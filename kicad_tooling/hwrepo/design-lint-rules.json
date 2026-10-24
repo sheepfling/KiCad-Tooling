@@ -6291,7 +6291,7 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Within one symbol, a recognized built-in pair or project-authored pin-function alias bound to an exact KiCad symbol identity is missing a counterpart function, has multiple pins on one side, lacks a unique net assignment, or places both functions on one schematic net.",
+      "predicate": "Within one symbol, a recognized built-in pair or project-authored pin-function alias bound to an exact KiCad symbol identity is missing a counterpart function, has multiple pins on one side, lacks a unique net assignment, or places both functions on one schematic net. Built-in aliases include Ethernet TD+/TD-, TDP/TDN, RD+/RD-, and RDP/RDN pin-function forms.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
@@ -6304,16 +6304,23 @@
       "fault_fixtures": [
         "tests.test_design_lint_complementary_pairs.test_complementary_pair_assignments_are_reviewed_without_inferred_requirements",
         "tests.test_design_lint_complementary_pairs.test_usb_superspeed_connector_aliases_have_fault_and_control_coverage",
+        "tests.test_design_lint_complementary_pairs.test_ethernet_media_pair_aliases_have_fault_and_control_coverage",
+        "tests.test_complementary_pair_native_fixture_lane.test_complementary_pair_fault_and_control_export_repeatably",
         "tests.test_design_lint_complementary_pairs.test_project_complementary_aliases_are_symbol_scoped_and_stale_maps_block"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_complementary_pairs.test_complementary_pair_assignments_are_reviewed_without_inferred_requirements",
         "tests.test_design_lint_complementary_pairs.test_usb_superspeed_connector_aliases_have_fault_and_control_coverage",
+        "tests.test_design_lint_complementary_pairs.test_ethernet_media_pair_aliases_have_fault_and_control_coverage",
+        "tests.test_complementary_pair_native_fixture_lane.test_complementary_pair_fault_and_control_export_repeatably",
         "tests.test_design_lint_complementary_pairs.test_project_complementary_aliases_are_symbol_scoped_and_stale_maps_block",
         "tests.test_design_lint_complementary_pairs.test_usb_c_lane_indexed_pairs_remain_outside_single_pair_rule",
         "tests.test_design_lint_complementary_pairs.test_function_names_without_unique_pair_classification_remain_outside_rule"
       ],
       "metamorphic_status": "covered",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES"
+      ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_complementary_pairs.test_complementary_pair_finding_is_order_stable_and_assignment_clears_it",
         "tests.test_design_lint_complementary_pairs.test_project_complementary_aliases_are_symbol_scoped_and_stale_maps_block"

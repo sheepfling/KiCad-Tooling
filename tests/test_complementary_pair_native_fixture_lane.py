@@ -22,7 +22,7 @@ pytestmark = [
     os.environ.get("KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES") != "1",
     reason="native complementary-pair fixtures run in the digest-pinned package acceptance lane",
 )
-def test_usb_superspeed_fault_and_control_export_repeatably(
+def test_complementary_pair_fault_and_control_export_repeatably(
     hosted_reference_root: Path,
 ) -> None:
     from kicad_tooling.ci_hosted import HostedLog, complementary_pair_fixture_lane
@@ -61,8 +61,12 @@ def test_usb_superspeed_fault_and_control_export_repeatably(
         fault = results["complementary-pair-fixture/fault"]
         control = results["complementary-pair-fixture/control"]
         assert fault["lint_status"] == "REVIEW"
-        assert fault["pair_findings"] == "J1: USB SuperSpeed RX pair"
+        assert fault["pair_findings"] == "J1: USB SuperSpeed RX pair;U1: Ethernet TX pair"
         assert "J1.4=StdA_SSRX-" in fault["pin_functions"]
+        assert "U1.1=TDP" in fault["pin_functions"]
+        assert "U1.2=TDN" in fault["pin_functions"]
+        assert "U1.3=RDP" in control["pin_functions"]
+        assert "U1.4=RDN" in control["pin_functions"]
         assert control["lint_status"] == "PASS"
         assert control["pair_findings"] == "none"
         for result in (fault, control):

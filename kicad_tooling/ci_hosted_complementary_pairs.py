@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 def complementary_pair_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
-    """Verify USB SuperSpeed pin-function aliases with repeated native exports."""
+    """Verify USB SuperSpeed and Ethernet pair aliases with repeated native exports."""
     import hashlib
     import os
 
@@ -46,11 +46,11 @@ def complementary_pair_fixture_lane(
     cases = {"fault": "fault.kicad_sch", "control": "control.kicad_sch"}
     source_hashes = {case: digest(fixture_root / filename) for case, filename in cases.items()}
     expected_source_hashes = {
-        "fault": "cc8832c4f8ab0b74996f3035ec5c9b85780c11e63bee9a33ea50d319dff2c755",
-        "control": "4c0fcc56824a6004a1f63cfd0fc026f8e90438919eb936c492eeb96e9ecad601",
+        "fault": "ec0058d7bbb339b10c93970485e4c5645512f569db64d8982592d7ad34495d6a",
+        "control": "2f327f534795b4d991c0b298c3401a627393d17a9744051d77b11b0a48b9b792",
     }
     if source_hashes != expected_source_hashes:
-        raise ValueError("USB SuperSpeed fixture sources differ from the reviewed hashes")
+        raise ValueError("Complementary-pair fixture sources differ from the reviewed hashes")
     scratch = Path(
         tempfile.mkdtemp(prefix=f"complementary-pair-{project}-", dir=log.directory.resolve())
     )
@@ -127,6 +127,10 @@ def complementary_pair_fixture_lane(
         "J1.3": "StdA_SSRX+",
         "J1.4": "StdA_SSRX-",
         "J1.5": "GND",
+        "U1.1": "TDP",
+        "U1.2": "TDN",
+        "U1.3": "RDP",
+        "U1.4": "RDN",
     }
     normalized_hashes: dict[tuple[str, str], str] = {}
     raw_hashes: dict[tuple[str, str], str] = {}
@@ -141,7 +145,7 @@ def complementary_pair_fixture_lane(
             observed = read_netlist(netlist_path)
             if observed.pin_functions != expected_functions:
                 raise ValueError(
-                    "KiCad native export did not preserve the expected Standard-A pin functions: "
+                    "KiCad native export did not preserve the expected pair pin functions: "
                     f"{observed.pin_functions}"
                 )
             normalized = json.dumps(
@@ -151,7 +155,7 @@ def complementary_pair_fixture_lane(
                 ensure_ascii=False,
             ).encode("utf-8")
             normalized_hashes[(case, run)] = hashlib.sha256(normalized).hexdigest()
-            project_id = f"synthetic-usb-superspeed-{case}"
+            project_id = f"synthetic-complementary-pairs-{case}"
             coach = ContractCoachReport(
                 status="READY_FOR_REVIEW",
                 project_id=project_id,
@@ -164,7 +168,7 @@ def complementary_pair_fixture_lane(
     for case in cases:
         if normalized_hashes[(case, "first")] != normalized_hashes[(case, "repeat")]:
             raise ValueError(f"Native {case} exports differ after netlist normalization")
-    for case, expected_findings in (("fault", 1), ("control", 0)):
+    for case, expected_findings in (("fault", 2), ("control", 0)):
         report = reports[(case, "first")]
         findings = tuple(
             item for item in report.findings if item.rule_id == "bus.complementary_pair_assignment"
@@ -180,12 +184,21 @@ def complementary_pair_fixture_lane(
                 f"Native {case} expected design-lint status {expected_status}, observed "
                 f"{report.status}"
             )
-        if case == "fault" and (
-            findings[0].subject != "J1: USB SuperSpeed RX pair"
-            or findings[0].evidence["negative_pins"] != ("J1.4",)
-            or findings[0].evidence["negative_nets"]
-        ):
-            raise ValueError("Native open SSRX- pin did not localize to the expected pair finding")
+        if case == "fault":
+            by_subject = {item.subject: item for item in findings}
+            usb_finding = by_subject.get("J1: USB SuperSpeed RX pair")
+            ethernet_finding = by_subject.get("U1: Ethernet TX pair")
+            if (
+                usb_finding is None
+                or usb_finding.evidence["negative_pins"] != ("J1.4",)
+                or usb_finding.evidence["negative_nets"]
+                or ethernet_finding is None
+                or ethernet_finding.evidence["negative_pins"] != ("U1.2",)
+                or ethernet_finding.evidence["negative_nets"]
+            ):
+                raise ValueError(
+                    "Native open pair pins did not localize to their expected findings"
+                )
         log.event(
             f"complementary-pair-fixture/{case}",
             "PASS",
@@ -202,7 +215,7 @@ def complementary_pair_fixture_lane(
                 for pin, function in sorted(observed_by_case[case].pin_functions.items())
             ),
             lint_status=report.status,
-            pair_findings=";".join(item.subject for item in findings) or "none",
+            pair_findings=";".join(sorted(item.subject for item in findings)) or "none",
             repeatable="true",
             repeatability_basis="normalized_netlist_and_design_lint_report",
             command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),
@@ -219,4 +232,4 @@ def complementary_pair_fixture_lane(
     if any(
         digest(fixture_root / filename) != source_hashes[case] for case, filename in cases.items()
     ):
-        raise ValueError("USB SuperSpeed fixture source changed during native export")
+        raise ValueError("Complementary-pair fixture source changed during native export")

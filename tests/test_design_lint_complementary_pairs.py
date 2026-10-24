@@ -147,6 +147,40 @@ def test_usb_superspeed_connector_aliases_have_fault_and_control_coverage(prefix
     assert findings[0].evidence["negative_nets"] == ()
 
 
+@pytest.mark.parametrize(
+    ("positive_function", "negative_function", "family"),
+    (
+        ("TD+", "TD-", "Ethernet TX"),
+        ("TDP", "TDN", "Ethernet TX"),
+        ("RD+", "RD-", "Ethernet RX"),
+        ("RDP", "RDN", "Ethernet RX"),
+    ),
+    ids=("td-symbols", "td-pin-aliases", "rd-symbols", "rd-pin-aliases"),
+)
+def test_ethernet_media_pair_aliases_have_fault_and_control_coverage(
+    positive_function: str,
+    negative_function: str,
+    family: str,
+) -> None:
+    rule_id = "bus.complementary_pair_assignment"
+    control = NetlistContract(
+        components={},
+        nets={"NET_A": ("U1.1",), "NET_B": ("U1.2",)},
+        component_symbols={"U1": "Synthetic:EthernetPhy"},
+        pin_functions={"U1.1": positive_function, "U1.2": negative_function},
+    )
+    assert not any(item.rule_id == rule_id for item in candidates(control))
+
+    fault = control.model_copy(update={"nets": {"NET_A": ("U1.1",)}})
+    findings = [item for item in candidates(fault) if item.rule_id == rule_id]
+
+    assert len(findings) == 1
+    assert findings[0].subject == f"U1: {family} pair"
+    assert findings[0].evidence["positive_pins"] == ("U1.1",)
+    assert findings[0].evidence["negative_pins"] == ("U1.2",)
+    assert findings[0].evidence["negative_nets"] == ()
+
+
 def test_usb_c_lane_indexed_pairs_remain_outside_single_pair_rule() -> None:
     rule_id = "bus.complementary_pair_assignment"
     lane_indexed = NetlistContract(

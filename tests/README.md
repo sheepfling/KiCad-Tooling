@@ -537,7 +537,8 @@ KICAD_RUN_NATIVE_LED_RAIL_FIXTURES=1 python -I -B -m pytest -q \
   tests/test_led_rail_native_fixture_lane.py
 ```
 
-USB SuperSpeed pair acceptance uses the exact-version native interface lane:
+USB SuperSpeed and Ethernet pair acceptance use the exact-version native
+interface lane:
 
 ```sh
 KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES=1 python -I -B -m pytest -q \

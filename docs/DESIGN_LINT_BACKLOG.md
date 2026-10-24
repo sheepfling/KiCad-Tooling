@@ -2486,9 +2486,10 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-003 — Paired-line and differential-interface completeness
 
-- **Status:** Implemented v3 as review-only checks for bounded built-in
+- **Status:** Implemented v4 as review-only checks for bounded built-in
   CANH/CANL, USB D+/D−, USB SuperSpeed SSTX/SSRX, TX+/TX−, and RX+/RX−
-  aliases, plus opt-in project aliases tied to an exact native symbol identity.
+  aliases, Ethernet TD+/TD−, TDP/TDN, RD+/RD−, and RDP/RDN aliases, plus
+  opt-in project aliases tied to an exact native symbol identity.
   Stale symbol/function mappings block lint; fitted DNP symbols are skipped.
   Connector peer mapping and physical pair constraints remain separate work.
 - **Problem:** A named pair can be half-connected or have one side routed to a
@@ -2504,6 +2505,12 @@ is not a reason by itself to expand its scope or change its default policy.
   records the naming transition from SSTX/SSRX to TX/RX. These aliases are checked with synthetic
   fault and valid-control cases plus the
   [pinned native fixture lane](../tests/fixtures/design_lint/complementary-pair-native/README.md).
+  The Ethernet forms are documented as `TD+`, `TD-`, `RD+`, and `RD-` in TI's
+  [DP83826 PHY datasheet](https://www.ti.com/lit/ds/symlink/dp83826e.pdf) and
+  as `TDP`, `TDN`, `RDP`, and `RDN` in Microchip's
+  [VSC8211 datasheet](https://ww1.microchip.com/downloads/aemDocuments/documents/OTH/ProductDocuments/DataSheets/VMDS-10105.pdf).
+  Focused synthetic controls exercise all four spellings; the pinned native fault/control lane
+  checks that KiCad preserves the TDP/TDN/RDP/RDN pin functions and localizes an open TDN.
   Project aliases are separately validated with synthetic vendor-named functions,
   a missing-net fault, a valid pair, a DNP control, stale-map blocking, exact
   symbol binding, CLI/MCP parity, and order-stable alias digests. Add
@@ -2512,7 +2519,8 @@ is not a reason by itself to expand its scope or change its default policy.
   inconsistent across RS-485 vendors. Do not infer off-board pairing,
   impedance, polarity correctness, or isolation from names. Keep this a review
   hint unless an interface contract gives the pair map.
-- **Fixtures:** Synthetic open USB data side; both sides on one net; complete
+- **Fixtures:** Synthetic open USB data side; Ethernet TD+/TD−, TDP/TDN,
+  RD+/RD−, and RDP/RDN alias fault/control cases; both sides on one net; complete
   USB data pair on separate nets; intentionally unused pair with an exact
   project-owned ignore; Standard-A/Standard-B SuperSpeed aliases with open-line
   faults and complete controls; lane-indexed USB-C anti-control; exact-symbol

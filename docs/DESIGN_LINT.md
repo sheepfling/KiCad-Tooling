@@ -5,6 +5,32 @@ cannot infer whether matching connector pins should share a net. The project
 repository owns the pinout, electrical requirements, and decisions about each
 finding. Tooling owns the rules and report format.
 
+## Review incomplete complementary pairs
+
+`bus.complementary_pair_assignment` recognizes bounded pin-function pairs
+within one symbol, including Ethernet `TD+`/`TD-`, `TDP`/`TDN`, `RD+`/`RD-`,
+and `RDP`/`RDN` spellings. It reports a missing counterpart, an open or
+ambiguous assignment, or both pair members assigned to the same schematic net.
+It defaults to `review`: Ethernet PHY variants, intentionally unused pairs,
+and project-specific naming still need review. The rule does not infer which
+connector should attach to which PHY, validate polarity, or establish PCB
+routing or continuity. Project-authored aliases remain available for exact
+native symbol identities.
+
+Synthetic tests cover each built-in Ethernet spelling. The exact
+KiCad 10.0.0/10.0.5 native fixture includes an open `TDN` fault beside a
+complete `TDP`/`TDN` control and a complete receive pair:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_design_lint_complementary_pairs.py \
+  tests/test_complementary_pair_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.complementary_pair_assignment")'
+```
+
+The native export requires the public template checkout and its digest-pinned
+toolchain, as described in the
+[fixture README](../tests/fixtures/design_lint/complementary-pair-native/README.md).
+
 ## Review unassigned USB 2.0 data pins
 
 `bus.usb_unconnected_data_pin` recognizes a bounded set of native USB 2.0
