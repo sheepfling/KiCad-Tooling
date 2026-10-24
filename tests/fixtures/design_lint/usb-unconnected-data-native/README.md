@@ -4,10 +4,10 @@ These tooling-owned schematics exercise the opt-in review for an unassigned
 native USB 2.0 D+/D− function. They contain no product design or project
 expectation.
 
-| Case | Source | Expected result |
-| --- | --- | --- |
-| Connected control | [`integrated-phy-direct.kicad_sch`](../usb-data-path-native/integrated-phy-direct.kicad_sch) | J1 and U1 D+/D− pins have native net assignments; no unassigned-data finding |
-| Fault | [`open-dp.kicad_sch`](open-dp.kicad_sch) | J1.1 D+ has an explicit no-connect marker while J1.2 D− remains assigned; the candidate is present with default `RULE_OFF` disposition |
+| Case              | Source                                                                                       | Expected result                                                                                                                        |
+| ----------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Connected control | [`integrated-phy-direct.kicad_sch`](../usb-data-path-native/integrated-phy-direct.kicad_sch) | J1 and U1 D+/D− pins have native net assignments; no unassigned-data finding                                                           |
+| Fault             | [`open-dp.kicad_sch`](open-dp.kicad_sch)                                                     | J1.1 D+ has an explicit no-connect marker while J1.2 D− remains assigned; the candidate is present with default `RULE_OFF` disposition |
 
 The connected control SHA-256 is
 `e93371b78de2ba8c473ccde0579e551d0da0b44b5d9ed417473ab1dd63781d27`. The
