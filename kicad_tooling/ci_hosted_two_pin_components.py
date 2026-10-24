@@ -185,6 +185,21 @@ def two_pin_component_fixture_lane(
             ),
         )
     )
+    custom_motor_role_map = ComponentRoleMap(
+        entries=(
+            ComponentRoleBinding(
+                part_id="training-motor",
+                symbol="Training:Motor_DC",
+                footprint="Training:Motor_2pin",
+                role="motor",
+                pins=(
+                    ComponentRolePin(number="1", function="A", electrical_type="passive"),
+                    ComponentRolePin(number="2", function="B", electrical_type="passive"),
+                ),
+                basis="Synthetic native fixture reviews this exact custom motor identity",
+            ),
+        )
+    )
     role_maps_by_case = {
         "same-net-mapped-capacitor": custom_capacitor_role_map,
         "distinct-nets-mapped-capacitor": custom_capacitor_role_map,
@@ -192,6 +207,8 @@ def two_pin_component_fixture_lane(
         "distinct-nets-mapped-led": custom_led_role_map,
         "same-net-mapped-battery": custom_battery_role_map,
         "distinct-nets-mapped-battery": custom_battery_role_map,
+        "same-net-mapped-motor": custom_motor_role_map,
+        "distinct-nets-mapped-motor": custom_motor_role_map,
     }
     for case, (_, rule_id, case_expected_subjects) in cases.items():
         role_map = role_maps_by_case.get(case)

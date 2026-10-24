@@ -1,19 +1,21 @@
 # Two-pin DC motor same-net fixture
 
 These tooling-owned schematics exercise `component.two_pin_motor_same_net`
-using the exact `Motor:Motor_DC` library identity and a minimal synthetic
-two-pin symbol. They contain no product design data and do not establish motor
-behavior.
+using the exact `Motor:Motor_DC` library identity and an exact project-mapped
+custom motor identity. They use minimal synthetic two-pin symbols, contain no
+product design data, and do not establish motor behavior.
 
-| Source                          | SHA-256                                                            | Expected result            |
-| ------------------------------- | ------------------------------------------------------------------ | -------------------------- |
-| `same-net-motor.kicad_sch`      | `a9d3b9dd3e403bdc1f6fc2403a4a030e57ffadc1cbe85ce585eda6d20e4d8f42` | One REVIEW finding for M1. |
-| `distinct-nets-motor.kicad_sch` | `6cfa5b1a856b1a04fabd3c274072b5b03f00f71ce7a218ea5542c344302e172e` | No finding.                |
+| Source                                 | SHA-256                                                            | Expected result            |
+| -------------------------------------- | ------------------------------------------------------------------ | -------------------------- |
+| `same-net-motor.kicad_sch`             | `a9d3b9dd3e403bdc1f6fc2403a4a030e57ffadc1cbe85ce585eda6d20e4d8f42` | One REVIEW finding for M1. |
+| `distinct-nets-motor.kicad_sch`        | `6cfa5b1a856b1a04fabd3c274072b5b03f00f71ce7a218ea5542c344302e172e` | No finding.                |
+| `mapped-same-net-motor.kicad_sch`      | `33711a992c4725dbfe2a5c77f7f4c50839ad990d08aee67c1ed4603762133bc4` | One REVIEW finding for M1. |
+| `mapped-distinct-nets-motor.kicad_sch` | `3afc5de74dd3a935ce51465a5df062c53a08135dcd3fc6e7737a43d0a6b6622c` | No finding.                |
 
 The native fixture lane exports each source twice with digest-pinned KiCad
-10.0.0 and 10.0.5 images. It checks the same-net fault, the separate-net
-control, and repeatable normalized netlists. The lane does not run ERC or DRC
-and does not prove PCB continuity.
+10.0.0 and 10.0.5 images. It checks the same-net fault and separate-net
+control for stock and mapped custom identities, plus repeatable normalized
+netlists. The lane does not run ERC or DRC and does not prove PCB continuity.
 
 Focused synthetic regression:
 

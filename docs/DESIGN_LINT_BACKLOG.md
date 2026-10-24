@@ -4493,37 +4493,43 @@ is not a reason by itself to expand its scope or change its default policy.
 #### LINT-223 — Same-net two-pin DC motor review
 
 - **Status:** Implemented as the default-review rule
-  `component.two_pin_motor_same_net` for the exact `Motor:Motor_DC` symbol.
+  `component.two_pin_motor_same_net` for the exact `Motor:Motor_DC` symbol and
+  exact project-mapped custom motor identities.
 - **Gap:** The same-net inventory had no component-specific review for the
-  stock two-terminal DC motor. A fitted motor whose two pins shared one native
-  net therefore had no focused prompt, even though the exported netlist shows
-  no voltage difference across its terminals.
-- **Predicate:** Require an exact fitted `Motor:Motor_DC`, exactly two
-  distinct native pin numbers, and one unambiguous assigned net per pin.
-  Report only when both pins use the same net. DNP, open, multiply assigned,
-  incomplete, multi-pin, custom, and alternate symbol identities remain
-  unclassified.
+  stock two-terminal DC motor, and custom motor symbols had no exact project
+  role-map path. A fitted motor whose two pins shared one native net therefore
+  had no focused prompt, even though the exported netlist shows no voltage
+  difference across its terminals.
+- **Predicate:** Require an exact fitted `Motor:Motor_DC` or a custom motor
+  whose project role map matches PART_ID, symbol, footprint, and complete
+  native pin number/function/electrical-type inventory with two passive pins.
+  Require exactly two distinct native pin numbers and one unambiguous assigned
+  net per pin. Report only when both pins use the same net. DNP, open, multiply
+  assigned, incomplete, multi-pin, unmapped or stale custom, and alternate
+  identities remain unclassified.
 - **Boundary:** A motor can be intentionally bypassed or disabled. The
   configurable `REVIEW` prompt does not establish motor behavior, driver
   compatibility, polarity, footprint mapping, physical connectivity, or
   assembly state. It does not infer that motor terminals need to be powered
   or make a blocking decision unless a project changes the rule policy.
-- **Fixtures:** Tooling-owned same-net fault and separate-net control;
-  DNP, incomplete, ambiguous, open, multi-pin, custom, and alternate-symbol
-  exclusions; policy and exact-ignore lifecycle; ordering and per-motor
-  net-split metamorphic check; and source-hashed native exports on the pinned
-  KiCad 10.0.0 and 10.0.5 images. No product or cohort schematic is used.
+- **Fixtures:** Tooling-owned stock and exact-mapped custom same-net faults and
+  separate-net controls; DNP, incomplete, ambiguous, open, multi-pin, unmapped
+  custom, stale-role, and alternate-symbol controls; policy, exact-ignore,
+  ordering, role-basis fingerprint, and per-motor net-split metamorphic checks;
+  and source-hashed native exports on pinned KiCad 10.0.0 and 10.0.5 images.
+  No product or cohort schematic is used.
   The [fixture note](../tests/fixtures/design_lint/two-pin-motors/README.md)
   records source hashes and native boundaries.
-- **Incremental-value claim:** This adds one exact stock DC-motor identity to
-  the component-specific same-net review inventory. Synthetic cases establish
-  predicate behavior only; public applicability and reviewer-value
-  measurements remain open.
-- **Local verification:** The five focused synthetic tests, the two exact
-  native exports (KiCad 10.0.0 and 10.0.5), and the two-pin family suite
-  (110 passed, 22 environment-gated skips) passed. Catalog reachability,
-  native fixture selection, architecture, formatting, Ruff, configured host
-  and Windows Pyright, Markdown lint, and repository-doc checks passed.
+- **Incremental-value claim:** This extends the same-net review inventory to
+  project-specific motor symbols only when an exact role binding is authored.
+  Synthetic cases establish predicate behavior only; public applicability and
+  reviewer-value measurements remain open.
+- **Local verification:** Ten focused synthetic tests, 45 related role-map
+  regressions, 99 catalog tests, 68 architecture tests, and 61 package smoke
+  tests passed. Strict Pyright, Ruff, formatting, Markdown lint, source-hash
+  inventory, and diff checks passed. Local native exports were unavailable
+  because KiCad CLI is absent and Docker access is denied; the focused tag
+  enables exact native exports on KiCad 10.0.0 and 10.0.5.
 - **Focused selection:**
 
   ```sh

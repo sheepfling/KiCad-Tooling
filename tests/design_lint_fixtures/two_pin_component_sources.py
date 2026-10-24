@@ -33,6 +33,8 @@ TWO_PIN_COMPONENT_SOURCE_HASHES = {
     "two-pin-batteries/mapped-distinct-nets-battery.kicad_sch": "2cfeb1ac0d450512915068b5c6636718ae23d2931a3867d99e66b9a0ad1dc191",
     "two-pin-motors/same-net-motor.kicad_sch": "a9d3b9dd3e403bdc1f6fc2403a4a030e57ffadc1cbe85ce585eda6d20e4d8f42",
     "two-pin-motors/distinct-nets-motor.kicad_sch": "6cfa5b1a856b1a04fabd3c274072b5b03f00f71ce7a218ea5542c344302e172e",
+    "two-pin-motors/mapped-same-net-motor.kicad_sch": "33711a992c4725dbfe2a5c77f7f4c50839ad990d08aee67c1ed4603762133bc4",
+    "two-pin-motors/mapped-distinct-nets-motor.kicad_sch": "3afc5de74dd3a935ce51465a5df062c53a08135dcd3fc6e7737a43d0a6b6622c",
     "two-pin-solar-cells/same-net-solar-cell.kicad_sch": "9bfc6cbd16fe471fd9edc869c5ccab715f97a7067fdf15680e5123b765eb57e6",
     "two-pin-solar-cells/distinct-nets-solar-cell.kicad_sch": "df1aac38d4e3f352fe4d1358e0a786ce144b921552eedae3e2d380aa165bdb9d",
     "two-pin-thermocouples/same-net-thermocouples.kicad_sch": "a4710304e1d5148e74e4983ac3f2431cf0883051b1ad769fe525a6fcae1a2539",

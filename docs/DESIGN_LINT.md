@@ -330,12 +330,16 @@ the exact KiCad 10 native lane.
 ## Review a two-pin DC motor whose terminals share one net
 
 `component.two_pin_motor_same_net` reviews an exact fitted `Motor:Motor_DC`
-symbol when both native pins are assigned to one schematic net. The netlist
-shows no voltage difference across the motor. The prompt does not establish
-motor behavior, driver compatibility, footprint mapping, PCB connectivity, or
+symbol or a custom motor matched by the project's exact `component_role_map`
+when both native pins are assigned to one schematic net. A custom binding must
+match PART_ID, symbol, footprint, and complete native pin number, function,
+and electrical-type inventory, with two passive pins. The netlist shows no
+voltage difference across the motor. The prompt does not establish motor
+behavior, driver compatibility, footprint mapping, PCB connectivity, or
 assembly state. It defaults to `review` and supports project `block`, `off`,
-and exact-fingerprint ignore decisions. Alternate, custom, open, ambiguous,
-incomplete, multi-pin, and DNP symbols remain unclassified. The
+and exact-fingerprint ignore decisions. Alternate, unmapped or stale custom,
+open, ambiguous, incomplete, multi-pin, and DNP identities remain
+unclassified. The
 [synthetic fixture record](../tests/fixtures/design_lint/two-pin-motors/README.md)
 contains the same-net fault and separate-net control, with source hashes and
 the exact KiCad 10 native lane.

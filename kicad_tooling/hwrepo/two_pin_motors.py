@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .component_roles import component_role_binding_evidence
 from .design_lint_types import Candidate
 from .two_pin_components import TwoPinComponentOnSameNet
 
@@ -21,14 +22,21 @@ def two_pin_motor_same_net_candidates(
                 "is missing. This prompt does not establish motor behavior, driver compatibility, "
                 "footprint mapping, physical connectivity, or assembly state."
             ),
-            evidence={
-                "symbol": (item.symbol,),
-                "value": (item.value,),
-                "net": (item.net,),
-                "pin_assignments": tuple(
-                    f"{item.reference}.{number} -> {item.net}" for number in item.pin_numbers
-                ),
-            },
+            evidence=(
+                {
+                    "symbol": (item.symbol,),
+                    "value": (item.value,),
+                    "net": (item.net,),
+                    "pin_assignments": tuple(
+                        f"{item.reference}.{number} -> {item.net}" for number in item.pin_numbers
+                    ),
+                }
+                | (
+                    {}
+                    if item.role_binding is None
+                    else component_role_binding_evidence(item.role_binding)
+                )
+            ),
         )
         for item in observations
         if item.kind == "motor"

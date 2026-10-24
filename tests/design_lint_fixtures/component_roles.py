@@ -49,3 +49,24 @@ def custom_battery_role_map(
             ),
         )
     )
+
+
+def custom_motor_role_map(
+    basis: str = "Synthetic reviewed motor symbol declaration",
+) -> ComponentRoleMap:
+    """Map one synthetic two-pin motor using its complete native identity."""
+    return ComponentRoleMap(
+        entries=(
+            ComponentRoleBinding(
+                part_id="training-motor",
+                symbol="Training:Motor_DC",
+                footprint="Training:Motor_2pin",
+                role="motor",
+                pins=(
+                    ComponentRolePin(number="1", function="A", electrical_type="passive"),
+                    ComponentRolePin(number="2", function="B", electrical_type="passive"),
+                ),
+                basis=basis,
+            ),
+        )
+    )

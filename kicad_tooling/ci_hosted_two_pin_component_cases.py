@@ -163,6 +163,16 @@ TWO_PIN_COMPONENT_FIXTURE_CASES: dict[str, tuple[str, str, set[str]]] = {
         "component.two_pin_motor_same_net",
         set(),
     ),
+    "same-net-mapped-motor": (
+        "two-pin-motors/mapped-same-net-motor.kicad_sch",
+        "component.two_pin_motor_same_net",
+        {"M1: both motor terminals share MOTOR_TIED"},
+    ),
+    "distinct-nets-mapped-motor": (
+        "two-pin-motors/mapped-distinct-nets-motor.kicad_sch",
+        "component.two_pin_motor_same_net",
+        set(),
+    ),
     "same-net-solar-cell": (
         "two-pin-solar-cells/same-net-solar-cell.kicad_sch",
         "component.two_pin_solar_cell_same_net",

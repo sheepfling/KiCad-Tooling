@@ -2714,22 +2714,24 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For an exact fitted Motor:Motor_DC symbol with exactly two distinct native pin numbers and one unambiguous schematic net assignment per pin, report when both pins use the same net.",
+      "predicate": "For an exact fitted Motor:Motor_DC symbol or a custom motor matched by the project component_role_map using exact PART_ID, symbol, footprint, and complete native pin number/function/electrical-type inventory, require exactly two distinct native pins and one unambiguous schematic net assignment per pin; report when both pins use the same net.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "A same-net motor may be intentionally bypassed or represent a disabled drive; this is a configurable review prompt, not a defect verdict.",
-        "Only the exact Motor:Motor_DC identity with a complete two-pin inventory is recognized. Alternate, custom, multi-pin, incomplete, ambiguous, open, and DNP identities are outside the predicate.",
+        "Custom motors are recognized only through an exact project-authored role binding with two native passive pins; an unmapped, stale, or mismatched custom identity is not classified. Alternate, multi-pin, incomplete, ambiguous, open, and DNP identities remain outside the predicate.",
         "The schematic netlist does not establish motor behavior, drive compatibility, footprint mapping, physical connectivity, or assembly state."
       ],
       "fault_fixtures": [
         "tests.test_two_pin_motors.test_same_net_exact_dc_motor_is_reviewed_without_claiming_operation",
+        "tests.test_two_pin_motors.test_exact_mapped_custom_motor_same_net_is_reviewed_with_role_evidence",
         "tests.test_two_pin_component_native_fixture_lane.test_motor_native_fixture_scope_contains_only_motor_fault_and_control",
         "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_motor_same_net_fault_and_control"
       ],
       "valid_control_fixtures": [
         "tests.test_two_pin_motors.test_separate_motor_terminal_nets_are_the_no_finding_control",
+        "tests.test_two_pin_motors.test_exact_mapped_custom_motor_on_separate_nets_is_the_valid_control",
         "tests.test_two_pin_motors.test_skips_dnp_incomplete_ambiguous_open_multi_pin_and_other_symbols",
         "tests.test_two_pin_motors.test_policy_and_exact_fingerprint_ignore_are_project_configurable",
         "tests.test_two_pin_component_native_fixture_lane.test_motor_native_fixture_scope_contains_only_motor_fault_and_control",
@@ -2738,6 +2740,7 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_two_pin_motors.test_order_is_stable_and_splitting_one_motor_clears_only_its_finding",
+        "tests.test_two_pin_motors.test_custom_motor_role_fingerprint_is_order_stable_and_basis_bound",
         "tests.test_design_lint_determinism_components.test_two_pin_component_reports_remain_deterministic"
       ],
       "required_native_fixtures": [

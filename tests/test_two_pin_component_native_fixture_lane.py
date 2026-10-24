@@ -27,7 +27,7 @@ def test_native_fixture_sources_are_hash_pinned_under_the_fixture_root() -> None
     fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
     case_sources = {filename for filename, _, _ in TWO_PIN_COMPONENT_FIXTURE_CASES.values()}
     assert case_sources == set(_EXPECTED_SOURCE_HASHES)
-    assert len(TWO_PIN_COMPONENT_FIXTURE_CASES) == 46
+    assert len(TWO_PIN_COMPONENT_FIXTURE_CASES) == 48
     for filename, expected_digest in _EXPECTED_SOURCE_HASHES.items():
         source = (fixture_root / filename).resolve()
         assert source.is_relative_to(fixture_root.resolve())
@@ -165,7 +165,12 @@ def test_battery_native_fixture_scope_contains_only_battery_fault_and_control() 
 @pytest.mark.design_lint_rule(rule_id="component.two_pin_motor_same_net")
 def test_motor_native_fixture_scope_contains_only_motor_fault_and_control() -> None:
     selected = two_pin_component_fixture_cases_for_rules(("component.two_pin_motor_same_net",))
-    assert set(selected) == {"same-net-motor", "distinct-nets-motor"}
+    assert set(selected) == {
+        "same-net-motor",
+        "distinct-nets-motor",
+        "same-net-mapped-motor",
+        "distinct-nets-mapped-motor",
+    }
     assert {rule_id for _, rule_id, _ in selected.values()} == {"component.two_pin_motor_same_net"}
     assert TWO_PIN_COMPONENT_CANDIDATE_KINDS["component.two_pin_motor_same_net"] == frozenset(
         {"motor"}
