@@ -4964,7 +4964,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_i2c_pullup_voltage_coverage.test_input_limit_coverage_policy_ignore_and_order_are_deterministic"
+        "tests.test_i2c_pullup_voltage_coverage.test_input_limit_coverage_policy_ignore_and_order_are_deterministic",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_pullup_voltage_coverage.py#i2c_pullup_voltage_coverage",
@@ -7283,6 +7284,49 @@
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/i2c_addressing.py#unmapped_i2c_responders"
+    },
+    {
+      "rule_id": "bus.i2c_signal_on_named_rail",
+      "title": "I2C signal pin is assigned directly to a named rail",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted U/IC pin with one explicit bounded SDA/SCL native function, require the pin number to appear in that reference's native pin inventory and require exactly one native net assignment. Emit a REVIEW candidate when the net label matches the narrow supply-like or return-like vocabulary.",
+      "supported_kicad_versions": [
+        "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixtures; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The native pin function and rail-like label are review clues, not proof of an electrical defect, a required I2C endpoint, or the net's electrical potential. Intentional rail straps remain valid project decisions.",
+        "Only fitted U/IC references, exact SDA/SCL aliases, a complete native pin-number inventory, and one unambiguous assignment are considered. Connector-only endpoints, indexed or vendor-specific aliases, DNP, open, multiply assigned, and incomplete inventory cases are skipped.",
+        "This schematic-netlist prompt does not establish bus membership, device behavior, PCB copper continuity, external wiring, or physical connectivity."
+      ],
+      "fault_fixtures": [
+        "tests.test_i2c_signal_named_rail.test_explicit_i2c_pin_on_named_rail_requests_review_with_exact_evidence",
+        "tests.test_i2c_signal_named_rail.test_project_policy_and_exact_ignore_control_the_review",
+        "tests.test_i2c_signal_label_native_fixture_lane.test_native_i2c_signal_label_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_i2c_signal_named_rail.test_neutral_labels_and_unsupported_pin_functions_are_controls",
+        "tests.test_i2c_signal_named_rail.test_dnp_open_and_ambiguous_assignments_stay_outside_the_predicate",
+        "tests.test_i2c_signal_label_native_fixture_lane.test_native_i2c_signal_label_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_i2c_signal_named_rail.test_mapping_order_is_stable_and_repairing_assignment_clears_review",
+        "tests.test_design_lint_determinism_i2c_signal_named_rail.test_i2c_signal_named_rail_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I2C_SIGNAL_LABEL_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/i2c_signal_named_rail.py#i2c_signal_on_named_rail_candidates",
+        "kicad_tooling/hwrepo/named_rail_roles.py#named_rail_role_clue",
+        "kicad_tooling/hwrepo/bus_signal_roles.py#i2c_signal_role",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/i2c_signal_named_rail.py#i2c_signal_on_named_rail_candidates"
     },
     {
       "rule_id": "bus.i2c_signal_label_role_mismatch",

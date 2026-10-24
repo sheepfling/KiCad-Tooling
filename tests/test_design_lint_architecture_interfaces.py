@@ -173,6 +173,24 @@ def test_i2c_pullup_voltage_coverage_model_stays_in_its_theme_owner() -> None:
     )
 
 
+def test_i2c_named_rail_review_uses_a_focused_protocol_owner() -> None:
+    from kicad_tooling.hwrepo.design_lint import rule_catalog
+
+    owner = HWREPO / "i2c_signal_named_rail.py"
+    shared_roles = HWREPO / "named_rail_roles.py"
+    rule = next(
+        item for item in rule_catalog().rules if item.rule_id == "bus.i2c_signal_on_named_rail"
+    )
+
+    assert _line_count(owner) < IMPLEMENTATION_MAX_LINES
+    assert _line_count(shared_roles) < IMPLEMENTATION_MAX_LINES
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == (
+        "kicad_tooling/hwrepo/i2c_signal_named_rail.py#i2c_signal_on_named_rail_candidates"
+    )
+    assert rule.implementation_owner in rule.implementation_refs
+
+
 def test_usb_inline_component_coverage_model_stays_in_its_theme_owner() -> None:
     owner = HWREPO / "usb_peer_reference_models.py"
     owner_tree = ast.parse(owner.read_text(encoding="utf-8"), filename=owner.name)

@@ -694,7 +694,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 220 active rules.
+The catalog currently contains 221 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1023,6 +1023,24 @@ python -I -m pytest tests/test_i2c_signal_label_roles.py \
 KICAD_RUN_NATIVE_I2C_SIGNAL_LABEL_FIXTURES=1 python -I -m pytest \
   tests/test_i2c_signal_label_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_signal_label_role_mismatch")'
+```
+
+`bus.i2c_signal_on_named_rail` separately reviews a fitted IC's explicit SDA
+or SCL pin when its one assigned net has a recognized supply-like or
+return-like label. It uses the same bounded native I2C role aliases and
+requires the pin number in the component's exported inventory. Intentional
+rail straps remain possible, so the rule reports a configurable review clue;
+it does not claim a fault or require a connection. Indexed/vendor aliases,
+DNP pins, open or multiply assigned pins, connectors, and incomplete pin
+inventories remain outside the predicate.
+
+```sh
+python -I -m pytest tests/test_i2c_signal_named_rail.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2c_signal_on_named_rail")'
+
+KICAD_RUN_NATIVE_I2C_SIGNAL_LABEL_FIXTURES=1 python -I -m pytest \
+  tests/test_i2c_signal_label_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_signal_on_named_rail")'
 ```
 
 ### I2C SDA/SCL same-net review

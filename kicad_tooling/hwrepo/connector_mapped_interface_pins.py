@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageReport
-from .connector_identity import is_named_supply_function, pin_function_is_generic
+from .connector_identity import pin_function_is_generic
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .models import NetlistContract
-from .return_nets import is_return_like_net_name
+from .named_rail_roles import named_rail_role_clue
 
 RULE_ID: DesignLintRuleId = "connector.mapped_interface_signal_unassigned"
 SHIELD_RULE_ID: DesignLintRuleId = "connector.mapped_interface_shield_unassigned"
@@ -19,14 +19,6 @@ SUPPLY_RETURN_NET_RULE_ID: DesignLintRuleId = "connector.mapped_interface_supply
 SIGNAL_NAMED_RAIL_RULE_ID: DesignLintRuleId = "connector.mapped_interface_signal_on_named_rail"
 SHIELD_RETURN_NET_RULE_ID: DesignLintRuleId = "connector.mapped_interface_shield_on_return_net"
 SHIELD_SUPPLY_RAIL_RULE_ID: DesignLintRuleId = "connector.mapped_interface_shield_on_supply_rail"
-
-
-def _named_rail_role_clue(net_name: str) -> str | None:
-    if is_named_supply_function(net_name):
-        return "supply-like"
-    if is_return_like_net_name(net_name):
-        return "return-like"
-    return None
 
 
 def unassigned_mapped_interface_signal_pins(
@@ -248,7 +240,7 @@ def mapped_other_contacts_on_named_rails(
             continue
 
         net_name = mapped.nets[0]
-        label_clue = _named_rail_role_clue(net_name)
+        label_clue = named_rail_role_clue(net_name)
         if label_clue is None:
             continue
 
@@ -302,7 +294,7 @@ def mapped_supply_contacts_on_return_nets(
             continue
 
         net_name = mapped.nets[0]
-        if not is_return_like_net_name(net_name):
+        if named_rail_role_clue(net_name) != "return-like":
             continue
 
         results.append(
@@ -355,7 +347,7 @@ def mapped_signal_contacts_on_named_rails(
             continue
 
         net_name = mapped.nets[0]
-        label_clue = _named_rail_role_clue(net_name)
+        label_clue = named_rail_role_clue(net_name)
         if label_clue is None:
             continue
 
@@ -409,7 +401,7 @@ def mapped_shield_contacts_on_return_nets(
             continue
 
         net_name = mapped.nets[0]
-        if _named_rail_role_clue(net_name) != "return-like":
+        if named_rail_role_clue(net_name) != "return-like":
             continue
 
         results.append(
@@ -462,7 +454,7 @@ def mapped_shield_contacts_on_supply_rails(
             continue
 
         net_name = mapped.nets[0]
-        if _named_rail_role_clue(net_name) != "supply-like":
+        if named_rail_role_clue(net_name) != "supply-like":
             continue
 
         results.append(

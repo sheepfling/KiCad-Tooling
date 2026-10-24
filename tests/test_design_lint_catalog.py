@@ -257,13 +257,26 @@ def test_backlog_baseline_ids_match_the_active_catalog() -> None:
 
 def test_documented_catalog_counts_match_the_active_catalog() -> None:
     repository = Path(__file__).parents[1]
-    active_count = sum(item.status == "active" for item in rule_catalog().rules)
+    active_rules = tuple(item for item in rule_catalog().rules if item.status == "active")
+    active_count = len(active_rules)
     count_pattern = re.compile(r"catalog\s+currently\s+contains\s+(\d+)\s+active\s+rules")
 
     for relative_path in ("docs/DESIGN_LINT.md", "docs/DESIGN_LINT_BACKLOG.md"):
         content = (repository / relative_path).read_text(encoding="utf-8")
         matches = count_pattern.findall(content)
         assert matches == [str(active_count)], relative_path
+
+    cohort_trials = (repository / "docs/DESIGN_LINT_COHORT_TRIALS.md").read_text(encoding="utf-8")
+    mode_counts = {
+        mode: sum(item.default_mode == mode for item in active_rules)
+        for mode in ("review", "off", "block")
+    }
+    assert f"contains {active_count} active rules" in cohort_trials
+    assert (
+        f"Of the {active_count} active rules, {mode_counts['review']} default to `review`, "
+        f"{mode_counts['off']} to `off`, and\n"
+        f"`pcb.required_fitted_reference` to `block`."
+    ) in cohort_trials
 
 
 def test_active_catalog_entries_require_fault_and_control_coverage() -> None:

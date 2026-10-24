@@ -38,11 +38,17 @@ def test_interface_reports_remain_deterministic() -> None:
     assert i2c_fault["netlist_sha256"] != i2c_control["netlist_sha256"]
     assert {item["rule_id"] for item in i2c_fault["findings"]} == {
         "bus.i2c_missing_pullup",
+        "bus.i2c_pullup_input_limit_coverage",
         "bus.i2c_unmapped_responder",
     }
     assert [item["rule_id"] for item in i2c_control["findings"]] == [
-        "bus.i2c_unmapped_responder"
-    ], "the array requirement clears only its I2C pull-up hint"
+        "bus.i2c_pullup_input_limit_coverage",
+        "bus.i2c_pullup_input_limit_coverage",
+        "bus.i2c_unmapped_responder",
+    ], (
+        "the array requirement clears only its I2C pull-up hint: "
+        f"{[item['rule_id'] for item in i2c_control['findings']]}"
+    )
 
     i2c_contract_fault = reports["i2c_array_contract_fault"]
     i2c_contract_control = reports["i2c_array_contract_control"]

@@ -31,6 +31,7 @@ HASHSEED_REPORT_FAMILIES = (
     "connector_peer_pins",
     "pcb_measurements",
     "interfaces",
+    "i2c_signal_named_rail",
     "analog",
     "schematic_geometry",
 )

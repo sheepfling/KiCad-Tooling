@@ -6,33 +6,18 @@ import pytest
 
 from kicad_tooling.hwrepo.design_lint import candidates, evaluate
 from kicad_tooling.hwrepo.models import (
-    ComponentContract,
     DesignLintIgnore,
     DesignLintPolicy,
     DesignLintRuleOverride,
     NetlistContract,
 )
 from tests.design_lint_fixtures import coach
+from tests.design_lint_fixtures.ethernet_data_labels import (
+    ethernet_data_label_netlist as _ethernet_netlist,
+)
 
 RULE_ID = "bus.ethernet_data_label_mismatch"
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
-
-
-def _ethernet_netlist(
-    functions: tuple[str, str, str, str],
-    labels: tuple[str, str, str, str],
-    *,
-    dnp: bool = False,
-) -> NetlistContract:
-    pins = tuple(f"U1.{number}" for number in range(1, 5))
-    return NetlistContract(
-        components={"U1": ComponentContract(value="Synthetic Ethernet PHY", footprint="")},
-        nets={label: (pin,) for label, pin in zip(labels, pins, strict=True)},
-        dnp_components=("U1",) if dnp else (),
-        component_symbols={"U1": "Synthetic:EthernetPhy"},
-        pin_functions=dict(zip(pins, functions, strict=True)),
-        component_pin_numbers={"U1": ("1", "2", "3", "4")},
-    )
 
 
 def _findings(netlist: NetlistContract):

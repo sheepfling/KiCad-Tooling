@@ -33,8 +33,10 @@ from tests.design_lint_fixtures.connector_coverage import (
     inventory_review,
 )
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
+from tests.design_lint_fixtures.ethernet_data_labels import ethernet_data_label_netlist
 from tests.design_lint_fixtures.ethernet_management_labels import ethernet_management_netlist
 from tests.design_lint_fixtures.i2c_signal_label import i2c_signal_label_netlist
+from tests.design_lint_fixtures.i2c_signal_named_rail import i2c_signal_on_named_rail_netlist
 from tests.design_lint_fixtures.mosfet_drain_source_same_net import mosfet_drain_source_netlist
 from tests.design_lint_fixtures.mosfet_gate_direct_drive import netlist as mosfet_gate_drive_netlist
 from tests.design_lint_fixtures.mosfet_terminal_order import mosfet_terminal_order_netlist
@@ -220,6 +222,15 @@ def catalog_reachability_rule_ids() -> set[str]:
             connector_coverage=_coverage(mapped_power_source, target_role="return"),
         )
     )
+    result.update(
+        item.rule_id
+        for item in candidates(
+            ethernet_data_label_netlist(
+                functions=("TDP", "TDN", "RDP", "RDN"),
+                labels=("ETH_RX_P", "ETH_RX_N", "ETH_TX_P", "ETH_TX_N"),
+            )
+        )
+    )
     result.update(item.rule_id for item in candidates(ethernet_management_netlist()))
     result.update(
         item.rule_id
@@ -275,6 +286,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         i2c_netlist_with_parallel_sda(),
         i2c_netlist_with_pullup_rails(("+3V3", "+5V"), ("+3V3",)),
         i2c_signal_label_netlist(reversed_labels=True),
+        i2c_signal_on_named_rail_netlist(),
         same_net_serial_netlist(),
         serial_tx_rx_label_netlist(),
         rs485_data_label_netlist(),

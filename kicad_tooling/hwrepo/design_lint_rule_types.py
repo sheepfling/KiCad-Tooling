@@ -126,6 +126,7 @@ DesignLintRuleId = Literal[
     "bus.i2c_multiple_pullup_rail_families",
     "bus.i2c_peer_reference_review",
     "bus.i2c_signal_label_role_mismatch",
+    "bus.i2c_signal_on_named_rail",
     "bus.i2c_sda_scl_same_net",
     "bus.i2c_address_mismatch",
     "bus.i2c_address_collision",

@@ -14,6 +14,8 @@ HASHSEED_FAMILIES_ENV = "KICAD_TEAM_TOOLING_HASHSEED_FAMILIES"
 REPORT_ORDER = (
     "i2c_array_fault",
     "i2c_array_control",
+    "i2c_signal_named_rail_fault",
+    "i2c_signal_named_rail_control",
     "i2c_array_contract_fault",
     "i2c_array_contract_control",
     "i2c_address_map_fault",
@@ -286,6 +288,7 @@ REPORT_BUILDERS = {
     "pcb_return_paths": "tests.hashseed_probe_cases.pcb_return_paths",
     "pcb_measurements": "tests.hashseed_probe_cases.pcb_measurements",
     "interfaces": "tests.hashseed_probe_cases.interfaces",
+    "i2c_signal_named_rail": "tests.hashseed_probe_cases.i2c_signal_named_rail",
     "analog": "tests.hashseed_probe_cases.analog",
     "schematic_geometry": "tests.hashseed_probe_cases.schematic_geometry",
     "pcb_component_inventory": "tests.hashseed_probe_cases.pcb_component_inventory",

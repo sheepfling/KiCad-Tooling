@@ -131,6 +131,8 @@ _LINT_AREA_MODULES = {
             "tests/test_can_unconnected_direction_pins_native_fixture_lane.py",
             "tests/test_i2c_signal_label_roles.py",
             "tests/test_i2c_signal_label_native_fixture_lane.py",
+            "tests/test_i2c_signal_named_rail.py",
+            "tests/test_design_lint_determinism_i2c_signal_named_rail.py",
             "tests/test_serial_tx_rx_same_net.py",
             "tests/test_serial_tx_rx_same_net_native_fixture_lane.py",
             "tests/test_serial_tx_rx_label_mismatch.py",

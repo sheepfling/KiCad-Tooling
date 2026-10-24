@@ -32,6 +32,7 @@ PROJECT_TOOLCHAINS = tuple(
 )
 @pytest.mark.parametrize(("version", "image"), PROJECT_TOOLCHAINS)
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_signal_on_named_rail")
 def test_native_i2c_signal_label_fault_and_control_repeat(
     tmp_path: Path, version: str, image: str
 ) -> None:
@@ -53,14 +54,20 @@ def test_native_i2c_signal_label_fault_and_control_repeat(
         "i2c-signal-label-fixture/native-export",
         "i2c-signal-label-fixture/control",
         "i2c-signal-label-fixture/fault",
+        "i2c-signal-label-fixture/rail_fault",
     }
     fault = results["i2c-signal-label-fixture/fault"]
     control = results["i2c-signal-label-fixture/control"]
+    rail_fault = results["i2c-signal-label-fixture/rail_fault"]
     assert fault["role_findings"] == "U1.1: SDA on I2C_SCL;U1.2: SCL on I2C_SDA"
     assert control["role_findings"] == "none"
+    assert control["rail_findings"] == "none"
+    assert fault["rail_findings"] == "none"
+    assert rail_fault["role_findings"] == "none"
+    assert rail_fault["rail_findings"] == "U1.1: SDA on return-like net GND"
     native_export = results["i2c-signal-label-fixture/native-export"]
     assert_native_fixture_mounts(root, native_export["command_receipt"])
-    for result in (fault, control):
+    for result in (fault, control, rail_fault):
         assert result["status"] == "PASS"
         assert result["kicad_version"] == version
         assert result["image"] == image

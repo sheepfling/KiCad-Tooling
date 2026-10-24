@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 220 rules are implemented with synthetic regression coverage.
+The following 221 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 220 active rules.
+The catalog currently contains 221 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -543,6 +543,7 @@ skipped under prerelease policy.
 - `bus.i2c_address_collision`
 - `bus.i2c_unmapped_responder`
 - `bus.i2c_signal_label_role_mismatch`
+- `bus.i2c_signal_on_named_rail`
 - `bus.i2c_sda_scl_same_net`
 - `bus.spi_unmapped_participant`
 - `bus.serial_unmapped_peer`
@@ -732,6 +733,12 @@ and optional ecosystem adapters are `P3`.
   heuristic compares exact native MDC/MDIO pin functions with explicit MDC/MDIO
   net labels, including `ETH`, `ETHERNET`, and `SMI` prefixes. Neutral,
   indexed, DNP, ambiguous, open, and same-net cases stay unclassified.
+- **LINT-239 I2C signal pin assigned to a named rail:** A default-review
+  heuristic checks fitted IC pins with exact SDA/SCL functions and a complete
+  native pin-number inventory for one direct assignment to a recognized
+  supply-like or return-like label. It prompts review of intentional rail
+  straps as well as possible assignment mistakes; it does not infer that the
+  pin must connect to an I2C bus or that the label proves voltage.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3128,7 +3135,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 220 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 221 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -5012,6 +5019,44 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_LABEL_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_ethernet_management_label_native_fixture_lane.py \
       -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_label_mismatch")'
+  ```
+
+#### LINT-239 — Review fitted I2C SDA/SCL pins assigned to named rails
+
+- **Status:** Implemented as the default-`review` `bus.i2c_signal_on_named_rail`
+  heuristic, with project overrides for `review`, `block`, `off`, and exact
+  finding ignores.
+- **Gap:** The I2C pin/name check catches SDA/SCL role swaps but stays quiet
+  when a correctly named SDA or SCL pin is assigned directly to a return or
+  supply-like net. ERC can consider the netlist valid without knowing whether
+  the pin-to-rail assignment is intended.
+- **Predicate:** For each fitted U/IC with a unique explicit SDA/SCL native
+  function, require that pin number in the exported component inventory and
+  exactly one assigned net. Prompt only when the net label matches the bounded
+  supply-like or return-like vocabulary. DNP, connector-only, open, ambiguous,
+  incomplete-inventory, indexed, and vendor-specific cases remain outside the
+  rule.
+- **Boundary:** A named rail is a label clue, not proof of electrical
+  potential or an authoritative I2C requirement. Static straps and unused
+  endpoints may be intentional. The finding asks for review and does not
+  require a connection, establish bus membership, or prove PCB continuity.
+- **Fixtures and quality gate:** Synthetic GND, `0V PWM 2`, and `+3V3` faults;
+  neutral-label, indexed-function, connector, DNP, open, ambiguous, and
+  incomplete-inventory controls; configurable policy and exact-ignore cases;
+  stable ordering and assignment repair. A source-hashed schematic fault and
+  valid control export twice on digest-pinned KiCad 10.0.0 and 10.0.5. The
+  catalog, exact native fixture switch, focused selectors, marker registry,
+  rule reachability, and theme-owned module size are checked. Fixtures are
+  tooling-authored and contain no project design data.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_i2c_signal_named_rail.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2c_signal_on_named_rail")'
+
+  KICAD_RUN_NATIVE_I2C_SIGNAL_LABEL_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_i2c_signal_label_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_signal_on_named_rail")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

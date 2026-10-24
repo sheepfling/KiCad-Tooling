@@ -1,4 +1,4 @@
-"""Digest-pinned native fixture lane for I2C SDA/SCL label review."""
+"""Digest-pinned native fixture lane for I2C pin/net role reviews."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 def i2c_signal_label_fixture_lane(root: Path, *, version: str, image: str, log: HostedLog) -> None:
-    """Verify crossed SDA/SCL labels against a control with repeated native exports."""
+    """Verify I2C name-role and direct-rail faults against a control with repeated exports."""
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.design_lint import evaluate
     from .hwrepo.design_lint_report_models import DesignLintReport
@@ -36,11 +36,13 @@ def i2c_signal_label_fixture_lane(root: Path, *, version: str, image: str, log: 
     sources = {
         "control": fixture_root / "correct-i2c-lines.kicad_sch",
         "fault": fixture_root / "mismatched-i2c-lines.kicad_sch",
+        "rail_fault": fixture_root / "sda-on-ground.kicad_sch",
     }
     source_hashes = {case: digest(source) for case, source in sources.items()}
     expected_hashes = {
         "control": "c9129c01d99cc2636e2c1f5176fbf04cadc0ec875562ea83cc9f6dabe9ccf586",
         "fault": "a9e9f961a03948608a2c36e2c7bf718003c8e3453f01593ce951ccdeb7d9774c",
+        "rail_fault": "a79212cd736bb83af906f7537cca72085fd190f7c5b1f0775b2fa9b4a4c476a9",
     }
     if source_hashes != expected_hashes:
         raise ValueError("I2C signal-role fixture sources changed from their reviewed hashes")
@@ -64,7 +66,7 @@ def i2c_signal_label_fixture_lane(root: Path, *, version: str, image: str, log: 
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
         f'test "$actual" = "{version}"\n'
-        "for case in control fault; do\n"
+        "for case in control fault rail_fault; do\n"
         "  for run in first repeat; do\n"
         '    kicad-cli sch export netlist --format kicadxml --output "/output/${case}.${run}.netlist.xml" '
         '"/fixtures/${case}.kicad_sch"\n'
@@ -152,15 +154,25 @@ def i2c_signal_label_fixture_lane(root: Path, *, version: str, image: str, log: 
         raise ValueError("Native I2C signal-role exports differ after netlist normalization")
 
     expected_subjects = ("U1.1: SDA on I2C_SCL", "U1.2: SCL on I2C_SDA")
-    rule_id = "bus.i2c_signal_label_role_mismatch"
-    for case in ("control", "fault"):
+    label_rule_id = "bus.i2c_signal_label_role_mismatch"
+    rail_rule_id = "bus.i2c_signal_on_named_rail"
+    for case in ("control", "fault", "rail_fault"):
         report = reports[(case, "first")]
-        findings = tuple(item for item in report.findings if item.rule_id == rule_id)
-        subjects = tuple(item.subject for item in findings)
-        expected = expected_subjects if case == "fault" else ()
-        if subjects != expected:
+        label_findings = tuple(item for item in report.findings if item.rule_id == label_rule_id)
+        label_subjects = tuple(item.subject for item in label_findings)
+        expected_label = expected_subjects if case == "fault" else ()
+        if label_subjects != expected_label:
             raise ValueError(
-                f"Native I2C signal-role {case} produced {subjects!r}; expected {expected!r}"
+                f"Native I2C signal-role {case} produced {label_subjects!r}; "
+                f"expected {expected_label!r}"
+            )
+        rail_findings = tuple(item for item in report.findings if item.rule_id == rail_rule_id)
+        rail_subjects = tuple(item.subject for item in rail_findings)
+        expected_rail = ("U1.1: SDA on return-like net GND",) if case == "rail_fault" else ()
+        if rail_subjects != expected_rail:
+            raise ValueError(
+                f"Native I2C named-rail {case} produced {rail_subjects!r}; "
+                f"expected {expected_rail!r}"
             )
         log.event(
             f"i2c-signal-label-fixture/{case}",
@@ -175,7 +187,8 @@ def i2c_signal_label_fixture_lane(root: Path, *, version: str, image: str, log: 
             repeat_normalized_netlist_sha256=normalized_hashes[(case, "repeat")],
             repeatable="true",
             lint_status=report.status,
-            role_findings=";".join(subjects) if subjects else "none",
+            role_findings=";".join(label_subjects) if label_subjects else "none",
+            rail_findings=";".join(rail_subjects) if rail_subjects else "none",
         )
     log.event(
         "i2c-signal-label-fixture/native-export",

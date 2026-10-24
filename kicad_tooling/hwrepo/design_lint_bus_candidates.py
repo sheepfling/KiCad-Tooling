@@ -32,6 +32,7 @@ from .i2c_peer_reference_scan import I2cPeerReferenceScan
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .i2c_same_net import i2c_sda_scl_same_net_candidates
 from .i2c_signal_label import i2c_signal_label_role_candidates
+from .i2c_signal_named_rail import i2c_signal_on_named_rail_candidates
 from .models import NetlistContract
 from .pcb_drc_models import PcbDifferentialPairRuleMap
 from .rs485_peer_reference_types import Rs485PeerReferenceScan
@@ -73,6 +74,7 @@ def bus_candidates(
             component_peer_findings,
         ),
         *i2c_signal_label_role_candidates(observed),
+        *i2c_signal_on_named_rail_candidates(observed),
         *i2c_sda_scl_same_net_candidates(observed),
         *serial_tx_rx_label_mismatch_candidates(observed),
         *serial_tx_rx_same_net_candidates(observed),
