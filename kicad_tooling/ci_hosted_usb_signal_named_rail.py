@@ -106,16 +106,16 @@ def _usb_named_rail_fixture_lane(
             ),
             "control": (),
         }
-    fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint" / fixture_directory
+    fixture_root = (
+        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint" / fixture_directory
+    )
     sources = {case: fixture_root / f"{case}.kicad_sch" for case in ("fault", "control")}
     source_hashes = {case: digest(source) for case, source in sources.items()}
     if source_hashes != reviewed_hashes:
         raise ValueError(f"USB {feature} named-rail sources differ from their reviewed hashes")
 
     scratch = Path(
-        tempfile.mkdtemp(
-            prefix=f"usb-{feature}-named-rail-{version}-", dir=log.directory.resolve()
-        )
+        tempfile.mkdtemp(prefix=f"usb-{feature}-named-rail-{version}-", dir=log.directory.resolve())
     )
     inputs = scratch / "input"
     inputs.mkdir()
@@ -188,15 +188,14 @@ def _usb_named_rail_fixture_lane(
             netlist_path = output / f"{case}.{run}.netlist.xml"
             erc_path = output / f"{case}.{run}.erc.json"
             if not netlist_path.is_file() or not erc_path.is_file():
-                raise ValueError(
-                    f"Native KiCad omitted USB {feature} named-rail {case} evidence"
-                )
+                raise ValueError(f"Native KiCad omitted USB {feature} named-rail {case} evidence")
             observed = read_netlist(netlist_path)
-            if expected_pin_functions is not None and observed.pin_functions != expected_pin_functions:
-                raise ValueError(f"Native USB {feature} {case} pin functions changed")
-            if any(
-                observed.nets.get(net) != pins for net, pins in expected_nets[case].items()
+            if (
+                expected_pin_functions is not None
+                and observed.pin_functions != expected_pin_functions
             ):
+                raise ValueError(f"Native USB {feature} {case} pin functions changed")
+            if any(observed.nets.get(net) != pins for net, pins in expected_nets[case].items()):
                 raise ValueError(f"Native USB {feature} named-rail {case} net assignments changed")
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
@@ -230,7 +229,9 @@ def _usb_named_rail_fixture_lane(
         repeat = normalized_hashes[(case, "repeat")]
         expected = expected_subjects[case]
         if first != repeat or findings[(case, "first")] != expected:
-            raise ValueError(f"Native USB {feature} named-rail {case} result differs from its fixture")
+            raise ValueError(
+                f"Native USB {feature} named-rail {case} result differs from its fixture"
+            )
         if findings[(case, "repeat")] != findings[(case, "first")]:
             raise ValueError(f"Native USB {feature} named-rail {case} findings are not repeatable")
         log.event(

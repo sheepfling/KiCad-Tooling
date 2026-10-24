@@ -157,8 +157,13 @@ def test_project_policy_can_block_disable_or_ignore_an_intentional_assignment() 
     )
 
     assert blocked.status == "FAIL"
-    assert next(item for item in disabled.findings if item.rule_id == RULE_ID).disposition == "RULE_OFF"
-    assert next(item for item in ignored.findings if item.rule_id == RULE_ID).disposition == "IGNORED"
+    assert (
+        next(item for item in disabled.findings if item.rule_id == RULE_ID).disposition
+        == "RULE_OFF"
+    )
+    assert (
+        next(item for item in ignored.findings if item.rule_id == RULE_ID).disposition == "IGNORED"
+    )
 
 
 def test_mapping_order_is_stable_and_corrected_assignments_clear_review() -> None:
@@ -166,7 +171,9 @@ def test_mapping_order_is_stable_and_corrected_assignments_clear_review() -> Non
     reordered = fault.model_copy(update={"nets": dict(reversed(tuple(fault.nets.items())))})
     repaired = usb_c_cc_named_rail_netlist(cc1_net="CC1_BUS", cc2_net="CC2_BUS")
     findings = tuple(item for item in _report(fault).findings if item.rule_id == RULE_ID)
-    reordered_findings = tuple(item for item in _report(reordered).findings if item.rule_id == RULE_ID)
+    reordered_findings = tuple(
+        item for item in _report(reordered).findings if item.rule_id == RULE_ID
+    )
 
     assert tuple(item.model_dump() for item in findings) == tuple(
         item.model_dump() for item in reordered_findings

@@ -26,9 +26,7 @@ def usb_c_cc_signal_on_named_rail_candidates(
         role = usb_c_cc_role(function)
         if not separator or not number or role is None:
             continue
-        cc_roles_by_reference.setdefault(reference.casefold(), {}).setdefault(role, []).append(
-            pin
-        )
+        cc_roles_by_reference.setdefault(reference.casefold(), {}).setdefault(role, []).append(pin)
 
     candidates: list[Candidate] = []
     for item in assigned_named_rail_ic_pins(observed):

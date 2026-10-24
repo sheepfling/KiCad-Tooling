@@ -35,7 +35,6 @@ def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-
 @pytest.mark.parametrize(
     ("rule_id", "expected_node"),
     (
