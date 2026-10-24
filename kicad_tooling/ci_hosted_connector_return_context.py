@@ -7,6 +7,7 @@ import os
 import shutil
 import sys
 import tempfile
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
@@ -17,6 +18,7 @@ from .ci_hosted_connector_return_fixture_sources import (
 )
 from .hwrepo.contracts import write_model
 from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.design_lint_rule_types import DesignLintRuleId
 from .hwrepo.models import (
     NetlistContract,
     ProjectConfig,
@@ -54,6 +56,7 @@ def prepare_connector_return_fixture_context(
     *,
     case_names: tuple[str, ...] | None = None,
     stage_prefix: str = "connector-return-fixture",
+    rule_overrides_by_case: Mapping[str, tuple[DesignLintRuleId, ...]] | None = None,
 ) -> ConnectorReturnFixtureContext:
     """Prepare digest-pinned synthetic inputs and repeated native netlist reports."""
     import hashlib
@@ -88,6 +91,12 @@ def prepare_connector_return_fixture_context(
     unknown_cases = tuple(case for case in cases if case not in fixture_sources)
     if unknown_cases:
         raise ValueError(f"Unknown connector-return fixture cases: {unknown_cases}")
+    overrides = {} if rule_overrides_by_case is None else dict(rule_overrides_by_case)
+    unknown_override_cases = tuple(case for case in overrides if case not in cases)
+    if unknown_override_cases:
+        raise ValueError(f"Rule overrides name cases outside this lane: {unknown_override_cases}")
+    if any(not rule_ids or len(set(rule_ids)) != len(rule_ids) for rule_ids in overrides.values()):
+        raise ValueError("Per-case native fixture rule overrides must be non-empty and unique")
     fixtures = {case: fixture_sources[case] for case in cases}
     source_hashes = {case: digest(path) for (case, path) in fixtures.items()}
     expected_source_hashes = CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES
@@ -267,6 +276,28 @@ def prepare_connector_return_fixture_context(
                             reason="Synthetic native fixture explicitly enables the opt-in heuristic",
                         ),
                     )
+                )
+            extra_rule_ids = overrides.get(case, ())
+            if extra_rule_ids:
+                existing_rule_ids = {item.rule_id for item in policy.rules}
+                if existing_rule_ids.intersection(extra_rule_ids):
+                    raise ValueError(
+                        f"Duplicate rule override configured for native fixture {case}"
+                    )
+                policy = policy.model_copy(
+                    update={
+                        "rules": (
+                            *policy.rules,
+                            *(
+                                DesignLintRuleOverride(
+                                    rule_id=rule_id,
+                                    mode="review",
+                                    reason="Synthetic native fixture explicitly enables the opt-in heuristic",
+                                )
+                                for rule_id in extra_rule_ids
+                            ),
+                        )
+                    }
                 )
             reports[case, run] = evaluate(project_id, coach, policy)
     return ConnectorReturnFixtureContext(

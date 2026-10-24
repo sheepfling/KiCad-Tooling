@@ -1771,7 +1771,7 @@
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
       "predicate": "Within one fitted non-connector component with a complete native pin-function inventory, group explicit signal pins by exact normalized function and electrical type. If at least two group members each have exactly one native net assignment and those assignments differ, emit one REVIEW candidate for the group.",
       "supported_kicad_versions": [
-        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+        "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixtures; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Repeated same-function signal pins may represent separate channels, alternate modes, or intentional isolation; the prompt does not assert that the pins should be tied.",
@@ -1780,10 +1780,12 @@
       ],
       "fault_fixtures": [
         "tests.test_component_repeated_signal_pins.test_split_repeated_signal_pins_request_configurable_review_with_exact_evidence",
-        "tests.test_component_repeated_signal_pins.test_rule_is_opt_in_by_default_and_project_policy_controls_it"
+        "tests.test_component_repeated_signal_pins.test_rule_is_opt_in_by_default_and_project_policy_controls_it",
+        "tests.test_component_repeated_signal_pins.test_native_repeated_signal_pin_fault_and_control_are_focused_and_repeatable"
       ],
       "valid_control_fixtures": [
-        "tests.test_component_repeated_signal_pins.test_common_and_unsupported_shapes_stay_quiet"
+        "tests.test_component_repeated_signal_pins.test_common_and_unsupported_shapes_stay_quiet",
+        "tests.test_component_repeated_signal_pins.test_native_repeated_signal_pin_fault_and_control_are_focused_and_repeatable"
       ],
       "metamorphic_fixtures": [
         "tests.test_component_repeated_signal_pins.test_mapping_order_is_stable_and_commoning_clears_the_finding"
@@ -1793,7 +1795,10 @@
         "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates"
       ],
       "theme": "components",
-      "implementation_owner": "kicad_tooling/hwrepo/component_repeated_signal_pins.py#component_signal_pin_net_divergences"
+      "implementation_owner": "kicad_tooling/hwrepo/component_repeated_signal_pins.py#component_signal_pin_net_divergences",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_REPEATED_SIGNAL_PIN_FIXTURES"
+      ]
     },
     {
       "rule_id": "component.peer_power_pin_assignment_divergence",

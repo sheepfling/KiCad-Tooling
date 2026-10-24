@@ -315,11 +315,22 @@ parts, generic or incomplete pin metadata, power/return/shield functions, and
 open or ambiguous assignments. The netlist does not establish PCB continuity
 or the component's internal behavior. Project policy can enable REVIEW, promote
 the finding to `block`, or ignore its exact fingerprint. See the
-[synthetic fixture record](../tests/fixtures/design_lint/repeated-signal-pin-functions/README.md).
+[synthetic fixture record](../tests/fixtures/design_lint/repeated-signal-pin-functions/README.md)
+and the
+[exact native fault/control pair](../tests/fixtures/design_lint/repeated-signal-pin-functions-native/README.md).
 
 ```sh
 .venv/bin/python -I -m pytest tests/test_component_repeated_signal_pins.py \
   -m 'design_lint and component_lint and design_lint_rule(rule_id="component.repeated_signal_pin_assignment_divergence")'
+```
+
+The exact native adapter lane runs on KiCad 10.0.0 and 10.0.5 during package
+acceptance and the rule-scoped prerelease gate:
+
+```sh
+KICAD_RUN_NATIVE_COMPONENT_REPEATED_SIGNAL_PIN_FIXTURES=1 \
+  .venv/bin/python -I -m pytest tests/test_component_repeated_signal_pins.py \
+  -m 'design_lint and component_lint and native_kicad and design_lint_rule(rule_id="component.repeated_signal_pin_assignment_divergence")'
 ```
 
 ## Review project-mapped stateful connector contacts

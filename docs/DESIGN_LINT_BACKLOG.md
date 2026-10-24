@@ -4574,9 +4574,12 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Fixtures and quality gate:** Typed synthetic split fault and common-net
   control cover project policy, exact evidence, DNP and connector exclusions,
   generic functions, incomplete metadata, different electrical types, open
-  assignments, and input-order stability. The catalog requires fault, valid
-  control, and metamorphic fixtures; the component marker registry enables a
-  focused pytest selection. No proprietary source or example is used.
+  assignments, and input-order stability. A tooling-owned native schematic
+  fault/control pair exercises the KiCad XML netlist adapter on digest-pinned
+  KiCad 10.0.0 and 10.0.5, including repeated-export stability. The catalog
+  requires fault, valid-control, metamorphic, and exact-native fixtures; the
+  component marker registry enables a focused pytest selection. No proprietary
+  source or example is used.
 - **Focused selection:**
 
   ```sh

@@ -113,13 +113,22 @@ KICAD_RUN_NATIVE_COMPONENT_BASE_DRIVE_FIXTURES=1 \
   -m 'design_lint and design_lint_rule(rule_id="component.bjt_base_direct_drive")'
 ```
 
-The repeated signal-pin review is opt-in and uses only typed synthetic
-netlists. Select its fault, valid controls, policy cases, and determinism check
-with:
+The repeated signal-pin review is opt-in. Its typed netlist tests cover policy,
+fault/control, exclusions, and determinism; its digest-pinned native lane checks
+KiCad's extracted pin functions and assignments on 10.0.0 and 10.0.5. Select
+the fast cases with:
 
 ```sh
 .venv/bin/python -I -B -m pytest -q tests/test_component_repeated_signal_pins.py \
   -m 'design_lint and component_lint and design_lint_rule(rule_id="component.repeated_signal_pin_assignment_divergence")'
+```
+
+Run only its exact native cases with:
+
+```sh
+KICAD_RUN_NATIVE_COMPONENT_REPEATED_SIGNAL_PIN_FIXTURES=1 \
+  .venv/bin/python -I -B -m pytest -q tests/test_component_repeated_signal_pins.py \
+  -m 'design_lint and component_lint and native_kicad and design_lint_rule(rule_id="component.repeated_signal_pin_assignment_divergence")'
 ```
 
 The source-bound contract-coach tests are split by inspection/reporting and
