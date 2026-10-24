@@ -234,12 +234,10 @@ def complementary_signal_gaps(
         if not separator or reference.casefold() in dnp_references:
             continue
         symbol = observed.component_symbols.get(reference)
-        if symbol is None:
-            continue
         compact = _complementary_function_key(function)
         role = _COMPLEMENTARY_FUNCTIONS.get(compact)
         alias_entry = None
-        if role is None:
+        if role is None and symbol is not None:
             for candidate in alias_resolution.by_symbol.get(symbol, ()):
                 if compact in {
                     _complementary_function_key(item) for item in candidate.positive_functions
@@ -269,9 +267,9 @@ def complementary_signal_gaps(
             for side in ("positive", "negative")
         }
         if not pins["positive"] or not pins["negative"]:
-            reason = "one recognized pair side is absent from the symbol pin functions"
+            reason = "one recognized pair side is absent from the pin-function inventory"
         elif len(pins["positive"]) != 1 or len(pins["negative"]) != 1:
-            reason = "the symbol maps multiple pins to one pair side"
+            reason = "the component instance maps multiple pins to one pair side"
         elif any(len(pin_nets.get(pin, ())) != 1 for side in pins.values() for pin in side):
             reason = "one or both pair pins lack a unique schematic net assignment"
         else:

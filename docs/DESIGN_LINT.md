@@ -8,14 +8,16 @@ finding. Tooling owns the rules and report format.
 ## Review incomplete complementary pairs
 
 `bus.complementary_pair_assignment` recognizes bounded pin-function pairs
-within one symbol, including Ethernet `TD+`/`TD-`, `TDP`/`TDN`, `RD+`/`RD-`,
+within one component instance, including Ethernet `TD+`/`TD-`, `TDP`/`TDN`, `RD+`/`RD-`,
 and `RDP`/`RDN` spellings. It reports a missing counterpart, an open or
 ambiguous assignment, or both pair members assigned to the same schematic net.
 It defaults to `review`: Ethernet PHY variants, intentionally unused pairs,
 and project-specific naming still need review. The rule does not infer which
 connector should attach to which PHY, validate polarity, or establish PCB
-routing or continuity. Project-authored aliases remain available for exact
-native symbol identities.
+routing or continuity. Built-in aliases use the native pin-function inventory
+and do not depend on a library symbol ID being present in normalized evidence.
+Project-authored aliases remain bound to exact native symbol identities; when
+that identity is missing or stale, the project alias map blocks lint for review.
 
 Synthetic tests cover each built-in Ethernet spelling. The exact
 KiCad 10.0.0/10.0.5 native fixture includes an open `TDN` fault beside a

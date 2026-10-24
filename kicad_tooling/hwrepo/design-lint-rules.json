@@ -6292,18 +6292,19 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Within one symbol, a recognized built-in pair or project-authored pin-function alias bound to an exact KiCad symbol identity is missing a counterpart function, has multiple pins on one side, lacks a unique net assignment, or places both functions on one schematic net. Built-in aliases include Ethernet TD+/TD-, TDP/TDN, RD+/RD-, and RDP/RDN pin-function forms.",
+      "predicate": "Within one component instance, a recognized built-in pair or project-authored pin-function alias bound to an exact KiCad symbol identity is missing a counterpart function, has multiple pins on one side, lacks a unique net assignment, or places both functions on one schematic net. Built-in aliases are matched from native pin-function evidence without requiring a library symbol identity; they include Ethernet TD+/TD-, TDP/TDN, RD+/RD-, and RDP/RDN pin-function forms.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
-        "Built-in pin-function aliases are bounded to the documented names. Project-authored aliases are opt-in, scoped to an exact native KiCad symbol identity, and require a review basis; a stale symbol or function mapping blocks lint until refreshed.",
+        "Built-in pin-function aliases are bounded to the documented names and do not prove that a specific library symbol implements the expected function. Project-authored aliases are opt-in, scoped to an exact native KiCad symbol identity, and require a review basis; a missing or stale symbol or function mapping blocks lint until refreshed.",
         "Lane-indexed USB-C TX1/TX2 and RX1/RX2 pairs are outside this single-pair-per-role heuristic.",
         "The rule does not infer a project requirement, validate signal polarity, prove off-board continuity, or establish physical pair routing; aliases describe project review intent, not electrical approval.",
         "Fitted-symbol assignments are reviewed. DNP symbols are skipped; an intentionally unused fitted pair or deliberate same-net test mode needs an exact project-owned ignore or another reviewed decision."
       ],
       "fault_fixtures": [
         "tests.test_design_lint_complementary_pairs.test_complementary_pair_assignments_are_reviewed_without_inferred_requirements",
+        "tests.test_design_lint_complementary_pairs.test_builtin_pairs_do_not_require_native_symbol_library_ids",
         "tests.test_design_lint_complementary_pairs.test_usb_superspeed_connector_aliases_have_fault_and_control_coverage",
         "tests.test_design_lint_complementary_pairs.test_ethernet_media_pair_aliases_have_fault_and_control_coverage",
         "tests.test_complementary_pair_native_fixture_lane.test_complementary_pair_fault_and_control_export_repeatably",
@@ -6311,6 +6312,7 @@
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_complementary_pairs.test_complementary_pair_assignments_are_reviewed_without_inferred_requirements",
+        "tests.test_design_lint_complementary_pairs.test_builtin_pairs_do_not_require_native_symbol_library_ids",
         "tests.test_design_lint_complementary_pairs.test_usb_superspeed_connector_aliases_have_fault_and_control_coverage",
         "tests.test_design_lint_complementary_pairs.test_ethernet_media_pair_aliases_have_fault_and_control_coverage",
         "tests.test_complementary_pair_native_fixture_lane.test_complementary_pair_fault_and_control_export_repeatably",
@@ -6324,6 +6326,7 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_complementary_pairs.test_complementary_pair_finding_is_order_stable_and_assignment_clears_it",
+        "tests.test_design_lint_complementary_pairs.test_builtin_pairs_do_not_require_native_symbol_library_ids",
         "tests.test_design_lint_complementary_pairs.test_project_complementary_aliases_are_symbol_scoped_and_stale_maps_block"
       ],
       "implementation_refs": [

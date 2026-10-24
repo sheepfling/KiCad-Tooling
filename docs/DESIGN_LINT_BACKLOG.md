@@ -2490,7 +2490,10 @@ is not a reason by itself to expand its scope or change its default policy.
   CANH/CANL, USB D+/D−, USB SuperSpeed SSTX/SSRX, TX+/TX−, and RX+/RX−
   aliases, Ethernet TD+/TD−, TDP/TDN, RD+/RD−, and RDP/RDN aliases, plus
   opt-in project aliases tied to an exact native symbol identity.
-  Stale symbol/function mappings block lint; fitted DNP symbols are skipped.
+  Built-in alias matching uses native pin-function evidence without depending
+  on a library symbol ID; project aliases still require exact identity.
+  Stale or unavailable project symbol/function mappings block lint; fitted
+  DNP symbols are skipped.
   Connector peer mapping and physical pair constraints remain separate work.
 - **Problem:** A named pair can be half-connected or have one side routed to a
   different interface while ordinary pin-assignment checks pass.
@@ -2515,11 +2518,15 @@ is not a reason by itself to expand its scope or change its default policy.
   a missing-net fault, a valid pair, a DNP control, stale-map blocking, exact
   symbol binding, CLI/MCP parity, and order-stable alias digests. Add
   project-authored peer maps before comparing across connectors or active devices.
+  Synthetic faults and controls confirm that all built-in pair families behave
+  the same with and without a native library symbol ID, while project aliases
+  block if that identity is unavailable.
 - **Boundary:** Pin naming is vendor- and symbol-dependent; A/B polarity is
   inconsistent across RS-485 vendors. Do not infer off-board pairing,
   impedance, polarity correctness, or isolation from names. Keep this a review
   hint unless an interface contract gives the pair map.
-- **Fixtures:** Synthetic open USB data side; Ethernet TD+/TD−, TDP/TDN,
+- **Fixtures:** Synthetic open USB data side; all built-in pair families with
+  and without library symbol identity; Ethernet TD+/TD−, TDP/TDN,
   RD+/RD−, and RDP/RDN alias fault/control cases; both sides on one net; complete
   USB data pair on separate nets; intentionally unused pair with an exact
   project-owned ignore; Standard-A/Standard-B SuperSpeed aliases with open-line

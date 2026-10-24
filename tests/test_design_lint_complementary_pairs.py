@@ -79,7 +79,7 @@ def test_complementary_pair_assignments_are_reviewed_without_inferred_requiremen
         if item.rule_id == "bus.complementary_pair_assignment"
     )
     assert missing_function.evidence["negative_pins"] == ()
-    assert "absent from the symbol pin functions" in missing_function.message
+    assert "absent from the pin-function inventory" in missing_function.message
 
     valid_pair = evaluate("synthetic-usb", coach(complementary_usb_netlist()), DesignLintPolicy())
     assert not (
@@ -145,6 +145,59 @@ def test_usb_superspeed_connector_aliases_have_fault_and_control_coverage(prefix
     assert findings[0].evidence["positive_pins"] == ("J1.3",)
     assert findings[0].evidence["negative_pins"] == ("J1.4",)
     assert findings[0].evidence["negative_nets"] == ()
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.complementary_pair_assignment")
+@pytest.mark.parametrize(
+    ("positive_function", "negative_function", "family"),
+    (
+        ("CANH", "CANL", "CAN"),
+        ("D+", "D-", "USB data"),
+        ("TX+", "TX-", "TX"),
+        ("RX+", "RX-", "RX"),
+        ("TD+", "TD-", "Ethernet TX"),
+        ("RD+", "RD-", "Ethernet RX"),
+        ("SSTX+", "SSTX-", "USB SuperSpeed TX"),
+        ("SSRX+", "SSRX-", "USB SuperSpeed RX"),
+    ),
+    ids=("can", "usb2", "tx", "rx", "ethernet-tx", "ethernet-rx", "usb-ss-tx", "usb-ss-rx"),
+)
+def test_builtin_pairs_do_not_require_native_symbol_library_ids(
+    positive_function: str,
+    negative_function: str,
+    family: str,
+) -> None:
+    rule_id = "bus.complementary_pair_assignment"
+    observations = (
+        NetlistContract(
+            components={},
+            nets={"POS": ("U1.1",), "NEG": ("U1.2",)},
+            pin_functions={"U1.1": positive_function, "U1.2": negative_function},
+        ),
+        NetlistContract(
+            components={},
+            nets={"POS": ("U1.1",), "NEG": ("U1.2",)},
+            component_symbols={"U1": "Synthetic:GenericPair"},
+            pin_functions={"U1.1": positive_function, "U1.2": negative_function},
+        ),
+    )
+
+    signatures = []
+    for control in observations:
+        assert not any(item.rule_id == rule_id for item in candidates(control))
+
+        fault_nets = {"POS": ("U1.1", "U1.2")} if family == "CAN" else {"POS": ("U1.1",)}
+        fault = control.model_copy(update={"nets": fault_nets})
+        findings = [item for item in candidates(fault) if item.rule_id == rule_id]
+        assert len(findings) == 1
+        assert findings[0].subject == f"U1: {family} pair"
+        assert findings[0].evidence["positive_pins"] == ("U1.1",)
+        assert findings[0].evidence["negative_pins"] == ("U1.2",)
+        expected_negative_nets = ("POS",) if family == "CAN" else ()
+        assert findings[0].evidence["negative_nets"] == expected_negative_nets
+        signatures.append((fingerprint(findings[0]), findings[0].message, findings[0].evidence))
+
+    assert signatures[0] == signatures[1]
 
 
 @pytest.mark.parametrize(
@@ -338,6 +391,15 @@ def test_project_complementary_aliases_are_symbol_scoped_and_stale_maps_block() 
     )
     assert exact_identity.status == "BLOCKED"
     assert any("no exact native symbol instance" in item for item in exact_identity.issues)
+
+    missing_symbol_identity = fault_source.model_copy(update={"component_symbols": {}})
+    unresolved_alias = evaluate(
+        "synthetic-vendor-pair",
+        coach(missing_symbol_identity),
+        policy,
+    )
+    assert unresolved_alias.status == "BLOCKED"
+    assert any("no exact native symbol instance" in item for item in unresolved_alias.issues)
 
     repeated_builtin = alias.model_copy(
         update={"positive_functions": ("TX+",), "negative_functions": ("TX-",)}
