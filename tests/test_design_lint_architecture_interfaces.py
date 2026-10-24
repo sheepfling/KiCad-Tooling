@@ -287,6 +287,23 @@ def test_rs485_data_same_net_rule_uses_a_focused_predicate_owner() -> None:
     )
 
 
+def test_rs485_named_rail_rule_uses_a_focused_predicate_owner() -> None:
+    from kicad_tooling.hwrepo.design_lint import rule_catalog
+
+    rule = next(
+        item for item in rule_catalog().rules if item.rule_id == "bus.rs485_signal_on_named_rail"
+    )
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == (
+        "kicad_tooling/hwrepo/rs485_signal_named_rail.py#rs485_signal_on_named_rail_candidates"
+    )
+    assert rule.implementation_owner in rule.implementation_refs
+    assert (
+        "kicad_tooling/hwrepo/rs485_data_functions.py#explicit_rs485_transceiver_identity"
+        in rule.implementation_refs
+    )
+
+
 def test_spi_data_same_net_rule_uses_a_focused_predicate_owner() -> None:
     from kicad_tooling.hwrepo.design_lint import rule_catalog
 

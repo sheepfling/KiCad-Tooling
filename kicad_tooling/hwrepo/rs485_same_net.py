@@ -6,7 +6,7 @@ from .casefold_mapping_lookup import lookup_unique_casefold
 from .component_references import is_integrated_circuit_reference
 from .design_lint_types import Candidate
 from .models import NetlistContract
-from .rs485_data_functions import is_explicit_rs485_transceiver_identity, rs485_data_pin_role
+from .rs485_data_functions import explicit_rs485_transceiver_identity, rs485_data_pin_role
 
 RULE_ID = "bus.rs485_data_input_output_same_net"
 
@@ -54,12 +54,8 @@ def rs485_data_input_output_same_net_candidates(
         ):
             continue
 
-        symbol = lookup_unique_casefold(observed.component_symbols, reference)
-        component = lookup_unique_casefold(observed.components, reference)
-        identity = " ".join(
-            value for value in (symbol, component.value if component else None) if value
-        )
-        if not is_explicit_rs485_transceiver_identity(identity):
+        identity = explicit_rs485_transceiver_identity(observed, reference)
+        if identity is None:
             continue
 
         inventory = lookup_unique_casefold(observed.component_pin_numbers, reference)

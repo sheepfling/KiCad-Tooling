@@ -286,6 +286,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "tests/test_rs485_data_input_output_same_net.py::test_explicit_rs485_driver_input_and_receiver_output_on_one_net_are_reviewed",
         ),
         (
+            "bus.rs485_signal_on_named_rail",
+            "tests/test_rs485_signal_named_rail.py::test_explicit_rs485_data_pins_on_named_rails_request_review[U1.1-GND-D-tx]",
+        ),
+        (
             "bus.rs485_unconnected_data_pin",
             "tests/test_rs485_unconnected_data_pins.py::test_open_rs485_data_pin_emits_pair_identity_and_net_evidence",
         ),

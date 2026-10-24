@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 227 rules are implemented with synthetic regression coverage.
+The following 228 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 227 active rules.
+The catalog currently contains 228 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -559,6 +559,7 @@ skipped under prerelease policy.
 - `bus.rs485_peer_reference_review`
 - `bus.rs485_data_direction_label_mismatch`
 - `bus.rs485_data_input_output_same_net`
+- `bus.rs485_signal_on_named_rail`
 - `bus.rs485_unconnected_data_pin`
 - `bus.usb_peer_reference_review`
 - `bus.usb_unconnected_data_pin`
@@ -3178,7 +3179,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 227 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 228 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -3356,7 +3357,7 @@ is not a reason by itself to expand its scope or change its default policy.
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
 - **Status:** Implemented v86. The cross-process probe supports themed report
-  selectors and retains the complete 271-report inventory gate. Fault/control
+  selectors and retains the complete 273-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -5312,6 +5313,43 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_ethernet_management_signal_named_rail_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_signal_on_named_rail")'
+  ```
+
+#### LINT-246 — Review RS-485 data pins assigned to named rails
+
+- **Status:** Implemented as default-review
+  `bus.rs485_signal_on_named_rail`. A project may promote it to `block`, turn
+  it `off`, or ignore an exact finding.
+- **Gap:** RS-485 D/DI and R/RO functions were already used for pair topology
+  checks, but direct assignments to supply-like or return-like labels had no
+  focused review prompt.
+- **Predicate:** Require a fitted U/IC, a bounded D/DI/DriverDataIn/DriverInput
+  or R/RO/ReceiverDataOut/ReceiverOutput function, explicit RS-485 identity in
+  the native symbol library ID or component value, complete native pin-number
+  inventory membership, and exactly one assignment to a recognized rail-like
+  label. The rule reuses the canonical RS-485 identity and named-rail evidence
+  helpers.
+- **Boundary:** Generic D/R pins and the SN65HVD23x CAN identity do not qualify.
+  Function, identity, and label are review clues; a direct strap may be
+  intentional for a chosen transceiver mode. The finding does not establish
+  electrical potential, a defect, PCB copper, or physical continuity.
+- **Fixtures and quality gate:** D/DI/R/RO aliases and explicit identity
+  markers; neutral-label, generic-logic, CAN, DNP, open, ambiguous, connector,
+  and incomplete-inventory controls; project `block`, `off`, and exact-ignore
+  policy; stable ordering and repair; process-level hash-seed comparison;
+  catalog and rule-selector reachability; and source-hashed, repeated native
+  netlist/ERC fault/control exports on digest-pinned KiCad 10.0.0 and 10.0.5.
+  The native lane shares the RS-485 export runner while keeping source fixtures,
+  test selection, rule ownership, and architecture size checks focused.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_rs485_signal_named_rail.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.rs485_signal_on_named_rail")'
+
+  KICAD_RUN_NATIVE_RS485_SIGNAL_NAMED_RAIL_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_rs485_signal_named_rail_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_signal_on_named_rail")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

@@ -710,7 +710,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 227 active rules.
+The catalog currently contains 228 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -941,6 +941,27 @@ fault/control schematics are listed in the
 KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_ethernet_management_signal_named_rail_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_signal_on_named_rail")'
+```
+
+### RS-485 data pins assigned directly to named rails
+
+`bus.rs485_signal_on_named_rail` reviews fitted IC pins with bounded D/DI
+driver-input or R/RO receiver-output functions when an explicit RS-485 marker
+appears in the native symbol library ID or component value and the pin has one
+assignment to a recognized supply-like or return-like net label. Generic D/R
+pins and the SN65HVD23x CAN identity do not qualify. This defaults to `review`:
+a direct rail assignment can be an intentional transceiver mode choice. The
+finding does not prove electrical potential, a defect, routed copper, or
+physical continuity. Source hashes and scope are in the
+[synthetic fixture record](../tests/fixtures/design_lint/rs485-signal-named-rail/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_rs485_signal_named_rail.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.rs485_signal_on_named_rail")'
+
+KICAD_RUN_NATIVE_RS485_SIGNAL_NAMED_RAIL_FIXTURES=1 \
+  .venv/bin/python -I -m pytest tests/test_rs485_signal_named_rail_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_signal_on_named_rail")'
 ```
 
 ### CAN TX/RX pin and net-label direction review

@@ -44,6 +44,10 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
             "bus_usb_signal_named_rail.py",
             "kicad_tooling/hwrepo/bus_usb_signal_named_rail.py#usb_signal_on_named_rail_candidates",
         ),
+        "bus.rs485_signal_on_named_rail": (
+            "rs485_signal_named_rail.py",
+            "kicad_tooling/hwrepo/rs485_signal_named_rail.py#rs485_signal_on_named_rail_candidates",
+        ),
     }
     catalog = {item.rule_id: item for item in rule_catalog().rules}
     for shared_name in ("named_rail_roles.py", "named_rail_pin_evidence.py"):

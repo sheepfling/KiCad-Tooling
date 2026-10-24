@@ -182,6 +182,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="rs485-data-same-net",
     ),
     pytest.param(
+        "bus.rs485_signal_on_named_rail",
+        "KICAD_RUN_NATIVE_RS485_SIGNAL_NAMED_RAIL_FIXTURES",
+        "tests.test_rs485_signal_named_rail_native_fixture_lane."
+        "test_native_rs485_signal_named_rail_fault_and_control_repeat",
+        id="rs485-signal-named-rail",
+    ),
+    pytest.param(
         "bus.rs485_unconnected_data_pin",
         "KICAD_RUN_NATIVE_RS485_UNCONNECTED_DATA_PIN_FIXTURES",
         "tests.test_rs485_unconnected_data_pins_native_fixture_lane."
