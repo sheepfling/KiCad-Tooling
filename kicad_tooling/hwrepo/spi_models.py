@@ -2,11 +2,19 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Annotated, Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from .model_primitives import Identifier, NetName, NonEmptyText, Reference, StrictModel
+from .model_primitives import (
+    ElectricalPositive,
+    Identifier,
+    NetName,
+    NonEmptyText,
+    Reference,
+    StrictModel,
+)
 
 
 class SpiPinNetRequirement(StrictModel):
@@ -173,6 +181,64 @@ class SpiBridgeRequirement(StrictModel):
         return self
 
 
+class SpiBiasArrayChannelRequirement(StrictModel):
+    """Reviewed pin and nominal-value mapping for one chip-select pull-up channel."""
+
+    id: Identifier
+    signal_pin: Reference
+    rail_pin: Reference
+    signal_net: NetName
+    rail_net: NetName
+    resistance_ohms: ElectricalPositive
+    basis: NonEmptyText
+
+    @model_validator(mode="after")
+    def distinct_channel_endpoints(self) -> SpiBiasArrayChannelRequirement:
+        if "." not in self.signal_pin or "." not in self.rail_pin:
+            raise ValueError("SPI bias-array pins must use COMPONENT.PIN form")
+        if self.signal_pin.casefold() == self.rail_pin.casefold():
+            raise ValueError("SPI bias-array signal and rail pins must differ")
+        if self.signal_net == self.rail_net:
+            raise ValueError("SPI bias-array signal and rail nets must differ")
+        return self
+
+
+class SpiBiasResistorArrayRequirement(StrictModel):
+    """Exact array identity and complete pin map for SPI chip-select pull-ups."""
+
+    reference: Identifier
+    expected_symbol: NonEmptyText
+    expected_footprint: NonEmptyText
+    expected_value: NonEmptyText
+    expected_part_id: Identifier | None = None
+    basis: NonEmptyText
+    channels: Annotated[tuple[SpiBiasArrayChannelRequirement, ...], Field(min_length=1)]
+    unmapped_pin_reasons: Mapping[Reference, NonEmptyText] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def complete_pin_map(self) -> SpiBiasResistorArrayRequirement:
+        prefix = f"{self.reference}."
+        signal_pins = [channel.signal_pin for channel in self.channels]
+        rail_pins = [channel.rail_pin for channel in self.channels]
+        unique_rail_pins = tuple({pin.casefold(): pin for pin in rail_pins}.values())
+        mapped_pins = (*signal_pins, *unique_rail_pins)
+        all_pins = (*mapped_pins, *self.unmapped_pin_reasons)
+        if any(not pin.casefold().startswith(prefix.casefold()) for pin in all_pins):
+            raise ValueError("SPI bias-array pins must belong to their component")
+        normalized_pins = [pin.casefold() for pin in all_pins]
+        if len(set(normalized_pins)) != len(normalized_pins):
+            raise ValueError("SPI bias-array channel and unmapped pins must be unique")
+        if len({channel.id.casefold() for channel in self.channels}) != len(self.channels):
+            raise ValueError("SPI bias-array channel IDs must be unique")
+        rail_nets_by_pin: dict[str, str] = {}
+        for channel in self.channels:
+            pin = channel.rail_pin.casefold()
+            previous_net = rail_nets_by_pin.setdefault(pin, channel.rail_net.casefold())
+            if previous_net != channel.rail_net.casefold():
+                raise ValueError("A shared SPI bias-array rail pin must map to one exact rail net")
+        return self
+
+
 class SpiBusRequirement(StrictModel):
     id: Identifier
     basis: NonEmptyText
@@ -288,9 +354,39 @@ class SpiAnalysis(StrictModel):
     mode: Literal["required"] = "required"
     basis: NonEmptyText
     buses: Annotated[tuple[SpiBusRequirement, ...], Field(min_length=1)]
+    chip_select_pullup_arrays: tuple[SpiBiasResistorArrayRequirement, ...] = ()
 
     @model_validator(mode="after")
     def unique_bus_ids(self) -> SpiAnalysis:
         if len({bus.id for bus in self.buses}) != len(self.buses):
             raise ValueError("SPI bus IDs must be unique")
+
+        return self
+
+    @model_validator(mode="after")
+    def unique_bias_array_references(self) -> SpiAnalysis:
+        arrays = self.chip_select_pullup_arrays
+        if len({array.reference.casefold() for array in arrays}) != len(arrays):
+            raise ValueError("SPI chip-select pull-up array references must be unique")
+
+        return self
+
+    @model_validator(mode="after")
+    def bias_array_signal_nets_are_declared(self) -> SpiAnalysis:
+        arrays = self.chip_select_pullup_arrays
+        chip_select_nets = {
+            pin.net.casefold()
+            for bus in self.buses
+            for pin in (
+                *bus.controller.chip_selects,
+                *(device.chip_select for device in bus.devices),
+            )
+        }
+        for array in arrays:
+            if any(
+                channel.signal_net.casefold() not in chip_select_nets for channel in array.channels
+            ):
+                raise ValueError(
+                    f"SPI bias-array {array.reference} signal nets must be declared chip-select nets"
+                )
         return self

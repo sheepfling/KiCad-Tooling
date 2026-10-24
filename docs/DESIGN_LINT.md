@@ -3872,6 +3872,70 @@ review, so the electrical lane cannot pass. Use
 applies. Older contracts without `spi` remain readable and make no SPI map
 claim.
 
+### Map an SPI chip-select pull-up resistor array
+
+The `bus.spi_active_low_chip_select_without_pullup` review recognizes an
+array channel only when the existing `spi` contract includes an exact map.
+Add this optional field alongside `buses`:
+
+```json
+{
+  "chip_select_pullup_arrays": [
+    {
+      "reference": "RN1",
+      "expected_symbol": "Synthetic:ResistorArray",
+      "expected_footprint": "Synthetic:RA4",
+      "expected_value": "4x10k",
+      "expected_part_id": "SYNTHETIC-ARRAY-10K",
+      "basis": "Reviewed synthetic array part and pinout",
+      "channels": [
+        {
+          "id": "flash-select",
+          "signal_pin": "RN1.1",
+          "rail_pin": "RN1.2",
+          "signal_net": "SPI_CS_N",
+          "rail_net": "+3V3",
+          "resistance_ohms": 10000,
+          "basis": "Reviewed nominal value for this array channel"
+        }
+      ],
+      "unmapped_pin_reasons": {
+        "RN1.3": "Unused array channel is not connected",
+        "RN1.4": "Unused array channel is not connected"
+      }
+    }
+  ]
+}
+```
+
+Each mapped signal net must be a declared SPI chip-select net. The native
+netlist must match the array symbol, footprint, value, optional `PART_ID`,
+complete pin inventory, fitted state, and exact channel pin assignments.
+The named rail must also be recognized as positive, and the reviewed nominal
+channel resistance must fall within the lint's 1 kΩ–100 kΩ screening band.
+Missing or stale maps, wrong-net channels, DNP arrays, and extra unreviewed
+pins keep the review prompt open. A mapped channel covers only its declared
+chip-select net; other active-low select nets remain separate review
+candidates. The authored resistance is not measured from the native netlist;
+this check does not prove internal array construction, logic thresholds, reset
+timing, or that the board requires an external pull-up.
+
+Select the synthetic regression and exact-version native fault/control lane
+with:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_design_lint_spi_bias_arrays.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_active_low_chip_select_without_pullup")'
+
+KICAD_RUN_NATIVE_SPI_BIAS_ARRAY_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_spi_bias_arrays_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_active_low_chip_select_without_pullup")'
+```
+
+The source-hashed fixtures live in
+`tests/fixtures/design_lint/spi-bias-array-native/` and are run against the
+digest-pinned KiCad 10.0.0 and 10.0.5 images in package acceptance.
+
 ## Review unmapped SPI peers across voltage-named rails
 
 `bus.spi_peer_voltage_review` is a default-`review` prompt for a narrow

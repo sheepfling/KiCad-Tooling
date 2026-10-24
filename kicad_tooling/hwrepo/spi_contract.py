@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .models import ElectricalCheck, NetlistContract
+from .spi_bias_array_paths import spi_bias_array_checks
 from .spi_models import (
     SpiAnalysis,
     SpiBridgeRequirement,
@@ -288,4 +289,16 @@ def spi_checks(spec: SpiAnalysis, observed: NetlistContract) -> tuple[Electrical
                         detail=f"No device MISO return route is required: {reason}",
                     )
                 )
+    for check_id, issues in spi_bias_array_checks(spec, observed):
+        results.append(
+            ElectricalCheck(
+                id=check_id,
+                status="FAIL" if issues else "PASS",
+                detail=(
+                    "; ".join(issues)
+                    if issues
+                    else "Mapped SPI chip-select pull-up array channel matches the native component identity and net assignments."
+                ),
+            )
+        )
     return tuple(results)

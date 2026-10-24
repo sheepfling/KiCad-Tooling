@@ -5,13 +5,18 @@ from __future__ import annotations
 from .design_lint_types import Candidate
 from .models import NetlistContract
 from .spi_bias_heuristics import spi_active_low_chip_selects_without_pullups
+from .spi_participants import SpiRosterContext
 from .spi_peer_reference_scan import SpiPeerReferenceScan, scan_spi_peer_references
 
 
-def spi_bias_candidates(observed: NetlistContract) -> tuple[Candidate, ...]:
+def spi_bias_candidates(
+    observed: NetlistContract,
+    roster: SpiRosterContext | None = None,
+) -> tuple[Candidate, ...]:
     """Build SPI chip-select bias review prompts."""
     found: list[Candidate] = []
-    for gap in spi_active_low_chip_selects_without_pullups(observed):
+    analysis = roster.analysis if roster is not None and roster.state == "required" else None
+    for gap in spi_active_low_chip_selects_without_pullups(observed, analysis):
         found.append(
             Candidate(
                 rule_id="bus.spi_active_low_chip_select_without_pullup",

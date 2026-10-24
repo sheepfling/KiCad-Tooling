@@ -1,0 +1,57 @@
+{
+  "mode": "required",
+  "basis": "Synthetic SPI bus and exact chip-select resistor-array channel map",
+  "buses": [
+    {
+      "id": "main",
+      "basis": "Synthetic controller, peripheral, and chip-select net assignments",
+      "controller": {
+        "reference": "U1",
+        "symbol": "Synthetic:SpiController",
+        "footprint": "Synthetic:QFN",
+        "sck": {"pin": "U1.2", "net": "SPI_SCK"},
+        "mosi": {"pin": "U1.3", "net": "SPI_MOSI"},
+        "miso": {"mode": "not_present", "reason": "Synthetic controller has no MISO pin"},
+        "chip_selects": [{"pin": "U1.1", "net": "SPI_CS_N"}]
+      },
+      "devices": [
+        {
+          "id": "peripheral",
+          "reference": "U2",
+          "symbol": "Synthetic:SpiPeripheral",
+          "footprint": "Synthetic:SOIC",
+          "sck": {"pin": "U2.2", "net": "SPI_SCK"},
+          "mosi": {"pin": "U2.3", "net": "SPI_MOSI"},
+          "miso": {"mode": "not_present", "reason": "Synthetic peripheral has no MISO pin"},
+          "chip_select": {"pin": "U2.1", "net": "SPI_CS_N"}
+        }
+      ],
+      "bridges": []
+    }
+  ],
+  "chip_select_pullup_arrays": [
+    {
+      "reference": "RN1",
+      "expected_symbol": "Synthetic:ResistorArray",
+      "expected_footprint": "Synthetic:RA4",
+      "expected_value": "4x10k",
+      "expected_part_id": "SYNTHETIC-ARRAY-10K",
+      "basis": "Synthetic exact array identity and reviewed channel pinout",
+      "channels": [
+        {
+          "id": "peripheral-select",
+          "signal_pin": "RN1.1",
+          "rail_pin": "RN1.2",
+          "signal_net": "SPI_CS_N",
+          "rail_net": "+3V3",
+          "resistance_ohms": 10000,
+          "basis": "Synthetic reviewed nominal resistance from the array part map"
+        }
+      ],
+      "unmapped_pin_reasons": {
+        "RN1.3": "Unused array channel is not connected",
+        "RN1.4": "Unused array channel is not connected"
+      }
+    }
+  ]
+}

@@ -38,6 +38,7 @@ from .spi_clock_data_same_net import spi_clock_control_data_same_net_candidates
 from .spi_clock_select_label_mismatch import spi_clock_select_label_mismatch_candidates
 from .spi_control_same_net import spi_clock_chip_select_same_net_candidates
 from .spi_data_label import spi_data_polarity_label_candidates
+from .spi_participants import SpiRosterContext
 from .spi_peer_reference_scan import SpiPeerReferenceScan
 from .spi_same_net import spi_data_input_output_same_net_candidates
 from .spi_shared_chip_select import spi_chip_select_inputs_share_net_candidates
@@ -52,6 +53,7 @@ def bus_candidates(
     i2c_address_map: I2cAddressMap | None = None,
     i2c_pullup_heuristic_coverage: I2cPullupHeuristicCoverage | None = None,
     i2c_peer_reference_scan: I2cPeerReferenceScan | None = None,
+    spi_roster: SpiRosterContext | None = None,
     spi_peer_reference_scan: SpiPeerReferenceScan | None = None,
     can_peer_reference_scan: CanPeerReferenceScan | None = None,
     rs485_peer_reference_scan: Rs485PeerReferenceScan | None = None,
@@ -76,7 +78,7 @@ def bus_candidates(
             spi_peer_reference_scan,
             component_peer_findings,
         ),
-        *spi_bias_candidates(observed),
+        *spi_bias_candidates(observed, spi_roster),
         *spi_data_polarity_label_candidates(observed),
         *spi_clock_select_label_mismatch_candidates(observed),
         *spi_data_input_output_same_net_candidates(observed),

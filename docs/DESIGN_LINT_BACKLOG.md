@@ -677,6 +677,14 @@ and optional ecosystem adapters are `P3`.
   REVIEW asks whether connecting the shield to a net with that return-like label
   is intentional;
   it does not infer that shields and signal returns must be isolated or bonded.
+- **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
+  chip-select bias review now accepts a channel only through an exact
+  project-authored component and pin map. The check verifies native identity,
+  fitted state, complete pin inventory, and channel nets; its reviewed nominal
+  resistance remains an authored value. Synthetic regressions cover stale and
+  miswired maps, unrecognized rails, resistance bounds, and the fact that one
+  mapped channel does not silence another chip-select gap. Digest-pinned KiCad
+  10.0.0/10.0.5 fixtures cover a correct channel and a wrong-net fault.
 - **Single-rule gate integrity:** `Lint-Rule` prerelease tags now add a narrow
   cross-rule slice that verifies every active rule has a valid theme-owned
   predicate, catalogued fixtures retain their theme markers, and catalogued
@@ -13249,23 +13257,28 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-045 — SPI active-low chip-select idle-bias review
 
-- **Status:** Implemented v1 as a configurable native-netlist review heuristic,
-  inspired by the kicad-happy `validate_spi_bus` PR-002 check.
+- **Status:** Implemented v2 as a configurable native-netlist review heuristic
+  with exact project-authored resistor-array channel maps, inspired by the
+  kicad-happy `validate_spi_bus` PR-002 check.
 - **Problem:** A peripheral with an assigned active-low chip-select input may
   be selected while the controller pin is inactive or high impedance during
   reset. A connected net and ERC pass do not establish the startup state.
 - **Predicate:** For each fitted symbol pin with an explicit active-low
   chip-select spelling and native `input` or `input_low` type, require one
   assigned non-return net. Emit one review candidate per net when there is no
-  fitted conventional direct or unbranched series-resistor path of 1 kΩ–100
-  kΩ to a positive rail recognized by the existing narrow rail-name or
-  supply-function map. DNP devices and resistor paths are excluded. Bare `CS`,
-  `SS`, or `CHIPSELECT` names do not establish polarity.
+  fitted conventional direct or unbranched series-resistor path of 1 kΩ–100 kΩ
+  to a recognized positive rail, or an exact source-matched resistor-array
+  channel in that same band. Array mappings bind symbol, footprint, value,
+  optional `PART_ID`, complete native pin inventory, and each signal/rail pin
+  assignment. DNP devices and resistor paths are excluded. Bare `CS`, `SS`, or
+  `CHIPSELECT` names do not establish polarity.
 - **Boundary:** This is a review prompt, not a universal external-resistor
   requirement. It cannot see internal bias, controller reset/firmware behavior,
-  off-board circuitry, resistor arrays, jumpers, active bias networks, custom
-  supply names, or device selection timing. The broad 1 kΩ–100 kΩ range is a
-  detection window, not a recommended value or proof of electrical margin.
+  off-board circuitry, unmapped or stale arrays, jumpers, active bias networks,
+  custom supply names, or device selection timing. A mapped array's nominal
+  channel resistance is project-authored and is not measured by the native
+  netlist. The broad 1 kΩ–100 kΩ range is a detection window, not a recommended
+  value or proof of electrical margin.
   Project policy can set the rule to `off`, retain `review`, or explicitly
   promote it to `block`; a fingerprinted ignore records a reviewed exception.
 - **Cohort input:** The pinned kicad-happy
@@ -13278,12 +13291,16 @@ is not a reason by itself to expand its scope or change its default policy.
   No cohort code was copied.
 - **Fixtures:** Missing bias; direct 10 kΩ and unbranched two-resistor valid
   paths; DNP device and resistor; wrong-rail resistor; zero-ohm and out-of-band
-  values; bare-polarity and output-pin controls; exact rule `review`/`block`/
-  `off` and fingerprint-ignore behavior; shared CLI/MCP parity.
+  values; bare-polarity and output-pin controls; array identity, population,
+  channel-net, pin-inventory, and resistance-window faults; exact rule
+  `review`/`block`/`off` and fingerprint-ignore behavior; shared CLI/MCP
+  parity. The array fault/control schematics and contract are tooling-owned,
+  source-hashed, and exported repeatedly by the KiCad 10.0.0/10.0.5 package
+  acceptance lane.
 - **Done:** Catalog entry, deterministic predicate, rule-policy lifecycle,
-  source-bound report evidence, synthetic fault/control coverage, public cohort
-  source attribution, and user documentation are implemented. No cohort code,
-  project fixture, or proprietary board source is stored.
+  source-bound report evidence, synthetic and native fault/control coverage,
+  public cohort source attribution, and user documentation are implemented. No
+  cohort code, project fixture, or proprietary board source is stored.
 
 #### LINT-046 — IC supply rail without a fitted schematic capacitor
 

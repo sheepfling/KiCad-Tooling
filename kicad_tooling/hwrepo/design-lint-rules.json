@@ -4593,30 +4593,44 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "A non-DNP pin with an explicitly active-low chip-select function and native input/input_low electrical type has one assigned non-return net, while no fitted conventional resistor path from that net to a recognized positive rail has a per-resistor and total nominal value between 1 kΩ and 100 kΩ. Direct and unbranched two-terminal resistor chains are recognized.",
+      "predicate": "A non-DNP pin with an explicitly active-low chip-select function and native input/input_low electrical type has one assigned non-return net, while no fitted conventional resistor path from that net to a recognized positive rail has a per-resistor and total nominal value between 1 kΩ and 100 kΩ. Direct and unbranched two-terminal resistor chains are recognized. A resistor-array channel counts only when a project-authored SPI contract maps its exact signal/rail pins and nets, component symbol, footprint, value, optional PART_ID, complete pin inventory, and reviewed nominal channel resistance, and all native identity and net checks pass.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The rule recognizes only the bounded active-low function aliases documented in DESIGN_LINT.md and exported native input/input_low pin types.",
         "A missing visible path can be valid when the device has an internal bias, the controller guarantees the idle state, or bias is supplied off-board; no firmware or runtime state is inspected.",
-        "Only recognized positive rail names or pin functions count, and only direct or unbranched conventional two-terminal resistor chains are traced. Resistor arrays, jumpers, active bias circuits, and uncommon rail labels are outside the predicate.",
+        "Direct and unbranched conventional two-terminal resistor chains are traced without a project map. A resistor array counts only through an exact project-authored SPI map; stale identity, DNP state, wrong or unconnected pin nets, incomplete pin inventory, or a channel outside the 1 kΩ–100 kΩ review band keeps the prompt open. The nominal channel resistance is an authored assumption, not a native measurement. Jumpers, active bias circuits, off-board bias, and uncommon positive-rail names remain outside the predicate.",
         "The 1 kΩ–100 kΩ interval is a broad review-detection window, not a recommended value or proof of valid logic thresholds, reset sequencing, device selection, or signal integrity."
       ],
       "fault_fixtures": [
         "tests.test_design_lint_spi.test_spi_active_low_select_bias_hint_is_review_only_and_configurable",
-        "tests.test_design_lint_spi.test_spi_select_bias_reports_unusable_pullup_paths"
+        "tests.test_design_lint_spi.test_spi_select_bias_reports_unusable_pullup_paths",
+        "tests.test_design_lint_spi_bias_arrays.test_array_outside_the_review_resistance_band_does_not_resolve_the_prompt",
+        "tests.test_design_lint_spi_bias_arrays.test_unrecognized_array_rail_does_not_resolve_the_prompt",
+        "tests.test_design_lint_spi_bias_arrays.test_mapped_array_channel_does_not_clear_an_unmapped_chip_select_gap",
+        "tests.test_design_lint_spi_bias_arrays.test_shared_rail_pin_requires_one_rail_net",
+        "tests.test_design_lint_spi_bias_arrays.test_stale_or_miswired_array_keeps_the_review_prompt_open",
+        "tests.test_spi_bias_arrays_native_fixture_lane.test_native_spi_bias_array_fault_and_control_repeat"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_spi.test_spi_select_bias_recognizes_pullup_paths",
-        "tests.test_design_lint_spi.test_spi_select_bias_ignores_valid_controls"
+        "tests.test_design_lint_spi.test_spi_select_bias_ignores_valid_controls",
+        "tests.test_design_lint_spi_bias_arrays.test_exact_array_contract_resolves_only_the_matching_chip_select_prompt",
+        "tests.test_spi_bias_arrays_native_fixture_lane.test_native_spi_bias_array_fault_and_control_repeat"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SPI_BIAS_ARRAY_FIXTURES"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_spi.test_spi_select_bias_finding_is_order_stable_and_fitted_path_clears_it"
+        "tests.test_design_lint_spi.test_spi_select_bias_finding_is_order_stable_and_fitted_path_clears_it",
+        "tests.test_design_lint_spi_bias_arrays.test_array_channel_predicate_is_stable_under_netlist_mapping_order"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/spi_bias_heuristics.py#spi_active_low_chip_selects_without_pullups",
+        "kicad_tooling/hwrepo/spi_bias_array_paths.py#spi_bias_array_channel_evidence",
+        "kicad_tooling/hwrepo/spi_contract.py#spi_checks",
         "kicad_tooling/hwrepo/resistor_paths.py#visible_resistor_pullups",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],

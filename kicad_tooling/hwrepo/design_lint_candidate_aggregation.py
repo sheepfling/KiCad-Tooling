@@ -221,6 +221,7 @@ def candidates(
             i2c_address_map=i2c_address_map,
             i2c_pullup_heuristic_coverage=i2c_pullup_heuristic_coverage,
             i2c_peer_reference_scan=i2c_peer_reference_scan,
+            spi_roster=spi_roster,
             spi_peer_reference_scan=spi_peer_reference_scan,
             can_peer_reference_scan=can_peer_reference_scan,
             rs485_peer_reference_scan=rs485_peer_reference_scan,

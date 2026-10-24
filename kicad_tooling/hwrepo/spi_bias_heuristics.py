@@ -7,10 +7,14 @@ from dataclasses import dataclass
 from .bus_signal_roles import is_active_low_chip_select_function
 from .models import NetlistContract
 from .resistor_paths import (
+    VISIBLE_PULLUP_MAX_OHMS,
+    VISIBLE_PULLUP_MIN_OHMS,
     positive_power_nets,
     visible_resistor_pullups,
 )
 from .return_nets import is_return_like_net_name
+from .spi_bias_array_paths import spi_bias_array_channel_evidence
+from .spi_models import SpiAnalysis
 
 
 @dataclass(frozen=True)
@@ -22,6 +26,7 @@ class SpiChipSelectBiasGap:
 
 def spi_active_low_chip_selects_without_pullups(
     observed: NetlistContract,
+    analysis: SpiAnalysis | None = None,
 ) -> tuple[SpiChipSelectBiasGap, ...]:
     """Find assigned active-low SPI input pins without a visible local pull-up path."""
     positive_rails = positive_power_nets(observed)
@@ -49,7 +54,16 @@ def spi_active_low_chip_selects_without_pullups(
             continue
         chip_selects_by_net.setdefault(net, set()).add(pin)
 
-    visible_pullups = visible_resistor_pullups(observed)
+    visible_pullups = {net.casefold() for net in visible_resistor_pullups(observed)}
+    if analysis is not None:
+        recognized_rails = {net.casefold() for net in positive_rails}
+        visible_pullups.update(
+            item.signal_net.casefold()
+            for item in spi_bias_array_channel_evidence(analysis, observed)
+            if item.matches
+            and item.rail_net.casefold() in recognized_rails
+            and VISIBLE_PULLUP_MIN_OHMS <= item.resistance_ohms <= VISIBLE_PULLUP_MAX_OHMS
+        )
     return tuple(
         SpiChipSelectBiasGap(
             net=net,
@@ -57,5 +71,5 @@ def spi_active_low_chip_selects_without_pullups(
             positive_rails=tuple(sorted(positive_rails)),
         )
         for net, pins in sorted(chip_selects_by_net.items())
-        if net not in visible_pullups
+        if net.casefold() not in visible_pullups
     )
