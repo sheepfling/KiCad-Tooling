@@ -19,7 +19,9 @@ RULE_ID = "bus.complementary_pair_assignment"
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_lane_indexed_usb_c_pair_same_net_is_reviewed() -> None:
     findings = tuple(
-        item for item in candidates(usb_c_superspeed_lane_fault_netlist()) if item.rule_id == RULE_ID
+        item
+        for item in candidates(usb_c_superspeed_lane_fault_netlist())
+        if item.rule_id == RULE_ID
     )
 
     assert len(findings) == 1
@@ -84,9 +86,7 @@ def test_lane_indexed_usb_c_pair_is_order_stable_and_assignment_repair_clears_it
             "nets": dict(reversed(tuple(source.nets.items()))),
             "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
             "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
-            "component_pin_numbers": {
-                "J1": tuple(reversed(source.component_pin_numbers["J1"]))
-            },
+            "component_pin_numbers": {"J1": tuple(reversed(source.component_pin_numbers["J1"]))},
         }
     )
     actual = tuple(
@@ -96,6 +96,4 @@ def test_lane_indexed_usb_c_pair_is_order_stable_and_assignment_repair_clears_it
     )
 
     assert actual == expected
-    assert not any(
-        item.rule_id == RULE_ID for item in candidates(usb_c_superspeed_lane_netlist())
-    )
+    assert not any(item.rule_id == RULE_ID for item in candidates(usb_c_superspeed_lane_netlist()))
