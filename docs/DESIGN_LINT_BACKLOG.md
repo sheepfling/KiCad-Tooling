@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 217 rules are implemented with synthetic regression coverage.
+The following 218 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 217 active rules.
+The catalog currently contains 218 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -557,6 +557,7 @@ skipped under prerelease policy.
 - `bus.rs485_peer_reference_review`
 - `bus.rs485_data_direction_label_mismatch`
 - `bus.rs485_data_input_output_same_net`
+- `bus.rs485_unconnected_data_pin`
 - `bus.usb_peer_reference_review`
 - `bus.usb_unconnected_data_pin`
 - `bus.spi_unconnected_chip_select`
@@ -715,6 +716,10 @@ and optional ecosystem adapters are `P3`.
   one-role, DNP, incomplete function/pin-number inventory, repeated-role, and
   ambiguous cases.
   One-way channels remain valid; the prompt does not require a connection.
+- **LINT-236 partially connected RS-485 data pair:** A default-off review
+  identifies one open D/DI or R/RO pin beside its unique assigned counterpart
+  on a fitted IC with complete native pin metadata and explicit RS-485 identity.
+  One-way use remains valid; the check does not require a connection.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3096,7 +3101,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 217 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 218 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -4841,6 +4846,48 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_CAN_UNCONNECTED_DIRECTION_PIN_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_can_unconnected_direction_pins_native_fixture_lane.py \
       -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_unconnected_direction_pin")'
+  ```
+
+#### LINT-236 — Review an open RS-485 data pin beside its paired role
+
+- **Status:** Implemented as opt-in `bus.rs485_unconnected_data_pin`, owned
+  by `rs485_unconnected_data_pins.py#rs485_unconnected_data_pin_candidates`.
+- **Gap:** Existing RS-485 checks review direction-label mismatches and D/DI
+  with R/RO on one net. They do not prompt when one recognized data role has
+  no net assignment while the other role is connected.
+- **Predicate:** Require a fitted U/IC reference, an explicit bounded RS-485
+  identity in the native symbol name or component value, a complete native
+  function/pin-number inventory, and exactly one recognized D/DI driver input
+  and R/RO receiver output. Prompt for the open pin only when its counterpart
+  has one unique net assignment. Reuse the shared RS-485 identity and function
+  recognizers.
+- **Boundary:** The rule defaults to `off` because one-way transceiver use can
+  be intentional. It skips DNP, non-IC references, generic identities, the
+  SN65HVD23x CAN family, unsupported functions, incomplete inventories,
+  duplicate roles, both-open pairs, and ambiguous or multi-net assignments.
+  A schematic does not establish firmware use, interface requirements, PCB
+  routing, external wiring, or physical continuity.
+- **Fixtures and quality gate:** Synthetic tests cover both open directions,
+  bounded aliases, explicit identity boundaries, connected and one-way
+  controls, DNP, incomplete or duplicate inventories, ambiguity, policy,
+  exact ignores, stable ordering, and repair. Source-hashed native fault and
+  connected control schematics repeat netlist and ERC exports with digest-pinned
+  KiCad 10.0.0 and 10.0.5 images. Focused selectors, marker registries,
+  native-tag fixture selection, rule ownership, active-rule reachability, and
+  module-size checks are registered. No product or cohort design data is used.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_rs485_unconnected_data_pins.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.rs485_unconnected_data_pin")'
+  ```
+
+- **Native acceptance:**
+
+  ```sh
+  KICAD_RUN_NATIVE_RS485_UNCONNECTED_DATA_PIN_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_rs485_unconnected_data_pins_native_fixture_lane.py \
+      -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_unconnected_data_pin")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

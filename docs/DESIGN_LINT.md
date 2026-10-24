@@ -60,6 +60,27 @@ physical continuity. See the
   -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.can_unconnected_direction_pin")'
 ```
 
+## Review an open RS-485 data pin beside its paired role
+
+`bus.rs485_unconnected_data_pin` recognizes bounded D/DI driver-input and
+R/RO receiver-output functions on a fitted IC whose native value or symbol
+identity explicitly identifies an RS-485 transceiver. It reports one open
+role only when the counterpart has one net assignment and the complete native
+pin-function inventory matches the pin-number inventory. The rule defaults to
+`off` because transmit-only or receive-only operation can be intentional.
+Projects can enable `review`, promote the prompt to `block`, disable it, or
+ignore an exact finding. It does not establish interface use, firmware behavior,
+PCB routing, or physical continuity. See the
+[source-hashed native fault and control](../tests/fixtures/design_lint/rs485-unconnected-data-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_rs485_unconnected_data_pins.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.rs485_unconnected_data_pin")'
+```
+
+For exact-native acceptance, set `KICAD_RUN_NATIVE_RS485_UNCONNECTED_DATA_PIN_FIXTURES=1`
+and select `tests/test_rs485_unconnected_data_pins_native_fixture_lane.py`.
+
 ## Review open UART/USART function pins on partially connected channels
 
 `bus.serial_unconnected_pin` recognizes bounded UART/USART TX/RX pin functions when a pin has no
@@ -643,7 +664,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 217 active rules.
+The catalog currently contains 218 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

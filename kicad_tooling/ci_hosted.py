@@ -71,6 +71,7 @@ from .ci_hosted_power_pin_net_roles import power_pin_net_role_fixture_lane
 from .ci_hosted_power_sequences import power_sequence_fixture_lane
 from .ci_hosted_release_fixture import release_fixture
 from .ci_hosted_rs485_peer_reference import rs485_peer_reference_native_fixture_lane
+from .ci_hosted_rs485_unconnected_data import rs485_unconnected_data_pin_fixture_lane
 from .ci_hosted_serial_peer_fixtures import serial_peer_fixture_lane
 from .ci_hosted_serial_peer_net_labels import serial_peer_net_label_fixture_lane
 from .ci_hosted_serial_peer_reference_bonds import (
@@ -165,6 +166,7 @@ __all__ = (
     "release_fixture",
     "release_lane",
     "rs485_peer_reference_native_fixture_lane",
+    "rs485_unconnected_data_pin_fixture_lane",
     "serial_peer_fixture_lane",
     "serial_peer_net_label_fixture_lane",
     "serial_peer_reference_bond_fixture_lane",

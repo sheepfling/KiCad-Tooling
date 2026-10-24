@@ -7,6 +7,7 @@ from .models import NetlistContract
 from .rs485_data_label_mismatch import rs485_data_direction_label_candidates
 from .rs485_peer_reference_types import Rs485PeerReferenceScan
 from .rs485_same_net import rs485_data_input_output_same_net_candidates
+from .rs485_unconnected_data_pins import rs485_unconnected_data_pin_candidates
 
 
 def rs485_candidates(
@@ -22,6 +23,7 @@ def rs485_candidates(
         *reference_candidates,
         *rs485_data_direction_label_candidates(observed),
         *rs485_data_input_output_same_net_candidates(observed),
+        *rs485_unconnected_data_pin_candidates(observed),
     )
 
 

@@ -31,6 +31,12 @@ PYTEST_NATIVE_LINT_SUITES = {
         "native_kicad",
         "slow",
     },
+    "test_rs485_unconnected_data_pins.py": {"interface_lint"},
+    "test_rs485_unconnected_data_pins_native_fixture_lane.py": {
+        "interface_lint",
+        "native_kicad",
+        "slow",
+    },
     "test_serial_tx_output_sharing.py": {"interface_lint"},
     "test_serial_tx_output_sharing_native_fixture_lane.py": {
         "interface_lint",

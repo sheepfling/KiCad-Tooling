@@ -6117,6 +6117,46 @@
       "implementation_owner": "kicad_tooling/hwrepo/spi_control_same_net.py#spi_clock_chip_select_same_net_candidates"
     },
     {
+      "rule_id": "bus.rs485_unconnected_data_pin",
+      "title": "RS-485 transceiver has one open data role beside an assigned role",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted U/IC reference with an explicit bounded RS-485 identity, require a complete native pin-function and pin-number inventory containing exactly one recognized D/DI driver-data input and one R/RO receiver-data output. Emit a review candidate for the unassigned role only when the other role has exactly one native net assignment.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native export lanes"
+      ],
+      "limitations": [
+        "Identity matching is deliberately bounded to the explicit RS-485/RS485, MAX48xx, ADM48xx, SP3485, SN65HVD485, and THVD markers recognized by is_explicit_rs485_transceiver_identity. The SN65HVD485 marker excludes the SN65HVD23x CAN family.",
+        "Transmit-only or receive-only use may be intentional, so the rule defaults to off and asks for project review. Pin functions and a schematic netlist do not establish interface requirements, firmware behavior, board copper, external wiring, or physical continuity.",
+        "DNP parts, non-IC references, generic or unsupported identities, incomplete function/pin-number inventories, duplicate D/DI or R/RO roles, both-open pairs, and ambiguous or multi-net assignments are skipped."
+      ],
+      "fault_fixtures": [
+        "tests.test_rs485_unconnected_data_pins.test_open_rs485_data_pin_emits_pair_identity_and_net_evidence",
+        "tests.test_rs485_unconnected_data_pins_native_fixture_lane.test_native_open_rs485_data_pin_fault_and_connected_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_rs485_unconnected_data_pins.test_valid_or_unsupported_shapes_are_quiet",
+        "tests.test_rs485_unconnected_data_pins_native_fixture_lane.test_native_open_rs485_data_pin_fault_and_connected_control"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_rs485_unconnected_data_pins.test_reordering_is_stable_and_connecting_open_pin_clears_candidate"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_RS485_UNCONNECTED_DATA_PIN_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/rs485_unconnected_data_pins.py#rs485_unconnected_data_pin_candidates",
+        "kicad_tooling/hwrepo/rs485_data_functions.py#is_explicit_rs485_transceiver_identity",
+        "kicad_tooling/hwrepo/rs485_data_functions.py#rs485_data_pin_role",
+        "kicad_tooling/hwrepo/design_lint_rs485_candidates.py#rs485_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/rs485_unconnected_data_pins.py#rs485_unconnected_data_pin_candidates"
+    },
+    {
       "rule_id": "bus.rs485_peer_reference_review",
       "title": "Mapped RS-485 peers on one pair use different explicit reference nets",
       "status": "active",
@@ -6237,6 +6277,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/rs485_same_net.py#rs485_data_input_output_same_net_candidates",
         "kicad_tooling/hwrepo/rs485_data_functions.py#rs485_data_pin_role",
+        "kicad_tooling/hwrepo/rs485_data_functions.py#is_explicit_rs485_transceiver_identity",
         "kicad_tooling/hwrepo/design_lint_rs485_candidates.py#rs485_candidates",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
       ],

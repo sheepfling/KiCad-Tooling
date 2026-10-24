@@ -90,6 +90,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "bus.spi_unconnected_data_pin",
             "bus.serial_unconnected_pin",
             "bus.can_unconnected_direction_pin",
+            "bus.rs485_unconnected_data_pin",
         }
     )
     assert all(
@@ -144,6 +145,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "bus.spi_unconnected_data_pin",
             "bus.serial_unconnected_pin",
             "bus.can_unconnected_direction_pin",
+            "bus.rs485_unconnected_data_pin",
         }
     )
     assert all(item.maturity == "synthetic_validated" for item in catalog.rules)

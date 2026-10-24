@@ -2,19 +2,13 @@
 
 from __future__ import annotations
 
-import re
-
 from .casefold_mapping_lookup import lookup_unique_casefold
 from .component_references import is_integrated_circuit_reference
 from .design_lint_types import Candidate
 from .models import NetlistContract
-from .rs485_data_functions import rs485_data_pin_role
+from .rs485_data_functions import is_explicit_rs485_transceiver_identity, rs485_data_pin_role
 
 RULE_ID = "bus.rs485_data_input_output_same_net"
-_EXPLICIT_RS485_IDENTITY = re.compile(
-    r"(?:rs[^a-z0-9]*485|(?:max|adm)[-_ ]?[a-z0-9]*48[0-9]{1,2}|sp[-_ ]?3485|sn65hvd485[a-z0-9]*|thvd[a-z0-9]*)",
-    re.IGNORECASE,
-)
 
 
 def rs485_data_input_output_same_net_candidates(
@@ -65,7 +59,7 @@ def rs485_data_input_output_same_net_candidates(
         identity = " ".join(
             value for value in (symbol, component.value if component else None) if value
         )
-        if not _EXPLICIT_RS485_IDENTITY.search(identity):
+        if not is_explicit_rs485_transceiver_identity(identity):
             continue
 
         inventory = lookup_unique_casefold(observed.component_pin_numbers, reference)
