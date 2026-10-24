@@ -296,6 +296,10 @@ def test_two_pin_native_fault_control_cases_are_selectable_by_rule() -> None:
             f"{fixture_module}.test_native_two_pin_buzzer_same_net_fault_and_control",
             f"{fixture_module}.test_buzzer_native_fixture_scope_contains_only_buzzer_fault_and_control",
         ),
+        "component.two_pin_speaker_same_net": (
+            f"{fixture_module}.test_native_two_pin_speaker_same_net_fault_and_control",
+            f"{fixture_module}.test_speaker_native_fixture_scope_contains_only_speaker_fault_and_control",
+        ),
         "component.two_pin_fuse_same_net": (
             f"{fixture_module}.test_native_two_pin_fuse_same_net_fault_and_control",
             f"{fixture_module}.test_fuse_native_fixture_scope_contains_only_fuse_faults_and_controls",

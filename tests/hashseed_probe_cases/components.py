@@ -34,6 +34,7 @@ from tests.test_two_pin_crystals import crystal_netlist
 from tests.test_two_pin_diodes import diode_netlist
 from tests.test_two_pin_ferrites import ferrite_netlist
 from tests.test_two_pin_fuses import fuse_netlist
+from tests.test_two_pin_speakers import speaker_netlist
 from tests.test_two_pin_switches import switch_netlist
 
 
@@ -279,6 +280,16 @@ def report_cases() -> dict[str, object]:
         "diode_control": evaluate(
             "synthetic-two-pin-diode-hash-seed-control",
             coach(diode_netlist(same_net=False)),
+            DesignLintPolicy(),
+        ).model_dump(mode="json"),
+        "speaker_fault": evaluate(
+            "synthetic-two-pin-speaker-hash-seed-fault",
+            coach(speaker_netlist()),
+            DesignLintPolicy(),
+        ).model_dump(mode="json"),
+        "speaker_control": evaluate(
+            "synthetic-two-pin-speaker-hash-seed-control",
+            coach(speaker_netlist(same_net=False)),
             DesignLintPolicy(),
         ).model_dump(mode="json"),
         "crystal_fault": evaluate(

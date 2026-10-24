@@ -15,6 +15,7 @@ pytestmark = [
 ]
 
 
+@pytest.mark.design_lint_rule(rule_id="component.two_pin_speaker_same_net")
 def test_two_pin_component_reports_remain_deterministic() -> None:
     reports = hashseed_probe_reports(families=("components",))
     diode_fault = reports["diode_fault"]
@@ -24,6 +25,13 @@ def test_two_pin_component_reports_remain_deterministic() -> None:
     }
     assert reports["diode_control"]["status"] == "PASS"
     assert reports["diode_control"]["findings"] == []
+    speaker_fault = reports["speaker_fault"]
+    assert speaker_fault["status"] == "REVIEW"
+    assert "component.two_pin_speaker_same_net" in {
+        finding["rule_id"] for finding in speaker_fault["findings"]
+    }
+    assert reports["speaker_control"]["status"] == "PASS"
+    assert reports["speaker_control"]["findings"] == []
     crystal_fault = reports["crystal_fault"]
     assert crystal_fault["status"] == "REVIEW"
     assert (

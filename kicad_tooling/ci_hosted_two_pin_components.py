@@ -125,6 +125,16 @@ TWO_PIN_COMPONENT_FIXTURE_CASES: dict[str, tuple[str, str, set[str]]] = {
         "component.two_pin_buzzer_same_net",
         set(),
     ),
+    "same-net-speaker": (
+        "two-pin-speakers/same-net-speaker.kicad_sch",
+        "component.two_pin_speaker_same_net",
+        {"LS1: both speaker terminals share SPEAKER_TIED"},
+    ),
+    "distinct-nets-speaker": (
+        "two-pin-speakers/distinct-nets-speaker.kicad_sch",
+        "component.two_pin_speaker_same_net",
+        set(),
+    ),
     "same-net-crystal": (
         "two-pin-crystals/same-net-crystal.kicad_sch",
         "component.two_pin_crystal_same_net",
@@ -184,6 +194,7 @@ TWO_PIN_COMPONENT_CANDIDATE_KINDS: dict[str, frozenset[str]] = {
     "component.two_pin_diode_same_net": frozenset({"diode"}),
     "component.two_pin_led_same_net": frozenset({"led"}),
     "component.two_pin_buzzer_same_net": frozenset({"buzzer"}),
+    "component.two_pin_speaker_same_net": frozenset({"speaker"}),
     "component.two_pin_crystal_same_net": frozenset({"crystal"}),
     "component.two_pin_fuse_same_net": frozenset({"fuse", "polyfuse"}),
     "component.two_pin_ferrite_same_net": frozenset({"ferrite_bead"}),

@@ -113,6 +113,8 @@ REPORT_ORDER = (
     "bjt_base_bias_resistor_control",
     "diode_fault",
     "diode_control",
+    "speaker_fault",
+    "speaker_control",
     "crystal_fault",
     "crystal_control",
     "mapped_crystal_network_fault",

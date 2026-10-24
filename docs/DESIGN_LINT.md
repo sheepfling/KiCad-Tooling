@@ -147,6 +147,25 @@ exact KiCad 10 native lane.
   -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_buzzer_same_net")'
 ```
 
+## Review a two-pin speaker whose terminals share one net
+
+`component.two_pin_speaker_same_net` reviews an exact fitted
+`Device:Speaker` when its two native pins are both assigned to the same
+schematic net. The netlist shows no voltage difference between those
+terminals. The review prompt does not establish speaker behavior, amplifier
+compatibility, footprint mapping, PCB connectivity, or physical population.
+It defaults to `review` and supports project `block`, `off`, and
+exact-fingerprint ignore decisions. Crystal, ultrasonic, custom, open,
+ambiguous, incomplete, multi-pin, and DNP identities remain unclassified. The
+[synthetic fixture record](../tests/fixtures/design_lint/two-pin-speakers/README.md)
+contains the same-net fault and separate-net control, with source hashes and
+the exact KiCad 10 native lane.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_two_pin_speakers.py \
+  -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_speaker_same_net")'
+```
+
 ## Review project-mapped stateful connector contacts
 
 `connector.stateful_contact_topology_mismatch` checks a mechanical connector
@@ -338,7 +357,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 203 active rules.
+The catalog currently contains 204 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

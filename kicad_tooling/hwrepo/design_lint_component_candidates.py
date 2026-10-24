@@ -40,6 +40,7 @@ from .power_path_models import PowerPathMap
 from .two_pin_buzzers import two_pin_buzzer_same_net_candidates
 from .two_pin_components import two_pin_components_on_same_net
 from .two_pin_leds import two_pin_led_same_net_candidates
+from .two_pin_speakers import two_pin_speaker_same_net_candidates
 
 
 def _unconnected_named_pin_candidate(
@@ -138,8 +139,9 @@ def component_candidates(
     two_pin_components = two_pin_components_on_same_net(observed, component_role_map)
     found.extend(two_pin_led_same_net_candidates(two_pin_components))
     found.extend(two_pin_buzzer_same_net_candidates(two_pin_components))
+    found.extend(two_pin_speaker_same_net_candidates(two_pin_components))
     for component in two_pin_components:
-        if component.kind in {"led", "buzzer"}:
+        if component.kind in {"led", "buzzer", "speaker"}:
             continue
         pin_assignments = tuple(
             f"{component.reference}.{number} -> {component.net}" for number in component.pin_numbers

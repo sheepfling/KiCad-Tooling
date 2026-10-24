@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 203 rules are implemented with synthetic regression coverage.
+The following 204 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 203 active rules.
+The catalog currently contains 204 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -468,6 +468,7 @@ skipped under prerelease policy.
 - `component.two_pin_diode_same_net`
 - `component.two_pin_led_same_net`
 - `component.two_pin_buzzer_same_net`
+- `component.two_pin_speaker_same_net`
 - `component.two_pin_crystal_same_net`
 - `component.two_pin_fuse_same_net`
 - `component.two_pin_ferrite_same_net`
@@ -3061,7 +3062,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 203 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 204 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -4195,6 +4196,37 @@ is not a reason by itself to expand its scope or change its default policy.
   ```sh
   .venv/bin/python -I -m pytest tests/test_two_pin_buzzers.py \
     -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_buzzer_same_net")'
+  ```
+
+#### LINT-221 — Same-net two-pin speaker review
+
+- **Status:** Implemented as the default-review rule
+  `component.two_pin_speaker_same_net`.
+- **Gap:** The same-net component inventory had no exact check for the stock
+  `Device:Speaker` symbol. A fitted speaker with both terminals assigned to
+  one schematic net therefore received no component-specific review prompt.
+- **Predicate:** Require the exact `Device:Speaker` identity, fitted state,
+  exactly two distinct native pin numbers, and one unambiguous native net per
+  pin. Emit REVIEW only when both pins share one net. Crystal, ultrasonic,
+  custom, multi-pin, incomplete, ambiguous, open, and DNP identities remain
+  outside the predicate.
+- **Boundary:** A shared net shows no terminal voltage difference in the
+  exported schematic netlist. It does not prove speaker behavior, amplifier
+  compatibility, physical connectivity, or assembly state. A project may
+  intentionally bypass or mute a speaker, so the rule remains configurable
+  and defaults to REVIEW.
+- **Fixtures:** Tooling-owned same-net fault and separate-net control; DNP,
+  incomplete, ambiguous, open, multi-pin, custom, alternate-symbol, policy,
+  ignore, ordering, and split-net metamorphic cases; CLI/MCP report parity;
+  and source-hashed KiCad 10.0.0/10.0.5 native export regressions. No product
+  or cohort schematic is used. The
+  [fixture note](../tests/fixtures/design_lint/two-pin-speakers/README.md)
+  records source hashes and native boundaries.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_two_pin_speakers.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_speaker_same_net")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets
