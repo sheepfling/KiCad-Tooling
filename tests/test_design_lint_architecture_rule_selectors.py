@@ -237,6 +237,10 @@ def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:
             ),
         ),
         (
+            "bus.usb_c_superspeed_lane_label_mismatch",
+            "tests/test_usb_c_superspeed_lane_labels.py::test_cross_lane_labels_are_localized_against_native_connector_functions",
+        ),
+        (
             "bus.spi_clock_chip_select_same_net",
             (
                 "tests/test_spi_clock_chip_select_same_net.py::"

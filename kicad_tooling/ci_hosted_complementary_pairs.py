@@ -48,6 +48,8 @@ def complementary_pair_fixture_lane(
         "control": "control.kicad_sch",
         "lane-fault": "lane-fault.kicad_sch",
         "lane-control": "lane-control.kicad_sch",
+        "lane-label-fault": "lane-label-fault.kicad_sch",
+        "lane-label-control": "lane-label-control.kicad_sch",
     }
     source_hashes = {case: digest(fixture_root / filename) for case, filename in cases.items()}
     expected_source_hashes = {
@@ -55,6 +57,8 @@ def complementary_pair_fixture_lane(
         "control": "ce1c57f200b9f042fe4174f6b1b4b327b717c3e93623e50f262bf2352b8e6089",
         "lane-fault": "9e3b9f4f6d39956d6a803e8a8e9df8ad1006adedaefe6654cd7728367f2a48eb",
         "lane-control": "9e14b4a936dbfc2907ec031f10dccc4ed32a385134abd568144ea7104a66a853",
+        "lane-label-fault": "fe4cf3472eb4961faaef4d935317188d23e7028350c245bb8eb0ef1a29ba0248",
+        "lane-label-control": "a4be145343d775dee661e5381eff65a8895feea6581adfd77cea5f07952bdf91",
     }
     if source_hashes != expected_source_hashes:
         raise ValueError("Complementary-pair fixture sources differ from the reviewed hashes")
@@ -71,7 +75,7 @@ def complementary_pair_fixture_lane(
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
         f'test "$actual" = "{config.kicad_version}"\n'
-        "for case in fault control lane-fault lane-control; do\n"
+        "for case in fault control lane-fault lane-control lane-label-fault lane-label-control; do\n"
         "  for run in first repeat; do\n"
         "    kicad-cli sch export netlist --format kicadxml "
         '      --output "/output/${case}.${run}.netlist.xml" '
@@ -185,6 +189,40 @@ def complementary_pair_fixture_lane(
                 1,
             )
         },
+        "lane-label-fault": {
+            f"J1.{index}": function
+            for index, function in enumerate(
+                (
+                    "StdA_SSTX1+",
+                    "StdA_SSTX1-",
+                    "StdA_SSTX2+",
+                    "StdA_SSTX2-",
+                    "StdA_SSRX1+",
+                    "StdA_SSRX1-",
+                    "StdA_SSRX2+",
+                    "StdA_SSRX2-",
+                    "GND",
+                ),
+                1,
+            )
+        },
+        "lane-label-control": {
+            f"J1.{index}": function
+            for index, function in enumerate(
+                (
+                    "StdA_SSTX1+",
+                    "StdA_SSTX1-",
+                    "StdA_SSTX2+",
+                    "StdA_SSTX2-",
+                    "StdA_SSRX1+",
+                    "StdA_SSRX1-",
+                    "StdA_SSRX2+",
+                    "StdA_SSRX2-",
+                    "GND",
+                ),
+                1,
+            )
+        },
     }
     normalized_hashes: dict[tuple[str, str], str] = {}
     raw_hashes: dict[tuple[str, str], str] = {}
@@ -222,29 +260,54 @@ def complementary_pair_fixture_lane(
     for case in cases:
         if normalized_hashes[(case, "first")] != normalized_hashes[(case, "repeat")]:
             raise ValueError(f"Native {case} exports differ after netlist normalization")
-    for case, expected_findings in (
-        ("fault", 2),
-        ("control", 0),
-        ("lane-fault", 1),
-        ("lane-control", 0),
-    ):
+    expected_pair_findings = {
+        "fault": 2,
+        "control": 0,
+        "lane-fault": 1,
+        "lane-control": 0,
+        "lane-label-fault": 0,
+        "lane-label-control": 0,
+    }
+    expected_lane_label_findings = {
+        "fault": 0,
+        "control": 0,
+        "lane-fault": 0,
+        "lane-control": 0,
+        "lane-label-fault": 4,
+        "lane-label-control": 0,
+    }
+    for case in cases:
         report = reports[(case, "first")]
-        findings = tuple(
+        pair_findings = tuple(
             item for item in report.findings if item.rule_id == "bus.complementary_pair_assignment"
         )
-        if len(findings) != expected_findings:
+        lane_label_findings = tuple(
+            item
+            for item in report.findings
+            if item.rule_id == "bus.usb_c_superspeed_lane_label_mismatch"
+        )
+        if len(pair_findings) != expected_pair_findings[case]:
             raise ValueError(
-                f"Native {case} expected {expected_findings} complementary-pair findings, "
-                f"observed {len(findings)}"
+                f"Native {case} expected {expected_pair_findings[case]} complementary-pair findings, "
+                f"observed {len(pair_findings)}"
             )
-        expected_status = "REVIEW" if expected_findings else "PASS"
+        if len(lane_label_findings) != expected_lane_label_findings[case]:
+            raise ValueError(
+                f"Native {case} expected {expected_lane_label_findings[case]} lane-label findings, "
+                f"observed {len(lane_label_findings)}"
+            )
+        expected_status = (
+            "REVIEW"
+            if expected_pair_findings[case] or expected_lane_label_findings[case]
+            else "PASS"
+        )
         if report.status != expected_status:
             raise ValueError(
                 f"Native {case} expected design-lint status {expected_status}, observed "
                 f"{report.status}"
             )
         if case == "fault":
-            by_subject = {item.subject: item for item in findings}
+            by_subject = {item.subject: item for item in pair_findings}
             usb_finding = by_subject.get("J1: USB SuperSpeed RX pair")
             ethernet_finding = by_subject.get("U1: Ethernet TX pair")
             if (
@@ -259,7 +322,7 @@ def complementary_pair_fixture_lane(
                     "Native open pair pins did not localize to their expected findings"
                 )
         if case == "lane-fault":
-            lane_finding = findings[0]
+            lane_finding = pair_findings[0]
             if (
                 lane_finding.subject != "J1: USB SuperSpeed TX lane 1 pair"
                 or lane_finding.evidence["positive_pins"] != ("J1.1",)
@@ -268,6 +331,15 @@ def complementary_pair_fixture_lane(
                 or lane_finding.evidence["negative_nets"] != ("LANE_SHARED",)
             ):
                 raise ValueError("Native USB-C lane fault did not localize its collapsed pair")
+        if case == "lane-label-fault":
+            expected_subjects = (
+                "J1.1: StdA_SSTX1+ on USB_TX2_P",
+                "J1.2: StdA_SSTX1- on USB_TX2_N",
+                "J1.3: StdA_SSTX2+ on USB_TX1_P",
+                "J1.4: StdA_SSTX2- on USB_TX1_N",
+            )
+            if tuple(item.subject for item in lane_label_findings) != expected_subjects:
+                raise ValueError("Native USB-C lane-label fault did not localize its four pins")
         log.event(
             f"complementary-pair-fixture/{case}",
             "PASS",
@@ -284,7 +356,9 @@ def complementary_pair_fixture_lane(
                 for pin, function in sorted(observed_by_case[case].pin_functions.items())
             ),
             lint_status=report.status,
-            pair_findings=";".join(sorted(item.subject for item in findings)) or "none",
+            pair_findings=";".join(sorted(item.subject for item in pair_findings)) or "none",
+            lane_label_findings=";".join(sorted(item.subject for item in lane_label_findings))
+            or "none",
             repeatable="true",
             repeatability_basis="normalized_netlist_and_design_lint_report",
             command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),

@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 237 rules are implemented with synthetic regression coverage.
+The following 238 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 237 active rules.
+The catalog currently contains 238 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -585,6 +585,7 @@ skipped under prerelease policy.
 - `bus.usb_c_unreviewed_port`
 - `bus.usb_data_path_mismatch`
 - `bus.usb_data_polarity_label_mismatch`
+- `bus.usb_c_superspeed_lane_label_mismatch`
 - `bus.usb_peer_data_pair_crossed`
 - `bus.usb_dp_dm_same_net`
 - `bus.usb_signal_on_named_rail`
@@ -3288,7 +3289,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 237 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 238 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -5768,6 +5769,39 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_USB_C_CC_SAME_NET_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_usb_c_cc_same_net_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_cc_same_net")'
+  ```
+
+#### LINT-256 — Review USB-C SuperSpeed lane labels against pin functions
+
+- **Status:** Implemented as the default-review heuristic
+  `bus.usb_c_superspeed_lane_label_mismatch`. Project policy can promote it to
+  `block`, turn it off, or ignore one exact finding fingerprint.
+- **Gap:** Lane-indexed USB-C pair completeness detects open and same-net pair
+  assignments, but an intact, separately named pair can still be assigned to
+  the wrong SuperSpeed lane, direction, or polarity. Pair completeness alone
+  does not compare explicit labels with the native connector functions.
+- **Predicate:** For a fitted pin with one exported net assignment, recognize
+  exact `StdA_` or `StdB_` `SSTX`/`SSRX` lane 1/2 native functions and net labels
+  using a bounded USB or `SS` prefix plus direction, lane 1/2, and `P`/`N` or
+  `+`/`-` polarity. Emit a pin-localized review if lane, direction, or side
+  differs. Neutral or unrecognized labels, generic function names, open or
+  multiply assigned pins, and DNP connector instances are skipped.
+- **Boundary:** Naming conflicts do not prove which lane assignment is
+  intended or that the schematic, device pinout, USB-C behavior, routed PCB,
+  or off-board connection is wrong. The check does not infer a project
+  requirement or trace physical copper.
+- **Fixtures and quality gate:** Synthetic lane-swap, polarity, direction,
+  neutral/ambiguous, DNP, open, multiply assigned, policy, ordering, and repair
+  coverage; catalog and focused-selector gates; and source-hashed native
+  fault/control schematics exported twice with digest-pinned KiCad 10.0.0 and
+  10.0.5. The native lane also confirms pair-completeness stays quiet for the
+  intact cross-lane fault.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_usb_c_superspeed_lane_labels.py -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_superspeed_lane_label_mismatch")'
+
+  KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES=1 .venv/bin/python -I -m pytest tests/test_complementary_pair_native_fixture_lane.py -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_superspeed_lane_label_mismatch")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

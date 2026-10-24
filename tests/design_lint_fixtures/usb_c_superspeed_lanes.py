@@ -21,14 +21,17 @@ def usb_c_superspeed_lane_netlist(
     shared_pair: str | None = None,
     open_pin: str | None = None,
     dnp: bool = False,
+    swap_tx_lane_labels: bool = False,
 ) -> NetlistContract:
-    """Build four explicit lane/direction pairs, optionally mutating one pair."""
+    """Build four explicit pairs, optionally faulting a pair or swapping TX labels."""
     nets: dict[str, tuple[str, ...]] = {}
     assignments: dict[str, str] = {}
     for pin, function in _LANE_FUNCTIONS.items():
         match = function.replace("−", "-")
         direction = "TX" if "SSTX" in match else "RX"
         lane = "1" if "1" in match else "2"
+        if swap_tx_lane_labels and direction == "TX":
+            lane = "2" if lane == "1" else "1"
         side = "P" if match.endswith("+") else "N"
         pair_key = f"{direction}{lane}"
         net = f"USB_{pair_key}_{side}"

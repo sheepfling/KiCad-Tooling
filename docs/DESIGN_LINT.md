@@ -38,6 +38,31 @@ The same native gate also checks all four indexed USB-C SuperSpeed pairs, with
 a TX1 same-net fault and a distinct-net control. Generic `TX1+/TX1-` names and
 lane indices outside 1 and 2 remain unclassified.
 
+## Review USB-C SuperSpeed pin and net-label mismatches
+
+`bus.usb_c_superspeed_lane_label_mismatch` compares explicit `StdA_` and
+`StdB_` `SSTX`/`SSRX` lane 1/2 pin functions with net labels that explicitly
+encode USB or SuperSpeed direction, lane, and polarity, such as
+`USB_TX1_P` or `SSRX2-`. A mismatch in lane, TX/RX direction, or polarity
+creates one `REVIEW` finding for the affected pin. Neutral labels, generic
+`TX1`/`RX1` functions, open or multiply assigned pins, DNP connectors, and
+unrecognized labels stay quiet. The names are clues for review; they do not
+establish the correct pinout, lane mapping, USB compliance, routed copper, or
+physical continuity. Project policy can set the rule to `block` or `off`, or
+ignore an exact finding fingerprint.
+
+Synthetic regressions cover lane swaps, polarity and direction mismatches,
+neutral and ambiguous controls, DNP/open/ambiguous boundaries, policy, and
+ordering. The exact KiCad 10.0.0/10.0.5 native fixture checks swapped TX1/TX2
+labels beside a correct lane-label control, independently of pair-completeness
+findings:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_usb_c_superspeed_lane_labels.py -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_superspeed_lane_label_mismatch")'
+
+KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES=1 .venv/bin/python -I -m pytest tests/test_complementary_pair_native_fixture_lane.py -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_superspeed_lane_label_mismatch")'
+```
+
 ## Review unassigned USB 2.0 data pins
 
 `bus.usb_unconnected_data_pin` recognizes a bounded set of native USB 2.0
@@ -722,7 +747,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 237 active rules.
+The catalog currently contains 238 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

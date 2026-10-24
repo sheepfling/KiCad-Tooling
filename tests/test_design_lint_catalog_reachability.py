@@ -475,6 +475,12 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     )
     emitted.update(
         item.rule_id
+        for item in candidates(
+            _usb_c_superspeed_lane_fixtures.usb_c_superspeed_lane_netlist(swap_tx_lane_labels=True)
+        )
+    )
+    emitted.update(
+        item.rule_id
         for item in candidates(_usb_c_sbu_named_rail_fixtures.usb_c_sbu_named_rail_netlist())
     )
     emitted.update(

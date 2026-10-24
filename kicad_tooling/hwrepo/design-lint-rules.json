@@ -5395,6 +5395,50 @@
       "implementation_owner": "kicad_tooling/hwrepo/design_lint_interfaces_usb_data_polarity.py#usb_data_polarity_label_candidates"
     },
     {
+      "rule_id": "bus.usb_c_superspeed_lane_label_mismatch",
+      "title": "USB-C SuperSpeed pin function conflicts with its net label",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted pin with one exported net assignment, compare a bounded StdA/StdB USB-C SSTX/SSRX lane 1/2 pin-function alias with an explicitly USB- or SuperSpeed-prefixed net label that encodes direction, lane, and polarity. Emit a review candidate when those identities differ.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only explicit StdA/StdB-prefixed SSTX/SSRX lane 1/2 functions and labels matching the bounded USB/SS direction-lane-polarity grammar are classified. Generic TX/RX functions and neutral, ambiguous, open, multiply assigned, or unrecognized labels remain unclassified.",
+        "The finding is a review clue, not a pinout requirement or defect verdict. Pin and net names do not establish the intended lane mapping, internal connectivity, USB compliance, PCB routing, or physical continuity.",
+        "DNP connector instances are skipped. Project policy can change the default review mode, turn the rule off, or ignore an exact finding fingerprint."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_c_superspeed_lane_labels.test_cross_lane_labels_are_localized_against_native_connector_functions",
+        "tests.test_usb_c_superspeed_lane_labels.test_explicit_polarity_or_direction_mismatch_is_reviewed",
+        "tests.test_complementary_pair_native_fixture_lane.test_complementary_pair_fault_and_control_export_repeatably"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_c_superspeed_lane_labels.test_correct_and_neutral_or_ambiguous_labels_remain_quiet",
+        "tests.test_usb_c_superspeed_lane_labels.test_usb_and_superspeed_label_aliases_support_both_polarity_spellings",
+        "tests.test_usb_c_superspeed_lane_labels.test_dnp_open_and_multiply_assigned_connector_pins_are_skipped",
+        "tests.test_complementary_pair_native_fixture_lane.test_complementary_pair_fault_and_control_export_repeatably"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_c_superspeed_lane_labels.test_reordering_netlist_is_stable_and_corrected_labels_clear_findings"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_c_superspeed_lane_labels.py#usb_c_superspeed_lane_label_mismatch_candidates",
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#complementary_pin_function_key",
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_c_superspeed_lane_function_role",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_c_superspeed_lane_labels.py#usb_c_superspeed_lane_label_mismatch_candidates"
+    },
+    {
       "rule_id": "bus.usb_peer_data_pair_crossed",
       "title": "USB connector and PHY data pair is crossed",
       "status": "active",

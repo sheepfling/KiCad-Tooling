@@ -189,6 +189,7 @@ DesignLintRuleId = Literal[
     "bus.ethernet_signal_on_named_rail",
     "bus.complementary_pair_assignment",
     "bus.usb_data_polarity_label_mismatch",
+    "bus.usb_c_superspeed_lane_label_mismatch",
     "bus.usb_peer_data_pair_crossed",
     "bus.usb_signal_on_named_rail",
     "mcu.stm32_cubemx_pin_map",

@@ -101,6 +101,7 @@ TWO_PIN_NATIVE_THEME_SUITES = ("test_two_pin_component_native_fixture_lane.py",)
 COMPLEMENTARY_PAIR_THEME_SUITES = (
     "test_complementary_pair_native_fixture_lane.py",
     "test_usb_c_superspeed_lane_pairs.py",
+    "test_usb_c_superspeed_lane_labels.py",
 )
 DC_REFERENCE_NATIVE_THEME_SUITES = ("test_net_dc_reference_native_fixture_lane.py",)
 PCB_THEME_SUITES = (

@@ -22,6 +22,8 @@ pytestmark = [
     os.environ.get("KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES") != "1",
     reason="native complementary-pair fixtures run in the digest-pinned package acceptance lane",
 )
+@pytest.mark.design_lint_rule(rule_id="bus.complementary_pair_assignment")
+@pytest.mark.design_lint_rule(rule_id="bus.usb_c_superspeed_lane_label_mismatch")
 def test_complementary_pair_fault_and_control_export_repeatably(
     hosted_reference_root: Path,
 ) -> None:
@@ -59,11 +61,15 @@ def test_complementary_pair_fault_and_control_export_repeatably(
             "complementary-pair-fixture/control",
             "complementary-pair-fixture/lane-fault",
             "complementary-pair-fixture/lane-control",
+            "complementary-pair-fixture/lane-label-fault",
+            "complementary-pair-fixture/lane-label-control",
         }
         fault = results["complementary-pair-fixture/fault"]
         control = results["complementary-pair-fixture/control"]
         lane_fault = results["complementary-pair-fixture/lane-fault"]
         lane_control = results["complementary-pair-fixture/lane-control"]
+        lane_label_fault = results["complementary-pair-fixture/lane-label-fault"]
+        lane_label_control = results["complementary-pair-fixture/lane-label-control"]
         assert fault["lint_status"] == "REVIEW"
         assert fault["pair_findings"] == "J1: USB SuperSpeed RX pair;U1: Ethernet TX pair"
         assert "J1.4=StdA_SSRX-" in fault["pin_functions"]
@@ -80,7 +86,25 @@ def test_complementary_pair_fault_and_control_export_repeatably(
         assert lane_control["lint_status"] == "PASS"
         assert lane_control["pair_findings"] == "none"
         assert "J1.9=GND" in lane_control["pin_functions"]
-        for result in (fault, control, lane_fault, lane_control):
+        assert lane_label_fault["lint_status"] == "REVIEW"
+        assert lane_label_fault["pair_findings"] == "none"
+        assert lane_label_fault["lane_label_findings"] == (
+            "J1.1: StdA_SSTX1+ on USB_TX2_P;"
+            "J1.2: StdA_SSTX1- on USB_TX2_N;"
+            "J1.3: StdA_SSTX2+ on USB_TX1_P;"
+            "J1.4: StdA_SSTX2- on USB_TX1_N"
+        )
+        assert lane_label_control["lint_status"] == "PASS"
+        assert lane_label_control["pair_findings"] == "none"
+        assert lane_label_control["lane_label_findings"] == "none"
+        for result in (
+            fault,
+            control,
+            lane_fault,
+            lane_control,
+            lane_label_fault,
+            lane_label_control,
+        ):
             assert result["kicad_version"] == version
             assert result["repeatable"] == "true"
             assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
@@ -88,7 +112,14 @@ def test_complementary_pair_fault_and_control_export_repeatably(
             assert re.fullmatch("^[0-9a-f]{64}$", result["normalized_netlist_sha256"])
         normalized_hashes[version] = {
             case: results[f"complementary-pair-fixture/{case}"]["normalized_netlist_sha256"]
-            for case in ("fault", "control", "lane-fault", "lane-control")
+            for case in (
+                "fault",
+                "control",
+                "lane-fault",
+                "lane-control",
+                "lane-label-fault",
+                "lane-label-control",
+            )
         }
     assert set(normalized_hashes) == {"10.0.0", "10.0.5"}
     assert normalized_hashes["10.0.0"] == normalized_hashes["10.0.5"]

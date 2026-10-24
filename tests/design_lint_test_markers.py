@@ -143,6 +143,8 @@ _LINT_AREA_MODULES = {
             "tests/test_i3c_same_net_native_fixture_lane.py",
             "tests/test_usb_data_same_net.py",
             "tests/test_usb_c_superspeed_lane_pairs.py",
+            "tests/test_usb_c_superspeed_lane_labels.py",
+            "tests/test_design_lint_architecture_usb_c_lane_labels.py",
             "tests/test_design_lint_determinism_usb_dp_dm_same_net.py",
             "tests/test_usb_data_same_net_native_fixture_lane.py",
             "tests/test_design_lint_determinism_serial_signal_named_rail.py",
