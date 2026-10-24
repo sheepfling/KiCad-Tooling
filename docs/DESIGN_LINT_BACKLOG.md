@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 228 rules are implemented with synthetic regression coverage.
+The following 229 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 228 active rules.
+The catalog currently contains 229 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -559,6 +559,7 @@ skipped under prerelease policy.
 - `bus.rs485_peer_reference_review`
 - `bus.rs485_data_direction_label_mismatch`
 - `bus.rs485_data_input_output_same_net`
+- `bus.rs485_line_on_named_rail`
 - `bus.rs485_signal_on_named_rail`
 - `bus.rs485_unconnected_data_pin`
 - `bus.usb_peer_reference_review`
@@ -783,6 +784,15 @@ and optional ecosystem adapters are `P3`.
   to a supply-like or return-like net label. It uses the shared management-pin
   recognizer and named-rail evidence; unused management pins and intentional
   straps remain project decisions.
+- **LINT-246 RS-485 data pin assigned to a named rail:** The default-review
+  heuristic requires explicit RS-485 identity, bounded D/DI or R/RO function,
+  complete native pin inventory, and one direct assignment to a named supply
+  or return label. Intentional straps remain project decisions.
+- **LINT-247 RS-485 A/B bus line assigned to a named rail:** The default-review
+  heuristic requires explicit RS-485 identity, one exact A/B function pair,
+  complete native pin inventory, and one direct assignment to a named supply
+  or return label. Generic A/B pins, non-unique line pairs, and CAN identities
+  remain out of scope.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3179,7 +3189,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 228 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 229 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -3357,7 +3367,7 @@ is not a reason by itself to expand its scope or change its default policy.
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
 - **Status:** Implemented v86. The cross-process probe supports themed report
-  selectors and retains the complete 273-report inventory gate. Fault/control
+  selectors and retains the complete 275-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -5350,6 +5360,42 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_RS485_SIGNAL_NAMED_RAIL_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_rs485_signal_named_rail_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_signal_on_named_rail")'
+  ```
+
+#### LINT-247 — Review RS-485 A/B bus-line pins assigned to named rails
+
+- **Status:** Implemented as the default-review
+  `bus.rs485_line_on_named_rail`. A project may promote it to `block`, turn it
+  `off`, or ignore an exact finding.
+- **Gap:** LINT-246 reviews explicit transceiver D/DI and R/RO data pins on
+  named rails, but does not examine the A/B bus-side line pins.
+- **Predicate:** Require a fitted U/IC with exactly one A and one B pin-function
+  alias, explicit RS-485 identity in the native symbol library ID or component
+  value, complete native pin inventory membership for both line pins, and one
+  assignment for the examined pin. Emit a REVIEW candidate when the assigned
+  net label is recognized as supply-like or return-like.
+- **Boundary:** Only exact A/B aliases and bounded RS-485 identities qualify.
+  Generic A/B pins, non-unique A/B pairs, CAN identities, connector pins, DNP
+  parts, and incomplete or ambiguous assignments remain quiet. The finding
+  asks whether the direct rail assignment is intentional; it does not establish
+  electrical potential, required bus topology, a defect, PCB copper, or
+  physical continuity.
+- **Fixtures and quality gate:** Synthetic fault/control cases cover A and B
+  line pins on positive and return-like labels, neutral signal labels, generic
+  A/B logic pins, CAN identity, DNP, open and multiply assigned pins,
+  duplicate/non-unique pair functions, incomplete inventory, project policy,
+  exact ignores, repaired assignments, stable ordering, hash-seed determinism,
+  catalog reachability, and rule-scoped selectors. Digest-pinned KiCad 10.0.0
+  and 10.0.5 fixtures repeat native netlist and ERC fault/control exports.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_rs485_line_named_rail.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.rs485_line_on_named_rail")'
+
+  KICAD_RUN_NATIVE_RS485_LINE_NAMED_RAIL_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_rs485_line_named_rail_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_line_on_named_rail")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

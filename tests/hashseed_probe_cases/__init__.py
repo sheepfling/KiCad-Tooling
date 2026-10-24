@@ -39,6 +39,7 @@ HASHSEED_REPORT_FAMILIES = (
     "ethernet_management_named_rail",
     "usb_signal_named_rail",
     "rs485_signal_named_rail",
+    "rs485_line_named_rail",
     "analog",
     "schematic_geometry",
 )

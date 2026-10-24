@@ -6585,6 +6585,49 @@
       "implementation_owner": "kicad_tooling/hwrepo/rs485_same_net.py#rs485_data_input_output_same_net_candidates"
     },
     {
+      "rule_id": "bus.rs485_line_on_named_rail",
+      "title": "RS-485 transceiver bus line pin assigned to a named rail",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted U/IC with exactly one bounded A and one bounded B pin-function alias, require explicit RS-485 identity in the native symbol library ID or component value, complete native pin inventory membership for both line pins, and exactly one assignment for the examined pin. Emit a REVIEW candidate when that assignment has a supply-like or return-like label.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
+      ],
+      "limitations": [
+        "Identity matching is limited to explicit RS-485/RS485 text and bounded MAX48xx, SP3485, ADM48xx, SN65HVD485, and THVD family markers. Generic A/B pins and the SN65HVD23x CAN family do not qualify.",
+        "Only exact A/B function aliases are recognized. Function and label text are review clues only; a direct rail assignment may be intentional. The finding does not establish electrical potential, a required bus topology, a defect, board copper, or physical continuity. Projects may review, block, disable, or ignore the finding.",
+        "DNP, open, multiply assigned, connector, incomplete-inventory, and non-unique A/B pair cases are skipped. The complementary line pin is included as evidence; its assignment is not inferred or required by this rule."
+      ],
+      "fault_fixtures": [
+        "tests.test_rs485_line_named_rail.test_explicit_rs485_line_pins_on_named_rails_request_review",
+        "tests.test_rs485_line_named_rail_native_fixture_lane.test_native_rs485_line_named_rail_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_rs485_line_named_rail.test_only_bounded_a_b_functions_and_explicit_rs485_identity_are_considered",
+        "tests.test_rs485_line_named_rail.test_dnp_open_ambiguous_duplicate_and_incomplete_pair_evidence_are_skipped",
+        "tests.test_rs485_line_named_rail_native_fixture_lane.test_native_rs485_line_named_rail_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_rs485_line_named_rail.test_reordering_is_stable_and_moving_the_pin_to_a_bus_net_clears_review",
+        "tests.test_design_lint_determinism_rs485_line_named_rail.test_rs485_line_named_rail_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_RS485_LINE_NAMED_RAIL_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/rs485_line_named_rail.py#rs485_line_on_named_rail_candidates",
+        "kicad_tooling/hwrepo/rs485_line_functions.py#rs485_bus_line_role",
+        "kicad_tooling/hwrepo/rs485_data_functions.py#explicit_rs485_transceiver_identity",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/design_lint_rs485_candidates.py#rs485_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/rs485_line_named_rail.py#rs485_line_on_named_rail_candidates"
+    },
+    {
       "rule_id": "bus.rs485_signal_on_named_rail",
       "title": "RS-485 transceiver data pin assigned to a named rail",
       "status": "active",

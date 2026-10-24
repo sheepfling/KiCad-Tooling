@@ -710,7 +710,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 228 active rules.
+The catalog currently contains 229 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -962,6 +962,28 @@ physical continuity. Source hashes and scope are in the
 KICAD_RUN_NATIVE_RS485_SIGNAL_NAMED_RAIL_FIXTURES=1 \
   .venv/bin/python -I -m pytest tests/test_rs485_signal_named_rail_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_signal_on_named_rail")'
+```
+
+### RS-485 A/B bus-line pins assigned directly to named rails
+
+`bus.rs485_line_on_named_rail` reviews a fitted IC only when its native symbol
+ID or value identifies RS-485 and its complete native pin inventory contains
+one exact A and one exact B function. It prompts when either line pin has one
+direct assignment to a supply-like or return-like net label. Generic A/B pins,
+ambiguous pairs, CAN identities, DNP parts, and incomplete assignments remain
+quiet. This defaults to `review`: label and function names are clues, and the
+prompt does not establish electrical potential, intended bus topology, a
+defect, routed copper, or physical continuity. The project can set an exact
+mode or record a reasoned ignore. Source hashes and scope are in the
+[synthetic fixture record](../tests/fixtures/design_lint/rs485-line-named-rail/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_rs485_line_named_rail.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.rs485_line_on_named_rail")'
+
+KICAD_RUN_NATIVE_RS485_LINE_NAMED_RAIL_FIXTURES=1 \
+  .venv/bin/python -I -m pytest tests/test_rs485_line_named_rail_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_line_on_named_rail")'
 ```
 
 ### CAN TX/RX pin and net-label direction review

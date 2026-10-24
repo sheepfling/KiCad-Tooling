@@ -27,6 +27,7 @@ import tests.design_lint_fixtures.mosfet_terminal_same_net as _mosfet_terminal_s
 import tests.design_lint_fixtures.power_input_paths as _power_input_paths
 import tests.design_lint_fixtures.power_pin_net_roles as _power_pin_net_roles
 import tests.design_lint_fixtures.repeated_signal_pin_functions as _repeated_signal_pin_fixtures
+import tests.design_lint_fixtures.rs485_line_named_rail as _rs485_line_named_rail_fixtures
 import tests.design_lint_fixtures.rs485_unconnected_data_pins as _rs485_unconnected_data_fixtures
 import tests.design_lint_fixtures.serial_unconnected_pins as _serial_unconnected_pin_fixtures
 import tests.design_lint_fixtures.spi_unconnected_data_pins as _spi_unconnected_data_fixtures
@@ -444,6 +445,10 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     rs485_scan = scan_rs485_peer_references(rs485_context, rs485_source)
     emitted.update(
         item.rule_id for item in candidates(rs485_source, rs485_peer_reference_scan=rs485_scan)
+    )
+    emitted.update(
+        item.rule_id
+        for item in candidates(_rs485_line_named_rail_fixtures.rs485_line_named_rail_netlist())
     )
     active = {item.rule_id for item in rule_catalog().rules if item.status == "active"}
     assert emitted == active

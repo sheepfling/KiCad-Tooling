@@ -1,4 +1,4 @@
-"""Digest-pinned native fixtures for focused RS-485 data-pin reviews."""
+"""Digest-pinned native fixtures for focused RS-485 interface reviews."""
 
 from __future__ import annotations
 
@@ -28,6 +28,11 @@ _NAMED_RAIL_SOURCE_HASHES = {
     "fault": "4808cd9ba83174fd0d32d182f5816effa20a88da097dc18dea419f5115a39d23",
     "control": "aa38e247661a1bf88460122caf2214bf3ad11468debdc4b6edd71a628a02e512",
 }
+_LINE_NAMED_RAIL_RULE_ID = "bus.rs485_line_on_named_rail"
+_LINE_NAMED_RAIL_SOURCE_HASHES = {
+    "fault": "4e15a47d7418c3b17ae5cd2cf10cfcc6dc7e0ef796bbf9023aebbbe029ba6d1b",
+    "control": "ec8a53ce7ae539d233baf7952e773adb1911cd5d930c98f4b120d22b6865c4e3",
+}
 
 
 def rs485_data_same_net_fixture_lane(
@@ -44,13 +49,20 @@ def rs485_signal_named_rail_fixture_lane(
     _rs485_fixture_lane(root, version=version, image=image, log=log, feature="named_rail")
 
 
+def rs485_line_named_rail_fixture_lane(
+    root: Path, *, version: str, image: str, log: HostedLog
+) -> None:
+    """Repeat exact native exports for an RS-485 A/B line pin on a named rail."""
+    _rs485_fixture_lane(root, version=version, image=image, log=log, feature="line_named_rail")
+
+
 def _rs485_fixture_lane(
     root: Path,
     *,
     version: str,
     image: str,
     log: HostedLog,
-    feature: Literal["same_net", "named_rail"],
+    feature: Literal["same_net", "named_rail", "line_named_rail"],
 ) -> None:
     """Run the source-bound native lane shared by the RS-485 heuristics."""
     from .hwrepo.contract_coach import pinned_image, run_command
@@ -61,8 +73,11 @@ def _rs485_fixture_lane(
 
     root = root.resolve()
     if (version, image) not in RS485_DATA_SAME_NET_TOOLCHAINS:
-        raise ValueError(f"RS-485 same-net fixtures do not cover KiCad {version} with this image")
+        raise ValueError(f"RS-485 native fixtures do not cover KiCad {version} with this image")
     pinned = pinned_image(image)
+    expected_functions = {"U1.1": "D", "U1.2": "R"}
+    if feature == "line_named_rail":
+        expected_functions = {"U1.1": "A", "U1.2": "B"}
     if feature == "same_net":
         fixture_directory = "rs485-data-same-net"
         stage_prefix = "rs485-data-same-net-fixture"
@@ -80,7 +95,7 @@ def _rs485_fixture_lane(
             "fault": {"DATA_SHARED": ("U1.1", "U1.2")},
             "control": {"HOST_TX": ("U1.1",), "HOST_RX": ("U1.2",)},
         }
-    else:
+    elif feature == "named_rail":
         fixture_directory = "rs485-signal-named-rail"
         stage_prefix = "rs485-signal-named-rail-fixture"
         rule_id = _NAMED_RAIL_RULE_ID
@@ -93,6 +108,20 @@ def _rs485_fixture_lane(
         expected_nets = {
             "fault": {"GND": ("U1.1",), "HOST_RX": ("U1.2",)},
             "control": {"HOST_TX": ("U1.1",), "HOST_RX": ("U1.2",)},
+        }
+    else:
+        fixture_directory = "rs485-line-named-rail"
+        stage_prefix = "rs485-line-named-rail-fixture"
+        rule_id = _LINE_NAMED_RAIL_RULE_ID
+        source_names = {"fault": "fault.kicad_sch", "control": "control.kicad_sch"}
+        reviewed_hashes = _LINE_NAMED_RAIL_SOURCE_HASHES
+        expected_subjects = {
+            "fault": ("U1.1: A on return-like net GND",),
+            "control": (),
+        }
+        expected_nets = {
+            "fault": {"GND": ("U1.1",), "HOST_RX": ("U1.2",)},
+            "control": {"RS485_A": ("U1.1",), "RS485_B": ("U1.2",)},
         }
     fixture_root = (
         Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint" / fixture_directory
@@ -180,11 +209,20 @@ def _rs485_fixture_lane(
             observed = read_netlist(netlist_path)
             if observed.component_pin_numbers.get("U1") != ("1", "2"):
                 raise ValueError(f"Native RS-485 {feature} {case} lost pin inventory")
-            if (
-                observed.pin_functions.get("U1.1") != "D"
-                or observed.pin_functions.get("U1.2") != "R"
+            if any(
+                observed.pin_functions.get(pin) != function
+                for pin, function in expected_functions.items()
             ):
-                raise ValueError(f"Native RS-485 {feature} {case} lost D/R pin functions")
+                raise ValueError(
+                    f"Native RS-485 {feature} {case} lost expected pin functions: "
+                    f"{expected_functions!r}"
+                )
+            if feature == "line_named_rail" and (
+                observed.component_symbols.get("U1") != "Synthetic:Rs485Transceiver"
+                or observed.components.get("U1") is None
+                or observed.components["U1"].value != "RS-485 transceiver"
+            ):
+                raise ValueError(f"Native RS-485 {feature} {case} lost explicit identity evidence")
             expected_case_nets = expected_nets[case]
             if any(observed.nets.get(net) != pins for net, pins in expected_case_nets.items()):
                 actual_nets = {net: observed.nets.get(net) for net in expected_case_nets}
