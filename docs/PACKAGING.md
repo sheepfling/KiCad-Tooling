@@ -74,9 +74,11 @@ PyPI publication remains a separate release step. See the
 [repository boundary](../README.md#repository-boundary).
 
 Pull requests, main pushes, and stable version tags keep the full package acceptance
-suite. A prerelease tag containing `rc` runs the same packaging, static checks, and
-external-template rehearsal with a selected design-lint pytest scope and declared
-native fixture lanes. Use an annotated tag with exactly one `Lint-Area` or
+suite and the Windows/macOS/Linux preview matrix. A prerelease tag containing `rc`
+runs the scoped design-lint checks, static checks, and external-template rehearsal
+with declared native fixture lanes; its unrelated preview matrix is skipped. This
+keeps each lint tag focused while the full acceptance events continue to exercise
+portable preview orchestration. Use an annotated tag with exactly one `Lint-Area` or
 `Lint-Rule` line. Prefer `Lint-Rule` for a single-rule change, and use
 `Lint-Area` when a change spans rules within a theme. A rule selector must name
 an active rule in the packaged catalog;

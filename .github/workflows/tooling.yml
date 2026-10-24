@@ -12,6 +12,10 @@ permissions:
 jobs:
   preview-portability:
     name: Preview orchestration (${{ matrix.os }})
+    if: >-
+      github.event_name != 'push' ||
+      github.ref == 'refs/heads/main' ||
+      !contains(github.ref_name, 'rc')
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:

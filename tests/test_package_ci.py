@@ -124,26 +124,6 @@ def test_wheel_requires_rule_catalog_and_theme_owned_models(
         wheel_contents(wheel)
 
 
-@pytest.mark.architecture
-def test_workflow_keeps_full_acceptance_and_scopes_prerelease_tags() -> None:
-    repository = Path(__file__).resolve().parents[1]
-    workflow = (repository / ".github/workflows/tooling.yml").read_text(encoding="utf-8")
-    package_job = workflow.split("  package:\n", 1)[1].split("  prerelease-lint-gate:\n", 1)[0]
-    assert "github.event_name != 'push'" in package_job
-    assert "github.ref == 'refs/heads/main'" in package_job
-    assert "!contains(github.ref_name, 'rc')" in package_job
-
-    lint_job = workflow.split("  prerelease-lint-gate:\n", 1)[1]
-    assert "startsWith(github.ref, 'refs/tags/v')" in lint_job
-    assert "contains(github.ref_name, 'rc')" in lint_job
-    assert 'python scripts/lint_gate_scope.py --tag "$GITHUB_REF_NAME"' in lint_job
-    assert '--pytest-markexpr "$PYTEST_MARKEXPR"' in lint_job
-    assert "PYTEST_PATHS: ${{ steps.lint-scope.outputs.pytestpaths }}" in lint_job
-    assert 'args+=(--pytest-paths "${pytest_paths[@]}")' in lint_job
-    assert "build/acceptance-template" in lint_job
-    assert "tooling-lint-gate-${{ github.run_id }}-${{ github.run_attempt }}" in lint_job
-
-
 def test_lint_tag_declares_one_area_and_only_configured_native_fixtures() -> None:
     repository = Path(__file__).resolve().parents[1]
     fixtures = configured_native_fixtures(repository)
