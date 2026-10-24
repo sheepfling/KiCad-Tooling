@@ -14,7 +14,10 @@ from kicad_tooling.ci_hosted import (
     HostedLog,
     two_pin_component_fixture_lane,
 )
-from kicad_tooling.ci_hosted_two_pin_components import two_pin_component_fixture_cases_for_rules
+from kicad_tooling.ci_hosted_two_pin_components import (
+    TWO_PIN_COMPONENT_CANDIDATE_KINDS,
+    two_pin_component_fixture_cases_for_rules,
+)
 from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 from tests.synthetic_design_lint_project import (
@@ -70,6 +73,15 @@ def test_native_fixture_sources_are_hash_pinned_under_the_fixture_root() -> None
         assert source.is_relative_to(fixture_root.resolve())
         assert source.is_file()
         assert hashlib.sha256(source.read_bytes()).hexdigest() == expected_digest
+
+
+@pytest.mark.design_lint_rule(rule_id="component.two_pin_buzzer_same_net")
+def test_native_candidate_kind_map_covers_every_fixture_rule() -> None:
+    fixture_rule_ids = {rule_id for _, rule_id, _ in TWO_PIN_COMPONENT_FIXTURE_CASES.values()}
+    assert set(TWO_PIN_COMPONENT_CANDIDATE_KINDS) == fixture_rule_ids
+    assert TWO_PIN_COMPONENT_CANDIDATE_KINDS["component.two_pin_buzzer_same_net"] == frozenset(
+        {"buzzer"}
+    )
 
 
 def test_passive_native_fixture_scope_contains_only_passive_faults_and_controls() -> None:

@@ -177,6 +177,19 @@ TWO_PIN_COMPONENT_FIXTURE_CASES: dict[str, tuple[str, str, set[str]]] = {
     ),
 }
 
+TWO_PIN_COMPONENT_CANDIDATE_KINDS: dict[str, frozenset[str]] = {
+    "component.two_pin_passive_same_net": frozenset(
+        {"resistor", "capacitor", "inductor", "varistor", "thermistor"}
+    ),
+    "component.two_pin_diode_same_net": frozenset({"diode"}),
+    "component.two_pin_led_same_net": frozenset({"led"}),
+    "component.two_pin_buzzer_same_net": frozenset({"buzzer"}),
+    "component.two_pin_crystal_same_net": frozenset({"crystal"}),
+    "component.two_pin_fuse_same_net": frozenset({"fuse", "polyfuse"}),
+    "component.two_pin_ferrite_same_net": frozenset({"ferrite_bead"}),
+    "component.two_pin_switch_same_net": frozenset({"switch"}),
+}
+
 
 def two_pin_component_fixture_cases_for_rules(
     rule_ids: tuple[str, ...] | None,
@@ -355,21 +368,7 @@ def two_pin_component_fixture_lane(
             ).encode("utf-8")
             normalized_hashes[(case, run)] = hashlib.sha256(normalized).hexdigest()
             candidates = two_pin_components_on_same_net(observed, role_map)
-            candidate_kinds = {
-                "component.two_pin_passive_same_net": {
-                    "resistor",
-                    "capacitor",
-                    "inductor",
-                    "varistor",
-                    "thermistor",
-                },
-                "component.two_pin_diode_same_net": {"diode"},
-                "component.two_pin_led_same_net": {"led"},
-                "component.two_pin_crystal_same_net": {"crystal"},
-                "component.two_pin_fuse_same_net": {"fuse", "polyfuse"},
-                "component.two_pin_ferrite_same_net": {"ferrite_bead"},
-                "component.two_pin_switch_same_net": {"switch"},
-            }[rule_id]
+            candidate_kinds = TWO_PIN_COMPONENT_CANDIDATE_KINDS[rule_id]
             matching_candidates = tuple(item for item in candidates if item.kind in candidate_kinds)
             expected_candidate_count = len(case_expected_subjects)
             if len(matching_candidates) != expected_candidate_count:
