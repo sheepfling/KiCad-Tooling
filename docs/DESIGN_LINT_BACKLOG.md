@@ -11207,7 +11207,9 @@ is not a reason by itself to expand its scope or change its default policy.
   the native-netlist predicate. A same-domain common-net map and a
   distinct-domain split-net export are controls. Digest-pinned native exports
   repeat on KiCad 10.0.0 and 10.0.5; the mapped review changes while the
-  normalized netlist remains unchanged.
+  normalized netlist remains unchanged. A separate-group scenario also checks
+  that singleton supply scopes produce the independent
+  `connector.return_supply_scope_singleton` review.
 - **Focused selection:**
 
   ```sh

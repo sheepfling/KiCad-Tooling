@@ -95,10 +95,10 @@ def verify_mapped_supply_interfaces(ctx: ConnectorReturnFixtureContext):
             case == "mapped-supply-control" and serial_voltage_domain == "isolated-5v"
         )
         domain_control = serial_voltage_domain == "isolated-5v" and not domain_sharing_fault
-        scope_control = supply_groups is not None
+        scope_review = case == "mapped-supply-fault" and supply_groups is not None
         report_key = (
-            "mapped-supply-scope-control"
-            if scope_control
+            "mapped-supply-scope-review"
+            if scope_review
             else "mapped-supply-domain-sharing-fault"
             if domain_sharing_fault
             else "mapped-supply-domain-control"
@@ -164,10 +164,12 @@ def verify_mapped_supply_interfaces(ctx: ConnectorReturnFixtureContext):
             connector_coverage=connector_coverage,
         )
         expected_finding_ids: set[str] = (
-            {"connector.repeated_pin_function"}
-            if case == "mapped-supply-fault" and not domain_control and not scope_control
+            {"connector.return_supply_scope_singleton"}
+            if scope_review
             else {"connector.mapped_supply_domains_share_net"}
             if domain_sharing_fault
+            else {"connector.repeated_pin_function"}
+            if case == "mapped-supply-fault" and not domain_control
             else set()
         )
         if (
@@ -181,7 +183,31 @@ def verify_mapped_supply_interfaces(ctx: ConnectorReturnFixtureContext):
             finding = next(
                 item for item in mapped_report.findings if item.rule_id in expected_finding_ids
             )
-            if domain_sharing_fault:
+            if scope_review:
+                expected_evidence = {
+                    "comparison_role": ("supply in voltage domain external-5v",),
+                    "comparable_references": ("J1", "J2"),
+                    "isolated_references": ("J1", "J2"),
+                    "scope_evidence": (
+                        "J1: supply_comparison_group=usb-supply; Reviewed J1 in supply group usb-supply",
+                        "J2: supply_comparison_group=serial-supply; Reviewed J2 in supply group serial-supply",
+                    ),
+                    "mapped_pin_assignments": (
+                        "J1.1=SUPPLY_ALPHA; supply_comparison_group=usb-supply",
+                        "J2.9=SUPPLY_BETA; supply_comparison_group=serial-supply",
+                    ),
+                    "J1.1": ("SUPPLY_ALPHA",),
+                    "J2.9": ("SUPPLY_BETA",),
+                }
+                if any(
+                    finding.evidence.get(key) != value for key, value in expected_evidence.items()
+                ):
+                    raise ValueError(
+                        "Mapped supply-scope review lost its exact groups or pin evidence"
+                    )
+                if finding.evidence.get("interface_catalog_sha256") != (catalog_sha256,):
+                    raise ValueError("Mapped supply-scope review omitted its catalog digest")
+            elif domain_sharing_fault:
                 expected_evidence = {
                     "native_shared_net": ("COMMON_SUPPLY",),
                     "reviewed_voltage_domains": ("external-5v", "isolated-5v"),
@@ -219,8 +245,8 @@ def verify_mapped_supply_interfaces(ctx: ConnectorReturnFixtureContext):
                 if dict(finding.evidence) != expected_evidence:
                     raise ValueError("Mapped supply fault lost exact pin, domain, or role evidence")
         event_name = (
-            "scope-control"
-            if scope_control
+            "scope-review"
+            if scope_review
             else "domain-sharing-fault"
             if domain_sharing_fault
             else "domain-control"
@@ -249,7 +275,7 @@ def verify_mapped_supply_interfaces(ctx: ConnectorReturnFixtureContext):
             source_role_classification=f"role=supply; USB domain=external-5v; serial domain={serial_voltage_domain}; native supply functions are generic Pin_1 and Pin_9",
             comparison_scope=(
                 "distinct reviewed supply groups"
-                if scope_control
+                if scope_review
                 else "global same-voltage-domain comparison"
             ),
             repeatable="true"

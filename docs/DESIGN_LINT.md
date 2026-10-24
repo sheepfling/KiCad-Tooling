@@ -408,6 +408,11 @@ labels. Same-domain shared-net and distinct-domain split-net controls stay
 quiet. This validates the schematic review prompt, not electrical
 incompatibility or a requirement to keep the domains separate.
 
+The same native lane also checks scoped comparisons. Splitting two
+same-domain supplies into separate one-reference groups triggers the separate
+`connector.return_supply_scope_singleton` review, so a narrower comparison
+cannot look silently complete.
+
 ### Mapped connector return/supply scopes with isolated peers
 
 `connector.return_supply_scope_singleton` reviews a source-matched generic
