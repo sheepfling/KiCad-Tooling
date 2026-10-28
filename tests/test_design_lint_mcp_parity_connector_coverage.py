@@ -76,7 +76,25 @@ class _DesignLintMcpParityConnectorCoverageCases(DesignLintMcpParityReportHarnes
                 "Synthetic review covered all connector candidates in the schematic",
             )
             self.assertEqual(open_report.native_status, "FAIL")
-            self.assertEqual(len(open_report.findings), 26)
+            self.assertEqual(
+                len(open_report.findings),
+                28,
+            )
+            observed_finding_keys = {(item.rule_id, item.subject) for item in open_report.findings}
+            self.assertIn(
+                (
+                    "component.generic_peer_pin_assignment_outlier",
+                    "Device:R pin 1: generic peer assignment differs from its strict majority",
+                ),
+                observed_finding_keys,
+            )
+            self.assertIn(
+                (
+                    "connector.unconnected_power_input",
+                    "J12.1: generic native power-input pin is unassigned",
+                ),
+                observed_finding_keys,
+            )
             led_bridge = next(
                 item
                 for item in open_report.findings

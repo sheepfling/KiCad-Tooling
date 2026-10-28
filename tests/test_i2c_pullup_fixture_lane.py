@@ -8,8 +8,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from kicad_tooling import ci_hosted_i2c_pullup_fixtures as i2c_pullup_service
 from kicad_tooling.ci_hosted import HostedLog, i2c_pullup_native_fixture_lane
-from kicad_tooling.hwrepo import electrical
 from kicad_tooling.hwrepo.models import CommandEvidence
 from tests.design_lint_fixtures.i2c_arrays import array_netlist_with_capacitor
 from tests.design_lint_fixtures.i2c_resistor_symbols import i2c_netlist_with_device_r_symbol
@@ -96,9 +96,9 @@ def test_native_array_lane_checks_contract_resolution_against_typed_exports(
     def fake_selected_config(*_args: object) -> SimpleNamespace:
         return config
 
-    monkeypatch.setattr(electrical, "selected_config", fake_selected_config)
-    monkeypatch.setattr("kicad_tooling.hwrepo.contract_coach.run_command", fake_run_command)
-    monkeypatch.setattr("kicad_tooling.validate.read_netlist", fake_read_netlist)
+    monkeypatch.setattr(i2c_pullup_service, "selected_config", fake_selected_config)
+    monkeypatch.setattr(i2c_pullup_service, "run_command", fake_run_command)
+    monkeypatch.setattr(i2c_pullup_service, "read_netlist", fake_read_netlist)
 
     log = HostedLog(root, "i2c-pullup-native-lane-synthetic")
     i2c_pullup_native_fixture_lane(root, project="synthetic", image=image, log=log)

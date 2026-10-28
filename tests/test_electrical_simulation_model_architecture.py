@@ -51,8 +51,11 @@ def _owner_imports(path: Path) -> set[str]:
         alias.name
         for node in ast.walk(tree)
         if isinstance(node, ast.ImportFrom)
-        and node.level == 1
-        and node.module == "electrical_simulation_models"
+        and node.module is not None
+        and (
+            node.module == "electrical_simulation_models"
+            or node.module.endswith(".electrical_simulation_models")
+        )
         for alias in node.names
     }
 

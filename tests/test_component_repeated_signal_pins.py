@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from kicad_tooling import ci_hosted_connector_return_context as connector_return_context
 from kicad_tooling.ci_hosted_component_repeated_signal_pins import (
     COMPONENT_REPEATED_SIGNAL_PIN_CASES,
     COMPONENT_REPEATED_SIGNAL_PIN_CONTROL,
@@ -270,9 +271,9 @@ def test_native_fixture_lane_enables_only_the_split_fault_and_checks_its_control
     def fake_read_netlist(path: Path) -> NetlistContract:
         return observed[path.name.split(".", 1)[0]]
 
-    monkeypatch.setattr("kicad_tooling.hwrepo.electrical.selected_config", lambda *_args: config)
-    monkeypatch.setattr("kicad_tooling.hwrepo.contract_coach.run_command", fake_run_command)
-    monkeypatch.setattr("kicad_tooling.validate.read_netlist", fake_read_netlist)
+    monkeypatch.setattr(connector_return_context, "selected_config", lambda *_args: config)
+    monkeypatch.setattr(connector_return_context, "run_command", fake_run_command)
+    monkeypatch.setattr(connector_return_context, "read_netlist", fake_read_netlist)
 
     log = HostedLog(root, "component-repeated-signal-pin-unit")
     component_repeated_signal_pin_fixture_lane(root, project="synthetic", image=image, log=log)

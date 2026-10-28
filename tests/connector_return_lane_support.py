@@ -8,6 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from kicad_tooling import ci_hosted_connector_return_context as connector_return_context
 from kicad_tooling.ci_hosted import HostedLog, connector_return_lint_fixture_lane
 from kicad_tooling.hwrepo.models import CommandEvidence, NetlistContract
 from tests.connector_return_fixture_support import connector_return_fixture_contracts
@@ -63,9 +64,9 @@ def connector_return_fixture_results(
     def fake_read_netlist(path: Path) -> NetlistContract:
         return observed[path.name.split(".", 1)[0]]
 
-    monkeypatch.setattr("kicad_tooling.hwrepo.electrical.selected_config", lambda *_args: config)
-    monkeypatch.setattr("kicad_tooling.hwrepo.contract_coach.run_command", fake_run_command)
-    monkeypatch.setattr("kicad_tooling.validate.read_netlist", fake_read_netlist)
+    monkeypatch.setattr(connector_return_context, "selected_config", lambda *_args: config)
+    monkeypatch.setattr(connector_return_context, "run_command", fake_run_command)
+    monkeypatch.setattr(connector_return_context, "read_netlist", fake_read_netlist)
     log = HostedLog(root, "connector-return")
     connector_return_lint_fixture_lane(
         root,

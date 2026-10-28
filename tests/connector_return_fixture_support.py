@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from kicad_tooling.hwrepo.models import NetlistContract
+from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 from tests.component_peer_pin_support import generic_component_peer_power_assignment_netlist
 from tests.component_peer_power_input_support import (
     generic_peer_power_input_netlist,
@@ -28,6 +28,10 @@ from tests.design_lint_fixtures.named_component_power_pins import (
     named_component_return_pin_cases,
     named_component_supply_pin_cases,
 )
+from tests.design_lint_fixtures.repeated_signal_pin_functions import (
+    repeated_signal_pin_component,
+    repeated_signal_pin_with_unassigned_member,
+)
 
 
 def connector_return_fixture_contracts() -> dict[str, NetlistContract]:
@@ -44,6 +48,18 @@ def connector_return_fixture_contracts() -> dict[str, NetlistContract]:
     observed.update(named_connector_power_pin_cases())
     observed.update(named_component_supply_pin_cases())
     observed.update(named_component_return_pin_cases())
+    observed.update(
+        {
+            "repeated-signal-pin-fault": repeated_signal_pin_component(split=True),
+            "repeated-signal-pin-control": repeated_signal_pin_component(split=False),
+            "repeated-signal-pin-unassigned-fault": repeated_signal_pin_with_unassigned_member(),
+            "repeated-signal-pin-unassigned-control": repeated_signal_pin_component(split=False),
+            "mapped-distinct-signals-share-net": _mapped_signal_assignments(shared=True),
+            "mapped-same-signal-split-nets": _mapped_signal_assignments(shared=False),
+            "stateful-contact-fault": _stateful_contact(tip_pair_same_net=True),
+            "stateful-contact-control": _stateful_contact(tip_pair_same_net=False),
+        }
+    )
     observed.update(generic_component_power_input_cases())
     observed.update(
         {
@@ -76,3 +92,40 @@ def connector_return_fixture_contracts() -> dict[str, NetlistContract]:
         }
     )
     return observed
+
+
+def _mapped_signal_assignments(*, shared: bool) -> NetlistContract:
+    """Build mapped connector contacts that share or split their assigned nets."""
+    nets = (
+        {"SHARED_SIGNAL_NET": ("J1.1", "J1.2")}
+        if shared
+        else {"CONTACT_NET_A": ("J1.1",), "CONTACT_NET_B": ("J1.2",)}
+    )
+    return NetlistContract(
+        components={},
+        nets=nets,
+        component_symbols={"J1": "Synthetic:MappedConnector"},
+        component_pin_numbers={"J1": ("1", "2")},
+        pin_functions={"J1.1": "1", "J1.2": "2"},
+    )
+
+
+def _stateful_contact(*, tip_pair_same_net: bool) -> NetlistContract:
+    """Build exact synthetic audio-jack contacts for the stateful-map lane."""
+    nets = (
+        {"AUDIO_TIP": ("J1.1", "J1.2")}
+        if tip_pair_same_net
+        else {"AUDIO_TIP": ("J1.1",), "AUDIO_TIP_SWITCH": ("J1.2",)}
+    )
+    return NetlistContract(
+        components={
+            "J1": ComponentContract(
+                value="Synthetic Audio Jack",
+                footprint="Synthetic:AudioJack_2Contact",
+                part_id="SYNTH-AUDIO-JACK-001",
+            )
+        },
+        nets=nets,
+        component_symbols={"J1": "Synthetic:AudioJack_2Contact"},
+        component_pin_numbers={"J1": ("1", "2")},
+    )

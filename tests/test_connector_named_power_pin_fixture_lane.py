@@ -8,6 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from kicad_tooling import ci_hosted_connector_return_context as connector_return_context
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.models import CommandEvidence, DesignLintPolicy, NetlistContract
 from tests.design_lint_fixtures.connector_power_cases import named_connector_power_pin_cases
@@ -81,9 +82,9 @@ def test_lane_exports_only_named_pin_faults_and_control(
     def fake_read_netlist(path: Path) -> NetlistContract:
         return observed[path.name.split(".", 1)[0]]
 
-    monkeypatch.setattr("kicad_tooling.hwrepo.electrical.selected_config", lambda *_: config)
-    monkeypatch.setattr("kicad_tooling.hwrepo.contract_coach.run_command", fake_run_command)
-    monkeypatch.setattr("kicad_tooling.validate.read_netlist", fake_read_netlist)
+    monkeypatch.setattr(connector_return_context, "selected_config", lambda *_: config)
+    monkeypatch.setattr(connector_return_context, "run_command", fake_run_command)
+    monkeypatch.setattr(connector_return_context, "read_netlist", fake_read_netlist)
 
     log = HostedLog(project_root, "named-connector-power-pin-unit")
     connector_named_power_pin_fixture_lane(project_root, project="controller", image=image, log=log)

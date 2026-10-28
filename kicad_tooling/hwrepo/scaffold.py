@@ -32,7 +32,14 @@ def prepare_manifest(
     # The template has already passed ProjectManifest validation, and the only
     # changed field is independently validated as an Identifier. The manifest's
     # cross-field validator covers connector/interface consistency, not its ID.
-    manifest = template.model_copy(update={"id": project_id})
+    project_placeholder = "REPLACE-WITH-PROJECT-ID"
+    project = template.project.replace(project_placeholder, project_id)
+    required_inputs = tuple(
+        item.replace(project_placeholder, project_id) for item in template.required_inputs
+    )
+    manifest_data = template.model_dump(mode="python")
+    manifest_data.update({"id": project_id, "project": project, "required_inputs": required_inputs})
+    manifest = ProjectManifest.model_validate(manifest_data)
     policy = settings(root)
     toolchains = read_model(repo_path(root, policy.catalogs.toolchains), ToolchainsCatalog)
     if toolchain_id not in {toolchain.id for toolchain in toolchains.toolchains}:

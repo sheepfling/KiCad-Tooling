@@ -2,20 +2,16 @@
 
 from __future__ import annotations
 
-from .bus_ethernet_management_named_rail import (
-    ethernet_management_signal_on_named_rail_candidates,
-)
 from .bus_ethernet_pair_labels import (
     ethernet_data_label_mismatch_candidates,
     ethernet_management_label_mismatch_candidates,
 )
-from .bus_ethernet_signal_named_rail import ethernet_signal_on_named_rail_candidates
 from .bus_ethernet_unconnected_management import (
     ethernet_management_unconnected_pin_candidates,
 )
 from .bus_signal_pairs import ComplementaryPinFunctionAliasResolution
-from .bus_usb_signal_named_rail import usb_signal_on_named_rail_candidates
 from .can_peer_reference_scan import CanPeerReferenceScan
+from .design_lint_bus_named_rail_candidates import bus_named_rail_candidates
 from .design_lint_can_candidates import can_candidates
 from .design_lint_i2c_candidates import (
     i2c_address_candidates,
@@ -46,9 +42,7 @@ from .pcb_drc_models import PcbDifferentialPairRuleMap
 from .rs485_peer_reference_types import Rs485PeerReferenceScan
 from .spi_participants import SpiRosterContext
 from .spi_peer_reference_scan import SpiPeerReferenceScan
-from .usb_c_cc_named_rail import usb_c_cc_signal_on_named_rail_candidates
 from .usb_c_cc_same_net import usb_c_cc_same_net_candidates
-from .usb_c_sbu_named_rail import usb_c_sbu_signal_on_named_rail_candidates
 from .usb_c_superspeed_lane_labels import usb_c_superspeed_lane_label_mismatch_candidates
 from .usb_data_same_net import usb_data_same_net_candidates
 
@@ -92,15 +86,11 @@ def bus_candidates(
         *ethernet_data_label_mismatch_candidates(observed),
         *ethernet_management_label_mismatch_candidates(observed),
         *ethernet_management_unconnected_pin_candidates(observed),
-        *ethernet_management_signal_on_named_rail_candidates(observed),
-        *ethernet_signal_on_named_rail_candidates(observed),
+        *bus_named_rail_candidates(observed),
         *complementary_signal_candidates(observed, complementary_alias_resolution),
         *usb_data_polarity_label_candidates(observed),
         *usb_c_superspeed_lane_label_mismatch_candidates(observed),
         *usb_data_same_net_candidates(observed),
-        *usb_signal_on_named_rail_candidates(observed),
-        *usb_c_cc_signal_on_named_rail_candidates(observed),
-        *usb_c_sbu_signal_on_named_rail_candidates(observed),
         *usb_c_cc_same_net_candidates(observed, reviewed_connector_references),
         *named_differential_pair_candidates(observed, pcb_differential_pair_rule_map),
         *i2c_address_candidates(i2c_address_coverage),

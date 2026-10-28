@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 import pytest
 
+from kicad_tooling import ci_hosted_open_drain_bias as open_drain_service
 from kicad_tooling.ci_hosted import HostedLog, open_drain_bias_fixture_lane
 from kicad_tooling.hwrepo.contracts import KiCadErcReport, KiCadErcViolation
 from kicad_tooling.hwrepo.models import CommandEvidence, ComponentContract, NetlistContract
@@ -143,11 +144,11 @@ def test_native_lane_checks_both_bias_polarities_and_dnp_faults(tmp_path: Path) 
 
     log = HostedLog(root, "open-drain-bias")
     with (
-        patch("kicad_tooling.hwrepo.electrical.selected_config", return_value=config),
-        patch("kicad_tooling.hwrepo.contract_coach.run_command", side_effect=fake_run_command),
-        patch("kicad_tooling.validate.read_netlist", side_effect=fake_read_netlist),
+        patch.object(open_drain_service, "selected_config", return_value=config),
+        patch.object(open_drain_service, "run_command", side_effect=fake_run_command),
+        patch.object(open_drain_service, "read_netlist", side_effect=fake_read_netlist),
         patch(
-            "kicad_tooling.ci_hosted.read_kicad_erc_report",
+            open_drain_service.__name__ + ".read_kicad_erc_report",
             return_value=KiCadErcReport(
                 kicad_version="10.0.0",
                 violations=tuple(
@@ -253,7 +254,7 @@ def test_native_exports_distinguish_bias_polarity_and_dnp_faults(
 
     root = tmp_path
     monkeypatch.setattr(
-        "kicad_tooling.hwrepo.electrical.selected_config",
+        open_drain_service.__name__ + ".selected_config",
         lambda *_: SimpleNamespace(image=image, kicad_version=version),
     )
     expected_hashes = {

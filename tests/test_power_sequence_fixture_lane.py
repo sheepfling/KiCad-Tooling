@@ -8,6 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from kicad_tooling import ci_hosted_power_sequences as power_sequence_service
 from kicad_tooling.ci_hosted import HostedLog, power_sequence_fixture_lane
 from kicad_tooling.hwrepo.models import CommandEvidence
 from tests.power_sequence_support import (
@@ -83,9 +84,9 @@ def test_native_export_checks_mapped_sequence_faults_and_controls(
         nets["GOOD_B"] = ("U2.3",)
         return observed.model_copy(update={"nets": nets})
 
-    monkeypatch.setattr("kicad_tooling.hwrepo.electrical.selected_config", lambda *_args: config)
-    monkeypatch.setattr("kicad_tooling.hwrepo.contract_coach.run_command", fake_run_command)
-    monkeypatch.setattr("kicad_tooling.validate.read_netlist", fake_read_netlist)
+    monkeypatch.setattr(power_sequence_service, "selected_config", lambda *_args: config)
+    monkeypatch.setattr(power_sequence_service, "run_command", fake_run_command)
+    monkeypatch.setattr(power_sequence_service, "read_netlist", fake_read_netlist)
 
     log = HostedLog(root, "power-sequence")
     power_sequence_fixture_lane(root, project="synthetic-project", image=image, log=log)
@@ -134,8 +135,8 @@ def test_unsupported_native_version_fails_before_export(
         invoked = True
         raise AssertionError("unsupported KiCad version must fail before export")
 
-    monkeypatch.setattr("kicad_tooling.hwrepo.electrical.selected_config", lambda *_args: config)
-    monkeypatch.setattr("kicad_tooling.hwrepo.contract_coach.run_command", unexpected_run_command)
+    monkeypatch.setattr(power_sequence_service, "selected_config", lambda *_args: config)
+    monkeypatch.setattr(power_sequence_service, "run_command", unexpected_run_command)
     with pytest.raises(ValueError, match="do not cover KiCad 9.0.0"):
         power_sequence_fixture_lane(
             tmp_path,

@@ -115,14 +115,28 @@ def test_hosted_combo_alias_lane_records_fault_and_roster_control() -> None:
     root = Path(__file__).resolve().parents[1]
     events: list[tuple[str, str, dict[str, str | float]]] = []
 
+    def evidence_record():
+        first = SimpleNamespace(
+            contract=observed,
+            netlist_sha256="c" * 64,
+            normalized_sha256="e" * 64,
+        )
+        repeat = SimpleNamespace(
+            contract=observed,
+            netlist_sha256="d" * 64,
+            normalized_sha256="e" * 64,
+        )
+        return SimpleNamespace(
+            source=SimpleNamespace(sha256=fixture_hash),
+            netlists=SimpleNamespace(first=first, repeat=repeat),
+        )
+
     def record_event(stage: str, status: str, **details: str | float) -> None:
         events.append((stage, status, details))
 
     context = SimpleNamespace(
-        contracts={"combo-device": {"first": observed}},
-        hashes={"combo-device": {"first": "c" * 64, "repeat": "d" * 64}},
-        normalized_hashes={"combo-device": {"first": "e" * 64, "repeat": "e" * 64}},
-        combo_spi_source_hash=fixture_hash,
+        fixture=lambda _case: evidence_record(),
+        observed=observed,
         config=SimpleNamespace(kicad_version="10.0.5"),
         log=SimpleNamespace(event=record_event),
         project="synthetic-spi-composite",

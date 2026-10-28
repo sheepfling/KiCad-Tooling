@@ -29,7 +29,9 @@ def _imports(path: Path, module: str) -> set[str]:
     return {
         alias.name
         for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom) and node.module == module
+        if isinstance(node, ast.ImportFrom)
+        and node.module is not None
+        and (node.module == module or node.module.endswith(f".{module}"))
         for alias in node.names
     }
 

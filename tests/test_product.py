@@ -638,17 +638,14 @@ class ProductTests(unittest.TestCase):
         root = self.stage()
         output = root / "build/review"
 
-        def fake_git(argv, **kwargs):
-            return subprocess.CompletedProcess(
-                argv,
-                0,
+        def fake_git(_root, *argv, **_kwargs):
+            return (
                 "a" * 40
                 if "rev-parse" in argv
-                else " M examples/products/status-indicator-system/product.json\n",
-                "",
+                else " M examples/products/status-indicator-system/product.json"
             )
 
-        with patch("kicad_tooling.hwrepo.generation.subprocess.run", side_effect=fake_git):
+        with patch("kicad_tooling.hwrepo.generation.git_output", side_effect=fake_git):
             manifest = snapshot(root, output)
             self.assertFalse(manifest.working_tree_clean)
             self.assertEqual(manifest.checks["kicad"], "NOT_RUN")

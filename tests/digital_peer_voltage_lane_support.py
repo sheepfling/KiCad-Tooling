@@ -9,8 +9,9 @@ from unittest.mock import patch
 
 import pytest
 
+from kicad_tooling import ci_hosted_digital_peer_context as digital_peer_context
 from kicad_tooling.ci_hosted import HostedLog, digital_peer_fixture_lane
-from kicad_tooling.hwrepo.models import CommandEvidence, NetlistContract
+from kicad_tooling.hwrepo.models import CommandEvidence, ComponentContract, NetlistContract
 from tests.design_lint_fixtures.component_peer_power import component_peer_power_netlist
 from tests.design_lint_fixtures.digital_peer_serial import (
     serial_label_reference_netlist,
@@ -44,7 +45,7 @@ def digital_peer_fixture_results(tmp_path_factory):
         assert 'test "$actual" = "10.0.0"' in script
         assert "kicad-cli sch erc --format json --severity-all" in script
         assert (
-            "peer-control peer-fault peer-translator-control serial-control serial-fault serial-reference-fault serial-connector-control serial-connector-fault serial-optical-isolation-control serial-label-control serial-label-fault component-peer-control component-peer-fault"
+            "multi-device combo-device peer-control peer-fault peer-translator-control serial-control serial-fault serial-reference-fault serial-connector-control serial-connector-fault serial-optical-isolation-control serial-label-control serial-label-fault component-peer-control component-peer-fault"
             in script
         )
         mounts = tuple((argv[index + 1] for index, item in enumerate(argv[:-1]) if item == "-v"))
@@ -54,6 +55,7 @@ def digital_peer_fixture_results(tmp_path_factory):
         output = Path(output_mount.removesuffix(":/output:rw"))
         assert {item.name for item in fixtures.iterdir()} == {
             "multi-device.kicad_sch",
+            "combo-device.kicad_sch",
             "peer-control.kicad_sch",
             "peer-fault.kicad_sch",
             "peer-translator-control.kicad_sch",
@@ -70,6 +72,7 @@ def digital_peer_fixture_results(tmp_path_factory):
         }
         for case in (
             "multi-device",
+            "combo-device",
             "peer-control",
             "peer-fault",
             "peer-translator-control",
@@ -100,6 +103,28 @@ def digital_peer_fixture_results(tmp_path_factory):
         )
 
     def fake_read_netlist(path: Path) -> NetlistContract:
+        if path.name.startswith("combo-device"):
+            return NetlistContract(
+                components={
+                    "U1": ComponentContract(
+                        value="Synthetic combo SPI device", footprint="Synthetic:QFN"
+                    )
+                },
+                nets={
+                    "SENSOR_CLOCK": ("U1.1",),
+                    "SENSOR_DATA": ("U1.2",),
+                    "SENSOR_OUT": ("U1.3",),
+                    "SENSOR_CS": ("U1.4",),
+                },
+                component_symbols={"U1": "Synthetic:Combo_SPI_Node"},
+                pin_functions={
+                    "U1.1": "SCL/SPC",
+                    "U1.2": "SDA/SDI/SDO",
+                    "U1.3": "SDO/SA0",
+                    "U1.4": "CS",
+                },
+                component_pin_numbers={"U1": ("1", "2", "3", "4")},
+            )
         if path.name.startswith("peer-translator-control"):
             return translator_peer_netlist()
         if path.name.startswith("component-peer-control"):
@@ -132,9 +157,9 @@ def digital_peer_fixture_results(tmp_path_factory):
 
     log = HostedLog(project_root, "digital-peer-voltage")
     with (
-        patch("kicad_tooling.hwrepo.electrical.selected_config", return_value=config),
-        patch("kicad_tooling.hwrepo.contract_coach.run_command", side_effect=fake_run_command),
-        patch("kicad_tooling.validate.read_netlist", side_effect=fake_read_netlist),
+        patch.object(digital_peer_context, "selected_config", return_value=config),
+        patch.object(digital_peer_context, "run_command", side_effect=fake_run_command),
+        patch.object(digital_peer_context, "read_netlist", side_effect=fake_read_netlist),
     ):
         digital_peer_fixture_lane(project_root, project="synthetic-project", image=image, log=log)
     events = tuple(json.loads(line) for line in log.events.read_text().splitlines())

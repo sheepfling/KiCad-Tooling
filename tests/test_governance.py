@@ -44,20 +44,19 @@ class GovernanceLintTests(unittest.TestCase):
                 branch_protection_verified_at="2026-09-08",
             )
             write_model(root / "governance.json", record)
-            issues: list[str] = []
-            lint_governance_record(root, "governance.json", "board", issues)
+            issues = list(lint_governance_record(root, "governance.json", "board"))
             self.assertEqual(issues, [])
             write_model(
                 root / "governance.json", record.model_copy(update={"reviewers": ("AUTHOR-a",)})
             )
-            lint_governance_record(root, "governance.json", "board", issues)
+            issues.extend(lint_governance_record(root, "governance.json", "board"))
             self.assertTrue(any("independent" in issue for issue in issues))
             write_model(root / "governance.json", record)
             write_model(
                 root / "catalog/team-policy.json", policy.model_copy(update={"minimum_actors": 3})
             )
             issues.clear()
-            lint_governance_record(root, "governance.json", "board", issues)
+            issues.extend(lint_governance_record(root, "governance.json", "board"))
             self.assertTrue(any("3 distinct" in issue for issue in issues))
 
     def test_all_declared_projects_pass_static_lint(self) -> None:

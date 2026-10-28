@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
+from kicad_tooling import ci_hosted_power_paths as power_path_service
 from kicad_tooling.ci_hosted import HostedLog, power_path_fixture_lane
 from kicad_tooling.hwrepo.models import CommandEvidence, ComponentContract, NetlistContract
 from tests.design_lint_fixtures.power_input_paths import (
@@ -253,9 +254,9 @@ def test_synthetic_lane_checks_read_only_export_fault_control_and_repeatability(
 
         log = HostedLog(root, "power-path")
         with (
-            patch("kicad_tooling.hwrepo.electrical.selected_config", return_value=config),
-            patch("kicad_tooling.hwrepo.contract_coach.run_command", side_effect=fake_run_command),
-            patch("kicad_tooling.validate.read_netlist", side_effect=fake_read_netlist),
+            patch.object(power_path_service, "selected_config", return_value=config),
+            patch.object(power_path_service, "run_command", side_effect=fake_run_command),
+            patch.object(power_path_service, "read_netlist", side_effect=fake_read_netlist),
         ):
             power_path_fixture_lane(root, project="synthetic-project", image=image, log=log)
 

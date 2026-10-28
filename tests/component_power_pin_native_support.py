@@ -10,6 +10,7 @@ from typing import Protocol, cast
 
 import pytest
 
+from kicad_tooling import ci_hosted_connector_return_context as connector_return_context
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.models import CommandEvidence, NetlistContract
 from tests.json_types import JsonObject
@@ -87,9 +88,9 @@ def assert_mocked_component_power_pin_lane(
     def fake_read_netlist(path: Path) -> NetlistContract:
         return observed_contracts[path.name.split(".", 1)[0]]
 
-    monkeypatch.setattr("kicad_tooling.hwrepo.electrical.selected_config", lambda *_args: config)
-    monkeypatch.setattr("kicad_tooling.hwrepo.contract_coach.run_command", fake_run_command)
-    monkeypatch.setattr("kicad_tooling.validate.read_netlist", fake_read_netlist)
+    monkeypatch.setattr(connector_return_context, "selected_config", lambda *_args: config)
+    monkeypatch.setattr(connector_return_context, "run_command", fake_run_command)
+    monkeypatch.setattr(connector_return_context, "read_netlist", fake_read_netlist)
 
     log = HostedLog(root, f"{stage_prefix}-unit")
     lane(root, project="synthetic", image=image, log=log)

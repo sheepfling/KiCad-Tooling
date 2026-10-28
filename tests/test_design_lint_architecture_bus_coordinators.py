@@ -69,8 +69,10 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "design_lint_signal_pair_candidates.py",
         "design_lint_interfaces_usb_data_polarity.py",
         "design_lint_two_wire_signal_candidates.py",
+        "design_lint_bus_named_rail_candidates.py",
         "design_lint_serial_signal_candidates.py",
         "design_lint_spi_signal_candidates.py",
+        "design_lint_bus_named_rail_candidates.py",
     )
 
     assert line_count(facade) < FACADE_MAX_LINES
@@ -117,18 +119,39 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "rs485_candidates",
         "ethernet_data_label_mismatch_candidates",
         "ethernet_management_label_mismatch_candidates",
-        "ethernet_management_signal_on_named_rail_candidates",
-        "ethernet_signal_on_named_rail_candidates",
+        "ethernet_management_unconnected_pin_candidates",
+        "bus_named_rail_candidates",
         "complementary_signal_candidates",
         "usb_data_polarity_label_candidates",
-        "usb_signal_on_named_rail_candidates",
-        "usb_c_cc_signal_on_named_rail_candidates",
-        "usb_c_sbu_signal_on_named_rail_candidates",
+        "usb_c_superspeed_lane_label_mismatch_candidates",
+        "usb_data_same_net_candidates",
+        "usb_c_cc_same_net_candidates",
         "named_differential_pair_candidates",
         "i2c_address_candidates",
         "i2c_responder_coverage_candidates",
     ]
     assert not candidate_constructions, "Bus dispatch should not construct lint findings."
+
+    named_rail_tree = ast.parse(
+        (HWREPO / "design_lint_bus_named_rail_candidates.py").read_text(encoding="utf-8")
+    )
+    named_rail_function = next(
+        node
+        for node in named_rail_tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "bus_named_rail_candidates"
+    )
+    named_rail_calls = sorted(
+        (node.lineno, node.func.id)
+        for node in ast.walk(named_rail_function)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    )
+    assert [name for _, name in named_rail_calls] == [
+        "ethernet_management_signal_on_named_rail_candidates",
+        "ethernet_signal_on_named_rail_candidates",
+        "usb_signal_on_named_rail_candidates",
+        "usb_c_cc_signal_on_named_rail_candidates",
+        "usb_c_sbu_signal_on_named_rail_candidates",
+    ]
 
 
 def test_control_and_digital_peer_rule_refs_point_to_their_owners() -> None:

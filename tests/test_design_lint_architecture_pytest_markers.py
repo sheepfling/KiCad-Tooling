@@ -72,6 +72,14 @@ def _is_session_scoped_fixture(decorator: ast.expr) -> bool:
     return False
 
 
+def _is_unittest_case_class(node: ast.AST) -> bool:
+    """Identify legacy unittest test classes without rejecting TypedDict helpers."""
+    return isinstance(node, ast.ClassDef) and any(
+        ast.unparse(base) == "TestCase" or ast.unparse(base).endswith(".TestCase")
+        for base in node.bases
+    )
+
+
 _DIGITAL_PEER_SUITES: Mapping[str, frozenset[str]] = MappingProxyType(
     {
         "test_ci_hosted_digital_peer_spi.py": frozenset({"interface_lint"}),
@@ -156,6 +164,11 @@ def test_marker_registry_owners_stay_below_review_threshold() -> None:
     for name in (
         "design_lint_return_path_test_markers.py",
         "design_lint_pytest_native_marker_registry.py",
+        "design_lint_pytest_native_marker_registry_interfaces.py",
+        "design_lint_pytest_native_marker_registry_connectors.py",
+        "design_lint_pytest_native_marker_registry_components.py",
+        "design_lint_pytest_native_marker_registry_pcb.py",
+        "design_lint_pytest_native_marker_registry_shared.py",
     ):
         owner = Path(__file__).with_name(name)
         assert len(owner.read_text(encoding="utf-8").splitlines()) < 500
@@ -235,7 +248,7 @@ def test_native_digital_peer_suites_are_pytest_native_and_theme_scoped() -> None
             and any(alias.name == "unittest" for alias in node.names)
             or isinstance(node, ast.ImportFrom)
             and node.module == "unittest"
-            or isinstance(node, ast.ClassDef)
+            or _is_unittest_case_class(node)
             for node in ast.walk(tree)
         )
         assert any(
@@ -281,7 +294,7 @@ def test_focus_lint_suites_are_pytest_native_and_theme_scoped() -> None:
             and any(alias.name == "unittest" for alias in node.names)
             or isinstance(node, ast.ImportFrom)
             and node.module == "unittest"
-            or isinstance(node, ast.ClassDef)
+            or _is_unittest_case_class(node)
             for node in ast.walk(tree)
         )
         assert any(

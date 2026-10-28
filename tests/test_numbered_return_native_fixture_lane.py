@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from kicad_tooling import ci_hosted_connector_return_context as connector_return_context
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import CommandEvidence, DesignLintPolicy, NetlistContract
@@ -83,9 +84,9 @@ def test_focused_return_lanes_export_only_their_synthetic_cases(
         case = path.name.split(".", 1)[0]
         return observed[case]
 
-    monkeypatch.setattr("kicad_tooling.hwrepo.electrical.selected_config", lambda *_args: config)
-    monkeypatch.setattr("kicad_tooling.hwrepo.contract_coach.run_command", fake_run_command)
-    monkeypatch.setattr("kicad_tooling.validate.read_netlist", fake_read_netlist)
+    monkeypatch.setattr(connector_return_context, "selected_config", lambda *_args: config)
+    monkeypatch.setattr(connector_return_context, "run_command", fake_run_command)
+    monkeypatch.setattr(connector_return_context, "read_netlist", fake_read_netlist)
 
     log = HostedLog(root, "numbered-pwm-return-unit")
     lane(root, project="synthetic", image=image, log=log)

@@ -161,7 +161,7 @@ def test_digital_peer_fixture_lane_is_split_by_interface_theme() -> None:
     }
 
     assert lane_lines < 100, f"Keep the digital peer lane as a coordinator: {lane_lines} lines"
-    assert len(modules) == 10, "Keep digital peer fixtures in named interface theme modules"
+    assert len(modules) == 11, "Keep digital peer fixtures in named interface theme modules"
     assert not oversized_modules, (
         f"Split digital peer modules by responsibility: {oversized_modules}"
     )

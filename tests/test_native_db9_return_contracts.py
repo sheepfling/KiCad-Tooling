@@ -11,6 +11,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from kicad_tooling import ci_hosted_connector_return_context as connector_return_context
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import CommandEvidence, DesignLintPolicy, NetlistContract
@@ -163,9 +164,9 @@ def test_db9_return_lane_exports_only_fault_and_control(
     def fake_read_netlist(path: Path) -> NetlistContract:
         return observed[path.name.split(".", 1)[0]]
 
-    monkeypatch.setattr("kicad_tooling.hwrepo.electrical.selected_config", lambda *_args: config)
-    monkeypatch.setattr("kicad_tooling.hwrepo.contract_coach.run_command", fake_run_command)
-    monkeypatch.setattr("kicad_tooling.validate.read_netlist", fake_read_netlist)
+    monkeypatch.setattr(connector_return_context, "selected_config", lambda *_args: config)
+    monkeypatch.setattr(connector_return_context, "run_command", fake_run_command)
+    monkeypatch.setattr(connector_return_context, "read_netlist", fake_read_netlist)
 
     log = HostedLog(root, "db9-return-contract-unit")
     db9_return_contract_fixture_lane(root, project="synthetic", image=image, log=log)
