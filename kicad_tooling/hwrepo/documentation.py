@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import re
 import tomllib
-from datetime import UTC, date, datetime
+from collections.abc import Mapping
+from datetime import UTC, date, datetime, time
 from pathlib import Path, PurePosixPath
-from typing import TypedDict, cast
+from typing import TypeAlias
 from urllib.parse import unquote
 
 from .contracts import read_model, repo_path
@@ -41,20 +42,9 @@ LINK_PATTERN = re.compile(r"!?\[[^\]\n]*\]\((?P<destination>[^\n)]*)\)")
 EXTERNAL_SCHEMES = ("data:", "http:", "https:", "mailto:", "tel:")
 
 
-class _PyprojectSettings(TypedDict, total=False):
-    tool: object
-
-
-class _ToolSettings(TypedDict, total=False):
-    mdrepo: object
-
-
-class _MdrepoSettings(TypedDict, total=False):
-    orphans: object
-
-
-class _OrphanSettings(TypedDict, total=False):
-    roots: object
+TomlValue: TypeAlias = (
+    str | int | float | bool | date | datetime | time | list["TomlValue"] | dict[str, "TomlValue"]
+)
 
 
 def label(path: Path, root: Path) -> str:
@@ -213,7 +203,7 @@ def link_issues(
     document: Path,
     root: Path,
     text: str,
-    anchors_by_path: dict[str, dict[str, int]],
+    anchors_by_path: Mapping[str, Mapping[str, int]],
 ) -> tuple[tuple[DocumentationIssue, ...], tuple[str, ...]]:
     """Check portable local targets and fragments, returning Markdown graph edges."""
     findings: list[DocumentationIssue] = []
@@ -382,30 +372,30 @@ def check(root: Path, today: date | None = None) -> DocumentationPolicyReport:
         mdrepo_roots: tuple[str, ...] = ()
         project_configuration = repo_path(resolved_root, "pyproject.toml")
         if project_configuration.is_file():
-            project_settings = cast(
-                _PyprojectSettings,
-                tomllib.loads(project_configuration.read_text(encoding="utf-8")),
+            project_settings: dict[str, TomlValue] = tomllib.loads(
+                project_configuration.read_text(encoding="utf-8")
             )
-            tool_value = project_settings.get("tool", {})
+            tool_value: TomlValue = project_settings.get("tool", {})
             if not isinstance(tool_value, dict):
                 raise ValueError("pyproject.toml [tool] must be a table")
-            tool_settings = cast(_ToolSettings, tool_value)
-            mdrepo_value = tool_settings.get("mdrepo", {})
+            tool_settings: dict[str, TomlValue] = tool_value
+            mdrepo_value: TomlValue = tool_settings.get("mdrepo", {})
             if not isinstance(mdrepo_value, dict):
                 raise ValueError("pyproject.toml [tool.mdrepo] must be a table")
-            mdrepo_settings = cast(_MdrepoSettings, mdrepo_value)
-            orphan_value = mdrepo_settings.get("orphans", {})
+            mdrepo_settings: dict[str, TomlValue] = mdrepo_value
+            orphan_value: TomlValue = mdrepo_settings.get("orphans", {})
             if not isinstance(orphan_value, dict):
                 raise ValueError("pyproject.toml [tool.mdrepo.orphans] must be a table")
-            orphan_settings = cast(_OrphanSettings, orphan_value)
-            configured_roots = orphan_settings.get("roots", [])
+            orphan_settings: dict[str, TomlValue] = orphan_value
+            configured_roots: TomlValue = orphan_settings.get("roots", [])
             if not isinstance(configured_roots, list):
                 raise ValueError("tool.mdrepo.orphans.roots must be an array of paths")
             root_paths: list[str] = []
-            for path in cast(list[object], configured_roots):
-                if not isinstance(path, str):
+            root_values: list[TomlValue] = configured_roots
+            for root_value in root_values:
+                if not isinstance(root_value, str):
                     raise TypeError("tool.mdrepo.orphans.roots must be an array of paths")
-                root_paths.append(path)
+                root_paths.append(root_value)
             mdrepo_roots = tuple(root_paths)
         island_roots = tuple(
             path.relative_to(resolved_root).as_posix()

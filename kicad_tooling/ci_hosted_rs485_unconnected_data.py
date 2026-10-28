@@ -9,49 +9,43 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
+from types import MappingProxyType
 
 from .ci_hosted_kicad10_images import KICAD_10_NATIVE_TOOLCHAINS
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy, DesignLintRuleOverride
+from .validate import read_netlist
 
 RS485_UNCONNECTED_DATA_TOOLCHAINS = KICAD_10_NATIVE_TOOLCHAINS
 _RULE_ID = "bus.rs485_unconnected_data_pin"
-_SOURCE_HASHES = {
-    "fault": "39ec0fb43f3175204f550a71506a7b5fd063cf71759f2786ea0bf765f6077c5f",
-    "control": "fa1ee6811e6351691e186c70411c6fbb139acbbebbb99e556136ad36818ea588",
-}
+_SOURCE_HASHES = MappingProxyType(
+    {
+        "fault": "39ec0fb43f3175204f550a71506a7b5fd063cf71759f2786ea0bf765f6077c5f",
+        "control": "fa1ee6811e6351691e186c70411c6fbb139acbbebbb99e556136ad36818ea588",
+    }
+)
 
 
 def rs485_unconnected_data_pin_fixture_lane(
     root: Path, *, version: str, image: str, log: HostedLog
 ) -> None:
     """Repeat exact native netlist/ERC exports for open and connected RS-485 data pins."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import (
-        ContractCoachReport,
-        DesignLintPolicy,
-        DesignLintRuleOverride,
-    )
-    from .validate import read_netlist
-
     root = root.resolve()
     if (version, image) not in RS485_UNCONNECTED_DATA_TOOLCHAINS:
         raise ValueError(f"RS-485 open-data fixtures do not cover KiCad {version} with this image")
     pinned = pinned_image(image)
     fixture_root = (
-        Path(__file__).resolve().parents[1]
-        / "tests/fixtures/design_lint/rs485-unconnected-data-native"
+        tooling_checkout_root() / "tests/fixtures/design_lint/rs485-unconnected-data-native"
     )
     sources = {
         "fault": fixture_root / "fault.kicad_sch",
         "control": fixture_root / "control.kicad_sch",
     }
-    source_hashes = {case: digest(source) for case, source in sources.items()}
+    source_hashes = MappingProxyType({case: digest(source) for case, source in sources.items()})
     if source_hashes != _SOURCE_HASHES:
         raise ValueError("RS-485 open-data sources differ from reviewed hashes")
 

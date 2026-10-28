@@ -3,6 +3,11 @@
 from __future__ import annotations
 
 from .ci_hosted_digital_peer_context import DigitalPeerFixtureContext
+from .ci_hosted_digital_peer_models import (
+    SPI_PEER_FIXTURE_CASES,
+    DigitalPeerFixtureCase,
+)
+from .ci_hosted_native_fixture_models import NativeRun, NativeRunPair
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
 from .hwrepo.design_lint_report_models import DesignLintReport
@@ -28,14 +33,15 @@ def verify_spi_peer_voltage_cases(ctx: DigitalPeerFixtureContext) -> None:
             ),
         )
     )
-    for case, expected_status in (
-        ("peer-control", "PASS"),
-        ("peer-fault", "REVIEW"),
-        ("peer-translator-control", "PASS"),
+    for case, expected_status in zip(
+        SPI_PEER_FIXTURE_CASES, ("PASS", "REVIEW", "PASS"), strict=True
     ):
-        peer_contracts = ctx.contracts[case]
-        peer_observed = peer_contracts["first"]
-        if ctx.normalized_hashes[case]["first"] != ctx.normalized_hashes[case]["repeat"]:
+        peer_contracts = ctx.fixture(case).netlists
+        peer_observed = peer_contracts.first.contract
+        if (
+            ctx.fixture(case).netlists.first.normalized_sha256
+            != ctx.fixture(case).netlists.repeat.normalized_sha256
+        ):
             raise ValueError(f"Native SPI {case} exports differ after typed-netlist normalization")
         if case == "peer-translator-control":
             expected_pin_functions = {
@@ -122,31 +128,38 @@ def verify_spi_peer_voltage_cases(ctx: DigitalPeerFixtureContext) -> None:
                 raise ValueError(
                     "Native SPI translator control no longer separates its A- and B-side nets"
                 )
-        peer_reports: dict[str, DesignLintReport] = {}
-        for run in ("first", "repeat"):
+
+        def peer_report_for(
+            run: NativeRun, fixture_case: DigitalPeerFixtureCase
+        ) -> DesignLintReport:
             report_coach = ContractCoachReport(
                 status="READY_FOR_REVIEW",
-                project_id=f"synthetic-spi-peer-voltage-{case}",
-                observed=peer_contracts[run],
-                netlist_sha256=ctx.hashes[case][run],
+                project_id=f"synthetic-spi-peer-voltage-{fixture_case}",
+                observed=ctx.fixture(fixture_case).netlists.for_run(run).contract,
+                netlist_sha256=ctx.fixture(fixture_case).netlists.for_run(run).netlist_sha256,
             )
-            peer_reports[run] = evaluate(report_coach.project_id, report_coach, peer_policy)
+            return evaluate(report_coach.project_id, report_coach, peer_policy)
+
+        peer_reports = NativeRunPair(
+            first=peer_report_for("first", case),
+            repeat=peer_report_for("repeat", case),
+        )
         findings = tuple(
             item
-            for item in peer_reports["first"].findings
+            for item in peer_reports.first.findings
             if item.rule_id == "bus.spi_peer_voltage_review"
         )
         repeated_findings = tuple(
             (item.fingerprint, item.rule_id, item.mode, item.evidence)
-            for item in peer_reports["repeat"].findings
+            for item in peer_reports.repeat.findings
         )
         first_findings = tuple(
             (item.fingerprint, item.rule_id, item.mode, item.evidence)
-            for item in peer_reports["first"].findings
+            for item in peer_reports.first.findings
         )
         if (
-            peer_reports["first"].status != expected_status
-            or peer_reports["repeat"].status != expected_status
+            peer_reports.first.status != expected_status
+            or peer_reports.repeat.status != expected_status
             or first_findings != repeated_findings
             or (case == "peer-control" and findings)
             or (case == "peer-fault" and len(findings) != 1)
@@ -173,12 +186,12 @@ def verify_spi_peer_voltage_cases(ctx: DigitalPeerFixtureContext) -> None:
             project=ctx.project,
             kicad_version=ctx.config.kicad_version,
             image=ctx.pinned,
-            source_sha256=ctx.peer_source_hashes[case],
-            netlist_sha256=ctx.hashes[case]["first"],
-            repeat_netlist_sha256=ctx.hashes[case]["repeat"],
-            normalized_netlist_sha256=ctx.normalized_hashes[case]["first"],
-            repeat_normalized_netlist_sha256=ctx.normalized_hashes[case]["repeat"],
-            lint_status=peer_reports["first"].status,
+            source_sha256=ctx.fixture(case).source.sha256,
+            netlist_sha256=ctx.fixture(case).netlists.first.netlist_sha256,
+            repeat_netlist_sha256=ctx.fixture(case).netlists.repeat.netlist_sha256,
+            normalized_netlist_sha256=ctx.fixture(case).netlists.first.normalized_sha256,
+            repeat_normalized_netlist_sha256=ctx.fixture(case).netlists.repeat.normalized_sha256,
+            lint_status=peer_reports.first.status,
             peer_voltage_findings=";".join(item.rule_id for item in findings) or "none",
             pin_functions=";".join(
                 f"{pin}={name}" for (pin, name) in sorted(peer_observed.pin_functions.items())

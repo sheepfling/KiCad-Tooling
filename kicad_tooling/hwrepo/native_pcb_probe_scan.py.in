@@ -20,10 +20,10 @@ def main(
         raise ValueError("KiCad could not build PCB connectivity")
 
     connectivity = board.GetConnectivity()
-    zone_rows: dict[tuple[str, str], dict[str, Any]] = {}
-    zone_objects: dict[tuple[str, str], Any] = {}
-    filled_polygons: dict[tuple[str, str], Any] = {}
-    rule_areas: list[dict[str, Any]] = []
+    zone_rows: dict[tuple[str, str], ZoneObservation] = {}
+    zone_objects: dict[tuple[str, str], NativeZone] = {}
+    filled_polygons: dict[tuple[str, str], NativePolygonSet] = {}
+    rule_areas: list[RuleAreaObservation] = []
     for zone in zones:
         if zone.GetIsRuleArea():
             observation = rule_area_observation(zone, board)
@@ -44,21 +44,23 @@ def main(
             "net": zone.GetNetname() or None,
             "filled_island_count": filled.OutlineCount(),
             "filled_islands": filled_zone_islands(filled),
+            "unanchored_pad_island_indexes": [],
         }
         zone_objects[identity] = zone
         filled_polygons[identity] = filled
 
-    pad_rows: dict[str, dict[str, Any]] = {}
-    pad_geometry: list[tuple[str, bool, Any]] = []
-    via_rows: dict[str, dict[str, Any]] = {}
+    pad_rows: dict[str, PadObservation] = {}
+    pad_geometry: list[tuple[str, bool, NativePad]] = []
+    via_rows: dict[str, ViaSnapshotObservation] = {}
     via_identity_by_native_uuid: dict[str, str] = {}
-    via_objects: list[tuple[str, Any]] = []
-    track_rows: list[dict[str, Any]] = []
-    track_objects: list[tuple[dict[str, Any], Any]] = []
+    via_objects: list[tuple[str, NativeVia]] = []
+    track_rows: list[TrackObservation] = []
+    track_objects: list[tuple[TrackObservation, NativeTrack]] = []
     track_identity_by_native_uuid: dict[str, str] = {}
     for track in board.GetTracks():
         if isinstance(track, native_pcbnew.PCB_VIA):
-            via = via_observation(track, board)
+            native_via = cast(NativeVia, track)
+            via = via_observation(native_via, board)
             identity = via["id"]
             native_uuid = track.m_Uuid.AsString().casefold()
             if native_uuid in via_identity_by_native_uuid:
@@ -67,21 +69,32 @@ def main(
             if identity in via_rows:
                 via_rows[identity]["multiplicity"] += 1
             else:
-                via_rows[identity] = {**via, "multiplicity": 1}
-            via_objects.append((identity, track))
+                via_rows[identity] = {
+                    "id": via["id"],
+                    "net": via["net"],
+                    "x_nm": via["x_nm"],
+                    "y_nm": via["y_nm"],
+                    "start_layer": via["start_layer"],
+                    "end_layer": via["end_layer"],
+                    "diameter_nm": via["diameter_nm"],
+                    "drill_nm": via["drill_nm"],
+                    "kind": via["kind"],
+                    "multiplicity": 1,
+                }
+            via_objects.append((identity, native_via))
             continue
         if not all(hasattr(track, name) for name in ("GetStart", "GetEnd", "GetWidth", "GetLayer")):
             raise ValueError(f"Unsupported native copper track item {track.GetClass()}")
         item_class = track.GetClass()
         if item_class == "PCB_TRACK":
-            geometry_kind = "segment"
+            geometry_kind: Literal["segment", "arc"] = "segment"
         elif item_class == "PCB_ARC":
             geometry_kind = "arc"
         else:
             raise ValueError(f"Unsupported native copper track geometry {item_class}")
         start = track.GetStart()
         end = track.GetEnd()
-        row = {
+        row: TrackObservation = {
             "uuid": track.m_Uuid.AsString(),
             "net": track.GetNetname() or None,
             "layer": board.GetLayerName(track.GetLayer()),
@@ -89,6 +102,12 @@ def main(
             "start_nm": [int(start.x), int(start.y)],
             "end_nm": [int(end.x), int(end.y)],
             "geometry_kind": geometry_kind,
+            "start_pads": [],
+            "end_pads": [],
+            "start_vias": [],
+            "end_vias": [],
+            "start_tracks": [],
+            "end_tracks": [],
         }
         native_uuid = track.m_Uuid.AsString().casefold()
         if native_uuid in track_identity_by_native_uuid:
@@ -96,8 +115,8 @@ def main(
         track_identity_by_native_uuid[native_uuid] = row["uuid"]
         track_rows.append(row)
         track_objects.append((row, track))
-    ties: list[dict[str, Any]] = []
-    footprint_rows: list[dict[str, Any]] = []
+    ties: list[NetTieObservation] = []
+    footprint_rows: list[FootprintPlacementObservation] = []
     for footprint in sorted(board.GetFootprints(), key=lambda item: item.GetReference()):
         footprint_id = footprint.GetFPIDAsString()
         dnp = bool(footprint.IsDNP())
@@ -115,12 +134,16 @@ def main(
             connected_vias: set[str] = set()
             for item in connectivity.GetConnectedItems(pad, 0):
                 if item.GetClass() == "PAD":
-                    item_reference = pad_reference(item)
+                    item_reference = pad_reference(cast(NativePad, item))
                     if item_reference:
                         connected.add(item_reference)
                 elif item.GetClass() == "ZONE":
+                    zone_item = cast(NativeZone, item)
                     component_zones.add(
-                        (item.m_Uuid.AsString(), board.GetLayerName(item.GetLayer()))
+                        (
+                            zone_item.m_Uuid.AsString(),
+                            board.GetLayerName(zone_item.GetLayer()),
+                        )
                     )
                 elif item.GetClass() == "PCB_VIA":
                     native_uuid = item.m_Uuid.AsString().casefold()
@@ -130,7 +153,7 @@ def main(
                             f"Connected pad {reference} refers to an unobserved via {native_uuid}"
                         )
                     connected_vias.add(identity)
-            connected_islands: list[dict[str, Any]] = []
+            connected_islands: list[ConnectedIslandIdentity] = []
             for uuid, layer in sorted(
                 component_zones, key=lambda item: (item[0].casefold(), item[1].casefold())
             ):
@@ -151,7 +174,7 @@ def main(
                     {"uuid": uuid, "layer": layer, "island_index": island_index}
                     for island_index in island_indices
                 )
-            row: dict[str, Any] = {
+            row: PadObservation = {
                 "pad": reference,
                 "net": pad.GetNetname() or None,
                 "footprint": footprint_id,
@@ -183,12 +206,15 @@ def main(
                     set(existing["connected_pads"]) | set(row["connected_pads"]),
                     key=str.casefold,
                 )
-                existing["positions_nm"] = sorted(
-                    {
-                        (int(position[0]), int(position[1]))
-                        for position in existing["positions_nm"] + row["positions_nm"]
-                    }
-                )
+                existing["positions_nm"] = [
+                    list(position)
+                    for position in sorted(
+                        {
+                            (int(position[0]), int(position[1]))
+                            for position in existing["positions_nm"] + row["positions_nm"]
+                        }
+                    )
+                ]
                 existing["connected_vias"] = sorted(
                     set(existing["connected_vias"]) | set(row["connected_vias"])
                 )
@@ -253,7 +279,9 @@ def main(
                 }
             )
 
-    def endpoint_contacts(track: Any, point: Any) -> tuple[list[str], list[str], list[str]]:
+    def endpoint_contacts(
+        track: NativeTrack, point: NativePoint
+    ) -> tuple[list[str], list[str], list[str]]:
         layer = track.GetLayer()
         track_net = track.GetNetname() or None
         pads: set[str] = set()
@@ -331,7 +359,7 @@ def main(
         board,
     )
 
-    output = {
+    output: NativeProbeSnapshot = {
         "schema_version": "14",
         "board_sha256": sha256(board_path),
         "kicad_version": native_pcbnew.GetBuildVersion(),

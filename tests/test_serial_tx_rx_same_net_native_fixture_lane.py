@@ -9,7 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.ci_hosted_serial_same_net import SERIAL_TX_RX_NATIVE_TOOLCHAINS
+from kicad_tooling.ci_hosted_serial_same_net import (
+    SERIAL_TX_RX_NATIVE_TOOLCHAINS,
+    serial_tx_rx_same_net_fixture_lane,
+)
+from kicad_tooling.ci_hosted_support import HostedLog
 from tests.native_fixture_support import assert_native_fixture_mounts
 
 RULE_ID = "bus.serial_tx_rx_same_net"
@@ -36,8 +40,6 @@ PROJECT_TOOLCHAINS = tuple(
 def test_native_serial_tx_rx_same_net_fault_and_control_repeat(
     tmp_path: Path, version: str, image: str
 ) -> None:
-    from kicad_tooling.ci_hosted_serial_same_net import serial_tx_rx_same_net_fixture_lane
-    from kicad_tooling.ci_hosted_support import HostedLog
 
     root = tmp_path
     log = HostedLog(root, f"native-serial-tx-rx-same-net-{version}")

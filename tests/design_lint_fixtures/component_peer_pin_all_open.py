@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 
@@ -10,13 +12,13 @@ def generic_component_peer_netlist(
     references: tuple[str, ...] = ("U1", "U2"),
     anchor_nets: tuple[str | None, ...] = ("SHARED", "SHARED"),
     target_nets: tuple[str | None, ...] = (None, None),
-    symbols: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
     target_types: tuple[str, ...] = ("passive", "passive"),
     pin_functions: tuple[str | None, str | None] = ("ANCHOR", "Pin_2"),
     dnp: tuple[str, ...] = (),
-    part_ids: dict[str, str] | None = None,
-    values: dict[str, str] | None = None,
-    footprints: dict[str, str] | None = None,
+    part_ids: Mapping[str, str] | None = None,
+    values: Mapping[str, str] | None = None,
+    footprints: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     """Build peers with a stable anchor and a configurable generic second pin."""
     if not (len(references) == len(anchor_nets) == len(target_nets) == len(target_types)):
@@ -67,12 +69,12 @@ def generic_component_peer_mixed_netlist(
     anchor_nets: tuple[str | None, ...] = ("SHARED", "SHARED", "SHARED"),
     target_nets: tuple[str | None, ...] = ("LOAD", "LOAD", None),
     target_types: tuple[str, ...] = ("passive", "passive", "passive"),
-    symbols: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
     pin_functions: tuple[str | None, str | None] = ("ANCHOR", "Pin_2"),
     dnp: tuple[str, ...] = (),
-    part_ids: dict[str, str] | None = None,
-    values: dict[str, str] | None = None,
-    footprints: dict[str, str] | None = None,
+    part_ids: Mapping[str, str] | None = None,
+    values: Mapping[str, str] | None = None,
+    footprints: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     """Build three peers with two agreeing target nets and one open target."""
     references = ("U1", "U2", "U3")

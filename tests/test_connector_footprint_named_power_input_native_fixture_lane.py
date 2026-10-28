@@ -6,7 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
-from types import SimpleNamespace
+from types import MappingProxyType, SimpleNamespace
 
 import pytest
 
@@ -17,6 +17,7 @@ from kicad_tooling.ci_hosted_connector_return_named_power_input_divergence impor
     verify_footprint_alias_named_power_input_divergence,
 )
 from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import DesignLintPolicy, DesignLintRuleOverride
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.synthetic_design_lint_project import (
@@ -27,10 +28,12 @@ from tests.synthetic_design_lint_project import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.power_lint]
 
 FIXTURE_CASES = (FAULT_CASE, CONTROL_CASE)
-EXPECTED_SOURCE_HASHES = {
-    FAULT_CASE: "d4dfd83d6e8c9859411e613b6f9313ae65efd25c33056541bf35b0e484b70aea",
-    CONTROL_CASE: "8b055617a737dde04b6647a7ce8f5e4a167aa9567b712a1b0d88696eae1f8a7c",
-}
+EXPECTED_SOURCE_HASHES = MappingProxyType(
+    {
+        FAULT_CASE: "d4dfd83d6e8c9859411e613b6f9313ae65efd25c33056541bf35b0e484b70aea",
+        CONTROL_CASE: "8b055617a737dde04b6647a7ce8f5e4a167aa9567b712a1b0d88696eae1f8a7c",
+    }
+)
 
 
 def test_named_power_input_divergence_fixture_sources_match_reviewed_hashes() -> None:
@@ -145,7 +148,6 @@ def test_native_named_power_input_divergence_fault_and_control_are_repeatable(
     from kicad_tooling.ci_hosted_connector_return_context import (
         prepare_connector_return_fixture_context,
     )
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     policy = DesignLintPolicy(

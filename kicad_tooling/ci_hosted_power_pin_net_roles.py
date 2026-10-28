@@ -8,12 +8,16 @@ import os
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 
 def power_pin_net_role_fixture_lane(
@@ -25,14 +29,6 @@ def power_pin_net_role_fixture_lane(
     cases: tuple[str, ...] = ("fault", "control"),
 ) -> None:
     """Repeat native netlist export for conflicting and valid pin-role assignments."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .validate import read_netlist
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image:
@@ -40,9 +36,7 @@ def power_pin_net_role_fixture_lane(
     if config.kicad_version not in {"10.0.0", "10.0.5"}:
         raise ValueError(f"Power pin-role fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/power-pin-net-role-native"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/power-pin-net-role-native"
     case_files = {
         "fault": "fault.kicad_sch",
         "control": "control.kicad_sch",

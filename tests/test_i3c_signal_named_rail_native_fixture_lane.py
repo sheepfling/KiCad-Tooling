@@ -9,7 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.ci_hosted_i3c_signal_named_rail import I3C_SIGNAL_NAMED_RAIL_TOOLCHAINS
+from kicad_tooling.ci_hosted_i3c_signal_named_rail import (
+    I3C_SIGNAL_NAMED_RAIL_TOOLCHAINS,
+    i3c_signal_named_rail_fixture_lane,
+)
+from kicad_tooling.ci_hosted_support import HostedLog
 
 RULE_ID = "bus.i3c_signal_on_named_rail"
 TOOLCHAINS = tuple(
@@ -34,8 +38,6 @@ pytestmark = [
 def test_native_i3c_signal_named_rail_fault_and_control_repeat(
     tmp_path: Path, version: str, image: str
 ) -> None:
-    from kicad_tooling.ci_hosted_i3c_signal_named_rail import i3c_signal_named_rail_fixture_lane
-    from kicad_tooling.ci_hosted_support import HostedLog
 
     log = HostedLog(tmp_path, f"native-i3c-signal-named-rail-{version}")
     i3c_signal_named_rail_fixture_lane(tmp_path, version=version, image=image, log=log)

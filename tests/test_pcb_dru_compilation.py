@@ -14,6 +14,7 @@ from kicad_tooling.hwrepo.models import CommandEvidence
 from kicad_tooling.hwrepo.pcb_dru_compilation import (
     PcbDruCompilationReport,
     _append_sentinel,
+    _native_identity_and_matches,
     _sentinel_name,
     run_pcb_dru_compilation_probe,
 )
@@ -165,7 +166,6 @@ def test_probe_fails_closed_without_exact_version_and_sentinel_evidence(
 def test_report_parser_rejects_malformed_native_output(tmp_path: Path) -> None:
     output = tmp_path / "malformed.json"
     output.write_text("[]", encoding="utf-8")
-    from kicad_tooling.hwrepo.pcb_dru_compilation import _native_identity_and_matches
 
     with pytest.raises(TypeError, match="root must be an object"):
         _native_identity_and_matches(output, "sentinel")

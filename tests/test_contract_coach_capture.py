@@ -24,9 +24,9 @@ from kicad_tooling.hwrepo.contracts import read_model
 from kicad_tooling.hwrepo.discovery import load_config
 from kicad_tooling.hwrepo.models import (
     CommandEvidence,
+    ProjectKind,
     ProjectManifest,
     ProjectTestContract,
-    SchematicValidationContract,
 )
 from tests.contract_coach_support import (
     NETLIST,
@@ -45,7 +45,7 @@ def test_capture_exports_before_an_empty_contract_is_authored(coach_workspace) -
     manifest = read_model(manifest_path, ProjectManifest)
     contract_path = manifest_path.parent / manifest.checks
     contract = read_model(contract_path, ProjectTestContract)
-    assert isinstance(contract.validation, SchematicValidationContract)
+    assert contract.validation.kind == ProjectKind.SCHEMATIC
     assert contract.validation.components == {}
     original = contract_path.read_bytes()
     runner = FakeRunner(config.kicad_version)

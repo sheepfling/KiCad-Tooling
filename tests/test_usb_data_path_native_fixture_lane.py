@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.hwrepo.electrical import selected_config
+
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.interface_lint,
@@ -29,7 +31,6 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
     hosted_reference_root: Path, project: str, version: str
 ) -> None:
     from kicad_tooling.ci_hosted import HostedLog, usb_data_path_fixture_lane
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     expected_images = {
         "controller": "ghcr.io/kicad/kicad:10.0.0@sha256:"

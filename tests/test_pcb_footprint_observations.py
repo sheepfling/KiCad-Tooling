@@ -6,9 +6,10 @@ import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.models import PcbConnectivitySnapshot
+from tests.json_types import JsonObject
 
 
-def snapshot_data() -> dict[str, object]:
+def snapshot_data() -> JsonObject:
     return {
         "schema_version": "12",
         "board_sha256": "a" * 64,

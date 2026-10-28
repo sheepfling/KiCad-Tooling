@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 
 from .design_lint_pcb_coverage_common import (
@@ -47,7 +48,7 @@ def layout_coverage_reports(
     keepout_map: PcbKeepoutMap | None,
     rf_antenna_map: PcbRfModuleAntennaMap | None,
     touch_pad_clearance_map: PcbTouchPadClearanceMap | None,
-    modes: dict[str, PcbRuleMode],
+    modes: Mapping[str, PcbRuleMode],
     evidence: PcbGeometrySourceEvidence,
 ) -> tuple[
     PcbSignalPathRuleCoverageReport,

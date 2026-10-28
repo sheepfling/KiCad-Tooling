@@ -13,6 +13,7 @@ from .crystal_network_models import (
     CrystalNetworkRequirement,
 )
 from .models import NetlistContract
+from .netlist_pin_assignments import netlist_pin_inventory_contains
 
 
 def _pin_nets(observed: NetlistContract, pin: str) -> tuple[str, ...]:
@@ -25,29 +26,19 @@ def _pin_nets(observed: NetlistContract, pin: str) -> tuple[str, ...]:
     )
 
 
-def _component_pin_is_in_inventory(observed: NetlistContract, pin: str) -> bool | None:
-    reference, separator, number = pin.rpartition(".")
-    if not separator:
-        return False
-    inventory = _lookup(observed.component_pin_numbers, reference)
-    if inventory is None:
-        return None
-    return any(str(candidate).casefold() == number.casefold() for candidate in inventory)
-
-
 def _check_identity(
     observed: NetlistContract,
     reference: str,
     expected_value: str | None,
     expected_symbol: str,
     expected_footprint: str,
-    issues: list[str],
-) -> None:
+) -> tuple[str, ...]:
+    issues: list[str] = []
     component = _lookup(observed.components, reference)
     symbol = _lookup(observed.component_symbols, reference)
     if component is None:
         issues.append(f"Mapped component {reference} is missing or ambiguous in the native netlist")
-        return
+        return tuple(issues)
     if expected_value is not None and component.value != expected_value:
         issues.append(f"{reference} value is {component.value}; expected {expected_value}")
     if symbol != expected_symbol:
@@ -57,6 +48,7 @@ def _check_identity(
             f"{reference} footprint is {component.footprint or '<empty>'}; "
             f"expected {expected_footprint}"
         )
+    return tuple(issues)
 
 
 def _entry(
@@ -83,7 +75,7 @@ def _entry(
         ),
     )
     for reference, value, symbol, footprint in components:
-        _check_identity(observed, reference, value, symbol, footprint, issues)
+        issues.extend(_check_identity(observed, reference, value, symbol, footprint))
 
     fitted = {reference.casefold() for reference in observed.dnp_components}
     not_fitted = sorted(reference for reference, *_ in components if reference.casefold() in fitted)
@@ -105,7 +97,7 @@ def _entry(
     extra_capacitors: tuple[str, ...] = ()
     extra_capacitor_pin_nets: dict[str, tuple[str, ...]] = {}
     for pin in pins:
-        in_inventory = _component_pin_is_in_inventory(observed, pin)
+        in_inventory = netlist_pin_inventory_contains(observed, pin)
         if in_inventory is None:
             issues.append(f"Native pin inventory is unavailable for {pin}")
         elif not in_inventory:

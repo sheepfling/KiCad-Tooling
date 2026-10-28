@@ -3,6 +3,11 @@
 from __future__ import annotations
 
 from .ci_hosted_digital_peer_context import DigitalPeerFixtureContext
+from .ci_hosted_digital_peer_models import (
+    SERIAL_LABEL_REFERENCE_CASES,
+    DigitalPeerFixtureCase,
+)
+from .ci_hosted_native_fixture_models import NativeRun, NativeRunPair
 from .hwrepo.contracts import read_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_report_models import DesignLintReport
@@ -23,10 +28,13 @@ def verify_serial_label_reference_cases(ctx: DigitalPeerFixtureContext):
         "UART.0.RX": expected_signal_data.rx,
         "UART.0.TX": expected_signal_data.tx,
     }
-    for case in ("serial-label-control", "serial-label-fault"):
-        peer_contracts = ctx.contracts[case]
-        peer_observed = peer_contracts["first"]
-        if ctx.normalized_hashes[case]["first"] != ctx.normalized_hashes[case]["repeat"]:
+    for case in SERIAL_LABEL_REFERENCE_CASES:
+        peer_contracts = ctx.fixture(case).netlists
+        peer_observed = peer_contracts.first.contract
+        if (
+            ctx.fixture(case).netlists.first.normalized_sha256
+            != ctx.fixture(case).netlists.repeat.normalized_sha256
+        ):
             raise ValueError(
                 f"Native UART label {case} exports differ after typed-netlist normalization"
             )
@@ -72,33 +80,38 @@ def verify_serial_label_reference_cases(ctx: DigitalPeerFixtureContext):
             net: pins for (net, pins) in peer_observed.nets.items() if net.startswith("UART.")
         } != expected_signal_nets:
             raise ValueError(f"Native UART label {case} export changed its labeled TX/RX nets")
-        reports: dict[str, DesignLintReport] = {}
-        for run in ("first", "repeat"):
+
+        def report_for(run: NativeRun, fixture_case: DigitalPeerFixtureCase) -> DesignLintReport:
             report_coach = ContractCoachReport(
                 status="READY_FOR_REVIEW",
-                project_id=f"synthetic-uart-label-reference-{case}",
-                observed=peer_contracts[run],
-                netlist_sha256=ctx.hashes[case][run],
+                project_id=f"synthetic-uart-label-reference-{fixture_case}",
+                observed=ctx.fixture(fixture_case).netlists.for_run(run).contract,
+                netlist_sha256=ctx.fixture(fixture_case).netlists.for_run(run).netlist_sha256,
             )
-            reports[run] = evaluate(report_coach.project_id, report_coach, DesignLintPolicy())
+            return evaluate(report_coach.project_id, report_coach, DesignLintPolicy())
+
+        reports = NativeRunPair(
+            first=report_for("first", case),
+            repeat=report_for("repeat", case),
+        )
         reference_findings = tuple(
             item
-            for item in reports["first"].findings
+            for item in reports.first.findings
             if item.rule_id == "bus.serial_peer_reference_review"
         )
         first_signature = tuple(
             (item.fingerprint, item.rule_id, item.mode, item.evidence)
-            for item in reports["first"].findings
+            for item in reports.first.findings
         )
         repeated_signature = tuple(
             (item.fingerprint, item.rule_id, item.mode, item.evidence)
-            for item in reports["repeat"].findings
+            for item in reports.repeat.findings
         )
         expected_reference_count = 0 if case == "serial-label-control" else 1
         if (
             first_signature != repeated_signature
-            or reports["first"].status != "REVIEW"
-            or reports["repeat"].status != "REVIEW"
+            or reports.first.status != "REVIEW"
+            or reports.repeat.status != "REVIEW"
             or (len(reference_findings) != expected_reference_count)
         ):
             raise ValueError(
@@ -129,12 +142,12 @@ def verify_serial_label_reference_cases(ctx: DigitalPeerFixtureContext):
             project=ctx.project,
             kicad_version=ctx.config.kicad_version,
             image=ctx.pinned,
-            source_sha256=ctx.serial_label_reference_source_hashes[case],
-            netlist_sha256=ctx.hashes[case]["first"],
-            repeat_netlist_sha256=ctx.hashes[case]["repeat"],
-            normalized_netlist_sha256=ctx.normalized_hashes[case]["first"],
-            repeat_normalized_netlist_sha256=ctx.normalized_hashes[case]["repeat"],
-            lint_status=reports["first"].status,
+            source_sha256=ctx.fixture(case).source.sha256,
+            netlist_sha256=ctx.fixture(case).netlists.first.netlist_sha256,
+            repeat_netlist_sha256=ctx.fixture(case).netlists.repeat.netlist_sha256,
+            normalized_netlist_sha256=ctx.fixture(case).netlists.first.normalized_sha256,
+            repeat_normalized_netlist_sha256=ctx.fixture(case).netlists.repeat.normalized_sha256,
+            lint_status=reports.first.status,
             peer_reference_findings=";".join(item.rule_id for item in reference_findings) or "none",
             pin_functions=";".join(
                 f"{pin}={name}" for (pin, name) in sorted(peer_observed.pin_functions.items())

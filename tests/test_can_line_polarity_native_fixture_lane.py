@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from tests.native_fixture_support import assert_native_fixture_mounts
 
 RULE_ID = "bus.can_line_polarity_label_mismatch"
@@ -49,8 +51,6 @@ def test_native_can_line_polarity_fault_and_control_repeat(
     hosted_reference_root: Path, project: str, version: str, image: str
 ) -> None:
     from kicad_tooling.ci_hosted_can_line_polarity import can_line_polarity_fixture_lane
-    from kicad_tooling.ci_hosted_support import HostedLog
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     root = hosted_reference_root
     config = selected_config(root, project)

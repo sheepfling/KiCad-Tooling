@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from types import MappingProxyType
+
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import candidates, evaluate, fingerprint
@@ -18,19 +21,21 @@ from tests.design_lint_fixtures.usb_c_superspeed_lanes import usb_c_superspeed_l
 RULE_ID = "bus.usb_c_superspeed_lane_label_mismatch"
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
 
-_CORRECT_LABELS = {
-    "J1.1": "USB_TX1_P",
-    "J1.2": "USB_TX1_N",
-    "J1.3": "USB_TX2_P",
-    "J1.4": "USB_TX2_N",
-    "J1.5": "USB_RX1_P",
-    "J1.6": "USB_RX1_N",
-    "J1.7": "USB_RX2_P",
-    "J1.8": "USB_RX2_N",
-}
+_CORRECT_LABELS = MappingProxyType(
+    {
+        "J1.1": "USB_TX1_P",
+        "J1.2": "USB_TX1_N",
+        "J1.3": "USB_TX2_P",
+        "J1.4": "USB_TX2_N",
+        "J1.5": "USB_RX1_P",
+        "J1.6": "USB_RX1_N",
+        "J1.7": "USB_RX2_P",
+        "J1.8": "USB_RX2_N",
+    }
+)
 
 
-def _netlist(labels: dict[str, str]) -> NetlistContract:
+def _netlist(labels: Mapping[str, str]) -> NetlistContract:
     grouped: dict[str, list[str]] = {}
     for pin, net in labels.items():
         grouped.setdefault(net, []).append(pin)

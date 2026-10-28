@@ -9,10 +9,12 @@ from __future__ import annotations
 import hashlib
 import os
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
 
 from pydantic import TypeAdapter
 
+from ..platforms import is_posix_host
 from . import digikey_handoff
 from .contract_coach import project_context
 from .contracts import parse_model_text, read_model, repo_path, write_model
@@ -54,7 +56,7 @@ def _payload_digest(payload: DigiKeyHandoffPayload) -> str:
     return hashlib.sha256(content).hexdigest()
 
 
-def _current(root: Path, expected: dict[str, str | None]) -> None:
+def _current(root: Path, expected: Mapping[str, str | None]) -> None:
     for name, expected_hash in expected.items():
         path = repo_path(root, name)
         if expected_hash is None:
@@ -199,7 +201,7 @@ def _validate_handoff(
 def _sync_directory(path: Path) -> None:
     # POSIX directory fsync retains the new marker name as well as its contents.
     # Windows has no portable directory descriptor; the file itself is flushed.
-    if os.name == "posix":
+    if is_posix_host():
         descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
         try:
             os.fsync(descriptor)

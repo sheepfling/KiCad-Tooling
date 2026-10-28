@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 
 def can_peer_reference_netlist(
     *,
-    reference_nets: dict[str, str] | None = None,
-    line_nets: dict[str, tuple[str, str]] | None = None,
-    symbols: dict[str, str] | None = None,
+    reference_nets: Mapping[str, str] | None = None,
+    line_nets: Mapping[str, tuple[str, str]] | None = None,
+    symbols: Mapping[str, str] | None = None,
     dnp: tuple[str, ...] = (),
     incomplete_reference_types: tuple[str, ...] = (),
-    reference_functions: dict[str, str] | None = None,
+    reference_functions: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     """Build fitted CAN line-pair peers with complete explicit pin inventories."""
     reference_nets = reference_nets or {"U1": "GND_A", "U2": "GND_B"}

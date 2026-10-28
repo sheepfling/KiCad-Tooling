@@ -9,7 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.ci_hosted_i3c_same_net import I3C_SIGNAL_SAME_NET_TOOLCHAINS
+from kicad_tooling.ci_hosted_i3c_same_net import (
+    I3C_SIGNAL_SAME_NET_TOOLCHAINS,
+    i3c_sda_scl_same_net_fixture_lane,
+)
+from kicad_tooling.ci_hosted_support import HostedLog
 from tests.native_fixture_support import assert_native_fixture_mounts
 
 RULE_ID = "bus.i3c_sda_scl_same_net"
@@ -36,8 +40,6 @@ PROJECT_TOOLCHAINS = tuple(
 def test_native_i3c_sda_scl_same_net_fault_and_control_repeat(
     tmp_path: Path, version: str, image: str
 ) -> None:
-    from kicad_tooling.ci_hosted_i3c_same_net import i3c_sda_scl_same_net_fixture_lane
-    from kicad_tooling.ci_hosted_support import HostedLog
 
     log = HostedLog(tmp_path, f"native-i3c-sda-scl-same-net-{version}")
     i3c_sda_scl_same_net_fixture_lane(tmp_path, version=version, image=image, log=log)

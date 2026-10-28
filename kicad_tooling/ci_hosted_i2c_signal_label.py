@@ -9,29 +9,25 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from .ci_hosted_i2c_native import I2C_NATIVE_TOOLCHAINS
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 
 def i2c_signal_label_fixture_lane(root: Path, *, version: str, image: str, log: HostedLog) -> None:
     """Verify I2C name-role and direct-rail faults against a control with repeated exports."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .validate import read_netlist
-
     root = root.resolve()
     if (version, image) not in I2C_NATIVE_TOOLCHAINS:
         raise ValueError(f"I2C signal-role fixtures do not cover KiCad {version} with this image")
     pinned = pinned_image(image)
-    repository = Path(__file__).resolve().parents[1]
+    repository = tooling_checkout_root()
     fixture_root = repository / "tests/fixtures/design_lint/i2c-signal-label-native"
     sources = {
         "control": fixture_root / "correct-i2c-lines.kicad_sch",

@@ -9,28 +9,25 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.can_peer_reference_scan import scan_can_peer_references
+from .hwrepo.component_peer_pin_findings import (
+    component_peer_power_pin_assignment_divergences,
+)
+from .hwrepo.contract_coach import pinned_image, run_command
+from .hwrepo.contracts import read_kicad_erc_report, write_model
+from .hwrepo.design_lint_can_candidates import can_peer_reference_candidates
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import NetlistContract
+from .validate import read_netlist
 
 
 def can_peer_reference_native_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Verify CAN shared-pair reference fixtures with repeated pinned exports."""
-    from .hwrepo.can_peer_reference_scan import scan_can_peer_references
-    from .hwrepo.component_peer_pin_findings import (
-        component_peer_power_pin_assignment_divergences,
-    )
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.contracts import read_kicad_erc_report, write_model
-    from .hwrepo.design_lint_can_candidates import can_peer_reference_candidates
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import NetlistContract
-    from .validate import read_netlist
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image:
@@ -38,9 +35,7 @@ def can_peer_reference_native_fixture_lane(
     if config.kicad_version not in {"10.0.0", "10.0.5"}:
         raise ValueError(f"CAN peer-reference fixtures do not cover KiCad {config.kicad_version}")
 
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/can-peer-reference-native"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/can-peer-reference-native"
     cases = ("reference-control", "reference-fault")
     source_hashes = {case: digest(fixture_root / f"{case}.kicad_sch") for case in cases}
     expected_source_hashes = {

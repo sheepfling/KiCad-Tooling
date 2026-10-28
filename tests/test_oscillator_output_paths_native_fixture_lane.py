@@ -6,10 +6,12 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
 from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 from tests.design_lint_fixtures.oscillator_output_path_native import CASES, render_case
 from tests.native_fixture_support import assert_native_fixture_mounts
@@ -23,10 +25,12 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint]
 
 RULE_ID = "oscillator.output_load_path_mismatch"
 FIXTURE_ROOT = Path(__file__).parent / "fixtures" / "design_lint" / "oscillator-output-native"
-SOURCE_SHA256 = {
-    "series-boundary-control.kicad_sch": "4fadcabb12a2bbedc396e707abf0bf1247df3a921674b5236cc993c9d54445b9",
-    "wrong-value-fault.kicad_sch": "9225ef72ca1e7922003672085bc69531a33f67b0acc1acbde2b9554d350239d8",
-}
+SOURCE_SHA256 = MappingProxyType(
+    {
+        "series-boundary-control.kicad_sch": "4fadcabb12a2bbedc396e707abf0bf1247df3a921674b5236cc993c9d54445b9",
+        "wrong-value-fault.kicad_sch": "9225ef72ca1e7922003672085bc69531a33f67b0acc1acbde2b9554d350239d8",
+    }
+)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -56,7 +60,6 @@ def test_native_oscillator_output_path_fault_and_control_are_version_pinned_and_
     from kicad_tooling.ci_hosted_oscillator_output_path_fixtures import (
         oscillator_output_path_fixture_lane,
     )
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     project = "oscillator-output-native"
     image = PINNED_NATIVE_KICAD_IMAGES[version]

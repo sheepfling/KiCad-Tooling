@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.hwrepo.electrical import selected_config
+
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.interface_lint,
@@ -28,7 +30,6 @@ def test_complementary_pair_fault_and_control_export_repeatably(
     hosted_reference_root: Path,
 ) -> None:
     from kicad_tooling.ci_hosted import HostedLog, complementary_pair_fixture_lane
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     root = hosted_reference_root
     expected_versions = (("controller", "10.0.0"), ("raspberry-pi-status-led", "10.0.5"))

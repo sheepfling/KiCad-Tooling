@@ -14,7 +14,7 @@ from .connector_identity import (
 from .models import NetlistContract
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnconnectedGenericPowerInputComponentPin:
     pin: str
     symbol: str
@@ -22,7 +22,7 @@ class UnconnectedGenericPowerInputComponentPin:
     electrical_type: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnconnectedGenericPowerOutputComponentPin:
     pin: str
     symbol: str
@@ -30,7 +30,7 @@ class UnconnectedGenericPowerOutputComponentPin:
     electrical_type: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _UnconnectedGenericPowerComponentPin:
     pin: str
     symbol: str
@@ -124,7 +124,7 @@ def unconnected_generic_power_output_component_pins(
     )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnconnectedNamedComponentPin:
     pin: str
     function: str
@@ -164,7 +164,7 @@ def unconnected_named_component_pins(
     return tuple(sorted(results, key=lambda item: (item.category, item.pin, item.function)))
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class RepeatedComponentSupplyPins:
     reference: str
     symbol: str

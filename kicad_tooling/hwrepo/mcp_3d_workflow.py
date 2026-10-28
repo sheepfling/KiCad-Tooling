@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 
 from . import model_inventory, model_population, three_d
@@ -41,7 +42,7 @@ def export_3d(
     view_id: str,
     runner: NativeRunner = "auto",
     assembly_variant: str | None = None,
-    views: list[ThreeDView] | None = None,
+    views: Sequence[ThreeDView] | None = None,
 ) -> ThreeDReport:
     """Create source-bound 3D review artifacts under one fresh ignored destination."""
     root = root.resolve()

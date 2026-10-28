@@ -9,7 +9,10 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.ci_hosted_diode_rail_orientation import DIODE_RAIL_FIXTURE_CASES
+from kicad_tooling.ci_hosted_diode_rail_orientation import (
+    DIODE_RAIL_FIXTURE_CASES,
+    diode_rail_fixture_lane,
+)
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.component_diode_rail_orientation import RULE_ID
 from kicad_tooling.hwrepo.electrical import selected_config
@@ -36,7 +39,6 @@ def test_native_diode_rail_fault_and_control_are_deterministic(
     tmp_path: Path,
     version: str,
 ) -> None:
-    from kicad_tooling.ci_hosted_diode_rail_orientation import diode_rail_fixture_lane
 
     fixture_root = Path(__file__).parent / "fixtures/design_lint"
     actual_paths = {

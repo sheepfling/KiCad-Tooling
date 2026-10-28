@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
+from .ci_hosted_support import HostedLog
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
@@ -13,9 +15,6 @@ from .hwrepo.usb_data_path_models import UsbDataPathMap
 from .hwrepo.usb_reference_pin_models import UsbReferencePinRequirement
 from .hwrepo.usb_superspeed_reference_models import UsbSuperspeedReferencePathRequirement
 from .validate import read_netlist
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
 
 _SignalFamily = Literal["USB SuperSpeed TX", "USB SuperSpeed RX"]
 
@@ -97,9 +96,9 @@ def usb_superspeed_reference_map_fixture_lane(
     kicad_version: str,
     image: str,
     output: Path,
-    source_hashes: dict[str, str],
-    normalized_hashes: dict[tuple[str, str], str],
-    raw_hashes: dict[tuple[str, str], str],
+    source_hashes: Mapping[str, str],
+    normalized_hashes: Mapping[tuple[str, str], str],
+    raw_hashes: Mapping[tuple[str, str], str],
     log: HostedLog,
 ) -> None:
     """Verify exact split/common maps and a stale-map fault on native exports."""

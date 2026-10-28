@@ -8,6 +8,9 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
+
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.interface_lint,
@@ -107,11 +110,9 @@ def _synthetic_toolchain_checkout(base: Path, *, project: str, version: str, ima
 def test_usb_superspeed_peer_reference_native_fixture_lane_is_repeatable(
     tmp_path: Path, project: str, version: str
 ) -> None:
-    from kicad_tooling.ci_hosted_support import HostedLog
     from kicad_tooling.ci_hosted_usb_superspeed_peer_reference import (
         usb_superspeed_peer_reference_fixture_lane,
     )
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     expected_images = {
         "controller": "ghcr.io/kicad/kicad:10.0.0@sha256:"

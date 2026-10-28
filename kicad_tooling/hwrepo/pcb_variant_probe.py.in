@@ -7,11 +7,39 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any, cast
+from typing import Literal, Protocol, TypedDict, cast
 
 import pcbnew as _pcbnew  # type: ignore[import-not-found]
 
-native_pcbnew: Any = cast(Any, _pcbnew)
+
+class VariantBoard(Protocol):
+    def HasVariant(self, name: str) -> bool: ...
+
+
+class NativePcbnew(Protocol):
+    def LoadBoard(self, path: str) -> VariantBoard | None: ...
+
+
+class VariantPresence(TypedDict):
+    name: str
+    present_on_board: bool
+
+
+class VariantProbeSnapshot(TypedDict):
+    schema_version: Literal["1"]
+    board_sha256: str
+    project_sha256: str
+    variants: list[VariantPresence]
+
+
+class RawVariantProbeRequest(TypedDict, total=False):
+    schema_version: object
+    board_sha256: object
+    project_sha256: object
+    variants: object
+
+
+native_pcbnew = cast(NativePcbnew, _pcbnew)
 
 
 def main(arguments: list[str] | None = None) -> None:
@@ -24,7 +52,7 @@ def main(arguments: list[str] | None = None) -> None:
     raw_request: object = json.loads(request_path.read_text(encoding="utf-8"))
     if not isinstance(raw_request, dict):
         raise TypeError("Variant request is malformed or bound to a different PCB source")
-    request = cast(dict[str, object], raw_request)
+    request = cast(RawVariantProbeRequest, raw_request)
     project_sha256 = request.get("project_sha256")
     raw_variants = request.get("variants")
     issues: list[str] = []
@@ -56,10 +84,11 @@ def main(arguments: list[str] | None = None) -> None:
     board = native_pcbnew.LoadBoard(str(board_path))
     if board is None:
         raise ValueError("KiCad could not load the requested PCB source")
-    observed: dict[str, object] = {
+    project_sha256_value = cast(str, project_sha256)
+    observed: VariantProbeSnapshot = {
         "schema_version": "1",
         "board_sha256": board_sha256,
-        "project_sha256": project_sha256,
+        "project_sha256": project_sha256_value,
         "variants": [
             {"name": name, "present_on_board": bool(board.HasVariant(name))} for name in names
         ],

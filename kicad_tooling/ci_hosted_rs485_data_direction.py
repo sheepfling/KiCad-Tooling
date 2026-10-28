@@ -9,32 +9,31 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
+from types import MappingProxyType
 
 from .ci_hosted_kicad10_images import KICAD_10_NATIVE_TOOLCHAINS
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 RS485_DATA_DIRECTION_TOOLCHAINS = KICAD_10_NATIVE_TOOLCHAINS
 _RULE_ID = "bus.rs485_data_direction_label_mismatch"
-_SOURCE_HASHES = {
-    "fault": "10b0e622dd9359866b7edce3dd81c9f6bff6b7e00c3ce1392eef3ae5bb5f605a",
-    "control": "16711f441b0a0fc050378ffea39b1bbcecf9c9c698a1da5987a15d5670327cad",
-}
+_SOURCE_HASHES = MappingProxyType(
+    {
+        "fault": "10b0e622dd9359866b7edce3dd81c9f6bff6b7e00c3ce1392eef3ae5bb5f605a",
+        "control": "16711f441b0a0fc050378ffea39b1bbcecf9c9c698a1da5987a15d5670327cad",
+    }
+)
 
 
 def rs485_data_direction_fixture_lane(
     root: Path, *, version: str, image: str, log: HostedLog
 ) -> None:
     """Repeat exact native netlist/ERC exports for crossed and matching labels."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .validate import read_netlist
-
     root = root.resolve()
     if (version, image) not in RS485_DATA_DIRECTION_TOOLCHAINS:
         raise ValueError(
@@ -42,14 +41,13 @@ def rs485_data_direction_fixture_lane(
         )
     pinned = pinned_image(image)
     fixture_root = (
-        Path(__file__).resolve().parents[1]
-        / "tests/fixtures/design_lint/rs485-data-direction-label-mismatch"
+        tooling_checkout_root() / "tests/fixtures/design_lint/rs485-data-direction-label-mismatch"
     )
     sources = {
         "fault": fixture_root / "crossed-data-labels.kicad_sch",
         "control": fixture_root / "matching-data-labels-control.kicad_sch",
     }
-    source_hashes = {case: digest(source) for case, source in sources.items()}
+    source_hashes = MappingProxyType({case: digest(source) for case, source in sources.items()})
     if source_hashes != _SOURCE_HASHES:
         raise ValueError("RS-485 data direction sources differ from reviewed hashes")
 

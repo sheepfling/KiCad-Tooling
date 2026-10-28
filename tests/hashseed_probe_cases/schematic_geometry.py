@@ -19,6 +19,7 @@ from tests.design_lint_fixtures.schematic_geometry_fixtures import (
     JUNCTION_MARKED_CROSSING,
     UNMARKED_CROSSING,
 )
+from tests.json_types import JsonObject
 
 _ROOT = Path(__file__).resolve().parents[2]
 _KICAD_VERSION = "10.0.6"
@@ -26,7 +27,7 @@ _CROSSING_RULE_ID = "schematic.unmarked_wire_crossing"
 _BODY_RULE_ID = "schematic.wire_through_symbol_body"
 
 
-def _report(source_path: Path, rule_id: str) -> dict[str, object]:
+def _report(source_path: Path, rule_id: str) -> JsonObject:
     observed = NetlistContract(components={}, nets={})
     netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
     relative_path = source_path.relative_to(_ROOT).as_posix()
@@ -53,7 +54,7 @@ def _report(source_path: Path, rule_id: str) -> dict[str, object]:
     return report.model_dump(mode="json")
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     return {
         "schematic_wire_crossing_fault": _report(UNMARKED_CROSSING, _CROSSING_RULE_ID),
         "schematic_wire_crossing_junction_control": _report(

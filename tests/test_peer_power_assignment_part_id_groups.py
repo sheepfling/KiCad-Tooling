@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from tests.component_peer_power_assignment_support import RULE_ID, lint_report, peer_power_netlist
+from tests.component_peer_power_assignment_support import (
+    RULE_ID,
+    PeerPowerNetlistOverrides,
+    lint_report,
+    peer_power_netlist,
+)
 
 pytestmark = [pytest.mark.component_lint, pytest.mark.design_lint, pytest.mark.power_lint]
 
@@ -166,12 +171,12 @@ def test_part_id_peer_findings_are_stable_under_input_mapping_order() -> None:
     ),
 )
 def test_part_id_alias_comparison_requires_complete_matching_peer_identity(
-    changes: dict[str, object],
+    changes: PeerPowerNetlistOverrides,
 ) -> None:
-    defaults: dict[str, object] = {"part_ids": {"U1": "SYNTHETIC-1", "U2": "SYNTHETIC-1"}}
-    defaults.update(changes)
+    overrides: PeerPowerNetlistOverrides = {"part_ids": {"U1": "SYNTHETIC-1", "U2": "SYNTHETIC-1"}}
+    overrides.update(changes)
 
-    report = lint_report(peer_power_netlist(**defaults))
+    report = lint_report(peer_power_netlist(**overrides))
 
     assert RULE_ID not in {item.rule_id for item in report.findings}
 

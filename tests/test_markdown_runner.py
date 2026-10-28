@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+from collections.abc import Sequence
 from importlib.metadata import PackageNotFoundError, PackagePath
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -35,7 +36,9 @@ def test_distribution_record_resolves_unix_and_windows_binaries(tmp_path: Path, 
     (None, [], [PackagePath("bin/rumdl"), PackagePath("Scripts/rumdl.exe")]),
     ids=("missing-metadata", "empty-metadata", "ambiguous-metadata"),
 )
-def test_missing_or_ambiguous_metadata_has_no_path_search_fallback(files: list | None) -> None:
+def test_missing_or_ambiguous_metadata_has_no_path_search_fallback(
+    files: Sequence[PackagePath] | None,
+) -> None:
     installed = Mock(files=files)
     installed.locate_file.return_value = Path("/missing/rumdl")
     with (

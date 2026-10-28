@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import evaluate
@@ -152,7 +154,7 @@ def test_unsupported_identity_or_incomplete_native_roles_are_controls(
     ),
 )
 def test_missing_or_ambiguous_gate_source_assignments_are_not_bias_findings(
-    nets: dict[str, tuple[str, ...]],
+    nets: Mapping[str, tuple[str, ...]],
 ) -> None:
     report = lint(netlist().model_copy(update={"nets": nets}))
 

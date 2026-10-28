@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from urllib.parse import quote, urlsplit
 
+from .evidence import digest as file_digest
 from .model_inventory import (
     _atoms,  # pyright: ignore[reportPrivateUsage]
     _children,  # pyright: ignore[reportPrivateUsage]
@@ -35,7 +36,7 @@ _NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_+.,()-]*\Z")
 _VERSION = re.compile(r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\Z")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class DownloadedCadAsset:
     """A source URL and digest for one file in a completed download bundle."""
 
@@ -65,7 +66,8 @@ def _download(url: str, maximum: int) -> bytes:
         or parsed.netloc != _HOST
         or parsed.query
         or parsed.fragment
-        or not parsed.path.startswith("/kicad/libraries/")
+        or PurePosixPath(parsed.path).parts[1:3] != ("kicad", "libraries")
+        or len(PurePosixPath(parsed.path).parts) < 4
     ):
         raise ValueError("CAD download URL is outside the official KiCad library host")
     connection = http.client.HTTPSConnection(_HOST, timeout=_TIMEOUT)
@@ -139,7 +141,7 @@ def _asset_shape(path: str, value: bytes) -> None:
         raise ValueError(f"Downloaded model is not a STEP file: {path}")
     if suffix == ".wrl" and not value.lstrip().startswith(b"#VRML"):
         raise ValueError(f"Downloaded model is not a VRML file: {path}")
-    if path.startswith("licenses/") and b"Creative Commons" not in value:
+    if PurePosixPath(path).parts[:1] == ("licenses",) and b"Creative Commons" not in value:
         raise ValueError(f"Official library license was not returned: {path}")
 
 
@@ -187,7 +189,7 @@ def inspect_cached_provenance(footprints_root: Path) -> tuple[DownloadedCadAsset
                 or not asset.is_file()
             ):
                 raise ValueError("Official CAD cache asset is missing or outside its bundle")
-            if hashlib.sha256(asset.read_bytes()).hexdigest() != digest:
+            if file_digest(asset) != digest:
                 raise ValueError(f"Official CAD cache asset changed: {path}")
             records.append(DownloadedCadAsset(path, url, digest))
     if len({record.path for record in records}) != len(records):
@@ -240,8 +242,9 @@ def fetch_official_footprint(
         expected = _expected(footprint_id, version, source)
         records: list[DownloadedCadAsset] = []
         for path, url in expected.items():
-            maximum = _MAX_LICENSE if path.startswith("licenses/") else _MAX_MODEL
-            value = source if path.startswith("footprints/") else _download(url, maximum)
+            parts = PurePosixPath(path).parts
+            maximum = _MAX_LICENSE if parts[:1] == ("licenses",) else _MAX_MODEL
+            value = source if parts[:1] == ("footprints",) else _download(url, maximum)
             _asset_shape(path, value)
             target = stage / path
             target.parent.mkdir(parents=True, exist_ok=True)

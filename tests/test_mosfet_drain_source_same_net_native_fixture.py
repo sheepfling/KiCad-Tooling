@@ -6,10 +6,15 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
-from kicad_tooling.ci_hosted_component_mosfet_terminals import FIXTURE_CASES, RULE_ID
+from kicad_tooling.ci_hosted_component_mosfet_terminals import (
+    FIXTURE_CASES,
+    RULE_ID,
+    mosfet_drain_source_fixture_lane,
+)
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 from tests.native_fixture_support import assert_native_fixture_mounts
@@ -20,10 +25,12 @@ from tests.synthetic_design_lint_project import (
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint]
 
-EXPECTED_SOURCE_HASHES = {
-    "fault": "332cc8bef1c6af31e2e585f75824efa6a38049419f88e27071febebc2f07d3a4",
-    "control": "e95ed1a5673723dc690e1fad27d534f3f834c371a489957c0c7050f642d18a75",
-}
+EXPECTED_SOURCE_HASHES = MappingProxyType(
+    {
+        "fault": "332cc8bef1c6af31e2e585f75824efa6a38049419f88e27071febebc2f07d3a4",
+        "control": "e95ed1a5673723dc690e1fad27d534f3f834c371a489957c0c7050f642d18a75",
+    }
+)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -53,9 +60,6 @@ def test_native_mosfet_same_net_fault_and_control_are_repeatable(
     project: str,
     version: str,
 ) -> None:
-    from kicad_tooling.ci_hosted_component_mosfet_terminals import (
-        mosfet_drain_source_fixture_lane,
-    )
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(

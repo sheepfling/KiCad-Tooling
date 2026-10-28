@@ -14,6 +14,21 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal, Protocol, TypeVar
 
+from kicad_tooling.hwrepo.models import (
+    CommandEvidence,
+    ContractCoachReport,
+    ContractDifference,
+    HarnessInterfaceValidationContract,
+    NetlistContract,
+    PcbOnlyValidationContract,
+    PcbValidationContract,
+    ProjectConfig,
+    ProjectKind,
+    SchematicValidationContract,
+    SystemWiringValidationContract,
+    ValidationSummary,
+)
+
 from ..check_toolchain import cli_executable
 from ..validate import hashes, read_netlist
 from .connector_identity import similar_connector_pin_groups
@@ -21,17 +36,6 @@ from .contracts import read_model, repo_path, write_model
 from .discovery import load_config, load_registry
 from .evidence import digest
 from .kicad_compatibility import require_cli_profile
-from .models import (
-    CommandEvidence,
-    ContractCoachReport,
-    ContractDifference,
-    NetlistContract,
-    PcbValidationContract,
-    ProjectConfig,
-    ProjectKind,
-    SchematicValidationContract,
-    ValidationSummary,
-)
 from .return_nets import return_net_groups
 
 Item = TypeVar("Item")
@@ -64,15 +68,17 @@ def run_command(root: Path, argv: tuple[str, ...], timeout: int = 180) -> Comman
             stderr=result.stderr,
         )
     except subprocess.TimeoutExpired as exc:
-        stdout = (
-            exc.stdout.decode(errors="replace")
-            if isinstance(exc.stdout, bytes)
-            else exc.stdout or ""
+        stdout_value: str | bytes | None = exc.stdout
+        stderr_value: str | bytes | None = exc.stderr
+        stdout: str = (
+            stdout_value.decode(errors="replace")
+            if isinstance(stdout_value, bytes)
+            else stdout_value or ""
         )
-        stderr = (
-            exc.stderr.decode(errors="replace")
-            if isinstance(exc.stderr, bytes)
-            else exc.stderr or ""
+        stderr: str = (
+            stderr_value.decode(errors="replace")
+            if isinstance(stderr_value, bytes)
+            else stderr_value or ""
         )
         return CommandEvidence(
             argv=argv,
@@ -240,7 +246,13 @@ def project_context(
     require_cli_profile(config)
     if config.project_id != project_id or config.kind is not project.kind:
         raise ValueError("Project manifest and resolved configuration disagree")
-    validation = config.validation
+    validation: (
+        PcbValidationContract
+        | PcbOnlyValidationContract
+        | SchematicValidationContract
+        | SystemWiringValidationContract
+        | HarnessInterfaceValidationContract
+    ) = config.validation
     if not isinstance(validation, (PcbValidationContract, SchematicValidationContract)):
         raise TypeError("Project has no electrical component/net contract")
     current = hashes(root, config.source_roots)
@@ -296,12 +308,12 @@ def differences(
 def ready_report(
     project_id: str,
     config: ProjectConfig,
-    current: dict[str, str],
+    current: Mapping[str, str],
     observed: NetlistContract,
     authored: NetlistContract,
     netlist_hash: str,
     native_status: Literal["PASS", "FAIL"] | None,
-    commands: dict[str, CommandEvidence] | None = None,
+    commands: Mapping[str, CommandEvidence] | None = None,
     receipt_dir: str | None = None,
     selected_runner: Literal["local", "container"] | None = None,
 ) -> ContractCoachReport:
@@ -365,7 +377,7 @@ def blocked_report(
     project_id: str,
     reason: str,
     project_kind: ProjectKind | None = None,
-    commands: dict[str, CommandEvidence] | None = None,
+    commands: Mapping[str, CommandEvidence] | None = None,
     receipt_dir: str | None = None,
     selected_runner: Literal["local", "container"] | None = None,
 ) -> ContractCoachReport:

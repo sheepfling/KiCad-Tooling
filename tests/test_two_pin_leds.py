@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 
 import pytest
 
@@ -33,7 +34,7 @@ def led_netlist(
     ambiguous: tuple[str, ...] = (),
     open_pins: tuple[str, ...] = (),
     multi_pin: tuple[str, ...] = (),
-    symbols: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     symbols = symbols or {"LED1": "Device:LED"}
     components = {

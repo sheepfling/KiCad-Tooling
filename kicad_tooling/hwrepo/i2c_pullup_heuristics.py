@@ -21,7 +21,7 @@ from .resistor_paths import (
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class I2cPullupGap:
     sda_net: str
     scl_net: str
@@ -30,7 +30,7 @@ class I2cPullupGap:
     missing_lines: tuple[Literal["SDA", "SCL"], ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class I2cLowEquivalentResistance:
     sda_net: str
     scl_net: str
@@ -40,7 +40,7 @@ class I2cLowEquivalentResistance:
     equivalent_ohms: dict[str, str]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class I2cMultiplePullupRailFamilies:
     sda_net: str
     scl_net: str

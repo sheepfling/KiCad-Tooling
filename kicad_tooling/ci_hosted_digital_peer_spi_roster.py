@@ -58,7 +58,7 @@ def verify_spi_roster_coverage(ctx: DigitalPeerFixtureContext):
             status="READY_FOR_REVIEW",
             project_id=project_id,
             observed=ctx.observed,
-            netlist_sha256=ctx.hashes["multi-device"]["first"],
+            netlist_sha256=ctx.fixture("multi-device").netlists.first.netlist_sha256,
         )
         reports[case] = evaluate(project_id, coach, DesignLintPolicy(), spi_roster=context)
     unrostered = reports["unrostered"]
@@ -91,11 +91,13 @@ def verify_spi_roster_coverage(ctx: DigitalPeerFixtureContext):
             project=ctx.project,
             kicad_version=ctx.config.kicad_version,
             image=ctx.pinned,
-            source_sha256=ctx.source_hash,
-            netlist_sha256=ctx.hashes["multi-device"]["first"],
-            repeat_netlist_sha256=ctx.hashes["multi-device"]["repeat"],
-            normalized_netlist_sha256=ctx.normalized_hashes["multi-device"]["first"],
-            repeat_normalized_netlist_sha256=ctx.normalized_hashes["multi-device"]["repeat"],
+            source_sha256=ctx.fixture("multi-device").source.sha256,
+            netlist_sha256=ctx.fixture("multi-device").netlists.first.netlist_sha256,
+            repeat_netlist_sha256=ctx.fixture("multi-device").netlists.repeat.netlist_sha256,
+            normalized_netlist_sha256=ctx.fixture("multi-device").netlists.first.normalized_sha256,
+            repeat_normalized_netlist_sha256=ctx.fixture(
+                "multi-device"
+            ).netlists.repeat.normalized_sha256,
             lint_status=report.status,
             findings=";".join(item.subject for item in report.findings) or "none",
             spi_findings=";".join(item.subject for item in case_spi_findings) or "none",
@@ -110,9 +112,8 @@ def verify_spi_roster_coverage(ctx: DigitalPeerFixtureContext):
 
 def verify_spi_composite_alias_coverage(ctx: DigitalPeerFixtureContext) -> None:
     """Verify exact slash-separated SPI aliases survive native export and roster review."""
-    from .hwrepo.spi_models import SpiDeviceRequirement
 
-    observed = ctx.contracts["combo-device"]["first"]
+    observed = ctx.fixture("combo-device").netlists.first.contract
     expected_functions = {
         "U1.1": "SCL/SPC",
         "U1.2": "SDA/SDI/SDO",
@@ -124,8 +125,8 @@ def verify_spi_composite_alias_coverage(ctx: DigitalPeerFixtureContext) -> None:
     if observed.component_symbols != {"U1": "Synthetic:Combo_SPI_Node"}:
         raise ValueError("Native SPI combo fixture changed its synthetic component identity")
     if (
-        ctx.normalized_hashes["combo-device"]["first"]
-        != ctx.normalized_hashes["combo-device"]["repeat"]
+        ctx.fixture("combo-device").netlists.first.normalized_sha256
+        != ctx.fixture("combo-device").netlists.repeat.normalized_sha256
     ):
         raise ValueError("Native SPI combo fixture differs after normalized repeat exports")
 
@@ -175,7 +176,7 @@ def verify_spi_composite_alias_coverage(ctx: DigitalPeerFixtureContext) -> None:
                 status="READY_FOR_REVIEW",
                 project_id=f"synthetic-spi-composite-{case}",
                 observed=observed,
-                netlist_sha256=ctx.hashes["combo-device"]["first"],
+                netlist_sha256=ctx.fixture("combo-device").netlists.first.netlist_sha256,
             ),
             DesignLintPolicy(),
             spi_roster=context,
@@ -200,11 +201,13 @@ def verify_spi_composite_alias_coverage(ctx: DigitalPeerFixtureContext) -> None:
             project=ctx.project,
             kicad_version=ctx.config.kicad_version,
             image=ctx.pinned,
-            source_sha256=ctx.combo_spi_source_hash,
-            netlist_sha256=ctx.hashes["combo-device"]["first"],
-            repeat_netlist_sha256=ctx.hashes["combo-device"]["repeat"],
-            normalized_netlist_sha256=ctx.normalized_hashes["combo-device"]["first"],
-            repeat_normalized_netlist_sha256=ctx.normalized_hashes["combo-device"]["repeat"],
+            source_sha256=ctx.fixture("combo-device").source.sha256,
+            netlist_sha256=ctx.fixture("combo-device").netlists.first.netlist_sha256,
+            repeat_netlist_sha256=ctx.fixture("combo-device").netlists.repeat.netlist_sha256,
+            normalized_netlist_sha256=ctx.fixture("combo-device").netlists.first.normalized_sha256,
+            repeat_normalized_netlist_sha256=ctx.fixture(
+                "combo-device"
+            ).netlists.repeat.normalized_sha256,
             lint_status=report.status,
             findings=";".join(item.subject for item in findings) or "none",
             pin_functions=";".join(

@@ -11,7 +11,7 @@ import webbrowser
 from dataclasses import dataclass, field
 from html import escape
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import cast
 from urllib.parse import parse_qsl
 
@@ -45,7 +45,7 @@ from .parts_workflow import (
 MAX_BODY = 64 * 1024
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Form:
     """Validated HTTP form boundary; core services never receive raw payloads."""
 
@@ -117,7 +117,7 @@ class Form:
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class Assistant:
     """One browser session; only server-created source-bound plans can be applied."""
 
@@ -876,7 +876,7 @@ class AssistantHandler(BaseHTTPRequestHandler):
                     )
                 finally:
                     state.lock.release()
-            elif route.startswith("step/"):
+            elif len(PurePosixPath(route).parts) > 1 and PurePosixPath(route).parts[0] == "step":
                 with state.lock:
                     name = route.removeprefix("step/")
                     content = state.step_asset(name)

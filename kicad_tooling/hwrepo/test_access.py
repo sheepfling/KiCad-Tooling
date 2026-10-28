@@ -18,20 +18,19 @@ from .pcb_test_access_models import (
     PcbAccessAnalysis,
     PcbAccessProbeRequest,
     PcbAccessProbeRequestSet,
-    RequiredTestAccess,
     TestAccessAnalysis,
     TestAccessEndpointRequirement,
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _BoardPad:
     number: str
     net: str | None
     layers: frozenset[str]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _BoardFootprint:
     identity: str
     dnp: bool
@@ -196,7 +195,7 @@ def pcb_accessibility_checks(
     checks: list[ElectricalCheck] = []
     for decision in spec.decisions:
         check_id = f"test-access/pcb-accessibility/{decision.id}"
-        if not isinstance(decision, RequiredTestAccess):
+        if decision.mode != "required":
             checks.append(
                 ElectricalCheck(
                     id=check_id,
@@ -241,7 +240,7 @@ def pcb_access_probe_request_set(
     """Build the deterministic native requests for configured probe envelopes."""
     requests: list[PcbAccessProbeRequest] = []
     for decision in spec.decisions:
-        if not isinstance(decision, RequiredTestAccess):
+        if decision.mode != "required":
             continue
         for endpoint in decision.endpoints:
             if endpoint.probe_envelope is None:
@@ -290,7 +289,7 @@ def pcb_probe_envelope_checks(
 
     checks: list[ElectricalCheck] = []
     for decision in spec.decisions:
-        if not isinstance(decision, RequiredTestAccess):
+        if decision.mode != "required":
             continue
         endpoint_results: list[tuple[TestAccessEndpointRequirement, bool, tuple[str, ...]]] = []
         for endpoint in decision.endpoints:
@@ -458,7 +457,7 @@ def evaluate_test_access_checks(
     checks: list[ElectricalCheck] = []
     for decision in spec.decisions:
         check_id = f"test-access/schematic/{decision.id}"
-        if not isinstance(decision, RequiredTestAccess):
+        if decision.mode != "required":
             if decision.net not in observed.nets:
                 checks.append(
                     ElectricalCheck(

@@ -6,7 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
-from types import SimpleNamespace
+from types import MappingProxyType, SimpleNamespace
 
 import pytest
 
@@ -21,6 +21,7 @@ from kicad_tooling.ci_hosted_connector_return_named_power_input_all_open import 
     verify_footprint_alias_named_power_input_all_open,
 )
 from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import DesignLintPolicy, DesignLintRuleOverride
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.synthetic_design_lint_project import (
@@ -31,10 +32,12 @@ from tests.synthetic_design_lint_project import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.power_lint]
 
 FIXTURE_CASES = (FAULT_CASE, CONTROL_CASE)
-EXPECTED_SOURCE_HASHES = {
-    FAULT_CASE: "fc7bf0d75bcc8775e39328d6e9cf0e19a2c244f3ac1b782fed9d95e23b30271d",
-    CONTROL_CASE: "8b055617a737dde04b6647a7ce8f5e4a167aa9567b712a1b0d88696eae1f8a7c",
-}
+EXPECTED_SOURCE_HASHES = MappingProxyType(
+    {
+        FAULT_CASE: "fc7bf0d75bcc8775e39328d6e9cf0e19a2c244f3ac1b782fed9d95e23b30271d",
+        CONTROL_CASE: "8b055617a737dde04b6647a7ce8f5e4a167aa9567b712a1b0d88696eae1f8a7c",
+    }
+)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -159,7 +162,6 @@ def test_native_named_power_input_all_open_fault_and_control_are_repeatable(
     from kicad_tooling.ci_hosted_connector_return_context import (
         prepare_connector_return_fixture_context,
     )
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     policy = DesignLintPolicy(

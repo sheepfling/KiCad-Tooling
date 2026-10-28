@@ -18,11 +18,12 @@ from kicad_tooling.hwrepo.pcb_required_fitted_reference_models import (
     PcbRequiredFittedReferenceMap,
 )
 from tests.design_lint_fixtures.pcb_component_inventory import netlist, snapshot
+from tests.json_types import JsonObject
 
 FOOTPRINT = "Synthetic:Probe_Module"
 
 
-def required_fitted_report(*, dnp: bool) -> dict[str, object]:
+def required_fitted_report(*, dnp: bool) -> JsonObject:
     """Serialize a required-but-DNP fault or exact-fitted control."""
     requirements = PcbRequiredFittedReferenceMap(
         basis="Synthetic approved base assembly",
@@ -83,7 +84,7 @@ def required_fitted_report(*, dnp: bool) -> dict[str, object]:
     }
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     """Return a both-DNP fault and a fitted requirement control."""
     return {
         "pcb_required_fitted_reference_dnp_fault": required_fitted_report(dnp=True),

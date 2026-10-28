@@ -14,7 +14,7 @@ from .connector_identity import (
 from .models import NetlistContract
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ConnectorPeerPinAssignmentOutlier:
     symbol: str
     pin_number: str
@@ -27,7 +27,7 @@ class ConnectorPeerPinAssignmentOutlier:
     peer_symbols: tuple[str, ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ConnectorPeerPinAssignmentDivergence:
     symbol: str
     pin_number: str
@@ -40,7 +40,7 @@ class ConnectorPeerPinAssignmentDivergence:
     peer_symbols: tuple[str, ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ConnectorPartIdPeerPinGroup:
     part_id: str
     pin_number: str
@@ -52,7 +52,7 @@ class ConnectorPartIdPeerPinGroup:
     peer_assignment_basis: tuple[str, ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ConnectorPartIdPeerPinScan:
     candidate_group_count: int
     incomplete_component_identity_group_count: int
@@ -65,7 +65,7 @@ class ConnectorPartIdPeerPinScan:
 
 
 def unique_peer_pin_majority(
-    assignments: dict[str, tuple[str, ...]],
+    assignments: Mapping[str, tuple[str, ...]],
 ) -> tuple[str, ...] | None:
     counts: dict[tuple[str, ...], int] = {}
     for signature in assignments.values():

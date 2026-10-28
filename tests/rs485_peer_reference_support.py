@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 from kicad_tooling.hwrepo.rs485_models import (
     Rs485Analysis,
@@ -18,9 +20,9 @@ from kicad_tooling.hwrepo.rs485_peer_reference_types import Rs485PeerReferenceCo
 def rs485_peer_reference_fixture(
     *,
     references: tuple[str, ...] = ("U1", "U2", "U3"),
-    reference_nets: dict[str, str] | None = None,
+    reference_nets: Mapping[str, str] | None = None,
     incomplete_references: tuple[str, ...] = (),
-    line_nets: dict[str, tuple[str, str]] | None = None,
+    line_nets: Mapping[str, tuple[str, str]] | None = None,
     dnp: tuple[str, ...] = (),
 ) -> tuple[Rs485Analysis, Rs485PeerReferenceContext, NetlistContract]:
     """Build exact authored maps and native assignments for one synthetic RS-485 bus."""

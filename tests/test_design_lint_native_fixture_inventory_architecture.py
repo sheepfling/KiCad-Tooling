@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -15,48 +16,50 @@ from tests.execution_test_markers import execution_markers_for_path
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.catalog_lint, pytest.mark.architecture]
 
-_NON_RULE_NATIVE_TESTS = {
-    (
-        "tests.test_bjt_base_bias_native_fixture",
-        None,
-        "test_native_bjt_base_bias_fixture_sources_are_pinned",
-    ): "This test pins synthetic fixture source hashes for native BJT bias tests; it does not execute the native tool or implement a separate lint predicate.",
-    (
-        "tests.test_bjt_terminal_order_native_fixture",
-        None,
-        "test_native_bjt_terminal_order_fixture_sources_are_pinned",
-    ): "This test pins synthetic fixture source hashes for native BJT terminal tests; it does not execute the native tool or implement a separate lint predicate.",
-    (
-        "tests.test_can_native_fixture_lanes",
-        None,
-        "test_native_can_split_termination_fault_and_control",
-    ): "The authored CAN termination contract checks its ordered topology and midpoint capacitor; it is distinct from the active direct-termination review heuristic.",
-    (
-        "tests.test_component_rating_native_fixture_lane",
-        None,
-        "test_component_and_connector_rating_controls_export_repeatably",
-    ): "This native lane validates authored component and connector rating requirements; the design-lint catalog has no rating predicate.",
-    (
-        "tests.test_empty_netlist_evidence_native_fixture_lane",
-        None,
-        "test_native_empty_inventory_trigger_and_nonempty_control_on_supported_images",
-    ): "This lane verifies native export evidence integrity for empty and nonempty netlists; it is not an active design-lint predicate.",
-    (
-        "tests.test_native_connector_return_lint",
-        None,
-        "test_native_netlist_distinguishes_split_and_common_return_domains",
-    ): "This KiCad 10.0.6 public cohort sample supports analyzer comparison; the active return-net rules already have a rule-selectable KiCad 10.0.0 and 10.0.5 fault/control lane.",
-    (
-        "tests.test_pcb_access_native_fixture_lane",
-        None,
-        "test_native_probe_envelope_fixtures_on_supported_images",
-    ): "This lane validates native PCB probe-envelope evidence for authored test-access requirements; no active design-lint rule owns that predicate.",
-    (
-        "tests.test_pcb_return_path_native_fixture_lane",
-        None,
-        "test_native_return_path_fixture_cases_on_supported_kicad",
-    ): "This lane validates authored PCB copper-continuity cases; it does not implement a catalogued schematic return-label or PCB layout heuristic.",
-}
+_NON_RULE_NATIVE_TESTS = MappingProxyType(
+    {
+        (
+            "tests.test_bjt_base_bias_native_fixture",
+            None,
+            "test_native_bjt_base_bias_fixture_sources_are_pinned",
+        ): "This test pins synthetic fixture source hashes for native BJT bias tests; it does not execute the native tool or implement a separate lint predicate.",
+        (
+            "tests.test_bjt_terminal_order_native_fixture",
+            None,
+            "test_native_bjt_terminal_order_fixture_sources_are_pinned",
+        ): "This test pins synthetic fixture source hashes for native BJT terminal tests; it does not execute the native tool or implement a separate lint predicate.",
+        (
+            "tests.test_can_native_fixture_lanes",
+            None,
+            "test_native_can_split_termination_fault_and_control",
+        ): "The authored CAN termination contract checks its ordered topology and midpoint capacitor; it is distinct from the active direct-termination review heuristic.",
+        (
+            "tests.test_component_rating_native_fixture_lane",
+            None,
+            "test_component_and_connector_rating_controls_export_repeatably",
+        ): "This native lane validates authored component and connector rating requirements; the design-lint catalog has no rating predicate.",
+        (
+            "tests.test_empty_netlist_evidence_native_fixture_lane",
+            None,
+            "test_native_empty_inventory_trigger_and_nonempty_control_on_supported_images",
+        ): "This lane verifies native export evidence integrity for empty and nonempty netlists; it is not an active design-lint predicate.",
+        (
+            "tests.test_native_connector_return_lint",
+            None,
+            "test_native_netlist_distinguishes_split_and_common_return_domains",
+        ): "This KiCad 10.0.6 public cohort sample supports analyzer comparison; the active return-net rules already have a rule-selectable KiCad 10.0.0 and 10.0.5 fault/control lane.",
+        (
+            "tests.test_pcb_access_native_fixture_lane",
+            None,
+            "test_native_probe_envelope_fixtures_on_supported_images",
+        ): "This lane validates native PCB probe-envelope evidence for authored test-access requirements; no active design-lint rule owns that predicate.",
+        (
+            "tests.test_pcb_return_path_native_fixture_lane",
+            None,
+            "test_native_return_path_fixture_cases_on_supported_kicad",
+        ): "This lane validates authored PCB copper-continuity cases; it does not implement a catalogued schematic return-label or PCB layout heuristic.",
+    }
+)
 
 
 class _TestFunctionReferences(ast.NodeVisitor):

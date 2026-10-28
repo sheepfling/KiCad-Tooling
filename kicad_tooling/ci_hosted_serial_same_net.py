@@ -9,12 +9,14 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 SERIAL_TX_RX_NATIVE_TOOLCHAINS = (
     (
@@ -38,11 +40,6 @@ def serial_tx_rx_same_net_fixture_lane(
     root: Path, *, version: str, image: str, log: HostedLog
 ) -> None:
     """Export both synthetic cases twice and compare normalized lint evidence."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .validate import read_netlist
 
     root = root.resolve()
     if (version, image) not in SERIAL_TX_RX_NATIVE_TOOLCHAINS:
@@ -50,7 +47,7 @@ def serial_tx_rx_same_net_fixture_lane(
             f"Serial TX/RX same-net fixtures do not cover KiCad {version} with this image"
         )
     pinned = pinned_image(image)
-    repository = Path(__file__).resolve().parents[1]
+    repository = tooling_checkout_root()
     fixture_root = repository / "tests/fixtures/design_lint/serial-tx-rx-same-net"
     sources = {
         "control": fixture_root / "full-duplex-control.kicad_sch",

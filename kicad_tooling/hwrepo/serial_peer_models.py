@@ -118,7 +118,11 @@ class SerialPeerLinkRequirement(StrictModel):
 
     @model_validator(mode="after")
     def compatible_peer_map(self) -> SerialPeerLinkRequirement:
-        peer = self.peer
+        peer: (
+            SerialDirectPeerRequirement
+            | SerialShiftedPeerRequirement
+            | SerialExternalPeerRequirement
+        ) = self.peer
         if isinstance(peer, SerialExternalPeerRequirement):
             if self.reference_policy not in {"external_unverified", "not_applicable"}:
                 raise ValueError(

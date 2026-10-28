@@ -9,7 +9,7 @@ from .models import NetlistContract
 from .spi_participants import is_spi_ic_reference, spi_signal_role_and_channel
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SpiRolePinAssignment:
     """One bounded SPI function pin and its native net/type evidence."""
 
@@ -20,7 +20,7 @@ class SpiRolePinAssignment:
     in_component_inventory: bool
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SpiRoleAssignmentGroup:
     """Recognized SPI pin roles for one fitted IC and one channel."""
 

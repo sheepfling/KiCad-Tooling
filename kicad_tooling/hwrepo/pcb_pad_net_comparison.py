@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from .models import NetlistContract
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
 
-_SUPPORTED_SNAPSHOT_SCHEMAS = {"12", "13", "14"}
+_SUPPORTED_SNAPSHOT_SCHEMAS = frozenset({"12", "13", "14"})
 
 
 def compare_schematic_pcb_pad_nets(
@@ -130,7 +132,7 @@ def schematic_pad_net_assignments(
 
 def _pin_key(
     pin: str,
-    components: dict[str, tuple[str, str]],
+    components: Mapping[str, tuple[str, str]],
 ) -> tuple[str, str]:
     reference, separator, pin_number = pin.rpartition(".")
     key = reference.casefold()

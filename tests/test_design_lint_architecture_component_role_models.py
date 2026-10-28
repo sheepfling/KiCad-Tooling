@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from types import MappingProxyType
 
 import pytest
 
@@ -13,18 +14,30 @@ from tests.lint_architecture_support import IMPLEMENTATION_MAX_LINES, REPO_ROOT,
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint, pytest.mark.architecture]
 
 MODEL_NAMES = ("ComponentRolePin", "ComponentRoleBinding", "ComponentRoleMap")
-EXPECTED_OWNER_IMPORTS = {
-    "kicad_tooling/ci_hosted_ic_rail_capacitors.py": set(MODEL_NAMES),
-    "kicad_tooling/ci_hosted_led_rail.py": set(MODEL_NAMES),
-    "kicad_tooling/ci_hosted_two_pin_components.py": set(MODEL_NAMES),
-    "kicad_tooling/hwrepo/component_roles.py": {"ComponentRoleBinding", "ComponentRoleMap"},
-    "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py": {"ComponentRoleMap"},
-    "kicad_tooling/hwrepo/design_lint_component_candidates.py": {"ComponentRoleMap"},
-    "kicad_tooling/hwrepo/design_lint_power_candidates.py": {"ComponentRoleMap"},
-    "kicad_tooling/hwrepo/led_heuristics.py": {"ComponentRoleBinding", "ComponentRoleMap"},
-    "kicad_tooling/hwrepo/two_pin_components.py": {"ComponentRoleBinding", "ComponentRoleMap"},
-    "kicad_tooling/hwrepo/two_pin_passives.py": {"ComponentRoleBinding", "ComponentRoleMap"},
-}
+EXPECTED_OWNER_IMPORTS = MappingProxyType(
+    {
+        "kicad_tooling/ci_hosted_ic_rail_capacitors.py": frozenset(MODEL_NAMES),
+        "kicad_tooling/ci_hosted_led_rail.py": frozenset(MODEL_NAMES),
+        "kicad_tooling/ci_hosted_two_pin_components.py": frozenset(MODEL_NAMES),
+        "kicad_tooling/hwrepo/component_roles.py": frozenset(
+            {"ComponentRoleBinding", "ComponentRoleMap"}
+        ),
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py": frozenset(
+            {"ComponentRoleMap"}
+        ),
+        "kicad_tooling/hwrepo/design_lint_component_candidates.py": frozenset({"ComponentRoleMap"}),
+        "kicad_tooling/hwrepo/design_lint_power_candidates.py": frozenset({"ComponentRoleMap"}),
+        "kicad_tooling/hwrepo/led_heuristics.py": frozenset(
+            {"ComponentRoleBinding", "ComponentRoleMap"}
+        ),
+        "kicad_tooling/hwrepo/two_pin_components.py": frozenset(
+            {"ComponentRoleBinding", "ComponentRoleMap"}
+        ),
+        "kicad_tooling/hwrepo/two_pin_passives.py": frozenset(
+            {"ComponentRoleBinding", "ComponentRoleMap"}
+        ),
+    }
+)
 
 
 def _top_level_definitions(tree: ast.Module) -> set[str]:

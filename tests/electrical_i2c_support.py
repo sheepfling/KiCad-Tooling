@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.i2c_pullup_models import (
     I2cPullupAnalysis,
     I2cPullupArrayChannelRequirement,
@@ -221,7 +223,7 @@ def i2c_series_pullup_netlist(
 
 
 def i2c_pullup_array_requirement(
-    *, unmapped_pin_reasons: dict[str, str] | None = None
+    *, unmapped_pin_reasons: Mapping[str, str] | None = None
 ) -> I2cPullupAnalysis:
     return I2cPullupAnalysis(
         basis="Synthetic reviewed resistor-array part and bus requirement",

@@ -2,46 +2,38 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+import os
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract
+from .hwrepo.power_sequence_models import (
+    PowerSequenceDependencyRequirement,
+    PowerSequenceEndpointRequirement,
+    PowerSequenceMap,
+    PowerSequenceStageRequirement,
+)
+from .hwrepo.power_sequences import (
+    PowerSequenceObservedCycle,
+    power_sequence_graph_has_cycle,
+    power_sequence_mismatches,
+    power_sequence_observed_enable_cycles,
+)
+from .validate import read_netlist
 
 
 def power_sequence_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
     """Repeat exact-version exports and check an authored PG-to-enable dependency."""
-    import hashlib
-    import json
-    import os
-
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import (
-        ContractCoachReport,
-        DesignLintPolicy,
-        NetlistContract,
-    )
-    from .hwrepo.power_sequence_models import (
-        PowerSequenceDependencyRequirement,
-        PowerSequenceEndpointRequirement,
-        PowerSequenceMap,
-        PowerSequenceStageRequirement,
-    )
-    from .hwrepo.power_sequences import (
-        PowerSequenceObservedCycle,
-        power_sequence_graph_has_cycle,
-        power_sequence_mismatches,
-        power_sequence_observed_enable_cycles,
-    )
-    from .validate import read_netlist
 
     root = root.resolve()
     config = selected_config(root, project)
@@ -50,9 +42,7 @@ def power_sequence_fixture_lane(root: Path, *, project: str, image: str, log: Ho
     if config.kicad_version not in {"10.0.0", "10.0.5"}:
         raise ValueError(f"Power-sequence fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/power-sequence-native"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/power-sequence-native"
     cases = {
         "control": "control.kicad_sch",
         "open-enable": "open-enable.kicad_sch",

@@ -35,10 +35,11 @@ from tests.design_lint_fixtures.connector_coverage import (
 from tests.design_lint_fixtures.connector_mixed_return import (
     two_usb_one_serial_return_case,
 )
+from tests.json_types import JsonObject
 from tests.test_return_net_lint import lint_report as return_net_lint_report
 
 
-def reviewed_connector_return_report(*, common_return: bool) -> dict[str, object]:
+def reviewed_connector_return_report(*, common_return: bool) -> JsonObject:
     observed = connector_return_role_netlist(common_return=common_return)
     coverage = evaluate_connector_coverage(
         observed,
@@ -78,9 +79,7 @@ def parsed_netlist_pin_metadata() -> dict[str, list[tuple[str, str]]]:
     }
 
 
-def db9_grounding_check_result(
-    *, observed_common: bool, required_common: bool
-) -> dict[str, object]:
+def db9_grounding_check_result(*, observed_common: bool, required_common: bool) -> JsonObject:
     """Serialize the same DB9 return netlist against common and isolated requirements."""
     observed = four_db9_return_domains(common=observed_common).model_copy(
         update={
@@ -154,7 +153,7 @@ def db9_grounding_check_result(
     }
 
 
-def unconnected_pin_inventory_check_result() -> dict[str, object]:
+def unconnected_pin_inventory_check_result() -> JsonObject:
     """Compare absent and complete symbol-pin inventories for an unused pin."""
     requirement = PinConnectivityAnalysis(
         basis="Synthetic approved connector pin disposition",
@@ -176,7 +175,7 @@ def unconnected_pin_inventory_check_result() -> dict[str, object]:
     complete_inventory = missing_inventory.model_copy(
         update={"component_pin_numbers": {"J1": ("1", "2")}}
     )
-    results: dict[str, object] = {
+    results: JsonObject = {
         "requirements_sha256": hashlib.sha256(
             requirement.model_dump_json().encode("utf-8")
         ).hexdigest()
@@ -197,7 +196,7 @@ def unconnected_pin_inventory_check_result() -> dict[str, object]:
     return results
 
 
-def numbered_pwm_return_report(*, common: bool) -> dict[str, object]:
+def numbered_pwm_return_report(*, common: bool) -> JsonObject:
     """Serialize the spaced PWM return-name fault or its common-net control."""
     observed = four_db9_return_domains(common=common)
     nets = (
@@ -218,7 +217,7 @@ def numbered_pwm_return_report(*, common: bool) -> dict[str, object]:
     return report.model_dump(mode="json")
 
 
-def component_return_pin_report(*, split: bool) -> dict[str, object]:
+def component_return_pin_report(*, split: bool) -> JsonObject:
     """Serialize the split component return-pin fault or common control."""
     observed = component_return_pin_domains(split=split)
     report = evaluate(
@@ -231,7 +230,7 @@ def component_return_pin_report(*, split: bool) -> dict[str, object]:
 
 def two_usb_one_serial_return_report(
     *, common_return: bool, ignore_return: bool = False
-) -> dict[str, object]:
+) -> JsonObject:
     """Serialize the mixed-port split-return fault or common-return control."""
     observed, coverage = two_usb_one_serial_return_case(common_return=common_return)
     netlist_sha256 = hashlib.sha256(model_json_bytes(observed)).hexdigest()
@@ -271,7 +270,7 @@ def two_usb_one_serial_return_report(
     return report.model_dump(mode="json")
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     return {
         "parsed_netlist_pin_metadata": parsed_netlist_pin_metadata(),
         "fault": evaluate(

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 
 
 def connector_footprint_peer_common_anchor_pin_numbers(
@@ -10,7 +11,7 @@ def connector_footprint_peer_common_anchor_pin_numbers(
     target_pin_number: str,
     references: tuple[str, ...],
     displayed_numbers: Mapping[str, Mapping[str, str]],
-    pin_nets: Mapping[str, set[str]],
+    pin_nets: Mapping[str, AbstractSet[str]],
 ) -> tuple[str, ...]:
     """Return non-target pins assigned to one exact common net across all peers."""
     anchors: list[str] = []

@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from kicad_tooling.ci_hosted import HostedLog, power_path_fixture_lane
+from kicad_tooling.hwrepo.electrical import selected_config
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.power_lint]
 
@@ -27,7 +28,6 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.power_lint]
 def test_mapped_ferrite_path_control_and_wrong_rail_fault(
     tmp_path: Path, project: str, version: str
 ) -> None:
-    from kicad_tooling.hwrepo.electrical import selected_config
     from tests.support import reference_root
 
     root = tmp_path / project

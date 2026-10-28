@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from .models import ElectricalCheck, NetlistContract
-from .spi_bias_array_paths import spi_bias_array_checks
-from .spi_models import (
+from collections.abc import Mapping
+
+from kicad_tooling.hwrepo.spi_models import (
     SpiAnalysis,
     SpiBridgeRequirement,
     SpiMisoConnectedRequirement,
@@ -12,6 +12,9 @@ from .spi_models import (
     SpiPinNotPresent,
     SpiPinUnconnectedRequirement,
 )
+
+from .models import ElectricalCheck, NetlistContract
+from .spi_bias_array_paths import spi_bias_array_checks
 
 
 def spi_checks(spec: SpiAnalysis, observed: NetlistContract) -> tuple[ElectricalCheck, ...]:
@@ -116,9 +119,12 @@ def spi_checks(spec: SpiAnalysis, observed: NetlistContract) -> tuple[Electrical
             for role, pin in controller_pin_requirements
             if (issue := pin_disposition(pin)) is not None
         ]
+        controller_miso: (
+            SpiMisoConnectedRequirement | SpiPinUnconnectedRequirement | SpiPinNotPresent
+        ) = controller.miso
         if isinstance(
-            controller.miso, (SpiMisoConnectedRequirement, SpiPinUnconnectedRequirement)
-        ) and (issue := pin_disposition(controller.miso)):
+            controller_miso, (SpiMisoConnectedRequirement, SpiPinUnconnectedRequirement)
+        ) and (issue := pin_disposition(controller_miso)):
             controller_pin_issues.append(f"MISO: {issue}")
         results.append(
             ElectricalCheck(
@@ -131,12 +137,12 @@ def spi_checks(spec: SpiAnalysis, observed: NetlistContract) -> tuple[Electrical
                 ),
             )
         )
-        if isinstance(controller.miso, SpiPinNotPresent):
+        if isinstance(controller_miso, SpiPinNotPresent):
             results.append(
                 ElectricalCheck(
                     id=f"{base}/controller-miso",
                     status="NOT_APPLICABLE",
-                    detail=f"Controller MISO is declared absent: {controller.miso.reason}",
+                    detail=f"Controller MISO is declared absent: {controller_miso.reason}",
                 )
             )
 
@@ -184,7 +190,7 @@ def spi_checks(spec: SpiAnalysis, observed: NetlistContract) -> tuple[Electrical
             destination: str,
             *,
             bridges: tuple[SpiBridgeRequirement, ...] = bus.bridges,
-            valid_paths: dict[tuple[str, str, str], bool] = bridge_path_ok,
+            valid_paths: Mapping[tuple[str, str, str], bool] = bridge_path_ok,
         ) -> bool:
             if source == destination:
                 return True
@@ -233,6 +239,9 @@ def spi_checks(spec: SpiAnalysis, observed: NetlistContract) -> tuple[Electrical
             )
 
         for device in bus.devices:
+            device_miso: (
+                SpiMisoConnectedRequirement | SpiPinUnconnectedRequirement | SpiPinNotPresent
+            ) = device.miso
             device_base = f"{base}/device/{device.id}"
             issues = identity_issues(device.reference, device.symbol, device.footprint)
             results.append(
@@ -257,8 +266,8 @@ def spi_checks(spec: SpiAnalysis, observed: NetlistContract) -> tuple[Electrical
                 if (issue := pin_disposition(pin)) is not None
             ]
             if isinstance(
-                device.miso, (SpiMisoConnectedRequirement, SpiPinUnconnectedRequirement)
-            ) and (issue := pin_disposition(device.miso)):
+                device_miso, (SpiMisoConnectedRequirement, SpiPinUnconnectedRequirement)
+            ) and (issue := pin_disposition(device_miso)):
                 device_pin_issues.append(f"MISO: {issue}")
             results.append(
                 ElectricalCheck(
@@ -273,13 +282,13 @@ def spi_checks(spec: SpiAnalysis, observed: NetlistContract) -> tuple[Electrical
             )
             add_route(device.id, "sck", controller.sck.net, device.sck.net)
             add_route(device.id, "mosi", controller.mosi.net, device.mosi.net)
-            if isinstance(device.miso, SpiMisoConnectedRequirement):
-                if isinstance(controller.miso, SpiMisoConnectedRequirement):
-                    add_route(device.id, "miso", controller.miso.net, device.miso.net)
+            if isinstance(device_miso, SpiMisoConnectedRequirement):
+                if isinstance(controller_miso, SpiMisoConnectedRequirement):
+                    add_route(device.id, "miso", controller_miso.net, device_miso.net)
             else:
                 reason = (
-                    device.miso.reason
-                    if isinstance(device.miso, SpiPinNotPresent)
+                    device_miso.reason
+                    if isinstance(device_miso, SpiPinNotPresent)
                     else "Device MISO is declared unconnected."
                 )
                 results.append(

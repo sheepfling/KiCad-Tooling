@@ -29,7 +29,11 @@ from kicad_tooling.hwrepo.models import (
     ValidationSummary,
 )
 from tests.component_peer_power_assignment_support import peer_pin_netlist_xml
-from tests.connector_footprint_peer_support import lint_report, peer_metadata_divergence_netlist
+from tests.connector_footprint_peer_support import (
+    PeerMetadataDivergenceOverrides,
+    lint_report,
+    peer_metadata_divergence_netlist,
+)
 from tests.mcp_parity_support import semantic_design_lint_report
 from tests.synthetic_design_lint_project import (
     run_design_lint_cli,
@@ -131,7 +135,7 @@ def test_one_known_metadata_difference_is_enough(different_field: str) -> None:
     ),
 )
 def test_open_metadata_controls_require_partial_assignment_and_anchor(
-    kwargs: dict[str, object],
+    kwargs: PeerMetadataDivergenceOverrides,
 ) -> None:
     report = lint_report(
         peer_metadata_divergence_netlist(**{"target_assignments": ("UART_RX_NET", None), **kwargs})

@@ -114,7 +114,7 @@ LABEL_KINDS: tuple[Literal["label", "global_label", "hierarchical_label"], ...] 
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class WireEndOnPinLine:
     """A native-unconnected pin whose tip-to-body line meets a wire endpoint."""
 
@@ -133,7 +133,7 @@ class WireEndOnPinLine:
     sheet_instance_path: str = "/"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PinTipOnWireInterior:
     """A native-unconnected pin tip intersects the interior of a wire segment."""
 
@@ -151,7 +151,7 @@ class PinTipOnWireInterior:
     sheet_instance_path: str = "/"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class WireEndpointNearPinTip:
     """A wire endpoint close to, but not touching, a native-unconnected pin tip."""
 
@@ -168,7 +168,7 @@ class WireEndpointNearPinTip:
     sheet_instance_path: str = "/"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class LabelWireEndpointCandidate:
     """A wire endpoint within the review radius of an unattached label."""
 
@@ -177,7 +177,7 @@ class LabelWireEndpointCandidate:
     distance_mm: float
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class LabelNearWireEndpoint:
     """A label anchor that narrowly misses nearby wire-endpoint geometry."""
 
@@ -189,7 +189,7 @@ class LabelNearWireEndpoint:
     sheet_instance_path: str = "/"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnmarkedWireCrossing:
     """Orthogonal wire interiors intersect without a junction marker."""
 
@@ -198,7 +198,7 @@ class UnmarkedWireCrossing:
     sheet_instance_path: str = "/"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnmarkedTJunction:
     """A wire endpoint touches another wire's interior without a junction marker."""
 
@@ -208,7 +208,7 @@ class UnmarkedTJunction:
     sheet_instance_path: str = "/"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class CoincidentTextAnchors:
     """Two free-text insertion anchors occupy the same schematic coordinate."""
 
@@ -220,7 +220,7 @@ class CoincidentTextAnchors:
     sheet_instance_path: str = "/"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class FreeTextOverlap:
     """Two distinct free-text anchors have intersecting conservative glyph envelopes."""
 
@@ -234,7 +234,7 @@ class FreeTextOverlap:
     sheet_instance_path: str = "/"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class FreeTextWireOverlap:
     """A wire segment crosses the guarded envelope of one supported free-text item."""
 
@@ -248,7 +248,7 @@ class FreeTextWireOverlap:
     sheet_instance_path: str = "/"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class FreeTextSymbolBodyOverlap:
     """A supported free-text envelope overlaps a symbol-body envelope."""
 
@@ -264,7 +264,7 @@ class FreeTextSymbolBodyOverlap:
     sheet_instance_path: str = "/"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class WireBodyPinEndpointMatch:
     """A wire endpoint coordinate matches a pin tip within one symbol body envelope."""
 
@@ -274,7 +274,7 @@ class WireBodyPinEndpointMatch:
     endpoint_mm: tuple[float, float]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class WireThroughSymbolBody:
     """A native wire segment crosses a guarded symbol-body envelope."""
 
@@ -290,7 +290,7 @@ class WireThroughSymbolBody:
     sheet_instance_path: str = "/"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SchematicSourceBinding:
     """One source file and instance path covered by a geometry scan."""
 
@@ -300,7 +300,7 @@ class SchematicSourceBinding:
     sheet_path: tuple[str, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SchematicSheetReference:
     """A child sheet declared by one schematic source file."""
 
@@ -313,7 +313,7 @@ def _empty_unsupported_by_rule() -> dict[str, tuple[str, ...]]:
     return {}
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SchematicGeometryScan:
     """Version and source binding for this limited read-only geometry pass."""
 
@@ -341,7 +341,7 @@ class SchematicGeometryScan:
     )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SchematicPin:
     reference: str
     library_id: str
@@ -353,20 +353,20 @@ class SchematicPin:
     body_end: tuple[float, float]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class WireEnd:
     uuid: str
     point: tuple[float, float]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class WireSegment:
     uuid: str
     start: tuple[float, float]
     end: tuple[float, float]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class LabelAnchor:
     kind: Literal["label", "global_label", "hierarchical_label"]
     text: str
@@ -374,14 +374,14 @@ class LabelAnchor:
     point: tuple[float, float]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class TextAnchor:
     text: str
     uuid: str
     point: tuple[float, float]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SchematicTextMetrics:
     advances_mm: Mapping[str, float]
     reference_size_mm: float
@@ -393,13 +393,13 @@ class SchematicTextMetrics:
     stroke_width_mm: float
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class FreeTextGeometry:
     anchor: TextAnchor
     box_mm: tuple[float, float, float, float]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SymbolBodyEnvelope:
     reference: str
     library_id: str

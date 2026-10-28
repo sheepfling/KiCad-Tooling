@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Mapping
 from math import isqrt
 
 from .pcb_connectivity_observations import (
@@ -79,7 +80,7 @@ def incomplete_route_edge(
 def mapped_endpoint_issue(
     edge: PcbSwitchingLoopEdge,
     specification: PcbSwitchingLoopRequirement,
-    pads: dict[str, PcbPadConnectivityObservation],
+    pads: Mapping[str, PcbPadConnectivityObservation],
 ) -> str | None:
     expected = {item.pad.casefold(): item for item in specification.loop_pads}
     for reference in (edge.from_pad, edge.to_pad):
@@ -106,7 +107,7 @@ def resolve_switching_loop_trace_edge(
     edge: PcbSwitchingLoopEdge,
     specification: PcbSwitchingLoopRequirement,
     snapshot: PcbConnectivitySnapshot,
-    pads: dict[str, PcbPadConnectivityObservation],
+    pads: Mapping[str, PcbPadConnectivityObservation],
 ) -> PcbSwitchingLoopRouteEdgeCoverage:
     endpoint_issue = mapped_endpoint_issue(edge, specification, pads)
     if endpoint_issue is not None:

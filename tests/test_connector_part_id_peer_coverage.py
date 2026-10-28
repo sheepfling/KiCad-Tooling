@@ -11,6 +11,7 @@ from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from tests.connector_part_id_peer_support import (
     PART_ID_PEER_PIN_DIVERGENCE_RULE_ID,
     PART_ID_PEER_PIN_OUTLIER_RULE_ID,
+    ConnectorNetlistOverrides,
     connector_netlist,
     lint_report,
 )
@@ -107,7 +108,7 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint]
     ),
 )
 def test_part_id_peer_scan_reports_one_identity_and_metadata_outcome(
-    overrides: dict[str, object], expected_status: str, outcome: str | None
+    overrides: ConnectorNetlistOverrides, expected_status: str, outcome: str | None
 ) -> None:
     report = lint_report(
         connector_netlist(

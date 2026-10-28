@@ -10,7 +10,7 @@ from .pcb_connectivity_observations import PcbFootprintPlacementObservation
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PcbVariantPopulationSource:
     """Parsed source records from paired exports of one exact named variant."""
 

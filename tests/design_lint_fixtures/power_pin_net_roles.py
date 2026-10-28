@@ -2,7 +2,18 @@
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
+
+
+class SupplyPinNetlistOverrides(TypedDict, total=False):
+    """Optional controls accepted by the synthetic supply-pin netlist."""
+
+    function: str
+    dnp: bool
+    assigned: bool
+    ambiguous: bool
 
 
 def positive_supply_on_return_netlist() -> NetlistContract:

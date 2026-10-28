@@ -40,7 +40,7 @@ from .usb_peer_reference_scan import scan_usb_peer_reference_reviews
 from .usb_peer_reference_types import UsbPeerReferenceScan
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PeerDesignLintEvidence:
     """Source-bound peer scans and their current policy coverage summaries."""
 

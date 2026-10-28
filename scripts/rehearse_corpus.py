@@ -19,10 +19,27 @@ import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
+from itertools import repeat
 from pathlib import Path, PurePosixPath
-from typing import Any
 
 import kicad_tooling
+from kicad_tooling.git import git_output, run_git_text
+from kicad_tooling.hwrepo.contracts import repo_path as inside
+from kicad_tooling.hwrepo.evidence import digest
+from kicad_tooling.hwrepo.rehearsal_models import (
+    CORPUS_INVENTORY_ADAPTER,
+    CORPUS_QUEUE_ADAPTER,
+    TOOL_REPORT_ADAPTER,
+    CorpusFixture,
+    CorpusGroup,
+    CorpusInventory,
+    CorpusQueue,
+    RehearsalResult,
+    RehearsalStage,
+    RehearsalStageReceipt,
+    RehearsalSummary,
+    ToolReport,
+)
 
 NOT_EXERCISED = (
     "transient_and_frequency_simulations",
@@ -36,7 +53,7 @@ def save(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
-def write_report(output: Path, summary: dict[str, Any]) -> None:
+def write_report(output: Path, summary: RehearsalSummary) -> None:
     counts = Counter(
         (stage["stage"], stage["status"])
         for result in summary["results"]
@@ -90,38 +107,17 @@ def write_report(output: Path, summary: dict[str, Any]) -> None:
     (output / "REPORT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def digest(path: Path) -> str:
-    with path.open("rb") as stream:
-        return hashlib.file_digest(stream, "sha256").hexdigest()
-
-
 def signature(value: object) -> str:
     return hashlib.sha256(
         json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
     ).hexdigest()
 
 
-def inside(root: Path, relative: str) -> Path:
-    parts = PurePosixPath(relative)
-    if (
-        not relative
-        or parts.is_absolute()
-        or ".." in parts.parts
-        or "\\" in relative
-        or ":" in relative
-    ):
-        raise ValueError(f"Not a portable relative path: {relative}")
-    target = root
-    for part in parts.parts:
-        target /= part
-        if target.is_symlink():
-            raise ValueError(f"Linked source is not a qualified fixture: {relative}")
-    return target
-
-
-def verify_group(corpus: Path, group: dict[str, Any]) -> list[str]:
+def verify_group(corpus: Path, group: CorpusGroup) -> list[str]:
     """Check complete inventory before and after runs, without touching the source."""
-    inventory = json.loads(inside(corpus, group["inventory_path"]).read_text())
+    inventory: CorpusInventory = CORPUS_INVENTORY_ADAPTER.validate_python(
+        json.loads(inside(corpus, group["inventory_path"]).read_text()), strict=True
+    )
     payload = (
         inventory["files"] if group["source_kind"] == "generated_actions_artifact" else inventory
     )
@@ -136,13 +132,20 @@ def verify_group(corpus: Path, group: dict[str, Any]) -> list[str]:
         try:
             if item.get("kind") == "symlink":
                 relative = PurePosixPath(item["path"])
-                parent = inside(directory, str(relative.parent))
+                parent = (
+                    directory
+                    if relative.parent == PurePosixPath(".")
+                    else inside(directory, str(relative.parent))
+                )
                 path = parent / relative.name
-                if not path.is_symlink() or os.readlink(path) != item["target"]:
+                if not path.is_symlink() or os.readlink(path) != item.get("target"):
                     problems.append(f"Missing/changed symlink: {item['path']}")
                 continue
             path = inside(directory, item["path"])
-            if not path.is_file() or digest(path) != item["sha256"]:
+            expected_digest: str | None = item.get("sha256")
+            if not isinstance(expected_digest, str):
+                problems.append(f"Inventory digest missing: {item['path']}")
+            elif not path.is_file() or digest(path) != expected_digest:
                 problems.append(f"Missing/changed: {item['path']}")
         except (KeyError, OSError, ValueError) as exc:
             problems.append(str(exc))
@@ -165,7 +168,7 @@ def environment() -> dict[str, str]:
     }
 
 
-def run(output: Path, name: str, root: Path, *args: str, timeout: int = 300) -> dict[str, Any]:
+def run(output: Path, name: str, root: Path, *args: str, timeout: int = 300) -> RehearsalStage:
     command = [
         sys.executable,
         "-I",
@@ -196,16 +199,16 @@ def run(output: Path, name: str, root: Path, *args: str, timeout: int = 300) -> 
         code = 124
     (output / f"{name}.stdout.log").write_text(stdout)
     (output / f"{name}.stderr.log").write_text(stderr)
+    report: ToolReport = TOOL_REPORT_ADAPTER.validate_python({}, strict=True)
     try:
-        report = json.loads(stdout)
-        if not isinstance(report, dict):
-            raise TypeError("Expected a JSON object")
-        if not isinstance(report.get("status"), str):
+        report = TOOL_REPORT_ADAPTER.validate_python(json.loads(stdout), strict=True)
+        report_status: str | None = report.get("status")
+        if not isinstance(report_status, str):
             raise TypeError("Expected a structured workflow status")
         error = None
     except (ValueError, TypeError) as exc:
-        report, error = {}, str(exc)
-    result = {
+        report, error = TOOL_REPORT_ADAPTER.validate_python({}, strict=True), str(exc)
+    result: RehearsalStageReceipt = {
         "stage": name,
         "command": command,
         "returncode": code,
@@ -239,8 +242,9 @@ def copy_template(template: Path, target: Path) -> None:
     )
     if any((target / "tools").rglob("*.py")) or (target / "kicad_tooling").exists():
         raise ValueError("Use the trimmed template; it must not embed reusable Python tooling")
-    for args in (("init", str(target)), ("-C", str(target), "add", "--all")):
-        subprocess.run(["git", *args], env=environment(), capture_output=True, check=True)
+    git_environment = environment()
+    run_git_text(target.parent, "init", str(target), env=git_environment)
+    run_git_text(target, "add", "--all", env=git_environment)
 
 
 def file_identity(root: Path) -> dict[str, str]:
@@ -256,25 +260,26 @@ def file_identity(root: Path) -> dict[str, str]:
 
 
 def execute_one(
-    fixture: dict[str, Any],
-    group: dict[str, Any],
+    fixture: CorpusFixture,
+    group: CorpusGroup,
     corpus: Path,
     baseline: Path,
     output: Path,
     toolchain: str,
     native: bool = False,
-) -> dict[str, Any]:
+) -> RehearsalResult:
     fixture_id = fixture["id"]
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", fixture_id):
         raise ValueError(f"Invalid fixture ID: {fixture_id}")
     receipt = output / fixture_id
     receipt.mkdir()
     project = receipt / "project"
-    result: dict[str, Any] = {
+    result: RehearsalResult = {
         "fixture": fixture,
         "source_revision": group["revision"],
         "build_authorized": False,
         "stages": [],
+        "status": "RUNNING",
     }
     try:
         copy_template(baseline, project)
@@ -296,7 +301,10 @@ def execute_one(
             result["stages"].append(imported)
             if imported["returncode"] == 0:
                 copied = imported["report"].get("copied_sha256", {})
-                folder = project / imported["report"]["directory"] / "kicad"
+                directory: str | None = imported["report"].get("directory")
+                if not isinstance(directory, str):
+                    raise ValueError("Project import report is missing its directory")
+                folder = project / directory / "kicad"
                 result["copied_bytes_match"] = bool(copied) and all(
                     digest(inside(folder, name)) == value for name, value in copied.items()
                 )
@@ -368,7 +376,9 @@ def main() -> int:
         parser.error("Use a nonnegative limit and an output outside source snapshots")
     if args.native and args.jobs != 1:
         parser.error("Native rehearsal requires --jobs 1 to bound KiCad resource use")
-    queue = json.loads((corpus / "queue.json").read_text())
+    queue: CorpusQueue = CORPUS_QUEUE_ADAPTER.validate_python(
+        json.loads((corpus / "queue.json").read_text()), strict=True
+    )
     fixtures = [
         row
         for row in queue["fixtures"]
@@ -379,7 +389,7 @@ def main() -> int:
     fixtures = fixtures[: args.limit] if args.limit else fixtures
     if not fixtures:
         parser.error("No ready fixtures selected")
-    groups = {
+    groups: dict[str, CorpusGroup] = {
         row["id"]: row
         for row in queue["groups"]
         if row["id"] in {fixture["group_id"] for fixture in fixtures}
@@ -391,9 +401,7 @@ def main() -> int:
             "started_utc": datetime.now(UTC).isoformat(),
             "python": sys.version,
             "tooling_version": importlib.metadata.version("kicad-team-tooling"),
-            "template_commit": subprocess.check_output(
-                ["git", "-C", str(template), "rev-parse", "HEAD"], text=True
-            ).strip(),
+            "template_commit": git_output(template, "rev-parse", "HEAD"),
             "driver_sha256": digest(Path(__file__)),
             "queue_sha256": digest(corpus / "queue.json"),
             "installed_package": str(Path(kicad_tooling.__file__).parent),
@@ -410,7 +418,11 @@ def main() -> int:
             return dict(
                 zip(
                     groups,
-                    pool.map(lambda group: verify_group(corpus, group), groups.values()),
+                    pool.map(
+                        verify_group,
+                        repeat(corpus),
+                        groups.values(),
+                    ),
                     strict=True,
                 )
             )
@@ -426,7 +438,7 @@ def main() -> int:
     )
     if initialized["returncode"]:
         return 2
-    results: list[dict[str, Any]] = []
+    results: list[RehearsalResult] = []
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
         pending = [
             pool.submit(
@@ -456,7 +468,7 @@ def main() -> int:
         )
         else "INCOMPLETE"
     )
-    summary = {
+    summary: RehearsalSummary = {
         "status": status,
         "completed": len(results),
         "selected": len(fixtures),

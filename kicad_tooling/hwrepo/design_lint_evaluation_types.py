@@ -75,7 +75,7 @@ from .usb_c_ports import UsbCPortRosterContext
 from .usb_peer_reference_models import UsbPeerReferenceCoverageReport
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class DesignLintEvaluationRequest:
     """Public evaluation inputs grouped for the staged lint workflow."""
 
@@ -114,7 +114,7 @@ class DesignLintEvaluationRequest:
     pcb_native_drc_candidates: tuple[Candidate, ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class DesignLintResolvedCoverage:
     """Coverage evidence normalized for candidate evaluation and reporting."""
 
@@ -141,7 +141,7 @@ class DesignLintResolvedCoverage:
     i2c_pullup_heuristic: I2cPullupHeuristicCoverage | None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class DesignLintEvaluationPreparation:
     """Policy-resolved evidence and rule modes before theme candidate scans."""
 
@@ -158,7 +158,7 @@ class DesignLintEvaluationPreparation:
     default_modes: Mapping[DesignLintRuleId, Literal["review", "block", "off"]]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class DesignLintEvaluationPreparationResult:
     """Either the preparation stage is complete or it produced an early report."""
 
@@ -166,7 +166,7 @@ class DesignLintEvaluationPreparationResult:
     report: DesignLintReport | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class DesignLintEvaluationCandidates:
     """Theme candidates and peer coverage found from prepared evidence."""
 
@@ -183,7 +183,7 @@ class DesignLintEvaluationCandidates:
     mapped_check_runs: tuple[DesignLintMappedCheckRun, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class DesignLintFindingDisposition:
     """Resolved finding list and ignore fingerprints observed in this evaluation."""
 
@@ -192,7 +192,7 @@ class DesignLintFindingDisposition:
     issue: str | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class DesignLintEvaluationReportInput:
     """All independently resolved evidence needed to finalize one lint report."""
 

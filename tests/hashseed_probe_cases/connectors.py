@@ -29,12 +29,13 @@ from tests.design_lint_fixtures.connector_coverage import (
     uart_peer_netlist,
 )
 from tests.design_lint_fixtures.connector_peer_pin_cases import peer_pin_case_contracts
+from tests.json_types import JsonObject
 from tests.test_connector_contact_ratings import contact as connector_contact
 from tests.test_connector_contact_ratings import netlist as connector_rating_netlist
 from tests.test_connector_contact_ratings import requirement as connector_rating_requirement
 
 
-def mapped_connector_supply_report(*, open_supply: bool) -> dict[str, object]:
+def mapped_connector_supply_report(*, open_supply: bool) -> JsonObject:
     """Serialize a mapped cross-symbol open-supply fault and common-rail control."""
     observed = connector_supply_role_netlist(common_supply=not open_supply, open_supply=open_supply)
     coverage = evaluate_connector_coverage(
@@ -58,9 +59,7 @@ def mapped_connector_supply_report(*, open_supply: bool) -> dict[str, object]:
     return report.model_dump(mode="json")
 
 
-def connector_contact_rating_check_result(
-    *, maximum_expected_current_a: float
-) -> dict[str, object]:
+def connector_contact_rating_check_result(*, maximum_expected_current_a: float) -> JsonObject:
     """Serialize typed contact-rating checks at and over the authored limit."""
     specification = connector_rating_requirement(
         contacts=(connector_contact(maximum_expected_current_a=maximum_expected_current_a),)
@@ -76,7 +75,7 @@ def connector_contact_rating_check_result(
     }
 
 
-def mapped_generic_peer_scope_report(*, mode: str) -> dict[str, object]:
+def mapped_generic_peer_scope_report(*, mode: str) -> JsonObject:
     """Serialize a three-port generic-pin scope with mapped split returns."""
     if mode not in {"separate-fault", "shared-fault", "shared-control"}:
         raise ValueError(f"Unsupported connector peer-scope probe mode: {mode}")
@@ -154,7 +153,7 @@ def mapped_generic_peer_scope_report(*, mode: str) -> dict[str, object]:
     return report.model_dump(mode="json")
 
 
-def connector_peer_scope_report(*, shared_group: bool) -> dict[str, object]:
+def connector_peer_scope_report(*, shared_group: bool) -> JsonObject:
     """Serialize source-matched connector scopes for cross-process determinism checks."""
     observed = uart_peer_netlist(split_return=True)
     groups = ("uart-ports", "uart-ports") if shared_group else ("uart-1", "uart-2")
@@ -171,7 +170,7 @@ def connector_peer_scope_report(*, shared_group: bool) -> dict[str, object]:
     return report.model_dump(mode="json")
 
 
-def mapped_peer_pin_report(*, complete_map: bool, common_supply: bool = False) -> dict[str, object]:
+def mapped_peer_pin_report(*, complete_map: bool, common_supply: bool = False) -> JsonObject:
     """Keep mapped-role coverage and generic peer findings distinct and deterministic."""
     supply_net = (
         {"COMMON_SUPPLY": ("J1.1", "J2.1", "J3.1")}
@@ -244,7 +243,7 @@ def mapped_peer_pin_report(*, complete_map: bool, common_supply: bool = False) -
     return report.model_dump(mode="json")
 
 
-def part_id_connector_peer_report(*, mode: Literal["open", "split", "common"]) -> dict[str, object]:
+def part_id_connector_peer_report(*, mode: Literal["open", "split", "common"]) -> JsonObject:
     """Serialize a guarded cross-symbol PART_ID peer fault or valid control."""
     case_name = {
         "open": "peer-pin-part-id-open-fault",
@@ -261,7 +260,7 @@ def part_id_connector_peer_report(*, mode: Literal["open", "split", "common"]) -
     return report.model_dump(mode="json")
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     return {
         "generic_power_input_fault": evaluate(
             "synthetic-generic-power-input-hash-seed-fault",

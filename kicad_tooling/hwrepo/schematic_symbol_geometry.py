@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 
 from .model_inventory import _atoms, _children, _Span  # pyright: ignore[reportPrivateUsage]
 from .schematic_geometry_primitives import transform_point
@@ -30,7 +31,7 @@ def instance_pin_uuids(source: str, placed: _Span) -> dict[str, str]:
 def pins_for_instance(
     source: str,
     placed: _Span,
-    libraries: dict[str, _Span],
+    libraries: Mapping[str, _Span],
     *,
     reference_override: str | None = None,
 ) -> tuple[tuple[SchematicPin, ...], str | None]:
@@ -261,7 +262,7 @@ def body_primitive_points(
 def symbol_body_envelope_for_instance(
     source: str,
     placed: _Span,
-    libraries: dict[str, _Span],
+    libraries: Mapping[str, _Span],
     *,
     reference_override: str | None = None,
 ) -> tuple[SymbolBodyEnvelope | None, str | None]:

@@ -35,6 +35,7 @@ from tests.design_lint_fixtures.schematic_geometry_native_support import (
     _netlist_components_without_sheetfile,
 )
 from tests.design_lint_fixtures.schematic_geometry_test_cases import NativeSchematicGeometryHelpers
+from tests.json_types import JsonObject
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -103,7 +104,7 @@ class NativeSchematicGeometryWireTopologyTests(NativeSchematicGeometryHelpers):
         assert (baseline_nets) is not None
         assert (ET.tostring(graphical_nets)) == (ET.tostring(baseline_nets))
 
-        def violation_signatures(report: dict[str, object]) -> tuple[tuple[object, ...], ...]:
+        def violation_signatures(report: JsonObject) -> tuple[tuple[object, ...], ...]:
             violations = [
                 violation
                 for sheet in report.get("sheets", [])
@@ -169,7 +170,7 @@ class NativeSchematicGeometryWireTopologyTests(NativeSchematicGeometryHelpers):
         assert (control_nets["R1.1"]) == ("/CONTROL_NET")
         assert (control_nets["R1.2"]) == ("/CONTROL_NET")
 
-        def violations(report: dict[str, object]) -> list[dict[str, object]]:
+        def violations(report: JsonObject) -> list[JsonObject]:
             return [
                 item for sheet in report.get("sheets", []) for item in sheet.get("violations", [])
             ]

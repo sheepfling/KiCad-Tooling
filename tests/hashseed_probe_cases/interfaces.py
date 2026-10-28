@@ -46,6 +46,7 @@ from tests.external_protection_support import (
     protection_map,
 )
 from tests.i2c_peer_reference_support import i2c_peer_netlist
+from tests.json_types import JsonObject
 from tests.rs485_peer_reference_support import rs485_peer_reference_fixture
 from tests.serial_participant_support import (
     alternate_function_serial_netlist,
@@ -71,7 +72,7 @@ from tests.usb_peer_reference_support import usb_multiport_peer_netlist
 from tests.usb_peer_superspeed_support import superspeed_peer_netlist
 
 
-def serial_reference_lint_report(*, common_references: bool) -> dict[str, object]:
+def serial_reference_lint_report(*, common_references: bool) -> JsonObject:
     observed = three_uart_connector_reference_netlist(common_references=common_references)
     netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
     report = evaluate(
@@ -84,14 +85,14 @@ def serial_reference_lint_report(*, common_references: bool) -> dict[str, object
     return report.model_dump(mode="json")
 
 
-def serial_bonded_reference_checks(*, fault: bool) -> list[dict[str, object]]:
+def serial_bonded_reference_checks(*, fault: bool) -> list[JsonObject]:
     """Serialize mapped UART bond checks for hash-seed stability."""
     spec = serial_peer_requirement(reference_policy="bonded")
     observed = serial_peer_netlist(spec, fault="bond-wrong-net" if fault else None)
     return [item.model_dump(mode="json") for item in serial_peer_checks(spec, observed)]
 
 
-def can_peer_lint_report(*, divergent_peer: bool) -> dict[str, object]:
+def can_peer_lint_report(*, divergent_peer: bool) -> JsonObject:
     observed = can_peer_netlist(divergent_peer=divergent_peer)
     netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
     report = evaluate(
@@ -102,7 +103,7 @@ def can_peer_lint_report(*, divergent_peer: bool) -> dict[str, object]:
     return report.model_dump(mode="json")
 
 
-def i2c_array_lint_report(*, wrong_sda_channel: bool) -> dict[str, object]:
+def i2c_array_lint_report(*, wrong_sda_channel: bool) -> JsonObject:
     """Serialize an I2C array channel fault or control with authored coverage."""
     observed = array_netlist(wrong_sda_net=wrong_sda_channel)
     netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
@@ -127,7 +128,7 @@ def i2c_array_lint_report(*, wrong_sda_channel: bool) -> dict[str, object]:
     return report.model_dump(mode="json")
 
 
-def i2c_array_contract_checks(*, wrong_sda_channel: bool) -> dict[str, object]:
+def i2c_array_contract_checks(*, wrong_sda_channel: bool) -> JsonObject:
     """Serialize typed checks for the I2C array fault/control pair."""
     observed = array_netlist(wrong_sda_net=wrong_sda_channel)
     requirement = array_requirement()
@@ -142,7 +143,7 @@ def i2c_array_contract_checks(*, wrong_sda_channel: bool) -> dict[str, object]:
     }
 
 
-def i2c_address_map_lint_report(*, strap_fault: bool) -> dict[str, object]:
+def i2c_address_map_lint_report(*, strap_fault: bool) -> JsonObject:
     """Serialize a source-bound address mismatch and same-segment collision pair."""
     specification = address_map(
         responder("U1", address=0x50),
@@ -162,7 +163,7 @@ def i2c_address_map_lint_report(*, strap_fault: bool) -> dict[str, object]:
     }
 
 
-def i2c_peer_reference_lint_report(*, split_references: bool) -> dict[str, object]:
+def i2c_peer_reference_lint_report(*, split_references: bool) -> JsonObject:
     """Serialize an I2C peer-reference split and common-reference control."""
     reference_nets = (
         {"U1": "GND_A", "U2": "GND_B"} if split_references else {"U1": "GND", "U2": "GND"}
@@ -179,7 +180,7 @@ def i2c_peer_reference_lint_report(*, split_references: bool) -> dict[str, objec
     return report.model_dump(mode="json")
 
 
-def spi_peer_reference_lint_report(*, split_references: bool) -> dict[str, object]:
+def spi_peer_reference_lint_report(*, split_references: bool) -> JsonObject:
     """Serialize an SPI shared-clock split and common-reference control."""
     references = {"U1": "GND_A", "U2": "GND_B"} if split_references else {"U1": "GND", "U2": "GND"}
     observed = spi_peer_netlist(reference_nets=references)
@@ -194,7 +195,7 @@ def spi_peer_reference_lint_report(*, split_references: bool) -> dict[str, objec
     return report.model_dump(mode="json")
 
 
-def can_peer_reference_lint_report(*, split_references: bool) -> dict[str, object]:
+def can_peer_reference_lint_report(*, split_references: bool) -> JsonObject:
     """Serialize a CAN line-pair split and common-reference control."""
     references = {"U1": "GND_A", "U2": "GND_B"} if split_references else {"U1": "GND", "U2": "GND"}
     observed = can_peer_reference_netlist(reference_nets=references)
@@ -209,7 +210,7 @@ def can_peer_reference_lint_report(*, split_references: bool) -> dict[str, objec
     return report.model_dump(mode="json")
 
 
-def rs485_peer_reference_lint_report(*, split_references: bool) -> dict[str, object]:
+def rs485_peer_reference_lint_report(*, split_references: bool) -> JsonObject:
     """Serialize an authored RS-485 split-reference fault and common control."""
     reference_nets = (
         {"U1": "GND_A", "U2": "GND_B", "U3": "GND_A"}
@@ -229,7 +230,7 @@ def rs485_peer_reference_lint_report(*, split_references: bool) -> dict[str, obj
     return report.model_dump(mode="json")
 
 
-def rs485_peer_reference_source_drift() -> dict[str, object]:
+def rs485_peer_reference_source_drift() -> JsonObject:
     """Serialize source drift against one unchanged RS-485 map and its exact checks."""
     analysis, context, source = rs485_peer_reference_fixture()
     nets = dict(source.nets)
@@ -249,7 +250,7 @@ def rs485_peer_reference_source_drift() -> dict[str, object]:
     }
 
 
-def external_protection_lint_report(*, fault: bool) -> dict[str, object]:
+def external_protection_lint_report(*, fault: bool) -> JsonObject:
     """Serialize a mapped protector net fault and its repaired control."""
     requirement = protection_map()
     observed = external_protection_netlist(fault="protector-wrong-net" if fault else None)
@@ -263,7 +264,7 @@ def external_protection_lint_report(*, fault: bool) -> dict[str, object]:
     }
 
 
-def spi_peer_voltage_lint_report(*, mapped: bool) -> dict[str, object]:
+def spi_peer_voltage_lint_report(*, mapped: bool) -> JsonObject:
     observed = spi_peer_voltage_netlist()
     netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
     context = (
@@ -284,7 +285,7 @@ def spi_peer_voltage_lint_report(*, mapped: bool) -> dict[str, object]:
     return report.model_dump(mode="json")
 
 
-def serial_peer_voltage_lint_report(*, mapped: bool) -> dict[str, object]:
+def serial_peer_voltage_lint_report(*, mapped: bool) -> JsonObject:
     observed = serial_peer_voltage_netlist()
     netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
     context = (
@@ -303,7 +304,7 @@ def serial_peer_voltage_lint_report(*, mapped: bool) -> dict[str, object]:
     return report.model_dump(mode="json")
 
 
-def usb_bonded_reference_lint_report(*, fault: bool) -> dict[str, object]:
+def usb_bonded_reference_lint_report(*, fault: bool) -> JsonObject:
     """Serialize a mapped USB reference bond fault or exact control."""
     observed = usb_bonded_reference_netlist(fault="wrong-net" if fault else None)
     netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
@@ -317,7 +318,7 @@ def usb_bonded_reference_lint_report(*, fault: bool) -> dict[str, object]:
     return report.model_dump(mode="json")
 
 
-def stm32_pin_map_lint_report(*, mismatch: bool) -> dict[str, object]:
+def stm32_pin_map_lint_report(*, mismatch: bool) -> JsonObject:
     with TemporaryDirectory(prefix="stm32-hash-seed-") as temporary:
         root = Path(temporary)
         source = root / "firmware/controller.ioc"
@@ -339,7 +340,7 @@ def stm32_pin_map_lint_report(*, mismatch: bool) -> dict[str, object]:
         return report.model_dump(mode="json")
 
 
-def header_only_spi_uart_lint_report() -> dict[str, object]:
+def header_only_spi_uart_lint_report() -> JsonObject:
     observed = header_only_spi_uart_netlist()
     netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
     report = evaluate(
@@ -350,7 +351,7 @@ def header_only_spi_uart_lint_report() -> dict[str, object]:
 
 def usb_data_path_lint_report(
     *, topology: Literal["direct", "series_resistor"], fault: str | None = None
-) -> dict[str, object]:
+) -> JsonObject:
     """Serialize a project-mapped USB data path with source-bound typed evidence."""
     observed = usb_netlist(topology, fault=fault)
     netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
@@ -362,7 +363,7 @@ def usb_data_path_lint_report(
     return report.model_dump(mode="json")
 
 
-def serial_label_lint_report(*, mapped: bool) -> dict[str, object]:
+def serial_label_lint_report(*, mapped: bool) -> JsonObject:
     observed = alternate_function_serial_netlist()
     netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
     if mapped:
@@ -385,7 +386,7 @@ def serial_label_lint_report(*, mapped: bool) -> dict[str, object]:
     return report.model_dump(mode="json")
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     return {
         "i2c_array_fault": i2c_array_lint_report(wrong_sda_channel=True),
         "i2c_array_control": i2c_array_lint_report(wrong_sda_channel=False),

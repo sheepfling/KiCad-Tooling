@@ -10,11 +10,12 @@ from tests.electrical_power_connectivity_support import (
     power_connectivity_netlist,
     power_connectivity_requirement,
 )
+from tests.json_types import JsonObject
 
 PowerConnectivityFault = Literal["source-wrong-net", "load-wrong-net"]
 
 
-def _check_report(fault: PowerConnectivityFault | None) -> dict[str, object]:
+def _check_report(fault: PowerConnectivityFault | None) -> JsonObject:
     requirement = power_connectivity_requirement()
     netlist = power_connectivity_netlist(fault=fault)
     checks = power_connectivity_checks(requirement, netlist)
@@ -27,7 +28,7 @@ def _check_report(fault: PowerConnectivityFault | None) -> dict[str, object]:
     }
 
 
-def report_cases() -> dict[str, dict[str, object]]:
+def report_cases() -> dict[str, JsonObject]:
     """Serialize source, load, and valid-control check sets from the shared service."""
     return {
         "power_connectivity_source_fault": _check_report("source-wrong-net"),

@@ -10,6 +10,7 @@ from .pcb_connectivity_observations import (
     PcbViaObservation,
 )
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
+from .pcb_pad_union_find import PcbPadUnionFind
 from .pcb_return_path_models import PcbReturnPathsAnalysis
 
 
@@ -19,33 +20,6 @@ def _canonical_groups(groups: tuple[tuple[str, ...], ...]) -> tuple[tuple[str, .
             (tuple(sorted((pad.casefold() for pad in group))) for group in groups),
         )
     )
-
-
-class _PadUnion:
-    def __init__(self, pads: tuple[PcbPadConnectivityObservation, ...]) -> None:
-        self.parent = {item.pad.casefold(): item.pad.casefold() for item in pads}
-        for item in pads:
-            for other in item.connected_pads:
-                self.join(item.pad, other)
-
-    def find(self, pad: str) -> str:
-        key = pad.casefold()
-        if key not in self.parent:
-            return ""
-        while self.parent[key] != key:
-            self.parent[key] = self.parent[self.parent[key]]
-            key = self.parent[key]
-        return key
-
-    def join(self, first: str, second: str) -> None:
-        a = first.casefold()
-        b = second.casefold()
-        if a not in self.parent or b not in self.parent:
-            return
-        root_a = self.find(a)
-        root_b = self.find(b)
-        if root_a != root_b:
-            self.parent[max(root_a, root_b)] = min(root_a, root_b)
 
 
 def pcb_return_path_checks(
@@ -91,7 +65,7 @@ def pcb_return_path_checks(
     ties = {item.reference.casefold(): item for item in snapshot.net_ties}
     zones = {(item.uuid.casefold(), item.layer.casefold()): item for item in snapshot.zones}
     vias = {item.id: item for item in snapshot.vias}
-    active_ties = _PadUnion(snapshot.pads)
+    active_ties = PcbPadUnionFind(snapshot.pads)
     for tie in snapshot.net_ties:
         if not tie.dnp:
             for group in tie.pad_groups:
@@ -149,7 +123,7 @@ def pcb_return_path_checks(
                 )
             )
 
-        local = _PadUnion(snapshot.pads)
+        local = PcbPadUnionFind(snapshot.pads)
         bonds_valid = True
         for bond in domain.bonds:
             if not valid_bonds.get(bond.reference.casefold(), False):

@@ -17,7 +17,7 @@ from tests.lint_architecture_support import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint, pytest.mark.architecture]
 
 HWREPO = REPO_ROOT / "kicad_tooling/hwrepo"
-MODEL_NAMES = {"Rs485PeerReferencePairCoverage", "Rs485PeerReferenceCoverageReport"}
+MODEL_NAMES = frozenset({"Rs485PeerReferencePairCoverage", "Rs485PeerReferenceCoverageReport"})
 MODULES = (
     "kicad_tooling/hwrepo/rs485_peer_reference_types.py",
     "kicad_tooling/hwrepo/rs485_peer_reference_models.py",

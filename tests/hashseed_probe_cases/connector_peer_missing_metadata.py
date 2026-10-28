@@ -9,9 +9,10 @@ from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 from tests.connector_footprint_peer_support import peer_missing_metadata_netlist
 from tests.design_lint_fixtures import coach
+from tests.json_types import JsonObject
 
 
-def _report(*, split: bool, part_id: bool = False) -> dict[str, object]:
+def _report(*, split: bool, part_id: bool = False) -> JsonObject:
     assignments = ("UART_RX_NET", "UART_TX_NET") if split else ("SHARED_PORT", "SHARED_PORT")
     part_id_value = "SYNTHETIC-PART-001" if part_id else None
     observed = peer_missing_metadata_netlist(
@@ -31,7 +32,7 @@ def _report(*, split: bool, part_id: bool = False) -> dict[str, object]:
     return report.model_dump(mode="json")
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     """Return missing-metadata split and common controls with and without PART_ID."""
     return {
         "connector_peer_missing_metadata_fault": _report(split=True),

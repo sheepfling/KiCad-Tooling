@@ -316,11 +316,14 @@ class UsbCPortRequirement(StrictModel):
         if self.role != "source" and self.source_rail is not None:
             raise ValueError("Only USB-C source ports may declare a source rail")
 
-        attachments = (self.cc1.attachment, self.cc2.attachment)
-        resistor_attachments = tuple(
+        attachments: tuple[
+            UsbCcResistorAttachment | UsbCcControllerAttachment,
+            UsbCcResistorAttachment | UsbCcControllerAttachment,
+        ] = (self.cc1.attachment, self.cc2.attachment)
+        resistor_attachments: tuple[UsbCcResistorAttachment, ...] = tuple(
             item for item in attachments if isinstance(item, UsbCcResistorAttachment)
         )
-        controller_attachments = tuple(
+        controller_attachments: tuple[UsbCcControllerAttachment, ...] = tuple(
             item for item in attachments if isinstance(item, UsbCcControllerAttachment)
         )
         if len({item.reference.casefold() for item in resistor_attachments}) != len(
@@ -362,7 +365,8 @@ class UsbCPortRequirement(StrictModel):
         if (
             self.role in {"source", "sink"}
             and len(attachments) == 2
-            and type(attachments[0]) is not type(attachments[1])
+            and isinstance(attachments[0], UsbCcResistorAttachment)
+            != isinstance(attachments[1], UsbCcResistorAttachment)
         ):
             raise ValueError(
                 "USB-C source or sink CC lines must both use resistors or controller pins"

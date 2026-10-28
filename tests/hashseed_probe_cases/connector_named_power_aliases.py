@@ -11,11 +11,10 @@ from tests.design_lint_fixtures import coach
 from tests.design_lint_fixtures.connector_named_power_aliases import (
     named_connector_power_alias_netlist,
 )
+from tests.json_types import JsonObject
 
 
-def _named_power_alias_report(
-    direction: Literal["input", "output"], *, split: bool
-) -> dict[str, object]:
+def _named_power_alias_report(direction: Literal["input", "output"], *, split: bool) -> JsonObject:
     electrical_type = "power_in" if direction == "input" else "power_out"
     function = "BIAS_IN" if direction == "input" else "BIAS_OUT"
     part_id = f"SYNTHETIC-NAMED-{direction.upper()}-001"
@@ -38,7 +37,7 @@ def _named_power_alias_report(
     return report.model_dump(mode="json")
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     """Return fault/control reports for named input and output alias rules."""
     return {
         "named_connector_power_input_divergence_fault": _named_power_alias_report(

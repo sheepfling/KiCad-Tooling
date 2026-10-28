@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
 
 from .hwrepo.repository import ephemeral, generated_artifact
@@ -49,7 +50,7 @@ def release_fixture(root: Path, target: Path) -> None:
             f"paths from the matching template version: {', '.join(missing)}"
         )
 
-    def ignore_local(directory: str, names: list[str]) -> set[str]:
+    def ignore_local(directory: str, names: Sequence[str]) -> set[str]:
         ignored = {
             name
             for name in names

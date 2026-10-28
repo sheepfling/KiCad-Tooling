@@ -4,25 +4,20 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import TYPE_CHECKING
 
 from .ci_hosted_component_rating_context import ComponentRatingFixtureContext
-from .hwrepo.contracts import read_kicad_erc_report
-from .hwrepo.evidence import digest
-from .validate import read_netlist
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
-
-
+from .ci_hosted_support import HostedLog
 from .hwrepo.component_power_ratings import component_power_rating_checks
 from .hwrepo.component_rating_models import (
     ComponentPowerRatingAnalysis,
     ComponentPowerRatingRequirement,
 )
+from .hwrepo.contracts import read_kicad_erc_report
+from .hwrepo.evidence import digest
 from .hwrepo.models import (
     NetlistContract,
 )
+from .validate import read_netlist
 
 
 def verify_component_power_rating_fixture(
@@ -121,8 +116,10 @@ def verify_component_power_rating_fixture(
             basis="Synthetic exact-part power-rating comparison", requirements=(requirement,)
         )
         checks = component_power_rating_checks(spec, power_observed)
-        margin = next(item for item in checks if item.id.endswith("/utilization"))
-        if any(item.status != "PASS" for item in checks if not item.id.endswith("/utilization")):
+        margin = next(item for item in checks if item.id.rsplit("/", 1)[-1] == "utilization")
+        if any(
+            item.status != "PASS" for item in checks if item.id.rsplit("/", 1)[-1] != "utilization"
+        ):
             raise ValueError("Native component power identity and pin-map checks did not pass")
         return margin.status, tuple(item.id for item in checks if item.status != "PASS")
 

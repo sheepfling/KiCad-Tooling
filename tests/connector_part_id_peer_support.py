@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import TypedDict
+
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
@@ -16,17 +19,33 @@ PART_ID_PEER_PIN_DIVERGENCE_RULE_ID = "connector.peer_pin_assignment_divergence"
 NETLIST_SHA256 = "b" * 64
 
 
+class ConnectorNetlistOverrides(TypedDict, total=False):
+    """Optional inputs accepted by the PART_ID peer netlist fixture."""
+
+    references: tuple[str, ...]
+    symbols: dict[str, str]
+    part_ids: dict[str, str]
+    values: dict[str, str]
+    footprints: dict[str, str]
+    pin_two_nets: tuple[str | None, ...]
+    pin_functions: dict[str, str | None]
+    pin_electrical_types: dict[str, str | None]
+    pin_inventories: dict[str, tuple[str, ...] | None]
+    ambiguous_pin: str | None
+    dnp: tuple[str, ...]
+
+
 def connector_netlist(
     *,
     references: tuple[str, ...] = ("J1", "J2"),
-    symbols: dict[str, str] | None = None,
-    part_ids: dict[str, str] | None = None,
-    values: dict[str, str] | None = None,
-    footprints: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
+    part_ids: Mapping[str, str] | None = None,
+    values: Mapping[str, str] | None = None,
+    footprints: Mapping[str, str] | None = None,
     pin_two_nets: tuple[str | None, ...] = ("GND", None),
-    pin_functions: dict[str, str | None] | None = None,
-    pin_electrical_types: dict[str, str | None] | None = None,
-    pin_inventories: dict[str, tuple[str, ...] | None] | None = None,
+    pin_functions: Mapping[str, str | None] | None = None,
+    pin_electrical_types: Mapping[str, str | None] | None = None,
+    pin_inventories: Mapping[str, tuple[str, ...] | None] | None = None,
     ambiguous_pin: str | None = None,
     dnp: tuple[str, ...] = (),
 ) -> NetlistContract:

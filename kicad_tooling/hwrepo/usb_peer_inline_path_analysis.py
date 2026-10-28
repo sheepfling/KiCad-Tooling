@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
+
 from .models import NetlistContract
 from .usb_data_path_models import (
     UsbDataInterfaceRequirement,
@@ -37,12 +40,12 @@ def _line_matches_endpoint(
 
 
 def _mapped_net_shunts(
-    net_members: dict[str, set[str]],
+    net_members: Mapping[str, AbstractSet[str]],
     net: str,
     endpoint_pins: tuple[str, ...],
     inline_pin: str,
     observed: NetlistContract,
-    reference_nets: set[str],
+    reference_nets: AbstractSet[str],
 ) -> tuple[UsbPeerDataShuntBranch, ...] | None:
     expected = {pin.casefold() for pin in (*endpoint_pins, inline_pin)}
     extras = net_members.get(net.casefold(), set()) - expected
@@ -115,7 +118,7 @@ def _current_inline_map(
 def _inline_data_link(
     connector: UsbEndpoint,
     phy: UsbEndpoint,
-    net_members: dict[str, set[str]],
+    net_members: Mapping[str, AbstractSet[str]],
     observed: NetlistContract,
     interface: UsbDataInterfaceRequirement,
 ) -> UsbPeerDataLink | None:
@@ -218,7 +221,7 @@ def _inline_data_link(
 def mapped_inline_usb_data_link(
     connector: UsbEndpoint,
     phy: UsbEndpoint,
-    net_members: dict[str, set[str]],
+    net_members: Mapping[str, AbstractSet[str]],
     observed: NetlistContract,
     path_map: UsbDataPathMap | None,
 ) -> UsbPeerDataLink | None:

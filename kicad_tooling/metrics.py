@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from .hwrepo.contracts import read_model, repo_path
+from .hwrepo.layout import default_project_root
 from .hwrepo.metrics import collect
 from .hwrepo.models import ReleaseManifest, TemplateMetricsReport
 
@@ -32,7 +33,7 @@ def format_metrics(report: TemplateMetricsReport) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     parser.add_argument("--manifest", help="Optional repository-relative release manifest")
     parser.add_argument(
         "--format",

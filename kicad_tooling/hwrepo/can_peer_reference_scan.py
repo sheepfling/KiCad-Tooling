@@ -16,7 +16,7 @@ from .peer_reference_assignments import (
 _IC_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class CanPeerReferenceEndpoint:
     """One fitted transceiver with unique native CANH/CANL assignments."""
 
@@ -29,7 +29,7 @@ class CanPeerReferenceEndpoint:
     reference_pins: tuple[PeerReferencePinAssignment, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class CanPeerReferenceBus:
     """Coverage for fitted endpoints sharing one exact native CAN line pair."""
 
@@ -45,7 +45,7 @@ class CanPeerReferenceBus:
     ]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class CanPeerReferenceScan:
     """Recognized direct CAN endpoints and source-bound reference states."""
 

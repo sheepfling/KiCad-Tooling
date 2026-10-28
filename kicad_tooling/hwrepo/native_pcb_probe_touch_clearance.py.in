@@ -2,13 +2,14 @@
 
 def read_touch_pad_clearance_requests(
     path: Path | None,
-) -> tuple[list[dict[str, Any]], str | None]:
+) -> tuple[list[TouchPadClearanceRequest], str | None]:
     if path is None:
         return [], None
     raw_bytes = path.read_bytes()
-    raw = json.loads(raw_bytes)
-    if not isinstance(raw, dict) or set(raw) != {"schema_version", "requests"}:
+    raw_value: object = json.loads(raw_bytes)
+    if not isinstance(raw_value, dict) or set(raw_value) != {"schema_version", "requests"}:
         raise ValueError("Touch-pad probe request file has an invalid object shape")
+    raw = cast(RawTouchClearanceRequestEnvelope, raw_value)
     if raw["schema_version"] != "1" or not isinstance(raw["requests"], list):
         raise ValueError("Touch-pad probe request file has an unsupported schema")
     required = {
@@ -19,38 +20,51 @@ def read_touch_pad_clearance_requests(
         "layer",
         "minimum_clearance_nm",
     }
-    requests: list[dict[str, Any]] = []
+    raw_requests = cast(list[object], raw["requests"])
+    requests: list[TouchPadClearanceRequest] = []
     seen_ids: set[str] = set()
-    for row in raw["requests"]:
-        if not isinstance(row, dict) or set(row) != required:
+    for row_value in raw_requests:
+        if not isinstance(row_value, dict) or set(row_value) != required:
             raise ValueError("Touch-pad probe request has an invalid shape")
-        if (
-            not all(isinstance(row[key], str) and row[key] for key in required - {"minimum_clearance_nm"})
-            or type(row["minimum_clearance_nm"]) is not int
-            or row["minimum_clearance_nm"] <= 0
-        ):
+        row = cast(RawTouchClearanceRequest, row_value)
+        string_fields = {
+            key: row[key]
+            for key in required - {"minimum_clearance_nm"}
+        }
+        if not all(isinstance(value, str) and value for value in string_fields.values()):
             raise ValueError("Touch-pad probe request has invalid values")
-        key = row["id"].casefold()
+        minimum_clearance = row["minimum_clearance_nm"]
+        if type(minimum_clearance) is not int or minimum_clearance <= 0:
+            raise ValueError("Touch-pad probe request has invalid values")
+        request: TouchPadClearanceRequest = {
+            "id": cast(str, string_fields["id"]),
+            "pad": cast(str, string_fields["pad"]),
+            "expected_pad_net": cast(str, string_fields["expected_pad_net"]),
+            "reference_net": cast(str, string_fields["reference_net"]),
+            "layer": cast(str, string_fields["layer"]),
+            "minimum_clearance_nm": minimum_clearance,
+        }
+        key = request["id"].casefold()
         if key in seen_ids:
             raise ValueError("Touch-pad probe request IDs must be unique")
         seen_ids.add(key)
-        requests.append(row)
+        requests.append(request)
     return requests, hashlib.sha256(raw_bytes).hexdigest()
 
 
 def touch_pad_clearance_observations(
-    requests: list[dict[str, Any]],
-    pad_geometry: list[tuple[str, bool, Any]],
-    zone_objects: dict[tuple[str, str], Any],
-    filled_polygons: dict[tuple[str, str], Any],
-    board: Any,
-) -> list[dict[str, Any]]:
+    requests: list[TouchPadClearanceRequest],
+    pad_geometry: list[tuple[str, bool, NativePad]],
+    zone_objects: dict[tuple[str, str], NativeZone],
+    filled_polygons: dict[tuple[str, str], NativePolygonSet],
+    board: NativeBoard,
+) -> list[TouchPadClearanceObservation]:
     """Measure exact KiCad pad-shape clearance to matching filled copper zones."""
     layer_ids = {
         board.GetLayerName(layer).casefold(): layer
         for layer in board.GetEnabledLayers().CuStack()
     }
-    observations: list[dict[str, Any]] = []
+    observations: list[TouchPadClearanceObservation] = []
     for request in requests:
         requested_pad = request["pad"]
         matches = [
@@ -58,7 +72,7 @@ def touch_pad_clearance_observations(
             for reference, _dnp, pad in pad_geometry
             if reference.casefold() == requested_pad.casefold()
         ]
-        base = {
+        observation: TouchPadClearanceObservation = {
             "requirement_id": request["id"],
             "pad": requested_pad,
             "expected_pad_net": request["expected_pad_net"],
@@ -68,37 +82,42 @@ def touch_pad_clearance_observations(
             "matching_zone_count": 0,
             "closest_zone_uuid": None,
             "distance_nm": None,
+            "status": "PAD_MISSING",
         }
         if not matches:
-            observations.append({**base, "status": "PAD_MISSING"})
+            observations.append(observation)
             continue
         if len(matches) != 1:
-            observations.append({**base, "status": "PAD_AMBIGUOUS"})
+            observation["status"] = "PAD_AMBIGUOUS"
+            observations.append(observation)
             continue
         pad = matches[0]
         pad_net = pad.GetNetname() or None
-        base["observed_pad_net"] = pad_net
+        observation["observed_pad_net"] = pad_net
         layer_id = layer_ids.get(request["layer"].casefold())
         if layer_id is None:
-            observations.append({**base, "status": "UNSUPPORTED_LAYER"})
+            observation["status"] = "UNSUPPORTED_LAYER"
+            observations.append(observation)
             continue
         if not pad.GetLayerSet().Contains(layer_id):
-            observations.append({**base, "status": "PAD_LAYER_ABSENT"})
+            observation["status"] = "PAD_LAYER_ABSENT"
+            observations.append(observation)
             continue
         pad_shape = pad.GetEffectiveShape(layer_id)
         if pad_shape is None or pad_shape.IsNull():
             raise ValueError(f"KiCad returned no effective pad shape for {requested_pad}")
 
-        matching_zones = [
+        matching_zones: list[tuple[str, NativeZone, NativePolygonSet]] = [
             (uuid, zone, filled_polygons[identity])
             for identity, zone in zone_objects.items()
             if (uuid := zone.m_Uuid.AsString())
             and board.GetLayerName(zone.GetLayer()).casefold() == request["layer"].casefold()
             and (zone.GetNetname() or "").casefold() == request["reference_net"].casefold()
         ]
-        base["matching_zone_count"] = len(matching_zones)
+        observation["matching_zone_count"] = len(matching_zones)
         if not matching_zones:
-            observations.append({**base, "status": "NO_REFERENCE_ZONE"})
+            observation["status"] = "NO_REFERENCE_ZONE"
+            observations.append(observation)
             continue
         measured: list[tuple[int, str, str]] = []
         for uuid, _zone, filled in matching_zones:
@@ -114,15 +133,12 @@ def touch_pad_clearance_observations(
                     )
             measured.append((distance_nm, uuid.casefold(), uuid))
         if not measured:
-            observations.append({**base, "status": "NO_FILLED_REFERENCE_COPPER"})
+            observation["status"] = "NO_FILLED_REFERENCE_COPPER"
+            observations.append(observation)
             continue
         distance_nm, _uuid_key, closest_zone_uuid = min(measured)
-        observations.append(
-            {
-                **base,
-                "closest_zone_uuid": closest_zone_uuid,
-                "distance_nm": distance_nm,
-                "status": "MEASURED",
-            }
-        )
+        observation["closest_zone_uuid"] = closest_zone_uuid
+        observation["distance_nm"] = distance_nm
+        observation["status"] = "MEASURED"
+        observations.append(observation)
     return observations

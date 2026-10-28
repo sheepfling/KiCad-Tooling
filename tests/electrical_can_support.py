@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.models import (
     CanTerminationAnalysis,
     CanTerminationBusRequirement,
@@ -118,7 +120,7 @@ def can_split_termination_requirement(
 
 
 def can_termination_netlist(
-    paths: dict[str, tuple[str, str, str]] | None = None,
+    paths: Mapping[str, tuple[str, str, str]] | None = None,
     *,
     dnp: tuple[str, ...] = (),
     midpoint_capacitor: tuple[str, str, str, str] | None = None,

@@ -201,6 +201,9 @@ def serial_peer_requirement(
 
 def serial_peer_netlist(spec: SerialPeerAnalysis, *, fault: str | None = None) -> NetlistContract:
     link = spec.links[0]
+    peer: (
+        SerialDirectPeerRequirement | SerialShiftedPeerRequirement | SerialExternalPeerRequirement
+    ) = link.peer
     assignments: dict[str, str] = {}
     pins: dict[str, set[str]] = {}
     symbols: dict[str, str] = {}
@@ -219,10 +222,10 @@ def serial_peer_netlist(spec: SerialPeerAnalysis, *, fault: str | None = None) -
             assignments[mapping.pin] = mapping.net
 
     add_endpoint(link.endpoint)
-    if isinstance(link.peer, (SerialDirectPeerRequirement, SerialShiftedPeerRequirement)):
-        add_endpoint(link.peer.endpoint)
-    if isinstance(link.peer, SerialShiftedPeerRequirement):
-        for bridge in link.peer.bridges:
+    if isinstance(peer, (SerialDirectPeerRequirement, SerialShiftedPeerRequirement)):
+        add_endpoint(peer.endpoint)
+    if isinstance(peer, SerialShiftedPeerRequirement):
+        for bridge in peer.bridges:
             components[bridge.reference] = ComponentContract(
                 value="Synthetic UART level shifter", footprint=bridge.footprint
             )
@@ -265,25 +268,25 @@ def serial_peer_netlist(spec: SerialPeerAnalysis, *, fault: str | None = None) -
             assignments[bond.side_b_pin] = "FLOATING_GND"
 
     if fault == "tx-to-tx" and isinstance(
-        link.peer, (SerialDirectPeerRequirement, SerialShiftedPeerRequirement)
+        peer, (SerialDirectPeerRequirement, SerialShiftedPeerRequirement)
     ):
-        if isinstance(link.peer, SerialDirectPeerRequirement):
-            assignments[link.peer.endpoint.tx.pin] = link.endpoint.tx.net
-            assignments[link.peer.endpoint.rx.pin] = link.endpoint.rx.net
+        if isinstance(peer, SerialDirectPeerRequirement):
+            assignments[peer.endpoint.tx.pin] = link.endpoint.tx.net
+            assignments[peer.endpoint.rx.pin] = link.endpoint.rx.net
         else:
-            assignments[link.peer.endpoint.rx.pin] = "WRONG_UART_NET"
-    elif fault == "bridge-output-wrong-net" and isinstance(link.peer, SerialShiftedPeerRequirement):
-        path = link.peer.bridges[0].paths[0]
+            assignments[peer.endpoint.rx.pin] = "WRONG_UART_NET"
+    elif fault == "bridge-output-wrong-net" and isinstance(peer, SerialShiftedPeerRequirement):
+        path = peer.bridges[0].paths[0]
         assignments[path.to_pin] = "WRONG_UART_NET"
     elif fault == "local-reference-wrong-net" and link.endpoint.reference_pins:
         assignment = link.endpoint.reference_pins[0]
         assignments[assignment.pin] = "WRONG_REFERENCE"
     elif (
         fault == "remote-reference-unconnected"
-        and isinstance(link.peer, (SerialDirectPeerRequirement, SerialShiftedPeerRequirement))
-        and link.peer.endpoint.reference_pins
+        and isinstance(peer, (SerialDirectPeerRequirement, SerialShiftedPeerRequirement))
+        and peer.endpoint.reference_pins
     ):
-        assignments.pop(link.peer.endpoint.reference_pins[0].pin, None)
+        assignments.pop(peer.endpoint.reference_pins[0].pin, None)
 
     nets: dict[str, list[str]] = {}
     for pin, net in assignments.items():

@@ -3,29 +3,35 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Literal
 
 from .models import NetlistContract
 
-_I2C_FUNCTIONS = {
-    "sda": "SDA",
-    "i2csda": "SDA",
-    "scl": "SCL",
-    "i2cscl": "SCL",
-}
+_I2C_FUNCTIONS: Mapping[str, str] = MappingProxyType(
+    {
+        "sda": "SDA",
+        "i2csda": "SDA",
+        "scl": "SCL",
+        "i2cscl": "SCL",
+    }
+)
 _I3C_FUNCTION = re.compile(r"(?<![a-z0-9])i3c(?P<channel>\d*)[_\s-]*(?P<role>sda|scl)(?![a-z0-9])")
-_I3C_ROLES: dict[str, Literal["SDA", "SCL"]] = {"sda": "SDA", "scl": "SCL"}
+_I3C_ROLES: Mapping[str, Literal["SDA", "SCL"]] = MappingProxyType({"sda": "SDA", "scl": "SCL"})
 
-_CAN_FUNCTIONS = {
-    "canh": "CANH",
-    "canhigh": "CANH",
-    "canl": "CANL",
-    "canlow": "CANL",
-}
+_CAN_FUNCTIONS: Mapping[str, str] = MappingProxyType(
+    {
+        "canh": "CANH",
+        "canhigh": "CANH",
+        "canl": "CANL",
+        "canlow": "CANL",
+    }
+)
 
-_USB_C_CC_FUNCTIONS = {"cc1": "CC1", "cc2": "CC2"}
-_USB_C_SBU_FUNCTIONS = {"sbu1": "SBU1", "sbu2": "SBU2"}
+_USB_C_CC_FUNCTIONS: Mapping[str, str] = MappingProxyType({"cc1": "CC1", "cc2": "CC2"})
+_USB_C_SBU_FUNCTIONS: Mapping[str, str] = MappingProxyType({"sbu1": "SBU1", "sbu2": "SBU2"})
 
 _SPI_CHIP_SELECT_FUNCTIONS = frozenset(
     {"cs", "csn", "ncs", "nss", "ss", "ssn", "chipselect", "chipselectn"}
@@ -34,14 +40,14 @@ _SPI_CHIP_SELECT_FUNCTIONS = frozenset(
 _SPI_ACTIVE_LOW_CHIP_SELECT_FUNCTIONS = frozenset({"csn", "ncs", "nss", "ssn", "chipselectn"})
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnconnectedInterfacePin:
     protocol: Literal["spi", "usb_c", "can"]
     pin: str
     function: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class I3cSignalIdentity:
     """One unambiguous I3C SDA or SCL function and its optional channel."""
 

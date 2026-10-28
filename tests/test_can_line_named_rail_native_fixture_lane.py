@@ -9,7 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.ci_hosted_can_signal_named_rail import CAN_SIGNAL_NAMED_RAIL_TOOLCHAINS
+from kicad_tooling.ci_hosted_can_signal_named_rail import (
+    CAN_SIGNAL_NAMED_RAIL_TOOLCHAINS,
+    can_line_named_rail_fixture_lane,
+)
+from kicad_tooling.ci_hosted_support import HostedLog
 from tests.native_fixture_support import assert_native_fixture_mounts
 
 RULE_ID = "bus.can_line_on_named_rail"
@@ -36,8 +40,6 @@ PROJECT_TOOLCHAINS = tuple(
 def test_native_can_line_named_rail_fault_and_control_repeat(
     tmp_path: Path, version: str, image: str
 ) -> None:
-    from kicad_tooling.ci_hosted_can_signal_named_rail import can_line_named_rail_fixture_lane
-    from kicad_tooling.ci_hosted_support import HostedLog
 
     root = tmp_path
     log = HostedLog(root, f"native-can-line-named-rail-{version}")

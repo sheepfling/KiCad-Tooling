@@ -8,9 +8,9 @@ import os
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
+from types import MappingProxyType
 
-from .ci_hosted_support import normalized_erc_report_bytes
+from .ci_hosted_support import HostedLog, normalized_erc_report_bytes, tooling_checkout_root
 from .hwrepo.component_mosfet_gate_drive import RULE_ID as DIRECT_DRIVE_RULE_ID
 from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
@@ -23,24 +23,24 @@ from .hwrepo.design_lint_component_mosfet_terminals import (
 )
 from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
 from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
 from .hwrepo.mosfet_gate_connectivity import RULE_ID, SOURCE_BIAS_RULE_ID
 from .validate import read_netlist
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
-
-MOSFET_GATE_FIXTURE_CASES = {
-    "fault": "mosfet-gate-native/fault.kicad_sch",
-    "control": "mosfet-gate-native/control.kicad_sch",
-    "source-bias-control": "mosfet-gate-native/source-bias-control.kicad_sch",
-    "series-gate-control": "mosfet-gate-native/series-gate-control.kicad_sch",
-    "gate-source-fault": "mosfet-gate-native/gate-source-tie.kicad_sch",
-    "gate-source-control": "mosfet-gate-native/source-bias-control.kicad_sch",
-    "gate-drain-fault": "mosfet-gate-native/gate-drain-tie.kicad_sch",
-    "gate-drain-control": "mosfet-gate-native/source-bias-control.kicad_sch",
-}
+MOSFET_GATE_FIXTURE_CASES = MappingProxyType(
+    {
+        "fault": "mosfet-gate-native/fault.kicad_sch",
+        "control": "mosfet-gate-native/control.kicad_sch",
+        "source-bias-control": "mosfet-gate-native/source-bias-control.kicad_sch",
+        "series-gate-control": "mosfet-gate-native/series-gate-control.kicad_sch",
+        "gate-source-fault": "mosfet-gate-native/gate-source-tie.kicad_sch",
+        "gate-source-control": "mosfet-gate-native/source-bias-control.kicad_sch",
+        "gate-drain-fault": "mosfet-gate-native/gate-drain-tie.kicad_sch",
+        "gate-drain-control": "mosfet-gate-native/source-bias-control.kicad_sch",
+    }
+)
 
 
 def mosfet_gate_fixture_lane(
@@ -51,13 +51,11 @@ def mosfet_gate_fixture_lane(
     log: HostedLog,
 ) -> None:
     """Export and evaluate native MOSFET gate connectivity heuristics twice."""
-    from .hwrepo.electrical import selected_config
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image or config.kicad_version not in {"10.0.0", "10.0.5"}:
         raise ValueError("MOSFET gate fixtures require the selected exact KiCad 10.0 image")
-    fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint"
     source_hashes = {
         case: digest(fixture_root / relative)
         for case, relative in MOSFET_GATE_FIXTURE_CASES.items()

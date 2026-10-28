@@ -6,12 +6,15 @@ import hashlib
 import json
 import os
 from pathlib import Path
-from types import SimpleNamespace
+from types import MappingProxyType, SimpleNamespace
 from typing import cast
 
 import pytest
 
-from kicad_tooling.ci_hosted_connector_return_context import ConnectorReturnFixtureContext
+from kicad_tooling.ci_hosted_connector_return_context import (
+    ConnectorReturnFixtureContext,
+    prepare_connector_return_fixture_context,
+)
 from kicad_tooling.ci_hosted_connector_return_fixture_sources import (
     CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES,
     connector_return_fixture_sources,
@@ -23,6 +26,7 @@ from kicad_tooling.ci_hosted_connector_return_peer_metadata_open import (
     verify_footprint_alias_peer_metadata_open_outlier,
 )
 from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     DesignLintPolicy,
@@ -39,20 +43,24 @@ from tests.synthetic_design_lint_project import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.interface_lint]
 
 FIXTURE_CASES = (FAULT_CASE, CONTROL_CASE)
-FIXTURE_PATHS = {
-    FAULT_CASE: (
-        "connector-footprint-peer-metadata-open-native",
-        "fault.kicad_sch",
-    ),
-    CONTROL_CASE: (
-        "connector-footprint-peer-metadata-open-native",
-        "control.kicad_sch",
-    ),
-}
-EXPECTED_SOURCE_HASHES = {
-    FAULT_CASE: "e6b24ecc2ecbafb23410b23ba18fb34ae78537957e66d4425f59a9265c0c5ed4",
-    CONTROL_CASE: "b7f54dfda65d777fc3532f4debb4f399c405b4e34a6d3d3d50d86f655089c8a4",
-}
+FIXTURE_PATHS = MappingProxyType(
+    {
+        FAULT_CASE: (
+            "connector-footprint-peer-metadata-open-native",
+            "fault.kicad_sch",
+        ),
+        CONTROL_CASE: (
+            "connector-footprint-peer-metadata-open-native",
+            "control.kicad_sch",
+        ),
+    }
+)
+EXPECTED_SOURCE_HASHES = MappingProxyType(
+    {
+        FAULT_CASE: "e6b24ecc2ecbafb23410b23ba18fb34ae78537957e66d4425f59a9265c0c5ed4",
+        CONTROL_CASE: "b7f54dfda65d777fc3532f4debb4f399c405b4e34a6d3d3d50d86f655089c8a4",
+    }
+)
 
 
 def _observed_fixture(*, common_anchor: bool) -> NetlistContract:
@@ -148,10 +156,6 @@ def test_native_metadata_open_fault_and_control_are_repeatable(
     project: str,
     version: str,
 ) -> None:
-    from kicad_tooling.ci_hosted_connector_return_context import (
-        prepare_connector_return_fixture_context,
-    )
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(

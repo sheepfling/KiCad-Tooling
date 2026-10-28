@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from types import MappingProxyType
 
 import pytest
 
@@ -10,7 +11,9 @@ from kicad_tooling.hwrepo import (
     connector_coverage_models,
     connector_part_id_peer_models,
     connector_peer_pin_models,
+    connector_stateful_contact_models,
     design_lint_policy_models,
+    oscillator_output_path_models,
     pcb_touch_pad_clearance_models,
     power_rail_models,
     rc_filter_models,
@@ -24,62 +27,64 @@ from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, RE
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
-MODEL_OWNERS = {
-    "connector_coverage_models.py": (
-        connector_coverage_models,
-        (
-            "ConnectorMappedPinEvidence",
-            "ConnectorCoverageEntry",
-            "ConnectorCoverageReport",
-            "ConnectorInterfaceReview",
-            "ConnectorInventoryReview",
+MODEL_OWNERS = MappingProxyType(
+    {
+        "connector_coverage_models.py": (
+            connector_coverage_models,
+            (
+                "ConnectorMappedPinEvidence",
+                "ConnectorCoverageEntry",
+                "ConnectorCoverageReport",
+                "ConnectorInterfaceReview",
+                "ConnectorInventoryReview",
+            ),
         ),
-    ),
-    "connector_peer_pin_models.py": (
-        connector_peer_pin_models,
-        (
-            "ConnectorPeerPinHeuristicCoverage",
-            "SimilarConnectorPinGroup",
+        "connector_peer_pin_models.py": (
+            connector_peer_pin_models,
+            (
+                "ConnectorPeerPinHeuristicCoverage",
+                "SimilarConnectorPinGroup",
+            ),
         ),
-    ),
-    "connector_part_id_peer_models.py": (
-        connector_part_id_peer_models,
-        ("ConnectorPartIdPeerPinCoverage",),
-    ),
-    "power_rail_models.py": (power_rail_models, ("NumberedPowerRailGroup",)),
-    "design_lint_policy_models.py": (
-        design_lint_policy_models,
-        ("DesignLintPolicy",),
-    ),
-    "rc_filter_models.py": (
-        rc_filter_models,
-        (
-            "RcFilterRequirement",
-            "RcFilterMap",
-            "RcFilterCoverageEntry",
-            "RcFilterCoverageReport",
+        "connector_part_id_peer_models.py": (
+            connector_part_id_peer_models,
+            ("ConnectorPartIdPeerPinCoverage",),
         ),
-    ),
-    "regulator_feedback_models.py": (
-        regulator_feedback_models,
-        (
-            "RegulatorDividerResistorRequirement",
-            "RegulatorFeedbackRequirement",
-            "RegulatorFeedbackMap",
-            "RegulatorFeedbackCoverageEntry",
-            "RegulatorFeedbackCoverageReport",
+        "power_rail_models.py": (power_rail_models, ("NumberedPowerRailGroup",)),
+        "design_lint_policy_models.py": (
+            design_lint_policy_models,
+            ("DesignLintPolicy",),
         ),
-    ),
-    "return_net_models.py": (return_net_models, ("ReturnNetGroup",)),
-    "schematic_geometry_models.py": (
-        schematic_geometry_models,
-        ("SchematicGeometrySourceBinding", "SchematicGeometryCoverage"),
-    ),
-    "signal_pair_models.py": (
-        signal_pair_models,
-        ("ComplementaryPinFunctionAlias", "ComplementaryPinFunctionAliasMap"),
-    ),
-}
+        "rc_filter_models.py": (
+            rc_filter_models,
+            (
+                "RcFilterRequirement",
+                "RcFilterMap",
+                "RcFilterCoverageEntry",
+                "RcFilterCoverageReport",
+            ),
+        ),
+        "regulator_feedback_models.py": (
+            regulator_feedback_models,
+            (
+                "RegulatorDividerResistorRequirement",
+                "RegulatorFeedbackRequirement",
+                "RegulatorFeedbackMap",
+                "RegulatorFeedbackCoverageEntry",
+                "RegulatorFeedbackCoverageReport",
+            ),
+        ),
+        "return_net_models.py": (return_net_models, ("ReturnNetGroup",)),
+        "schematic_geometry_models.py": (
+            schematic_geometry_models,
+            ("SchematicGeometrySourceBinding", "SchematicGeometryCoverage"),
+        ),
+        "signal_pair_models.py": (
+            signal_pair_models,
+            ("ComplementaryPinFunctionAlias", "ComplementaryPinFunctionAliasMap"),
+        ),
+    }
+)
 NEW_THEME_MODELS = (
     "PcbTouchPadClearanceRequirement",
     "PcbTouchPadClearanceMap",
@@ -146,7 +151,6 @@ def test_new_touch_clearance_models_stay_in_their_theme_owner() -> None:
 
 
 def test_stateful_contact_models_have_a_connector_theme_owner() -> None:
-    from kicad_tooling.hwrepo import connector_stateful_contact_models
 
     names = (
         "ConnectorStatefulContactPair",
@@ -166,7 +170,6 @@ def test_stateful_contact_models_have_a_connector_theme_owner() -> None:
 
 
 def test_oscillator_output_path_models_stay_in_their_theme_owner() -> None:
-    from kicad_tooling.hwrepo import oscillator_output_path_models
 
     owner_path = HWREPO / "oscillator_output_path_models.py"
     assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES

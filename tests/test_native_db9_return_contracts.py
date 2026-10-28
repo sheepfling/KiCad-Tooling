@@ -5,12 +5,14 @@ from __future__ import annotations
 import json
 import os
 import re
+from collections.abc import Mapping
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
 from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import CommandEvidence, DesignLintPolicy, NetlistContract
 from tests.design_lint_fixtures.connector_peer_pin_cases import peer_pin_case_contracts
 from tests.design_lint_fixtures.connector_return_cases import return_case_contracts
@@ -27,7 +29,7 @@ pytestmark = [
 ]
 
 
-def _assert_db9_contract_results(results: dict[str, dict[str, str]], version: str) -> None:
+def _assert_db9_contract_results(results: Mapping[str, Mapping[str, str]], version: str) -> None:
     prefix = "connector-return-fixture/"
     expected_contracts = {
         "ground-contract-common-fault": "FAIL",
@@ -204,7 +206,6 @@ def test_native_db9_return_contracts_are_source_bound_and_repeatable(
     tmp_path: Path, project: str, version: str
 ) -> None:
     from kicad_tooling.ci_hosted_connector_return_lane import db9_return_contract_fixture_lane
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(

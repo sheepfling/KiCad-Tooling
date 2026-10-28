@@ -11,9 +11,10 @@ from tests.design_lint_fixtures.connector_peer_pin_all_open import (
     generic_open_peer_netlist,
     review_generic_peer_pin_policy,
 )
+from tests.json_types import JsonObject
 
 
-def generic_peer_all_open_report(*, open_pin_assignments: bool) -> dict[str, object]:
+def generic_peer_all_open_report(*, open_pin_assignments: bool) -> JsonObject:
     """Serialize an all-open generic contact or its connected control."""
     observed = generic_open_peer_netlist(open_pin_assignments=open_pin_assignments)
     netlist_sha256 = sha256(model_json_bytes(observed)).hexdigest()
@@ -25,7 +26,7 @@ def generic_peer_all_open_report(*, open_pin_assignments: bool) -> dict[str, obj
     return report.model_dump(mode="json")
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     """Return the opt-in all-open fault and assigned-pin control."""
     return {
         "connector_generic_peer_pin_all_open_fault": generic_peer_all_open_report(

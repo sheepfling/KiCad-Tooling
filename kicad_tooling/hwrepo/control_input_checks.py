@@ -7,7 +7,6 @@ from .control_input_models import (
     ControlBiasResistorArrayRequirement,
     ControlBiasResistorRequirement,
     ControlInputsAnalysis,
-    ControlLocalBiasRequirement,
     ControlPinRequirement,
 )
 from .models import (
@@ -241,7 +240,7 @@ def control_input_checks(
             )
         )
 
-        if isinstance(signal.bias, ControlLocalBiasRequirement):
+        if signal.bias.mode == "local":
             bias_failures = [
                 f"{resistor.reference}: {'; '.join(issues)}"
                 for resistor in signal.bias.resistors

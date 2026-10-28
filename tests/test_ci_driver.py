@@ -16,7 +16,11 @@ from unittest.mock import patch
 from kicad_tooling.ci import main, project_static_pipeline, run_command, static_pipeline
 from kicad_tooling.ci_hosted import gate_result
 from kicad_tooling.hwrepo.documentation import check as documentation_check
-from kicad_tooling.hwrepo.models import CommandEvidence, StaticPipelineReport
+from kicad_tooling.hwrepo.models import (
+    CommandEvidence,
+    ProjectStaticPipelineReport,
+    StaticPipelineReport,
+)
 from tests.support import SOURCE_ROOT
 
 ROOT = Path()
@@ -49,7 +53,7 @@ class CiDriverTests(unittest.TestCase):
         with patch(
             "kicad_tooling.ci.run_command", side_effect=(evidence(0), evidence(1))
         ) as command:
-            result = static_pipeline(ROOT, None)
+            result: StaticPipelineReport | ProjectStaticPipelineReport = static_pipeline(ROOT, None)
         if not isinstance(result, StaticPipelineReport):
             self.fail("The unselected CI lane must return the full repository report")
         self.assertEqual(result.scope, "repository_static")
@@ -70,7 +74,9 @@ class CiDriverTests(unittest.TestCase):
                 outcomes = [evidence(0) for _ in range(2)]
                 outcomes[failed_index] = evidence(1)
                 with patch("kicad_tooling.ci.run_command", side_effect=outcomes):
-                    result = static_pipeline(ROOT, None)
+                    result: StaticPipelineReport | ProjectStaticPipelineReport = static_pipeline(
+                        ROOT, None
+                    )
                 if not isinstance(result, StaticPipelineReport):
                     self.fail("The full lane must return the full repository report")
                 self.assertEqual(getattr(result, name).returncode, 1)

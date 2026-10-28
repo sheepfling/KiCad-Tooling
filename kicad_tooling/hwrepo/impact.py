@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Set as AbstractSet
 from pathlib import Path
 
-from .contracts import read_model, repo_path
+from .contracts import read_model, repo_path, repo_path_is_within
 from .discovery import load_registry
 from .layout import CONFIG_NAME, layout
 from .models import ImpactPlan, LibrariesCatalog, ProductIndex, ProductRecord, ProjectManifest
@@ -13,11 +14,6 @@ from .models import ImpactPlan, LibrariesCatalog, ProductIndex, ProductRecord, P
 POLICY_MARKDOWN = frozenset({"AGENTS.md", "CLAUDE.md", "LICENSE.md"})
 GLOBAL_PREFIXES = ("tools/", "tests/", "catalog/", ".github/")
 DOCUMENTATION_ROOT_FILES = frozenset({"README.md", "generated/README.md", "schemas/README.md"})
-
-
-def _within(path: str, directory: str) -> bool:
-    """Match a path component boundary, not a similarly named sibling."""
-    return path == directory or path.startswith(f"{directory}/")
 
 
 def _local_references(manifest: ProjectManifest) -> tuple[str, ...]:
@@ -35,7 +31,7 @@ def _local_path(project_directory: str, relative: str) -> str:
 
 
 def _full(
-    all_ids: tuple[str, ...], paths: tuple[str, ...], reasons: set[str], docs_changed: bool
+    all_ids: tuple[str, ...], paths: tuple[str, ...], reasons: AbstractSet[str], docs_changed: bool
 ) -> ImpactPlan:
     return ImpactPlan(
         scope="full",
@@ -114,7 +110,7 @@ def plan_paths(root: Path, changed_paths: tuple[str, ...]) -> ImpactPlan:
             for project in registry.projects
             if path in manifests[project.id].shared_inputs
             or any(
-                _within(path, shared_root)
+                repo_path_is_within(path, shared_root, include_directory=True)
                 for shared_root in manifests[project.id].shared_source_roots
             )
         }
@@ -137,7 +133,9 @@ def plan_paths(root: Path, changed_paths: tuple[str, ...]) -> ImpactPlan:
         project_owners = {
             project.id
             for project in registry.projects
-            if _within(path, Path(project.config).parent.as_posix())
+            if repo_path_is_within(
+                path, Path(project.config).parent.as_posix(), include_directory=True
+            )
         }
         source_owners = {
             project.id
@@ -148,14 +146,20 @@ def plan_paths(root: Path, changed_paths: tuple[str, ...]) -> ImpactPlan:
                 for relative in _local_references(manifests[project.id])
             }
             or any(
-                _within(path, _local_path(Path(project.config).parent.as_posix(), source_root))
+                repo_path_is_within(
+                    path,
+                    _local_path(Path(project.config).parent.as_posix(), source_root),
+                    include_directory=True,
+                )
                 for source_root in manifests[project.id].source_roots
             )
         }
         product_owners = {
             project_id
             for product in products.products
-            if _within(path, Path(product.path).parent.as_posix())
+            if repo_path_is_within(
+                path, Path(product.path).parent.as_posix(), include_directory=True
+            )
             for project_id in product.project_ids
         }
         product_source_owners = {
@@ -174,8 +178,8 @@ def plan_paths(root: Path, changed_paths: tuple[str, ...]) -> ImpactPlan:
         ):
             if (
                 path in DOCUMENTATION_ROOT_FILES
-                or path.startswith("docs/")
-                or _within(path, configuration.workflow_docs)
+                or repo_path_is_within(path, "docs", include_directory=True)
+                or repo_path_is_within(path, configuration.workflow_docs, include_directory=True)
                 or project_owners
                 or product_owners
             ):

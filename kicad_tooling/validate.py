@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import json
 import os
 import subprocess
@@ -13,20 +12,26 @@ import xml.etree.ElementTree as ET
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Literal, cast
+from typing import Literal, TypeAlias, cast
+
+from pydantic import JsonValue
+
+import kicad_tooling.hwrepo.models as hwrepo_models
 
 from .check_toolchain import cli_executable, toolchain
 from .hwrepo.connector_pins import similar_connector_pin_groups
 from .hwrepo.contracts import repo_path, write_model
 from .hwrepo.discovery import load_config
+from .hwrepo.evidence import digest as file_digest
+from .hwrepo.evidence import source_state
 from .hwrepo.generation import csv_cell
 from .hwrepo.kicad_compatibility import require_cli_profile
+from .hwrepo.layout import default_project_root
 from .hwrepo.models import (
     CheckEvidence,
     CommandEvidence,
     ComponentContract,
     NetlistContract,
-    PcbOnlyValidationContract,
     PcbValidationContract,
     ProjectConfig,
     ProjectKind,
@@ -35,6 +40,14 @@ from .hwrepo.models import (
 )
 from .hwrepo.pcb_dru_compilation import run_pcb_dru_compilation_probe
 from .hwrepo.return_nets import return_net_groups
+
+ValidationContract: TypeAlias = (
+    hwrepo_models.PcbValidationContract
+    | hwrepo_models.PcbOnlyValidationContract
+    | hwrepo_models.SchematicValidationContract
+    | hwrepo_models.SystemWiringValidationContract
+    | hwrepo_models.HarnessInterfaceValidationContract
+)
 
 
 def local_state(path: Path) -> bool:
@@ -62,20 +75,20 @@ def hashes(root: Path, source_roots: Sequence[str] | None = None) -> dict[str, s
                 repo_path(root, key)  # Also reject linked/junction ancestors.
                 if key in result:
                     raise ValueError(f"Overlapping source roots include: {key}")
-                result[key] = hashlib.sha256(path.read_bytes()).hexdigest()
+                result[key] = file_digest(path)
     return result
 
 
-def _mapping(value: object, label: str) -> Mapping[str, object]:
+def _mapping(value: JsonValue, label: str) -> Mapping[str, JsonValue]:
     if not isinstance(value, dict):
         raise TypeError(f"{label}: expected object")
-    return cast(Mapping[str, object], value)
+    return cast(Mapping[str, JsonValue], value)
 
 
-def _sequence(value: object, label: str) -> tuple[object, ...]:
+def _sequence(value: JsonValue, label: str) -> tuple[JsonValue, ...]:
     if not isinstance(value, list):
         raise TypeError(f"{label}: expected list")
-    return tuple(cast(list[object], value))
+    return tuple(cast(list[JsonValue], value))
 
 
 def check_report(
@@ -84,7 +97,8 @@ def check_report(
     config: ProjectConfig | None = None,
 ) -> int:
     """Adapter: parse a third-party KiCad report to one typed count."""
-    data = _mapping(json.loads(path.read_text(encoding="utf-8")), "KiCad report")
+    decoded: JsonValue = json.loads(path.read_text(encoding="utf-8"))
+    data = _mapping(decoded, "KiCad report")
     version = data.get("kicad_version")
     if not isinstance(version, str) or not version:
         raise ValueError("Missing KiCad report identity")
@@ -372,8 +386,6 @@ def validate(
     """Run a typed, fail-closed KiCad check for one declared configuration."""
     output.mkdir(parents=True, exist_ok=False)
     root = root.resolve()
-    from .hwrepo.evidence import source_state
-
     source_before = source_state(root)
     checks: dict[str, CheckEvidence] = {}
     before: dict[str, str] = {}
@@ -389,6 +401,7 @@ def validate(
         if root not in selected_config.resolve().parents:
             raise ValueError("Configuration path must remain inside the repository root")
         config = load_config(root, selected_config)
+        validation_contract: ValidationContract = config.validation
         from .hwrepo.product import check as check_product
         from .hwrepo.product import (
             check_harness_interface_contract,
@@ -462,8 +475,8 @@ def validate(
         base = repo_path(root, config.project)
         commands: dict[str, tuple[str, ...]] = {}
         if config.kind is ProjectKind.PCB:
-            validation = config.validation
-            if not isinstance(validation, PcbValidationContract):
+            validation = validation_contract
+            if not isinstance(validation, hwrepo_models.PcbValidationContract):
                 raise ValueError("PCB project requires a PCB validation contract")
             commands.update(
                 {
@@ -522,8 +535,8 @@ def validate(
                 }
             )
         elif config.kind is ProjectKind.PCB_ONLY:
-            validation = config.validation
-            if not isinstance(validation, PcbOnlyValidationContract):
+            validation = validation_contract
+            if not isinstance(validation, hwrepo_models.PcbOnlyValidationContract):
                 raise ValueError("PCB-only project requires a PCB-only validation contract")
             commands.update(
                 {
@@ -586,8 +599,8 @@ def validate(
             or config.electrical is not None
             or config.component_identity.required
             or (
-                isinstance(config.validation, SchematicValidationContract)
-                and config.validation.components
+                isinstance(validation_contract, hwrepo_models.SchematicValidationContract)
+                and validation_contract.components
             )
         ):
             commands["netlist"] = (
@@ -630,9 +643,13 @@ def validate(
                     if command.returncode != 0:
                         raise ValueError(f"KiCad command failed with {command.returncode}")
                 elif name == "netlist":
-                    validation = config.validation
+                    validation = validation_contract
                     if not isinstance(
-                        validation, (PcbValidationContract, SchematicValidationContract)
+                        validation,
+                        (
+                            hwrepo_models.PcbValidationContract,
+                            hwrepo_models.SchematicValidationContract,
+                        ),
                     ):
                         raise ValueError("Netlist check requires an electrical component contract")
                     check_netlist(output / "netlist.xml", validation)
@@ -739,16 +756,18 @@ def validate(
         required.add("drc_rule_compilation")
     if config is not None and config.electrical is not None:
         required.add("grounding")
-    if config is not None and (
-        config.kind in {ProjectKind.PCB, ProjectKind.SCHEMATIC}
-        or config.electrical is not None
-        or config.component_identity.required
-        or (
-            isinstance(config.validation, SchematicValidationContract)
-            and config.validation.components
-        )
-    ):
-        required.add("netlist")
+    if config is not None:
+        final_validation: ValidationContract = config.validation
+        if (
+            config.kind in {ProjectKind.PCB, ProjectKind.SCHEMATIC}
+            or config.electrical is not None
+            or config.component_identity.required
+            or (
+                isinstance(final_validation, hwrepo_models.SchematicValidationContract)
+                and final_validation.components
+            )
+        ):
+            required.add("netlist")
     status = (
         "PASS"
         if required.issubset(checks)
@@ -771,7 +790,7 @@ def validate(
         checks=checks,
         status=status,
         artifacts_sha256={
-            path.relative_to(output).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+            path.relative_to(output).as_posix(): file_digest(path)
             for path in sorted(output.rglob("*"))
             if path.is_file()
         },
@@ -782,7 +801,7 @@ def validate(
 
 def main() -> int:
     parser: argparse.ArgumentParser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument(
         "--cli",

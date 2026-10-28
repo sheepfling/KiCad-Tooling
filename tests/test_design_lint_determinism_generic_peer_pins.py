@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from tests.design_lint_fixtures.hashseed_reports import hashseed_probe_reports
+from tests.json_types import JsonObject
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -13,12 +14,12 @@ pytestmark = [
 ]
 
 
-def _rule_ids(report: dict[str, object]) -> set[str]:
+def _rule_ids(report: JsonObject) -> set[str]:
     return {finding["rule_id"] for finding in report["findings"]}
 
 
 def _assert_fault_control_reports(
-    reports: dict[str, object], fault_name: str, control_name: str, rule_id: str
+    reports: JsonObject, fault_name: str, control_name: str, rule_id: str
 ) -> None:
     fault = reports[fault_name]
     control = reports[control_name]

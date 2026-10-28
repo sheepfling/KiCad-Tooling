@@ -7,21 +7,20 @@ Pydantic model from hwrepo.models; dictionaries do not cross this boundary.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable, Mapping
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath, PureWindowsPath
-from typing import TYPE_CHECKING, TypeVar, cast
+from typing import TypeVar, cast
 
-from pydantic import BaseModel, TypeAdapter
+from pydantic import BaseModel, JsonValue, TypeAdapter
 
-from .models import KiCadForeignImportSummary
-
-if TYPE_CHECKING:
-    from .models import CadProviderIdentity
+from .models import CadProviderIdentity, KiCadForeignImportSummary, ProjectManifest
 
 Model = TypeVar("Model", bound=BaseModel)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class KiCadErcItem:
     """Small typed projection of one native ERC detail item."""
 
@@ -30,7 +29,7 @@ class KiCadErcItem:
     y: int | float | None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class KiCadErcViolation:
     """Native ERC rule result used by deterministic fixture comparisons."""
 
@@ -40,7 +39,7 @@ class KiCadErcViolation:
     items: tuple[KiCadErcItem, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class KiCadErcReport:
     """Versioned, narrow projection of a KiCad ERC JSON report."""
 
@@ -48,8 +47,15 @@ class KiCadErcReport:
     violations: tuple[KiCadErcViolation, ...]
 
 
-def _unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
-    result: dict[str, object] = {}
+@dataclass(frozen=True, slots=True)
+class KiCadDrcParitySummary:
+    """Narrow projection of whether a native DRC report has parity findings."""
+
+    has_findings: bool
+
+
+def _unique_object(pairs: Iterable[tuple[str, JsonValue]]) -> dict[str, JsonValue]:
+    result: dict[str, JsonValue] = {}
     for key, value in pairs:
         if key in result:
             raise ValueError(f"Duplicate JSON key: {key}")
@@ -71,7 +77,7 @@ def parse_model_text(document: str, model: type[Model]) -> Model:
 
 def validate_json_object(document: str) -> None:
     """Check JSON object shape without returning untyped native-settings data."""
-    decoded: object = json.loads(
+    decoded: JsonValue = json.loads(
         document,
         object_pairs_hook=_unique_object,
         parse_constant=_invalid_number,
@@ -94,7 +100,7 @@ def read_model(path: Path, model: type[Model]) -> Model:
         raise ValueError(f"{path}: {exc}") from exc
 
 
-def _read_external_json(path: Path) -> object:
+def _read_external_json(path: Path) -> JsonValue:
     """Decode unowned KiCad JSON only at this I/O boundary."""
     try:
         return json.loads(
@@ -108,10 +114,10 @@ def _read_external_json(path: Path) -> object:
 
 def read_kicad_erc_report(path: Path) -> KiCadErcReport:
     """Decode native ERC JSON into the exact fields used by fixture checks."""
-    document = _read_external_json(path)
+    document: JsonValue = _read_external_json(path)
     if not isinstance(document, dict):
         raise ValueError(f"{path}: expected an ERC report object")  # noqa: TRY004 - input boundary
-    report = cast(dict[str, object], document)
+    report: dict[str, JsonValue] = cast(dict[str, JsonValue], document)
     version = report.get("kicad_version")
     if not isinstance(version, str) or not version.strip():
         raise ValueError(f"{path}: ERC report has no KiCad version")
@@ -120,18 +126,23 @@ def read_kicad_erc_report(path: Path) -> KiCadErcReport:
         raise ValueError(f"{path}: ERC report sheets must be a list")  # noqa: TRY004 - input boundary
 
     violations: list[KiCadErcViolation] = []
-    for sheet_index, raw_sheet in enumerate(cast(list[object], sheets)):
+    raw_sheets: list[JsonValue] = cast(list[JsonValue], sheets)
+    for sheet_index, raw_value in enumerate(raw_sheets):
+        raw_sheet: JsonValue = raw_value
         if not isinstance(raw_sheet, dict):
             raise ValueError(f"{path}: ERC sheet {sheet_index} must be an object")  # noqa: TRY004 - input boundary
-        raw_violations = cast(dict[str, object], raw_sheet).get("violations", [])
+        sheet: dict[str, JsonValue] = cast(dict[str, JsonValue], raw_sheet)
+        raw_violations = sheet.get("violations", [])
         if not isinstance(raw_violations, list):
             raise ValueError(f"{path}: ERC sheet {sheet_index} violations must be a list")  # noqa: TRY004 - input boundary
-        for violation_index, raw_violation in enumerate(cast(list[object], raw_violations)):
+        violation_values: list[JsonValue] = cast(list[JsonValue], raw_violations)
+        for violation_index, violation_value in enumerate(violation_values):
+            raw_violation: JsonValue = violation_value
             if not isinstance(raw_violation, dict):
                 raise ValueError(  # noqa: TRY004 - input boundary
                     f"{path}: ERC sheet {sheet_index} violation {violation_index} must be an object"
                 )
-            values = cast(dict[str, object], raw_violation)
+            values: dict[str, JsonValue] = cast(dict[str, JsonValue], raw_violation)
             violation_type = values.get("type")
             severity = values.get("severity")
             if not isinstance(violation_type, str) or not violation_type.strip():
@@ -153,23 +164,25 @@ def read_kicad_erc_report(path: Path) -> KiCadErcReport:
                     f"{path}: ERC sheet {sheet_index} violation {violation_index} items must be a list"
                 )
             items: list[KiCadErcItem] = []
-            for item_index, raw_item in enumerate(cast(list[object], raw_items)):
+            raw_item_values: list[JsonValue] = cast(list[JsonValue], raw_items)
+            for item_index, item_value in enumerate(raw_item_values):
+                raw_item: JsonValue = item_value
                 if not isinstance(raw_item, dict):
                     raise ValueError(  # noqa: TRY004 - input boundary
                         f"{path}: ERC sheet {sheet_index} violation {violation_index} item {item_index} must be an object"
                     )
-                item = cast(dict[str, object], raw_item)
+                item: dict[str, JsonValue] = cast(dict[str, JsonValue], raw_item)
                 item_description = item.get("description")
                 if item_description is not None and not isinstance(item_description, str):
                     raise ValueError(
                         f"{path}: ERC sheet {sheet_index} violation {violation_index} item {item_index} has an invalid description"
                     )
-                raw_position = item.get("pos", {})
+                raw_position: JsonValue = item.get("pos", {})
                 if not isinstance(raw_position, dict):
                     raise ValueError(  # noqa: TRY004 - input boundary
                         f"{path}: ERC sheet {sheet_index} violation {violation_index} item {item_index} position must be an object"
                     )
-                position = cast(dict[str, object], raw_position)
+                position: dict[str, JsonValue] = cast(dict[str, JsonValue], raw_position)
                 coordinates: list[int | float | None] = []
                 for axis in ("x", "y"):
                     coordinate = position.get(axis)
@@ -198,23 +211,34 @@ def read_kicad_erc_report(path: Path) -> KiCadErcReport:
     return KiCadErcReport(kicad_version=version, violations=tuple(violations))
 
 
-def kicad_variant_names(path: Path) -> tuple[str, ...]:
-    """Extract only authored variant names from a KiCad project file."""
+def read_kicad_drc_parity(path: Path) -> KiCadDrcParitySummary:
+    """Read the parity result from native DRC JSON at the shared input boundary."""
     document = _read_external_json(path)
     if not isinstance(document, dict):
+        return KiCadDrcParitySummary(has_findings=False)
+    return KiCadDrcParitySummary(has_findings=bool(document.get("schematic_parity")))
+
+
+def kicad_variant_names(path: Path) -> tuple[str, ...]:
+    """Extract only authored variant names from a KiCad project file."""
+    document: JsonValue = _read_external_json(path)
+    if not isinstance(document, dict):
         raise ValueError(f"{path}: project file is not a JSON object")  # noqa: TRY004 - input boundary
-    schematic = cast(dict[str, object], document).get("schematic")
+    project: dict[str, JsonValue] = cast(dict[str, JsonValue], document)
+    schematic = project.get("schematic")
     if not isinstance(schematic, dict):
         raise ValueError(f"{path}: schematic settings are missing")  # noqa: TRY004 - input boundary
-    variants = cast(dict[str, object], schematic).get("variants")
+    schematic_values: dict[str, JsonValue] = cast(dict[str, JsonValue], schematic)
+    variants = schematic_values.get("variants")
     if not isinstance(variants, list):
         raise ValueError(f"{path}: schematic.variants is not a list")  # noqa: TRY004 - input boundary
     names: list[str] = []
-    for item in cast(list[object], variants):
-        value: object = (
+    variant_values: list[JsonValue] = cast(list[JsonValue], variants)
+    for item in variant_values:
+        value: JsonValue = (
             item
             if isinstance(item, str)
-            else (cast(dict[str, object], item).get("name") if isinstance(item, dict) else None)
+            else (cast(dict[str, JsonValue], item).get("name") if isinstance(item, dict) else None)
         )
         if not isinstance(value, str) or not value.strip():
             raise ValueError(f"{path}: schematic.variants contains a nameless entry")
@@ -231,10 +255,10 @@ def require_kicad_json_object(path: Path) -> None:
 
 def read_kicad_import_summary(path: Path) -> KiCadForeignImportSummary:
     """Keep KiCad's full report on disk; pass only actionable fields to services."""
-    document = _read_external_json(path)
+    document: JsonValue = _read_external_json(path)
     if not isinstance(document, dict):
         raise ValueError(f"{path}: expected an import report object")  # noqa: TRY004 - input boundary
-    values = cast(dict[str, object], document)
+    values: dict[str, JsonValue] = cast(dict[str, JsonValue], document)
     source_format = values.get("source_format")
     layer_mapping = values.get("layer_mapping")
     errors = values.get("errors")
@@ -248,16 +272,16 @@ def read_kicad_import_summary(path: Path) -> KiCadForeignImportSummary:
     ):
         raise ValueError(f"{path}: import report lacks format, layer map, errors or warnings")
 
-    def messages(items: list[object]) -> tuple[str, ...]:
+    def messages(items: Iterable[JsonValue]) -> tuple[str, ...]:
         return tuple(
             item if isinstance(item, str) else json.dumps(item, sort_keys=True) for item in items
         )
 
     return KiCadForeignImportSummary(
         source_format=source_format,
-        mapped_layers=len(cast(dict[str, object], layer_mapping)),
-        errors=messages(cast(list[object], errors)),
-        warnings=messages(cast(list[object], warnings)),
+        mapped_layers=len(cast(dict[str, JsonValue], layer_mapping)),
+        errors=messages(cast(list[JsonValue], errors)),
+        warnings=messages(cast(list[JsonValue], warnings)),
     )
 
 
@@ -273,15 +297,17 @@ def model_json_bytes(model: BaseModel) -> bytes:
     )
 
 
-def update_project_manifest_inputs(document: str, additions: dict[str, set[str]]) -> str:
+def update_project_manifest_inputs(document: str, additions: Mapping[str, AbstractSet[str]]) -> str:
     """Add reviewed source inputs while preserving a manifest's other JSON fields."""
-    from .models import ProjectManifest
 
-    raw = json.loads(
+    decoded: JsonValue = json.loads(
         document,
         object_pairs_hook=_unique_object,
         parse_constant=_invalid_number,
     )
+    if not isinstance(decoded, dict):
+        raise ValueError("Project manifest must be a JSON object")  # noqa: TRY004 - input boundary
+    raw = cast(dict[str, JsonValue], decoded)
     manifest = ProjectManifest.model_validate_json(document, strict=True)
     for field in ("required_inputs", "shared_inputs"):
         added = additions[field]
@@ -290,6 +316,36 @@ def update_project_manifest_inputs(document: str, additions: dict[str, set[str]]
     updated = json.dumps(raw, indent=2, ensure_ascii=False) + "\n"
     ProjectManifest.model_validate_json(updated, strict=True)
     return updated
+
+
+def lexical_absolute_path(path: Path) -> Path:
+    """Normalize a path like ``abspath`` without resolving filesystem links."""
+    absolute = path.absolute()
+    current = Path(absolute.anchor)
+    for part in absolute.parts[1:]:
+        if part == "..":
+            current = current.parent
+        elif part != ".":
+            current /= part
+    return current
+
+
+def relative_path_from(path: Path, base: Path) -> Path:
+    """Return a lexical relative path, including ``..`` when needed."""
+    target = lexical_absolute_path(path)
+    origin = lexical_absolute_path(base)
+    if target.anchor.casefold() != origin.anchor.casefold():
+        raise ValueError(f"Paths do not share an anchor: {path} and {base}")
+    common = origin
+    upward = 0
+    while not target.is_relative_to(common):
+        parent = common.parent
+        if parent == common:
+            raise ValueError(f"Paths do not share a root: {path} and {base}")
+        common = parent
+        upward += 1
+    downward = target.relative_to(common).parts
+    return Path(*(("..",) * upward + downward))
 
 
 def repo_path(root: Path, value: str) -> Path:
@@ -334,14 +390,32 @@ def repo_path(root: Path, value: str) -> Path:
     return current
 
 
+def repo_path_is_within(value: str, directory: str, *, include_directory: bool = False) -> bool:
+    """Compare portable repository paths by POSIX path components."""
+    for candidate in (value, directory):
+        if (
+            not candidate
+            or "\\" in candidate
+            or ":" in candidate
+            or PurePosixPath(candidate).is_absolute()
+            or PureWindowsPath(candidate).drive
+            or any(part in {"", ".", ".."} for part in candidate.split("/"))
+        ):
+            return False
+    path_parts = PurePosixPath(value)
+    root_parts = PurePosixPath(directory)
+    if include_directory and path_parts == root_parts:
+        return True
+    return path_parts != root_parts and path_parts.is_relative_to(root_parts)
+
+
 def update_project_manifest_parts(
     document: str,
     part_ids: tuple[str, ...],
-    additions: dict[str, set[str]],
+    additions: Mapping[str, AbstractSet[str]],
     remove_part_ids: tuple[str, ...] = (),
 ) -> str:
     """Update reviewed identities and model inputs, retaining other authored JSON fields."""
-    from .models import ProjectManifest
 
     raw = json.loads(document, object_pairs_hook=_unique_object, parse_constant=_invalid_number)
     manifest = ProjectManifest.model_validate_json(document, strict=True)
@@ -358,7 +432,6 @@ def update_project_manifest_parts(
 
 def parse_easyeda_identity(document: str) -> CadProviderIdentity:
     """Project vendor JSON into the exact fields used by the offline CAD adapter."""
-    from .models import CadProviderIdentity
 
     raw = json.loads(document, object_pairs_hook=_unique_object, parse_constant=_invalid_number)
     try:
@@ -375,11 +448,16 @@ def parse_easyeda_identity(document: str) -> CadProviderIdentity:
         ]
         if len(models) != 1:
             raise ValueError("The provider footprint must have exactly one paired 3D model")
-        node = json.loads(
+        decoded_node: JsonValue = json.loads(
             models[0], object_pairs_hook=_unique_object, parse_constant=_invalid_number
         )
-        if not isinstance(node["attrs"], dict):
+        if not isinstance(decoded_node, dict):
+            raise TypeError("The provider model must be an object")
+        node: dict[str, JsonValue] = cast(dict[str, JsonValue], decoded_node)
+        attributes = node.get("attrs")
+        if not isinstance(attributes, dict):
             raise TypeError("The provider model attributes have an unsupported format")
+        attribute_values: dict[str, JsonValue] = cast(dict[str, JsonValue], attributes)
         return CadProviderIdentity.model_validate(
             {
                 "supplier_id": result["lcsc"]["number"],
@@ -388,8 +466,8 @@ def parse_easyeda_identity(document: str) -> CadProviderIdentity:
                 "mpn": parameters["Manufacturer Part"],
                 "package": parameters["package"],
                 "symbol_name": parameters["name"],
-                "model_uuid": node["attrs"]["uuid"],
-                "model_title": node["attrs"].get("title", ""),
+                "model_uuid": attribute_values["uuid"],
+                "model_title": attribute_values.get("title", ""),
             },
             strict=True,
         )

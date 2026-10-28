@@ -9,7 +9,7 @@ from .models import NetlistContract
 from .power_sequence_models import PowerSequenceMap, PowerSequenceStageRequirement
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PowerSequenceMismatch:
     stage_id: str
     stage_basis: str
@@ -20,7 +20,7 @@ class PowerSequenceMismatch:
     issues: tuple[str, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PowerSequenceObservedCycle:
     """A cycle observed between exactly mapped stage outputs and enable pins."""
 

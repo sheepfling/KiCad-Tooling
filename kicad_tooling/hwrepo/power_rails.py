@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from decimal import Decimal
+from types import MappingProxyType
 
 from .models import NetlistContract
 from .power_rail_models import NumberedPowerRailGroup
@@ -13,47 +15,51 @@ _CHANNEL_NUMBERED_RAIL = re.compile(
     r"^(?P<namespace>P|CH|RAIL)[\s_./-]*(?P<index>\d+)[\s_./-]+(?P<stem>.+)$",
     re.IGNORECASE,
 )
-_RAIL_STEMS = {
-    "pwr": "PWR",
-    "power": "PWR",
-    "supply": "SUPPLY",
-    "vsupply": "SUPPLY",
-    "vin": "VIN",
-    "vcc": "VCC",
-    "vdd": "VDD",
-    "vdda": "VDDA",
-    "vddd": "VDDD",
-    "vddio": "VDDIO",
-    "vccio": "VCCIO",
-    "vbus": "VBUS",
-    "vbat": "VBAT",
-    "vraw": "VRAW",
-    "vreg": "VREG",
-    "5v": "5V",
-    "5.0v": "5V",
-    "3v3": "3V3",
-    "3.3v": "3V3",
-    "1v8": "1V8",
-    "1.8v": "1V8",
-    "2v5": "2V5",
-    "2.5v": "2V5",
-    "9v": "9V",
-    "12v": "12V",
-    "24v": "24V",
-    "48v": "48V",
-}
+_RAIL_STEMS: Mapping[str, str] = MappingProxyType(
+    {
+        "pwr": "PWR",
+        "power": "PWR",
+        "supply": "SUPPLY",
+        "vsupply": "SUPPLY",
+        "vin": "VIN",
+        "vcc": "VCC",
+        "vdd": "VDD",
+        "vdda": "VDDA",
+        "vddd": "VDDD",
+        "vddio": "VDDIO",
+        "vccio": "VCCIO",
+        "vbus": "VBUS",
+        "vbat": "VBAT",
+        "vraw": "VRAW",
+        "vreg": "VREG",
+        "5v": "5V",
+        "5.0v": "5V",
+        "3v3": "3V3",
+        "3.3v": "3V3",
+        "1v8": "1V8",
+        "1.8v": "1V8",
+        "2v5": "2V5",
+        "2.5v": "2V5",
+        "9v": "9V",
+        "12v": "12V",
+        "24v": "24V",
+        "48v": "48V",
+    }
+)
 
 _EXPLICIT_VOLTAGE_RAIL_KEYS = frozenset({"1V8", "2V5", "3V3", "5V", "9V", "12V", "24V", "48V"})
-_EXPLICIT_VOLTAGE_RAIL_VALUES = {
-    "1V8": Decimal("1.8"),
-    "2V5": Decimal("2.5"),
-    "3V3": Decimal("3.3"),
-    "5V": Decimal(5),
-    "9V": Decimal(9),
-    "12V": Decimal(12),
-    "24V": Decimal(24),
-    "48V": Decimal(48),
-}
+_EXPLICIT_VOLTAGE_RAIL_VALUES: Mapping[str, Decimal] = MappingProxyType(
+    {
+        "1V8": Decimal("1.8"),
+        "2V5": Decimal("2.5"),
+        "3V3": Decimal("3.3"),
+        "5V": Decimal(5),
+        "9V": Decimal(9),
+        "12V": Decimal(12),
+        "24V": Decimal(24),
+        "48V": Decimal(48),
+    }
+)
 
 
 def _numbered_positive_rail(name: str) -> tuple[str, int] | None:

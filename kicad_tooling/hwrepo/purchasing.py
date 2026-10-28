@@ -7,6 +7,8 @@ import io
 import re
 import xml.etree.ElementTree as ET
 from collections import Counter, defaultdict
+from collections.abc import Iterable, Mapping
+from collections.abc import Set as AbstractSet
 from pathlib import Path
 from urllib.parse import quote
 
@@ -36,7 +38,7 @@ def _single_text(component: ET.Element, tag: str) -> str:
     return (elements[0].text or "") if elements else ""
 
 
-def _named_entries(elements: list[ET.Element], reference: str) -> dict[str, str]:
+def _named_entries(elements: Iterable[ET.Element], reference: str) -> dict[str, str]:
     entries: dict[str, str] = {}
     for element in elements:
         name = element.get("name")
@@ -50,7 +52,7 @@ def _named_entries(elements: list[ET.Element], reference: str) -> dict[str, str]
     return entries
 
 
-def _excluded(properties: dict[str, str], name: str, reference: str) -> bool:
+def _excluded(properties: Mapping[str, str], name: str, reference: str) -> bool:
     # KiCad emits these direct properties only when true; variants are separate.
     if name not in properties:
         return False
@@ -98,7 +100,9 @@ def _finding(
     return PurchasingFinding(code=code, references=references, message=message, action=action)
 
 
-def _catalog_findings(parts: PartsCatalog, selected: set[str]) -> tuple[PurchasingFinding, ...]:
+def _catalog_findings(
+    parts: PartsCatalog, selected: AbstractSet[str]
+) -> tuple[PurchasingFinding, ...]:
     findings: list[PurchasingFinding] = []
     ids = Counter(part.id for part in parts.parts)
     identities: dict[tuple[str, str], list[str]] = defaultdict(list)
@@ -129,7 +133,7 @@ def _catalog_findings(parts: PartsCatalog, selected: set[str]) -> tuple[Purchasi
 
 
 def _preference_findings(
-    preferences: PurchasingPreferences, parts: dict[str, PartRecord], allowed: set[str]
+    preferences: PurchasingPreferences, parts: Mapping[str, PartRecord], allowed: AbstractSet[str]
 ) -> tuple[PurchasingFinding, ...]:
     findings: list[PurchasingFinding] = []
     skus: dict[str, list[str]] = defaultdict(list)
@@ -167,7 +171,7 @@ def _preference_findings(
 
 
 def _component_findings(
-    component: PurchasingComponent, parts: dict[str, PartRecord], allowed: set[str]
+    component: PurchasingComponent, parts: Mapping[str, PartRecord], allowed: AbstractSet[str]
 ) -> tuple[PurchasingFinding, ...]:
     findings: list[PurchasingFinding] = []
     references = (component.reference,)

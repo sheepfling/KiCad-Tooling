@@ -9,7 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.ci_hosted_rs485_ab_same_net import RS485_AB_SAME_NET_TOOLCHAINS
+from kicad_tooling.ci_hosted_rs485_ab_same_net import (
+    RS485_AB_SAME_NET_TOOLCHAINS,
+    rs485_ab_same_net_fixture_lane,
+)
+from kicad_tooling.ci_hosted_support import HostedLog
 from tests.native_fixture_support import assert_native_fixture_mounts
 
 RULE_ID = "bus.rs485_ab_same_net"
@@ -35,8 +39,6 @@ pytestmark = [
 def test_native_rs485_ab_same_net_fault_and_control_repeat(
     tmp_path: Path, version: str, image: str
 ) -> None:
-    from kicad_tooling.ci_hosted_rs485_ab_same_net import rs485_ab_same_net_fixture_lane
-    from kicad_tooling.ci_hosted_support import HostedLog
 
     log = HostedLog(tmp_path, f"native-rs485-ab-same-net-{version}")
     rs485_ab_same_net_fixture_lane(tmp_path, version=version, image=image, log=log)

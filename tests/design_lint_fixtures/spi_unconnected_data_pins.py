@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 
@@ -9,7 +11,7 @@ def spi_unconnected_data_netlist(
     *,
     open_pins: tuple[str, ...] = ("U1.1",),
     dnp_components: tuple[str, ...] = (),
-    functions: dict[str, str] | None = None,
+    functions: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     """Build a synthetic two-endpoint SPI data channel with configurable opens."""
     pin_functions = functions or {

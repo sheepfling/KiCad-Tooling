@@ -3,13 +3,40 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_bus_signal_pair_models import (
+    BusSignalPairFixtureExpectation,
+    ExpectedNetAssignment,
+    ExpectedPinFunction,
+    SameNetCaseExpectation,
+)
 from .ci_hosted_bus_signal_pair_same_net import bus_signal_pair_same_net_fixture_lane
 from .ci_hosted_i2c_native import I2C_NATIVE_TOOLCHAINS
+from .ci_hosted_support import HostedLog
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+I2C_SIGNAL_SAME_NET_EXPECTATION = BusSignalPairFixtureExpectation(
+    protocol="i2c",
+    pair_name="sda-scl",
+    rule_id="bus.i2c_sda_scl_same_net",
+    fixture_directory="i2c-sda-scl-same-net",
+    pin_functions=(
+        ExpectedPinFunction(reference="U1.1", function="SDA"),
+        ExpectedPinFunction(reference="U1.2", function="SCL"),
+    ),
+    fault=SameNetCaseExpectation(
+        source_sha256="e45583f123b62fe0769d19e5ffd08200510b9abb44afb97d6a8fc269ed3e84b6",
+        net_assignments=(ExpectedNetAssignment(name="I2C_SHARED", pins=("U1.1", "U1.2")),),
+        subjects=("U1: I2C SDA/SCL pins share I2C_SHARED",),
+    ),
+    control=SameNetCaseExpectation(
+        source_sha256="1fd6caf4f272e3e492b012c01dc645f1b8077ecf127e2dd6569c45b147aaf523",
+        net_assignments=(
+            ExpectedNetAssignment(name="I2C_SDA", pins=("U1.1",)),
+            ExpectedNetAssignment(name="I2C_SCL", pins=("U1.2",)),
+        ),
+        subjects=(),
+    ),
+)
 
 
 def i2c_sda_scl_same_net_fixture_lane(
@@ -23,20 +50,5 @@ def i2c_sda_scl_same_net_fixture_lane(
         version=version,
         image=image,
         log=log,
-        protocol="i2c",
-        rule_id="bus.i2c_sda_scl_same_net",
-        fixture_directory="i2c-sda-scl-same-net",
-        source_hashes={
-            "fault": "e45583f123b62fe0769d19e5ffd08200510b9abb44afb97d6a8fc269ed3e84b6",
-            "control": "1fd6caf4f272e3e492b012c01dc645f1b8077ecf127e2dd6569c45b147aaf523",
-        },
-        expected_pin_functions={"U1.1": "SDA", "U1.2": "SCL"},
-        expected_nets={
-            "fault": {"I2C_SHARED": ("U1.1", "U1.2")},
-            "control": {"I2C_SDA": ("U1.1",), "I2C_SCL": ("U1.2",)},
-        },
-        expected_subjects={
-            "fault": ("U1: I2C SDA/SCL pins share I2C_SHARED",),
-            "control": (),
-        },
+        fixture=I2C_SIGNAL_SAME_NET_EXPECTATION,
     )

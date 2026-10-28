@@ -6,9 +6,10 @@ from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 from tests.design_lint_fixtures import coach
 from tests.design_lint_fixtures.can_line_named_rail import can_line_named_rail_netlist
+from tests.json_types import JsonObject
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     fault = evaluate(
         "synthetic-can-line-named-rail-fault",
         coach(can_line_named_rail_netlist(high_net="GND", low_net="+3V3")),

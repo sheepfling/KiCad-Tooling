@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Literal
 
 from .casefold_mapping_lookup import lookup_unique_casefold
@@ -13,16 +15,18 @@ _EXPLICIT_RS485_IDENTITY = re.compile(
     re.IGNORECASE,
 )
 
-_DATA_PIN_ROLES: dict[str, Literal["tx", "rx"]] = {
-    "d": "tx",
-    "di": "tx",
-    "driverdatain": "tx",
-    "driverinput": "tx",
-    "r": "rx",
-    "ro": "rx",
-    "receiverdataout": "rx",
-    "receiveroutput": "rx",
-}
+_DATA_PIN_ROLES: Mapping[str, Literal["tx", "rx"]] = MappingProxyType(
+    {
+        "d": "tx",
+        "di": "tx",
+        "driverdatain": "tx",
+        "driverinput": "tx",
+        "r": "rx",
+        "ro": "rx",
+        "receiverdataout": "rx",
+        "receiveroutput": "rx",
+    }
+)
 
 
 def rs485_data_pin_role(function: str) -> Literal["tx", "rx"] | None:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from types import MappingProxyType
 
 SUPPORTED_BASIC_BJT_SYMBOLS = frozenset(
     f"transistor_bjt:q_{family}_{order}"
@@ -10,14 +11,16 @@ SUPPORTED_BASIC_BJT_SYMBOLS = frozenset(
     for order in ("bce", "bec", "cbe", "ceb", "ebc", "ecb")
 )
 
-_FUNCTION_ROLES = {
-    "b": "base",
-    "base": "base",
-    "c": "collector",
-    "collector": "collector",
-    "e": "emitter",
-    "emitter": "emitter",
-}
+_FUNCTION_ROLES = MappingProxyType(
+    {
+        "b": "base",
+        "base": "base",
+        "c": "collector",
+        "collector": "collector",
+        "e": "emitter",
+        "emitter": "emitter",
+    }
+)
 
 
 def basic_bjt_role_numbers(

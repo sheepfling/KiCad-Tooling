@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import argparse
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 
 from .hwrepo.contracts import write_model
 from .hwrepo.discovery import load_config, load_registry
 from .hwrepo.evidence import digest
+from .hwrepo.layout import default_project_root
 from .hwrepo.models import (
     CheckAllSummary,
     CheckEvidence,
@@ -18,11 +20,12 @@ from .hwrepo.models import (
 )
 from .hwrepo.product import check as check_product
 from .hwrepo.repository import check_repository
+from .hwrepo.selection import ProjectSelector, resolve_project_ids
 from .lint_registry import lint
 from .validate import validate
 
 
-def selected_projects(root: Path, requested: list[str] | None) -> tuple[ProjectRecord, ...]:
+def selected_projects(root: Path, requested: Sequence[str] | None) -> tuple[ProjectRecord, ...]:
     registry = load_registry(root)
     available = {project.id: project for project in registry.projects}
     identifiers = tuple(available) if requested is None else tuple(requested)
@@ -33,7 +36,7 @@ def selected_projects(root: Path, requested: list[str] | None) -> tuple[ProjectR
 
 
 def check_all(
-    root: Path, output: Path, cli: str, requested: list[str] | None = None
+    root: Path, output: Path, cli: str, requested: Sequence[str] | None = None
 ) -> CheckAllSummary:
     root = root.resolve()
     if output.exists():
@@ -111,7 +114,7 @@ def check_all(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument(
         "--cli",
@@ -126,8 +129,6 @@ def main() -> int:
         "--all", action="store_true", help="Check every declared project (the default)."
     )
     args = parser.parse_args()
-    from .hwrepo.selection import ProjectSelector, resolve_project_ids
-
     selector = ProjectSelector(
         project_ids=tuple(args.projects or ()),
         tags=tuple(args.tags or ()),

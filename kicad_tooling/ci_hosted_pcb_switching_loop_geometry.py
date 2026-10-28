@@ -6,28 +6,28 @@ import shutil
 from pathlib import Path
 
 from .ci_hosted_pcb_switching_loop_context import SwitchingLoopContext
+from .hwrepo.evidence import digest
+from .hwrepo.pcb_reference_plane_models import (
+    PcbReferencePlaneMap,
+    PcbReferencePlaneRequirement,
+)
+from .hwrepo.pcb_reference_planes import pcb_reference_plane_entries
+from .hwrepo.pcb_return_path_capture import (
+    capture_native_pcb_connectivity,
+    expected_probe_sha256,
+    native_pcb_command_matches,
+)
+from .hwrepo.pcb_switching_loop_models import (
+    PcbSwitchingLoopEdge,
+    PcbSwitchingLoopMap,
+    PcbSwitchingLoopPad,
+    PcbSwitchingLoopRequirement,
+)
+from .hwrepo.pcb_switching_loops import pcb_switching_loop_entries
 
 
 def verify_switching_loop_geometry_cases(ctx: SwitchingLoopContext):
     """Verify native loop topology, reference-plane, and route-chain evidence."""
-    from .hwrepo.evidence import digest
-    from .hwrepo.pcb_reference_plane_models import (
-        PcbReferencePlaneMap,
-        PcbReferencePlaneRequirement,
-    )
-    from .hwrepo.pcb_reference_planes import pcb_reference_plane_entries
-    from .hwrepo.pcb_return_path_capture import (
-        capture_native_pcb_connectivity,
-        expected_probe_sha256,
-        native_pcb_command_matches,
-    )
-    from .hwrepo.pcb_switching_loop_models import (
-        PcbSwitchingLoopEdge,
-        PcbSwitchingLoopMap,
-        PcbSwitchingLoopPad,
-        PcbSwitchingLoopRequirement,
-    )
-    from .hwrepo.pcb_switching_loops import pcb_switching_loop_entries
 
     def mapped_pad(reference: str, footprint: str, net: str) -> PcbSwitchingLoopPad:
         return PcbSwitchingLoopPad(pad=reference, footprint=footprint, net=net)

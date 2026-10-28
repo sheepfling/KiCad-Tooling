@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from types import MappingProxyType
 
 import pytest
 
@@ -17,16 +18,18 @@ pytestmark = [
     pytest.mark.architecture,
 ]
 
-MODEL_OWNERS = {
-    "grounding_models.py": (
-        grounding_models,
-        ("GroundDomain", "GroundingAnalysis"),
-    ),
-    "pin_connectivity_models.py": (
-        pin_connectivity_models,
-        ("PinRelationshipRule", "PinConnectivityAnalysis"),
-    ),
-}
+MODEL_OWNERS = MappingProxyType(
+    {
+        "grounding_models.py": (
+            grounding_models,
+            ("GroundDomain", "GroundingAnalysis"),
+        ),
+        "pin_connectivity_models.py": (
+            pin_connectivity_models,
+            ("PinRelationshipRule", "PinConnectivityAnalysis"),
+        ),
+    }
+)
 
 
 def test_electrical_contract_types_have_theme_owners_and_compatible_exports() -> None:

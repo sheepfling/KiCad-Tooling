@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 
 from kicad_tooling.hwrepo.models import (
     PcbConnectivitySnapshot,
@@ -63,13 +64,13 @@ def mapping(*items: PcbDecouplingRequirement) -> PcbDecouplingMap:
 
 def snapshot(
     *,
-    distances_nm: dict[str, int] | None = None,
+    distances_nm: Mapping[str, int] | None = None,
     wrong_supply_nets: frozenset[str] = frozenset(),
     disconnected_supply: frozenset[str] = frozenset(),
     dnp_caps: frozenset[str] = frozenset(),
-    footprints: dict[str, str] | None = None,
+    footprints: Mapping[str, str] | None = None,
     extra_ic_supply: bool = False,
-    return_vias_nm: dict[str, tuple[tuple[int, int], ...]] | None = None,
+    return_vias_nm: Mapping[str, tuple[tuple[int, int], ...]] | None = None,
     unconnected_vias_nm: tuple[tuple[int, int], ...] = (),
 ) -> PcbConnectivitySnapshot:
     distances_nm = distances_nm or {"C1": 80_000}
@@ -119,6 +120,23 @@ def snapshot(
     if extra_ic_supply:
         supply_refs.append("U1.3")
         return_refs.append("U1.4")
+    supply_group = tuple(
+        reference
+        for reference in (
+            *supply_refs,
+            *(item for item in cap_refs if item.endswith(".1")),
+        )
+        if reference not in disconnected_supply and reference not in wrong_supply_nets
+    )
+    return_group = tuple(
+        reference
+        for reference in (
+            *return_refs,
+            *(item for item in cap_refs if item.endswith(".2")),
+        )
+        if reference not in disconnected_supply
+    )
+    alternate_supply_group = tuple(sorted(wrong_supply_nets - disconnected_supply))
     pads: list[PcbPadConnectivityObservation] = []
     for reference in (*supply_refs, *return_refs, *cap_refs):
         component = reference.rsplit(".", 1)[0]
@@ -127,13 +145,14 @@ def snapshot(
         net = "VDD" if is_supply else "GND"
         if reference in wrong_supply_nets and is_supply:
             net = "ALT_VDD"
-        group = supply_refs if is_supply else return_refs
-        if component.startswith("C"):
-            group = [*group, reference]
         if reference in disconnected_supply:
             connected = (reference,)
+        elif reference in wrong_supply_nets:
+            connected = alternate_supply_group
+        elif is_supply:
+            connected = supply_group
         else:
-            connected = tuple(dict.fromkeys((reference, *group)))
+            connected = return_group
         if component.startswith("C"):
             x = distances_nm[component]
             y = 0 if pin == "1" else 20_000

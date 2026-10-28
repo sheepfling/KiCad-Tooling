@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from .pcb_connectivity_observations import (
     PcbPadConnectivityObservation,
     PcbZoneFilledIslandObservation,
@@ -65,7 +67,7 @@ def _self_intersects(points: tuple[tuple[int, int], ...]) -> bool:
 
 def loop_area_twice_nm2(
     requirement: PcbSwitchingLoopRequirement,
-    pads: dict[str, PcbPadConnectivityObservation],
+    pads: Mapping[str, PcbPadConnectivityObservation],
 ) -> tuple[int | None, list[str]]:
     issues: list[str] = []
     points: list[tuple[int, int]] = []

@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import csv
-import os
 import shlex
 import xml.etree.ElementTree as ET
 from collections import Counter
+from collections.abc import Sequence
 from contextlib import nullcontext
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Literal
 
+from ..platforms import is_windows_host
 from .contracts import read_model, repo_path
 from .diagnostic_journal import DiagnosticJournal
 from .discovery import load_config, load_registry, settings
@@ -22,7 +23,6 @@ from .models import (
     DiagnosticReport,
     PartsCatalog,
     PartStatus,
-    PcbValidationContract,
     ProjectKind,
     ProjectManifest,
     ProjectStaticPipelineReport,
@@ -40,7 +40,7 @@ BOM_GUIDE = "docs/workflow/BOM_POLICY.md"
 
 def quote_argument(value: str, windows: bool | None = None) -> str:
     """Use a copyable argument for the host shell (PowerShell or POSIX)."""
-    use_windows = os.name == "nt" if windows is None else windows
+    use_windows = is_windows_host() if windows is None else windows
     if use_windows:
         return "'" + value.replace("'", "''") + "'"
     return shlex.quote(value)
@@ -64,7 +64,7 @@ def finding(
 def report(
     project_id: str,
     scope: str,
-    findings: list[DiagnosticFinding],
+    findings: Sequence[DiagnosticFinding],
     next_command: str,
     follow_up_command: str | None = None,
     root: Path | None = None,
@@ -239,7 +239,7 @@ def repository_guidance(issue: str, kicad_major: str | None = None) -> Diagnosti
     if issue.startswith("CAD_PATH: "):
         location, _, observed = issue.removeprefix("CAD_PATH: ").partition(": ")
         if "machine-local dependency" in observed:
-            normalized = observed.casefold().replace("\\", "/")
+            normalized = PureWindowsPath(observed).as_posix().casefold()
             installed = any(
                 prefix in normalized
                 for prefix in ("/usr/share/kicad/", "/applications/kicad/", "/program files/kicad/")
@@ -454,7 +454,7 @@ def portable_findings(
                 IMPORT_GUIDE,
             )
         )
-    elif config.kind is ProjectKind.PCB and isinstance(config.validation, PcbValidationContract):
+    elif config.kind is ProjectKind.PCB and config.validation.kind is ProjectKind.PCB:
         if not config.validation.components:
             findings.append(
                 finding(
@@ -819,7 +819,7 @@ def bom_binding_findings(
         references: list[str] = []
         for row in rows:
             reference = row.get("Reference")
-            if not isinstance(reference, str) or not reference:
+            if reference is None or not reference:
                 raise ValueError("Native BOM has a missing reference")
             references.append(reference)
         if len(set(references)) != len(references):

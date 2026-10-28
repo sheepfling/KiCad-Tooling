@@ -20,19 +20,23 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
 REVIEW_LIMIT = THEME_SUITE_MAX_LINES
 LEGACY_LIMITS_PATH = TESTS / "lint_suite_line_ceilings.json"
-NATIVE_LINT_AREAS = {
-    "component_lint",
-    "connector_lint",
-    "interface_lint",
-    "power_lint",
-    "evidence_lint",
-    "return_path_lint",
-    "schematic_lint",
-    "pcb_lint",
-}
-NON_RULE_SUITES = {
-    "test_lint_suite_architecture.py",
-}
+NATIVE_LINT_AREAS = frozenset(
+    {
+        "component_lint",
+        "connector_lint",
+        "interface_lint",
+        "power_lint",
+        "evidence_lint",
+        "return_path_lint",
+        "schematic_lint",
+        "pcb_lint",
+    }
+)
+NON_RULE_SUITES = frozenset(
+    {
+        "test_lint_suite_architecture.py",
+    }
+)
 
 
 def _has_lint_marker(path: Path) -> bool:

@@ -15,6 +15,8 @@ from eda_toolkit import __version__
 from eda_toolkit.kicad import kicad_cli, sch_review
 from eda_toolkit.kicad.sch_review import ReviewContext, rule_clock_series_resistor
 
+from tests.json_types import JsonObject
+
 EXPECTED_COMMIT = "53d1af8bc550f60415b4b8e51a6d2d5924ada03f"
 EXPECTED_MODULE_SHA256 = "fd7427eb29ee099e3cb8868869be8e8b75ed7d72aeba07ad1b4fa5a8e8597d54"
 EXPECTED_LICENSE_SHA256 = "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
@@ -28,7 +30,7 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _inspect_rows() -> list[dict[str, object]]:
+def _inspect_rows() -> list[JsonObject]:
     expectations = json.loads((FIXTURE_ROOT / "expectations.json").read_text(encoding="utf-8"))
     expected_cases = expectations["cases"]
     fixtures = sorted(FIXTURE_ROOT.glob("*.kicad_sch"))

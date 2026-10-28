@@ -10,7 +10,7 @@ from .rs485_models import Rs485Analysis
 Rs485PeerReferenceMapState = Literal["not_configured", "pending", "not_applicable", "required"]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Rs485PeerReferenceContext:
     """Authored RS-485 bus map and exact source provenance for one lint run."""
 
@@ -20,7 +20,7 @@ class Rs485PeerReferenceContext:
     source_sha256: str | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Rs485ReferencePinAssignment:
     """One authored reference pin and its native net assignment."""
 
@@ -29,7 +29,7 @@ class Rs485ReferencePinAssignment:
     expected_net: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Rs485PeerReferenceEndpoint:
     """One mapped endpoint on a native line pair."""
 
@@ -45,7 +45,7 @@ class Rs485PeerReferenceEndpoint:
     reference_issue: str | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Rs485PeerReferencePair:
     """Native RS-485 pair membership and endpoint reference assignments."""
 
@@ -63,7 +63,7 @@ class Rs485PeerReferencePair:
     ]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Rs485PeerReferenceScan:
     """Map-scoped native RS-485 reference evidence."""
 

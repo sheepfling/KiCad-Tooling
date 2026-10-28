@@ -2,31 +2,27 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+import os
+import shutil
+import sys
+import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import NetlistContract
+from .validate import read_netlist
 
 
 def empty_netlist_evidence_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Verify the native empty-netlist trigger on each supported project image."""
-    import hashlib
-    import json
-    import os
-    import shutil
-    import sys
-    import tempfile
-
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import NetlistContract
-    from .validate import read_netlist
 
     root = root.resolve()
     config = selected_config(root, project)
@@ -38,7 +34,7 @@ def empty_netlist_evidence_fixture_lane(
         )
     pinned = pinned_image(config.image)
 
-    fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint"
     fixtures = {
         "empty": (
             fixture_root / "empty-native-netlist/empty.kicad_sch",

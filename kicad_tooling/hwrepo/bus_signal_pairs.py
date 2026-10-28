@@ -5,7 +5,9 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Literal, cast
 
 from .models import NetlistContract
@@ -14,67 +16,69 @@ from .signal_pair_models import (
     ComplementaryPinFunctionAliasMap,
 )
 
-_COMPLEMENTARY_FUNCTIONS: dict[str, tuple[str, str]] = {
-    "canh": ("CAN", "positive"),
-    "canhigh": ("CAN", "positive"),
-    "canl": ("CAN", "negative"),
-    "canlow": ("CAN", "negative"),
-    "d+": ("USB data", "positive"),
-    "dp": ("USB data", "positive"),
-    "dplus": ("USB data", "positive"),
-    # DP1/DM1 are single-port aliases here. The USB peer-reference review
-    # keeps DPn/DMn port groups in its own typed topology model.
-    "dp1": ("USB data", "positive"),
-    "ud+": ("USB data", "positive"),
-    "usbd+": ("USB data", "positive"),
-    "usbdp": ("USB data", "positive"),
-    "usbdplus": ("USB data", "positive"),
-    "d-": ("USB data", "negative"),
-    "dm": ("USB data", "negative"),
-    "dminus": ("USB data", "negative"),
-    "dm1": ("USB data", "negative"),
-    "ud-": ("USB data", "negative"),
-    "usbd-": ("USB data", "negative"),
-    "usbdm": ("USB data", "negative"),
-    "usbdminus": ("USB data", "negative"),
-    "tx+": ("TX", "positive"),
-    "txp": ("TX", "positive"),
-    "txplus": ("TX", "positive"),
-    "tx-": ("TX", "negative"),
-    "txn": ("TX", "negative"),
-    "txminus": ("TX", "negative"),
-    "rx+": ("RX", "positive"),
-    "rxp": ("RX", "positive"),
-    "rxplus": ("RX", "positive"),
-    "rx-": ("RX", "negative"),
-    "rxn": ("RX", "negative"),
-    "rxminus": ("RX", "negative"),
-    "td+": ("Ethernet TX", "positive"),
-    "tdp": ("Ethernet TX", "positive"),
-    "td-": ("Ethernet TX", "negative"),
-    "tdn": ("Ethernet TX", "negative"),
-    "rd+": ("Ethernet RX", "positive"),
-    "rdp": ("Ethernet RX", "positive"),
-    "rd-": ("Ethernet RX", "negative"),
-    "rdn": ("Ethernet RX", "negative"),
-    "sstx+": ("USB SuperSpeed TX", "positive"),
-    "sstx-": ("USB SuperSpeed TX", "negative"),
-    "stdasstx+": ("USB SuperSpeed TX", "positive"),
-    "stdasstx-": ("USB SuperSpeed TX", "negative"),
-    "stdbsstx+": ("USB SuperSpeed TX", "positive"),
-    "stdbsstx-": ("USB SuperSpeed TX", "negative"),
-    "ssrx+": ("USB SuperSpeed RX", "positive"),
-    "ssrx-": ("USB SuperSpeed RX", "negative"),
-    "stdassrx+": ("USB SuperSpeed RX", "positive"),
-    "stdassrx-": ("USB SuperSpeed RX", "negative"),
-    "stdbssrx+": ("USB SuperSpeed RX", "positive"),
-    "stdbssrx-": ("USB SuperSpeed RX", "negative"),
-}
+_COMPLEMENTARY_FUNCTIONS: Mapping[str, tuple[str, str]] = MappingProxyType(
+    {
+        "canh": ("CAN", "positive"),
+        "canhigh": ("CAN", "positive"),
+        "canl": ("CAN", "negative"),
+        "canlow": ("CAN", "negative"),
+        "d+": ("USB data", "positive"),
+        "dp": ("USB data", "positive"),
+        "dplus": ("USB data", "positive"),
+        # DP1/DM1 are single-port aliases here. The USB peer-reference review
+        # keeps DPn/DMn port groups in its own typed topology model.
+        "dp1": ("USB data", "positive"),
+        "ud+": ("USB data", "positive"),
+        "usbd+": ("USB data", "positive"),
+        "usbdp": ("USB data", "positive"),
+        "usbdplus": ("USB data", "positive"),
+        "d-": ("USB data", "negative"),
+        "dm": ("USB data", "negative"),
+        "dminus": ("USB data", "negative"),
+        "dm1": ("USB data", "negative"),
+        "ud-": ("USB data", "negative"),
+        "usbd-": ("USB data", "negative"),
+        "usbdm": ("USB data", "negative"),
+        "usbdminus": ("USB data", "negative"),
+        "tx+": ("TX", "positive"),
+        "txp": ("TX", "positive"),
+        "txplus": ("TX", "positive"),
+        "tx-": ("TX", "negative"),
+        "txn": ("TX", "negative"),
+        "txminus": ("TX", "negative"),
+        "rx+": ("RX", "positive"),
+        "rxp": ("RX", "positive"),
+        "rxplus": ("RX", "positive"),
+        "rx-": ("RX", "negative"),
+        "rxn": ("RX", "negative"),
+        "rxminus": ("RX", "negative"),
+        "td+": ("Ethernet TX", "positive"),
+        "tdp": ("Ethernet TX", "positive"),
+        "td-": ("Ethernet TX", "negative"),
+        "tdn": ("Ethernet TX", "negative"),
+        "rd+": ("Ethernet RX", "positive"),
+        "rdp": ("Ethernet RX", "positive"),
+        "rd-": ("Ethernet RX", "negative"),
+        "rdn": ("Ethernet RX", "negative"),
+        "sstx+": ("USB SuperSpeed TX", "positive"),
+        "sstx-": ("USB SuperSpeed TX", "negative"),
+        "stdasstx+": ("USB SuperSpeed TX", "positive"),
+        "stdasstx-": ("USB SuperSpeed TX", "negative"),
+        "stdbsstx+": ("USB SuperSpeed TX", "positive"),
+        "stdbsstx-": ("USB SuperSpeed TX", "negative"),
+        "ssrx+": ("USB SuperSpeed RX", "positive"),
+        "ssrx-": ("USB SuperSpeed RX", "negative"),
+        "stdassrx+": ("USB SuperSpeed RX", "positive"),
+        "stdassrx-": ("USB SuperSpeed RX", "negative"),
+        "stdbssrx+": ("USB SuperSpeed RX", "positive"),
+        "stdbssrx-": ("USB SuperSpeed RX", "negative"),
+    }
+)
 
 _USB_C_SUPERSPEED_LANE_FUNCTION = re.compile(r"(?:(?:stda|stdb))?ss(tx|rx)([12])([+-])")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ComplementaryLineGap:
     reference: str
     family: str
@@ -86,7 +90,7 @@ class ComplementaryLineGap:
     alias_sha256: str | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ComplementaryPinFunctionAliasResolution:
     by_symbol: dict[str, tuple[ComplementaryPinFunctionAlias, ...]]
     issues: tuple[str, ...] = ()

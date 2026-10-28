@@ -6,7 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
-from types import SimpleNamespace
+from types import MappingProxyType, SimpleNamespace
 
 import pytest
 
@@ -21,6 +21,7 @@ from kicad_tooling.ci_hosted_connector_return_named_passive_divergence import (
     verify_footprint_alias_named_passive_divergence,
 )
 from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import DesignLintPolicy, DesignLintRuleOverride
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.synthetic_design_lint_project import (
@@ -31,10 +32,12 @@ from tests.synthetic_design_lint_project import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.interface_lint]
 
 FIXTURE_CASES = (FAULT_CASE, CONTROL_CASE)
-EXPECTED_SOURCE_HASHES = {
-    FAULT_CASE: "ff33080326c28271c1a0efa214dd788288800695cba6b8fd4865ebf1b587a32b",
-    CONTROL_CASE: "0c8a06ee56f2e058cb58b3515ff7f65f95c8df457dfc4ab9d87bdb40ff501aa7",
-}
+EXPECTED_SOURCE_HASHES = MappingProxyType(
+    {
+        FAULT_CASE: "ff33080326c28271c1a0efa214dd788288800695cba6b8fd4865ebf1b587a32b",
+        CONTROL_CASE: "0c8a06ee56f2e058cb58b3515ff7f65f95c8df457dfc4ab9d87bdb40ff501aa7",
+    }
+)
 
 
 def test_named_passive_divergence_fixture_sources_match_reviewed_hashes() -> None:
@@ -164,7 +167,6 @@ def test_native_named_passive_divergence_fault_and_control_are_repeatable(
     from kicad_tooling.ci_hosted_connector_return_context import (
         prepare_connector_return_fixture_context,
     )
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     policy = DesignLintPolicy(

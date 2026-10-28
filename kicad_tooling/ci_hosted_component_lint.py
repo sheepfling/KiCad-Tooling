@@ -7,9 +7,10 @@ import json
 import os
 import sys
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import KiCadErcReport, read_kicad_erc_report, write_model
 from .hwrepo.design_lint import evaluate
@@ -18,9 +19,6 @@ from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
 from .validate import read_netlist
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
 
 
 def _normalized_erc_digest(report: KiCadErcReport) -> str:
@@ -71,8 +69,8 @@ def component_lint_fixture_lane(
     fixture_prefix: str,
     project_id_prefix: str,
     rule_id: str,
-    fixtures: dict[str, str],
-    expected_subjects: dict[str, str | tuple[str, ...] | None],
+    fixtures: Mapping[str, str],
+    expected_subjects: Mapping[str, str | tuple[str, ...] | None],
     policy: DesignLintPolicy | None = None,
 ) -> dict[str, DesignLintReport]:
     """Export and compare source-hashed component lint fixtures twice."""
@@ -83,7 +81,7 @@ def component_lint_fixture_lane(
     if not fixtures or set(fixtures) != set(expected_subjects):
         raise ValueError("Every native design-lint fixture requires an expected target result")
 
-    fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint"
     source_hashes = {case: digest(fixture_root / path) for case, path in fixtures.items()}
     scratch = Path(tempfile.mkdtemp(prefix=f"{fixture_prefix}-", dir=log.directory.resolve()))
     output = scratch / "output"

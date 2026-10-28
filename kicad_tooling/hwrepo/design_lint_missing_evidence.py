@@ -28,7 +28,7 @@ from .rc_filter_models import RcFilterCoverageReport
 from .stm32_pin_map_models import Stm32PinMapCoverageReport
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class DesignLintMissingEvidenceInput:
     """Inputs already normalized for a report that cannot inspect a netlist."""
 

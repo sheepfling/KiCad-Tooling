@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Annotated, Literal
+from typing import Annotated, Literal, TypeAlias
 
 from pydantic import Field, field_validator, model_validator
 
@@ -59,7 +59,7 @@ class SpiPinNotPresent(StrictModel):
     reason: NonEmptyText
 
 
-SpiMisoRequirement = Annotated[
+SpiMisoRequirement: TypeAlias = Annotated[
     SpiMisoConnectedRequirement | SpiPinUnconnectedRequirement | SpiPinNotPresent,
     Field(discriminator="mode"),
 ]
@@ -76,13 +76,14 @@ class SpiControllerRequirement(StrictModel):
 
     @model_validator(mode="after")
     def controller_pin_ownership_and_selects(self) -> SpiControllerRequirement:
+        miso: SpiMisoRequirement = self.miso
         signals: tuple[
             SpiPinNetRequirement | SpiMisoConnectedRequirement | SpiPinUnconnectedRequirement,
             ...,
         ] = (
             self.sck,
             self.mosi,
-            *((self.miso,) if not isinstance(self.miso, SpiPinNotPresent) else ()),
+            *((miso,) if not isinstance(miso, SpiPinNotPresent) else ()),
             *self.chip_selects,
         )
         if any(
@@ -97,8 +98,8 @@ class SpiControllerRequirement(StrictModel):
         if len(set(select_nets)) != len(select_nets):
             raise ValueError("SPI controller chip-select nets must be unique")
         data_nets = [self.sck.net, self.mosi.net]
-        if isinstance(self.miso, SpiMisoConnectedRequirement):
-            data_nets.append(self.miso.net)
+        if isinstance(miso, SpiMisoConnectedRequirement):
+            data_nets.append(miso.net)
         if len(set(data_nets)) != len(data_nets):
             raise ValueError("SPI clock and connected data nets must be distinct")
         if set(data_nets) & set(select_nets):
@@ -119,13 +120,14 @@ class SpiDeviceRequirement(StrictModel):
 
     @model_validator(mode="after")
     def device_pin_ownership_and_uniqueness(self) -> SpiDeviceRequirement:
+        miso: SpiMisoRequirement = self.miso
         signals: tuple[
             SpiPinNetRequirement | SpiMisoConnectedRequirement | SpiPinUnconnectedRequirement,
             ...,
         ] = (
             self.sck,
             self.mosi,
-            *((self.miso,) if not isinstance(self.miso, SpiPinNotPresent) else ()),
+            *((miso,) if not isinstance(miso, SpiPinNotPresent) else ()),
             self.chip_select,
         )
         if any(
@@ -263,7 +265,7 @@ class SpiBusRequirement(StrictModel):
             raise ValueError("SPI devices and bridges must be distinct components")
 
         controller_nets = {self.controller.sck.net, self.controller.mosi.net}
-        controller_miso = self.controller.miso
+        controller_miso: SpiMisoRequirement = self.controller.miso
         if isinstance(controller_miso, SpiMisoConnectedRequirement):
             controller_nets.add(controller_miso.net)
         select_nets = {item.net for item in self.controller.chip_selects}
@@ -272,14 +274,15 @@ class SpiBusRequirement(StrictModel):
 
         device_selects: dict[str, list[SpiDeviceRequirement]] = {}
         for device in self.devices:
+            device_miso: SpiMisoRequirement = device.miso
             device_selects.setdefault(device.chip_select.net, []).append(device)
             if device.chip_select.net not in select_nets:
                 raise ValueError(
                     f"SPI device {device.id} chip-select net has no declared controller pin"
                 )
             device_data_nets = {device.sck.net, device.mosi.net}
-            if isinstance(device.miso, SpiMisoConnectedRequirement):
-                device_data_nets.add(device.miso.net)
+            if isinstance(device_miso, SpiMisoConnectedRequirement):
+                device_data_nets.add(device_miso.net)
             if device.chip_select.net in device_data_nets:
                 raise ValueError(
                     f"SPI device {device.id} chip-select must be separate from data nets"
@@ -300,13 +303,13 @@ class SpiBusRequirement(StrictModel):
                 raise ValueError(
                     f"SPI device {device.id} MOSI has no declared path to the controller"
                 )
-            if isinstance(device.miso, SpiMisoConnectedRequirement):
+            if isinstance(device_miso, SpiMisoConnectedRequirement):
                 if not isinstance(controller_miso, SpiMisoConnectedRequirement):
                     raise ValueError(  # noqa: TRY004 - malformed contract relationship
                         f"SPI device {device.id} has MISO but the controller MISO is not connected"
                     )
-                if device.miso.net != controller_miso.net and not self._has_route(
-                    "miso", controller_miso.net, device.miso.net
+                if device_miso.net != controller_miso.net and not self._has_route(
+                    "miso", controller_miso.net, device_miso.net
                 ):
                     raise ValueError(
                         f"SPI device {device.id} MISO has no declared path to the controller"

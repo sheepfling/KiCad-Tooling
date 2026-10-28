@@ -5,13 +5,13 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from .ci_hosted_pcb_fixture_support import (
     HostedPcbFixtureContext,
     HostedPcbFixtureFailure,
     capture_verified_pcb_snapshot,
 )
+from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.contract_coach import ContainerNetlistRunner
 from .hwrepo.contracts import write_model
 from .hwrepo.design_lint import evaluate
@@ -26,9 +26,6 @@ from .hwrepo.pcb_component_inventory import evaluate_native_component_inventory_
 from .hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .validate import read_netlist
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
-
 
 def pcb_component_value_fixture_lane(
     context: HostedPcbFixtureContext,
@@ -36,7 +33,7 @@ def pcb_component_value_fixture_lane(
     log: HostedLog,
 ) -> None:
     """Require repeated native value-field faults and controls to remain stable."""
-    fixture_root = Path(__file__).resolve().parents[1] / (
+    fixture_root = tooling_checkout_root() / (
         "tests/fixtures/design_lint/component-inventory-footprint-identity"
     )
     schematic_source = fixture_root / "control.kicad_sch"

@@ -17,6 +17,7 @@ from tests.connector_footprint_peer_support import (
 )
 from tests.connector_footprint_peer_support import (
     NETLIST_SHA256,
+    PeerNetlistOverrides,
     lint_report,
     peer_netlist,
 )
@@ -133,7 +134,7 @@ def test_incomplete_or_unanchored_alias_evidence_is_reported_without_a_finding()
     ids=("missing-native-metadata", "open-pin", "ambiguous-pin"),
 )
 def test_incomplete_alias_assignments_are_counted_and_do_not_become_divergences(
-    kwargs: dict[str, object], field: str, expected: int, expected_status: str
+    kwargs: PeerNetlistOverrides, field: str, expected: int, expected_status: str
 ) -> None:
     report = lint_report(peer_netlist(**kwargs))
     assert not any(item.rule_id == RULE_ID for item in report.findings)

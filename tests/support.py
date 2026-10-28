@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+from collections.abc import Sequence
 from functools import lru_cache
 from pathlib import Path
 
@@ -32,7 +33,7 @@ def template_root() -> Path:
     return root
 
 
-def ignore_local(directory: str, names: list[str]) -> set[str]:
+def ignore_local(directory: str, names: Sequence[str]) -> set[str]:
     root = template_root()
     return {
         name
@@ -46,7 +47,7 @@ def ignore_local(directory: str, names: list[str]) -> set[str]:
     }
 
 
-def ignore_example_catalog_readme(directory: str, names: list[str]) -> set[str]:
+def ignore_example_catalog_readme(directory: str, names: Sequence[str]) -> set[str]:
     """Keep the live catalog guide when example catalog data is copied into place."""
     if Path(directory) == template_root() / "examples/catalog" and "README.md" in names:
         return {"README.md"}

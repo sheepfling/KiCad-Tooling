@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import (
@@ -26,6 +28,15 @@ pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.interface_lint,
 ]
+
+
+class I2cNetlistUpdates(TypedDict, total=False):
+    """Netlist fields changed by the synthetic I2C symbol-boundary cases."""
+
+    component_symbols: dict[str, str]
+    dnp_components: tuple[str, ...]
+    component_pin_numbers: dict[str, tuple[str, ...]]
+    nets: dict[str, tuple[str, ...]]
 
 
 def test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors() -> None:
@@ -89,7 +100,7 @@ def test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors() -> None:
     ),
 )
 def test_i2c_missing_pullup_does_not_accept_unverified_symbol_resistors(
-    updates: dict[str, object],
+    updates: I2cNetlistUpdates,
     symbol: str,
 ) -> None:
     source = i2c_netlist_with_device_r_symbol(symbol=symbol).model_copy(update=updates)

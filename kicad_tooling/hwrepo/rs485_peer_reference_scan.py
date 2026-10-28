@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 
 from .models import NetlistContract
 from .rs485_models import (
@@ -151,7 +153,7 @@ def _pin_nets(observed: NetlistContract) -> dict[str, set[str]]:
     return pin_nets
 
 
-def _assigned_net(pin_nets: dict[str, set[str]], pin: str) -> str | None:
+def _assigned_net(pin_nets: Mapping[str, AbstractSet[str]], pin: str) -> str | None:
     nets = pin_nets.get(pin.casefold(), set())
     if len({net.casefold() for net in nets}) != 1:
         return None
@@ -175,7 +177,7 @@ def _mapped_pair_pins(
 
 def _reference_assignments(
     endpoint: Rs485EndpointRequirement,
-    pin_nets: dict[str, set[str]],
+    pin_nets: Mapping[str, AbstractSet[str]],
 ) -> tuple[tuple[Rs485ReferencePinAssignment, ...], str | None, str | None]:
     requirements = tuple(pin for pin in endpoint.pins if pin.role == "reference")
     assignments = tuple(

@@ -5,20 +5,435 @@ from __future__ import annotations
 import hashlib
 import json
 import sys
+from collections.abc import Callable, Iterable
 from math import floor, isfinite
 from pathlib import Path
-from typing import Any, cast
+from typing import Literal, Protocol, TypedDict, cast, overload
 
 import pcbnew as _pcbnew  # type: ignore[import-not-found]
 
-native_pcbnew: Any = cast(Any, _pcbnew)
+
+class NativePoint(Protocol):
+    x: int
+    y: int
+
+
+class NativeUuid(Protocol):
+    def AsString(self) -> str: ...
+
+
+class NativeLineChain(Protocol):
+    def PointCount(self) -> int: ...
+
+    def CPoint(self, index: int) -> NativePoint: ...
+
+
+class NativeLayerSet(Protocol):
+    def Contains(self, layer: int) -> bool: ...
+
+
+class NativeLayerStack(Protocol):
+    def CuStack(self) -> Iterable[int]: ...
+
+
+class NativePolygonSet(Protocol):
+    def OutlineCount(self) -> int: ...
+
+    def COutline(self, index: int) -> NativeLineChain: ...
+
+    def HoleCount(self, index: int) -> int: ...
+
+    def CHole(self, outline_index: int, hole_index: int) -> NativeLineChain: ...
+
+    def AddHole(self, hole: NativeLineChain, error: int) -> None: ...
+
+    def Collide(self, shape: object) -> bool: ...
+
+
+class NativeBoard(Protocol):
+    def GetEnabledLayers(self) -> NativeLayerStack: ...
+
+    def GetLayerName(self, layer: int) -> str: ...
+
+    def Zones(self) -> list[NativeZone]: ...
+
+    def GetTracks(self) -> Iterable[NativeTrack]: ...
+
+    def GetFootprints(self) -> Iterable[NativeFootprint]: ...
+
+    def BuildConnectivity(self) -> bool: ...
+
+    def GetConnectivity(self) -> NativeConnectivity: ...
+
+
+class NativePad(Protocol):
+    m_Uuid: NativeUuid
+
+    def GetClass(self) -> str: ...
+
+    def GetParentFootprint(self) -> NativeFootprint: ...
+
+    def GetNumber(self) -> object: ...
+
+    def GetLayerSet(self) -> NativeLayerSet: ...
+
+    def GetShape(self, layer: int) -> int: ...
+
+    def GetDrillSize(self) -> NativePoint: ...
+
+    def GetSize(self, layer: int) -> NativePoint: ...
+
+    def GetSolderMaskExpansion(self, layer: int) -> int: ...
+
+    def GetNetname(self) -> str: ...
+
+    def GetPosition(self) -> NativePoint: ...
+
+    def GetEffectiveShape(self, layer: int) -> NativeShape | None: ...
+
+
+class NativeShape(Protocol):
+    def Distance(self, point: NativePoint) -> float: ...
+
+    def IsNull(self) -> bool: ...
+
+    def Collide(self, other: object, clearance: int) -> bool: ...
+
+    def GetClearance(self, other: NativePolygonSet) -> int: ...
+
+
+class NativeTrack(Protocol):
+    m_Uuid: NativeUuid
+
+    def GetClass(self) -> str: ...
+
+    def GetNetname(self) -> str: ...
+
+    def GetLayer(self) -> int: ...
+
+    @overload
+    def GetWidth(self) -> int: ...
+
+    @overload
+    def GetWidth(self, layer: int) -> int: ...
+
+    def GetStart(self) -> NativePoint: ...
+
+    def GetEnd(self) -> NativePoint: ...
+
+    def GetEffectiveShape(self, layer: int) -> NativeShape | None: ...
+
+
+class NativeVia(NativeTrack, Protocol):
+    def TopLayer(self) -> int: ...
+
+    def BottomLayer(self) -> int: ...
+
+    def GetPosition(self) -> NativePoint: ...
+
+    def IsMicroVia(self) -> bool: ...
+
+    def IsBlindVia(self) -> bool: ...
+
+    def IsBuriedVia(self) -> bool: ...
+
+    def GetDrillValue(self) -> int: ...
+
+    def GetLayerSet(self) -> NativeLayerSet: ...
+
+
+class NativeConnectedItem(Protocol):
+    m_Uuid: NativeUuid
+
+    def GetClass(self) -> str: ...
+
+    def GetLayer(self) -> int: ...
+
+
+class NativeConnectivity(Protocol):
+    def GetConnectedItems(
+        self, pad: NativePad, clearance: int
+    ) -> Iterable[NativeConnectedItem]: ...
+
+    def GetConnectedTracks(self, track: NativeTrack) -> Iterable[NativeTrack]: ...
+
+
+class NativeZone(Protocol):
+    m_Uuid: NativeUuid
+
+    def GetIsRuleArea(self) -> bool: ...
+
+    def GetLayer(self) -> int: ...
+
+    def GetFilledPolysList(self, layer: int) -> object: ...
+
+    def Outline(self) -> NativePolygonSet: ...
+
+    def GetLayerSet(self) -> NativeLayerSet: ...
+
+    def GetZoneName(self) -> str: ...
+
+    def GetNetname(self) -> str: ...
+
+    def GetDoNotAllowTracks(self) -> bool: ...
+
+    def GetDoNotAllowVias(self) -> bool: ...
+
+    def GetDoNotAllowPads(self) -> bool: ...
+
+    def GetDoNotAllowZoneFills(self) -> bool: ...
+
+    def GetDoNotAllowFootprints(self) -> bool: ...
+
+
+class NativeFootprint(Protocol):
+    def GetReference(self) -> str: ...
+
+    def GetFPIDAsString(self) -> str: ...
+
+    def IsDNP(self) -> bool: ...
+
+    def GetValue(self) -> str: ...
+
+    def GetPosition(self) -> NativePoint: ...
+
+    def GetOrientationDegrees(self) -> float: ...
+
+    def GetLayer(self) -> int: ...
+
+    def Pads(self) -> Iterable[NativePad]: ...
+
+    def IsNetTie(self) -> bool: ...
+
+    def GetNetTiePads(self, pad: NativePad) -> Iterable[NativePad]: ...
+
+
+class NativeZoneFiller(Protocol):
+    def Fill(self, zones: list[NativeZone]) -> bool: ...
+
+
+class NativePcbnew(Protocol):
+    F_Cu: int
+    B_Cu: int
+    F_Mask: int
+    B_Mask: int
+    PAD_SHAPE_CIRCLE: int
+    PCB_VIA: type[NativeVia]
+    SHAPE_POLY_SET: Callable[[object], NativePolygonSet]
+    ZONE_FILLER: Callable[[NativeBoard], NativeZoneFiller]
+
+    def GetBuildVersion(self) -> str: ...
+
+    def LoadBoard(self, path: str) -> NativeBoard | None: ...
+
+
+native_pcbnew = cast(NativePcbnew, _pcbnew)
+
+
+class ViaGeometry(TypedDict):
+    net: str | None
+    x_nm: int
+    y_nm: int
+    start_layer: str
+    end_layer: str
+    diameter_nm: int
+    drill_nm: int
+    kind: Literal["through", "blind", "buried", "micro"]
+
+
+class ViaObservation(ViaGeometry):
+    id: str
+
+
+class FilledZoneIslandObservation(TypedDict):
+    island_index: int
+    outline_nm: list[list[int]]
+    holes_nm: list[list[list[int]]]
+
+
+class RuleAreaPolygonObservation(TypedDict):
+    outline_nm: list[list[int]]
+    holes_nm: list[list[list[int]]]
+
+
+class RuleAreaObservation(TypedDict):
+    uuid: str
+    name: str
+    layers: list[str]
+    net: str | None
+    polygons: list[RuleAreaPolygonObservation]
+    forbids_tracks: bool
+    forbids_vias: bool
+    forbids_pads: bool
+    forbids_zone_fills: bool
+    forbids_footprints: bool
+
+
+class FootprintPlacementObservation(TypedDict):
+    reference: str
+    footprint: str
+    dnp: bool
+    value: str
+    position_nm: list[int]
+    orientation_microdegrees: int
+    side: Literal["F.Cu", "B.Cu"]
+
+
+class AccessProbeRequest(TypedDict):
+    endpoint: str
+    net: str
+    side: Literal["front", "back"]
+
+
+class RawAccessRequestEnvelope(TypedDict, total=False):
+    schema_version: object
+    requests: object
+
+
+class RawAccessProbeRequest(TypedDict, total=False):
+    endpoint: object
+    net: object
+    side: object
+
+
+class AccessProbeObservation(TypedDict):
+    endpoint: str
+    side: Literal["front", "back"]
+    target_net: str | None
+    target_exposed: bool
+    obstacle: str | None
+    obstacle_net: str | None
+    distance_nm: int | None
+    target_aperture_shape: Literal["circle", "unsupported"] | None
+    target_aperture_diameter_nm: int | None
+
+
+class TouchPadClearanceRequest(TypedDict):
+    id: str
+    pad: str
+    expected_pad_net: str
+    reference_net: str
+    layer: str
+    minimum_clearance_nm: int
+
+
+class RawTouchClearanceRequestEnvelope(TypedDict, total=False):
+    schema_version: object
+    requests: object
+
+
+class RawTouchClearanceRequest(TypedDict, total=False):
+    id: object
+    pad: object
+    expected_pad_net: object
+    reference_net: object
+    layer: object
+    minimum_clearance_nm: object
+
+
+class TouchPadClearanceObservation(TypedDict):
+    requirement_id: str
+    pad: str
+    expected_pad_net: str
+    observed_pad_net: str | None
+    reference_net: str
+    layer: str
+    matching_zone_count: int
+    closest_zone_uuid: str | None
+    distance_nm: int | None
+    status: Literal[
+        "MEASURED",
+        "PAD_MISSING",
+        "PAD_AMBIGUOUS",
+        "PAD_LAYER_ABSENT",
+        "UNSUPPORTED_LAYER",
+        "NO_REFERENCE_ZONE",
+        "NO_FILLED_REFERENCE_COPPER",
+    ]
+
+
+class ZoneObservation(TypedDict):
+    uuid: str
+    layer: str
+    name: str
+    net: str | None
+    filled_island_count: int
+    filled_islands: list[FilledZoneIslandObservation]
+    unanchored_pad_island_indexes: list[int]
+
+
+class ConnectedZoneIdentity(TypedDict):
+    uuid: str
+    layer: str
+
+
+class ConnectedIslandIdentity(ConnectedZoneIdentity):
+    island_index: int
+
+
+class PadObservation(TypedDict):
+    pad: str
+    net: str | None
+    footprint: str
+    dnp: bool
+    positions_nm: list[list[int]]
+    connected_pads: list[str]
+    connected_vias: list[str]
+    connected_zones: list[ConnectedZoneIdentity]
+    connected_islands: list[ConnectedIslandIdentity]
+
+
+class ViaSnapshotObservation(ViaObservation):
+    multiplicity: int
+
+
+class NetTieObservation(TypedDict):
+    reference: str
+    footprint: str
+    dnp: bool
+    pad_groups: list[list[str]]
+
+
+class TrackObservation(TypedDict):
+    uuid: str
+    net: str | None
+    layer: str
+    width_nm: int
+    start_nm: list[int]
+    end_nm: list[int]
+    geometry_kind: Literal["segment", "arc"]
+    start_pads: list[str]
+    end_pads: list[str]
+    start_vias: list[str]
+    end_vias: list[str]
+    start_tracks: list[str]
+    end_tracks: list[str]
+
+
+class NativeProbeSnapshot(TypedDict):
+    schema_version: Literal["14"]
+    board_sha256: str
+    kicad_version: str
+    zones_refilled: bool
+    pads: list[PadObservation]
+    vias: list[ViaSnapshotObservation]
+    net_ties: list[NetTieObservation]
+    zones: list[ZoneObservation]
+    rule_areas: list[RuleAreaObservation]
+    footprints: list[FootprintPlacementObservation]
+    access_probe_observations: list[AccessProbeObservation]
+    access_probe_requests_sha256: str | None
+    touch_pad_clearance_observations: list[TouchPadClearanceObservation]
+    touch_pad_clearance_requests_sha256: str | None
+    tracks: list[TrackObservation]
+    copper_layers: list[str]
 
 
 def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def pad_reference(pad: Any) -> str:
+def pad_reference(pad: NativePad) -> str:
     footprint = pad.GetParentFootprint()
     number = str(pad.GetNumber()).strip()
     if not number:
@@ -26,7 +441,7 @@ def pad_reference(pad: Any) -> str:
     return f"{footprint.GetReference()}.{number}"
 
 
-def via_observation(via: Any, board: Any) -> dict[str, Any]:
+def via_observation(via: NativeVia, board: NativeBoard) -> ViaObservation:
     """Return a geometry-derived stable identity for one KiCad via."""
     top_layer = via.TopLayer()
     bottom_layer = via.BottomLayer()
@@ -41,7 +456,7 @@ def via_observation(via: Any, board: Any) -> dict[str, Any]:
         kind = "buried"
     else:
         kind = "through"
-    row = {
+    geometry: ViaGeometry = {
         "net": via.GetNetname() or None,
         "x_nm": int(position.x),
         "y_nm": int(position.y),
@@ -51,6 +466,5 @@ def via_observation(via: Any, board: Any) -> dict[str, Any]:
         "drill_nm": int(via.GetDrillValue()),
         "kind": kind,
     }
-    canonical = json.dumps(row, ensure_ascii=True, sort_keys=True, separators=(",", ":"))
-    row["id"] = hashlib.sha256(canonical.encode("ascii")).hexdigest()
-    return row
+    canonical = json.dumps(geometry, ensure_ascii=True, sort_keys=True, separators=(",", ":"))
+    return {"id": hashlib.sha256(canonical.encode("ascii")).hexdigest(), **geometry}

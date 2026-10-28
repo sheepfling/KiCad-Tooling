@@ -291,6 +291,12 @@ class Rs485BusRequirement(StrictModel):
         termination_refs: list[str] = []
         bias_refs: list[str] = []
         for pair in self.pairs:
+            bias: (
+                Rs485LocalBiasRequirement
+                | Rs485RemoteBiasRequirement
+                | Rs485InternalFailSafeRequirement
+                | Rs485NoBiasRequirement
+            ) = pair.bias
             line_nets = {pair.line_1_net, pair.line_2_net}
             for endpoint in pair.terminations:
                 termination_refs.extend(
@@ -317,8 +323,8 @@ class Rs485BusRequirement(StrictModel):
                 for option in endpoint.expected_dnp_resistors:
                     if {option.first_net, option.second_net} != line_nets:
                         raise ValueError("Expected DNP termination options must bridge the pair")
-            if isinstance(pair.bias, Rs485LocalBiasRequirement):
-                up, down = pair.bias.pull_up, pair.bias.pull_down
+            if isinstance(bias, Rs485LocalBiasRequirement):
+                up, down = bias.pull_up, bias.pull_down
                 if {up.bus_net, down.bus_net} != line_nets:
                     raise ValueError(
                         "Local RS-485 bias must declare one resistor on each pair line"
@@ -326,8 +332,8 @@ class Rs485BusRequirement(StrictModel):
                 if up.rail_net in line_nets or down.rail_net in line_nets:
                     raise ValueError("RS-485 bias supply/reference nets must differ from pair nets")
                 bias_refs.extend((up.reference.casefold(), down.reference.casefold()))
-            elif isinstance(pair.bias, Rs485InternalFailSafeRequirement):
-                if {item.casefold() for item in pair.bias.transceiver_references} != (
+            elif isinstance(bias, Rs485InternalFailSafeRequirement):
+                if {item.casefold() for item in bias.transceiver_references} != (
                     transceiver_references
                 ):
                     raise ValueError(
@@ -368,13 +374,18 @@ class Rs485Analysis(StrictModel):
             for termination in pair.terminations
             for item in (*termination.resistors, *termination.expected_dnp_resistors)
         ]
-        resistor_references.extend(
-            resistor.reference.casefold()
-            for bus in self.buses
-            for pair in bus.pairs
-            if isinstance(pair.bias, Rs485LocalBiasRequirement)
-            for resistor in (pair.bias.pull_up, pair.bias.pull_down)
-        )
+        for bus in self.buses:
+            for pair in bus.pairs:
+                bias: (
+                    Rs485LocalBiasRequirement
+                    | Rs485RemoteBiasRequirement
+                    | Rs485InternalFailSafeRequirement
+                    | Rs485NoBiasRequirement
+                ) = pair.bias
+                if isinstance(bias, Rs485LocalBiasRequirement):
+                    resistor_references.extend(
+                        (bias.pull_up.reference.casefold(), bias.pull_down.reference.casefold())
+                    )
         if len(set(resistor_references)) != len(resistor_references):
             raise ValueError("RS-485 resistor references cannot be reused across buses")
         return self

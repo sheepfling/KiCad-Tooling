@@ -341,9 +341,7 @@ def test_hashseed_report_tests_are_linked_to_each_rule_they_assert() -> None:
             rule_ids = {
                 item.value
                 for item in ast.walk(node)
-                if isinstance(item, ast.Constant)
-                and isinstance(item.value, str)
-                and item.value in rules
+                if isinstance(item, ast.Constant) and item.value in rules
             }
             reference = f"{module}.{node.name}"
             for rule_id in sorted(rule_ids):

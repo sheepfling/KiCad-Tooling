@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable, Mapping
+from collections.abc import Set as AbstractSet
 from typing import TypeVar
 
 from .bus_signal_pairs import usb_data_function_identity, usb_superspeed_function_identity
@@ -65,7 +66,7 @@ def usb_endpoint(
     observed: NetlistContract,
     *,
     connector: bool,
-    pin_nets: dict[str, set[str]],
+    pin_nets: Mapping[str, AbstractSet[str]],
 ) -> tuple[UsbEndpoint, ...]:
     reference_key = reference.casefold()
     if reference_key in {item.casefold() for item in observed.dnp_components}:
@@ -163,7 +164,7 @@ def usb_endpoint(
 def usb_endpoints(
     references: Iterable[str],
     observed: NetlistContract,
-    pin_nets: dict[str, set[str]],
+    pin_nets: Mapping[str, AbstractSet[str]],
     *,
     connector: bool,
 ) -> tuple[UsbEndpoint, ...]:
@@ -220,7 +221,7 @@ def recognized_usb_superspeed_groups(
 def usb_superspeed_endpoints(
     references: Iterable[str],
     observed: NetlistContract,
-    pin_nets: dict[str, set[str]],
+    pin_nets: Mapping[str, AbstractSet[str]],
     *,
     connector: bool,
 ) -> tuple[UsbEndpoint, ...]:

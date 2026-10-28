@@ -2,32 +2,28 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+import os
 import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
-    from .hwrepo.models import NetlistContract
+from .hwrepo.design_lint_can_candidates import can_candidates
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import NetlistContract
+from .validate import read_netlist
 
 
 def can_excess_termination_native_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Check the excess-termination prompt against exact-version native exports."""
-    import hashlib
-    import json
-    import os
-
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint_can_candidates import can_candidates
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .validate import read_netlist
 
     root = root.resolve()
     config = selected_config(root, project)
@@ -40,8 +36,7 @@ def can_excess_termination_native_fixture_lane(
     pinned = pinned_image(config.image)
 
     fixture_root = (
-        Path(__file__).resolve().parents[1]
-        / "tests/fixtures/design_lint/can-excess-termination-native"
+        tooling_checkout_root() / "tests/fixtures/design_lint/can-excess-termination-native"
     )
     fixtures = {case: fixture_root / f"{case}.kicad_sch" for case in ("control", "fault")}
     source_hashes = {case: digest(path) for case, path in fixtures.items()}

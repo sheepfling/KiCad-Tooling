@@ -2,42 +2,35 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+import os
 import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.can_termination_contract import can_termination_checks
+from .hwrepo.can_termination_models import (
+    CanTerminationAnalysis,
+    CanTerminationBusRequirement,
+    CanTerminationEndpointRequirement,
+    CanTerminationMidpointCapacitorRequirement,
+    CanTerminationResistorRequirement,
+)
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
-    from .hwrepo.models import NetlistContract
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ElectricalCheck, NetlistContract
+from .validate import read_netlist
 
 
 def can_termination_native_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Exercise split CAN termination requirements from pinned native exports."""
-    import hashlib
-    import json
-    import os
-
-    from .hwrepo.can_termination_contract import (
-        can_termination_checks,
-    )
-    from .hwrepo.can_termination_models import (
-        CanTerminationAnalysis,
-        CanTerminationBusRequirement,
-        CanTerminationEndpointRequirement,
-        CanTerminationMidpointCapacitorRequirement,
-        CanTerminationResistorRequirement,
-    )
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ElectricalCheck
-    from .validate import read_netlist
 
     root = root.resolve()
     config = selected_config(root, project)
@@ -47,9 +40,7 @@ def can_termination_native_fixture_lane(
         raise ValueError(f"CAN termination fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
 
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/can-split-midpoint-native"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/can-split-midpoint-native"
     fixtures = {case: fixture_root / f"{case}.kicad_sch" for case in ("control", "fault")}
     source_hashes = {case: digest(path) for case, path in fixtures.items()}
     expected_source_hashes = {

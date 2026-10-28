@@ -4,22 +4,19 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from .ci_hosted_pcb_fixture_support import (
     HostedPcbFixtureFailure,
     capture_verified_pcb_snapshot,
     prepare_pcb_fixture,
 )
+from .ci_hosted_support import HostedLog
 from .hwrepo.evidence import digest
 from .hwrepo.pcb_protection_path import pcb_protection_path_entries
 from .hwrepo.pcb_protection_path_models import (
     PcbProtectionPathMap,
     PcbProtectionPathRequirement,
 )
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
 
 
 def protection_path_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:

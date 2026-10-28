@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from pathlib import PurePosixPath
 from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
@@ -28,7 +29,9 @@ class GroundingAnalysis(StrictModel):
         pins = [pin for domain in self.domains for pin in domain.pins]
         if len(set(names)) != len(names) or len(set(pins)) != len(pins):
             raise ValueError("Ground domains and their pins must be unique")
-        if any(name.startswith("/") for name in (*names, *self.reviewed_return_exceptions)):
+        if any(
+            PurePosixPath(name).is_absolute() for name in (*names, *self.reviewed_return_exceptions)
+        ):
             raise ValueError("Use net names without the leading slash, as in the native contract")
         if set(names) & set(self.reviewed_return_exceptions):
             raise ValueError("A return net cannot be both a ground domain and an exception")

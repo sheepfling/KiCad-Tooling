@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -46,31 +47,37 @@ PROJECT_TOOLCHAINS = (
     ),
 )
 
-TERMINATION_HASHES = {
-    "control": (
-        "f69f9084482ce5455740c4ac33628fd226e5243650acd9a2e022984aec830726",
-        "de5d5d2edff5d2f4143bd8a5595734c3ea64f6dfa3844eef626999806fc53c9d",
-    ),
-    "fault": (
-        "0c84ea82f7ff60be1d8a1ea6f2815fe9e6593ad1e8ae192f362c02af73bb8db6",
-        "4d0141640743cd0f953fe382941036a396f39b104fe89d9fd1febc43767bacb6",
-    ),
-}
-PEER_HASHES = {
-    "peer-control": (
-        "9adfa39101f0caaa60bde8ca1770659382d6bfc1677e1b2272847bb76d943135",
-        "add4ca19eeac84b2f89733cc3a27aa2ff7a1a8945ed4699e3f35ffb882cdeca4",
-    ),
-    "peer-fault": (
-        "60e310e7faae4cee9b8982b1d2abc5be3e8d6c48d815dd9808ae82e7578ecbc6",
-        "337f52c298085c36f4e738f1ba486dceeea15cae32dea6f4094c362f159c8e26",
-    ),
-}
+TERMINATION_HASHES = MappingProxyType(
+    {
+        "control": (
+            "f69f9084482ce5455740c4ac33628fd226e5243650acd9a2e022984aec830726",
+            "de5d5d2edff5d2f4143bd8a5595734c3ea64f6dfa3844eef626999806fc53c9d",
+        ),
+        "fault": (
+            "0c84ea82f7ff60be1d8a1ea6f2815fe9e6593ad1e8ae192f362c02af73bb8db6",
+            "4d0141640743cd0f953fe382941036a396f39b104fe89d9fd1febc43767bacb6",
+        ),
+    }
+)
+PEER_HASHES = MappingProxyType(
+    {
+        "peer-control": (
+            "9adfa39101f0caaa60bde8ca1770659382d6bfc1677e1b2272847bb76d943135",
+            "add4ca19eeac84b2f89733cc3a27aa2ff7a1a8945ed4699e3f35ffb882cdeca4",
+        ),
+        "peer-fault": (
+            "60e310e7faae4cee9b8982b1d2abc5be3e8d6c48d815dd9808ae82e7578ecbc6",
+            "337f52c298085c36f4e738f1ba486dceeea15cae32dea6f4094c362f159c8e26",
+        ),
+    }
+)
 
-PEER_REFERENCE_HASHES = {
-    "reference-control": "ece18cddcf6fb122bcbcd46a7b4792426735146a6a923b62b68642ef0903a96a",
-    "reference-fault": "4e636cab9d214f97e68640f1d200df6067d49e83d571ce3e8e117527517103a8",
-}
+PEER_REFERENCE_HASHES = MappingProxyType(
+    {
+        "reference-control": "ece18cddcf6fb122bcbcd46a7b4792426735146a6a923b62b68642ef0903a96a",
+        "reference-fault": "4e636cab9d214f97e68640f1d200df6067d49e83d571ce3e8e117527517103a8",
+    }
+)
 
 
 @pytest.fixture

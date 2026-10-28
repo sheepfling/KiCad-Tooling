@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, TypedDict
 
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 from kicad_tooling.hwrepo.reference_bond_models import ReferenceBondRequirement
@@ -11,6 +11,20 @@ from kicad_tooling.hwrepo.usb_reference_pin_models import UsbReferencePinRequire
 from kicad_tooling.hwrepo.usb_superspeed_reference_models import (
     UsbSuperspeedReferencePathRequirement,
 )
+
+
+class SuperspeedPeerNetlistOverrides(TypedDict, total=False):
+    """Optional topology changes accepted by the SuperSpeed peer fixture."""
+
+    connector_reference_net: str
+    phy_reference_net: str
+    phy_pair_family: str
+    extra_positive_peer: bool
+    missing_metadata_pin: str | None
+    dnp: tuple[str, ...]
+    reverse_polarity: bool
+    full_duplex: bool
+    bond_value: str | None
 
 
 def superspeed_peer_netlist(

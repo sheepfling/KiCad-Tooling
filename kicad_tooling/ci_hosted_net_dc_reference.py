@@ -2,34 +2,27 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 
 def net_dc_reference_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
     """Compare the connector/capacitor-only hint with pinned exports and native ERC."""
-    import hashlib
-    import os
-
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import (
-        ContractCoachReport,
-        DesignLintPolicy,
-    )
-    from .validate import read_netlist
 
     root = root.resolve()
     config = selected_config(root, project)
@@ -38,9 +31,7 @@ def net_dc_reference_fixture_lane(root: Path, *, project: str, image: str, log: 
     if config.kicad_version not in {"10.0.0", "10.0.5"}:
         raise ValueError(f"DC-reference fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/net-dc-reference"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/net-dc-reference"
     cases = {
         "fault": ("fault.kicad_sch", True),
         "control": ("control.kicad_sch", False),

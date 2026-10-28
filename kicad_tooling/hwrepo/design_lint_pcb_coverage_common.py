@@ -22,7 +22,7 @@ class CoverageEntry(Protocol):
     def status(self) -> str: ...
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PcbGeometrySourceEvidence:
     """Native and source-bound inputs shared by deterministic PCB coverage checks."""
 

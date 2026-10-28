@@ -6,6 +6,7 @@ import pytest
 
 from tests.design_lint_fixtures.digital_peer_serial import SERIAL_LABEL_EXPECTED_NETS
 from tests.digital_peer_native_acceptance import NATIVE_DIGITAL_PEER_PROJECTS
+from tests.json_types import JsonObject
 
 pytestmark = [
     pytest.mark.template_checkout,
@@ -17,7 +18,7 @@ pytestmark = [
     pytest.mark.slow,
 ]
 
-NativeDigitalPeerResults = dict[str, dict[str, dict[str, object]]]
+NativeDigitalPeerResults = dict[str, dict[str, JsonObject]]
 _SERIAL_CONNECTOR_PIN_ROLE_METADATA = (
     "J1.1=UART1_RX/input;J1.2=UART1_TX/output;J1.3=VDD/passive;J1.4=GND/passive;"
     "U1.1=UART1_TX/output;U1.2=UART1_RX/input;U1.3=VDD/power_in;U1.4=GND/power_in"

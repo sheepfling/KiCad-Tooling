@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -22,21 +23,27 @@ from tests.synthetic_design_lint_project import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint]
 
 RULE_ID = "component.bjt_base_collector_same_net"
-FIXTURES = {
-    "fault": "bjt-bc-same-net-native/fault.kicad_sch",
-    "control": "bjt-terminal-order-native/control.kicad_sch",
-}
-SOURCE_HASHES = {
-    "fault": "32dff25a342646150e18a765bcba4cc13ef360d52d06b51ef448bad4c5f17a21",
-    "control": "2b68e0bb4818e82917047e2e9caf07b0b9ebf25cf5fd939a6bb4b7a1f7c45845",
-}
-EXPECTED_SUBJECTS = {
-    "fault": (
-        "Q1: BJT base and collector share one schematic net",
-        "Q2: BJT base and collector share one schematic net",
-    ),
-    "control": None,
-}
+FIXTURES = MappingProxyType(
+    {
+        "fault": "bjt-bc-same-net-native/fault.kicad_sch",
+        "control": "bjt-terminal-order-native/control.kicad_sch",
+    }
+)
+SOURCE_HASHES = MappingProxyType(
+    {
+        "fault": "32dff25a342646150e18a765bcba4cc13ef360d52d06b51ef448bad4c5f17a21",
+        "control": "2b68e0bb4818e82917047e2e9caf07b0b9ebf25cf5fd939a6bb4b7a1f7c45845",
+    }
+)
+EXPECTED_SUBJECTS = MappingProxyType(
+    {
+        "fault": (
+            "Q1: BJT base and collector share one schematic net",
+            "Q2: BJT base and collector share one schematic net",
+        ),
+        "control": None,
+    }
+)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

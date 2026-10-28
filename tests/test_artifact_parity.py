@@ -18,7 +18,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from mcp import Client
-from pydantic import BaseModel
+from pydantic import BaseModel, JsonValue
 
 from kicad_tooling.hwrepo.contracts import parse_model_text, read_model
 from kicad_tooling.hwrepo.evidence import digest, source_state
@@ -82,7 +82,7 @@ class ArtifactParityTests(unittest.IsolatedAsyncioTestCase):
     def semantic(report: BaseModel, output: Path):
         """Normalize only one known output directory and command start timestamps."""
 
-        def normalize(value, field=None):
+        def normalize(value: JsonValue, field: str | None = None) -> JsonValue:
             if isinstance(value, dict):
                 return {key: normalize(item, key) for key, item in value.items()}
             if isinstance(value, list):

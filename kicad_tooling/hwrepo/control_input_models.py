@@ -291,7 +291,7 @@ class ControlSignalRequirement(StrictModel):
                 raise ValueError("A shared or multiple-driver control needs a review basis")
         elif self.driver_basis is not None:
             raise ValueError("A driver basis is only valid for shared or reviewed multiple drivers")
-        if isinstance(self.bias, ControlLocalBiasRequirement) and any(
+        if self.bias.mode == "local" and any(
             item.signal_net != self.signal_net for item in self.bias.resistors
         ):
             raise ValueError("Local control-bias resistor signal nets must match the control net")
@@ -317,7 +317,7 @@ class ControlInputsAnalysis(StrictModel):
         resistor_refs = [
             resistor.reference.casefold()
             for signal in self.signals
-            if isinstance(signal.bias, ControlLocalBiasRequirement)
+            if signal.bias.mode == "local"
             for resistor in (*signal.bias.resistors, *signal.bias.arrays)
         ]
         if len(set(resistor_refs)) != len(resistor_refs):

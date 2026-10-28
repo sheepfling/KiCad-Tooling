@@ -10,28 +10,30 @@ from .models import NetlistContract
 from .spi_models import SpiAnalysis
 
 _SPI_DEVICE_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)
-_SPI_CLOCK_FUNCTIONS = {"sck", "sclk"}
-_SPI_PARTICIPANT_CLOCK_FUNCTIONS = _SPI_CLOCK_FUNCTIONS | {"spc"}
-_SPI_INPUT_DATA_FUNCTIONS = {"mosi", "sdi", "copi"}
-_SPI_OUTPUT_DATA_FUNCTIONS = {"miso", "sdo", "cipo"}
-_SPI_SELECT_FUNCTIONS = {
-    "cs",
-    "csn",
-    "ncs",
-    "nss",
-    "ss",
-    "ssn",
-    "ssel",
-    "ce0",
-    "ce1",
-    "chipselect",
-    "chipselectn",
-}
+_SPI_CLOCK_FUNCTIONS = frozenset({"sck", "sclk"})
+_SPI_PARTICIPANT_CLOCK_FUNCTIONS = _SPI_CLOCK_FUNCTIONS | frozenset({"spc"})
+_SPI_INPUT_DATA_FUNCTIONS = frozenset({"mosi", "sdi", "copi"})
+_SPI_OUTPUT_DATA_FUNCTIONS = frozenset({"miso", "sdo", "cipo"})
+_SPI_SELECT_FUNCTIONS = frozenset(
+    {
+        "cs",
+        "csn",
+        "ncs",
+        "nss",
+        "ss",
+        "ssn",
+        "ssel",
+        "ce0",
+        "ce1",
+        "chipselect",
+        "chipselectn",
+    }
+)
 
 SpiRosterState = Literal["not_configured", "pending", "not_applicable", "required"]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SpiRosterContext:
     """Authored SPI membership state and its source binding for one lint run."""
 
@@ -41,7 +43,7 @@ class SpiRosterContext:
     source_sha256: str | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnmappedSpiParticipant:
     """Likely SPI-capable IC with connected clock/data pins absent from the roster."""
 

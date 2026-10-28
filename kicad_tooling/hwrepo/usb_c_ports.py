@@ -13,7 +13,7 @@ from .usb_c_models import UsbCAnalysis
 UsbCPortRosterState = Literal["not_configured", "pending", "not_applicable", "required"]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbCPortRosterContext:
     """Project USB-C port coverage and its source binding for one lint run."""
 
@@ -23,7 +23,7 @@ class UsbCPortRosterContext:
     source_sha256: str | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnmappedUsbCPort:
     """Connector candidate with paired CC pin functions absent from the role map."""
 

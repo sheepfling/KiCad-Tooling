@@ -11,12 +11,13 @@ from functools import lru_cache
 from pathlib import Path
 
 from tests.hashseed_probe_cases import HASHSEED_REPORT_FAMILIES
+from tests.json_types import JsonObject
 
 _FAMILIES_ENV = "KICAD_TEAM_TOOLING_HASHSEED_FAMILIES"
-_FULL_REPORT_DATA: tuple[dict[str, object], dict[str, tuple[str, ...]]] | None = None
+_FULL_REPORT_DATA: tuple[JsonObject, dict[str, tuple[str, ...]]] | None = None
 
 
-def hashseed_probe_reports(*, families: tuple[str, ...] | None = None) -> dict[str, object]:
+def hashseed_probe_reports(*, families: tuple[str, ...] | None = None) -> JsonObject:
     """Return all reports or just the requested themed report families."""
     global _FULL_REPORT_DATA
 
@@ -41,7 +42,7 @@ def hashseed_probe_reports(*, families: tuple[str, ...] | None = None) -> dict[s
 @lru_cache(maxsize=32)
 def _hashseed_probe_report_data(
     families: tuple[str, ...] | None,
-) -> tuple[dict[str, object], dict[str, tuple[str, ...]]]:
+) -> tuple[JsonObject, dict[str, tuple[str, ...]]]:
     repository = Path(__file__).resolve().parents[2]
     probe = Path(__file__).resolve().parents[1] / "hashseed_probe.py"
     command = [

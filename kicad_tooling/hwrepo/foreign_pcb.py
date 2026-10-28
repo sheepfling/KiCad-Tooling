@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import re
 import shlex
 from pathlib import Path
@@ -13,6 +12,7 @@ from .contract_coach import docker_prefix, pinned_image, run_command
 from .contracts import read_kicad_import_summary
 from .diagnostic_journal import DiagnosticJournal
 from .doctor import NativeRunner, doctor
+from .evidence import digest as file_digest
 from .importing import import_project
 from .models import (
     CommandEvidence,
@@ -52,7 +52,7 @@ def render_text(report: ForeignPcbReport) -> str:
 
 
 def _digest(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return file_digest(path)
 
 
 def convert_pcb(

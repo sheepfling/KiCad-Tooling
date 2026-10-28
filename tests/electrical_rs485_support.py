@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, TypeAlias
 
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
@@ -22,6 +22,17 @@ from kicad_tooling.hwrepo.models import (
     Rs485TerminationResistorRequirement,
 )
 
+Rs485PairSpec: TypeAlias = tuple[
+    str,
+    Literal["bidirectional", "board_to_peer", "peer_to_board"],
+    str,
+    str,
+    str,
+    str,
+    str,
+    str,
+]
+
 
 def rs485_requirement(
     *,
@@ -32,7 +43,7 @@ def rs485_requirement(
     dnp_option: bool = False,
     external_peers: tuple[str, ...] = (),
 ) -> Rs485Analysis:
-    pair_specs = (
+    pair_specs: tuple[Rs485PairSpec, ...] = (
         ("shared", "bidirectional", "485_LINE_1", "485_LINE_2", "R20", "R26", "R21", "R22"),
     )
     if topology == "four_wire_full_duplex":
@@ -324,8 +335,14 @@ def rs485_netlist(
                     )
                     symbols[resistor.reference] = resistor.symbol
                     dnp.add(resistor.reference)
-            if isinstance(pair.bias, Rs485LocalBiasRequirement):
-                for resistor in (pair.bias.pull_up, pair.bias.pull_down):
+            bias: (
+                Rs485LocalBiasRequirement
+                | Rs485RemoteBiasRequirement
+                | Rs485InternalFailSafeRequirement
+                | Rs485NoBiasRequirement
+            ) = pair.bias
+            if isinstance(bias, Rs485LocalBiasRequirement):
+                for resistor in (bias.pull_up, bias.pull_down):
                     resistor_values[resistor.reference] = (
                         "680R",
                         resistor.bus_net,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from types import MappingProxyType
 
 import pytest
 
@@ -28,34 +29,36 @@ pytestmark = [
     pytest.mark.architecture,
 ]
 
-RATING_MODEL_OWNERS = {
-    "component_rating_models.py": (
-        component_rating_models,
-        (
-            "ComponentVoltageRatingRequirement",
-            "ComponentVoltageRatingAnalysis",
-            "ComponentPowerRatingRequirement",
-            "ComponentPowerRatingAnalysis",
+RATING_MODEL_OWNERS = MappingProxyType(
+    {
+        "component_rating_models.py": (
+            component_rating_models,
+            (
+                "ComponentVoltageRatingRequirement",
+                "ComponentVoltageRatingAnalysis",
+                "ComponentPowerRatingRequirement",
+                "ComponentPowerRatingAnalysis",
+            ),
         ),
-    ),
-    "connector_contact_rating_models.py": (
-        connector_contact_rating_models,
-        (
-            "ConnectorContactCurrentRequirement",
-            "ConnectorContactRatingRequirement",
-            "ConnectorContactRatingAnalysis",
+        "connector_contact_rating_models.py": (
+            connector_contact_rating_models,
+            (
+                "ConnectorContactCurrentRequirement",
+                "ConnectorContactRatingRequirement",
+                "ConnectorContactRatingAnalysis",
+            ),
         ),
-    ),
-    "mosfet_stress_models.py": (
-        mosfet_stress_models,
-        (
-            "MosfetVoltageInterval",
-            "MosfetOperatingState",
-            "MosfetStressRequirement",
-            "MosfetStressAnalysis",
+        "mosfet_stress_models.py": (
+            mosfet_stress_models,
+            (
+                "MosfetVoltageInterval",
+                "MosfetOperatingState",
+                "MosfetStressRequirement",
+                "MosfetStressAnalysis",
+            ),
         ),
-    ),
-}
+    }
+)
 
 
 def test_rating_models_live_in_theme_owners_and_registry_exports_keep_identity() -> None:

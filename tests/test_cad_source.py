@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.metadata
 import json
 import tempfile
 import unittest
@@ -266,7 +267,6 @@ class CadSourceTests(unittest.TestCase):
                     target.write_bytes(original)
 
     def test_missing_or_wrong_converter_gives_setup_action_without_network(self):
-        import importlib.metadata
 
         for missing in [True, False]:
             with (

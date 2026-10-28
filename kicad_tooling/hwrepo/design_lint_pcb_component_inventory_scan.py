@@ -15,7 +15,7 @@ from .pcb_required_fitted_reference_models import PcbRequiredFittedReferenceMap
 from .pcb_variant_population_capture import capture_variant_population
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PcbComponentInventoryRuleModes:
     """Resolved project modes for checks sharing one native footprint snapshot."""
 

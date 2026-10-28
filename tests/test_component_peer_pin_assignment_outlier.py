@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
 from kicad_tooling.hwrepo.models import (
@@ -20,7 +22,7 @@ def _generic_peer_assignment_netlist(
     *,
     references: tuple[str, ...] = ("U1", "U2", "U3"),
     assignments: tuple[str | None, ...] = ("PEER_DATA", "PEER_DATA", "OTHER_DATA"),
-    symbols: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
     dnp: tuple[str, ...] = (),
     missing_inventory: tuple[str, ...] = (),
     ambiguous_pins: tuple[str, ...] = (),

@@ -23,6 +23,7 @@ from kicad_tooling.hwrepo.models import (
     ValidationSummary,
 )
 from tests import test_mcp_workflow, test_release_evidence
+from tests.json_types import JsonObject
 
 
 class ReleaseElectricalTests(unittest.TestCase):
@@ -99,7 +100,7 @@ class ReleaseElectricalTests(unittest.TestCase):
         self.assertFalse(export_only)
         shutil.copytree(self.fixture.native_path.parent, output)
 
-    def command(self, *args: str) -> tuple[int, dict]:
+    def command(self, *args: str) -> tuple[int, JsonObject]:
         output = StringIO()
         with (
             patch.object(sys, "argv", ["release", "--root", str(self.root), *args]),

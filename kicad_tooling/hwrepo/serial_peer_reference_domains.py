@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 
 from .models import NetlistContract
 from .peer_reference_assignments import peer_reference_assignments
@@ -68,10 +70,10 @@ def pin_index(
 def reference_domain(
     reference: str,
     observed: NetlistContract,
-    pin_nets: dict[str, set[str]],
-    pin_numbers: dict[str, tuple[str, ...]],
-    dnp: set[str],
-    connector_references: set[str],
+    pin_nets: Mapping[str, AbstractSet[str]],
+    pin_numbers: Mapping[str, tuple[str, ...]],
+    dnp: AbstractSet[str],
+    connector_references: AbstractSet[str],
 ) -> SerialReferenceDomain | None:
     reference_key = reference.casefold()
     if reference_key in dnp or not (

@@ -9,13 +9,19 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from .ci_hosted_spi_native import SPI_NATIVE_TOOLCHAINS as SPI_BIAS_ARRAY_TOOLCHAINS
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_policy_models import DesignLintPolicy
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport
+from .hwrepo.spi_contract import spi_checks
+from .hwrepo.spi_models import SpiAnalysis
+from .hwrepo.spi_participants import SpiRosterContext
+from .validate import read_netlist
 
 
 def spi_bias_array_fixture_lane(
@@ -26,21 +32,11 @@ def spi_bias_array_fixture_lane(
     log: HostedLog,
 ) -> None:
     """Verify repeatable native exports, array contract checks, and lint results."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_policy_models import DesignLintPolicy
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport
-    from .hwrepo.spi_contract import spi_checks
-    from .hwrepo.spi_models import SpiAnalysis
-    from .hwrepo.spi_participants import SpiRosterContext
-    from .validate import read_netlist
-
     root = root.resolve()
     if (version, image) not in SPI_BIAS_ARRAY_TOOLCHAINS:
         raise ValueError(f"SPI bias-array fixtures do not cover KiCad {version} with this image")
     pinned = pinned_image(image)
-    repository = Path(__file__).resolve().parents[1]
+    repository = tooling_checkout_root()
     fixture_root = repository / "tests/fixtures/design_lint/spi-bias-array-native"
     sources = {
         "control": fixture_root / "control.kicad_sch",

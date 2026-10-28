@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling import ci_hosted_pcb_signal_path_drc as signal_path_lane
 from kicad_tooling.ci_hosted import HostedLog, pcb_signal_path_drc_fixture_lane
 from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.evidence import digest
@@ -26,9 +27,7 @@ def _install_mock_native_run(
     fault_types: tuple[str, ...] = _EXPECTED_FAULTS,
     ignored_types: tuple[str, ...] = (),
 ) -> None:
-    from kicad_tooling.hwrepo import contract_coach
-
-    monkeypatch.setattr(contract_coach, "pinned_image", lambda image: image)
+    monkeypatch.setattr(signal_path_lane, "pinned_image", lambda image: image)
 
     def run_command(root: Path, argv: tuple[str, ...], *, timeout: int) -> CommandEvidence:
         assert timeout == 600
@@ -53,7 +52,7 @@ def _install_mock_native_run(
                 )
         return CommandEvidence(argv=argv, started_utc="synthetic", returncode=0)
 
-    monkeypatch.setattr(contract_coach, "run_command", run_command)
+    monkeypatch.setattr(signal_path_lane, "run_command", run_command)
 
 
 def _copy_project(base: Path, expected_version: str) -> tuple[Path, ProjectConfig]:

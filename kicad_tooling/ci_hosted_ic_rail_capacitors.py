@@ -2,39 +2,34 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_ic_decoupling import source_backed_ic_decoupling_result
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.component_role_models import (
+    ComponentRoleBinding,
+    ComponentRoleMap,
+    ComponentRolePin,
+)
+from .hwrepo.component_roles import resolve_component_role_map
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.power_decoupling import ic_power_rails_without_fitted_capacitors
+from .validate import read_netlist
 
 
 def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
     """Check synthetic IC power-rail faults and controls with native exports and ERC."""
-    import hashlib
-    import os
-
-    from .ci_hosted_ic_decoupling import source_backed_ic_decoupling_result
-    from .hwrepo.component_role_models import (
-        ComponentRoleBinding,
-        ComponentRoleMap,
-        ComponentRolePin,
-    )
-    from .hwrepo.component_roles import resolve_component_role_map
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .hwrepo.power_decoupling import ic_power_rails_without_fitted_capacitors
-    from .validate import read_netlist
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image:
@@ -43,9 +38,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         raise ValueError(f"IC rail-capacitor fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
 
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/cohort-power-pin-dc"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/cohort-power-pin-dc"
     cases = {
         "positive-rail-no-cap": "no-cap.kicad_sch",
         "positive-rail-cap-control": "control.kicad_sch",

@@ -5,12 +5,13 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from .hwrepo.layout import default_project_root
 from .hwrepo.surface import format_surfaces, inspect_tool_surfaces
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     parser.add_argument("--format", choices=("text", "json"), default="text")
     parser.add_argument(
         "--require-live-mcp",

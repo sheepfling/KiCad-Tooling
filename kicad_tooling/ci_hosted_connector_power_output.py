@@ -8,25 +8,21 @@ import os
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 
 def connector_unconnected_power_output_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Verify generic open connector power-output fault and assigned control exports."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .validate import read_netlist
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image:
@@ -37,8 +33,7 @@ def connector_unconnected_power_output_fixture_lane(
         )
     pinned = pinned_image(config.image)
     fixture_root = (
-        Path(__file__).resolve().parents[1]
-        / "tests/fixtures/design_lint/generic-connector-power-output"
+        tooling_checkout_root() / "tests/fixtures/design_lint/generic-connector-power-output"
     )
     cases = {"fault": "fault.kicad_sch", "control": "control.kicad_sch"}
     source_hashes = {case: digest(fixture_root / filename) for case, filename in cases.items()}

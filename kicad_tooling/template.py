@@ -17,6 +17,7 @@ from .hwrepo.import_inventory import format_import_inventory, scan_imports
 from .hwrepo.importing import import_project
 from .hwrepo.initialization import initialize
 from .hwrepo.inventory import format_inventory, inventory
+from .hwrepo.layout import default_project_root
 from .hwrepo.models import ProjectKind
 from .hwrepo.rescue import format_rescue, rescue_project
 from .hwrepo.scaffold import new_project
@@ -43,7 +44,7 @@ def main() -> int:
             "list",
         ),
     )
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     parser.add_argument("--destination", type=Path)
     parser.add_argument("--project-id")
     parser.add_argument("--target-version")

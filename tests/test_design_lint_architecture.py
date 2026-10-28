@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import json
+from types import MappingProxyType
 
 import pytest
 
@@ -65,39 +66,41 @@ COMPONENT_THEME_MODULES = (
     "oscillator_output_path_candidates.py",
     "oscillator_output_paths.py",
 )
-THEME_OWNER_PREFIXES = {
-    "connectors": ("connector_",),
-    "interfaces": (
-        "bus_",
-        "can_",
-        "control_input_",
-        "differential_pair_",
-        "digital_peer_",
-        "external_protection",
-        "i3c_",
-        "i2c_",
-        "open_drain_",
-        "rs485_",
-        "serial_",
-        "spi_",
-        "usb_",
-    ),
-    "components": (
-        "component_",
-        "design_lint_component_",
-        "crystal_",
-        "led_",
-        "mosfet_",
-        "oscillator_",
-        "rc_",
-        "stm32_",
-        "two_pin_",
-    ),
-    "power": ("net_dc_", "power_", "regulator_"),
-    "returns": ("component_return_", "connector_return_", "return_"),
-    "schematic": ("schematic_",),
-    "pcb": ("pcb_",),
-}
+THEME_OWNER_PREFIXES = MappingProxyType(
+    {
+        "connectors": ("connector_",),
+        "interfaces": (
+            "bus_",
+            "can_",
+            "control_input_",
+            "differential_pair_",
+            "digital_peer_",
+            "external_protection",
+            "i3c_",
+            "i2c_",
+            "open_drain_",
+            "rs485_",
+            "serial_",
+            "spi_",
+            "usb_",
+        ),
+        "components": (
+            "component_",
+            "design_lint_component_",
+            "crystal_",
+            "led_",
+            "mosfet_",
+            "oscillator_",
+            "rc_",
+            "stm32_",
+            "two_pin_",
+        ),
+        "power": ("net_dc_", "power_", "regulator_"),
+        "returns": ("component_return_", "connector_return_", "return_"),
+        "schematic": ("schematic_",),
+        "pcb": ("pcb_",),
+    }
+)
 
 
 def test_design_lint_public_module_stays_a_small_facade() -> None:

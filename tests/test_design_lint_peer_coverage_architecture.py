@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from types import MappingProxyType
 
 import pytest
 
@@ -21,33 +22,37 @@ pytestmark = [
     pytest.mark.architecture,
 ]
 
-INTERFACE_COVERAGE_MODEL_OWNERS = {
-    "component_peer_pin_models.py": ("ComponentPeerPinRuleCoverage",),
-    "connector_peer_pin_models.py": (
-        "ConnectorFootprintPeerPinCoverage",
-        "ConnectorPeerPinHeuristicCoverage",
-    ),
-    "connector_part_id_peer_models.py": ("ConnectorPartIdPeerPinCoverage",),
-    "digital_peer_voltage_models.py": ("DigitalPeerVoltageRuleCoverage",),
-    "serial_peer_reference_models.py": (
-        "SerialPeerReferenceLinkCoverageEntry",
-        "SerialPeerReferenceCoverageReport",
-    ),
-    "usb_peer_reference_models.py": (
-        "UsbPeerEndpointGroupCoverage",
-        "UsbPeerReferencePinCoverage",
-        "UsbPeerDataShuntBranchCoverage",
-        "UsbPeerDataSeriesResistorCoverage",
-        "UsbPeerDataLineCoverage",
-        "UsbPeerDataPathCoverage",
-        "UsbPeerReferencePathCoverageEntry",
-        "UsbPeerReferenceCoverageReport",
-    ),
-}
-I2C_PEER_REFERENCE_MODELS = {
-    "I2cPeerReferenceBusCoverage",
-    "I2cPeerReferenceCoverageReport",
-}
+INTERFACE_COVERAGE_MODEL_OWNERS = MappingProxyType(
+    {
+        "component_peer_pin_models.py": ("ComponentPeerPinRuleCoverage",),
+        "connector_peer_pin_models.py": (
+            "ConnectorFootprintPeerPinCoverage",
+            "ConnectorPeerPinHeuristicCoverage",
+        ),
+        "connector_part_id_peer_models.py": ("ConnectorPartIdPeerPinCoverage",),
+        "digital_peer_voltage_models.py": ("DigitalPeerVoltageRuleCoverage",),
+        "serial_peer_reference_models.py": (
+            "SerialPeerReferenceLinkCoverageEntry",
+            "SerialPeerReferenceCoverageReport",
+        ),
+        "usb_peer_reference_models.py": (
+            "UsbPeerEndpointGroupCoverage",
+            "UsbPeerReferencePinCoverage",
+            "UsbPeerDataShuntBranchCoverage",
+            "UsbPeerDataSeriesResistorCoverage",
+            "UsbPeerDataLineCoverage",
+            "UsbPeerDataPathCoverage",
+            "UsbPeerReferencePathCoverageEntry",
+            "UsbPeerReferenceCoverageReport",
+        ),
+    }
+)
+I2C_PEER_REFERENCE_MODELS = frozenset(
+    {
+        "I2cPeerReferenceBusCoverage",
+        "I2cPeerReferenceCoverageReport",
+    }
+)
 PEER_COVERAGE_SERVICES = (
     "component_peer_pin_coverage.py",
     "component_power_input_peer_scan.py",

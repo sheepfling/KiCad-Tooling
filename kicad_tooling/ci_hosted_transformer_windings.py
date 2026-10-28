@@ -7,37 +7,42 @@ import json
 import os
 import sys
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING
+from types import MappingProxyType
 
-from .ci_hosted_support import normalized_erc_report_bytes
+from .ci_hosted_support import HostedLog, normalized_erc_report_bytes, tooling_checkout_root
 from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
 from .hwrepo.design_lint import evaluate
+from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
 from .validate import read_netlist
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
-
 RULE_ID = "component.transformer_winding_same_net"
 GROUP_BRIDGE_RULE_ID = "component.transformer_winding_groups_share_net"
-FIXTURE_CASES = {
-    "fault": "transformer-windings/same-net-winding-1.kicad_sch",
-    "cross_winding_fault": "transformer-windings/shared-winding-groups-net.kicad_sch",
-    "control": "transformer-windings/distinct-winding-terminal-nets.kicad_sch",
-}
-EXPECTED_FINDINGS = {
-    "fault": ("T1: winding 1 pins 1/2 share WINDING_1_TIED",),
-    "cross_winding_fault": (),
-    "control": (),
-}
-EXPECTED_GROUP_BRIDGE_FINDINGS = {
-    "fault": (),
-    "cross_winding_fault": ("T1: winding groups share WINDING_GROUPS_SHARED",),
-    "control": (),
-}
+FIXTURE_CASES: Mapping[str, str] = MappingProxyType(
+    {
+        "fault": "transformer-windings/same-net-winding-1.kicad_sch",
+        "cross_winding_fault": "transformer-windings/shared-winding-groups-net.kicad_sch",
+        "control": "transformer-windings/distinct-winding-terminal-nets.kicad_sch",
+    }
+)
+EXPECTED_FINDINGS: Mapping[str, tuple[str, ...]] = MappingProxyType(
+    {
+        "fault": ("T1: winding 1 pins 1/2 share WINDING_1_TIED",),
+        "cross_winding_fault": (),
+        "control": (),
+    }
+)
+EXPECTED_GROUP_BRIDGE_FINDINGS: Mapping[str, tuple[str, ...]] = MappingProxyType(
+    {
+        "fault": (),
+        "cross_winding_fault": ("T1: winding groups share WINDING_GROUPS_SHARED",),
+        "control": (),
+    }
+)
 
 
 def transformer_winding_fixture_lane(
@@ -48,13 +53,11 @@ def transformer_winding_fixture_lane(
     log: HostedLog,
 ) -> None:
     """Export exact-version fault/control schematics and compare native evidence."""
-    from .hwrepo.electrical import selected_config
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image or config.kicad_version not in {"10.0.0", "10.0.5"}:
         raise ValueError("Transformer winding fixtures require a pinned KiCad 10.0 image")
-    fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint"
     source_hashes = {
         case: digest(fixture_root / relative) for case, relative in FIXTURE_CASES.items()
     }

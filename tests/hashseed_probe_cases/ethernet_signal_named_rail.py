@@ -8,9 +8,10 @@ from tests.design_lint_fixtures import coach
 from tests.design_lint_fixtures.ethernet_signal_named_rail import (
     ethernet_signal_on_named_rail_netlist,
 )
+from tests.json_types import JsonObject
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     fault = evaluate(
         "synthetic-ethernet-signal-named-rail-fault",
         coach(ethernet_signal_on_named_rail_netlist()),

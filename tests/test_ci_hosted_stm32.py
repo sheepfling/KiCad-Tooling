@@ -14,7 +14,9 @@ import pytest
 
 from kicad_tooling.ci_hosted import (
     HostedLog,
+    stm32_pin_map_fixture_lane,
 )
+from kicad_tooling.hwrepo.electrical import selected_config
 from tests.support import reference_root
 
 pytestmark = [
@@ -32,8 +34,6 @@ pytestmark = [
 )
 class NativeStm32PinMapFixtureTests(unittest.TestCase):
     def test_cube_mx_and_schematic_pin_map_faults_export_repeatably(self) -> None:
-        from kicad_tooling.ci_hosted import stm32_pin_map_fixture_lane
-        from kicad_tooling.hwrepo.electrical import selected_config
 
         repository = Path(__file__).resolve().parents[1]
         acceptance = repository / "build/ci"

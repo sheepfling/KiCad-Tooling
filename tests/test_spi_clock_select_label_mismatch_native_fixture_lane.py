@@ -11,7 +11,9 @@ import pytest
 
 from kicad_tooling.ci_hosted_spi_clock_select_label_mismatch import (
     SPI_CLOCK_SELECT_LABEL_TOOLCHAINS,
+    spi_clock_select_label_fixture_lane,
 )
+from kicad_tooling.ci_hosted_support import HostedLog
 from tests.native_fixture_support import assert_native_fixture_mounts
 
 RULE_ID = "bus.spi_clock_select_label_mismatch"
@@ -38,10 +40,6 @@ PROJECT_TOOLCHAINS = tuple(
 def test_native_spi_clock_select_label_fault_and_control_repeat(
     tmp_path: Path, version: str, image: str
 ) -> None:
-    from kicad_tooling.ci_hosted_spi_clock_select_label_mismatch import (
-        spi_clock_select_label_fixture_lane,
-    )
-    from kicad_tooling.ci_hosted_support import HostedLog
 
     root = tmp_path
     log = HostedLog(root, f"native-spi-clock-select-label-{version}")

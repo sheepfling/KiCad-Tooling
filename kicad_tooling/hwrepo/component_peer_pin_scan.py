@@ -35,7 +35,7 @@ AssignmentOutlierSelector = Callable[
 PeerPinFunctionSelector = Callable[[tuple[str | None, ...]], bool]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PeerPowerPinAssignmentDivergence:
     symbol: str
     pin_number: str
@@ -47,7 +47,7 @@ class PeerPowerPinAssignmentDivergence:
     peer_symbols: tuple[str, ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PeerPinAssignmentOutlier:
     symbol: str
     pin_number: str
@@ -62,7 +62,7 @@ class PeerPinAssignmentOutlier:
     outlier_pins: tuple[str, ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PeerPinAssignmentScan:
     exact_symbol_peer_group_count: int
     part_id_peer_group_count: int
@@ -82,7 +82,7 @@ class PeerPinAssignmentScan:
     outliers: tuple[PeerPinAssignmentOutlier, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ComponentPeerPinAssignmentScans:
     power_output: PeerPinAssignmentScan
     signal_output: PeerPinAssignmentScan

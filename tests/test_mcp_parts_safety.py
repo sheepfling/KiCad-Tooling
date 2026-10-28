@@ -9,7 +9,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 from mcp import Client
-from mcp.types import TextContent
 
 from kicad_tooling.hwrepo import mcp_files, mcp_parts, parts_workflow
 from kicad_tooling.hwrepo.contracts import read_model, write_model
@@ -17,6 +16,7 @@ from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import McpPurchasingPreferencesResult, PurchasingPreferences
 from tests import test_parts_workflow as fixture
+from tests.mcp_test_support import text_content
 
 
 class McpPartsSafetyTests(unittest.IsolatedAsyncioTestCase):
@@ -237,7 +237,7 @@ class McpPartsSafetyTests(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(stale.is_error)
             self.assertIn(
                 "hash mismatch",
-                " ".join(item.text for item in stale.content if isinstance(item, TextContent)),
+                text_content(stale),
             )
             self.assertEqual(self.preferences.read_bytes(), before)
 

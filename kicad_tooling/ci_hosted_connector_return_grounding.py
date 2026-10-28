@@ -7,9 +7,10 @@ import json
 from collections.abc import Mapping
 
 from .ci_hosted_connector_return_context import ConnectorReturnFixtureContext
-from .hwrepo.grounding_models import GroundingAnalysis
+from .hwrepo.electrical import grounding_checks, pin_relationship_checks
+from .hwrepo.grounding_models import GroundDomain, GroundingAnalysis
 from .hwrepo.models import ElectricalCheck
-from .hwrepo.pin_connectivity_models import PinConnectivityAnalysis
+from .hwrepo.pin_connectivity_models import PinConnectivityAnalysis, PinRelationshipRule
 
 
 def _record_grounding_contract(
@@ -101,10 +102,6 @@ def verify_db9_return_contracts(
     ctx: ConnectorReturnFixtureContext, db9_control_nets: Mapping[str, tuple[str, ...]]
 ) -> None:
     """Check common and isolated DB9 requirements against only DB9 native fixtures."""
-    from .hwrepo.electrical import grounding_checks, pin_relationship_checks
-    from .hwrepo.grounding_models import GroundDomain
-    from .hwrepo.pin_connectivity_models import PinRelationshipRule
-
     expected_pins = tuple(f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9))
     if db9_control_nets.get("COMMON_RETURN") != expected_pins:
         raise ValueError("Common four-port DB9 control lost its eight native pin assignments")
@@ -293,9 +290,6 @@ def verify_db9_return_contracts(
 
 def verify_peer_power_pin_contracts(ctx: ConnectorReturnFixtureContext) -> None:
     """Check generic peer-power and stale-pin contract controls."""
-    from .hwrepo.electrical import pin_relationship_checks
-    from .hwrepo.pin_connectivity_models import PinRelationshipRule
-
     peer_common_power = PinConnectivityAnalysis(
         basis="Synthetic approved three-port pinout requires one shared +5V contact net",
         rules=(

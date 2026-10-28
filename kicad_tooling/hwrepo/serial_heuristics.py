@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from .models import ElectricalCheck, NetlistContract
-from .reference_bonds import reference_bond_issues
-from .serial_logic_models import SerialLogicInputLimits, SerialLogicOutputLimits
-from .serial_peer_models import (
+from collections.abc import Mapping
+
+from kicad_tooling.hwrepo.serial_peer_models import (
     SerialBridgeRequirement,
     SerialDirectPeerRequirement,
     SerialEndpointRequirement,
@@ -13,6 +12,10 @@ from .serial_peer_models import (
     SerialPeerAnalysis,
     SerialShiftedPeerRequirement,
 )
+
+from .models import ElectricalCheck, NetlistContract
+from .reference_bonds import reference_bond_issues
+from .serial_logic_models import SerialLogicInputLimits, SerialLogicOutputLimits
 
 
 def logic_direction_check(
@@ -194,21 +197,26 @@ def serial_peer_checks(
     results: list[ElectricalCheck] = []
     for link in spec.links:
         link_id = link.id
-        if isinstance(link.peer, SerialDirectPeerRequirement):
+        peer: (
+            SerialDirectPeerRequirement
+            | SerialShiftedPeerRequirement
+            | SerialExternalPeerRequirement
+        ) = link.peer
+        if isinstance(peer, SerialDirectPeerRequirement):
             results.extend(
                 _serial_logic_voltage_checks(
                     link_id,
                     link.endpoint,
-                    link.peer.endpoint,
+                    peer.endpoint,
                     mode="direct",
                 )
             )
-        elif isinstance(link.peer, SerialShiftedPeerRequirement):
+        elif isinstance(peer, SerialShiftedPeerRequirement):
             results.extend(
                 _serial_logic_voltage_checks(
                     link_id,
                     link.endpoint,
-                    link.peer.endpoint,
+                    peer.endpoint,
                     mode="level_shifted",
                 )
             )
@@ -224,13 +232,13 @@ def serial_peer_checks(
         local_rows, local_identity_ok, local_pins_ok = endpoint_checks(link_id, link.endpoint)
         results.extend(local_rows)
 
-        if isinstance(link.peer, SerialExternalPeerRequirement):
+        if isinstance(peer, SerialExternalPeerRequirement):
             results.extend(
                 (
                     ElectricalCheck(
                         id=f"serial/{link_id}/peer-map",
                         status="NOT_APPLICABLE",
-                        detail=f"Remote TX/RX mapping is outside the local netlist: {link.peer.reason}",
+                        detail=f"Remote TX/RX mapping is outside the local netlist: {peer.reason}",
                     ),
                     ElectricalCheck(
                         id=f"serial/{link_id}/voltage-domain",
@@ -250,13 +258,13 @@ def serial_peer_checks(
             )
             continue
 
-        remote = link.peer.endpoint
+        remote = peer.endpoint
         remote_rows, remote_identity_ok, remote_pins_ok = endpoint_checks(link_id, remote)
         results.extend(remote_rows)
         bridge_rows: list[ElectricalCheck] = []
         bridge_paths_ok: dict[tuple[str, str, str, str], bool] = {}
-        if isinstance(link.peer, SerialShiftedPeerRequirement):
-            for bridge in link.peer.bridges:
+        if isinstance(peer, SerialShiftedPeerRequirement):
+            for bridge in peer.bridges:
                 bridge_key = bridge.reference.casefold()
                 bridge_identity_failures = identity_issues(
                     bridge.reference, bridge.symbol, bridge.footprint
@@ -303,9 +311,9 @@ def serial_peer_checks(
             destination: str,
             *,
             bridges: tuple[SerialBridgeRequirement, ...] = (
-                link.peer.bridges if isinstance(link.peer, SerialShiftedPeerRequirement) else ()
+                peer.bridges if isinstance(peer, SerialShiftedPeerRequirement) else ()
             ),
-            valid_paths: dict[tuple[str, str, str, str], bool] = bridge_paths_ok,
+            valid_paths: Mapping[tuple[str, str, str, str], bool] = bridge_paths_ok,
         ) -> bool:
             if source == destination:
                 return True

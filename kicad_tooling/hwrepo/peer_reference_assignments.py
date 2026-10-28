@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 
 from .models import NetlistContract
@@ -16,7 +18,7 @@ _RETURN_FUNCTION_SUFFIX = re.compile(r"\d+$")
 _EXTENDED_RETURN_FUNCTIONS = frozenset({"gnda", "gndd", "gndp", "vssa", "vssd", "vssp"})
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PeerReferencePinAssignment:
     """One assigned return-like pin from a complete native inventory."""
 
@@ -26,7 +28,7 @@ class PeerReferencePinAssignment:
     net: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PeerReferenceAssignments:
     """Return-pin assignments and their single-domain result when available."""
 
@@ -52,7 +54,7 @@ def _supported_reference_pin_type(function: str, electrical_type: str) -> bool:
 def peer_reference_assignments(
     reference: str,
     observed: NetlistContract,
-    pin_nets: dict[str, set[str]],
+    pin_nets: Mapping[str, AbstractSet[str]],
     pin_numbers: tuple[str, ...],
 ) -> PeerReferenceAssignments:
     """Resolve explicit return pins from complete native pin metadata.

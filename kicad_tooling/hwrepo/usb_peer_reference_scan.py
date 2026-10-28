@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from collections.abc import Set as AbstractSet
 from typing import Literal
 
 from .connector_identity import connector_candidate_references
@@ -118,7 +119,7 @@ def scan_usb_peer_reference_reviews(
         references: Iterable[str],
         *,
         endpoint_role: Literal["connector", "phy"],
-        supported: set[tuple[str, str | None, UsbPeerSignalFamily]],
+        supported: AbstractSet[tuple[str, str | None, UsbPeerSignalFamily]],
     ) -> tuple[UsbPeerEndpointGroupCoverage, ...]:
         result: list[UsbPeerEndpointGroupCoverage] = []
         for reference in references:

@@ -6,7 +6,7 @@ import re
 from collections.abc import Mapping
 from datetime import date
 from enum import Enum
-from typing import Annotated, Literal, cast
+from typing import Annotated, Literal
 
 from pydantic import (
     AwareDatetime,
@@ -96,7 +96,7 @@ from .model_primitives import (
     StrictModel,
     TemplateVersion,
 )
-from .netlist_pins import is_native_unconnected_net_name
+from .netlist_contract_inputs import NetlistRawValue, normalize_native_unconnected_nets
 
 CrystalLoadCapRequirement = _crystal_network_models.CrystalLoadCapRequirement
 CrystalNetworkRequirement = _crystal_network_models.CrystalNetworkRequirement
@@ -1014,8 +1014,8 @@ class ConnectionKind(str, Enum):
 class Connection(StrictModel):
     id: Identifier
     kind: ConnectionKind
-    from_terminal: Identifier = Field(alias="from")
-    to_terminal: Identifier = Field(alias="to")
+    from_terminal: Annotated[Identifier, Field(alias="from")]
+    to_terminal: Annotated[Identifier, Field(alias="to")]
     variants: tuple[Identifier, ...]
     assurance: Assurance
     evidence: tuple[Identifier, ...]
@@ -1140,8 +1140,8 @@ class HarnessSchedule(StrictModel):
 
 class ElectricalConnectionView(StrictModel):
     id: Identifier
-    from_terminal: Terminal = Field(alias="from")
-    to_terminal: Terminal = Field(alias="to")
+    from_terminal: Annotated[Terminal, Field(alias="from")]
+    to_terminal: Annotated[Terminal, Field(alias="to")]
     harness: Identifier | None = None
     assurance: Assurance
     evidence: tuple[Identifier, ...]
@@ -1160,8 +1160,8 @@ class ElectricalView(StrictModel):
 class SystemConnectionView(StrictModel):
     id: Identifier
     kind: ConnectionKind
-    from_terminal: Terminal = Field(alias="from")
-    to_terminal: Terminal = Field(alias="to")
+    from_terminal: Annotated[Terminal, Field(alias="from")]
+    to_terminal: Annotated[Terminal, Field(alias="to")]
     harness: Identifier | None = None
     assurance: Assurance
     evidence: tuple[Identifier, ...]
@@ -1802,65 +1802,10 @@ class NetlistContract(StrictModel):
 
     @model_validator(mode="before")
     @classmethod
-    def separate_native_unconnected_nets(cls, value: object, info: ValidationInfo) -> object:
-        """Keep KiCad's per-pin unconnected sentinels out of electrical nets."""
-        if not isinstance(value, Mapping):
-            return value
-        source = cast(Mapping[object, object], value)
-        nets = source.get("nets")
-        existing_unconnected = source.get("unconnected_nets", {})
-        if not isinstance(nets, Mapping) or not isinstance(existing_unconnected, Mapping):
-            return cast(object, value)
-        net_mapping = cast(Mapping[object, object], nets)
-        unconnected_mapping = cast(Mapping[object, object], existing_unconnected)
-
-        assigned: dict[object, object] = {}
-        unconnected: dict[object, object] = dict(unconnected_mapping)
-        moved = False
-        for name, pins in net_mapping.items():
-            if not isinstance(name, str) or not is_native_unconnected_net_name(name):
-                assigned[name] = pins
-                continue
-            moved = True
-            previous = unconnected.get(name)
-            if isinstance(previous, (tuple, list)) and isinstance(pins, (tuple, list)):
-                previous_items = cast(tuple[object, ...] | list[object], previous)
-                current_items = cast(tuple[object, ...] | list[object], pins)
-                if all(isinstance(pin, str) for pin in previous_items) and all(
-                    isinstance(pin, str) for pin in current_items
-                ):
-                    previous_pins = cast(tuple[str, ...] | list[str], previous_items)
-                    current_pins = cast(tuple[str, ...] | list[str], current_items)
-                    unconnected[name] = tuple(
-                        sorted(set(previous_pins) | set(current_pins), key=str.casefold)
-                    )
-                else:
-                    unconnected[name] = pins
-            else:
-                unconnected[name] = pins
-
-        if not moved and info.mode != "json":
-            return cast(object, value)
-        normalized: dict[object, object] = dict(source.items())
-        if moved:
-            normalized["nets"] = assigned
-            normalized["unconnected_nets"] = unconnected
-        if info.mode == "json":
-            # Returning a Python mapping from a before-validator switches
-            # subsequent validation to Python mode. Preserve JSON array
-            # semantics for every tuple field before strict field validation.
-            for field in ("nets", "unconnected_nets", "component_pin_numbers"):
-                table = normalized.get(field)
-                if isinstance(table, Mapping):
-                    table_mapping = cast(Mapping[object, object], table)
-                    normalized[field] = {
-                        key: tuple(cast(list[object], items)) if isinstance(items, list) else items
-                        for key, items in table_mapping.items()
-                    }
-            dnp_components = normalized.get("dnp_components")
-            if isinstance(dnp_components, list):
-                normalized["dnp_components"] = tuple(cast(list[object], dnp_components))
-        return normalized
+    def separate_native_unconnected_nets(
+        cls, value: NetlistRawValue, info: ValidationInfo
+    ) -> object:
+        return normalize_native_unconnected_nets(value, info)
 
 
 ReturnNetGroup = _return_net_models.ReturnNetGroup
@@ -2233,7 +2178,7 @@ class ThreeDReport(StrictModel):
 class ModelMapAssignment(StrictModel):
     """An exact placed-footprint reference mapped to reviewed model source."""
 
-    reference: str = Field(min_length=1)
+    reference: Annotated[str, Field(min_length=1)]
     model: str
     candidate_assets: tuple[RepositoryPath, ...] = ()
     model_sha256: Digest | None = None
@@ -2242,7 +2187,7 @@ class ModelMapAssignment(StrictModel):
 class McpModelMapAssignment(StrictModel):
     """MCP JSON-array input, converted to an immutable assignment at the adapter."""
 
-    reference: str = Field(min_length=1)
+    reference: Annotated[str, Field(min_length=1)]
     model: str
     candidate_assets: list[RepositoryPath] = Field(default_factory=list)
     model_sha256: Digest | None = None
@@ -2255,7 +2200,7 @@ class ModelMap(StrictModel):
     project_id: Identifier
     board_sha256: Digest
     manifest_sha256: Digest
-    assignments: tuple[ModelMapAssignment, ...] = Field(min_length=1)
+    assignments: Annotated[tuple[ModelMapAssignment, ...], Field(min_length=1)]
 
     @model_validator(mode="after")
     def unique_references(self) -> ModelMap:
@@ -2296,10 +2241,10 @@ class PurchasingSchemaModel(StrictModel):
 
     @field_validator("schema_version", mode="before")
     @classmethod
-    def exact_schema_version(cls, value: str) -> str:
-        if type(value) is not str or value != "1":
+    def exact_schema_version(cls, value: object) -> str:
+        if value != "1":
             raise ValueError("Unsupported purchasing schema version")
-        return value
+        return "1"
 
 
 class PurchasingPreferences(PurchasingSchemaModel):
@@ -2375,9 +2320,9 @@ class DigiKeyHandoffQuantity(StrictModel):
 
 
 class DigiKeyHandoffPart(StrictModel):
-    requested_part_number: NonEmptyText = Field(alias="requestedPartNumber")
+    requested_part_number: Annotated[NonEmptyText, Field(alias="requestedPartNumber")]
     quantities: Annotated[tuple[DigiKeyHandoffQuantity, ...], Field(min_length=1)]
-    customer_reference: str = Field(alias="customerReference")
+    customer_reference: Annotated[str, Field(alias="customerReference")]
     notes: str
 
 

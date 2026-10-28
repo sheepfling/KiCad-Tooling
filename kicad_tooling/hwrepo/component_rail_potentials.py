@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -10,7 +11,7 @@ from .power_rails import explicit_voltage_rail_value
 from .return_nets import is_return_like_net_name
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class RailPotential:
     """Potential evidence used only to order named component terminals."""
 
@@ -23,7 +24,7 @@ class RailPotential:
 def named_net_potential(
     net_name: str,
     pins: tuple[str, ...],
-    pin_functions: dict[str, str],
+    pin_functions: Mapping[str, str],
 ) -> RailPotential | None:
     """Resolve explicit numeric rails or unambiguous positive/return roles."""
     numeric_values: set[Decimal] = set()

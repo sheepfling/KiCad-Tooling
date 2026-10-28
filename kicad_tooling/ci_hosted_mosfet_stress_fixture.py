@@ -4,17 +4,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import TYPE_CHECKING
 
 from .ci_hosted_component_rating_context import ComponentRatingFixtureContext
+from .ci_hosted_support import HostedLog
 from .hwrepo.contracts import read_kicad_erc_report
 from .hwrepo.evidence import digest
-from .validate import read_netlist
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
-
-
 from .hwrepo.models import (
     NetlistContract,
 )
@@ -25,6 +19,7 @@ from .hwrepo.mosfet_stress_models import (
     MosfetStressRequirement,
     MosfetVoltageInterval,
 )
+from .validate import read_netlist
 
 
 def verify_mosfet_stress_fixture(context: ComponentRatingFixtureContext, log: HostedLog) -> None:
@@ -145,15 +140,13 @@ def verify_mosfet_stress_fixture(context: ComponentRatingFixtureContext, log: Ho
         unexpected = tuple(
             item.id
             for item in checks
-            if item.status != "PASS" and not (item.id.endswith("/vds") or item.id.endswith("/vgs"))
+            if item.status != "PASS" and item.id.rsplit("/", 1)[-1] not in {"vds", "vgs"}
         )
         if unexpected:
             raise ValueError(
                 f"Native MOSFET identity, terminal, or state checks failed: {unexpected}"
             )
-        stress = tuple(
-            item for item in checks if item.id.endswith("/vds") or item.id.endswith("/vgs")
-        )
+        stress = tuple(item for item in checks if item.id.rsplit("/", 1)[-1] in {"vds", "vgs"})
         if drain_v == 48.0 and gate_v == 16.0:
             if any(item.status != "PASS" for item in stress):
                 raise ValueError("Native MOSFET equality-at-project-limit control failed")

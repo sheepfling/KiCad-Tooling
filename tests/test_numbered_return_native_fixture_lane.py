@@ -10,6 +10,7 @@ from types import SimpleNamespace
 import pytest
 
 from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import CommandEvidence, DesignLintPolicy, NetlistContract
 from tests.design_lint_fixtures.connector_return_cases import (
     pwm_return_case_contracts,
@@ -120,7 +121,6 @@ def test_native_numbered_pwm_return_fault_and_control_are_focused_and_repeatable
     tmp_path: Path, project: str, version: str
 ) -> None:
     from kicad_tooling.ci_hosted_connector_return_lane import numbered_pwm_return_fixture_lane
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(
@@ -193,7 +193,6 @@ def test_native_ret_return_label_fault_and_control_are_focused_and_repeatable(
     tmp_path: Path, project: str, version: str
 ) -> None:
     from kicad_tooling.ci_hosted_connector_return_lane import ret_return_label_fixture_lane
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(

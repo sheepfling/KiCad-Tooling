@@ -10,11 +10,12 @@ from tests.design_lint_fixtures.pcb_component_inventory import (
     netlist,
     snapshot,
 )
+from tests.json_types import JsonObject
 
 
 def _inventory_report(
     *, board_references: tuple[str, ...], placed_footprint: str | None
-) -> dict[str, object]:
+) -> JsonObject:
     observed = netlist(components={"U1": "Package_QFP:TQFP-48"})
     board = snapshot(
         *board_references,
@@ -29,7 +30,7 @@ def _inventory_report(
     return report.model_dump(mode="json")
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     """Return missing, mismatched, and exact-footprint inventory cases."""
     return {
         "pcb_inventory_missing_placement_fault": _inventory_report(

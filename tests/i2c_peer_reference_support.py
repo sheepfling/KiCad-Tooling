@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 
 def i2c_peer_netlist(
     *,
-    reference_nets: dict[str, str] | None = None,
-    signal_nets: dict[str, tuple[str, str]] | None = None,
-    symbols: dict[str, str] | None = None,
-    part_ids: dict[str, str] | None = None,
+    reference_nets: Mapping[str, str] | None = None,
+    signal_nets: Mapping[str, tuple[str, str]] | None = None,
+    symbols: Mapping[str, str] | None = None,
+    part_ids: Mapping[str, str] | None = None,
     dnp: tuple[str, ...] = (),
     incomplete_reference_types: tuple[str, ...] = (),
-    shield_nets: dict[str, str] | None = None,
+    shield_nets: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     """Build exact I2C peer pin inventories without a product-specific design."""
     if reference_nets is None:

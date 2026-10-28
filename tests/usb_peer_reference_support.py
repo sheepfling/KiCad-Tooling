@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, TypedDict
 
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import (
@@ -23,6 +23,14 @@ from kicad_tooling.hwrepo.usb_reference_pin_models import UsbReferencePinRequire
 
 RULE_ID = "bus.usb_peer_reference_review"
 PATH_RULE_ID = "bus.usb_data_path_mismatch"
+
+
+class UsbReferenceMapOptions(TypedDict, total=False):
+    """Optional reference decisions expanded into a USB interface requirement."""
+
+    connector_reference_pins: tuple[UsbReferencePinRequirement, ...]
+    phy_reference_pins: tuple[UsbReferencePinRequirement, ...]
+    reference_policy: Literal["common_net", "bonded", "separate_nets"]
 
 
 def usb_peer_netlist(
@@ -283,13 +291,13 @@ def usb_multiport_data_map(
 
 def usb_series_data_map(
     *,
-    reference_policy: str | None = "separate_nets",
+    reference_policy: Literal["common_net", "bonded", "separate_nets"] | None = "separate_nets",
     connector_reference_net: str = "USB_GND",
     phy_reference_net: str = "BOARD_GND",
     positive_resistor: str = "R1",
     negative_resistor: str = "R2",
 ) -> UsbDataPathMap:
-    reference_pins: dict[str, object] = {}
+    reference_pins: UsbReferenceMapOptions = {}
     if reference_policy is not None:
         reference_pins = {
             "connector_reference_pins": (
@@ -349,12 +357,12 @@ def usb_series_data_map(
 
 def usb_data_map(
     *,
-    reference_policy: str | None = None,
+    reference_policy: Literal["common_net", "bonded", "separate_nets"] | None = None,
     expected_connector_reference_net: str = "USB_GND",
     expected_phy_reference_net: str = "BOARD_GND",
     phy_reference_pin: str = "U1.3",
 ) -> UsbDataPathMap:
-    reference_pins: dict[str, object] = {}
+    reference_pins: UsbReferenceMapOptions = {}
     if reference_policy is not None:
         reference_pins = {
             "connector_reference_pins": (

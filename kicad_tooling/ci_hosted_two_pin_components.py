@@ -2,20 +2,32 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .ci_hosted_two_pin_component_cases import (
     TWO_PIN_COMPONENT_CANDIDATE_KINDS,
     two_pin_component_fixture_cases_for_rules,
 )
+from .hwrepo.component_role_models import (
+    ComponentRoleBinding,
+    ComponentRoleMap,
+    ComponentRolePin,
+)
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.two_pin_components import two_pin_components_on_same_net
+from .validate import read_netlist
 
 
 def two_pin_component_fixture_lane(
@@ -27,22 +39,6 @@ def two_pin_component_fixture_lane(
     rule_ids: tuple[str, ...] | None = None,
 ) -> None:
     """Verify same-net component rules against repeated pinned native exports."""
-    import hashlib
-    import os
-
-    from .hwrepo.component_role_models import (
-        ComponentRoleBinding,
-        ComponentRoleMap,
-        ComponentRolePin,
-    )
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .hwrepo.two_pin_components import two_pin_components_on_same_net
-    from .validate import read_netlist
 
     root = root.resolve()
     config = selected_config(root, project)
@@ -52,7 +48,7 @@ def two_pin_component_fixture_lane(
         raise ValueError(f"Two-pin component fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
 
-    fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint"
     cases = two_pin_component_fixture_cases_for_rules(rule_ids)
     source_hashes = {
         case: digest(fixture_root / filename) for case, (filename, _, _) in cases.items()
@@ -255,7 +251,9 @@ def two_pin_component_fixture_lane(
         )
     for case in cases:
         report = reports[(case, "first")]
-        findings = {item.subject for item in report.findings if item.rule_id == cases[case][1]}
+        findings = frozenset(
+            item.subject for item in report.findings if item.rule_id == cases[case][1]
+        )
         if findings != cases[case][2]:
             raise ValueError(
                 f"Native {case} lint result differs from expected findings: {sorted(findings)}"

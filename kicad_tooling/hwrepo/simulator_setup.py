@@ -10,13 +10,17 @@ import tarfile
 import tempfile
 import urllib.request
 from pathlib import Path, PurePosixPath
+from types import MappingProxyType
 from typing import Protocol
+from urllib.parse import urlsplit
 
 from .models import CommandEvidence
 from .spice import observed_versions
 
 # Reviewed upstream archive pin already used by the template's electrical lane.
-SOURCE_PINS = {"47": "894e649651f1838a14095e5a5439e7d3aa63e87ede14d283173fda4fcdef675f"}
+SOURCE_PINS = MappingProxyType(
+    {"47": "894e649651f1838a14095e5a5439e7d3aa63e87ede14d283173fda4fcdef675f"}
+)
 
 
 class SetupLog(Protocol):
@@ -107,7 +111,7 @@ def ensure(
     hasher = hashlib.sha256()
     total = 0
     with urllib.request.urlopen(url, timeout=120) as response, archive.open("xb") as stream:
-        if not response.url.startswith("https://"):
+        if urlsplit(str(response.url)).scheme != "https":
             raise ValueError("Simulator download redirected away from HTTPS")
         while chunk := response.read(1024 * 1024):
             total += len(chunk)

@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -22,21 +23,27 @@ from tests.test_regulator_feedback import regulator_feedback_map
 pytestmark = [pytest.mark.design_lint, pytest.mark.power_lint]
 
 RULE_ID = "power.regulator_feedback_mismatch"
-FIXTURES = {
-    "control": "regulator-feedback-native/control.kicad_sch",
-    "value-fault": "regulator-feedback-native/value-fault.kicad_sch",
-    "split-feedback-fault": "regulator-feedback-native/split-feedback-fault.kicad_sch",
-}
-EXPECTED_SOURCE_HASHES = {
-    "control": "7b0f89c28b607ed9b22bb3757976eb3ddd882c6a543ce093c4557232ffb68e63",
-    "value-fault": "4f032ee18da29f42232ba3bf7ba2b033f6e1e66fced8629599047ae6d114f7f9",
-    "split-feedback-fault": "2f9c3e020f095891745edd137fed1691432fefcd7d43168585e3507a62b30f36",
-}
-EXPECTED_SUBJECTS = {
-    "control": None,
-    "value-fault": "U1: mapped feedback divider",
-    "split-feedback-fault": "U1: mapped feedback divider",
-}
+FIXTURES = MappingProxyType(
+    {
+        "control": "regulator-feedback-native/control.kicad_sch",
+        "value-fault": "regulator-feedback-native/value-fault.kicad_sch",
+        "split-feedback-fault": "regulator-feedback-native/split-feedback-fault.kicad_sch",
+    }
+)
+EXPECTED_SOURCE_HASHES = MappingProxyType(
+    {
+        "control": "7b0f89c28b607ed9b22bb3757976eb3ddd882c6a543ce093c4557232ffb68e63",
+        "value-fault": "4f032ee18da29f42232ba3bf7ba2b033f6e1e66fced8629599047ae6d114f7f9",
+        "split-feedback-fault": "2f9c3e020f095891745edd137fed1691432fefcd7d43168585e3507a62b30f36",
+    }
+)
+EXPECTED_SUBJECTS = MappingProxyType(
+    {
+        "control": None,
+        "value-fault": "U1: mapped feedback divider",
+        "split-feedback-fault": "U1: mapped feedback divider",
+    }
+)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import (
@@ -24,16 +25,16 @@ def peer_component_pin_netlist(
     references: tuple[str, ...] = ("U1", "U2"),
     pin_nets: tuple[str | None, ...] = ("VOUT", None),
     dnp: tuple[str, ...] = (),
-    symbols: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
     default_symbol: str = "Synthetic:PowerModule",
     pin_electrical_types: tuple[str, ...] | None = None,
     pin_function: str = "OUT",
     pin_functions: tuple[str | None, ...] | None = None,
     missing_inventory: tuple[str, ...] = (),
     ambiguous_pins: tuple[str, ...] = (),
-    part_ids: dict[str, str] | None = None,
-    values: dict[str, str] | None = None,
-    footprints: dict[str, str] | None = None,
+    part_ids: Mapping[str, str] | None = None,
+    values: Mapping[str, str] | None = None,
+    footprints: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     if len(references) != len(pin_nets):
         raise ValueError("Each peer needs one pin-net case")
@@ -117,14 +118,14 @@ def peer_power_output_netlist(
     references: tuple[str, ...] = ("U1", "U2"),
     output_nets: tuple[str | None, ...] = ("VOUT", None),
     dnp: tuple[str, ...] = (),
-    symbols: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
     output_electrical_types: tuple[str, ...] | None = None,
     output_function: str = "OUT",
     missing_inventory: tuple[str, ...] = (),
     ambiguous_outputs: tuple[str, ...] = (),
-    part_ids: dict[str, str] | None = None,
-    values: dict[str, str] | None = None,
-    footprints: dict[str, str] | None = None,
+    part_ids: Mapping[str, str] | None = None,
+    values: Mapping[str, str] | None = None,
+    footprints: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     return peer_component_pin_netlist(
         references=references,
@@ -146,7 +147,7 @@ def peer_signal_input_netlist(
     references: tuple[str, ...] = ("U1", "U2"),
     input_nets: tuple[str | None, ...] = ("SIGNAL_A", None),
     dnp: tuple[str, ...] = (),
-    symbols: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
     input_electrical_types: tuple[str, ...] | None = None,
     input_function: str = "IN",
     input_functions: tuple[str | None, ...] | None = None,
@@ -172,7 +173,7 @@ def peer_bidirectional_netlist(
     references: tuple[str, ...] = ("U1", "U2"),
     pin_nets: tuple[str | None, ...] = ("DATA_A", None),
     dnp: tuple[str, ...] = (),
-    symbols: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
     electrical_types: tuple[str, ...] | None = None,
     pin_function: str = "DATA_IO",
     pin_functions: tuple[str | None, ...] | None = None,

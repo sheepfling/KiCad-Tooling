@@ -6,25 +6,21 @@ import os
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from .ci_hosted_component_power_rating_fixture import verify_component_power_rating_fixture
 from .ci_hosted_component_rating_context import ComponentRatingFixtureContext
 from .ci_hosted_component_voltage_rating_fixture import verify_component_voltage_rating_fixture
 from .ci_hosted_connector_contact_rating_fixture import verify_connector_contact_rating_fixture
 from .ci_hosted_mosfet_stress_fixture import verify_mosfet_stress_fixture
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
 
 
 def component_rating_fixtures_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
     """Verify authored component voltage, power, and contact limits on native netlists."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image:
@@ -34,18 +30,14 @@ def component_rating_fixtures_lane(root: Path, *, project: str, image: str, log:
             f"Component and connector rating fixtures do not cover KiCad {config.kicad_version}"
         )
     pinned = pinned_image(config.image)
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/component-voltage-ratings"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/component-voltage-ratings"
     fixture = fixture_root / "rating-control.kicad_sch"
     fixture_sha256 = digest(fixture)
     power_fixture = fixture_root / "power-control.kicad_sch"
     power_fixture_sha256 = digest(power_fixture)
     contact_fixture = fixture_root / "contact-control.kicad_sch"
     contact_fixture_sha256 = digest(contact_fixture)
-    mosfet_fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/mosfet-stress"
-    )
+    mosfet_fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/mosfet-stress"
     mosfet_fixture = mosfet_fixture_root / "mosfet.kicad_sch"
     mosfet_fixture_sha256 = digest(mosfet_fixture)
     scratch = Path(

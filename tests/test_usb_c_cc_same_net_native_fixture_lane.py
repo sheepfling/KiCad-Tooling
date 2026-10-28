@@ -9,7 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.ci_hosted_usb_c_cc_same_net import USB_C_CC_SAME_NET_TOOLCHAINS
+from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.ci_hosted_usb_c_cc_same_net import (
+    USB_C_CC_SAME_NET_TOOLCHAINS,
+    usb_c_cc_same_net_fixture_lane,
+)
 from tests.native_fixture_support import assert_native_fixture_mounts
 
 RULE_ID = "bus.usb_c_cc_same_net"
@@ -36,8 +40,6 @@ PROJECT_TOOLCHAINS = tuple(
 def test_native_usb_c_cc_same_net_fault_and_control_repeat(
     tmp_path: Path, version: str, image: str
 ) -> None:
-    from kicad_tooling.ci_hosted_support import HostedLog
-    from kicad_tooling.ci_hosted_usb_c_cc_same_net import usb_c_cc_same_net_fixture_lane
 
     log = HostedLog(tmp_path, f"native-usb-c-cc-same-net-{version}")
     usb_c_cc_same_net_fixture_lane(tmp_path, version=version, image=image, log=log)

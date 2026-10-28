@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     ComponentRoleBinding,
@@ -68,7 +70,7 @@ def led_rail_bridge_netlist(
     pin_numbers: tuple[str, ...] = ("1", "2"),
     positive_net: str = "+3V3",
     return_net: str = "GND",
-    pin_functions: dict[str, str] | None = None,
+    pin_functions: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     components = {"D1": ComponentContract(value="LED", footprint="Synthetic:LED")}
     symbols = {"D1": symbol}

@@ -8,29 +8,28 @@ import os
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
+from types import MappingProxyType
 
-from .ci_hosted_support import normalized_erc_report_bytes
+from .ci_hosted_support import HostedLog, normalized_erc_report_bytes, tooling_checkout_root
 from .hwrepo.component_mosfet_terminal_order import RULE_ID as TERMINAL_ORDER_RULE_ID
 from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
 from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
 from .validate import read_netlist
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
-
-
-MOSFET_TERMINAL_ORDER_FIXTURE_CASES = {
-    "fault_nmos": "mosfet-terminal-order-native/fault_nmos.kicad_sch",
-    "control_nmos": "mosfet-terminal-order-native/control_nmos.kicad_sch",
-    "fault_pmos": "mosfet-terminal-order-native/fault_pmos.kicad_sch",
-    "control_pmos": "mosfet-terminal-order-native/control_pmos.kicad_sch",
-}
+MOSFET_TERMINAL_ORDER_FIXTURE_CASES = MappingProxyType(
+    {
+        "fault_nmos": "mosfet-terminal-order-native/fault_nmos.kicad_sch",
+        "control_nmos": "mosfet-terminal-order-native/control_nmos.kicad_sch",
+        "fault_pmos": "mosfet-terminal-order-native/fault_pmos.kicad_sch",
+        "control_pmos": "mosfet-terminal-order-native/control_pmos.kicad_sch",
+    }
+)
 
 
 def mosfet_terminal_order_fixture_lane(
@@ -41,13 +40,11 @@ def mosfet_terminal_order_fixture_lane(
     log: HostedLog,
 ) -> None:
     """Export and evaluate NMOS/PMOS rail-order faults and controls twice."""
-    from .hwrepo.electrical import selected_config
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image or config.kicad_version not in {"10.0.0", "10.0.5"}:
         raise ValueError("MOSFET terminal-order fixtures require a pinned KiCad 10.0 image")
-    fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint"
     source_hashes = {
         case: digest(fixture_root / relative)
         for case, relative in MOSFET_TERMINAL_ORDER_FIXTURE_CASES.items()

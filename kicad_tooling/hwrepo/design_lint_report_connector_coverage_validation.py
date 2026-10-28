@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from .connector_peer_pin_models import ConnectorPeerPinHeuristicCoverage
-    from .design_lint_finding_models import DesignLintFinding
-    from .model_primitives import Digest
+from .connector_peer_pin_models import ConnectorPeerPinHeuristicCoverage
+from .design_lint_finding_models import DesignLintFinding
+from .model_primitives import Digest
 
 
 def validate_connector_peer_pin_coverage(

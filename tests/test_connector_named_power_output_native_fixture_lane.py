@@ -18,6 +18,7 @@ from kicad_tooling.ci_hosted_connector_named_power_output import (
     verify_connector_named_power_output_cases,
 )
 from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.synthetic_design_lint_project import (
@@ -132,7 +133,6 @@ def test_native_connector_named_power_output_alias_fault_and_control_are_repeata
     from kicad_tooling.ci_hosted_connector_named_power_output_lane import (
         connector_named_power_output_fixture_lane,
     )
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(

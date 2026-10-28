@@ -275,8 +275,16 @@ def native_pcb_command_matches(
     if argv[-len(expected_tail) :] != expected_tail:
         return False
     mounts = tuple(argv[index + 1] for index, item in enumerate(argv[:-1]) if item == "-v")
+    targets = tuple(_container_volume_target(mount) for mount in mounts)
     return (
-        len(mounts) == 2
-        and sum(mount.endswith(":/work:ro") for mount in mounts) == 1
-        and sum(mount.endswith(":/output:rw") for mount in mounts) == 1
+        len(targets) == 2
+        and targets.count(("/work", "ro")) == 1
+        and targets.count(("/output", "rw")) == 1
     )
+
+
+def _container_volume_target(mount: str) -> tuple[str, str]:
+    parts = mount.rsplit(":", 2)
+    if len(parts) != 3 or not parts[0]:
+        return "", ""
+    return parts[1], parts[2]

@@ -89,6 +89,14 @@ class ConnectorInventoryReview(StrictModel):
     basis: NonEmptyText
 
 
+class ConnectorReviewsDocument(StrictModel):
+    """Versioned connector review document used by source-bound fixture lanes."""
+
+    schema_version: Literal["1"]
+    connector_reviews: tuple[ConnectorInterfaceReview, ...]
+    inventory_review: ConnectorInventoryReview
+
+
 class ConnectorCoverageEntry(StrictModel):
     reference: Identifier
     status: Literal["COVERED", "NOT_APPLICABLE", "UNDECLARED", "INCOMPLETE", "STALE"]

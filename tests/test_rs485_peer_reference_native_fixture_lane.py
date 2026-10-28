@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -21,16 +22,22 @@ pytestmark = [
     pytest.mark.slow,
 ]
 
-SOURCE_HASHES = {
-    "reference-control": {
-        "schematic": "10be7495b5c4bbdd20fc7f637a0fb77d0dc946c1bb54f8b86e580ab19e8441e3",
-        "analysis": "96135ffa15a09b2529b0c383e3171d82ec33c271760413a819ca8c2e9cb956c4",
-    },
-    "reference-fault": {
-        "schematic": "dcceed2427de1a6001cba204dd4f05dee2eb734ae2d77bfb5a58289f7d62622c",
-        "analysis": "8694c6ee028fdd3aca09eecb1c91e3c938ce35b62385672100d630ad7c2005bb",
-    },
-}
+SOURCE_HASHES = MappingProxyType(
+    {
+        "reference-control": MappingProxyType(
+            {
+                "schematic": "10be7495b5c4bbdd20fc7f637a0fb77d0dc946c1bb54f8b86e580ab19e8441e3",
+                "analysis": "96135ffa15a09b2529b0c383e3171d82ec33c271760413a819ca8c2e9cb956c4",
+            }
+        ),
+        "reference-fault": MappingProxyType(
+            {
+                "schematic": "dcceed2427de1a6001cba204dd4f05dee2eb734ae2d77bfb5a58289f7d62622c",
+                "analysis": "8694c6ee028fdd3aca09eecb1c91e3c938ce35b62385672100d630ad7c2005bb",
+            }
+        ),
+    }
+)
 
 
 @pytest.fixture

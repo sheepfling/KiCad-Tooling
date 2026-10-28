@@ -35,6 +35,7 @@ from tests.design_lint_fixtures.component_peer_pin_all_open import (
     generic_component_peer_mixed_netlist,
     generic_component_peer_netlist,
 )
+from tests.json_types import JsonObject
 
 
 def part_id_peer_component_pin_netlist(
@@ -49,7 +50,7 @@ def part_id_peer_component_pin_netlist(
     )
 
 
-def generic_peer_pin_review_report(netlist: NetlistContract, rule_id: str) -> dict[str, object]:
+def generic_peer_pin_review_report(netlist: NetlistContract, rule_id: str) -> JsonObject:
     policy = DesignLintPolicy(
         rules=(
             DesignLintRuleOverride(
@@ -62,7 +63,7 @@ def generic_peer_pin_review_report(netlist: NetlistContract, rule_id: str) -> di
     return component_peer_pin_lint_report(netlist, policy).model_dump(mode="json")
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     return {
         "generic_component_power_input_fault": evaluate(
             "synthetic-generic-component-power-input-hash-seed-fault",

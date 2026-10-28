@@ -12,10 +12,11 @@ from kicad_tooling.hwrepo.pcb_touch_pad_clearance import touch_pad_clearance_ent
 from kicad_tooling.hwrepo.pcb_touch_pad_clearance_models import (
     PcbTouchPadClearanceCoverageReport,
 )
+from tests.json_types import JsonObject
 from tests.pcb_touch_pad_clearance_support import clearance_map, netlist, snapshot
 
 
-def clearance_report(*, distance_nm: int) -> dict[str, object]:
+def clearance_report(*, distance_nm: int) -> JsonObject:
     """Serialize a below-minimum fault or exact-minimum control."""
     authored = clearance_map(minimum_clearance_nm=800_000)
     source_netlist = netlist()
@@ -68,7 +69,7 @@ def clearance_report(*, distance_nm: int) -> dict[str, object]:
     }
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     """Return a fault and exact-threshold control with identical requirements."""
     return {
         "pcb_touch_pad_clearance_fault": clearance_report(distance_nm=500_000),

@@ -7,39 +7,45 @@ import sys
 from pathlib import Path
 
 from .hwrepo.electrical_charts import build_charts, build_suite
+from .hwrepo.layout import default_project_root
 from .hwrepo.models import ElectricalChartsReport, ElectricalChartsSuiteReport
 
 
 def format_text(report: ElectricalChartsReport | ElectricalChartsSuiteReport) -> str:
-    if isinstance(report, ElectricalChartsSuiteReport):
-        lines = [f"Electrical charts suite: {report.status}", f"Receipt: {report.run_directory}"]
+    charts_report: ElectricalChartsReport | ElectricalChartsSuiteReport = report
+    if charts_report.lane == "ELECTRICAL_CHARTS_SUITE":
+        lines = [
+            f"Electrical charts suite: {charts_report.status}",
+            f"Receipt: {charts_report.run_directory}",
+        ]
         lines.extend(
-            f"  {item.project_id}: {item.status} ({item.run_directory})" for item in report.reports
+            f"  {item.project_id}: {item.status} ({item.run_directory})"
+            for item in charts_report.reports
         )
         return "\n".join(lines)
     lines = [
-        f"Electrical charts: {report.status}",
-        f"Project: {report.project_id}",
-        f"Source: {report.source_receipt}",
-        f"Receipt: {report.run_directory}",
+        f"Electrical charts: {charts_report.status}",
+        f"Project: {charts_report.project_id}",
+        f"Source: {charts_report.source_receipt}",
+        f"Receipt: {charts_report.run_directory}",
     ]
-    for item in report.cases:
+    for item in charts_report.cases:
         suffix = (
             f" — {item.samples} samples, {item.csv}, {item.png}, {item.svg}"
             if item.csv
             else f" — {item.detail}"
         )
         lines.append(f"  {item.id}: {item.status}{suffix}")
-    if report.grounding_csv:
-        lines.append(f"Grounding: {report.grounding_csv}")
-    if report.power_csv:
-        lines.append(f"Power: {report.power_csv}")
+    if charts_report.grounding_csv:
+        lines.append(f"Grounding: {charts_report.grounding_csv}")
+    if charts_report.power_csv:
+        lines.append(f"Power: {charts_report.power_csv}")
     return "\n".join(lines)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path.cwd(), help="Repository root")
+    parser.add_argument("--root", type=Path, default=default_project_root(), help="Repository root")
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument(
         "--receipt", type=Path, help="Saved build/.../electrical.json or its receipt directory"

@@ -9,12 +9,13 @@ from tests.design_lint_fixtures.pcb_component_inventory import (
     snapshot,
     source_bound_component_inventory,
 )
+from tests.json_types import JsonObject
 
 RULE_ID = "pcb.schematic_pcb_pad_net_mismatch"
 FOOTPRINT = "Synthetic:Probe_Module"
 
 
-def pad_net_report(*, schematic_net: str, board_net: str) -> dict[str, object]:
+def pad_net_report(*, schematic_net: str, board_net: str) -> JsonObject:
     """Serialize one side-specific net mismatch or an exact assignment control."""
     source_netlist = netlist(
         components={"U1": FOOTPRINT},
@@ -49,7 +50,7 @@ def pad_net_report(*, schematic_net: str, board_net: str) -> dict[str, object]:
     }
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     """Return board-only and schematic-only mismatches with a matching control."""
     return {
         "pcb_pad_net_board_only_mismatch": pad_net_report(

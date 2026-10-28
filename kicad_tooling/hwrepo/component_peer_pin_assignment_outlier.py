@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Mapping
 
 from .component_peer_pin_scan import (
     GENERIC_COMPONENT_MIXED_PIN_TYPES,
@@ -13,7 +14,7 @@ from .models import NetlistContract
 
 
 def _strict_majority_assignment_outlier(
-    assignments: dict[str, tuple[str, ...]], peers: tuple[str, ...]
+    assignments: Mapping[str, tuple[str, ...]], peers: tuple[str, ...]
 ) -> tuple[str, tuple[str, ...]] | None:
     if any(len(nets) != 1 for nets in assignments.values()):
         return None

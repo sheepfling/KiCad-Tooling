@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 
@@ -29,7 +31,7 @@ def named_component_return_pin_cases() -> dict[str, NetlistContract]:
     }
 
 
-def _named_component_power_pins(*, nets: dict[str, tuple[str, ...]]) -> NetlistContract:
+def _named_component_power_pins(*, nets: Mapping[str, tuple[str, ...]]) -> NetlistContract:
     """Build native-shaped evidence for one synthetic named-pin component."""
     return NetlistContract(
         components={

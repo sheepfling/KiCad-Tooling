@@ -250,7 +250,6 @@ def test_native_lane_checks_both_bias_polarities_and_dnp_faults(tmp_path: Path) 
 def test_native_exports_distinguish_bias_polarity_and_dnp_faults(
     project: str, version: str, image: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kicad_tooling.ci_hosted import HostedLog, open_drain_bias_fixture_lane
 
     root = tmp_path
     monkeypatch.setattr(

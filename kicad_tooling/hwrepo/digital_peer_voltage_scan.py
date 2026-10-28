@@ -29,7 +29,7 @@ from .models import NetlistContract
 from .return_nets import is_return_like_net_name
 
 
-@dataclass
+@dataclass(slots=True)
 class _PeerGroup:
     interface: Literal["SPI", "serial"]
     output_rail: VoltageNamedRail

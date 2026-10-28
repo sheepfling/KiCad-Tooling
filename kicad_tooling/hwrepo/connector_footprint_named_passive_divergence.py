@@ -16,7 +16,7 @@ from .design_lint_types import Candidate
 RULE_ID: DesignLintRuleId = "connector.footprint_named_passive_assignment_divergence"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class NamedPassiveDivergenceEvaluation:
     """Candidates and unanchored count for passive connector contacts."""
 

@@ -30,7 +30,7 @@ from tests.electrical_simulation_support import ISLAND, NA, PROJECT, install_fix
 from tests.support import initialize_git
 
 
-@dataclass
+@dataclass(slots=True)
 class ElectricalEvidenceWorkspace:
     """A disposable source-bound electrical report and native-summary pair."""
 

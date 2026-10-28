@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 
 from .models import NetlistContract
 from .usb_peer_endpoint_analysis import casefold_mapping, pin_net_index
@@ -22,8 +24,8 @@ _RESISTOR_SYMBOL = re.compile(r"^Device:R(?:_[A-Z0-9_]+)?$", re.IGNORECASE)
 def d_designated_shunt_branches(
     observed: NetlistContract,
     data_net: str,
-    extra_pins: set[str],
-    reference_nets: set[str],
+    extra_pins: AbstractSet[str],
+    reference_nets: AbstractSet[str],
 ) -> tuple[UsbPeerDataShuntBranch, ...] | None:
     """Accept complete two-pin passive D-designated branches to endpoint references."""
     if not extra_pins:
@@ -170,9 +172,9 @@ def _data_line_path(
     phy: UsbEndpoint,
     *,
     positive: bool,
-    net_members: dict[str, set[str]],
+    net_members: Mapping[str, AbstractSet[str]],
     observed: NetlistContract,
-    reference_nets: set[str],
+    reference_nets: AbstractSet[str],
 ) -> tuple[UsbPeerDataSeriesResistor | None, tuple[UsbPeerDataShuntBranch, ...]] | None:
     connector_pins = connector.positive_pins if positive else connector.negative_pins
     phy_pins = phy.positive_pins if positive else phy.negative_pins
@@ -235,7 +237,7 @@ def _data_line_path(
 def usb_data_link(
     connector: UsbEndpoint,
     phy: UsbEndpoint,
-    net_members: dict[str, set[str]],
+    net_members: Mapping[str, AbstractSet[str]],
     observed: NetlistContract,
 ) -> UsbPeerDataLink | None:
     if (
@@ -293,7 +295,7 @@ def usb_data_link(
 def usb_superspeed_direct_data_link(
     connector: UsbEndpoint,
     phy: UsbEndpoint,
-    net_members: dict[str, set[str]],
+    net_members: Mapping[str, AbstractSet[str]],
 ) -> UsbPeerDataLink | None:
     """Match one unambiguous direct USB SuperSpeed P/N pair between two endpoints."""
     if (

@@ -7,10 +7,11 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Any
 
 import pytest
 
+from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from tests.hosted_ci_component_power_support import assert_unconnected_component_power_input_cases
 from tests.hosted_ci_connector_common_support import normalized_connector_return_patterns
 from tests.hosted_ci_connector_peer_support import assert_connector_peer_pin_cases
@@ -25,6 +26,7 @@ from tests.hosted_ci_connector_return_support import (
     assert_positive_rail_return_cases,
 )
 from tests.hosted_connector_return_expected_stages import EXPECTED_CONNECTOR_RETURN_STAGES
+from tests.json_types import JsonObject
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.support import reference_root
 from tests.synthetic_design_lint_project import (
@@ -48,9 +50,8 @@ pytestmark = [
 
 
 @pytest.fixture(scope="module")
-def connector_return_results_by_version() -> dict[str, dict[str, dict[str, Any]]]:
+def connector_return_results_by_version() -> dict[str, dict[str, JsonObject]]:
     from kicad_tooling.ci_hosted import HostedLog, connector_return_lint_fixture_lane
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     repository = Path(__file__).resolve().parents[1]
     acceptance = repository / "build/ci"
@@ -66,7 +67,7 @@ def connector_return_results_by_version() -> dict[str, dict[str, dict[str, Any]]
         "controller": "10.0.0",
         "raspberry-pi-status-led": "10.0.5",
     }
-    results_by_version: dict[str, dict[str, dict[str, Any]]] = {}
+    results_by_version: dict[str, dict[str, JsonObject]] = {}
     for project, version in expected_versions.items():
         config = selected_config(root, project)
         if config.kicad_version != version:
@@ -351,8 +352,6 @@ def _assert_native_named_connector_power_pin_cases(
     from kicad_tooling.ci_hosted_connector_named_power_pin_lane import (
         connector_named_power_pin_fixture_lane,
     )
-    from kicad_tooling.ci_hosted_support import HostedLog
-    from kicad_tooling.hwrepo.electrical import selected_config
     from kicad_tooling.hwrepo.models import DesignLintPolicy
 
     project = "controller" if version == "10.0.0" else "raspberry-pi-status-led"

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
+
 from .connector_coverage_models import ConnectorCoverageReport
 from .external_protection_models import (
     ExternalProtectionCoverageEntry,
@@ -17,11 +20,11 @@ from .models import (
 
 def _device_issues(
     requirement: ExternalProtectionDeviceRequirement,
-    components: dict[str, tuple[str, ComponentContract]],
-    symbols: dict[str, str],
-    pin_numbers: dict[str, set[str]],
-    pin_nets: dict[str, set[str]],
-    dnp: set[str],
+    components: Mapping[str, tuple[str, ComponentContract]],
+    symbols: Mapping[str, str],
+    pin_numbers: Mapping[str, AbstractSet[str]],
+    pin_nets: Mapping[str, AbstractSet[str]],
+    dnp: AbstractSet[str],
 ) -> tuple[str, ...]:
     key = requirement.reference.casefold()
     issues: list[str] = []
@@ -75,7 +78,7 @@ def evaluate(
     connector_coverage: ConnectorCoverageReport | None,
     netlist_sha256: str | None,
     *,
-    handled_by_existing_contract: dict[str, str] | None = None,
+    handled_by_existing_contract: Mapping[str, str] | None = None,
     electrical_contract_path: str | None = None,
     electrical_contract_sha256: str | None = None,
 ) -> ExternalProtectionCoverageReport:

@@ -6,17 +6,13 @@ the repository loader and engineering policy uses typed immutable records only.
 
 from __future__ import annotations
 
-import hashlib
 import xml.etree.ElementTree as ET
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol, TypeVar
+from typing import Protocol, TypeAlias, TypeVar
 
-from .contracts import read_model, repo_path
-from .discovery import load_config, load_registry
-from .layout import RepositoryLayout, layout, within_roots
-from .models import (
+from kicad_tooling.hwrepo.models import (
     AssemblyKind,
     Assurance,
     Connection,
@@ -32,19 +28,36 @@ from .models import (
     PartRecord,
     PartsCatalog,
     PartStatus,
+    PcbOnlyValidationContract,
     PcbValidationContract,
     PolicyIssue,
     ProductIndex,
     ProductPolicyReport,
     ProductRecord,
-    ProductTraceabilityValidationContract,
     ProjectConfig,
     ProjectKind,
     ProjectRecord,
+    SchematicValidationContract,
     SystemWiringValidationContract,
     Terminal,
     TerminalKind,
     Variant,
+)
+
+from .contracts import read_model, repo_path
+from .discovery import load_config, load_registry
+from .evidence import digest as file_digest
+from .layout import RepositoryLayout, layout, within_roots
+
+LoadedProjectValidation: TypeAlias = (
+    PcbValidationContract
+    | PcbOnlyValidationContract
+    | SchematicValidationContract
+    | SystemWiringValidationContract
+    | HarnessInterfaceValidationContract
+)
+ProductViewValidation: TypeAlias = (
+    SystemWiringValidationContract | HarnessInterfaceValidationContract
 )
 
 
@@ -55,7 +68,7 @@ class HasIdentifier(Protocol):
 Record = TypeVar("Record", bound=HasIdentifier)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ProductRepository:
     """Validated repository records indexed once for policy services."""
 
@@ -68,16 +81,17 @@ class ProductRepository:
 
 
 def index_by_id(
-    records: Iterable[Record], label: str, issues: list[PolicyIssue]
-) -> dict[str, Record]:
+    records: Iterable[Record], label: str
+) -> tuple[dict[str, Record], tuple[PolicyIssue, ...]]:
     result: dict[str, Record] = {}
+    issues: list[PolicyIssue] = []
     casefolded: set[str] = set()
     for record in records:
         if record.id.casefold() in casefolded:
             issues.append(PolicyIssue(code="DUPLICATE_ID", location=label, message=record.id))
         casefolded.add(record.id.casefold())
         result[record.id] = record
-    return result
+    return result, tuple(issues)
 
 
 def occurrences(product: ProductRecord) -> dict[str, Occurrence]:
@@ -125,13 +139,20 @@ def validate_product(
     def fail(code: str, location: str, message: str) -> None:
         issues.append(PolicyIssue(code=code, location=location, message=message))
 
-    assemblies = index_by_id(product.assemblies, "assemblies", issues)
-    terminals = index_by_id(product.terminals, "terminals", issues)
-    connections = index_by_id(product.connections, "connections", issues)
-    variants = index_by_id(product.variants, "variants", issues)
-    evidence = index_by_id(product.evidence, "evidence", issues)
-    harnesses = index_by_id(product.harnesses, "harnesses", issues)
-    mechanical = index_by_id(product.mechanical, "mechanical", issues)
+    assemblies, index_issues = index_by_id(product.assemblies, "assemblies")
+    issues.extend(index_issues)
+    terminals, index_issues = index_by_id(product.terminals, "terminals")
+    issues.extend(index_issues)
+    connections, index_issues = index_by_id(product.connections, "connections")
+    issues.extend(index_issues)
+    variants, index_issues = index_by_id(product.variants, "variants")
+    issues.extend(index_issues)
+    evidence, index_issues = index_by_id(product.evidence, "evidence")
+    issues.extend(index_issues)
+    harnesses, index_issues = index_by_id(product.harnesses, "harnesses")
+    issues.extend(index_issues)
+    mechanical, index_issues = index_by_id(product.mechanical, "mechanical")
+    issues.extend(index_issues)
 
     for identifier in set(assemblies) & set(parts):
         fail("DUPLICATE_ID", identifier, "Part and assembly identities must not collide")
@@ -173,19 +194,18 @@ def validate_product(
                 fail("PROJECT_REF", assembly.id, assembly.project_id)
                 continue
             try:
-                config = load_config(root, project.config)
+                project_config: ProjectConfig = load_config(root, project.config)
+                validation: LoadedProjectValidation = project_config.validation
                 project_bindings[assembly.id] = project
                 if (
                     assembly.kind is not AssemblyKind.BUILT
-                    or config.kind is not ProjectKind.PCB
-                    or not isinstance(config.validation, PcbValidationContract)
+                    or project_config.kind is not ProjectKind.PCB
+                    or not isinstance(validation, PcbValidationContract)
                 ):
                     fail("KICAD_MEMBERS", assembly.id, "Only a built assembly may map to KiCad")
                 else:
-                    configurations[assembly.id] = config.validation
-                    if set(config.validation.components) != {
-                        member.ref for member in assembly.members
-                    }:
+                    configurations[assembly.id] = validation
+                    if set(validation.components) != {member.ref for member in assembly.members}:
                         fail(
                             "KICAD_MEMBERS",
                             assembly.id,
@@ -315,7 +335,7 @@ def validate_product(
     for record in evidence.values():
         try:
             path = repo_path(root, record.path)
-            if hashlib.sha256(path.read_bytes()).hexdigest() != record.sha256:
+            if file_digest(path) != record.sha256:
                 fail("EVIDENCE_HASH", record.id, "Evidence content changed")
         except (OSError, ValueError) as exc:
             fail("EVIDENCE_PATH", record.id, str(exc))
@@ -461,9 +481,12 @@ def load_repository(
         interfaces_catalog = read_model(
             repo_path(root, registry.catalogs.interfaces), InterfacesCatalog
         )
-        parts = index_by_id(parts_catalog.parts, "parts", issues)
-        interfaces = index_by_id(interfaces_catalog.interfaces, "interfaces", issues)
-        projects = index_by_id(registry.projects, "projects", issues)
+        parts, index_issues = index_by_id(parts_catalog.parts, "parts")
+        issues.extend(index_issues)
+        interfaces, index_issues = index_by_id(interfaces_catalog.interfaces, "interfaces")
+        issues.extend(index_issues)
+        projects, index_issues = index_by_id(registry.projects, "projects")
+        issues.extend(index_issues)
         if selected is not None and (unknown := selected - projects.keys()):
             issues.append(
                 PolicyIssue(
@@ -485,9 +508,7 @@ def load_repository(
             else selected
             | {project_id for entry in relevant_entries for project_id in entry.project_ids}
         )
-        product_view_projects_by_product: dict[
-            str, list[tuple[str, ProductTraceabilityValidationContract]]
-        ] = {}
+        product_view_projects_by_product: dict[str, list[tuple[str, ProductViewValidation]]] = {}
         for project in registry.projects:
             # A selected lane needs view contracts from its dependent products,
             # but must not load contracts belonging to unrelated project islands.
@@ -497,14 +518,15 @@ def load_repository(
                 or project.kind not in {ProjectKind.SYSTEM_WIRING, ProjectKind.HARNESS_INTERFACE}
             ):
                 continue
-            config = load_config(root, project.config)
+            config: ProjectConfig = load_config(root, project.config)
+            validation: LoadedProjectValidation = config.validation
             if isinstance(
-                config.validation,
+                validation,
                 (SystemWiringValidationContract, HarnessInterfaceValidationContract),
             ):
-                product_view_projects_by_product.setdefault(
-                    config.validation.product_id, []
-                ).append((project.id, config.validation))
+                product_view_projects_by_product.setdefault(validation.product_id, []).append(
+                    (project.id, validation)
+                )
 
         declared: set[str] = set()
         for entry in index.products:
@@ -547,7 +569,9 @@ def load_repository(
                 for assembly in product.assemblies
                 if assembly.project_id is not None
             }
-            wiring_projects = product_view_projects_by_product.get(product.id, [])
+            wiring_projects: list[tuple[str, ProductViewValidation]] = (
+                product_view_projects_by_product.get(product.id, [])
+            )
             associated_projects = mapped_projects | {
                 project_id for project_id, _ in wiring_projects
             }
@@ -572,10 +596,8 @@ def load_repository(
                 try:
                     if isinstance(validation, SystemWiringValidationContract):
                         validate_system_wiring_contract(product, validation)
-                    elif isinstance(validation, HarnessInterfaceValidationContract):
-                        validate_harness_interface_contract(product, validation)
                     else:
-                        raise TypeError("Unsupported product traceability contract")
+                        validate_harness_interface_contract(product, validation)
                 except ValueError as exc:
                     product_issues = (
                         *product_issues,
@@ -607,7 +629,7 @@ def load_repository(
                 if not (
                     configuration.product_roots == RepositoryLayout().product_roots
                     and product_root == "examples/products"
-                    and not any(name.startswith("examples/") for name in declared)
+                    and not any(within_roots(name, ("examples",)) for name in declared)
                 )
                 for path in repo_path(root, product_root).glob("*/product.json")
                 if repo_path(root, path.relative_to(root).as_posix()).is_file()
@@ -736,7 +758,7 @@ def validate_harness_interface_contract(
 
 def check_system_wiring_contract(root: Path, config: ProjectConfig) -> None:
     """Resolve a system-wiring project to its one typed product contract."""
-    validation = config.validation
+    validation: LoadedProjectValidation = config.validation
     if not isinstance(validation, SystemWiringValidationContract):
         raise TypeError("System wiring check requires a system_wiring configuration")
     repository = load_repository(root, (config.project_id,))
@@ -754,7 +776,7 @@ def check_system_wiring_contract(root: Path, config: ProjectConfig) -> None:
 
 def check_harness_interface_contract(root: Path, config: ProjectConfig) -> None:
     """Resolve a harness-interface project to its one typed product contract."""
-    validation = config.validation
+    validation: LoadedProjectValidation = config.validation
     if not isinstance(validation, HarnessInterfaceValidationContract):
         raise TypeError("Harness interface check requires a harness_interface configuration")
     repository = load_repository(root, (config.project_id,))
@@ -798,13 +820,11 @@ def check_project_netlist(root: Path, project_id: str, path: Path) -> NetlistIde
             raise ValueError(f"Duplicate KiCad fields at {reference}")
         components[reference] = {field.attrib["name"]: field.text or "" for field in fields}
     if project.component_identity.required:
-        from .discovery import load_config
-        from .models import PcbValidationContract, SchematicValidationContract
-
-        config = load_config(root, project.config)
-        if isinstance(config.validation, (PcbValidationContract, SchematicValidationContract)):
+        config: ProjectConfig = load_config(root, project.config)
+        validation: LoadedProjectValidation = config.validation
+        if isinstance(validation, (PcbValidationContract, SchematicValidationContract)):
             expected_parts = {
-                ref: component.part_id for ref, component in config.validation.components.items()
+                ref: component.part_id for ref, component in validation.components.items()
             }
             if set(components) != set(expected_parts):
                 raise ValueError("KiCad and project component inventories differ")

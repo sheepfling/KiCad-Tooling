@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
@@ -9,20 +10,29 @@ import sys
 import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Protocol
 
 from .ci_hosted_connector_return_fixture_sources import (
     CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES,
     connector_return_fixture_sources,
 )
+from .ci_hosted_support import tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
 from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.design_lint_rule_types import DesignLintRuleId
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
 from .hwrepo.models import (
+    ContractCoachReport,
+    DesignLintPolicy,
     NetlistContract,
     ProjectConfig,
 )
+from .validate import read_netlist
 
 
 class ConnectorReturnLog(Protocol):
@@ -59,19 +69,6 @@ def prepare_connector_return_fixture_context(
     rule_overrides_by_case: Mapping[str, tuple[DesignLintRuleId, ...]] | None = None,
 ) -> ConnectorReturnFixtureContext:
     """Prepare digest-pinned synthetic inputs and repeated native netlist reports."""
-    import hashlib
-
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import (
-        ContractCoachReport,
-        DesignLintPolicy,
-    )
-    from .validate import read_netlist
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image:
@@ -81,12 +78,18 @@ def prepare_connector_return_fixture_context(
             f"Connector return lint fixtures do not cover KiCad {config.kicad_version}"
         )
     pinned = pinned_image(config.image)
-    fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint"
     fixture_sources = connector_return_fixture_sources(fixture_root)
     cases = tuple(fixture_sources) if case_names is None else tuple(case_names)
     if not cases or len(set(cases)) != len(cases):
         raise ValueError("Connector-return fixture cases must be a non-empty unique sequence")
-    if not stage_prefix or stage_prefix.startswith("/") or stage_prefix.endswith("/"):
+    prefix_path = PurePosixPath(stage_prefix)
+    if (
+        not stage_prefix
+        or prefix_path.is_absolute()
+        or prefix_path.as_posix() != stage_prefix
+        or any(part in {"", ".", ".."} for part in stage_prefix.split("/"))
+    ):
         raise ValueError("Connector-return fixture stage prefix must be a non-empty relative name")
     unknown_cases = tuple(case for case in cases if case not in fixture_sources)
     if unknown_cases:

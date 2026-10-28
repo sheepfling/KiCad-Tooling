@@ -44,6 +44,7 @@ PCB_RETURN_PATH_MODULES = (
     "pcb_return_path_checks.py",
     "pcb_return_path_capture.py",
 )
+PCB_SHARED_PAD_MODULES = ("pcb_pad_review.py", "pcb_pad_union_find.py")
 # Lower this baseline alongside each registry extraction; never raise it.
 
 
@@ -153,4 +154,46 @@ def test_internal_pcb_return_path_services_import_from_their_owners() -> None:
     assert not legacy_imports, (
         "Internal PCB services should import from pcb_return_path_checks or "
         f"pcb_return_path_capture, not the compatibility facade: {legacy_imports}"
+    )
+
+
+def test_shared_pcb_pad_services_stay_small_and_are_reused() -> None:
+    modules = [HWREPO / name for name in PCB_SHARED_PAD_MODULES]
+
+    assert all(path.is_file() for path in modules)
+    oversized = {path.name: _line_count(path) for path in modules if _line_count(path) >= 500}
+    assert not oversized, f"Keep shared PCB pad services below 500 lines: {oversized}"
+
+    consumers = (
+        HWREPO / "pcb_decoupling.py",
+        HWREPO / "pcb_protection_path.py",
+        HWREPO / "pcb_return_path_checks.py",
+    )
+    parsed = {
+        path.name: ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for path in consumers
+    }
+    assert all(
+        any(
+            isinstance(node, ast.ImportFrom)
+            and node.module == "pcb_pad_union_find"
+            and any(alias.name == "PcbPadUnionFind" for alias in node.names)
+            for node in ast.walk(tree)
+        )
+        for tree in parsed.values()
+    )
+    assert all(
+        any(
+            isinstance(node, ast.ImportFrom)
+            and node.module == "pcb_pad_review"
+            and any(alias.name == "pcb_pad_endpoint_issues" for alias in node.names)
+            for node in ast.walk(tree)
+        )
+        for name, tree in parsed.items()
+        if name != "pcb_return_path_checks.py"
+    )
+    assert not any(
+        isinstance(node, ast.ClassDef) and node.name == "_PadUnion"
+        for tree in parsed.values()
+        for node in ast.walk(tree)
     )

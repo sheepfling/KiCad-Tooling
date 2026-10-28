@@ -28,7 +28,7 @@ from .regulator_feedback import scan_regulator_feedback_map
 from .regulator_feedback_models import RegulatorFeedbackCoverageReport, RegulatorFeedbackMap
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ComponentMapCoverage:
     """Coverage reports for authored component-level topology maps."""
 

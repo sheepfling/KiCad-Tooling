@@ -16,6 +16,7 @@ from kicad_tooling.hwrepo.usb_superspeed_reference_models import (
 )
 from tests.usb_peer_reference_support import PATH_RULE_ID, RULE_ID, lint_report, usb_data_map
 from tests.usb_peer_superspeed_support import (
+    SuperspeedPeerNetlistOverrides,
     superspeed_peer_netlist,
     superspeed_reference_bond,
     superspeed_reference_map,
@@ -374,7 +375,7 @@ def test_project_rule_override_can_turn_off_superspeed_review() -> None:
     ],
 )
 def test_superspeed_path_boundaries_are_not_promoted_to_findings(
-    changes: dict[str, object], expected_path_count: int
+    changes: SuperspeedPeerNetlistOverrides, expected_path_count: int
 ) -> None:
     observed = superspeed_peer_netlist(**changes)
     assert usb_peer_reference_reviews(observed) == ()

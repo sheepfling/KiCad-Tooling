@@ -9,6 +9,7 @@ import pytest
 
 from kicad_tooling.ci_hosted_component_named_supply_pin import COMPONENT_NAMED_SUPPLY_PIN_CASES
 from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 from tests.component_power_pin_native_support import (
     assert_mocked_component_power_pin_lane,
@@ -60,7 +61,6 @@ def test_native_named_component_supply_pin_fault_and_control_are_focused_and_rep
     from kicad_tooling.ci_hosted_component_named_supply_pin_lane import (
         component_named_supply_pin_fixture_lane,
     )
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(

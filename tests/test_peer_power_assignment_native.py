@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 from pathlib import Path
 
 import pytest
 
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 
 pytestmark = [pytest.mark.component_lint, pytest.mark.design_lint, pytest.mark.power_lint]
@@ -30,10 +32,8 @@ def test_native_fixture_sources_match_reviewed_digests() -> None:
 
 
 def _run_native_part_id_peer_power_assignment_lane(base: Path) -> None:
-    import json
 
     from kicad_tooling.ci_hosted import HostedLog, component_peer_power_assignment_fixture_lane
-    from kicad_tooling.hwrepo.electrical import selected_config
     from tests.synthetic_design_lint_project import synthetic_design_lint_project
 
     expected_projects = {

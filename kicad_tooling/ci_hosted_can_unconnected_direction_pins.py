@@ -9,27 +9,33 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_native_fixture_models import (
+    FaultControlFixtureCase,
+    FixtureSourceEvidence,
+    NativeNetlistFixtureEvidence,
+    NativeNetlistRunEvidence,
+    NativeRun,
+    NativeRunPair,
+)
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract
+from .validate import read_netlist
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+_FIXTURE_CASES: tuple[FaultControlFixtureCase, ...] = ("control", "fault")
 
 
 def can_unconnected_direction_pin_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Verify a native open-direction fault against a connected control."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract
-    from .validate import read_netlist
-
     rule_id = "bus.can_unconnected_direction_pin"
     root = root.resolve()
     config = selected_config(root, project)
@@ -41,13 +47,15 @@ def can_unconnected_direction_pin_fixture_lane(
         )
     pinned = pinned_image(config.image)
 
-    repository = Path(__file__).resolve().parents[1]
+    repository = tooling_checkout_root()
     fixture_root = repository / "tests/fixtures/design_lint/can-unconnected-direction-native"
-    fixtures = {
+    fixtures: dict[FaultControlFixtureCase, Path] = {
         "control": fixture_root / "control.kicad_sch",
         "fault": fixture_root / "open-tx.kicad_sch",
     }
-    source_hashes = {case: digest(path) for case, path in fixtures.items()}
+    source_hashes: dict[FaultControlFixtureCase, str] = {
+        case: digest(path) for case, path in fixtures.items()
+    }
     scratch = Path(
         tempfile.mkdtemp(
             prefix=f"can-unconnected-direction-{project}-", dir=log.directory.resolve()
@@ -127,30 +135,42 @@ def can_unconnected_direction_pin_fixture_lane(
             f"Native CAN unconnected-direction export failed: {command.stderr or command.error}"
         )
 
-    contracts: dict[str, dict[str, NetlistContract]] = {"control": {}, "fault": {}}
-    netlist_hashes: dict[str, dict[str, str]] = {"control": {}, "fault": {}}
-    normalized_hashes: dict[str, dict[str, str]] = {"control": {}, "fault": {}}
+    fixture_evidence: dict[FaultControlFixtureCase, NativeNetlistFixtureEvidence] = {}
+
+    def load_netlist_run(
+        case: FaultControlFixtureCase, source: Path, run: NativeRun
+    ) -> NativeNetlistRunEvidence:
+        path = output / f"{source.stem}.{run}.netlist.xml"
+        if not path.is_file():
+            raise ValueError(f"Native CAN direction fixture omitted {path.name}")
+        contract = read_netlist(path)
+        normalized = json.dumps(
+            contract.model_dump(mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        ).encode("utf-8")
+        return NativeNetlistRunEvidence(
+            contract=contract,
+            netlist_sha256=digest(path),
+            normalized_sha256=hashlib.sha256(normalized).hexdigest(),
+        )
+
     for case, source in fixtures.items():
         if (
             digest(source) != source_hashes[case]
             or digest(inputs / source.name) != source_hashes[case]
         ):
             raise ValueError(f"Synthetic CAN direction {case} source changed during native export")
-        for run in ("first", "repeat"):
-            path = output / f"{source.stem}.{run}.netlist.xml"
-            if not path.is_file():
-                raise ValueError(f"Native CAN direction fixture omitted {path.name}")
-            netlist_hashes[case][run] = digest(path)
-            contract = read_netlist(path)
-            contracts[case][run] = contract
-            normalized = json.dumps(
-                contract.model_dump(mode="json"),
-                sort_keys=True,
-                separators=(",", ":"),
-                ensure_ascii=False,
-            ).encode("utf-8")
-            normalized_hashes[case][run] = hashlib.sha256(normalized).hexdigest()
-        if normalized_hashes[case]["first"] != normalized_hashes[case]["repeat"]:
+        fixture_evidence[case] = NativeNetlistFixtureEvidence(
+            source=FixtureSourceEvidence(path=source, sha256=source_hashes[case]),
+            netlists=NativeRunPair(
+                first=load_netlist_run(case, source, "first"),
+                repeat=load_netlist_run(case, source, "repeat"),
+            ),
+        )
+        netlists = fixture_evidence[case].netlists
+        if netlists.first.normalized_sha256 != netlists.repeat.normalized_sha256:
             raise ValueError(f"Native CAN direction {case} exports differ after normalization")
 
     expected_functions = {
@@ -171,9 +191,9 @@ def can_unconnected_direction_pin_fixture_lane(
         "CAN1_RX": {"U1.2"},
         "CAN2_RX": {"U2.2"},
     }
-    control = contracts["control"]["first"]
-    fault = contracts["fault"]["first"]
-    for case, observed in (("control", control), ("fault", fault)):
+    control = fixture_evidence["control"].netlists.first.contract
+    fault = fixture_evidence["fault"].netlists.first.contract
+    for case, observed in zip(_FIXTURE_CASES, (control, fault), strict=True):
         if observed.pin_functions != expected_functions:
             raise ValueError(
                 f"Native CAN direction {case} functions changed: {observed.pin_functions}"
@@ -194,7 +214,10 @@ def can_unconnected_direction_pin_fixture_lane(
         raise ValueError(f"Native CAN direction fault changed more than U1.1: {actual_fault_nets}")
 
     def report(
-        observed: NetlistContract, case: str, run: str, policy: DesignLintPolicy
+        observed: NetlistContract,
+        case: FaultControlFixtureCase,
+        run: NativeRun,
+        policy: DesignLintPolicy,
     ) -> DesignLintReport:
         return evaluate(
             f"synthetic-can-direction-{case}",
@@ -202,7 +225,7 @@ def can_unconnected_direction_pin_fixture_lane(
                 status="READY_FOR_REVIEW",
                 project_id=f"synthetic-can-direction-{case}",
                 observed=observed,
-                netlist_sha256=netlist_hashes[case][run],
+                netlist_sha256=fixture_evidence[case].netlists.for_run(run).netlist_sha256,
             ),
             policy,
         )
@@ -243,32 +266,40 @@ def can_unconnected_direction_pin_fixture_lane(
             ),
         )
     )
-    review_reports = [report(fault, "fault", run, review_policy) for run in ("first", "repeat")]
-    review_findings = [
-        [item for item in item_report.findings if item.rule_id == rule_id]
-        for item_report in review_reports
-    ]
+    review_reports = NativeRunPair(
+        first=report(fault, "fault", "first", review_policy),
+        repeat=report(fault, "fault", "repeat", review_policy),
+    )
+    review_findings = NativeRunPair(
+        first=[item for item in review_reports.first.findings if item.rule_id == rule_id],
+        repeat=[item for item in review_reports.repeat.findings if item.rule_id == rule_id],
+    )
     if (
-        any(len(items) != 1 for items in review_findings)
-        or review_findings[0][0].subject != "U1.1: CAN1_TX"
-        or review_findings[0][0].disposition != "OPEN"
-        or review_findings[0][0].fingerprint != review_findings[1][0].fingerprint
-        or review_findings[0][0].evidence != review_findings[1][0].evidence
+        len(review_findings.first) != 1
+        or len(review_findings.repeat) != 1
+        or review_findings.first[0].subject != "U1.1: CAN1_TX"
+        or review_findings.first[0].disposition != "OPEN"
+        or review_findings.first[0].fingerprint != review_findings.repeat[0].fingerprint
+        or review_findings.first[0].evidence != review_findings.repeat[0].evidence
     ):
         raise ValueError("Native CAN direction review candidate changed on repeated export")
 
-    review_finding = review_findings[0][0]
-    for case, expected_nets, enabled_report in (
-        ("control", expected_control_nets, control_report),
-        ("fault", expected_fault_nets, review_reports[0]),
+    review_finding = review_findings.first[0]
+    for case, expected_nets, enabled_report in zip(
+        _FIXTURE_CASES,
+        (expected_control_nets, expected_fault_nets),
+        (control_report, review_reports.first),
+        strict=True,
     ):
         log.event(
             f"can-unconnected-direction-fixture/{case}",
             "PASS",
             project=project,
-            source_sha256=source_hashes[case],
-            normalized_netlist_sha256=normalized_hashes[case]["first"],
-            repeat_normalized_netlist_sha256=normalized_hashes[case]["repeat"],
+            source_sha256=fixture_evidence[case].source.sha256,
+            normalized_netlist_sha256=fixture_evidence[case].netlists.first.normalized_sha256,
+            repeat_normalized_netlist_sha256=fixture_evidence[
+                case
+            ].netlists.repeat.normalized_sha256,
             rule_findings=(
                 ";".join(
                     item.subject for item in enabled_report.findings if item.rule_id == rule_id
@@ -299,9 +330,13 @@ def can_unconnected_direction_pin_fixture_lane(
         kicad_version=config.kicad_version,
         image=pinned,
         command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),
-        control_source_sha256=source_hashes["control"],
-        fault_source_sha256=source_hashes["fault"],
-        control_normalized_netlist_sha256=normalized_hashes["control"]["first"],
-        fault_normalized_netlist_sha256=normalized_hashes["fault"]["first"],
+        control_source_sha256=fixture_evidence["control"].source.sha256,
+        fault_source_sha256=fixture_evidence["fault"].source.sha256,
+        control_normalized_netlist_sha256=(
+            fixture_evidence["control"].netlists.first.normalized_sha256
+        ),
+        fault_normalized_netlist_sha256=(
+            fixture_evidence["fault"].netlists.first.normalized_sha256
+        ),
         repeatable="true",
     )

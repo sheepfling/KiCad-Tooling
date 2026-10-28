@@ -3,6 +3,11 @@
 from __future__ import annotations
 
 from .ci_hosted_digital_peer_context import DigitalPeerFixtureContext
+from .ci_hosted_digital_peer_models import (
+    SERIAL_PEER_FIXTURE_CASES,
+    DigitalPeerFixtureCase,
+)
+from .ci_hosted_native_fixture_models import NativeRun, NativeRunPair
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
 from .hwrepo.design_lint_report_models import DesignLintReport
@@ -23,13 +28,14 @@ def verify_serial_peer_voltage_cases(ctx: DigitalPeerFixtureContext) -> DesignLi
             ),
         )
     )
-    for case, expected_status in (
-        ("serial-control", "PASS"),
-        ("serial-fault", "REVIEW"),
-        ("serial-reference-fault", "REVIEW"),
+    for case, expected_status in zip(
+        SERIAL_PEER_FIXTURE_CASES, ("PASS", "REVIEW", "REVIEW"), strict=True
     ):
-        peer_observed = ctx.contracts[case]["first"]
-        if ctx.normalized_hashes[case]["first"] != ctx.normalized_hashes[case]["repeat"]:
+        peer_observed = ctx.fixture(case).netlists.first.contract
+        if (
+            ctx.fixture(case).netlists.first.normalized_sha256
+            != ctx.fixture(case).netlists.repeat.normalized_sha256
+        ):
             raise ValueError(f"Native UART {case} exports differ after typed-netlist normalization")
         expected_functions = {
             "U1.1": "UART1_TX",
@@ -82,36 +88,43 @@ def verify_serial_peer_voltage_cases(ctx: DigitalPeerFixtureContext) -> DesignLi
             if net in {"GND", "GND_A", "GND_B"}
         } != expected_references:
             raise ValueError(f"Native UART {case} export changed exact reference assignments")
-        reports: dict[str, DesignLintReport] = {}
-        for run in ("first", "repeat"):
+
+        def peer_report_for(
+            run: NativeRun, fixture_case: DigitalPeerFixtureCase
+        ) -> DesignLintReport:
             report_coach = ContractCoachReport(
                 status="READY_FOR_REVIEW",
-                project_id=f"synthetic-uart-peer-voltage-{case}",
-                observed=ctx.contracts[case][run],
-                netlist_sha256=ctx.hashes[case][run],
+                project_id=f"synthetic-uart-peer-voltage-{fixture_case}",
+                observed=ctx.fixture(fixture_case).netlists.for_run(run).contract,
+                netlist_sha256=ctx.fixture(fixture_case).netlists.for_run(run).netlist_sha256,
             )
-            reports[run] = evaluate(report_coach.project_id, report_coach, serial_peer_policy)
+            return evaluate(report_coach.project_id, report_coach, serial_peer_policy)
+
+        reports = NativeRunPair(
+            first=peer_report_for("first", case),
+            repeat=peer_report_for("repeat", case),
+        )
         findings = tuple(
             item
-            for item in reports["first"].findings
+            for item in reports.first.findings
             if item.rule_id == "bus.serial_peer_voltage_review"
         )
         reference_findings = tuple(
             item
-            for item in reports["first"].findings
+            for item in reports.first.findings
             if item.rule_id == "bus.serial_peer_reference_review"
         )
         first_signature = tuple(
             (item.fingerprint, item.rule_id, item.mode, item.evidence)
-            for item in reports["first"].findings
+            for item in reports.first.findings
         )
         repeated_signature = tuple(
             (item.fingerprint, item.rule_id, item.mode, item.evidence)
-            for item in reports["repeat"].findings
+            for item in reports.repeat.findings
         )
         if (
-            reports["first"].status != expected_status
-            or reports["repeat"].status != expected_status
+            reports.first.status != expected_status
+            or reports.repeat.status != expected_status
             or first_signature != repeated_signature
             or (case in {"serial-control", "serial-reference-fault"} and findings)
             or (case == "serial-fault" and len(findings) != 1)
@@ -159,12 +172,12 @@ def verify_serial_peer_voltage_cases(ctx: DigitalPeerFixtureContext) -> DesignLi
             project=ctx.project,
             kicad_version=ctx.config.kicad_version,
             image=ctx.pinned,
-            source_sha256=ctx.serial_peer_source_hashes[case],
-            netlist_sha256=ctx.hashes[case]["first"],
-            repeat_netlist_sha256=ctx.hashes[case]["repeat"],
-            normalized_netlist_sha256=ctx.normalized_hashes[case]["first"],
-            repeat_normalized_netlist_sha256=ctx.normalized_hashes[case]["repeat"],
-            lint_status=reports["first"].status,
+            source_sha256=ctx.fixture(case).source.sha256,
+            netlist_sha256=ctx.fixture(case).netlists.first.netlist_sha256,
+            repeat_netlist_sha256=ctx.fixture(case).netlists.repeat.netlist_sha256,
+            normalized_netlist_sha256=ctx.fixture(case).netlists.first.normalized_sha256,
+            repeat_normalized_netlist_sha256=ctx.fixture(case).netlists.repeat.normalized_sha256,
+            lint_status=reports.first.status,
             peer_voltage_findings=";".join(item.rule_id for item in findings) or "none",
             peer_reference_findings=";".join(item.rule_id for item in reference_findings) or "none",
             pin_functions=";".join(

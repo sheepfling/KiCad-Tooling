@@ -8,9 +8,11 @@ import os
 import shutil
 import sys
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING
+from types import MappingProxyType
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.can_termination_contract import can_termination_checks
 from .hwrepo.can_termination_models import CanTerminationAnalysis
 from .hwrepo.contract_coach import pinned_image, run_command
@@ -21,13 +23,12 @@ from .hwrepo.evidence import digest
 from .hwrepo.models import ElectricalCheck, NetlistContract
 from .validate import read_netlist
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
-
-FIXTURE_HASHES = {
-    "control": "1f014e79a42f45d5b08d3ef8394dd3b38e992c2af7a67c987c067afa77c3a186",
-    "fault": "cae3faf3cba68758c3ed35755d49b96088799922c3c45af3fdc644f5d6d05a2d",
-}
+FIXTURE_HASHES: Mapping[str, str] = MappingProxyType(
+    {
+        "control": "1f014e79a42f45d5b08d3ef8394dd3b38e992c2af7a67c987c067afa77c3a186",
+        "fault": "cae3faf3cba68758c3ed35755d49b96088799922c3c45af3fdc644f5d6d05a2d",
+    }
+)
 REQUIREMENT_HASH = "5c1fc55b40a292e32534aff67e3e17e535edad6e2f10d86fe2a3fe67bba3b872"
 
 
@@ -44,9 +45,7 @@ def can_termination_array_native_fixture_lane(
             f"CAN termination array fixtures do not cover KiCad {config.kicad_version}"
         )
     pinned = pinned_image(config.image)
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/can-resistor-array-native"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/can-resistor-array-native"
     fixtures = {case: fixture_root / f"{case}.kicad_sch" for case in FIXTURE_HASHES}
     source_hashes = {case: digest(path) for case, path in fixtures.items()}
     if source_hashes != FIXTURE_HASHES or digest(fixture_root / "electrical.json") != (
@@ -55,9 +54,10 @@ def can_termination_array_native_fixture_lane(
         raise ValueError("CAN termination array fixture sources differ from reviewed hashes")
 
     contract = read_model(fixture_root / "electrical.json", ElectricalAnalysisContract)
-    if not isinstance(contract.can_termination, CanTerminationAnalysis):
+    termination = contract.can_termination
+    if termination is None or termination.mode != "required":
         raise TypeError("Synthetic CAN array fixture must declare a required termination contract")
-    requirement = contract.can_termination
+    requirement: CanTerminationAnalysis = termination
     scratch = Path(
         tempfile.mkdtemp(prefix=f"native-can-array-{project}-", dir=log.directory.resolve())
     )

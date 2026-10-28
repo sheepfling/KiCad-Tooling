@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from types import MappingProxyType
 
 import pytest
 
@@ -24,133 +25,139 @@ from tests.lint_architecture_support import line_count as _line_count
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint, pytest.mark.architecture]
 
-PROTOCOL_MODEL_OWNERS = {
-    "can_termination_models.py": (
-        can_termination_models,
-        (
-            "CanTerminationResistorRequirement",
-            "CanTerminationMidpointCapacitorRequirement",
-            "CanTerminationEndpointRequirement",
-            "CanTerminationBusRequirement",
-            "CanTerminationAnalysis",
+PROTOCOL_MODEL_OWNERS = MappingProxyType(
+    {
+        "can_termination_models.py": (
+            can_termination_models,
+            (
+                "CanTerminationResistorRequirement",
+                "CanTerminationMidpointCapacitorRequirement",
+                "CanTerminationEndpointRequirement",
+                "CanTerminationBusRequirement",
+                "CanTerminationAnalysis",
+            ),
         ),
-    ),
-    "i2c_address_models.py": (
-        i2c_address_models,
-        (
-            "I2cAddressBitRequirement",
-            "I2cResponderAddressRequirement",
-            "I2cAddressSegmentRequirement",
-            "I2cAddressMap",
-            "I2cAddressBitEvidence",
-            "I2cResponderAddressCoverageEntry",
-            "I2cAddressCoverageReport",
+        "i2c_address_models.py": (
+            i2c_address_models,
+            (
+                "I2cAddressBitRequirement",
+                "I2cResponderAddressRequirement",
+                "I2cAddressSegmentRequirement",
+                "I2cAddressMap",
+                "I2cAddressBitEvidence",
+                "I2cResponderAddressCoverageEntry",
+                "I2cAddressCoverageReport",
+            ),
         ),
-    ),
-    "i2c_pullup_models.py": (
-        i2c_pullup_models,
-        (
-            "I2cPullupArrayChannelRequirement",
-            "I2cPullupArrayRequirement",
-            "I2cPullupInputVoltageLimit",
-            "I2cPullupVoltageCompatibilityRequirement",
-            "I2cPullupElectricalWindow",
-            "I2cPullupLineRequirement",
-            "I2cPullupSeriesResistorRequirement",
-            "I2cPullupSeriesPathRequirement",
-            "I2cPullupBusRequirement",
-            "I2cPullupAnalysis",
-            "I2cPullupHeuristicEntry",
-            "I2cPullupHeuristicCoverage",
+        "i2c_pullup_models.py": (
+            i2c_pullup_models,
+            (
+                "I2cPullupArrayChannelRequirement",
+                "I2cPullupArrayRequirement",
+                "I2cPullupInputVoltageLimit",
+                "I2cPullupVoltageCompatibilityRequirement",
+                "I2cPullupElectricalWindow",
+                "I2cPullupLineRequirement",
+                "I2cPullupSeriesResistorRequirement",
+                "I2cPullupSeriesPathRequirement",
+                "I2cPullupBusRequirement",
+                "I2cPullupAnalysis",
+                "I2cPullupHeuristicEntry",
+                "I2cPullupHeuristicCoverage",
+            ),
         ),
-    ),
-    "spi_models.py": (
-        spi_models,
-        (
-            "SpiPinNetRequirement",
-            "SpiPinUnconnectedRequirement",
-            "SpiMisoConnectedRequirement",
-            "SpiPinNotPresent",
-            "SpiControllerRequirement",
-            "SpiDeviceRequirement",
-            "SpiBridgePathRequirement",
-            "SpiBridgeRequirement",
-            "SpiBusRequirement",
-            "SpiAnalysis",
+        "spi_models.py": (
+            spi_models,
+            (
+                "SpiPinNetRequirement",
+                "SpiPinUnconnectedRequirement",
+                "SpiMisoConnectedRequirement",
+                "SpiPinNotPresent",
+                "SpiControllerRequirement",
+                "SpiDeviceRequirement",
+                "SpiBridgePathRequirement",
+                "SpiBridgeRequirement",
+                "SpiBusRequirement",
+                "SpiAnalysis",
+            ),
         ),
-    ),
-    "serial_logic_models.py": (
-        serial_logic_models,
-        (
-            "SerialPinNetRequirement",
-            "SerialLogicOutputLimits",
-            "SerialLogicInputLimits",
-            "SerialLogicLimits",
-            "SerialLabelFixtureExpectedNets",
+        "serial_logic_models.py": (
+            serial_logic_models,
+            (
+                "SerialPinNetRequirement",
+                "SerialLogicOutputLimits",
+                "SerialLogicInputLimits",
+                "SerialLogicLimits",
+                "SerialLabelFixtureExpectedNets",
+            ),
         ),
-    ),
-    "serial_peer_models.py": (
-        serial_peer_models,
-        (
-            "SerialEndpointRequirement",
-            "SerialBridgePathRequirement",
-            "SerialBridgeRequirement",
-            "SerialDirectPeerRequirement",
-            "SerialShiftedPeerRequirement",
-            "SerialExternalPeerRequirement",
-            "SerialPeerLinkRequirement",
-            "SerialPeerAnalysis",
+        "serial_peer_models.py": (
+            serial_peer_models,
+            (
+                "SerialEndpointRequirement",
+                "SerialBridgePathRequirement",
+                "SerialBridgeRequirement",
+                "SerialDirectPeerRequirement",
+                "SerialShiftedPeerRequirement",
+                "SerialExternalPeerRequirement",
+                "SerialPeerLinkRequirement",
+                "SerialPeerAnalysis",
+            ),
         ),
-    ),
-    "rs485_models.py": (
-        rs485_models,
-        (
-            "Rs485EndpointPinRequirement",
-            "Rs485EndpointRequirement",
-            "Rs485TerminationResistorRequirement",
-            "Rs485DnpResistorRequirement",
-            "Rs485TerminationEndpointRequirement",
-            "Rs485BiasResistorRequirement",
-            "Rs485LocalBiasRequirement",
-            "Rs485RemoteBiasRequirement",
-            "Rs485InternalFailSafeRequirement",
-            "Rs485NoBiasRequirement",
-            "Rs485SignalPairRequirement",
-            "Rs485BusRequirement",
-            "Rs485Analysis",
+        "rs485_models.py": (
+            rs485_models,
+            (
+                "Rs485EndpointPinRequirement",
+                "Rs485EndpointRequirement",
+                "Rs485TerminationResistorRequirement",
+                "Rs485DnpResistorRequirement",
+                "Rs485TerminationEndpointRequirement",
+                "Rs485BiasResistorRequirement",
+                "Rs485LocalBiasRequirement",
+                "Rs485RemoteBiasRequirement",
+                "Rs485InternalFailSafeRequirement",
+                "Rs485NoBiasRequirement",
+                "Rs485SignalPairRequirement",
+                "Rs485BusRequirement",
+                "Rs485Analysis",
+            ),
         ),
-    ),
-    "reference_bond_models.py": (
-        reference_bond_models,
-        ("ReferenceBondRequirement",),
-    ),
-    "digital_peer_voltage_models.py": (
-        digital_peer_voltage_models,
-        (
-            "DigitalLogicOutputLimits",
-            "DigitalLogicInputLimits",
-            "DigitalPeerPinRequirement",
-            "DigitalPeerVoltageLink",
-            "DigitalPeerVoltageAnalysis",
+        "reference_bond_models.py": (
+            reference_bond_models,
+            ("ReferenceBondRequirement",),
         ),
-    ),
-}
+        "digital_peer_voltage_models.py": (
+            digital_peer_voltage_models,
+            (
+                "DigitalLogicOutputLimits",
+                "DigitalLogicInputLimits",
+                "DigitalPeerPinRequirement",
+                "DigitalPeerVoltageLink",
+                "DigitalPeerVoltageAnalysis",
+            ),
+        ),
+    }
+)
 
-PROTOCOL_MODEL_TYPE_ALIASES = {
-    "spi_models.py": (spi_models, ("SpiMisoRequirement",)),
-    "serial_peer_models.py": (serial_peer_models, ("SerialPeerRequirement",)),
-    "rs485_models.py": (rs485_models, ("Rs485BiasRequirement",)),
-}
+PROTOCOL_MODEL_TYPE_ALIASES = MappingProxyType(
+    {
+        "spi_models.py": (spi_models, ("SpiMisoRequirement",)),
+        "serial_peer_models.py": (serial_peer_models, ("SerialPeerRequirement",)),
+        "rs485_models.py": (rs485_models, ("Rs485BiasRequirement",)),
+    }
+)
 
-PROTOCOL_MODEL_OWNER_ONLY = {
-    "can_termination_models.py": (
-        can_termination_models,
-        (
-            "CanTerminationResistorArrayChannelRequirement",
-            "CanTerminationResistorArrayRequirement",
+PROTOCOL_MODEL_OWNER_ONLY = MappingProxyType(
+    {
+        "can_termination_models.py": (
+            can_termination_models,
+            (
+                "CanTerminationResistorArrayChannelRequirement",
+                "CanTerminationResistorArrayRequirement",
+            ),
         ),
-    ),
-}
+    }
+)
 
 
 def test_protocol_models_live_in_theme_owners_and_services_import_them_directly() -> None:

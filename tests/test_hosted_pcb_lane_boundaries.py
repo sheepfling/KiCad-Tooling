@@ -7,6 +7,15 @@ from types import SimpleNamespace
 
 import pytest
 
+from kicad_tooling import (
+    ci_hosted_pcb_fixture_support as inventory_lane,
+)
+from kicad_tooling import (
+    ci_hosted_pcb_return_context as return_lane,
+)
+from kicad_tooling import (
+    ci_hosted_pcb_switching_loop_context as switching_loop_lane,
+)
 from kicad_tooling.ci_hosted import (
     pcb_component_inventory_fixture_lane,
     pcb_return_fixture_lane,
@@ -46,10 +55,8 @@ def test_hosted_pcb_fixture_adapters_reject_uncovered_versions_before_native_wor
 ) -> None:
     image = "fixture.invalid/kicad@sha256:" + "a" * 64
     config = SimpleNamespace(image=image, kicad_version="10.0.6")
-    monkeypatch.setattr(
-        "kicad_tooling.hwrepo.electrical.selected_config",
-        lambda *_args: config,
-    )
+    for owner in (inventory_lane, return_lane, switching_loop_lane):
+        monkeypatch.setattr(owner, "selected_config", lambda *_args: config)
     log = SimpleNamespace(directory=tmp_path)
 
     with pytest.raises(ValueError, match=message):

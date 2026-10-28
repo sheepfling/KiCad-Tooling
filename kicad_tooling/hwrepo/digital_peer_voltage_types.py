@@ -9,7 +9,7 @@ from typing import Literal
 from .digital_peer_voltage_models import DigitalPeerVoltageAnalysis
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class DigitalPeerVoltageLintContext:
     """Project contract state and provenance for digital-peer voltage reviews."""
 
@@ -19,13 +19,13 @@ class DigitalPeerVoltageLintContext:
     source_sha256: str | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class VoltageNamedRail:
     net: str
     voltage_v: Decimal
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class DigitalPeerLink:
     interface: Literal["SPI", "serial"]
     output_role: str | None
@@ -41,7 +41,7 @@ class DigitalPeerLink:
     net: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class DigitalPeerVoltageReview:
     interface: Literal["SPI", "serial"]
     output_reference: str
@@ -51,7 +51,7 @@ class DigitalPeerVoltageReview:
     links: tuple[DigitalPeerLink, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class DigitalPeerVoltageCoverage:
     """Counts the supported direct-peer links examined by one interface rule."""
 
@@ -66,7 +66,7 @@ class DigitalPeerVoltageCoverage:
     review_candidate_group_count: int
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class DigitalPeerVoltageScan:
     """Grouped review candidates plus bounded applicability counts."""
 

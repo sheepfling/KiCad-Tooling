@@ -20,7 +20,6 @@ from .models import (
 )
 from .usb_c_models import (
     UsbCAnalysis,
-    UsbCProtectionAnalysis,
 )
 
 
@@ -93,7 +92,7 @@ def usb_c_protection_scope(
     if digest(path) != expected_digest:
         raise ValueError("Electrical contract changed during external-protection inspection")
     handled: dict[str, str] = {}
-    if contract is None or not isinstance(contract.usb_c, UsbCAnalysis):
+    if contract is None or contract.usb_c is None or contract.usb_c.mode != "required":
         return handled, relative_path, expected_digest
     for port in contract.usb_c.ports:
         prefix = f"{port.connector}.".casefold()
@@ -120,7 +119,7 @@ def mapped_usb_c_protection_pins(
     """Map covered connector pins to exact non-reference nets in USB-C protector maps."""
     handled: dict[str, str] = {}
     for port in analysis.ports:
-        if not isinstance(port.protection, UsbCProtectionAnalysis):
+        if port.protection.mode != "required":
             continue
         reference_nets = {port.ground_net, port.vbus_net, port.cc1.net, port.cc2.net}
         protected_signal_nets = {

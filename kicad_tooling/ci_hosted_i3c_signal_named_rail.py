@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from .ci_hosted_kicad10_images import KICAD_10_NATIVE_TOOLCHAINS
 from .ci_hosted_named_rail_fixtures import named_rail_fixture_lane
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .ci_hosted_support import HostedLog
 
 I3C_SIGNAL_NAMED_RAIL_TOOLCHAINS = KICAD_10_NATIVE_TOOLCHAINS
 

@@ -16,8 +16,9 @@ from .hwrepo.contract_coach import (
     LocalNetlistRunner,
 )
 from .hwrepo.contracts import read_model
+from .hwrepo.layout import default_project_root
 from .hwrepo.mcp_files import read_regular_bytes
-from .hwrepo.models import SupplierHandoffPlan
+from .hwrepo.models import CadSourcingReview, SupplierHandoffPlan
 from .hwrepo.part_picker import create_picker, resume_selection, selection
 from .hwrepo.part_picker_view import (
     picker_text,
@@ -73,7 +74,7 @@ def main() -> int:
             "Choose reviewed parts, preview and apply, then rerun without --picker for an order list."
         ),
     )
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     parser.add_argument("--project", required=True, help="ID shown by kicad_tooling.template list")
     parser.add_argument("--boards", type=count, help="Number of boards (default: saved value or 1)")
     parser.add_argument(
@@ -377,7 +378,6 @@ def main() -> int:
             return 0 if report.status == "REVIEW" else 1
         if args.source_cad is not None or args.import_cad is not None:
             from .hwrepo import cad_library, cad_source
-            from .hwrepo.models import CadSourcingReview
 
             output = new_receipt(root, args.project, args.output)
             if args.source_cad is not None:

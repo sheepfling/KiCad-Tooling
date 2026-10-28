@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from .ci_hosted_connector_return_context import ConnectorReturnFixtureContext
 
 
 def emit_connector_return_receipts(
-    ctx: ConnectorReturnFixtureContext, peer_pin_coverage_receipts: dict[str, str]
+    ctx: ConnectorReturnFixtureContext, peer_pin_coverage_receipts: Mapping[str, str]
 ):
     """Emit source-bound receipts for each connector return fixture."""
     for case in ctx.cases:

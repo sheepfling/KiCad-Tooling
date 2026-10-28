@@ -103,10 +103,24 @@ class PcbConnectivitySnapshot(StrictModel):
         zone_keys = {(item.uuid.casefold(), item.layer.casefold()) for item in self.zones}
         if len(zone_keys) != len(self.zones):
             raise ValueError("Native PCB evidence contains duplicate zone identities")
-        known = {item.pad for item in self.pads}
         pads_by_name = {item.pad.casefold(): item for item in self.pads}
-        if any(not set(item.connected_pads) <= known for item in self.pads):
+        connected_pad_names = {
+            item.pad.casefold(): {reference.casefold() for reference in item.connected_pads}
+            for item in self.pads
+        }
+        known_pad_names = set(pads_by_name)
+        if any(
+            not {reference.casefold() for reference in item.connected_pads} <= known_pad_names
+            for item in self.pads
+        ):
             raise ValueError("Native PCB connectivity refers to a pad absent from the board")
+        for pad in self.pads:
+            for reference in pad.connected_pads:
+                connected_pad = pads_by_name[reference.casefold()]
+                if connected_pad.net != pad.net:
+                    raise ValueError("Native PCB connected pads have different nets")
+                if pad.pad.casefold() not in connected_pad_names[connected_pad.pad.casefold()]:
+                    raise ValueError("Native PCB connected pad membership must be symmetric")
         vias_by_id = {item.id: item for item in self.vias}
         for pad in self.pads:
             if not set(pad.connected_vias) <= vias_by_id.keys():

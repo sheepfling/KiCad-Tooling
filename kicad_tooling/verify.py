@@ -20,6 +20,7 @@ from .hwrepo.diagnostic_journal import DiagnosticJournal
 from .hwrepo.diagnostics import diagnose_project, format_text
 from .hwrepo.discovery import load_config, load_registry
 from .hwrepo.doctor import NativeRunner, doctor
+from .hwrepo.layout import default_project_root
 from .hwrepo.models import (
     CheckAllSummary,
     CommandEvidence,
@@ -426,7 +427,7 @@ def verify(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     parser.add_argument("--project", required=True, help="One registered project ID")
     parser.add_argument(
         "--depth",

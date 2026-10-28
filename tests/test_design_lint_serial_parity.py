@@ -8,7 +8,12 @@ from mcp import Client
 from kicad_tooling.hwrepo.contracts import write_model
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
-from kicad_tooling.hwrepo.models import CommandEvidence, ComponentContract, ValidationSummary
+from kicad_tooling.hwrepo.models import (
+    CommandEvidence,
+    ComponentContract,
+    ReferenceBondRequirement,
+    ValidationSummary,
+)
 from tests.design_lint_fixtures.i2c_serial_parity import (
     alternate_function_serial_netlist,
     dual_uart_reference_netlist,
@@ -304,7 +309,6 @@ class DesignLintSerialParityTests(I2cSerialParityHarness):
     async def test_bonded_uart_reference_map_suppresses_only_valid_bond_on_cli_and_mcp(
         self,
     ) -> None:
-        from kicad_tooling.hwrepo.models import ReferenceBondRequirement
         from tests.electrical_parity_support import contract_netlist_xml
         from tests.serial_peer_reference_support import (
             bonded_serial_reference_netlist,

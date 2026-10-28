@@ -5,12 +5,13 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 
 _NAMESPACE = uuid.UUID("be987a5a-4fd7-4852-b8ad-03b90f41e1a3")
 _PROJECT = "LINT-150 synthetic oscillator output path"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Pin:
     number: str
     name: str
@@ -18,14 +19,14 @@ class Pin:
     x: float
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Symbol:
     reference_prefix: str
     value: str
     pins: tuple[Pin, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Part:
     reference: str
     library_id: str
@@ -36,18 +37,24 @@ class Part:
     pin_nets: tuple[str, ...]
 
 
-_SYMBOLS = {
-    "Synthetic:ClockModule": Symbol(
-        "X", "Synthetic clock module", (Pin("1", "OUT", "output", -5.08),)
-    ),
-    "Synthetic:ReceiverA": Symbol("U", "Synthetic receiver A", (Pin("2", "CLK", "input", -5.08),)),
-    "Synthetic:ReceiverB": Symbol("U", "Synthetic receiver B", (Pin("3", "CLK", "input", -5.08),)),
-    "Device:R": Symbol(
-        "R",
-        "R",
-        (Pin("1", "~", "passive", -5.08), Pin("2", "~", "passive", 5.08)),
-    ),
-}
+_SYMBOLS = MappingProxyType(
+    {
+        "Synthetic:ClockModule": Symbol(
+            "X", "Synthetic clock module", (Pin("1", "OUT", "output", -5.08),)
+        ),
+        "Synthetic:ReceiverA": Symbol(
+            "U", "Synthetic receiver A", (Pin("2", "CLK", "input", -5.08),)
+        ),
+        "Synthetic:ReceiverB": Symbol(
+            "U", "Synthetic receiver B", (Pin("3", "CLK", "input", -5.08),)
+        ),
+        "Device:R": Symbol(
+            "R",
+            "R",
+            (Pin("1", "~", "passive", -5.08), Pin("2", "~", "passive", 5.08)),
+        ),
+    }
+)
 
 
 def _uid(case_name: str, name: str) -> str:
@@ -177,10 +184,12 @@ def render_case(case_name: str, resistor_value: str) -> str:
 '''
 
 
-CASES = {
-    "series-boundary-control": "47R",
-    "wrong-value-fault": "1k",
-}
+CASES = MappingProxyType(
+    {
+        "series-boundary-control": "47R",
+        "wrong-value-fault": "1k",
+    }
+)
 
 
 def write_cases(destination: Path) -> tuple[Path, ...]:

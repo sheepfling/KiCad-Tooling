@@ -16,9 +16,9 @@ from typing import TypeVar
 
 from pydantic import BaseModel
 
-from .models import CommandEvidence
+from kicad_tooling.hwrepo.models import CommandEvidence
 
-_Result = TypeVar("_Result")
+_Result = TypeVar("_Result", bound=BaseModel)
 
 
 class PipelineJournal:
@@ -68,18 +68,19 @@ class PipelineJournal:
         started = time.monotonic()
         self._event(name, "START")
         try:
-            result = action()
+            result: _Result = action()
         except BaseException as exc:
             self._event(name, "ERROR", time.monotonic() - started, f"{type(exc).__name__}: {exc}")
             raise
-        if self.output is not None and isinstance(result, BaseModel):
+        if self.output is not None:
             (self.output / f"{name}.json").write_text(
                 result.model_dump_json(indent=2) + "\n", encoding="utf-8"
             )
+        result_state: BaseModel | CommandEvidence = result
         state = (
-            ("PASS" if result.returncode == 0 and result.error is None else "FAIL")
-            if isinstance(result, CommandEvidence)
-            else getattr(result, "status", "DONE")
+            ("PASS" if result_state.returncode == 0 and result_state.error is None else "FAIL")
+            if isinstance(result_state, CommandEvidence)
+            else getattr(result_state, "status", "DONE")
         )
         self._event(name, str(state), time.monotonic() - started)
         return result

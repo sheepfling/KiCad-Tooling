@@ -9,12 +9,12 @@ import re
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 from kicad_tooling.ci_hosted import HostedLog, native_control_input_demo_lane
 from kicad_tooling.hwrepo.electrical import selected_config
+from tests.json_types import JsonObject
 from tests.support import reference_root
 
 pytestmark = [
@@ -94,7 +94,7 @@ _EXPECTED_CASES = (
 @pytest.fixture(scope="module")
 def native_control_input_demo_run(
     request: pytest.FixtureRequest,
-) -> tuple[str, dict[str, Any]]:
+) -> tuple[str, JsonObject]:
     """Export selected samples once, sharing one exact-version native run."""
     selected: set[str] = set()
     for item in request.session.items:
@@ -103,8 +103,8 @@ def native_control_input_demo_run(
         callspec = getattr(item, "callspec", None)
         if callspec is None:
             continue
-        sample = callspec.params.get("sample")
-        if isinstance(sample, str):
+        sample: str | None = callspec.params.get("sample")
+        if sample is not None:
             selected.add(sample)
     selected_samples = frozenset(selected)
     assert selected_samples, "The native demo fixture requires a selected sample case"
@@ -164,7 +164,7 @@ def native_control_input_demo_run(
     ids=tuple(case[0] for case in _EXPECTED_CASES),
 )
 def test_native_public_demos_record_connected_bias_and_unconnected_controls(
-    native_control_input_demo_run: tuple[str, dict[str, Any]],
+    native_control_input_demo_run: tuple[str, JsonObject],
     sample: str,
     expected_candidates: str,
     expected_count: int,

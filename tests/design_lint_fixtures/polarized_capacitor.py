@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+from types import MappingProxyType
+
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
-NATIVE_FIXTURE_SHA256 = {
-    "fault": "8b87c5640e0ad70a93986a1d10d948f5b71a7ef4bf40ca2c7d2d23db55dfbab1",
-    "control": "6defad64c1522c4663706464723f0b241a1900d00f7ddc575841cce11f5f282f",
-}
+NATIVE_FIXTURE_SHA256 = MappingProxyType(
+    {
+        "fault": "8b87c5640e0ad70a93986a1d10d948f5b71a7ef4bf40ca2c7d2d23db55dfbab1",
+        "control": "6defad64c1522c4663706464723f0b241a1900d00f7ddc575841cce11f5f282f",
+    }
+)
 
 
 def netlist(

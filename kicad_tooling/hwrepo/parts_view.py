@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from html import escape
+from pathlib import PurePosixPath
 
 from .models import PurchasingReport
 
@@ -100,7 +101,7 @@ Use an assembly multiplier of 1 and no extra attrition; these quantities already
             (
                 name
                 for name in report.input_hashes
-                if name.endswith(f"/{report.project_id}/project.json")
+                if PurePosixPath(name).parts[-2:] == (report.project_id, "project.json")
             ),
             f"projects/{report.project_id}/project.json",
         )

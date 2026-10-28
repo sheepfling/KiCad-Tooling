@@ -173,8 +173,9 @@ def test_project_array_contract_fixture_parses() -> None:
     )
     contract = read_model(fixture, ElectricalAnalysisContract)
 
-    assert isinstance(contract.can_termination, CanTerminationAnalysis)
-    channels = contract.can_termination.buses[0].endpoints[0].resistor_arrays[0].channels
+    termination = contract.can_termination
+    assert termination is not None and termination.mode == "required"
+    channels = termination.buses[0].endpoints[0].resistor_arrays[0].channels
     assert tuple(item.id for item in channels) == ("high-leg", "low-leg")
 
 

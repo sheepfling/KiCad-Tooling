@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import TypeVar
 
 from pydantic import BaseModel
@@ -61,7 +61,7 @@ def measurement_coverage_reports(
     track_width_map: PcbTrackWidthMap | None,
     reference_plane_map: PcbReferencePlaneMap | None,
     switching_loop_map: PcbSwitchingLoopMap | None,
-    modes: dict[str, PcbRuleMode],
+    modes: Mapping[str, PcbRuleMode],
     evidence: PcbGeometrySourceEvidence,
     netlist_sha256: Digest,
 ) -> tuple[

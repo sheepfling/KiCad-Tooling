@@ -12,22 +12,23 @@ from tests.support import SOURCE_ROOT
 pytestmark = pytest.mark.architecture
 
 ROOT = SOURCE_ROOT
-JSON_ADAPTERS = {
-    "kicad_tooling/hwrepo/contracts.py",
-    # GitHub API JSON is validated into narrow Pydantic response models at this boundary.
-    "kicad_tooling/hwrepo/hosted_governance.py",
-    "kicad_tooling/validate.py",
-    "kicad_tooling/fault_probe.py",
-    # Native PCB probe output is validated as a strict snapshot before models are built.
-    "kicad_tooling/hwrepo/pcb_return_path_capture.py",
-    # Native variant-probe JSON is bound to board and project digests before use.
-    "kicad_tooling/hwrepo/pcb_variant_population_capture.py",
-    # Native DRC JSON is decoded into typed report and source-bound evidence models.
-    "kicad_tooling/hwrepo/pcb_drc_rule_parser.py",
-    "kicad_tooling/hwrepo/pcb_drc_source_evidence.py",
-    # Native custom-rule probe JSON has a focused identity and sentinel adapter.
-    "kicad_tooling/hwrepo/pcb_dru_compilation_native_report.py",
-}
+JSON_ADAPTERS = frozenset(
+    {
+        "kicad_tooling/hwrepo/contracts.py",
+        # GitHub API JSON is validated into narrow Pydantic response models at this boundary.
+        "kicad_tooling/hwrepo/hosted_governance.py",
+        "kicad_tooling/validate.py",
+        # Native PCB probe output is validated as a strict snapshot before models are built.
+        "kicad_tooling/hwrepo/pcb_return_path_capture.py",
+        # Native variant-probe JSON is bound to board and project digests before use.
+        "kicad_tooling/hwrepo/pcb_variant_population_capture.py",
+        # Native DRC JSON is decoded into typed report and source-bound evidence models.
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py",
+        "kicad_tooling/hwrepo/pcb_drc_source_evidence.py",
+        # Native custom-rule probe JSON has a focused identity and sentinel adapter.
+        "kicad_tooling/hwrepo/pcb_dru_compilation_native_report.py",
+    }
+)
 # Discover services automatically so a new module cannot evade architecture checks.
 CORE_MODULES = tuple(
     sorted(

@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -26,11 +27,13 @@ from tests.synthetic_design_lint_project import (
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint]
 
-EXPECTED_SOURCE_HASHES = {
-    "fault": "d2029e5dde45f91dbc2b66a319c0994fa720489f5a1624da70ae39ad161c50c1",
-    "cross_winding_fault": "812e43c602373b37d468b9d8d0b081d0a28c75974f79877b8719fafcb62a720c",
-    "control": "444f6bb48b2e9796293e373812e6dc605932d666dc4c737cb8c9561dfb09daf3",
-}
+EXPECTED_SOURCE_HASHES = MappingProxyType(
+    {
+        "fault": "d2029e5dde45f91dbc2b66a319c0994fa720489f5a1624da70ae39ad161c50c1",
+        "cross_winding_fault": "812e43c602373b37d468b9d8d0b081d0a28c75974f79877b8719fafcb62a720c",
+        "control": "444f6bb48b2e9796293e373812e6dc605932d666dc4c737cb8c9561dfb09daf3",
+    }
+)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

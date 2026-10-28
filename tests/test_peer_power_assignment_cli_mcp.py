@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import json
 from pathlib import Path
 
 import pytest
@@ -10,6 +12,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     DesignLintReport,
     DesignLintRuleOverride,
+    ValidationSummary,
 )
 from tests.component_peer_power_assignment_support import (
     RULE_ID,
@@ -65,15 +68,12 @@ def _synthetic_parity_project(tmp_path: Path) -> tuple[Path, Path]:
 
 
 def _run_cli_and_mcp(tmp_path: Path, root: Path, summary_path: Path, observed) -> DesignLintReport:
-    import asyncio
-    import json
 
     from mcp import Client
 
     from kicad_tooling.hwrepo.contracts import read_model, write_model
     from kicad_tooling.hwrepo.evidence import digest
     from kicad_tooling.hwrepo.mcp_server import create_server
-    from kicad_tooling.hwrepo.models import ValidationSummary
     from tests.synthetic_design_lint_project import run_design_lint_cli
 
     netlist_path = summary_path.parent / "netlist.xml"

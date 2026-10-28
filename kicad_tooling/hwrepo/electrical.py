@@ -6,22 +6,23 @@ import hashlib
 import os
 import stat
 from pathlib import Path
+from typing import Protocol
 
-from ..validate import hashes
-from .analysis_state_models import (
-    AnalysisNotApplicable,
-    AnalysisPending,
-)
-from .contracts import parse_model_text, read_model, repo_path
-from .discovery import load_config, load_registry
-from .electrical_analysis_contract_models import ElectricalAnalysisContract
-from .electrical_simulation_models import (
+from kicad_tooling.hwrepo.analysis_state_models import AnalysisNotApplicable, AnalysisPending
+from kicad_tooling.hwrepo.electrical_analysis_contract_models import ElectricalAnalysisContract
+from kicad_tooling.hwrepo.electrical_simulation_models import (
     FrequencyAnalysis,
     HighFrequencyAnalysis,
     PowerAnalysis,
     TransientAnalysis,
 )
-from .grounding_models import GroundingAnalysis
+from kicad_tooling.hwrepo.grounding_models import GroundingAnalysis
+from kicad_tooling.hwrepo.pcb_test_access_models import PcbAccessAnalysis, TestAccessAnalysis
+from kicad_tooling.hwrepo.pin_connectivity_models import PinConnectivityAnalysis
+
+from ..validate import hashes
+from .contracts import parse_model_text, read_model, repo_path
+from .discovery import load_config, load_registry
 from .models import (
     ElectricalCheck,
     NetlistContract,
@@ -29,11 +30,14 @@ from .models import (
     ProjectKind,
     ProjectManifest,
 )
-from .pcb_test_access_models import TestAccessAnalysis
-from .pin_connectivity_models import PinConnectivityAnalysis
 from .return_nets import return_net_groups
 
 SimulationCase = TransientAnalysis | FrequencyAnalysis
+
+
+class _ModeledAnalysisSection(Protocol):
+    @property
+    def mode(self) -> str: ...
 
 
 def regular_input_bytes(path: Path) -> bytes:
@@ -74,10 +78,14 @@ def selected_config(root: Path, project_id: str) -> ProjectConfig:
 
 def simulation_cases(contract: ElectricalAnalysisContract) -> tuple[SimulationCase, ...]:
     cases: list[SimulationCase] = []
-    if isinstance(contract.power, PowerAnalysis):
-        cases.extend((*contract.power.startup, *contract.power.steady_state))
-    if isinstance(contract.high_frequency, HighFrequencyAnalysis):
-        cases.extend((*contract.high_frequency.sweeps, *contract.high_frequency.waveforms))
+    power: PowerAnalysis | AnalysisNotApplicable | AnalysisPending = contract.power
+    if isinstance(power, PowerAnalysis):
+        cases.extend((*power.startup, *power.steady_state))
+    high_frequency: HighFrequencyAnalysis | AnalysisNotApplicable | AnalysisPending = (
+        contract.high_frequency
+    )
+    if isinstance(high_frequency, HighFrequencyAnalysis):
+        cases.extend((*high_frequency.sweeps, *high_frequency.waveforms))
     return tuple(cases)
 
 
@@ -328,36 +336,40 @@ def power_budget_checks(
 
 
 def pending_sections(contract: ElectricalAnalysisContract) -> tuple[str, ...]:
-    pending = tuple(
-        name
-        for name, section in (
-            ("grounding", contract.grounding),
-            ("pcb_return_paths", contract.pcb_return_paths),
-            ("pin_connectivity", contract.pin_connectivity),
-            ("i2c_pullups", contract.i2c_pullups),
-            ("can_termination", contract.can_termination),
-            ("usb_c", contract.usb_c),
-            ("spi", contract.spi),
-            ("serial_peers", contract.serial_peers),
-            ("digital_peer_voltages", contract.digital_peer_voltages),
-            ("component_voltage_ratings", contract.component_voltage_ratings),
-            ("component_power_ratings", contract.component_power_ratings),
-            ("connector_contact_ratings", contract.connector_contact_ratings),
-            ("mosfet_stress", contract.mosfet_stress),
-            ("rs485", contract.rs485),
-            ("control_inputs", contract.control_inputs),
-            ("power", contract.power),
-            ("power_connectivity", contract.power_connectivity),
-            ("high_frequency", contract.high_frequency),
-        )
-        if isinstance(section, AnalysisPending)
+    sections: tuple[tuple[str, _ModeledAnalysisSection | None], ...] = (
+        ("grounding", contract.grounding),
+        ("pcb_return_paths", contract.pcb_return_paths),
+        ("pin_connectivity", contract.pin_connectivity),
+        ("i2c_pullups", contract.i2c_pullups),
+        ("can_termination", contract.can_termination),
+        ("usb_c", contract.usb_c),
+        ("spi", contract.spi),
+        ("serial_peers", contract.serial_peers),
+        ("digital_peer_voltages", contract.digital_peer_voltages),
+        ("component_voltage_ratings", contract.component_voltage_ratings),
+        ("component_power_ratings", contract.component_power_ratings),
+        ("connector_contact_ratings", contract.connector_contact_ratings),
+        ("mosfet_stress", contract.mosfet_stress),
+        ("rs485", contract.rs485),
+        ("control_inputs", contract.control_inputs),
+        ("power", contract.power),
+        ("power_connectivity", contract.power_connectivity),
+        ("high_frequency", contract.high_frequency),
     )
-    if contract.test_access is None:
+    pending = tuple(
+        name for name, section in sections if section is not None and section.mode == "pending"
+    )
+    test_access: TestAccessAnalysis | AnalysisNotApplicable | AnalysisPending | None = (
+        contract.test_access
+    )
+    if test_access is None:
         return (*pending, "test_access")
-    if isinstance(contract.test_access, TestAccessAnalysis) and isinstance(
-        contract.test_access.pcb_accessibility, AnalysisPending
-    ):
-        return (*pending, "test_access.pcb_accessibility")
+    if isinstance(test_access, TestAccessAnalysis):
+        accessibility: PcbAccessAnalysis | AnalysisNotApplicable | AnalysisPending = (
+            test_access.pcb_accessibility
+        )
+        if accessibility.mode == "pending":
+            return (*pending, "test_access.pcb_accessibility")
     return pending
 
 

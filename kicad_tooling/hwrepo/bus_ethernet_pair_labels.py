@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from types import MappingProxyType
+
 from .bus_signal_pairs import (
     complementary_pin_function_key,
     ethernet_data_pair_function_role,
@@ -13,24 +16,26 @@ from .models import NetlistContract
 RULE_ID = "bus.ethernet_data_label_mismatch"
 MANAGEMENT_RULE_ID = "bus.ethernet_management_label_mismatch"
 
-_ETHERNET_NET_LABEL_ROLES: dict[str, tuple[str, str]] = {
-    "td+": ("TX", "positive"),
-    "td-": ("TX", "negative"),
-    "tdp": ("TX", "positive"),
-    "tdn": ("TX", "negative"),
-    "tx+": ("TX", "positive"),
-    "tx-": ("TX", "negative"),
-    "txp": ("TX", "positive"),
-    "txn": ("TX", "negative"),
-    "rd+": ("RX", "positive"),
-    "rd-": ("RX", "negative"),
-    "rdp": ("RX", "positive"),
-    "rdn": ("RX", "negative"),
-    "rx+": ("RX", "positive"),
-    "rx-": ("RX", "negative"),
-    "rxp": ("RX", "positive"),
-    "rxn": ("RX", "negative"),
-}
+_ETHERNET_NET_LABEL_ROLES: Mapping[str, tuple[str, str]] = MappingProxyType(
+    {
+        "td+": ("TX", "positive"),
+        "td-": ("TX", "negative"),
+        "tdp": ("TX", "positive"),
+        "tdn": ("TX", "negative"),
+        "tx+": ("TX", "positive"),
+        "tx-": ("TX", "negative"),
+        "txp": ("TX", "positive"),
+        "txn": ("TX", "negative"),
+        "rd+": ("RX", "positive"),
+        "rd-": ("RX", "negative"),
+        "rdp": ("RX", "positive"),
+        "rdn": ("RX", "negative"),
+        "rx+": ("RX", "positive"),
+        "rx-": ("RX", "negative"),
+        "rxp": ("RX", "positive"),
+        "rxn": ("RX", "negative"),
+    }
+)
 _ETHERNET_NET_LABEL_PREFIXES = ("ethernet", "eth", "mdi")
 _ETHERNET_MANAGEMENT_NET_LABEL_PREFIXES = ("ethernet", "eth", "smi")
 

@@ -9,41 +9,39 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
+from types import MappingProxyType
 
 from .ci_hosted_spi_native import SPI_NATIVE_TOOLCHAINS
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 SPI_SIGNAL_NAMED_RAIL_TOOLCHAINS = SPI_NATIVE_TOOLCHAINS
 _RULE_ID = "bus.spi_signal_on_named_rail"
-_SOURCE_HASHES = {
-    "fault": "ea7aa06bf78c24996bdfa8754c88822cb0a6ed8b86b0c6010ab9b79f6705aebf",
-    "control": "8c18aae7ec349d9e971928e85dfc4843397aad1a3f7623100d25cc1b7d4e5221",
-}
+_SOURCE_HASHES = MappingProxyType(
+    {
+        "fault": "ea7aa06bf78c24996bdfa8754c88822cb0a6ed8b86b0c6010ab9b79f6705aebf",
+        "control": "8c18aae7ec349d9e971928e85dfc4843397aad1a3f7623100d25cc1b7d4e5221",
+    }
+)
 
 
 def spi_signal_named_rail_fixture_lane(
     root: Path, *, version: str, image: str, log: HostedLog
 ) -> None:
     """Repeat source-bound KiCad netlist and ERC exports for a fault and control."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .validate import read_netlist
 
     root = root.resolve()
     if (version, image) not in SPI_SIGNAL_NAMED_RAIL_TOOLCHAINS:
         raise ValueError(f"SPI named-rail coverage is not configured for KiCad {version}")
     pinned = pinned_image(image)
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/spi-signal-named-rail"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/spi-signal-named-rail"
     sources = {case: fixture_root / f"{case}.kicad_sch" for case in ("fault", "control")}
-    source_hashes = {case: digest(source) for case, source in sources.items()}
+    source_hashes = MappingProxyType({case: digest(source) for case, source in sources.items()})
     if source_hashes != _SOURCE_HASHES:
         raise ValueError("SPI named-rail sources differ from their reviewed hashes")
 

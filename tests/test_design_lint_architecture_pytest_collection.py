@@ -15,6 +15,15 @@ from tests.design_lint_test_markers import design_lint_markers_for_path
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
 
+def _is_version_parameter_decorator(decorator: ast.expr) -> bool:
+    if not isinstance(decorator, ast.Call):
+        return False
+    if ast.unparse(decorator.func) != "pytest.mark.parametrize" or not decorator.args:
+        return False
+    parameter_names: ast.expr = decorator.args[0]
+    return isinstance(parameter_names, ast.Constant) and parameter_names.value == "version"
+
+
 def test_selector_architecture_suites_are_in_the_catalog_gate() -> None:
     for module in (
         "tests/test_design_lint_architecture_pytest_markers.py",
@@ -94,14 +103,7 @@ def test_native_connector_acceptance_uses_version_parameterized_pytest() -> None
         for node in tree.body
         if isinstance(node, ast.FunctionDef)
         and node.name in expected
-        and any(
-            isinstance(decorator, ast.Call)
-            and ast.unparse(decorator.func) == "pytest.mark.parametrize"
-            and decorator.args
-            and isinstance(decorator.args[0], ast.Constant)
-            and decorator.args[0].value == "version"
-            for decorator in node.decorator_list
-        )
+        and any(_is_version_parameter_decorator(decorator) for decorator in node.decorator_list)
     }
     assert version_parameterized == expected
 

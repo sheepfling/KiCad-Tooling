@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -21,21 +22,27 @@ from tests.synthetic_design_lint_project import (
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint]
 
-FIXTURES = {
-    "fault": "bjt-terminal-order-native/fault.kicad_sch",
-    "control": "bjt-terminal-order-native/control.kicad_sch",
-}
-EXPECTED_SOURCE_HASHES = {
-    "fault": "deca669b12ceec4fbd21004d48f6eebbe86f68dd9820a727bb01adbd9a663c9d",
-    "control": "2b68e0bb4818e82917047e2e9caf07b0b9ebf25cf5fd939a6bb4b7a1f7c45845",
-}
-EXPECTED_SUBJECTS = {
-    "fault": (
-        "Q1.2: BJT base directly shares a net with an output-capable pin",
-        "Q2.1: BJT base directly shares a net with an output-capable pin",
-    ),
-    "control": None,
-}
+FIXTURES = MappingProxyType(
+    {
+        "fault": "bjt-terminal-order-native/fault.kicad_sch",
+        "control": "bjt-terminal-order-native/control.kicad_sch",
+    }
+)
+EXPECTED_SOURCE_HASHES = MappingProxyType(
+    {
+        "fault": "deca669b12ceec4fbd21004d48f6eebbe86f68dd9820a727bb01adbd9a663c9d",
+        "control": "2b68e0bb4818e82917047e2e9caf07b0b9ebf25cf5fd939a6bb4b7a1f7c45845",
+    }
+)
+EXPECTED_SUBJECTS = MappingProxyType(
+    {
+        "fault": (
+            "Q1.2: BJT base directly shares a net with an output-capable pin",
+            "Q2.1: BJT base directly shares a net with an output-capable pin",
+        ),
+        "control": None,
+    }
+)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

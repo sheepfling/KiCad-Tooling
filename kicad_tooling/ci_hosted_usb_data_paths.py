@@ -2,40 +2,33 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog
 from .ci_hosted_usb_data_path_cases import usb_data_path_fixture_sources
 from .ci_hosted_usb_isolation import validate_usb_isolator_reference_boundary
 from .ci_hosted_usb_multiport_validation import validate_usb_multiport_peer_reference_reports
 from .ci_hosted_usb_protection_shunts import validate_usb_protection_shunt_fixture_reports
 from .ci_hosted_usb_requirements import usb_data_path_requirements
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.contract_coach import pinned_image, run_command
+from .hwrepo.contracts import write_model
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.usb_data_paths import usb_data_path_mismatches
+from .validate import read_netlist
 
 
 def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
     """Compare mapped USB PHY topologies with repeated, pinned native netlist exports."""
-    import hashlib
-    import os
-
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.contracts import write_model
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import (
-        ContractCoachReport,
-        DesignLintPolicy,
-    )
-    from .hwrepo.usb_data_paths import usb_data_path_mismatches
-    from .validate import read_netlist
 
     root = root.resolve()
     config = selected_config(root, project)

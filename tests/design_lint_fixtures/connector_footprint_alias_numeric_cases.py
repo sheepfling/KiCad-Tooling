@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 
@@ -25,7 +27,7 @@ def footprint_alias_numeric_peer_pin_cases() -> dict[str, NetlistContract]:
     electrical_types = {pin: "passive" for pin in pin_functions}
 
     def observed(
-        *, second_pin_nets: dict[str, tuple[str, ...]], open_pin: bool = False
+        *, second_pin_nets: Mapping[str, tuple[str, ...]], open_pin: bool = False
     ) -> NetlistContract:
         return NetlistContract(
             components=components,

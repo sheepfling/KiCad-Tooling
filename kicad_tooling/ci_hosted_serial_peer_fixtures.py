@@ -2,39 +2,30 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
+from .hwrepo.contracts import read_model, write_model
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract
+from .hwrepo.serial_participants import SerialPeerRosterContext
+from .hwrepo.serial_peer_models import SerialPeerAnalysis
+from .validate import read_netlist
 
 
 def serial_peer_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
     """Verify serial-peer coverage prompts against repeated pinned native exports."""
-    import hashlib
-    import os
-
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.contracts import read_model
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import (
-        ContractCoachReport,
-        DesignLintPolicy,
-        NetlistContract,
-    )
-    from .hwrepo.serial_participants import SerialPeerRosterContext
-    from .hwrepo.serial_peer_models import SerialPeerAnalysis
-    from .validate import read_netlist
 
     root = root.resolve()
     config = selected_config(root, project)
@@ -44,7 +35,7 @@ def serial_peer_fixture_lane(root: Path, *, project: str, image: str, log: Hoste
         raise ValueError(f"Serial peer fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
 
-    repository = Path(__file__).resolve().parents[1]
+    repository = tooling_checkout_root()
     fixture_root = repository / "tests/fixtures/design_lint/serial-peer-native"
     fixture = fixture_root / "endpoints.kicad_sch"
     source_hash = digest(fixture)

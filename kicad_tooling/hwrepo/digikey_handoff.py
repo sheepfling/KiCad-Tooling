@@ -51,9 +51,9 @@ def build_payload(plan: PurchasingPlan) -> DigiKeyHandoffPayload:
         identities[line.order_number] = identity
         rows.append(
             DigiKeyHandoffPart(
-                requestedPartNumber=line.order_number,
+                requested_part_number=line.order_number,
                 quantities=(DigiKeyHandoffQuantity(quantity=line.quantity),),
-                customerReference=line.part_id,
+                customer_reference=line.part_id,
                 notes=(
                     f"Manufacturer: {line.manufacturer}; MPN: {line.mpn}; "
                     f"References: {', '.join(line.references)}"

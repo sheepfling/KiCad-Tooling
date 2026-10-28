@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import pytest
 
 from kicad_tooling import ci_hosted
-from kicad_tooling.hwrepo import electrical
+from kicad_tooling import ci_hosted_pcb_reference_planes as reference_plane_lane
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -29,7 +29,7 @@ def test_reference_plane_fixture_lanes_reject_untested_kicad_minors(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     config = SimpleNamespace(image="synthetic-image", kicad_version="10.0.6")
-    monkeypatch.setattr(electrical, "selected_config", lambda root, project: config)
+    monkeypatch.setattr(reference_plane_lane, "selected_config", lambda *_args: config)
     lane = getattr(ci_hosted, lane_name)
 
     with pytest.raises(ValueError, match="fixtures do not cover KiCad 10.0.6"):

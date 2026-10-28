@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -20,31 +21,47 @@ MODEL_NAMES = (
     "ConnectorReturnDistributionCoverageReport",
 )
 
-EXPECTED_OWNER_IMPORTS = {
-    "kicad_tooling/hwrepo/connector_return_distribution.py": set(MODEL_NAMES),
-    "kicad_tooling/hwrepo/design_lint_component_coverage.py": {
-        "ConnectorReturnDistributionCoverageReport",
-        "ConnectorReturnDistributionMap",
-    },
-    "kicad_tooling/hwrepo/design_lint_evaluator.py": {
-        "ConnectorReturnDistributionCoverageReport",
-    },
-    "kicad_tooling/hwrepo/design_lint_report_models.py": {
-        "ConnectorReturnDistributionCoverageReport",
-    },
-    "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py": {
-        "ConnectorReturnDistributionCoverageReport",
-    },
-    "kicad_tooling/hwrepo/design_lint_evaluation_types.py": {
-        "ConnectorReturnDistributionCoverageReport",
-    },
-    "kicad_tooling/hwrepo/design_lint_return_distribution_candidates.py": {
-        "ConnectorReturnDistributionCoverageReport",
-    },
-    "kicad_tooling/hwrepo/design_lint_missing_evidence.py": {
-        "ConnectorReturnDistributionCoverageReport",
-    },
-}
+EXPECTED_OWNER_IMPORTS = MappingProxyType(
+    {
+        "kicad_tooling/hwrepo/connector_return_distribution.py": frozenset(MODEL_NAMES),
+        "kicad_tooling/hwrepo/design_lint_component_coverage.py": frozenset(
+            {
+                "ConnectorReturnDistributionCoverageReport",
+                "ConnectorReturnDistributionMap",
+            }
+        ),
+        "kicad_tooling/hwrepo/design_lint_evaluator.py": frozenset(
+            {
+                "ConnectorReturnDistributionCoverageReport",
+            }
+        ),
+        "kicad_tooling/hwrepo/design_lint_report_models.py": frozenset(
+            {
+                "ConnectorReturnDistributionCoverageReport",
+            }
+        ),
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py": frozenset(
+            {
+                "ConnectorReturnDistributionCoverageReport",
+            }
+        ),
+        "kicad_tooling/hwrepo/design_lint_evaluation_types.py": frozenset(
+            {
+                "ConnectorReturnDistributionCoverageReport",
+            }
+        ),
+        "kicad_tooling/hwrepo/design_lint_return_distribution_candidates.py": frozenset(
+            {
+                "ConnectorReturnDistributionCoverageReport",
+            }
+        ),
+        "kicad_tooling/hwrepo/design_lint_missing_evidence.py": frozenset(
+            {
+                "ConnectorReturnDistributionCoverageReport",
+            }
+        ),
+    }
+)
 
 
 def _top_level_class_names(path: Path) -> set[str]:

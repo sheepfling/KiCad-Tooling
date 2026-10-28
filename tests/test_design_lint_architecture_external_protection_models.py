@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from types import MappingProxyType
 
 import pytest
 
@@ -21,21 +22,27 @@ EXTERNAL_PROTECTION_MODEL_NAMES = (
     "ExternalProtectionCoverageReport",
 )
 
-EXPECTED_OWNER_IMPORTS = {
-    "design_lint_candidate_aggregation.py": {"ExternalProtectionCoverageReport"},
-    "design_lint_connector_coverage.py": {"ExternalProtectionCoverageReport"},
-    "design_lint_evaluation_preparation.py": {"ExternalProtectionCoverageReport"},
-    "design_lint_evaluation_types.py": {"ExternalProtectionCoverageReport"},
-    "design_lint_evaluator.py": {"ExternalProtectionCoverageReport"},
-    "design_lint_mapped_coverage_candidates.py": {"ExternalProtectionCoverageReport"},
-    "design_lint_protection_candidates.py": {"ExternalProtectionCoverageReport"},
-    "external_protection.py": {
-        "ExternalProtectionCoverageEntry",
-        "ExternalProtectionCoverageReport",
-        "ExternalProtectionDeviceRequirement",
-        "ExternalProtectionMap",
-    },
-}
+EXPECTED_OWNER_IMPORTS = MappingProxyType(
+    {
+        "design_lint_candidate_aggregation.py": frozenset({"ExternalProtectionCoverageReport"}),
+        "design_lint_connector_coverage.py": frozenset({"ExternalProtectionCoverageReport"}),
+        "design_lint_evaluation_preparation.py": frozenset({"ExternalProtectionCoverageReport"}),
+        "design_lint_evaluation_types.py": frozenset({"ExternalProtectionCoverageReport"}),
+        "design_lint_evaluator.py": frozenset({"ExternalProtectionCoverageReport"}),
+        "design_lint_mapped_coverage_candidates.py": frozenset(
+            {"ExternalProtectionCoverageReport"}
+        ),
+        "design_lint_protection_candidates.py": frozenset({"ExternalProtectionCoverageReport"}),
+        "external_protection.py": frozenset(
+            {
+                "ExternalProtectionCoverageEntry",
+                "ExternalProtectionCoverageReport",
+                "ExternalProtectionDeviceRequirement",
+                "ExternalProtectionMap",
+            }
+        ),
+    }
+)
 
 
 def _top_level_definitions(tree: ast.Module) -> set[str]:

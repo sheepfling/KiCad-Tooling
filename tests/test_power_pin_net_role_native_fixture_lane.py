@@ -5,8 +5,11 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
+
+from kicad_tooling.hwrepo.electrical import selected_config
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -17,16 +20,17 @@ pytestmark = [
     pytest.mark.template_checkout,
 ]
 
-_EXPECTED_IMAGES = {
-    "controller": "ghcr.io/kicad/kicad:10.0.0@sha256:"
-    "9549d3a08e0822f9434a9eda0782c812451ab4a733c73535f9e8beed42039bc3",
-    "raspberry-pi-status-led": "ghcr.io/kicad/kicad:10.0.5@sha256:"
-    "fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c",
-}
+_EXPECTED_IMAGES = MappingProxyType(
+    {
+        "controller": "ghcr.io/kicad/kicad:10.0.0@sha256:"
+        "9549d3a08e0822f9434a9eda0782c812451ab4a733c73535f9e8beed42039bc3",
+        "raspberry-pi-status-led": "ghcr.io/kicad/kicad:10.0.5@sha256:"
+        "fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c",
+    }
+)
 
 
 def _selected_image(hosted_reference_root: Path, project: str, version: str) -> str:
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     config = selected_config(hosted_reference_root, project)
     assert config.kicad_version == version

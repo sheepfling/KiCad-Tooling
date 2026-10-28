@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from .ci_hosted_digital_peer_context import DigitalPeerFixtureContext
+from .ci_hosted_digital_peer_models import (
+    SERIAL_CONNECTOR_REVIEW_CASES,
+    DigitalPeerFixtureCase,
+)
+from .ci_hosted_native_fixture_models import NativeRun, NativeRunPair
+from .ci_hosted_support import tooling_checkout_root
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_connectivity_snapshot import capture_connectivity_snapshot
 from .hwrepo.design_lint_connectivity_snapshot_models import (
@@ -19,16 +23,16 @@ from .hwrepo.models import (
 
 
 def _connectivity_snapshot(
-    ctx: DigitalPeerFixtureContext, case: str, run: str
+    ctx: DigitalPeerFixtureContext, case: DigitalPeerFixtureCase, run: NativeRun
 ) -> DesignLintConnectivitySnapshot:
     """Capture pin-role metadata from one exact-version native export."""
-    source_path = ctx.serial_connector_reference_fixtures[case]
-    source_key = source_path.relative_to(Path(__file__).resolve().parents[1]).as_posix()
+    source_path = ctx.fixture(case).source.path
+    source_key = source_path.relative_to(tooling_checkout_root()).as_posix()
     return capture_connectivity_snapshot(
         project_id="serial-reference-fixture",
-        observed=ctx.contracts[case][run],
-        source_hashes={source_key: ctx.serial_connector_reference_source_hashes[case]},
-        netlist_sha256=ctx.hashes[case][run],
+        observed=ctx.fixture(case).netlists.for_run(run).contract,
+        source_hashes={source_key: ctx.fixture(case).source.sha256},
+        netlist_sha256=ctx.fixture(case).netlists.for_run(run).netlist_sha256,
         kicad_version=ctx.config.kicad_version,
         toolchain_image=ctx.pinned,
     )
@@ -38,10 +42,13 @@ def verify_serial_connector_reference_cases(
     ctx: DigitalPeerFixtureContext, serial_peer_policy: DesignLintPolicy
 ):
     """Verify connector-level serial reference-domain review cases."""
-    for case in ("serial-connector-control", "serial-connector-fault"):
-        peer_contracts = ctx.contracts[case]
-        peer_observed = peer_contracts["first"]
-        if ctx.normalized_hashes[case]["first"] != ctx.normalized_hashes[case]["repeat"]:
+    for case in SERIAL_CONNECTOR_REVIEW_CASES:
+        peer_contracts = ctx.fixture(case).netlists
+        peer_observed = peer_contracts.first.contract
+        if (
+            ctx.fixture(case).netlists.first.normalized_sha256
+            != ctx.fixture(case).netlists.repeat.normalized_sha256
+        ):
             raise ValueError(
                 f"Native UART connector {case} exports differ after typed-netlist normalization"
             )
@@ -107,33 +114,38 @@ def verify_serial_connector_reference_cases(
             net: pins for (net, pins) in peer_observed.nets.items() if net.startswith("UART_")
         } != expected_signal_nets:
             raise ValueError(f"Native UART connector {case} export changed its TX/RX assignments")
-        reports: dict[str, DesignLintReport] = {}
-        for run in ("first", "repeat"):
+
+        def report_for(run: NativeRun, fixture_case: DigitalPeerFixtureCase) -> DesignLintReport:
             report_coach = ContractCoachReport(
                 status="READY_FOR_REVIEW",
-                project_id=f"synthetic-uart-connector-reference-{case}",
-                observed=peer_contracts[run],
-                netlist_sha256=ctx.hashes[case][run],
+                project_id=f"synthetic-uart-connector-reference-{fixture_case}",
+                observed=ctx.fixture(fixture_case).netlists.for_run(run).contract,
+                netlist_sha256=ctx.fixture(fixture_case).netlists.for_run(run).netlist_sha256,
             )
-            reports[run] = evaluate(report_coach.project_id, report_coach, serial_peer_policy)
+            return evaluate(report_coach.project_id, report_coach, serial_peer_policy)
+
+        reports = NativeRunPair(
+            first=report_for("first", case),
+            repeat=report_for("repeat", case),
+        )
         reference_findings = tuple(
             item
-            for item in reports["first"].findings
+            for item in reports.first.findings
             if item.rule_id == "bus.serial_peer_reference_review"
         )
         first_signature = tuple(
             (item.fingerprint, item.rule_id, item.mode, item.evidence)
-            for item in reports["first"].findings
+            for item in reports.first.findings
         )
         repeated_signature = tuple(
             (item.fingerprint, item.rule_id, item.mode, item.evidence)
-            for item in reports["repeat"].findings
+            for item in reports.repeat.findings
         )
         expected_reference_count = 0 if case == "serial-connector-control" else 1
         if (
             first_signature != repeated_signature
-            or reports["first"].status != "REVIEW"
-            or reports["repeat"].status != "REVIEW"
+            or reports.first.status != "REVIEW"
+            or reports.repeat.status != "REVIEW"
             or (len(reference_findings) != expected_reference_count)
         ):
             raise ValueError(
@@ -164,12 +176,12 @@ def verify_serial_connector_reference_cases(
             project=ctx.project,
             kicad_version=ctx.config.kicad_version,
             image=ctx.pinned,
-            source_sha256=ctx.serial_connector_reference_source_hashes[case],
-            netlist_sha256=ctx.hashes[case]["first"],
-            repeat_netlist_sha256=ctx.hashes[case]["repeat"],
-            normalized_netlist_sha256=ctx.normalized_hashes[case]["first"],
-            repeat_normalized_netlist_sha256=ctx.normalized_hashes[case]["repeat"],
-            lint_status=reports["first"].status,
+            source_sha256=ctx.fixture(case).source.sha256,
+            netlist_sha256=ctx.fixture(case).netlists.first.netlist_sha256,
+            repeat_netlist_sha256=ctx.fixture(case).netlists.repeat.netlist_sha256,
+            normalized_netlist_sha256=ctx.fixture(case).netlists.first.normalized_sha256,
+            repeat_normalized_netlist_sha256=ctx.fixture(case).netlists.repeat.normalized_sha256,
+            lint_status=reports.first.status,
             peer_reference_findings=";".join(item.rule_id for item in reference_findings) or "none",
             pin_functions=";".join(
                 f"{pin}={name}" for (pin, name) in sorted(peer_observed.pin_functions.items())

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from .casefold_mapping_lookup import lookup_unique_casefold
@@ -26,7 +27,7 @@ _CANONICAL_RETURN_NET_NAMES = frozenset(
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class DirectLedRailBridge:
     reference: str
     symbol: str
@@ -35,7 +36,7 @@ class DirectLedRailBridge:
     return_net: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class LedOutputWithoutVisibleSeriesResistor:
     """A fitted LED shares a rail-spanning path directly with an output pin."""
 
@@ -64,7 +65,7 @@ def _net_assignments(
 
 
 def _net_roles(
-    net: str, net_pins: dict[str, tuple[str, ...]], observed: NetlistContract
+    net: str, net_pins: Mapping[str, tuple[str, ...]], observed: NetlistContract
 ) -> tuple[bool, bool]:
     functions = tuple(observed.pin_functions.get(pin, "") for pin in net_pins.get(net, ()))
     is_positive = power_function_key(net) is not None or any(
@@ -77,7 +78,7 @@ def _net_roles(
 
 
 def _exclusive_rail_role(
-    net: str, net_pins: dict[str, tuple[str, ...]], observed: NetlistContract
+    net: str, net_pins: Mapping[str, tuple[str, ...]], observed: NetlistContract
 ) -> str | None:
     is_positive, is_return = _net_roles(net, net_pins, observed)
     if is_positive == is_return:

@@ -13,7 +13,13 @@ from kicad_tooling.ci_hosted_component_peer_power_input import (
     NAMED_COMPONENT_PEER_POWER_INPUT_DIVERGENCE_CASES,
     NAMED_COMPONENT_PEER_POWER_INPUT_OPEN_CASES,
 )
+from kicad_tooling.ci_hosted_component_peer_power_input_lane import (
+    component_peer_power_input_fixture_lane,
+    named_component_peer_power_input_divergence_fixture_lane,
+    named_component_peer_power_input_open_fixture_lane,
+)
 from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 from tests.component_peer_power_input_support import (
     generic_peer_power_input_netlist,
@@ -80,10 +86,6 @@ def test_named_peer_power_input_divergence_fixture_sources_match_reviewed_digest
 def test_component_peer_power_input_lane_exports_only_its_fault_and_control(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kicad_tooling.ci_hosted_component_peer_power_input_lane import (
-        component_peer_power_input_fixture_lane,
-    )
-
     assert_mocked_component_power_pin_lane(
         tmp_path,
         monkeypatch,
@@ -109,10 +111,6 @@ def test_component_peer_power_input_lane_exports_only_its_fault_and_control(
 def test_named_component_peer_power_input_open_lane_exports_only_its_fault_and_control(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kicad_tooling.ci_hosted_component_peer_power_input_lane import (
-        named_component_peer_power_input_open_fixture_lane,
-    )
-
     assert_mocked_component_power_pin_lane(
         tmp_path,
         monkeypatch,
@@ -138,10 +136,6 @@ def test_named_component_peer_power_input_open_lane_exports_only_its_fault_and_c
 def test_named_component_peer_power_input_divergence_lane_exports_only_fault_and_control(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kicad_tooling.ci_hosted_component_peer_power_input_lane import (
-        named_component_peer_power_input_divergence_fixture_lane,
-    )
-
     assert_mocked_component_power_pin_lane(
         tmp_path,
         monkeypatch,
@@ -179,11 +173,6 @@ def test_named_component_peer_power_input_divergence_lane_exports_only_fault_and
 def test_native_generic_peer_power_input_fault_and_control_are_repeatable(
     tmp_path: Path, project: str, version: str
 ) -> None:
-    from kicad_tooling.ci_hosted_component_peer_power_input_lane import (
-        component_peer_power_input_fixture_lane,
-    )
-    from kicad_tooling.hwrepo.electrical import selected_config
-
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(
         tmp_path,
@@ -239,11 +228,6 @@ def test_native_generic_peer_power_input_fault_and_control_are_repeatable(
 def test_native_named_peer_power_input_open_fault_and_control_are_repeatable(
     tmp_path: Path, project: str, version: str
 ) -> None:
-    from kicad_tooling.ci_hosted_component_peer_power_input_lane import (
-        named_component_peer_power_input_open_fixture_lane,
-    )
-    from kicad_tooling.hwrepo.electrical import selected_config
-
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(
         tmp_path,
@@ -305,11 +289,6 @@ def test_native_named_peer_power_input_open_fault_and_control_are_repeatable(
 def test_native_named_peer_power_input_divergence_fault_and_control_are_repeatable(
     tmp_path: Path, project: str, version: str
 ) -> None:
-    from kicad_tooling.ci_hosted_component_peer_power_input_lane import (
-        named_component_peer_power_input_divergence_fixture_lane,
-    )
-    from kicad_tooling.hwrepo.electrical import selected_config
-
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(
         tmp_path,

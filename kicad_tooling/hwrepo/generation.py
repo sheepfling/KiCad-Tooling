@@ -7,17 +7,18 @@ import hashlib
 import io
 import json
 import platform
-import subprocess
 import tempfile
 from collections.abc import Mapping
 from pathlib import Path
 
 from pydantic import BaseModel
 
+from ..git import git_output
 from . import __version__
 from .contracts import read_model, repo_path, write_model
 from .discovery import load_registry, settings
 from .electrical_analysis_contract_models import ElectricalAnalysisContract
+from .evidence import digest as file_digest
 from .layout import CONFIG_NAME, layout
 from .models import (
     AssemblyKind,
@@ -399,13 +400,7 @@ def check_generation(
 
 
 def _git(root: Path, *args: str) -> str:
-    result = subprocess.run(
-        ["git", "-c", f"safe.directory={root.as_posix()}", "-C", str(root), *args],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return result.stdout.strip()
+    return git_output(root, *args)
 
 
 def snapshot(root: Path, output: Path) -> SnapshotManifest:
@@ -461,8 +456,7 @@ def snapshot(root: Path, output: Path) -> SnapshotManifest:
         if path.is_file():
             sources.add(path)
     source_hashes = {
-        path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
-        for path in sorted(sources)
+        path.relative_to(root).as_posix(): file_digest(path) for path in sorted(sources)
     }
     for name in (
         "README.md",
@@ -476,7 +470,7 @@ def snapshot(root: Path, output: Path) -> SnapshotManifest:
         CONFIG_NAME,
     ):
         if (path := repo_path(root, name)).is_file():
-            source_hashes[name] = hashlib.sha256(path.read_bytes()).hexdigest()
+            source_hashes[name] = file_digest(path)
     manifest = SnapshotManifest(
         commit=_git(root, "rev-parse", "HEAD"),
         working_tree_clean=not bool(
@@ -510,7 +504,7 @@ def verify_snapshot(output: Path) -> SnapshotVerification:
     """Check retained bytes and inventory, not authenticity or source reproduction."""
     manifest = read_model(output / "manifest.json", SnapshotManifest)
     for name, expected in manifest.artifacts_sha256.items():
-        if hashlib.sha256(repo_path(output, name).read_bytes()).hexdigest() != expected:
+        if file_digest(repo_path(output, name)) != expected:
             raise ValueError(f"Artifact hash mismatch: {name}")
     actual = {path.relative_to(output).as_posix() for path in output.rglob("*") if path.is_file()}
     if actual != set(manifest.artifacts_sha256) | {"manifest.json"}:

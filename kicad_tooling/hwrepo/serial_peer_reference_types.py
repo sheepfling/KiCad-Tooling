@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal, Protocol
 
+from kicad_tooling.hwrepo.serial_peer_models import SerialPeerRequirement
+
 from .reference_bond_models import ReferenceBondRequirement
 from .serial_participants import SerialNativePeerLink
 
@@ -29,7 +31,7 @@ class DirectPeerView(Protocol):
 
 class PeerLinkView(Protocol):
     endpoint: SerialEndpointView
-    peer: object
+    peer: SerialPeerRequirement
     reference_policy: str
     reference_bond: ReferenceBondRequirement | None
 
@@ -38,7 +40,7 @@ class SerialAnalysisView(Protocol):
     links: tuple[PeerLinkView, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SerialReferencePinAssignment:
     pin: str
     function: str
@@ -46,13 +48,13 @@ class SerialReferencePinAssignment:
     net: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SerialReferenceDomain:
     net: str
     pins: tuple[SerialReferencePinAssignment, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SerialPeerReferenceReview:
     first_reference: str
     second_reference: str
@@ -62,7 +64,7 @@ class SerialPeerReferenceReview:
     label_links: tuple[SerialLabelPeerLink, ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SerialPeerReferenceScan:
     """Reference-domain candidates with bounded peer and evidence counts."""
 
@@ -81,7 +83,7 @@ class SerialPeerReferenceScan:
         return len(self.reviews)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SerialPeerReferenceLinkCoverage:
     """Identity, signal evidence, and reference disposition for one discovered link."""
 
@@ -99,7 +101,7 @@ class SerialPeerReferenceLinkCoverage:
     ]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SerialLabelPeerLink:
     """Direct two-IC UART segment identified by an exact TX/RX channel label pair."""
 
@@ -114,7 +116,7 @@ class SerialLabelPeerLink:
     second_rx_pin: str
 
 
-@dataclass
+@dataclass(slots=True)
 class ReviewGroup:
     first_reference: str
     second_reference: str

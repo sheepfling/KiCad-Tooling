@@ -9,45 +9,44 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
+from types import MappingProxyType
 
 from .ci_hosted_spi_native import SPI_NATIVE_TOOLCHAINS
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract
+from .validate import read_netlist
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
-
-_SOURCE_HASHES = {
-    "control": "af3490ef9bd15a32ec307a50c807a56611ca3f2e6e597bc66368b4fdadc97a2a",
-    "fault": "d18786cbb35cf58f723b452b12b61abe5b3f347ebc1a540e3b9655097e98f13d",
-}
+_SOURCE_HASHES = MappingProxyType(
+    {
+        "control": "af3490ef9bd15a32ec307a50c807a56611ca3f2e6e597bc66368b4fdadc97a2a",
+        "fault": "d18786cbb35cf58f723b452b12b61abe5b3f347ebc1a540e3b9655097e98f13d",
+    }
+)
 
 
 def spi_unconnected_data_fixture_lane(
     root: Path, *, version: str, image: str, log: HostedLog
 ) -> None:
     """Verify open-MOSI and connected-control exports on exact pinned KiCad images."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract
-    from .validate import read_netlist
-
     if (version, image) not in SPI_NATIVE_TOOLCHAINS:
         raise ValueError(
             f"SPI unconnected-data fixtures do not cover KiCad {version} with this image"
         )
     root = root.resolve()
     pinned = pinned_image(image)
-    repository = Path(__file__).resolve().parents[1]
+    repository = tooling_checkout_root()
     fixture_root = repository / "tests/fixtures/design_lint/spi-unconnected-data-native"
     sources = {
         "control": fixture_root / "control.kicad_sch",
         "fault": fixture_root / "open-mosi.kicad_sch",
     }
-    source_hashes = {case: digest(source) for case, source in sources.items()}
+    source_hashes = MappingProxyType({case: digest(source) for case, source in sources.items()})
     if source_hashes != _SOURCE_HASHES:
         raise ValueError("SPI unconnected-data fixture sources changed from their reviewed hashes")
 

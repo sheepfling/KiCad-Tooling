@@ -3,19 +3,19 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from types import MappingProxyType
 
 from .ci_hosted_component_lint import component_lint_fixture_lane
+from .ci_hosted_support import HostedLog
 from .hwrepo.component_diode_rail_orientation import RULE_ID
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
-
-DIODE_RAIL_FIXTURE_CASES = {
-    "fault_numeric": "diode-rail-orientation-native/fault.kicad_sch",
-    "fault_return": "diode-rail-orientation-native/fault-return.kicad_sch",
-    "control": "diode-rail-orientation-native/control.kicad_sch",
-}
+DIODE_RAIL_FIXTURE_CASES = MappingProxyType(
+    {
+        "fault_numeric": "diode-rail-orientation-native/fault.kicad_sch",
+        "fault_return": "diode-rail-orientation-native/fault-return.kicad_sch",
+        "control": "diode-rail-orientation-native/control.kicad_sch",
+    }
+)
 
 
 def diode_rail_fixture_lane(

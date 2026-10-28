@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.hwrepo.electrical import selected_config
+
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.power_lint,
@@ -30,7 +32,6 @@ def test_missing_capacitor_and_controls_export_repeatably(
     hosted_reference_root: Path, project: str, version: str
 ) -> None:
     from kicad_tooling.ci_hosted import HostedLog, ic_rail_capacitor_fixture_lane
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     root = hosted_reference_root
     expected_images = {

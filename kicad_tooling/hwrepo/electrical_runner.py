@@ -3,22 +3,15 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal
+from typing import Literal, TypeAlias
 from uuid import uuid4
 
-from .analysis_state_models import (
-    AnalysisNotApplicable,
-    AnalysisPending,
-)
+import kicad_tooling.hwrepo.electrical_analysis_contract_models as electrical_contracts
+from kicad_tooling.hwrepo import pcb_test_access_models
+
 from .can_termination_contract import can_termination_checks
-from .can_termination_models import CanTerminationAnalysis
 from .component_power_ratings import component_power_rating_checks
-from .component_rating_models import (
-    ComponentPowerRatingAnalysis,
-    ComponentVoltageRatingAnalysis,
-)
 from .component_voltage_ratings import component_voltage_rating_checks
-from .connector_contact_rating_models import ConnectorContactRatingAnalysis
 from .connector_contact_ratings import connector_contact_rating_checks
 from .contract_coach import (
     AutoNetlistRunner,
@@ -29,8 +22,6 @@ from .contract_coach import (
 )
 from .contracts import repo_path, write_model
 from .control_input_checks import control_input_checks
-from .control_input_models import ControlInputsAnalysis
-from .digital_peer_voltage_models import DigitalPeerVoltageAnalysis
 from .digital_peer_voltages import digital_peer_voltage_checks
 from .electrical import (
     bound_inputs,
@@ -42,9 +33,7 @@ from .electrical import (
     simulation_cases,
 )
 from .evidence import digest, source_state
-from .grounding_models import GroundingAnalysis
 from .i2c_pullup_contract import i2c_pullup_checks
-from .i2c_pullup_models import I2cPullupAnalysis
 from .models import (
     CommandEvidence,
     ElectricalAnalysisReport,
@@ -53,21 +42,13 @@ from .models import (
     ProjectKind,
 )
 from .mosfet_stress import mosfet_stress_checks
-from .mosfet_stress_models import MosfetStressAnalysis
 from .pcb_return_path_capture import capture_native_pcb_connectivity, expected_probe_sha256
 from .pcb_return_path_checks import pcb_return_path_checks
-from .pcb_return_path_models import PcbReturnPathsAnalysis
-from .pcb_test_access_models import PcbAccessAnalysis, TestAccessAnalysis
-from .pin_connectivity_models import PinConnectivityAnalysis
 from .power_connectivity import power_connectivity_checks
-from .power_connectivity_models import PowerConnectivityAnalysis
 from .rs485_heuristics import rs485_checks
-from .rs485_models import Rs485Analysis
 from .selection import ProjectSelector, resolve_project_ids
 from .serial_heuristics import serial_peer_checks
-from .serial_peer_models import SerialPeerAnalysis
 from .spi_contract import spi_checks
-from .spi_models import SpiAnalysis
 from .spice import executable_path, run_case, simulator_version
 from .test_access import (
     evaluate_test_access_checks,
@@ -76,7 +57,10 @@ from .test_access import (
     pcb_probe_envelope_checks,
 )
 from .usb_c_contract import usb_c_checks
-from .usb_c_models import UsbCAnalysis
+
+ElectricalAnalysisState: TypeAlias = (
+    electrical_contracts.AnalysisNotApplicable | electrical_contracts.AnalysisPending
+)
 
 
 def analyze(
@@ -112,27 +96,89 @@ def analyze(
                 )
             )
         else:
+            grounding: electrical_contracts.GroundingAnalysis | ElectricalAnalysisState = (
+                contract.grounding
+            )
+            pcb_return_paths: (
+                electrical_contracts.PcbReturnPathsAnalysis | ElectricalAnalysisState
+            ) = contract.pcb_return_paths
+            pin_connectivity: (
+                electrical_contracts.PinConnectivityAnalysis | ElectricalAnalysisState | None
+            ) = contract.pin_connectivity
+            i2c_pullups: electrical_contracts.I2cPullupAnalysis | ElectricalAnalysisState | None = (
+                contract.i2c_pullups
+            )
+            can_termination: (
+                electrical_contracts.CanTerminationAnalysis | ElectricalAnalysisState | None
+            ) = contract.can_termination
+            usb_c: electrical_contracts.UsbCAnalysis | ElectricalAnalysisState | None = (
+                contract.usb_c
+            )
+            spi: electrical_contracts.SpiAnalysis | ElectricalAnalysisState | None = contract.spi
+            serial_peers: (
+                electrical_contracts.SerialPeerAnalysis | ElectricalAnalysisState | None
+            ) = contract.serial_peers
+            digital_peer_voltages: (
+                electrical_contracts.DigitalPeerVoltageAnalysis | ElectricalAnalysisState | None
+            ) = contract.digital_peer_voltages
+            component_voltage_ratings: (
+                electrical_contracts.ComponentVoltageRatingAnalysis | ElectricalAnalysisState | None
+            ) = contract.component_voltage_ratings
+            component_power_ratings: (
+                electrical_contracts.ComponentPowerRatingAnalysis | ElectricalAnalysisState | None
+            ) = contract.component_power_ratings
+            connector_contact_ratings: (
+                electrical_contracts.ConnectorContactRatingAnalysis | ElectricalAnalysisState | None
+            ) = contract.connector_contact_ratings
+            mosfet_stress: (
+                electrical_contracts.MosfetStressAnalysis | ElectricalAnalysisState | None
+            ) = contract.mosfet_stress
+            rs485: electrical_contracts.Rs485Analysis | ElectricalAnalysisState | None = (
+                contract.rs485
+            )
+            control_inputs: (
+                electrical_contracts.ControlInputsAnalysis | ElectricalAnalysisState | None
+            ) = contract.control_inputs
+            power_connectivity: (
+                electrical_contracts.PowerConnectivityAnalysis | ElectricalAnalysisState | None
+            ) = contract.power_connectivity
+            test_access: (
+                electrical_contracts.TestAccessAnalysis | ElectricalAnalysisState | None
+            ) = contract.test_access
+            high_frequency: electrical_contracts.HighFrequencyAnalysis | ElectricalAnalysisState = (
+                contract.high_frequency
+            )
             inputs = bound_inputs(root, config, contract)
             write_model(output / "requirements.json", contract)
             netlist = None
             needs_netlist = any(
                 (
-                    isinstance(contract.grounding, GroundingAnalysis),
-                    isinstance(contract.pin_connectivity, PinConnectivityAnalysis),
-                    isinstance(contract.i2c_pullups, I2cPullupAnalysis),
-                    isinstance(contract.can_termination, CanTerminationAnalysis),
-                    isinstance(contract.usb_c, UsbCAnalysis),
-                    isinstance(contract.spi, SpiAnalysis),
-                    isinstance(contract.serial_peers, SerialPeerAnalysis),
-                    isinstance(contract.digital_peer_voltages, DigitalPeerVoltageAnalysis),
-                    isinstance(contract.component_voltage_ratings, ComponentVoltageRatingAnalysis),
-                    isinstance(contract.component_power_ratings, ComponentPowerRatingAnalysis),
-                    isinstance(contract.connector_contact_ratings, ConnectorContactRatingAnalysis),
-                    isinstance(contract.mosfet_stress, MosfetStressAnalysis),
-                    isinstance(contract.rs485, Rs485Analysis),
-                    isinstance(contract.control_inputs, ControlInputsAnalysis),
-                    isinstance(contract.power_connectivity, PowerConnectivityAnalysis),
-                    isinstance(contract.test_access, TestAccessAnalysis),
+                    isinstance(grounding, electrical_contracts.GroundingAnalysis),
+                    isinstance(pin_connectivity, electrical_contracts.PinConnectivityAnalysis),
+                    isinstance(i2c_pullups, electrical_contracts.I2cPullupAnalysis),
+                    isinstance(can_termination, electrical_contracts.CanTerminationAnalysis),
+                    isinstance(usb_c, electrical_contracts.UsbCAnalysis),
+                    isinstance(spi, electrical_contracts.SpiAnalysis),
+                    isinstance(serial_peers, electrical_contracts.SerialPeerAnalysis),
+                    isinstance(
+                        digital_peer_voltages, electrical_contracts.DigitalPeerVoltageAnalysis
+                    ),
+                    isinstance(
+                        component_voltage_ratings,
+                        electrical_contracts.ComponentVoltageRatingAnalysis,
+                    ),
+                    isinstance(
+                        component_power_ratings, electrical_contracts.ComponentPowerRatingAnalysis
+                    ),
+                    isinstance(
+                        connector_contact_ratings,
+                        electrical_contracts.ConnectorContactRatingAnalysis,
+                    ),
+                    isinstance(mosfet_stress, electrical_contracts.MosfetStressAnalysis),
+                    isinstance(rs485, electrical_contracts.Rs485Analysis),
+                    isinstance(control_inputs, electrical_contracts.ControlInputsAnalysis),
+                    isinstance(power_connectivity, electrical_contracts.PowerConnectivityAnalysis),
+                    isinstance(test_access, electrical_contracts.TestAccessAnalysis),
                 )
             )
             if needs_netlist:
@@ -146,7 +192,7 @@ def analyze(
                     observed = inspect_summary(root, project_id, native_summary)
                 write_model(output / "netlist-evidence.json", observed)
                 netlist = observed.observed
-            if isinstance(contract.grounding, GroundingAnalysis):
+            if isinstance(grounding, electrical_contracts.GroundingAnalysis):
                 if netlist is None:
                     checks.append(
                         ElectricalCheck(
@@ -156,26 +202,26 @@ def analyze(
                         )
                     )
                 else:
-                    checks.extend(grounding_checks(contract.grounding, netlist))
+                    checks.extend(grounding_checks(grounding, netlist))
             else:
                 checks.append(
                     ElectricalCheck(
                         id="grounding",
                         status="NOT_CONFIGURED"
-                        if isinstance(contract.grounding, AnalysisPending)
+                        if isinstance(grounding, electrical_contracts.AnalysisPending)
                         else "NOT_APPLICABLE",
-                        detail=contract.grounding.reason,
+                        detail=grounding.reason,
                     )
                 )
             access_probe_requests = (
-                pcb_access_probe_request_set(contract.test_access)
-                if isinstance(contract.test_access, TestAccessAnalysis)
+                pcb_access_probe_request_set(test_access)
+                if isinstance(test_access, electrical_contracts.TestAccessAnalysis)
                 else None
             )
             pcb_snapshot = None
             pcb_probe_error: str | None = None
             needs_pcb_probe = (
-                isinstance(contract.pcb_return_paths, PcbReturnPathsAnalysis)
+                isinstance(pcb_return_paths, electrical_contracts.PcbReturnPathsAnalysis)
                 or access_probe_requests is not None
             )
             if needs_pcb_probe and config.kind is ProjectKind.PCB:
@@ -201,7 +247,7 @@ def analyze(
                         write_model(output / "pcb-connectivity/snapshot.json", pcb_snapshot)
                 except (OSError, ValueError) as exc:
                     pcb_probe_error = str(exc)
-            if isinstance(contract.pcb_return_paths, PcbReturnPathsAnalysis):
+            if isinstance(pcb_return_paths, electrical_contracts.PcbReturnPathsAnalysis):
                 if config.kind is not ProjectKind.PCB:
                     checks.append(
                         ElectricalCheck(
@@ -224,7 +270,7 @@ def analyze(
                         board_path = repo_path(root, config.project).with_suffix(".kicad_pcb")
                         checks.extend(
                             pcb_return_path_checks(
-                                contract.pcb_return_paths,
+                                pcb_return_paths,
                                 pcb_snapshot,
                                 board_sha256=digest(board_path),
                                 kicad_version=config.kicad_version,
@@ -232,12 +278,12 @@ def analyze(
                                 probe_sha256=expected_probe_sha256(),
                             )
                         )
-            elif isinstance(contract.pcb_return_paths, AnalysisPending):
+            elif isinstance(pcb_return_paths, electrical_contracts.AnalysisPending):
                 checks.append(
                     ElectricalCheck(
                         id="pcb-return-paths",
                         status="NOT_CONFIGURED",
-                        detail=contract.pcb_return_paths.reason,
+                        detail=pcb_return_paths.reason,
                     )
                 )
             else:
@@ -245,10 +291,10 @@ def analyze(
                     ElectricalCheck(
                         id="pcb-return-paths",
                         status="NOT_APPLICABLE",
-                        detail=contract.pcb_return_paths.reason,
+                        detail=pcb_return_paths.reason,
                     )
                 )
-            if isinstance(contract.pin_connectivity, PinConnectivityAnalysis):
+            if isinstance(pin_connectivity, electrical_contracts.PinConnectivityAnalysis):
                 if netlist is None:
                     checks.append(
                         ElectricalCheck(
@@ -258,18 +304,18 @@ def analyze(
                         )
                     )
                 else:
-                    checks.extend(pin_relationship_checks(contract.pin_connectivity, netlist))
-            elif contract.pin_connectivity is not None:
+                    checks.extend(pin_relationship_checks(pin_connectivity, netlist))
+            elif pin_connectivity is not None:
                 checks.append(
                     ElectricalCheck(
                         id="pin-connectivity",
                         status="NOT_CONFIGURED"
-                        if isinstance(contract.pin_connectivity, AnalysisPending)
+                        if isinstance(pin_connectivity, electrical_contracts.AnalysisPending)
                         else "NOT_APPLICABLE",
-                        detail=contract.pin_connectivity.reason,
+                        detail=pin_connectivity.reason,
                     )
                 )
-            if isinstance(contract.i2c_pullups, I2cPullupAnalysis):
+            if isinstance(i2c_pullups, electrical_contracts.I2cPullupAnalysis):
                 if netlist is None:
                     checks.append(
                         ElectricalCheck(
@@ -279,20 +325,20 @@ def analyze(
                         )
                     )
                 else:
-                    checks.extend(i2c_pullup_checks(contract.i2c_pullups, netlist))
-            elif contract.i2c_pullups is not None:
+                    checks.extend(i2c_pullup_checks(i2c_pullups, netlist))
+            elif i2c_pullups is not None:
                 checks.append(
                     ElectricalCheck(
                         id="i2c-pullups",
                         status=(
                             "NOT_CONFIGURED"
-                            if isinstance(contract.i2c_pullups, AnalysisPending)
+                            if isinstance(i2c_pullups, electrical_contracts.AnalysisPending)
                             else "NOT_APPLICABLE"
                         ),
-                        detail=contract.i2c_pullups.reason,
+                        detail=i2c_pullups.reason,
                     )
                 )
-            if isinstance(contract.can_termination, CanTerminationAnalysis):
+            if isinstance(can_termination, electrical_contracts.CanTerminationAnalysis):
                 if netlist is None:
                     checks.append(
                         ElectricalCheck(
@@ -302,20 +348,20 @@ def analyze(
                         )
                     )
                 else:
-                    checks.extend(can_termination_checks(contract.can_termination, netlist))
-            elif contract.can_termination is not None:
+                    checks.extend(can_termination_checks(can_termination, netlist))
+            elif can_termination is not None:
                 checks.append(
                     ElectricalCheck(
                         id="can-termination",
                         status=(
                             "NOT_CONFIGURED"
-                            if isinstance(contract.can_termination, AnalysisPending)
+                            if isinstance(can_termination, electrical_contracts.AnalysisPending)
                             else "NOT_APPLICABLE"
                         ),
-                        detail=contract.can_termination.reason,
+                        detail=can_termination.reason,
                     )
                 )
-            if isinstance(contract.usb_c, UsbCAnalysis):
+            if isinstance(usb_c, electrical_contracts.UsbCAnalysis):
                 if netlist is None:
                     checks.append(
                         ElectricalCheck(
@@ -325,20 +371,20 @@ def analyze(
                         )
                     )
                 else:
-                    checks.extend(usb_c_checks(contract.usb_c, netlist))
-            elif contract.usb_c is not None:
+                    checks.extend(usb_c_checks(usb_c, netlist))
+            elif usb_c is not None:
                 checks.append(
                     ElectricalCheck(
                         id="usb-c",
                         status=(
                             "NOT_CONFIGURED"
-                            if isinstance(contract.usb_c, AnalysisPending)
+                            if isinstance(usb_c, electrical_contracts.AnalysisPending)
                             else "NOT_APPLICABLE"
                         ),
-                        detail=contract.usb_c.reason,
+                        detail=usb_c.reason,
                     )
                 )
-            if isinstance(contract.spi, SpiAnalysis):
+            if isinstance(spi, electrical_contracts.SpiAnalysis):
                 if netlist is None:
                     checks.append(
                         ElectricalCheck(
@@ -348,20 +394,20 @@ def analyze(
                         )
                     )
                 else:
-                    checks.extend(spi_checks(contract.spi, netlist))
-            elif contract.spi is not None:
+                    checks.extend(spi_checks(spi, netlist))
+            elif spi is not None:
                 checks.append(
                     ElectricalCheck(
                         id="spi",
                         status=(
                             "NOT_CONFIGURED"
-                            if isinstance(contract.spi, AnalysisPending)
+                            if isinstance(spi, electrical_contracts.AnalysisPending)
                             else "NOT_APPLICABLE"
                         ),
-                        detail=contract.spi.reason,
+                        detail=spi.reason,
                     )
                 )
-            if isinstance(contract.serial_peers, SerialPeerAnalysis):
+            if isinstance(serial_peers, electrical_contracts.SerialPeerAnalysis):
                 if netlist is None:
                     checks.append(
                         ElectricalCheck(
@@ -371,20 +417,20 @@ def analyze(
                         )
                     )
                 else:
-                    checks.extend(serial_peer_checks(contract.serial_peers, netlist))
-            elif contract.serial_peers is not None:
+                    checks.extend(serial_peer_checks(serial_peers, netlist))
+            elif serial_peers is not None:
                 checks.append(
                     ElectricalCheck(
                         id="serial-peers",
                         status=(
                             "NOT_CONFIGURED"
-                            if isinstance(contract.serial_peers, AnalysisPending)
+                            if isinstance(serial_peers, electrical_contracts.AnalysisPending)
                             else "NOT_APPLICABLE"
                         ),
-                        detail=contract.serial_peers.reason,
+                        detail=serial_peers.reason,
                     )
                 )
-            if isinstance(contract.digital_peer_voltages, DigitalPeerVoltageAnalysis):
+            if isinstance(digital_peer_voltages, electrical_contracts.DigitalPeerVoltageAnalysis):
                 if netlist is None:
                     checks.append(
                         ElectricalCheck(
@@ -394,22 +440,24 @@ def analyze(
                         )
                     )
                 else:
-                    checks.extend(
-                        digital_peer_voltage_checks(contract.digital_peer_voltages, netlist)
-                    )
-            elif contract.digital_peer_voltages is not None:
+                    checks.extend(digital_peer_voltage_checks(digital_peer_voltages, netlist))
+            elif digital_peer_voltages is not None:
                 checks.append(
                     ElectricalCheck(
                         id="digital-peer-voltages",
                         status=(
                             "NOT_CONFIGURED"
-                            if isinstance(contract.digital_peer_voltages, AnalysisPending)
+                            if isinstance(
+                                digital_peer_voltages, electrical_contracts.AnalysisPending
+                            )
                             else "NOT_APPLICABLE"
                         ),
-                        detail=contract.digital_peer_voltages.reason,
+                        detail=digital_peer_voltages.reason,
                     )
                 )
-            if isinstance(contract.component_voltage_ratings, ComponentVoltageRatingAnalysis):
+            if isinstance(
+                component_voltage_ratings, electrical_contracts.ComponentVoltageRatingAnalysis
+            ):
                 if netlist is None:
                     checks.append(
                         ElectricalCheck(
@@ -420,21 +468,25 @@ def analyze(
                     )
                 else:
                     checks.extend(
-                        component_voltage_rating_checks(contract.component_voltage_ratings, netlist)
+                        component_voltage_rating_checks(component_voltage_ratings, netlist)
                     )
-            elif contract.component_voltage_ratings is not None:
+            elif component_voltage_ratings is not None:
                 checks.append(
                     ElectricalCheck(
                         id="component-voltage-ratings",
                         status=(
                             "NOT_CONFIGURED"
-                            if isinstance(contract.component_voltage_ratings, AnalysisPending)
+                            if isinstance(
+                                component_voltage_ratings, electrical_contracts.AnalysisPending
+                            )
                             else "NOT_APPLICABLE"
                         ),
-                        detail=contract.component_voltage_ratings.reason,
+                        detail=component_voltage_ratings.reason,
                     )
                 )
-            if isinstance(contract.component_power_ratings, ComponentPowerRatingAnalysis):
+            if isinstance(
+                component_power_ratings, electrical_contracts.ComponentPowerRatingAnalysis
+            ):
                 if netlist is None:
                     checks.append(
                         ElectricalCheck(
@@ -444,22 +496,24 @@ def analyze(
                         )
                     )
                 else:
-                    checks.extend(
-                        component_power_rating_checks(contract.component_power_ratings, netlist)
-                    )
-            elif contract.component_power_ratings is not None:
+                    checks.extend(component_power_rating_checks(component_power_ratings, netlist))
+            elif component_power_ratings is not None:
                 checks.append(
                     ElectricalCheck(
                         id="component-power-ratings",
                         status=(
                             "NOT_CONFIGURED"
-                            if isinstance(contract.component_power_ratings, AnalysisPending)
+                            if isinstance(
+                                component_power_ratings, electrical_contracts.AnalysisPending
+                            )
                             else "NOT_APPLICABLE"
                         ),
-                        detail=contract.component_power_ratings.reason,
+                        detail=component_power_ratings.reason,
                     )
                 )
-            if isinstance(contract.connector_contact_ratings, ConnectorContactRatingAnalysis):
+            if isinstance(
+                connector_contact_ratings, electrical_contracts.ConnectorContactRatingAnalysis
+            ):
                 if netlist is None:
                     checks.append(
                         ElectricalCheck(
@@ -470,21 +524,23 @@ def analyze(
                     )
                 else:
                     checks.extend(
-                        connector_contact_rating_checks(contract.connector_contact_ratings, netlist)
+                        connector_contact_rating_checks(connector_contact_ratings, netlist)
                     )
-            elif contract.connector_contact_ratings is not None:
+            elif connector_contact_ratings is not None:
                 checks.append(
                     ElectricalCheck(
                         id="connector-contact-ratings",
                         status=(
                             "NOT_CONFIGURED"
-                            if isinstance(contract.connector_contact_ratings, AnalysisPending)
+                            if isinstance(
+                                connector_contact_ratings, electrical_contracts.AnalysisPending
+                            )
                             else "NOT_APPLICABLE"
                         ),
-                        detail=contract.connector_contact_ratings.reason,
+                        detail=connector_contact_ratings.reason,
                     )
                 )
-            if isinstance(contract.mosfet_stress, MosfetStressAnalysis):
+            if isinstance(mosfet_stress, electrical_contracts.MosfetStressAnalysis):
                 if netlist is None:
                     checks.append(
                         ElectricalCheck(
@@ -494,20 +550,20 @@ def analyze(
                         )
                     )
                 else:
-                    checks.extend(mosfet_stress_checks(contract.mosfet_stress, netlist))
-            elif contract.mosfet_stress is not None:
+                    checks.extend(mosfet_stress_checks(mosfet_stress, netlist))
+            elif mosfet_stress is not None:
                 checks.append(
                     ElectricalCheck(
                         id="mosfet-stress",
                         status=(
                             "NOT_CONFIGURED"
-                            if isinstance(contract.mosfet_stress, AnalysisPending)
+                            if isinstance(mosfet_stress, electrical_contracts.AnalysisPending)
                             else "NOT_APPLICABLE"
                         ),
-                        detail=contract.mosfet_stress.reason,
+                        detail=mosfet_stress.reason,
                     )
                 )
-            if isinstance(contract.rs485, Rs485Analysis):
+            if isinstance(rs485, electrical_contracts.Rs485Analysis):
                 if netlist is None:
                     checks.append(
                         ElectricalCheck(
@@ -517,20 +573,20 @@ def analyze(
                         )
                     )
                 else:
-                    checks.extend(rs485_checks(contract.rs485, netlist))
-            elif contract.rs485 is not None:
+                    checks.extend(rs485_checks(rs485, netlist))
+            elif rs485 is not None:
                 checks.append(
                     ElectricalCheck(
                         id="rs485",
                         status=(
                             "NOT_CONFIGURED"
-                            if isinstance(contract.rs485, AnalysisPending)
+                            if isinstance(rs485, electrical_contracts.AnalysisPending)
                             else "NOT_APPLICABLE"
                         ),
-                        detail=contract.rs485.reason,
+                        detail=rs485.reason,
                     )
                 )
-            if isinstance(contract.control_inputs, ControlInputsAnalysis):
+            if isinstance(control_inputs, electrical_contracts.ControlInputsAnalysis):
                 if netlist is None:
                     checks.append(
                         ElectricalCheck(
@@ -540,20 +596,20 @@ def analyze(
                         )
                     )
                 else:
-                    checks.extend(control_input_checks(contract.control_inputs, netlist))
-            elif contract.control_inputs is not None:
+                    checks.extend(control_input_checks(control_inputs, netlist))
+            elif control_inputs is not None:
                 checks.append(
                     ElectricalCheck(
                         id="control-inputs",
                         status=(
                             "NOT_CONFIGURED"
-                            if isinstance(contract.control_inputs, AnalysisPending)
+                            if isinstance(control_inputs, electrical_contracts.AnalysisPending)
                             else "NOT_APPLICABLE"
                         ),
-                        detail=contract.control_inputs.reason,
+                        detail=control_inputs.reason,
                     )
                 )
-            if isinstance(contract.power_connectivity, PowerConnectivityAnalysis):
+            if isinstance(power_connectivity, electrical_contracts.PowerConnectivityAnalysis):
                 if netlist is None:
                     checks.append(
                         ElectricalCheck(
@@ -563,20 +619,23 @@ def analyze(
                         )
                     )
                 else:
-                    checks.extend(power_connectivity_checks(contract.power_connectivity, netlist))
-            elif contract.power_connectivity is not None:
+                    checks.extend(power_connectivity_checks(power_connectivity, netlist))
+            elif power_connectivity is not None:
                 checks.append(
                     ElectricalCheck(
                         id="power-connectivity",
                         status=(
                             "NOT_CONFIGURED"
-                            if isinstance(contract.power_connectivity, AnalysisPending)
+                            if isinstance(power_connectivity, electrical_contracts.AnalysisPending)
                             else "NOT_APPLICABLE"
                         ),
-                        detail=contract.power_connectivity.reason,
+                        detail=power_connectivity.reason,
                     )
                 )
-            if isinstance(contract.test_access, TestAccessAnalysis):
+            if isinstance(test_access, electrical_contracts.TestAccessAnalysis):
+                pcb_accessibility: (
+                    pcb_test_access_models.PcbAccessAnalysis | ElectricalAnalysisState
+                ) = test_access.pcb_accessibility
                 if netlist is None:
                     checks.append(
                         ElectricalCheck(
@@ -586,8 +645,8 @@ def analyze(
                         )
                     )
                 else:
-                    checks.extend(evaluate_test_access_checks(contract.test_access, netlist))
-                if isinstance(contract.test_access.pcb_accessibility, PcbAccessAnalysis):
+                    checks.extend(evaluate_test_access_checks(test_access, netlist))
+                if isinstance(pcb_accessibility, pcb_test_access_models.PcbAccessAnalysis):
                     if config.kind is not ProjectKind.PCB:
                         checks.append(
                             ElectricalCheck(
@@ -600,17 +659,17 @@ def analyze(
                         board_path = repo_path(root, config.project).with_suffix(".kicad_pcb")
                         checks.extend(
                             pcb_accessibility_checks(
-                                contract.test_access,
-                                contract.test_access.pcb_accessibility,
+                                test_access,
+                                pcb_accessibility,
                                 board_path,
                             )
                         )
-                elif isinstance(contract.test_access.pcb_accessibility, AnalysisPending):
+                elif isinstance(pcb_accessibility, electrical_contracts.AnalysisPending):
                     checks.append(
                         ElectricalCheck(
                             id="test-access/pcb-accessibility",
                             status="NOT_CONFIGURED",
-                            detail=contract.test_access.pcb_accessibility.reason,
+                            detail=pcb_accessibility.reason,
                         )
                     )
                 else:
@@ -618,7 +677,7 @@ def analyze(
                         ElectricalCheck(
                             id="test-access/pcb-accessibility",
                             status="NOT_APPLICABLE",
-                            detail=contract.test_access.pcb_accessibility.reason,
+                            detail=pcb_accessibility.reason,
                         )
                     )
                 if access_probe_requests is not None:
@@ -640,25 +699,25 @@ def analyze(
                             )
                         )
                     else:
-                        checks.extend(pcb_probe_envelope_checks(contract.test_access, pcb_snapshot))
-            elif contract.test_access is not None:
+                        checks.extend(pcb_probe_envelope_checks(test_access, pcb_snapshot))
+            elif test_access is not None:
                 access_status = (
                     "NOT_CONFIGURED"
-                    if isinstance(contract.test_access, AnalysisPending)
+                    if isinstance(test_access, electrical_contracts.AnalysisPending)
                     else "NOT_APPLICABLE"
                 )
                 checks.append(
                     ElectricalCheck(
                         id="test-access/schematic",
                         status=access_status,
-                        detail=contract.test_access.reason,
+                        detail=test_access.reason,
                     )
                 )
                 checks.append(
                     ElectricalCheck(
                         id="test-access/pcb-accessibility",
                         status=access_status,
-                        detail=contract.test_access.reason,
+                        detail=test_access.reason,
                     )
                 )
             else:
@@ -682,14 +741,17 @@ def analyze(
                         ),
                     )
                 )
-            if isinstance(contract.high_frequency, (AnalysisNotApplicable, AnalysisPending)):
+            if isinstance(
+                high_frequency,
+                (electrical_contracts.AnalysisNotApplicable, electrical_contracts.AnalysisPending),
+            ):
                 checks.append(
                     ElectricalCheck(
                         id="high-frequency",
                         status="NOT_CONFIGURED"
-                        if isinstance(contract.high_frequency, AnalysisPending)
+                        if isinstance(high_frequency, electrical_contracts.AnalysisPending)
                         else "NOT_APPLICABLE",
-                        detail=contract.high_frequency.reason,
+                        detail=high_frequency.reason,
                     )
                 )
             checks.extend(power_budget_checks(contract.power))

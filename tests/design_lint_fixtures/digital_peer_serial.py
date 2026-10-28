@@ -4,19 +4,22 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import MappingProxyType
 
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
-SERIAL_LABEL_EXPECTED_NETS = {
-    net: tuple(pins)
-    for net, pins in json.loads(
-        (
-            Path(__file__).resolve().parents[1]
-            / "fixtures/design_lint/serial-peer-connector-reference-native/"
-            "serial-label-expected-nets.json"
-        ).read_text(encoding="utf-8")
-    ).items()
-}
+SERIAL_LABEL_EXPECTED_NETS = MappingProxyType(
+    {
+        net: tuple(pins)
+        for net, pins in json.loads(
+            (
+                Path(__file__).resolve().parents[1]
+                / "fixtures/design_lint/serial-peer-connector-reference-native/"
+                "serial-label-expected-nets.json"
+            ).read_text(encoding="utf-8")
+        ).items()
+    }
+)
 
 
 def serial_peer_netlist(*, split_supplies: bool, split_references: bool = False) -> NetlistContract:

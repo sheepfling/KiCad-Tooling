@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import Set as AbstractSet
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -17,37 +19,47 @@ pytestmark = [
     pytest.mark.architecture,
 ]
 
-MODEL_NAMES = {
-    "Stm32PinRequirement",
-    "Stm32PinExclusion",
-    "Stm32CubeMxPinMap",
-    "Stm32PinMapMismatch",
-    "Stm32UnmappedDevice",
-    "Stm32PinMapCoverageReport",
-}
-
-MODEL_CONSUMERS = {
-    HWREPO / "stm32_pin_map.py": {
+MODEL_NAMES = frozenset(
+    {
+        "Stm32PinRequirement",
+        "Stm32PinExclusion",
         "Stm32CubeMxPinMap",
         "Stm32PinMapMismatch",
         "Stm32UnmappedDevice",
-    },
-    HWREPO / "design_lint_stm32_coverage.py": {
         "Stm32PinMapCoverageReport",
-        "Stm32PinMapMismatch",
-    },
-    HWREPO / "design_lint_stm32_candidates.py": {"Stm32PinMapCoverageReport"},
-    HWREPO / "design_lint_evaluation_types.py": {"Stm32PinMapCoverageReport"},
-    HWREPO / "design_lint_evaluator.py": {"Stm32PinMapCoverageReport"},
-    HWREPO / "design_lint_missing_evidence.py": {"Stm32PinMapCoverageReport"},
-    HWREPO / "design_lint_candidate_aggregation.py": {"Stm32PinMapCoverageReport"},
-    HWREPO / "design_lint_report_models.py": {"Stm32PinMapCoverageReport"},
-    HWREPO.parents[0] / "ci_hosted_stm32_pin_map.py": {
-        "Stm32CubeMxPinMap",
-        "Stm32PinExclusion",
-        "Stm32PinRequirement",
-    },
-}
+    }
+)
+
+MODEL_CONSUMERS = MappingProxyType(
+    {
+        HWREPO / "stm32_pin_map.py": frozenset(
+            {
+                "Stm32CubeMxPinMap",
+                "Stm32PinMapMismatch",
+                "Stm32UnmappedDevice",
+            }
+        ),
+        HWREPO / "design_lint_stm32_coverage.py": frozenset(
+            {
+                "Stm32PinMapCoverageReport",
+                "Stm32PinMapMismatch",
+            }
+        ),
+        HWREPO / "design_lint_stm32_candidates.py": frozenset({"Stm32PinMapCoverageReport"}),
+        HWREPO / "design_lint_evaluation_types.py": frozenset({"Stm32PinMapCoverageReport"}),
+        HWREPO / "design_lint_evaluator.py": frozenset({"Stm32PinMapCoverageReport"}),
+        HWREPO / "design_lint_missing_evidence.py": frozenset({"Stm32PinMapCoverageReport"}),
+        HWREPO / "design_lint_candidate_aggregation.py": frozenset({"Stm32PinMapCoverageReport"}),
+        HWREPO / "design_lint_report_models.py": frozenset({"Stm32PinMapCoverageReport"}),
+        HWREPO.parents[0] / "ci_hosted_stm32_pin_map.py": frozenset(
+            {
+                "Stm32CubeMxPinMap",
+                "Stm32PinExclusion",
+                "Stm32PinRequirement",
+            }
+        ),
+    }
+)
 
 
 def _imported_names(tree: ast.Module, module_suffix: str) -> set[str]:
@@ -106,7 +118,9 @@ def test_stm32_regressions_are_plain_pytest_functions() -> None:
 
 
 @pytest.mark.parametrize(("consumer", "expected_models"), MODEL_CONSUMERS.items())
-def test_stm32_services_import_models_from_owner(consumer: Path, expected_models: set[str]) -> None:
+def test_stm32_services_import_models_from_owner(
+    consumer: Path, expected_models: AbstractSet[str]
+) -> None:
     tree = ast.parse(consumer.read_text(encoding="utf-8"), filename=consumer.name)
     owner_imports = _imported_names(tree, "stm32_pin_map_models")
     facade_imports = _imported_names(tree, "models")

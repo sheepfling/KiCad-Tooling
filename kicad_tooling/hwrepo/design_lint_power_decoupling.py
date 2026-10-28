@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 from decimal import Decimal
 
 from .capacitance_values import parse_capacitance_pf
@@ -10,14 +12,7 @@ from .casefold_mapping_lookup import lookup_unique_casefold
 from .design_lint_types import Candidate
 from .ic_decoupling_models import IcDecouplingMap, IcDecouplingRequirement
 from .models import NetlistContract
-
-
-def _pin_net_index(observed: NetlistContract) -> dict[str, set[str]]:
-    result: dict[str, set[str]] = {}
-    for net, pins in observed.nets.items():
-        for pin in pins:
-            result.setdefault(pin.casefold(), set()).add(net)
-    return result
+from .netlist_pin_assignments import netlist_pin_net_index
 
 
 def _component_identity_issues(
@@ -62,7 +57,9 @@ def _component_pin_inventory_issues(
     return []
 
 
-def _pin_assignment_issue(pin_nets: dict[str, set[str]], pin: str, expected_net: str) -> str | None:
+def _pin_assignment_issue(
+    pin_nets: Mapping[str, AbstractSet[str]], pin: str, expected_net: str
+) -> str | None:
     actual = tuple(sorted(pin_nets.get(pin.casefold(), ()), key=str.casefold))
     if actual != (expected_net,):
         rendered = ", ".join(actual) if actual else "unassigned"
@@ -81,7 +78,7 @@ def _pin_type_issue(observed: NetlistContract, pin: str, expected: str) -> str |
 def _requirement_issues(
     observed: NetlistContract,
     requirement: IcDecouplingRequirement,
-    pin_nets: dict[str, set[str]],
+    pin_nets: Mapping[str, AbstractSet[str]],
 ) -> tuple[tuple[str, ...], tuple[tuple[str, Decimal | None], ...]]:
     issues = _component_identity_issues(
         observed,
@@ -172,7 +169,7 @@ def ic_decoupling_candidates(
     """Report only mapped identity/topology faults or values below authored minimums."""
     if requirements is None:
         return ()
-    pin_nets = _pin_net_index(observed)
+    pin_nets = netlist_pin_net_index(observed)
     map_sha256 = hashlib.sha256(requirements.model_dump_json().encode("utf-8")).hexdigest()
     found: list[Candidate] = []
     for requirement in sorted(requirements.requirements, key=lambda item: item.id.casefold()):

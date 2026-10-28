@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -25,17 +26,23 @@ MODEL_NAMES = (
     "SpiceExpression",
 )
 
-CONSUMER_IMPORTS = {
-    "electrical.py": {
-        "FrequencyAnalysis",
-        "HighFrequencyAnalysis",
-        "PowerAnalysis",
-        "TransientAnalysis",
-    },
-    "spice.py": {"TransientAnalysis"},
-    "electrical_plot.py": {"FrequencyAnalysis", "SimulationMeasure", "TransientAnalysis"},
-    "electrical_charts.py": {"PowerAnalysis"},
-}
+CONSUMER_IMPORTS = MappingProxyType(
+    {
+        "electrical.py": frozenset(
+            {
+                "FrequencyAnalysis",
+                "HighFrequencyAnalysis",
+                "PowerAnalysis",
+                "TransientAnalysis",
+            }
+        ),
+        "spice.py": frozenset({"TransientAnalysis"}),
+        "electrical_plot.py": frozenset(
+            {"FrequencyAnalysis", "SimulationMeasure", "TransientAnalysis"}
+        ),
+        "electrical_charts.py": frozenset({"PowerAnalysis"}),
+    }
+)
 
 
 def _owner_imports(path: Path) -> set[str]:

@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import ast
 import re
+from collections.abc import Mapping, MutableMapping, Sequence
+from collections.abc import Set as AbstractSet
 from pathlib import Path
+from types import EllipsisType
 
 import pytest
 
@@ -18,6 +21,13 @@ from tests.execution_test_markers import execution_markers_for_path
 pytestmark = [pytest.mark.design_lint, pytest.mark.catalog_lint, pytest.mark.architecture]
 
 
+def _constant_string(expression: ast.expr) -> str | None:
+    if not isinstance(expression, ast.Constant):
+        return None
+    value: str | bytes | int | float | complex | bool | None | EllipsisType = expression.value
+    return value if isinstance(value, str) else None
+
+
 def _has_exact_native_marker(node: ast.AST) -> bool:
     return any(
         isinstance(child, ast.Attribute) and ast.unparse(child) == "pytest.mark.native_kicad"
@@ -26,27 +36,22 @@ def _has_exact_native_marker(node: ast.AST) -> bool:
 
 
 def _native_switches(nodes: ast.AST | tuple[ast.AST, ...]) -> frozenset[str]:
-    roots = nodes if isinstance(nodes, tuple) else (nodes,)
+    roots: tuple[ast.AST, ...] = nodes if isinstance(nodes, tuple) else (nodes,)
     switches: set[str] = set()
     for root in roots:
         for node in ast.walk(root):
-            if (
-                isinstance(node, ast.Call)
-                and ast.unparse(node.func) in {"os.environ.get", "os.getenv"}
-                and node.args
-                and isinstance(node.args[0], ast.Constant)
-            ):
-                value = node.args[0].value
-                if isinstance(value, str) and re.fullmatch(r"KICAD_RUN_NATIVE_[A-Z0-9_]+", value):
+            if isinstance(node, ast.Call) and ast.unparse(node.func) in {
+                "os.environ.get",
+                "os.getenv",
+            }:
+                arguments: list[ast.expr] = node.args
+                value = _constant_string(arguments[0]) if arguments else None
+                if value is not None and re.fullmatch(r"KICAD_RUN_NATIVE_[A-Z0-9_]+", value):
                     switches.add(value)
-            if (
-                isinstance(node, ast.Subscript)
-                and ast.unparse(node.value) == "os.environ"
-                and isinstance(node.slice, ast.Constant)
-                and isinstance(node.slice.value, str)
-                and re.fullmatch(r"KICAD_RUN_NATIVE_[A-Z0-9_]+", node.slice.value)
-            ):
-                switches.add(node.slice.value)
+            if isinstance(node, ast.Subscript) and ast.unparse(node.value) == "os.environ":
+                value = _constant_string(node.slice)
+                if value is not None and re.fullmatch(r"KICAD_RUN_NATIVE_[A-Z0-9_]+", value):
+                    switches.add(value)
     return frozenset(switches)
 
 
@@ -71,11 +76,12 @@ def _usefixture_names(nodes: tuple[ast.AST, ...]) -> set[str]:
                 or ast.unparse(node.func) != "pytest.mark.usefixtures"
             ):
                 continue
+            arguments: list[ast.expr] = node.args
             names.update(
                 fixture
-                for argument in node.args
-                if isinstance(argument, ast.Constant) and isinstance(argument.value, str)
-                for fixture in argument.value.split()
+                for argument in arguments
+                if (value := _constant_string(argument)) is not None
+                for fixture in value.split()
             )
     return names
 
@@ -86,25 +92,25 @@ def _pytest_fixture_name(function: ast.FunctionDef | ast.AsyncFunctionDef) -> st
         if ast.unparse(target) != "pytest.fixture":
             continue
         if isinstance(decorator, ast.Call):
-            for keyword in decorator.keywords:
-                if (
-                    keyword.arg == "name"
-                    and isinstance(keyword.value, ast.Constant)
-                    and isinstance(keyword.value.value, str)
-                ):
-                    return keyword.value.value
+            keywords: list[ast.keyword] = decorator.keywords
+            for keyword in keywords:
+                if keyword.arg == "name":
+                    value = _constant_string(keyword.value)
+                    if value is not None:
+                        return value
         return function.name
     return None
 
 
 def _fixture_index(
     tests_root: Path,
-    parsed_modules: dict[Path, ast.Module],
+    parsed_modules: MutableMapping[Path, ast.Module],
 ) -> dict[str, list[tuple[Path, ast.FunctionDef | ast.AsyncFunctionDef]]]:
     fixtures: dict[str, list[tuple[Path, ast.FunctionDef | ast.AsyncFunctionDef]]] = {}
     for source_path in tests_root.rglob("*.py"):
-        tree = parsed_modules.get(source_path)
-        if tree is None:
+        if source_path in parsed_modules:
+            tree: ast.Module = parsed_modules[source_path]
+        else:
             tree = ast.parse(source_path.read_text(encoding="utf-8"))
             parsed_modules[source_path] = tree
         for node in ast.walk(tree):
@@ -117,8 +123,8 @@ def _fixture_index(
 
 
 def _fixture_dependency_switches(
-    names: set[str],
-    fixtures: dict[str, list[tuple[Path, ast.FunctionDef | ast.AsyncFunctionDef]]],
+    names: AbstractSet[str],
+    fixtures: Mapping[str, Sequence[tuple[Path, ast.FunctionDef | ast.AsyncFunctionDef]]],
 ) -> frozenset[str]:
     pending = set(names)
     visited: set[tuple[Path, int]] = set()
@@ -140,14 +146,15 @@ def _fixture_dependency_switches(
 def _fixture_reference_native_switches(
     reference: str,
     tests_root: Path,
-    parsed_modules: dict[Path, ast.Module],
-    fixtures: dict[str, list[tuple[Path, ast.FunctionDef | ast.AsyncFunctionDef]]],
+    parsed_modules: MutableMapping[Path, ast.Module],
+    fixtures: Mapping[str, Sequence[tuple[Path, ast.FunctionDef | ast.AsyncFunctionDef]]],
 ) -> frozenset[str] | None:
     parts = reference.split(".")
     module = ".".join(parts[:2])
     source_path = tests_root.parent.joinpath(*module.split(".")).with_suffix(".py")
-    tree = parsed_modules.get(source_path)
-    if tree is None:
+    if source_path in parsed_modules:
+        tree: ast.Module = parsed_modules[source_path]
+    else:
         tree = ast.parse(source_path.read_text(encoding="utf-8"))
         parsed_modules[source_path] = tree
     module_markers = [
@@ -172,7 +179,7 @@ def _fixture_reference_native_switches(
         owners = [None]
 
     for owner in owners:
-        functions = tree.body if owner is None else owner.body
+        functions: list[ast.stmt] = tree.body if owner is None else owner.body
         for function in functions:
             if not isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue

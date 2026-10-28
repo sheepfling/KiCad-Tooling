@@ -8,9 +8,9 @@ from types import SimpleNamespace
 
 import pytest
 
+from kicad_tooling import ci_hosted_pcb_access as access_lane
 from kicad_tooling.ci_hosted import HostedLog, pcb_access_fixture_lane
 from kicad_tooling.hwrepo import electrical
-from kicad_tooling.hwrepo import pcb_return_path_capture as pcb_capture
 from tests.pcb_access_fixture_support import capture_synthetic_access_probe
 
 pytestmark = [
@@ -40,7 +40,7 @@ def test_probe_envelope_fixture_uses_repeatable_source_bound_requests(
         )
         return command, snapshot
 
-    monkeypatch.setattr(pcb_capture, "capture_native_pcb_connectivity", capture)
+    monkeypatch.setattr(access_lane, "capture_native_pcb_connectivity", capture)
     log = HostedLog(root, "native-pcb-access-fixture")
     pcb_access_fixture_lane(root, project="controller", image=config.image, log=log)
 
@@ -72,9 +72,9 @@ def test_probe_envelope_fixture_uses_repeatable_source_bound_requests(
 def test_unsupported_kicad_minor_fails_before_native_access(tmp_path: Path, monkeypatch) -> None:
     image = "fixture.invalid/kicad@sha256:" + "a" * 64
     config = SimpleNamespace(image=image, kicad_version="10.0.6")
-    monkeypatch.setattr(electrical, "selected_config", lambda root, project: config)
+    monkeypatch.setattr(access_lane, "selected_config", lambda root, project: config)
     monkeypatch.setattr(
-        pcb_capture,
+        access_lane,
         "capture_native_pcb_connectivity",
         lambda *args, **kwargs: pytest.fail("unsupported version reached native capture"),
     )

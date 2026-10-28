@@ -28,6 +28,7 @@ from kicad_tooling.hwrepo.pcb_mechanical_edge_models import (
     PcbMechanicalEdgeClearanceRequirement,
 )
 from kicad_tooling.validate import hashes
+from tests.json_types import JsonObject
 
 _PROJECT_ID = "synthetic-mechanical-edge-clearance"
 _PROJECT_RELATIVE = "projects/synthetic-mechanical-edge-clearance/board.kicad_pro"
@@ -46,7 +47,7 @@ def _sha256(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
 
-def mechanical_edge_report(*, fault: bool) -> dict[str, object]:
+def mechanical_edge_report(*, fault: bool) -> JsonObject:
     """Build a source-hashed rule-coverage fault or exact-coverage control."""
     with tempfile.TemporaryDirectory(prefix="mechanical-edge-hashseed-") as temporary:
         root = Path(temporary)
@@ -165,7 +166,7 @@ def mechanical_edge_report(*, fault: bool) -> dict[str, object]:
         }
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     """Return a weak-rule fault and exact-rule coverage control."""
     return {
         "pcb_mechanical_edge_coverage_fault": mechanical_edge_report(fault=True),

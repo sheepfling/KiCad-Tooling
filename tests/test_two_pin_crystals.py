@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -36,7 +37,7 @@ def crystal_netlist(
     ambiguous: tuple[str, ...] = (),
     multi_pin: tuple[str, ...] = (),
     unassigned: tuple[str, ...] = (),
-    symbols: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     symbols = symbols or {
         "Y1": "Device:Crystal",

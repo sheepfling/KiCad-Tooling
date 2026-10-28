@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.connector_coverage import evaluate
+from kicad_tooling.hwrepo.connector_coverage_models import ConnectorReviewsDocument
+from kicad_tooling.hwrepo.contracts import read_model
 from kicad_tooling.hwrepo.design_lint import evaluate as evaluate_design_lint
 from kicad_tooling.hwrepo.design_lint import text_report
 from kicad_tooling.hwrepo.models import (
@@ -27,6 +31,30 @@ pytestmark = [
     pytest.mark.connector_lint,
     pytest.mark.design_lint,
 ]
+
+
+def test_source_bound_connector_review_documents_are_typed_and_versioned() -> None:
+    fixture_root = (
+        Path(__file__).resolve().parent / "fixtures/design_lint/mixed-interface-return-peers"
+    )
+    review_paths = tuple(sorted(fixture_root.glob("connector-reviews*.json")))
+    documents = tuple(read_model(path, ConnectorReviewsDocument) for path in review_paths)
+
+    assert {document.schema_version for document in documents} == {"1"}
+    assert all(
+        tuple(review.reference for review in document.connector_reviews) == ("J1", "J2", "J3")
+        for document in documents
+    )
+    assert all(
+        document.inventory_review.basis
+        == "Synthetic fixture reviewed the complete connector inventory"
+        for document in documents
+    )
+
+    unsupported = documents[0].model_dump()
+    unsupported["schema_version"] = "2"
+    with pytest.raises(ValidationError):
+        ConnectorReviewsDocument.model_validate(unsupported)
 
 
 def test_standard_connector_symbol_identity_finds_nonstandard_reference_candidates() -> None:

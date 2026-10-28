@@ -5,20 +5,18 @@ from __future__ import annotations
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog
+from .hwrepo.electrical import selected_config
 from .hwrepo.models import ProjectConfig
 from .hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
 
 
 class HostedPcbFixtureFailure(RuntimeError):
     """A theme lane failed after it recorded its failure evidence."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class HostedPcbFixtureContext:
     root: Path
     project: str
@@ -37,8 +35,6 @@ def prepare_pcb_fixture(
     scratch_prefix: str,
 ) -> HostedPcbFixtureContext:
     """Resolve the reviewed toolchain and allocate an in-checkout receipt area."""
-    from .hwrepo.electrical import selected_config
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image:

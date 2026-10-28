@@ -5,22 +5,27 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TypeVar
 
+from pydantic import BaseModel
+
 from . import package_version
 from .ci_matrix import build_matrix
 from .hwrepo.cli_output import summary
+from .hwrepo.contracts import read_model, repo_path, write_model
 from .hwrepo.documentation import check as documentation_check
 from .hwrepo.evidence import source_state
 from .hwrepo.generation import check_generation
+from .hwrepo.layout import default_project_root
 from .hwrepo.models import (
     CommandEvidence,
     GenerationReport,
     ProjectStaticPipelineReport,
     ProjectTestsReport,
+    ReleaseManifest,
     StaticPipelineReport,
 )
 from .hwrepo.pipeline_journal import PipelineJournal
@@ -32,7 +37,7 @@ from .hwrepo.sharding import shard_projects
 from .lint_registry import lint
 from .metrics import format_metrics
 
-_Result = TypeVar("_Result")
+_Result = TypeVar("_Result", bound=BaseModel)
 
 
 def phase(journal: PipelineJournal | None, name: str, action: Callable[[], _Result]) -> _Result:
@@ -108,7 +113,7 @@ def project_static_pipeline(
 
 def static_pipeline(
     root: Path,
-    selected: list[str] | None,
+    selected: Sequence[str] | None,
     workers: int = 1,
     journal: PipelineJournal | None = None,
 ) -> StaticPipelineReport | ProjectStaticPipelineReport:
@@ -229,7 +234,7 @@ def main() -> int:
     parser.add_argument(
         "--root",
         type=Path,
-        default=Path.cwd(),
+        default=default_project_root(),
         help="Repository root; defaults to the current working directory",
     )
     mode = parser.add_mutually_exclusive_group()
@@ -350,8 +355,6 @@ def main() -> int:
             parser.error("--release does not support project selectors")
         if args.manifest is None:
             parser.error("--release requires --manifest")
-        from .hwrepo.contracts import read_model, repo_path
-        from .hwrepo.models import ReleaseManifest
         from .hwrepo.release import check as release_check
 
         try:
@@ -368,9 +371,7 @@ def main() -> int:
     if args.metrics:
         if selected is not None:
             parser.error("--metrics does not support project selectors")
-        from .hwrepo.contracts import read_model, repo_path
         from .hwrepo.metrics import collect
-        from .hwrepo.models import ReleaseManifest
 
         try:
             deviations = (
@@ -397,8 +398,6 @@ def main() -> int:
             root, None if selected is None else list(selected), workers=args.jobs, journal=journal
         )
         if args.output is not None:
-            from .hwrepo.contracts import write_model
-
             write_model(args.output / "portable.json", static)
         journal.finish(static.status)
     except BaseException:

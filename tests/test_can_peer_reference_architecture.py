@@ -16,10 +16,12 @@ from tests.lint_architecture_support import (
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint, pytest.mark.architecture]
 
-CAN_REFERENCE_MODELS = {
-    "CanPeerReferenceBusCoverage",
-    "CanPeerReferenceCoverageReport",
-}
+CAN_REFERENCE_MODELS = frozenset(
+    {
+        "CanPeerReferenceBusCoverage",
+        "CanPeerReferenceCoverageReport",
+    }
+)
 CAN_REFERENCE_MODULES = (
     "can_peer_reference_models.py",
     "can_peer_reference_scan.py",

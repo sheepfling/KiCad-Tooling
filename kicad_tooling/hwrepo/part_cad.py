@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import math
-import os
 import re
 from collections import defaultdict
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from uuid import UUID
 
-from .contracts import read_model, repo_path
+from .contracts import lexical_absolute_path, read_model, repo_path, repo_path_is_within
 from .discovery import load_config, load_registry
 from .model_inventory import (
     _atoms,  # pyright: ignore[reportPrivateUsage]
@@ -29,21 +28,21 @@ from .models import (
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _Token:
     start: int
     end: int
     quoted: bool
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _Change:
     start: int
     end: int
     replacement: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _Placed:
     component: PartCadComponent
     span: _Span
@@ -54,7 +53,7 @@ class _Placed:
     on_board: bool
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _Schematic:
     path: Path
     source: str
@@ -319,7 +318,7 @@ def _property_change(
     return _Change(token.start, token.end, _quote(value))
 
 
-def _insertion(source: str, span: _Span, expressions: list[str]) -> _Change:
+def _insertion(source: str, span: _Span, expressions: Iterable[str]) -> _Change:
     newline = "\r\n" if "\r\n" in source else "\n"
     position = span.end - 1
     start = source.rfind("\n", 0, span.start) + 1
@@ -330,7 +329,7 @@ def _insertion(source: str, span: _Span, expressions: list[str]) -> _Change:
     return _Change(position, position, value + newline + indent)
 
 
-def _apply(source: str, changes: list[_Change], kind: str) -> str:
+def _apply(source: str, changes: Sequence[_Change], kind: str) -> str:
     end = -1
     for change in sorted(changes, key=lambda item: (item.start, item.end)):
         if change.start < end:
@@ -441,7 +440,7 @@ def _board_changes(
             pending.append(reference)
             continue
         model = models[reference]
-        if not model.startswith("${KIPRJMOD}/"):
+        if not repo_path_is_within(model, "${KIPRJMOD}"):
             raise ValueError("Reviewed model reference must use a portable KIPRJMOD path")
         _quote(model)
         assigned = _nodes(source, span, "model")
@@ -580,14 +579,14 @@ def validate_footprint_binding(root: Path, project_id: str, footprint: str) -> N
     target = Path(uri.replace("${KIPRJMOD}", str(project_dir)))
     if not target.is_absolute():
         target = project_dir / target
-    normalized = Path(os.path.abspath(target / (name + ".kicad_mod")))
+    normalized = lexical_absolute_path(target / (name + ".kicad_mod"))
     try:
         member_name = normalized.relative_to(root).as_posix()
     except ValueError as exc:
         raise ValueError("Reviewed footprint library escapes the repository") from exc
     member = repo_path(root, member_name)
     if member_name not in config.required_inputs or not any(
-        member_name.startswith(source_root + "/") for source_root in config.source_roots
+        repo_path_is_within(member_name, source_root) for source_root in config.source_roots
     ):
         raise ValueError(
             f"Reviewed footprint {member_name} must be declared in this project's inputs"

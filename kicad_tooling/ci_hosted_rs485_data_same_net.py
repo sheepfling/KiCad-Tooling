@@ -8,31 +8,42 @@ import os
 import shutil
 import sys
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from types import MappingProxyType
+from typing import Literal
 
 from .ci_hosted_kicad10_images import KICAD_10_NATIVE_TOOLCHAINS
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 RS485_DATA_SAME_NET_TOOLCHAINS = KICAD_10_NATIVE_TOOLCHAINS
 _RULE_ID = "bus.rs485_data_input_output_same_net"
-_SOURCE_HASHES = {
-    "fault": "d8af98143c7c94d2227206c5e6e93d03f8a82f32c9dbf87f93c6ad37bba4bc3a",
-    "control": "17edbd6020658f7b4ef29413928ed93fdca4b13a41c2b09c783fe4ce330ccfc8",
-}
+_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
+    {
+        "fault": "d8af98143c7c94d2227206c5e6e93d03f8a82f32c9dbf87f93c6ad37bba4bc3a",
+        "control": "17edbd6020658f7b4ef29413928ed93fdca4b13a41c2b09c783fe4ce330ccfc8",
+    }
+)
 _NAMED_RAIL_RULE_ID = "bus.rs485_signal_on_named_rail"
-_NAMED_RAIL_SOURCE_HASHES = {
-    "fault": "4808cd9ba83174fd0d32d182f5816effa20a88da097dc18dea419f5115a39d23",
-    "control": "aa38e247661a1bf88460122caf2214bf3ad11468debdc4b6edd71a628a02e512",
-}
+_NAMED_RAIL_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
+    {
+        "fault": "4808cd9ba83174fd0d32d182f5816effa20a88da097dc18dea419f5115a39d23",
+        "control": "aa38e247661a1bf88460122caf2214bf3ad11468debdc4b6edd71a628a02e512",
+    }
+)
 _LINE_NAMED_RAIL_RULE_ID = "bus.rs485_line_on_named_rail"
-_LINE_NAMED_RAIL_SOURCE_HASHES = {
-    "fault": "4e15a47d7418c3b17ae5cd2cf10cfcc6dc7e0ef796bbf9023aebbbe029ba6d1b",
-    "control": "ec8a53ce7ae539d233baf7952e773adb1911cd5d930c98f4b120d22b6865c4e3",
-}
+_LINE_NAMED_RAIL_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
+    {
+        "fault": "4e15a47d7418c3b17ae5cd2cf10cfcc6dc7e0ef796bbf9023aebbbe029ba6d1b",
+        "control": "ec8a53ce7ae539d233baf7952e773adb1911cd5d930c98f4b120d22b6865c4e3",
+    }
+)
 
 
 def rs485_data_same_net_fixture_lane(
@@ -65,11 +76,6 @@ def _rs485_fixture_lane(
     feature: Literal["same_net", "named_rail", "line_named_rail"],
 ) -> None:
     """Run the source-bound native lane shared by the RS-485 heuristics."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .validate import read_netlist
 
     root = root.resolve()
     if (version, image) not in RS485_DATA_SAME_NET_TOOLCHAINS:
@@ -123,9 +129,7 @@ def _rs485_fixture_lane(
             "fault": {"GND": ("U1.1",), "HOST_RX": ("U1.2",)},
             "control": {"RS485_A": ("U1.1",), "RS485_B": ("U1.2",)},
         }
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint" / fixture_directory
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint" / fixture_directory
     sources = {case: fixture_root / name for case, name in source_names.items()}
     source_hashes = {case: digest(source) for case, source in sources.items()}
     if source_hashes != reviewed_hashes:

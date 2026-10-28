@@ -8,10 +8,12 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
 from kicad_tooling.ci_hosted import HostedLog, power_sequence_fixture_lane
+from kicad_tooling.hwrepo.electrical import selected_config
 from tests.support import reference_root
 
 pytestmark = [
@@ -19,11 +21,13 @@ pytestmark = [
     pytest.mark.power_lint,
 ]
 
-_NATIVE_FIXTURE_SOURCES = {
-    "control": "f1104387c9208d6be6a608872ddc9425158b05572d351e4afbd80d72a2f447c3",
-    "open-enable": "b093d3b7b7b57f7a8aa3e1fa86b4c7c6b3440ebc6c3ee5d5c4a15ee4818f99fb",
-    "output-enable-cycle": "da22daa43ad104bdce3e499d651c36b5a0ed6556cd75347a07eed5a21ea22c6d",
-}
+_NATIVE_FIXTURE_SOURCES = MappingProxyType(
+    {
+        "control": "f1104387c9208d6be6a608872ddc9425158b05572d351e4afbd80d72a2f447c3",
+        "open-enable": "b093d3b7b7b57f7a8aa3e1fa86b4c7c6b3440ebc6c3ee5d5c4a15ee4818f99fb",
+        "output-enable-cycle": "da22daa43ad104bdce3e499d651c36b5a0ed6556cd75347a07eed5a21ea22c6d",
+    }
+)
 
 
 @pytest.mark.native_kicad
@@ -71,8 +75,6 @@ def test_control_fault_and_cycle_repeat_on_pinned_kicad_versions(
         case: hashlib.sha256((fixture_root / f"{case}.kicad_sch").read_bytes()).hexdigest()
         for case in _NATIVE_FIXTURE_SOURCES
     } == _NATIVE_FIXTURE_SOURCES
-
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     config = selected_config(root, project)
     assert (config.kicad_version, config.image) == (version, image)

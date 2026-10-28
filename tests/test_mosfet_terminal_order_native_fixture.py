@@ -6,11 +6,13 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
 from kicad_tooling.ci_hosted_mosfet_terminal_order_fixture import (
     MOSFET_TERMINAL_ORDER_FIXTURE_CASES,
+    mosfet_terminal_order_fixture_lane,
 )
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.models import DesignLintPolicy
@@ -23,12 +25,14 @@ from tests.synthetic_design_lint_project import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint]
 
 RULE_ID = "component.mosfet_terminal_order_on_named_rails"
-EXPECTED_SOURCE_HASHES: dict[str, str] = {
-    "fault_nmos": "b79b2a7bfde5855e43bf7abbed61f1d9954a576e88ffcc9c07a3d2f42953a81f",
-    "control_nmos": "5b876b74b39d730820ae3d4cbb7d462874e0affa4a91add709db90c118154103",
-    "fault_pmos": "be3131997dc36fab36ab838dbafe52cb789838abab8a6a1e17aebe14de529a41",
-    "control_pmos": "d5b4873bfcc1132c3940ebe112a5546ebc0a2820ad85c43655bf488fdac56e6a",
-}
+EXPECTED_SOURCE_HASHES: dict[str, str] = MappingProxyType(
+    {
+        "fault_nmos": "b79b2a7bfde5855e43bf7abbed61f1d9954a576e88ffcc9c07a3d2f42953a81f",
+        "control_nmos": "5b876b74b39d730820ae3d4cbb7d462874e0affa4a91add709db90c118154103",
+        "fault_pmos": "be3131997dc36fab36ab838dbafe52cb789838abab8a6a1e17aebe14de529a41",
+        "control_pmos": "d5b4873bfcc1132c3940ebe112a5546ebc0a2820ad85c43655bf488fdac56e6a",
+    }
+)
 
 
 def test_native_mosfet_terminal_order_fixture_inventory_is_source_pinned() -> None:
@@ -69,9 +73,6 @@ def test_native_mosfet_terminal_order_faults_and_controls_are_repeatable(
     project: str,
     version: str,
 ) -> None:
-    from kicad_tooling.ci_hosted_mosfet_terminal_order_fixture import (
-        mosfet_terminal_order_fixture_lane,
-    )
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(

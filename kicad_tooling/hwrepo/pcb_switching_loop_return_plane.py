@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Literal
 
 from .pcb_connectivity_observations import PcbPadConnectivityObservation
@@ -14,7 +15,7 @@ from .pcb_switching_loop_models import (
 def return_plane_coverage(
     requirement: PcbSwitchingLoopRequirement,
     snapshot: PcbConnectivitySnapshot,
-    pads: dict[str, PcbPadConnectivityObservation],
+    pads: Mapping[str, PcbPadConnectivityObservation],
 ) -> tuple[
     Literal["CONNECTED", "SPLIT", "UNOBSERVED", "UNSUPPORTED", "AMBIGUOUS"],
     str | None,

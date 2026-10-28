@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 
@@ -11,8 +13,8 @@ def repeated_signal_pin_component(
     reference: str = "U1",
     symbol: str = "Lint:RepeatedSignalPins",
     dnp: bool = False,
-    functions: dict[str, str] | None = None,
-    electrical_types: dict[str, str] | None = None,
+    functions: Mapping[str, str] | None = None,
+    electrical_types: Mapping[str, str] | None = None,
     pin_numbers: tuple[str, ...] = ("1", "2", "3", "4"),
 ) -> NetlistContract:
     """Build one fitted component with duplicated explicit signal metadata."""

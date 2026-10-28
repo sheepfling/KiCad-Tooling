@@ -6,12 +6,13 @@ import json
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 
 _NAMESPACE = uuid.UUID("2e37d07b-0e6a-5094-92b3-73e7789c63b1")
 _PROJECT = "LINT-075 synthetic clock series trial"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Pin:
     number: str
     name: str
@@ -19,7 +20,7 @@ class Pin:
     x: float
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Part:
     reference: str
     library_id: str
@@ -30,27 +31,29 @@ class Part:
     dnp: bool = False
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Case:
     parts: tuple[Part, ...]
     candidate_finding: bool
     disposition: str
 
 
-_PIN_LIBRARY = {
-    "Synthetic:ClockSource": (Pin("1", "OUT", "output", -5.08),),
-    "Oscillator:DirectDriver": (Pin("1", "OUT", "output", -5.08),),
-    "Synthetic:ClockInput": (Pin("1", "CLK_IN", "input", -5.08),),
-    "Synthetic:SeriesResistor": (
-        Pin("1", "~", "passive", -5.08),
-        Pin("2", "~", "passive", 5.08),
-    ),
-    "Synthetic:SeriesBead": (
-        Pin("1", "~", "passive", -5.08),
-        Pin("2", "~", "passive", 5.08),
-    ),
-    "Synthetic:TestPoint": (Pin("1", "TP", "passive", -5.08),),
-}
+_PIN_LIBRARY = MappingProxyType(
+    {
+        "Synthetic:ClockSource": (Pin("1", "OUT", "output", -5.08),),
+        "Oscillator:DirectDriver": (Pin("1", "OUT", "output", -5.08),),
+        "Synthetic:ClockInput": (Pin("1", "CLK_IN", "input", -5.08),),
+        "Synthetic:SeriesResistor": (
+            Pin("1", "~", "passive", -5.08),
+            Pin("2", "~", "passive", 5.08),
+        ),
+        "Synthetic:SeriesBead": (
+            Pin("1", "~", "passive", -5.08),
+            Pin("2", "~", "passive", 5.08),
+        ),
+        "Synthetic:TestPoint": (Pin("1", "TP", "passive", -5.08),),
+    }
+)
 
 
 def _part(
@@ -67,164 +70,255 @@ def _part(
     return Part(reference, library_id, value, x, y, tuple(pin_nets), dnp)
 
 
-CASES = {
-    "series-control": Case(
-        (
-            _part("X1", "Synthetic:ClockSource", "Synthetic clock source", 101.6, 101.6, "OSC_SRC"),
-            _part("R1", "Synthetic:SeriesResistor", "33R", 121.92, 101.6, "OSC_SRC", "CLK_LOAD"),
-            _part("U1", "Synthetic:ClockInput", "Synthetic clock input", 147.32, 101.6, "CLK_LOAD"),
+CASES = MappingProxyType(
+    {
+        "series-control": Case(
+            (
+                _part(
+                    "X1", "Synthetic:ClockSource", "Synthetic clock source", 101.6, 101.6, "OSC_SRC"
+                ),
+                _part(
+                    "R1", "Synthetic:SeriesResistor", "33R", 121.92, 101.6, "OSC_SRC", "CLK_LOAD"
+                ),
+                _part(
+                    "U1", "Synthetic:ClockInput", "Synthetic clock input", 147.32, 101.6, "CLK_LOAD"
+                ),
+            ),
+            False,
+            "valid-series-control",
         ),
-        False,
-        "valid-series-control",
-    ),
-    "series-testpoint-control": Case(
-        (
-            _part("X1", "Synthetic:ClockSource", "Synthetic clock source", 101.6, 101.6, "OSC_SRC"),
-            _part("R1", "Synthetic:SeriesResistor", "33R", 121.92, 101.6, "OSC_SRC", "CLK_LOAD"),
-            _part("U1", "Synthetic:ClockInput", "Synthetic clock input", 147.32, 101.6, "CLK_LOAD"),
-            _part("TP1", "Synthetic:TestPoint", "TestPoint", 121.92, 127.0, "OSC_SRC"),
+        "series-testpoint-control": Case(
+            (
+                _part(
+                    "X1", "Synthetic:ClockSource", "Synthetic clock source", 101.6, 101.6, "OSC_SRC"
+                ),
+                _part(
+                    "R1", "Synthetic:SeriesResistor", "33R", 121.92, 101.6, "OSC_SRC", "CLK_LOAD"
+                ),
+                _part(
+                    "U1", "Synthetic:ClockInput", "Synthetic clock input", 147.32, 101.6, "CLK_LOAD"
+                ),
+                _part("TP1", "Synthetic:TestPoint", "TestPoint", 121.92, 127.0, "OSC_SRC"),
+            ),
+            False,
+            "valid-series-with-test-point-on-source-side",
         ),
-        False,
-        "valid-series-with-test-point-on-source-side",
-    ),
-    "direct-load-fault": Case(
-        (
-            _part(
-                "X1", "Synthetic:ClockSource", "Synthetic clock source", 101.6, 101.6, "CLK_DIRECT"
+        "direct-load-fault": Case(
+            (
+                _part(
+                    "X1",
+                    "Synthetic:ClockSource",
+                    "Synthetic clock source",
+                    101.6,
+                    101.6,
+                    "CLK_DIRECT",
+                ),
+                _part(
+                    "U1",
+                    "Synthetic:ClockInput",
+                    "Synthetic clock input",
+                    147.32,
+                    101.6,
+                    "CLK_DIRECT",
+                ),
             ),
-            _part(
-                "U1", "Synthetic:ClockInput", "Synthetic clock input", 147.32, 101.6, "CLK_DIRECT"
-            ),
+            True,
+            "direct-load-fault",
         ),
-        True,
-        "direct-load-fault",
-    ),
-    "direct-testpoint-fault": Case(
-        (
-            _part(
-                "X1", "Synthetic:ClockSource", "Synthetic clock source", 101.6, 101.6, "CLK_DIRECT"
+        "direct-testpoint-fault": Case(
+            (
+                _part(
+                    "X1",
+                    "Synthetic:ClockSource",
+                    "Synthetic clock source",
+                    101.6,
+                    101.6,
+                    "CLK_DIRECT",
+                ),
+                _part(
+                    "U1",
+                    "Synthetic:ClockInput",
+                    "Synthetic clock input",
+                    147.32,
+                    101.6,
+                    "CLK_DIRECT",
+                ),
+                _part("TP1", "Synthetic:TestPoint", "TestPoint", 121.92, 127.0, "CLK_DIRECT"),
             ),
-            _part(
-                "U1", "Synthetic:ClockInput", "Synthetic clock input", 147.32, 101.6, "CLK_DIRECT"
-            ),
-            _part("TP1", "Synthetic:TestPoint", "TestPoint", 121.92, 127.0, "CLK_DIRECT"),
+            True,
+            "direct-load-fault-with-test-point",
         ),
-        True,
-        "direct-load-fault-with-test-point",
-    ),
-    "direct-pull-fault": Case(
-        (
-            _part(
-                "X1", "Synthetic:ClockSource", "Synthetic clock source", 101.6, 101.6, "CLK_DIRECT"
+        "direct-pull-fault": Case(
+            (
+                _part(
+                    "X1",
+                    "Synthetic:ClockSource",
+                    "Synthetic clock source",
+                    101.6,
+                    101.6,
+                    "CLK_DIRECT",
+                ),
+                _part("R1", "Synthetic:SeriesResistor", "10k", 121.92, 127.0, "CLK_DIRECT", "GND"),
+                _part(
+                    "U1",
+                    "Synthetic:ClockInput",
+                    "Synthetic clock input",
+                    147.32,
+                    101.6,
+                    "CLK_DIRECT",
+                ),
+                _part(
+                    "J1",
+                    "Synthetic:ClockInput",
+                    "Synthetic reference contact",
+                    147.32,
+                    152.4,
+                    "GND",
+                ),
             ),
-            _part("R1", "Synthetic:SeriesResistor", "10k", 121.92, 127.0, "CLK_DIRECT", "GND"),
-            _part(
-                "U1", "Synthetic:ClockInput", "Synthetic clock input", 147.32, 101.6, "CLK_DIRECT"
-            ),
-            _part(
-                "J1", "Synthetic:ClockInput", "Synthetic reference contact", 147.32, 152.4, "GND"
-            ),
+            True,
+            "pull-resistor-does-not-count-as-series",
         ),
-        True,
-        "pull-resistor-does-not-count-as-series",
-    ),
-    "wrong-net-fault": Case(
-        (
-            _part(
-                "X1", "Synthetic:ClockSource", "Synthetic clock source", 101.6, 101.6, "CLK_DIRECT"
+        "wrong-net-fault": Case(
+            (
+                _part(
+                    "X1",
+                    "Synthetic:ClockSource",
+                    "Synthetic clock source",
+                    101.6,
+                    101.6,
+                    "CLK_DIRECT",
+                ),
+                _part(
+                    "U1",
+                    "Synthetic:ClockInput",
+                    "Synthetic clock input",
+                    147.32,
+                    101.6,
+                    "CLK_DIRECT",
+                ),
+                _part(
+                    "X2",
+                    "Synthetic:ClockSource",
+                    "Other synthetic clock source",
+                    101.6,
+                    177.8,
+                    "AUX_SRC",
+                ),
+                _part(
+                    "R1", "Synthetic:SeriesResistor", "33R", 121.92, 177.8, "AUX_SRC", "AUX_LOAD"
+                ),
+                _part(
+                    "U2",
+                    "Synthetic:ClockInput",
+                    "Other synthetic clock input",
+                    147.32,
+                    177.8,
+                    "AUX_LOAD",
+                ),
             ),
-            _part(
-                "U1", "Synthetic:ClockInput", "Synthetic clock input", 147.32, 101.6, "CLK_DIRECT"
-            ),
-            _part(
-                "X2",
-                "Synthetic:ClockSource",
-                "Other synthetic clock source",
-                101.6,
-                177.8,
-                "AUX_SRC",
-            ),
-            _part("R1", "Synthetic:SeriesResistor", "33R", 121.92, 177.8, "AUX_SRC", "AUX_LOAD"),
-            _part(
-                "U2",
-                "Synthetic:ClockInput",
-                "Other synthetic clock input",
-                147.32,
-                177.8,
-                "AUX_LOAD",
-            ),
+            True,
+            "only-resistor-is-on-an-unrelated-clock-net",
         ),
-        True,
-        "only-resistor-is-on-an-unrelated-clock-net",
-    ),
-    "bypass-fault": Case(
-        (
-            _part("X1", "Synthetic:ClockSource", "Synthetic clock source", 101.6, 101.6, "OSC_SRC"),
-            _part("R1", "Synthetic:SeriesResistor", "33R", 121.92, 152.4, "OSC_SRC", "DAMPED"),
-            _part(
-                "U1", "Synthetic:ClockInput", "Directly connected input", 147.32, 101.6, "OSC_SRC"
+        "bypass-fault": Case(
+            (
+                _part(
+                    "X1", "Synthetic:ClockSource", "Synthetic clock source", 101.6, 101.6, "OSC_SRC"
+                ),
+                _part("R1", "Synthetic:SeriesResistor", "33R", 121.92, 152.4, "OSC_SRC", "DAMPED"),
+                _part(
+                    "U1",
+                    "Synthetic:ClockInput",
+                    "Directly connected input",
+                    147.32,
+                    101.6,
+                    "OSC_SRC",
+                ),
+                _part("U2", "Synthetic:ClockInput", "Downstream input", 147.32, 152.4, "DAMPED"),
             ),
-            _part("U2", "Synthetic:ClockInput", "Downstream input", 147.32, 152.4, "DAMPED"),
+            True,
+            "direct-bypass-around-series-resistor",
         ),
-        True,
-        "direct-bypass-around-series-resistor",
-    ),
-    "wrong-part-miss": Case(
-        (
-            _part("X1", "Synthetic:ClockSource", "Synthetic clock source", 101.6, 101.6, "OSC_SRC"),
-            _part(
-                "R1", "Synthetic:SeriesBead", "Ferrite bead", 121.92, 101.6, "OSC_SRC", "CLK_LOAD"
+        "wrong-part-miss": Case(
+            (
+                _part(
+                    "X1", "Synthetic:ClockSource", "Synthetic clock source", 101.6, 101.6, "OSC_SRC"
+                ),
+                _part(
+                    "R1",
+                    "Synthetic:SeriesBead",
+                    "Ferrite bead",
+                    121.92,
+                    101.6,
+                    "OSC_SRC",
+                    "CLK_LOAD",
+                ),
+                _part(
+                    "U1", "Synthetic:ClockInput", "Synthetic clock input", 147.32, 101.6, "CLK_LOAD"
+                ),
             ),
-            _part("U1", "Synthetic:ClockInput", "Synthetic clock input", 147.32, 101.6, "CLK_LOAD"),
+            False,
+            "candidate-uses-reference-prefix-and-misses-wrong-part",
         ),
-        False,
-        "candidate-uses-reference-prefix-and-misses-wrong-part",
-    ),
-    "dnp-series-miss": Case(
-        (
-            _part("X1", "Synthetic:ClockSource", "Synthetic clock source", 101.6, 101.6, "OSC_SRC"),
-            _part(
-                "R1",
-                "Synthetic:SeriesResistor",
-                "33R",
-                121.92,
-                101.6,
-                "OSC_SRC",
-                "CLK_LOAD",
-                dnp=True,
+        "dnp-series-miss": Case(
+            (
+                _part(
+                    "X1", "Synthetic:ClockSource", "Synthetic clock source", 101.6, 101.6, "OSC_SRC"
+                ),
+                _part(
+                    "R1",
+                    "Synthetic:SeriesResistor",
+                    "33R",
+                    121.92,
+                    101.6,
+                    "OSC_SRC",
+                    "CLK_LOAD",
+                    dnp=True,
+                ),
+                _part(
+                    "U1", "Synthetic:ClockInput", "Synthetic clock input", 147.32, 101.6, "CLK_LOAD"
+                ),
             ),
-            _part("U1", "Synthetic:ClockInput", "Synthetic clock input", 147.32, 101.6, "CLK_LOAD"),
+            False,
+            "candidate-ignores-dnp-state",
         ),
-        False,
-        "candidate-ignores-dnp-state",
-    ),
-    "wrong-value-series-miss": Case(
-        (
-            _part("X1", "Synthetic:ClockSource", "Synthetic clock source", 101.6, 101.6, "OSC_SRC"),
-            _part("R1", "Synthetic:SeriesResistor", "1M", 121.92, 101.6, "OSC_SRC", "CLK_LOAD"),
-            _part("U1", "Synthetic:ClockInput", "Synthetic clock input", 147.32, 101.6, "CLK_LOAD"),
-        ),
-        False,
-        "candidate-ignores-resistor-value",
-    ),
-    "direct-drive-control": Case(
-        (
-            _part(
-                "U1",
-                "Oscillator:DirectDriver",
-                "Synthetic approved direct driver",
-                101.6,
-                101.6,
-                "CLK_DIRECT",
+        "wrong-value-series-miss": Case(
+            (
+                _part(
+                    "X1", "Synthetic:ClockSource", "Synthetic clock source", 101.6, 101.6, "OSC_SRC"
+                ),
+                _part("R1", "Synthetic:SeriesResistor", "1M", 121.92, 101.6, "OSC_SRC", "CLK_LOAD"),
+                _part(
+                    "U1", "Synthetic:ClockInput", "Synthetic clock input", 147.32, 101.6, "CLK_LOAD"
+                ),
             ),
-            _part(
-                "U2", "Synthetic:ClockInput", "Synthetic clock input", 147.32, 101.6, "CLK_DIRECT"
-            ),
+            False,
+            "candidate-ignores-resistor-value",
         ),
-        True,
-        "candidate-overprompts-on-authored-direct-drive-control",
-    ),
-}
+        "direct-drive-control": Case(
+            (
+                _part(
+                    "U1",
+                    "Oscillator:DirectDriver",
+                    "Synthetic approved direct driver",
+                    101.6,
+                    101.6,
+                    "CLK_DIRECT",
+                ),
+                _part(
+                    "U2",
+                    "Synthetic:ClockInput",
+                    "Synthetic clock input",
+                    147.32,
+                    101.6,
+                    "CLK_DIRECT",
+                ),
+            ),
+            True,
+            "candidate-overprompts-on-authored-direct-drive-control",
+        ),
+    }
+)
 
 
 def _uid(case: str, name: str) -> str:

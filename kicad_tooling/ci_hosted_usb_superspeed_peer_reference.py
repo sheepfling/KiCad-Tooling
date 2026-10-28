@@ -8,43 +8,62 @@ import os
 import shutil
 import sys
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING
+from types import MappingProxyType
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .ci_hosted_usb_superspeed_reference_maps import (
+    usb_superspeed_reference_map_fixture_lane,
+)
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
-
-_EXPECTED_SOURCE_HASHES = {
-    "fault": "4eab8226ec5b526a16c880453f54202bb3df9b42b444bd82684d92fd7720c095",
-    "control": "5b8bd68163f9493c91c643b55d283f9514522ccc67b2cc7e37955e83e0b7b400",
-}
-_EXPECTED_PIN_FUNCTIONS = {
-    "J1.1": "StdA_SSTX+",
-    "J1.2": "StdA_SSTX-",
-    "J1.3": "StdA_SSRX+",
-    "J1.4": "StdA_SSRX-",
-    "J1.5": "GND",
-    "U1.1": "SSRX+",
-    "U1.2": "SSRX-",
-    "U1.3": "SSTX+",
-    "U1.4": "SSTX-",
-    "U1.5": "AGND",
-}
-_EXPECTED_NET_MEMBERS = {
-    "ss_tx_p": frozenset({"j1.1", "u1.1"}),
-    "ss_tx_n": frozenset({"j1.2", "u1.2"}),
-    "ss_rx_p": frozenset({"j1.3", "u1.3"}),
-    "ss_rx_n": frozenset({"j1.4", "u1.4"}),
-}
-_EXPECTED_REFERENCE_NET_MEMBERS = {
-    "fault": {
-        "usb_gnd": frozenset({"j1.5"}),
-        "phy_gnd": frozenset({"u1.5"}),
-    },
-    "control": {"board_gnd": frozenset({"j1.5", "u1.5"})},
-}
+_EXPECTED_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
+    {
+        "fault": "4eab8226ec5b526a16c880453f54202bb3df9b42b444bd82684d92fd7720c095",
+        "control": "5b8bd68163f9493c91c643b55d283f9514522ccc67b2cc7e37955e83e0b7b400",
+    }
+)
+_EXPECTED_PIN_FUNCTIONS: Mapping[str, str] = MappingProxyType(
+    {
+        "J1.1": "StdA_SSTX+",
+        "J1.2": "StdA_SSTX-",
+        "J1.3": "StdA_SSRX+",
+        "J1.4": "StdA_SSRX-",
+        "J1.5": "GND",
+        "U1.1": "SSRX+",
+        "U1.2": "SSRX-",
+        "U1.3": "SSTX+",
+        "U1.4": "SSTX-",
+        "U1.5": "AGND",
+    }
+)
+_EXPECTED_NET_MEMBERS: Mapping[str, frozenset[str]] = MappingProxyType(
+    {
+        "ss_tx_p": frozenset({"j1.1", "u1.1"}),
+        "ss_tx_n": frozenset({"j1.2", "u1.2"}),
+        "ss_rx_p": frozenset({"j1.3", "u1.3"}),
+        "ss_rx_n": frozenset({"j1.4", "u1.4"}),
+    }
+)
+_EXPECTED_REFERENCE_NET_MEMBERS: Mapping[str, Mapping[str, frozenset[str]]] = MappingProxyType(
+    {
+        "fault": MappingProxyType(
+            {
+                "usb_gnd": frozenset({"j1.5"}),
+                "phy_gnd": frozenset({"u1.5"}),
+            }
+        ),
+        "control": MappingProxyType({"board_gnd": frozenset({"j1.5", "u1.5"})}),
+    }
+)
 _EXPECTED_FAMILIES = frozenset(
     {
         ("USB SuperSpeed TX", "USB SuperSpeed RX"),
@@ -63,14 +82,6 @@ def usb_superspeed_peer_reference_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Check split/common references on both full-duplex paths with pinned KiCad."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .validate import read_netlist
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image:
@@ -82,8 +93,7 @@ def usb_superspeed_peer_reference_fixture_lane(
     pinned = pinned_image(config.image)
 
     fixture_root = (
-        Path(__file__).resolve().parents[1]
-        / "tests/fixtures/design_lint/usb-superspeed-peer-reference-native"
+        tooling_checkout_root() / "tests/fixtures/design_lint/usb-superspeed-peer-reference-native"
     )
     cases = {case: fixture_root / f"{case}.kicad_sch" for case in _EXPECTED_SOURCE_HASHES}
     source_hashes = {case: digest(path) for case, path in cases.items()}
@@ -213,10 +223,6 @@ def usb_superspeed_peer_reference_fixture_lane(
     for case in cases:
         if normalized_hashes[(case, "first")] != normalized_hashes[(case, "repeat")]:
             raise ValueError(f"Native USB SuperSpeed {case} exports differ after normalization")
-
-    from .ci_hosted_usb_superspeed_reference_maps import (
-        usb_superspeed_reference_map_fixture_lane,
-    )
 
     usb_superspeed_reference_map_fixture_lane(
         project=project,

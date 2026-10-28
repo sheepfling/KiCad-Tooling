@@ -16,7 +16,7 @@ from .design_lint_types import Candidate
 RULE_ID: DesignLintRuleId = "connector.footprint_named_power_output_all_open"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class NamedPowerOutputAllOpenEvaluation:
     """Candidates and coverage counts for named outputs open on every peer."""
 

@@ -27,7 +27,7 @@ from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .discovery import load_config
 from .doctor import NativeRunner, doctor
-from .evidence import source_state, verify_release_portable
+from .evidence import source_state
 from .exports import export as generate_exports
 from .exports import require_declared_variant, verify_exports
 from .mcp_workflow_journal import journal
@@ -45,6 +45,7 @@ from .models import (
     ReleaseReadinessReport,
     ReleaseStatus,
 )
+from .portable_evidence import verify_release_portable
 from .release import check as release_check
 from .selection import ProjectSelector, resolve_project_ids
 from .sharding import shard_projects
@@ -113,7 +114,8 @@ def check_scope(
     jobs: int = 1,
 ) -> McpScopeReport:
     """Reuse union/exclusion selection; no selectors deliberately invokes the full gate."""
-    if type(jobs) is not int or not 1 <= jobs <= 32:
+    job_count: int | bool = jobs
+    if type(job_count) is not int or not 1 <= job_count <= 32:
         raise ValueError("jobs must be between 1 and 32")
     selector = ProjectSelector(
         project_ids=project_ids,

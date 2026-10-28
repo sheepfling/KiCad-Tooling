@@ -8,7 +8,7 @@ from pathlib import Path
 from .hwrepo.models import ProjectConfig
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ComponentRatingFixtureContext:
     """Paths and reviewed project toolchain for one component-rating lane run."""
 

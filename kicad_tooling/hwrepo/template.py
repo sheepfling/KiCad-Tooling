@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from ..git import run_git_text
 from .contracts import read_model, repo_path, write_model
 from .layout import layout
 from .licensing import template_license
@@ -65,20 +66,11 @@ def preflight(root: Path) -> TemplatePreflightReport:
 
 def working_tree_is_clean(root: Path) -> bool:
     """Read Git status; a bootstrap must never copy a half-edited template state."""
-    result = subprocess.run(
-        [
-            "git",
-            "-c",
-            f"safe.directory={root.as_posix()}",
-            "-C",
-            str(root),
-            "status",
-            "--porcelain=v1",
-            "--untracked-files=all",
-        ],
-        capture_output=True,
-        text=True,
-        check=True,
+    result = run_git_text(
+        root,
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all",
     )
     return not result.stdout
 
@@ -150,20 +142,7 @@ def bootstrap(root: Path, destination: Path, project_id: str) -> TemplateBootstr
     staging = staging_parent / resolved_destination.name
     removed: tuple[str, ...] = ()
     try:
-        tracked = subprocess.run(
-            [
-                "git",
-                "-c",
-                f"safe.directory={resolved_root.as_posix()}",
-                "-C",
-                str(resolved_root),
-                "ls-files",
-                "-z",
-            ],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
+        tracked = run_git_text(resolved_root, "ls-files", "-z")
         staging.mkdir()
         for name in tracked.stdout.split("\0"):
             if not name or ephemeral(name) or generated_artifact(name):

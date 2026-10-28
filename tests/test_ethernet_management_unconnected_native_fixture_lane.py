@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from tests.native_fixture_support import assert_native_fixture_mounts
 
 RULE_ID = "bus.ethernet_management_unconnected_pin"
@@ -47,8 +49,6 @@ def test_native_ethernet_management_open_pin_fault_and_connected_control_repeat(
     hosted_reference_root: Path, project: str, version: str, image: str
 ) -> None:
     from kicad_tooling.ci_hosted_ethernet_label import ethernet_label_fixture_lane
-    from kicad_tooling.ci_hosted_support import HostedLog
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     root = hosted_reference_root
     config = selected_config(root, project)

@@ -12,6 +12,7 @@ import pytest
 
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.models import CommandEvidence, NetlistContract
+from tests.json_types import JsonObject
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.synthetic_design_lint_project import PINNED_NATIVE_KICAD_IMAGES
 
@@ -22,9 +23,7 @@ class ComponentPowerPinLane(Protocol):
     def __call__(self, root: Path, *, project: str, image: str, log: HostedLog) -> None: ...
 
 
-def component_power_pin_lane_results(
-    log: HostedLog, *, stage_prefix: str
-) -> dict[str, dict[str, object]]:
+def component_power_pin_lane_results(log: HostedLog, *, stage_prefix: str) -> dict[str, JsonObject]:
     """Select result events emitted by one component power-pin lane."""
     events = tuple(json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines())
     prefix = f"{stage_prefix}/"

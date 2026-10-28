@@ -20,7 +20,7 @@ from .models import NetlistContract
 ConnectorPowerElectricalType = Literal["power_in", "power_out"]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ConnectorNamedPowerAliasPeer:
     group: ConnectorPartIdPeerPinGroup
     function: str

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import runpy
+from collections.abc import Callable
+from collections.abc import Set as AbstractSet
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import ModuleType
-from typing import Any, cast
+from typing import Protocol, TypedDict, cast
 from unittest.mock import patch
 
 import pytest
@@ -17,6 +19,59 @@ pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.pcb_lint,
 ]
+
+
+class NativeProbeHelpers(TypedDict):
+    """Callable probes exported by the isolated native PCB probe module."""
+
+    canonical_ring_nm: Callable[[FakeLineChain], list[list[int]]]
+    filled_zone_islands: Callable[[FakeFilledPolygons], list[FilledZoneIsland]]
+    rule_area_observation: Callable[[FakeRuleArea, FakeBoard], RuleAreaObservation | None]
+    footprint_placement_observation: Callable[
+        [FakeFootprint, FakeBoard], FootprintPlacementObservation | None
+    ]
+    zone_island_indexes_touching_pad: Callable[
+        [FakePadShape, FakeZone, FakeFilledPolygons], tuple[int, ...]
+    ]
+    native_pcbnew: NativePcbnewProbe
+
+
+class FilledZoneIsland(TypedDict):
+    island_index: int
+    outline_nm: list[list[int]]
+    holes_nm: list[list[list[int]]]
+
+
+class RuleAreaPolygon(TypedDict):
+    outline_nm: list[list[int]]
+    holes_nm: list[list[list[int]]]
+
+
+class RuleAreaObservation(TypedDict):
+    uuid: str
+    name: str
+    layers: list[str]
+    net: str | None
+    polygons: list[RuleAreaPolygon]
+    forbids_tracks: bool
+    forbids_vias: bool
+    forbids_pads: bool
+    forbids_zone_fills: bool
+    forbids_footprints: bool
+
+
+class FootprintPlacementObservation(TypedDict):
+    reference: str
+    footprint: str
+    dnp: bool
+    value: str
+    position_nm: list[int]
+    orientation_microdegrees: int
+    side: str
+
+
+class NativePcbnewProbe(Protocol):
+    SHAPE_POLY_SET: Callable[[object], FakeShapePolySet]
 
 
 class FakePoint:
@@ -63,7 +118,7 @@ class FakeCollidableIsland(FakeLineChain):
         super().__init__(points)
         self.touches_pad = touches_pad
 
-    def Collide(self, _shape: Any) -> bool:
+    def Collide(self, _shape: object) -> bool:
         return self.touches_pad
 
     def AddHole(self, _hole: FakeLineChain, _error: int) -> None:
@@ -71,7 +126,7 @@ class FakeCollidableIsland(FakeLineChain):
 
 
 class FakePadShape:
-    def __init__(self, layers: set[int]) -> None:
+    def __init__(self, layers: AbstractSet[int]) -> None:
         self.layers = layers
         self.requested_layers: list[int] = []
 
@@ -103,7 +158,7 @@ class FakeShapePolySet:
 
 
 class FakeLayerSet:
-    def __init__(self, layers: set[int]) -> None:
+    def __init__(self, layers: AbstractSet[int]) -> None:
         self.layers = layers
 
     def Contains(self, layer: int) -> bool:
@@ -206,16 +261,19 @@ class FakeFootprint:
         return self._layer
 
 
-def probe_helpers() -> dict[str, Any]:
+def probe_helpers() -> NativeProbeHelpers:
     with TemporaryDirectory() as temporary_directory:
         probe_path = Path(temporary_directory) / "native_pcb_probe.py"
         probe_path.write_text(native_probe_source(), encoding="utf-8")
         with patch.dict("sys.modules", {"pcbnew": ModuleType("pcbnew")}):
-            return runpy.run_path(str(probe_path), run_name="native_pcb_probe_test")
+            return cast(
+                NativeProbeHelpers,
+                runpy.run_path(str(probe_path), run_name="native_pcb_probe_test"),
+            )
 
 
 def test_ring_canonicalization_ignores_rotation_direction_and_duplicate_points() -> None:
-    canonical_ring = cast(Any, probe_helpers()["canonical_ring_nm"])
+    canonical_ring = probe_helpers()["canonical_ring_nm"]
     first = FakeLineChain(((3, 0), (3, 2), (0, 2), (0, 0), (3, 0)))
     rotated_reversed = FakeLineChain(((3, 2), (3, 2), (3, 0), (0, 0), (0, 2), (3, 2)))
 
@@ -225,7 +283,7 @@ def test_ring_canonicalization_ignores_rotation_direction_and_duplicate_points()
 
 
 def test_island_contours_keep_native_indexes_and_sort_canonical_holes() -> None:
-    filled_zone_islands = cast(Any, probe_helpers()["filled_zone_islands"])
+    filled_zone_islands = probe_helpers()["filled_zone_islands"]
     outer = FakeLineChain(((0, 0), (10, 0), (10, 10), (0, 10)))
     larger_hole = FakeLineChain(((7, 7), (7, 9), (9, 9), (9, 7)))
     smaller_hole = FakeLineChain(((1, 1), (2, 1), (2, 2), (1, 2)))
@@ -247,7 +305,7 @@ def test_island_contours_keep_native_indexes_and_sort_canonical_holes() -> None:
 
 
 def test_canonicalization_rejects_degenerate_native_rings() -> None:
-    canonical_ring = cast(Any, probe_helpers()["canonical_ring_nm"])
+    canonical_ring = probe_helpers()["canonical_ring_nm"]
 
     with pytest.raises(ValueError, match="fewer than three distinct points"):
         canonical_ring(FakeLineChain(((0, 0), (1, 1), (0, 0))))
@@ -255,8 +313,10 @@ def test_canonicalization_rejects_degenerate_native_rings() -> None:
 
 def test_zone_island_evidence_is_direct_to_pad_and_layer() -> None:
     helpers = probe_helpers()
-    cast(Any, helpers["native_pcbnew"]).SHAPE_POLY_SET = FakeShapePolySet
-    observe = cast(Any, helpers["zone_island_indexes_touching_pad"])
+    helpers["native_pcbnew"].SHAPE_POLY_SET = lambda outline: FakeShapePolySet(
+        cast(FakeCollidableIsland, outline)
+    )
+    observe = helpers["zone_island_indexes_touching_pad"]
     pad = FakePadShape({0})
     filled = FakeFilledPolygons(
         outlines=(
@@ -272,7 +332,7 @@ def test_zone_island_evidence_is_direct_to_pad_and_layer() -> None:
 
 
 def test_rule_area_observation_serializes_outline_holes_layers_and_restrictions() -> None:
-    rule_area_observation = cast(Any, probe_helpers()["rule_area_observation"])
+    rule_area_observation = probe_helpers()["rule_area_observation"]
 
     result = rule_area_observation(FakeRuleArea(), FakeBoard())
 
@@ -296,13 +356,13 @@ def test_rule_area_observation_serializes_outline_holes_layers_and_restrictions(
 
 
 def test_rule_area_observation_ignores_non_rule_zones() -> None:
-    rule_area_observation = cast(Any, probe_helpers()["rule_area_observation"])
+    rule_area_observation = probe_helpers()["rule_area_observation"]
 
     assert rule_area_observation(FakeRuleArea(is_rule_area=False), FakeBoard()) is None
 
 
 def test_footprint_placement_observation_records_canonical_source_transform() -> None:
-    observe = cast(Any, probe_helpers()["footprint_placement_observation"])
+    observe = probe_helpers()["footprint_placement_observation"]
 
     result = observe(FakeFootprint(), FakeBoard())
 
@@ -318,16 +378,17 @@ def test_footprint_placement_observation_records_canonical_source_transform() ->
 
 
 def test_footprint_placement_normalizes_negative_angle_on_back_copper() -> None:
-    observe = cast(Any, probe_helpers()["footprint_placement_observation"])
+    observe = probe_helpers()["footprint_placement_observation"]
 
     result = observe(FakeFootprint(angle_degrees=-90.0, layer=2), FakeBoard())
 
+    assert result is not None
     assert result["orientation_microdegrees"] == 270_000_000
     assert result["side"] == "B.Cu"
 
 
 def test_footprint_placement_rejects_unsupported_and_non_finite_transforms() -> None:
-    observe = cast(Any, probe_helpers()["footprint_placement_observation"])
+    observe = probe_helpers()["footprint_placement_observation"]
 
     with pytest.raises(ValueError, match="unsupported board side"):
         observe(FakeFootprint(layer=1), FakeBoard())
@@ -336,6 +397,6 @@ def test_footprint_placement_rejects_unsupported_and_non_finite_transforms() -> 
 
 
 def test_unreferenced_footprint_is_not_addressable_placement_evidence() -> None:
-    observe = cast(Any, probe_helpers()["footprint_placement_observation"])
+    observe = probe_helpers()["footprint_placement_observation"]
 
     assert observe(FakeFootprint(reference=""), FakeBoard()) is None

@@ -6,36 +6,9 @@ from math import isqrt
 
 from .pcb_connectivity_observations import PcbPadConnectivityObservation
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
+from .pcb_pad_review import pcb_pad_endpoint_issues
+from .pcb_pad_union_find import PcbPadUnionFind
 from .pcb_protection_path_models import PcbProtectionPathEntry, PcbProtectionPathMap
-
-
-class _PadUnion:
-    """Connectivity groups derived only from native pad-component observations."""
-
-    def __init__(self, pads: tuple[PcbPadConnectivityObservation, ...]) -> None:
-        self.parent = {item.pad.casefold(): item.pad.casefold() for item in pads}
-        for item in pads:
-            for other in item.connected_pads:
-                self.join(item.pad, other)
-
-    def find(self, pad: str) -> str:
-        key = pad.casefold()
-        if key not in self.parent:
-            return ""
-        while self.parent[key] != key:
-            self.parent[key] = self.parent[self.parent[key]]
-            key = self.parent[key]
-        return key
-
-    def join(self, first: str, second: str) -> None:
-        a = first.casefold()
-        b = second.casefold()
-        if a not in self.parent or b not in self.parent:
-            return
-        root_a = self.find(a)
-        root_b = self.find(b)
-        if root_a != root_b:
-            self.parent[max(root_a, root_b)] = min(root_a, root_b)
 
 
 def _nearest_distance_squared(
@@ -51,28 +24,6 @@ def _nearest_distance_squared(
     )
 
 
-def _pad_issues(
-    pad: PcbPadConnectivityObservation | None,
-    *,
-    reference: str,
-    expected_footprint: str,
-    expected_net: str,
-    role: str,
-) -> list[str]:
-    if pad is None:
-        return [f"{role} pad {reference} is absent from the native PCB inventory"]
-    issues: list[str] = []
-    if pad.footprint != expected_footprint:
-        issues.append(
-            f"{role} {reference} footprint is {pad.footprint!r}; expected {expected_footprint!r}"
-        )
-    if pad.net != expected_net:
-        issues.append(f"{role} {reference} net is {pad.net!r}; expected {expected_net!r}")
-    if pad.dnp:
-        issues.append(f"{role} {reference} is marked do-not-populate")
-    return issues
-
-
 def pcb_protection_path_entries(
     spec: PcbProtectionPathMap,
     snapshot: PcbConnectivitySnapshot,
@@ -80,13 +31,13 @@ def pcb_protection_path_entries(
     """Compare authored pad mappings with native net, copper, via, and geometry data."""
     pads = {item.pad.casefold(): item for item in snapshot.pads}
     vias = {item.id: item for item in snapshot.vias}
-    connected = _PadUnion(snapshot.pads)
+    connected = PcbPadUnionFind(snapshot.pads)
     entries: list[PcbProtectionPathEntry] = []
     for requirement in spec.requirements:
         connector_pad = pads.get(requirement.connector_signal_pad.casefold())
         protection_signal_pad = pads.get(requirement.protection_signal_pad.casefold())
         protection_reference_pad = pads.get(requirement.protection_reference_pad.casefold())
-        issues = _pad_issues(
+        issues = pcb_pad_endpoint_issues(
             connector_pad,
             reference=requirement.connector_signal_pad,
             expected_footprint=requirement.connector_footprint,
@@ -94,7 +45,7 @@ def pcb_protection_path_entries(
             role="Connector signal",
         )
         issues.extend(
-            _pad_issues(
+            pcb_pad_endpoint_issues(
                 protection_signal_pad,
                 reference=requirement.protection_signal_pad,
                 expected_footprint=requirement.protection_footprint,
@@ -103,7 +54,7 @@ def pcb_protection_path_entries(
             )
         )
         issues.extend(
-            _pad_issues(
+            pcb_pad_endpoint_issues(
                 protection_reference_pad,
                 reference=requirement.protection_reference_pad,
                 expected_footprint=requirement.protection_footprint,

@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from fnmatch import fnmatchcase
 
-from .models import NetlistContract
-from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
-from .pcb_drc_models import (
+from kicad_tooling.hwrepo.pcb_drc_models import (
     PcbDifferentialPairRuleCoverageEntry,
     PcbDifferentialPairRuleMap,
     PcbDrcConstraintCoverage,
@@ -17,6 +15,9 @@ from .pcb_drc_models import (
     PcbSignalPathRuleCoverageEntry,
     PcbSignalPathRuleMap,
 )
+
+from .models import NetlistContract
+from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_drc_rule_parser import (
     RULE_SEVERITY,
     NativeRuleConstraint,
@@ -29,9 +30,10 @@ def _expected(
     name: PcbDrcConstraintName,
     bounds: PcbDrcMinMaxRequirement | PcbDrcMaximumRequirement,
 ) -> tuple[int | None, int | None]:
-    if isinstance(bounds, PcbDrcMaximumRequirement):
-        return None, bounds.max_nm
-    return bounds.min_nm, bounds.max_nm
+    bounds_contract: PcbDrcMinMaxRequirement | PcbDrcMaximumRequirement = bounds
+    if isinstance(bounds_contract, PcbDrcMaximumRequirement):
+        return None, bounds_contract.max_nm
+    return bounds_contract.min_nm, bounds_contract.max_nm
 
 
 def _compare_constraint(

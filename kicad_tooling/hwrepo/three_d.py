@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import hashlib
 import os
 import re
 import subprocess
 import sys
 from collections.abc import Iterable
 from datetime import UTC, datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Literal
 
 from ..check_toolchain import cli_executable
@@ -18,6 +17,7 @@ from .contracts import repo_path
 from .diagnostic_journal import DiagnosticJournal
 from .discovery import load_config, load_registry
 from .doctor import NativeRunner, doctor
+from .evidence import digest as file_digest
 from .model_inventory import inspect_models
 from .models import (
     DEFAULT_THREE_D_VIEWS,
@@ -66,15 +66,17 @@ def _command(root: Path, argv: tuple[str, ...], timeout: int) -> CommandEvidence
             stderr=result.stderr,
         )
     except subprocess.TimeoutExpired as exc:
+        stdout_value: str | bytes | None = exc.stdout
+        stderr_value: str | bytes | None = exc.stderr
         stdout = (
-            exc.stdout.decode(errors="replace")
-            if isinstance(exc.stdout, bytes)
-            else exc.stdout or ""
+            stdout_value.decode(errors="replace")
+            if isinstance(stdout_value, bytes)
+            else stdout_value or ""
         )
         stderr = (
-            exc.stderr.decode(errors="replace")
-            if isinstance(exc.stderr, bytes)
-            else exc.stderr or ""
+            stderr_value.decode(errors="replace")
+            if isinstance(stderr_value, bytes)
+            else stderr_value or ""
         )
         return CommandEvidence(
             argv=argv,
@@ -134,15 +136,18 @@ def _run_kicad(
     executable = cli_executable(cli)
     if executable is None:
         raise ValueError(f"Exact local KiCad CLI is unavailable: {cli}")
-    local_args = tuple(
-        str(output / value.removeprefix("/output/"))
-        if value.startswith("/output/")
-        else str(root / value.removeprefix("/work/"))
-        if value.startswith("/work/")
-        else value
-        for value in args
-    )
+    local_args = tuple(_local_path_argument(root, output, value) for value in args)
     return _command(root, (executable, *local_args), timeout)
+
+
+def _local_path_argument(root: Path, output: Path, value: str) -> str:
+    path = PurePosixPath(value)
+    parts = path.parts
+    if len(parts) > 2 and path.is_relative_to(PurePosixPath("/output")):
+        return str(output.joinpath(*parts[2:]))
+    if len(parts) > 2 and path.is_relative_to(PurePosixPath("/work")):
+        return str(root.joinpath(*parts[2:]))
+    return value
 
 
 def _valid_artifact(path: Path, kind: str) -> bool:
@@ -441,7 +446,7 @@ def generate(
                                 + f"Inspect {name}-command.json and report a tooling defect.",
                             )
                             break
-                        artifacts[filename] = hashlib.sha256(path.read_bytes()).hexdigest()
+                        artifacts[filename] = file_digest(path)
                     else:
                         status = "PASS"
                         if inventory.status == "REVIEW":

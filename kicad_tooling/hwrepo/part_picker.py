@@ -33,10 +33,9 @@ from .models import (
     PartSelectionReport,
     PartSourceEdit,
     PartStatus,
-    PcbValidationContract,
+    ProjectKind,
     ProjectManifest,
     PurchasingPreferences,
-    SchematicValidationContract,
 )
 from .part_cad import preview_cad, read_cad_components
 from .parts_workflow import local_path, preferences_path, selected_project
@@ -417,7 +416,7 @@ def _contract_guidance(root: Path, project_id: str, spec: PartSelectionMap) -> t
     project = selected_project(root, project_id)
     config = load_config(root, project.config)
     validation = config.validation
-    if not isinstance(validation, (PcbValidationContract, SchematicValidationContract)):
+    if validation.kind != ProjectKind.PCB and validation.kind != ProjectKind.SCHEMATIC:
         return ()
     catalog = {part.id: part for part in _catalog(root).parts}
     different: list[str] = []

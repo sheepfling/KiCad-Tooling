@@ -18,6 +18,7 @@ from tests.design_lint_fixtures.pcb_signal_path import (
 from tests.design_lint_fixtures.pcb_switching_loop import (
     design_lint_report as pcb_switching_loop_lint_report,
 )
+from tests.json_types import JsonObject
 from tests.pcb_decoupling_support import coverage_report as pcb_decoupling_coverage_report
 from tests.pcb_decoupling_support import mapping as pcb_decoupling_mapping
 from tests.pcb_decoupling_support import requirement as pcb_decoupling_requirement
@@ -32,7 +33,7 @@ from tests.test_power_paths import lint_report as power_path_lint_report
 from tests.test_power_paths import power_path_map, power_path_netlist
 
 
-def pcb_decoupling_lint_report(*, capacitor_distance_nm: int) -> dict[str, object]:
+def pcb_decoupling_lint_report(*, capacitor_distance_nm: int) -> JsonObject:
     """Serialize the mapped PCB decoupling boundary through the shared linter."""
     mapped = pcb_decoupling_mapping(pcb_decoupling_requirement(maximum_um=100))
     snapshot = pcb_decoupling_snapshot(distances_nm={"C1": capacitor_distance_nm})
@@ -48,7 +49,7 @@ def pcb_decoupling_lint_report(*, capacitor_distance_nm: int) -> dict[str, objec
     return report.model_dump(mode="json")
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     return {
         "pcb_decoupling_distance_fault": pcb_decoupling_lint_report(capacitor_distance_nm=100001),
         "pcb_decoupling_distance_control": pcb_decoupling_lint_report(capacitor_distance_nm=100000),

@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import math
 import re
+from collections.abc import Mapping
 from pathlib import Path
+from types import MappingProxyType
 
 from kicad_tooling.hwrepo.schematic_geometry import (
     SchematicGeometryScan,
@@ -69,52 +71,60 @@ REPEATED_SHEET_CONTROL = FIXTURES / "repeated-sheet/repeated-sheet-control-root.
 REPEATED_CHANNEL_CONTROL = FIXTURES / "repeated-sheet/repeated-channel-control.kicad_sch"
 
 
-TRANSFORM_MIDPOINTS: dict[tuple[int, str | None], tuple[float, float]] = {
-    (0, None): (76.2, 72.39),
-    (0, "x"): (76.2, 80.01),
-    (0, "y"): (76.2, 72.39),
-    (90, None): (72.39, 76.2),
-    (90, "x"): (72.39, 76.2),
-    (90, "y"): (80.01, 76.2),
-    (180, None): (76.2, 80.01),
-    (180, "x"): (76.2, 72.39),
-    (180, "y"): (76.2, 80.01),
-    (270, None): (80.01, 76.2),
-    (270, "x"): (80.01, 76.2),
-    (270, "y"): (72.39, 76.2),
-}
+TRANSFORM_MIDPOINTS: Mapping[tuple[int, str | None], tuple[float, float]] = MappingProxyType(
+    {
+        (0, None): (76.2, 72.39),
+        (0, "x"): (76.2, 80.01),
+        (0, "y"): (76.2, 72.39),
+        (90, None): (72.39, 76.2),
+        (90, "x"): (72.39, 76.2),
+        (90, "y"): (80.01, 76.2),
+        (180, None): (76.2, 80.01),
+        (180, "x"): (76.2, 72.39),
+        (180, "y"): (76.2, 80.01),
+        (270, None): (80.01, 76.2),
+        (270, "x"): (80.01, 76.2),
+        (270, "y"): (72.39, 76.2),
+    }
+)
 
 
-TRANSFORM_PIN_TIPS: dict[tuple[int, str | None], tuple[float, float]] = {
-    (0, None): (76.2, 71.12),
-    (0, "x"): (76.2, 81.28),
-    (0, "y"): (76.2, 71.12),
-    (90, None): (71.12, 76.2),
-    (90, "x"): (71.12, 76.2),
-    (90, "y"): (81.28, 76.2),
-    (180, None): (76.2, 81.28),
-    (180, "x"): (76.2, 71.12),
-    (180, "y"): (76.2, 81.28),
-    (270, None): (81.28, 76.2),
-    (270, "x"): (81.28, 76.2),
-    (270, "y"): (71.12, 76.2),
-}
+TRANSFORM_PIN_TIPS: Mapping[tuple[int, str | None], tuple[float, float]] = MappingProxyType(
+    {
+        (0, None): (76.2, 71.12),
+        (0, "x"): (76.2, 81.28),
+        (0, "y"): (76.2, 71.12),
+        (90, None): (71.12, 76.2),
+        (90, "x"): (71.12, 76.2),
+        (90, "y"): (81.28, 76.2),
+        (180, None): (76.2, 81.28),
+        (180, "x"): (76.2, 71.12),
+        (180, "y"): (76.2, 81.28),
+        (270, None): (81.28, 76.2),
+        (270, "x"): (81.28, 76.2),
+        (270, "y"): (71.12, 76.2),
+    }
+)
 
 
-TRANSFORM_NEAR_PIN_ENDPOINTS: dict[tuple[int, str | None], tuple[float, float]] = {
-    (0, None): (76.2, 70.62),
-    (0, "x"): (76.2, 81.78),
-    (0, "y"): (76.2, 70.62),
-    (90, None): (70.62, 76.2),
-    (90, "x"): (70.62, 76.2),
-    (90, "y"): (81.78, 76.2),
-    (180, None): (76.2, 81.78),
-    (180, "x"): (76.2, 70.62),
-    (180, "y"): (76.2, 81.78),
-    (270, None): (81.78, 76.2),
-    (270, "x"): (81.78, 76.2),
-    (270, "y"): (70.62, 76.2),
-}
+TRANSFORM_NEAR_PIN_ENDPOINTS: Mapping[tuple[int, str | None], tuple[float, float]] = (
+    MappingProxyType(
+        {
+            (0, None): (76.2, 70.62),
+            (0, "x"): (76.2, 81.78),
+            (0, "y"): (76.2, 70.62),
+            (90, None): (70.62, 76.2),
+            (90, "x"): (70.62, 76.2),
+            (90, "y"): (81.78, 76.2),
+            (180, None): (76.2, 81.78),
+            (180, "x"): (76.2, 70.62),
+            (180, "y"): (76.2, 81.78),
+            (270, None): (81.78, 76.2),
+            (270, "x"): (81.78, 76.2),
+            (270, "y"): (70.62, 76.2),
+        }
+    )
+)
 
 
 def _geometry_candidates(scan: SchematicGeometryScan) -> tuple[object, ...]:

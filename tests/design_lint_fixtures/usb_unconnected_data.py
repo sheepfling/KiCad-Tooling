@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 
@@ -9,7 +11,7 @@ def usb_unconnected_data_netlist(
     *,
     open_pins: tuple[str, ...] = ("J1.1",),
     dnp_components: tuple[str, ...] = (),
-    functions: dict[str, str] | None = None,
+    functions: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     """Build a direct USB 2.0 pair with configurable open endpoint pins."""
     pin_functions = {

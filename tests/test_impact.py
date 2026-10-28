@@ -110,7 +110,7 @@ class ImpactPlanTests(unittest.TestCase):
 
         def synthetic_manifest(path: Path, model: type[BaseModel]) -> BaseModel:
             result = read_model(path, model)
-            if path == project_manifest and isinstance(result, ProjectManifest):
+            if path == project_manifest and model is ProjectManifest:
                 return result.model_copy(
                     update={
                         "required_inputs": (*result.required_inputs, "docs/declared.md"),
@@ -140,7 +140,7 @@ class ImpactPlanTests(unittest.TestCase):
 
         def synthetic_product(path: Path, model: type[BaseModel]) -> BaseModel:
             result = read_model(path, model)
-            if path == product_path and isinstance(result, ProductRecord):
+            if path == product_path and model is ProductRecord:
                 evidence = Evidence(
                     id="review-note",
                     kind=EvidenceKind.OBSERVATION,
@@ -159,7 +159,7 @@ class ImpactPlanTests(unittest.TestCase):
     def test_library_license_markdown_outside_library_tree_selects_consumers(self) -> None:
         def synthetic_catalog(path: Path, model: type[BaseModel]) -> BaseModel:
             result = read_model(path, model)
-            if isinstance(result, LibrariesCatalog):
+            if model is LibrariesCatalog:
                 library = result.libraries[0].model_copy(
                     update={
                         "licensing_path": "docs/library-license.md",
@@ -184,7 +184,7 @@ class ImpactPlanTests(unittest.TestCase):
 
         def synthetic_manifest(path: Path, model: type[BaseModel]) -> BaseModel:
             result = read_model(path, model)
-            if path == project_manifest and isinstance(result, ProjectManifest):
+            if path == project_manifest and model is ProjectManifest:
                 return result.model_copy(
                     update={
                         "mechanical_handoff": "docs/mechanical-handoff.md",

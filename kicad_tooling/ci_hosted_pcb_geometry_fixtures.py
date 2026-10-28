@@ -3,15 +3,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from .ci_hosted_pcb_decoupling_fixture import decoupling_placement_fixture_lane
 from .ci_hosted_pcb_fixture_support import HostedPcbFixtureFailure
 from .ci_hosted_pcb_protection_fixture import protection_path_fixture_lane
 from .ci_hosted_pcb_track_width_fixture import track_width_fixture_lane
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .ci_hosted_support import HostedLog
 
 
 def pcb_decoupling_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:

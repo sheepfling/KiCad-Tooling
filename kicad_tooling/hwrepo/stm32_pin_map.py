@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from typing import TypeVar
 
 from .models import (
-    ComponentContract,
     NetlistContract,
 )
 from .stm32_pin_map_models import (
@@ -25,7 +24,7 @@ _MAX_IOC_LINES = 100_000
 _Value = TypeVar("_Value")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class CubeMxPin:
     """Selected function fields for one physical package port pin."""
 
@@ -35,7 +34,7 @@ class CubeMxPin:
     gpio_label: str | None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class CubeMxDocument:
     """Parsed pin-related CubeMX settings and explicit input-format issues."""
 
@@ -138,7 +137,7 @@ def stm32_pin_map_mismatches(
 
     for requirement in pin_map.pins:
         issues: list[str] = []
-        if not isinstance(component, ComponentContract):
+        if component is None:
             issues.append(f"{pin_map.reference} is absent or ambiguous in the native netlist")
         else:
             if component.value != pin_map.expected_part:

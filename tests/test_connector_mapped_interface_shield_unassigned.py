@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -13,6 +14,7 @@ from kicad_tooling.ci_hosted_connector_return_fixture_sources import (
     CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES,
     connector_return_fixture_sources,
 )
+from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.connector_coverage_models import ConnectorCoverageReport
 from kicad_tooling.hwrepo.connector_peer_pin_models import ConnectorPinRole
 from kicad_tooling.hwrepo.design_lint import evaluate, fingerprint
@@ -24,6 +26,7 @@ from kicad_tooling.hwrepo.design_lint_finding_models import (
 from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.design_lint_types import Candidate
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import ContractCoachReport, NetlistContract
 from tests.connector_mapped_interface_support import CATALOG_SHA256, interface_coverage
 from tests.design_lint_fixtures.connector_mapped_interface_signal import (
@@ -38,10 +41,12 @@ NETLIST_SHA256 = "a" * 64
 NATIVE_FAULT_CASE = "mapped-interface-shield-unassigned-fault"
 NATIVE_CONTROL_CASE = "mapped-interface-shield-unassigned-control"
 NATIVE_FIXTURE_CASES = (NATIVE_FAULT_CASE, NATIVE_CONTROL_CASE)
-EXPECTED_NATIVE_SOURCE_HASHES = {
-    NATIVE_FAULT_CASE: "ef64edfafefdc9e724474c5686d8638577ec1c1719883f3f34f8b365de068821",
-    NATIVE_CONTROL_CASE: "1cf322d88271b585ae9e97e356f1078b8573a9a2cd25122caf3352a28ed3cd9d",
-}
+EXPECTED_NATIVE_SOURCE_HASHES = MappingProxyType(
+    {
+        NATIVE_FAULT_CASE: "ef64edfafefdc9e724474c5686d8638577ec1c1719883f3f34f8b365de068821",
+        NATIVE_CONTROL_CASE: "1cf322d88271b585ae9e97e356f1078b8573a9a2cd25122caf3352a28ed3cd9d",
+    }
+)
 
 
 def _report(
@@ -261,8 +266,6 @@ def test_native_mapped_shield_contact_fault_and_control_are_repeatable(
     from kicad_tooling.ci_hosted_connector_return_context import (
         prepare_connector_return_fixture_context,
     )
-    from kicad_tooling.ci_hosted_support import HostedLog
-    from kicad_tooling.hwrepo.electrical import selected_config
     from tests.native_fixture_support import assert_native_fixture_mounts
     from tests.synthetic_design_lint_project import (
         PINNED_NATIVE_KICAD_IMAGES,

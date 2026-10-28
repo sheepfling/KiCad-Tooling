@@ -1,22 +1,19 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING
 
+from .control_input_models import ControlInputBiasHeuristicCoverage
+from .design_lint_connectivity_snapshot_models import DesignLintConnectivitySnapshot
+from .design_lint_finding_models import DesignLintFinding
+from .design_lint_mapped_topology_models import DesignLintMappedCheckRun
 from .design_lint_pcb_required_fitted_reference_report import (
     validate_required_fitted_reference_findings,
 )
-
-if TYPE_CHECKING:
-    from .control_input_models import ControlInputBiasHeuristicCoverage
-    from .design_lint_connectivity_snapshot_models import DesignLintConnectivitySnapshot
-    from .design_lint_finding_models import DesignLintFinding
-    from .design_lint_mapped_topology_models import DesignLintMappedCheckRun
-    from .i2c_pullup_models import I2cPullupHeuristicCoverage
-    from .model_primitives import Digest, Identifier, RepositoryPath
-    from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
-    from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
-    from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
+from .i2c_pullup_models import I2cPullupHeuristicCoverage
+from .model_primitives import Digest, Identifier, RepositoryPath
+from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
+from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
+from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 
 
 def validate_source_bound_evidence(

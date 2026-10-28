@@ -2,17 +2,26 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
+from .hwrepo.contracts import read_model, write_model
+from .hwrepo.control_input_bias import control_input_bias_heuristic_coverage
+from .hwrepo.control_input_checks import control_input_checks
+from .hwrepo.control_input_inventory import (
+    connected_control_inputs_without_visible_rail_resistor,
+    unconnected_control_inputs,
+)
+from .hwrepo.control_input_models import ControlInputsAnalysis
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .validate import read_netlist
 
 
 def native_control_input_demo_lane(
@@ -24,19 +33,6 @@ def native_control_input_demo_lane(
     sample_names: frozenset[str] | None = None,
 ) -> None:
     """Check unconnected controls in public demos bundled in pinned KiCad 10.0.5."""
-    import hashlib
-
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.control_input_bias import control_input_bias_heuristic_coverage
-    from .hwrepo.control_input_checks import control_input_checks
-    from .hwrepo.control_input_inventory import (
-        connected_control_inputs_without_visible_rail_resistor,
-        unconnected_control_inputs,
-    )
-    from .hwrepo.control_input_models import ControlInputsAnalysis
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .validate import read_netlist
 
     root = root.resolve()
     expected_image = (
@@ -117,7 +113,7 @@ def native_control_input_demo_lane(
         samples = {name: sample for name, sample in samples.items() if name in sample_names}
         if not samples:
             raise ValueError("Native control-input demo selection must include at least one sample")
-    synthetic_fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
+    synthetic_fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint"
     control_alias_fixture_root = synthetic_fixture_root / "control-input-alias"
     control_array_fixture_root = synthetic_fixture_root / "control-input-array-native"
     if not (control_alias_fixture_root / "por-b.kicad_sch").is_file():
@@ -230,9 +226,7 @@ def native_control_input_demo_lane(
                 raise ValueError(f"Native {sample} demo omitted its source or netlist evidence")
             observed = read_netlist(netlist_path)
             if sample in {"array-bias-control-fixture", "array-bias-fault-fixture"}:
-                spec = ControlInputsAnalysis.model_validate(
-                    json.loads(control_array_contract_path.read_text(encoding="utf-8"))
-                )
+                spec = read_model(control_array_contract_path, ControlInputsAnalysis)
                 checks = {item.id: item for item in control_input_checks(spec, observed)}
                 bias_check = checks["control-inputs/main-reset/bias"]
                 expected_check = "PASS" if sample == "array-bias-control-fixture" else "FAIL"

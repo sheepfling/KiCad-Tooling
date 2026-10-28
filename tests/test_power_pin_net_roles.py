@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import evaluate
@@ -26,8 +28,8 @@ RULE_ID = "power.pin_function_net_role_conflict"
 
 
 def _netlist(
-    nets: dict[str, tuple[str, ...]],
-    pin_functions: dict[str, str],
+    nets: Mapping[str, tuple[str, ...]],
+    pin_functions: Mapping[str, str],
     *,
     dnp: tuple[str, ...] = (),
 ) -> NetlistContract:

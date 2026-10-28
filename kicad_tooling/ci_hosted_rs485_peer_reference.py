@@ -9,26 +9,24 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
+from .hwrepo.contracts import read_kicad_erc_report, write_model
+from .hwrepo.design_lint_rs485_candidates import rs485_peer_reference_candidates
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import NetlistContract
+from .hwrepo.rs485_models import Rs485Analysis
+from .hwrepo.rs485_peer_reference_scan import scan_rs485_peer_references
+from .hwrepo.rs485_peer_reference_types import Rs485PeerReferenceContext
+from .validate import read_netlist
 
 
 def rs485_peer_reference_native_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Check project-mapped RS-485 peer references against repeated native exports."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.contracts import read_kicad_erc_report, write_model
-    from .hwrepo.design_lint_rs485_candidates import rs485_peer_reference_candidates
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import NetlistContract
-    from .hwrepo.rs485_models import Rs485Analysis
-    from .hwrepo.rs485_peer_reference_scan import scan_rs485_peer_references
-    from .hwrepo.rs485_peer_reference_types import Rs485PeerReferenceContext
-    from .validate import read_netlist
 
     root = root.resolve()
     config = selected_config(root, project)
@@ -40,8 +38,7 @@ def rs485_peer_reference_native_fixture_lane(
         )
 
     fixture_root = (
-        Path(__file__).resolve().parents[1]
-        / "tests/fixtures/design_lint/rs485-peer-reference-native"
+        tooling_checkout_root() / "tests/fixtures/design_lint/rs485-peer-reference-native"
     )
     cases = ("reference-control", "reference-fault")
     sources = {

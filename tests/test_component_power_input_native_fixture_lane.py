@@ -11,8 +11,10 @@ import pytest
 
 from kicad_tooling.ci_hosted_component_power_input import GENERIC_COMPONENT_POWER_INPUT_CASES
 from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import CommandEvidence, DesignLintPolicy, NetlistContract
 from tests.design_lint_fixtures.connector_power_cases import generic_component_power_input_cases
+from tests.json_types import JsonObject
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.synthetic_design_lint_project import (
     PINNED_NATIVE_KICAD_IMAGES,
@@ -22,7 +24,7 @@ from tests.synthetic_design_lint_project import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint, pytest.mark.power_lint]
 
 
-def _lane_results(log: HostedLog) -> dict[str, dict[str, object]]:
+def _lane_results(log: HostedLog) -> dict[str, JsonObject]:
     events = tuple(json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines())
     prefix = "component-power-input-fixture/"
     return {item["stage"]: item for item in events if item.get("stage", "").startswith(prefix)}
@@ -119,7 +121,6 @@ def test_native_generic_component_power_input_cases_are_focused_and_repeatable(
     from kicad_tooling.ci_hosted_component_power_input_fixture_lane import (
         component_power_input_fixture_lane,
     )
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(

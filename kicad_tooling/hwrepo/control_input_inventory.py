@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from .connector_identity import power_function_key
 from .models import NetlistContract
@@ -27,45 +28,47 @@ _SWITCH_NODE_FUNCTION = re.compile(r"(?:sw|lx|ph)\d*")
 
 # A power-stage BOOTSTRAP terminal is not an MCU boot-mode strap. Keep the
 # ambiguous bare BOOT alias reviewable, but do not classify the distinct word.
-_CONTROL_FUNCTION_FAMILIES = {
-    "reset": "reset",
-    "resetn": "reset",
-    "nreset": "reset",
-    "nrst": "reset",
-    "rst": "reset",
-    "rstn": "reset",
-    "rstb": "reset",
-    "resetb": "reset",
-    "hreset": "reset",
-    "rsti": "reset",
-    "por": "reset",
-    "perst": "reset",
-    "perst0": "reset",
-    "perstn": "reset",
-    "en": "enable",
-    "ena": "enable",
-    "enb": "enable",
-    "enn": "enable",
-    "nen": "enable",
-    "enable": "enable",
-    "enablen": "enable",
-    "enableb": "enable",
-    "shdn": "enable",
-    "shutdown": "enable",
-    "powerdown": "enable",
-    "standby": "enable",
-    "boot": "boot/strap",
-    "boot0": "boot/strap",
-    "boot1": "boot/strap",
-    "bootsel": "boot/strap",
-    "bootmode": "boot/strap",
-    "nrpiboot": "boot/strap",
-    "strap0": "boot/strap",
-    "strap1": "boot/strap",
-}
+_CONTROL_FUNCTION_FAMILIES = MappingProxyType(
+    {
+        "reset": "reset",
+        "resetn": "reset",
+        "nreset": "reset",
+        "nrst": "reset",
+        "rst": "reset",
+        "rstn": "reset",
+        "rstb": "reset",
+        "resetb": "reset",
+        "hreset": "reset",
+        "rsti": "reset",
+        "por": "reset",
+        "perst": "reset",
+        "perst0": "reset",
+        "perstn": "reset",
+        "en": "enable",
+        "ena": "enable",
+        "enb": "enable",
+        "enn": "enable",
+        "nen": "enable",
+        "enable": "enable",
+        "enablen": "enable",
+        "enableb": "enable",
+        "shdn": "enable",
+        "shutdown": "enable",
+        "powerdown": "enable",
+        "standby": "enable",
+        "boot": "boot/strap",
+        "boot0": "boot/strap",
+        "boot1": "boot/strap",
+        "bootsel": "boot/strap",
+        "bootmode": "boot/strap",
+        "nrpiboot": "boot/strap",
+        "strap0": "boot/strap",
+        "strap1": "boot/strap",
+    }
+)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnconnectedControlInput:
     pin: str
     function: str
@@ -73,7 +76,7 @@ class UnconnectedControlInput:
     electrical_type: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ConnectedControlInput:
     pin: str
     function: str
@@ -82,7 +85,7 @@ class ConnectedControlInput:
     net: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ControlInputBiasGap:
     net: str
     controls: tuple[ConnectedControlInput, ...]

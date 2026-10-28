@@ -30,7 +30,7 @@ from .pcb_touch_pad_clearance_models import (
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PcbInputCoveragePolicyState:
     """Coverage reports for source-bound signal, keepout, and antenna maps."""
 
@@ -40,7 +40,7 @@ class PcbInputCoveragePolicyState:
     touch_pad_clearance: PcbTouchPadClearanceCoverageReport
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PcbMappedCoveragePolicyState:
     """Coverage reports and selected modes for mapped PCB checks."""
 

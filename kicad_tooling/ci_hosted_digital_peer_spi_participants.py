@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .ci_hosted_digital_peer_context import DigitalPeerFixtureContext
+from .ci_hosted_native_fixture_models import NativeRunPair
 from .hwrepo.digital_peer_voltage_models import (
     DigitalLogicInputLimits,
     DigitalLogicOutputLimits,
@@ -25,7 +26,6 @@ def verify_spi_participant_voltage(ctx: DigitalPeerFixtureContext):
         "U2.3": "SPI1_CIPO",
         "U2.4": "SPI1_NSS",
     }
-    ctx.observed = ctx.contracts["multi-device"]["first"]
     if ctx.observed.pin_functions != expected_functions:
         raise ValueError(
             f"Native netlist no longer preserves the exact SPI pin-function aliases: {ctx.observed.pin_functions}"
@@ -33,8 +33,8 @@ def verify_spi_participant_voltage(ctx: DigitalPeerFixtureContext):
     if ctx.observed.component_symbols != {"U1": "Synthetic:SPI_Node", "U2": "Synthetic:SPI_Node"}:
         raise ValueError("Native netlist changed the synthetic SPI component identities")
     if (
-        ctx.normalized_hashes["multi-device"]["first"]
-        != ctx.normalized_hashes["multi-device"]["repeat"]
+        ctx.fixture("multi-device").netlists.first.normalized_sha256
+        != ctx.fixture("multi-device").netlists.repeat.normalized_sha256
     ):
         raise ValueError("Native SPI exports differ after normalization to the typed netlist")
 
@@ -85,13 +85,17 @@ def verify_spi_participant_voltage(ctx: DigitalPeerFixtureContext):
         "voltage-fault": (digital_peer_limits(5.0), "FAIL"),
     }
     for case, (spec, expected_status) in voltage_cases.items():
-        by_run = {
-            run: digital_peer_voltage_checks(spec, ctx.contracts["multi-device"][run])
-            for run in ("first", "repeat")
-        }
-        if by_run["first"] != by_run["repeat"]:
+        by_run = NativeRunPair(
+            first=digital_peer_voltage_checks(
+                spec, ctx.fixture("multi-device").netlists.first.contract
+            ),
+            repeat=digital_peer_voltage_checks(
+                spec, ctx.fixture("multi-device").netlists.repeat.contract
+            ),
+        )
+        if by_run.first != by_run.repeat:
             raise ValueError(f"Native SPI {case} voltage evidence changed on repeated export")
-        checks = {item.id: item for item in by_run["first"]}
+        checks = {item.id: item for item in by_run.first}
         compatibility = checks["digital-peer-voltage/spi-mosi/compatibility"]
         if (
             compatibility.status != expected_status
@@ -108,11 +112,13 @@ def verify_spi_participant_voltage(ctx: DigitalPeerFixtureContext):
             project=ctx.project,
             kicad_version=ctx.config.kicad_version,
             image=ctx.pinned,
-            source_sha256=ctx.source_hash,
-            netlist_sha256=ctx.hashes["multi-device"]["first"],
-            repeat_netlist_sha256=ctx.hashes["multi-device"]["repeat"],
-            normalized_netlist_sha256=ctx.normalized_hashes["multi-device"]["first"],
-            repeat_normalized_netlist_sha256=ctx.normalized_hashes["multi-device"]["repeat"],
+            source_sha256=ctx.fixture("multi-device").source.sha256,
+            netlist_sha256=ctx.fixture("multi-device").netlists.first.netlist_sha256,
+            repeat_netlist_sha256=ctx.fixture("multi-device").netlists.repeat.netlist_sha256,
+            normalized_netlist_sha256=ctx.fixture("multi-device").netlists.first.normalized_sha256,
+            repeat_normalized_netlist_sha256=ctx.fixture(
+                "multi-device"
+            ).netlists.repeat.normalized_sha256,
             compatibility_status=compatibility.status,
             minimum_margin_v=compatibility.observed,
             driver="U1.2/SPI_MOSI",

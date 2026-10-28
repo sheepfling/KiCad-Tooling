@@ -2,40 +2,33 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.design_lint_stm32_coverage import scan_stm32_pin_maps
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.stm32_pin_map_models import (
+    Stm32CubeMxPinMap,
+    Stm32PinExclusion,
+    Stm32PinRequirement,
+)
+from .validate import read_netlist
 
 
 def stm32_pin_map_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
     """Compare CubeMX pin-map controls and faults with repeated pinned native exports."""
-    import hashlib
-    import os
-
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.design_lint_stm32_coverage import scan_stm32_pin_maps
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import (
-        ContractCoachReport,
-        DesignLintPolicy,
-    )
-    from .hwrepo.stm32_pin_map_models import (
-        Stm32CubeMxPinMap,
-        Stm32PinExclusion,
-        Stm32PinRequirement,
-    )
-    from .validate import read_netlist
 
     root = root.resolve()
     config = selected_config(root, project)
@@ -45,9 +38,7 @@ def stm32_pin_map_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         raise ValueError(f"STM32 pin-map fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
 
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/stm32-pin-map-native"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/stm32-pin-map-native"
     cases = {
         "control": ("valid.kicad_sch", "valid.ioc", ()),
         "net-drift": ("net-drift.kicad_sch", "valid.ioc", ("PA0",)),

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Literal
 
 from .pcb_connectivity_observations import PcbPadConnectivityObservation
@@ -24,7 +25,7 @@ def _route_edge_coverage(
     edge: PcbSwitchingLoopEdge,
     specification: PcbSwitchingLoopRequirement,
     snapshot: PcbConnectivitySnapshot,
-    pads: dict[str, PcbPadConnectivityObservation],
+    pads: Mapping[str, PcbPadConnectivityObservation],
 ) -> PcbSwitchingLoopRouteEdgeCoverage:
     endpoint_issue = mapped_endpoint_issue(edge, specification, pads)
     if endpoint_issue is not None:
@@ -129,7 +130,7 @@ def _route_edge_coverage(
 def route_map_coverage(
     requirement: PcbSwitchingLoopRequirement,
     snapshot: PcbConnectivitySnapshot,
-    pads: dict[str, PcbPadConnectivityObservation],
+    pads: Mapping[str, PcbPadConnectivityObservation],
 ) -> tuple[
     Literal["NOT_REQUESTED", "COMPLETE", "INCOMPLETE"],
     tuple[PcbSwitchingLoopRouteEdgeCoverage, ...],

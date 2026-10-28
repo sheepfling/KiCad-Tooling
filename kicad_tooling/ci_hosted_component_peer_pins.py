@@ -2,17 +2,26 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 from .ci_hosted_component_peer_metadata import native_peer_metadata_mismatches
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.design_lint_rule_types import DesignLintRuleId
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 
 def component_peer_power_output_fixture_lane(
@@ -109,21 +118,6 @@ def _component_peer_pin_assignment_fixture_lane(
     ],
 ) -> None:
     """Verify one comparable-peer open-pin class against repeated KiCad exports."""
-    import hashlib
-    import os
-
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.design_lint_rule_types import DesignLintRuleId
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import (
-        ContractCoachReport,
-        DesignLintPolicy,
-    )
-    from .validate import read_netlist
 
     root = root.resolve()
     config = selected_config(root, project)
@@ -133,8 +127,7 @@ def _component_peer_pin_assignment_fixture_lane(
         raise ValueError(f"Peer {kind} fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
     fixture_root = (
-        Path(__file__).resolve().parents[1]
-        / f"tests/fixtures/design_lint/component-peer-{kind}-native"
+        tooling_checkout_root() / f"tests/fixtures/design_lint/component-peer-{kind}-native"
     )
     native_pin_types = {
         "power-output": "power_out",

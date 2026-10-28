@@ -24,6 +24,8 @@ from kicad_tooling.hwrepo.models import (
 )
 from tests.component_peer_power_assignment_support import peer_pin_netlist_xml
 from tests.connector_footprint_peer_support import (
+    PeerMetadataDivergenceOverrides,
+    PeerMissingMetadataOverrides,
     lint_report,
     peer_metadata_divergence_netlist,
     peer_missing_metadata_netlist,
@@ -98,7 +100,7 @@ def test_part_id_connector_aliases_with_missing_metadata_are_reviewed() -> None:
     ids=("unnamed-function", "missing-electrical-type", "both-fields", "absent-function"),
 )
 def test_supported_missing_metadata_values_are_reported(
-    kwargs: dict[str, object], missing_fields: tuple[str, ...]
+    kwargs: PeerMissingMetadataOverrides, missing_fields: tuple[str, ...]
 ) -> None:
     report = lint_report(peer_missing_metadata_netlist(**kwargs))
 
@@ -134,7 +136,7 @@ def test_supported_missing_metadata_values_are_reported(
     ),
 )
 def test_missing_metadata_needs_complete_split_and_anchor_evidence(
-    kwargs: dict[str, object],
+    kwargs: PeerMetadataDivergenceOverrides,
 ) -> None:
     report = lint_report(peer_missing_metadata_netlist(**kwargs))
 

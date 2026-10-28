@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
@@ -18,6 +20,40 @@ FOOTPRINT_PEER_RULE_ID = "connector.footprint_peer_pin_assignment_divergence"
 FOOTPRINT_OPEN_RULE_ID = "connector.footprint_peer_pin_open_outlier"
 FOOTPRINT_ALL_OPEN_RULE_ID = "connector.footprint_peer_pin_all_open"
 NETLIST_SHA256 = "a" * 64
+
+
+class PeerNetlistOverrides(TypedDict, total=False):
+    """Optional controls accepted by the synthetic two-connector netlist."""
+
+    assignments: tuple[tuple[str | None, str | None], ...]
+    functions: tuple[str, str]
+    electrical_types: tuple[str, str]
+    part_id: str | None
+    dnp: tuple[str, ...]
+    incomplete_inventory: bool
+    missing_metadata_pin: str | None
+    open_pin: str | None
+    ambiguous_pin: str | None
+
+
+class PeerMetadataDivergenceOverrides(TypedDict, total=False):
+    """Optional controls for metadata divergence fixture construction."""
+
+    anchor_assignments: tuple[str | None, str | None]
+    target_assignments: tuple[str | None, str | None]
+    part_id: str | None
+    dnp: tuple[str, ...]
+    incomplete_inventory: bool
+    missing_metadata_pin: str | None
+    ambiguous_pin: str | None
+
+
+class PeerMissingMetadataOverrides(PeerMetadataDivergenceOverrides, total=False):
+    """Optional controls for fixtures with withheld native metadata."""
+
+    missing_fields: tuple[str, ...]
+    missing_reference: str
+    placeholder_function: str | None
 
 
 def peer_netlist(

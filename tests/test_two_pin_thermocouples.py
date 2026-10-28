@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 
 import pytest
 
@@ -35,7 +36,7 @@ def thermocouple_netlist(
     ambiguous: tuple[str, ...] = (),
     open_pins: tuple[str, ...] = (),
     multi_pin: tuple[str, ...] = (),
-    symbols: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     symbols = symbols or dict(zip(("TC1", "TC2", "TC3"), THERMOCOUPLE_SYMBOLS, strict=True))
     components = {

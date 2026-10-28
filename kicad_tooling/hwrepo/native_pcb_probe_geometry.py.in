@@ -1,6 +1,6 @@
 # Geometry observations: canonicalize filled zones, rule areas, and placements.
 
-def canonical_ring_nm(chain: Any) -> list[list[int]]:
+def canonical_ring_nm(chain: NativeLineChain) -> list[list[int]]:
     points: list[tuple[int, int]] = []
     for index in range(chain.PointCount()):
         point = chain.CPoint(index)
@@ -22,8 +22,8 @@ def canonical_ring_nm(chain: Any) -> list[list[int]]:
     return [[x, y] for x, y in canonical]
 
 
-def filled_zone_islands(filled: Any) -> list[dict[str, Any]]:
-    result: list[dict[str, Any]] = []
+def filled_zone_islands(filled: NativePolygonSet) -> list[FilledZoneIslandObservation]:
+    result: list[FilledZoneIslandObservation] = []
     for island_index in range(filled.OutlineCount()):
         holes = sorted(
             canonical_ring_nm(filled.CHole(island_index, hole_index))
@@ -39,12 +39,14 @@ def filled_zone_islands(filled: Any) -> list[dict[str, Any]]:
     return result
 
 
-def rule_area_observation(zone: Any, board: Any) -> dict[str, Any] | None:
+def rule_area_observation(
+    zone: NativeZone, board: NativeBoard
+) -> RuleAreaObservation | None:
     """Return exact native outline, layer, and restriction evidence for one rule area."""
     if not bool(zone.GetIsRuleArea()):
         return None
     outline_set = zone.Outline()
-    polygons: list[dict[str, Any]] = []
+    polygons: list[RuleAreaPolygonObservation] = []
     for outline_index in range(outline_set.OutlineCount()):
         holes = sorted(
             canonical_ring_nm(outline_set.CHole(outline_index, hole_index))
@@ -76,7 +78,9 @@ def rule_area_observation(zone: Any, board: Any) -> dict[str, Any] | None:
     }
 
 
-def footprint_placement_observation(footprint: Any, board: Any) -> dict[str, Any] | None:
+def footprint_placement_observation(
+    footprint: NativeFootprint, board: NativeBoard
+) -> FootprintPlacementObservation | None:
     """Return a canonical, source-bound transform for one referenced footprint."""
     reference = str(footprint.GetReference()).strip()
     if not reference:
@@ -86,9 +90,10 @@ def footprint_placement_observation(footprint: Any, board: Any) -> dict[str, Any
     if not isfinite(angle_degrees):
         raise ValueError(f"Footprint {reference} has a non-finite placement angle")
     orientation_microdegrees = round((angle_degrees % 360.0) * 1_000_000) % 360_000_000
-    side = board.GetLayerName(footprint.GetLayer())
-    if side not in {"F.Cu", "B.Cu"}:
-        raise ValueError(f"Footprint {reference} is on unsupported board side {side!r}")
+    side_name = board.GetLayerName(footprint.GetLayer())
+    if side_name not in {"F.Cu", "B.Cu"}:
+        raise ValueError(f"Footprint {reference} is on unsupported board side {side_name!r}")
+    side = cast(Literal["F.Cu", "B.Cu"], side_name)
     return {
         "reference": reference,
         "footprint": footprint.GetFPIDAsString(),
@@ -100,16 +105,21 @@ def footprint_placement_observation(footprint: Any, board: Any) -> dict[str, Any
     }
 
 
-def normalized_filled_zone_polygons(zone: Any, layer: Any) -> Any:
+def normalized_filled_zone_polygons(zone: NativeZone, layer: int) -> NativePolygonSet:
     """Copy fractured zone contours and restore explicit outline/hole topology."""
-    filled = native_pcbnew.SHAPE_POLY_SET(zone.GetFilledPolysList(layer))
+    filled = cast(
+        NativePolygonSet,
+        native_pcbnew.SHAPE_POLY_SET(zone.GetFilledPolysList(layer)),
+    )
     if not hasattr(filled, "Unfracture"):
         raise ValueError("KiCad native polygon API cannot restore filled-zone holes")
     filled.Unfracture()
     return filled
 
 
-def zone_island_indexes_touching_pad(pad: Any, zone: Any, filled: Any) -> tuple[int, ...]:
+def zone_island_indexes_touching_pad(
+    pad: NativePad, zone: NativeZone, filled: NativePolygonSet
+) -> tuple[int, ...]:
     """Return filled islands on this pad's copper layers that touch its copper shape."""
     layer = zone.GetLayer()
     if not pad.GetLayerSet().Contains(layer):

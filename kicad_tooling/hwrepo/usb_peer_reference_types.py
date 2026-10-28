@@ -12,7 +12,7 @@ UsbPeerSignalFamily = Literal[
 ]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbReferencePinAssignment:
     pin: str
     function: str
@@ -20,7 +20,7 @@ class UsbReferencePinAssignment:
     net: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbPeerReferenceComponentPin:
     pin: str
     net: str
@@ -28,7 +28,7 @@ class UsbPeerReferenceComponentPin:
     electrical_type: str | None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbPeerReferenceComponentObservation:
     reference: str
     symbol: str | None
@@ -38,7 +38,7 @@ class UsbPeerReferenceComponentObservation:
     pin_assignments: tuple[UsbPeerReferenceComponentPin, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbPeerDataShuntBranch:
     data_pin: str
     reference_pin: str
@@ -47,7 +47,7 @@ class UsbPeerDataShuntBranch:
     reference_net: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbPeerDataSeriesResistor:
     reference: str
     symbol: str
@@ -59,7 +59,7 @@ class UsbPeerDataSeriesResistor:
     phy_net: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbPeerDataInlineComponent:
     reference: str
     symbol: str
@@ -71,14 +71,14 @@ class UsbPeerDataInlineComponent:
     pin_assignments: tuple[str, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbPeerDataProtectionShuntPin:
     line: Literal["D+", "D-"]
     pin: str
     net: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbPeerDataProtectionShunt:
     reference: str
     symbol: str
@@ -87,7 +87,7 @@ class UsbPeerDataProtectionShunt:
     pin_assignments: tuple[str, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbPeerDataLink:
     connector_positive_pin: str
     phy_positive_pin: str
@@ -113,7 +113,7 @@ class UsbPeerDataLink:
     phy_signal_family: UsbPeerSignalFamily = "USB 2.0 data"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbPeerReferenceReview:
     connector_reference: str
     phy_reference: str
@@ -129,7 +129,7 @@ class UsbPeerReferenceReview:
     reference_component_observations: tuple[UsbPeerReferenceComponentObservation, ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbPeerReferencePathCoverage:
     """One supported connector-to-PHY path and its reference disposition."""
 
@@ -151,7 +151,7 @@ class UsbPeerReferencePathCoverage:
     data_link: UsbPeerDataLink
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbPeerReferenceCoverage:
     """Bounded endpoint and data-path counts for the USB reference heuristic."""
 
@@ -171,7 +171,7 @@ class UsbPeerReferenceCoverage:
     unsupported_multi_pin_paths: tuple[UsbPeerUnsupportedMultiPinPath, ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbPeerUnsupportedMultiPinPath:
     """Coverage-only evidence for one unmapped multi-pin USB data topology candidate."""
 
@@ -192,7 +192,7 @@ class UsbPeerUnsupportedMultiPinPath:
     negative_phy_component_pins: tuple[str, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbPeerEndpointGroupCoverage:
     """Identity and bounded disposition for one recognized USB endpoint group."""
 
@@ -203,7 +203,7 @@ class UsbPeerEndpointGroupCoverage:
     signal_family: UsbPeerSignalFamily = "USB 2.0 data"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbPeerReferenceScan:
     """Review candidates and applicability counts from one deterministic scan."""
 
@@ -211,7 +211,7 @@ class UsbPeerReferenceScan:
     coverage: UsbPeerReferenceCoverage
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbEndpoint:
     reference: str
     symbol: str

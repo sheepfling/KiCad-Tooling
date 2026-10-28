@@ -16,7 +16,6 @@ from kicad_tooling.hwrepo.models import (
     ElectricalAnalysisContract,
     ElectricalAnalysisReport,
     GroundDomain,
-    GroundingAnalysis,
     NetlistContract,
     PinConnectivityAnalysis,
     PinRelationshipRule,
@@ -40,8 +39,9 @@ async def _run_connector_pin_relationships_match_cli_and_mcp(parity) -> None:
     for root in (parity.root, parity.mcp_root):
         contract_path = root / ISLAND / "tests/electrical.json"
         contract = read_model(contract_path, ElectricalAnalysisContract)
-        assert isinstance(contract.grounding, GroundingAnalysis)
-        grounding = contract.grounding.model_copy(
+        grounding = contract.grounding
+        assert grounding.mode == "required"
+        grounding = grounding.model_copy(
             update={
                 "domains": (
                     *contract.grounding.domains,
@@ -155,7 +155,6 @@ def test_connector_pin_relationships_match_cli_and_mcp_analysis(parity) -> None:
 
 
 async def _run_required_pin_assignment_matches_cli_and_mcp(parity) -> None:
-    from kicad_tooling.hwrepo.models import PinConnectivityAnalysis, PinRelationshipRule
 
     parity.configured()
     requirement = PinConnectivityAnalysis(

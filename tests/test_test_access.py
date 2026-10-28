@@ -38,7 +38,7 @@ from tests.test_control_inputs import control_netlist
 
 def access_requirement(
     *,
-    selection: str = "all",
+    selection: Literal["all", "any"] = "all",
     approach_side: Literal["front", "back", "either"] = "either",
 ) -> AccessAnalysis:
     return AccessAnalysis(
@@ -156,7 +156,7 @@ def probe_access_requirement(
 ) -> AccessAnalysis:
     requirement = access_requirement(approach_side=approach_side)
     decision = requirement.decisions[0]
-    assert isinstance(decision, RequiredTestAccess)
+    assert decision.mode == "required"
     endpoint = decision.endpoints[0].model_copy(
         update={
             "probe_envelope": AccessProbeEnvelope(
@@ -175,7 +175,12 @@ def probe_access_requirement(
 
 
 class TestAccessChecksTests(unittest.TestCase):
-    def rows(self, *, selection: str = "all", fault: str | None = None):
+    def rows(
+        self,
+        *,
+        selection: Literal["all", "any"] = "all",
+        fault: str | None = None,
+    ):
         return {
             row.id: row
             for row in evaluate_test_access_checks(
@@ -244,7 +249,7 @@ class TestAccessChecksTests(unittest.TestCase):
     def test_any_selection_accepts_one_matching_endpoint(self) -> None:
         spec = access_requirement(selection="any")
         decision = spec.decisions[0]
-        assert isinstance(decision, RequiredTestAccess)
+        assert decision.mode == "required"
         alternate = decision.model_copy(
             update={
                 "endpoints": (
@@ -278,7 +283,7 @@ class TestAccessChecksTests(unittest.TestCase):
                 }
             )
         decision = access_requirement().decisions[0]
-        assert isinstance(decision, RequiredTestAccess)
+        assert decision.mode == "required"
         endpoint = decision.endpoints[0]
         with self.assertRaisesRegex(ValueError, "approach_side"):
             AccessEndpointRequirement.model_validate(
@@ -286,35 +291,20 @@ class TestAccessChecksTests(unittest.TestCase):
             )
 
     def test_probe_envelope_requires_pcb_stage_and_finite_positive_dimensions(self) -> None:
+        raw = access_requirement().model_dump()
+        decision = access_requirement().decisions[0]
+        assert decision.mode == "required"
+        endpoint = decision.endpoints[0].model_copy(
+            update={
+                "probe_envelope": AccessProbeEnvelope(
+                    tip_diameter_mm=0.8,
+                    clearance_mm=0.1,
+                )
+            }
+        )
+        raw["decisions"] = (decision.model_copy(update={"endpoints": (endpoint,)}).model_dump(),)
         with self.assertRaisesRegex(ValueError, "require the PCB accessibility stage"):
-            AccessAnalysis.model_validate(
-                access_requirement().model_dump()
-                | {
-                    "decisions": (
-                        access_requirement()
-                        .decisions[0]
-                        .model_copy(
-                            update={
-                                "endpoints": (
-                                    access_requirement()
-                                    .decisions[0]
-                                    .endpoints[0]
-                                    .model_copy(
-                                        update={
-                                            "probe_envelope": AccessProbeEnvelope(
-                                                tip_diameter_mm=0.8,
-                                                clearance_mm=0.1,
-                                            )
-                                        }
-                                    ),
-                                )
-                            }
-                        )
-                        .model_dump(),
-                        *access_requirement().model_dump()["decisions"][1:],
-                    )
-                }
-            )
+            AccessAnalysis.model_validate(raw)
         with self.assertRaises(ValueError):
             AccessProbeEnvelope(tip_diameter_mm=float("inf"), clearance_mm=0.1)
         with self.assertRaises(ValueError):
@@ -323,7 +313,7 @@ class TestAccessChecksTests(unittest.TestCase):
     def test_probe_request_sides_and_clearance_boundary_are_deterministic(self) -> None:
         requirement = access_requirement(approach_side="either")
         decision = requirement.decisions[0]
-        assert isinstance(decision, RequiredTestAccess)
+        assert decision.mode == "required"
         endpoint = decision.endpoints[0].model_copy(
             update={
                 "probe_envelope": AccessProbeEnvelope(
@@ -465,13 +455,8 @@ class TestAccessChecksTests(unittest.TestCase):
 
     def test_pcb_stage_checks_placed_pad_net_and_surface_layers(self) -> None:
         requirement = access_requirement(approach_side="front")
-        pcb_requirement = requirement.model_copy(
-            update={
-                "pcb_accessibility": PcbAccessAnalysis(
-                    basis="Synthetic PCB programming pad evidence"
-                )
-            }
-        )
+        pcb_accessibility = PcbAccessAnalysis(basis="Synthetic PCB programming pad evidence")
+        pcb_requirement = requirement.model_copy(update={"pcb_accessibility": pcb_accessibility})
         with TemporaryDirectory(prefix="synthetic-test-access-") as temporary:
             board_path = Path(temporary) / "board.kicad_pcb"
             board_path.write_text(
@@ -488,9 +473,7 @@ class TestAccessChecksTests(unittest.TestCase):
             )
             rows = {
                 row.id: row
-                for row in pcb_accessibility_checks(
-                    pcb_requirement, pcb_requirement.pcb_accessibility, board_path
-                )
+                for row in pcb_accessibility_checks(pcb_requirement, pcb_accessibility, board_path)
             }
         self.assertEqual(rows["test-access/pcb-accessibility/reset-access"].status, "PASS")
         self.assertIn(
@@ -507,7 +490,9 @@ class TestAccessChecksTests(unittest.TestCase):
         )
 
     def test_pcb_stage_enforces_project_authored_approach_side(self) -> None:
-        cases = (
+        cases: tuple[
+            tuple[Literal["front", "back", "either"], str, Literal["PASS", "FAIL"]], ...
+        ] = (
             ("front", '"F.Cu" "F.Mask"', "PASS"),
             ("back", '"F.Cu" "F.Mask"', "FAIL"),
             ("back", '"B.Cu" "B.Mask"', "PASS"),
@@ -517,12 +502,11 @@ class TestAccessChecksTests(unittest.TestCase):
             board_path = Path(temporary) / "board.kicad_pcb"
             for approach_side, layers, expected_status in cases:
                 with self.subTest(approach_side=approach_side, layers=layers):
+                    pcb_accessibility = PcbAccessAnalysis(
+                        basis="Synthetic required probe approach side"
+                    )
                     requirement = access_requirement(approach_side=approach_side).model_copy(
-                        update={
-                            "pcb_accessibility": PcbAccessAnalysis(
-                                basis="Synthetic required probe approach side"
-                            )
-                        }
+                        update={"pcb_accessibility": pcb_accessibility}
                     )
                     board_path.write_text(
                         '(kicad_pcb (version 20250114) (net 0 "") (net 1 "RESET_N") '
@@ -535,9 +519,7 @@ class TestAccessChecksTests(unittest.TestCase):
                     row = next(
                         item
                         for item in pcb_accessibility_checks(
-                            requirement,
-                            requirement.pcb_accessibility,
-                            board_path,
+                            requirement, pcb_accessibility, board_path
                         )
                         if item.id == "test-access/pcb-accessibility/reset-access"
                     )
@@ -546,12 +528,9 @@ class TestAccessChecksTests(unittest.TestCase):
                         self.assertIn("expected a back-side approach", row.detail)
 
     def test_pcb_stage_rejects_missing_wrong_net_and_mask_covered_access(self) -> None:
+        pcb_accessibility = PcbAccessAnalysis(basis="Synthetic PCB programming pad evidence")
         requirement = access_requirement().model_copy(
-            update={
-                "pcb_accessibility": PcbAccessAnalysis(
-                    basis="Synthetic PCB programming pad evidence"
-                )
-            }
+            update={"pcb_accessibility": pcb_accessibility}
         )
         valid_board = (
             '(kicad_pcb (version 20250114) (net 0 "") (net 1 "RESET_N") '
@@ -591,7 +570,7 @@ class TestAccessChecksTests(unittest.TestCase):
                     row = next(
                         item
                         for item in pcb_accessibility_checks(
-                            requirement, requirement.pcb_accessibility, board_path
+                            requirement, pcb_accessibility, board_path
                         )
                         if item.id == "test-access/pcb-accessibility/reset-access"
                     )

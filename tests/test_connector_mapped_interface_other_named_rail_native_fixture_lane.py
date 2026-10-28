@@ -17,6 +17,7 @@ from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.contracts import model_json_bytes
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import ContractCoachReport
 from tests.design_lint_fixtures.connector_mapped_other_named_rail import (
     native_return_board_coverage,
@@ -51,7 +52,6 @@ def test_native_single_other_pin_on_ret_is_reviewed_and_role_control_is_clean(
     from kicad_tooling.ci_hosted_connector_return_context import (
         prepare_connector_return_fixture_context,
     )
-    from kicad_tooling.hwrepo.electrical import selected_config
     from tests.native_fixture_support import assert_native_fixture_mounts
     from tests.synthetic_design_lint_project import (
         PINNED_NATIVE_KICAD_IMAGES,

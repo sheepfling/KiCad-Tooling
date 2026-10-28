@@ -9,6 +9,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import zipfile
+from collections.abc import Mapping
 from itertools import pairwise
 from pathlib import Path
 from unittest.mock import patch
@@ -161,7 +163,6 @@ class ExportExtensionTests(unittest.TestCase):
             (output / "review/board-stats.json").write_text("{}")
             settings = ReleaseExportSettings(gerber_layers=("F.Cu",), supplier_formats=("odb",))
             self.assertFalse(review_artifacts_valid(output, settings))
-            import zipfile
 
             with zipfile.ZipFile(output / "fabrication/board.odb.zip", "w") as archive:
                 archive.writestr("manifest", "sample")
@@ -245,7 +246,7 @@ class ExportExtensionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "bom.csv"
 
-            def write(rows: dict[str, str]) -> None:
+            def write(rows: Mapping[str, str]) -> None:
                 with path.open("w", newline="") as stream:
                     writer = csv.writer(stream)
                     writer.writerow(("Reference", "Value", "Footprint", "PartID", "DNP"))

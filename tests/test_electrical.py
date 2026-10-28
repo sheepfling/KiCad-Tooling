@@ -8,7 +8,9 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from collections.abc import Callable
 from pathlib import Path
+from typing import Required, TypedDict, cast
 from unittest.mock import patch
 
 import pytest
@@ -27,7 +29,8 @@ from kicad_tooling.hwrepo.generation import expected_outputs
 from kicad_tooling.hwrepo.models import (
     CommandEvidence,
     ElectricalAnalysisContract,
-    PowerAnalysis,
+    ElectricalAnalysisReport,
+    ElectricalCheck,
 )
 from kicad_tooling.hwrepo.spice import (
     expanded_deck,
@@ -40,6 +43,51 @@ from kicad_tooling.hwrepo.spice import (
 from tests.electrical_simulation_support import ISLAND, NA, PROJECT, install_fixture
 
 pytestmark = [pytest.mark.template_checkout]
+
+
+class _ElectricalMeasureUpdate(TypedDict, total=False):
+    minimum: Required[float]
+    expression: Required[str]
+    unit: Required[str]
+
+
+class _PowerCaseUpdate(TypedDict, total=False):
+    measures: Required[list[_ElectricalMeasureUpdate]]
+    step_s: Required[float]
+    source_sha256: Required[dict[str, str]]
+    id: Required[str]
+
+
+class _ElectricalPowerUpdate(TypedDict, total=False):
+    startup: Required[list[_PowerCaseUpdate]]
+    steady_state: Required[list[_PowerCaseUpdate]]
+
+
+class _WaveformUpdate(TypedDict, total=False):
+    step_s: Required[float]
+
+
+class _SweepUpdate(TypedDict, total=False):
+    stop_hz: Required[float]
+
+
+class _ElectricalHighFrequencyUpdate(TypedDict, total=False):
+    waveforms: Required[list[_WaveformUpdate]]
+    sweeps: Required[list[_SweepUpdate]]
+
+
+class _ElectricalGroundingDomainUpdate(TypedDict, total=False):
+    pins: Required[list[str]]
+
+
+class _ElectricalGroundingUpdate(TypedDict, total=False):
+    domains: Required[list[_ElectricalGroundingDomainUpdate]]
+
+
+class _ElectricalPayloadUpdate(TypedDict, total=False):
+    grounding: Required[_ElectricalGroundingUpdate]
+    power: Required[_ElectricalPowerUpdate]
+    high_frequency: Required[_ElectricalHighFrequencyUpdate]
 
 
 class ElectricalTests(unittest.TestCase):
@@ -69,7 +117,7 @@ class ElectricalTests(unittest.TestCase):
     def test_invalid_ground_duplicates_windows_limits_and_model_bindings(self) -> None:
         root = self.stage()
         contract = install_fixture(root)
-        mutations = (
+        mutations: tuple[Callable[[_ElectricalPayloadUpdate], None], ...] = (
             lambda d: d["grounding"]["domains"][0]["pins"].append("R1.2"),
             lambda d: d["power"]["startup"][0]["measures"][0].update(minimum=6.0),
             lambda d: d["power"]["startup"][0].update(step_s=1.0),
@@ -81,7 +129,9 @@ class ElectricalTests(unittest.TestCase):
             lambda d: d["power"]["steady_state"][0]["measures"][1].update(unit="A"),
         )
         for mutation in mutations:
-            raw = json.loads(contract.model_dump_json())
+            raw: _ElectricalPayloadUpdate = cast(
+                _ElectricalPayloadUpdate, json.loads(contract.model_dump_json())
+            )
             mutation(raw)
             with self.assertRaises(ValueError):
                 ElectricalAnalysisContract.model_validate_json(json.dumps(raw))
@@ -89,7 +139,7 @@ class ElectricalTests(unittest.TestCase):
     def test_budgets_reject_steady_peak_and_excess_peak_duration(self) -> None:
         root = self.stage()
         spec = install_fixture(root).power
-        assert isinstance(spec, PowerAnalysis)
+        assert spec.mode == "required"
         self.assertTrue(all(c.status == "PASS" for c in power_budget_checks(spec)))
         for field, value, expected in (
             ("continuous_limit_a", 0.01, "steady-current"),
@@ -105,7 +155,7 @@ class ElectricalTests(unittest.TestCase):
     def test_zero_startup_current_cannot_hide_steady_load(self) -> None:
         root = self.stage()
         spec = install_fixture(root).power
-        assert isinstance(spec, PowerAnalysis)
+        assert spec.mode == "required"
         load = spec.rails[0].loads[0].model_copy(update={"startup_a": 0.0})
         changed = spec.model_copy(
             update={"rails": (spec.rails[0].model_copy(update={"loads": (load,)}),)}
@@ -127,6 +177,7 @@ class ElectricalTests(unittest.TestCase):
                     target = root / ISLAND / "tests/electrical/startup.cir"
                     target.write_text(target.read_text().replace("100u", "200u"))
                 elif kind == "identity":
+                    assert config.electrical is not None
                     write_model(
                         root / config.electrical,
                         contract.model_copy(update={"project_id": "wrong"}),
@@ -138,7 +189,7 @@ class ElectricalTests(unittest.TestCase):
     def test_undeclared_includes_control_code_and_unused_models_rejected(self) -> None:
         root = self.stage()
         contract = install_fixture(root)
-        assert isinstance(contract.power, PowerAnalysis)
+        assert contract.power.mode == "required"
         case = contract.power.startup[0]
         target = root / case.deck
         for text in (
@@ -157,7 +208,7 @@ class ElectricalTests(unittest.TestCase):
     ) -> None:
         root = self.stage()
         contract = install_fixture(root)
-        assert isinstance(contract.power, PowerAnalysis)
+        assert contract.power.mode == "required"
         case = contract.power.startup[0]
         for stdout in (
             "",
@@ -243,7 +294,7 @@ class ElectricalTests(unittest.TestCase):
     def test_timeout_receipt_and_missing_waveforms_fail(self) -> None:
         root = self.stage()
         contract = install_fixture(root)
-        assert isinstance(contract.power, PowerAnalysis)
+        assert contract.power.mode == "required"
         output = root / "build/spice-test"
         output.mkdir(parents=True)
         with patch(
@@ -259,7 +310,7 @@ class ElectricalTests(unittest.TestCase):
     def test_waveform_parser_rejects_truncated_nonfinite_and_uncovered_data(self) -> None:
         root = self.stage()
         contract = install_fixture(root)
-        assert isinstance(contract.power, PowerAnalysis)
+        assert contract.power.mode == "required"
         case = contract.power.startup[0]
         raw = root / "waveform.raw"
         content = "Title: test\nFlags: real\nNo. Variables: 2\nNo. Points: 3\nVariables:\n0 time time\n1 v(out) voltage\nValues:\n0 0\n0\n1 0.001\n4.9\n2 0.005\n5\n"
@@ -279,7 +330,7 @@ class ElectricalTests(unittest.TestCase):
     def test_recursive_escaping_and_unlisted_model_includes_fail(self) -> None:
         root = self.stage()
         contract = install_fixture(root)
-        assert isinstance(contract.power, PowerAnalysis)
+        assert contract.power.mode == "required"
         case = contract.power.startup[0]
         target = root / case.deck
         for include in ("startup.cir", "../other.cir", "/tmp/other.cir"):
@@ -309,7 +360,7 @@ class ElectricalTests(unittest.TestCase):
     def test_portable_gate_rejects_an_overload_and_cli_cannot_bypass_model_hashes(self) -> None:
         root = self.stage()
         contract = install_fixture(root)
-        assert isinstance(contract.power, PowerAnalysis)
+        assert contract.power.mode == "required"
         overloaded = contract.power.model_copy(
             update={
                 "rails": (
@@ -352,7 +403,6 @@ class ElectricalTests(unittest.TestCase):
         self.assertIn("stale reviewed model", report["projects"][0]["checks"][-1]["detail"])
 
     def test_combined_verification_cannot_pass_a_failed_electrical_lane(self) -> None:
-        from kicad_tooling.hwrepo.models import ElectricalAnalysisReport, ElectricalCheck
         from kicad_tooling.verify import verify
         from tests.test_verify import VerifyTests, native_summary
 

@@ -11,7 +11,7 @@ from .return_nets import is_return_like_net_name
 _SUPPORTED_PIN_TYPES = frozenset({"output", "tri_state", "bidirectional", "passive"})
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class TxOutputSharingGroup:
     """One unambiguous fitted same-role TX group that is not an ERC output conflict."""
 

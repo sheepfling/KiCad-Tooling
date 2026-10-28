@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import re
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from itertools import pairwise
 from pathlib import Path
@@ -12,7 +13,7 @@ from typing import Literal
 AxisName = Literal["time", "frequency"]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class WaveformSeries:
     """One named ngspice variable; unit preserves its raw variable type label."""
 
@@ -21,7 +22,7 @@ class WaveformSeries:
     values: tuple[complex, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class WaveformData:
     """A complete transient or AC waveform with its physical sample coordinates."""
 
@@ -30,14 +31,14 @@ class WaveformData:
     series: tuple[WaveformSeries, ...]
 
 
-def _section_index(lines: list[str], section: str) -> int:
+def _section_index(lines: Iterable[str], section: str) -> int:
     matches = [index for index, line in enumerate(lines) if line.strip() == section]
     if len(matches) != 1:
         raise ValueError(f"Missing or duplicate ASCII waveform {section} section")
     return matches[0]
 
 
-def _header(lines: list[str], name: str) -> str:
+def _header(lines: Iterable[str], name: str) -> str:
     prefix = f"{name}:"
     matches = [line[len(prefix) :].strip() for line in lines if line.startswith(prefix)]
     if len(matches) != 1 or not matches[0]:
@@ -45,7 +46,7 @@ def _header(lines: list[str], name: str) -> str:
     return matches[0]
 
 
-def _count(lines: list[str], name: str) -> int:
+def _count(lines: Sequence[str], name: str) -> int:
     value = _header(lines, name)
     if not value.isdecimal() or int(value) < 1:
         raise ValueError(f"Invalid ASCII waveform {name} header")

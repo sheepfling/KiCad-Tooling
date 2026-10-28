@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 from pydantic import ValidationError
@@ -242,10 +243,12 @@ def test_contact_pair_must_bind_distinct_pins_in_the_exact_inventory() -> None:
 
 
 NATIVE_CASES = ("stateful-contact-fault", "stateful-contact-control")
-EXPECTED_NATIVE_SOURCE_HASHES = {
-    "stateful-contact-fault": "131715fd0c9d4b746a2dc3fe651356e775cfd9c5d5dcea8a98676bb741d881ff",
-    "stateful-contact-control": "0d44469c1e8d5284289688e7f95154a600b43393cff13c7c2bf8ff9b129ac652",
-}
+EXPECTED_NATIVE_SOURCE_HASHES = MappingProxyType(
+    {
+        "stateful-contact-fault": "131715fd0c9d4b746a2dc3fe651356e775cfd9c5d5dcea8a98676bb741d881ff",
+        "stateful-contact-control": "0d44469c1e8d5284289688e7f95154a600b43393cff13c7c2bf8ff9b129ac652",
+    }
+)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

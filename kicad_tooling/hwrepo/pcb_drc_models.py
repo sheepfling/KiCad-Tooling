@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fnmatch import fnmatchcase
+from pathlib import PurePosixPath
 from typing import Annotated, Literal
 
 from pydantic import Field, StringConstraints, model_validator
@@ -58,7 +59,7 @@ class PcbSignalPathRequirement(StrictModel):
 
     @model_validator(mode="after")
     def exact_path_endpoints(self) -> PcbSignalPathRequirement:
-        if self.net.startswith("/"):
+        if PurePosixPath(self.net).is_absolute():
             raise ValueError("Use the native net name without a leading slash")
         if self.from_pad.casefold() == self.to_pad.casefold():
             raise ValueError("A PCB signal path needs two distinct endpoint pads")

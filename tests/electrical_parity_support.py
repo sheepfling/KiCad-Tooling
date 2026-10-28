@@ -9,9 +9,11 @@ import shutil
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
+from collections.abc import Mapping
 
 import pytest
 from mcp import Client
+from pydantic import BaseModel
 
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.evidence import digest
@@ -165,7 +167,7 @@ class ElectricalParityHarness:
             write_model(root / ISLAND / "tests/electrical.json", contract)
 
     def install_netlist_contract(
-        self, observed: NetlistContract, contract_updates: dict[str, object]
+        self, observed: NetlistContract, contract_updates: Mapping[str, BaseModel]
     ) -> None:
         """Install one typed netlist and its reviewed contract update on both surfaces."""
         serialized = contract_netlist_xml(observed)

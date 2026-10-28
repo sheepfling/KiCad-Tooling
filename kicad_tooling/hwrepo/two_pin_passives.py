@@ -9,7 +9,7 @@ from .models import NetlistContract
 from .two_pin_components import two_pin_components_on_same_net
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class TwoPinPassiveOnSameNet:
     """A complete, fitted supported passive with both pins on one native net."""
 

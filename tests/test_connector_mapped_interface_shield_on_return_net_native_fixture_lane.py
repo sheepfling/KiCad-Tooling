@@ -14,6 +14,7 @@ from kicad_tooling.ci_hosted_connector_return_fixture_sources import (
     connector_return_fixture_sources,
 )
 from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from tests.design_lint_fixtures.connector_mapped_named_rail import (
     mapped_named_rail_report,
 )
@@ -51,7 +52,6 @@ def test_native_mapped_shield_on_ret_is_reviewed_and_return_role_is_control(
         prepare_connector_return_fixture_context,
     )
     from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
-    from kicad_tooling.hwrepo.electrical import selected_config
     from tests.native_fixture_support import assert_native_fixture_mounts
     from tests.synthetic_design_lint_project import (
         PINNED_NATIVE_KICAD_IMAGES,

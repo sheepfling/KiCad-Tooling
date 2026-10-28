@@ -8,6 +8,7 @@ import shutil
 from pathlib import Path
 
 import pytest
+from pydantic import JsonValue
 
 from kicad_tooling.ci_hosted import HostedLog, pcb_signal_path_drc_fixture_lane
 from kicad_tooling.hwrepo.evidence import digest
@@ -71,9 +72,9 @@ def _retain_native_receipt(project_root: Path, log: HostedLog, project: str) -> 
 
     command_path = scratch / "native.command.json" if scratch is not None else None
     if command_path is not None and command_path.is_file():
-        command = json.loads(command_path.read_text(encoding="utf-8"))
+        command: JsonValue = json.loads(command_path.read_text(encoding="utf-8"))
 
-        def normalize(value: object) -> object:
+        def normalize(value: JsonValue) -> JsonValue:
             if isinstance(value, str):
                 for previous, current in replacements:
                     value = value.replace(previous, current)
@@ -89,17 +90,18 @@ def _retain_native_receipt(project_root: Path, log: HostedLog, project: str) -> 
             json.dumps(normalized_command, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
 
-    event_values = [
+    event_values: list[dict[str, JsonValue]] = [
         json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines()
     ]
     relative_output = (destination / "output").relative_to(SOURCE_ROOT).as_posix()
     relative_command = (destination / "native.command.json").relative_to(SOURCE_ROOT).as_posix()
     for event in event_values:
         for key, value in tuple(event.items()):
-            if isinstance(value, str):
+            event_value: JsonValue = value
+            if isinstance(event_value, str):
                 for previous, current in replacements:
-                    value = value.replace(previous, current)
-                event[key] = value
+                    event_value = event_value.replace(previous, current)
+                event[key] = event_value
         if event.get("stage") == "pcb-signal-path-drc-fixture/native-run":
             if source_output is not None and source_output.is_dir():
                 event["artifact_directory"] = relative_output

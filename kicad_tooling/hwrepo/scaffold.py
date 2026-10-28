@@ -7,11 +7,16 @@ import shutil
 import tempfile
 from pathlib import Path
 
+from pydantic import TypeAdapter
+
 from .contracts import read_model, repo_path, write_model
 from .discovery import load_registry, project_destination, settings
 from .layout import layout
 from .markdown import design_notes, project_readme, write_markdown
+from .model_primitives import Identifier
 from .models import ProjectKind, ProjectManifest, ProjectScaffoldReport, ToolchainsCatalog
+
+_IDENTIFIER_ADAPTER: TypeAdapter[str] = TypeAdapter(Identifier)
 
 
 def prepare_manifest(
@@ -23,10 +28,11 @@ def prepare_manifest(
         ProjectManifest,
     )
     # Validate the identifier before substituting it into template paths.
-    manifest = ProjectManifest.model_validate({**template.model_dump(), "id": project_id})
-    manifest = ProjectManifest.model_validate_json(
-        manifest.model_dump_json().replace("REPLACE-WITH-PROJECT-ID", project_id)
-    )
+    project_id = _IDENTIFIER_ADAPTER.validate_python(project_id)
+    # The template has already passed ProjectManifest validation, and the only
+    # changed field is independently validated as an Identifier. The manifest's
+    # cross-field validator covers connector/interface consistency, not its ID.
+    manifest = template.model_copy(update={"id": project_id})
     policy = settings(root)
     toolchains = read_model(repo_path(root, policy.catalogs.toolchains), ToolchainsCatalog)
     if toolchain_id not in {toolchain.id for toolchain in toolchains.toolchains}:

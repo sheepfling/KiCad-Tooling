@@ -8,7 +8,7 @@ from .models import NetlistContract
 from .serial_participants import serial_function_role_and_channel
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnconnectedSerialFunctionPin:
     pin: str
     function: str

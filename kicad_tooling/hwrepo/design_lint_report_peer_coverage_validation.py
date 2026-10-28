@@ -1,18 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from .can_peer_reference_models import CanPeerReferenceCoverageReport
-    from .component_peer_pin_models import ComponentPeerPinRuleCoverage
-    from .design_lint_finding_models import DesignLintFinding
-    from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
-    from .i2c_peer_reference_models import I2cPeerReferenceCoverageReport
-    from .model_primitives import Digest
-    from .rs485_peer_reference_models import Rs485PeerReferenceCoverageReport
-    from .serial_peer_reference_models import SerialPeerReferenceCoverageReport
-    from .spi_peer_reference_models import SpiPeerReferenceCoverageReport
-    from .usb_peer_reference_models import UsbPeerReferenceCoverageReport
+from .can_peer_reference_models import CanPeerReferenceCoverageReport
+from .component_peer_pin_models import ComponentPeerPinRuleCoverage
+from .design_lint_finding_models import DesignLintFinding
+from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
+from .i2c_peer_reference_models import I2cPeerReferenceCoverageReport
+from .model_primitives import Digest
+from .rs485_peer_reference_models import Rs485PeerReferenceCoverageReport
+from .serial_peer_reference_models import SerialPeerReferenceCoverageReport
+from .spi_peer_reference_models import SpiPeerReferenceCoverageReport
+from .usb_peer_reference_models import UsbPeerReferenceCoverageReport
 
 
 def validate_peer_coverage(

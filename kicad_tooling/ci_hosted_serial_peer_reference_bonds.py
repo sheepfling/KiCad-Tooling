@@ -2,34 +2,29 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
+from .hwrepo.contracts import read_model, write_model
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ElectricalCheck
+from .hwrepo.serial_heuristics import serial_peer_checks
+from .hwrepo.serial_peer_models import SerialPeerAnalysis
+from .validate import read_netlist
 
 
 def serial_peer_reference_bond_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Verify an authored serial reference bond against repeated pinned exports."""
-    import hashlib
-    import os
-
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.contracts import read_model
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ElectricalCheck
-    from .hwrepo.serial_heuristics import serial_peer_checks
-    from .hwrepo.serial_peer_models import SerialPeerAnalysis
-    from .validate import read_netlist
 
     root = root.resolve()
     config = selected_config(root, project)
@@ -41,7 +36,7 @@ def serial_peer_reference_bond_fixture_lane(
         )
     pinned = pinned_image(config.image)
 
-    repository = Path(__file__).resolve().parents[1]
+    repository = tooling_checkout_root()
     fixture_root = repository / "tests/fixtures/design_lint/serial-peer-reference-bond-native"
     fixtures = {
         "control": fixture_root / "serial-reference-bond-control.kicad_sch",

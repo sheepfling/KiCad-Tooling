@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     ContractCoachReport,
@@ -72,10 +74,10 @@ def address_map(*responders: tuple[str, I2cResponderAddressRequirement]) -> I2cA
 def address_netlist(
     specification: I2cAddressMap,
     *,
-    strap_values: dict[str, int | None] | None = None,
-    symbol_overrides: dict[str, str] | None = None,
-    function_overrides: dict[str, str] | None = None,
-    misplaced_pins: dict[str, str] | None = None,
+    strap_values: Mapping[str, int | None] | None = None,
+    symbol_overrides: Mapping[str, str] | None = None,
+    function_overrides: Mapping[str, str] | None = None,
+    misplaced_pins: Mapping[str, str] | None = None,
     dnp: tuple[str, ...] = (),
 ) -> NetlistContract:
     strap_values = strap_values or {}

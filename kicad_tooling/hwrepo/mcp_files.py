@@ -22,6 +22,7 @@ from .models import (
     McpEditPreview,
     McpEditResult,
     McpFileContent,
+    ProductIndex,
     ProjectManifest,
     ProjectTestContract,
     PurchasingPreferences,
@@ -102,9 +103,6 @@ def artifact_path(root: Path, value: str) -> Path:
                 boundary = index
                 break
             if within_roots(owner, layout(root).product_roots):
-                from .contracts import read_model
-                from .models import ProductIndex
-
                 products = read_model(repo_path(root, layout(root).products), ProductIndex)
                 if any(Path(entry.path).parent.as_posix() == owner for entry in products.products):
                     boundary = index
@@ -117,7 +115,7 @@ def artifact_path(root: Path, value: str) -> Path:
     return path
 
 
-def _bounds(offset: int, limit: int, maximum: int) -> None:
+def _bounds(offset: int | bool, limit: int | bool, maximum: int) -> None:
     if (
         isinstance(offset, bool)
         or isinstance(limit, bool)

@@ -3,17 +3,16 @@
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import shutil
-import subprocess
 import sys
 import tempfile
-from collections.abc import Mapping
+from collections.abc import Iterable
 from pathlib import Path
-from typing import cast
 
-from .hwrepo.contracts import write_model
+from .git import run_git_text
+from .hwrepo.contracts import read_kicad_drc_parity, write_model
+from .hwrepo.layout import default_project_root
 from .hwrepo.models import FaultProbeCase, FaultProbeReport
 from .hwrepo.repository import ephemeral
 from .validate import validate
@@ -37,7 +36,7 @@ def probe(root: Path, output: Path) -> FaultProbeReport:
 
             # Copy policy/catalog dependencies too, otherwise a missing preflight
             # dependency masks the intended ERC/DRC defect.
-            def ignored(directory: str, names: list[str]) -> set[str]:
+            def ignored(directory: str, names: Iterable[str]) -> set[str]:
                 return {
                     item
                     for item in names
@@ -53,7 +52,7 @@ def probe(root: Path, output: Path) -> FaultProbeReport:
             # Deliberate defects belong to the reference fixture, independently
             # of an adopter's active projects, libraries and product catalogs.
             shutil.copytree(root / "examples/catalog", copy / "catalog", dirs_exist_ok=True)
-            subprocess.run(("git", "init", "-q", str(copy)), check=True, capture_output=True)
+            run_git_text(copy.parent, "init", "-q", str(copy))
             board: Path = copy / "examples/projects/controller/kicad/controller.kicad_pcb"
             sch: Path = copy / "examples/projects/controller/kicad/controller.kicad_sch"
             cli: str = "kicad-cli"
@@ -100,12 +99,8 @@ def probe(root: Path, output: Path) -> FaultProbeReport:
             if name in {"erc_open_pin", "drc_unrouted", "parity_value"}:
                 passed = passed and observed is not None and observed.returncode == 5
             if name == "parity_value" and (output / name / "drc.json").exists():
-                raw: object = json.loads((output / name / "drc.json").read_text(encoding="utf-8"))
-                if isinstance(raw, dict):
-                    report_data = cast(Mapping[str, object], raw)
-                    passed = passed and bool(report_data.get("schematic_parity"))
-                else:
-                    passed = False
+                parity = read_kicad_drc_parity(output / name / "drc.json")
+                passed = passed and parity.has_findings
             rows.append(
                 FaultProbeCase(
                     id=name,
@@ -127,7 +122,7 @@ def main() -> int:
     parser: argparse.ArgumentParser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     args: argparse.Namespace = parser.parse_args()
-    result = probe(Path.cwd(), args.output.resolve())
+    result = probe(default_project_root(), args.output.resolve())
     print(result.model_dump_json(indent=2))
     return 0 if result.status == "PASS" else 1
 

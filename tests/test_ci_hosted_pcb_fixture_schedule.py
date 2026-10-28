@@ -7,6 +7,18 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling import (
+    ci_hosted_pcb_access as access_lane,
+)
+from kicad_tooling import (
+    ci_hosted_pcb_reference_planes as reference_plane_lane,
+)
+from kicad_tooling import (
+    ci_hosted_pcb_return_context as return_lane,
+)
+from kicad_tooling import (
+    ci_hosted_pcb_switching_loop_context as switching_loop_lane,
+)
 from kicad_tooling.ci_hosted import (
     HostedLog,
     pcb_access_fixture_lane,
@@ -16,7 +28,6 @@ from kicad_tooling.ci_hosted import (
     pcb_switching_loop_fixture_lane,
 )
 from kicad_tooling.hwrepo import electrical
-from kicad_tooling.hwrepo import pcb_return_path_capture as pcb_capture
 
 pytestmark = [
     pytest.mark.template_checkout,
@@ -36,12 +47,8 @@ def _assert_unsupported_version_stops_before_capture(
 ) -> None:
     config = electrical.selected_config(root, "controller")
     unsupported = config.model_copy(update={"kicad_version": "10.0.6"})
-    monkeypatch.setattr(electrical, "selected_config", lambda root, project: unsupported)
-    monkeypatch.setattr(
-        pcb_capture,
-        "capture_native_pcb_connectivity",
-        lambda *args, **kwargs: pytest.fail("unsupported version reached native capture"),
-    )
+    for owner in (access_lane, return_lane, switching_loop_lane, reference_plane_lane):
+        monkeypatch.setattr(owner, "selected_config", lambda *_args: unsupported)
 
     with pytest.raises(ValueError, match="do not cover KiCad 10.0.6"):
         lane(

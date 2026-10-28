@@ -14,6 +14,7 @@ from kicad_tooling.hwrepo.models import (
     PcbRfModuleAntennaMap,
 )
 from kicad_tooling.hwrepo.pcb_rf_antenna import pcb_rf_module_antenna_entries
+from tests.json_types import JsonObject
 from tests.pcb_rf_antenna_support import (
     area,
     netlist,
@@ -27,7 +28,7 @@ def _digest(model: BaseModel) -> str:
     return hashlib.sha256(model.model_dump_json().encode("utf-8")).hexdigest()
 
 
-def antenna_report(*, fault: bool) -> dict[str, object]:
+def antenna_report(*, fault: bool) -> JsonObject:
     """Serialize a moved-module/stale-keepout fault or exact geometric control."""
     antenna_map = PcbRfModuleAntennaMap(
         basis="Synthetic RF module review",
@@ -84,7 +85,7 @@ def antenna_report(*, fault: bool) -> dict[str, object]:
     }
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     return {
         "pcb_antenna_keepout_fault": antenna_report(fault=True),
         "pcb_antenna_keepout_control": antenna_report(fault=False),

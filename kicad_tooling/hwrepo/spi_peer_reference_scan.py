@@ -19,7 +19,7 @@ _IC_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)
 _CLOCK_PIN_TYPES = OUTPUT_TYPES | INPUT_TYPES
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SpiClockEndpoint:
     """One fitted IC with one assigned native SCK/SCLK function."""
 
@@ -31,7 +31,7 @@ class SpiClockEndpoint:
     reference_pins: tuple[SpiReferencePinAssignment, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SpiClockPeerBus:
     """Coverage state for fitted ICs sharing one exact native clock net."""
 
@@ -46,7 +46,7 @@ class SpiClockPeerBus:
     ]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SpiPeerReferenceScan:
     """Supported SPI clock endpoints and shared-clock reference states."""
 

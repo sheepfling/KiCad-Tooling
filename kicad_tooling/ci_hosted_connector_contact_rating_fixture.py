@@ -4,26 +4,21 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import TYPE_CHECKING
 
 from .ci_hosted_component_rating_context import ComponentRatingFixtureContext
-from .hwrepo.contracts import read_kicad_erc_report
-from .hwrepo.evidence import digest
-from .validate import read_netlist
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
-
-
+from .ci_hosted_support import HostedLog
 from .hwrepo.connector_contact_rating_models import (
     ConnectorContactCurrentRequirement,
     ConnectorContactRatingAnalysis,
     ConnectorContactRatingRequirement,
 )
 from .hwrepo.connector_contact_ratings import connector_contact_rating_checks
+from .hwrepo.contracts import read_kicad_erc_report
+from .hwrepo.evidence import digest
 from .hwrepo.models import (
     NetlistContract,
 )
+from .validate import read_netlist
 
 
 def verify_connector_contact_rating_fixture(
@@ -109,11 +104,11 @@ def verify_connector_contact_rating_fixture(
             requirements=(requirement,),
         )
         checks = connector_contact_rating_checks(spec, contact_observed)
-        margin = next(item for item in checks if item.id.endswith("/utilization"))
+        margin = next(item for item in checks if item.id.rsplit("/", 1)[-1] == "utilization")
         unexpected = tuple(
             item.id
             for item in checks
-            if not item.id.endswith("/utilization") and item.status != "PASS"
+            if item.id.rsplit("/", 1)[-1] != "utilization" and item.status != "PASS"
         )
         if unexpected:
             raise ValueError(f"Native contact identity and pin map did not pass: {unexpected}")

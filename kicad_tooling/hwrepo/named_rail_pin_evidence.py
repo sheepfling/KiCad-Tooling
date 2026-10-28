@@ -10,7 +10,7 @@ from .models import NetlistContract
 from .named_rail_roles import named_rail_role_clue
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class NamedRailPinEvidence:
     """One fitted IC pin with a complete inventory and unambiguous rail assignment."""
 

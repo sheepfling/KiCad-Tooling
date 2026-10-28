@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import argparse
 import re
-import subprocess
 from pathlib import Path
 
+from .git import run_git_bytes, run_git_text
 from .hwrepo.impact import plan_paths
+from .hwrepo.layout import default_project_root
 from .hwrepo.models import ImpactPlan
 from .hwrepo.selection import ProjectSelector, resolve_project_ids
 from .hwrepo.sharding import shard_projects
@@ -15,10 +16,12 @@ from .hwrepo.sharding import shard_projects
 
 def resolve_commit(root: Path, value: str) -> str:
     """Resolve a commit-ish after Git's option boundary before using it in a diff."""
-    result = subprocess.run(
-        ("git", "-C", str(root), "rev-parse", "--verify", "--end-of-options", value + "^{commit}"),
-        capture_output=True,
-        text=True,
+    result = run_git_text(
+        root,
+        "rev-parse",
+        "--verify",
+        "--end-of-options",
+        value + "^{commit}",
         check=False,
     )
     commit = result.stdout.strip()
@@ -31,22 +34,17 @@ def changed_paths(root: Path, base: str, head: str) -> tuple[str, ...]:
     """Include both sides of renames; commit IDs prevent caller-controlled Git options."""
     base_commit = resolve_commit(root, base)
     head_commit = resolve_commit(root, head)
-    result = subprocess.run(
-        (
-            "git",
-            "-C",
-            str(root),
-            "diff",
-            "--no-ext-diff",
-            "--no-textconv",
-            "--name-only",
-            "-z",
-            "--no-renames",
-            base_commit,
-            head_commit,
-            "--",
-        ),
-        capture_output=True,
+    result = run_git_bytes(
+        root,
+        "diff",
+        "--no-ext-diff",
+        "--no-textconv",
+        "--name-only",
+        "-z",
+        "--no-renames",
+        base_commit,
+        head_commit,
+        "--",
         check=False,
     )
     if result.returncode:
@@ -122,7 +120,7 @@ def build_plan(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--base", help="Base commit for a Git diff")
     source.add_argument(

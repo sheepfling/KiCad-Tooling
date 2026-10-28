@@ -5,6 +5,8 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+from ..git import run_git_text
+
 CONTAINER_COMMON = "/kicad-git/common"
 
 
@@ -25,22 +27,13 @@ def git_metadata_mounts(root: Path) -> tuple[str, ...]:
     if not gitfile.is_file():
         raise ValueError("Native container checks require a Git checkout with a .git entry")
     try:
-        result = subprocess.run(
-            (
-                "git",
-                "-c",
-                f"safe.directory={root.as_posix()}",
-                "-C",
-                str(root),
-                "rev-parse",
-                "--path-format=absolute",
-                "--git-dir",
-                "--git-common-dir",
-                "--show-toplevel",
-            ),
-            text=True,
-            capture_output=True,
-            check=True,
+        result = run_git_text(
+            root,
+            "rev-parse",
+            "--path-format=absolute",
+            "--git-dir",
+            "--git-common-dir",
+            "--show-toplevel",
             timeout=30,
         )
     except (OSError, subprocess.SubprocessError) as exc:

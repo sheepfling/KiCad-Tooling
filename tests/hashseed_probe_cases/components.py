@@ -26,6 +26,7 @@ from tests.design_lint_fixtures.mosfet_terminal_order import mosfet_terminal_ord
 from tests.design_lint_fixtures.mosfet_terminal_same_net import (
     mosfet_terminal_same_net_netlist,
 )
+from tests.json_types import JsonObject
 from tests.test_led_output_heuristics import observed_report as led_output_observed_report
 from tests.test_led_output_heuristics import output_led_netlist as led_output_netlist
 from tests.test_mosfet_gate_connectivity import mosfet_netlist as mosfet_gate_netlist
@@ -41,12 +42,12 @@ from tests.test_two_pin_switches import switch_netlist
 from tests.test_two_pin_thermocouples import thermocouple_netlist
 
 
-def led_output_lint_report(*, topology: str) -> dict[str, object]:
+def led_output_lint_report(*, topology: str) -> JsonObject:
     """Serialize direct-drive, parallel-resistor, or series-path LED evidence."""
     return led_output_observed_report(led_output_netlist(topology)).model_dump(mode="json")
 
 
-def mosfet_stress_check_result(*, q2_over_limit: bool) -> dict[str, object]:
+def mosfet_stress_check_result(*, q2_over_limit: bool) -> JsonObject:
     """Serialize a multi-device MOSFET stress contract and its typed results."""
     requirement = multi_device_requirement(
         q2_drain_on=MosfetVoltageInterval(minimum_v=0.0, maximum_v=60.0) if q2_over_limit else None
@@ -66,7 +67,7 @@ def source_bound_component_report(
     project_id: str,
     observed: NetlistContract,
     policy: DesignLintPolicy | None = None,
-) -> dict[str, object]:
+) -> JsonObject:
     """Serialize component lint against a hash of its normalized netlist."""
     digest = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
     return evaluate(
@@ -76,19 +77,19 @@ def source_bound_component_report(
     ).model_dump(mode="json")
 
 
-def diode_rail_orientation_report(*, anode_net: str, cathode_net: str) -> dict[str, object]:
+def diode_rail_orientation_report(*, anode_net: str, cathode_net: str) -> JsonObject:
     """Serialize a diode rail review with a digest of its normalized netlist."""
     observed = diode_rail_netlist(anode_net=anode_net, cathode_net=cathode_net)
     return source_bound_component_report("synthetic-diode-rail-return", observed)
 
 
-def mosfet_gate_peer_report(*, has_driver: bool) -> dict[str, object]:
+def mosfet_gate_peer_report(*, has_driver: bool) -> JsonObject:
     """Serialize a supported MOSFET gate with and without a fitted net peer."""
     observed = mosfet_gate_netlist(gate_net_members=("U1.1",) if has_driver else None)
     return source_bound_component_report("synthetic-mosfet-gate-hashseed", observed)
 
 
-def mosfet_terminal_order_report(*, reversed_order: bool) -> dict[str, object]:
+def mosfet_terminal_order_report(*, reversed_order: bool) -> JsonObject:
     """Serialize an enabled MOSFET named-rail order fault or valid control."""
     observed = mosfet_terminal_order_netlist(reversed_order=reversed_order)
     policy = DesignLintPolicy(
@@ -105,7 +106,7 @@ def mosfet_terminal_order_report(*, reversed_order: bool) -> dict[str, object]:
     )
 
 
-def mosfet_drain_source_same_net_report(*, same_net: bool) -> dict[str, object]:
+def mosfet_drain_source_same_net_report(*, same_net: bool) -> JsonObject:
     """Serialize a same-net MOSFET terminal fault or distinct-net control."""
     observed = mosfet_drain_source_netlist(same_net=same_net)
     policy = DesignLintPolicy(
@@ -122,7 +123,7 @@ def mosfet_drain_source_same_net_report(*, same_net: bool) -> dict[str, object]:
     )
 
 
-def mosfet_gate_source_same_net_report(*, same_net: bool) -> dict[str, object]:
+def mosfet_gate_source_same_net_report(*, same_net: bool) -> JsonObject:
     """Serialize a same-net MOSFET gate/source tie or distinct-net control."""
     observed = mosfet_terminal_same_net_netlist(pair="gate-source", same_net=same_net)
     policy = DesignLintPolicy(
@@ -137,7 +138,7 @@ def mosfet_gate_source_same_net_report(*, same_net: bool) -> dict[str, object]:
     return source_bound_component_report("synthetic-mosfet-gate-source-hashseed", observed, policy)
 
 
-def mosfet_gate_drain_same_net_report(*, same_net: bool) -> dict[str, object]:
+def mosfet_gate_drain_same_net_report(*, same_net: bool) -> JsonObject:
     """Serialize a MOSFET gate/drain tie or distinct-net control."""
     observed = mosfet_terminal_same_net_netlist(pair="gate-drain", same_net=same_net)
     policy = DesignLintPolicy(
@@ -152,7 +153,7 @@ def mosfet_gate_drain_same_net_report(*, same_net: bool) -> dict[str, object]:
     return source_bound_component_report("synthetic-mosfet-gate-drain-hashseed", observed, policy)
 
 
-def bjt_terminal_order_report(*, family: str, reversed_order: bool) -> dict[str, object]:
+def bjt_terminal_order_report(*, family: str, reversed_order: bool) -> JsonObject:
     """Serialize an enabled BJT named-rail order fault or valid control."""
     observed = bjt_terminal_order_netlist(family=family, reversed_order=reversed_order)
     policy = DesignLintPolicy(
@@ -167,7 +168,7 @@ def bjt_terminal_order_report(*, family: str, reversed_order: bool) -> dict[str,
     return source_bound_component_report("synthetic-bjt-terminal-order-hashseed", observed, policy)
 
 
-def bjt_collector_emitter_same_net_report(*, same_net: bool) -> dict[str, object]:
+def bjt_collector_emitter_same_net_report(*, same_net: bool) -> JsonObject:
     """Serialize a BJT same-net terminal fault or distinct-net control."""
     observed = bjt_collector_emitter_netlist(same_net=same_net)
     policy = DesignLintPolicy(
@@ -182,7 +183,7 @@ def bjt_collector_emitter_same_net_report(*, same_net: bool) -> dict[str, object
     return source_bound_component_report("synthetic-bjt-main-terminals-hashseed", observed, policy)
 
 
-def bjt_base_emitter_same_net_report(*, same_net: bool) -> dict[str, object]:
+def bjt_base_emitter_same_net_report(*, same_net: bool) -> JsonObject:
     """Serialize an enabled BJT base/emitter same-net fault or control."""
     observed = bjt_base_emitter_netlist(same_net=same_net)
     policy = DesignLintPolicy(
@@ -197,7 +198,7 @@ def bjt_base_emitter_same_net_report(*, same_net: bool) -> dict[str, object]:
     return source_bound_component_report("synthetic-bjt-base-emitter-hashseed", observed, policy)
 
 
-def bjt_base_collector_same_net_report(*, same_net: bool) -> dict[str, object]:
+def bjt_base_collector_same_net_report(*, same_net: bool) -> JsonObject:
     """Serialize a BJT base/collector same-net fault or distinct-net control."""
     observed = bjt_base_collector_netlist(same_net=same_net)
     policy = DesignLintPolicy(
@@ -212,13 +213,13 @@ def bjt_base_collector_same_net_report(*, same_net: bool) -> dict[str, object]:
     return source_bound_component_report("synthetic-bjt-base-collector-hashseed", observed, policy)
 
 
-def bjt_base_drive_report(*, series_resistor: bool) -> dict[str, object]:
+def bjt_base_drive_report(*, series_resistor: bool) -> JsonObject:
     """Serialize direct BJT output drive and its visible series-resistor control."""
     observed = bjt_base_drive_netlist(series_resistor=series_resistor)
     return source_bound_component_report("synthetic-bjt-base-drive-hashseed", observed)
 
 
-def bjt_base_bias_report(*, bias_resistor: bool) -> dict[str, object]:
+def bjt_base_bias_report(*, bias_resistor: bool) -> JsonObject:
     """Serialize an opt-in BJT base-bias fault or direct-resistor control."""
     observed = bjt_base_bias_netlist(bias_value="100k" if bias_resistor else None)
     policy = DesignLintPolicy(
@@ -233,7 +234,7 @@ def bjt_base_bias_report(*, bias_resistor: bool) -> dict[str, object]:
     return source_bound_component_report("synthetic-bjt-base-bias-hashseed", observed, policy)
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     return {
         "diode_rail_named_return_fault": diode_rail_orientation_report(
             anode_net="GND", cathode_net="+3V3"

@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 
 from .hwrepo.hosted_governance import audit, format_text
+from .hwrepo.layout import default_project_root
 
 
 def main() -> int:
@@ -13,7 +14,7 @@ def main() -> int:
     parser.add_argument(
         "--root",
         type=Path,
-        default=Path.cwd(),
+        default=default_project_root(),
         help="Local repository containing the configured team policy",
     )
     parser.add_argument("--repo", help="GitHub OWNER/REPO (default: current gh repository)")

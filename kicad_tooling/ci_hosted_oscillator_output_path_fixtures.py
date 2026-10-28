@@ -8,27 +8,32 @@ import os
 import shutil
 import sys
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING
+from types import MappingProxyType
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_model, write_model
 from .hwrepo.design_lint import evaluate
+from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, ProjectTestContract
 from .validate import read_netlist
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
-
 RULE_ID = "oscillator.output_load_path_mismatch"
-_CASE_FILES = {
-    "series-boundary-control": "series-boundary-control.kicad_sch",
-    "wrong-value-fault": "wrong-value-fault.kicad_sch",
-}
-_SOURCE_SHA256 = {
-    "series-boundary-control.kicad_sch": "4fadcabb12a2bbedc396e707abf0bf1247df3a921674b5236cc993c9d54445b9",
-    "wrong-value-fault.kicad_sch": "9225ef72ca1e7922003672085bc69531a33f67b0acc1acbde2b9554d350239d8",
-}
+_CASE_FILES: Mapping[str, str] = MappingProxyType(
+    {
+        "series-boundary-control": "series-boundary-control.kicad_sch",
+        "wrong-value-fault": "wrong-value-fault.kicad_sch",
+    }
+)
+_SOURCE_SHA256: Mapping[str, str] = MappingProxyType(
+    {
+        "series-boundary-control.kicad_sch": "4fadcabb12a2bbedc396e707abf0bf1247df3a921674b5236cc993c9d54445b9",
+        "wrong-value-fault.kicad_sch": "9225ef72ca1e7922003672085bc69531a33f67b0acc1acbde2b9554d350239d8",
+    }
+)
 
 
 def _evaluate_case(
@@ -91,9 +96,6 @@ def oscillator_output_path_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Export, normalize, and lint the synthetic fault/control on pinned KiCad."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.electrical import selected_config
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image:
@@ -102,9 +104,7 @@ def oscillator_output_path_fixture_lane(
         raise ValueError(
             f"Oscillator output path fixtures do not cover KiCad {config.kicad_version}"
         )
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/oscillator-output-native"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/oscillator-output-native"
     fixture_paths = {case: fixture_root / filename for case, filename in _CASE_FILES.items()}
     source_hashes = {path.name: digest(path) for path in fixture_paths.values()}
     if source_hashes != _SOURCE_SHA256:

@@ -6,7 +6,7 @@ import hashlib
 import importlib.util
 import os
 from pathlib import Path
-from types import ModuleType
+from types import MappingProxyType, ModuleType
 
 import pytest
 
@@ -15,10 +15,12 @@ from kicad_tooling.hwrepo.stm32_pin_map import parse_cubemx_ioc
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
 _ROOT = Path(__file__).resolve().parents[1]
 _FIXTURES = _ROOT / "tests/fixtures/design_lint/stm32-pin-map"
-_SOURCE_HASHES = {
-    "ioc.py": "6926aa6a34f20576fd433898cc8e4fdfb9da5dd06aee3ff307decc5b22013c84",
-    "compare.py": "24f10fc5e494c9ec5671dae1b1ea4341712ad0111ac020ab314e7cbb73574a15",
-}
+_SOURCE_HASHES = MappingProxyType(
+    {
+        "ioc.py": "6926aa6a34f20576fd433898cc8e4fdfb9da5dd06aee3ff307decc5b22013c84",
+        "compare.py": "24f10fc5e494c9ec5671dae1b1ea4341712ad0111ac020ab314e7cbb73574a15",
+    }
+)
 
 
 def _candidate_modules() -> tuple[ModuleType, ModuleType]:

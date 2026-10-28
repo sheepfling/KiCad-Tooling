@@ -9,9 +9,10 @@ from tests.design_lint_fixtures.connector_mapped_named_rail import (
     mapped_named_rail_netlist,
     mapped_named_rail_report,
 )
+from tests.json_types import JsonObject
 
 
-def _report(net_name: str) -> dict[str, object]:
+def _report(net_name: str) -> JsonObject:
     observed = mapped_named_rail_netlist(target_net=net_name)
     report, coverage = mapped_named_rail_report(observed, role="shield")
     return {
@@ -22,7 +23,7 @@ def _report(net_name: str) -> dict[str, object]:
     }
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     """Return a return-label fault and ordinary-net control."""
     return {
         "mapped_shield_return_net_fault": _report("RET"),

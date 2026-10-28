@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from types import MappingProxyType
+
 import pytest
 
 from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
@@ -10,17 +12,19 @@ from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, li
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint, pytest.mark.architecture]
 
 RULE_ID = "component.mosfet_gate_without_peer"
-RULE_OWNERS = {
-    "component.mosfet_gate_without_peer": (
-        "kicad_tooling/hwrepo/mosfet_gate_connectivity.py#mosfet_gates_without_peer"
-    ),
-    "component.mosfet_gate_without_visible_source_bias": (
-        "kicad_tooling/hwrepo/mosfet_gate_connectivity.py#mosfet_gates_without_visible_source_bias"
-    ),
-    "component.mosfet_gate_direct_drive": (
-        "kicad_tooling/hwrepo/component_mosfet_gate_drive.py#mosfets_with_direct_output_gate_drive"
-    ),
-}
+RULE_OWNERS = MappingProxyType(
+    {
+        "component.mosfet_gate_without_peer": (
+            "kicad_tooling/hwrepo/mosfet_gate_connectivity.py#mosfet_gates_without_peer"
+        ),
+        "component.mosfet_gate_without_visible_source_bias": (
+            "kicad_tooling/hwrepo/mosfet_gate_connectivity.py#mosfet_gates_without_visible_source_bias"
+        ),
+        "component.mosfet_gate_direct_drive": (
+            "kicad_tooling/hwrepo/component_mosfet_gate_drive.py#mosfets_with_direct_output_gate_drive"
+        ),
+    }
+)
 
 
 def test_mosfet_gate_predicate_has_a_small_theme_owned_module() -> None:

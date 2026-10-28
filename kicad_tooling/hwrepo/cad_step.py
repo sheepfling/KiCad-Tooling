@@ -6,7 +6,6 @@ asserts manufacturer dimensions, pad contact, or mechanical approval.
 
 from __future__ import annotations
 
-import hashlib
 import os
 import re
 from html import escape
@@ -16,6 +15,7 @@ from .cad_library import _native_footprint, inspect_bundle  # pyright: ignore[re
 from .cad_source import _cached  # pyright: ignore[reportPrivateUsage]
 from .contracts import parse_easyeda_identity, repo_path, write_model
 from .discovery import load_config
+from .evidence import digest as file_digest
 from .kicad_compatibility import require_cli_profile
 from .models import CadSourceReport, CadStepReport, CommandEvidence
 from .part_cad import _nodes, _quote, _root, _tokens  # pyright: ignore[reportPrivateUsage]
@@ -77,11 +77,7 @@ for kind in ('wrl', 'step'):
 
 
 def _sha(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(65536), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+    return file_digest(path)
 
 
 def _fixture_footprint(source: str, name: str, model: str) -> str:
@@ -202,8 +198,11 @@ def review(root: Path, project_id: str, source: CadSourceReport, output: Path) -
         footprint = repo_path(directory, bundle.footprint_file)
         wrl = repo_path(directory, bundle.model_file)
         source_paths = (directory / "bundle.json", raw, step, footprint, wrl)
-        before = {str(path): _sha(path) for path in source_paths}
-        bundle_sha256, step_sha256 = before[str(directory / "bundle.json")], before[str(step)]
+        before = {path.as_posix(): _sha(path) for path in source_paths}
+        bundle_sha256, step_sha256 = (
+            before[(directory / "bundle.json").as_posix()],
+            before[step.as_posix()],
+        )
         record = selected_project(root, project_id)
         config = load_config(root, record.config)
         require_cli_profile(config)
@@ -286,7 +285,7 @@ def review(root: Path, project_id: str, source: CadSourceReport, output: Path) -
         if assembly.read_text(encoding="utf-8", errors="ignore").count("MANIFOLD_SOLID_BREP") < 2:
             raise ValueError("KiCad assembly STEP lacks an identifiable component solid")
         artifacts[assembly.name] = _sha(assembly)
-        if {str(path): _sha(path) for path in source_paths} != before:
+        if {path.as_posix(): _sha(path) for path in source_paths} != before:
             raise ValueError(
                 "CAD source changed while STEP evidence was generated; discard the receipt"
             )

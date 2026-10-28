@@ -15,7 +15,10 @@ from kicad_tooling.hwrepo.power_rails import (
     negative_voltage_rail_key,
 )
 from tests.design_lint_fixtures import coach
-from tests.design_lint_fixtures.power_pin_net_roles import supply_pin_on_rail_netlist
+from tests.design_lint_fixtures.power_pin_net_roles import (
+    SupplyPinNetlistOverrides,
+    supply_pin_on_rail_netlist,
+)
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.power_lint, pytest.mark.component_lint]
 
@@ -105,7 +108,7 @@ def test_explicit_voltage_values_use_only_the_numeric_rail_vocabulary(
 def test_unrecognized_negative_roles_and_nonunique_assignments_are_controls(
     rail: str,
     function: str,
-    options: dict[str, object],
+    options: SupplyPinNetlistOverrides,
 ) -> None:
     report = evaluate(
         "synthetic-negative-supply-rail-control",

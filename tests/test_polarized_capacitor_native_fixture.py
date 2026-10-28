@@ -9,7 +9,10 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.ci_hosted_polarized_capacitor import POLARIZED_CAPACITOR_FIXTURE_CASES
+from kicad_tooling.ci_hosted_polarized_capacitor import (
+    POLARIZED_CAPACITOR_FIXTURE_CASES,
+    polarized_capacitor_fixture_lane,
+)
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.component_polarized_capacitor_orientation import RULE_ID
 from kicad_tooling.hwrepo.electrical import selected_config
@@ -36,7 +39,6 @@ def test_native_polarized_capacitor_fault_and_control_are_deterministic(
     tmp_path: Path,
     version: str,
 ) -> None:
-    from kicad_tooling.ci_hosted_polarized_capacitor import polarized_capacitor_fixture_lane
 
     fixture_root = Path(__file__).parent / "fixtures/design_lint"
     actual_paths = {

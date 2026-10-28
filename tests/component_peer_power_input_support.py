@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 GENERIC_PEER_POWER_INPUT_RULE_ID = "component.peer_power_input_assignment_divergence"
@@ -13,13 +15,13 @@ NAMED_PEER_POWER_INPUT_ALL_OPEN_RULE_ID = "component.peer_power_input_named_all_
 def generic_peer_power_input_netlist(
     *,
     references: tuple[str, ...] = ("U1", "U2"),
-    symbols: dict[str, str] | None = None,
-    part_ids: dict[str, str | None] | None = None,
-    values: dict[str, str] | None = None,
-    footprints: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
+    part_ids: Mapping[str, str | None] | None = None,
+    values: Mapping[str, str] | None = None,
+    footprints: Mapping[str, str] | None = None,
     assignments: tuple[str | None, ...] = ("SYNTHETIC_RAIL_A", "SYNTHETIC_RAIL_B"),
-    functions: dict[str, str | None] | None = None,
-    electrical_types: dict[str, str] | None = None,
+    functions: Mapping[str, str | None] | None = None,
+    electrical_types: Mapping[str, str] | None = None,
     incomplete_inventory: tuple[str, ...] = (),
     dnp: tuple[str, ...] = (),
 ) -> NetlistContract:
@@ -76,13 +78,13 @@ def generic_peer_power_input_netlist(
 def named_peer_power_input_netlist(
     *,
     references: tuple[str, ...] = ("U1", "U2"),
-    symbols: dict[str, str] | None = None,
-    part_ids: dict[str, str | None] | None = None,
-    values: dict[str, str] | None = None,
-    footprints: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
+    part_ids: Mapping[str, str | None] | None = None,
+    values: Mapping[str, str] | None = None,
+    footprints: Mapping[str, str] | None = None,
     assignments: tuple[str | None, ...] = ("SYNTHETIC_RAIL_A", None),
-    functions: dict[str, str | None] | None = None,
-    electrical_types: dict[str, str] | None = None,
+    functions: Mapping[str, str | None] | None = None,
+    electrical_types: Mapping[str, str] | None = None,
     incomplete_inventory: tuple[str, ...] = (),
     dnp: tuple[str, ...] = (),
 ) -> NetlistContract:

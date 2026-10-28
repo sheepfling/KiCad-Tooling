@@ -6,10 +6,19 @@ import json
 import subprocess
 import sys
 import time
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 
 from .hwrepo.contracts import KiCadErcReport
+
+
+def tooling_checkout_root() -> Path:
+    """Locate this source tree's hosted fixtures, separate from the target project."""
+    root = Path(__file__).resolve().parents[1]
+    if not (root / "tests" / "fixtures").is_dir():
+        raise RuntimeError("Hosted fixture lanes require the KiCad-Tooling source checkout")
+    return root
 
 
 class HostedCommandError(RuntimeError):
@@ -50,7 +59,7 @@ class HostedLog:
         *,
         cwd: Path,
         stdout_path: Path | None = None,
-        env: dict[str, str] | None = None,
+        env: Mapping[str, str] | None = None,
         merge_stderr: bool = False,
     ) -> Path:
         """Retain stdout and stderr separately; stream progress to the Actions log."""

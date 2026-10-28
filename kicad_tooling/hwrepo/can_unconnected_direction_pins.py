@@ -8,7 +8,7 @@ from .can_signal_functions import can_signal_role_and_channel
 from .models import NetlistContract
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnconnectedCanDirectionPin:
     pin: str
     function: str

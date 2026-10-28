@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from types import MappingProxyType
+
 import pytest
 from pydantic import ValidationError
 
@@ -34,7 +37,7 @@ pytestmark = [
     pytest.mark.design_lint_rule(rule_id="connector.repeated_pin_function"),
 ]
 
-_GROUPS = {"J1": "host-5v", "J2": "host-5v", "J3": "sensor-5v"}
+_GROUPS = MappingProxyType({"J1": "host-5v", "J2": "host-5v", "J3": "sensor-5v"})
 
 
 def _split_supply_netlist() -> NetlistContract:
@@ -52,9 +55,9 @@ def _split_supply_netlist() -> NetlistContract:
 
 def _coverage(
     observed: NetlistContract,
-    groups: dict[str, str] | None = None,
+    groups: Mapping[str, str] | None = None,
     *,
-    catalog: dict[str, InterfaceRecord] | None = None,
+    catalog: Mapping[str, InterfaceRecord] | None = None,
 ):
     groups = groups or {}
     reviews = tuple(

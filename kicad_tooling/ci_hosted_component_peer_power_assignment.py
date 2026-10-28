@@ -2,35 +2,28 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+import os
 import sys
+import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 
 def component_peer_power_assignment_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Verify shared-PART_ID power and return assignment review on pinned exports."""
-    import hashlib
-    import json
-    import os
-    import tempfile
-
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import (
-        ContractCoachReport,
-        DesignLintPolicy,
-    )
-    from .validate import read_netlist
 
     root = root.resolve()
     config = selected_config(root, project)
@@ -42,7 +35,7 @@ def component_peer_power_assignment_fixture_lane(
         )
     pinned = pinned_image(config.image)
     fixture_root = (
-        Path(__file__).resolve().parents[1]
+        tooling_checkout_root()
         / "tests/fixtures/design_lint/component-peer-power-assignment-native"
     )
     cases = {"fault": "fault.kicad_sch", "control": "control.kicad_sch"}

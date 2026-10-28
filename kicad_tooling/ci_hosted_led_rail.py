@@ -2,45 +2,41 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.component_role_models import (
+    ComponentRoleBinding,
+    ComponentRoleMap,
+    ComponentRolePin,
+)
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.led_heuristics import (
+    leds_directly_between_positive_and_return_nets,
+    leds_directly_driven_without_visible_series_resistor,
+)
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.power_path_models import (
+    PowerPathElementRequirement,
+    PowerPathEndpointRequirement,
+    PowerPathMap,
+    PowerPathRequirement,
+)
+from .validate import read_netlist
 
 
 def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
     """Check native direct-rail and output-driven LED topology fixtures."""
-    import hashlib
-    import os
-
-    from .hwrepo.component_role_models import (
-        ComponentRoleBinding,
-        ComponentRoleMap,
-        ComponentRolePin,
-    )
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.led_heuristics import (
-        leds_directly_between_positive_and_return_nets,
-        leds_directly_driven_without_visible_series_resistor,
-    )
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .hwrepo.power_path_models import (
-        PowerPathElementRequirement,
-        PowerPathEndpointRequirement,
-        PowerPathMap,
-        PowerPathRequirement,
-    )
-    from .validate import read_netlist
 
     root = root.resolve()
     config = selected_config(root, project)
@@ -50,9 +46,7 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
         raise ValueError(f"LED rail fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
 
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/cohort-led-resistor"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/cohort-led-resistor"
     cases = {
         "direct-rails": "fault-direct-across-rails.kicad_sch",
         "series-control": "control-series-resistor.kicad_sch",

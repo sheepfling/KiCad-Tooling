@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal
 
@@ -29,7 +30,7 @@ def scan_source_bound_rule_map(
     config: ProjectConfig,
     requirements: PcbDifferentialPairRuleMap,
     observed: NetlistContract,
-    source_hashes: dict[str, str],
+    source_hashes: Mapping[str, str],
     native_summary: Path,
     mode: Literal["review", "block", "off"],
 ) -> PcbDifferentialPairRuleCoverageReport:
@@ -83,7 +84,7 @@ def scan_source_bound_signal_path_map(
     config: ProjectConfig,
     requirements: PcbSignalPathRuleMap,
     observed: NetlistContract,
-    source_hashes: dict[str, str],
+    source_hashes: Mapping[str, str],
     native_summary: Path,
     snapshot: PcbConnectivitySnapshot,
     snapshot_path: Path,

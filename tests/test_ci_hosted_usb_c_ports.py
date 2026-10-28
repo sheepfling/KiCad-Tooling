@@ -13,7 +13,9 @@ import pytest
 
 from kicad_tooling.ci_hosted import (
     HostedLog,
+    usb_c_port_fixture_lane,
 )
+from kicad_tooling.hwrepo.electrical import selected_config
 from tests.support import reference_root
 
 pytestmark = [
@@ -31,8 +33,6 @@ pytestmark = [
 )
 class NativeUsbCPortFixtureTests(unittest.TestCase):
     def test_native_role_prompt_covers_unknown_source_and_sink_topologies(self) -> None:
-        from kicad_tooling.ci_hosted import usb_c_port_fixture_lane
-        from kicad_tooling.hwrepo.electrical import selected_config
 
         repository = Path(__file__).resolve().parents[1]
         acceptance = repository / "build/ci"

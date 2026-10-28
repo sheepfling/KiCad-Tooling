@@ -6,6 +6,7 @@ import hashlib
 import json
 import runpy
 import sys
+from collections.abc import Set as AbstractSet
 from pathlib import Path
 
 import pytest
@@ -14,7 +15,7 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint]
 
 
 class FakeBoard:
-    def __init__(self, variants: set[str]) -> None:
+    def __init__(self, variants: AbstractSet[str]) -> None:
         self.variants = {name.casefold() for name in variants}
 
     def HasVariant(self, name: str) -> bool:
@@ -22,14 +23,14 @@ class FakeBoard:
 
 
 class FakePcbNew:
-    def __init__(self, variants: set[str]) -> None:
+    def __init__(self, variants: AbstractSet[str]) -> None:
         self.board = FakeBoard(variants)
 
     def LoadBoard(self, _path: str) -> FakeBoard:
         return self.board
 
 
-def probe_main(monkeypatch: pytest.MonkeyPatch, variants: set[str]):
+def probe_main(monkeypatch: pytest.MonkeyPatch, variants: AbstractSet[str]):
     monkeypatch.setitem(sys.modules, "pcbnew", FakePcbNew(variants))
     path = Path(__file__).parents[1] / "kicad_tooling/hwrepo/pcb_variant_probe.py.in"
     namespace = runpy.run_path(str(path), run_name="native_pcb_variant_probe_test")

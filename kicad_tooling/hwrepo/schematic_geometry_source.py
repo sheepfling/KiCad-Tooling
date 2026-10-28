@@ -8,6 +8,7 @@ import posixpath
 from collections.abc import Mapping
 from pathlib import PurePosixPath
 
+from .contracts import repo_path_is_within
 from .model_inventory import (  # pyright: ignore[reportPrivateUsage]
     _atoms,  # pyright: ignore[reportPrivateUsage]
     _children,  # pyright: ignore[reportPrivateUsage]
@@ -88,24 +89,28 @@ def resolve_schematic_sheet_path(
         raise ValueError("Schematic source path is not portable")
     if not sheet_file or "\\" in sheet_file or ":" in sheet_file:
         raise ValueError(f"Schematic sheet file is not portable: {sheet_file!r}")
-    if "$" in sheet_file and not sheet_file.startswith("${KIPRJMOD}/"):
+    sheet_parts = PurePosixPath(sheet_file).parts
+    project_relative = sheet_parts[:1] == ("${KIPRJMOD}",) and len(sheet_parts) > 1
+    if "$" in sheet_file and not project_relative:
         raise ValueError(f"Unresolved schematic sheet variable: {sheet_file}")
-    file_name = sheet_file.removeprefix("${KIPRJMOD}/")
+    file_name = (
+        PurePosixPath(sheet_file).relative_to(PurePosixPath("${KIPRJMOD}")).as_posix()
+        if project_relative
+        else sheet_file
+    )
     if not file_name or PurePosixPath(file_name).is_absolute():
         raise ValueError(f"Schematic sheet file must be project-relative: {sheet_file!r}")
     source_parent = posixpath.dirname(source_path)
-    base = project_directory if sheet_file.startswith("${KIPRJMOD}/") else source_parent
+    base = project_directory if project_relative else source_parent
     resolved = posixpath.normpath(posixpath.join(base, file_name))
     project_root = posixpath.normpath(project_directory) if project_directory else "."
-    if resolved == ".." or resolved.startswith("../"):
+    if PurePosixPath(resolved).parts[:1] == ("..",):
         raise ValueError(f"Schematic sheet file escapes the repository: {sheet_file!r}")
-    if (
-        project_root != "."
-        and resolved != project_root
-        and not resolved.startswith(project_root + "/")
+    if project_root != "." and not repo_path_is_within(
+        resolved, project_root, include_directory=True
     ):
         raise ValueError(f"Schematic sheet file escapes its project directory: {sheet_file!r}")
-    if not resolved.endswith(".kicad_sch"):
+    if PurePosixPath(resolved).suffix != ".kicad_sch":
         raise ValueError(f"Schematic sheet file must end in .kicad_sch: {sheet_file!r}")
     return resolved
 

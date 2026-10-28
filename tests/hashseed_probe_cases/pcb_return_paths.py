@@ -28,6 +28,7 @@ from tests.design_lint_fixtures.pcb_return_paths import (
     pad,
     snapshot,
 )
+from tests.json_types import JsonObject
 
 
 def _requirement() -> PcbReturnPathsAnalysis:
@@ -40,7 +41,7 @@ def _requirement() -> PcbReturnPathsAnalysis:
 def _report(
     requirement: PcbReturnPathsAnalysis,
     evidence: PcbConnectivitySnapshot,
-) -> dict[str, object]:
+) -> JsonObject:
     board_sha256 = evidence.board_sha256
     checks = check_rows(
         requirement,
@@ -66,7 +67,7 @@ def _report(
     }
 
 
-def return_path_report(*, connected: bool) -> dict[str, object]:
+def return_path_report(*, connected: bool) -> JsonObject:
     """Serialize direct-disconnect checks and their synthetic source provenance."""
     board_sha256 = "d" * 64 if connected else BOARD
     requirement = _requirement()
@@ -81,7 +82,7 @@ def return_path_report(*, connected: bool) -> dict[str, object]:
     return _report(requirement, evidence)
 
 
-def split_plane_report(*, split: bool) -> dict[str, object]:
+def split_plane_report(*, split: bool) -> JsonObject:
     """Serialize a same-net copper-island fault and continuous-plane control."""
     identity = PcbZoneIdentity(
         uuid="00000000-0000-0000-0000-000000000001",
@@ -128,7 +129,7 @@ def split_plane_report(*, split: bool) -> dict[str, object]:
     return _report(_requirement(), evidence)
 
 
-def bonded_return_report(*, fitted: bool) -> dict[str, object]:
+def bonded_return_report(*, fitted: bool) -> JsonObject:
     """Serialize exact bonded-return contract checks for a fitted or DNP net tie."""
     bond = PcbReturnBondRequirement(
         reference="NT1",
@@ -177,7 +178,7 @@ def bonded_return_report(*, fitted: bool) -> dict[str, object]:
     return _report(requirement, evidence)
 
 
-def via_stitch_report(*, stitched: bool) -> dict[str, object]:
+def via_stitch_report(*, stitched: bool) -> JsonObject:
     """Serialize separate front/back return planes with and without a stitch via."""
     front = PcbZoneIdentity(
         uuid="00000000-0000-0000-0000-000000000011",
@@ -251,7 +252,7 @@ def via_stitch_report(*, stitched: bool) -> dict[str, object]:
     return _report(_requirement(), evidence)
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     return {
         "pcb_return_path_disconnected_fault": return_path_report(connected=False),
         "pcb_return_path_connected_control": return_path_report(connected=True),

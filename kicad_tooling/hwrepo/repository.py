@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import os
 import re
 import subprocess
 from pathlib import Path, PurePosixPath, PureWindowsPath
+from urllib.parse import urlsplit
 
-from .contracts import repo_path
+from ..git import run_git_text
+from .contracts import lexical_absolute_path, repo_path, repo_path_is_within
 from .discovery import load_config, load_registry, settings
 from .models import RepositoryPolicyReport
 
@@ -218,13 +219,14 @@ def cad_dependencies(
         line += text.count("\n", previous_match, match.start())
         previous_match = match.start()
         label = f"{file.relative_to(root).as_posix()}:{line}"
-        if value.startswith("kicad-embed://"):
+        embedded_uri = urlsplit(value)
+        if embedded_uri.scheme == "kicad-embed":
             # The containing native file is itself inventoried and hashed. Check
             # record presence here; native KiCad owns decoding the embedded bytes.
-            if value.removeprefix("kicad-embed://") not in embedded:
+            if f"{embedded_uri.netloc}{embedded_uri.path}" not in embedded:
                 issues.append(f"CAD_PATH: {label}: missing embedded model {value!r}")
             continue
-        if "\\" in value or PureWindowsPath(value).drive or value.startswith("/"):
+        if "\\" in value or PurePosixPath(value).is_absolute() or PureWindowsPath(value).drive:
             issues.append(f"CAD_PATH: {label}: machine-local dependency {value!r}")
             continue
         allowed = {
@@ -234,7 +236,7 @@ def cad_dependencies(
         }
         variables = re.findall(r"\$\{([^}]+)\}", value)
         if variables and variables[0] in allowed and len(variables) == 1:
-            if not value.startswith("${" + variables[0] + "}/") or ".." in value.split("/"):
+            if not repo_path_is_within(value, "${" + variables[0] + "}"):
                 issues.append(f"CAD_PATH: {label}: invalid versioned KiCad library path")
             continue  # Bundled library dependency resolved by the pinned KiCad lane.
         if any(variable != "KIPRJMOD" for variable in variables) or "$" in value.replace(
@@ -247,7 +249,7 @@ def cad_dependencies(
             target = project_dir / target
         try:
             # Collapse relative .. only after anchoring at the project directory.
-            normalized = Path(os.path.abspath(target))
+            normalized = lexical_absolute_path(target)
             relative = normalized.relative_to(root).as_posix()
             dependency = repo_path(root, relative)
             if not dependency.exists():
@@ -256,7 +258,7 @@ def cad_dependencies(
                 raise ValueError("dependency is not in this project's required_inputs")
             if dependency.is_dir():
                 if not any(
-                    relative == source or relative.startswith(f"{source}/")
+                    repo_path_is_within(relative, source, include_directory=True)
                     for source in source_roots
                 ):
                     raise ValueError("library directory is outside this project's source_roots")
@@ -269,7 +271,7 @@ def cad_dependencies(
                         and child.name != "fp-info-cache"
                     }
                     if exposed_inputs is None
-                    else {name for name in exposed_inputs if name.startswith(f"{relative}/")}
+                    else {name for name in exposed_inputs if repo_path_is_within(name, relative)}
                 )
                 if not exposed:
                     raise ValueError("library directory has no inventoried inputs for this project")
@@ -335,12 +337,7 @@ def check_repository(
             and not ephemeral(path.relative_to(root).as_posix())
         }
         issues.extend(f"UNREGISTERED_DESIGN: {name}" for name in sorted(found - inventories))
-        result = subprocess.run(
-            ["git", "-c", f"safe.directory={root.as_posix()}", "-C", str(root), "ls-files", "-z"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
+        result = run_git_text(root, "ls-files", "-z")
         for name in result.stdout.split("\0"):
             if name and generated_artifact(name) and (root / name).exists():
                 # A working-tree deletion is the intended fix; CI checks the committed tree.

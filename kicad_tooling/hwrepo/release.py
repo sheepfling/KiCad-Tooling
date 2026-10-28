@@ -3,21 +3,22 @@
 from __future__ import annotations
 
 import csv
-import hashlib
 import subprocess
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import UTC, date, datetime
 from pathlib import Path
+from types import MappingProxyType
 
+from ..git import git_output
 from .contracts import read_model, repo_path
 from .discovery import load_config, load_registry
-from .evidence import source_state, verify_native, verify_release_portable
+from .evidence import digest as file_digest
+from .evidence import source_state
 from .layout import layout
 from .models import (
     Assurance,
     DeviationStatus,
     GovernanceRecord,
-    HarnessInterfaceValidationContract,
     InterfacesCatalog,
     LibrariesCatalog,
     PolicyIssue,
@@ -33,74 +34,77 @@ from .models import (
     ReleaseReadinessReport,
     ReleaseStatus,
     ReleaseVariant,
-    SystemWiringValidationContract,
     TeamPolicy,
     ToolchainsCatalog,
 )
+from .native_evidence import verify_native
+from .portable_evidence import verify_release_portable
 from .product import ProductRepository, excluded, load_repository, occurrences
 
-MATURITY_ORDER = {
-    "training": 0,
-    "engineering_review": 1,
-    "prototype": 2,
-    "pilot": 3,
-    "production": 4,
-}
-RELEASE_MATURITY = {
-    ReleaseClass.ENGINEERING_REVIEW: "engineering_review",
-    ReleaseClass.PROTOTYPE: "prototype",
-    ReleaseClass.PILOT: "pilot",
-    ReleaseClass.PRODUCTION: "production",
-}
-REQUIRED_ARTIFACT_KINDS = {
-    ReleaseClass.ENGINEERING_REVIEW: frozenset({ReleaseArtifactKind.REVIEW_RECORD}),
-    ReleaseClass.PROTOTYPE: frozenset(
-        {
-            ReleaseArtifactKind.BOM,
-            ReleaseArtifactKind.SCHEMATIC_EXPORT,
-            ReleaseArtifactKind.PCB_EXPORT,
-            ReleaseArtifactKind.VALIDATION_REPORT,
-        }
-    ),
-    ReleaseClass.PILOT: frozenset(
-        {
-            ReleaseArtifactKind.BOM,
-            ReleaseArtifactKind.SCHEMATIC_EXPORT,
-            ReleaseArtifactKind.PCB_EXPORT,
-            ReleaseArtifactKind.VALIDATION_REPORT,
-        }
-    ),
-    ReleaseClass.PRODUCTION: frozenset(
-        {
-            ReleaseArtifactKind.BOM,
-            ReleaseArtifactKind.SCHEMATIC_EXPORT,
-            ReleaseArtifactKind.PCB_EXPORT,
-            ReleaseArtifactKind.VALIDATION_REPORT,
-            ReleaseArtifactKind.FABRICATION_PACKAGE,
-            ReleaseArtifactKind.ASSEMBLY_PACKAGE,
-        }
-    ),
-}
-ASSURANCE_ORDER = {
-    Assurance.NOT_APPLICABLE: -1,
-    Assurance.UNKNOWN: 0,
-    Assurance.ASSUMED: 1,
-    Assurance.INFERRED: 2,
-    Assurance.OBSERVED: 3,
-    Assurance.MANUFACTURER_DOCUMENTED: 4,
-    Assurance.VERIFIED: 5,
-}
+MATURITY_ORDER: Mapping[str, int] = MappingProxyType(
+    {
+        "training": 0,
+        "engineering_review": 1,
+        "prototype": 2,
+        "pilot": 3,
+        "production": 4,
+    }
+)
+RELEASE_MATURITY: Mapping[ReleaseClass, str] = MappingProxyType(
+    {
+        ReleaseClass.ENGINEERING_REVIEW: "engineering_review",
+        ReleaseClass.PROTOTYPE: "prototype",
+        ReleaseClass.PILOT: "pilot",
+        ReleaseClass.PRODUCTION: "production",
+    }
+)
+REQUIRED_ARTIFACT_KINDS: Mapping[ReleaseClass, frozenset[ReleaseArtifactKind]] = MappingProxyType(
+    {
+        ReleaseClass.ENGINEERING_REVIEW: frozenset({ReleaseArtifactKind.REVIEW_RECORD}),
+        ReleaseClass.PROTOTYPE: frozenset(
+            {
+                ReleaseArtifactKind.BOM,
+                ReleaseArtifactKind.SCHEMATIC_EXPORT,
+                ReleaseArtifactKind.PCB_EXPORT,
+                ReleaseArtifactKind.VALIDATION_REPORT,
+            }
+        ),
+        ReleaseClass.PILOT: frozenset(
+            {
+                ReleaseArtifactKind.BOM,
+                ReleaseArtifactKind.SCHEMATIC_EXPORT,
+                ReleaseArtifactKind.PCB_EXPORT,
+                ReleaseArtifactKind.VALIDATION_REPORT,
+            }
+        ),
+        ReleaseClass.PRODUCTION: frozenset(
+            {
+                ReleaseArtifactKind.BOM,
+                ReleaseArtifactKind.SCHEMATIC_EXPORT,
+                ReleaseArtifactKind.PCB_EXPORT,
+                ReleaseArtifactKind.VALIDATION_REPORT,
+                ReleaseArtifactKind.FABRICATION_PACKAGE,
+                ReleaseArtifactKind.ASSEMBLY_PACKAGE,
+            }
+        ),
+    }
+)
+ASSURANCE_ORDER: Mapping[Assurance, int] = MappingProxyType(
+    {
+        Assurance.NOT_APPLICABLE: -1,
+        Assurance.UNKNOWN: 0,
+        Assurance.ASSUMED: 1,
+        Assurance.INFERRED: 2,
+        Assurance.OBSERVED: 3,
+        Assurance.MANUFACTURER_DOCUMENTED: 4,
+        Assurance.VERIFIED: 5,
+    }
+)
 
 
 def git(root: Path, *args: str) -> str:
     """Read one Git fact without altering the worktree, index, refs or remotes."""
-    result = subprocess.run(
-        ["git", "-c", f"safe.directory={root.as_posix()}", "-C", str(root), *args],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return result.stdout.strip()
+    return git_output(root, *args)
 
 
 def issue(code: str, location: str, message: str) -> PolicyIssue:
@@ -134,25 +138,29 @@ def load_release_repository(root: Path, manifest: ReleaseManifest) -> ProductRep
         if project.kind not in {ProjectKind.SYSTEM_WIRING, ProjectKind.HARNESS_INTERFACE}:
             continue
         validation = load_config(root, project.config).validation
-        if not isinstance(
-            validation, (SystemWiringValidationContract, HarnessInterfaceValidationContract)
+        if (
+            validation.kind == ProjectKind.SYSTEM_WIRING
+            or validation.kind == ProjectKind.HARNESS_INTERFACE
         ):
+            product_id = validation.product_id
+        else:
             raise TypeError(f"{project.config}: product-view validation contract is missing")
-        entry = indexed.get(validation.product_id)
-        if validation.product_id in relevant_products and (
+        entry = indexed.get(product_id)
+        if product_id in relevant_products and (
             entry is None or project.id not in entry.project_ids
         ):
             raise ValueError(
-                f"{layout(root).products}: product {validation.product_id} omits "
+                f"{layout(root).products}: product {product_id} omits "
                 f"product-view project {project.id} declared by {project.config}"
             )
     return load_repository(root, tuple(sorted(selected)))
 
 
 def selected_products(
-    repository: ProductRepository, manifest: ReleaseManifest, issues: list[PolicyIssue]
-) -> tuple[ProductRecord, ...]:
+    repository: ProductRepository, manifest: ReleaseManifest
+) -> tuple[tuple[ProductRecord, ...], tuple[PolicyIssue, ...]]:
     """Resolve every explicit product/variant selection once and fail unknown values."""
+    issues: list[PolicyIssue] = []
     products = {product.id: product for product in repository.products}
     selected: dict[str, ProductRecord] = {}
     seen: set[tuple[str, str]] = set()
@@ -189,7 +197,7 @@ def selected_products(
         selected[product.id] = product
     if not manifest.variants and not manifest.projects:
         issues.append(issue("RELEASE_SELECTION", "projects", "Select a project or product/variant"))
-    return tuple(selected[identifier] for identifier in sorted(selected))
+    return tuple(selected[identifier] for identifier in sorted(selected)), tuple(issues)
 
 
 def product_scope(product: ProductRecord) -> frozenset[str]:
@@ -352,9 +360,9 @@ def validate_dependencies(
     root: Path,
     projects: Iterable[ProjectRecord],
     manifest: ReleaseManifest,
-    findings: list[PolicyIssue],
-) -> None:
+) -> tuple[PolicyIssue, ...]:
     """Bind release records to every selected shared-library/interface revision."""
+    findings: list[PolicyIssue] = []
     registry = load_registry(root)
     libraries = {
         record.id: record
@@ -416,6 +424,7 @@ def validate_dependencies(
             findings.append(
                 issue("RELEASE_INTERFACE", identifier, "Interface revision does not match")
             )
+    return tuple(findings)
 
 
 def assurance_policy(root: Path, release_class: ReleaseClass) -> ReleaseAssurancePolicy:
@@ -433,9 +442,9 @@ def assurance_policy(root: Path, release_class: ReleaseClass) -> ReleaseAssuranc
 def validate_assurance(
     products: Iterable[ProductRecord],
     policy: ReleaseAssurancePolicy,
-    findings: list[PolicyIssue],
-) -> None:
+) -> tuple[PolicyIssue, ...]:
     """Require every retained semantic claim to meet the maturity-specific floor."""
+    findings: list[PolicyIssue] = []
     required = ASSURANCE_ORDER[policy.minimum_assurance]
     for product in products:
         claims = (*product.connections, *product.harnesses, *product.mechanical)
@@ -449,6 +458,7 @@ def validate_assurance(
                         f"{policy.minimum_assurance.value}",
                     )
                 )
+    return tuple(findings)
 
 
 def check(
@@ -463,10 +473,11 @@ def check(
         findings.append(issue("RELEASE_DEPENDENCY", "products", str(exc)))
         repository = load_repository(resolved_root, ())
     findings.extend(repository.issues)
-    products = selected_products(repository, manifest, findings)
+    products, selection_issues = selected_products(repository, manifest)
+    findings.extend(selection_issues)
     try:
         projects = selected_project_records(repository, products, manifest.projects)
-        validate_dependencies(resolved_root, projects, manifest, findings)
+        findings.extend(validate_dependencies(resolved_root, projects, manifest))
     except (OSError, ValueError) as exc:
         findings.append(issue("RELEASE_DEPENDENCY", "projects", str(exc)))
         projects = ()
@@ -505,8 +516,8 @@ def check(
                 )
             )
     try:
-        validate_assurance(
-            products, assurance_policy(resolved_root, manifest.release_class), findings
+        findings.extend(
+            validate_assurance(products, assurance_policy(resolved_root, manifest.release_class))
         )
     except (OSError, ValueError) as exc:
         findings.append(issue("RELEASE_ASSURANCE_POLICY", "release_policies", str(exc)))
@@ -621,7 +632,7 @@ def check(
             path = repo_path(resolved_root, artifact.path)
             if not path.is_file():
                 raise ValueError("missing artifact")
-            actual = hashlib.sha256(path.read_bytes()).hexdigest()
+            actual = file_digest(path)
             if actual != artifact.sha256:
                 raise ValueError("SHA-256 does not match")
         except (OSError, ValueError) as exc:

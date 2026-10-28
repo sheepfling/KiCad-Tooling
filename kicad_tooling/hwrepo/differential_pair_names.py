@@ -12,7 +12,7 @@ from .models import (
 from .pcb_drc_models import PcbDifferentialPairRuleMap
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class NamedDifferentialPair:
     """A deterministic name-based pair candidate, not an asserted requirement."""
 

@@ -9,7 +9,7 @@ from .usb_data_path_component_checks import check_usb_component_pin_map
 from .usb_data_path_models import UsbDataPathInlineComponentRequirement
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbInlineComponentCheck:
     component_issues: tuple[str, ...]
     positive_issues: tuple[str, ...]

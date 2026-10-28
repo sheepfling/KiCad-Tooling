@@ -6,6 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from .hwrepo.layout import default_project_root
 from .hwrepo.model_population import init_model_map, populate_models, render_population_text
 from .hwrepo.models import THREE_D_VIEWS
 from .hwrepo.three_d import generate, render_text, selected_views
@@ -13,7 +14,7 @@ from .hwrepo.three_d import generate, render_text, selected_views
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     parser.add_argument(
         "--project", required=True, help="One registered PCB or PCB-only project ID"
     )

@@ -10,13 +10,15 @@ import sys
 import tempfile
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from .ci_hosted_kicad10_images import KICAD_10_NATIVE_TOOLCHAINS
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 
 def named_rail_fixture_lane(
@@ -35,11 +37,6 @@ def named_rail_fixture_lane(
     expected_pin_functions: Mapping[str, str] | None = None,
 ) -> None:
     """Export and relint exact fault/control schematics on one pinned KiCad image."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .validate import read_netlist
 
     root = root.resolve()
     if (version, image) not in KICAD_10_NATIVE_TOOLCHAINS:
@@ -50,9 +47,7 @@ def named_rail_fixture_lane(
     ):
         raise ValueError("Named-rail fixture lane requires exact fault and control expectations")
     pinned = pinned_image(image)
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint" / fixture_directory
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint" / fixture_directory
     sources = {case: fixture_root / f"{case}.kicad_sch" for case in cases}
     actual_source_hashes = {case: digest(source) for case, source in sources.items()}
     if actual_source_hashes != dict(source_hashes):

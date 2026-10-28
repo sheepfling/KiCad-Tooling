@@ -29,6 +29,7 @@ from kicad_tooling.hwrepo.models import (
 )
 from tests.component_peer_power_assignment_support import peer_pin_netlist_xml
 from tests.connector_footprint_peer_support import (
+    PeerMetadataDivergenceOverrides,
     lint_report,
     peer_metadata_divergence_netlist,
 )
@@ -115,7 +116,7 @@ def test_different_metadata_with_common_target_assignment_is_quiet() -> None:
     ),
 )
 def test_metadata_divergence_requires_complete_anchored_assignments(
-    kwargs: dict[str, object],
+    kwargs: PeerMetadataDivergenceOverrides,
 ) -> None:
     report = lint_report(peer_metadata_divergence_netlist(**kwargs))
 

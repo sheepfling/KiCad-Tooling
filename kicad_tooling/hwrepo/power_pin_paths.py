@@ -5,7 +5,9 @@ from __future__ import annotations
 import re
 from collections import deque
 from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import TypeVar
 
 from .capacitor_symbols import is_capacitor_symbol
@@ -25,25 +27,29 @@ _SUPPORTED_FIXED_PATH_SYMBOLS = frozenset(
         "device:polyfuse",
     }
 )
-_BRIDGED_JUMPER_TOPOLOGIES: dict[str, tuple[dict[str, str], tuple[tuple[str, ...], ...]]] = {
-    "jumper:solderjumper_2_bridged": (
-        {"1": "a", "2": "b"},
-        (("1", "2"),),
-    ),
-    "jumper:solderjumper_3_bridged12": (
-        {"1": "a", "2": "c", "3": "b"},
-        (("1", "2"),),
-    ),
-    "jumper:solderjumper_3_bridged123": (
-        {"1": "a", "2": "c", "3": "b"},
-        (("1", "2", "3"),),
-    ),
-}
+_BRIDGED_JUMPER_TOPOLOGIES: Mapping[str, tuple[Mapping[str, str], tuple[tuple[str, ...], ...]]] = (
+    MappingProxyType(
+        {
+            "jumper:solderjumper_2_bridged": (
+                MappingProxyType({"1": "a", "2": "b"}),
+                (("1", "2"),),
+            ),
+            "jumper:solderjumper_3_bridged12": (
+                MappingProxyType({"1": "a", "2": "c", "3": "b"}),
+                (("1", "2"),),
+            ),
+            "jumper:solderjumper_3_bridged123": (
+                MappingProxyType({"1": "a", "2": "c", "3": "b"}),
+                (("1", "2", "3"),),
+            ),
+        }
+    )
+)
 _SUPPORTED_DIRECTIONAL_PATH_SYMBOLS = frozenset({"device:d", "device:d_schottky"})
 _Value = TypeVar("_Value")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PowerInputSourcePathGap:
     """A decoupled power input without a recognized source anchor or bounded path."""
 
@@ -70,9 +76,9 @@ def _is_return_net(observed: NetlistContract, net: str) -> bool:
 def _native_two_pin_nets(
     observed: NetlistContract,
     reference: str,
-    nets_by_pin: dict[str, set[str]],
+    nets_by_pin: Mapping[str, AbstractSet[str]],
 ) -> tuple[str, str] | None:
-    numbers = _casefold_lookup(observed.component_pin_numbers, reference)
+    numbers: tuple[str, ...] | None = _casefold_lookup(observed.component_pin_numbers, reference)
     if not isinstance(numbers, tuple) or len(numbers) != 2 or len(set(numbers)) != 2:
         return None
     assigned = [nets_by_pin.get(f"{reference}.{number}".casefold(), set()) for number in numbers]
@@ -86,7 +92,7 @@ def _native_two_pin_nets(
 
 def _fitted_capacitors_to_return(
     observed: NetlistContract,
-    nets_by_pin: dict[str, set[str]],
+    nets_by_pin: Mapping[str, AbstractSet[str]],
 ) -> dict[str, set[str]]:
     dnp = {reference.casefold() for reference in observed.dnp_components}
     capacitors_by_supply_net: dict[str, set[str]] = {}
@@ -108,7 +114,7 @@ def _fitted_capacitors_to_return(
 
 def _supported_path_edges(
     observed: NetlistContract,
-    nets_by_pin: dict[str, set[str]],
+    nets_by_pin: Mapping[str, AbstractSet[str]],
 ) -> dict[str, set[str]]:
     dnp = {reference.casefold() for reference in observed.dnp_components}
     adjacent: dict[str, set[str]] = {}
@@ -122,7 +128,9 @@ def _supported_path_edges(
         jumper_topology = _BRIDGED_JUMPER_TOPOLOGIES.get(symbol_key)
         if jumper_topology is not None:
             expected_roles, bridged_pin_groups = jumper_topology
-            pin_numbers = _casefold_lookup(observed.component_pin_numbers, reference)
+            pin_numbers: tuple[str, ...] | None = _casefold_lookup(
+                observed.component_pin_numbers, reference
+            )
             if (
                 not isinstance(pin_numbers, tuple)
                 or len(pin_numbers) != len(expected_roles)
@@ -132,7 +140,7 @@ def _supported_path_edges(
             nets_by_pin_number: dict[str, str] = {}
             for number in pin_numbers:
                 pin = f"{reference}.{number}"
-                function = _casefold_lookup(observed.pin_functions, pin)
+                function: str | None = _casefold_lookup(observed.pin_functions, pin)
                 function_key = function.strip().casefold() if isinstance(function, str) else ""
                 number_key = number.casefold()
                 if expected_roles.get(number_key) != function_key:
@@ -152,7 +160,9 @@ def _supported_path_edges(
                             adjacent.setdefault(second, set()).add(first)
             continue
         if symbol_key in _SUPPORTED_DIRECTIONAL_PATH_SYMBOLS:
-            pin_numbers = _casefold_lookup(observed.component_pin_numbers, reference)
+            pin_numbers: tuple[str, ...] | None = _casefold_lookup(
+                observed.component_pin_numbers, reference
+            )
             if (
                 not isinstance(pin_numbers, tuple)
                 or len(pin_numbers) != 2
@@ -162,7 +172,7 @@ def _supported_path_edges(
             nets_by_role: dict[str, set[str]] = {"a": set(), "k": set()}
             for number in pin_numbers:
                 pin = f"{reference}.{number}"
-                function = _casefold_lookup(observed.pin_functions, pin)
+                function: str | None = _casefold_lookup(observed.pin_functions, pin)
                 function_key = function.strip().casefold() if isinstance(function, str) else ""
                 if function_key not in nets_by_role:
                     break
@@ -199,8 +209,8 @@ def _supported_path_edges(
 
 def _reaches_any_source(
     start: str,
-    source_nets: set[str],
-    adjacent: dict[str, set[str]],
+    source_nets: AbstractSet[str],
+    adjacent: Mapping[str, AbstractSet[str]],
 ) -> bool:
     pending = deque((start,))
     visited = {start}

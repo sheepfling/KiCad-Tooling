@@ -3,18 +3,46 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from types import SimpleNamespace
+from typing import Literal, TypedDict
 
 from domain_detectors import detect_transformer_feedback
 
 
-def _component(reference: str, value: str, lib_id: str, pins: list[tuple[str, str]]) -> dict:
+class ComponentPin(TypedDict):
+    number: str
+    name: str
+
+
+class ComponentRecord(TypedDict):
+    reference: str
+    type: Literal["ic"]
+    value: str
+    lib_id: str
+    pins: list[ComponentPin]
+
+
+class FeedbackSummary(TypedDict):
+    rule_id: str
+    reference: str
+    optocoupler: str | None
+    shunt_reference: str | None
+    confidence: Literal["deterministic", "heuristic"]
+    evidence_source: str
+    components: list[str]
+    description: str
+
+
+def _component(
+    reference: str, value: str, lib_id: str, pins: Sequence[tuple[str, str]]
+) -> ComponentRecord:
     return {
         "reference": reference,
         "type": "ic",
         "value": value,
         "lib_id": lib_id,
-        "pins": [{"number": number, "name": name} for number, name in pins],
+        "pins": [ComponentPin(number=number, name=name) for number, name in pins],
     }
 
 
@@ -70,7 +98,7 @@ def _context(case: str) -> SimpleNamespace:
     )
 
 
-def _summarize(case: str) -> list[dict]:
+def _summarize(case: str) -> list[FeedbackSummary]:
     keys = (
         "rule_id",
         "reference",

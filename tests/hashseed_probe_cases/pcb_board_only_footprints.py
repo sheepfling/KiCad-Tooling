@@ -13,11 +13,12 @@ from kicad_tooling.hwrepo.pcb_component_inventory import (
     evaluate_native_component_inventory_coverage,
 )
 from tests.design_lint_fixtures.pcb_component_inventory import netlist, snapshot
+from tests.json_types import JsonObject
 
 RULE_ID = "pcb.board_only_footprint"
 
 
-def board_only_report(*, include_mounting_hole: bool) -> dict[str, object]:
+def board_only_report(*, include_mounting_hole: bool) -> JsonObject:
     """Serialize an unmatched mounting-hole candidate or matched control."""
     source_netlist = netlist(components={"J1": "Connector:USB_B"})
     board_references = ("J1", "H_MOUNT1") if include_mounting_hole else ("J1",)
@@ -75,7 +76,7 @@ def board_only_report(*, include_mounting_hole: bool) -> dict[str, object]:
     }
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     """Return a REVIEW candidate plus a matched-reference control."""
     return {
         "pcb_board_only_mounting_hole_candidate": board_only_report(include_mounting_hole=True),

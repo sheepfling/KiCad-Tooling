@@ -3,24 +3,19 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TypeAlias
 
-from .analysis_state_models import AnalysisNotApplicable
+import kicad_tooling.hwrepo.electrical_analysis_contract_models as electrical_contracts
+from kicad_tooling.hwrepo import pcb_test_access_models
+
 from .can_termination_contract import (
     can_termination_checks,
 )
-from .can_termination_models import CanTerminationAnalysis
 from .component_power_ratings import component_power_rating_checks
-from .component_rating_models import (
-    ComponentPowerRatingAnalysis,
-    ComponentVoltageRatingAnalysis,
-)
 from .component_voltage_ratings import component_voltage_rating_checks
-from .connector_contact_rating_models import ConnectorContactRatingAnalysis
 from .connector_contact_ratings import connector_contact_rating_checks
 from .contracts import read_model, repo_path
 from .control_input_checks import control_input_checks
-from .control_input_models import ControlInputsAnalysis
-from .digital_peer_voltage_models import DigitalPeerVoltageAnalysis
 from .digital_peer_voltages import digital_peer_voltage_checks
 from .electrical import (
     bound_inputs,
@@ -34,11 +29,9 @@ from .electrical import (
 )
 from .electrical_analysis_contract_models import ElectricalAnalysisContract
 from .evidence import digest, evidence_path, verify_source
-from .grounding_models import GroundingAnalysis
 from .i2c_pullup_contract import (
     i2c_pullup_checks,
 )
-from .i2c_pullup_models import I2cPullupAnalysis
 from .models import (
     CommandEvidence,
     ElectricalAnalysisReport,
@@ -50,27 +43,16 @@ from .models import (
     SourceState,
 )
 from .mosfet_stress import mosfet_stress_checks
-from .mosfet_stress_models import MosfetStressAnalysis
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_return_path_capture import expected_probe_sha256, native_pcb_command_matches
 from .pcb_return_path_checks import pcb_return_path_checks
-from .pcb_return_path_models import PcbReturnPathsAnalysis
-from .pcb_test_access_models import (
-    PcbAccessAnalysis,
-    PcbAccessProbeRequestSet,
-    TestAccessAnalysis,
-)
-from .pin_connectivity_models import PinConnectivityAnalysis
+from .pcb_test_access_models import PcbAccessProbeRequestSet
 from .power_connectivity import power_connectivity_checks
-from .power_connectivity_models import PowerConnectivityAnalysis
 from .rs485_heuristics import rs485_checks
-from .rs485_models import Rs485Analysis
 from .serial_heuristics import serial_peer_checks
-from .serial_peer_models import SerialPeerAnalysis
 from .spi_contract import (
     spi_checks,
 )
-from .spi_models import SpiAnalysis
 from .spice import measured_checks, observed_versions, simulation_deck, waveform_checks
 from .test_access import (
     evaluate_test_access_checks,
@@ -78,10 +60,11 @@ from .test_access import (
     pcb_accessibility_checks,
     pcb_probe_envelope_checks,
 )
-from .usb_c_contract import (
-    usb_c_checks,
+from .usb_c_contract import usb_c_checks
+
+ElectricalAnalysisState: TypeAlias = (
+    electrical_contracts.AnalysisNotApplicable | electrical_contracts.AnalysisPending
 )
-from .usb_c_models import UsbCAnalysis
 
 
 def required_projects(
@@ -119,6 +102,54 @@ def verify_electrical(
     contract = load_analysis(root, config)
     if contract is None:
         raise ValueError("Electrical requirements are missing")
+    # Project the imported Pydantic contract fields into explicit local unions so
+    # runtime narrowing remains visible at this cross-module validation boundary.
+    grounding: electrical_contracts.GroundingAnalysis | ElectricalAnalysisState = contract.grounding
+    pcb_return_paths: electrical_contracts.PcbReturnPathsAnalysis | ElectricalAnalysisState = (
+        contract.pcb_return_paths
+    )
+    pin_connectivity: (
+        electrical_contracts.PinConnectivityAnalysis | ElectricalAnalysisState | None
+    ) = contract.pin_connectivity
+    i2c_pullups: electrical_contracts.I2cPullupAnalysis | ElectricalAnalysisState | None = (
+        contract.i2c_pullups
+    )
+    can_termination: (
+        electrical_contracts.CanTerminationAnalysis | ElectricalAnalysisState | None
+    ) = contract.can_termination
+    usb_c: electrical_contracts.UsbCAnalysis | ElectricalAnalysisState | None = contract.usb_c
+    spi: electrical_contracts.SpiAnalysis | ElectricalAnalysisState | None = contract.spi
+    serial_peers: electrical_contracts.SerialPeerAnalysis | ElectricalAnalysisState | None = (
+        contract.serial_peers
+    )
+    digital_peer_voltages: (
+        electrical_contracts.DigitalPeerVoltageAnalysis | ElectricalAnalysisState | None
+    ) = contract.digital_peer_voltages
+    component_voltage_ratings: (
+        electrical_contracts.ComponentVoltageRatingAnalysis | ElectricalAnalysisState | None
+    ) = contract.component_voltage_ratings
+    component_power_ratings: (
+        electrical_contracts.ComponentPowerRatingAnalysis | ElectricalAnalysisState | None
+    ) = contract.component_power_ratings
+    connector_contact_ratings: (
+        electrical_contracts.ConnectorContactRatingAnalysis | ElectricalAnalysisState | None
+    ) = contract.connector_contact_ratings
+    mosfet_stress: electrical_contracts.MosfetStressAnalysis | ElectricalAnalysisState | None = (
+        contract.mosfet_stress
+    )
+    rs485: electrical_contracts.Rs485Analysis | ElectricalAnalysisState | None = contract.rs485
+    control_inputs: electrical_contracts.ControlInputsAnalysis | ElectricalAnalysisState | None = (
+        contract.control_inputs
+    )
+    power_connectivity: (
+        electrical_contracts.PowerConnectivityAnalysis | ElectricalAnalysisState | None
+    ) = contract.power_connectivity
+    test_access: electrical_contracts.TestAccessAnalysis | ElectricalAnalysisState | None = (
+        contract.test_access
+    )
+    high_frequency: electrical_contracts.HighFrequencyAnalysis | ElectricalAnalysisState = (
+        contract.high_frequency
+    )
     issues = policy_issues(root, config)
     if issues:
         raise ValueError("Electrical requirements are invalid: " + "; ".join(issues))
@@ -138,36 +169,38 @@ def verify_electrical(
     checks: list[ElectricalCheck] = []
     netlist = (
         read_netlist(evidence_path(root, native).parent / "netlist.xml")
-        if isinstance(contract.grounding, GroundingAnalysis)
-        or isinstance(contract.pin_connectivity, PinConnectivityAnalysis)
-        or isinstance(contract.i2c_pullups, I2cPullupAnalysis)
-        or isinstance(contract.can_termination, CanTerminationAnalysis)
-        or isinstance(contract.usb_c, UsbCAnalysis)
-        or isinstance(contract.spi, SpiAnalysis)
-        or isinstance(contract.serial_peers, SerialPeerAnalysis)
-        or isinstance(contract.digital_peer_voltages, DigitalPeerVoltageAnalysis)
-        or isinstance(contract.component_voltage_ratings, ComponentVoltageRatingAnalysis)
-        or isinstance(contract.component_power_ratings, ComponentPowerRatingAnalysis)
-        or isinstance(contract.connector_contact_ratings, ConnectorContactRatingAnalysis)
-        or isinstance(contract.mosfet_stress, MosfetStressAnalysis)
-        or isinstance(contract.rs485, Rs485Analysis)
-        or isinstance(contract.control_inputs, ControlInputsAnalysis)
-        or isinstance(contract.power_connectivity, PowerConnectivityAnalysis)
-        or isinstance(contract.test_access, TestAccessAnalysis)
+        if isinstance(grounding, electrical_contracts.GroundingAnalysis)
+        or isinstance(pin_connectivity, electrical_contracts.PinConnectivityAnalysis)
+        or isinstance(i2c_pullups, electrical_contracts.I2cPullupAnalysis)
+        or isinstance(can_termination, electrical_contracts.CanTerminationAnalysis)
+        or isinstance(usb_c, electrical_contracts.UsbCAnalysis)
+        or isinstance(spi, electrical_contracts.SpiAnalysis)
+        or isinstance(serial_peers, electrical_contracts.SerialPeerAnalysis)
+        or isinstance(digital_peer_voltages, electrical_contracts.DigitalPeerVoltageAnalysis)
+        or isinstance(
+            component_voltage_ratings, electrical_contracts.ComponentVoltageRatingAnalysis
+        )
+        or isinstance(component_power_ratings, electrical_contracts.ComponentPowerRatingAnalysis)
+        or isinstance(
+            connector_contact_ratings, electrical_contracts.ConnectorContactRatingAnalysis
+        )
+        or isinstance(mosfet_stress, electrical_contracts.MosfetStressAnalysis)
+        or isinstance(rs485, electrical_contracts.Rs485Analysis)
+        or isinstance(control_inputs, electrical_contracts.ControlInputsAnalysis)
+        or isinstance(power_connectivity, electrical_contracts.PowerConnectivityAnalysis)
+        or isinstance(test_access, electrical_contracts.TestAccessAnalysis)
         else None
     )
-    if isinstance(contract.grounding, GroundingAnalysis):
+    if isinstance(grounding, electrical_contracts.GroundingAnalysis):
         assert netlist is not None
-        checks.extend(grounding_checks(contract.grounding, netlist))
+        checks.extend(grounding_checks(grounding, netlist))
     else:
-        if not isinstance(contract.grounding, AnalysisNotApplicable):
+        if not isinstance(grounding, electrical_contracts.AnalysisNotApplicable):
             raise ValueError("Grounding requirements remain pending")  # noqa: TRY004 - incomplete policy
         checks.append(
-            ElectricalCheck(
-                id="grounding", status="NOT_APPLICABLE", detail=contract.grounding.reason
-            )
+            ElectricalCheck(id="grounding", status="NOT_APPLICABLE", detail=grounding.reason)
         )
-    if isinstance(contract.pcb_return_paths, PcbReturnPathsAnalysis):
+    if isinstance(pcb_return_paths, electrical_contracts.PcbReturnPathsAnalysis):
         if config.kind is not ProjectKind.PCB:
             raise ValueError("PCB return-path requirements need an authoritative PCB project")
         board_path = repo_path(root, config.project).with_suffix(".kicad_pcb")
@@ -180,8 +213,8 @@ def verify_electrical(
                 command,
                 config,
                 access_probes=(
-                    isinstance(contract.test_access, TestAccessAnalysis)
-                    and pcb_access_probe_request_set(contract.test_access) is not None
+                    isinstance(test_access, electrical_contracts.TestAccessAnalysis)
+                    and pcb_access_probe_request_set(test_access) is not None
                 ),
             )
             or digest(probe_path) != expected_probe_sha256()
@@ -190,7 +223,7 @@ def verify_electrical(
             raise ValueError("PCB connectivity command or probe source evidence differs")
         checks.extend(
             pcb_return_path_checks(
-                contract.pcb_return_paths,
+                pcb_return_paths,
                 snapshot,
                 board_sha256=digest(board_path),
                 kicad_version=config.kicad_version,
@@ -198,19 +231,19 @@ def verify_electrical(
                 probe_sha256=expected_probe_sha256(),
             )
         )
-    elif isinstance(contract.pcb_return_paths, AnalysisNotApplicable):
+    elif isinstance(pcb_return_paths, electrical_contracts.AnalysisNotApplicable):
         checks.append(
             ElectricalCheck(
                 id="pcb-return-paths",
                 status="NOT_APPLICABLE",
-                detail=contract.pcb_return_paths.reason,
+                detail=pcb_return_paths.reason,
             )
         )
     else:
         raise ValueError("PCB return-path requirements remain pending")  # noqa: TRY004
     access_probe_requests = (
-        pcb_access_probe_request_set(contract.test_access)
-        if isinstance(contract.test_access, TestAccessAnalysis)
+        pcb_access_probe_request_set(test_access)
+        if isinstance(test_access, electrical_contracts.TestAccessAnalysis)
         else None
     )
     access_probe_snapshot: PcbConnectivitySnapshot | None = None
@@ -239,196 +272,193 @@ def verify_electrical(
                 "PCB probe-envelope evidence differs from its board, request, or native toolchain"
             )
         access_probe_snapshot = snapshot
-    if isinstance(contract.pin_connectivity, PinConnectivityAnalysis):
+    if isinstance(pin_connectivity, electrical_contracts.PinConnectivityAnalysis):
         assert netlist is not None
-        checks.extend(pin_relationship_checks(contract.pin_connectivity, netlist))
-    elif contract.pin_connectivity is not None:
-        if not isinstance(contract.pin_connectivity, AnalysisNotApplicable):
+        checks.extend(pin_relationship_checks(pin_connectivity, netlist))
+    elif pin_connectivity is not None:
+        if not isinstance(pin_connectivity, electrical_contracts.AnalysisNotApplicable):
             raise ValueError("Pin connectivity requirements remain pending")  # noqa: TRY004 - incomplete policy
         checks.append(
             ElectricalCheck(
                 id="pin-connectivity",
                 status="NOT_APPLICABLE",
-                detail=contract.pin_connectivity.reason,
+                detail=pin_connectivity.reason,
             )
         )
-    if isinstance(contract.i2c_pullups, I2cPullupAnalysis):
+    if isinstance(i2c_pullups, electrical_contracts.I2cPullupAnalysis):
         assert netlist is not None
-        checks.extend(i2c_pullup_checks(contract.i2c_pullups, netlist))
-    elif contract.i2c_pullups is not None:
-        if not isinstance(contract.i2c_pullups, AnalysisNotApplicable):
+        checks.extend(i2c_pullup_checks(i2c_pullups, netlist))
+    elif i2c_pullups is not None:
+        if not isinstance(i2c_pullups, electrical_contracts.AnalysisNotApplicable):
             raise ValueError("I2C pull-up requirements remain pending")  # noqa: TRY004 - incomplete policy
         checks.append(
             ElectricalCheck(
                 id="i2c-pullups",
                 status="NOT_APPLICABLE",
-                detail=contract.i2c_pullups.reason,
+                detail=i2c_pullups.reason,
             )
         )
-    if isinstance(contract.can_termination, CanTerminationAnalysis):
+    if isinstance(can_termination, electrical_contracts.CanTerminationAnalysis):
         assert netlist is not None
-        checks.extend(can_termination_checks(contract.can_termination, netlist))
-    elif contract.can_termination is not None:
-        if not isinstance(contract.can_termination, AnalysisNotApplicable):
+        checks.extend(can_termination_checks(can_termination, netlist))
+    elif can_termination is not None:
+        if not isinstance(can_termination, electrical_contracts.AnalysisNotApplicable):
             raise ValueError("CAN termination requirements remain pending")  # noqa: TRY004 - incomplete policy
         checks.append(
             ElectricalCheck(
                 id="can-termination",
                 status="NOT_APPLICABLE",
-                detail=contract.can_termination.reason,
+                detail=can_termination.reason,
             )
         )
-    if isinstance(contract.usb_c, UsbCAnalysis):
+    if isinstance(usb_c, electrical_contracts.UsbCAnalysis):
         assert netlist is not None
-        checks.extend(usb_c_checks(contract.usb_c, netlist))
-    elif contract.usb_c is not None:
-        if not isinstance(contract.usb_c, AnalysisNotApplicable):
+        checks.extend(usb_c_checks(usb_c, netlist))
+    elif usb_c is not None:
+        if not isinstance(usb_c, electrical_contracts.AnalysisNotApplicable):
             raise ValueError("USB-C requirements remain pending")  # noqa: TRY004 - incomplete policy
-        checks.append(
-            ElectricalCheck(id="usb-c", status="NOT_APPLICABLE", detail=contract.usb_c.reason)
-        )
-    if isinstance(contract.spi, SpiAnalysis):
+        checks.append(ElectricalCheck(id="usb-c", status="NOT_APPLICABLE", detail=usb_c.reason))
+    if isinstance(spi, electrical_contracts.SpiAnalysis):
         assert netlist is not None
-        checks.extend(spi_checks(contract.spi, netlist))
-    elif contract.spi is not None:
-        if not isinstance(contract.spi, AnalysisNotApplicable):
+        checks.extend(spi_checks(spi, netlist))
+    elif spi is not None:
+        if not isinstance(spi, electrical_contracts.AnalysisNotApplicable):
             raise ValueError("SPI requirements remain pending")  # noqa: TRY004 - incomplete policy
-        checks.append(
-            ElectricalCheck(id="spi", status="NOT_APPLICABLE", detail=contract.spi.reason)
-        )
-    if isinstance(contract.serial_peers, SerialPeerAnalysis):
+        checks.append(ElectricalCheck(id="spi", status="NOT_APPLICABLE", detail=spi.reason))
+    if isinstance(serial_peers, electrical_contracts.SerialPeerAnalysis):
         assert netlist is not None
-        checks.extend(serial_peer_checks(contract.serial_peers, netlist))
-    elif contract.serial_peers is not None:
-        if not isinstance(contract.serial_peers, AnalysisNotApplicable):
+        checks.extend(serial_peer_checks(serial_peers, netlist))
+    elif serial_peers is not None:
+        if not isinstance(serial_peers, electrical_contracts.AnalysisNotApplicable):
             raise ValueError("Serial peer requirements remain pending")  # noqa: TRY004 - incomplete policy
         checks.append(
             ElectricalCheck(
                 id="serial-peers",
                 status="NOT_APPLICABLE",
-                detail=contract.serial_peers.reason,
+                detail=serial_peers.reason,
             )
         )
-    if isinstance(contract.digital_peer_voltages, DigitalPeerVoltageAnalysis):
+    if isinstance(digital_peer_voltages, electrical_contracts.DigitalPeerVoltageAnalysis):
         assert netlist is not None
-        checks.extend(digital_peer_voltage_checks(contract.digital_peer_voltages, netlist))
-    elif contract.digital_peer_voltages is not None:
-        if not isinstance(contract.digital_peer_voltages, AnalysisNotApplicable):
+        checks.extend(digital_peer_voltage_checks(digital_peer_voltages, netlist))
+    elif digital_peer_voltages is not None:
+        if not isinstance(digital_peer_voltages, electrical_contracts.AnalysisNotApplicable):
             raise ValueError("Digital peer voltage requirements remain pending")  # noqa: TRY004
         checks.append(
             ElectricalCheck(
                 id="digital-peer-voltages",
                 status="NOT_APPLICABLE",
-                detail=contract.digital_peer_voltages.reason,
+                detail=digital_peer_voltages.reason,
             )
         )
-    if isinstance(contract.component_voltage_ratings, ComponentVoltageRatingAnalysis):
+    if isinstance(component_voltage_ratings, electrical_contracts.ComponentVoltageRatingAnalysis):
         assert netlist is not None
-        checks.extend(component_voltage_rating_checks(contract.component_voltage_ratings, netlist))
-    elif contract.component_voltage_ratings is not None:
-        if not isinstance(contract.component_voltage_ratings, AnalysisNotApplicable):
+        checks.extend(component_voltage_rating_checks(component_voltage_ratings, netlist))
+    elif component_voltage_ratings is not None:
+        if not isinstance(component_voltage_ratings, electrical_contracts.AnalysisNotApplicable):
             raise ValueError("Component voltage-rating requirements remain pending")  # noqa: TRY004
         checks.append(
             ElectricalCheck(
                 id="component-voltage-ratings",
                 status="NOT_APPLICABLE",
-                detail=contract.component_voltage_ratings.reason,
+                detail=component_voltage_ratings.reason,
             )
         )
-    if isinstance(contract.component_power_ratings, ComponentPowerRatingAnalysis):
+    if isinstance(component_power_ratings, electrical_contracts.ComponentPowerRatingAnalysis):
         assert netlist is not None
-        checks.extend(component_power_rating_checks(contract.component_power_ratings, netlist))
-    elif contract.component_power_ratings is not None:
-        if not isinstance(contract.component_power_ratings, AnalysisNotApplicable):
+        checks.extend(component_power_rating_checks(component_power_ratings, netlist))
+    elif component_power_ratings is not None:
+        if not isinstance(component_power_ratings, electrical_contracts.AnalysisNotApplicable):
             raise ValueError("Component power-rating requirements remain pending")  # noqa: TRY004
         checks.append(
             ElectricalCheck(
                 id="component-power-ratings",
                 status="NOT_APPLICABLE",
-                detail=contract.component_power_ratings.reason,
+                detail=component_power_ratings.reason,
             )
         )
-    if isinstance(contract.connector_contact_ratings, ConnectorContactRatingAnalysis):
+    if isinstance(connector_contact_ratings, electrical_contracts.ConnectorContactRatingAnalysis):
         assert netlist is not None
-        checks.extend(connector_contact_rating_checks(contract.connector_contact_ratings, netlist))
-    elif contract.connector_contact_ratings is not None:
-        if not isinstance(contract.connector_contact_ratings, AnalysisNotApplicable):
+        checks.extend(connector_contact_rating_checks(connector_contact_ratings, netlist))
+    elif connector_contact_ratings is not None:
+        if not isinstance(connector_contact_ratings, electrical_contracts.AnalysisNotApplicable):
             raise ValueError("Connector contact rating requirements remain pending")  # noqa: TRY004
         checks.append(
             ElectricalCheck(
                 id="connector-contact-ratings",
                 status="NOT_APPLICABLE",
-                detail=contract.connector_contact_ratings.reason,
+                detail=connector_contact_ratings.reason,
             )
         )
-    if isinstance(contract.mosfet_stress, MosfetStressAnalysis):
+    if isinstance(mosfet_stress, electrical_contracts.MosfetStressAnalysis):
         assert netlist is not None
-        checks.extend(mosfet_stress_checks(contract.mosfet_stress, netlist))
-    elif contract.mosfet_stress is not None:
-        if not isinstance(contract.mosfet_stress, AnalysisNotApplicable):
+        checks.extend(mosfet_stress_checks(mosfet_stress, netlist))
+    elif mosfet_stress is not None:
+        if not isinstance(mosfet_stress, electrical_contracts.AnalysisNotApplicable):
             raise ValueError("MOSFET stress requirements remain pending")  # noqa: TRY004
         checks.append(
             ElectricalCheck(
                 id="mosfet-stress",
                 status="NOT_APPLICABLE",
-                detail=contract.mosfet_stress.reason,
+                detail=mosfet_stress.reason,
             )
         )
-    if isinstance(contract.rs485, Rs485Analysis):
+    if isinstance(rs485, electrical_contracts.Rs485Analysis):
         assert netlist is not None
-        checks.extend(rs485_checks(contract.rs485, netlist))
-    elif contract.rs485 is not None:
-        if not isinstance(contract.rs485, AnalysisNotApplicable):
+        checks.extend(rs485_checks(rs485, netlist))
+    elif rs485 is not None:
+        if not isinstance(rs485, electrical_contracts.AnalysisNotApplicable):
             raise ValueError("RS-485 requirements remain pending")  # noqa: TRY004 - incomplete policy
-        checks.append(
-            ElectricalCheck(id="rs485", status="NOT_APPLICABLE", detail=contract.rs485.reason)
-        )
-    if isinstance(contract.control_inputs, ControlInputsAnalysis):
+        checks.append(ElectricalCheck(id="rs485", status="NOT_APPLICABLE", detail=rs485.reason))
+    if isinstance(control_inputs, electrical_contracts.ControlInputsAnalysis):
         assert netlist is not None
-        checks.extend(control_input_checks(contract.control_inputs, netlist))
-    elif contract.control_inputs is not None:
-        if not isinstance(contract.control_inputs, AnalysisNotApplicable):
+        checks.extend(control_input_checks(control_inputs, netlist))
+    elif control_inputs is not None:
+        if not isinstance(control_inputs, electrical_contracts.AnalysisNotApplicable):
             raise ValueError("Control-input requirements remain pending")  # noqa: TRY004
         checks.append(
             ElectricalCheck(
                 id="control-inputs",
                 status="NOT_APPLICABLE",
-                detail=contract.control_inputs.reason,
+                detail=control_inputs.reason,
             )
         )
-    if isinstance(contract.power_connectivity, PowerConnectivityAnalysis):
+    if isinstance(power_connectivity, electrical_contracts.PowerConnectivityAnalysis):
         assert netlist is not None
-        checks.extend(power_connectivity_checks(contract.power_connectivity, netlist))
-    elif contract.power_connectivity is not None:
-        if not isinstance(contract.power_connectivity, AnalysisNotApplicable):
+        checks.extend(power_connectivity_checks(power_connectivity, netlist))
+    elif power_connectivity is not None:
+        if not isinstance(power_connectivity, electrical_contracts.AnalysisNotApplicable):
             raise ValueError("Power connectivity requirements remain pending")  # noqa: TRY004 - incomplete policy
         checks.append(
             ElectricalCheck(
                 id="power-connectivity",
                 status="NOT_APPLICABLE",
-                detail=contract.power_connectivity.reason,
+                detail=power_connectivity.reason,
             )
         )
-    if isinstance(contract.test_access, TestAccessAnalysis):
+    if isinstance(test_access, electrical_contracts.TestAccessAnalysis):
         assert netlist is not None
-        checks.extend(evaluate_test_access_checks(contract.test_access, netlist))
-        if isinstance(contract.test_access.pcb_accessibility, PcbAccessAnalysis):
+        pcb_accessibility: pcb_test_access_models.PcbAccessAnalysis | ElectricalAnalysisState = (
+            test_access.pcb_accessibility
+        )
+        checks.extend(evaluate_test_access_checks(test_access, netlist))
+        if isinstance(pcb_accessibility, pcb_test_access_models.PcbAccessAnalysis):
             if config.kind is not ProjectKind.PCB:
                 raise ValueError("PCB access requirements need an authoritative PCB project")
             board_path = repo_path(root, config.project).with_suffix(".kicad_pcb")
             checks.extend(
                 pcb_accessibility_checks(
-                    contract.test_access,
-                    contract.test_access.pcb_accessibility,
+                    test_access,
+                    pcb_accessibility,
                     board_path,
                 )
             )
-        elif isinstance(contract.test_access.pcb_accessibility, AnalysisNotApplicable):
+        elif isinstance(pcb_accessibility, electrical_contracts.AnalysisNotApplicable):
             checks.append(
                 ElectricalCheck(
                     id="test-access/pcb-accessibility",
                     status="NOT_APPLICABLE",
-                    detail=contract.test_access.pcb_accessibility.reason,
+                    detail=pcb_accessibility.reason,
                 )
             )
         else:
@@ -436,28 +466,28 @@ def verify_electrical(
         if access_probe_requests is not None:
             if access_probe_snapshot is None:
                 raise ValueError("Retained PCB probe-envelope observations are missing")
-            checks.extend(pcb_probe_envelope_checks(contract.test_access, access_probe_snapshot))
-    elif isinstance(contract.test_access, AnalysisNotApplicable):
+            checks.extend(pcb_probe_envelope_checks(test_access, access_probe_snapshot))
+    elif isinstance(test_access, electrical_contracts.AnalysisNotApplicable):
         checks.append(
             ElectricalCheck(
                 id="test-access/schematic",
                 status="NOT_APPLICABLE",
-                detail=contract.test_access.reason,
+                detail=test_access.reason,
             )
         )
         checks.append(
             ElectricalCheck(
                 id="test-access/pcb-accessibility",
                 status="NOT_APPLICABLE",
-                detail=contract.test_access.reason,
+                detail=test_access.reason,
             )
         )
     else:
         raise ValueError("Test-access requirements remain pending")  # noqa: TRY004
-    if isinstance(contract.high_frequency, AnalysisNotApplicable):
+    if isinstance(high_frequency, electrical_contracts.AnalysisNotApplicable):
         checks.append(
             ElectricalCheck(
-                id="high-frequency", status="NOT_APPLICABLE", detail=contract.high_frequency.reason
+                id="high-frequency", status="NOT_APPLICABLE", detail=high_frequency.reason
             )
         )
     checks.extend(power_budget_checks(contract.power))
@@ -466,7 +496,7 @@ def verify_electrical(
     if cases:
         expected_commands.add("version")
     if (
-        isinstance(contract.pcb_return_paths, PcbReturnPathsAnalysis)
+        isinstance(pcb_return_paths, electrical_contracts.PcbReturnPathsAnalysis)
         or access_probe_requests is not None
     ):
         expected_commands.add("pcb-connectivity")

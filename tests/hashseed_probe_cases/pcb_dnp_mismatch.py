@@ -10,12 +10,13 @@ from tests.design_lint_fixtures.pcb_component_inventory import (
     snapshot,
     source_bound_component_inventory,
 )
+from tests.json_types import JsonObject
 
 RULE_ID = "pcb.schematic_pcb_dnp_mismatch"
 FOOTPRINT = "Synthetic:Probe_Module"
 
 
-def dnp_report(*, schematic_dnp: bool, board_dnp: bool) -> dict[str, object]:
+def dnp_report(*, schematic_dnp: bool, board_dnp: bool) -> JsonObject:
     """Serialize one DNP mismatch direction or a matching fitted control."""
     source_netlist = netlist(
         components={"U1": FOOTPRINT},
@@ -57,7 +58,7 @@ def dnp_report(*, schematic_dnp: bool, board_dnp: bool) -> dict[str, object]:
     }
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     """Return both mismatch directions and a matching fitted control."""
     return {
         "pcb_dnp_board_only_mismatch": dnp_report(schematic_dnp=False, board_dnp=True),

@@ -9,29 +9,26 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from .ci_hosted_spi_native import SPI_NATIVE_TOOLCHAINS
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 
 def spi_clock_control_same_net_fixture_lane(
     root: Path, *, version: str, image: str, log: HostedLog
 ) -> None:
     """Repeat native netlist/ERC exports and verify the exact SPI fault/control pair."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .validate import read_netlist
 
     if (version, image) not in SPI_NATIVE_TOOLCHAINS:
         raise ValueError(f"SPI clock/control fixtures do not cover KiCad {version} with this image")
     pinned = pinned_image(image)
-    repository = Path(__file__).resolve().parents[1]
+    repository = tooling_checkout_root()
     fixture_root = repository / "tests/fixtures/design_lint/spi-clock-control-same-net"
     sources = {
         "clock_data_fault": fixture_root / "fault.kicad_sch",

@@ -8,7 +8,7 @@ from .bus_signal_pairs import usb_data_function_identity
 from .models import NetlistContract
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnconnectedUsbDataPin:
     pin: str
     function: str

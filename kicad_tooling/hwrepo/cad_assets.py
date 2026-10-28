@@ -10,9 +10,9 @@ import math
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
-from .contracts import read_model, repo_path
+from .contracts import lexical_absolute_path, read_model, repo_path, repo_path_is_within
 from .discovery import load_config, load_registry
 from .model_inventory import _atoms, _children, _Span  # pyright: ignore[reportPrivateUsage]
 from .model_population import _validate_shared_roots  # pyright: ignore[reportPrivateUsage]
@@ -33,7 +33,7 @@ class MissingFootprintError(ValueError):
     """The exact requested footprint is unavailable, allowing an explicit provider fallback."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PadSignature:
     number: str
     kind: str
@@ -48,7 +48,7 @@ class PadSignature:
     roundrect_ratio: float
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ResolvedModel:
     source_path: Path
     source_bytes: bytes
@@ -56,7 +56,7 @@ class ResolvedModel:
     model_expression: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ResolvedFootprint:
     footprint_id: str
     source_path: Path
@@ -71,7 +71,7 @@ class ResolvedFootprint:
         return self.source_text.encode("utf-8")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PlacedFootprint:
     reference: str
     footprint_id: str
@@ -86,14 +86,14 @@ class PlacedFootprint:
     geometry_issue: str | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class BoardInventory:
     path: Path
     source: str
     footprints: tuple[PlacedFootprint, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _Library:
     path: Path
     roots: tuple[Path, ...]
@@ -193,7 +193,7 @@ def _pads(
 
 
 def _safe_file(path: Path, roots: tuple[Path, ...]) -> Path:
-    absolute = Path(os.path.abspath(path))
+    absolute = lexical_absolute_path(path)
     if not any(absolute.is_relative_to(root) for root in roots):
         raise ValueError(f"CAD asset escapes its declared source directory: {path}")
     current = absolute
@@ -283,7 +283,7 @@ def _library(
             directory = Path(uri.replace("${KIPRJMOD}", str(project_dir)))
             if not directory.is_absolute():
                 directory = project_dir / directory
-            directory = Path(os.path.abspath(directory))
+            directory = lexical_absolute_path(directory)
             if not any(directory.is_relative_to(source_root) for source_root in roots):
                 raise ValueError(
                     "Project footprint library is outside this project's declared sources"
@@ -326,20 +326,28 @@ def _library(
 
 
 def _model_path(reference: str, library: _Library, major: str, project_dir: Path) -> Path:
-    if "\\" in reference or reference.startswith(("/", "~")) or ":" in reference:
+    reference_path = PurePosixPath(reference)
+    if (
+        "\\" in reference
+        or reference_path.is_absolute()
+        or reference_path.parts[:1] == ("~",)
+        or ":" in reference
+    ):
         raise ValueError("Model source path must be local and portable")
     prefix = f"${{KICAD{major}_3DMODEL_DIR}}/"
-    if reference.startswith(prefix):
-        relative = reference[len(prefix) :]
-        if "$" in relative or any(part in {"", ".", ".."} for part in relative.split("/")):
+    variable_root = prefix[:-1]
+    if repo_path_is_within(reference, variable_root):
+        relative = reference_path.relative_to(PurePosixPath(variable_root)).as_posix()
+        if "$" in relative:
             raise ValueError("Unsafe standard 3D model reference")
         for directory in library.model_roots:
             path = directory / relative
             if path.is_file():
                 return _safe_file(path, (directory,))
         raise ValueError(f"Paired 3D model is missing: {reference}")
-    if reference.startswith("${KIPRJMOD}/"):
-        path = project_dir / reference[len("${KIPRJMOD}/") :]
+    if repo_path_is_within(reference, "${KIPRJMOD}"):
+        relative = reference_path.relative_to(PurePosixPath("${KIPRJMOD}")).as_posix()
+        path = project_dir / relative
     elif "$" in reference:
         raise ValueError("Unresolved or wrong-version 3D model variable")
     else:
@@ -543,7 +551,11 @@ def plan_model_assignment(
     expressions: list[str] = []
     for model in resolved.models:
         destination = model_references[model.source_model_reference]
-        if not destination.startswith("${KIPRJMOD}/") or "$" in destination[len("${KIPRJMOD}/") :]:
+        if (
+            not repo_path_is_within(destination, "${KIPRJMOD}")
+            or "$"
+            in PurePosixPath(destination).relative_to(PurePosixPath("${KIPRJMOD}")).as_posix()
+        ):
             raise ValueError("Imported model paths must be portable KIPRJMOD references")
         text = model.model_expression
         token = _tokens(text, _root(text, "model"))[1]

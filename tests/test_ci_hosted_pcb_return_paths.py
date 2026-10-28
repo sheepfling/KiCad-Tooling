@@ -8,7 +8,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kicad_tooling.ci_hosted import HostedLog
+from kicad_tooling.ci_hosted import HostedLog, pcb_return_fixture_lane
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import (
     CommandEvidence,
     PcbConnectivitySnapshot,
@@ -33,9 +34,7 @@ pytestmark = [
 def test_pcb_return_fixture_checks_native_connectivity_zone_via_and_net_tie_evidence(
     hosted_reference_root: Path,
 ) -> None:
-    from kicad_tooling.ci_hosted import pcb_return_fixture_lane
     from kicad_tooling.hwrepo.contracts import repo_path
-    from kicad_tooling.hwrepo.electrical import selected_config
     from kicad_tooling.hwrepo.evidence import digest
     from kicad_tooling.hwrepo.pcb_return_path_capture import expected_probe_sha256
 

@@ -32,6 +32,7 @@ from kicad_tooling.hwrepo.models import (
     ElectricalCheck,
     ElectricalSuiteReport,
     ProjectTestContract,
+    TemplateDoctorReport,
 )
 from kicad_tooling.template import main as template_main
 from kicad_tooling.verify import verify
@@ -304,7 +305,6 @@ class ElectricalSetupTests(unittest.TestCase):
         self.assertIn("ngspice", report.model_dump_json())
 
     def test_doctor_cli_routes_electrical_and_simulator_options(self) -> None:
-        from kicad_tooling.hwrepo.models import TemplateDoctorReport
 
         report = TemplateDoctorReport(
             native_requested=True,

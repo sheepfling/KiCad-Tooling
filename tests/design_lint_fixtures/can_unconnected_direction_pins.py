@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 
@@ -9,7 +11,7 @@ def can_unconnected_direction_netlist(
     *,
     open_pins: tuple[str, ...] = ("U1.2",),
     dnp_components: tuple[str, ...] = (),
-    functions: dict[str, str] | None = None,
+    functions: Mapping[str, str] | None = None,
     pin_numbers: tuple[str, ...] = ("1", "2"),
 ) -> NetlistContract:
     """Create a native-shaped fitted transceiver with one partially open pair."""

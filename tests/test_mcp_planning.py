@@ -15,12 +15,13 @@ from pathlib import Path
 from unittest.mock import patch
 
 from mcp import Client
-from mcp.types import CallToolResult, TextContent
+from mcp.types import CallToolResult
 
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import ModelMap, SourcingSnapshot, SupplierOffer
+from tests.mcp_test_support import text_content
 from tests.support import SOURCE_ROOT, initialize_git, reference_root
 
 
@@ -48,7 +49,7 @@ class McpPlanningTests(unittest.IsolatedAsyncioTestCase):
 
     @staticmethod
     def text(result: CallToolResult) -> str:
-        return "\n".join(item.text for item in result.content if isinstance(item, TextContent))
+        return text_content(result)
 
     def structured(self, result: CallToolResult):
         self.assertFalse(result.is_error, self.text(result))

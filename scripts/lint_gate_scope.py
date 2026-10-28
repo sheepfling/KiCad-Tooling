@@ -5,11 +5,11 @@ from __future__ import annotations
 import argparse
 import os
 import re
-import subprocess
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+from kicad_tooling.git import run_git_text
 from kicad_tooling.pytest_scope import validate_test_module_files, validate_test_module_paths
 
 LINT_AREAS = frozenset(
@@ -37,7 +37,7 @@ _NATIVE_FIXTURE_PATTERN = re.compile(
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class LintGateScope:
     area: str | None
     rule_id: str | None
@@ -141,11 +141,11 @@ def read_tag_scope(tag_name: str, repository: Path) -> LintGateScope:
     """Read an annotated Git tag and validate its scoped-test declarations."""
     if not tag_name.startswith("v") or not re.fullmatch(r"[A-Za-z0-9.+_-]+", tag_name):
         raise ValueError(f"invalid version tag name: {tag_name!r}")
-    result = subprocess.run(
-        ("git", "cat-file", "tag", f"refs/tags/{tag_name}"),
-        cwd=repository,
-        capture_output=True,
-        text=True,
+    result = run_git_text(
+        repository,
+        "cat-file",
+        "tag",
+        f"refs/tags/{tag_name}",
         check=False,
     )
     if result.returncode:

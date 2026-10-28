@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import xml.etree.ElementTree as ET
+from collections.abc import Mapping
+from typing import TypedDict
 
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import (
@@ -17,17 +19,34 @@ from kicad_tooling.hwrepo.models import (
 RULE_ID = "component.peer_power_pin_assignment_divergence"
 
 
+class PeerPowerNetlistOverrides(TypedDict, total=False):
+    """Optional inputs accepted by the synthetic peer-power netlist."""
+
+    references: tuple[str, ...]
+    symbols: dict[str, str]
+    part_ids: dict[str, str]
+    values: dict[str, str]
+    footprints: dict[str, str]
+    supply_nets: tuple[str | None, ...]
+    return_nets: tuple[str | None, ...]
+    pin_functions: dict[str, tuple[str, str]]
+    pin_types: dict[str, tuple[str, str]]
+    incomplete_inventory: tuple[str, ...]
+    ambiguous_pins: tuple[str, ...]
+    dnp: tuple[str, ...]
+
+
 def peer_power_netlist(
     *,
     references: tuple[str, ...] = ("U1", "U2"),
-    symbols: dict[str, str] | None = None,
-    part_ids: dict[str, str] | None = None,
-    values: dict[str, str] | None = None,
-    footprints: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
+    part_ids: Mapping[str, str] | None = None,
+    values: Mapping[str, str] | None = None,
+    footprints: Mapping[str, str] | None = None,
     supply_nets: tuple[str | None, ...] = ("+3V3", "+5V"),
     return_nets: tuple[str | None, ...] = ("GND", "AGND"),
-    pin_functions: dict[str, tuple[str, str]] | None = None,
-    pin_types: dict[str, tuple[str, str]] | None = None,
+    pin_functions: Mapping[str, tuple[str, str]] | None = None,
+    pin_types: Mapping[str, tuple[str, str]] | None = None,
     incomplete_inventory: tuple[str, ...] = (),
     ambiguous_pins: tuple[str, ...] = (),
     dnp: tuple[str, ...] = (),

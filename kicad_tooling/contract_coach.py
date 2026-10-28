@@ -15,11 +15,12 @@ from .hwrepo.contract_coach import (
     save_receipt,
     text_report,
 )
+from .hwrepo.layout import default_project_root
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     parser.add_argument(
         "--project-id", required=True, help="Registered pcb or schematic project ID"
     )

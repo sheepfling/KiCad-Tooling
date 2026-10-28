@@ -2,18 +2,22 @@
 
 from __future__ import annotations
 
+from types import MappingProxyType
+
 from kicad_tooling.hwrepo.models import NetlistContract
 
-_LANE_FUNCTIONS = {
-    "J1.1": "StdA_SSTX1+",
-    "J1.2": "StdA_SSTX1−",
-    "J1.3": "StdA_SSTX2+",
-    "J1.4": "StdA_SSTX2−",
-    "J1.5": "StdA_SSRX1+",
-    "J1.6": "StdA_SSRX1−",
-    "J1.7": "StdA_SSRX2+",
-    "J1.8": "StdA_SSRX2−",
-}
+_LANE_FUNCTIONS = MappingProxyType(
+    {
+        "J1.1": "StdA_SSTX1+",
+        "J1.2": "StdA_SSTX1−",
+        "J1.3": "StdA_SSTX2+",
+        "J1.4": "StdA_SSTX2−",
+        "J1.5": "StdA_SSRX1+",
+        "J1.6": "StdA_SSRX1−",
+        "J1.7": "StdA_SSRX2+",
+        "J1.8": "StdA_SSRX2−",
+    }
+)
 
 
 def usb_c_superspeed_lane_netlist(

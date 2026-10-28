@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -22,51 +23,69 @@ from tests.synthetic_design_lint_project import (
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint]
 
-FIXTURES = {
-    "fault": "bjt-terminal-order-native/fault.kicad_sch",
-    "control": "bjt-terminal-order-native/control.kicad_sch",
-}
-EXPECTED_SOURCE_HASHES = {
-    "fault": "deca669b12ceec4fbd21004d48f6eebbe86f68dd9820a727bb01adbd9a663c9d",
-    "control": "2b68e0bb4818e82917047e2e9caf07b0b9ebf25cf5fd939a6bb4b7a1f7c45845",
-}
-EXPECTED_SUBJECTS = {
-    "fault": (
-        "Q1: NPN transistor collector/emitter order merits review",
-        "Q2: PNP transistor collector/emitter order merits review",
-    ),
-    "control": None,
-}
-SAME_NET_FIXTURES = {
-    "fault": "bjt-ce-same-net-native/fault.kicad_sch",
-    "control": "bjt-terminal-order-native/control.kicad_sch",
-}
-EXPECTED_SAME_NET_SOURCE_HASHES = {
-    "fault": "5fda7f1f6b248be52260d4e472444f9a517ba5b92bec06bc2f5ef3609cdf93c3",
-    "control": "2b68e0bb4818e82917047e2e9caf07b0b9ebf25cf5fd939a6bb4b7a1f7c45845",
-}
-SAME_NET_EXPECTED_SUBJECTS = {
-    "fault": (
-        "Q1: BJT collector and emitter share one schematic net",
-        "Q2: BJT collector and emitter share one schematic net",
-    ),
-    "control": None,
-}
-BASE_EMITTER_SAME_NET_FIXTURES = {
-    "fault": "bjt-be-same-net-native/fault.kicad_sch",
-    "control": "bjt-terminal-order-native/control.kicad_sch",
-}
-BASE_EMITTER_SAME_NET_SOURCE_HASHES = {
-    "fault": "3ff07964aaea5f8a879d82eaf918902c8b5a1ff83dee877a8609613a6c91b77b",
-    "control": "2b68e0bb4818e82917047e2e9caf07b0b9ebf25cf5fd939a6bb4b7a1f7c45845",
-}
-BASE_EMITTER_SAME_NET_EXPECTED_SUBJECTS = {
-    "fault": (
-        "Q1: BJT base and emitter share one schematic net",
-        "Q2: BJT base and emitter share one schematic net",
-    ),
-    "control": None,
-}
+FIXTURES = MappingProxyType(
+    {
+        "fault": "bjt-terminal-order-native/fault.kicad_sch",
+        "control": "bjt-terminal-order-native/control.kicad_sch",
+    }
+)
+EXPECTED_SOURCE_HASHES = MappingProxyType(
+    {
+        "fault": "deca669b12ceec4fbd21004d48f6eebbe86f68dd9820a727bb01adbd9a663c9d",
+        "control": "2b68e0bb4818e82917047e2e9caf07b0b9ebf25cf5fd939a6bb4b7a1f7c45845",
+    }
+)
+EXPECTED_SUBJECTS = MappingProxyType(
+    {
+        "fault": (
+            "Q1: NPN transistor collector/emitter order merits review",
+            "Q2: PNP transistor collector/emitter order merits review",
+        ),
+        "control": None,
+    }
+)
+SAME_NET_FIXTURES = MappingProxyType(
+    {
+        "fault": "bjt-ce-same-net-native/fault.kicad_sch",
+        "control": "bjt-terminal-order-native/control.kicad_sch",
+    }
+)
+EXPECTED_SAME_NET_SOURCE_HASHES = MappingProxyType(
+    {
+        "fault": "5fda7f1f6b248be52260d4e472444f9a517ba5b92bec06bc2f5ef3609cdf93c3",
+        "control": "2b68e0bb4818e82917047e2e9caf07b0b9ebf25cf5fd939a6bb4b7a1f7c45845",
+    }
+)
+SAME_NET_EXPECTED_SUBJECTS = MappingProxyType(
+    {
+        "fault": (
+            "Q1: BJT collector and emitter share one schematic net",
+            "Q2: BJT collector and emitter share one schematic net",
+        ),
+        "control": None,
+    }
+)
+BASE_EMITTER_SAME_NET_FIXTURES = MappingProxyType(
+    {
+        "fault": "bjt-be-same-net-native/fault.kicad_sch",
+        "control": "bjt-terminal-order-native/control.kicad_sch",
+    }
+)
+BASE_EMITTER_SAME_NET_SOURCE_HASHES = MappingProxyType(
+    {
+        "fault": "3ff07964aaea5f8a879d82eaf918902c8b5a1ff83dee877a8609613a6c91b77b",
+        "control": "2b68e0bb4818e82917047e2e9caf07b0b9ebf25cf5fd939a6bb4b7a1f7c45845",
+    }
+)
+BASE_EMITTER_SAME_NET_EXPECTED_SUBJECTS = MappingProxyType(
+    {
+        "fault": (
+            "Q1: BJT base and emitter share one schematic net",
+            "Q2: BJT base and emitter share one schematic net",
+        ),
+        "control": None,
+    }
+)
 
 
 def test_native_bjt_terminal_order_fixture_sources_are_pinned() -> None:

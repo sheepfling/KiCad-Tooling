@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -10,12 +11,13 @@ from pathlib import Path
 from .container_git import git_metadata_mounts
 from .contracts import read_model, repo_path, write_model
 from .discovery import load_config, load_registry
-from .evidence import digest, evidence_path, source_state, verify_release_portable
+from .evidence import digest, evidence_path, source_state
 from .generation import expected_outputs
 from .layout import layout
 from .markdown import release_review, write_markdown
 from .models import (
     CommandEvidence,
+    ElectricalAnalysisReport,
     EvidenceFile,
     InterfacesCatalog,
     LibrariesCatalog,
@@ -24,11 +26,11 @@ from .models import (
     ProductRecord,
     ProjectManifest,
     ProjectRecord,
-    ProjectStaticPipelineReport,
     ReleaseArtifact,
     ReleaseArtifactKind,
     ReleaseClass,
     ReleaseEvidence,
+    ReleaseExportReport,
     ReleaseInterface,
     ReleaseLibrary,
     ReleaseManifest,
@@ -37,6 +39,7 @@ from .models import (
     ScopedReleasePortableReport,
     ValidationSummary,
 )
+from .portable_evidence import verify_release_portable
 from .release import (
     configured_toolchains,
     load_release_repository,
@@ -90,8 +93,6 @@ def run_native(
     )
     user: tuple[str, ...] = ()
     if sys.platform != "win32":
-        import os
-
         user = ("--user", f"{os.getuid()}:{os.getgid()}")
     argv = (
         "docker",
@@ -182,7 +183,8 @@ def selected_scope(
     """Validate release scope and its common toolchain before creating any evidence."""
     repository = load_release_repository(root, candidate)
     findings: list[PolicyIssue] = list(repository.issues)
-    products = selected_products(repository, candidate, findings)
+    products, selection_issues = selected_products(repository, candidate)
+    findings.extend(selection_issues)
     projects = selected_project_records(repository, products, candidate.projects)
     if findings or not projects:
         raise ValueError(f"Invalid release selection: {findings}")
@@ -229,7 +231,7 @@ def prepare(
     ngspice: str = "ngspice",
 ) -> ReleaseManifest:
     """Commit source first; reports and the candidate are then written under build/."""
-    from ..ci import static_pipeline
+    from ..ci import project_static_pipeline
 
     root = root.resolve()
     source = source_state(root)
@@ -263,9 +265,7 @@ def prepare(
     selected_ids = tuple(project.id for project in projects)
     if portable is None:
         portable = output / "portable.json"
-        checks = static_pipeline(root, list(selected_ids))
-        if not isinstance(checks, ProjectStaticPipelineReport):
-            raise ValueError("Selected release portable checks did not return a project report")
+        checks = project_static_pipeline(root, selected_ids)
         if source_state(root) != source:
             raise ValueError("Source changed while running selected portable checks")
         write_model(
@@ -425,8 +425,6 @@ def retained_paths(root: Path, manifest: ReleaseManifest) -> set[str]:
         raise ValueError("Candidate lacks evidence")
     paths.add(manifest.evidence.portable.path)
     for reference_file in manifest.evidence.electrical.values():
-        from .models import ElectricalAnalysisReport
-
         paths.add(reference_file.path)
         electrical_report = read_model(
             evidence_path(root, reference_file), ElectricalAnalysisReport
@@ -442,8 +440,6 @@ def retained_paths(root: Path, manifest: ReleaseManifest) -> set[str]:
             (Path(reference_file.path).parent / name).as_posix() for name in report.artifacts_sha256
         )
     for reference_file in manifest.evidence.exports.values():
-        from .models import ReleaseExportReport
-
         paths.add(reference_file.path)
         export_report = read_model(evidence_path(root, reference_file), ReleaseExportReport)
         paths.update(

@@ -15,7 +15,20 @@ from tests.connector_footprint_peer_support import (
     named_signal_mode_dependent_open_netlist,
     peer_metadata_divergence_netlist,
 )
-from tests.design_lint_fixtures import observed, schematic_geometry_fixtures
+from tests.design_lint_fixtures import (
+    can_netlist,
+    complementary_usb_netlist,
+    control_input_pins,
+    i2c_netlist,
+    i2c_netlist_with_parallel_sda,
+    i2c_netlist_with_pullup_rails,
+    observed,
+    schematic_geometry_fixtures,
+    serial_peer_voltage_netlist,
+    spi_active_low_select_netlist,
+    spi_peer_voltage_netlist,
+    unconnected_protocol_pins,
+)
 from tests.design_lint_fixtures.bjt_base_bias import bjt_base_bias_netlist
 from tests.design_lint_fixtures.bjt_base_drive import bjt_base_drive_netlist
 from tests.design_lint_fixtures.bjt_collector_emitter_same_net import (
@@ -258,18 +271,6 @@ def catalog_reachability_rule_ids() -> set[str]:
 def protocol_peer_candidate_rule_ids() -> set[str]:
     """Reach protocol and control-input candidate rules from synthetic netlists."""
     from tests.can_peer_reference_support import can_peer_reference_netlist
-    from tests.design_lint_fixtures import (
-        can_netlist,
-        complementary_usb_netlist,
-        control_input_pins,
-        i2c_netlist,
-        i2c_netlist_with_parallel_sda,
-        i2c_netlist_with_pullup_rails,
-        serial_peer_voltage_netlist,
-        spi_active_low_select_netlist,
-        spi_peer_voltage_netlist,
-        unconnected_protocol_pins,
-    )
     from tests.i2c_peer_reference_support import i2c_peer_netlist
     from tests.serial_peer_reference_support import serial_reference_netlist
     from tests.spi_peer_reference_support import spi_peer_netlist

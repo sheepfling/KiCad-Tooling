@@ -2,50 +2,70 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Literal, TypeAlias
 
+from .ci_hosted_native_fixture_models import (
+    FixtureSourceEvidence,
+    NativeNetlistFixtureEvidence,
+    NativeNetlistRunEvidence,
+    NativeRun,
+    NativeRunPair,
+)
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.analysis_state_models import AnalysisNotApplicable
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.usb_c_models import (
+    UsbCAnalysis,
+    UsbCcLineRequirement,
+    UsbCcResistorAttachment,
+    UsbCNetPinAssignment,
+    UsbCPortRequirement,
+    UsbCVbusCapacitanceRequirement,
+    UsbCVbusCapacitorRequirement,
+)
+from .hwrepo.usb_c_ports import UsbCPortRosterContext
+from .hwrepo.usb_c_vbus import usb_c_vbus_capacitance_check
+from .validate import read_netlist
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+UsbCPortFixtureCase: TypeAlias = Literal[
+    "connector",
+    "source-rp-control",
+    "sink-rd-control",
+    "vbus-capacitance-control",
+    "vbus-capacitance-fault",
+]
+UsbCPortControlFixtureCase: TypeAlias = Literal["source-rp-control", "sink-rd-control"]
+UsbCPortRosterScenario: TypeAlias = Literal["unmapped", "mapped"]
+UsbCPortReviewCase: TypeAlias = UsbCPortControlFixtureCase | UsbCPortRosterScenario
+_FIXTURE_CASES: tuple[UsbCPortFixtureCase, ...] = (
+    "connector",
+    "source-rp-control",
+    "sink-rd-control",
+    "vbus-capacitance-control",
+    "vbus-capacitance-fault",
+)
+_CONTROL_FIXTURE_CASES: tuple[UsbCPortControlFixtureCase, ...] = (
+    "source-rp-control",
+    "sink-rd-control",
+)
+_ROSTER_SCENARIOS: tuple[UsbCPortRosterScenario, ...] = ("unmapped", "mapped")
 
 
 def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
     """Verify USB-C CC pin-function coverage from repeated pinned native exports."""
-    import hashlib
-    import os
-
-    from .hwrepo.analysis_state_models import AnalysisNotApplicable
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import (
-        ContractCoachReport,
-        DesignLintPolicy,
-        NetlistContract,
-    )
-    from .hwrepo.usb_c_models import (
-        UsbCAnalysis,
-        UsbCcLineRequirement,
-        UsbCcResistorAttachment,
-        UsbCNetPinAssignment,
-        UsbCPortRequirement,
-        UsbCVbusCapacitanceRequirement,
-        UsbCVbusCapacitorRequirement,
-    )
-    from .hwrepo.usb_c_ports import UsbCPortRosterContext
-    from .hwrepo.usb_c_vbus import (
-        usb_c_vbus_capacitance_check,
-    )
-    from .validate import read_netlist
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image:
@@ -54,8 +74,8 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
         raise ValueError(f"USB-C port fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
 
-    fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
-    fixtures = {
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint"
+    fixtures: dict[UsbCPortFixtureCase, Path] = {
         "connector": fixture_root / "usb-c-port-native/connector.kicad_sch",
         "source-rp-control": fixture_root / "cohort-usb-c-roles/source-rp-control.kicad_sch",
         "sink-rd-control": fixture_root / "cohort-usb-c-roles/sink-rd-control.kicad_sch",
@@ -64,7 +84,9 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
         ),
         "vbus-capacitance-fault": (fixture_root / "usb-c-vbus-capacitance-native/fault.kicad_sch"),
     }
-    source_hashes = {case: digest(path) for case, path in fixtures.items()}
+    source_hashes: dict[UsbCPortFixtureCase, str] = {
+        case: digest(path) for case, path in fixtures.items()
+    }
     scratch = Path(tempfile.mkdtemp(prefix=f"usb-c-port-{project}-", dir=log.directory.resolve()))
     inputs = scratch / "input"
     inputs.mkdir()
@@ -79,13 +101,13 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
     if sys.platform != "win32":
         user = ("--user", f"{os.getuid()}:{os.getgid()}")
 
+    fixture_case_list = " ".join(_FIXTURE_CASES)
     script = (
         'mkdir -p "$HOME"\n'
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
         f'test "$actual" = "{config.kicad_version}"\n'
-        "for case in connector source-rp-control sink-rd-control "
-        "vbus-capacitance-control vbus-capacitance-fault; do\n"
+        f"for case in {fixture_case_list}; do\n"
         "  for run in first repeat; do\n"
         "    kicad-cli sch export netlist --format kicadxml "
         '      --output "/output/${case}.${run}.netlist.xml" '
@@ -156,33 +178,43 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
     ):
         raise ValueError("Synthetic USB-C fixture source changed during native export")
 
-    contracts: dict[str, dict[str, NetlistContract]] = {}
-    netlist_hashes: dict[str, dict[str, str]] = {}
-    normalized_hashes: dict[str, dict[str, str]] = {}
-    for fixture_case in fixtures:
-        contracts[fixture_case] = {}
-        netlist_hashes[fixture_case] = {}
-        normalized_hashes[fixture_case] = {}
-        for run in ("first", "repeat"):
-            netlist_path = output / f"{fixture_case}.{run}.netlist.xml"
-            if not netlist_path.is_file():
-                raise ValueError(f"Native USB-C fixture omitted {netlist_path.name}")
-            netlist_hashes[fixture_case][run] = digest(netlist_path)
-            parsed = read_netlist(netlist_path)
-            contracts[fixture_case][run] = parsed
-            normalized = json.dumps(
-                parsed.model_dump(mode="json"),
-                sort_keys=True,
-                separators=(",", ":"),
-                ensure_ascii=False,
-            ).encode("utf-8")
-            normalized_hashes[fixture_case][run] = hashlib.sha256(normalized).hexdigest()
-        if normalized_hashes[fixture_case]["first"] != normalized_hashes[fixture_case]["repeat"]:
+    def load_netlist_run(
+        fixture_case: UsbCPortFixtureCase, run: NativeRun
+    ) -> NativeNetlistRunEvidence:
+        netlist_path = output / f"{fixture_case}.{run}.netlist.xml"
+        if not netlist_path.is_file():
+            raise ValueError(f"Native USB-C fixture omitted {netlist_path.name}")
+        parsed = read_netlist(netlist_path)
+        normalized = json.dumps(
+            parsed.model_dump(mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        ).encode("utf-8")
+        return NativeNetlistRunEvidence(
+            contract=parsed,
+            netlist_sha256=digest(netlist_path),
+            normalized_sha256=hashlib.sha256(normalized).hexdigest(),
+        )
+
+    fixture_evidence: dict[UsbCPortFixtureCase, NativeNetlistFixtureEvidence] = {}
+    for fixture_case in _FIXTURE_CASES:
+        fixture_evidence[fixture_case] = NativeNetlistFixtureEvidence(
+            source=FixtureSourceEvidence(
+                path=fixtures[fixture_case], sha256=source_hashes[fixture_case]
+            ),
+            netlists=NativeRunPair(
+                first=load_netlist_run(fixture_case, "first"),
+                repeat=load_netlist_run(fixture_case, "repeat"),
+            ),
+        )
+        netlists = fixture_evidence[fixture_case].netlists
+        if netlists.first.normalized_sha256 != netlists.repeat.normalized_sha256:
             raise ValueError(
                 f"Native USB-C {fixture_case} exports differ after normalization to the typed netlist"
             )
 
-    observed = contracts["connector"]["first"]
+    observed = fixture_evidence["connector"].netlists.first.contract
     expected_functions = {"J1.4": "CC1", "J1.5": "CC2"}
     if observed.pin_functions != expected_functions:
         raise ValueError(
@@ -192,19 +224,19 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
     if observed.component_symbols != {"J1": "Synthetic:TypeCConnector"}:
         raise ValueError("Native netlist changed the synthetic USB-C connector identity")
 
-    expected_control_symbols = {
+    expected_control_symbols: dict[UsbCPortControlFixtureCase, str] = {
         "source-rp-control": "Connector:USB_C_Receptacle",
         "sink-rd-control": "Connector:USB_C_Receptacle",
     }
     for case, expected_symbol in expected_control_symbols.items():
-        control = contracts[case]["first"]
+        control = fixture_evidence[case].netlists.first.contract
         if control.pin_functions != expected_functions:
             raise ValueError(
                 f"Native USB-C {case} fixture lost its CC pin functions: {control.pin_functions}"
             )
         if control.component_symbols.get("J1") != expected_symbol:
             raise ValueError(f"Native USB-C {case} fixture changed connector symbol identity")
-    source_control = contracts["source-rp-control"]["first"]
+    source_control = fixture_evidence["source-rp-control"].netlists.first.contract
     if (
         set(source_control.components) != {"J1", "R1", "R2"}
         or source_control.dnp_components
@@ -219,7 +251,7 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
         or set(source_control.nets.get("+5V", ())) != {"R1.2", "R2.2"}
     ):
         raise ValueError("Native USB-C source control no longer has its synthetic 56 kΩ Rp paths")
-    sink_control = contracts["sink-rd-control"]["first"]
+    sink_control = fixture_evidence["sink-rd-control"].netlists.first.contract
     if (
         set(sink_control.components) != {"J1", "R1", "R2"}
         or sink_control.dnp_components
@@ -251,12 +283,12 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             ),
         ),
     )
-    expected_capacitance = {
+    expected_capacitance: dict[UsbCPortFixtureCase, tuple[str, float, str]] = {
         "vbus-capacitance-control": ("PASS", 4700.0, "4.7uF"),
         "vbus-capacitance-fault": ("FAIL", 2200.0, "2.2uF"),
     }
     for case, (expected_status, expected_nf, expected_value) in expected_capacitance.items():
-        observed_capacitance = contracts[case]["first"]
+        observed_capacitance = fixture_evidence[case].netlists.first.contract
         if (
             set(observed_capacitance.components) != {"C1"}
             or observed_capacitance.component_symbols != {"C1": "Device:C"}
@@ -295,12 +327,15 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),
             fixture_case=case,
             source_sha256=source_hashes[case],
-            netlist_sha256=netlist_hashes[case]["first"],
-            repeat_netlist_sha256=netlist_hashes[case]["repeat"],
-            normalized_netlist_sha256=normalized_hashes[case]["first"],
-            repeat_normalized_netlist_sha256=normalized_hashes[case]["repeat"],
+            netlist_sha256=fixture_evidence[case].netlists.first.netlist_sha256,
+            repeat_netlist_sha256=fixture_evidence[case].netlists.repeat.netlist_sha256,
+            normalized_netlist_sha256=fixture_evidence[case].netlists.first.normalized_sha256,
+            repeat_normalized_netlist_sha256=fixture_evidence[
+                case
+            ].netlists.repeat.normalized_sha256,
             repeatable=str(
-                normalized_hashes[case]["first"] == normalized_hashes[case]["repeat"]
+                fixture_evidence[case].netlists.first.normalized_sha256
+                == fixture_evidence[case].netlists.repeat.normalized_sha256
             ).lower(),
             check_status=capacitance_check.status,
             observed_nf=observed_nf,
@@ -359,17 +394,21 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             ),
         ),
     )
-    reports: dict[str, DesignLintReport] = {}
-    for case, context in (
-        ("unmapped", UsbCPortRosterContext(state="not_configured")),
-        ("mapped", UsbCPortRosterContext(state="required", analysis=analysis)),
+    reports: dict[UsbCPortReviewCase, DesignLintReport] = {}
+    for case, context in zip(
+        _ROSTER_SCENARIOS,
+        (
+            UsbCPortRosterContext(state="not_configured"),
+            UsbCPortRosterContext(state="required", analysis=analysis),
+        ),
+        strict=True,
     ):
         project_id = f"synthetic-usb-c-port-{case}"
         coach = ContractCoachReport(
             status="READY_FOR_REVIEW",
             project_id=project_id,
             observed=observed,
-            netlist_sha256=netlist_hashes["connector"]["first"],
+            netlist_sha256=fixture_evidence["connector"].netlists.first.netlist_sha256,
         )
         reports[case] = evaluate(
             project_id,
@@ -390,14 +429,14 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
     if mapped.status != "PASS" or mapped.findings:
         raise ValueError("The exact USB-C role-map control no longer suppresses review findings")
 
-    for case in ("source-rp-control", "sink-rd-control"):
-        control = contracts[case]["first"]
+    for case in _CONTROL_FIXTURE_CASES:
+        control = fixture_evidence[case].netlists.first.contract
         project_id = f"synthetic-usb-c-port-{case}-unmapped"
         coach = ContractCoachReport(
             status="READY_FOR_REVIEW",
             project_id=project_id,
             observed=control,
-            netlist_sha256=netlist_hashes[case]["first"],
+            netlist_sha256=fixture_evidence[case].netlists.first.netlist_sha256,
         )
         report = evaluate(
             project_id,
@@ -417,8 +456,11 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
         reports[case] = report
 
     for case, report in reports.items():
-        fixture_case = "connector" if case in {"unmapped", "mapped"} else case
-        observed_case = contracts[fixture_case]["first"]
+        if case == "unmapped" or case == "mapped":
+            fixture_case: UsbCPortFixtureCase = "connector"
+        else:
+            fixture_case = case
+        observed_case = fixture_evidence[fixture_case].netlists.first.contract
         log.event(
             f"usb-c-port-fixture/{case}",
             "PASS",
@@ -427,10 +469,14 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             image=pinned,
             fixture_case=fixture_case,
             source_sha256=source_hashes[fixture_case],
-            netlist_sha256=netlist_hashes[fixture_case]["first"],
-            repeat_netlist_sha256=netlist_hashes[fixture_case]["repeat"],
-            normalized_netlist_sha256=normalized_hashes[fixture_case]["first"],
-            repeat_normalized_netlist_sha256=normalized_hashes[fixture_case]["repeat"],
+            netlist_sha256=fixture_evidence[fixture_case].netlists.first.netlist_sha256,
+            repeat_netlist_sha256=fixture_evidence[fixture_case].netlists.repeat.netlist_sha256,
+            normalized_netlist_sha256=fixture_evidence[
+                fixture_case
+            ].netlists.first.normalized_sha256,
+            repeat_normalized_netlist_sha256=fixture_evidence[
+                fixture_case
+            ].netlists.repeat.normalized_sha256,
             lint_status=report.status,
             findings=";".join(item.subject for item in report.findings) or "none",
             cc_pin_functions=";".join(

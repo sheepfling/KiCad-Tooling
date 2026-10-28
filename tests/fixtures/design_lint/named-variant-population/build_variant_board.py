@@ -3,15 +3,39 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, cast
+from typing import Protocol, cast
 
 import pcbnew as _pcbnew  # type: ignore[import-not-found]
 
-native_pcbnew: Any = cast(Any, _pcbnew)
+
+class FootprintVariant(Protocol):
+    def SetDNP(self, value: bool) -> None: ...
 
 
-def main(arguments: list[str] | None = None) -> None:
+class BoardFootprint(Protocol):
+    def GetReference(self) -> str: ...
+
+    def AddVariant(self, variant: str) -> FootprintVariant: ...
+
+
+class Board(Protocol):
+    def AddVariant(self, variant: str) -> object: ...
+
+    def GetFootprints(self) -> Sequence[BoardFootprint]: ...
+
+
+class NativePcbnew(Protocol):
+    def LoadBoard(self, path: str) -> Board | None: ...
+
+    def SaveBoard(self, path: str, board: Board) -> None: ...
+
+
+native_pcbnew = cast(NativePcbnew, _pcbnew)
+
+
+def main(arguments: Sequence[str] | None = None) -> None:
     """Copy one synthetic board and set the named variant DNP state for U1."""
     values = sys.argv[1:] if arguments is None else arguments
     if len(values) != 4:

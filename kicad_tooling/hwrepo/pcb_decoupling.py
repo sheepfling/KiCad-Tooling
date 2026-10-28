@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from math import isqrt
 
 from .pcb_connectivity_observations import (
@@ -14,35 +15,8 @@ from .pcb_decoupling_models import (
     PcbDecouplingCoverageEntry,
     PcbDecouplingMap,
 )
-
-
-class _PadUnion:
-    """Connectivity groups derived from native pad-to-pad observations."""
-
-    def __init__(self, pads: tuple[PcbPadConnectivityObservation, ...]) -> None:
-        self.parent = {item.pad.casefold(): item.pad.casefold() for item in pads}
-        for item in pads:
-            for other in item.connected_pads:
-                self.join(item.pad, other)
-
-    def find(self, pad: str) -> str:
-        key = pad.casefold()
-        if key not in self.parent:
-            return ""
-        while self.parent[key] != key:
-            self.parent[key] = self.parent[self.parent[key]]
-            key = self.parent[key]
-        return key
-
-    def join(self, first: str, second: str) -> None:
-        a = first.casefold()
-        b = second.casefold()
-        if a not in self.parent or b not in self.parent:
-            return
-        root_a = self.find(a)
-        root_b = self.find(b)
-        if root_a != root_b:
-            self.parent[max(root_a, root_b)] = min(root_a, root_b)
+from .pcb_pad_review import pcb_pad_endpoint_issues
+from .pcb_pad_union_find import PcbPadUnionFind
 
 
 def _nearest_centers(
@@ -66,7 +40,7 @@ def _nearest_centers(
 
 def _nearest_connected_via(
     pad: PcbPadConnectivityObservation | None,
-    vias: dict[str, PcbViaObservation],
+    vias: Mapping[str, PcbViaObservation],
 ) -> tuple[int, str | None, int | None]:
     if pad is None:
         return 0, None, None
@@ -86,40 +60,18 @@ def _nearest_connected_via(
     return len(pad.connected_vias), via_id, distance_squared
 
 
-def _endpoint_issues(
-    pad: PcbPadConnectivityObservation | None,
-    *,
-    reference: str,
-    expected_footprint: str,
-    expected_net: str,
-    role: str,
-) -> list[str]:
-    if pad is None:
-        return [f"{role} pad {reference} is absent from the native PCB inventory"]
-    issues: list[str] = []
-    if pad.footprint != expected_footprint:
-        issues.append(
-            f"{role} {reference} footprint is {pad.footprint!r}; expected {expected_footprint!r}"
-        )
-    if pad.net != expected_net:
-        issues.append(f"{role} {reference} net is {pad.net!r}; expected {expected_net!r}")
-    if pad.dnp:
-        issues.append(f"{role} {reference} is marked do-not-populate")
-    return issues
-
-
 def pcb_decoupling_entries(
     spec: PcbDecouplingMap, snapshot: PcbConnectivitySnapshot
 ) -> tuple[PcbDecouplingCoverageEntry, ...]:
     """Compare exact project pin mappings with native net, copper, DNP, and geometry data."""
     pads = {item.pad.casefold(): item for item in snapshot.pads}
     vias = {item.id: item for item in snapshot.vias}
-    connected = _PadUnion(snapshot.pads)
+    connected = PcbPadUnionFind(snapshot.pads)
     results: list[PcbDecouplingCoverageEntry] = []
     for requirement in spec.requirements:
         ic_supply = pads.get(requirement.supply_pad.casefold())
         ic_return = pads.get(requirement.return_pad.casefold())
-        common_issues = _endpoint_issues(
+        common_issues = pcb_pad_endpoint_issues(
             ic_supply,
             reference=requirement.supply_pad,
             expected_footprint=requirement.ic_footprint,
@@ -127,7 +79,7 @@ def pcb_decoupling_entries(
             role="IC supply",
         )
         common_issues.extend(
-            _endpoint_issues(
+            pcb_pad_endpoint_issues(
                 ic_return,
                 reference=requirement.return_pad,
                 expected_footprint=requirement.ic_footprint,
@@ -149,14 +101,14 @@ def pcb_decoupling_entries(
             cap_supply = pads.get(candidate.supply_pad.casefold())
             cap_return = pads.get(candidate.return_pad.casefold())
             issues: list[str] = []
-            supply_pad_issues = _endpoint_issues(
+            supply_pad_issues = pcb_pad_endpoint_issues(
                 cap_supply,
                 reference=candidate.supply_pad,
                 expected_footprint=candidate.footprint,
                 expected_net=requirement.supply_net,
                 role="Capacitor supply",
             )
-            return_pad_issues = _endpoint_issues(
+            return_pad_issues = pcb_pad_endpoint_issues(
                 cap_return,
                 reference=candidate.return_pad,
                 expected_footprint=candidate.footprint,

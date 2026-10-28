@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from hashlib import sha256
 from pathlib import Path
 from typing import Literal
@@ -98,7 +99,7 @@ def test_rule_defaults_off_and_supports_review_block_off_and_exact_ignore() -> N
     ),
 )
 def test_bounded_i2c_aliases_keep_pair_direction(
-    functions: dict[str, str], open_pin: str, role: str, paired_pin: str
+    functions: Mapping[str, str], open_pin: str, role: str, paired_pin: str
 ) -> None:
     source = i2c_unconnected_netlist(open_pins=(open_pin,), functions=functions)
     finding = next(

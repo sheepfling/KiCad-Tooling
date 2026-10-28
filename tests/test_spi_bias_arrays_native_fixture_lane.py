@@ -9,7 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.ci_hosted_spi_bias_arrays import SPI_BIAS_ARRAY_TOOLCHAINS
+from kicad_tooling.ci_hosted_spi_bias_arrays import (
+    SPI_BIAS_ARRAY_TOOLCHAINS,
+    spi_bias_array_fixture_lane,
+)
+from kicad_tooling.ci_hosted_support import HostedLog
 from tests.native_fixture_support import assert_native_fixture_mounts
 
 pytestmark = [
@@ -37,8 +41,6 @@ def test_native_spi_bias_array_fault_and_control_repeat(
     version: str,
     image: str,
 ) -> None:
-    from kicad_tooling.ci_hosted_spi_bias_arrays import spi_bias_array_fixture_lane
-    from kicad_tooling.ci_hosted_support import HostedLog
 
     log = HostedLog(tmp_path, f"native-spi-bias-array-{version}")
     spi_bias_array_fixture_lane(tmp_path, version=version, image=image, log=log)

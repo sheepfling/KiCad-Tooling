@@ -8,7 +8,7 @@ from .bus_signal_roles import i2c_signal_role
 from .models import NetlistContract
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnconnectedI2cSignalPin:
     pin: str
     function: str

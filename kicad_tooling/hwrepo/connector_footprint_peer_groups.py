@@ -6,10 +6,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from .connector_identity import connector_candidate_references
+from .model_primitives import NonEmptyText, Reference
 from .models import NetlistContract
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ConnectorFootprintPeerGroup:
     """Fitted connector candidates sharing exact identity clues."""
 
@@ -99,7 +100,10 @@ def observed_connector_pin_numbers(observed: NetlistContract) -> dict[str, set[s
         *observed.unconnected_nets.values(),
     )
     for assignments in pin_groups:
-        pins = assignments.keys() if isinstance(assignments, Mapping) else assignments
+        assignment_group: Mapping[Reference, NonEmptyText] | tuple[Reference, ...] = assignments
+        pins = (
+            assignment_group.keys() if isinstance(assignment_group, Mapping) else assignment_group
+        )
         for pin in pins:
             reference, separator, number = pin.rpartition(".")
             if separator and reference and number:

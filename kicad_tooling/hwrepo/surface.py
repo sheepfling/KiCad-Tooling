@@ -8,9 +8,11 @@ from __future__ import annotations
 
 import ast
 import asyncio
+from collections.abc import MutableMapping, Sequence
 from importlib.util import find_spec
 from pathlib import Path
-from typing import Literal, cast
+from types import EllipsisType
+from typing import Literal
 
 from pydantic import JsonValue
 
@@ -73,22 +75,40 @@ CORE_WORKFLOWS = frozenset(
 )
 
 
+def _literal_string(expression: ast.expr) -> str | None:
+    if not isinstance(expression, ast.Constant):
+        return None
+    value: str | bytes | int | float | complex | bool | None | EllipsisType = expression.value
+    return value if isinstance(value, str) else None
+
+
 def _strings(node: ast.AST, location: str) -> tuple[str, ...]:
-    if not isinstance(node, (ast.Tuple, ast.List, ast.Set)) or any(
-        not isinstance(item, ast.Constant) or not isinstance(item.value, str) for item in node.elts
-    ):
+    if not isinstance(node, (ast.Tuple, ast.List, ast.Set)):
+        raise ValueError(  # noqa: TRY004 - keep the parser's established value-error contract
+            f"{location}: surface choices must be literal strings"
+        )
+    elements: list[ast.expr] = node.elts
+    values = tuple(_literal_string(item) for item in elements)
+    if any(value is None for value in values):
         raise ValueError(f"{location}: surface choices must be literal strings")
-    return tuple(
-        item.value
-        for item in node.elts
-        if isinstance(item, ast.Constant) and isinstance(item.value, str)
-    )
+    return tuple(value for value in values if value is not None)
 
 
-def _string(node: ast.AST, location: str) -> str:
-    if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+def _string(node: ast.expr, location: str) -> str:
+    value = _literal_string(node)
+    if value is None:
         raise TypeError(f"{location}: surface name must be a literal string")
-    return node.value
+    return value
+
+
+def _is_main_guard(node: ast.AST) -> bool:
+    if not isinstance(node, ast.Compare):
+        return False
+    left: ast.expr = node.left
+    if not isinstance(left, ast.Name) or left.id != "__name__":
+        return False
+    comparators: list[ast.expr] = node.comparators
+    return any(_literal_string(value) == "__main__" for value in comparators)
 
 
 def discover_cli(root: Path) -> tuple[ToolCliSnapshot, ...]:
@@ -111,16 +131,7 @@ def discover_cli(root: Path) -> tuple[ToolCliSnapshot, ...]:
                 isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "main"
                 for node in tree.body
             )
-            or any(
-                isinstance(node, ast.Compare)
-                and isinstance(node.left, ast.Name)
-                and node.left.id == "__name__"
-                and any(
-                    isinstance(value, ast.Constant) and value.value == "__main__"
-                    for value in node.comparators
-                )
-                for node in ast.walk(tree)
-            )
+            or any(_is_main_guard(node) for node in ast.walk(tree))
         )
         if not is_cli:
             continue
@@ -179,9 +190,10 @@ def discover_mcp(root: Path) -> tuple[ToolMcpSnapshot, ...]:
         function: ast.FunctionDef | ast.AsyncFunctionDef | None = None
         declaration: ast.Call | None = None
         if isinstance(node, ast.Call) and _is_tool_call(node.func):
-            if len(node.args) != 1 or not isinstance(node.args[0], ast.Name):
+            registration_args: list[ast.expr] = node.args
+            if len(registration_args) != 1 or not isinstance(registration_args[0], ast.Name):
                 raise ValueError(f"{path}:{node.lineno}: unsupported MCP tool registration")
-            function = functions.get(node.args[0].id)
+            function = functions.get(registration_args[0].id)
             declaration = node.func if isinstance(node.func, ast.Call) else None
         elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             decorators = [value for value in node.decorator_list if _is_tool_call(value)]
@@ -237,14 +249,15 @@ async def _live_mcp(root: Path) -> tuple[ToolMcpSnapshot, ...]:
     for tool in await server.list_tools():
         # input_schema is an SDK JSON boundary. Pydantic immediately validates the
         # extracted names, so framework dictionaries never reach comparison code.
-        properties = tool.input_schema.get("properties", {})
-        if not isinstance(properties, dict):
+        properties_value: JsonValue = tool.input_schema.get("properties", {})
+        if not isinstance(properties_value, dict):
             raise TypeError(f"MCP tool {tool.name} has no object parameter schema")
+        properties: dict[str, JsonValue] = properties_value
         snapshots.append(
             ToolMcpSnapshot.model_validate(
                 {
                     "name": tool.name,
-                    "parameters": tuple(cast("dict[str, JsonValue]", properties)),
+                    "parameters": tuple(properties),
                 }
             )
         )
@@ -348,7 +361,7 @@ def _test_exists(
     root: Path,
     reference: str,
     *,
-    ast_cache: dict[Path, ast.Module | None] | None = None,
+    ast_cache: MutableMapping[Path, ast.Module | None] | None = None,
 ) -> bool:
     """Resolve a pytest function or unittest method without importing tests."""
     parts = reference.split(".")
@@ -357,7 +370,7 @@ def _test_exists(
     if any(not part.isidentifier() for part in parts):
         return False
 
-    def read_tree(module_parts: list[str]) -> ast.Module | None:
+    def read_tree(module_parts: Sequence[str]) -> ast.Module | None:
         path: Path | None = None
         try:
             path = repo_path(root, "/".join(module_parts) + ".py")

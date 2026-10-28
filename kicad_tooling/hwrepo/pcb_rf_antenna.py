@@ -145,22 +145,22 @@ def _mapped_value(mapping: Mapping[_Key, _Value], key: str) -> tuple[_Value, ...
     return tuple(value for _, value in _casefold_matches(mapping, key))
 
 
-def _append_keepout_issues(
+def _check_keepout(
     requirement: PcbRfModuleAntennaRequirement,
     snapshot: PcbConnectivitySnapshot,
     placement: PcbFootprintPlacementObservation | None,
-    *,
-    issues: list[str],
 ) -> tuple[
     tuple[str, ...],
     str | None,
     str | None,
     tuple[str, ...],
     tuple[bool | None, bool | None, bool | None, bool | None, bool | None],
+    tuple[str, ...],
 ]:
+    issues: list[str] = []
     keepout = requirement.keepout
     if keepout is None:
-        return (), None, None, (), (None, None, None, None, None)
+        return (), None, None, (), (None, None, None, None, None), ()
     if (
         snapshot.schema_version not in {"12", "13", "14"}
         or "footprints" not in snapshot.model_fields_set
@@ -168,20 +168,20 @@ def _append_keepout_issues(
         issues.append(
             "native footprint-placement evidence requires PCB snapshot schema 12, 13, or 14"
         )
-        return (), None, None, (), (None, None, None, None, None)
+        return (), None, None, (), (None, None, None, None, None), tuple(issues)
     if placement is None:
         issues.append("native PCB footprint placement is missing for the mapped RF module")
-        return (), None, None, (), (None, None, None, None, None)
+        return (), None, None, (), (None, None, None, None, None), tuple(issues)
     try:
         expected_polygons = _transform_polygons(requirement, placement)
         expected_digest = _geometry_digest(expected_polygons)
     except (ValueError, ArithmeticError) as exc:
         issues.append(f"could not transform the authored antenna keepout: {exc}")
-        return (), None, None, (), (None, None, None, None, None)
+        return (), None, None, (), (None, None, None, None, None), tuple(issues)
     areas = tuple(item for item in snapshot.rule_areas if item.name == keepout.name)
     if not areas:
         issues.append("named native antenna keepout is missing")
-        return (), expected_digest, None, (), (None, None, None, None, None)
+        return (), expected_digest, None, (), (None, None, None, None, None), tuple(issues)
     if len(areas) != 1:
         issues.append("named native antenna keepout is ambiguous because it is duplicated")
     area = min(areas, key=lambda item: item.uuid.casefold())
@@ -209,7 +209,14 @@ def _append_keepout_issues(
     )
     if expected_flags != observed_flags:
         issues.append("native antenna keepout restrictions differ from the project requirement")
-    return (area.uuid,), expected_digest, observed_digest, observed_layers, observed_flags
+    return (
+        (area.uuid,),
+        expected_digest,
+        observed_digest,
+        observed_layers,
+        observed_flags,
+        tuple(issues),
+    )
 
 
 def pcb_rf_module_antenna_entries(
@@ -311,7 +318,9 @@ def pcb_rf_module_antenna_entries(
             observed_geometry_sha256,
             observed_layers,
             observed_flags,
-        ) = _append_keepout_issues(requirement, snapshot, placement, issues=issues)
+            keepout_issues,
+        ) = _check_keepout(requirement, snapshot, placement)
+        issues.extend(keepout_issues)
         keepout = requirement.keepout
         entry = PcbRfModuleAntennaCoverageEntry(
             id=requirement.id,

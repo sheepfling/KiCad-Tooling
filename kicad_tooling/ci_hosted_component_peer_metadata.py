@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from .hwrepo.models import NetlistContract
+from .hwrepo.models import NetlistContract
 
 
 def native_peer_metadata_mismatches(

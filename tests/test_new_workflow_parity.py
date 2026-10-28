@@ -31,6 +31,7 @@ from kicad_tooling.hwrepo.models import (
 from kicad_tooling.parts import main as parts_main
 from tests import test_cad_library as cad_fixture
 from tests import test_electrical_charts as chart_fixture
+from tests.json_types import JsonObject
 from tests.support import SOURCE_ROOT
 
 
@@ -52,7 +53,7 @@ class NewWorkflowParityTests(unittest.IsolatedAsyncioTestCase):
         return fixture, source
 
     @staticmethod
-    def cli_parts(root: Path, *args: str) -> tuple[int, dict[str, object]]:
+    def cli_parts(root: Path, *args: str) -> tuple[int, JsonObject]:
         output = StringIO()
         with (
             patch.object(

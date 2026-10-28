@@ -7,7 +7,6 @@ from .bus_signal_pairs import (
 )
 from .casefold_mapping_lookup import lookup_unique_casefold as _lookup
 from .models import (
-    ComponentContract,
     NetlistContract,
 )
 from .reference_bonds import reference_bond_issues
@@ -68,7 +67,7 @@ def _component_issues(
 ) -> list[str]:
     issues: list[str] = []
     component = _lookup(observed.components, reference)
-    if not isinstance(component, ComponentContract):
+    if component is None:
         return [f"{reference} is absent or ambiguous in the native netlist"]
     if component.footprint != expected_footprint:
         issues.append(
@@ -127,7 +126,7 @@ def _resistor_issues(
         return []
     issues: list[str] = []
     component = _lookup(observed.components, resistor.reference)
-    if not isinstance(component, ComponentContract):
+    if component is None:
         return [f"{resistor.reference} is absent or ambiguous in the native netlist"]
     if component.footprint != resistor.expected_footprint:
         issues.append(

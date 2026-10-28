@@ -9,13 +9,15 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from .ci_hosted_kicad10_images import KICAD_10_NATIVE_TOOLCHAINS
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 CAN_TX_OUTPUT_SHARING_TOOLCHAINS = KICAD_10_NATIVE_TOOLCHAINS
 
@@ -24,19 +26,11 @@ def can_tx_output_sharing_fixture_lane(
     root: Path, *, version: str, image: str, log: HostedLog
 ) -> None:
     """Repeat native netlist/ERC exports and verify shared-TX fault and control."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .validate import read_netlist
-
     root = root.resolve()
     if (version, image) not in CAN_TX_OUTPUT_SHARING_TOOLCHAINS:
         raise ValueError(f"CAN TX-sharing fixtures do not cover KiCad {version} with this image")
     pinned = pinned_image(image)
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/can-tx-output-sharing"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/can-tx-output-sharing"
     sources = {
         "fault": fixture_root / "multiple-transmitters.kicad_sch",
         "control": fixture_root / "one-transmitter-control.kicad_sch",

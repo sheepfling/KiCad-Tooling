@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -61,14 +62,16 @@ def test_ret_return_names_match_cli_and_mcp(tmp_path: Path) -> None:
         for port in range(1, 5)
     }
 
-    def install_return_nets(return_nets: dict[str, tuple[str, ...]]) -> None:
+    def install_return_nets(return_nets: Mapping[str, tuple[str, ...]]) -> None:
         observed = base.model_copy(update={"components": components, "nets": return_nets})
         install_synthetic_netlist(native, contract_netlist_xml(observed))
 
     async def exercise() -> None:
         async with Client(create_server(root), mode="legacy") as client:
 
-            async def compare(return_nets: dict[str, tuple[str, ...]]) -> DesignLintReport:
+            async def compare(
+                return_nets: Mapping[str, tuple[str, ...]],
+            ) -> DesignLintReport:
                 install_return_nets(return_nets)
                 process = run_design_lint_cli(tmp_path, root, native)
                 assert process.returncode in {0, 1}, process.stderr + process.stdout

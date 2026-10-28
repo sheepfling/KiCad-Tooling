@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 
 from .models import NetlistContract
 from .usb_peer_reference_types import UsbEndpoint, UsbPeerUnsupportedMultiPinPath
@@ -12,8 +13,8 @@ def unsupported_usb_multi_pin_path_candidates(
     connector: UsbEndpoint,
     phy: UsbEndpoint,
     observed: NetlistContract,
-    net_members: Mapping[str, set[str]],
-    mapped_component_references: set[str],
+    net_members: Mapping[str, AbstractSet[str]],
+    mapped_component_references: AbstractSet[str],
 ) -> tuple[UsbPeerUnsupportedMultiPinPath, ...]:
     """Report shared multi-pin candidates without asserting that they pass data."""
     if (

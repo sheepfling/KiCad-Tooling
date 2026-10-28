@@ -12,7 +12,7 @@ CAN_TERMINATION_MIN_OHMS = 108.0
 CAN_TERMINATION_MAX_OHMS = 132.0
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class CanSignalPair:
     high_net: str
     low_net: str
@@ -20,7 +20,7 @@ class CanSignalPair:
     low_pins: tuple[str, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class CanTerminationGap:
     high_net: str
     low_net: str
@@ -28,7 +28,7 @@ class CanTerminationGap:
     low_pins: tuple[str, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class CanTerminationExcess:
     high_net: str
     low_net: str

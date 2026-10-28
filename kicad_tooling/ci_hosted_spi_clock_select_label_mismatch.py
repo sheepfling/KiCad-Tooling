@@ -9,45 +9,44 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
+from types import MappingProxyType
 
 from .ci_hosted_spi_native import SPI_NATIVE_TOOLCHAINS
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 SPI_CLOCK_SELECT_LABEL_TOOLCHAINS = SPI_NATIVE_TOOLCHAINS
 _RULE_ID = "bus.spi_clock_select_label_mismatch"
-_SOURCE_HASHES = {
-    "fault": "aeedfe05f1997dfefe547d83a474e1c527a1f482c1e58b7700846cc80404d19f",
-    "control": "0b52bf3893cfcee36727bb82257d650538835c3153fe0f71b62dfac58d6b4c3c",
-}
+_SOURCE_HASHES = MappingProxyType(
+    {
+        "fault": "aeedfe05f1997dfefe547d83a474e1c527a1f482c1e58b7700846cc80404d19f",
+        "control": "0b52bf3893cfcee36727bb82257d650538835c3153fe0f71b62dfac58d6b4c3c",
+    }
+)
 
 
 def spi_clock_select_label_fixture_lane(
     root: Path, *, version: str, image: str, log: HostedLog
 ) -> None:
     """Repeat exact native netlist/ERC exports for crossed and matching labels."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .validate import read_netlist
 
     root = root.resolve()
     if (version, image) not in SPI_CLOCK_SELECT_LABEL_TOOLCHAINS:
         raise ValueError(f"SPI clock/select labels do not cover KiCad {version} with this image")
     pinned = pinned_image(image)
     fixture_root = (
-        Path(__file__).resolve().parents[1]
-        / "tests/fixtures/design_lint/spi-clock-select-label-mismatch"
+        tooling_checkout_root() / "tests/fixtures/design_lint/spi-clock-select-label-mismatch"
     )
     sources = {
         "fault": fixture_root / "crossed-labels.kicad_sch",
         "control": fixture_root / "matching-labels-control.kicad_sch",
     }
-    source_hashes = {case: digest(source) for case, source in sources.items()}
+    source_hashes = MappingProxyType({case: digest(source) for case, source in sources.items()})
     if source_hashes != _SOURCE_HASHES:
         raise ValueError("SPI clock/select label sources differ from reviewed hashes")
 

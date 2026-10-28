@@ -7,13 +7,10 @@ import os
 import shutil
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from ..ci_hosted_support import HostedLog
 from .contracts import repo_path
 from .doctor import NativeRunner
-
-if TYPE_CHECKING:
-    from ..ci_hosted_support import HostedLog
 
 
 def preview_lane(

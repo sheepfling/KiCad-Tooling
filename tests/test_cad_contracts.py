@@ -7,9 +7,10 @@ import unittest
 
 from kicad_tooling.hwrepo.contracts import parse_easyeda_identity, parse_model
 from kicad_tooling.hwrepo.models import CadProviderIdentity, CadSourceFile
+from tests.json_types import JsonObject
 
 
-def provider_document() -> dict:
+def provider_document() -> JsonObject:
     return {
         "success": True,
         "ignored_vendor_field": "allowed outside our projection",

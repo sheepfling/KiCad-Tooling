@@ -9,7 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.ci_hosted_usb_signal_named_rail import USB_SIGNAL_NAMED_RAIL_TOOLCHAINS
+from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.ci_hosted_usb_signal_named_rail import (
+    USB_SIGNAL_NAMED_RAIL_TOOLCHAINS,
+    usb_signal_named_rail_fixture_lane,
+)
 from tests.native_fixture_support import assert_native_fixture_mounts
 
 RULE_ID = "bus.usb_signal_on_named_rail"
@@ -35,8 +39,6 @@ pytestmark = [
 def test_native_usb_signal_named_rail_fault_and_control_repeat(
     tmp_path: Path, version: str, image: str
 ) -> None:
-    from kicad_tooling.ci_hosted_support import HostedLog
-    from kicad_tooling.ci_hosted_usb_signal_named_rail import usb_signal_named_rail_fixture_lane
 
     root = tmp_path
     log = HostedLog(root, f"native-usb-signal-named-rail-{version}")

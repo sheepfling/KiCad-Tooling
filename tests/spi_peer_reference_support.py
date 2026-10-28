@@ -2,19 +2,21 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 
 def spi_peer_netlist(
     *,
-    reference_nets: dict[str, str] | None = None,
-    supply_nets: dict[str, str] | None = None,
-    clock_nets: dict[str, str] | None = None,
-    clock_types: dict[str, str] | None = None,
-    symbols: dict[str, str] | None = None,
+    reference_nets: Mapping[str, str] | None = None,
+    supply_nets: Mapping[str, str] | None = None,
+    clock_nets: Mapping[str, str] | None = None,
+    clock_types: Mapping[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
     dnp: tuple[str, ...] = (),
     incomplete_reference_types: tuple[str, ...] = (),
-    reference_functions: dict[str, str] | None = None,
+    reference_functions: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     """Build direct SCK peers with explicit reference-pin inventories."""
     reference_nets = reference_nets or {"U1": "GND_A", "U2": "GND_B"}

@@ -18,7 +18,7 @@ from .peer_reference_assignments import (
 _IC_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class I2cPeerEndpoint:
     """One fitted IC with one unambiguous native SDA/SCL pair."""
 
@@ -31,7 +31,7 @@ class I2cPeerEndpoint:
     reference_pins: tuple[I2cReferencePinAssignment, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class I2cPeerReferenceReview:
     """A shared native I2C bus with a split between explicit reference nets."""
 
@@ -41,7 +41,7 @@ class I2cPeerReferenceReview:
     incomplete_references: tuple[str, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class I2cPeerReferenceBus:
     """Coverage for one exact shared I2C signal-net pair."""
 
@@ -57,7 +57,7 @@ class I2cPeerReferenceBus:
     ]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class I2cPeerReferenceScan:
     """Recognized single-port I2C endpoints and shared bus reference states."""
 

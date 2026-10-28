@@ -23,7 +23,7 @@ _OPEN_OUTPUT_TYPES = frozenset({"open_collector", "open_emitter"})
 _INPUT_TYPES = frozenset({"input", "input_low"})
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class OpenOutputBiasGap:
     net: str
     bias: Literal["pull_up", "pull_down"]

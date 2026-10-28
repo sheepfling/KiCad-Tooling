@@ -9,7 +9,7 @@ SIGNAL_ELECTRICAL_TYPES = frozenset(
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ConnectorFootprintPeerPinDivergence:
     """A generic pin assignment difference inside a bounded alias candidate group."""
 
@@ -24,7 +24,7 @@ class ConnectorFootprintPeerPinDivergence:
     peer_assignment_basis: tuple[str, ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ConnectorFootprintPeerPinNamedDivergence:
     """A named pin assignment difference, including unanchored coverage evidence."""
 
@@ -40,7 +40,7 @@ class ConnectorFootprintPeerPinNamedDivergence:
     peer_assignment_basis: tuple[str, ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ConnectorFootprintPeerPinOpenOutlier:
     """An eligible generic or named contact open on some peers."""
 
@@ -57,7 +57,7 @@ class ConnectorFootprintPeerPinOpenOutlier:
     peer_assignment_basis: tuple[str, ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ConnectorFootprintPeerPinAllOpen:
     """A generic contact left unassigned on every footprint-alias peer."""
 
@@ -72,7 +72,7 @@ class ConnectorFootprintPeerPinAllOpen:
     peer_assignment_basis: tuple[str, ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ConnectorFootprintPeerPinNamedAllOpen:
     """A named contact with a supported role left open on every alias peer."""
 
@@ -88,7 +88,7 @@ class ConnectorFootprintPeerPinNamedAllOpen:
     peer_assignment_basis: tuple[str, ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ConnectorFootprintPeerPinScan:
     """Coverage and review candidates derived from one native netlist snapshot."""
 

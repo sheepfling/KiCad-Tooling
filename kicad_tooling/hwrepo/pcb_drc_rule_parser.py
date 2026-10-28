@@ -8,18 +8,23 @@ import re
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from types import MappingProxyType
 from typing import Literal, cast
+
+from pydantic import JsonValue
 
 from .model_inventory import _atoms, _children, _Span  # pyright: ignore[reportPrivateUsage]
 from .pcb_drc_models import PcbDrcConstraintName
 
-RULE_SEVERITY = {
-    "track_width": "track_width",
-    "diff_pair_gap": "diff_pair_gap_out_of_range",
-    "skew": "skew_out_of_range",
-    "diff_pair_uncoupled": "diff_pair_uncoupled_length_too_long",
-    "length": "length_out_of_range",
-}
+RULE_SEVERITY = MappingProxyType(
+    {
+        "track_width": "track_width",
+        "diff_pair_gap": "diff_pair_gap_out_of_range",
+        "skew": "skew_out_of_range",
+        "diff_pair_uncoupled": "diff_pair_uncoupled_length_too_long",
+        "length": "length_out_of_range",
+    }
+)
 _LENGTH = re.compile(r"^([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+))(mm|mil)$")
 
 
@@ -252,10 +257,10 @@ def drc_pad_selector(pad: str) -> str:
 
 def read_native_pcb_drc_fixture_report(path: Path) -> NativePcbDrcFixtureReport:
     """Validate the DRC report fields needed by native signal-path fixtures."""
-    raw_payload: object = json.loads(path.read_text(encoding="utf-8"))
+    raw_payload: JsonValue = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(raw_payload, dict):
         raise TypeError(f"{path}: native DRC report root must be an object")
-    payload = cast(dict[str, object], raw_payload)
+    payload: dict[str, JsonValue] = raw_payload
     version = payload.get("kicad_version")
     source = payload.get("source")
     violations = payload.get("violations")
@@ -267,10 +272,12 @@ def read_native_pcb_drc_fixture_report(path: Path) -> NativePcbDrcFixtureReport:
         raise TypeError(f"{path}: native DRC violations must be a list")
     violation_types: list[str] = []
     canonical_violations: list[str] = []
-    for index, raw_item in enumerate(cast(list[object], violations)):
+    violation_values: list[JsonValue] = violations
+    for index, item_value in enumerate(violation_values):
+        raw_item: JsonValue = item_value
         if not isinstance(raw_item, dict):
             raise TypeError(f"{path}: native DRC violation {index} must be an object")
-        item = cast(dict[str, object], raw_item)
+        item: dict[str, JsonValue] = raw_item
         violation_type = item.get("type")
         if not isinstance(violation_type, str) or not violation_type.strip():
             raise TypeError(f"{path}: native DRC violation {index} has no type")

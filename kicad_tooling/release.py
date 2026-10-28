@@ -7,14 +7,16 @@ import subprocess
 import zipfile
 from pathlib import Path
 
-from .hwrepo.contracts import read_model, repo_path
-from .hwrepo.models import (
+from kicad_tooling.hwrepo.models import (
     ReleaseClass,
     ReleaseExportReport,
     ReleaseManifest,
     ReleasePackageReport,
     ReleaseReadinessReport,
 )
+
+from .hwrepo.contracts import read_model, repo_path
+from .hwrepo.layout import default_project_root
 from .hwrepo.release import check
 
 
@@ -72,7 +74,7 @@ def main() -> int:
         choices=("prepare", "check", "package", "verify", "restore", "export"),
     )
     parser.add_argument("--manifest", help="Repository-relative release manifest")
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     parser.add_argument("--project", action="append", default=[])
     parser.add_argument("--variant", action="append", default=[], metavar="PRODUCT:VARIANT")
     parser.add_argument(

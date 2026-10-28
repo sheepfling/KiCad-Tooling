@@ -14308,7 +14308,9 @@ is not a reason by itself to expand its scope or change its default policy.
   reports each pad's connected pad set, stable via geometry and per-pad
   component membership, directly touched zone UUID/layer identities, and each
   zone's filled-island count and pad-to-island indexes from the exact
-  digest-pinned KiCad 10 image.
+  digest-pinned KiCad 10 image. Typed snapshot validation rejects connected-pad
+  groups with mixed net assignments or asymmetric membership before any
+  project return requirement is evaluated.
   KiCad's [GetConnectedItems API](https://docs.kicad.org/doxygen/classCONNECTIVITY__DATA.html)
   returns every item in a copper cluster, so the probe filters those candidates
   by the pad's copper layers and actual filled-island contact before recording
@@ -14375,7 +14377,8 @@ is not a reason by itself to expand its scope or change its default policy.
   footprint identity, pad groups, and DNP state, but does not prove that copper
   inside the footprint physically bridges those pads. Isolated domains remain
   valid when declared.
-- **Fixtures:** Connected plane; missing pad connection; split plane; four-port
+- **Fixtures:** Connected plane; missing pad connection; split plane;
+  malformed mixed-net and asymmetric connected-pad evidence; four-port
   DB9-like common-return control, whole-connector copper island, and single
   open-contact fault; same-net front/back return planes without and with a
   through-via bond; declared net

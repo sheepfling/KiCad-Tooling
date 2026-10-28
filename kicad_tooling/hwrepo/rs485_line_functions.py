@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Literal
 
-_BUS_LINE_ROLES: dict[str, Literal["a", "b"]] = {"a": "a", "b": "b"}
+_BUS_LINE_ROLES: Mapping[str, Literal["a", "b"]] = MappingProxyType({"a": "a", "b": "b"})
 
 
 def rs485_bus_line_role(function: str) -> Literal["a", "b"] | None:

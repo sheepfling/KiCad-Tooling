@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from itertools import pairwise
 
 from .model_inventory import _atoms, _Span  # pyright: ignore[reportPrivateUsage]
@@ -198,7 +199,7 @@ def label_anchors(source: str, root: _Span) -> tuple[tuple[LabelAnchor, ...], tu
 
 def labels_near_wire_endpoints(
     labels: tuple[LabelAnchor, ...],
-    pins: list[SchematicPin],
+    pins: Sequence[SchematicPin],
     wire_ends: tuple[WireEnd, ...],
     wire_segments: tuple[WireSegment, ...],
 ) -> tuple[LabelNearWireEndpoint, ...]:

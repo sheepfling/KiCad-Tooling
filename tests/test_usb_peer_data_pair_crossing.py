@@ -11,6 +11,12 @@ from kicad_tooling.hwrepo.models import (
     DesignLintRuleOverride,
     NetlistContract,
 )
+from kicad_tooling.hwrepo.usb_data_path_models import (
+    UsbDataInterfaceRequirement,
+    UsbDataPathLineRequirement,
+    UsbDataPathMap,
+)
+from kicad_tooling.hwrepo.usb_reference_pin_models import UsbReferencePinRequirement
 from tests.design_lint_fixtures import coach
 from tests.design_lint_fixtures.usb_data_pair_crossing import (
     usb_data_pair_crossing_netlist,
@@ -108,13 +114,6 @@ def test_bounded_tvs_shunt_is_allowed_but_unrelated_route_branch_is_not() -> Non
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_exact_interface_map_owns_the_same_endpoint_pair() -> None:
-    from kicad_tooling.hwrepo.usb_data_path_models import (
-        UsbDataInterfaceRequirement,
-        UsbDataPathLineRequirement,
-        UsbDataPathMap,
-    )
-    from kicad_tooling.hwrepo.usb_reference_pin_models import UsbReferencePinRequirement
-
     path_map = UsbDataPathMap(
         basis="synthetic reviewed USB endpoint map",
         interfaces=(

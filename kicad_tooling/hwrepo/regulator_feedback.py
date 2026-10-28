@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 
 from .casefold_mapping_lookup import lookup_unique_casefold as _lookup
 from .models import (
     NetlistContract,
 )
+from .netlist_pin_assignments import netlist_pin_inventory_contains, netlist_pin_net_index
 from .regulator_feedback_models import (
     RegulatorFeedbackCoverageEntry,
     RegulatorFeedbackCoverageReport,
@@ -20,37 +23,19 @@ from .resistor_paths import (
 )
 
 
-def _pin_nets(observed: NetlistContract) -> dict[str, set[str]]:
-    result: dict[str, set[str]] = {}
-    for net, pins in observed.nets.items():
-        for pin in pins:
-            result.setdefault(pin.casefold(), set()).add(net)
-    return result
-
-
-def _pin_inventory_contains(observed: NetlistContract, pin: str) -> bool | None:
-    reference, separator, number = pin.rpartition(".")
-    if not separator:
-        return False
-    inventory = _lookup(observed.component_pin_numbers, reference)
-    if inventory is None:
-        return None
-    return any(str(candidate).casefold() == number.casefold() for candidate in inventory)
-
-
 def _component_identity(
     observed: NetlistContract,
     reference: str,
     expected_value: str | None,
     expected_symbol: str,
     expected_footprint: str,
-    issues: list[str],
-) -> bool:
+) -> tuple[bool, tuple[str, ...]]:
+    issues: list[str] = []
     component = _lookup(observed.components, reference)
     symbol = _lookup(observed.component_symbols, reference)
     if component is None:
         issues.append(f"Mapped component {reference} is missing or ambiguous in the native netlist")
-        return False
+        return False, tuple(issues)
     valid = True
     if expected_value is not None and component.value != expected_value:
         issues.append(f"{reference} value is {component.value}; expected {expected_value}")
@@ -64,36 +49,34 @@ def _component_identity(
             f"expected {expected_footprint}"
         )
         valid = False
-    return valid
+    return valid, tuple(issues)
 
 
 def _entry(
     requirement: RegulatorFeedbackRequirement,
     observed: NetlistContract,
-    pins_by_net: dict[str, set[str]],
-    dnp_references: set[str],
+    pins_by_net: Mapping[str, AbstractSet[str]],
+    dnp_references: AbstractSet[str],
 ) -> RegulatorFeedbackCoverageEntry:
     issues: list[str] = []
-    identity_valid = _component_identity(
+    identity_valid, identity_issues = _component_identity(
         observed,
         requirement.regulator_reference,
         requirement.expected_regulator_value,
         requirement.expected_regulator_symbol,
         requirement.expected_regulator_footprint,
-        issues,
     )
+    issues.extend(identity_issues)
     for resistor in (requirement.upper_resistor, requirement.lower_resistor):
-        identity_valid = (
-            _component_identity(
-                observed,
-                resistor.reference,
-                None,
-                resistor.expected_symbol,
-                resistor.expected_footprint,
-                issues,
-            )
-            and identity_valid
+        resistor_valid, identity_issues = _component_identity(
+            observed,
+            resistor.reference,
+            None,
+            resistor.expected_symbol,
+            resistor.expected_footprint,
         )
+        issues.extend(identity_issues)
+        identity_valid = resistor_valid and identity_valid
 
     mapped_references = (
         requirement.regulator_reference,
@@ -128,7 +111,7 @@ def _entry(
     }
     pins_valid = True
     for pin in all_pins:
-        inventory = _pin_inventory_contains(observed, pin)
+        inventory = netlist_pin_inventory_contains(observed, pin)
         if inventory is None:
             issues.append(f"{pin} has no native component-pin inventory")
             pins_valid = False
@@ -145,7 +128,7 @@ def _entry(
         (requirement.feedback_pin, requirement.expected_feedback_pin_function),
     ):
         observed_function = _lookup(observed.pin_functions, pin)
-        if not isinstance(observed_function, str):
+        if observed_function is None:
             issues.append(f"{pin} has no native symbol pin function")
             pins_valid = False
         elif observed_function.strip().casefold() != expected_function.strip().casefold():
@@ -315,7 +298,7 @@ def scan_regulator_feedback_map(
     netlist_sha256: str,
 ) -> RegulatorFeedbackCoverageReport:
     """Check authored conventional feedback dividers against one native netlist export."""
-    pins_by_net = _pin_nets(observed)
+    pins_by_net = netlist_pin_net_index(observed)
     dnp_references = {reference.casefold() for reference in observed.dnp_components}
     entries = tuple(
         _entry(requirement, observed, pins_by_net, dnp_references)

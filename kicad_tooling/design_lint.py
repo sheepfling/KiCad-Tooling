@@ -11,6 +11,7 @@ from .hwrepo.design_lint_reconciliation_text import reconciliation_text
 from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.design_lint_rule_models import DesignLintRuleCatalog
 from .hwrepo.design_lint_text_report import text_report
+from .hwrepo.layout import default_project_root
 
 
 def catalog_text(catalog: DesignLintRuleCatalog) -> str:
@@ -40,7 +41,7 @@ def catalog_text(catalog: DesignLintRuleCatalog) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     parser.add_argument("--project", help="Registered pcb or schematic project ID")
     parser.add_argument(
         "--native-summary",

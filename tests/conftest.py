@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
@@ -72,7 +73,7 @@ def _resolve_legacy_reference_root(request: pytest.FixtureRequest) -> None:
         module.__dict__["ROOT"] = reference_root()
 
 
-def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+def pytest_collection_modifyitems(items: Sequence[pytest.Item]) -> None:
     """Tag tests by lint scope, catalogued rule, exact toolchain, and cost."""
     for item in items:
         path = item.path.relative_to(_ROOT).as_posix()
@@ -92,7 +93,7 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
         )
         callspec = getattr(item, "callspec", None)
         parameters = getattr(callspec, "params", {})
-        parameter_rule_id = parameters.get("rule_id")
+        parameter_rule_id: str | None = parameters.get("rule_id")
         if isinstance(parameter_rule_id, str) and parameter_rule_id in catalogued_rule_ids:
             catalogued_rule_ids = (parameter_rule_id,)
         for rule_id in catalogued_rule_ids:

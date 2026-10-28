@@ -29,7 +29,7 @@ from kicad_tooling.hwrepo.models import (
     PurchasingPreferences,
 )
 from kicad_tooling.hwrepo.part_cad import read_cad_components
-from kicad_tooling.hwrepo.part_picker import create_picker, resume_selection, selection
+from kicad_tooling.hwrepo.part_picker import _snapshot, create_picker, resume_selection, selection
 from kicad_tooling.hwrepo.parts_workflow import new_receipt
 from tests.support import reference_root
 
@@ -467,7 +467,6 @@ class PartPickerTests(unittest.TestCase):
         selected = self.draft()
         before = self.schematic.read_bytes()
         # A forger can fill current hashes but cannot bypass source inventory policy.
-        from kicad_tooling.hwrepo.part_picker import _snapshot
 
         manifest = read_model(self.manifest_path, ProjectManifest)
         write_model(
@@ -500,7 +499,6 @@ class PartPickerTests(unittest.TestCase):
         self.assertIn("off-board", " ".join(report.items[0].issues).lower())
 
     def replacement_draft(self, shared_old_part: bool) -> Path:
-        from kicad_tooling.hwrepo.part_picker import _snapshot
 
         source = self.schematic.read_text()
         references = ("R1", "R2") if shared_old_part else ("R1",)
@@ -596,7 +594,6 @@ class PartPickerTests(unittest.TestCase):
         self.schematic.write_text(
             source[:marker] + source[marker:].replace("(dnp no)", "(dnp yes)", 1), encoding="utf-8"
         )
-        from kicad_tooling.hwrepo.part_picker import _snapshot
 
         spec = read_model(selected, PartSelectionMap)
         selected.write_text(

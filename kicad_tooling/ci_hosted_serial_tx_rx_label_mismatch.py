@@ -9,33 +9,33 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
+from types import MappingProxyType
 
 from .ci_hosted_serial_same_net import SERIAL_TX_RX_NATIVE_TOOLCHAINS
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 SERIAL_TX_RX_LABEL_TOOLCHAINS = SERIAL_TX_RX_NATIVE_TOOLCHAINS
 _RULE_ID = "bus.serial_tx_rx_label_mismatch"
 _NAMED_RAIL_RULE_ID = "bus.serial_signal_on_named_rail"
-_SOURCE_HASHES = {
-    "fault": "f48b576254795b7343c145478bf7e44380a7f1555def2c652d40570fa3c181f9",
-    "control": "912e346b5e745d60595eaae0715ccf9bc380bac34dd1ed047631ec4ea03b29d0",
-    "rail_fault": "425102fe01e6cf6ab102f5d52bffdec315a124612d1256c429995b057cf68626",
-}
+_SOURCE_HASHES = MappingProxyType(
+    {
+        "fault": "f48b576254795b7343c145478bf7e44380a7f1555def2c652d40570fa3c181f9",
+        "control": "912e346b5e745d60595eaae0715ccf9bc380bac34dd1ed047631ec4ea03b29d0",
+        "rail_fault": "425102fe01e6cf6ab102f5d52bffdec315a124612d1256c429995b057cf68626",
+    }
+)
 
 
 def serial_tx_rx_label_fixture_lane(
     root: Path, *, version: str, image: str, log: HostedLog
 ) -> None:
     """Repeat native exports for crossed labels, a named-rail fault, and control."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .validate import read_netlist
 
     root = root.resolve()
     if (version, image) not in SERIAL_TX_RX_LABEL_TOOLCHAINS:
@@ -44,15 +44,14 @@ def serial_tx_rx_label_fixture_lane(
         )
     pinned = pinned_image(image)
     fixture_root = (
-        Path(__file__).resolve().parents[1]
-        / "tests/fixtures/design_lint/serial-tx-rx-label-mismatch"
+        tooling_checkout_root() / "tests/fixtures/design_lint/serial-tx-rx-label-mismatch"
     )
     sources = {
         "fault": fixture_root / "crossed-labels.kicad_sch",
         "control": fixture_root / "matching-labels-control.kicad_sch",
         "rail_fault": fixture_root / "tx-on-ground.kicad_sch",
     }
-    source_hashes = {case: digest(source) for case, source in sources.items()}
+    source_hashes = MappingProxyType({case: digest(source) for case, source in sources.items()})
     if source_hashes != _SOURCE_HASHES:
         raise ValueError("Serial TX/RX label sources differ from reviewed hashes")
 

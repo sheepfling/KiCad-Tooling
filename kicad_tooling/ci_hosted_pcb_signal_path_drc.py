@@ -5,23 +5,19 @@ from __future__ import annotations
 import os
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.pcb_drc_rule_parser import read_native_pcb_drc_fixture_report
 
 
 def pcb_signal_path_drc_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Check native fromTo length and skew rules on repeatable synthetic boards."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.pcb_drc_rule_parser import read_native_pcb_drc_fixture_report
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image:
@@ -31,7 +27,7 @@ def pcb_signal_path_drc_fixture_lane(
             f"PCB signal-path native DRC fixtures do not cover KiCad {config.kicad_version}"
         )
     pinned = pinned_image(image)
-    fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/signal-path"
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/signal-path"
     if not (fixture_root / "create.py").is_file():
         raise ValueError("Synthetic signal-path DRC generator is missing")
     scratch = Path(

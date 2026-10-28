@@ -12,7 +12,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 from mcp import Client
-from mcp.types import TextContent
 
 from kicad_tooling.hwrepo import mcp_files
 from kicad_tooling.hwrepo.mcp_files import (
@@ -24,6 +23,7 @@ from kicad_tooling.hwrepo.mcp_files import (
     read_project_file,
 )
 from kicad_tooling.hwrepo.mcp_server import create_server
+from tests.mcp_test_support import text_content
 from tests.support import reference_root
 
 
@@ -326,11 +326,7 @@ class McpFileErrorTests(unittest.IsolatedAsyncioTestCase):
                                 },
                             )
                             self.assertTrue(result.is_error)
-                            explanation = "\n".join(
-                                item.text
-                                for item in result.content
-                                if isinstance(item, TextContent)
-                            )
+                            explanation = text_content(result)
                             self.assertIn(expected, explanation)
                             self.assertEqual(source.read_bytes(), original)
             self.assertFalse(list(source.parent.glob(".mcp-edit-*")))

@@ -9,27 +9,25 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.component_peer_pin_findings import (
+    component_peer_power_pin_assignment_divergences,
+)
+from .hwrepo.contract_coach import pinned_image, run_command
+from .hwrepo.contracts import write_model
+from .hwrepo.design_lint_spi_candidates import spi_peer_reference_candidates
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import NetlistContract
+from .hwrepo.spi_peer_reference_scan import scan_spi_peer_references
+from .validate import read_netlist
 
 
 def spi_peer_reference_native_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Verify split/common clock-reference fixtures through pinned KiCad exports."""
-    from .hwrepo.component_peer_pin_findings import (
-        component_peer_power_pin_assignment_divergences,
-    )
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint_spi_candidates import spi_peer_reference_candidates
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import NetlistContract
-    from .hwrepo.spi_peer_reference_scan import scan_spi_peer_references
-    from .validate import read_netlist
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image:
@@ -38,9 +36,7 @@ def spi_peer_reference_native_fixture_lane(
         raise ValueError(f"SPI peer-reference fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
 
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/spi-peer-reference-native"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/spi-peer-reference-native"
     fixtures = {case: fixture_root / f"{case}.kicad_sch" for case in ("control", "fault")}
     source_hashes = {case: digest(path) for case, path in fixtures.items()}
     expected_source_hashes = {
@@ -113,8 +109,6 @@ def spi_peer_reference_native_fixture_lane(
         image=pinned,
     )
     command = run_command(root, argv, timeout=600)
-    from .hwrepo.contracts import write_model
-
     receipt = scratch / "native.command.json"
     write_model(receipt, command)
     receipt_path = receipt.relative_to(root).as_posix()

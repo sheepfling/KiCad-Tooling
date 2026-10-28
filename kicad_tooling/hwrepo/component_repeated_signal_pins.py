@@ -22,14 +22,14 @@ _SIGNAL_ELECTRICAL_TYPES = frozenset(
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _SignalPin:
     pin: str
     function: str
     assignments: tuple[str, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _RepeatedSignalPinGroup:
     reference: str
     symbol: str

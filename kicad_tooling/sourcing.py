@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from .hwrepo.contracts import read_model, repo_path
+from .hwrepo.layout import default_project_root
 from .hwrepo.models import PolicyIssue, SourcingSnapshot, SourcingSnapshotReport
 from .hwrepo.sourcing import check
 
@@ -29,7 +30,7 @@ def format_sourcing(report: SourcingSnapshotReport, *, limit: int = 5) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--snapshot", required=True, help="Repository-relative sourcing snapshot")
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     parser.add_argument(
         "--format",
         choices=("json", "text"),

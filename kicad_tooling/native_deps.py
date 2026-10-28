@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import shutil
 import subprocess
@@ -11,6 +12,7 @@ from importlib.metadata import PackageNotFoundError, distribution, distributions
 from pathlib import Path, PurePosixPath
 
 from .hwrepo.contracts import repo_path
+from .hwrepo.layout import default_project_root
 
 
 def runtime_metadata() -> Path:
@@ -102,8 +104,6 @@ def prepare(root: Path, image: str, output: Path) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     user: tuple[str, ...] = ()
     if sys.platform != "win32":
-        import os
-
         user = ("--user", f"{os.getuid()}:{os.getgid()}")
     environment_path = PurePosixPath("/work") / output.as_posix()
     create = subprocess.run(
@@ -177,7 +177,7 @@ def prepare(root: Path, image: str, output: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     parser.add_argument("--image", required=True)
     parser.add_argument("--output", type=Path, default=Path("build/policy-deps"))
     args = parser.parse_args()
@@ -185,8 +185,13 @@ def main() -> int:
         prepare(args.root, args.image, args.output)
     except (OSError, ValueError, subprocess.SubprocessError) as exc:
         print(f"Native dependency preparation failed: {exc}", file=sys.stderr)
-        if isinstance(exc, subprocess.CalledProcessError) and isinstance(exc.stderr, str):
-            print(exc.stderr[-8000:], file=sys.stderr)
+        caught_error: (
+            OSError | ValueError | subprocess.SubprocessError | subprocess.CalledProcessError
+        ) = exc
+        if isinstance(caught_error, subprocess.CalledProcessError):
+            stderr: str | bytes | None = caught_error.stderr
+            if isinstance(stderr, str):
+                print(stderr[-8000:], file=sys.stderr)
         return 1
     return 0
 

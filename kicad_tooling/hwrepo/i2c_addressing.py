@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from .i2c_address_models import (
     I2cAddressBitEvidence,
@@ -15,12 +18,14 @@ from .i2c_address_models import (
 from .models import NetlistContract
 
 _I2C_ADDRESS_DEVICE_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)
-_I2C_ADDRESS_PIN_ROLES = {
-    "sda": "SDA",
-    "i2csda": "SDA",
-    "scl": "SCL",
-    "i2cscl": "SCL",
-}
+_I2C_ADDRESS_PIN_ROLES = MappingProxyType(
+    {
+        "sda": "SDA",
+        "i2csda": "SDA",
+        "scl": "SCL",
+        "i2cscl": "SCL",
+    }
+)
 
 
 def format_i2c_address(address: int | None) -> str:
@@ -28,7 +33,7 @@ def format_i2c_address(address: int | None) -> str:
     return "dynamic or unresolved" if address is None else f"0x{address:02X}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnmappedI2cResponder:
     """Likely I2C IC candidate not listed in the project-authored address map."""
 
@@ -131,13 +136,13 @@ def _address_entry(
     segment_sda: str,
     segment_scl: str,
     requirement: I2cResponderAddressRequirement,
-    component_references: set[str],
-    nets_by_pin: dict[str, set[str]],
-    symbols_by_reference: dict[str, str],
-    pin_functions: dict[str, str],
-    known_pins: set[str],
-    pin_numbers: dict[str, set[str]],
-    dnp_references: set[str],
+    component_references: AbstractSet[str],
+    nets_by_pin: Mapping[str, AbstractSet[str]],
+    symbols_by_reference: Mapping[str, str],
+    pin_functions: Mapping[str, str],
+    known_pins: AbstractSet[str],
+    pin_numbers: Mapping[str, AbstractSet[str]],
+    dnp_references: AbstractSet[str],
 ) -> I2cResponderAddressCoverageEntry:
     reference_key = requirement.reference.casefold()
     observed_symbol = symbols_by_reference.get(reference_key)

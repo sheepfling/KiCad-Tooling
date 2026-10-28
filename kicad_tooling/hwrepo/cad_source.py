@@ -17,7 +17,7 @@ import sys
 import tempfile
 import time
 from datetime import UTC, datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from urllib.parse import urlsplit
 
 from .contracts import parse_easyeda_identity, read_model, repo_path, write_model
@@ -125,7 +125,8 @@ def _converter_digest() -> str:
     sources = sorted(
         item
         for item in distribution.files or ()
-        if str(item).startswith("easyeda2kicad/") and str(item).endswith(".py")
+        if PurePosixPath(str(item)).parts[:1] == ("easyeda2kicad",)
+        and PurePosixPath(str(item)).suffix == ".py"
     )
     if not sources:
         raise ValueError("The CAD converter installation has no recorded Python source files")

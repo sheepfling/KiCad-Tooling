@@ -9,9 +9,10 @@ from tests.design_lint_fixtures.serial_signal_named_rail import (
     serial_signal_on_named_rail_netlist,
 )
 from tests.design_lint_fixtures.serial_tx_rx_label_mismatch import serial_tx_rx_label_netlist
+from tests.json_types import JsonObject
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     fault = evaluate(
         "synthetic-serial-signal-named-rail-fault",
         coach(serial_signal_on_named_rail_netlist()),

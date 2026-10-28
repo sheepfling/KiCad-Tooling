@@ -31,7 +31,7 @@ from .part_picker import _snapshot, _verify_snapshot  # pyright: ignore[reportPr
 from .parts_workflow import local_path, selected_project
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _Edit:
     path: str
     before: bytes | None

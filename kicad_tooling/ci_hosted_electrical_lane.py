@@ -7,13 +7,12 @@ from pathlib import Path
 
 from .ci_hosted_support import HostedLog
 from .hwrepo.contracts import read_model
+from .hwrepo.electrical import load_analysis, policy_issues, selected_config, simulation_cases
 from .hwrepo.models import ElectricalAnalysisReport
+from .hwrepo.simulator_setup import ensure
 
 
 def project_simulator(root: Path, project: str, log: HostedLog) -> str:
-    from .hwrepo.electrical import load_analysis, policy_issues, selected_config, simulation_cases
-    from .hwrepo.simulator_setup import ensure
-
     config = selected_config(root, project)
     contract = load_analysis(root, config)
     if contract is None:
@@ -35,8 +34,6 @@ def electrical_lane(
     native_summary: str | None = None,
     required: bool = False,
 ) -> None:
-    from .hwrepo.electrical import selected_config
-
     if selected_config(root, project).electrical is None:
         if required:
             raise ValueError(

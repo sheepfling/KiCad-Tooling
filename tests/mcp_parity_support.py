@@ -11,10 +11,11 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import TypeAlias, overload
 
-from pydantic import BaseModel
+from pydantic import BaseModel, JsonValue, TypeAdapter
 
 from kicad_tooling.hwrepo.contracts import (
     parse_model_text,
@@ -40,9 +41,21 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.validate import hashes
 from tests import test_parts_workflow as native_fixture
+from tests.json_types import JsonObject
 from tests.support import (
     initialize_git,
     reference_root,
+)
+
+McpParityAssertionValue: TypeAlias = (
+    DesignLintReport
+    | BaseModel
+    | JsonValue
+    | Path
+    | Enum
+    | list[object]
+    | tuple[object, ...]
+    | set[object]
 )
 
 
@@ -211,7 +224,12 @@ class McpParityHarness:
             return getattr(self._assertions, name)
         raise AttributeError(name)
 
-    def _assert_equal(self, first: object, second: object, msg: str | None = None) -> None:
+    def _assert_equal(
+        self,
+        first: McpParityAssertionValue,
+        second: McpParityAssertionValue,
+        msg: str | None = None,
+    ) -> None:
         if isinstance(first, DesignLintReport) and isinstance(second, DesignLintReport):
             first = semantic_design_lint_report(first)
             second = semantic_design_lint_report(second)
@@ -248,8 +266,8 @@ class McpParityHarness:
             write_model(contract_path, contract.model_copy(update={"design_lint": policy}))
 
     @staticmethod
-    def semantic(report: BaseModel, receipt: str | None = None) -> Any:
-        def normalize(value: Any, field: str | None = None) -> Any:
+    def semantic(report: BaseModel, receipt: str | None = None) -> JsonValue:
+        def normalize(value: JsonValue, field: str | None = None) -> JsonValue:
             if isinstance(value, dict):
                 return {key: normalize(item, key) for key, item in value.items()}
             if isinstance(value, list):
@@ -265,7 +283,8 @@ class McpParityHarness:
                     )
             return value
 
-        return normalize_per_run_pcb_geometry_paths(normalize(report.model_dump(mode="json")))
+        report_value = _report_json_object(report)
+        return normalize_per_run_pcb_geometry_paths(normalize(report_value))
 
     def receipt_equal(self, cli, mcp, field="run_directory") -> None:
         left = getattr(cli, field)
@@ -309,12 +328,25 @@ class McpParityHarness:
         )
 
 
-def semantic_design_lint_report(report: DesignLintReport) -> dict[str, Any]:
+def semantic_design_lint_report(report: DesignLintReport) -> JsonObject:
     """Remove per-run PCB geometry output IDs before semantic parity comparison."""
-    return normalize_per_run_pcb_geometry_paths(report.model_dump(mode="json"))
+    return normalize_per_run_pcb_geometry_paths(_report_json_object(report))
 
 
-def normalize_per_run_pcb_geometry_paths(value: Any) -> Any:
+def _report_json_object(report: BaseModel) -> JsonObject:
+    """Validate a Pydantic report dump at the test's JSON comparison boundary."""
+    return TypeAdapter(JsonObject).validate_python(report.model_dump(mode="json"))
+
+
+@overload
+def normalize_per_run_pcb_geometry_paths(value: JsonObject) -> JsonObject: ...
+
+
+@overload
+def normalize_per_run_pcb_geometry_paths(value: JsonValue) -> JsonValue: ...
+
+
+def normalize_per_run_pcb_geometry_paths(value: JsonValue) -> JsonValue:
     """Normalize only generated PCB geometry run IDs in a typed report or dump."""
     if isinstance(value, dict):
         return {key: normalize_per_run_pcb_geometry_paths(item) for key, item in value.items()}

@@ -4,17 +4,18 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import cast
+
+from pydantic import JsonValue
 
 PROBE_BOARD_NAME = "pcb-dru-rule-compilation-probe.kicad_pcb"
 
 
 def native_identity_and_matches(report_path: Path, sentinel_name: str) -> tuple[str, int]:
     """Validate report identity and count active terminal-sentinel violations."""
-    raw: object = json.loads(report_path.read_text(encoding="utf-8"))
+    raw: JsonValue = json.loads(report_path.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
         raise TypeError("Native sentinel DRC report root must be an object")
-    payload = cast(dict[str, object], raw)
+    payload: dict[str, JsonValue] = raw
     version = payload.get("kicad_version")
     source = payload.get("source")
     violations = payload.get("violations")
@@ -26,10 +27,12 @@ def native_identity_and_matches(report_path: Path, sentinel_name: str) -> tuple[
         raise TypeError("Native sentinel DRC report violations must be a list")
 
     matches = 0
-    for index, raw_violation in enumerate(cast(list[object], violations)):
+    violation_values: list[JsonValue] = violations
+    for index, violation_value in enumerate(violation_values):
+        raw_violation: JsonValue = violation_value
         if not isinstance(raw_violation, dict):
             raise TypeError(f"Native sentinel DRC violation {index} must be an object")
-        violation = cast(dict[str, object], raw_violation)
+        violation: dict[str, JsonValue] = raw_violation
         description = violation.get("description")
         if (
             violation.get("type") == "clearance"

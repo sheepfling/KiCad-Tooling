@@ -56,10 +56,10 @@ class TestAccessEndpointRequirement(StrictModel):
     footprint: NonEmptyText
     pin: Reference
     electrical_type: NonEmptyText
-    approach_side: Literal["front", "back", "either"] = Field(
-        default="either",
-        description="Required outer PCB surface with copper and solder-mask access.",
-    )
+    approach_side: Annotated[
+        Literal["front", "back", "either"],
+        Field(description="Required outer PCB surface with copper and solder-mask access."),
+    ] = "either"
     probe_envelope: TestAccessProbeEnvelope | None = None
 
     @model_validator(mode="after")
@@ -130,11 +130,14 @@ class TestAccessAnalysis(StrictModel):
             raise ValueError("Test-access decision IDs must be unique")
         if len({item.net.casefold() for item in self.decisions}) != len(self.decisions):
             raise ValueError("Each test-access net needs one explicit decision")
-        if any(
-            endpoint.probe_envelope is not None
-            for decision in self.decisions
-            if isinstance(decision, RequiredTestAccess)
-            for endpoint in decision.endpoints
-        ) and not isinstance(self.pcb_accessibility, PcbAccessAnalysis):
+        if (
+            any(
+                endpoint.probe_envelope is not None
+                for decision in self.decisions
+                if decision.mode == "required"
+                for endpoint in decision.endpoints
+            )
+            and self.pcb_accessibility.mode != "required"
+        ):
             raise ValueError("Probe envelopes require the PCB accessibility stage")
         return self

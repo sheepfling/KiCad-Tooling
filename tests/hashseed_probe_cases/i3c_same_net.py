@@ -9,9 +9,10 @@ from tests.design_lint_fixtures.i3c_same_net import (
     i3c_distinct_lines_netlist,
     i3c_same_net_netlist,
 )
+from tests.json_types import JsonObject
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     fault = evaluate(
         "synthetic-i3c-same-net-fault",
         coach(i3c_same_net_netlist()),

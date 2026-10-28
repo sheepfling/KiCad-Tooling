@@ -3,18 +3,13 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TypeAlias
 
-from .analysis_state_models import (
-    AnalysisNotApplicable,
-    AnalysisPending,
-)
+import kicad_tooling.hwrepo.electrical_analysis_contract_models as electrical_contracts
+
 from .contracts import repo_path
 from .control_input_bias import control_input_bias_heuristic_coverage
-from .control_input_models import (
-    ControlInputBiasHeuristicCoverage,
-    ControlInputsAnalysis,
-)
-from .digital_peer_voltage_models import DigitalPeerVoltageAnalysis
+from .control_input_models import ControlInputBiasHeuristicCoverage
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
 from .discovery import ProjectConfig
 from .electrical import load_analysis
@@ -22,19 +17,16 @@ from .evidence import digest
 from .i2c_pullup_heuristics import (
     i2c_pullup_heuristic_coverage as resolve_i2c_pullup_heuristic_coverage,
 )
-from .i2c_pullup_models import (
-    I2cPullupAnalysis,
-    I2cPullupHeuristicCoverage,
-)
+from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import NetlistContract
-from .rs485_models import Rs485Analysis
 from .rs485_peer_reference_types import Rs485PeerReferenceContext
 from .serial_participants import SerialPeerRosterContext
-from .serial_peer_models import SerialPeerAnalysis
-from .spi_models import SpiAnalysis
 from .spi_participants import SpiRosterContext
-from .usb_c_models import UsbCAnalysis
 from .usb_c_ports import UsbCPortRosterContext
+
+ElectricalAnalysisState: TypeAlias = (
+    electrical_contracts.AnalysisNotApplicable | electrical_contracts.AnalysisPending
+)
 
 
 def spi_roster_context(root: Path, config: ProjectConfig) -> SpiRosterContext:
@@ -47,8 +39,10 @@ def spi_roster_context(root: Path, config: ProjectConfig) -> SpiRosterContext:
     contract = load_analysis(root, config)
     if digest(path) != expected_digest:
         raise ValueError("Electrical contract changed during SPI roster inspection")
-    spi = None if contract is None else contract.spi
-    if isinstance(spi, SpiAnalysis):
+    spi: electrical_contracts.SpiAnalysis | ElectricalAnalysisState | None = (
+        None if contract is None else contract.spi
+    )
+    if isinstance(spi, electrical_contracts.SpiAnalysis):
         state = "required"
         analysis = spi
     else:
@@ -73,8 +67,10 @@ def serial_peer_roster_context(root: Path, config: ProjectConfig) -> SerialPeerR
     contract = load_analysis(root, config)
     if digest(path) != expected_digest:
         raise ValueError("Electrical contract changed during serial-peer map inspection")
-    section = None if contract is None else contract.serial_peers
-    if isinstance(section, SerialPeerAnalysis):
+    section: electrical_contracts.SerialPeerAnalysis | ElectricalAnalysisState | None = (
+        None if contract is None else contract.serial_peers
+    )
+    if isinstance(section, electrical_contracts.SerialPeerAnalysis):
         state = "required"
         analysis = section
     else:
@@ -99,14 +95,16 @@ def rs485_peer_reference_context(root: Path, config: ProjectConfig) -> Rs485Peer
     contract = load_analysis(root, config)
     if digest(path) != expected_digest:
         raise ValueError("Electrical contract changed during RS-485 peer inspection")
-    section = None if contract is None else contract.rs485
-    if isinstance(section, Rs485Analysis):
+    section: electrical_contracts.Rs485Analysis | ElectricalAnalysisState | None = (
+        None if contract is None else contract.rs485
+    )
+    if isinstance(section, electrical_contracts.Rs485Analysis):
         state = "required"
         analysis = section
-    elif isinstance(section, AnalysisPending):
+    elif isinstance(section, electrical_contracts.AnalysisPending):
         state = "pending"
         analysis = None
-    elif isinstance(section, AnalysisNotApplicable):
+    elif isinstance(section, electrical_contracts.AnalysisNotApplicable):
         state = "not_applicable"
         analysis = None
     else:
@@ -132,14 +130,16 @@ def digital_peer_voltage_context(
     contract = load_analysis(root, config)
     if digest(path) != expected_digest:
         raise ValueError("Electrical contract changed during digital-peer voltage inspection")
-    section = None if contract is None else contract.digital_peer_voltages
-    if isinstance(section, DigitalPeerVoltageAnalysis):
+    section: electrical_contracts.DigitalPeerVoltageAnalysis | ElectricalAnalysisState | None = (
+        None if contract is None else contract.digital_peer_voltages
+    )
+    if isinstance(section, electrical_contracts.DigitalPeerVoltageAnalysis):
         state = "required"
         analysis = section
-    elif isinstance(section, AnalysisPending):
+    elif isinstance(section, electrical_contracts.AnalysisPending):
         state = "pending"
         analysis = None
-    elif isinstance(section, AnalysisNotApplicable):
+    elif isinstance(section, electrical_contracts.AnalysisNotApplicable):
         state = "not_applicable"
         analysis = None
     else:
@@ -174,14 +174,16 @@ def control_input_bias_coverage_from_project(
     contract = load_analysis(root, config)
     if digest(path) != expected_digest:
         raise ValueError("Electrical contract changed during control-input heuristic inspection")
-    control_inputs = None if contract is None else contract.control_inputs
-    if isinstance(control_inputs, ControlInputsAnalysis):
+    control_inputs: electrical_contracts.ControlInputsAnalysis | ElectricalAnalysisState | None = (
+        None if contract is None else contract.control_inputs
+    )
+    if isinstance(control_inputs, electrical_contracts.ControlInputsAnalysis):
         state = "required"
         spec = control_inputs
-    elif isinstance(control_inputs, AnalysisPending):
+    elif isinstance(control_inputs, electrical_contracts.AnalysisPending):
         state = "pending"
         spec = None
-    elif isinstance(control_inputs, AnalysisNotApplicable):
+    elif isinstance(control_inputs, electrical_contracts.AnalysisNotApplicable):
         state = "not_applicable"
         spec = None
     else:
@@ -218,14 +220,16 @@ def i2c_pullup_coverage_from_project(
     contract = load_analysis(root, config)
     if digest(path) != expected_digest:
         raise ValueError("Electrical contract changed during I2C pull-up heuristic inspection")
-    pullups = None if contract is None else contract.i2c_pullups
-    if isinstance(pullups, I2cPullupAnalysis):
+    pullups: electrical_contracts.I2cPullupAnalysis | ElectricalAnalysisState | None = (
+        None if contract is None else contract.i2c_pullups
+    )
+    if isinstance(pullups, electrical_contracts.I2cPullupAnalysis):
         state = "required"
         spec = pullups
-    elif isinstance(pullups, AnalysisPending):
+    elif isinstance(pullups, electrical_contracts.AnalysisPending):
         state = "pending"
         spec = None
-    elif isinstance(pullups, AnalysisNotApplicable):
+    elif isinstance(pullups, electrical_contracts.AnalysisNotApplicable):
         state = "not_applicable"
         spec = None
     else:
@@ -251,8 +255,10 @@ def usb_c_port_roster_context(root: Path, config: ProjectConfig) -> UsbCPortRost
     contract = load_analysis(root, config)
     if digest(path) != expected_digest:
         raise ValueError("Electrical contract changed during USB-C port roster inspection")
-    usb_c = None if contract is None else contract.usb_c
-    if isinstance(usb_c, UsbCAnalysis):
+    usb_c: electrical_contracts.UsbCAnalysis | ElectricalAnalysisState | None = (
+        None if contract is None else contract.usb_c
+    )
+    if isinstance(usb_c, electrical_contracts.UsbCAnalysis):
         state = "required"
         analysis = usb_c
     else:

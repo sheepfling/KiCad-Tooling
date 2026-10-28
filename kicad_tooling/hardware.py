@@ -3,27 +3,31 @@
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
-from collections.abc import Sequence
+from collections.abc import Mapping
 from pathlib import Path
 from typing import cast
+
+from pydantic import JsonValue
 
 from .hwrepo.cli_output import issue_text
 from .hwrepo.contracts import repo_path
 from .hwrepo.generation import check_generation, generate, snapshot, verify_snapshot
+from .hwrepo.layout import default_project_root
 from .hwrepo.product import check
 from .hwrepo.selection import ProjectSelector, resolve_project_ids
 
 
-def _mapping(value: object) -> dict[str, object]:
-    return cast(dict[str, object], value) if isinstance(value, dict) else {}
+def _mapping(value: JsonValue) -> dict[str, JsonValue]:
+    return cast(dict[str, JsonValue], value) if isinstance(value, dict) else {}
 
 
-def _items(value: object) -> tuple[object, ...]:
-    return tuple(cast(Sequence[object], value)) if isinstance(value, (list, tuple)) else ()
+def _items(value: JsonValue) -> tuple[JsonValue, ...]:
+    return tuple(cast(list[JsonValue], value)) if isinstance(value, list) else ()
 
 
-def format_text(command: str, result: dict[str, object], output: Path | None) -> str:
+def format_text(command: str, result: Mapping[str, JsonValue], output: Path | None) -> str:
     """Keep product findings and review-only snapshot scope visible in a short view."""
     title = {
         "check": "Hardware policy",
@@ -107,7 +111,7 @@ def generation_output(root: Path, requested: Path) -> Path:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("check", "generate", "snapshot", "verify-snapshot"))
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     parser.add_argument(
         "--release",
         action="store_true",
@@ -153,15 +157,16 @@ def main() -> int:
     )
     if selector.active and args.command != "generate":
         parser.error("Project/product/tag selectors are only valid with generate")
+    result: dict[str, JsonValue]
     try:
         if args.release and args.command != "check":
             parser.error("--release is only valid with check")
         if args.command == "check":
             policy = check(root, args.release)
-            result: dict[str, object] = policy.model_dump(mode="json")
+            result = cast(dict[str, JsonValue], policy.model_dump(mode="json"))
             if policy.status == "PASS":
                 generation_drift = check_generation(root)
-                result["generation_drift"] = generation_drift
+                result["generation_drift"] = list(generation_drift)
                 if generation_drift:
                     result["status"] = "FAIL"
         elif args.command == "generate":
@@ -169,7 +174,7 @@ def main() -> int:
             output = None if args.output is None else generation_output(root, args.output)
             result = {
                 "status": "PASS",
-                "generated": generate(root, output=output, selected_project_ids=selected),
+                "generated": list(generate(root, output=output, selected_project_ids=selected)),
                 "build_authorized": False,
             }
             if output is not None:
@@ -179,15 +184,20 @@ def main() -> int:
                 parser.error("snapshot requires --output")
             result = {
                 "status": "PASS",
-                "manifest": snapshot(root, args.output).model_dump(mode="json"),
+                "manifest": cast(
+                    dict[str, JsonValue],
+                    snapshot(root, args.output).model_dump(mode="json"),
+                ),
             }
         else:
             if args.output is None:
                 parser.error("verify-snapshot requires --output")
-            result = verify_snapshot(args.output.resolve()).model_dump(mode="json")
+            result = cast(
+                dict[str, JsonValue],
+                verify_snapshot(args.output.resolve()).model_dump(mode="json"),
+            )
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
         result = {"status": "FAIL", "error": str(exc), "build_authorized": False}
-    import json  # CLI serialization boundary; the service layer returns models.
 
     print(
         json.dumps(result, indent=2)

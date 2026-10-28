@@ -8,14 +8,15 @@ import tempfile
 import unittest
 from itertools import pairwise
 from pathlib import Path
+from types import MappingProxyType
 
 from kicad_tooling.hwrepo.electrical_plot import _complex_phase, _panels, render_case
 from kicad_tooling.hwrepo.models import FrequencyAnalysis, SimulationMeasure, TransientAnalysis
 from kicad_tooling.hwrepo.waveform_data import WaveformData, WaveformSeries
 
 _HASH = "0" * 64
-_SOURCE = {"projects/demo/kicad/demo.kicad_sch": _HASH}
-_MODELS = {"projects/demo/tests/electrical/model.cir": _HASH}
+_SOURCE = MappingProxyType({"projects/demo/kicad/demo.kicad_sch": _HASH})
+_MODELS = MappingProxyType({"projects/demo/tests/electrical/model.cir": _HASH})
 _DECK = next(iter(_MODELS))
 
 
@@ -37,8 +38,8 @@ def _transient(unit: str = "A") -> TransientAnalysis:
         id="startup",
         basis="Synthetic test circuit",
         deck=_DECK,
-        source_sha256=_SOURCE,
-        model_sha256=_MODELS,
+        source_sha256=dict(_SOURCE),
+        model_sha256=dict(_MODELS),
         step_s=0.1,
         stop_s=1.0,
         measures=(_measure("-i(vrail)", unit, 0, 1),),
@@ -50,8 +51,8 @@ def _frequency(expression: str = "db(v(out)/v(in))", unit: str = "dB") -> Freque
         id="response",
         basis="Synthetic transfer function",
         deck=_DECK,
-        source_sha256=_SOURCE,
-        model_sha256=_MODELS,
+        source_sha256=dict(_SOURCE),
+        model_sha256=dict(_MODELS),
         start_hz=1,
         stop_hz=100,
         measures=(_measure(expression, unit, 1, 100),),

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -19,6 +20,7 @@ from kicad_tooling.hwrepo import (
     usb_peer_unsupported_models,
 )
 from kicad_tooling.hwrepo import models as shared_models
+from kicad_tooling.hwrepo.design_lint import rule_catalog
 from tests.lint_architecture_support import (
     FACADE_MAX_LINES,
     HWREPO,
@@ -34,31 +36,35 @@ pytestmark = [
     pytest.mark.architecture,
 ]
 
-INTERFACE_COVERAGE_MODEL_OWNERS = {
-    "component_peer_pin_models.py": ("ComponentPeerPinRuleCoverage",),
-    "connector_peer_pin_models.py": ("ConnectorPeerPinHeuristicCoverage",),
-    "connector_part_id_peer_models.py": ("ConnectorPartIdPeerPinCoverage",),
-    "digital_peer_voltage_models.py": ("DigitalPeerVoltageRuleCoverage",),
-    "serial_peer_reference_models.py": (
-        "SerialPeerReferenceLinkCoverageEntry",
-        "SerialPeerReferenceCoverageReport",
-    ),
-    "usb_peer_reference_models.py": (
-        "UsbPeerEndpointGroupCoverage",
-        "UsbPeerReferencePinCoverage",
-        "UsbPeerDataShuntBranchCoverage",
-        "UsbPeerDataSeriesResistorCoverage",
-        "UsbPeerDataLineCoverage",
-        "UsbPeerDataPathCoverage",
-        "UsbPeerReferencePathCoverageEntry",
-        "UsbPeerReferenceCoverageReport",
-    ),
-}
+INTERFACE_COVERAGE_MODEL_OWNERS = MappingProxyType(
+    {
+        "component_peer_pin_models.py": ("ComponentPeerPinRuleCoverage",),
+        "connector_peer_pin_models.py": ("ConnectorPeerPinHeuristicCoverage",),
+        "connector_part_id_peer_models.py": ("ConnectorPartIdPeerPinCoverage",),
+        "digital_peer_voltage_models.py": ("DigitalPeerVoltageRuleCoverage",),
+        "serial_peer_reference_models.py": (
+            "SerialPeerReferenceLinkCoverageEntry",
+            "SerialPeerReferenceCoverageReport",
+        ),
+        "usb_peer_reference_models.py": (
+            "UsbPeerEndpointGroupCoverage",
+            "UsbPeerReferencePinCoverage",
+            "UsbPeerDataShuntBranchCoverage",
+            "UsbPeerDataSeriesResistorCoverage",
+            "UsbPeerDataLineCoverage",
+            "UsbPeerDataPathCoverage",
+            "UsbPeerReferencePathCoverageEntry",
+            "UsbPeerReferenceCoverageReport",
+        ),
+    }
+)
 
-I2C_PEER_REFERENCE_MODELS = {
-    "I2cPeerReferenceBusCoverage",
-    "I2cPeerReferenceCoverageReport",
-}
+I2C_PEER_REFERENCE_MODELS = frozenset(
+    {
+        "I2cPeerReferenceBusCoverage",
+        "I2cPeerReferenceCoverageReport",
+    }
+)
 
 USB_PEER_ANALYSIS_MODULES = (
     "usb_peer_reference_types.py",
@@ -231,8 +237,6 @@ def test_resistor_array_evidence_is_shared_by_control_and_i2c_checks() -> None:
 
 
 def test_can_tx_rx_same_net_rule_uses_a_focused_predicate_owner() -> None:
-    from kicad_tooling.hwrepo.design_lint import rule_catalog
-
     rule = next(item for item in rule_catalog().rules if item.rule_id == "bus.can_tx_rx_same_net")
     assert rule.theme == "interfaces"
     assert rule.implementation_owner == (
@@ -242,8 +246,6 @@ def test_can_tx_rx_same_net_rule_uses_a_focused_predicate_owner() -> None:
 
 
 def test_rs485_data_same_net_rule_uses_a_focused_predicate_owner() -> None:
-    from kicad_tooling.hwrepo.design_lint import rule_catalog
-
     rule = next(
         item
         for item in rule_catalog().rules
@@ -261,8 +263,6 @@ def test_rs485_data_same_net_rule_uses_a_focused_predicate_owner() -> None:
 
 
 def test_rs485_named_rail_rule_uses_a_focused_predicate_owner() -> None:
-    from kicad_tooling.hwrepo.design_lint import rule_catalog
-
     rule = next(
         item for item in rule_catalog().rules if item.rule_id == "bus.rs485_signal_on_named_rail"
     )
@@ -278,8 +278,6 @@ def test_rs485_named_rail_rule_uses_a_focused_predicate_owner() -> None:
 
 
 def test_spi_data_same_net_rule_uses_a_focused_predicate_owner() -> None:
-    from kicad_tooling.hwrepo.design_lint import rule_catalog
-
     rule = next(
         item
         for item in rule_catalog().rules
@@ -297,8 +295,6 @@ def test_spi_data_same_net_rule_uses_a_focused_predicate_owner() -> None:
 
 
 def test_spi_clock_control_data_same_net_rule_uses_a_focused_predicate_owner() -> None:
-    from kicad_tooling.hwrepo.design_lint import rule_catalog
-
     rule = next(
         item
         for item in rule_catalog().rules
@@ -320,8 +316,6 @@ def test_spi_clock_control_data_same_net_rule_uses_a_focused_predicate_owner() -
 
 
 def test_spi_clock_chip_select_same_net_rule_uses_a_focused_predicate_owner() -> None:
-    from kicad_tooling.hwrepo.design_lint import rule_catalog
-
     rule = next(
         item
         for item in rule_catalog().rules
@@ -356,8 +350,6 @@ def test_usb_peer_reference_review_stays_split_by_responsibility() -> None:
 
 
 def test_usb_peer_reference_rule_refs_point_to_the_owning_modules() -> None:
-    from kicad_tooling.hwrepo.design_lint import rule_catalog
-
     rule = next(
         item for item in rule_catalog().rules if item.rule_id == "bus.usb_peer_reference_review"
     )

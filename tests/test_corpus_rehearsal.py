@@ -9,6 +9,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from kicad_tooling.hwrepo.rehearsal_models import CorpusGroup, CorpusInventory
 from scripts import rehearse_corpus as rehearsal
 
 
@@ -42,18 +43,20 @@ class CorpusRehearsalTests(unittest.TestCase):
             source.mkdir(parents=True)
             board = source / "board.kicad_pro"
             board.write_text("original")
-            inventory = {
+            inventory: CorpusInventory = {
                 "inventory_complete": True,
                 "files": [
                     {"path": board.name, "kind": "file", "sha256": rehearsal.digest(board)},
                 ],
             }
             rehearsal.save(root / "inventory.json", inventory)
-            group = {
+            group: CorpusGroup = {
+                "id": "board-source",
                 "inventory_path": "inventory.json",
                 "directory": "sources/board",
                 "source_kind": "git_snapshot",
                 "inventory_sha256": rehearsal.signature(inventory),
+                "revision": "synthetic-revision",
             }
             self.assertEqual(rehearsal.verify_group(root, group), [])
             board.write_text("changed")
@@ -68,21 +71,23 @@ class CorpusRehearsalTests(unittest.TestCase):
             root = Path(temporary)
             (root / "snapshot").mkdir()
             (root / "snapshot/link").symlink_to("../../outside")
-            inventory = {
+            inventory: CorpusInventory = {
                 "inventory_complete": True,
                 "files": [
                     {"path": "link", "kind": "symlink", "target": "../../outside"},
                 ],
             }
             rehearsal.save(root / "inventory.json", inventory)
-            group = {
+            group: CorpusGroup = {
+                "id": "symlink-source",
                 "inventory_path": "inventory.json",
                 "directory": "snapshot",
                 "source_kind": "git_snapshot",
                 "inventory_sha256": rehearsal.signature(inventory),
+                "revision": "synthetic-revision",
             }
             self.assertEqual(rehearsal.verify_group(root, group), [])
-            with self.assertRaisesRegex(ValueError, "Linked source"):
+            with self.assertRaisesRegex(ValueError, "Linked repository path"):
                 rehearsal.inside(root, "snapshot/link/file.kicad_pro")
             with self.assertRaises(ValueError):
                 rehearsal.inside(root, "../outside")

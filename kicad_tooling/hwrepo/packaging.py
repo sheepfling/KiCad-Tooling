@@ -7,9 +7,9 @@ import shutil
 import subprocess
 import tempfile
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
-from .contracts import read_model, repo_path, write_model
+from .contracts import read_model, repo_path, repo_path_is_within, write_model
 from .evidence import digest, git
 from .models import ReleaseManifest, ReleasePackageIndex, ReleasePackageReport
 from .release import check
@@ -99,7 +99,7 @@ def restore(archive_path: Path, destination: Path) -> ReleasePackageReport:
         if set(names) != set(index.files_sha256) | {"package.json"}:
             raise ValueError("Release archive inventory differs from its index")
         if "source.bundle" not in index.files_sha256 or any(
-            name != "source.bundle" and not name.startswith("payload/")
+            name != "source.bundle" and not repo_path_is_within(name, "payload")
             for name in index.files_sha256
         ):
             raise ValueError("Release archive has unexpected members")
@@ -137,8 +137,9 @@ def restore(archive_path: Path, destination: Path) -> ReleasePackageReport:
                 command, env=environment, text=True, capture_output=True, check=True, timeout=120
             )
         for name in index.files_sha256:
-            if name.startswith("payload/"):
-                target = repo_path(checkout, name.removeprefix("payload/"))
+            if repo_path_is_within(name, "payload"):
+                relative = PurePosixPath(name).relative_to(PurePosixPath("payload")).as_posix()
+                target = repo_path(checkout, relative)
                 target.parent.mkdir(parents=True, exist_ok=True)
                 incoming = repo_path(unpacked, name)
                 if target.exists() and digest(target) != digest(incoming):

@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
-from .analysis_state_models import AnalysisPending
+from kicad_tooling.hwrepo.analysis_state_models import AnalysisNotApplicable, AnalysisPending
+from kicad_tooling.hwrepo.usb_c_models import (
+    UsbCAnalysis,
+    UsbCcControllerAttachment,
+    UsbCcResistorAttachment,
+    UsbCProtectionAnalysis,
+    UsbCVbusCapacitanceRequirement,
+)
+
 from .models import (
     ElectricalCheck,
     NetlistContract,
 )
 from .resistor_paths import direct_resistors
-from .usb_c_models import (
-    UsbCAnalysis,
-    UsbCcResistorAttachment,
-    UsbCProtectionAnalysis,
-    UsbCVbusCapacitanceRequirement,
-)
 from .usb_c_vbus import (
     usb_c_vbus_capacitance_check,
     usb_c_vbus_path_check,
@@ -84,22 +86,25 @@ def usb_c_checks(spec: UsbCAnalysis, observed: NetlistContract) -> tuple[Electri
                     f"{base}/vbus-path/{port.vbus_path.id}",
                 )
             )
-        if isinstance(port.vbus_capacitance, UsbCVbusCapacitanceRequirement):
+        vbus_capacitance: (
+            UsbCVbusCapacitanceRequirement | AnalysisPending | AnalysisNotApplicable
+        ) = port.vbus_capacitance
+        if isinstance(vbus_capacitance, UsbCVbusCapacitanceRequirement):
             results.append(
                 usb_c_vbus_capacitance_check(
-                    port.vbus_capacitance,
+                    vbus_capacitance,
                     vbus_net=port.vbus_net,
                     ground_net=port.ground_net,
                     observed=observed,
                     check_id=f"{base}/vbus-capacitance",
                 )
             )
-        elif isinstance(port.vbus_capacitance, AnalysisPending):
+        elif isinstance(vbus_capacitance, AnalysisPending):
             results.append(
                 ElectricalCheck(
                     id=f"{base}/vbus-capacitance",
                     status="NOT_CONFIGURED",
-                    detail=port.vbus_capacitance.reason,
+                    detail=vbus_capacitance.reason,
                 )
             )
         else:
@@ -107,7 +112,7 @@ def usb_c_checks(spec: UsbCAnalysis, observed: NetlistContract) -> tuple[Electri
                 ElectricalCheck(
                     id=f"{base}/vbus-capacitance",
                     status="NOT_APPLICABLE",
-                    detail=port.vbus_capacitance.reason,
+                    detail=vbus_capacitance.reason,
                 )
             )
 
@@ -141,7 +146,7 @@ def usb_c_checks(spec: UsbCAnalysis, observed: NetlistContract) -> tuple[Electri
             )
 
         for label, line in (("cc1", port.cc1), ("cc2", port.cc2)):
-            attachment = line.attachment
+            attachment: UsbCcResistorAttachment | UsbCcControllerAttachment = line.attachment
             if isinstance(attachment, UsbCcResistorAttachment):
                 expected_ref = attachment.reference.casefold()
                 resistor = resistors_by_reference.get(expected_ref)
@@ -228,8 +233,11 @@ def usb_c_checks(spec: UsbCAnalysis, observed: NetlistContract) -> tuple[Electri
                     )
                 )
 
-        if isinstance(port.protection, UsbCProtectionAnalysis):
-            for requirement in port.protection.components:
+        protection: UsbCProtectionAnalysis | AnalysisPending | AnalysisNotApplicable = (
+            port.protection
+        )
+        if isinstance(protection, UsbCProtectionAnalysis):
+            for requirement in protection.components:
                 entry = components.get(requirement.reference.casefold())
                 component_failures: list[str] = []
                 if entry is None:
@@ -262,12 +270,12 @@ def usb_c_checks(spec: UsbCAnalysis, observed: NetlistContract) -> tuple[Electri
                         ),
                     )
                 )
-        elif isinstance(port.protection, AnalysisPending):
+        elif isinstance(protection, AnalysisPending):
             results.append(
                 ElectricalCheck(
                     id=f"{base}/protection",
                     status="NOT_CONFIGURED",
-                    detail=port.protection.reason,
+                    detail=protection.reason,
                 )
             )
         else:
@@ -275,7 +283,7 @@ def usb_c_checks(spec: UsbCAnalysis, observed: NetlistContract) -> tuple[Electri
                 ElectricalCheck(
                     id=f"{base}/protection",
                     status="NOT_APPLICABLE",
-                    detail=port.protection.reason,
+                    detail=protection.reason,
                 )
             )
 

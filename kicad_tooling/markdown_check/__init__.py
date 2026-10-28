@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from collections.abc import Sequence
 from importlib.metadata import PackageNotFoundError, distribution
 from pathlib import Path
 
@@ -21,7 +22,7 @@ def executable() -> Path:
     return candidates[0]
 
 
-def run(arguments: list[str]) -> int:
+def run(arguments: Sequence[str]) -> int:
     """Keep the Rust tool exception behind a package-owned Python module interface."""
     try:
         return subprocess.run((str(executable()), *arguments), check=False).returncode

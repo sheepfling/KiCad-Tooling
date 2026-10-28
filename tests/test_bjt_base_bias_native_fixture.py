@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -22,21 +23,27 @@ from tests.synthetic_design_lint_project import (
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint]
 
-FIXTURES = {
-    "fault": "bjt-base-bias-native/fault.kicad_sch",
-    "control": "bjt-base-bias-native/control.kicad_sch",
-}
-EXPECTED_SOURCE_HASHES = {
-    "fault": "55cc042c83a59be9df77953cb9167533fe459bf5a7e5b7b6d2bcf3e6cc8d4d17",
-    "control": "e457df2782144a90b2c74141892defe416b82e5c0c10d5546d9ab6c854155461",
-}
-EXPECTED_SUBJECTS = {
-    "fault": (
-        "Q1.2: BJT base has no visible base-emitter bias resistor",
-        "Q2.1: BJT base has no visible base-emitter bias resistor",
-    ),
-    "control": None,
-}
+FIXTURES = MappingProxyType(
+    {
+        "fault": "bjt-base-bias-native/fault.kicad_sch",
+        "control": "bjt-base-bias-native/control.kicad_sch",
+    }
+)
+EXPECTED_SOURCE_HASHES = MappingProxyType(
+    {
+        "fault": "55cc042c83a59be9df77953cb9167533fe459bf5a7e5b7b6d2bcf3e6cc8d4d17",
+        "control": "e457df2782144a90b2c74141892defe416b82e5c0c10d5546d9ab6c854155461",
+    }
+)
+EXPECTED_SUBJECTS = MappingProxyType(
+    {
+        "fault": (
+            "Q1.2: BJT base has no visible base-emitter bias resistor",
+            "Q2.1: BJT base has no visible base-emitter bias resistor",
+        ),
+        "control": None,
+    }
+)
 
 
 def test_native_bjt_base_bias_fixture_sources_are_pinned() -> None:

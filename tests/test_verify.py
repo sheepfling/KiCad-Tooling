@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import patch
@@ -131,7 +132,9 @@ class VerifyTests(VerifyFixture):
         executable.write_text("fixture", encoding="utf-8")
         relative_cli = "./bin/kicad-cli"
 
-        def native(_root: Path, _output: Path, cli: str, projects: list[str]) -> CheckAllSummary:
+        def native(
+            _root: Path, _output: Path, cli: str, projects: Sequence[str]
+        ) -> CheckAllSummary:
             self.assertEqual(projects, ["controller"])
             self.assertEqual(cli, relative_cli)
             self.assertEqual(cli_executable(cli), str(executable.resolve()))
@@ -244,7 +247,7 @@ class VerifyTests(VerifyFixture):
 
     def test_native_failure_keeps_report_and_specific_repair_findings(self) -> None:
         def failing_native(
-            root: Path, output: Path, cli: str, projects: list[str]
+            root: Path, output: Path, cli: str, projects: Sequence[str]
         ) -> CheckAllSummary:
             project_output = output / "controller"
             project_output.mkdir(parents=True)

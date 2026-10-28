@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -41,10 +42,12 @@ PROJECT_TOOLCHAINS = (
     ),
 )
 
-SOURCE_HASHES = {
-    "control": "1f014e79a42f45d5b08d3ef8394dd3b38e992c2af7a67c987c067afa77c3a186",
-    "fault": "cae3faf3cba68758c3ed35755d49b96088799922c3c45af3fdc644f5d6d05a2d",
-}
+SOURCE_HASHES = MappingProxyType(
+    {
+        "control": "1f014e79a42f45d5b08d3ef8394dd3b38e992c2af7a67c987c067afa77c3a186",
+        "fault": "cae3faf3cba68758c3ed35755d49b96088799922c3c45af3fdc644f5d6d05a2d",
+    }
+)
 REQUIREMENT_HASH = "5c1fc55b40a292e32534aff67e3e17e535edad6e2f10d86fe2a3fe67bba3b872"
 
 

@@ -9,9 +9,10 @@ from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 from tests.design_lint_fixtures import coach
 from tests.design_lint_fixtures.connector_mixed_return import two_usb_one_serial_return_case
+from tests.json_types import JsonObject
 
 
-def _scope_report(*, isolated_serial_scope: bool) -> dict[str, object]:
+def _scope_report(*, isolated_serial_scope: bool) -> JsonObject:
     if isolated_serial_scope:
         groups = {
             "J1": "usb-returns",
@@ -43,7 +44,7 @@ def _scope_report(*, isolated_serial_scope: bool) -> dict[str, object]:
     }
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     """Return an isolated return-scope fault and a shared-scope control."""
     return {
         "connector_return_scope_singleton_fault": _scope_report(isolated_serial_scope=True),

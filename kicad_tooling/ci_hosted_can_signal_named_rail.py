@@ -8,26 +8,35 @@ import os
 import shutil
 import sys
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from types import MappingProxyType
+from typing import Literal
 
 from .ci_hosted_can_tx_rx_same_net import CAN_TX_RX_NATIVE_TOOLCHAINS
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 CAN_SIGNAL_NAMED_RAIL_TOOLCHAINS = CAN_TX_RX_NATIVE_TOOLCHAINS
 _SIGNAL_RULE_ID = "bus.can_signal_on_named_rail"
-_SIGNAL_SOURCE_HASHES = {
-    "fault": "8780151a3e20f7ae3d784870cf5eb146c9ab2816f21a561a72e15bd59e9e284a",
-    "control": "f443a372c06d1862c7250d3797269fd29ced89d0a8def43c184d8762c00a865e",
-}
+_SIGNAL_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
+    {
+        "fault": "8780151a3e20f7ae3d784870cf5eb146c9ab2816f21a561a72e15bd59e9e284a",
+        "control": "f443a372c06d1862c7250d3797269fd29ced89d0a8def43c184d8762c00a865e",
+    }
+)
 _LINE_RULE_ID = "bus.can_line_on_named_rail"
-_LINE_SOURCE_HASHES = {
-    "fault": "c50e8988e1ab51fa4cf57d1fb9f6b5cd3dd8be7ab6331a361a9cc190b47e279a",
-    "control": "1a7b40e9d2b44fe45548cb870787aa8790487faebe905f36060ba72d99f92947",
-}
+_LINE_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
+    {
+        "fault": "c50e8988e1ab51fa4cf57d1fb9f6b5cd3dd8be7ab6331a361a9cc190b47e279a",
+        "control": "1a7b40e9d2b44fe45548cb870787aa8790487faebe905f36060ba72d99f92947",
+    }
+)
 
 
 def can_signal_named_rail_fixture_lane(
@@ -53,12 +62,6 @@ def _can_named_rail_fixture_lane(
     feature: Literal["signal", "line"],
 ) -> None:
     """Share exact-version native export and lint checks across CAN rail heuristics."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .validate import read_netlist
-
     root = root.resolve()
     if (version, image) not in CAN_SIGNAL_NAMED_RAIL_TOOLCHAINS:
         raise ValueError(f"CAN named-rail coverage is not configured for KiCad {version}")
@@ -91,9 +94,7 @@ def _can_named_rail_fixture_lane(
             "fault": ("U1.1: CANH on return-like net GND;U1.2: CANL on supply-like net +3V3"),
             "control": "none",
         }
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint" / fixture_directory
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint" / fixture_directory
     sources = {case: fixture_root / f"{case}.kicad_sch" for case in ("fault", "control")}
     source_hashes = {case: digest(source) for case, source in sources.items()}
     if source_hashes != reviewed_hashes:

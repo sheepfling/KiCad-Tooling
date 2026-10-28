@@ -9,30 +9,36 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_native_fixture_models import (
+    FaultControlFixtureCase,
+    FaultControlPair,
+    FixtureSourceEvidence,
+    NativeNetlistFixtureEvidence,
+    NativeNetlistRunEvidence,
+    NativeRun,
+    NativeRunPair,
+)
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
+from .hwrepo.design_lint import evaluate
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import (
+    ContractCoachReport,
+    DesignLintPolicy,
+    DesignLintRuleOverride,
+)
+from .validate import read_netlist
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+_FIXTURE_CASES: tuple[FaultControlFixtureCase, ...] = ("control", "fault")
 
 
 def i2c_unconnected_pin_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Export and compare a no-connect fault and connected control on pinned KiCad."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import (
-        ContractCoachReport,
-        DesignLintPolicy,
-        DesignLintRuleOverride,
-        NetlistContract,
-    )
-    from .validate import read_netlist
-
     rule_id = "bus.i2c_unconnected_pin"
     root = root.resolve()
     config = selected_config(root, project)
@@ -42,12 +48,13 @@ def i2c_unconnected_pin_fixture_lane(
         raise ValueError(f"I2C unconnected-pin fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
 
-    fixture_root = (
-        Path(__file__).resolve().parents[1]
-        / "tests/fixtures/design_lint/i2c-unconnected-pin-native"
-    )
-    fixtures = {case: fixture_root / f"{case}.kicad_sch" for case in ("control", "fault")}
-    source_hashes = {case: digest(path) for case, path in fixtures.items()}
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/i2c-unconnected-pin-native"
+    fixtures: dict[FaultControlFixtureCase, Path] = {
+        case: fixture_root / f"{case}.kicad_sch" for case in _FIXTURE_CASES
+    }
+    source_hashes: dict[FaultControlFixtureCase, str] = {
+        case: digest(path) for case, path in fixtures.items()
+    }
     expected_source_hashes = {
         "control": "05c75407c4af9fac48c8c4e2a0517e3aeed928d3c73990e3384388c38303c27e",
         "fault": "6e98c35fae5fd7484979811006c3d24a7bf100abf7ac59680a679b9b5d1ee133",
@@ -133,42 +140,52 @@ def i2c_unconnected_pin_fixture_lane(
         )
         raise ValueError(f"Native I2C export failed: {command.stderr or command.error}")
 
-    contracts: dict[str, dict[str, NetlistContract]] = {"control": {}, "fault": {}}
-    normalized_hashes: dict[str, dict[str, str]] = {"control": {}, "fault": {}}
-    netlist_hashes: dict[str, dict[str, str]] = {"control": {}, "fault": {}}
-    for case in ("control", "fault"):
+    fixture_evidence: dict[FaultControlFixtureCase, NativeNetlistFixtureEvidence] = {}
+
+    def load_netlist_run(case: FaultControlFixtureCase, run: NativeRun) -> NativeNetlistRunEvidence:
+        netlist_path = output / f"{case}.{run}.netlist.xml"
+        erc_path = output / f"{case}.{run}.erc.json"
+        if not netlist_path.is_file() or not erc_path.is_file():
+            raise ValueError(f"Native I2C {case} export omitted an expected report")
+        observed = read_netlist(netlist_path)
+        normalized = json.dumps(
+            observed.model_dump(mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        ).encode("utf-8")
+        erc = read_kicad_erc_report(erc_path)
+        if erc.kicad_version != config.kicad_version:
+            raise ValueError(f"Native I2C {case} ERC report version changed")
+        if any(item.severity == "error" for item in erc.violations):
+            raise ValueError(f"Native I2C {case} emitted an unexpected ERC error")
+        return NativeNetlistRunEvidence(
+            contract=observed,
+            netlist_sha256=digest(netlist_path),
+            normalized_sha256=hashlib.sha256(normalized).hexdigest(),
+        )
+
+    for case in _FIXTURE_CASES:
         if digest(fixtures[case]) != source_hashes[case]:
             raise ValueError(f"Synthetic I2C {case} source changed during native export")
-        for run in ("first", "repeat"):
-            netlist_path = output / f"{case}.{run}.netlist.xml"
-            erc_path = output / f"{case}.{run}.erc.json"
-            if not netlist_path.is_file() or not erc_path.is_file():
-                raise ValueError(f"Native I2C {case} export omitted an expected report")
-            netlist_hashes[case][run] = digest(netlist_path)
-            observed = read_netlist(netlist_path)
-            contracts[case][run] = observed
-            normalized = json.dumps(
-                observed.model_dump(mode="json"),
-                sort_keys=True,
-                separators=(",", ":"),
-                ensure_ascii=False,
-            ).encode("utf-8")
-            normalized_hashes[case][run] = hashlib.sha256(normalized).hexdigest()
-            erc = read_kicad_erc_report(erc_path)
-            if erc.kicad_version != config.kicad_version:
-                raise ValueError(f"Native I2C {case} ERC report version changed")
-            if any(item.severity == "error" for item in erc.violations):
-                raise ValueError(f"Native I2C {case} emitted an unexpected ERC error")
-        if normalized_hashes[case]["first"] != normalized_hashes[case]["repeat"]:
+        fixture_evidence[case] = NativeNetlistFixtureEvidence(
+            source=FixtureSourceEvidence(path=fixtures[case], sha256=source_hashes[case]),
+            netlists=NativeRunPair(
+                first=load_netlist_run(case, "first"),
+                repeat=load_netlist_run(case, "repeat"),
+            ),
+        )
+        netlists = fixture_evidence[case].netlists
+        if netlists.first.normalized_sha256 != netlists.repeat.normalized_sha256:
             raise ValueError(f"Native I2C {case} netlist is not repeatable")
 
     expected_functions = {"U1.1": "SDA", "U1.2": "SCL"}
-    expected_nets = {
-        "control": {"I2C_SDA": {"U1.1"}, "I2C_SCL": {"U1.2"}},
-        "fault": {"I2C_SCL": {"U1.2"}},
-    }
-    for case in ("control", "fault"):
-        observed = contracts[case]["first"]
+    expected_nets = FaultControlPair(
+        control={"I2C_SDA": {"U1.1"}, "I2C_SCL": {"U1.2"}},
+        fault={"I2C_SCL": {"U1.2"}},
+    )
+    for case in _FIXTURE_CASES:
+        observed = fixture_evidence[case].netlists.first.contract
         if observed.pin_functions != expected_functions:
             raise ValueError(f"Native I2C {case} function inventory changed")
         if observed.component_pin_numbers != {"U1": ("1", "2")}:
@@ -176,17 +193,17 @@ def i2c_unconnected_pin_fixture_lane(
         actual_nets = {
             net: set(pins) for net, pins in observed.nets.items() if net.startswith("I2C_")
         }
-        if actual_nets != expected_nets[case]:
+        if actual_nets != expected_nets.for_case(case):
             raise ValueError(f"Native I2C {case} assignments changed: {actual_nets}")
 
-    fault_observed = contracts["fault"]["first"]
+    fault_observed = fixture_evidence["fault"].netlists.first.contract
     default_report = evaluate(
         "synthetic-i2c-unconnected-fault",
         ContractCoachReport(
             status="READY_FOR_REVIEW",
             project_id="synthetic-i2c-unconnected-fault",
             observed=fault_observed,
-            netlist_sha256=netlist_hashes["fault"]["first"],
+            netlist_sha256=fixture_evidence["fault"].netlists.first.netlist_sha256,
         ),
         DesignLintPolicy(),
     )
@@ -208,21 +225,30 @@ def i2c_unconnected_pin_fixture_lane(
             ),
         )
     )
-    reports = {
-        case: evaluate(
-            f"synthetic-i2c-unconnected-{case}",
+    reports = FaultControlPair(
+        control=evaluate(
+            "synthetic-i2c-unconnected-control",
             ContractCoachReport(
                 status="READY_FOR_REVIEW",
-                project_id=f"synthetic-i2c-unconnected-{case}",
-                observed=contracts[case]["first"],
-                netlist_sha256=netlist_hashes[case]["first"],
+                project_id="synthetic-i2c-unconnected-control",
+                observed=fixture_evidence["control"].netlists.first.contract,
+                netlist_sha256=fixture_evidence["control"].netlists.first.netlist_sha256,
             ),
             policy,
-        )
-        for case in ("control", "fault")
-    }
-    fault_findings = [item for item in reports["fault"].findings if item.rule_id == rule_id]
-    control_findings = [item for item in reports["control"].findings if item.rule_id == rule_id]
+        ),
+        fault=evaluate(
+            "synthetic-i2c-unconnected-fault",
+            ContractCoachReport(
+                status="READY_FOR_REVIEW",
+                project_id="synthetic-i2c-unconnected-fault",
+                observed=fixture_evidence["fault"].netlists.first.contract,
+                netlist_sha256=fixture_evidence["fault"].netlists.first.netlist_sha256,
+            ),
+            policy,
+        ),
+    )
+    fault_findings = [item for item in reports.fault.findings if item.rule_id == rule_id]
+    control_findings = [item for item in reports.control.findings if item.rule_id == rule_id]
     if (
         len(fault_findings) != 1
         or fault_findings[0].subject != "U1.1: SDA"
@@ -233,16 +259,18 @@ def i2c_unconnected_pin_fixture_lane(
         raise ValueError("Native I2C fault/control no longer selects the partial-pair candidate")
 
     receipt_path = receipt.relative_to(root).as_posix()
-    for case, findings in (("control", control_findings), ("fault", fault_findings)):
+    for case, findings in zip(_FIXTURE_CASES, (control_findings, fault_findings), strict=True):
         log.event(
             f"i2c-unconnected-pin-fixture/{case}",
             "PASS",
             project=project,
             kicad_version=config.kicad_version,
             image=pinned,
-            source_sha256=source_hashes[case],
-            normalized_netlist_sha256=normalized_hashes[case]["first"],
-            repeat_normalized_netlist_sha256=normalized_hashes[case]["repeat"],
+            source_sha256=fixture_evidence[case].source.sha256,
+            normalized_netlist_sha256=fixture_evidence[case].netlists.first.normalized_sha256,
+            repeat_normalized_netlist_sha256=fixture_evidence[
+                case
+            ].netlists.repeat.normalized_sha256,
             repeatable="true",
             findings=";".join(item.subject for item in findings) or "none",
             **(
@@ -262,10 +290,14 @@ def i2c_unconnected_pin_fixture_lane(
         project=project,
         kicad_version=config.kicad_version,
         image=pinned,
-        control_source_sha256=source_hashes["control"],
-        fault_source_sha256=source_hashes["fault"],
-        control_normalized_netlist_sha256=normalized_hashes["control"]["first"],
-        fault_normalized_netlist_sha256=normalized_hashes["fault"]["first"],
+        control_source_sha256=fixture_evidence["control"].source.sha256,
+        fault_source_sha256=fixture_evidence["fault"].source.sha256,
+        control_normalized_netlist_sha256=(
+            fixture_evidence["control"].netlists.first.normalized_sha256
+        ),
+        fault_normalized_netlist_sha256=(
+            fixture_evidence["fault"].netlists.first.normalized_sha256
+        ),
         repeatable="true",
         repeatability_basis="normalized_native_netlist_contract_and_ERC",
         command_receipt=receipt_path,

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import tempfile
+from collections.abc import Sequence
 from pathlib import Path
 
 from pydantic import TypeAdapter
@@ -85,7 +86,7 @@ def preview_part_selection(
     project_id: str,
     view_id: str,
     picker_report: str,
-    assignments: list[PartSelectionAssignment],
+    assignments: Sequence[PartSelectionAssignment],
 ) -> PartSelectionReport:
     selected_project(root, project_id)
     picker = read_model(_json_artifact(root, picker_report), PartPickerReport)

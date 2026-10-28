@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from .design_lint_types import Candidate
 from .models import NetlistContract
 
 _WindingGroup = tuple[str, tuple[str, str]]
-_SUPPORTED_WINDINGS = {
-    "transformer:transf1": (("winding_1", ("1", "2")), ("winding_2", ("3", "4")))
-}
+_SUPPORTED_WINDINGS = MappingProxyType(
+    {"transformer:transf1": (("winding_1", ("1", "2")), ("winding_2", ("3", "4")))}
+)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _SupportedTransformer:
     reference: str
     symbol: str

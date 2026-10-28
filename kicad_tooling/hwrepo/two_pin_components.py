@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from .component_role_models import ComponentRoleBinding, ComponentRoleMap
 from .component_roles import resolve_component_role_map
@@ -38,21 +39,23 @@ _SUPPORTED_THERMISTOR_SYMBOLS = frozenset(
         "Device:Thermistor_PTC_US",
     }
 )
-_KIND_NAMES = {
-    "r": "resistor",
-    "c": "capacitor",
-    "l": "inductor",
-    "d": "diode",
-    "fuse": "fuse",
-    "polyfuse": "polyfuse",
-    "ferritebead": "ferrite_bead",
-    "crystal": "crystal",
-    "varistor": "varistor",
-    "thermistor": "thermistor",
-}
+_KIND_NAMES = MappingProxyType(
+    {
+        "r": "resistor",
+        "c": "capacitor",
+        "l": "inductor",
+        "d": "diode",
+        "fuse": "fuse",
+        "polyfuse": "polyfuse",
+        "ferritebead": "ferrite_bead",
+        "crystal": "crystal",
+        "varistor": "varistor",
+        "thermistor": "thermistor",
+    }
+)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class TwoPinComponentOnSameNet:
     """A complete, fitted supported component with both pins on one native net."""
 

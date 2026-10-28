@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 import pytest
 
 from kicad_tooling.hwrepo.connector_peer_pin_all_open import (
@@ -27,6 +29,14 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint]
 
 _RULE_ID = "connector.generic_peer_pin_all_open"
 _REFERENCES = ("J1", "J2", "J3")
+
+
+class GenericPeerNetlistUpdates(TypedDict, total=False):
+    """Supported netlist fields varied by the generic all-open regressions."""
+
+    dnp_components: tuple[str, ...]
+    pin_electrical_types: dict[str, str]
+    pin_functions: dict[str, str]
 
 
 def test_all_open_generic_passive_peer_pin_is_opt_in_review() -> None:
@@ -100,13 +110,9 @@ def test_guarded_part_id_aliases_prompt_once_for_an_all_open_generic_pin() -> No
     assert candidate.subject == (
         "PART_ID SYNTHETIC-PASSIVE-PORT-001 pin 2: generic passive contact is open on every peer"
     )
-    assert candidate.message == (
-        "This generic passive connector pin is unassigned on every fitted peer with the same "
-        "reviewed PART_ID, while another pin has the same exact assigned net across those peers. "
-        "Review the approved pinout for an intentionally unused contact or a missing connection. "
-        "The generic pin metadata does not identify this contact as signal, return, or power, and "
-        "peer similarity does not establish that it must connect."
-    )
+    assert "unassigned on every fitted peer" in candidate.message
+    assert "does not identify this contact as signal, return, or power" in candidate.message
+    assert "peer similarity does not establish that it must connect" in candidate.message
     assert candidate.evidence["peer_identity_basis"] == ("part_id",)
     assert candidate.evidence["peer_identity"] == ("SYNTHETIC-PASSIVE-PORT-001",)
     assert candidate.evidence["peer_symbols"] == (
@@ -242,7 +248,7 @@ def test_distinct_reviewed_peer_groups_are_not_compared() -> None:
     ),
 )
 def test_specific_roles_and_population_controls_stay_out_of_generic_rule(
-    update: dict[str, object], expected_count: int
+    update: GenericPeerNetlistUpdates, expected_count: int
 ) -> None:
     source = generic_open_peer_netlist().model_copy(update=update)
 

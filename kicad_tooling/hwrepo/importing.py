@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import hashlib
 import os
 import re
 import shutil
 import tempfile
 from pathlib import Path
 
-from .contracts import repo_path, write_model
+from .contracts import lexical_absolute_path, repo_path, repo_path_is_within, write_model
 from .discovery import project_destination
+from .evidence import digest as file_digest
 from .markdown import imported_project_readme, write_markdown
 from .models import ComponentIdentity, ProjectImportReport, ProjectKind
 from .repository import ephemeral, generated_artifact, unmanaged_artifact
@@ -36,8 +36,8 @@ def schematic_files(source: Path, schematic: Path) -> set[Path]:
             if "$" in name:
                 raise ValueError(f"Resolve the schematic sheet variable before import: {name}")
             # KiCad Sheetfile is relative to its containing sheet, except KIPRJMOD.
-            parent = source if match.group(1).startswith("${KIPRJMOD}/") else path.parent
-            normalized = Path(os.path.abspath(parent / name))
+            parent = source if repo_path_is_within(match.group(1), "${KIPRJMOD}") else path.parent
+            normalized = lexical_absolute_path(parent / name)
             if not normalized.is_relative_to(source):
                 raise ValueError(
                     f"Schematic sheet {match.group(1)!r} in {path.relative_to(source)} "
@@ -108,7 +108,7 @@ def import_project(
             if reason:
                 excluded[name] = reason
             else:
-                copied[name] = hashlib.sha256(path.read_bytes()).hexdigest()
+                copied[name] = file_digest(path)
         required: set[str] = {
             project.name,
             *(path.relative_to(source).as_posix() for path in sheets),
@@ -152,7 +152,7 @@ def import_project(
             target = stage / "kicad" / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(repo_path(source, name), target)
-            if hashlib.sha256(target.read_bytes()).hexdigest() != digest:
+            if file_digest(target) != digest:
                 raise ValueError(f"Source changed during import: {name}")
         write_model(stage / "docs/import.json", report)
         upstream_docs = sorted(name for name in copied if name.lower().endswith(".md"))

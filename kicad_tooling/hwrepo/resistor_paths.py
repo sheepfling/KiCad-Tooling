@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 
 from .connector_identity import power_function_key
@@ -17,7 +18,7 @@ _ENGINEERING_VALUE = re.compile(r"^(?P<whole>[0-9]+)(?P<unit>[krm])(?P<fraction>
 _STANDARD_VALUE = re.compile(r"^(?P<amount>[0-9]+(?:\.[0-9]+)?)(?P<unit>[krm]?)$")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class VisibleResistorPath:
     references: tuple[str, ...]
     resistance_ohms: float
@@ -28,7 +29,7 @@ class VisibleResistorPath:
 VisiblePullupPath = VisibleResistorPath
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class DirectResistor:
     reference: str
     resistance_ohms: float
@@ -165,7 +166,7 @@ def visible_resistor_pullups(
 
 def visible_resistor_paths(
     observed: NetlistContract,
-    target_nets: set[str],
+    target_nets: AbstractSet[str],
     *,
     minimum_resistor_ohms: float | None = None,
     maximum_resistor_ohms: float | None = None,

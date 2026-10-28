@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from .design_lint_rule_types import DesignLintRuleId
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Candidate:
     rule_id: DesignLintRuleId
     subject: str

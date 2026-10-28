@@ -7,23 +7,27 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
 from kicad_tooling.ci_hosted import HostedLog, digital_peer_fixture_lane
 from kicad_tooling.hwrepo.electrical import selected_config
+from tests.json_types import JsonObject
 from tests.support import reference_root
 
 NATIVE_DIGITAL_PEER_PROJECTS = (
     ("controller", "10.0.0"),
     ("raspberry-pi-status-led", "10.0.5"),
 )
-_EXPECTED_IMAGES = {
-    "controller": "ghcr.io/kicad/kicad:10.0.0@sha256:"
-    "9549d3a08e0822f9434a9eda0782c812451ab4a733c73535f9e8beed42039bc3",
-    "raspberry-pi-status-led": "ghcr.io/kicad/kicad:10.0.5@sha256:"
-    "fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c",
-}
+_EXPECTED_IMAGES = MappingProxyType(
+    {
+        "controller": "ghcr.io/kicad/kicad:10.0.0@sha256:"
+        "9549d3a08e0822f9434a9eda0782c812451ab4a733c73535f9e8beed42039bc3",
+        "raspberry-pi-status-led": "ghcr.io/kicad/kicad:10.0.5@sha256:"
+        "fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c",
+    }
+)
 _EXPECTED_STAGES = frozenset(
     {
         "spi-participant-fixture/native-export",
@@ -51,28 +55,30 @@ _EXPECTED_STAGES = frozenset(
 _REPEATABLE_STAGES = frozenset(_EXPECTED_STAGES - {"spi-participant-fixture/native-export"})
 _EXPECTED_SOURCE_HASH = "0c5d901b4dc70ccb3c3818bd8fdf002955a6322b814ac2e7f8bab086d47d5e06"
 _EXPECTED_COMBO_SPI_SOURCE_HASH = "78fb20b4e2770c1e68b16727ebd4f1014bd76c4d4d512647b38960d41f02f7ff"
-_EXPECTED_COMPONENT_SOURCE_HASHES = {
-    "component-peer-power-fixture/control": "0198205216be6cd5be0c03ac14b7c2b9de52258aacd564159e16532fadb10446",
-    "component-peer-power-fixture/fault": "92a2cfda8088c7eebe8305e5ecf786870ed44bc846acb031fe4bb1d567418ae3",
-}
-_EXPECTED_PEER_SOURCE_HASHES = {
-    "spi-participant-fixture/peer-control": "427bfd18783c800ddc0b9e48d4ce95db8d26ac4fb27bf2a36921908016d75cdd",
-    "spi-participant-fixture/peer-fault": "98ca9f8d999892b9441019064f36eba776eec18770e23519cde30ff1a532e5a4",
-    "spi-participant-fixture/peer-translator-control": "58f2ac474e5c055fc5ff3f5e2f9be0613fc7339298244de035740ca85eaa80a1",
-    "spi-participant-fixture/serial-control": "3c420e5cde0e0c6ee52cb5b5f63fb243237dcb846e7ac6057e61f4b30df7ff79",
-    "spi-participant-fixture/serial-fault": "14f7c4097f270ed806c471df7d49f4f0dd18607de6402312920e16840f5afdd3",
-    "spi-participant-fixture/serial-reference-fault": "d3c9a6e14e9bc4314c2b616e8be3962638161b1e056789ea7b66977e430081be",
-    "spi-participant-fixture/serial-connector-control": "7d086f4f838504fa3cefc906f7f9e415240b10d89e95c9063c19780922915f16",
-    "spi-participant-fixture/serial-connector-fault": "ee9ce9a51a78c422da96e260720247bb09403abe314921952f29c5d9ba110c20",
-    "spi-participant-fixture/serial-optical-isolation-control": "2d3cfb6f98d2d97114a97c8948f6fac290f4401fac58474af8c974dbf2e1da46",
-    "spi-participant-fixture/serial-label-control": "a0ac8548431af625c5116c1d456e4f2c6cf1714e58cca84c6fe595165d87c561",
-    "spi-participant-fixture/serial-label-fault": "2006adbfa6c6f1c99e88e3320a1ed7230f01a02f5e143c16a946abaa34f9db20",
-}
+_EXPECTED_COMPONENT_SOURCE_HASHES = MappingProxyType(
+    {
+        "component-peer-power-fixture/control": "0198205216be6cd5be0c03ac14b7c2b9de52258aacd564159e16532fadb10446",
+        "component-peer-power-fixture/fault": "92a2cfda8088c7eebe8305e5ecf786870ed44bc846acb031fe4bb1d567418ae3",
+    }
+)
+_EXPECTED_PEER_SOURCE_HASHES = MappingProxyType(
+    {
+        "spi-participant-fixture/peer-control": "427bfd18783c800ddc0b9e48d4ce95db8d26ac4fb27bf2a36921908016d75cdd",
+        "spi-participant-fixture/peer-fault": "98ca9f8d999892b9441019064f36eba776eec18770e23519cde30ff1a532e5a4",
+        "spi-participant-fixture/peer-translator-control": "58f2ac474e5c055fc5ff3f5e2f9be0613fc7339298244de035740ca85eaa80a1",
+        "spi-participant-fixture/serial-control": "3c420e5cde0e0c6ee52cb5b5f63fb243237dcb846e7ac6057e61f4b30df7ff79",
+        "spi-participant-fixture/serial-fault": "14f7c4097f270ed806c471df7d49f4f0dd18607de6402312920e16840f5afdd3",
+        "spi-participant-fixture/serial-reference-fault": "d3c9a6e14e9bc4314c2b616e8be3962638161b1e056789ea7b66977e430081be",
+        "spi-participant-fixture/serial-connector-control": "7d086f4f838504fa3cefc906f7f9e415240b10d89e95c9063c19780922915f16",
+        "spi-participant-fixture/serial-connector-fault": "ee9ce9a51a78c422da96e260720247bb09403abe314921952f29c5d9ba110c20",
+        "spi-participant-fixture/serial-optical-isolation-control": "2d3cfb6f98d2d97114a97c8948f6fac290f4401fac58474af8c974dbf2e1da46",
+        "spi-participant-fixture/serial-label-control": "a0ac8548431af625c5116c1d456e4f2c6cf1714e58cca84c6fe595165d87c561",
+        "spi-participant-fixture/serial-label-fault": "2006adbfa6c6f1c99e88e3320a1ed7230f01a02f5e143c16a946abaa34f9db20",
+    }
+)
 
 
-def _assert_result_receipt(
-    root: Path, result: dict[str, object], *, version: str, image: str
-) -> None:
+def _assert_result_receipt(root: Path, result: JsonObject, *, version: str, image: str) -> None:
     assert result["kicad_version"] == version
     assert result["image"] == image
     assert result["repeatable"] == "true"
@@ -102,7 +108,7 @@ def _assert_result_receipt(
 
 
 @pytest.fixture(scope="session")
-def native_digital_peer_results() -> dict[str, dict[str, dict[str, object]]]:
+def native_digital_peer_results() -> dict[str, dict[str, JsonObject]]:
     """Run the shared native lane once for each pinned project toolchain."""
     if os.environ.get("KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES") != "1":
         pytest.skip("native digital-peer fixtures run in the digest-pinned package acceptance lane")
@@ -118,7 +124,7 @@ def native_digital_peer_results() -> dict[str, dict[str, dict[str, object]]]:
         ignore=shutil.ignore_patterns(".git", "build", "__pycache__"),
     )
 
-    results_by_project: dict[str, dict[str, dict[str, object]]] = {}
+    results_by_project: dict[str, dict[str, JsonObject]] = {}
     for project, expected_version in NATIVE_DIGITAL_PEER_PROJECTS:
         config = selected_config(root, project)
         assert config.kicad_version == expected_version

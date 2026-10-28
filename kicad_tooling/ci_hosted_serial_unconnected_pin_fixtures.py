@@ -9,27 +9,33 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_native_fixture_models import (
+    FaultControlFixtureCase,
+    FixtureSourceEvidence,
+    NativeNetlistFixtureEvidence,
+    NativeNetlistRunEvidence,
+    NativeRun,
+    NativeRunPair,
+)
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+_FIXTURE_CASES: tuple[FaultControlFixtureCase, ...] = ("control", "fault")
 
 
 def serial_unconnected_pin_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Verify a native open-TX fault and connected control on pinned KiCad."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract
-    from .validate import read_netlist
-
     rule_id = "bus.serial_unconnected_pin"
     root = root.resolve()
     config = selected_config(root, project)
@@ -41,13 +47,15 @@ def serial_unconnected_pin_fixture_lane(
         )
     pinned = pinned_image(config.image)
 
-    repository = Path(__file__).resolve().parents[1]
+    repository = tooling_checkout_root()
     fixture_root = repository / "tests/fixtures/design_lint/serial-peer-native"
-    fixtures = {
+    fixtures: dict[FaultControlFixtureCase, Path] = {
         "control": fixture_root / "endpoints.kicad_sch",
         "fault": fixture_root / "unconnected-tx.kicad_sch",
     }
-    source_hashes = {case: digest(path) for case, path in fixtures.items()}
+    source_hashes: dict[FaultControlFixtureCase, str] = {
+        case: digest(path) for case, path in fixtures.items()
+    }
     scratch = Path(
         tempfile.mkdtemp(prefix=f"serial-unconnected-{project}-", dir=log.directory.resolve())
     )
@@ -125,31 +133,42 @@ def serial_unconnected_pin_fixture_lane(
             f"Native serial unconnected-pin export failed: {command.stderr or command.error}"
         )
 
-    contracts: dict[str, dict[str, NetlistContract]] = {"control": {}, "fault": {}}
-    netlist_hashes: dict[str, dict[str, str]] = {"control": {}, "fault": {}}
-    normalized_hashes: dict[str, dict[str, str]] = {"control": {}, "fault": {}}
+    fixture_evidence: dict[FaultControlFixtureCase, NativeNetlistFixtureEvidence] = {}
+
+    def load_netlist_run(
+        case: FaultControlFixtureCase, source: Path, run: NativeRun
+    ) -> NativeNetlistRunEvidence:
+        path = output / f"{source.stem}.{run}.netlist.xml"
+        if not path.is_file():
+            raise ValueError(f"Native serial fixture omitted {path.name}")
+        contract = read_netlist(path)
+        normalized = json.dumps(
+            contract.model_dump(mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        ).encode("utf-8")
+        return NativeNetlistRunEvidence(
+            contract=contract,
+            netlist_sha256=digest(path),
+            normalized_sha256=hashlib.sha256(normalized).hexdigest(),
+        )
+
     for case, source in fixtures.items():
         if (
             digest(source) != source_hashes[case]
             or digest(inputs / source.name) != source_hashes[case]
         ):
             raise ValueError(f"Synthetic serial {case} source changed during native export")
-        fixture_name = source.stem
-        for run in ("first", "repeat"):
-            path = output / f"{fixture_name}.{run}.netlist.xml"
-            if not path.is_file():
-                raise ValueError(f"Native serial fixture omitted {path.name}")
-            netlist_hashes[case][run] = digest(path)
-            contract = read_netlist(path)
-            contracts[case][run] = contract
-            normalized = json.dumps(
-                contract.model_dump(mode="json"),
-                sort_keys=True,
-                separators=(",", ":"),
-                ensure_ascii=False,
-            ).encode("utf-8")
-            normalized_hashes[case][run] = hashlib.sha256(normalized).hexdigest()
-        if normalized_hashes[case]["first"] != normalized_hashes[case]["repeat"]:
+        fixture_evidence[case] = NativeNetlistFixtureEvidence(
+            source=FixtureSourceEvidence(path=source, sha256=source_hashes[case]),
+            netlists=NativeRunPair(
+                first=load_netlist_run(case, source, "first"),
+                repeat=load_netlist_run(case, source, "repeat"),
+            ),
+        )
+        netlists = fixture_evidence[case].netlists
+        if netlists.first.normalized_sha256 != netlists.repeat.normalized_sha256:
             raise ValueError(
                 f"Native serial {case} exports differ after typed-netlist normalization"
             )
@@ -165,9 +184,9 @@ def serial_unconnected_pin_fixture_lane(
         "SERIAL_B_TX": {"J3.1", "J4.2"},
         "SERIAL_B_RX": {"J3.2", "J4.1"},
     }
-    control = contracts["control"]["first"]
-    fault = contracts["fault"]["first"]
-    for case, observed in (("control", control), ("fault", fault)):
+    control = fixture_evidence["control"].netlists.first.contract
+    fault = fixture_evidence["fault"].netlists.first.contract
+    for case, observed in zip(_FIXTURE_CASES, (control, fault), strict=True):
         if observed.pin_functions != expected_functions:
             raise ValueError(
                 f"Native serial {case} function inventory changed: {observed.pin_functions}"
@@ -198,7 +217,7 @@ def serial_unconnected_pin_fixture_lane(
             status="READY_FOR_REVIEW",
             project_id="synthetic-serial-unconnected-tx",
             observed=fault,
-            netlist_sha256=netlist_hashes["fault"]["first"],
+            netlist_sha256=fixture_evidence["fault"].netlists.first.netlist_sha256,
         ),
         DesignLintPolicy(),
     )
@@ -220,21 +239,24 @@ def serial_unconnected_pin_fixture_lane(
             ),
         )
     )
-    review_reports: list[DesignLintReport] = []
-    for run in ("first", "repeat"):
-        review_reports.append(
-            evaluate(
-                "synthetic-serial-unconnected-tx",
-                ContractCoachReport(
-                    status="READY_FOR_REVIEW",
-                    project_id="synthetic-serial-unconnected-tx",
-                    observed=contracts["fault"][run],
-                    netlist_sha256=netlist_hashes["fault"][run],
-                ),
-                review_policy,
-            )
+
+    def review_report_for(run: NativeRun) -> DesignLintReport:
+        return evaluate(
+            "synthetic-serial-unconnected-tx",
+            ContractCoachReport(
+                status="READY_FOR_REVIEW",
+                project_id="synthetic-serial-unconnected-tx",
+                observed=fixture_evidence["fault"].netlists.for_run(run).contract,
+                netlist_sha256=(fixture_evidence["fault"].netlists.for_run(run).netlist_sha256),
+            ),
+            review_policy,
         )
-    review_report, repeated_report = review_reports
+
+    review_reports = NativeRunPair(
+        first=review_report_for("first"),
+        repeat=review_report_for("repeat"),
+    )
+    review_report, repeated_report = review_reports.first, review_reports.repeat
     review_findings = [item for item in review_report.findings if item.rule_id == rule_id]
     repeated_findings = [item for item in repeated_report.findings if item.rule_id == rule_id]
     if (
@@ -254,7 +276,7 @@ def serial_unconnected_pin_fixture_lane(
             status="READY_FOR_REVIEW",
             project_id="synthetic-serial-unconnected-control",
             observed=control,
-            netlist_sha256=netlist_hashes["control"]["first"],
+            netlist_sha256=fixture_evidence["control"].netlists.first.netlist_sha256,
         ),
         review_policy,
     )
@@ -262,16 +284,18 @@ def serial_unconnected_pin_fixture_lane(
         raise ValueError("Connected native serial control unexpectedly emitted an open-pin prompt")
 
     receipt = (scratch / "native.command.json").relative_to(root).as_posix()
-    for case in ("control", "fault"):
+    for case in _FIXTURE_CASES:
         log.event(
             f"serial-unconnected-pin-fixture/{case}",
             "PASS",
             project=project,
             kicad_version=config.kicad_version,
             image=pinned,
-            source_sha256=source_hashes[case],
-            normalized_netlist_sha256=normalized_hashes[case]["first"],
-            repeat_normalized_netlist_sha256=normalized_hashes[case]["repeat"],
+            source_sha256=fixture_evidence[case].source.sha256,
+            normalized_netlist_sha256=fixture_evidence[case].netlists.first.normalized_sha256,
+            repeat_normalized_netlist_sha256=fixture_evidence[
+                case
+            ].netlists.repeat.normalized_sha256,
             repeatable="true",
             command_receipt=receipt,
             **(
@@ -300,10 +324,14 @@ def serial_unconnected_pin_fixture_lane(
         project=project,
         kicad_version=config.kicad_version,
         image=pinned,
-        control_source_sha256=source_hashes["control"],
-        fault_source_sha256=source_hashes["fault"],
-        control_normalized_netlist_sha256=normalized_hashes["control"]["first"],
-        fault_normalized_netlist_sha256=normalized_hashes["fault"]["first"],
+        control_source_sha256=fixture_evidence["control"].source.sha256,
+        fault_source_sha256=fixture_evidence["fault"].source.sha256,
+        control_normalized_netlist_sha256=(
+            fixture_evidence["control"].netlists.first.normalized_sha256
+        ),
+        fault_normalized_netlist_sha256=(
+            fixture_evidence["fault"].netlists.first.normalized_sha256
+        ),
         repeatable="true",
         repeatability_basis="normalized_native_netlist_contract",
         command_receipt=receipt,

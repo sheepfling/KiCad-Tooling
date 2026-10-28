@@ -12,6 +12,7 @@ from kicad_tooling.ci_hosted_component_peer_power_input import (
     NAMED_COMPONENT_PEER_POWER_INPUT_ALL_OPEN_CASES,
 )
 from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 from tests.component_peer_power_input_support import named_peer_power_input_netlist
 from tests.component_power_pin_native_support import (
@@ -90,7 +91,6 @@ def test_native_named_peer_power_input_all_open_fault_and_control_are_repeatable
     from kicad_tooling.ci_hosted_component_peer_power_input_lane import (
         named_component_peer_power_input_all_open_fixture_lane,
     )
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(

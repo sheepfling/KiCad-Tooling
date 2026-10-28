@@ -2,12 +2,20 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 from typing import cast
+
+from kicad_tooling.hwrepo.serial_peer_models import (
+    SerialDirectPeerRequirement,
+    SerialExternalPeerRequirement,
+    SerialPeerAnalysis,
+    SerialShiftedPeerRequirement,
+)
 
 from .models import NetlistContract
 from .reference_bonds import reference_bond_issues
 from .serial_participants import SerialNativePeerLink
-from .serial_peer_models import SerialDirectPeerRequirement, SerialPeerAnalysis
 from .serial_peer_reference_types import (
     DirectPeerView,
     PeerLinkView,
@@ -28,11 +36,11 @@ def _reference_policy_matches_native(link: PeerLinkView, observed: NetlistContra
 
 def _endpoint_matches_native(
     endpoint: SerialEndpointView,
-    pin_nets: dict[str, set[str]],
-    references: dict[str, str],
-    symbols: dict[str, str],
-    footprints: dict[str, str],
-    dnp: set[str],
+    pin_nets: Mapping[str, AbstractSet[str]],
+    references: Mapping[str, str],
+    symbols: Mapping[str, str],
+    footprints: Mapping[str, str],
+    dnp: AbstractSet[str],
 ) -> bool:
     reference = endpoint.reference
     reference_key = reference.casefold()
@@ -53,22 +61,27 @@ def fully_mapped_direct_link(
     observed: NetlistContract,
     output_domain: SerialReferenceDomain,
     input_domain: SerialReferenceDomain,
-    pin_nets: dict[str, set[str]],
-    references: dict[str, str],
-    symbols: dict[str, str],
-    footprints: dict[str, str],
-    dnp: set[str],
+    pin_nets: Mapping[str, AbstractSet[str]],
+    references: Mapping[str, str],
+    symbols: Mapping[str, str],
+    footprints: Mapping[str, str],
+    dnp: AbstractSet[str],
 ) -> bool:
     if analysis is None:
         return False
     analysis_view = cast(SerialAnalysisView, analysis)
     for item in analysis_view.links:
-        if not isinstance(item.peer, SerialDirectPeerRequirement) or not (
+        peer: (
+            SerialDirectPeerRequirement
+            | SerialShiftedPeerRequirement
+            | SerialExternalPeerRequirement
+        ) = item.peer
+        if not isinstance(peer, SerialDirectPeerRequirement) or not (
             _reference_policy_matches_native(item, observed)
         ):
             continue
-        peer = cast(DirectPeerView, item.peer)
-        endpoints = (item.endpoint, peer.endpoint)
+        direct_peer = cast(DirectPeerView, peer)
+        endpoints = (item.endpoint, direct_peer.endpoint)
         for output_endpoint, input_endpoint in (endpoints, endpoints[::-1]):
             if (
                 output_endpoint.reference.casefold() != link.output_reference.casefold()
@@ -108,11 +121,11 @@ def fully_mapped_label_link(
     observed: NetlistContract,
     first_domain: SerialReferenceDomain,
     second_domain: SerialReferenceDomain,
-    pin_nets: dict[str, set[str]],
-    references: dict[str, str],
-    symbols: dict[str, str],
-    footprints: dict[str, str],
-    dnp: set[str],
+    pin_nets: Mapping[str, AbstractSet[str]],
+    references: Mapping[str, str],
+    symbols: Mapping[str, str],
+    footprints: Mapping[str, str],
+    dnp: AbstractSet[str],
 ) -> bool:
     """Suppress only when an exact direct map covers the labeled signal pair and returns."""
     if analysis is None:
@@ -125,23 +138,28 @@ def fully_mapped_label_link(
         (link.second_rx_pin.casefold(), link.rx_net),
     }
     for item in analysis_view.links:
-        if not isinstance(item.peer, SerialDirectPeerRequirement) or not (
+        peer: (
+            SerialDirectPeerRequirement
+            | SerialShiftedPeerRequirement
+            | SerialExternalPeerRequirement
+        ) = item.peer
+        if not isinstance(peer, SerialDirectPeerRequirement) or not (
             _reference_policy_matches_native(item, observed)
         ):
             continue
-        peer = cast(DirectPeerView, item.peer)
+        direct_peer = cast(DirectPeerView, peer)
         mapped_signal_assignments = {
             (endpoint.tx.pin.casefold(), endpoint.tx.net)
-            for endpoint in (item.endpoint, peer.endpoint)
+            for endpoint in (item.endpoint, direct_peer.endpoint)
         } | {
             (endpoint.rx.pin.casefold(), endpoint.rx.net)
-            for endpoint in (item.endpoint, peer.endpoint)
+            for endpoint in (item.endpoint, direct_peer.endpoint)
         }
         if mapped_signal_assignments != observed_signal_assignments:
             continue
         for first_endpoint, second_endpoint in (
-            (item.endpoint, peer.endpoint),
-            (peer.endpoint, item.endpoint),
+            (item.endpoint, direct_peer.endpoint),
+            (direct_peer.endpoint, item.endpoint),
         ):
             if (
                 first_endpoint.reference.casefold() != link.first_reference.casefold()

@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
+
+from kicad_tooling.hwrepo.electrical import selected_config
 
 
 def _run_native_peer_pin_assignment_lane(kind: str, base: Path) -> None:
-    import json
 
     from kicad_tooling.ci_hosted import (
         HostedLog,
@@ -17,7 +19,6 @@ def _run_native_peer_pin_assignment_lane(kind: str, base: Path) -> None:
         component_peer_signal_input_fixture_lane,
         component_peer_signal_output_fixture_lane,
     )
-    from kicad_tooling.hwrepo.electrical import selected_config
     from kicad_tooling.hwrepo.models import DesignLintPolicy
     from tests.synthetic_design_lint_project import (
         PINNED_NATIVE_KICAD_IMAGES,

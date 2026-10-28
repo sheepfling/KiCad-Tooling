@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
-from pathlib import Path
-from typing import cast
+from pathlib import Path, PureWindowsPath
+
+from pydantic import JsonValue
 
 from ..validate import hashes
 from .contracts import read_model, repo_path
@@ -38,7 +40,7 @@ class BoundDrcEvidence:
 def source_bound_drc_evidence(
     root: Path,
     config: ProjectConfig,
-    source_hashes: dict[str, str],
+    source_hashes: Mapping[str, str],
     native_summary: Path,
 ) -> BoundDrcEvidence:
     root = root.resolve()
@@ -114,26 +116,26 @@ def source_bound_drc_evidence(
     check = summary.checks.get("drc")
     if check is None or check.status == "NOT_RUN" or check.returncode not in {0, 5}:
         raise ValueError("Native summary does not record a completed PCB DRC check")
-    raw_payload: object = json.loads(drc_file.read_text(encoding="utf-8"))
+    raw_payload: JsonValue = json.loads(drc_file.read_text(encoding="utf-8"))
     if not isinstance(raw_payload, dict):
         raise TypeError("Native DRC report root must be a JSON object")
-    payload = cast(dict[str, object], raw_payload)
+    payload: dict[str, JsonValue] = raw_payload
     if payload.get("kicad_version") != config.kicad_version:
         raise ValueError("Native DRC report version differs from the selected project version")
     source = payload.get("source")
-    if (
-        not isinstance(source, str)
-        or source.replace("\\", "/").rsplit("/", 1)[-1] != board_file.name
-    ):
+    if not isinstance(source, str) or PureWindowsPath(source).name != board_file.name:
         raise ValueError("Native DRC report does not name the authoritative PCB")
     raw_ignored_rows = payload.get("ignored_checks")
     if not isinstance(raw_ignored_rows, list):
         raise TypeError("Native DRC report does not include ignored-check evidence")
     ignored: set[str] = set()
-    for raw_row in cast(list[object], raw_ignored_rows):
+    ignored_rows: list[JsonValue] = raw_ignored_rows
+    for row_value in ignored_rows:
+        raw_row: JsonValue = row_value
         if not isinstance(raw_row, dict):
             raise TypeError("Native DRC report has malformed ignored-check evidence")
-        key = cast(dict[str, object], raw_row).get("key")
+        row: dict[str, JsonValue] = raw_row
+        key = row.get("key")
         if not isinstance(key, str):
             raise TypeError("Native DRC report has malformed ignored-check evidence")
         ignored.add(key)
@@ -158,7 +160,7 @@ def source_bound_drc_evidence(
     )
 
 
-def source_inventory_sha256(source_hashes: dict[str, str]) -> str:
+def source_inventory_sha256(source_hashes: Mapping[str, str]) -> str:
     return hashlib.sha256(
         "\n".join(f"{name}\0{value}" for name, value in sorted(source_hashes.items())).encode(
             "utf-8"
@@ -169,7 +171,7 @@ def source_inventory_sha256(source_hashes: dict[str, str]) -> str:
 def verify_source_bound_drc_unchanged(
     root: Path,
     config: ProjectConfig,
-    source_hashes: dict[str, str],
+    source_hashes: Mapping[str, str],
     evidence: BoundDrcEvidence,
 ) -> None:
     if hashes(root, config.source_roots) != source_hashes:

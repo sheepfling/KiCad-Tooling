@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import PurePosixPath
 from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
@@ -24,7 +25,7 @@ class PinRelationshipRule(StrictModel):
             raise ValueError("Connected pin relationships need at least two pins")
         if self.topology != "common_net" and self.net is not None:
             raise ValueError("Only common-net relationships can name one net")
-        if self.net is not None and self.net.startswith("/"):
+        if self.net is not None and PurePosixPath(self.net).is_absolute():
             raise ValueError("Use the native net name without a leading slash")
         return self
 

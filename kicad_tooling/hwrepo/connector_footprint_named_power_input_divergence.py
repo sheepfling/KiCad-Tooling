@@ -16,7 +16,7 @@ from .design_lint_types import Candidate
 RULE_ID: DesignLintRuleId = "connector.footprint_named_power_input_assignment_divergence"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class NamedPowerInputDivergenceEvaluation:
     """Candidates and coverage counts for split named power-input contacts."""
 

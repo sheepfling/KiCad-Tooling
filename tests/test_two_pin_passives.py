@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 
 import pytest
 
@@ -33,7 +34,7 @@ def passive_netlist(
     dnp: tuple[str, ...] = (),
     omit_inventory: tuple[str, ...] = (),
     ambiguous: tuple[str, ...] = (),
-    symbols: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     symbols = symbols or {
         "R1": "Device:R",

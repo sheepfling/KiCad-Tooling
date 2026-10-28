@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import hashlib
 import json
 import os
 import shutil
@@ -12,24 +11,31 @@ import stat
 import subprocess
 import sys
 import time
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import cast
 
+from pydantic import JsonValue
+
+from kicad_tooling.hwrepo.evidence import digest as file_digest
 from kicad_tooling.hwrepo.repository import ephemeral
+from kicad_tooling.playtest_mcp import PLAYTEST_REPORT_ADAPTER, PlaytestReport, run_mcp_playtest
 
 ROOT = Path(__file__).resolve().parents[1]
-OMIT = {
-    ".git",
-    "build",
-    ".venv",
-    "venv",
-    "__pycache__",
-    ".pytest_cache",
-    ".ruff_cache",
-    ".mypy_cache",
-    ".DS_Store",
-}
+OMIT = frozenset(
+    {
+        ".git",
+        "build",
+        ".venv",
+        "venv",
+        "__pycache__",
+        ".pytest_cache",
+        ".ruff_cache",
+        ".mypy_cache",
+        ".DS_Store",
+    }
+)
 
 
 def source_files(root: Path) -> dict[str, str]:
@@ -54,9 +60,7 @@ def source_files(root: Path) -> dict[str, str]:
             if stat.S_ISLNK(mode) or not (stat.S_ISDIR(mode) or stat.S_ISREG(mode)):
                 raise ValueError(f"Playtest source must use ordinary files/directories: {path}")
             if stat.S_ISREG(mode):
-                result[path.relative_to(root).as_posix()] = hashlib.sha256(
-                    path.read_bytes()
-                ).hexdigest()
+                result[path.relative_to(root).as_posix()] = file_digest(path)
     return result
 
 
@@ -66,7 +70,7 @@ class Playtest:
         self.environment = os.environ.copy()
         self.environment.pop("PYTHONPATH", None)
         self.environment["PYTHONDONTWRITEBYTECODE"] = "1"
-        self.records: list[dict[str, Any]] = []
+        self.records: list[dict[str, JsonValue]] = []
         self.complete = False
         self.started = datetime.now(UTC).isoformat()
         self.caller = output / "caller"
@@ -77,12 +81,13 @@ class Playtest:
     def save(self, name: str, document: object) -> None:
         (self.output / name).write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
 
-    def record(self, name: str, passed: bool, **details: Any) -> None:
-        item = {"stage": name, "status": "PASS" if passed else "FAIL", **details}
+    def record(self, name: str, passed: bool, **details: JsonValue) -> None:
+        status = "PASS" if passed else "FAIL"
+        item: dict[str, JsonValue] = {"stage": name, "status": status, **details}
         self.records.append(item)
         with (self.output / "events.jsonl").open("a", encoding="utf-8") as stream:
             stream.write(json.dumps(item) + "\n")
-        print(f"playtest: {name} {item['status'].lower()}", flush=True)
+        print(f"playtest: {name} {status.lower()}", flush=True)
         self.summary()
 
     def summary(self) -> None:
@@ -110,7 +115,7 @@ class Playtest:
         expected_exit: int = 0,
         expected_status: str | None = None,
         timeout: int = 300,
-    ) -> dict[str, Any]:
+    ) -> PlaytestReport:
         print(f"playtest: {name} started", flush=True)
         started = time.monotonic()
         result = subprocess.run(
@@ -124,13 +129,13 @@ class Playtest:
         )
         (self.output / f"{name}.stdout.log").write_text(result.stdout, encoding="utf-8")
         (self.output / f"{name}.stderr.log").write_text(result.stderr, encoding="utf-8")
-        report: dict[str, Any] = {}
+        report: PlaytestReport = {}
         parse_error = None
         if expected_status is not None:
             try:
-                report = json.loads(result.stdout)
-                if not isinstance(report, dict):
-                    raise TypeError("Expected a JSON object")
+                report = PLAYTEST_REPORT_ADAPTER.validate_python(
+                    json.loads(result.stdout), strict=True
+                )
             except (ValueError, TypeError) as exc:
                 parse_error = str(exc)
                 report = {}
@@ -143,7 +148,7 @@ class Playtest:
         self.record(
             name,
             passed,
-            command=command,
+            command=cast(JsonValue, list(command)),
             returncode=result.returncode,
             expected_returncode=expected_exit,
             observed_status=report.get("status"),
@@ -161,7 +166,7 @@ class Playtest:
         expected_exit: int = 0,
         expected_status: str = "PASS",
         timeout: int = 300,
-    ) -> dict[str, Any]:
+    ) -> PlaytestReport:
         return self.run(
             name,
             (
@@ -206,130 +211,11 @@ class Playtest:
         ):
             self.run(f"{label}-git-{name}", ("git", *arguments))
 
-    async def mcp(self, root: Path, toolchain_id: str) -> None:
-        # Both sessions speak JSON-RPC to a separate installed-package process.
-        from mcp import ClientSession, StdioServerParameters
-        from mcp.client.stdio import stdio_client
-        from mcp.types import TextContent
-
-        for writable in (False, True):
-            label = "mcp-enabled" if writable else "mcp-default"
-            arguments = ["-I", "-B", "-m", "kicad_tooling.mcp", "--root", str(root)]
-            if writable:
-                arguments += ["--allow-checks", "--allow-writes"]
-            parameters = StdioServerParameters(
-                command=sys.executable, args=arguments, cwd=self.caller, env=self.environment
-            )
-            with (self.output / f"{label}.stderr.log").open("w", encoding="utf-8") as errors:
-                async with stdio_client(parameters, errlog=errors) as (read, write):
-                    async with ClientSession(read, write, read_timeout_seconds=120) as client:
-                        initialized = await client.initialize()
-                        self.save(f"{label}-initialize.json", initialized.model_dump(mode="json"))
-                        self.record(f"{label}-initialize", bool(initialized.protocol_version))
-                        listing = await client.list_tools()
-                        names = {tool.name for tool in listing.tools}
-                        self.save(f"{label}-tools.json", listing.model_dump(mode="json"))
-                        required = {"list_projects", "read_document"}
-                        if writable:
-                            required |= {"new_project", "diagnose_project", "check_project"}
-                        self.record(
-                            f"{label}-capabilities",
-                            required <= names
-                            and (
-                                writable
-                                or not names.intersection(
-                                    {"new_project", "diagnose_project", "check_project"}
-                                )
-                            ),
-                            required=sorted(required),
-                            available=sorted(names),
-                        )
-
-                        async def call(
-                            name: str, arguments: dict[str, Any], stage: str, expected_status: str
-                        ) -> dict[str, Any]:
-                            result = await client.call_tool(name, arguments)
-                            self.save(f"{stage}.json", result.model_dump(mode="json"))
-                            data = result.structured_content or {}
-                            self.record(
-                                stage,
-                                not result.is_error
-                                and data.get("status") == expected_status
-                                and data.get("build_authorized") is not True,
-                                tool=name,
-                                observed_status=data.get("status"),
-                                expected_status=expected_status,
-                                is_error=result.is_error,
-                            )
-                            return data
-
-                        inventory = await call("list_projects", {}, f"{label}-inventory", "PASS")
-                        self.record(
-                            f"{label}-project-identity",
-                            "controller" in {item["id"] for item in inventory.get("projects", [])},
-                        )
-                        document = await client.call_tool("read_document", {"name": "start-here"})
-                        contents = "\n".join(
-                            item.text for item in document.content if isinstance(item, TextContent)
-                        )
-                        self.save(f"{label}-document.json", document.model_dump(mode="json"))
-                        self.record(
-                            f"{label}-document",
-                            not document.is_error
-                            and contents
-                            == (root / "docs/workflow/START_HERE.md").read_text(encoding="utf-8"),
-                        )
-                        if not writable:
-                            denied = await client.call_tool(
-                                "check_project", {"project_id": "controller"}
-                            )
-                            self.save(
-                                "mcp-default-denied-check.json", denied.model_dump(mode="json")
-                            )
-                            self.record("mcp-default-denied-check", denied.is_error)
-                            continue
-                        await call(
-                            "new_project",
-                            {
-                                "project_id": "mcp-first",
-                                "kind": "pcb",
-                                "toolchain_id": toolchain_id,
-                            },
-                            "mcp-new-project",
-                            "PASS",
-                        )
-                        diagnosis = await call(
-                            "diagnose_project",
-                            {"project_id": "mcp-first"},
-                            "mcp-diagnose-first",
-                            "NEEDS_WORK",
-                        )
-                        self.record(
-                            "mcp-actionable-diagnosis",
-                            bool(diagnosis.get("findings"))
-                            and any(
-                                item.get("severity") == "BLOCKING" and item.get("action")
-                                for item in diagnosis.get("findings", [])
-                            ),
-                        )
-                        await call(
-                            "check_project",
-                            {"project_id": "mcp-first"},
-                            "mcp-check-incomplete",
-                            "FAIL",
-                        )
-                        await call(
-                            "check_project",
-                            {"project_id": "controller"},
-                            "mcp-check-controller",
-                            "PASS",
-                        )
-
     def execute(self) -> None:
         original = source_files(self.template)
         reference = self.output / "reference"
 
-        def omit_local(directory: str, names: list[str]) -> set[str]:
+        def omit_local(directory: str, names: Iterable[str]) -> set[str]:
             base = Path(directory)
             return {
                 name
@@ -454,8 +340,7 @@ class Playtest:
             bool(copied)
             and copied == preview.get("copied_sha256")
             and all(
-                hashlib.sha256((directory / "kicad" / name).read_bytes()).hexdigest() == digest
-                for name, digest in copied.items()
+                file_digest(directory / "kicad" / name) == digest for name, digest in copied.items()
             )
             and original_native == source_files(source.parent),
         )
@@ -500,7 +385,7 @@ class Playtest:
                 and observed.get("build_authorized") is False
                 and contract == json.loads((directory / "tests/contract.json").read_text()),
             )
-        asyncio.run(self.mcp(reference, toolchain_id))
+        asyncio.run(run_mcp_playtest(self, reference, toolchain_id))
         self.record(
             "original-native-source-preserved",
             original_native == source_files(self.template / Path(controller["project"]).parent),

@@ -6,9 +6,10 @@ from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 from tests.design_lint_fixtures import coach
 from tests.design_lint_fixtures.usb_c_cc_named_rail import usb_c_cc_named_rail_netlist
+from tests.json_types import JsonObject
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     fault = evaluate(
         "synthetic-usb-c-cc-named-rail-fault",
         coach(usb_c_cc_named_rail_netlist()),

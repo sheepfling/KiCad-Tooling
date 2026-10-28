@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
 from kicad_tooling.hwrepo.analysis_state_models import AnalysisPending
@@ -50,7 +52,7 @@ def test_grounding_accepts_distinct_declared_domains() -> None:
         {"GND": ("U1.2", "J1.2"), "AGND": ("U2.2",), "SHORT": ("U1.2",)},
     ),
 )
-def test_grounding_rejects_missing_wrong_or_extra_pins(nets: dict[str, tuple[str, ...]]) -> None:
+def test_grounding_rejects_missing_wrong_or_extra_pins(nets: Mapping[str, tuple[str, ...]]) -> None:
     requirement, observed = isolated_ground_inputs()
     changed = observed.model_copy(update={"nets": nets})
 

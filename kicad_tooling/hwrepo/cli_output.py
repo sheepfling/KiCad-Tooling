@@ -2,42 +2,44 @@
 
 from __future__ import annotations
 
-from typing import TypeAlias, cast
+from collections.abc import Mapping
+from types import MappingProxyType
+from typing import cast
 
-from pydantic import BaseModel
+from pydantic import BaseModel, JsonValue
 
-JsonValue: TypeAlias = "str | int | float | bool | None | list[JsonValue] | dict[str, JsonValue]"
+LABELS: Mapping[str, str] = MappingProxyType(
+    {
+        "project_id": "Project",
+        "contract": "Contract",
+        "projects": "Projects",
+        "directory": "Directory",
+        "destination": "Destination",
+        "source_project": "Source project",
+        "template_version": "Template version",
+        "current_version": "Current version",
+        "target_version": "Target version",
+        "release_id": "Release",
+        "run_directory": "Run log",
+    }
+)
 
-LABELS: dict[str, str] = {
-    "project_id": "Project",
-    "contract": "Contract",
-    "projects": "Projects",
-    "directory": "Directory",
-    "destination": "Destination",
-    "source_project": "Source project",
-    "template_version": "Template version",
-    "current_version": "Current version",
-    "target_version": "Target version",
-    "release_id": "Release",
-    "run_directory": "Run log",
-}
 
-
-def mapping(value: object) -> dict[str, JsonValue] | None:
+def mapping(value: JsonValue) -> dict[str, JsonValue] | None:
     """Narrow a JSON object at the presentation boundary."""
     if isinstance(value, dict):
         return cast(dict[str, JsonValue], value)
     return None
 
 
-def sequence(value: object) -> list[JsonValue]:
+def sequence(value: JsonValue) -> list[JsonValue]:
     """Narrow a JSON array at the presentation boundary."""
     if isinstance(value, list):
         return cast(list[JsonValue], value)
     return []
 
 
-def issue_text(value: object) -> str:
+def issue_text(value: JsonValue) -> str:
     """Keep typed issue identity and location visible without dumping JSON."""
     issue = mapping(value)
     if issue is None:
@@ -54,7 +56,7 @@ def issue_text(value: object) -> str:
 
 def summary(label: str, report: BaseModel, *, limit: int = 5) -> str:
     """Show status, failed stages and next actions while retaining a JSON escape hatch."""
-    data = cast(dict[str, JsonValue], report.model_dump(mode="json"))
+    data: dict[str, JsonValue] = cast(dict[str, JsonValue], report.model_dump(mode="json"))
     status = str(data.get("status", "RESULT"))
     lines = [f"{label}: {status}"]
     for key, title in LABELS.items():

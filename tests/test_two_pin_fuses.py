@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -31,7 +32,7 @@ def fuse_netlist(
     omit_inventory: tuple[str, ...] = (),
     ambiguous: tuple[str, ...] = (),
     multi_pin: tuple[str, ...] = (),
-    symbols: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     symbols = symbols or {"F1": "Device:Fuse", "F2": "Device:Polyfuse"}
     components = {

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Iterable
 
 from .schematic_geometry_primitives import point_to_segment
 from .schematic_geometry_types import (
@@ -19,7 +20,7 @@ from .schematic_geometry_types import (
 
 
 def unconnected_pin_wire_near_misses(
-    pins: list[SchematicPin],
+    pins: Iterable[SchematicPin],
     unconnected_pins: frozenset[str],
     no_connects: tuple[tuple[float, float], ...],
     wire_ends: tuple[WireEnd, ...],

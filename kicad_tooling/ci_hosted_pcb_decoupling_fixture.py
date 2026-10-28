@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from .ci_hosted_pcb_fixture_support import (
     HostedPcbFixtureFailure,
     capture_verified_pcb_snapshot,
     prepare_pcb_fixture,
 )
+from .ci_hosted_support import HostedLog
 from .hwrepo.evidence import digest
 from .hwrepo.pcb_decoupling import pcb_decoupling_entries
 from .hwrepo.pcb_decoupling_models import (
@@ -18,9 +18,6 @@ from .hwrepo.pcb_decoupling_models import (
     PcbDecouplingMap,
     PcbDecouplingRequirement,
 )
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
 
 
 def decoupling_placement_fixture_lane(

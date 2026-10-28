@@ -6,10 +6,14 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
-from kicad_tooling.ci_hosted_mosfet_gate_fixture import MOSFET_GATE_FIXTURE_CASES
+from kicad_tooling.ci_hosted_mosfet_gate_fixture import (
+    MOSFET_GATE_FIXTURE_CASES,
+    mosfet_gate_fixture_lane,
+)
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.component_mosfet_gate_drive import RULE_ID as DIRECT_DRIVE_RULE_ID
 from kicad_tooling.hwrepo.design_lint_component_mosfet_terminals import (
@@ -32,16 +36,18 @@ pytestmark = [
 ]
 
 RULE_ID = "component.mosfet_gate_without_peer"
-EXPECTED_SOURCE_HASHES = {
-    "fault": "5cd4983eb3ac3abc6370f8d5626fae3fbe8b1e38ce26b32d31e0cb3c7d9a8c6c",
-    "control": "e95ed1a5673723dc690e1fad27d534f3f834c371a489957c0c7050f642d18a75",
-    "source-bias-control": "d7529a3ce8d7815669fa764cd1c0a868ea37dd94aae072fe66e05a3e34c48e78",
-    "series-gate-control": "5f6a6b62155601ef51c1d9d3dad30dd2e5b8d02f22fa210f332fdf9566322323",
-    "gate-source-fault": "75849c215452527d32739eb43d9a8d7ec72ee2a0a31fc50e49360bbb8e62986c",
-    "gate-source-control": "d7529a3ce8d7815669fa764cd1c0a868ea37dd94aae072fe66e05a3e34c48e78",
-    "gate-drain-fault": "3c420798532c410789fb7e9212c0fd92d41a76fb400b44ec6515f2ffc12d715e",
-    "gate-drain-control": "d7529a3ce8d7815669fa764cd1c0a868ea37dd94aae072fe66e05a3e34c48e78",
-}
+EXPECTED_SOURCE_HASHES = MappingProxyType(
+    {
+        "fault": "5cd4983eb3ac3abc6370f8d5626fae3fbe8b1e38ce26b32d31e0cb3c7d9a8c6c",
+        "control": "e95ed1a5673723dc690e1fad27d534f3f834c371a489957c0c7050f642d18a75",
+        "source-bias-control": "d7529a3ce8d7815669fa764cd1c0a868ea37dd94aae072fe66e05a3e34c48e78",
+        "series-gate-control": "5f6a6b62155601ef51c1d9d3dad30dd2e5b8d02f22fa210f332fdf9566322323",
+        "gate-source-fault": "75849c215452527d32739eb43d9a8d7ec72ee2a0a31fc50e49360bbb8e62986c",
+        "gate-source-control": "d7529a3ce8d7815669fa764cd1c0a868ea37dd94aae072fe66e05a3e34c48e78",
+        "gate-drain-fault": "3c420798532c410789fb7e9212c0fd92d41a76fb400b44ec6515f2ffc12d715e",
+        "gate-drain-control": "d7529a3ce8d7815669fa764cd1c0a868ea37dd94aae072fe66e05a3e34c48e78",
+    }
+)
 
 
 def test_native_mosfet_gate_fixture_scope_matches_registered_cases() -> None:
@@ -88,7 +94,6 @@ def test_native_mosfet_gate_fixture_scope_matches_registered_cases() -> None:
 def test_native_mosfet_gate_fault_and_control_are_repeatable(
     tmp_path: Path, project: str, version: str
 ) -> None:
-    from kicad_tooling.ci_hosted_mosfet_gate_fixture import mosfet_gate_fixture_lane
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(

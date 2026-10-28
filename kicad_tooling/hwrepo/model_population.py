@@ -7,10 +7,20 @@ import hashlib
 import os
 import re
 import tempfile
+from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 from pathlib import Path
 from typing import Literal
 
-from .contracts import read_model, repo_path, update_project_manifest_inputs
+from kicad_tooling.hwrepo.models import ModelMap
+
+from .contracts import (
+    read_model,
+    relative_path_from,
+    repo_path,
+    repo_path_is_within,
+    update_project_manifest_inputs,
+)
 from .diagnostic_journal import DiagnosticJournal
 from .discovery import load_config, load_registry
 from .layout import layout
@@ -21,7 +31,6 @@ from .model_inventory import (
 )
 from .models import (
     LibrariesCatalog,
-    ModelMap,
     ModelMapAssignment,
     ModelPopulationReport,
     ProjectKind,
@@ -79,7 +88,7 @@ def _model_path(
         )
     inventory_field = "required_inputs" if local else "shared_inputs"
     inventory_name = path.relative_to(manifest_dir).as_posix() if local else name
-    relative = Path(os.path.relpath(path, board_dir)).as_posix()
+    relative = relative_path_from(path, board_dir).as_posix()
     return path, inventory_field, inventory_name, "${KIPRJMOD}/" + relative
 
 
@@ -112,7 +121,7 @@ def _require_shared_consumer_inventory(
     registry: ProjectRegistry,
     selected_config: str,
     manifest: ProjectManifest,
-    models: set[str],
+    models: AbstractSet[str],
 ) -> None:
     """Do not introduce a shared asset that another consumer has not inventoried."""
     if not models:
@@ -124,7 +133,7 @@ def _require_shared_consumer_inventory(
     model_roots: dict[str, str] = {}
     for model in models:
         matches = [
-            source for source in manifest.shared_source_roots if model.startswith(f"{source}/")
+            source for source in manifest.shared_source_roots if repo_path_is_within(model, source)
         ]
         if len(matches) != 1:
             raise ValueError(f"Shared model has no unique registered library root: {model}")
@@ -151,7 +160,7 @@ def _require_shared_consumer_inventory(
         )
 
 
-def _board_edits(source: str, assignments: ModelMap, model_references: dict[str, str]) -> str:
+def _board_edits(source: str, assignments: ModelMap, model_references: Mapping[str, str]) -> str:
     roots = _children(source, 0, len(source))
     if len(roots) != 1 or _atoms(source, roots[0])[:1] != ("kicad_pcb",):
         raise ValueError("Expected exactly one kicad_pcb root expression")
@@ -215,7 +224,7 @@ def _board_edits(source: str, assignments: ModelMap, model_references: dict[str,
     return updated
 
 
-def _new_manifest(source: str, additions: dict[str, set[str]]) -> str:
+def _new_manifest(source: str, additions: Mapping[str, AbstractSet[str]]) -> str:
     return update_project_manifest_inputs(source, additions)
 
 
@@ -289,10 +298,14 @@ def populate_models(
     locked_map: str | None = None
     try:
         with journal.stage("map-and-project"):
+            map_input: Path | ModelMap = map_path
             spec = (
-                map_path
-                if isinstance(map_path, ModelMap)
-                else read_model(map_path if map_path.is_absolute() else root / map_path, ModelMap)
+                map_input
+                if isinstance(map_input, ModelMap)
+                else read_model(
+                    map_input if map_input.is_absolute() else root / map_input,
+                    ModelMap,
+                )
             )
             journal.save_model("model-map", spec)
             if reviewed_plan is not None and (

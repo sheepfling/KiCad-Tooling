@@ -8,7 +8,7 @@ from .models import NetlistContract
 from .spi_participants import is_spi_ic_reference, spi_data_function_role_and_channel
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnconnectedSpiDataPin:
     pin: str
     function: str

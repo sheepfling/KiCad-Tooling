@@ -119,7 +119,7 @@ def selected_findings(
                 )
             )
     for name in manifest.shared_inputs:
-        if not any(name.startswith(f"{source}/") for source in manifest.shared_source_roots):
+        if not within_roots(name, manifest.shared_source_roots):
             findings.append(
                 finding(
                     "BLOCKING",

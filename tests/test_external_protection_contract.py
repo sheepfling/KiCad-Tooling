@@ -16,7 +16,6 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.usb_c_models import (
     UsbCNetPinAssignment,
-    UsbCProtectionAnalysis,
 )
 from tests.external_protection_support import (
     connector_coverage,
@@ -179,8 +178,9 @@ def test_explicit_unmapped_pin_reason_and_usb_c_contract_suppress_duplicate_prom
 def test_usb_c_protection_map_covers_only_matching_signal_pins() -> None:
     requirement = usb_c_protection_requirement()
     port = requirement.ports[0]
-    assert isinstance(port.protection, UsbCProtectionAnalysis)
-    component = port.protection.components[0].model_copy(
+    protection = port.protection
+    assert protection.mode == "required"
+    component = protection.components[0].model_copy(
         update={
             "pins": (
                 UsbCNetPinAssignment(pin="D1.1", net="USB_DP"),

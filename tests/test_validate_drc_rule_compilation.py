@@ -20,6 +20,7 @@ from kicad_tooling.hwrepo.models import (
     ProjectKind,
 )
 from kicad_tooling.validate import validate
+from tests.json_types import JsonObject
 from tests.support import initialize_git
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint]
@@ -111,7 +112,7 @@ def test_project_validation_requires_compilation_proof_when_rules_file_exists(
                 returncode=5 if emit_sentinel else 0,
             )
         elif name in {"erc", "drc"}:
-            report: dict[str, object] = {
+            report: JsonObject = {
                 "$schema": f"https://schemas.kicad.org/{name}.v1.json",
                 "kicad_version": "10.0.5",
                 "included_severities": ["error", "warning", "exclusion"],

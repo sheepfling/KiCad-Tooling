@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
+from pydantic import JsonValue
 
 from tests.lint_architecture_support import REPO_ROOT, line_count
 
@@ -28,10 +29,11 @@ def _python_modules() -> dict[str, Path]:
 @pytest.mark.design_lint
 @pytest.mark.rule_gate_integrity
 def test_oversized_python_modules_are_explicit_legacy_and_must_shrink() -> None:
-    document = json.loads(CEILINGS_PATH.read_text(encoding="utf-8"))
+    document: dict[str, JsonValue] = json.loads(CEILINGS_PATH.read_text(encoding="utf-8"))
     assert document.get("line_limit") == LINE_LIMIT
-    ceilings = document.get("ceilings")
-    assert isinstance(ceilings, dict)
+    ceiling_data: JsonValue = document.get("ceilings")
+    assert isinstance(ceiling_data, dict)
+    ceilings: dict[str, JsonValue] = ceiling_data
 
     modules = _python_modules()
     module_sizes = {path: line_count(source) for path, source in modules.items()}
@@ -44,11 +46,11 @@ def test_oversized_python_modules_are_explicit_legacy_and_must_shrink() -> None:
     )
     assert not stale, f"Remove size ceilings after modules shrink below 500 lines: {stale}"
 
-    invalid = {
-        path: limit
-        for path, limit in ceilings.items()
-        if path not in modules or not isinstance(limit, int) or limit < LINE_LIMIT
-    }
+    invalid: dict[str, JsonValue] = {}
+    entries: list[tuple[str, JsonValue]] = list(ceilings.items())
+    for path, limit in entries:
+        if path not in modules or not isinstance(limit, int) or limit < LINE_LIMIT:
+            invalid[path] = limit
     assert not invalid, f"Invalid or missing legacy module ceilings: {invalid}"
     growth = {
         path: {"current": oversized[path], "ceiling": limit}

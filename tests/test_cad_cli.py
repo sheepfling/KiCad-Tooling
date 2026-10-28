@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 import tempfile
 import unittest
+from collections.abc import Sequence
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 from pathlib import Path
@@ -72,7 +73,7 @@ class CadCliTests(unittest.TestCase):
             check=CadBundleCheck(status="READY", symbol_pins=("1", "2"), footprint_pads=("1", "2")),
         )
 
-    def invoke(self, arguments: list[str]) -> tuple[int, str]:
+    def invoke(self, arguments: Sequence[str]) -> tuple[int, str]:
         stdout = StringIO()
         with (
             patch.object(

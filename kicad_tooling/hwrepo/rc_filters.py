@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Set as AbstractSet
 from decimal import Decimal, DecimalException, localcontext
 
 from .capacitance_values import parse_capacitance_pf
@@ -42,7 +43,7 @@ def _component_issues(
     expected_symbol: str,
     expected_footprint: str,
     expected_pins: tuple[str, str],
-    dnp: set[str],
+    dnp: AbstractSet[str],
 ) -> list[str]:
     issues: list[str] = []
     component: ComponentContract | None = _lookup(observed.components, reference)

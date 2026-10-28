@@ -9,7 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.ci_hosted_spi_shared_chip_select import SPI_SHARED_CHIP_SELECT_TOOLCHAINS
+from kicad_tooling.ci_hosted_spi_shared_chip_select import (
+    SPI_SHARED_CHIP_SELECT_TOOLCHAINS,
+    spi_shared_chip_select_fixture_lane,
+)
+from kicad_tooling.ci_hosted_support import HostedLog
 from tests.native_fixture_support import assert_native_fixture_mounts
 
 pytestmark = [
@@ -35,10 +39,6 @@ PROJECT_TOOLCHAINS = tuple(
 def test_native_spi_shared_chip_select_fault_and_control_repeat(
     tmp_path: Path, version: str, image: str
 ) -> None:
-    from kicad_tooling.ci_hosted_spi_shared_chip_select import (
-        spi_shared_chip_select_fixture_lane,
-    )
-    from kicad_tooling.ci_hosted_support import HostedLog
 
     log = HostedLog(tmp_path, f"native-spi-shared-chip-select-{version}")
     spi_shared_chip_select_fixture_lane(tmp_path, version=version, image=image, log=log)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import zipfile
 from email.parser import Parser
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 REQUIRED_WHEEL_ASSETS = frozenset(
     {
@@ -91,7 +91,11 @@ def wheel_contents(wheel: Path) -> tuple[str, dict[str, bytes]]:
     """Read authoritative metadata and required package payload from a wheel."""
     with zipfile.ZipFile(wheel) as archive:
         metadata_names = [
-            name for name in archive.namelist() if name.endswith(".dist-info/METADATA")
+            name
+            for name in archive.namelist()
+            if len(PurePosixPath(name).parts) >= 2
+            and PurePosixPath(name).parts[-2].endswith(".dist-info")
+            and PurePosixPath(name).parts[-1] == "METADATA"
         ]
         if len(metadata_names) != 1:
             raise ValueError(f"Expected one distribution metadata file in {wheel}")
@@ -103,7 +107,7 @@ def wheel_contents(wheel: Path) -> tuple[str, dict[str, bytes]]:
         payload = {
             name: archive.read(name)
             for name in archive.namelist()
-            if name.startswith("kicad_tooling/") or name == metadata_name
+            if PurePosixPath(name).parts[:1] == ("kicad_tooling",) or name == metadata_name
         }
         missing = REQUIRED_WHEEL_ASSETS - payload.keys()
         if missing:

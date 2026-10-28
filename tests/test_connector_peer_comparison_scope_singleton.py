@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
 from kicad_tooling.hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
@@ -103,7 +105,7 @@ def test_singleton_supply_scopes_are_reviewed_with_common_scope_control() -> Non
     observed = connector_supply_role_netlist(common_supply=True)
     interfaces = connector_supply_role_catalog()
 
-    def coverage_for(groups: dict[str, str]) -> ConnectorCoverageReport:
+    def coverage_for(groups: Mapping[str, str]) -> ConnectorCoverageReport:
         reviews = tuple(
             ConnectorInterfaceReview(
                 reference=reference,

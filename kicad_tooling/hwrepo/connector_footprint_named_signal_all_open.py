@@ -19,7 +19,7 @@ from .design_lint_types import Candidate
 RULE_ID: DesignLintRuleId = "connector.footprint_named_signal_all_open"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class NamedSignalAllOpenEvaluation:
     """Candidates and coverage counts for named signal pins open on every peer."""
 

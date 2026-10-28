@@ -6,12 +6,13 @@ import base64
 import json
 import re
 import subprocess
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Literal, TypeVar, cast
+from pathlib import Path, PurePosixPath
+from typing import Literal, TypeVar
 from urllib.parse import quote
 
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
 from ..lint_registry import reviewed_value
 from .contracts import read_model, repo_path
@@ -25,7 +26,7 @@ CODEOWNERS_PATHS = (".github/CODEOWNERS", "CODEOWNERS", "docs/CODEOWNERS")
 AuditStatus = Literal["PASS", "NEEDS_SETUP", "UNKNOWN"]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ApiError(Exception):
     endpoint: str
     detail: str
@@ -106,7 +107,7 @@ class CodeownersErrors(ApiModel):
     errors: list[CodeownersError]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Facts:
     source: str
     available: bool
@@ -121,14 +122,15 @@ class Facts:
     error: str | None = None
 
 
-def _gh(root: Path, *args: str) -> object:
+def _gh(root: Path, *args: str) -> JsonValue:
     """Run only read operations; never include tokens or mutation verbs in argv."""
     command = ("gh", *args)
     endpoint = " ".join(args)
     if args != ("repo", "view", "--json", "nameWithOwner") and not (
         args
         and args[0] == "api"
-        and args[-1].startswith("repos/")
+        and PurePosixPath(args[-1]).parts[:1] == ("repos",)
+        and len(PurePosixPath(args[-1]).parts) > 1
         and all(option in {"--paginate", "--slurp"} for option in args[1:-1])
     ):
         raise ApiError(endpoint, "Only read-only repository queries are supported")
@@ -162,12 +164,16 @@ def _model(value: object, kind: type[TApiModel], source: str) -> TApiModel:
 def _branch_rules(root: Path, repository: str, branch: str) -> Facts:
     endpoint = f"repos/{repository}/rules/branches/{quote(branch, safe='')}?per_page=100"
     try:
-        pages = _gh(root, "api", "--paginate", "--slurp", endpoint)
-        if not isinstance(pages, list) or any(
-            not isinstance(page, list) for page in cast(list[object], pages)
-        ):
+        pages_value: JsonValue = _gh(root, "api", "--paginate", "--slurp", endpoint)
+        if not isinstance(pages_value, list):
             raise ApiError(endpoint, "unexpected paginated rules response")
-        values = [value for page in cast(list[list[object]], pages) for value in page]
+        pages: list[JsonValue] = pages_value
+        values: list[JsonValue] = []
+        for page in pages:
+            if not isinstance(page, list):
+                raise ApiError(endpoint, "unexpected paginated rules response")
+            rows: list[JsonValue] = page
+            values.extend(rows)
         rules = tuple(_model(value, BranchRule, endpoint) for value in values)
     except ApiError as exc:
         return Facts(source=endpoint, available=False, error=str(exc))
@@ -193,7 +199,7 @@ def _branch_rules(root: Path, repository: str, branch: str) -> Facts:
         for rule in status_rules
     )
 
-    def rule_bool(field: str, selected: list[BranchRule]) -> bool | None:
+    def rule_bool(field: str, selected: Iterable[BranchRule]) -> bool | None:
         values = [
             getattr(rule.parameters, field) if rule.parameters is not None else None
             for rule in selected
@@ -225,7 +231,6 @@ def _legacy_protection(root: Path, repository: str, branch: str) -> Facts:
     except ApiError as exc:
         # GitHub can return 404 for either no rule or insufficient Administration:read.
         return Facts(source=endpoint, available=False, error=str(exc))
-    assert isinstance(protection, BranchProtection)
     review = protection.required_pull_request_reviews
     status = protection.required_status_checks
     return Facts(
@@ -291,7 +296,7 @@ def _check(
 
 
 def _overall(
-    checks: tuple[HostedGovernanceCheck, ...] | list[HostedGovernanceCheck],
+    checks: Sequence[HostedGovernanceCheck],
 ) -> AuditStatus:
     if any(check.status == "NEEDS_SETUP" for check in checks):
         return "NEEDS_SETUP"
@@ -333,7 +338,6 @@ def _codeowners(
                 endpoint,
                 "Grant Contents:read or inspect the default branch directly.",
             ), ()
-        assert isinstance(item, RepositoryContent)
         if item.size is not None and item.size >= 3 * 1024 * 1024:
             return _check(
                 "codeowners_file",
@@ -429,7 +433,7 @@ def _codeowners(
     # A successful root listing establishes Contents:read before interpreting 404s as absence.
     endpoint = f"repos/{repository}/contents?ref={ref}"
     try:
-        listing = _gh(root, "api", endpoint)
+        listing: JsonValue = _gh(root, "api", endpoint)
         if not isinstance(listing, list):
             raise ApiError(endpoint, "unexpected contents listing")
     except ApiError as exc:
@@ -483,7 +487,6 @@ def audit(
             view = _model(
                 _gh(root, "repo", "view", "--json", "nameWithOwner"), RepoView, "gh repo view"
             )
-            assert isinstance(view, RepoView)
             repository = view.nameWithOwner
         except ApiError as exc:
             return HostedGovernanceReport(
@@ -519,7 +522,6 @@ def audit(
     endpoint = f"repos/{repository}"
     try:
         metadata = _model(_gh(root, "api", endpoint), Repository, endpoint)
-        assert isinstance(metadata, Repository)
     except ApiError as exc:
         return HostedGovernanceReport(
             status="UNKNOWN",

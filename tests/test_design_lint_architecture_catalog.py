@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import ast
 import json
+from collections.abc import Set as AbstractSet
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -31,18 +33,20 @@ RULE_MODEL_NAMES = (
     "DesignLintRuleMetadata",
 )
 RULE_TYPE_NAMES = ("DesignLintRuleId", "DesignLintTheme")
-LEGACY_MODEL_IMPORTS = {*RULE_MODEL_NAMES, *RULE_TYPE_NAMES}
+LEGACY_MODEL_IMPORTS = frozenset({*RULE_MODEL_NAMES, *RULE_TYPE_NAMES})
 RULE_OWNER_MODULES = ("design_lint_rule_models.py", "design_lint_rule_types.py")
 RULE_FIXTURE_FIELDS = ("fault_fixtures", "valid_control_fixtures", "metamorphic_fixtures")
-RULE_THEME_MARKERS = {
-    "components": "component_lint",
-    "connectors": "connector_lint",
-    "interfaces": "interface_lint",
-    "power": "power_lint",
-    "returns": "return_path_lint",
-    "schematic": "schematic_lint",
-    "pcb": "pcb_lint",
-}
+RULE_THEME_MARKERS = MappingProxyType(
+    {
+        "components": "component_lint",
+        "connectors": "connector_lint",
+        "interfaces": "interface_lint",
+        "power": "power_lint",
+        "returns": "return_path_lint",
+        "schematic": "schematic_lint",
+        "pcb": "pcb_lint",
+    }
+)
 
 
 def _fixture_module_path(reference: str) -> Path | None:
@@ -321,7 +325,7 @@ def test_active_rule_fixture_modules_have_design_lint_and_theme_markers() -> Non
 )
 def test_dedicated_lint_suites_have_focused_area_markers(
     module_name: str,
-    expected_markers: set[str],
+    expected_markers: AbstractSet[str],
 ) -> None:
     path = REPO_ROOT / "tests" / module_name
     markers = _module_pytest_markers(path)

@@ -5,10 +5,12 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
 from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import DesignLintPolicy, DesignLintRuleOverride
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.synthetic_design_lint_project import (
@@ -21,10 +23,12 @@ FIXTURE_CASES = (
     "component-peer-assignment-outlier-fault",
     "component-peer-assignment-outlier-control",
 )
-EXPECTED_SOURCE_HASHES = {
-    FIXTURE_CASES[0]: "2235639e107cfe4b060c052069c5c2bbc2a48dbef40c2bb22c8219ad6f19e7ba",
-    FIXTURE_CASES[1]: "22f1efb0f7df6458d4523c79bc6b1e5cdd31b57463b8072cd4002105106179dc",
-}
+EXPECTED_SOURCE_HASHES = MappingProxyType(
+    {
+        FIXTURE_CASES[0]: "2235639e107cfe4b060c052069c5c2bbc2a48dbef40c2bb22c8219ad6f19e7ba",
+        FIXTURE_CASES[1]: "22f1efb0f7df6458d4523c79bc6b1e5cdd31b57463b8072cd4002105106179dc",
+    }
+)
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint]
 
@@ -48,7 +52,6 @@ def test_native_generic_peer_assignment_outlier_fault_and_control_are_repeatable
     from kicad_tooling.ci_hosted_connector_return_context import (
         prepare_connector_return_fixture_context,
     )
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(

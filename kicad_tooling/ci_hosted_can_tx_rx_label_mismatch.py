@@ -8,40 +8,38 @@ import os
 import shutil
 import sys
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING
+from types import MappingProxyType
 
 from .ci_hosted_kicad10_images import KICAD_10_NATIVE_TOOLCHAINS
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 CAN_TX_RX_LABEL_TOOLCHAINS = KICAD_10_NATIVE_TOOLCHAINS
 _RULE_ID = "bus.can_tx_rx_label_mismatch"
-_SOURCE_HASHES = {
-    "fault": "9d2497c89853798e7dc98451df3f975eadca5ccef45d6c4e229ae65d348c7448",
-    "control": "55ad4a1d31d86407edf705955c7bd8fb7d5284784a4376fdcc7da3f89313ee92",
-}
+_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
+    {
+        "fault": "9d2497c89853798e7dc98451df3f975eadca5ccef45d6c4e229ae65d348c7448",
+        "control": "55ad4a1d31d86407edf705955c7bd8fb7d5284784a4376fdcc7da3f89313ee92",
+    }
+)
 
 
 def can_tx_rx_label_mismatch_fixture_lane(
     root: Path, *, version: str, image: str, log: HostedLog
 ) -> None:
     """Repeat exact native netlist/ERC exports for crossed and matching labels."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .validate import read_netlist
-
     root = root.resolve()
     if (version, image) not in CAN_TX_RX_LABEL_TOOLCHAINS:
         raise ValueError(f"CAN TX/RX label fixtures do not cover KiCad {version} with this image")
     pinned = pinned_image(image)
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/can-tx-rx-label-mismatch"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/can-tx-rx-label-mismatch"
     sources = {
         "fault": fixture_root / "crossed-labels.kicad_sch",
         "control": fixture_root / "matching-labels-control.kicad_sch",

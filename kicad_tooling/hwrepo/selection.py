@@ -11,7 +11,7 @@ from .layout import layout
 from .models import ProductIndex, ProjectRecord, ProjectRegistry
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ProjectSelector:
     """OR-match project IDs, tags, and product members, then exclude tags."""
 

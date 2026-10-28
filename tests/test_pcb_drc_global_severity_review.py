@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
@@ -53,7 +54,7 @@ def _project(
 def _scan(
     root: Path,
     config: ProjectConfig,
-    source_hashes: dict[str, str],
+    source_hashes: Mapping[str, str],
 ):
     return ignored_core_native_drc_check_candidates(root, config, source_hashes)
 

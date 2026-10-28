@@ -11,9 +11,10 @@ from tests.design_lint_fixtures.connector_mapped_interface_other import (
 from tests.design_lint_fixtures.connector_mapped_interface_signal import (
     mapped_interface_netlist,
 )
+from tests.json_types import JsonObject
 
 
-def _report(*, connected: bool) -> dict[str, object]:
+def _report(*, connected: bool) -> JsonObject:
     observed = mapped_interface_netlist(
         target_net="AUXILIARY" if connected else None,
         target_function="2",
@@ -28,7 +29,7 @@ def _report(*, connected: bool) -> dict[str, object]:
     }
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     """Return an open-contact fault and an assigned-contact control."""
     return {
         "mapped_interface_other_fault": _report(connected=False),

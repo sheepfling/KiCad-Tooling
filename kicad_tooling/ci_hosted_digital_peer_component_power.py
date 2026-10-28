@@ -3,6 +3,11 @@
 from __future__ import annotations
 
 from .ci_hosted_digital_peer_context import DigitalPeerFixtureContext
+from .ci_hosted_digital_peer_models import (
+    COMPONENT_PEER_FIXTURE_CASES,
+    DigitalPeerFixtureCase,
+)
+from .ci_hosted_native_fixture_models import NativeRun, NativeRunPair
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
 from .hwrepo.design_lint_report_models import DesignLintReport
@@ -28,17 +33,22 @@ def verify_component_peer_power_cases(ctx: DigitalPeerFixtureContext):
             ),
         )
     )
-    for case, expected_status, expected_count in (
-        ("component-peer-control", "PASS", 0),
-        ("component-peer-fault", "REVIEW", 2),
+    for case, (expected_status, expected_count) in zip(
+        COMPONENT_PEER_FIXTURE_CASES, (("PASS", 0), ("REVIEW", 2)), strict=True
     ):
-        peer_contracts = ctx.contracts[case]
-        peer_observed = peer_contracts["first"]
-        if ctx.normalized_hashes[case]["first"] != ctx.normalized_hashes[case]["repeat"]:
+        peer_contracts = ctx.fixture(case).netlists
+        peer_observed = peer_contracts.first.contract
+        if (
+            ctx.fixture(case).netlists.first.normalized_sha256
+            != ctx.fixture(case).netlists.repeat.normalized_sha256
+        ):
             raise ValueError(
                 f"Native component peer {case} exports differ after typed-netlist normalization"
             )
-        if ctx.normalized_erc_hashes[case]["first"] != ctx.normalized_erc_hashes[case]["repeat"]:
+        if (
+            ctx.fixture(case).require_component_erc().first.normalized_sha256
+            != ctx.fixture(case).require_component_erc().repeat.normalized_sha256
+        ):
             raise ValueError(f"Native component peer {case} ERC reports are not repeatable")
         expected_pin_functions = {
             "U1.1": "IO",
@@ -71,32 +81,37 @@ def verify_component_peer_power_cases(ctx: DigitalPeerFixtureContext):
             raise ValueError(f"Native component peer {case} lost the shared exact symbol identity")
         if peer_observed.component_pin_numbers != {"U1": ("1", "2", "3"), "U2": ("1", "2", "3")}:
             raise ValueError(f"Native component peer {case} changed the complete pin inventory")
-        reports: dict[str, DesignLintReport] = {}
-        for run in ("first", "repeat"):
+
+        def report_for(run: NativeRun, fixture_case: DigitalPeerFixtureCase) -> DesignLintReport:
             coach = ContractCoachReport(
                 status="READY_FOR_REVIEW",
-                project_id=f"synthetic-component-peer-power-{case}",
-                observed=peer_contracts[run],
-                netlist_sha256=ctx.hashes[case][run],
+                project_id=f"synthetic-component-peer-power-{fixture_case}",
+                observed=ctx.fixture(fixture_case).netlists.for_run(run).contract,
+                netlist_sha256=ctx.fixture(fixture_case).netlists.for_run(run).netlist_sha256,
             )
-            reports[run] = evaluate(coach.project_id, coach, component_peer_policy)
+            return evaluate(coach.project_id, coach, component_peer_policy)
+
+        reports = NativeRunPair(
+            first=report_for("first", case),
+            repeat=report_for("repeat", case),
+        )
         findings = tuple(
             item
-            for item in reports["first"].findings
+            for item in reports.first.findings
             if item.rule_id == "component.peer_power_pin_assignment_divergence"
         )
-        active_findings = tuple(item for item in reports["first"].findings if item.mode != "off")
+        active_findings = tuple(item for item in reports.first.findings if item.mode != "off")
         first_findings = tuple(
             (item.fingerprint, item.rule_id, item.mode, item.evidence)
-            for item in reports["first"].findings
+            for item in reports.first.findings
         )
         repeat_findings = tuple(
             (item.fingerprint, item.rule_id, item.mode, item.evidence)
-            for item in reports["repeat"].findings
+            for item in reports.repeat.findings
         )
         if (
-            reports["first"].status != expected_status
-            or reports["repeat"].status != expected_status
+            reports.first.status != expected_status
+            or reports.repeat.status != expected_status
             or len(active_findings) != expected_count
             or any(
                 item.rule_id != "component.peer_power_pin_assignment_divergence"
@@ -140,17 +155,23 @@ def verify_component_peer_power_cases(ctx: DigitalPeerFixtureContext):
             project=ctx.project,
             kicad_version=ctx.config.kicad_version,
             image=ctx.pinned,
-            source_sha256=ctx.component_peer_source_hashes[case],
-            netlist_sha256=ctx.hashes[case]["first"],
-            repeat_netlist_sha256=ctx.hashes[case]["repeat"],
-            normalized_netlist_sha256=ctx.normalized_hashes[case]["first"],
-            repeat_normalized_netlist_sha256=ctx.normalized_hashes[case]["repeat"],
-            erc_report_version=ctx.erc_report_versions[case]["first"],
-            normalized_erc_sha256=ctx.normalized_erc_hashes[case]["first"],
-            repeat_normalized_erc_sha256=ctx.normalized_erc_hashes[case]["repeat"],
-            erc_warning_types=";".join(ctx.erc_warning_types[case]["first"]) or "none",
-            erc_error_types=";".join(ctx.erc_error_types[case]["first"]) or "none",
-            lint_status=reports["first"].status,
+            source_sha256=ctx.fixture(case).source.sha256,
+            netlist_sha256=ctx.fixture(case).netlists.first.netlist_sha256,
+            repeat_netlist_sha256=ctx.fixture(case).netlists.repeat.netlist_sha256,
+            normalized_netlist_sha256=ctx.fixture(case).netlists.first.normalized_sha256,
+            repeat_normalized_netlist_sha256=ctx.fixture(case).netlists.repeat.normalized_sha256,
+            erc_report_version=ctx.fixture(case).require_component_erc().first.kicad_version,
+            normalized_erc_sha256=ctx.fixture(case).require_component_erc().first.normalized_sha256,
+            repeat_normalized_erc_sha256=ctx.fixture(case)
+            .require_component_erc()
+            .repeat.normalized_sha256,
+            erc_warning_types=";".join(
+                ctx.fixture(case).require_component_erc().first.warning_types
+            )
+            or "none",
+            erc_error_types=";".join(ctx.fixture(case).require_component_erc().first.error_types)
+            or "none",
+            lint_status=reports.first.status,
             peer_power_findings=";".join(item.rule_id for item in findings) or "none",
             divergent_pin_roles=";".join(
                 f"{pin}:{function}:{role}" for (pin, function, role) in divergence_roles

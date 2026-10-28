@@ -16,6 +16,7 @@ from .hwrepo.contract_coach import (
 )
 from .hwrepo.electrical_runner import analyze, format_report
 from .hwrepo.electrical_setup import capture_inputs, initialize
+from .hwrepo.layout import default_project_root
 
 
 def main() -> int:
@@ -25,7 +26,7 @@ def main() -> int:
         "then run kicad_tooling.template doctor --electrical --project-id <id>. "
         "Guide: docs/workflow/ELECTRICAL_ANALYSIS.md",
     )
-    parser.add_argument("--root", type=Path, default=Path.cwd(), help="Repository root")
+    parser.add_argument("--root", type=Path, default=default_project_root(), help="Repository root")
     parser.add_argument("--project", required=True, help="Registered board or schematic ID")
     setup = parser.add_mutually_exclusive_group()
     setup.add_argument(

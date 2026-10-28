@@ -5,31 +5,28 @@ from __future__ import annotations
 import shutil
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
 from .hwrepo.models import ProjectConfig
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
+from .hwrepo.pcb_reference_plane_models import (
+    PcbReferencePlaneMap,
+    PcbReferencePlaneRequirement,
+)
+from .hwrepo.pcb_reference_planes import pcb_reference_plane_entries
+from .hwrepo.pcb_return_path_capture import (
+    capture_native_pcb_connectivity,
+    expected_probe_sha256,
+    native_pcb_command_matches,
+)
 
 
 def pcb_reference_plane_via_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Verify native via antipad contours and mapped reference-plane context."""
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.pcb_reference_plane_models import (
-        PcbReferencePlaneMap,
-        PcbReferencePlaneRequirement,
-    )
-    from .hwrepo.pcb_reference_planes import pcb_reference_plane_entries
-    from .hwrepo.pcb_return_path_capture import (
-        capture_native_pcb_connectivity,
-        expected_probe_sha256,
-        native_pcb_command_matches,
-    )
-
     root = root.resolve()
     config: ProjectConfig = selected_config(root, project)
     if config.image != image:
@@ -198,20 +195,6 @@ def pcb_reference_plane_narrow_void_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Ensure exact native centerline geometry catches a void between coarse samples."""
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
-    from .hwrepo.pcb_reference_plane_models import (
-        PcbReferencePlaneMap,
-        PcbReferencePlaneRequirement,
-    )
-    from .hwrepo.pcb_reference_planes import pcb_reference_plane_entries
-    from .hwrepo.pcb_return_path_capture import (
-        capture_native_pcb_connectivity,
-        expected_probe_sha256,
-        native_pcb_command_matches,
-    )
-
     root = root.resolve()
     config: ProjectConfig = selected_config(root, project)
     if config.image != image:

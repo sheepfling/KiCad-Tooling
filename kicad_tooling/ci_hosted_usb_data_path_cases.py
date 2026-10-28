@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .ci_hosted_support import tooling_checkout_root
+
 
 def usb_data_path_fixture_sources() -> dict[str, Path]:
     """Return the tooling-owned synthetic schematic sources for the USB lane."""
-    fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint"
     return {
         "integrated-direct": fixture_root / "usb-data-path-native/integrated-phy-direct.kicad_sch",
         "external-series": fixture_root

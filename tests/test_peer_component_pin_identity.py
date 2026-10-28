@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+import asyncio
+import json
 from pathlib import Path
 
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import text_report
 from kicad_tooling.hwrepo.models import (
+    ConnectorInventoryReview,
     DesignLintPolicy,
     DesignLintReport,
     NetlistContract,
+    ProjectManifest,
+    ValidationSummary,
 )
 from tests.component_peer_pin_support import (
     BIDIRECTIONAL_RULE_ID,
@@ -70,19 +75,12 @@ def test_shared_part_id_aliases_cover_each_typed_peer_rule(
 def test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp(
     tmp_path: Path, electrical_type: str, pin_function: str, pin_net: str, rule_id: str
 ) -> None:
-    import asyncio
-    import json
 
     from mcp import Client
 
     from kicad_tooling.hwrepo.contracts import read_model, write_model
     from kicad_tooling.hwrepo.evidence import digest
     from kicad_tooling.hwrepo.mcp_server import create_server
-    from kicad_tooling.hwrepo.models import (
-        ConnectorInventoryReview,
-        ProjectManifest,
-        ValidationSummary,
-    )
     from tests.component_peer_power_assignment_support import peer_pin_netlist_xml
     from tests.synthetic_design_lint_project import (
         run_design_lint_cli,

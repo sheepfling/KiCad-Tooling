@@ -2,38 +2,30 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_finding_models import DesignLintFinding
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract
+from .validate import read_netlist
 
 
 def can_peer_assignment_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Verify cross-peer CAN pair review from repeated pinned native exports."""
-    import hashlib
-
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_finding_models import DesignLintFinding
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import (
-        ContractCoachReport,
-        DesignLintPolicy,
-        NetlistContract,
-    )
-    from .validate import read_netlist
 
     root = root.resolve()
     config = selected_config(root, project)
@@ -42,9 +34,7 @@ def can_peer_assignment_fixture_lane(
     if config.kicad_version not in {"10.0.0", "10.0.5"}:
         raise ValueError(f"CAN peer fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/can-peer-native"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/can-peer-native"
     cases = ("peer-control", "peer-fault")
     source_hashes = {case: digest(fixture_root / f"{case}.kicad_sch") for case in cases}
     scratch = Path(tempfile.mkdtemp(prefix=f"can-peer-{project}-", dir=log.directory.resolve()))

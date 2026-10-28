@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import evaluate
@@ -181,7 +183,7 @@ def test_native_pin_functions_define_anode_and_cathode_not_pin_numbers() -> None
 def test_unsupported_or_incomplete_diodes_are_not_classified(
     symbol: str,
     pin_numbers: tuple[str, ...],
-    pin_functions: dict[str, str],
+    pin_functions: Mapping[str, str],
     dnp: tuple[str, ...],
 ) -> None:
     assert not diode_findings(

@@ -11,7 +11,9 @@ import pytest
 
 from kicad_tooling.ci_hosted_serial_tx_output_sharing import (
     SERIAL_TX_OUTPUT_SHARING_TOOLCHAINS,
+    serial_tx_output_sharing_fixture_lane,
 )
+from kicad_tooling.ci_hosted_support import HostedLog
 from tests.native_fixture_support import assert_native_fixture_mounts
 
 RULE_ID = "bus.serial_tx_outputs_share_net"
@@ -38,10 +40,6 @@ PROJECT_TOOLCHAINS = tuple(
 def test_native_serial_tx_output_sharing_fault_and_control_repeat(
     tmp_path: Path, version: str, image: str
 ) -> None:
-    from kicad_tooling.ci_hosted_serial_tx_output_sharing import (
-        serial_tx_output_sharing_fixture_lane,
-    )
-    from kicad_tooling.ci_hosted_support import HostedLog
 
     root = tmp_path
     log = HostedLog(root, f"native-serial-tx-sharing-{version}")

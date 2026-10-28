@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import JsonValue
 
 from tests.design_lint_fixtures.hashseed_reports import hashseed_probe_reports
+from tests.json_types import JsonObject
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.power_lint, pytest.mark.slow]
 
@@ -31,8 +33,8 @@ def test_authored_power_connectivity_checks_remain_deterministic() -> None:
         == 3
     )
 
-    def checks_by_id(report: dict[str, object]) -> dict[str, dict[str, object]]:
-        checks = report["checks"]
+    def checks_by_id(report: JsonObject) -> dict[str, JsonObject]:
+        checks: JsonValue = report["checks"]
         assert isinstance(checks, list)
         return {check["id"]: check for check in checks}
 

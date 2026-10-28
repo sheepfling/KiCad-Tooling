@@ -7,7 +7,9 @@ import sys
 from pathlib import Path
 
 from .hwrepo.discovery import load_config, load_registry
+from .hwrepo.layout import default_project_root
 from .hwrepo.models import CiMatrix, MatrixEntry
+from .hwrepo.selection import ProjectSelector, resolve_project_ids
 from .lint_registry import lint
 
 
@@ -40,14 +42,12 @@ def build_matrix(root: Path, selected: tuple[str, ...] | None = None) -> CiMatri
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     parser.add_argument("--project", action="append", dest="projects")
     parser.add_argument("--tag", action="append", dest="tags")
     parser.add_argument("--product", action="append", dest="products")
     parser.add_argument("--exclude-tag", action="append", dest="excluded_tags")
     args = parser.parse_args()
-    from .hwrepo.selection import ProjectSelector, resolve_project_ids
-
     selector = ProjectSelector(
         project_ids=tuple(args.projects or ()),
         tags=tuple(args.tags or ()),

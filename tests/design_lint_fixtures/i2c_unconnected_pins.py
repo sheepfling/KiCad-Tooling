@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 
@@ -9,7 +11,7 @@ def i2c_unconnected_netlist(
     *,
     open_pins: tuple[str, ...] = ("U1.1",),
     dnp_components: tuple[str, ...] = (),
-    functions: dict[str, str] | None = None,
+    functions: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     """Build one two-pin I2C component with configurable assignment evidence."""
     pin_functions = functions or {"U1.1": "SDA", "U1.2": "I2C_SCL"}

@@ -11,6 +11,7 @@ from .contracts import (
     kicad_variant_names,
     read_model,
     repo_path,
+    repo_path_is_within,
     require_kicad_json_object,
     write_model,
 )
@@ -184,7 +185,7 @@ def export(
     root, output = root.resolve(), output.resolve()
     relative = output.relative_to(root).as_posix()
     repo_path(root, relative)
-    if not relative.startswith("build/"):
+    if not repo_path_is_within(relative, "build"):
         raise ValueError("Release exports belong under the ignored build/ directory")
     config = load_config(root, manifest_path)
     require_cli_profile(config)

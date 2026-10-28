@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import patch
@@ -22,7 +23,7 @@ from tests.verify_support import create_reference_project, native_summary, runne
 
 
 def synthetic_connector_native(
-    root: Path, output: Path, cli: str, projects: list[str]
+    root: Path, output: Path, cli: str, projects: Sequence[str]
 ) -> CheckAllSummary:
     """Write exact synthetic split-return evidence for the generic connectors."""
     _ = cli, projects

@@ -8,14 +8,16 @@ from collections.abc import Mapping
 from pathlib import Path
 from uuid import uuid4
 
+from kicad_tooling.hwrepo.analysis_state_models import AnalysisNotApplicable, AnalysisPending
+from kicad_tooling.hwrepo.electrical_simulation_models import PowerAnalysis
+from kicad_tooling.hwrepo.grounding_models import GroundingAnalysis
+
 from .contract_coach import receipt_directory
 from .contracts import read_model, repo_path, write_model
 from .electrical import simulation_cases
 from .electrical_analysis_contract_models import ElectricalAnalysisContract
 from .electrical_plot import render_case
-from .electrical_simulation_models import PowerAnalysis
 from .evidence import digest
-from .grounding_models import GroundingAnalysis
 from .models import (
     ContractCoachReport,
     ElectricalAnalysisReport,
@@ -161,7 +163,9 @@ def build_charts(root: Path, receipt: Path, output: Path | None = None) -> Elect
     results: list[ElectricalChartCase] = []
     ground: str | None = None
     power: str | None = None
-    if isinstance(contract.grounding, GroundingAnalysis):
+    grounding: GroundingAnalysis | AnalysisNotApplicable | AnalysisPending = contract.grounding
+    power_analysis: PowerAnalysis | AnalysisNotApplicable | AnalysisPending = contract.power
+    if isinstance(grounding, GroundingAnalysis):
         observed: ContractCoachReport | None = None
         if "netlist-evidence.json" in report.artifacts_sha256:
             observed = read_model(
@@ -170,10 +174,10 @@ def build_charts(root: Path, receipt: Path, output: Path | None = None) -> Elect
             if observed.project_id != report.project_id:
                 raise ValueError("Grounding capture belongs to another project")
         ground = "grounding.csv"
-        grounding_csv(directory / ground, contract.grounding, observed)
-    if isinstance(contract.power, PowerAnalysis):
+        grounding_csv(directory / ground, grounding, observed)
+    if isinstance(power_analysis, PowerAnalysis):
         power = "power.csv"
-        power_csv(directory / power, contract.power)
+        power_csv(directory / power, power_analysis)
     for case in cases:
         raw_name = f"{case.id}/waveforms.raw"
         if raw_name not in report.artifacts_sha256 and not (source / raw_name).exists():

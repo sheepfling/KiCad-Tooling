@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from types import MappingProxyType
 from typing import Literal
 
 SUPPORTED_THREE_TERMINAL_MOSFET_SYMBOLS = frozenset(
@@ -32,14 +33,16 @@ def mosfet_channel_type(symbol: str) -> Literal["nmos", "pmos"] | None:
     return "pmos"
 
 
-_TERMINAL_FUNCTION_ROLES = {
-    "d": "drain",
-    "drain": "drain",
-    "g": "gate",
-    "gate": "gate",
-    "s": "source",
-    "source": "source",
-}
+_TERMINAL_FUNCTION_ROLES = MappingProxyType(
+    {
+        "d": "drain",
+        "drain": "drain",
+        "g": "gate",
+        "gate": "gate",
+        "s": "source",
+        "source": "source",
+    }
+)
 
 
 def mosfet_terminal_role_numbers(

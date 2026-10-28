@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from typing import Literal, TypedDict
 
 import pytest
 from pydantic import ValidationError
@@ -27,6 +28,13 @@ from kicad_tooling.hwrepo.oscillator_output_paths import oscillator_output_path_
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint]
 
 RULE_ID = "oscillator.output_load_path_mismatch"
+
+
+class OscillatorOutputPathUpdates(TypedDict, total=False):
+    """Fields varied by malformed oscillator-path input cases."""
+
+    topology: Literal["direct", "series"]
+    series_resistor: dict[str, str] | None
 
 
 def oscillator_output_path_map(
@@ -341,7 +349,7 @@ def test_netlist_record_order_does_not_change_the_path_finding() -> None:
         {"topology": "series", "series_resistor": None},
     ),
 )
-def test_topology_and_resistor_contract_must_agree(values: dict[str, object]) -> None:
+def test_topology_and_resistor_contract_must_agree(values: OscillatorOutputPathUpdates) -> None:
     base = oscillator_output_path_map().paths[0].model_dump(mode="python")
     base.update(values)
     with pytest.raises(ValidationError):

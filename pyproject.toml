@@ -13,6 +13,7 @@ requires-python = ">=3.11"
 dependencies = [
   "pydantic==2.13.5",
   "snakemd==2.4.1",
+  "typing-extensions>=4.14.1",
 ]
 
 [project.optional-dependencies]

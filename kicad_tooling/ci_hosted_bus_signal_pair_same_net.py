@@ -8,15 +8,17 @@ import os
 import shutil
 import sys
 import tempfile
-from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_bus_signal_pair_models import BusSignalPairFixtureExpectation
 from .ci_hosted_kicad10_images import KICAD_10_NATIVE_TOOLCHAINS
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 
 def bus_signal_pair_same_net_fixture_lane(
@@ -25,36 +27,27 @@ def bus_signal_pair_same_net_fixture_lane(
     version: str,
     image: str,
     log: HostedLog,
-    protocol: str,
-    pair_name: str = "sda-scl",
-    rule_id: str,
-    fixture_directory: str,
-    source_hashes: Mapping[str, str],
-    expected_pin_functions: Mapping[str, str],
-    expected_nets: Mapping[str, Mapping[str, tuple[str, ...]]],
-    expected_subjects: Mapping[str, tuple[str, ...]],
+    fixture: BusSignalPairFixtureExpectation,
 ) -> None:
     """Repeat source-bound netlist/ERC exports and compare a typed review result."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .validate import read_netlist
-
+    protocol = fixture.protocol
+    pair_name = fixture.pair_name
     root = root.resolve()
     if (version, image) not in KICAD_10_NATIVE_TOOLCHAINS:
         raise ValueError(f"{protocol} same-net fixtures do not cover KiCad {version}")
     cases = ("fault", "control")
-    expectations = (source_hashes, expected_nets, expected_subjects)
-    if any(set(mapping) != set(cases) for mapping in expectations):
-        raise ValueError(f"{protocol} same-net lane requires exact fault/control expectations")
+    case_expectations = (("fault", fixture.fault), ("control", fixture.control))
+    expected_source_hashes = {
+        case: expectation.source_sha256 for case, expectation in case_expectations
+    }
     pinned = pinned_image(image)
-    repository = Path(__file__).resolve().parents[1]
-    fixture_root = repository / "tests/fixtures/design_lint" / fixture_directory
+    repository = tooling_checkout_root()
+    fixture_root = repository / "tests/fixtures/design_lint" / fixture.fixture_directory
     sources = {case: fixture_root / f"{case}.kicad_sch" for case in cases}
     actual_source_hashes = {case: digest(source) for case, source in sources.items()}
-    if actual_source_hashes != dict(source_hashes):
+    if actual_source_hashes != expected_source_hashes:
         raise ValueError(f"{protocol} same-net fixture sources differ from reviewed hashes")
+    expected_pin_functions = {item.reference: item.function for item in fixture.pin_functions}
 
     scratch = Path(
         tempfile.mkdtemp(
@@ -151,7 +144,13 @@ def bus_signal_pair_same_net_fixture_lane(
             observed = read_netlist(netlist_path)
             if observed.pin_functions != dict(expected_pin_functions):
                 raise ValueError(f"Native {protocol} {case} pin-function inventory changed")
-            if any(observed.nets.get(net) != pins for net, pins in expected_nets[case].items()):
+            case_expectation = fixture.fault if case == "fault" else fixture.control
+            expected_net_assignments = {
+                item.name: item.pins for item in case_expectation.net_assignments
+            }
+            if any(
+                observed.nets.get(net) != pins for net, pins in expected_net_assignments.items()
+            ):
                 raise ValueError(f"Native {protocol} {case} net assignments changed")
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
@@ -178,13 +177,14 @@ def bus_signal_pair_same_net_fixture_lane(
                 DesignLintPolicy(),
             )
             findings[(case, run)] = tuple(
-                item.subject for item in report.findings if item.rule_id == rule_id
+                item.subject for item in report.findings if item.rule_id == fixture.rule_id
             )
 
     for case in cases:
+        case_expectation = fixture.fault if case == "fault" else fixture.control
         first = normalized_hashes[(case, "first")]
         repeat = normalized_hashes[(case, "repeat")]
-        expected = tuple(expected_subjects[case])
+        expected = case_expectation.subjects
         if (
             first != repeat
             or erc_errors[(case, "first")] != erc_errors[(case, "repeat")]

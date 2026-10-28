@@ -239,7 +239,8 @@ def verify_pcb_return_net_tie_evidence(case: PcbReturnCaseEvidence):
             )
         if case.scenario == "bond":
             case.connectivity_check = next(
-                (check for check in case.checks if check.id.endswith("/connectivity")), None
+                (check for check in case.checks if check.id.rsplit("/", 1)[-1] == "connectivity"),
+                None,
             )
             if case.connectivity_check is None or (case.connectivity_check.status == "PASS") != (
                 not case.expected_tie_dnp

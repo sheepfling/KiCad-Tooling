@@ -9,30 +9,36 @@ import shlex
 import shutil
 from pathlib import Path
 
+from kicad_tooling.hwrepo.electrical_simulation_models import (
+    FrequencyAnalysis,
+    TransientAnalysis,
+)
+
 from .contract_coach import run_command
 from .contracts import repo_path, write_model
-from .electrical import SimulationCase, regular_input_bytes
-from .electrical_simulation_models import TransientAnalysis
+from .electrical import regular_input_bytes
 from .models import CommandEvidence, ElectricalCheck
 from .waveform_data import read_waveform
 
 # Analysis/control directives are generated here, never inherited from a model file.
-MODEL_DIRECTIVES = {
-    ".model",
-    ".subckt",
-    ".ends",
-    ".param",
-    ".func",
-    ".global",
-    ".ic",
-    ".nodeset",
-    ".options",
-    ".option",
-    ".temp",
-}
+MODEL_DIRECTIVES = frozenset(
+    {
+        ".model",
+        ".subckt",
+        ".ends",
+        ".param",
+        ".func",
+        ".global",
+        ".ic",
+        ".nodeset",
+        ".options",
+        ".option",
+        ".temp",
+    }
+)
 
 
-def expanded_deck(root: Path, case: SimulationCase) -> str:
+def expanded_deck(root: Path, case: TransientAnalysis | FrequencyAnalysis) -> str:
     """Flatten inventoried relative .include files; reject hidden dependencies and control code."""
     root = root.resolve()
     used: set[str] = set()
@@ -85,7 +91,7 @@ def expanded_deck(root: Path, case: SimulationCase) -> str:
     return "\n".join(lines)
 
 
-def simulation_deck(root: Path, case: SimulationCase) -> str:
+def simulation_deck(root: Path, case: TransientAnalysis | FrequencyAnalysis) -> str:
     if isinstance(case, TransientAnalysis):
         # Explicitly cap the internal step as well as requesting an output step.
         analysis = f"tran {case.step_s:.17g} {case.stop_s:.17g} 0 {case.step_s:.17g}"
@@ -117,7 +123,9 @@ def simulation_deck(root: Path, case: SimulationCase) -> str:
     )
 
 
-def measured_checks(case: SimulationCase, command: CommandEvidence) -> tuple[ElectricalCheck, ...]:
+def measured_checks(
+    case: TransientAnalysis | FrequencyAnalysis, command: CommandEvidence
+) -> tuple[ElectricalCheck, ...]:
     results: list[ElectricalCheck] = []
     if command.returncode != 0 or command.error:
         return (
@@ -170,7 +178,9 @@ def measured_checks(case: SimulationCase, command: CommandEvidence) -> tuple[Ele
     return tuple(results)
 
 
-def waveform_checks(path: Path, case: SimulationCase) -> tuple[ElectricalCheck, ...]:
+def waveform_checks(
+    path: Path, case: TransientAnalysis | FrequencyAnalysis
+) -> tuple[ElectricalCheck, ...]:
     """Reject truncated/non-finite raw data and windows outside actual samples."""
     expected_scale = "time" if isinstance(case, TransientAnalysis) else "frequency"
     axis = read_waveform(path, expected_axis=expected_scale).axis
@@ -221,7 +231,11 @@ def simulator_version(output: Path, cli: str, expected: str) -> CommandEvidence:
 
 
 def run_case(
-    root: Path, output: Path, cli: str, case: SimulationCase, timeout: int = 120
+    root: Path,
+    output: Path,
+    cli: str,
+    case: TransientAnalysis | FrequencyAnalysis,
+    timeout: int = 120,
 ) -> tuple[CommandEvidence, tuple[ElectricalCheck, ...]]:
     directory = output / case.id
     directory.mkdir(exist_ok=False)

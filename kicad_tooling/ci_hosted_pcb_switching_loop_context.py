@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
+from .hwrepo.electrical import selected_config
 from .hwrepo.models import ProjectConfig
 
 
@@ -31,8 +32,6 @@ def prepare_switching_loop_context(
     root: Path, project: str, image: str, log: SwitchingLoopLog
 ) -> SwitchingLoopContext:
     """Prepare native switching-loop fixture selection."""
-    from .hwrepo.electrical import selected_config
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image:

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from types import MappingProxyType
+
 from .design_lint_types import Candidate
 from .models import NetlistContract
 from .spi_role_assignments import (
@@ -12,9 +15,11 @@ from .spi_role_assignments import (
 )
 
 RULE_ID = "bus.spi_clock_control_data_same_net"
-_SPI_CONTROL_ROLES = {"clock", "chip_select"}
-_SPI_DATA_ROLES = {"data_input", "data_output"}
-_ROLE_ORDER = {"clock": 0, "chip_select": 1, "data_input": 2, "data_output": 3}
+_SPI_CONTROL_ROLES = frozenset({"clock", "chip_select"})
+_SPI_DATA_ROLES = frozenset({"data_input", "data_output"})
+_ROLE_ORDER: Mapping[str, int] = MappingProxyType(
+    {"clock": 0, "chip_select": 1, "data_input": 2, "data_output": 3}
+)
 
 
 def _candidate(

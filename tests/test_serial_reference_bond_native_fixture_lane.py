@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -27,11 +28,13 @@ pytestmark = [
 FIXTURE_ROOT = (
     Path(__file__).resolve().parent / "fixtures/design_lint/serial-peer-reference-bond-native"
 )
-SOURCE_HASHES = {
-    "serial-reference-bond-control.kicad_sch": "d6efb587268b8a0dcdbb90eb4401090dcbd6d254742b3e2f718d6df12591c785",
-    "serial-reference-bond-fault.kicad_sch": "a8a41b85d776f521df90998e55c5fc8eb55f1afc4839ab50d997b7a9e190aed2",
-    "serial-peer-map.json": "db84fc9ef9ebbc019ccd5ced4ee0c8d686af201b9397375d658481caff58b6db",
-}
+SOURCE_HASHES = MappingProxyType(
+    {
+        "serial-reference-bond-control.kicad_sch": "d6efb587268b8a0dcdbb90eb4401090dcbd6d254742b3e2f718d6df12591c785",
+        "serial-reference-bond-fault.kicad_sch": "a8a41b85d776f521df90998e55c5fc8eb55f1afc4839ab50d997b7a9e190aed2",
+        "serial-peer-map.json": "db84fc9ef9ebbc019ccd5ced4ee0c8d686af201b9397375d658481caff58b6db",
+    }
+)
 PROJECT_TOOLCHAINS = (
     pytest.param(
         "controller",
@@ -48,10 +51,12 @@ PROJECT_TOOLCHAINS = (
         id="raspberry-pi-status-led-kicad-10.0.5",
     ),
 )
-BOND_NETLIST_HASHES = {
-    "control": "5e530be356d5e584c8ad994eada95b8cfae78031145881890bcfb6cf690ffe80",
-    "fault": "748d80edfe816b59c7b876f1d20a816f7de4652172e7e5d19c485f985965c20c",
-}
+BOND_NETLIST_HASHES = MappingProxyType(
+    {
+        "control": "5e530be356d5e584c8ad994eada95b8cfae78031145881890bcfb6cf690ffe80",
+        "fault": "748d80edfe816b59c7b876f1d20a816f7de4652172e7e5d19c485f985965c20c",
+    }
+)
 
 
 @pytest.fixture

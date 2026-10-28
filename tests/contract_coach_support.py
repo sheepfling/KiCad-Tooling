@@ -62,7 +62,7 @@ def fake_executable(path: Path, source: str) -> Path:
     return path
 
 
-@dataclass
+@dataclass(slots=True)
 class ContractCoachWorkspace:
     """Disposable copy of the public template with synthetic native evidence."""
 

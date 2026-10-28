@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping
 from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
@@ -53,7 +54,7 @@ def _project(
     return root, project, config, {PROJECT_RELATIVE: digest(project)}
 
 
-def _scan(root: Path, config: ProjectConfig, source_hashes: dict[str, str]):
+def _scan(root: Path, config: ProjectConfig, source_hashes: Mapping[str, str]):
     return source_bound_pcb_drc_exclusion_candidates(root, config, source_hashes)
 
 

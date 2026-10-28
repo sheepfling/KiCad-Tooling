@@ -11,7 +11,7 @@ from .component_role_models import ComponentRoleBinding, ComponentRoleMap
 from .models import NetlistContract
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ComponentRoleResolution:
     """Exact mapped component identities and any stale project declarations."""
 

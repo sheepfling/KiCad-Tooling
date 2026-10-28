@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -28,23 +29,25 @@ pytestmark = [
     ),
 ]
 
-EXPECTED_CONNECTIVITY = {
-    "alternate-layer-via": "connected",
-    "alternate-layer-open": "open",
-    "zone-connected": "connected",
-    "unstitched-planes": "open",
-    "stitched-planes": "connected",
-    "zone-unanchored-island": "connected",
-    "zone-split": "open",
-    "zone-through-hole-split": "open",
-    "net-tie-connected": "connected",
-    "net-tie-dnp": "open",
-    "isolation-open": "connected",
-    "isolation-bridged": "connected",
-    "four-port-db9-return-control": "connected",
-    "four-port-db9-return-connector-island": "open",
-    "four-port-db9-return-single-open": "open",
-}
+EXPECTED_CONNECTIVITY = MappingProxyType(
+    {
+        "alternate-layer-via": "connected",
+        "alternate-layer-open": "open",
+        "zone-connected": "connected",
+        "unstitched-planes": "open",
+        "stitched-planes": "connected",
+        "zone-unanchored-island": "connected",
+        "zone-split": "open",
+        "zone-through-hole-split": "open",
+        "net-tie-connected": "connected",
+        "net-tie-dnp": "open",
+        "isolation-open": "connected",
+        "isolation-bridged": "connected",
+        "four-port-db9-return-control": "connected",
+        "four-port-db9-return-connector-island": "open",
+        "four-port-db9-return-single-open": "open",
+    }
+)
 
 
 @pytest.mark.parametrize("project,version", NATIVE_KICAD_PROJECTS, ids=lambda value: value)

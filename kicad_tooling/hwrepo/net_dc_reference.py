@@ -11,7 +11,7 @@ from .models import NetlistContract
 from .return_nets import is_return_like_net_name
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ConnectorCapacitorOnlyNet:
     """A net whose fitted assigned pins are all recognized connectors or capacitors."""
 

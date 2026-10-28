@@ -6,7 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
-from types import SimpleNamespace
+from types import MappingProxyType, SimpleNamespace
 
 import pytest
 
@@ -21,6 +21,7 @@ from kicad_tooling.ci_hosted_connector_return_peer_metadata_divergence import (
     verify_footprint_alias_peer_metadata_divergence,
 )
 from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     DesignLintPolicy,
@@ -37,10 +38,12 @@ from tests.synthetic_design_lint_project import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.interface_lint]
 
 FIXTURE_CASES = (FAULT_CASE, CONTROL_CASE)
-EXPECTED_SOURCE_HASHES = {
-    FAULT_CASE: "eb57ac1553fa4a6d76a297375ec840d8b6b01c401401877a470968e4c12a45d6",
-    CONTROL_CASE: "1377db1444bf8c1c15bbde73358fe81e36c11581869ea5f31f2082464e97f45e",
-}
+EXPECTED_SOURCE_HASHES = MappingProxyType(
+    {
+        FAULT_CASE: "eb57ac1553fa4a6d76a297375ec840d8b6b01c401401877a470968e4c12a45d6",
+        CONTROL_CASE: "1377db1444bf8c1c15bbde73358fe81e36c11581869ea5f31f2082464e97f45e",
+    }
+)
 
 
 def _observed_fixture(*, common_target: bool) -> NetlistContract:
@@ -154,7 +157,6 @@ def test_native_metadata_divergence_fault_and_control_are_repeatable(
     from kicad_tooling.ci_hosted_connector_return_context import (
         prepare_connector_return_fixture_context,
     )
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     policy = DesignLintPolicy(

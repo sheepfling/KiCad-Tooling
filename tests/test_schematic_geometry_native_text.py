@@ -19,6 +19,7 @@ from tests.design_lint_fixtures.schematic_geometry_native_support import (
     _segment_distance,
 )
 from tests.design_lint_fixtures.schematic_geometry_test_cases import NativeSchematicGeometryHelpers
+from tests.json_types import JsonObject
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -41,7 +42,7 @@ class NativeSchematicGeometryTextTests(NativeSchematicGeometryHelpers):
         assert (separated.coincident_text_anchors) == (())
         assert (len(coincident.coincident_text_anchors)) == (1)
 
-        def violations(report: dict[str, object]) -> list[dict[str, object]]:
+        def violations(report: JsonObject) -> list[JsonObject]:
             return [
                 item for sheet in report.get("sheets", []) for item in sheet.get("violations", [])
             ]
@@ -75,7 +76,7 @@ class NativeSchematicGeometryTextTests(NativeSchematicGeometryHelpers):
         assert (control_nets) is not None
         assert (ET.tostring(fault_nets)) == (ET.tostring(control_nets))
 
-        def violation_signatures(report: dict[str, object]) -> tuple[tuple[object, ...], ...]:
+        def violation_signatures(report: JsonObject) -> tuple[tuple[object, ...], ...]:
             violations = [
                 violation
                 for sheet in report.get("sheets", [])
@@ -158,7 +159,7 @@ class NativeSchematicGeometryTextTests(NativeSchematicGeometryHelpers):
                 ET.tostring(control_netlist.find("./nets"))
             )
 
-            def erc_signatures(report: dict[str, object]) -> tuple[tuple[object, ...], ...]:
+            def erc_signatures(report: JsonObject) -> tuple[tuple[object, ...], ...]:
                 violations = [
                     item
                     for sheet in report.get("sheets", [])
@@ -206,7 +207,7 @@ class NativeSchematicGeometryTextTests(NativeSchematicGeometryHelpers):
             ET.tostring(empty_netlist.find("./nets"))
         )
 
-        def erc_signatures(report: dict[str, object]) -> tuple[tuple[object, ...], ...]:
+        def erc_signatures(report: JsonObject) -> tuple[tuple[object, ...], ...]:
             return tuple(
                 sorted(
                     (
@@ -323,7 +324,7 @@ class NativeSchematicGeometryTextTests(NativeSchematicGeometryHelpers):
             )
             return components, assignments
 
-        def erc_signatures(report: dict[str, object]) -> tuple[tuple[object, ...], ...]:
+        def erc_signatures(report: JsonObject) -> tuple[tuple[object, ...], ...]:
             violations = [
                 item for sheet in report.get("sheets", []) for item in sheet.get("violations", [])
             ]

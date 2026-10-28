@@ -4,44 +4,21 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Literal, Protocol, cast
+from typing import Literal
+
+from kicad_tooling.hwrepo.serial_peer_models import (
+    SerialPeerAnalysis,
+)
 
 from .component_references import is_integrated_circuit_reference
 from .connector_identity import connector_candidate_references
 from .models import NetlistContract
 from .return_nets import is_return_like_net_name
-from .serial_peer_models import (
-    SerialDirectPeerRequirement,
-    SerialPeerAnalysis,
-    SerialShiftedPeerRequirement,
-)
 
 SerialPeerRosterState = Literal["not_configured", "pending", "not_applicable", "required"]
 
 
-class _PinNetView(Protocol):
-    pin: str
-
-
-class _EndpointView(Protocol):
-    tx: _PinNetView
-    rx: _PinNetView
-
-
-class _PeerWithEndpointView(Protocol):
-    endpoint: _EndpointView
-
-
-class _PeerLinkView(Protocol):
-    endpoint: _EndpointView
-    peer: object
-
-
-class _PeerAnalysisView(Protocol):
-    links: tuple[_PeerLinkView, ...]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SerialPeerRosterContext:
     """Authored serial-peer coverage state and its source binding for one lint run."""
 
@@ -51,7 +28,7 @@ class SerialPeerRosterContext:
     source_sha256: str | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnmappedSerialPeer:
     """Likely UART-like endpoint whose TX/RX pins are absent from the peer map."""
 
@@ -63,7 +40,7 @@ class UnmappedSerialPeer:
     discovery_basis: Literal["pin_function", "net_label"]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SerialNativePeerLink:
     """One directionally clear, directly shared native UART TX-to-RX net."""
 
@@ -221,11 +198,10 @@ def _mapped_endpoint_pin_pairs(analysis: SerialPeerAnalysis | None) -> set[tuple
     if analysis is None:
         return set()
     pairs: set[tuple[str, str]] = set()
-    analysis_view = cast(_PeerAnalysisView, analysis)
-    for link in analysis_view.links:
+    for link in analysis.links:
         endpoints = [link.endpoint]
-        if isinstance(link.peer, (SerialDirectPeerRequirement, SerialShiftedPeerRequirement)):
-            peer = cast(_PeerWithEndpointView, link.peer)
+        peer = link.peer
+        if peer.mode != "external":
             endpoints.append(peer.endpoint)
         pairs.update(
             (endpoint.tx.pin.casefold(), endpoint.rx.pin.casefold()) for endpoint in endpoints

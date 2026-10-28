@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.hwrepo.electrical import selected_config
 from tests.support import reference_root
 
 pytestmark = [
@@ -29,7 +30,6 @@ pytestmark = [
 class NativeConnectorInventoryFixtureTests(unittest.TestCase):
     def test_native_netlist_connector_inventory_candidates_and_test_point_control(self) -> None:
         from kicad_tooling.ci_hosted import HostedLog, connector_inventory_fixture_lane
-        from kicad_tooling.hwrepo.electrical import selected_config
 
         repository = Path(__file__).resolve().parents[1]
         acceptance = repository / "build/ci"

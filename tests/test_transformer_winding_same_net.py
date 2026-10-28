@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 
 import pytest
 
@@ -37,7 +38,7 @@ def transformer_netlist(
     open_pins: tuple[str, ...] = (),
     extra_pin: tuple[str, ...] = (),
     shared_winding_groups: bool = False,
-    symbols: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     symbols = symbols or {"T1": SYMBOL}
     components = {

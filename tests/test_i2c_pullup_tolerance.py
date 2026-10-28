@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import TypedDict
+
 import pytest
 
 from kicad_tooling.hwrepo.bus_heuristics import i2c_pullup_checks
@@ -21,6 +24,13 @@ SDA_MAXIMUM = "i2c-pullup/series-bus/sda/electrical-window/maximum-rise-resistan
 DIRECT_SDA_MINIMUM = "i2c-pullup/control/sda/electrical-window/minimum-sink-resistance"
 DIRECT_SDA_MAXIMUM = "i2c-pullup/control/sda/electrical-window/maximum-rise-resistance"
 TOLERANCE_BASIS = "Synthetic worst-case datasheet resistor tolerance"
+
+
+class ElectricalWindowUpdates(TypedDict, total=False):
+    """Fields varied by invalid I2C resistor-tolerance inputs."""
+
+    maximum_per_resistor_tolerance_percent: float
+    resistor_tolerance_basis: str
 
 
 def _checks(**requirements: float) -> dict[str, ElectricalCheck]:
@@ -203,7 +213,7 @@ def test_tolerance_bounds_a_parallel_direct_resistor_network() -> None:
     ],
 )
 def test_tolerance_can_exceed_either_side_of_the_physical_window(
-    window_requirements: dict[str, float],
+    window_requirements: Mapping[str, float],
     expected_minimum: str,
     expected_maximum: str,
 ) -> None:
@@ -243,7 +253,7 @@ def test_tolerance_adjusted_resistance_limits_are_inclusive() -> None:
     ],
 )
 def test_tolerance_requires_a_basis_and_a_bounded_percentage(
-    update: dict[str, object],
+    update: ElectricalWindowUpdates,
 ) -> None:
     window = i2c_pullup_window_requirement().buses[0].sda.electrical_window
     assert window is not None

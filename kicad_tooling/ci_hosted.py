@@ -88,12 +88,14 @@ from .ci_hosted_two_pin_components import two_pin_component_fixture_lane
 from .ci_hosted_usb_c_ports import usb_c_port_fixture_lane as _run_usb_c_port_fixture_lane
 from .ci_hosted_usb_data_paths import usb_data_path_fixture_lane
 from .ci_matrix import build_matrix
+from .git import git_output
 from .hwrepo.contracts import (
     read_kicad_erc_report,
     read_model,
     write_model,
 )
 from .hwrepo.hosted_preview import preview_lane
+from .hwrepo.layout import default_project_root
 from .hwrepo.models import (
     ForeignPcbReport,
     ProjectImportReport,
@@ -356,9 +358,7 @@ def native_lane(
         raise ValueError("Native lane requires a project and digest-pinned image")
     if sys.platform == "win32":
         raise ValueError("The Docker native lane requires a Unix runner")
-    checked = subprocess.run(
-        ("git", "rev-parse", "HEAD"), cwd=root, capture_output=True, text=True, check=True
-    ).stdout.strip()
+    checked = git_output(root, "rev-parse", "HEAD")
     (root / "build").mkdir(exist_ok=True)
     (root / "build/checked-commit.txt").write_text(checked + "\n", encoding="utf-8")
     log.run(
@@ -659,7 +659,7 @@ def gate_result(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     commands = parser.add_subparsers(dest="command", required=True)
     plan = commands.add_parser("plan", help="Plan PR, branch or manually focused acceptance")
     plan.add_argument(
@@ -772,10 +772,14 @@ def main() -> int:
                 args.release_result,
             )
         log.finish()
+    except HostedCommandError as exc:
+        log.event("lane", "FAIL", error=str(exc))
+        print(f"hosted-ci: {exc}", file=sys.stderr)
+        return exc.returncode
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as exc:
         log.event("lane", "FAIL", error=str(exc))
         print(f"hosted-ci: {exc}", file=sys.stderr)
-        return exc.returncode if isinstance(exc, HostedCommandError) else 1
+        return 1
     return 0
 
 

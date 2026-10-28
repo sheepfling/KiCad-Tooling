@@ -16,6 +16,7 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.pcb_drc_rule_coverage import compare_native_rules
 from kicad_tooling.hwrepo.pcb_drc_source_evidence import source_inventory_sha256
+from tests.json_types import JsonObject
 from tests.test_pcb_drc_coverage import FIXTURES, pair_map, rules_text
 
 
@@ -31,7 +32,7 @@ def _json_bytes(value: object) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
 
-def differential_pair_rule_report(*, fault: bool) -> dict[str, object]:
+def differential_pair_rule_report(*, fault: bool) -> JsonObject:
     """Serialize an exact native-rule coverage control and one mismatched bound."""
     requirement_map = pair_map()
     native_rules = rules_text()
@@ -124,7 +125,7 @@ def differential_pair_rule_report(*, fault: bool) -> dict[str, object]:
     }
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     return {
         "pcb_differential_pair_rule_fault": differential_pair_rule_report(fault=True),
         "pcb_differential_pair_rule_control": differential_pair_rule_report(fault=False),

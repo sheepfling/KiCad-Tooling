@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import PurePosixPath
 from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
@@ -20,7 +21,7 @@ class PcbReturnEndpointRequirement(StrictModel):
     def exact_pad_reference(self) -> PcbReturnEndpointRequirement:
         if self.pad.count(".") != 1:
             raise ValueError("PCB return endpoints must use an exact reference.pad number")
-        if self.net.startswith("/"):
+        if PurePosixPath(self.net).is_absolute():
             raise ValueError("Use the native net name without a leading slash")
         return self
 

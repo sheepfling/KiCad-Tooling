@@ -5,9 +5,9 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
-from typing import Any
 
 from kicad_tooling.ci_hosted import HostedLog
+from tests.json_types import JsonObject
 from tests.support import reference_root
 
 NATIVE_KICAD_PROJECTS = (
@@ -26,7 +26,7 @@ def copy_reference_checkout(destination: Path) -> Path:
     return destination
 
 
-def lane_event(log: HostedLog, stage: str, *, status: str | None = None) -> dict[str, Any]:
+def lane_event(log: HostedLog, stage: str, *, status: str | None = None) -> JsonObject:
     events = tuple(json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines())
     matches = tuple(
         item

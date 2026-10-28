@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from functools import cache
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -18,22 +20,24 @@ from tests.design_lint_test_markers import (
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
-_RULE_THEME_MARKERS = {
-    "components": "component_lint",
-    "connectors": "connector_lint",
-    "interfaces": "interface_lint",
-    "pcb": "pcb_lint",
-    "power": "power_lint",
-    "returns": "return_path_lint",
-    "schematic": "schematic_lint",
-}
+_RULE_THEME_MARKERS: Mapping[str, str] = MappingProxyType(
+    {
+        "components": "component_lint",
+        "connectors": "connector_lint",
+        "interfaces": "interface_lint",
+        "pcb": "pcb_lint",
+        "power": "power_lint",
+        "returns": "return_path_lint",
+        "schematic": "schematic_lint",
+    }
+)
 
 
 @cache
 def _module_pytest_markers(path: str) -> frozenset[str]:
     source_path = Path(__file__).resolve().parents[1] / path
     tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=path)
-    marker_assignments = []
+    marker_assignments: list[ast.expr] = []
     for statement in tree.body:
         if isinstance(statement, ast.Assign):
             targets = statement.targets
@@ -58,41 +62,51 @@ def _module_pytest_markers(path: str) -> frozenset[str]:
     )
 
 
-_DIGITAL_PEER_SUITES = {
-    "test_ci_hosted_digital_peer_spi.py": {"interface_lint"},
-    "test_ci_hosted_digital_peer_serial.py": {
-        "connector_lint",
-        "interface_lint",
-        "return_path_lint",
-    },
-    "test_ci_hosted_component_peer_power.py": {
-        "component_lint",
-        "interface_lint",
-        "power_lint",
-    },
-}
+def _is_session_scoped_fixture(decorator: ast.expr) -> bool:
+    if not isinstance(decorator, ast.Call) or ast.unparse(decorator.func) != "pytest.fixture":
+        return False
+    for keyword in decorator.keywords:
+        value: ast.expr = keyword.value
+        if keyword.arg == "scope" and isinstance(value, ast.Constant) and value.value == "session":
+            return True
+    return False
 
-_RETURN_PATH_PEER_REFERENCE_SUITES = {
-    "tests/test_can_peer_reference_review.py",
-    "tests/test_connector_split_return_peers.py",
-    "tests/test_design_lint_mcp_parity_can_reference.py",
-    "tests/test_design_lint_mcp_parity_rs485_reference.py",
-    "tests/test_design_lint_mcp_parity_spi_reference.py",
-    "tests/test_i2c_peer_reference_native_fixture_lane.py",
-    "tests/test_i2c_peer_reference_review.py",
-    "tests/test_rs485_peer_reference_native_fixture_lane.py",
-    "tests/test_rs485_peer_reference_review.py",
-    "tests/test_spi_peer_reference_native_fixture_lane.py",
-    "tests/test_spi_peer_reference_review.py",
-    "tests/test_usb_data_path_reference_bonds.py",
-    "tests/test_usb_inline_bonded_reference_paths.py",
-    "tests/test_usb_isolator_peer_reference.py",
-    "tests/test_usb_peer_reference_superspeed.py",
-    "tests/test_usb_superspeed_peer_reference_native_fixture_lane.py",
-    "tests/test_serial_peer_reference_multichannel.py",
-    "tests/test_design_lint_serial_parity.py",
-    "tests/test_design_lint_mcp_parity_usb_reference.py",
-}
+
+_DIGITAL_PEER_SUITES: Mapping[str, frozenset[str]] = MappingProxyType(
+    {
+        "test_ci_hosted_digital_peer_spi.py": frozenset({"interface_lint"}),
+        "test_ci_hosted_digital_peer_serial.py": frozenset(
+            {"connector_lint", "interface_lint", "return_path_lint"}
+        ),
+        "test_ci_hosted_component_peer_power.py": frozenset(
+            {"component_lint", "interface_lint", "power_lint"}
+        ),
+    }
+)
+
+_RETURN_PATH_PEER_REFERENCE_SUITES = frozenset(
+    {
+        "tests/test_can_peer_reference_review.py",
+        "tests/test_connector_split_return_peers.py",
+        "tests/test_design_lint_mcp_parity_can_reference.py",
+        "tests/test_design_lint_mcp_parity_rs485_reference.py",
+        "tests/test_design_lint_mcp_parity_spi_reference.py",
+        "tests/test_i2c_peer_reference_native_fixture_lane.py",
+        "tests/test_i2c_peer_reference_review.py",
+        "tests/test_rs485_peer_reference_native_fixture_lane.py",
+        "tests/test_rs485_peer_reference_review.py",
+        "tests/test_spi_peer_reference_native_fixture_lane.py",
+        "tests/test_spi_peer_reference_review.py",
+        "tests/test_usb_data_path_reference_bonds.py",
+        "tests/test_usb_inline_bonded_reference_paths.py",
+        "tests/test_usb_isolator_peer_reference.py",
+        "tests/test_usb_peer_reference_superspeed.py",
+        "tests/test_usb_superspeed_peer_reference_native_fixture_lane.py",
+        "tests/test_serial_peer_reference_multichannel.py",
+        "tests/test_design_lint_serial_parity.py",
+        "tests/test_design_lint_mcp_parity_usb_reference.py",
+    }
+)
 
 
 @pytest.mark.rule_gate_integrity
@@ -252,17 +266,8 @@ def test_native_digital_peer_suites_are_pytest_native_and_theme_scoped() -> None
         for node in support_tree.body
         if isinstance(node, ast.FunctionDef) and node.name == "native_digital_peer_results"
     )
-    assert any(
-        isinstance(decorator, ast.Call)
-        and ast.unparse(decorator.func) == "pytest.fixture"
-        and any(
-            keyword.arg == "scope"
-            and isinstance(keyword.value, ast.Constant)
-            and keyword.value.value == "session"
-            for keyword in decorator.keywords
-        )
-        for decorator in native_fixture.decorator_list
-    )
+    fixture_decorators: list[ast.expr] = native_fixture.decorator_list
+    assert any(_is_session_scoped_fixture(decorator) for decorator in fixture_decorators)
 
 
 def test_focus_lint_suites_are_pytest_native_and_theme_scoped() -> None:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 
 import pytest
 
@@ -19,7 +20,7 @@ pytestmark = [
 RULE_ID = "net.numbered_returns"
 
 
-def _report(nets: dict[str, tuple[str, ...]]) -> DesignLintReport:
+def _report(nets: Mapping[str, tuple[str, ...]]) -> DesignLintReport:
     pin_functions = {pin: "GND" for pins in nets.values() for pin in pins}
     observed = NetlistContract(components={}, nets=nets, pin_functions=pin_functions)
     digest = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()

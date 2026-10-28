@@ -2,67 +2,44 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+import os
 import shutil
 import sys
 import tempfile
-from dataclasses import dataclass
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Protocol
 
+from .ci_hosted_digital_peer_models import (
+    COMPONENT_PEER_FIXTURE_CASES,
+    FIXTURE_CASES,
+    SERIAL_CONNECTOR_REFERENCE_CASES,
+    SERIAL_LABEL_REFERENCE_CASES,
+    SERIAL_PEER_FIXTURE_CASES,
+    SPI_PEER_FIXTURE_CASES,
+    DigitalPeerFixtureCase,
+    DigitalPeerFixtureContext,
+    DigitalPeerFixtureEvidence,
+    DigitalPeerFixtureSource,
+    DigitalPeerLog,
+    NativeErcRunEvidence,
+    NativeNetlistRunEvidence,
+    NativeRunPair,
+)
+from .ci_hosted_native_fixture_models import NativeRun
+from .ci_hosted_support import tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
-from .hwrepo.models import NetlistContract, ProjectConfig
-
-
-class DigitalPeerLog(Protocol):
-    directory: Path
-
-    def event(self, stage: str, status: str, **details: str | float) -> None: ...
-
-
-@dataclass(slots=True)
-class DigitalPeerFixtureContext:
-    root: Path
-    project: str
-    config: ProjectConfig
-    pinned: str
-    log: DigitalPeerLog
-    scratch: Path
-    fixture_root: Path
-    source_hash: str
-    combo_spi_source_hash: str
-    peer_fixtures: dict[str, Path]
-    peer_source_hashes: dict[str, str]
-    serial_peer_fixtures: dict[str, Path]
-    serial_peer_source_hashes: dict[str, str]
-    serial_connector_reference_fixtures: dict[str, Path]
-    serial_connector_reference_source_hashes: dict[str, str]
-    serial_label_reference_fixtures: dict[str, Path]
-    serial_label_reference_source_hashes: dict[str, str]
-    component_peer_fixtures: dict[str, Path]
-    component_peer_source_hashes: dict[str, str]
-    contracts: dict[str, dict[str, NetlistContract]]
-    hashes: dict[str, dict[str, str]]
-    normalized_hashes: dict[str, dict[str, str]]
-    normalized_erc_hashes: dict[str, dict[str, str]]
-    erc_report_versions: dict[str, dict[str, str]]
-    erc_warning_types: dict[str, dict[str, tuple[str, ...]]]
-    erc_error_types: dict[str, dict[str, tuple[str, ...]]]
-    observed: NetlistContract
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .validate import read_netlist
 
 
 def prepare_digital_peer_fixture_context(
     root: Path, project: str, image: str, log: DigitalPeerLog
 ) -> DigitalPeerFixtureContext:
     """Prepare synthetic peer fixtures and repeatable pinned native exports."""
-    import hashlib
-    import json
-    import os
-
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .validate import read_netlist
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image:
@@ -70,7 +47,7 @@ def prepare_digital_peer_fixture_context(
     if config.kicad_version not in {"10.0.0", "10.0.5"}:
         raise ValueError(f"Digital-peer fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
-    fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint"
     fixture = fixture_root / "spi-participant-native/multi-device.kicad_sch"
     source_hash = digest(fixture)
     combo_spi_fixture = fixture_root / "spi-composite-participant-native/combo-device.kicad_sch"
@@ -88,21 +65,23 @@ def prepare_digital_peer_fixture_context(
     shutil.copyfile(combo_spi_fixture, combo_spi_source)
     if digest(combo_spi_source) != combo_spi_source_hash:
         raise ValueError("Synthetic SPI combo-interface fixture changed while preparing input")
-    peer_fixtures = {
+    peer_fixtures: dict[DigitalPeerFixtureCase, Path] = {
         case: fixture_root / f"spi-peer-voltage-native/{case}.kicad_sch"
-        for case in ("peer-control", "peer-fault", "peer-translator-control")
+        for case in SPI_PEER_FIXTURE_CASES
     }
-    peer_source_hashes = {case: digest(path) for (case, path) in peer_fixtures.items()}
+    peer_source_hashes: dict[DigitalPeerFixtureCase, str] = {
+        case: digest(path) for (case, path) in peer_fixtures.items()
+    }
     for case, path in peer_fixtures.items():
         copied = inputs / f"{case}.kicad_sch"
         shutil.copyfile(path, copied)
         if digest(copied) != peer_source_hashes[case]:
             raise ValueError(f"Synthetic SPI {case} fixture changed while preparing native input")
-    serial_peer_fixtures = {
+    serial_peer_fixtures: dict[DigitalPeerFixtureCase, Path] = {
         case: fixture_root / f"serial-peer-voltage-native/{case}.kicad_sch"
-        for case in ("serial-control", "serial-fault", "serial-reference-fault")
+        for case in SERIAL_PEER_FIXTURE_CASES
     }
-    serial_peer_source_hashes = {
+    serial_peer_source_hashes: dict[DigitalPeerFixtureCase, str] = {
         case: digest(path) for (case, path) in serial_peer_fixtures.items()
     }
     for case, path in serial_peer_fixtures.items():
@@ -110,15 +89,11 @@ def prepare_digital_peer_fixture_context(
         shutil.copyfile(path, copied)
         if digest(copied) != serial_peer_source_hashes[case]:
             raise ValueError(f"Synthetic UART {case} fixture changed while preparing native input")
-    serial_connector_reference_fixtures = {
+    serial_connector_reference_fixtures: dict[DigitalPeerFixtureCase, Path] = {
         case: fixture_root / f"serial-peer-connector-reference-native/{case}.kicad_sch"
-        for case in (
-            "serial-connector-control",
-            "serial-connector-fault",
-            "serial-optical-isolation-control",
-        )
+        for case in SERIAL_CONNECTOR_REFERENCE_CASES
     }
-    serial_connector_reference_source_hashes = {
+    serial_connector_reference_source_hashes: dict[DigitalPeerFixtureCase, str] = {
         case: digest(path) for (case, path) in serial_connector_reference_fixtures.items()
     }
     for case, path in serial_connector_reference_fixtures.items():
@@ -128,11 +103,11 @@ def prepare_digital_peer_fixture_context(
             raise ValueError(
                 f"Synthetic UART connector {case} fixture changed while preparing native input"
             )
-    serial_label_reference_fixtures = {
+    serial_label_reference_fixtures: dict[DigitalPeerFixtureCase, Path] = {
         case: fixture_root / f"serial-peer-connector-reference-native/{case}.kicad_sch"
-        for case in ("serial-label-control", "serial-label-fault")
+        for case in SERIAL_LABEL_REFERENCE_CASES
     }
-    serial_label_reference_source_hashes = {
+    serial_label_reference_source_hashes: dict[DigitalPeerFixtureCase, str] = {
         case: digest(path) for (case, path) in serial_label_reference_fixtures.items()
     }
     for case, path in serial_label_reference_fixtures.items():
@@ -142,11 +117,11 @@ def prepare_digital_peer_fixture_context(
             raise ValueError(
                 f"Synthetic UART label {case} fixture changed while preparing native input"
             )
-    component_peer_fixtures = {
-        f"component-peer-{case}": fixture_root / f"component-peer-power-native/{case}.kicad_sch"
-        for case in ("control", "fault")
+    component_peer_fixtures: dict[DigitalPeerFixtureCase, Path] = {
+        "component-peer-control": fixture_root / "component-peer-power-native/control.kicad_sch",
+        "component-peer-fault": fixture_root / "component-peer-power-native/fault.kicad_sch",
     }
-    component_peer_source_hashes = {
+    component_peer_source_hashes: dict[DigitalPeerFixtureCase, str] = {
         case: digest(path) for (case, path) in component_peer_fixtures.items()
     }
     for case, path in component_peer_fixtures.items():
@@ -161,7 +136,8 @@ def prepare_digital_peer_fixture_context(
     user: tuple[str, ...] = ()
     if sys.platform != "win32":
         user = ("--user", f"{os.getuid()}:{os.getgid()}")
-    script = f'mkdir -p "$HOME"\nactual="$(kicad-cli version)"\nprintf "kicad_version=%s\\n" "$actual"\ntest "$actual" = "{config.kicad_version}"\nfor case in multi-device combo-device peer-control peer-fault peer-translator-control serial-control serial-fault serial-reference-fault serial-connector-control serial-connector-fault serial-optical-isolation-control serial-label-control serial-label-fault component-peer-control component-peer-fault; do\n  for run in first repeat; do\n    kicad-cli sch export netlist --format kicadxml       --output "/output/${{case}}.${{run}}.netlist.xml"       "/fixtures/${{case}}.kicad_sch"\n    case "$case" in component-peer-*)\n      kicad-cli sch erc --format json --severity-all         --output "/output/${{case}}.${{run}}.erc.json"         "/fixtures/${{case}}.kicad_sch" ;;\n    esac\n  done\ndone\n'
+    fixture_case_list = " ".join(FIXTURE_CASES)
+    script = f'mkdir -p "$HOME"\nactual="$(kicad-cli version)"\nprintf "kicad_version=%s\\n" "$actual"\ntest "$actual" = "{config.kicad_version}"\nfor case in {fixture_case_list}; do\n  for run in first repeat; do\n    kicad-cli sch export netlist --format kicadxml       --output "/output/${{case}}.${{run}}.netlist.xml"       "/fixtures/${{case}}.kicad_sch"\n    case "$case" in component-peer-*)\n      kicad-cli sch erc --format json --severity-all         --output "/output/${{case}}.${{run}}.erc.json"         "/fixtures/${{case}}.kicad_sch" ;;\n    esac\n  done\ndone\n'
     argv = (
         "docker",
         "run",
@@ -268,89 +244,117 @@ def prepare_digital_peer_fixture_context(
         )
     ):
         raise ValueError("Synthetic SPI fixture source changed during native export")
-    contracts: dict[str, dict[str, NetlistContract]] = {}
-    hashes: dict[str, dict[str, str]] = {}
-    normalized_hashes: dict[str, dict[str, str]] = {}
-    normalized_erc_hashes: dict[str, dict[str, str]] = {}
-    erc_report_versions: dict[str, dict[str, str]] = {}
-    erc_warning_types: dict[str, dict[str, tuple[str, ...]]] = {}
-    erc_error_types: dict[str, dict[str, tuple[str, ...]]] = {}
-    fixture_cases = (
-        "multi-device",
-        "combo-device",
-        *peer_fixtures,
-        *serial_peer_fixtures,
-        *serial_connector_reference_fixtures,
-        *serial_label_reference_fixtures,
-        *component_peer_fixtures,
+
+    def fixture_sources(
+        paths: Mapping[DigitalPeerFixtureCase, Path],
+        source_hashes: Mapping[DigitalPeerFixtureCase, str],
+    ) -> dict[DigitalPeerFixtureCase, DigitalPeerFixtureSource]:
+        return {
+            case: DigitalPeerFixtureSource(path=path, sha256=source_hashes[case])
+            for case, path in paths.items()
+        }
+
+    sources: dict[DigitalPeerFixtureCase, DigitalPeerFixtureSource] = {
+        "multi-device": DigitalPeerFixtureSource(path=fixture, sha256=source_hash),
+        "combo-device": DigitalPeerFixtureSource(
+            path=combo_spi_fixture, sha256=combo_spi_source_hash
+        ),
+    }
+    sources.update(fixture_sources(peer_fixtures, peer_source_hashes))
+    sources.update(fixture_sources(serial_peer_fixtures, serial_peer_source_hashes))
+    sources.update(
+        fixture_sources(
+            serial_connector_reference_fixtures, serial_connector_reference_source_hashes
+        )
     )
-    for fixture_case in fixture_cases:
-        contracts[fixture_case] = {}
-        hashes[fixture_case] = {}
-        normalized_hashes[fixture_case] = {}
-        for run in ("first", "repeat"):
-            path = output / f"{fixture_case}.{run}.netlist.xml"
-            if not path.is_file():
-                raise ValueError(f"Native SPI fixture omitted {path.name}")
-            hashes[fixture_case][run] = digest(path)
-            observed = read_netlist(path)
-            contracts[fixture_case][run] = observed
-            normalized = json.dumps(
-                observed.model_dump(mode="json"),
-                sort_keys=True,
-                separators=(",", ":"),
-                ensure_ascii=False,
-            ).encode("utf-8")
-            normalized_hashes[fixture_case][run] = hashlib.sha256(normalized).hexdigest()
-    for case in component_peer_fixtures:
-        normalized_erc_hashes[case] = {}
-        erc_report_versions[case] = {}
-        erc_warning_types[case] = {}
-        erc_error_types[case] = {}
-        for run in ("first", "repeat"):
-            erc_path = output / f"{case}.{run}.erc.json"
-            if not erc_path.is_file():
-                raise ValueError(f"Native component peer fixture omitted {erc_path.name}")
-            erc_report = read_kicad_erc_report(erc_path)
-            if erc_report.kicad_version != config.kicad_version:
-                raise ValueError(
-                    f"Native component peer {case} ERC report version differs from KiCad {config.kicad_version}"
-                )
-            erc_report_versions[case][run] = erc_report.kicad_version
-            erc_rows = [
-                (
-                    item.type,
-                    item.severity,
-                    item.description,
-                    tuple(
-                        sorted(
-                            [(detail.description, detail.x, detail.y) for detail in item.items],
-                            key=lambda detail: json.dumps(
-                                detail, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-                            ),
-                        )
-                    ),
-                )
-                for item in erc_report.violations
-            ]
-            erc_rows.sort(
-                key=lambda item: json.dumps(
-                    item, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-                )
+    sources.update(
+        fixture_sources(serial_label_reference_fixtures, serial_label_reference_source_hashes)
+    )
+    sources.update(fixture_sources(component_peer_fixtures, component_peer_source_hashes))
+
+    def load_netlist_run(case: DigitalPeerFixtureCase, run: NativeRun) -> NativeNetlistRunEvidence:
+        path = output / f"{case}.{run}.netlist.xml"
+        if not path.is_file():
+            raise ValueError(f"Native SPI fixture omitted {path.name}")
+        observed = read_netlist(path)
+        normalized = json.dumps(
+            observed.model_dump(mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        ).encode("utf-8")
+        return NativeNetlistRunEvidence(
+            contract=observed,
+            netlist_sha256=digest(path),
+            normalized_sha256=hashlib.sha256(normalized).hexdigest(),
+        )
+
+    def load_erc_run(case: DigitalPeerFixtureCase, run: NativeRun) -> NativeErcRunEvidence:
+        erc_path = output / f"{case}.{run}.erc.json"
+        if not erc_path.is_file():
+            raise ValueError(f"Native component peer fixture omitted {erc_path.name}")
+        erc_report = read_kicad_erc_report(erc_path)
+        if erc_report.kicad_version != config.kicad_version:
+            raise ValueError(
+                f"Native component peer {case} ERC report version differs from KiCad {config.kicad_version}"
             )
-            normalized_erc = json.dumps(
-                {"kicad_version": erc_report.kicad_version, "violations": erc_rows},
-                sort_keys=True,
-                separators=(",", ":"),
-                ensure_ascii=False,
-            ).encode("utf-8")
-            normalized_erc_hashes[case][run] = hashlib.sha256(normalized_erc).hexdigest()
-            erc_warning_types[case][run] = tuple(
+        erc_rows = [
+            (
+                item.type,
+                item.severity,
+                item.description,
+                tuple(
+                    sorted(
+                        [(detail.description, detail.x, detail.y) for detail in item.items],
+                        key=lambda detail: json.dumps(
+                            detail, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+                        ),
+                    )
+                ),
+            )
+            for item in erc_report.violations
+        ]
+        erc_rows.sort(
+            key=lambda item: json.dumps(
+                item, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+            )
+        )
+        normalized_erc = json.dumps(
+            {"kicad_version": erc_report.kicad_version, "violations": erc_rows},
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        ).encode("utf-8")
+        return NativeErcRunEvidence(
+            kicad_version=erc_report.kicad_version,
+            normalized_sha256=hashlib.sha256(normalized_erc).hexdigest(),
+            warning_types=tuple(
                 sorted(item.type for item in erc_report.violations if item.severity == "warning")
-            )
-            erc_error_types[case][run] = tuple(
+            ),
+            error_types=tuple(
                 sorted(item.type for item in erc_report.violations if item.severity == "error")
+            ),
+        )
+
+    fixtures: dict[DigitalPeerFixtureCase, DigitalPeerFixtureEvidence] = {}
+    for case in FIXTURE_CASES:
+        component_erc = (
+            NativeRunPair(
+                first=load_erc_run(case, "first"),
+                repeat=load_erc_run(case, "repeat"),
             )
+            if case in COMPONENT_PEER_FIXTURE_CASES
+            else None
+        )
+        fixtures[case] = DigitalPeerFixtureEvidence(
+            case=case,
+            source=sources[case],
+            netlists=NativeRunPair(
+                first=load_netlist_run(case, "first"),
+                repeat=load_netlist_run(case, "repeat"),
+            ),
+            component_erc=component_erc,
+        )
     return DigitalPeerFixtureContext(
         root=root,
         project=project,
@@ -359,24 +363,5 @@ def prepare_digital_peer_fixture_context(
         log=log,
         scratch=scratch,
         fixture_root=fixture_root,
-        source_hash=source_hash,
-        combo_spi_source_hash=combo_spi_source_hash,
-        peer_fixtures=peer_fixtures,
-        peer_source_hashes=peer_source_hashes,
-        serial_peer_fixtures=serial_peer_fixtures,
-        serial_peer_source_hashes=serial_peer_source_hashes,
-        serial_connector_reference_fixtures=serial_connector_reference_fixtures,
-        serial_connector_reference_source_hashes=serial_connector_reference_source_hashes,
-        serial_label_reference_fixtures=serial_label_reference_fixtures,
-        serial_label_reference_source_hashes=serial_label_reference_source_hashes,
-        component_peer_fixtures=component_peer_fixtures,
-        component_peer_source_hashes=component_peer_source_hashes,
-        contracts=contracts,
-        hashes=hashes,
-        normalized_hashes=normalized_hashes,
-        normalized_erc_hashes=normalized_erc_hashes,
-        erc_report_versions=erc_report_versions,
-        erc_warning_types=erc_warning_types,
-        erc_error_types=erc_error_types,
-        observed=contracts["multi-device"]["first"],
+        fixtures=fixtures,
     )

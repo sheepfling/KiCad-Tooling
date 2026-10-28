@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Protocol, TypeVar
 
-from .models import ComponentContract, NetlistContract
+from .models import NetlistContract
 
 _Value = TypeVar("_Value")
 
@@ -36,7 +36,7 @@ class _ComponentPinMap(Protocol):
     def pins(self) -> tuple[_PinRequirement, ...]: ...
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UsbDataPathComponentPinCheck:
     component_issues: tuple[str, ...]
     pin_issues: tuple[tuple[str, str], ...]
@@ -56,7 +56,7 @@ def check_usb_component_pin_map(
     """Match exact identity, native pin inventory, and every pin disposition."""
     component_issues: list[str] = []
     component = _lookup(observed.components, requirement.reference)
-    if not isinstance(component, ComponentContract):
+    if component is None:
         component_issues.append(
             f"{requirement.reference} is absent or ambiguous in the native netlist"
         )

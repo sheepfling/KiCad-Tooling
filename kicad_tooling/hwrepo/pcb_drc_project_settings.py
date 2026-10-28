@@ -173,7 +173,7 @@ def ignored_core_drc_check_ids(document: str) -> tuple[str, ...]:
     )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PcbDrcExclusion:
     """One serialized KiCad PCB DRC exclusion and its optional review comment."""
 
@@ -199,12 +199,16 @@ def pcb_drc_exclusions(document: str) -> tuple[PcbDrcExclusion, ...]:
     exclusions: list[PcbDrcExclusion] = []
     seen_markers: set[str] = set()
     for record in records:
-        if isinstance(record, str):
-            marker, comment = record, ""
+        exclusion_record: str | tuple[str, ...] = record
+        if isinstance(exclusion_record, str):
+            marker, comment = exclusion_record, ""
         else:
-            if not record:
+            if not exclusion_record:
                 raise ValueError("PCB DRC exclusion marker/comment pair is empty")
-            marker, comment = record[0], record[1] if len(record) > 1 else ""
+            marker, comment = (
+                exclusion_record[0],
+                exclusion_record[1] if len(exclusion_record) > 1 else "",
+            )
         if not marker or not marker.partition("|")[0]:
             raise ValueError("PCB DRC exclusion marker is empty or missing its rule key")
         if marker in seen_markers:

@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from pathlib import Path
 
 from .hwrepo.models import ImpactPlan
 from .impact import build_plan
 
 
-def write_action_outputs(values: dict[str, str]) -> None:
+def write_action_outputs(values: Mapping[str, str]) -> None:
     """Append single-line values to the GitHub Actions output file when present."""
     destination = os.environ.get("GITHUB_OUTPUT")
     if destination is None:

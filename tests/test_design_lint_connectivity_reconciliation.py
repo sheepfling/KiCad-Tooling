@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import rule_catalog
@@ -40,8 +42,8 @@ def _netlist(*, split_return: bool = False, return_net_name: str = "GND") -> Net
 
 def _netlist_with_pin_metadata(
     *,
-    functions: dict[str, str] | None = None,
-    electrical_types: dict[str, str] | None = None,
+    functions: Mapping[str, str] | None = None,
+    electrical_types: Mapping[str, str] | None = None,
 ) -> NetlistContract:
     return _netlist().model_copy(
         update={

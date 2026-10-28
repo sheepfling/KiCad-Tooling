@@ -9,24 +9,20 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .validate import read_netlist
 
 
 def can_line_polarity_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
     """Check crossed CANH/CANL labels against a matching control and repeated exports."""
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-    from .validate import read_netlist
-
     rule_id = "bus.can_line_polarity_label_mismatch"
     root = root.resolve()
     config = selected_config(root, project)
@@ -35,7 +31,7 @@ def can_line_polarity_fixture_lane(root: Path, *, project: str, image: str, log:
     if config.kicad_version not in {"10.0.0", "10.0.5"}:
         raise ValueError(f"CAN line-polarity fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
-    repository = Path(__file__).resolve().parents[1]
+    repository = tooling_checkout_root()
     sources = {
         "control": repository
         / "tests/fixtures/design_lint/can-split-midpoint-native/control.kicad_sch",

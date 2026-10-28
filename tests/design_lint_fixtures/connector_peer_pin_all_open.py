@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     DesignLintPolicy,
@@ -53,7 +55,7 @@ def generic_open_peer_netlist(
 def generic_open_part_id_peer_netlist(
     *,
     references: tuple[str, ...] = ("J1", "J2", "J3", "J4"),
-    symbols: dict[str, str] | None = None,
+    symbols: Mapping[str, str] | None = None,
     target_pin_type: str = "passive",
 ) -> NetlistContract:
     """Create cross-symbol peers with one guarded native PART_ID."""

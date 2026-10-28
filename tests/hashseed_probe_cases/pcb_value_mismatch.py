@@ -9,12 +9,13 @@ from tests.design_lint_fixtures.pcb_component_inventory import (
     snapshot,
     source_bound_component_inventory,
 )
+from tests.json_types import JsonObject
 
 RULE_ID = "pcb.schematic_pcb_value_mismatch"
 FOOTPRINT = "Synthetic:Probe_Module"
 
 
-def value_report(*, schematic_value: str, board_value: str) -> dict[str, object]:
+def value_report(*, schematic_value: str, board_value: str) -> JsonObject:
     """Serialize one source-side value mismatch or a matching fitted control."""
     source_netlist = netlist(
         components={"R1": FOOTPRINT},
@@ -48,7 +49,7 @@ def value_report(*, schematic_value: str, board_value: str) -> dict[str, object]
     }
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     """Return a board-only mismatch, schematic-only mismatch, and control."""
     return {
         "pcb_value_board_only_mismatch": value_report(

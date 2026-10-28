@@ -18,6 +18,7 @@ from kicad_tooling.ci_hosted_component_repeated_signal_pins import (
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import (
     CommandEvidence,
     DesignLintIgnore,
@@ -303,7 +304,6 @@ def test_native_repeated_signal_pin_fault_and_control_are_focused_and_repeatable
     from kicad_tooling.ci_hosted_component_repeated_signal_pins_lane import (
         component_repeated_signal_pin_fixture_lane,
     )
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(

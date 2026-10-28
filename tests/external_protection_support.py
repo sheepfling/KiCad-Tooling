@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 from typing import Literal
 
 from kicad_tooling.hwrepo.analysis_state_models import AnalysisNotApplicable
@@ -102,7 +103,7 @@ def usb_c_protection_requirement() -> UsbCAnalysis:
 def protection_map(
     *,
     disposition: Literal["required", "not_required"] = "required",
-    unmapped_pin_reasons: dict[str, str] | None = None,
+    unmapped_pin_reasons: Mapping[str, str] | None = None,
 ) -> ExternalProtectionMap:
     channels = (
         (

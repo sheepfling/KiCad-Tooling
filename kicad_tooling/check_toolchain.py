@@ -11,6 +11,7 @@ from pathlib import Path
 
 from .hwrepo.contracts import read_model, repo_path
 from .hwrepo.discovery import settings
+from .hwrepo.layout import default_project_root
 from .hwrepo.models import ToolchainAssessment, ToolchainRecord, ToolchainsCatalog
 
 MACOS_KICAD_CLI = Path("/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli")
@@ -97,7 +98,7 @@ def observed_version(cli: str) -> str | None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     parser.add_argument(
         "--toolchain", help="Catalogued ID; may be omitted only for a single toolchain"
     )

@@ -9,6 +9,9 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
+
 RULE_ID = "bus.usb_data_polarity_label_mismatch"
 
 pytestmark = [
@@ -33,9 +36,7 @@ pytestmark = [
 def test_native_usb_data_polarity_fault_and_control_repeat(
     hosted_reference_root: Path, project: str, version: str
 ) -> None:
-    from kicad_tooling.ci_hosted_support import HostedLog
     from kicad_tooling.ci_hosted_usb_data_polarity import usb_data_polarity_fixture_lane
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     expected_images = {
         "controller": "ghcr.io/kicad/kicad:10.0.0@sha256:"

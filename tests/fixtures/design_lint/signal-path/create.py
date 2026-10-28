@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
 import pcbnew
@@ -26,7 +27,7 @@ def _add_footprint(
     reference: str,
     x_mm: float,
     y_mm: float,
-    nets: dict[str, pcbnew.NETINFO_ITEM],
+    nets: Mapping[str, pcbnew.NETINFO_ITEM],
 ) -> dict[str, pcbnew.PAD]:
     footprint = pcbnew.FootprintLoad(str(_FOOTPRINT_LIBRARY), _FOOTPRINT_NAME)
     if footprint is None:

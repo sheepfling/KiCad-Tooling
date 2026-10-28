@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from mcp import Client
-from mcp.types import CallToolResult, TextContent
+from mcp.types import CallToolResult
 
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.discovery import load_config
@@ -30,6 +30,7 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.validate import hashes
 from tests import test_parts_workflow as parts_fixture
+from tests.mcp_test_support import text_content
 from tests.support import reference_root
 
 
@@ -127,7 +128,7 @@ class McpPartsTests(unittest.IsolatedAsyncioTestCase):
 
     @staticmethod
     def text(result: CallToolResult) -> str:
-        return "\n".join(item.text for item in result.content if isinstance(item, TextContent))
+        return text_content(result)
 
     def source_snapshot(self) -> dict[str, str]:
         return {

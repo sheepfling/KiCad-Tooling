@@ -16,6 +16,7 @@ from kicad_tooling.hwrepo.schematic_geometry import (
     scan_schematic_geometry_tree,
     scan_wire_ends_on_pin_lines,
 )
+from tests.json_types import JsonObject
 
 
 class SchematicGeometryHelpers:
@@ -46,7 +47,7 @@ class NativeSchematicGeometryHelpers(SchematicGeometryHelpers):
         source_name: str | None = None,
         related_sources: tuple[Path, ...] = (),
         scan_hierarchy: bool = False,
-    ) -> tuple[object, dict[str, object], dict[str, object]]:
+    ) -> tuple[object, JsonObject, JsonObject]:
         with tempfile.TemporaryDirectory(prefix="schematic-geometry-native-") as directory:
             root = Path(directory)
             if isinstance(fixture, Path):

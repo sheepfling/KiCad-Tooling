@@ -6,11 +6,12 @@ import argparse
 from pathlib import Path
 
 from .hwrepo.documentation import check
+from .hwrepo.layout import default_project_root
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     args = parser.parse_args()
     report = check(args.root)
     print(report.model_dump_json(indent=2))

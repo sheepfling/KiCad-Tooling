@@ -9,7 +9,7 @@ from .models import NetlistContract
 from .power_path_models import PowerPathMap, PowerPathRequirement
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PowerPathMismatch:
     path_id: str
     basis: str

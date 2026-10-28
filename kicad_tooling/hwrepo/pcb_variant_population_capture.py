@@ -11,7 +11,8 @@ import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import cast
+
+from pydantic import JsonValue
 
 from ..validate import hashes, read_netlist
 from .contract_coach import pinned_image, run_command
@@ -25,7 +26,7 @@ from .pcb_component_inventory_models import (
 from .pcb_component_population import PcbVariantPopulationSource
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PcbVariantPopulationCapture:
     """Variant comparison inputs and the retained source/output evidence state."""
 
@@ -128,11 +129,11 @@ def capture_variant_population(
             probe_paths[name] = (
                 path.relative_to(root).as_posix() if name.endswith("_path") else digest(path)
             )
-        raw_probe_result: object = json.loads(presence_path.read_text(encoding="utf-8"))
+        raw_probe_result: JsonValue = json.loads(presence_path.read_text(encoding="utf-8"))
         expected_variant_rows = [{"name": name, "present_on_board": True} for name in variants]
         if not isinstance(raw_probe_result, dict):
             raise TypeError("Native PCB variant probe returned malformed or unbound evidence")
-        probe_result = cast(dict[str, object], raw_probe_result)
+        probe_result: dict[str, JsonValue] = raw_probe_result
         variant_rows_value = probe_result.get("variants")
         if (
             set(probe_result) != {"schema_version", "board_sha256", "project_sha256", "variants"}
@@ -142,14 +143,15 @@ def capture_variant_population(
             or not isinstance(variant_rows_value, list)
         ):
             raise ValueError("Native PCB variant probe returned malformed or unbound evidence")
-        variant_rows = cast(list[object], variant_rows_value)
+        variant_rows: list[JsonValue] = variant_rows_value
         rows_match = len(variant_rows) == len(expected_variant_rows)
         missing: list[str] = []
         for row_value, expected in zip(variant_rows, expected_variant_rows, strict=False):
-            if not isinstance(row_value, dict):
+            raw_row: JsonValue = row_value
+            if not isinstance(raw_row, dict):
                 rows_match = False
                 continue
-            row = cast(dict[str, object], row_value)
+            row: dict[str, JsonValue] = raw_row
             if set(row) != {"name", "present_on_board"} or row != expected:
                 rows_match = False
             if row.get("name") == expected["name"] and row.get("present_on_board") is False:

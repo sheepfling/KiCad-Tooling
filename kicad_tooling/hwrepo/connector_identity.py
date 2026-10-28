@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
+from types import MappingProxyType
 
 from .connector_coverage_models import ConnectorMappedPinEvidence
 from .connector_peer_pin_models import SimilarConnectorPinGroup
@@ -44,27 +45,29 @@ _RETURN_FUNCTIONS = frozenset(
 _SHIELD_FUNCTIONS = frozenset({"shield", "chassis", "earth", "frame", "fg"})
 
 
-_POWER_FUNCTIONS = {
-    "pwr": "pwr",
-    "power": "pwr",
-    "vin": "vin",
-    "vcc": "vcc",
-    "vdd": "vdd",
-    "vbus": "vbus",
-    "supply": "supply",
-    "vsupply": "supply",
-    "vccio": "vccio",
-    "vddio": "vddio",
-    "5v": "5v",
-    "3v3": "3v3",
-    "3.3v": "3v3",
-    "1v8": "1v8",
-    "1.8v": "1v8",
-    "2v5": "2v5",
-    "2.5v": "2v5",
-    "12v": "12v",
-    "24v": "24v",
-}
+_POWER_FUNCTIONS = MappingProxyType(
+    {
+        "pwr": "pwr",
+        "power": "pwr",
+        "vin": "vin",
+        "vcc": "vcc",
+        "vdd": "vdd",
+        "vbus": "vbus",
+        "supply": "supply",
+        "vsupply": "supply",
+        "vccio": "vccio",
+        "vddio": "vddio",
+        "5v": "5v",
+        "3v3": "3v3",
+        "3.3v": "3v3",
+        "1v8": "1v8",
+        "1.8v": "1v8",
+        "2v5": "2v5",
+        "2.5v": "2v5",
+        "12v": "12v",
+        "24v": "24v",
+    }
+)
 
 
 def power_function_key(function: str) -> str | None:

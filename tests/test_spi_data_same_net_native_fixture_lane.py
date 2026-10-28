@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from kicad_tooling.ci_hosted_spi_native import SPI_NATIVE_TOOLCHAINS
+from kicad_tooling.ci_hosted_support import HostedLog
 from tests.native_fixture_support import assert_native_fixture_mounts
 
 pytestmark = [
@@ -37,7 +38,6 @@ def test_native_spi_data_same_net_fault_and_control_repeat(
     image: str,
 ) -> None:
     from kicad_tooling.ci_hosted_spi_data_same_net import spi_data_same_net_fixture_lane
-    from kicad_tooling.ci_hosted_support import HostedLog
 
     log = HostedLog(tmp_path, f"native-spi-data-same-net-{version}")
     spi_data_same_net_fixture_lane(tmp_path, version=version, image=image, log=log)

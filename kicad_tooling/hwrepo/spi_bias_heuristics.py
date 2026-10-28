@@ -17,7 +17,7 @@ from .spi_bias_array_paths import spi_bias_array_channel_evidence
 from .spi_models import SpiAnalysis
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SpiChipSelectBiasGap:
     net: str
     pins: tuple[str, ...]

@@ -151,19 +151,25 @@ def spi_netlist(spec: SpiAnalysis, *, fault: str | None = None) -> NetlistContra
     component(controller.reference, controller.symbol, controller.footprint)
     for requirement in (controller.sck, controller.mosi, *controller.chip_selects):
         add(requirement.pin, requirement.net)
-    if isinstance(controller.miso, SpiMisoConnectedRequirement):
-        add(controller.miso.pin, controller.miso.net)
-    elif isinstance(controller.miso, SpiPinUnconnectedRequirement):
-        add(controller.miso.pin, None)
+    controller_miso: (
+        SpiMisoConnectedRequirement | SpiPinUnconnectedRequirement | SpiPinNotPresent
+    ) = controller.miso
+    if isinstance(controller_miso, SpiMisoConnectedRequirement):
+        add(controller_miso.pin, controller_miso.net)
+    elif isinstance(controller_miso, SpiPinUnconnectedRequirement):
+        add(controller_miso.pin, None)
 
     for device in bus.devices:
         component(device.reference, device.symbol, device.footprint)
         for requirement in (device.sck, device.mosi, device.chip_select):
             add(requirement.pin, requirement.net)
-        if isinstance(device.miso, SpiMisoConnectedRequirement):
-            add(device.miso.pin, device.miso.net)
-        elif isinstance(device.miso, SpiPinUnconnectedRequirement):
-            add(device.miso.pin, None)
+        device_miso: (
+            SpiMisoConnectedRequirement | SpiPinUnconnectedRequirement | SpiPinNotPresent
+        ) = device.miso
+        if isinstance(device_miso, SpiMisoConnectedRequirement):
+            add(device_miso.pin, device_miso.net)
+        elif isinstance(device_miso, SpiPinUnconnectedRequirement):
+            add(device_miso.pin, None)
 
     for bridge in bus.bridges:
         component(bridge.reference, bridge.symbol, bridge.footprint)

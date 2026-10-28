@@ -12,10 +12,13 @@ import sys
 import tempfile
 import time
 import venv
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 
+from kicad_tooling.hwrepo.contracts import repo_path_is_within
 from kicad_tooling.package_build import build_distributions
+from kicad_tooling.platforms import is_windows_host
 from kicad_tooling.pytest_scope import validate_test_module_files
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,7 +30,7 @@ def stage(
     output: Path,
     *,
     cwd: Path,
-    environment: dict[str, str] | None = None,
+    environment: Mapping[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     started = time.monotonic()
     print(f"tooling-ci: {name} started", flush=True)
@@ -103,7 +106,7 @@ def adapted_project_fixture(project: Path, destination: Path) -> Path:
 
     def relocated(value: str) -> str:
         for previous, current in moves:
-            if value == previous or value.startswith(previous + "/"):
+            if repo_path_is_within(value, previous, include_directory=True):
                 return current + value[len(previous) :]
         return value
 
@@ -149,7 +152,7 @@ def verify_adapted_project(
     project: Path,
     command: Path,
     output: Path,
-    environment: dict[str, str],
+    environment: Mapping[str, str],
 ) -> None:
     """Exercise the installed wheel against the adapted checkout from an outside cwd."""
     adapted = adapted_project_fixture(project, output / "adapted-project")
@@ -352,9 +355,9 @@ def main() -> int:
         rebuilt_wheel, version = build_distributions(ROOT, output, args.build_python, stage)
         environment_dir = output / "environment"
         venv.EnvBuilder(with_pip=True).create(environment_dir)
-        python = environment_dir / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+        python = environment_dir / ("Scripts/python.exe" if is_windows_host() else "bin/python")
         command = environment_dir / (
-            "Scripts/kicad-team.exe" if os.name == "nt" else "bin/kicad-team"
+            "Scripts/kicad-team.exe" if is_windows_host() else "bin/kicad-team"
         )
         install = [str(python), "-m", "pip", "install", "--no-cache-dir"]
         stage("install", (*install, f"{rebuilt_wheel}[project,mcp]"), output, cwd=output)

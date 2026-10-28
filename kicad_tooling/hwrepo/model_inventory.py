@@ -7,13 +7,13 @@ from the copies already placed on a board.
 
 from __future__ import annotations
 
-import os
 import re
 from bisect import bisect_right
 from dataclasses import dataclass
-from pathlib import Path, PureWindowsPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
+from urllib.parse import urlsplit
 
-from .contracts import repo_path
+from .contracts import lexical_absolute_path, repo_path, repo_path_is_within
 from .models import (
     DiagnosticFinding,
     FootprintModels,
@@ -40,7 +40,7 @@ MODEL_SUFFIXES = frozenset({".step", ".stp", ".wrl", ".idf", ".igs", ".iges"})
 GUIDE = "docs/workflow/LIBRARIES.md"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _Span:
     start: int
     end: int
@@ -154,7 +154,7 @@ def _source_candidates(root: Path, config: ProjectConfig) -> dict[str, tuple[str
         path = Path(name)
         if path.suffix.lower() not in MODEL_SUFFIXES:
             continue
-        if not any(name.startswith(f"{source}/") for source in config.source_roots):
+        if not any(repo_path_is_within(name, source) for source in config.source_roots):
             continue
         try:
             if not repo_path(root, name).is_file():
@@ -184,14 +184,14 @@ def _resolve_model(
             resolution="broken",
             reason="Unsupported KiCad 3D model file format",
         )
-    if value.startswith("kicad-embed://"):
+    if urlsplit(value).scheme == "kicad-embed":
         return ModelAssignment(
             path=value,
             line=line,
             resolution="broken" if embedded_issue else "embedded_present",
             reason=embedded_issue,
         )
-    if "\\" in value or value.startswith("/") or PureWindowsPath(value).drive:
+    if "\\" in value or PurePosixPath(value).is_absolute() or PureWindowsPath(value).drive:
         return ModelAssignment(
             path=value, line=line, resolution="broken", reason="Machine-local or backslash path"
         )
@@ -207,7 +207,7 @@ def _resolve_model(
             f"KICAD{major}_3DMODEL_DIR",
         }
     ):
-        if value.startswith("${" + variables[0] + "}/") and ".." not in value.split("/"):
+        if repo_path_is_within(value, "${" + variables[0] + "}"):
             return ModelAssignment(
                 path=value,
                 line=line,
@@ -235,14 +235,14 @@ def _resolve_model(
     if not target.is_absolute():
         target = project_dir / target
     try:
-        normalized = Path(os.path.abspath(target))
+        normalized = lexical_absolute_path(target)
         relative = normalized.relative_to(root).as_posix()
         resolved = repo_path(root, relative)
         if not resolved.is_file():
             raise ValueError("Model file does not exist")
         if relative not in config.required_inputs:
             raise ValueError("Model file is not declared in this project's required_inputs")
-        if not any(relative.startswith(f"{source}/") for source in config.source_roots):
+        if not any(repo_path_is_within(relative, source) for source in config.source_roots):
             raise ValueError("Model file is outside this project's declared source roots")
     except ValueError as exc:
         return ModelAssignment(path=value, line=line, resolution="broken", reason=str(exc))

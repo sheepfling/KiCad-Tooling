@@ -14,6 +14,7 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
     PcbConnectivitySnapshot,
 )
+from tests.json_types import JsonObject
 from tests.test_pcb_protection_path import (
     coverage_report as protection_coverage,
 )
@@ -57,7 +58,7 @@ def _report_case(
     result: DesignLintReport,
     *,
     netlist_sha256: str,
-) -> dict[str, object]:
+) -> JsonObject:
     return {
         "requirement_sha256": _digest(requirement),
         "board_sha256": snapshot.board_sha256,
@@ -67,7 +68,7 @@ def _report_case(
     }
 
 
-def protection_path_report(*, fault: bool) -> dict[str, object]:
+def protection_path_report(*, fault: bool) -> JsonObject:
     """Serialize a one-nanometer protection-entry fault and boundary control."""
     requirement = protection_mapping()
     entry_distance_nm = 100_001 if fault else 100_000
@@ -95,7 +96,7 @@ def protection_path_report(*, fault: bool) -> dict[str, object]:
     return _report_case(requirement, evidence, result, netlist_sha256=netlist_sha256)
 
 
-def track_width_report(*, fault: bool) -> dict[str, object]:
+def track_width_report(*, fault: bool) -> JsonObject:
     """Serialize a one-micrometer track-width fault and boundary control."""
     requirement = track_width_mapping(track_width_requirement(minimum_um=251))
     measured_width_nm = 250_000 if fault else 251_000
@@ -123,7 +124,7 @@ def track_width_report(*, fault: bool) -> dict[str, object]:
     return _report_case(requirement, evidence, result, netlist_sha256=netlist_sha256)
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     return {
         "pcb_protection_path_fault": protection_path_report(fault=True),
         "pcb_protection_path_control": protection_path_report(fault=False),

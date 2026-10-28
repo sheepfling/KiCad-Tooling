@@ -19,7 +19,7 @@ from .design_lint_types import Candidate
 RULE_ID: DesignLintRuleId = "connector.footprint_named_signal_assignment_divergence"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class NamedSignalDivergenceEvaluation:
     """Candidates and coverage counts for the bounded signal-pin predicate."""
 

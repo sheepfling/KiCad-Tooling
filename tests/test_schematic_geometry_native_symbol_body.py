@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import xml.etree.ElementTree as ET
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
@@ -27,6 +28,7 @@ from tests.design_lint_fixtures.schematic_geometry_test_cases import NativeSchem
 from tests.design_lint_fixtures.schematic_geometry_text_metrics import (
     calibrated_stroke_text_metrics_fixture,
 )
+from tests.json_types import JsonObject
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -72,7 +74,7 @@ class NativeSchematicGeometrySymbolBodyTests(NativeSchematicGeometryHelpers):
         assert control_nets is not None
         assert ET.tostring(fault_nets) == ET.tostring(control_nets)
 
-        def violation_signatures(report: dict[str, object]) -> tuple[tuple[object, ...], ...]:
+        def violation_signatures(report: JsonObject) -> tuple[tuple[object, ...], ...]:
             violations = [
                 violation
                 for sheet in report.get("sheets", [])
@@ -128,7 +130,7 @@ class NativeSchematicGeometrySymbolBodyTests(NativeSchematicGeometryHelpers):
         assert (control_nets) is not None
         assert (ET.tostring(fault_nets)) == (ET.tostring(control_nets))
 
-        def violation_signatures(report: dict[str, object]) -> tuple[tuple[object, ...], ...]:
+        def violation_signatures(report: JsonObject) -> tuple[tuple[object, ...], ...]:
             violations = [
                 violation
                 for sheet in report.get("sheets", [])
@@ -215,7 +217,7 @@ class NativeSchematicGeometrySymbolBodyTests(NativeSchematicGeometryHelpers):
         }
         assert (signal_nodes) == ({"J1", "J2"})
 
-        def violation_signatures(report: dict[str, object]) -> tuple[tuple[object, ...], ...]:
+        def violation_signatures(report: JsonObject) -> tuple[tuple[object, ...], ...]:
             violations = [
                 violation
                 for sheet in report.get("sheets", [])
@@ -301,7 +303,7 @@ class NativeSchematicGeometrySymbolBodyTests(NativeSchematicGeometryHelpers):
             ET.tostring(baseline_netlist.find("./nets"))
         )
 
-        def erc_signatures(report: dict[str, object]) -> tuple[tuple[object, ...], ...]:
+        def erc_signatures(report: JsonObject) -> tuple[tuple[object, ...], ...]:
             violations = [
                 violation
                 for sheet in report.get("sheets", [])
@@ -345,7 +347,7 @@ class NativeSchematicGeometrySymbolBodyTests(NativeSchematicGeometryHelpers):
         assert (control_nets) is not None
         assert (ET.tostring(fault_nets)) == (ET.tostring(control_nets))
 
-        def violation_signatures(report: dict[str, object]) -> tuple[tuple[object, ...], ...]:
+        def violation_signatures(report: JsonObject) -> tuple[tuple[object, ...], ...]:
             violations = [
                 violation
                 for sheet in report.get("sheets", [])
@@ -379,7 +381,7 @@ class NativeSchematicGeometrySymbolBodyTests(NativeSchematicGeometryHelpers):
         control_points = [point for segment in control_strokes for point in segment]
 
         def stroke_bounds(
-            points: list[tuple[float, float]],
+            points: Sequence[tuple[float, float]],
         ) -> tuple[float, float, float, float]:
             return (
                 min(point[0] for point in points),

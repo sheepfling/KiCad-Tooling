@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import evaluate
@@ -159,7 +161,7 @@ def test_unsupported_identity_or_incomplete_component_is_not_a_finding(
     ),
 )
 def test_missing_ambiguous_or_same_net_assignments_are_not_findings(
-    nets: dict[str, tuple[str, ...]],
+    nets: Mapping[str, tuple[str, ...]],
 ) -> None:
     assert not polarity_findings(lint(netlist().model_copy(update={"nets": nets})))
 

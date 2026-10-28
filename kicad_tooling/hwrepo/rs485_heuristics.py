@@ -2,12 +2,7 @@
 
 from __future__ import annotations
 
-from .models import ElectricalCheck, NetlistContract
-from .resistor_paths import (
-    DirectResistor,
-    direct_resistors,
-)
-from .rs485_models import (
+from kicad_tooling.hwrepo.rs485_models import (
     Rs485Analysis,
     Rs485BiasResistorRequirement,
     Rs485BusRequirement,
@@ -15,10 +10,17 @@ from .rs485_models import (
     Rs485EndpointRequirement,
     Rs485InternalFailSafeRequirement,
     Rs485LocalBiasRequirement,
+    Rs485NoBiasRequirement,
     Rs485RemoteBiasRequirement,
     Rs485SignalPairRequirement,
     Rs485TerminationEndpointRequirement,
     Rs485TerminationResistorRequirement,
+)
+
+from .models import ElectricalCheck, NetlistContract
+from .resistor_paths import (
+    DirectResistor,
+    direct_resistors,
 )
 
 
@@ -176,8 +178,7 @@ def rs485_checks(spec: Rs485Analysis, observed: NetlistContract) -> tuple[Electr
         bus: Rs485BusRequirement,
         pair: Rs485SignalPairRequirement,
         endpoint: Rs485TerminationEndpointRequirement,
-        known_refs: set[str],
-    ) -> list[ElectricalCheck]:
+    ) -> tuple[list[ElectricalCheck], frozenset[str]]:
         base = f"rs485/{bus.id}/pair/{pair.id}/termination/{endpoint.id}"
         if endpoint.topology in {"external", "not_required"}:
             checks = [
@@ -207,10 +208,11 @@ def rs485_checks(spec: Rs485Analysis, observed: NetlistContract) -> tuple[Electr
                         ),
                     )
                 )
-            return checks
+            return checks, frozenset()
 
         failures: list[str] = []
         details: list[str] = []
+        known_refs: set[str] = set()
         observed_total = 0.0
         complete = True
         for requirement in endpoint.resistors:
@@ -223,20 +225,23 @@ def rs485_checks(spec: Rs485Analysis, observed: NetlistContract) -> tuple[Electr
                 observed_total += actual.resistance_ohms
                 details.append(f"{actual.reference}={actual.resistance_ohms:g}Ω")
                 known_refs.add(actual.reference.casefold())
-        return [
-            ElectricalCheck(
-                id=base,
-                status="FAIL" if failures else "PASS",
-                observed=observed_total if complete else None,
-                unit="Ω",
-                detail=(
-                    f"{endpoint.topology} termination at {endpoint.id} on "
-                    f"{pair.line_1_net}/{pair.line_2_net}: "
-                    + ("; ".join(failures) if failures else ", ".join(details))
-                    + "."
+        return (
+            [
+                ElectricalCheck(
+                    id=base,
+                    status="FAIL" if failures else "PASS",
+                    observed=observed_total if complete else None,
+                    unit="Ω",
+                    detail=(
+                        f"{endpoint.topology} termination at {endpoint.id} on "
+                        f"{pair.line_1_net}/{pair.line_2_net}: "
+                        + ("; ".join(failures) if failures else ", ".join(details))
+                        + "."
+                    ),
                 ),
-            )
-        ]
+            ],
+            frozenset(known_refs),
+        )
 
     results: list[ElectricalCheck] = []
     for bus in spec.buses:
@@ -299,7 +304,9 @@ def rs485_checks(spec: Rs485Analysis, observed: NetlistContract) -> tuple[Electr
 
             declared_termination_refs: set[str] = set()
             for endpoint in pair.terminations:
-                results.extend(termination_checks(bus, pair, endpoint, declared_termination_refs))
+                checks, known_refs = termination_checks(bus, pair, endpoint)
+                results.extend(checks)
+                declared_termination_refs.update(known_refs)
                 declared_termination_refs.update(
                     option.reference.casefold() for option in endpoint.expected_dnp_resistors
                 )
@@ -325,7 +332,12 @@ def rs485_checks(spec: Rs485Analysis, observed: NetlistContract) -> tuple[Electr
                 )
             )
 
-            bias = pair.bias
+            bias: (
+                Rs485LocalBiasRequirement
+                | Rs485RemoteBiasRequirement
+                | Rs485InternalFailSafeRequirement
+                | Rs485NoBiasRequirement
+            ) = pair.bias
             bias_id = f"{base}/bias"
             if isinstance(bias, Rs485LocalBiasRequirement):
                 failures: list[str] = []

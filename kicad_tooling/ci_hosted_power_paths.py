@@ -2,37 +2,30 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from .ci_hosted_power_path_native_evidence import validate_power_path_fixture_netlist
 from .ci_hosted_power_path_requirements import power_path_requirement_map
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.contract_coach import pinned_image, run_command
+from .hwrepo.contracts import read_kicad_erc_report, write_model
+from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.power_paths import PowerPathMismatch, power_path_mismatches
+from .validate import read_netlist
 
 
 def power_path_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
     """Compare mapped and heuristic power paths with repeated pinned exports and ERC."""
-    import hashlib
-    import os
-
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.contracts import read_kicad_erc_report, write_model
-    from .hwrepo.design_lint import evaluate
-    from .hwrepo.design_lint_report_models import DesignLintReport
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import (
-        ContractCoachReport,
-        DesignLintPolicy,
-    )
-    from .hwrepo.power_paths import PowerPathMismatch, power_path_mismatches
-    from .validate import read_netlist
 
     root = root.resolve()
     config = selected_config(root, project)
@@ -42,9 +35,7 @@ def power_path_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
         raise ValueError(f"Power-path fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
 
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/power-path-native"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/power-path-native"
     cases = {
         "control": "control.kicad_sch",
         "fault": "fault.kicad_sch",

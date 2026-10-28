@@ -9,16 +9,19 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from types import MappingProxyType
 
 from .ci_hosted_kicad10_images import KICAD_10_NATIVE_TOOLCHAINS
-from .ci_hosted_support import normalized_erc_report_bytes
+from .ci_hosted_support import HostedLog, normalized_erc_report_bytes, tooling_checkout_root
+from .hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
 from .hwrepo.connector_coverage_models import (
     ConnectorInterfaceReview,
     ConnectorInventoryReview,
+    ConnectorReviewsDocument,
 )
 from .hwrepo.contract_coach import pinned_image, run_command
-from .hwrepo.contracts import read_kicad_erc_report, write_model
+from .hwrepo.contracts import read_kicad_erc_report, read_model, write_model
+from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.evidence import digest
 from .hwrepo.models import (
@@ -27,18 +30,18 @@ from .hwrepo.models import (
     InterfacesCatalog,
     NetlistContract,
 )
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .validate import read_netlist
 
 MIXED_INTERFACE_RETURN_TOOLCHAINS = KICAD_10_NATIVE_TOOLCHAINS
 _RULE_ID = "connector.repeated_pin_function"
 _SCOPE_RULE_ID = "connector.return_supply_scope_singleton"
 _FIXTURE_RELATIVE_ROOT = Path("tests/fixtures/design_lint/mixed-interface-return-peers")
-_SOURCE_HASHES = {
-    "fault": "53af59844b37ac7181a99e22a5bc14cd868ef33083361590cd627e8907e3fb83",
-    "control": "b0731cac3cba8b946e905a41f2f9251c459573f699d2c2990b2574c4ba7f5c45",
-}
+_SOURCE_HASHES = MappingProxyType(
+    {
+        "fault": "53af59844b37ac7181a99e22a5bc14cd868ef33083361590cd627e8907e3fb83",
+        "control": "b0731cac3cba8b946e905a41f2f9251c459573f699d2c2990b2574c4ba7f5c45",
+    }
+)
 _INTERFACE_SHA256 = "e1216ee351d3fcdddd720f2bc6f0e2068bbc9d85e777aa4914c4af8102cb8b99"
 _CONNECTOR_REVIEWS_SHA256 = "a1ec6317ef6207572c89605a5c0ef1448fe7e5a62b2ec5383edea598dda2d0bc"
 _SEPARATE_RETURN_REVIEWS_SHA256 = "fcbebe5c7c83a15d82daf1ae43c25f461bcd3809b4e9c02f4eaca1a0c8ae3329"
@@ -47,20 +50,16 @@ _SEPARATE_RETURN_REVIEWS_SHA256 = "fcbebe5c7c83a15d82daf1ae43c25f461bcd3809b4e9c
 def _connector_reviews(
     path: Path,
 ) -> tuple[tuple[str, ...], tuple[ConnectorInterfaceReview, ...], ConnectorInventoryReview]:
-    source = json.loads(path.read_text(encoding="utf-8"))
-    if source.get("schema_version") != "1":
-        raise ValueError("Mixed-interface connector review fixture has an unsupported schema")
-    reviews = tuple(
-        ConnectorInterfaceReview.model_validate(item) for item in source["connector_reviews"]
-    )
-    inventory = ConnectorInventoryReview.model_validate(source["inventory_review"])
+    source = read_model(path, ConnectorReviewsDocument)
+    reviews = source.connector_reviews
+    inventory = source.inventory_review
     interface_ids = tuple(sorted({item.interface_id for item in reviews if item.interface_id}))
     return interface_ids, reviews, inventory
 
 
-def _normalized_sha256(value: Any) -> str:
+def _normalized_sha256(value: NetlistContract) -> str:
     normalized = json.dumps(
-        value,
+        value.model_dump(mode="json"),
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,
@@ -72,17 +71,13 @@ def mixed_interface_return_fixture_lane(
     root: Path, *, version: str, image: str, log: HostedLog
 ) -> None:
     """Repeat native exports and map-evaluated fault/control returns across USB and serial peers."""
-    from .hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
-    from .hwrepo.design_lint import evaluate
-    from .validate import read_netlist
-
     root = root.resolve()
     if (version, image) not in MIXED_INTERFACE_RETURN_TOOLCHAINS:
         raise ValueError(f"Mixed-interface return fixtures do not cover KiCad {version}")
     pinned = pinned_image(image)
-    fixture_root = Path(__file__).resolve().parents[1] / _FIXTURE_RELATIVE_ROOT
+    fixture_root = tooling_checkout_root() / _FIXTURE_RELATIVE_ROOT
     sources = {case: fixture_root / f"{case}.kicad_sch" for case in ("fault", "control")}
-    source_hashes = {case: digest(source) for case, source in sources.items()}
+    source_hashes = MappingProxyType({case: digest(source) for case, source in sources.items()})
     if source_hashes != _SOURCE_HASHES:
         raise ValueError("Mixed-interface return sources differ from the reviewed hashes")
     interfaces_path = fixture_root / "interfaces.json"
@@ -226,7 +221,7 @@ def mixed_interface_return_fixture_lane(
                     f"Native mixed-interface {case} assignments changed: "
                     f"expected={expected_nets[case]!r}, actual={actual_nets!r}"
                 )
-            normalized_hashes[case, run] = _normalized_sha256(observed.model_dump(mode="json"))
+            normalized_hashes[case, run] = _normalized_sha256(observed)
             erc = read_kicad_erc_report(erc_path)
             if erc.kicad_version != version or any(
                 item.severity == "error" for item in erc.violations

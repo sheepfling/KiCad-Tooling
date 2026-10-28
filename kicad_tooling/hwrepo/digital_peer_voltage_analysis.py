@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 from decimal import Decimal
 from typing import Literal
 
@@ -93,7 +95,7 @@ def is_return_assignment(net: str, function: str) -> bool:
 def unambiguous_voltage_named_supply(
     reference: str,
     observed: NetlistContract,
-    pin_nets: dict[str, set[str]],
+    pin_nets: Mapping[str, AbstractSet[str]],
 ) -> VoltageNamedRail | None:
     """Require complete native pin types and exactly one assigned positive rail."""
     reference_key = reference.casefold()
@@ -143,9 +145,9 @@ def unambiguous_voltage_named_supply(
 def endpoint_matches_native(
     endpoint: DigitalPeerPinRequirement,
     observed: NetlistContract,
-    pin_nets: dict[str, set[str]],
-    references: dict[str, str],
-    symbols: dict[str, str],
+    pin_nets: Mapping[str, AbstractSet[str]],
+    references: Mapping[str, str],
+    symbols: Mapping[str, str],
 ) -> bool:
     reference = endpoint.reference
     reference_key = reference.casefold()
@@ -177,9 +179,9 @@ def fully_mapped_link(
     link: DigitalPeerLink,
     analysis: DigitalPeerVoltageAnalysis | None,
     observed: NetlistContract,
-    pin_nets: dict[str, set[str]],
-    references: dict[str, str],
-    symbols: dict[str, str],
+    pin_nets: Mapping[str, AbstractSet[str]],
+    references: Mapping[str, str],
+    symbols: Mapping[str, str],
 ) -> bool:
     if analysis is None:
         return False

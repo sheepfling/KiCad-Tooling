@@ -5,34 +5,29 @@ from __future__ import annotations
 import shutil
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .ci_hosted_support import HostedLog
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .hwrepo.pcb_connectivity_observations import PcbAccessProbeObservation
+from .hwrepo.pcb_return_path_capture import (
+    capture_native_pcb_connectivity,
+    expected_probe_sha256,
+    native_pcb_command_matches,
+)
+from .hwrepo.pcb_test_access_models import (
+    PcbAccessAnalysis,
+    RequiredTestAccess,
+    TestAccessAnalysis,
+    TestAccessEndpointRequirement,
+    TestAccessProbeEnvelope,
+)
+from .hwrepo.test_access import pcb_access_probe_request_set, pcb_probe_envelope_checks
 
 
 def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
     """Exercise native pad exposure and probe-envelope evidence on a synthetic PCB."""
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.pcb_connectivity_observations import PcbAccessProbeObservation
-    from .hwrepo.pcb_return_path_capture import (
-        capture_native_pcb_connectivity,
-        expected_probe_sha256,
-        native_pcb_command_matches,
-    )
-    from .hwrepo.pcb_test_access_models import (
-        PcbAccessAnalysis,
-        RequiredTestAccess,
-        TestAccessAnalysis,
-        TestAccessEndpointRequirement,
-        TestAccessProbeEnvelope,
-    )
-    from .hwrepo.test_access import (
-        pcb_access_probe_request_set,
-        pcb_probe_envelope_checks,
-    )
-
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image:

@@ -9,7 +9,7 @@ from .bus_signal_roles import can_function_role
 from .models import NetlistContract
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class CanPeerAssignmentDivergence:
     """Complete CAN pin pairs that share one side but disagree on the other."""
 

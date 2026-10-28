@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.hwrepo.electrical import selected_config
+
 pytestmark = [
     pytest.mark.component_lint,
     pytest.mark.design_lint,
@@ -30,7 +32,6 @@ def test_direct_rail_and_output_driven_led_faults_with_series_controls(
     hosted_reference_root: Path, project: str, version: str
 ) -> None:
     from kicad_tooling.ci_hosted import HostedLog, led_rail_fixture_lane
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     root = hosted_reference_root
     expected_images = {

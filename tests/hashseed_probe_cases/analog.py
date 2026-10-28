@@ -7,6 +7,7 @@ import hashlib
 from pydantic import BaseModel
 
 from kicad_tooling.hwrepo.models import DesignLintReport
+from tests.json_types import JsonObject
 from tests.test_crystal_networks import crystal_map, crystal_netlist, report
 from tests.test_rc_filters import rc_filter_map, rc_filter_netlist
 from tests.test_rc_filters import report as rc_filter_report
@@ -27,7 +28,7 @@ def _case(
     requirement: BaseModel,
     observed: BaseModel,
     result: DesignLintReport,
-) -> dict[str, object]:
+) -> JsonObject:
     return {
         "requirement_sha256": _digest(requirement),
         "netlist_sha256": _digest(observed),
@@ -35,7 +36,7 @@ def _case(
     }
 
 
-def mapped_crystal_network_report(*, fault: bool) -> dict[str, object]:
+def mapped_crystal_network_report(*, fault: bool) -> JsonObject:
     """Serialize a mapped crystal-node fault or its valid control."""
     requirement = crystal_map()
     observed = crystal_netlist(fault="wrong-capacitor-node" if fault else None)
@@ -43,7 +44,7 @@ def mapped_crystal_network_report(*, fault: bool) -> dict[str, object]:
     return _case(requirement, observed, result)
 
 
-def mapped_regulator_feedback_report(*, fault: bool) -> dict[str, object]:
+def mapped_regulator_feedback_report(*, fault: bool) -> JsonObject:
     """Serialize a mapped feedback-divider range fault or its valid control."""
     requirement = regulator_feedback_map()
     observed = regulator_netlist(fault="upper-resistor-outside-range" if fault else None)
@@ -51,7 +52,7 @@ def mapped_regulator_feedback_report(*, fault: bool) -> dict[str, object]:
     return _case(requirement, observed, result)
 
 
-def mapped_rc_filter_report(*, fault: bool) -> dict[str, object]:
+def mapped_rc_filter_report(*, fault: bool) -> JsonObject:
     """Serialize a mapped RC cutoff fault or its valid control."""
     requirement = rc_filter_map()
     observed = rc_filter_netlist(capacitor_value="220nF" if fault else "100nF")
@@ -59,7 +60,7 @@ def mapped_rc_filter_report(*, fault: bool) -> dict[str, object]:
     return _case(requirement, observed, result)
 
 
-def report_cases() -> dict[str, object]:
+def report_cases() -> JsonObject:
     return {
         "mapped_crystal_network_fault": mapped_crystal_network_report(fault=True),
         "mapped_crystal_network_control": mapped_crystal_network_report(fault=False),

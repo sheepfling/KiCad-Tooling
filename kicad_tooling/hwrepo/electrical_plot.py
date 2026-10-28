@@ -10,16 +10,22 @@ from __future__ import annotations
 import math
 import re
 import textwrap
+from collections.abc import Mapping
 from dataclasses import dataclass
 from itertools import pairwise
 from pathlib import Path
+from types import MappingProxyType
 
-from .electrical import SimulationCase
-from .electrical_simulation_models import FrequencyAnalysis, SimulationMeasure, TransientAnalysis
+from kicad_tooling.hwrepo.electrical_simulation_models import (
+    FrequencyAnalysis,
+    SimulationMeasure,
+    TransientAnalysis,
+)
+
 from .waveform_data import WaveformData, WaveformSeries
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _ChartPanel:
     measure: SimulationMeasure
     values: tuple[float, ...]
@@ -30,14 +36,16 @@ class _ChartPanel:
     phase_label: str | None = None
 
 
-_NATIVE_UNITS: dict[str, set[str]] = {
-    "V": {"voltage", "v"},
-    "A": {"current", "a"},
-    "W": {"power", "w"},
-    "dB": {"decibel", "db"},
-    "rad": {"phase", "radian", "radians", "rad", "notype"},
-    "ratio": {"ratio", "dimensionless", "notype"},
-}
+_NATIVE_UNITS: Mapping[str, frozenset[str]] = MappingProxyType(
+    {
+        "V": frozenset({"voltage", "v"}),
+        "A": frozenset({"current", "a"}),
+        "W": frozenset({"power", "w"}),
+        "dB": frozenset({"decibel", "db"}),
+        "rad": frozenset({"phase", "radian", "radians", "rad", "notype"}),
+        "ratio": frozenset({"ratio", "dimensionless", "notype"}),
+    }
+)
 _VECTOR = r"[vi]\([A-Za-z0-9_.]+\)"
 _DB_RATIO = re.compile(rf"^db\(({_VECTOR})/({_VECTOR})\)$", re.IGNORECASE)
 _DB_SINGLE = re.compile(rf"^db\(({_VECTOR})\)$", re.IGNORECASE)
@@ -108,7 +116,9 @@ def _is_real(value: complex) -> bool:
     return abs(value.imag) <= 1e-12 * max(1.0, abs(value.real))
 
 
-def _panels(data: WaveformData, case: SimulationCase) -> tuple[_ChartPanel, ...]:
+def _panels(
+    data: WaveformData, case: TransientAnalysis | FrequencyAnalysis
+) -> tuple[_ChartPanel, ...]:
     expected = "time" if isinstance(case, TransientAnalysis) else "frequency"
     if data.axis_name != expected or len(data.axis) < 2:
         raise ValueError(f"Expected at least two {expected} samples for {case.id}.")
@@ -188,7 +198,12 @@ def _panels(data: WaveformData, case: SimulationCase) -> tuple[_ChartPanel, ...]
     return tuple(panels)
 
 
-def render_case(data: WaveformData, case: SimulationCase, png: Path, svg: Path) -> None:
+def render_case(
+    data: WaveformData,
+    case: TransientAnalysis | FrequencyAnalysis,
+    png: Path,
+    svg: Path,
+) -> None:
     """Save PNG and SVG from a validated ngspice waveform and authored case.
 
     Each indexed ``valueN`` vector is plotted against the original axis. For a

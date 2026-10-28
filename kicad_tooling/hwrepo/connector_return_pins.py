@@ -16,7 +16,7 @@ from .connector_identity import (
 from .models import NetlistContract
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ConnectorReturnCoverage:
     reference: str
     symbol: str
@@ -24,7 +24,7 @@ class ConnectorReturnCoverage:
     pins: dict[str, tuple[str, ...]]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnconnectedNamedConnectorPin:
     pin: str
     function: str
@@ -32,7 +32,7 @@ class UnconnectedNamedConnectorPin:
     role_source: str = "native_symbol"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnconnectedGenericPowerInputConnectorPin:
     pin: str
     symbol: str
@@ -40,7 +40,7 @@ class UnconnectedGenericPowerInputConnectorPin:
     electrical_type: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class UnconnectedGenericPowerOutputConnectorPin:
     pin: str
     symbol: str
@@ -48,7 +48,7 @@ class UnconnectedGenericPowerOutputConnectorPin:
     electrical_type: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _UnconnectedGenericPowerConnectorPin:
     pin: str
     symbol: str

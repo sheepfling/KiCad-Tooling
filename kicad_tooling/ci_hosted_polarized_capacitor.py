@@ -3,18 +3,18 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from types import MappingProxyType
 
 from .ci_hosted_component_lint import component_lint_fixture_lane
+from .ci_hosted_support import HostedLog
 from .hwrepo.component_polarized_capacitor_orientation import RULE_ID
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
-
-POLARIZED_CAPACITOR_FIXTURE_CASES = {
-    "fault": "polarized-capacitor-native/fault.kicad_sch",
-    "control": "polarized-capacitor-native/control.kicad_sch",
-}
+POLARIZED_CAPACITOR_FIXTURE_CASES = MappingProxyType(
+    {
+        "fault": "polarized-capacitor-native/fault.kicad_sch",
+        "control": "polarized-capacitor-native/control.kicad_sch",
+    }
+)
 
 
 def polarized_capacitor_fixture_lane(

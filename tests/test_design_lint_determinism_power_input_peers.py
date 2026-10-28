@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from tests.design_lint_fixtures.hashseed_reports import hashseed_probe_reports
+from tests.json_types import JsonObject
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -14,11 +15,11 @@ pytestmark = [
 ]
 
 
-def _rule_ids(report: dict[str, object]) -> set[str]:
+def _rule_ids(report: JsonObject) -> set[str]:
     return {finding["rule_id"] for finding in report["findings"]}
 
 
-def _coverage(report: dict[str, object], rule_id: str) -> dict[str, object]:
+def _coverage(report: JsonObject, rule_id: str) -> JsonObject:
     return next(
         item for item in report["component_peer_pin_coverage"] if item["rule_id"] == rule_id
     )

@@ -1,21 +1,24 @@
 # Access probes: validate authored requests and measure exposed pad surfaces.
 
 def access_probe_observations(
-    requests: list[dict[str, str]], pad_geometry: list[tuple[str, bool, Any]]
-) -> list[dict[str, Any]]:
+    requests: list[AccessProbeRequest],
+    pad_geometry: list[tuple[str, bool, NativePad]],
+) -> list[AccessProbeObservation]:
     """Measure each requested pad center to the nearest exposed foreign-net pad."""
-    observations: list[dict[str, Any]] = []
+    observations: list[AccessProbeObservation] = []
     layer_ids = {
         "front": (native_pcbnew.F_Cu, native_pcbnew.F_Mask),
         "back": (native_pcbnew.B_Cu, native_pcbnew.B_Mask),
     }
 
-    def exposed(pad: Any, side: str) -> bool:
+    def exposed(pad: NativePad, side: Literal["front", "back"]) -> bool:
         copper_layer, mask_layer = layer_ids[side]
         layers = pad.GetLayerSet()
         return bool(layers.Contains(copper_layer) and layers.Contains(mask_layer))
 
-    def aperture_geometry(pad: Any, mask_layer: int) -> tuple[str, int | None]:
+    def aperture_geometry(
+        pad: NativePad, mask_layer: int
+    ) -> tuple[Literal["circle", "unsupported"], int | None]:
         """Measure circular, undrilled pad-mask apertures without approximating other shapes."""
         if pad.GetShape(mask_layer) != native_pcbnew.PAD_SHAPE_CIRCLE:
             return "unsupported", None
@@ -76,7 +79,10 @@ def access_probe_observations(
             obstacle_net = obstacle.GetNetname() or None
             if target_net is not None and obstacle_net == target_net:
                 continue
-            distance = obstacle.GetEffectiveShape(copper_layer).Distance(position)
+            shape = obstacle.GetEffectiveShape(copper_layer)
+            if shape is None:
+                raise ValueError(f"KiCad returned no effective shape for obstacle {reference}")
+            distance = shape.Distance(position)
             distance_nm = floor(float(distance))
             if distance_nm < 0:
                 raise ValueError(f"KiCad returned a negative pad distance for {endpoint}")
@@ -99,29 +105,37 @@ def access_probe_observations(
     return observations
 
 
-def read_access_requests(path: Path | None) -> tuple[list[dict[str, str]], str | None]:
+def read_access_requests(path: Path | None) -> tuple[list[AccessProbeRequest], str | None]:
     if path is None:
         return [], None
-    raw = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(raw, dict) or set(raw) != {"schema_version", "requests"}:
+    raw_value: object = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(raw_value, dict) or set(raw_value) != {"schema_version", "requests"}:
         raise ValueError("Native probe request file has an invalid object shape")
+    raw = cast(RawAccessRequestEnvelope, raw_value)
     if raw["schema_version"] != "1" or not isinstance(raw["requests"], list):
         raise ValueError("Native probe request file has an unsupported schema")
-    requests: list[dict[str, str]] = []
+    raw_requests = cast(list[object], raw["requests"])
+    requests: list[AccessProbeRequest] = []
     seen: set[tuple[str, str]] = set()
-    for row in raw["requests"]:
-        if not isinstance(row, dict) or set(row) != {"endpoint", "net", "side"}:
+    for row_value in raw_requests:
+        if not isinstance(row_value, dict) or set(row_value) != {"endpoint", "net", "side"}:
             raise ValueError("Native probe request has an invalid shape")
-        endpoint, net, side = row["endpoint"], row["net"], row["side"]
-        if not all(isinstance(item, str) and item.strip() for item in (endpoint, net, side)):
+        row = cast(RawAccessProbeRequest, row_value)
+        endpoint_value, net_value, side_value = row["endpoint"], row["net"], row["side"]
+        if not isinstance(endpoint_value, str) or not endpoint_value.strip():
             raise ValueError("Native probe request values must be non-empty strings")
-        if side not in {"front", "back"} or endpoint.count(".") != 1:
+        if not isinstance(net_value, str) or not net_value.strip():
+            raise ValueError("Native probe request values must be non-empty strings")
+        if not isinstance(side_value, str) or not side_value.strip():
+            raise ValueError("Native probe request values must be non-empty strings")
+        if side_value not in {"front", "back"} or endpoint_value.count(".") != 1:
             raise ValueError("Native probe request has an invalid endpoint or side")
-        key = (endpoint.casefold(), side)
+        side = cast(Literal["front", "back"], side_value)
+        key = (endpoint_value.casefold(), side)
         if key in seen:
             raise ValueError("Native probe requests contain a duplicate endpoint surface")
         seen.add(key)
-        requests.append({"endpoint": endpoint, "net": net, "side": side})
+        requests.append({"endpoint": endpoint_value, "net": net_value, "side": side})
     if not requests:
         raise ValueError("Native probe request file must contain at least one request")
     return requests, sha256(path)

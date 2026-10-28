@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from hashlib import sha256
 from typing import Literal
@@ -91,12 +92,12 @@ def source_bound_component_inventory(
 
 def netlist(
     *,
-    components: dict[str, str] | None = None,
-    values: dict[str, str] | None = None,
+    components: Mapping[str, str] | None = None,
+    values: Mapping[str, str] | None = None,
     dnp: tuple[str, ...] = (),
-    nets: dict[str, tuple[str, ...]] | None = None,
-    unconnected_nets: dict[str, tuple[str, ...]] | None = None,
-    component_pin_numbers: dict[str, tuple[str, ...]] | None = None,
+    nets: Mapping[str, tuple[str, ...]] | None = None,
+    unconnected_nets: Mapping[str, tuple[str, ...]] | None = None,
+    component_pin_numbers: Mapping[str, tuple[str, ...]] | None = None,
 ) -> NetlistContract:
     assignments = components or {"U1": "Package_QFP:TQFP-48", "J1": "Connector:USB_B"}
     return NetlistContract(
@@ -117,10 +118,10 @@ def netlist(
 def snapshot(
     *references: str,
     schema_version: SnapshotSchema = "12",
-    footprint_by_reference: dict[str, str] | None = None,
-    dnp_by_reference: dict[str, bool] | None = None,
-    value_by_reference: dict[str, str] | None = None,
-    pad_net_by_reference: dict[str, str | None] | None = None,
+    footprint_by_reference: Mapping[str, str] | None = None,
+    dnp_by_reference: Mapping[str, bool] | None = None,
+    value_by_reference: Mapping[str, str] | None = None,
+    pad_net_by_reference: Mapping[str, str | None] | None = None,
 ) -> PcbConnectivitySnapshot:
     identity_by_reference = {
         reference.casefold(): footprint

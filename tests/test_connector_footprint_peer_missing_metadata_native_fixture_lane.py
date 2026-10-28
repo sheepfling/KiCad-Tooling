@@ -6,7 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
-from types import SimpleNamespace
+from types import MappingProxyType, SimpleNamespace
 
 import pytest
 
@@ -23,6 +23,7 @@ from kicad_tooling.ci_hosted_connector_return_peer_missing_metadata import (
     verify_footprint_alias_peer_missing_metadata_divergence,
 )
 from kicad_tooling.ci_hosted_support import HostedLog
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 from tests.connector_footprint_peer_support import (
     lint_report,
@@ -38,21 +39,25 @@ from tests.synthetic_design_lint_project import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.interface_lint]
 
 FIXTURE_CASES = (FAULT_CASE, CONTROL_CASE, PART_ID_FAULT_CASE, PART_ID_CONTROL_CASE)
-FIXTURE_PATHS = {
-    FAULT_CASE: ("connector-footprint-peer-missing-metadata-native", "fault.kicad_sch"),
-    CONTROL_CASE: ("connector-footprint-peer-missing-metadata-native", "control.kicad_sch"),
-    PART_ID_FAULT_CASE: ("connector-part-id-peer-missing-metadata-native", "fault.kicad_sch"),
-    PART_ID_CONTROL_CASE: (
-        "connector-part-id-peer-missing-metadata-native",
-        "control.kicad_sch",
-    ),
-}
-EXPECTED_SOURCE_HASHES = {
-    FAULT_CASE: "7265e062e47c5b1d06a30f40c94cfd23d14cc5f07ff51799ef0afefb21ab2c21",
-    CONTROL_CASE: "407e25454fabe943a4f2b9ad5fd58c8d8af48b836cef20258b32d216902db923",
-    PART_ID_FAULT_CASE: "5684bcf7293542cbc8bf2b05e68a3a7c9f6d0db6f0b7aaac0590721f1b58907b",
-    PART_ID_CONTROL_CASE: "880e000dc1646fe5a8a4183b60ac36150d6e965e9dd7b8055ac286e0a0e1f75c",
-}
+FIXTURE_PATHS = MappingProxyType(
+    {
+        FAULT_CASE: ("connector-footprint-peer-missing-metadata-native", "fault.kicad_sch"),
+        CONTROL_CASE: ("connector-footprint-peer-missing-metadata-native", "control.kicad_sch"),
+        PART_ID_FAULT_CASE: ("connector-part-id-peer-missing-metadata-native", "fault.kicad_sch"),
+        PART_ID_CONTROL_CASE: (
+            "connector-part-id-peer-missing-metadata-native",
+            "control.kicad_sch",
+        ),
+    }
+)
+EXPECTED_SOURCE_HASHES = MappingProxyType(
+    {
+        FAULT_CASE: "7265e062e47c5b1d06a30f40c94cfd23d14cc5f07ff51799ef0afefb21ab2c21",
+        CONTROL_CASE: "407e25454fabe943a4f2b9ad5fd58c8d8af48b836cef20258b32d216902db923",
+        PART_ID_FAULT_CASE: "5684bcf7293542cbc8bf2b05e68a3a7c9f6d0db6f0b7aaac0590721f1b58907b",
+        PART_ID_CONTROL_CASE: "880e000dc1646fe5a8a4183b60ac36150d6e965e9dd7b8055ac286e0a0e1f75c",
+    }
+)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -122,7 +127,6 @@ def test_native_missing_metadata_fault_and_control_are_repeatable(
     from kicad_tooling.ci_hosted_connector_return_context import (
         prepare_connector_return_fixture_context,
     )
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(

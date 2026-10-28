@@ -8,15 +8,20 @@ from __future__ import annotations
 
 import difflib
 import hashlib
-import os
 import re
 from collections.abc import Mapping
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from ..validate import hashes
 from .auto_cad import _Edit, _receipt, _write_edits  # pyright: ignore[reportPrivateUsage]
 from .cad_assets import _model_signature, _pads  # pyright: ignore[reportPrivateUsage]
-from .contracts import read_model, repo_path, update_project_manifest_inputs
+from .contracts import (
+    lexical_absolute_path,
+    read_model,
+    repo_path,
+    repo_path_is_within,
+    update_project_manifest_inputs,
+)
 from .discovery import load_config
 from .model_inventory import _atoms, _Span  # pyright: ignore[reportPrivateUsage]
 from .models import (
@@ -54,7 +59,7 @@ def _sha(content: bytes) -> str:
 
 
 def _unlinked_directory(path: Path) -> Path:
-    absolute = Path(os.path.abspath(path))
+    absolute = lexical_absolute_path(path)
     for ancestor in (absolute, *absolute.parents):
         if ancestor.is_symlink():
             raise ValueError("CAD bundle directory must not contain a symlink")
@@ -163,8 +168,8 @@ def _model_reference(source: str, parent: _Span, expected: str) -> str:
     reference, _, _, _, hidden = _model_signature(expression)
     if hidden:
         raise ValueError("Sourced footprint's paired model is hidden")
-    if reference.startswith("${KIPRJMOD}/"):
-        relative = reference.removeprefix("${KIPRJMOD}/")
+    if repo_path_is_within(reference, "${KIPRJMOD}"):
+        relative = PurePosixPath(reference).relative_to(PurePosixPath("${KIPRJMOD}")).as_posix()
     else:
         relative = reference
     if "$" in relative or relative != expected:

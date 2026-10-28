@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from .ci_hosted_pcb_board_only_fixture import pcb_board_only_footprint_fixture_lane
 from .ci_hosted_pcb_component_value_fixture import pcb_component_value_fixture_lane
@@ -14,6 +13,7 @@ from .ci_hosted_pcb_fixture_support import (
     prepare_pcb_fixture,
 )
 from .ci_hosted_pcb_population_fixture import pcb_population_mismatch_fixture_lane
+from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.contract_coach import ContainerNetlistRunner
 from .hwrepo.contracts import write_model
 from .hwrepo.design_lint import evaluate
@@ -22,9 +22,6 @@ from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy, ProjectKind
 from .hwrepo.pcb_component_inventory import evaluate_native_component_inventory_coverage
 from .validate import read_netlist
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
 
 
 def pcb_component_inventory_fixture_lane(
@@ -45,7 +42,7 @@ def pcb_component_inventory_fixture_lane(
     )
     root = context.root
     config = context.config
-    fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint"
     cases = {
         "fault": fixture_root / "component-peer-power-native/control.kicad_sch",
         "control": fixture_root / "usb-peer-reference-native/control.kicad_sch",

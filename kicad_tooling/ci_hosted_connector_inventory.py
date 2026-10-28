@@ -2,33 +2,32 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+import os
 import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
+from .hwrepo.connector_coverage_models import (
+    ConnectorCoverageReport,
+    ConnectorInventoryReview,
+)
+from .hwrepo.connector_pins import connector_candidate_references
+from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
+from .hwrepo.electrical import selected_config
+from .hwrepo.evidence import digest
+from .validate import read_netlist
 
 
 def connector_inventory_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Check connector-candidate coverage from repeated pinned native netlists."""
-    import hashlib
-    import json
-    import os
-
-    from .hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
-    from .hwrepo.connector_coverage_models import ConnectorCoverageReport, ConnectorInventoryReview
-    from .hwrepo.connector_pins import connector_candidate_references
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .validate import read_netlist
 
     root = root.resolve()
     config = selected_config(root, project)
@@ -38,10 +37,7 @@ def connector_inventory_fixture_lane(
         raise ValueError(f"Connector inventory fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
 
-    fixture_root = (
-        Path(__file__).resolve().parents[1]
-        / "tests/fixtures/design_lint/connector-inventory-native"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/connector-inventory-native"
     cases = ("fault", "control")
     source_hashes = {case: digest(fixture_root / f"{case}.kicad_sch") for case in cases}
     scratch = Path(

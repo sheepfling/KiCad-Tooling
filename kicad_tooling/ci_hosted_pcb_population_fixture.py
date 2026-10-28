@@ -5,12 +5,12 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from .ci_hosted_pcb_fixture_support import (
     HostedPcbFixtureContext,
     capture_verified_pcb_snapshot,
 )
+from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.contract_coach import ContainerNetlistRunner
 from .hwrepo.contracts import write_model
 from .hwrepo.design_lint import evaluate
@@ -24,9 +24,6 @@ from .hwrepo.pcb_required_fitted_reference_models import (
 )
 from .validate import read_netlist
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
-
 
 def pcb_population_mismatch_fixture_lane(
     context: HostedPcbFixtureContext,
@@ -34,7 +31,7 @@ def pcb_population_mismatch_fixture_lane(
     log: HostedLog,
 ) -> None:
     """Check both DNP mismatch directions and matched controls with repeated native evidence."""
-    fixture_root = Path(__file__).resolve().parents[1] / (
+    fixture_root = tooling_checkout_root() / (
         "tests/fixtures/design_lint/component-inventory-footprint-identity"
     )
     schematic_control = fixture_root / "control.kicad_sch"

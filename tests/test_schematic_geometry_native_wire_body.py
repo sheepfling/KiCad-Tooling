@@ -18,6 +18,7 @@ from tests.design_lint_fixtures.schematic_geometry_native_support import (
     _segment_distance,
 )
 from tests.design_lint_fixtures.schematic_geometry_test_cases import NativeSchematicGeometryHelpers
+from tests.json_types import JsonObject
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -55,7 +56,7 @@ class NativeSchematicGeometryWireBodyTests(NativeSchematicGeometryHelpers):
         assert (control_nets) is not None
         assert (ET.tostring(fault_nets)) == (ET.tostring(control_nets))
 
-        def violation_signatures(report: dict[str, object]) -> tuple[tuple[object, ...], ...]:
+        def violation_signatures(report: JsonObject) -> tuple[tuple[object, ...], ...]:
             violations = [
                 violation
                 for sheet in report.get("sheets", [])
@@ -111,7 +112,7 @@ class NativeSchematicGeometryWireBodyTests(NativeSchematicGeometryHelpers):
         assert (control_nets) is not None
         assert (ET.tostring(fault_nets)) == (ET.tostring(control_nets))
 
-        def violation_signatures(report: dict[str, object]) -> tuple[tuple[object, ...], ...]:
+        def violation_signatures(report: JsonObject) -> tuple[tuple[object, ...], ...]:
             violations = [
                 violation
                 for sheet in report.get("sheets", [])

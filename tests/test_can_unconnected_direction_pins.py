@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Literal
 
 import pytest
@@ -111,7 +112,7 @@ def test_rule_defaults_off_and_supports_review_block_off_and_exact_ignore() -> N
     ),
 )
 def test_bounded_can_direction_aliases_keep_role_and_channel_evidence(
-    functions: dict[str, str], open_pin: str, role: str, channel: str
+    functions: Mapping[str, str], open_pin: str, role: str, channel: str
 ) -> None:
     source = can_unconnected_direction_netlist(open_pins=(open_pin,), functions=functions)
     finding = next(

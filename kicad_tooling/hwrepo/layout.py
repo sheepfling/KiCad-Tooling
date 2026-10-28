@@ -9,11 +9,16 @@ from typing import Literal
 
 from pydantic import Field
 
-from .contracts import parse_model_text, repo_path
+from .contracts import parse_model_text, repo_path, repo_path_is_within
 from .models import RepositoryPath, StrictModel
 
 CONFIG_NAME = "kicad-tooling.toml"
 RESERVED_DIRECTORIES = frozenset({"build", "generated", "__pycache__", "releases", "restores"})
+
+
+def default_project_root() -> Path:
+    """Use the caller's checkout as the CLI default when ``--root`` is omitted."""
+    return Path.cwd()
 
 
 class RepositoryLayout(StrictModel):
@@ -44,7 +49,7 @@ def source_directory(root: Path, value: str) -> Path:
 
 
 def within_roots(value: str, roots: tuple[str, ...]) -> bool:
-    return any(value.startswith(f"{directory}/") for directory in roots)
+    return any(repo_path_is_within(value, directory) for directory in roots)
 
 
 def layout(root: Path) -> RepositoryLayout:

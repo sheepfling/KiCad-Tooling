@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -13,7 +14,7 @@ from scripts import ci
 
 
 def _selected_unit_command(
-    root: Path, monkeypatch: pytest.MonkeyPatch, arguments: list[str]
+    root: Path, monkeypatch: pytest.MonkeyPatch, arguments: Sequence[str]
 ) -> tuple[str, ...]:
     monkeypatch.setattr(ci, "ROOT", root)
     monkeypatch.setattr(ci.sys, "argv", ["scripts/ci.py", *arguments])

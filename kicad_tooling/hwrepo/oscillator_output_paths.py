@@ -13,7 +13,7 @@ from .oscillator_output_path_models import (
 from .resistor_paths import direct_resistors, resistance_ohms
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class OscillatorOutputPathMismatch:
     """One path whose native netlist differs from the authored requirement."""
 

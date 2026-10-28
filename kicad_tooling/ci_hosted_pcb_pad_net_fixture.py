@@ -5,13 +5,14 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING
+from types import MappingProxyType
 
 from .ci_hosted_pcb_fixture_support import (
     HostedPcbFixtureFailure,
     capture_verified_pcb_snapshot,
     prepare_pcb_fixture,
 )
+from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.contract_coach import ContainerNetlistRunner
 from .hwrepo.contracts import write_model
 from .hwrepo.design_lint import evaluate
@@ -20,15 +21,13 @@ from .hwrepo.models import ContractCoachReport, DesignLintPolicy, ProjectKind
 from .hwrepo.pcb_component_inventory import evaluate_native_component_inventory_coverage
 from .validate import read_netlist
 
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
-
-
-_FIXTURE_HASHES = {
-    "schematic": "343664d4ba1570250da0eb5b52dc23f7ba214c33e1db580c236dc0008fcaf394",
-    "control": "8e83c6c49c271bc686a9d067128e65e823416bd40a1659c9238c1cf743dfb519",
-    "fault": "1beeaaefba6942b2b0cc49834f0fea28f710282ba76365fc4688c64c0d4fc1e9",
-}
+_FIXTURE_HASHES = MappingProxyType(
+    {
+        "schematic": "343664d4ba1570250da0eb5b52dc23f7ba214c33e1db580c236dc0008fcaf394",
+        "control": "8e83c6c49c271bc686a9d067128e65e823416bd40a1659c9238c1cf743dfb519",
+        "fault": "1beeaaefba6942b2b0cc49834f0fea28f710282ba76365fc4688c64c0d4fc1e9",
+    }
+)
 
 
 def pcb_schematic_pcb_pad_net_fixture_lane(
@@ -49,9 +48,7 @@ def pcb_schematic_pcb_pad_net_fixture_lane(
     )
     root = context.root
     config = context.config
-    fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/schematic-pcb-pad-net"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/schematic-pcb-pad-net"
     schematic_source = fixture_root / "control.kicad_sch"
     board_sources = {case: fixture_root / f"{case}.kicad_pcb" for case in ("control", "fault")}
     if digest(schematic_source) != _FIXTURE_HASHES["schematic"]:

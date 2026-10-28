@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
+
 from .bus_signal_pairs import usb_data_function_identity
 from .connector_identity import connector_candidate_references
 from .design_lint_types import Candidate
@@ -22,8 +25,8 @@ def _crossed_net_shunts(
     connector_pins: tuple[str, ...],
     phy_pins: tuple[str, ...],
     net: str,
-    endpoint_reference_nets: set[str],
-    net_members: dict[str, set[str]],
+    endpoint_reference_nets: AbstractSet[str],
+    net_members: Mapping[str, AbstractSet[str]],
     observed: NetlistContract,
 ) -> bool:
     endpoint_pins = {pin.casefold() for pin in (*connector_pins, *phy_pins)}

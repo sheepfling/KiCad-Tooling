@@ -5,21 +5,18 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from .ci_hosted_pcb_fixture_support import (
     HostedPcbFixtureFailure,
     prepare_pcb_fixture,
 )
+from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.evidence import digest
 from .hwrepo.pcb_component_population import compare_variant_population_source
 from .hwrepo.pcb_variant_population_capture import (
     capture_variant_population,
 )
 from .validate import hashes
-
-if TYPE_CHECKING:
-    from .ci_hosted_support import HostedLog
 
 VARIANT = "Synthetic Assembly A"
 
@@ -40,10 +37,8 @@ def pcb_variant_population_fixture_lane(
         lane="PCB named-variant population",
         scratch_prefix="pcb-variant-population",
     )
-    fixture_root = Path(__file__).resolve().parents[1] / (
-        "tests/fixtures/design_lint/named-variant-population"
-    )
-    schematic_root = Path(__file__).resolve().parents[1] / (
+    fixture_root = tooling_checkout_root() / ("tests/fixtures/design_lint/named-variant-population")
+    schematic_root = tooling_checkout_root() / (
         "tests/fixtures/design_lint/component-inventory-footprint-identity"
     )
     source_directory = context.root / "projects/synthetic-variant-population"

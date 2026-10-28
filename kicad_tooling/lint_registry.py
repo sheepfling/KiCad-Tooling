@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import sys
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Protocol, TypeVar
 
 from .hwrepo.contracts import read_model, repo_path, write_model
 from .hwrepo.discovery import load_config, load_registry, settings
-from .hwrepo.layout import layout
+from .hwrepo.evidence import digest as file_digest
+from .hwrepo.layout import default_project_root, layout
 from .hwrepo.models import (
     GovernanceLintReport,
     GovernanceRecord,
@@ -19,16 +19,15 @@ from .hwrepo.models import (
     LibrariesCatalog,
     PartsCatalog,
     PartStatus,
-    PcbValidationContract,
     ProductRecord,
     ProjectKind,
     ProjectManifest,
     ReleaseClass,
     ReleasePoliciesCatalog,
-    SchematicValidationContract,
     TeamPolicy,
     ToolchainsCatalog,
 )
+from .hwrepo.selection import ProjectSelector, resolve_project_ids
 from .validate import hashes
 
 
@@ -39,15 +38,18 @@ class Identified(Protocol):
 Record = TypeVar("Record", bound=Identified)
 
 
-def records_by_id(records: Iterable[Record], label: str, issues: list[str]) -> dict[str, Record]:
+def records_by_id(
+    records: Iterable[Record], label: str
+) -> tuple[dict[str, Record], tuple[str, ...]]:
     result: dict[str, Record] = {}
+    issues: list[str] = []
     casefolded: set[str] = set()
     for record in records:
         if record.id.casefold() in casefolded:
             issues.append(f"{label}: duplicate id {record.id!r}")
         casefolded.add(record.id.casefold())
         result[record.id] = record
-    return result
+    return result, tuple(issues)
 
 
 def reviewed_value(value: str) -> bool:
@@ -70,27 +72,26 @@ def reviewed_value(value: str) -> bool:
     )
 
 
-def lint_governance_record(
-    root: Path, value: str | None, identifier: str, issues: list[str]
-) -> None:
+def lint_governance_record(root: Path, value: str | None, identifier: str) -> tuple[str, ...]:
     """Require a real multi-role GitHub governance record for production projects."""
+    issues: list[str] = []
     if value is None:
         issues.append(f"project {identifier}: governance record is missing")
-        return
+        return tuple(issues)
     try:
         path = repo_path(root, value)
     except ValueError as exc:
         issues.append(f"project {identifier}: governance record: {exc}")
-        return
+        return tuple(issues)
     if not path.is_file():
         issues.append(f"project {identifier}: governance record is missing")
-        return
+        return tuple(issues)
     try:
         record = read_model(path, GovernanceRecord)
         policy = read_model(repo_path(root, layout(root).team_policy), TeamPolicy)
     except (OSError, ValueError) as exc:
         issues.append(f"project {identifier}: invalid governance record: {exc}")
-        return
+        return tuple(issues)
     if not reviewed_value(record.branch):
         issues.append(f"project {identifier}: governance record needs a protected branch")
     if not record.required_status_checks or any(
@@ -128,9 +129,10 @@ def lint_governance_record(
         valid = bool(assigned) and all(reviewed_value(item) for item in assigned)
         if not valid:
             issues.append(f"project {identifier}: governance record needs reviewed {field}")
+    return tuple(issues)
 
 
-def lint(root: Path, selected: list[str] | None = None) -> GovernanceLintReport:
+def lint(root: Path, selected: Sequence[str] | None = None) -> GovernanceLintReport:
     """Lint all declared project inputs or an explicit project subset."""
     root = root.resolve()
     issues: list[str] = []
@@ -138,30 +140,31 @@ def lint(root: Path, selected: list[str] | None = None) -> GovernanceLintReport:
     try:
         registry = load_registry(root)
         read_model(repo_path(root, layout(root).team_policy), TeamPolicy)
-        parts = records_by_id(
+        parts, record_issues = records_by_id(
             read_model(repo_path(root, registry.catalogs.parts), PartsCatalog).parts,
             "parts catalog",
-            issues,
         )
-        interfaces = records_by_id(
+        issues.extend(record_issues)
+        interfaces, record_issues = records_by_id(
             read_model(repo_path(root, registry.catalogs.interfaces), InterfacesCatalog).interfaces,
             "interface catalog",
-            issues,
         )
-        libraries = records_by_id(
+        issues.extend(record_issues)
+        libraries, record_issues = records_by_id(
             read_model(repo_path(root, registry.catalogs.libraries), LibrariesCatalog).libraries,
             "library catalog",
-            issues,
         )
-        toolchains = records_by_id(
+        issues.extend(record_issues)
+        toolchains, record_issues = records_by_id(
             read_model(repo_path(root, registry.catalogs.toolchains), ToolchainsCatalog).toolchains,
             "toolchain catalog",
-            issues,
         )
+        issues.extend(record_issues)
         release_policies = read_model(
             repo_path(root, registry.catalogs.release_policies), ReleasePoliciesCatalog
         ).policies
-        projects = records_by_id(registry.projects, "project registry", issues)
+        projects, record_issues = records_by_id(registry.projects, "project registry")
+        issues.extend(record_issues)
     except (OSError, ValueError) as exc:
         return GovernanceLintReport(
             projects=requested,
@@ -290,7 +293,7 @@ def lint(root: Path, selected: list[str] | None = None) -> GovernanceLintReport:
                 record = repo_path(root, value)
                 if not record.is_file():
                     issues.append(f"library {library.id}: {label} record is missing: {value}")
-                elif hashlib.sha256(record.read_bytes()).hexdigest() != expected:
+                elif file_digest(record) != expected:
                     issues.append(f"library {library.id}: {label} record hash does not match")
         except ValueError as exc:
             issues.append(f"library {library.id}: {exc}")
@@ -413,7 +416,7 @@ def lint(root: Path, selected: list[str] | None = None) -> GovernanceLintReport:
                         issues.append(f"project {identifier}: mechanical handoff record is missing")
                 except ValueError as exc:
                     issues.append(f"project {identifier}: mechanical_handoff: {exc}")
-            lint_governance_record(root, project.governance_record, identifier, issues)
+            issues.extend(lint_governance_record(root, project.governance_record, identifier))
 
         if project.kind is ProjectKind.PCB_ONLY and (
             project.assurance_profile == "production" or not config.not_for_manufacture
@@ -479,12 +482,12 @@ def lint(root: Path, selected: list[str] | None = None) -> GovernanceLintReport:
             issues.append(
                 f"project {identifier}: component identity is required but no part ids are declared"
             )
-        if identity.required and isinstance(
-            config.validation, (PcbValidationContract, SchematicValidationContract)
-        ):
-            expected_ids = {
-                component.part_id for component in config.validation.components.values()
-            }
+        validation = config.validation
+        components = None
+        if validation.kind == ProjectKind.PCB or validation.kind == ProjectKind.SCHEMATIC:
+            components = validation.components
+        if identity.required and components is not None:
+            expected_ids = {component.part_id for component in components.values()}
             if None in expected_ids or expected_ids != set(identity.part_ids):
                 issues.append(
                     f"project {identifier}: component contracts must bind each reference to its declared part_id"
@@ -542,7 +545,7 @@ def lint(root: Path, selected: list[str] | None = None) -> GovernanceLintReport:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--root", type=Path, default=default_project_root())
     parser.add_argument("--project", action="append", dest="projects")
     parser.add_argument("--tag", action="append", dest="tags")
     parser.add_argument("--product", action="append", dest="products")
@@ -552,8 +555,6 @@ def main() -> int:
     )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    from .hwrepo.selection import ProjectSelector, resolve_project_ids
-
     selector = ProjectSelector(
         project_ids=tuple(args.projects or ()),
         tags=tuple(args.tags or ()),

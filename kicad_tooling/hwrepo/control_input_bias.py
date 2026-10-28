@@ -7,12 +7,9 @@ from typing import Literal
 from .control_input_checks import control_input_checks
 from .control_input_inventory import connected_control_inputs_without_visible_rail_resistor
 from .control_input_models import (
-    ControlExternalBiasRequirement,
     ControlInputBiasHeuristicCoverage,
     ControlInputBiasHeuristicEntry,
     ControlInputsAnalysis,
-    ControlInternalBiasRequirement,
-    ControlNoBiasRequirement,
 )
 from .models import NetlistContract
 
@@ -110,18 +107,7 @@ def control_input_bias_heuristic_coverage(
             or (name == "bias" and check.status not in {"PASS", "NOT_APPLICABLE"})
         )
         bias = signal.bias
-        bias_reason = (
-            bias.reason
-            if isinstance(
-                bias,
-                (
-                    ControlInternalBiasRequirement,
-                    ControlExternalBiasRequirement,
-                    ControlNoBiasRequirement,
-                ),
-            )
-            else None
-        )
+        bias_reason = bias.reason if bias.mode != "local" else None
         entries.append(
             ControlInputBiasHeuristicEntry(
                 net=gap.net,

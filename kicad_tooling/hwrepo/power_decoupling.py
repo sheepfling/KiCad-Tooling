@@ -10,7 +10,7 @@ from .models import NetlistContract
 from .return_nets import is_return_like_net_name
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PowerRailCapacitorGap:
     net: str
     input_pins: tuple[str, ...]

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from threading import Lock
+from types import MappingProxyType
 from typing import Annotated, Literal
 
 from mcp.server import MCPServer
@@ -111,27 +112,29 @@ DocumentName = Literal[
     "electrical-analysis",
     "cad-sourcing",
 ]
-DOCUMENTS: Mapping[DocumentName, str] = {
-    "start-here": "docs/workflow/START_HERE.md",
-    "first-board": "docs/workflow/FIRST_BOARD.md",
-    "diagnostics": "docs/workflow/DIAGNOSTICS.md",
-    "import-workflow": "docs/workflow/IMPORT_WORKFLOW.md",
-    "contributor-guide": "docs/workflow/CONTRIBUTOR_GUIDE.md",
-    "checks-and-ci": "docs/workflow/CHECKS_AND_CI.md",
-    "mcp": "docs/workflow/MCP.md",
-    "bom-policy": "docs/workflow/BOM_POLICY.md",
-    "release-readiness": "docs/workflow/RELEASE_READINESS.md",
-    "release-storage": "docs/workflow/RELEASE_STORAGE.md",
-    "project-kinds": "docs/workflow/PROJECT_KINDS.md",
-    "libraries": "docs/workflow/LIBRARIES.md",
-    "authority-model": "docs/workflow/AUTHORITY_MODEL.md",
-    "assurance-profiles": "docs/workflow/ASSURANCE_PROFILES.md",
-    "three-d-workflow": "docs/workflow/THREE_D_WORKFLOW.md",
-    "parts-to-order": "docs/workflow/PARTS_TO_ORDER.md",
-    "tool-surfaces": "docs/workflow/TOOL_SURFACES.md",
-    "electrical-analysis": "docs/workflow/ELECTRICAL_ANALYSIS.md",
-    "cad-sourcing": "docs/workflow/CAD_SOURCING.md",
-}
+DOCUMENTS: Mapping[DocumentName, str] = MappingProxyType(
+    {
+        "start-here": "docs/workflow/START_HERE.md",
+        "first-board": "docs/workflow/FIRST_BOARD.md",
+        "diagnostics": "docs/workflow/DIAGNOSTICS.md",
+        "import-workflow": "docs/workflow/IMPORT_WORKFLOW.md",
+        "contributor-guide": "docs/workflow/CONTRIBUTOR_GUIDE.md",
+        "checks-and-ci": "docs/workflow/CHECKS_AND_CI.md",
+        "mcp": "docs/workflow/MCP.md",
+        "bom-policy": "docs/workflow/BOM_POLICY.md",
+        "release-readiness": "docs/workflow/RELEASE_READINESS.md",
+        "release-storage": "docs/workflow/RELEASE_STORAGE.md",
+        "project-kinds": "docs/workflow/PROJECT_KINDS.md",
+        "libraries": "docs/workflow/LIBRARIES.md",
+        "authority-model": "docs/workflow/AUTHORITY_MODEL.md",
+        "assurance-profiles": "docs/workflow/ASSURANCE_PROFILES.md",
+        "three-d-workflow": "docs/workflow/THREE_D_WORKFLOW.md",
+        "parts-to-order": "docs/workflow/PARTS_TO_ORDER.md",
+        "tool-surfaces": "docs/workflow/TOOL_SURFACES.md",
+        "electrical-analysis": "docs/workflow/ELECTRICAL_ANALYSIS.md",
+        "cad-sourcing": "docs/workflow/CAD_SOURCING.md",
+    }
+)
 READ_ONLY = ToolAnnotations(
     read_only_hint=True,
     destructive_hint=False,
@@ -563,10 +566,10 @@ def create_server(
 
         def check_native_scope(
             view_id: str,
-            project_ids: list[str] | None = None,
-            product_ids: list[str] | None = None,
-            tags: list[str] | None = None,
-            exclude_tags: list[str] | None = None,
+            project_ids: Sequence[str] | None = None,
+            product_ids: Sequence[str] | None = None,
+            tags: Sequence[str] | None = None,
+            exclude_tags: Sequence[str] | None = None,
         ) -> McpNativeScopeReport:
             """Run the CLI grouped native lane with local kicad-cli and retain every failure.
 
@@ -633,10 +636,10 @@ def create_server(
         server.tool(annotations=EXECUTION)(capture_contract)
 
         def check_scope(
-            project_ids: list[str] | None = None,
-            product_ids: list[str] | None = None,
-            tags: list[str] | None = None,
-            exclude_tags: list[str] | None = None,
+            project_ids: Sequence[str] | None = None,
+            product_ids: Sequence[str] | None = None,
+            tags: Sequence[str] | None = None,
+            exclude_tags: Sequence[str] | None = None,
             shard: str | None = None,
             jobs: int = 1,
         ) -> McpScopeReport:
@@ -793,10 +796,10 @@ def create_server(
 
         def generate_views(
             view_id: str,
-            project_ids: list[str] | None = None,
-            product_ids: list[str] | None = None,
-            tags: list[str] | None = None,
-            exclude_tags: list[str] | None = None,
+            project_ids: Sequence[str] | None = None,
+            product_ids: Sequence[str] | None = None,
+            tags: Sequence[str] | None = None,
+            exclude_tags: Sequence[str] | None = None,
         ) -> McpGenerationReport:
             """Generate product BOMs, harness schedules and review views into fresh ignored output.
 
@@ -854,7 +857,7 @@ def create_server(
                 view_id: str,
                 runner: NativeRunner = "auto",
                 assembly_variant: str | None = None,
-                views: list[ThreeDView] | None = None,
+                views: Sequence[ThreeDView] | None = None,
             ) -> ThreeDReport:
                 """Generate selected PCB PNG views plus STEP and GLB in a fresh 3D receipt.
 
@@ -890,8 +893,8 @@ def create_server(
 
             def prepare_review_scope(
                 release_id: str,
-                project_ids: list[str] | None = None,
-                variants: list[str] | None = None,
+                project_ids: Sequence[str] | None = None,
+                variants: Sequence[str] | None = None,
                 portable: str | None = None,
                 runner: NativeRunner = "auto",
             ) -> ReleaseManifest:
@@ -934,7 +937,7 @@ def create_server(
         def capture_electrical_inputs(
             project_id: str,
             view_id: str,
-            models: list[str] | None = None,
+            models: Sequence[str] | None = None,
         ) -> ElectricalInputInventory:
             """Capture UNREVIEWED source/model hashes in a fresh ignored receipt."""
             with service_operation(operation):
@@ -983,10 +986,10 @@ def create_server(
         server.tool(annotations=EXECUTION)(analyze_electrical)
 
         def check_electrical_scope(
-            project_ids: list[str] | None = None,
-            product_ids: list[str] | None = None,
-            tags: list[str] | None = None,
-            exclude_tags: list[str] | None = None,
+            project_ids: Sequence[str] | None = None,
+            product_ids: Sequence[str] | None = None,
+            tags: Sequence[str] | None = None,
+            exclude_tags: Sequence[str] | None = None,
         ) -> ElectricalSuiteReport:
             """Run the CLI's selected electrical suite, preserving failures and missing requirements."""
             with service_operation(operation):
@@ -1057,7 +1060,7 @@ def create_server(
             project_id: str,
             view_id: str,
             picker_report: str,
-            assignments: list[PartSelectionAssignment],
+            assignments: Sequence[PartSelectionAssignment],
         ) -> PartSelectionReport:
             """Preview explicit reference/part_id choices offered by a retained picker.
 

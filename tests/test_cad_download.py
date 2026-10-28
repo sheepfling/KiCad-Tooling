@@ -7,7 +7,11 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from kicad_tooling.hwrepo.cad_download import fetch_official_footprint, inspect_cached_provenance
+from kicad_tooling.hwrepo.cad_download import (
+    _download,
+    fetch_official_footprint,
+    inspect_cached_provenance,
+)
 
 FOOTPRINT = b"""(footprint "Exact_Name"
  (version 20260206)
@@ -145,7 +149,6 @@ class CadDownloadTests(unittest.TestCase):
         self.assertEqual(target.read_bytes(), STEP + b"modified")
 
     def test_redirect_and_oversized_or_empty_http_response_are_rejected(self) -> None:
-        from kicad_tooling.hwrepo.cad_download import _download
 
         url = BASE + "kicad-footprints/-/raw/10.0.5/Library.pretty/Exact_Name.kicad_mod"
         with patch("kicad_tooling.hwrepo.cad_download.http.client.HTTPSConnection") as factory:

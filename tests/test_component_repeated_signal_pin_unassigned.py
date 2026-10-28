@@ -17,6 +17,7 @@ from kicad_tooling.ci_hosted_component_repeated_signal_pin_unassigned import (
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import (
     DesignLintIgnore,
     DesignLintPolicy,
@@ -283,7 +284,6 @@ def test_native_open_repeated_signal_pin_fault_and_control_are_repeatable(
     from kicad_tooling.ci_hosted_component_repeated_signal_pin_unassigned_lane import (
         component_repeated_signal_pin_unassigned_fixture_lane,
     )
-    from kicad_tooling.hwrepo.electrical import selected_config
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(

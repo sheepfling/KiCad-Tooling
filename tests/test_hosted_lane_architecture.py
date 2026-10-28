@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import json
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -25,13 +26,15 @@ SWITCHING_LOOP_COORDINATOR = REPO_ROOT / "kicad_tooling" / "ci_hosted_pcb_switch
 SWITCHING_LOOP_MODULES = REPO_ROOT / "kicad_tooling"
 PCB_RETURN_COORDINATOR = REPO_ROOT / "kicad_tooling" / "ci_hosted_pcb_return_lane.py"
 PCB_RETURN_MODULES = REPO_ROOT / "kicad_tooling"
-LARGER_THEME_LANES = {
-    "usb_c_port_fixture_lane": "ci_hosted_usb_c_ports.py",
-    "ic_rail_capacitor_fixture_lane": "ci_hosted_ic_rail_capacitors.py",
-    "power_pin_net_role_fixture_lane": "ci_hosted_power_pin_net_roles.py",
-    "power_sequence_fixture_lane": "ci_hosted_power_sequences.py",
-    "open_drain_bias_fixture_lane": "ci_hosted_open_drain_bias.py",
-}
+LARGER_THEME_LANES = MappingProxyType(
+    {
+        "usb_c_port_fixture_lane": "ci_hosted_usb_c_ports.py",
+        "ic_rail_capacitor_fixture_lane": "ci_hosted_ic_rail_capacitors.py",
+        "power_pin_net_role_fixture_lane": "ci_hosted_power_pin_net_roles.py",
+        "power_sequence_fixture_lane": "ci_hosted_power_sequences.py",
+        "open_drain_bias_fixture_lane": "ci_hosted_open_drain_bias.py",
+    }
+)
 LEGACY_CEILINGS = Path(__file__).with_name("hosted_lane_line_ceilings.json")
 MODULE_SIZE_CEILINGS = Path(__file__).with_name("python_module_line_ceilings.json")
 FUNCTION_LIMIT = 500
