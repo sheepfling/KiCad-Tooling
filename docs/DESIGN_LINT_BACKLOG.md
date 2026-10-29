@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 249 rules are implemented with synthetic regression coverage.
+The following 250 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 249 active rules.
+The catalog currently contains 250 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -423,6 +423,7 @@ skipped under prerelease policy.
 - `connector.return_supply_scope_singleton`
 - `connector.stateful_contact_topology_mismatch`
 - `connector.mapped_shield_signal_share_net`
+- `connector.mapped_signal_return_share_net`
 - `connector.peer_pin_assignment_outlier`
 - `connector.peer_pin_assignment_divergence`
 - `connector.footprint_peer_pin_assignment_divergence`
@@ -3321,7 +3322,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 249 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 250 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -13797,6 +13798,33 @@ control are documented in the
   ```sh
   .venv/bin/python -I -m pytest tests/test_connector_mapped_shield_signal_sharing.py \
     -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_shield_signal_share_net")'
+  ```
+
+#### LINT-266 — Review mapped connector signal and return contacts sharing a net
+
+- **Status:** Implemented as the default-`review` rule
+  `connector.mapped_signal_return_share_net`.
+- **Gap:** Existing checks can inspect return-looking net names and separately
+  mapped signal contacts. A neutral net label can still conceal a signal
+  contact that shares a return contact when the reviewed interface map already
+  records both contact roles.
+- **Predicate:** For complete current source-matched connector maps, group
+  fitted return and signal contacts by exact native net assignment and prompt
+  when both roles occur on one net.
+- **Boundary:** Intentional common references are valid in some interfaces.
+  The rule requests disposition and does not declare a defect, decide the
+  required signal reference, inspect intervening circuitry, or prove PCB
+  copper continuity. DNP, reasoned-open, ambiguous, stale, incomplete, and
+  digestless evidence is excluded.
+- **Fixtures:** Synthetic role fault, separate-net and non-target-role
+  controls, policy/ignore, stale/open/ambiguous controls, and deterministic
+  ordering; exact KiCad 10.0.0 and 10.0.5 exports reuse the tooling-owned
+  two-contact fixture with return/signal and shield/signal role maps.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_connector_mapped_signal_return_sharing.py \
+    -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_signal_return_share_net")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

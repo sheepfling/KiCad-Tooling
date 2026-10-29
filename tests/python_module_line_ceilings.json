@@ -33,7 +33,6 @@
     "tests/test_parts_extensions.py": 853,
     "tests/test_product.py": 697,
     "tests/test_test_access.py": 604,
-    "tests/test_validation.py": 565,
-    "tests/test_design_lint_catalog_reachability.py": 521
+    "tests/test_validation.py": 565
   }
 }

@@ -18,6 +18,7 @@ import tests.design_lint_fixtures.connector_mapped_supply_return_net as _mapped_
 import tests.design_lint_fixtures.connector_named_power_aliases as _connector_named_power_aliases
 import tests.design_lint_fixtures.connector_peer_pin_all_open as _connector_peer_pin_all_open
 import tests.design_lint_fixtures.connector_return_supply as _connector_return_supply_fixtures
+import tests.design_lint_fixtures.connector_role_sharing_reachability as _connector_role_sharing_reachability
 import tests.design_lint_fixtures.i2c_addresses as _tests_i2c_address_fixtures
 import tests.design_lint_fixtures.i2c_signal_label as _i2c_signal_label_fixtures
 import tests.design_lint_fixtures.i3c_same_net as _i3c_same_net_fixtures
@@ -78,11 +79,6 @@ from tests.design_lint_fixtures.catalog_reachability import (
 from tests.design_lint_fixtures.catalog_reachability_pcb import pcb_rule_ids
 from tests.design_lint_fixtures.component_catalog_reachability import (
     reachable_component_rule_ids,
-)
-from tests.design_lint_fixtures.connector_mapped_signal_sharing import (
-    signal_sharing_coverage,
-    signal_sharing_netlist,
-    signal_sharing_report,
 )
 from tests.design_lint_fixtures.unconnected_protocol_reachability import (
     unconnected_protocol_candidate_rule_ids,
@@ -268,24 +264,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     emitted.update(
         item.rule_id for item in candidates(stm32_netlist, stm32_pin_map_coverage=stm32_coverage)
     )
-    for source, signal_names in (
-        (signal_sharing_netlist(), ("CONTROL_A", "CONTROL_B")),
-        (signal_sharing_netlist(), ("CABLE_SHIELD", "UART_RX")),
-        (
-            signal_sharing_netlist(first_net="CONTACT_NET_A", second_net="CONTACT_NET_B"),
-            ("CONTROL_A", "control_a"),
-        ),
-    ):
-        if signal_names == ("CABLE_SHIELD", "UART_RX"):
-            mapped_coverage = signal_sharing_coverage(
-                source,
-                signal_names=signal_names,
-                roles=("shield", "signal"),
-            )
-        else:
-            mapped_coverage = signal_sharing_coverage(source, signal_names=signal_names)
-        mapped_report, _ = signal_sharing_report(source, coverage=mapped_coverage)
-        emitted.update(item.rule_id for item in mapped_report.findings)
+    emitted.update(_connector_role_sharing_reachability.connector_role_sharing_rule_ids())
     i2c_pullup_source = i2c_series_pullup_netlist()
     i2c_pullup_coverage = i2c_pullup_heuristic_coverage(
         i2c_pullup_source,

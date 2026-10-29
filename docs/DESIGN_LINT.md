@@ -761,7 +761,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 249 active rules.
+The catalog currently contains 250 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -2900,6 +2900,29 @@ KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_connector_mapped_signals_share_net_native_fixture_lane.py \
   -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_signals_share_net")'
 ```
+
+## Review a mapped connector signal sharing a return net
+
+`connector.mapped_signal_return_share_net` prompts when complete, current,
+source-matched connector interface maps identify at least one fitted signal
+contact and one fitted return contact assigned to the same native net. It uses
+contact roles rather than net-name patterns, so neutral net labels still
+receive review when the independently authored interface map provides those
+roles.
+
+The finding is a configurable review cue; a signal and return may intentionally
+share a reference. DNP contacts, reasoned opens, ambiguous assignments, stale
+or incomplete maps, and digestless coverage are excluded. This does not decide
+the required signal reference or prove an electrical or copper defect.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_mapped_signal_return_sharing.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_signal_return_share_net")'
+```
+
+The exact-version native fault/control reuses the tooling-owned two-contact
+connector fixture. The same exported net is mapped as return/signal for the
+fault and shield/signal for the control in the KiCad 10.0.0 and 10.0.5 lane.
 
 ## Review a mapped shield contact on a return-labeled net
 
