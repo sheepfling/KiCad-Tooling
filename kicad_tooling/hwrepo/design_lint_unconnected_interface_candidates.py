@@ -8,6 +8,7 @@ from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .i2c_unconnected_pins import unconnected_i2c_signal_pins
 from .models import NetlistContract
+from .rs485_unconnected_line_pin import rs485_unconnected_line_pin_candidates
 from .serial_unconnected_pins import unconnected_serial_function_pins
 from .spi_unconnected_clock_pin import unconnected_spi_clock_function_pins
 from .spi_unconnected_data_pins import unconnected_spi_data_function_pins
@@ -171,5 +172,6 @@ def unconnected_interface_candidates(observed: NetlistContract) -> tuple[Candida
                 },
             )
         )
+    found.extend(rs485_unconnected_line_pin_candidates(observed))
     found.extend(usb_c_sbu_unconnected_pin_candidates(observed))
     return tuple(found)

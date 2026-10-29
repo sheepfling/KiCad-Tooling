@@ -318,6 +318,25 @@ def test_rs485_named_rail_rule_uses_a_focused_predicate_owner() -> None:
     )
 
 
+def test_rs485_unconnected_line_rule_uses_a_focused_predicate_owner() -> None:
+    from kicad_tooling.hwrepo import rs485_unconnected_line_pin
+
+    rule = next(
+        item for item in rule_catalog().rules if item.rule_id == "bus.rs485_unconnected_line_pin"
+    )
+    owner = (
+        "kicad_tooling/hwrepo/rs485_unconnected_line_pin.py#rs485_unconnected_line_pin_candidates"
+    )
+
+    assert _line_count(HWREPO / "rs485_unconnected_line_pin.py") < IMPLEMENTATION_MAX_LINES
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == owner
+    assert owner in rule.implementation_refs
+    assert rs485_unconnected_line_pin.rs485_unconnected_line_pin_candidates.__module__.endswith(
+        "rs485_unconnected_line_pin"
+    )
+
+
 def test_spi_data_same_net_rule_uses_a_focused_predicate_owner() -> None:
     rule = next(
         item
