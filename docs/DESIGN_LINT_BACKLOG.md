@@ -2776,6 +2776,14 @@ is not a reason by itself to expand its scope or change its default policy.
   2,841 deselected`), the complete `design_lint and parity_lint` slice passed
   (`113 passed, 2,986 deselected, 14 subtests passed`), and the
   catalog/backlog/architecture group passed (`65 passed`).
+- **Fixture-reference reachability audit (2026-10-29):** Rule-gate integrity
+  now parses every active catalogued fault, valid-control, and metamorphic test
+  reference and verifies that the named function or class method still exists.
+  This catches stale fixture names that module-marker checks alone cannot
+  detect. The architecture collection test requires the audit in each
+  rule-scoped release gate. All 2,596 references in the committed catalog
+  resolved to defined test functions; the focused architecture group passed
+  (`38 passed`).
 - **Done when:** CI can identify an undocumented rule or missing required
   fixture, and a reviewer can trace each report finding to its evidence and
   limitations.

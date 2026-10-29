@@ -90,6 +90,63 @@ def _module_pytest_markers(path: Path) -> set[str]:
     return markers
 
 
+def _test_function_exists(
+    tree: ast.Module, owner_names: tuple[str, ...], function_name: str
+) -> bool:
+    """Check that a catalogued test function is defined in its module or class."""
+    body: list[ast.stmt] = tree.body
+    for owner_name in owner_names:
+        owner = next(
+            (
+                statement
+                for statement in body
+                if isinstance(statement, ast.ClassDef) and statement.name == owner_name
+            ),
+            None,
+        )
+        if owner is None:
+            return False
+        body = owner.body
+    return any(
+        isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and statement.name == function_name
+        for statement in body
+    )
+
+
+@pytest.mark.rule_gate_integrity
+def test_active_rule_fixture_references_name_existing_test_functions() -> None:
+    catalog = json.loads((HWREPO / "design-lint-rules.json").read_text(encoding="utf-8"))
+    trees: dict[Path, ast.Module] = {}
+    missing: list[str] = []
+    for rule in catalog["rules"]:
+        if rule.get("status") != "active":
+            continue
+        for field in RULE_FIXTURE_FIELDS:
+            for reference in rule.get(field, []):
+                module_path = _fixture_module_path(reference)
+                if module_path is None:
+                    missing.append(reference)
+                    continue
+                parts = reference.split(".")
+                module_parts = module_path.relative_to(REPO_ROOT).with_suffix("").parts
+                if module_parts[-1] == "__init__":
+                    module_parts = module_parts[:-1]
+                node_parts = parts[len(module_parts) :]
+                if not node_parts:
+                    missing.append(reference)
+                    continue
+                if module_path not in trees:
+                    trees[module_path] = ast.parse(
+                        module_path.read_text(encoding="utf-8"), filename=str(module_path)
+                    )
+                tree = trees[module_path]
+                if not _test_function_exists(tree, tuple(node_parts[:-1]), node_parts[-1]):
+                    missing.append(reference)
+
+    assert not missing, f"Active rule fixture references must resolve to test functions: {missing}"
+
+
 def test_catalog_types_have_small_rule_owned_modules() -> None:
     modules = [HWREPO / name for name in RULE_OWNER_MODULES]
     assert all(path.is_file() for path in modules)
