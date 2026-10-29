@@ -294,6 +294,8 @@ def inspect_design_lint_summary(
             kicad_version=config.kicad_version,
             toolchain_image=config.image,
         )
+        if hashes(root, config.source_roots) != coach.source_hashes:
+            raise ValueError("Declared project source changed during design-lint inspection")
         # Revalidate the assembled report so the final cross-field contract is
         # checked after adding manifest, policy, and connectivity evidence.
         return DesignLintReport.model_validate(

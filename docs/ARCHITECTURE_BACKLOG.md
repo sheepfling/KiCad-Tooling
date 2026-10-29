@@ -147,6 +147,10 @@ positive state, while old serialized records remain parseable. Apply the same
 positive-state source-binding check to other coverage families during their
 route reviews.
 
+Project inspection now rechecks the declared source inventory after scanning
+and connectivity capture. An edit, addition, or removal during that work
+blocks the result rather than presenting findings bound to the earlier source.
+
 Control-input bias coverage follows the same boundary: a completed scan keeps
 the observed netlist hash even when it finds no candidate nets. Evaluation
 blocks stale or unbound completed coverage and coverage containing entries
