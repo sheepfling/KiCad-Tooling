@@ -3,10 +3,16 @@
 from __future__ import annotations
 
 import ast
+import inspect
 
 import pytest
 
-from kicad_tooling.hwrepo import design_lint_peer_candidates, digital_peer_voltage_types
+from kicad_tooling.hwrepo import (
+    design_lint_candidate_aggregation,
+    design_lint_evaluator,
+    design_lint_peer_candidates,
+    digital_peer_voltage_types,
+)
 from tests.lint_architecture_support import (
     FACADE_MAX_LINES,
     HWREPO,
@@ -236,3 +242,19 @@ def test_i2c_address_input_replaces_separate_bus_arguments() -> None:
     assert "i2c_address" in arguments
     assert "i2c_address_map" not in arguments
     assert "i2c_address_coverage" not in arguments
+
+
+def test_public_lint_compatibility_signatures_do_not_grow() -> None:
+    candidate_parameters = inspect.signature(
+        design_lint_candidate_aggregation.candidates
+    ).parameters
+    evaluator_parameters = inspect.signature(design_lint_evaluator.evaluate).parameters
+
+    assert len(candidate_parameters) <= 49, (
+        "Route new lint evidence through a typed theme input instead of widening "
+        "the candidate compatibility API."
+    )
+    assert len(evaluator_parameters) <= 33, (
+        "Route new lint evidence through prepared typed inputs instead of widening "
+        "the evaluator compatibility API."
+    )
