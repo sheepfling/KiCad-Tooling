@@ -70,6 +70,16 @@ def resolve_component_map_coverage(
                     netlist_sha256=netlist_sha256,
                     issue=f"Could not compare the I2C address map with native evidence: {exc}",
                 )
+    issue = _stale_netlist_coverage_issue(
+        i2c_address_coverage.status,
+        i2c_address_coverage.netlist_sha256,
+        netlist_sha256,
+        "I2C address",
+    )
+    if issue is not None:
+        i2c_address_coverage = I2cAddressCoverageReport(
+            status="BLOCKED", netlist_sha256=netlist_sha256, issue=issue
+        )
     if crystal_network_coverage is None:
         network_map: CrystalNetworkMap | None = policy.crystal_network_map
         if network_map is None:
@@ -90,6 +100,16 @@ def resolve_component_map_coverage(
                     netlist_sha256=netlist_sha256,
                     issue=f"Could not compare the crystal network map with native evidence: {exc}",
                 )
+    issue = _stale_netlist_coverage_issue(
+        crystal_network_coverage.status,
+        crystal_network_coverage.netlist_sha256,
+        netlist_sha256,
+        "Crystal network",
+    )
+    if issue is not None:
+        crystal_network_coverage = CrystalNetworkCoverageReport(
+            status="BLOCKED", netlist_sha256=netlist_sha256, issue=issue
+        )
     if regulator_feedback_coverage is None:
         feedback_map: RegulatorFeedbackMap | None = policy.regulator_feedback_map
         if feedback_map is None:
@@ -110,6 +130,16 @@ def resolve_component_map_coverage(
                     netlist_sha256=netlist_sha256,
                     issue=f"Could not compare the regulator feedback map with native evidence: {exc}",
                 )
+    issue = _stale_netlist_coverage_issue(
+        regulator_feedback_coverage.status,
+        regulator_feedback_coverage.netlist_sha256,
+        netlist_sha256,
+        "Regulator feedback",
+    )
+    if issue is not None:
+        regulator_feedback_coverage = RegulatorFeedbackCoverageReport(
+            status="BLOCKED", netlist_sha256=netlist_sha256, issue=issue
+        )
     if rc_filter_coverage is None:
         filter_map: RcFilterMap | None = policy.rc_filter_map
         if filter_map is None:
@@ -128,6 +158,16 @@ def resolve_component_map_coverage(
                     netlist_sha256=netlist_sha256,
                     issue=f"Could not compare the RC filter map with native evidence: {exc}",
                 )
+    issue = _stale_netlist_coverage_issue(
+        rc_filter_coverage.status,
+        rc_filter_coverage.netlist_sha256,
+        netlist_sha256,
+        "RC filter",
+    )
+    if issue is not None:
+        rc_filter_coverage = RcFilterCoverageReport(
+            status="BLOCKED", netlist_sha256=netlist_sha256, issue=issue
+        )
     if connector_return_distribution_coverage is None:
         distribution_map: ConnectorReturnDistributionMap | None = (
             policy.connector_return_distribution_map
@@ -155,6 +195,28 @@ def resolve_component_map_coverage(
                         f"source-bound evidence: {exc}"
                     ),
                 )
+    issue = _stale_netlist_coverage_issue(
+        connector_return_distribution_coverage.status,
+        connector_return_distribution_coverage.netlist_sha256,
+        netlist_sha256,
+        "Connector return-distribution",
+    )
+    catalog_sha256 = (
+        None if connector_coverage is None else connector_coverage.interface_catalog_sha256
+    )
+    if (
+        issue is None
+        and connector_return_distribution_coverage.status in {"COMPLETE", "INCOMPLETE"}
+        and connector_return_distribution_coverage.interface_catalog_sha256 != catalog_sha256
+    ):
+        issue = "Connector return-distribution coverage uses a different or unavailable interface catalog hash."
+    if issue is not None:
+        connector_return_distribution_coverage = ConnectorReturnDistributionCoverageReport(
+            status="BLOCKED",
+            netlist_sha256=netlist_sha256,
+            interface_catalog_sha256=catalog_sha256,
+            issue=issue,
+        )
     return ComponentMapCoverage(
         i2c_address=i2c_address_coverage,
         crystal_network=crystal_network_coverage,
@@ -162,3 +224,18 @@ def resolve_component_map_coverage(
         rc_filter=rc_filter_coverage,
         connector_return_distribution=connector_return_distribution_coverage,
     )
+
+
+def _stale_netlist_coverage_issue(
+    status: str,
+    coverage_netlist_sha256: Digest | None,
+    current_netlist_sha256: Digest | None,
+    coverage_name: str,
+) -> str | None:
+    if status not in {"COMPLETE", "INCOMPLETE"}:
+        return None
+    if current_netlist_sha256 is None or coverage_netlist_sha256 != current_netlist_sha256:
+        return (
+            f"{coverage_name} coverage uses a different or unavailable native netlist hash."
+        )
+    return None

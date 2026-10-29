@@ -17,7 +17,6 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
 )
 from tests.design_lint_fixtures.i2c_addresses import (
-    _NETLIST_HASH,
     address_map,
     address_netlist,
     coach,
@@ -26,6 +25,8 @@ from tests.design_lint_fixtures.i2c_addresses import (
 )
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
+
+_NETLIST_HASH = "b" * 64
 
 
 def test_unmapped_responder_prompt_is_order_stable_and_map_entry_clears_it() -> None:
@@ -131,6 +132,30 @@ def test_address_map_suppresses_listed_responder_and_finds_unlisted_peer() -> No
     assert candidates[0].subject == "U2: I2C address-map coverage"
     assert "not listed as a responder" in candidates[0].message
     assert candidates[0].evidence["assigned_net_pairs"] == ("MAIN_SDA / MAIN_SCL",)
+
+
+def test_stale_complete_address_coverage_cannot_hide_current_collision() -> None:
+    specification = address_map(responder("U1"), responder("U2"))
+    prior_netlist = address_netlist(specification, strap_values={"U1": 0, "U2": 1})
+    prior_hash = hashlib.sha256(prior_netlist.model_dump_json().encode("utf-8")).hexdigest()
+    stale_coverage = scan_i2c_address_map(specification, prior_netlist, prior_hash)
+    assert stale_coverage.status == "COMPLETE"
+    assert len({entry.observed_address for entry in stale_coverage.entries}) == 2
+
+    current_netlist = address_netlist(specification, strap_values={"U1": 0, "U2": 0})
+    current_hash = hashlib.sha256(current_netlist.model_dump_json().encode("utf-8")).hexdigest()
+    assert current_hash != prior_hash
+    report = evaluate(
+        "synthetic-i2c-addresses",
+        coach(current_netlist, current_hash),
+        DesignLintPolicy(i2c_address_map=specification),
+        i2c_address_coverage=stale_coverage,
+    )
+
+    assert report.status == "BLOCKED"
+    assert report.i2c_address_coverage.status == "BLOCKED"
+    assert report.i2c_address_coverage.entries == ()
+    assert any("different or unavailable native netlist hash" in issue for issue in report.issues)
 
 
 def test_address_map_candidate_skips_declared_dnp_and_non_ic_controls() -> None:
