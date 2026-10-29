@@ -5915,7 +5915,6 @@ is not a reason by itself to expand its scope or change its default policy.
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_same_net")'
   ```
 
-
 #### LINT-262 — Review same-role serial connector and controller pins
 
 - **Status:** Implemented as default-review `bus.serial_endpoint_role_collision`.

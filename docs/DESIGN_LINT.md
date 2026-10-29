@@ -1402,7 +1402,6 @@ KICAD_RUN_NATIVE_USB_C_SBU_UNCONNECTED_FIXTURES=1 .venv/bin/python -I -m pytest 
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_unconnected_pin")'
 ```
 
-
 ### USB-C controller CC1/CC2 pins sharing one net
 
 `bus.usb_c_cc_controller_same_net` reviews a fitted numeric U/IC reference

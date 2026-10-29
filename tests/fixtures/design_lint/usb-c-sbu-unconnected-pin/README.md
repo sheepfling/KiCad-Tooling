@@ -11,9 +11,9 @@ They contain no product board or project data.
 
 Reviewed schematic SHA-256 digests:
 
-| Fixture | SHA-256 |
-| --- | --- |
-| `fault.kicad_sch` | `7244d4285c4624aadc302905ab051462e16280a56e8dfe01b1791aea701f6bed` |
+| Fixture             | SHA-256                                                            |
+| ------------------- | ------------------------------------------------------------------ |
+| `fault.kicad_sch`   | `7244d4285c4624aadc302905ab051462e16280a56e8dfe01b1791aea701f6bed` |
 | `control.kicad_sch` | `9b16bfcbc1efff9a72db1ac636a3decdb069f0136b827d03b6aed72ea66128d7` |
 
 The exact-version native lane exports each source twice with digest-pinned
