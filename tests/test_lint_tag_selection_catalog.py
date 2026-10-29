@@ -104,6 +104,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_USB_C_CC_ENDPOINT_CROSSED_FIXTURES",
         ),
         (
+            "bus.serial_endpoint_role_collision",
+            "KICAD_RUN_NATIVE_SERIAL_ENDPOINT_ROLE_COLLISION_FIXTURES",
+        ),
+        (
             "bus.usb_c_sbu_signal_on_named_rail",
             "KICAD_RUN_NATIVE_USB_C_SBU_NAMED_RAIL_FIXTURES",
         ),

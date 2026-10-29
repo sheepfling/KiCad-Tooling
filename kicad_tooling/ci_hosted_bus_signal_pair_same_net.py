@@ -143,7 +143,10 @@ def bus_signal_pair_same_net_fixture_lane(
                 raise ValueError(f"Native KiCad omitted {protocol} same-net {case} evidence")
             raw_hashes[(case, run)] = digest(netlist_path)
             observed = read_netlist(netlist_path)
-            if observed.pin_functions != dict(expected_pin_functions):
+            if any(
+                observed.pin_functions.get(pin) != function
+                for pin, function in expected_pin_functions.items()
+            ):
                 raise ValueError(f"Native {protocol} {case} pin-function inventory changed")
             case_expectation = fixture.fault if case == "fault" else fixture.control
             expected_net_assignments = {

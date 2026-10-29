@@ -30,6 +30,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_architecture_pytest_markers.py",
                 "tests/test_design_lint_architecture_pytest_collection.py",
                 "tests/test_design_lint_architecture_rule_selectors.py",
+                "tests/test_design_lint_architecture_serial_endpoint_role_collision.py",
                 "tests/test_design_lint_architecture_named_rail_protocols.py",
             }
         ),
@@ -185,6 +186,9 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_usb_c_cc_endpoint_pairing.py",
                 "tests/test_design_lint_determinism_usb_c_cc_endpoint_pairing.py",
                 "tests/test_usb_c_cc_endpoint_crossed_native_fixture_lane.py",
+                "tests/test_serial_endpoint_role_collision.py",
+                "tests/test_serial_endpoint_role_collision_native_fixture_lane.py",
+                "tests/test_design_lint_determinism_serial_endpoint_role_collision.py",
                 "tests/test_design_lint_architecture_usb_c_cc_endpoint_pairing.py",
                 "tests/test_numbered_interface_returns.py",
                 "tests/test_protocol_return_name_groups.py",

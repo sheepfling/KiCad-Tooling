@@ -41,6 +41,7 @@ REQUIRED_WHEEL_ASSETS = frozenset(
         "kicad_tooling/hwrepo/usb_c_cc_same_net.py",
         "kicad_tooling/hwrepo/usb_c_cc_controller_same_net.py",
         "kicad_tooling/hwrepo/usb_c_cc_endpoint_pairing.py",
+        "kicad_tooling/hwrepo/serial_endpoint_role_collision.py",
         "kicad_tooling/hwrepo/design_lint_usb_c_same_net_candidates.py",
         "kicad_tooling/ci_hosted_usb_c_cc_same_net.py",
         "kicad_tooling/ci_hosted_usb_c_cc_controller_same_net.py",

@@ -95,6 +95,10 @@ def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:
             "tests/test_serial_tx_rx_same_net.py::test_same_net_uart_tx_rx_pair_is_reviewed_and_full_duplex_control_is_quiet",
         ),
         (
+            "bus.serial_endpoint_role_collision",
+            "tests/test_serial_endpoint_role_collision.py::test_same_role_tx_and_rx_endpoint_pairs_request_review",
+        ),
+        (
             "bus.serial_signal_on_named_rail",
             "tests/test_serial_signal_named_rail.py::test_project_policy_and_exact_ignore_control_the_review",
         ),

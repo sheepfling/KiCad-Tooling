@@ -59,15 +59,45 @@ def main() -> int:
         action="store_true",
         help="List the packaged design-lint rules without reading project evidence",
     )
+    parser.add_argument(
+        "--theme",
+        choices=("connectors", "interfaces", "components", "power", "returns", "schematic", "pcb"),
+    )
+    parser.add_argument("--status", choices=("active", "prototype", "retired"))
+    parser.add_argument(
+        "--maturity", choices=("synthetic_validated", "cohort_candidate", "field_validated")
+    )
+    parser.add_argument("--default-mode", choices=("review", "block", "off"))
+    parser.add_argument("--rule-id", help="Select one exact design-lint rule ID")
+    parser.add_argument("--rule-id-prefix", help="Select a rule-ID family prefix")
     args = parser.parse_args()
     if args.catalog:
         if any(
             value is not None for value in (args.project, args.native_summary, args.baseline_report)
         ):
             parser.error("--catalog cannot be combined with project evidence or --baseline-report")
-        catalog = rule_catalog()
+        catalog = rule_catalog(
+            theme=args.theme,
+            status=args.status,
+            maturity=args.maturity,
+            default_mode=args.default_mode,
+            rule_id=args.rule_id,
+            rule_id_prefix=args.rule_id_prefix,
+        )
         print(catalog.model_dump_json(indent=2) if args.format == "json" else catalog_text(catalog))
         return 0
+    if any(
+        value is not None
+        for value in (
+            args.theme,
+            args.status,
+            args.maturity,
+            args.default_mode,
+            args.rule_id,
+            args.rule_id_prefix,
+        )
+    ):
+        parser.error("Catalog filters require --catalog")
     if args.project is None or args.native_summary is None:
         parser.error("--project and --native-summary are required unless --catalog is selected")
     root = args.root.resolve()

@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 243 rules are implemented with synthetic regression coverage.
+The following 244 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 243 active rules.
+The catalog currently contains 244 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -3294,7 +3294,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 243 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 244 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -5915,6 +5915,38 @@ is not a reason by itself to expand its scope or change its default policy.
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_same_net")'
   ```
 
+
+#### LINT-262 — Review same-role serial connector and controller pins
+
+- **Status:** Implemented as default-review `bus.serial_endpoint_role_collision`.
+  Project policy can promote findings to `block`, turn the rule off, or ignore
+  an exact finding fingerprint.
+- **Gap:** Existing serial checks find local TX/RX shorts and label-direction
+  mismatches, but a connector TX tied directly to a local TX (and RX to RX)
+  could pass when both endpoints use internally consistent labels.
+- **Predicate:** For a recognized connector and numeric U/IC reference, use
+  exact native UART/USART roles and complete pin inventories. Prompt only when
+  the same-role connector and IC pins uniquely share a direct two-pin net and
+  native electrical-type evidence is present; suppress output/output nets.
+- **Boundary:** Port direction, translation, isolation, labeling conventions,
+  and project-specific topology can make same-role wiring intentional. This is
+  a review clue, not a defect declaration or a source of electrical intent.
+  An approved port map is needed for a blocking requirement.
+- **Evidence:** Synthetic same-role fault and crossed-role control, DNP,
+  incomplete, ambiguous, multi-peer, output-conflict and custom-identity
+  controls; policy handling; deterministic ordering and process hash-seed
+  reports; CLI/MCP parity; catalog reachability and selectors; and digest-pinned
+  KiCad 10.0.0/10.0.5 native fault/control exports.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_serial_endpoint_role_collision.py \\
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.serial_endpoint_role_collision")'
+
+  KICAD_RUN_NATIVE_SERIAL_ENDPOINT_ROLE_COLLISION_FIXTURES=1 \\
+    .venv/bin/python -I -m pytest tests/test_serial_endpoint_role_collision_native_fixture_lane.py \\
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.serial_endpoint_role_collision")'
+  ```
 
 #### LINT-261 — Review crossed USB-C CC endpoint assignments
 

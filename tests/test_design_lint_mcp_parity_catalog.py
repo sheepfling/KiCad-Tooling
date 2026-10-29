@@ -48,6 +48,30 @@ class _DesignLintMcpParityCatalogCases(McpParityHarness):
         self.assertTrue(cli.rules)
         self.assertEqual(cli.sha256, mcp.sha256)
 
+    async def _case_test_filtered_design_lint_rule_catalog_cli_mcp_parity(self) -> None:
+        """Apply the same catalog dimensions through both read-only surfaces."""
+        options = {
+            "theme": "interfaces",
+            "status": "active",
+            "default_mode": "review",
+            "rule_id": "bus.usb_c_sbu_same_net",
+            "rule_id_prefix": "bus.usb_c_",
+        }
+        async with Client(create_server(self.root), mode="legacy") as client:
+            cli = await self.cli(
+                "kicad_tooling.design_lint",
+                DesignLintRuleCatalog,
+                "--catalog",
+                *(
+                    part
+                    for key, value in options.items()
+                    for part in (f"--{key.replace('_', '-')}", value)
+                ),
+            )
+            mcp = await self.call(client, "list_design_lint_rules", DesignLintRuleCatalog, options)
+        self.assertEqual(cli, mcp)
+        self.assertEqual(tuple(item.rule_id for item in cli.rules), (options["rule_id"],))
+
     async def _case_test_empty_native_netlist_blocks_design_lint_cli_mcp_parity(self) -> None:
         native = self.native_evidence()
         netlist = native.parent / "netlist.xml"
@@ -95,6 +119,13 @@ class _DesignLintMcpParityCatalogCases(McpParityHarness):
 def test_design_lint_rule_catalog_cli_mcp_parity() -> None:
     run_mcp_parity(
         _DesignLintMcpParityCatalogCases, "_case_test_design_lint_rule_catalog_cli_mcp_parity"
+    )
+
+
+def test_filtered_design_lint_rule_catalog_cli_mcp_parity() -> None:
+    run_mcp_parity(
+        _DesignLintMcpParityCatalogCases,
+        "_case_test_filtered_design_lint_rule_catalog_cli_mcp_parity",
     )
 
 

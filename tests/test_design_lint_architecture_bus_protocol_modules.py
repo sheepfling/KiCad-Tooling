@@ -41,6 +41,7 @@ BUS_ANALYSIS_MODULES = (
     "i2c_signal_label.py",
     "i2c_same_net.py",
     "serial_same_net.py",
+    "serial_endpoint_role_collision.py",
     "serial_tx_rx_label_mismatch.py",
     "serial_signal_named_rail.py",
     "named_rail_pin_evidence.py",

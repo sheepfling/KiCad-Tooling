@@ -223,6 +223,24 @@ def test_standalone_catalog_text_includes_default_and_evidence_limits() -> None:
     assert "Limits:" in rendered
 
 
+def test_catalog_metadata_filters_preserve_source_identity() -> None:
+    complete = rule_catalog()
+    chosen = next(item for item in complete.rules if item.rule_id == "bus.usb_c_sbu_same_net")
+    selected = rule_catalog(
+        theme=chosen.theme,
+        status=chosen.status,
+        maturity=chosen.maturity,
+        default_mode=chosen.default_mode,
+        rule_id=chosen.rule_id,
+    )
+    assert selected.rules == (chosen,)
+    assert selected.sha256 == complete.sha256
+    assert rule_catalog(theme="pcb", rule_id=chosen.rule_id).rules == ()
+    spi = rule_catalog(theme="interfaces", rule_id_prefix="bus.spi_")
+    assert spi.rules
+    assert all(item.rule_id.startswith("bus.spi_") for item in spi.rules)
+
+
 def test_legacy_catalog_report_defaults_new_metamorphic_fields_to_unreviewed() -> None:
     metadata = rule_catalog().rules[0].model_dump(mode="python")
     metadata.pop("theme")

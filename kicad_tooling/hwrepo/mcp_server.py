@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from threading import Lock
-from types import MappingProxyType
 from typing import Annotated, Literal
 
 from mcp.server import MCPServer
@@ -28,6 +27,7 @@ from .contracts import read_model, repo_path
 from .design_lint_reconciliation_models import DesignLintReconciliationReport
 from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
+from .design_lint_rule_types import DesignLintTheme
 from .doctor import NativeRunner
 from .doctor import doctor as inspect_environment
 from .import_inventory import scan_imports as scan_designs
@@ -35,6 +35,7 @@ from .importing import import_project as import_design
 from .inventory import inventory
 from .layout import layout, workflow_guide
 from .mcp_server_guardrails import import_path, service_operation
+from .mcp_workflow_documents import DOCUMENTS, DocumentName
 from .models import (
     AutoCadReport,
     CadImportReport,
@@ -91,50 +92,6 @@ from .models import (
 )
 from .scaffold import new_project as scaffold_project
 
-DocumentName = Literal[
-    "start-here",
-    "first-board",
-    "diagnostics",
-    "import-workflow",
-    "contributor-guide",
-    "checks-and-ci",
-    "mcp",
-    "bom-policy",
-    "release-readiness",
-    "release-storage",
-    "project-kinds",
-    "libraries",
-    "authority-model",
-    "assurance-profiles",
-    "three-d-workflow",
-    "parts-to-order",
-    "tool-surfaces",
-    "electrical-analysis",
-    "cad-sourcing",
-]
-DOCUMENTS: Mapping[DocumentName, str] = MappingProxyType(
-    {
-        "start-here": "docs/workflow/START_HERE.md",
-        "first-board": "docs/workflow/FIRST_BOARD.md",
-        "diagnostics": "docs/workflow/DIAGNOSTICS.md",
-        "import-workflow": "docs/workflow/IMPORT_WORKFLOW.md",
-        "contributor-guide": "docs/workflow/CONTRIBUTOR_GUIDE.md",
-        "checks-and-ci": "docs/workflow/CHECKS_AND_CI.md",
-        "mcp": "docs/workflow/MCP.md",
-        "bom-policy": "docs/workflow/BOM_POLICY.md",
-        "release-readiness": "docs/workflow/RELEASE_READINESS.md",
-        "release-storage": "docs/workflow/RELEASE_STORAGE.md",
-        "project-kinds": "docs/workflow/PROJECT_KINDS.md",
-        "libraries": "docs/workflow/LIBRARIES.md",
-        "authority-model": "docs/workflow/AUTHORITY_MODEL.md",
-        "assurance-profiles": "docs/workflow/ASSURANCE_PROFILES.md",
-        "three-d-workflow": "docs/workflow/THREE_D_WORKFLOW.md",
-        "parts-to-order": "docs/workflow/PARTS_TO_ORDER.md",
-        "tool-surfaces": "docs/workflow/TOOL_SURFACES.md",
-        "electrical-analysis": "docs/workflow/ELECTRICAL_ANALYSIS.md",
-        "cad-sourcing": "docs/workflow/CAD_SOURCING.md",
-    }
-)
 READ_ONLY = ToolAnnotations(
     read_only_hint=True,
     destructive_hint=False,
@@ -505,10 +462,20 @@ def create_server(
 
     server.tool(annotations=READ_ONLY)(reconcile_design_lint)
 
-    def list_design_lint_rules() -> DesignLintRuleCatalog:
-        """List each lint theme, source owner, evidence boundary and default mode."""
+    def list_design_lint_rules(
+        theme: DesignLintTheme | None = None,
+        status: Literal["active", "prototype", "retired"] | None = None,
+        maturity: Literal["synthetic_validated", "cohort_candidate", "field_validated"]
+        | None = None,
+        default_mode: Literal["review", "block", "off"] | None = None,
+        rule_id: str | None = None,
+        rule_id_prefix: str | None = None,
+    ) -> DesignLintRuleCatalog:
+        """List lint rules by theme, status, maturity, mode, or ID."""
         with service_operation(operation):
-            return workflow.list_design_lint_rules()
+            return workflow.list_design_lint_rules(
+                theme, status, maturity, default_mode, rule_id, rule_id_prefix
+            )
 
     server.tool(annotations=READ_ONLY)(list_design_lint_rules)
 

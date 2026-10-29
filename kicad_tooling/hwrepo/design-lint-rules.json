@@ -8510,6 +8510,48 @@
       "implementation_owner": "kicad_tooling/hwrepo/serial_signal_named_rail.py#serial_signal_on_named_rail_candidates"
     },
     {
+      "rule_id": "bus.serial_endpoint_role_collision",
+      "title": "Serial connector and controller share same-role pins",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including connector/controller identities, exact UART/USART functions, complete pin inventories, direct net assignments, electrical types, and fitted state",
+      "predicate": "For one recognized connector and one numeric U/IC reference, consider exact native TX or RX functions on complete pin inventories. Emit a review candidate when one uniquely assigned connector pin and one uniquely assigned serial-IC pin share a net containing exactly those two pins, both functions have the same TX/RX role, and native pin-type evidence is present. Suppress nets with two output pins.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Recognition is limited to the connector candidates, numeric U/IC references, and bounded UART/USART function aliases recognized by shared tooling. Open, DNP, ambiguous, multiply assigned, inventory-incomplete, multi-peer, and electrically unsupported cases are skipped.",
+        "Same-role endpoint wiring may be intentional because of labeling conventions, port direction, isolation or translation circuitry, or project-specific topology. This default-review clue does not infer a defect or declare which endpoint should transmit; an approved port map remains authoritative.",
+        "A schematic netlist does not prove PCB copper continuity, external cable wiring, firmware configuration, or electrical suitability."
+      ],
+      "fault_fixtures": [
+        "tests.test_serial_endpoint_role_collision.test_same_role_tx_and_rx_endpoint_pairs_request_review",
+        "tests.test_serial_endpoint_role_collision_native_fixture_lane.test_native_serial_endpoint_role_fault_and_crossed_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_serial_endpoint_role_collision.test_correctly_crossed_tx_rx_and_unsupported_endpoints_are_controls",
+        "tests.test_serial_endpoint_role_collision_native_fixture_lane.test_native_serial_endpoint_role_fault_and_crossed_control_repeat"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_serial_endpoint_role_collision.test_assignment_order_is_stable_and_crossing_the_roles_clears_findings"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SERIAL_ENDPOINT_ROLE_COLLISION_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/serial_endpoint_role_collision.py#serial_endpoint_role_collision_candidates",
+        "kicad_tooling/hwrepo/serial_participants.py#serial_function_role_and_channel",
+        "kicad_tooling/hwrepo/connector_identity.py#connector_candidate_references",
+        "kicad_tooling/hwrepo/netlist_pin_assignments.py#netlist_pin_net_index",
+        "kicad_tooling/hwrepo/design_lint_serial_signal_candidates.py#serial_signal_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/serial_endpoint_role_collision.py#serial_endpoint_role_collision_candidates"
+    },
+    {
       "rule_id": "bus.serial_tx_rx_same_net",
       "title": "Serial transmit and receive pins share one net",
       "status": "active",

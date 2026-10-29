@@ -89,6 +89,13 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_usb_c_cc_endpoint_crossed_native_fixture_lane.py": frozenset(
             {"interface_lint", "native_kicad", "slow"}
         ),
+        "test_serial_endpoint_role_collision.py": frozenset({"interface_lint"}),
+        "test_serial_endpoint_role_collision_native_fixture_lane.py": frozenset(
+            {"interface_lint", "native_kicad", "slow"}
+        ),
+        "test_design_lint_determinism_serial_endpoint_role_collision.py": frozenset(
+            {"interface_lint", "slow"}
+        ),
         "test_design_lint_architecture_usb_c_cc_endpoint_pairing.py": frozenset({"interface_lint"}),
         "test_usb_c_sbu_named_rail.py": frozenset({"interface_lint"}),
         "test_usb_c_sbu_unconnected_pin.py": frozenset({"interface_lint"}),

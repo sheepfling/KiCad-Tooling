@@ -168,6 +168,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="usb-c-cc-endpoint-crossed",
     ),
     pytest.param(
+        "bus.serial_endpoint_role_collision",
+        "KICAD_RUN_NATIVE_SERIAL_ENDPOINT_ROLE_COLLISION_FIXTURES",
+        "tests.test_serial_endpoint_role_collision_native_fixture_lane."
+        "test_native_serial_endpoint_role_fault_and_crossed_control_repeat",
+        id="serial-endpoint-role-collision",
+    ),
+    pytest.param(
         "bus.rs485_ab_same_net",
         "KICAD_RUN_NATIVE_RS485_AB_SAME_NET_FIXTURES",
         "tests.test_rs485_ab_same_net_native_fixture_lane."

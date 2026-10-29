@@ -125,10 +125,16 @@
       "options": [
         "--baseline-report",
         "--catalog",
+        "--default-mode",
         "--format",
+        "--maturity",
         "--native-summary",
         "--project",
-        "--root"
+        "--root",
+        "--rule-id",
+        "--rule-id-prefix",
+        "--status",
+        "--theme"
       ]
     },
     {
@@ -705,7 +711,14 @@
     },
     {
       "name": "list_design_lint_rules",
-      "parameters": []
+      "parameters": [
+        "default_mode",
+        "maturity",
+        "rule_id",
+        "rule_id_prefix",
+        "status",
+        "theme"
+      ]
     },
     {
       "name": "list_projects",
