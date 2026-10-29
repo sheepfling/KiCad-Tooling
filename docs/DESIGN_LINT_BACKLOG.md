@@ -5124,7 +5124,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 The separate A/B line-pair heuristic is tracked as
 `bus.rs485_unconnected_line_pin`; its source-hashed synthetic native fault and
-control are documented in the [A/B line fixture record](../tests/fixtures/design_lint/rs485-unconnected-line-native/README.md).
+control are documented in the
+[A/B line fixture record](../tests/fixtures/design_lint/rs485-unconnected-line-native/README.md).
 
 #### LINT-237 — Review Ethernet PHY pin functions that contradict net labels
 
