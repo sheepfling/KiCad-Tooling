@@ -49,7 +49,11 @@ def validate_source_bound_evidence(
         ("Connector return-distribution", connector_return_distribution),
     ):
         _validate_component_coverage_netlist_hash(
-            name, coverage.status, coverage.netlist_sha256, netlist_sha256
+            name,
+            coverage.status,
+            coverage.netlist_sha256,
+            netlist_sha256,
+            required_statuses=frozenset({"COMPLETE", "INCOMPLETE"}),
         )
     distribution = connector_return_distribution
     if distribution.status in {"COMPLETE", "INCOMPLETE"} and (
@@ -67,12 +71,13 @@ def validate_source_bound_evidence(
     ):
         raise ValueError("Connectivity snapshot must use this report's source-bound netlist")
     inventory = pcb_component_inventory
-    if (
-        netlist_sha256 is not None
-        and inventory.netlist_sha256 is not None
-        and inventory.netlist_sha256 != netlist_sha256
-    ):
-        raise ValueError("PCB component inventory must use this report's native netlist")
+    _validate_component_coverage_netlist_hash(
+        "PCB component inventory",
+        inventory.status,
+        inventory.netlist_sha256,
+        netlist_sha256,
+        required_statuses=frozenset({"COMPLETE"}),
+    )
     if inventory.status == "COMPLETE":
         expected_findings = len(inventory.missing_placements) + len(inventory.footprint_mismatches)
         actual_findings = sum(
@@ -106,30 +111,34 @@ def validate_source_bound_evidence(
         if actual_board_only_findings != expected_board_only_findings:
             raise ValueError("Board-only footprint findings must match coverage rows")
     validate_required_fitted_reference_findings(inventory, findings)
-    if (
-        netlist_sha256 is not None
-        and control_input_bias_coverage.netlist_sha256 is not None
-        and netlist_sha256 != control_input_bias_coverage.netlist_sha256
-    ):
-        raise ValueError("Control-input bias coverage must use this report's native netlist")
-    if (
-        netlist_sha256 is not None
-        and i2c_pullup_heuristic_coverage.netlist_sha256 is not None
-        and netlist_sha256 != i2c_pullup_heuristic_coverage.netlist_sha256
-    ):
-        raise ValueError("I2C pull-up coverage must use this report's native netlist")
-    if (
-        netlist_sha256 is not None
-        and pcb_rf_module_antenna_coverage.netlist_sha256 is not None
-        and netlist_sha256 != pcb_rf_module_antenna_coverage.netlist_sha256
-    ):
-        raise ValueError("RF module antenna coverage must use this report's native netlist")
-    if (
-        netlist_sha256 is not None
-        and pcb_touch_pad_clearance_coverage.netlist_sha256 is not None
-        and netlist_sha256 != pcb_touch_pad_clearance_coverage.netlist_sha256
-    ):
-        raise ValueError("Touch-pad clearance coverage must use this report's native netlist")
+    _validate_component_coverage_netlist_hash(
+        "Control-input bias",
+        control_input_bias_coverage.status,
+        control_input_bias_coverage.netlist_sha256,
+        netlist_sha256,
+        required_statuses=frozenset({"COMPLETE", "OPEN"}),
+    )
+    _validate_component_coverage_netlist_hash(
+        "I2C pull-up",
+        i2c_pullup_heuristic_coverage.status,
+        i2c_pullup_heuristic_coverage.netlist_sha256,
+        netlist_sha256,
+        required_statuses=frozenset({"COMPLETE", "OPEN"}),
+    )
+    _validate_component_coverage_netlist_hash(
+        "RF module antenna",
+        pcb_rf_module_antenna_coverage.status,
+        pcb_rf_module_antenna_coverage.netlist_sha256,
+        netlist_sha256,
+        required_statuses=frozenset({"COMPLETE", "INCOMPLETE"}),
+    )
+    _validate_component_coverage_netlist_hash(
+        "Touch-pad clearance",
+        pcb_touch_pad_clearance_coverage.status,
+        pcb_touch_pad_clearance_coverage.netlist_sha256,
+        netlist_sha256,
+        required_statuses=frozenset({"COMPLETE", "INCOMPLETE"}),
+    )
     touch_clearance = pcb_touch_pad_clearance_coverage
     if touch_clearance.status in {"COMPLETE", "INCOMPLETE", "BLOCKED"}:
         expected_touch_clearance_findings = (
@@ -165,8 +174,10 @@ def _validate_component_coverage_netlist_hash(
     status: str,
     coverage_netlist_sha256: Digest | None,
     report_netlist_sha256: Digest | None,
+    *,
+    required_statuses: frozenset[str],
 ) -> None:
-    if status in {"COMPLETE", "INCOMPLETE"} and (
-        report_netlist_sha256 is None or coverage_netlist_sha256 != report_netlist_sha256
-    ):
+    if coverage_netlist_sha256 is None and status not in required_statuses:
+        return
+    if report_netlist_sha256 is None or coverage_netlist_sha256 != report_netlist_sha256:
         raise ValueError(f"{name} coverage must use this report's native netlist")
