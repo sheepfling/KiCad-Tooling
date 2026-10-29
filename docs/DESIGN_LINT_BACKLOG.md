@@ -5957,6 +5957,8 @@ is not a reason by itself to expand its scope or change its default policy.
   controls; policy handling; deterministic ordering and process hash-seed
   reports; CLI/MCP parity; catalog reachability and selectors; and digest-pinned
   KiCad 10.0.0/10.0.5 native fault/control exports.
+- **Fixture record:** [Serial endpoint-role collision synthetic schematics and
+  source hashes](../tests/fixtures/design_lint/serial-endpoint-role-collision/README.md).
 - **Focused selection:**
 
   ```sh
