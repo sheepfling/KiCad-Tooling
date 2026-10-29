@@ -201,6 +201,27 @@ def _fixture_reference_native_switches(
     return None
 
 
+def test_regulator_fixture_and_differential_pair_declare_native_lanes() -> None:
+    """Keep these previously missed exact-version lanes independently selectable."""
+    tests_root = Path(__file__).parent
+    parsed_modules: dict[Path, ast.Module] = {}
+    fixtures = _fixture_index(tests_root, parsed_modules)
+    switches = _fixture_reference_native_switches(
+        "tests.test_regulator_required_passives_native_fixture."
+        "test_native_regulator_passive_topology_faults_and_control_are_source_bound",
+        tests_root,
+        parsed_modules,
+        fixtures,
+    )
+    assert switches == frozenset({"KICAD_RUN_NATIVE_REGULATOR_REQUIRED_PASSIVE_FIXTURES"})
+    pair_rule = next(
+        rule
+        for rule in rule_catalog().rules
+        if rule.rule_id == "pcb.differential_pair_rule_coverage"
+    )
+    assert "KICAD_RUN_NATIVE_PCB_FIXTURES" in pair_rule.required_native_fixtures
+
+
 def test_native_catalog_fixtures_require_rule_tag_lanes() -> None:
     tests_root = Path(__file__).parent
     parsed_modules: dict[Path, ast.Module] = {}

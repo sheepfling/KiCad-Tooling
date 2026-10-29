@@ -46,7 +46,6 @@ EXPECTED_SUBJECTS = MappingProxyType(
         "wrong-net": "U1: required passive topology differs",
     }
 )
-NATIVE_FIXTURE_ENV = "KICAD_RUN_NATIVE_REGULATOR_REQUIRED_PASSIVE_FIXTURES"
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -63,7 +62,7 @@ def test_native_regulator_passive_fixture_sources_are_pinned() -> None:
 @pytest.mark.native_kicad
 @pytest.mark.slow
 @pytest.mark.skipif(
-    os.environ.get(NATIVE_FIXTURE_ENV) != "1",
+    os.environ.get("KICAD_RUN_NATIVE_REGULATOR_REQUIRED_PASSIVE_FIXTURES") != "1",
     reason="native regulator passive fixtures run in the digest-pinned acceptance lane",
 )
 @pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))

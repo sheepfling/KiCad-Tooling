@@ -9854,6 +9854,9 @@
         "tests.test_pcb_drc_coverage.test_rule_and_requirement_order_preserve_coverage_but_bound_mutation_is_detected",
         "tests.test_design_lint_determinism_pcb_drc.test_differential_pair_drc_coverage_reports_remain_source_bound_and_deterministic"
       ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_clearance_limit_issue",
         "kicad_tooling/hwrepo/pcb_drc_rule_coverage.py#compare_native_rules",
