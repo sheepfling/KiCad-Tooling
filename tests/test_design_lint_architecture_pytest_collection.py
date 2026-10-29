@@ -66,7 +66,7 @@ def test_rule_gate_also_collects_cross_rule_integrity_checks() -> None:
         in result.stdout
     )
     assert (
-        "tests/test_design_lint_architecture_catalog.py::test_active_rule_fixture_references_name_existing_test_functions"
+        "tests/test_design_lint_architecture_catalog.py::test_active_rule_fixture_references_resolve_to_pytest_discoverable_tests"
         in result.stdout
     )
     assert (

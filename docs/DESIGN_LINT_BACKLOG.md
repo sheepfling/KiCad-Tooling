@@ -2778,12 +2778,15 @@ is not a reason by itself to expand its scope or change its default policy.
   catalog/backlog/architecture group passed (`65 passed`).
 - **Fixture-reference reachability audit (2026-10-29):** Rule-gate integrity
   now parses every active catalogued fault, valid-control, and metamorphic test
-  reference and verifies that the named function or class method still exists.
-  This catches stale fixture names that module-marker checks alone cannot
-  detect. The architecture collection test requires the audit in each
-  rule-scoped release gate. All 2,596 references in the committed catalog
-  resolved to defined test functions; the focused architecture group passed
-  (`38 passed`).
+  reference and verifies that the named function or class method exists and
+  matches the repository's configured pytest file, class, and function naming
+  rules. It rejects test classes with a custom initializer, which pytest would
+  not collect. This catches stale fixture names and non-collectable targets
+  that module-marker checks alone cannot detect. The architecture collection
+  test requires the audit in each rule-scoped release gate. All 2,596
+  references in the committed catalog resolved to pytest-discoverable targets;
+  fault/control cases for configured naming and initializer exclusions are
+  included, and the focused architecture group passed (`39 passed`).
 - **Done when:** CI can identify an undocumented rule or missing required
   fixture, and a reviewer can trace each report finding to its evidence and
   limitations.

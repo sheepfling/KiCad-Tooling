@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import ast
+import fnmatch
 import json
+import tomllib
 from collections.abc import Set as AbstractSet
+from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
 
@@ -106,6 +109,12 @@ def _test_function_exists(
         )
         if owner is None:
             return False
+        if any(
+            isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and statement.name == "__init__"
+            for statement in owner.body
+        ):
+            return False
         body = owner.body
     return any(
         isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef))
@@ -114,8 +123,53 @@ def _test_function_exists(
     )
 
 
+@lru_cache(maxsize=1)
+def _pytest_naming_options() -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
+    config = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    options = config["tool"]["pytest"]["ini_options"]
+    return (
+        tuple(options.get("python_files", ("test_*.py",))),
+        tuple(options.get("python_classes", ("Test",))),
+        tuple(options.get("python_functions", ("test",))),
+    )
+
+
+def _pytest_discovers_fixture_target(
+    module_path: Path, owner_names: tuple[str, ...], function_name: str
+) -> bool:
+    """Check the configured pytest naming rules for a fixture target."""
+    file_patterns, class_patterns, function_patterns = _pytest_naming_options()
+    return (
+        any(fnmatch.fnmatchcase(module_path.name, pattern) for pattern in file_patterns)
+        and all(
+            any(fnmatch.fnmatchcase(name, pattern) for pattern in class_patterns)
+            for name in owner_names
+        )
+        and any(fnmatch.fnmatchcase(function_name, pattern) for pattern in function_patterns)
+    )
+
+
 @pytest.mark.rule_gate_integrity
-def test_active_rule_fixture_references_name_existing_test_functions() -> None:
+def test_fixture_targets_follow_pytest_collection_names_and_class_controls() -> None:
+    module = REPO_ROOT / "tests" / "test_fixture_target.py"
+    assert _pytest_discovers_fixture_target(module, (), "test_detects_the_fault")
+    assert not _pytest_discovers_fixture_target(module, (), "detects_the_fault")
+    assert not _pytest_discovers_fixture_target(
+        REPO_ROOT / "tests" / "fixture_target.py", (), "test_detects_the_fault"
+    )
+    assert _pytest_discovers_fixture_target(module, ("FixtureTargetTests",), "test_fault")
+    assert not _pytest_discovers_fixture_target(module, ("FixtureTargetHelper",), "test_fault")
+
+    collectable = ast.parse("class FixtureTargetTests:\n    def test_fault(self): ...\n")
+    with_initializer = ast.parse(
+        "class FixtureTargetTests:\n    def __init__(self): ...\n    def test_fault(self): ...\n"
+    )
+    assert _test_function_exists(collectable, ("FixtureTargetTests",), "test_fault")
+    assert not _test_function_exists(with_initializer, ("FixtureTargetTests",), "test_fault")
+
+
+@pytest.mark.rule_gate_integrity
+def test_active_rule_fixture_references_resolve_to_pytest_discoverable_tests() -> None:
     catalog = json.loads((HWREPO / "design-lint-rules.json").read_text(encoding="utf-8"))
     trees: dict[Path, ast.Module] = {}
     missing: list[str] = []
@@ -141,7 +195,11 @@ def test_active_rule_fixture_references_name_existing_test_functions() -> None:
                         module_path.read_text(encoding="utf-8"), filename=str(module_path)
                     )
                 tree = trees[module_path]
-                if not _test_function_exists(tree, tuple(node_parts[:-1]), node_parts[-1]):
+                owner_names = tuple(node_parts[:-1])
+                function_name = node_parts[-1]
+                if not _test_function_exists(tree, owner_names, function_name) or not (
+                    _pytest_discovers_fixture_target(module_path, owner_names, function_name)
+                ):
                     missing.append(reference)
 
     assert not missing, f"Active rule fixture references must resolve to test functions: {missing}"
