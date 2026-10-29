@@ -180,6 +180,41 @@ def test_return_pin_disagreement_within_one_connector_needs_review() -> None:
     }
 
 
+@pytest.mark.design_lint_rule(rule_id="connector.repeated_pin_function")
+def test_four_db9_explicit_ground_roles_review_split_nets_and_accept_common_control() -> None:
+    pins = tuple(f"J{port}.{pin}" for port in range(1, 5) for pin in (7, 9))
+    symbols = {f"J{port}": "Synthetic:DB9" for port in range(1, 5)}
+    pin_numbers = {f"J{port}": ("7", "9") for port in range(1, 5)}
+    pin_functions = {pin: "GND" for pin in pins}
+    split = NetlistContract(
+        components={},
+        nets={f"RETURN_{port}": (f"J{port}.7", f"J{port}.9") for port in range(1, 5)},
+        component_symbols=symbols,
+        component_pin_numbers=pin_numbers,
+        pin_functions=pin_functions,
+    )
+    common = split.model_copy(update={"nets": {"COMMON_RETURN": pins}})
+
+    fault = _lint(split)
+    control = _lint(common)
+    return_findings = [
+        item
+        for item in fault.findings
+        if item.rule_id == "connector.repeated_pin_function"
+    ]
+
+    assert fault.status == "REVIEW"
+    assert len(return_findings) == 1
+    assert return_findings[0].subject == "Synthetic:DB9: ground/return"
+    assert {pin: return_findings[0].evidence[pin] for pin in pins} == {
+        f"J{port}.{pin}": (f"RETURN_{port}",)
+        for port in range(1, 5)
+        for pin in (7, 9)
+    }
+    assert control.status == "PASS"
+    assert "connector.repeated_pin_function" not in {item.rule_id for item in control.findings}
+
+
 def test_common_return_across_symbols_keeps_shield_separate() -> None:
     report = _lint(cross_symbol_returns(common=True))
 
