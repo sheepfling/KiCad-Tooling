@@ -154,6 +154,7 @@ class DesignLintReport(StrictModel):
             netlist_sha256=self.netlist_sha256,
             connectivity_snapshot=self.connectivity_snapshot,
             findings=self.findings,
+            findings_complete=self.status != "BLOCKED" or bool(self.findings),
             i2c_address_coverage=self.i2c_address_coverage,
             crystal_network_coverage=self.crystal_network_coverage,
             regulator_feedback_coverage=self.regulator_feedback_coverage,
@@ -174,6 +175,7 @@ class DesignLintReport(StrictModel):
         validate_peer_coverage(
             netlist_sha256=self.netlist_sha256,
             findings=self.findings,
+            findings_complete=self.status != "BLOCKED" or bool(self.findings),
             digital_peer_voltage_coverage=self.digital_peer_voltage_coverage,
             component_peer_pin_coverage=self.component_peer_pin_coverage,
             usb_peer_reference_coverage=self.usb_peer_reference_coverage,
@@ -186,6 +188,7 @@ class DesignLintReport(StrictModel):
         validate_connector_peer_pin_coverage(
             netlist_sha256=self.netlist_sha256,
             findings=self.findings,
+            findings_complete=self.status != "BLOCKED" or bool(self.findings),
             connector_peer_pin_coverage=self.connector_peer_pin_coverage,
         )
         validate_pcb_source_consistency(

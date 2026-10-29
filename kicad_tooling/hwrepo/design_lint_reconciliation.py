@@ -23,6 +23,24 @@ from .design_lint_reconciliation_models import (
 )
 from .design_lint_report_models import DesignLintReport
 
+_SEPARATELY_COMPARED_FIELDS = frozenset(
+    {
+        "project_id",
+        "status",
+        "source_hashes",
+        "netlist_sha256",
+        "native_status",
+        "native_summary",
+        "project_manifest_sha256",
+        "policy_path",
+        "policy_sha256",
+        "findings",
+        "rule_overrides",
+        "stale_ignores",
+        "issues",
+    }
+)
+
 
 def _report_sha256(report: DesignLintReport) -> str:
     payload = json.dumps(report.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
@@ -210,6 +228,14 @@ def reconcile_design_lint_reports(
         context_changes.append("Stale exact-ignore records changed")
     if baseline.issues != current.issues:
         context_changes.append("Report issues changed")
+    changed_evidence_fields = tuple(
+        name
+        for name in DesignLintReport.model_fields
+        if name not in _SEPARATELY_COMPARED_FIELDS
+        and getattr(baseline, name) != getattr(current, name)
+    )
+    if changed_evidence_fields:
+        context_changes.append("Report evidence changed: " + ", ".join(changed_evidence_fields))
     if connectivity_comparison == "UNAVAILABLE":
         missing: list[str] = []
         if baseline_snapshot is None:

@@ -10,7 +10,7 @@ from .design_lint_evaluation_candidates import scan_evaluation_candidates
 from .design_lint_evaluation_preparation import prepare_evaluation
 from .design_lint_evaluation_report import assemble_design_lint_report
 from .design_lint_evaluation_report_inputs import (
-    blocked_wrong_ignore_report,
+    blocked_disposition_report,
     evaluation_report_input,
 )
 from .design_lint_evaluation_types import DesignLintEvaluationRequest
@@ -131,7 +131,7 @@ def evaluate(
     candidate_results = scan_evaluation_candidates(prepared)
     disposition = resolve_finding_dispositions(prepared, candidate_results)
     if disposition.issue is not None:
-        return blocked_wrong_ignore_report(prepared, candidate_results, disposition.issue)
+        return blocked_disposition_report(prepared, candidate_results, disposition.issue)
     return assemble_design_lint_report(
         evaluation_report_input(prepared, candidate_results, disposition)
     )

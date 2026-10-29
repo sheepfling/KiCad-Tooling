@@ -28,6 +28,7 @@ def validate_source_bound_evidence(
     netlist_sha256: Digest | None,
     connectivity_snapshot: DesignLintConnectivitySnapshot | None,
     findings: tuple[DesignLintFinding, ...],
+    findings_complete: bool,
     i2c_address_coverage: I2cAddressCoverageReport,
     crystal_network_coverage: CrystalNetworkCoverageReport,
     regulator_feedback_coverage: RegulatorFeedbackCoverageReport,
@@ -78,7 +79,7 @@ def validate_source_bound_evidence(
         netlist_sha256,
         required_statuses=frozenset({"COMPLETE"}),
     )
-    if inventory.status == "COMPLETE":
+    if findings_complete and inventory.status == "COMPLETE":
         expected_findings = len(inventory.missing_placements) + len(inventory.footprint_mismatches)
         actual_findings = sum(
             finding.rule_id == "pcb.schematic_component_inventory" for finding in findings
@@ -101,7 +102,7 @@ def validate_source_bound_evidence(
             if actual_value_findings != expected_value_findings:
                 raise ValueError("PCB value findings must match their comparison rows")
     board_only = inventory.board_only_footprint_coverage
-    if board_only.status in {"COMPLETE", "BLOCKED"}:
+    if findings_complete and board_only.status in {"COMPLETE", "BLOCKED"}:
         expected_board_only_findings = (
             len(board_only.footprints) if board_only.status == "COMPLETE" else 1
         )
@@ -110,7 +111,8 @@ def validate_source_bound_evidence(
         )
         if actual_board_only_findings != expected_board_only_findings:
             raise ValueError("Board-only footprint findings must match coverage rows")
-    validate_required_fitted_reference_findings(inventory, findings)
+    if findings_complete:
+        validate_required_fitted_reference_findings(inventory, findings)
     _validate_component_coverage_netlist_hash(
         "Control-input bias",
         control_input_bias_coverage.status,
@@ -140,7 +142,7 @@ def validate_source_bound_evidence(
         required_statuses=frozenset({"COMPLETE", "INCOMPLETE"}),
     )
     touch_clearance = pcb_touch_pad_clearance_coverage
-    if touch_clearance.status in {"COMPLETE", "INCOMPLETE", "BLOCKED"}:
+    if findings_complete and touch_clearance.status in {"COMPLETE", "INCOMPLETE", "BLOCKED"}:
         expected_touch_clearance_findings = (
             1
             if touch_clearance.status == "BLOCKED"
@@ -166,7 +168,7 @@ def validate_source_bound_evidence(
             required_statuses=frozenset({"EVALUATED"}),
         )
         expected_finding_count = sum(finding.rule_id == run.rule_id for finding in findings)
-        if run.finding_count != expected_finding_count:
+        if findings_complete and run.finding_count != expected_finding_count:
             raise ValueError("Mapped-check execution finding count must match the report findings")
 
 

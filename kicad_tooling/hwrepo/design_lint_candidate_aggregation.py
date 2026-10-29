@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Sequence
+from dataclasses import replace
 
 from .bus_signal_pairs import (
     ComplementaryPinFunctionAliasResolution,
@@ -274,16 +275,6 @@ def scan_candidates(inputs: DesignLintCandidateInputs) -> tuple[Candidate, ...]:
     peer_pin_assignment_scans = inputs.component.peer_pin_assignment_scans
     peer_power_output_review_enabled = inputs.component.peer_power_output_review_enabled
     control_input_bias_coverage = inputs.control.input_bias_coverage
-    digital_peer_voltage_context = inputs.peer.digital_voltage_context
-    digital_peer_voltage_scan = inputs.peer.digital_voltage_scan
-    usb_peer_reference_scan = inputs.peer.usb_reference_scan
-    serial_peer_reference_scan = inputs.peer.serial_reference_scan
-    serial_peer_roster = inputs.peer.serial_roster
-    usb_c_port_roster = inputs.peer.usb_c_port_roster
-    external_protection_coverage = inputs.mapped.external_protection
-    crystal_network_coverage = inputs.mapped.crystal_network
-    regulator_feedback_coverage = inputs.mapped.regulator_feedback
-    rc_filter_coverage = inputs.mapped.rc_filter
     power_sequence_map = inputs.power.power_sequence_map
     pcb_component_inventory_coverage = inputs.pcb.component_inventory
     pcb_decoupling_coverage = inputs.pcb.decoupling
@@ -298,15 +289,7 @@ def scan_candidates(inputs: DesignLintCandidateInputs) -> tuple[Candidate, ...]:
     pcb_touch_pad_clearance_coverage = inputs.pcb.touch_pad_clearance
     stm32_pin_map_coverage = inputs.pcb.stm32_pin_map
     usb_data_path_map = inputs.usb_data_path_map
-    i2c_address_input = inputs.bus.i2c_address
-    i2c_pullup_input = inputs.bus.i2c_pullup
-    complementary_alias_resolution = inputs.bus.complementary_alias_resolution
-    i2c_peer_reference_scan = inputs.bus.i2c_peer_reference_scan
     spi_roster = inputs.bus.spi_roster
-    spi_peer_reference_scan = inputs.bus.spi_peer_reference_scan
-    can_peer_reference_scan = inputs.bus.can_peer_reference_scan
-    rs485_peer_reference_scan = inputs.bus.rs485_peer_reference_scan
-    pcb_differential_pair_rule_map = inputs.bus.pcb_differential_pair_rule_map
     found: list[Candidate] = []
     usb_data_map_sha256 = usb_data_path_map_sha256(usb_data_path_map)
     peer_pin_scans = peer_pin_assignment_scans or component_peer_pin_assignment_scans(
@@ -369,47 +352,24 @@ def scan_candidates(inputs: DesignLintCandidateInputs) -> tuple[Candidate, ...]:
     )
     found.extend(component_peer_findings)
     found.extend(
-        bus_candidates(
-            BusCandidateInputs(
-                observed=observed,
-                i2c_address=i2c_address_input,
-                i2c_pullup=i2c_pullup_input,
-                complementary_alias_resolution=complementary_alias_resolution,
-                i2c_peer_reference_scan=i2c_peer_reference_scan,
-                spi_roster=spi_roster,
-                spi_peer_reference_scan=spi_peer_reference_scan,
-                can_peer_reference_scan=can_peer_reference_scan,
-                rs485_peer_reference_scan=rs485_peer_reference_scan,
-                component_peer_findings=component_peer_findings,
-                pcb_differential_pair_rule_map=pcb_differential_pair_rule_map,
-                reviewed_connector_references=reviewed_connector_references,
-            )
-        )
+        bus_candidates(replace(inputs.bus, component_peer_findings=component_peer_findings))
     )
     if schematic_geometry is not None:
         found.extend(schematic_geometry_candidates(schematic_geometry))
     found.extend(
         peer_candidates(
             observed,
-            digital_peer_voltage_context=digital_peer_voltage_context,
-            digital_peer_voltage_scan=digital_peer_voltage_scan,
+            inputs.peer,
             reviewed_connector_references=reviewed_connector_references,
-            serial_peer_reference_scan=serial_peer_reference_scan,
-            serial_peer_roster=serial_peer_roster,
             spi_roster=spi_roster,
-            usb_c_port_roster=usb_c_port_roster,
             usb_data_path_map=usb_data_path_map,
             usb_data_map_sha256=usb_data_map_sha256,
-            usb_peer_reference_scan=usb_peer_reference_scan,
         )
     )
     found.extend(
         mapped_coverage_candidates(
             observed,
-            external_protection_coverage=external_protection_coverage,
-            crystal_network_coverage=crystal_network_coverage,
-            regulator_feedback_coverage=regulator_feedback_coverage,
-            rc_filter_coverage=rc_filter_coverage,
+            inputs.mapped,
             usb_data_path_map=usb_data_path_map,
             usb_data_map_sha256=usb_data_map_sha256,
             power_path_map=power_path_map,

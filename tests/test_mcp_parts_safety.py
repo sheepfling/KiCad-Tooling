@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 from mcp import Client
 
-from kicad_tooling.hwrepo import mcp_files, mcp_parts, parts_workflow
+from kicad_tooling.hwrepo import mcp_files, mcp_parts, parts_workflow, project_source_access
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
@@ -170,6 +170,47 @@ class McpPartsSafetyTests(unittest.IsolatedAsyncioTestCase):
             )
         self.assertEqual(read_model(self.preferences, PurchasingPreferences), changed)
         self.assertFalse(list(self.preferences.parent.glob(".mcp-edit-*")))
+
+    def test_equivalent_but_different_readback_bytes_do_not_claim_success(self) -> None:
+        original_read = project_source_access.read_project_file
+        for operation in ("create", "update", "noop"):
+            with self.subTest(operation=operation):
+                self.preferences.unlink(missing_ok=True)
+                if operation != "create":
+                    initial = mcp_parts.save_parts_preferences(
+                        self.root, "controller", PurchasingPreferences(boards=2)
+                    )
+                    expected = initial.after_sha256
+                else:
+                    expected = None
+                desired = PurchasingPreferences(boards=2 if operation == "noop" else 3)
+                read_count = 0
+
+                def change_before_readback(
+                    *args,
+                    expected_count=1 if operation == "create" else 2,
+                    replacement=desired,
+                    **kwargs,
+                ):
+                    nonlocal read_count
+                    read_count += 1
+                    if read_count == expected_count:
+                        self.preferences.write_text(
+                            json.dumps(replacement.model_dump(), sort_keys=True) + "\n",
+                            encoding="utf-8",
+                        )
+                    return original_read(*args, **kwargs)
+
+                with (
+                    patch.object(
+                        project_source_access,
+                        "read_project_file",
+                        side_effect=change_before_readback,
+                    ),
+                    self.assertRaisesRegex(ValueError, "changed during readback"),
+                ):
+                    mcp_parts.save_parts_preferences(self.root, "controller", desired, expected)
+                self.assertEqual(read_model(self.preferences, PurchasingPreferences), desired)
 
     async def test_binary_duplicate_and_wrong_shape_preferences_remain_blocked_receipts(
         self,

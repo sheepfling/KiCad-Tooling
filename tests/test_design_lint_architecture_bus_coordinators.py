@@ -233,14 +233,6 @@ def test_i2c_address_input_replaces_separate_bus_arguments() -> None:
     )
     (bus_call,) = bus_calls
     assert len(bus_call.args) == 1
-    route = bus_call.args[0]
-    assert isinstance(route, ast.Call)
-    assert isinstance(route.func, ast.Name) and route.func.id == "BusCandidateInputs"
-    route_keywords = {keyword.arg for keyword in route.keywords}
-    assert {"observed", "i2c_address", "i2c_pullup"} <= route_keywords
-    assert "i2c_address_map" not in route_keywords
-    assert "i2c_address_coverage" not in route_keywords
-    assert "i2c_pullup_heuristic_coverage" not in route_keywords
     facade_tree = ast.parse(facade.read_text(encoding="utf-8"))
     bus_function = next(
         node

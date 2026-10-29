@@ -9,12 +9,15 @@ def validate_connector_peer_pin_coverage(
     *,
     netlist_sha256: Digest | None,
     findings: tuple[DesignLintFinding, ...],
+    findings_complete: bool,
     connector_peer_pin_coverage: ConnectorPeerPinHeuristicCoverage | None,
 ) -> None:
     if connector_peer_pin_coverage is not None:
         item = connector_peer_pin_coverage
         if item.netlist_sha256 != netlist_sha256:
             raise ValueError("Connector peer-pin coverage must use this report's native netlist")
+        if not findings_complete:
+            return
         expected_counts = (
             (
                 "connector.repeated_pin_function",

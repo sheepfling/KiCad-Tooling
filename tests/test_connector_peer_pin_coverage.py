@@ -117,6 +117,7 @@ def test_report_rejects_peer_coverage_without_top_level_netlist_hash() -> None:
     payload["netlist_sha256"] = None
     payload["digital_peer_voltage_coverage"] = ()
     payload["component_peer_pin_coverage"] = ()
+    payload["mapped_check_runs"] = ()
     for field_name in (
         "usb_peer_reference_coverage",
         "serial_peer_reference_coverage",

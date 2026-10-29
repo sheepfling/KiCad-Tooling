@@ -221,3 +221,46 @@ def test_changed_native_netlist_requires_review_when_source_and_findings_match()
     assert result.transitions == ()
     assert result.connectivity_changes == ()
     assert "Native netlist digest changed" in reconciliation_text(result)
+
+
+@pytest.mark.parametrize(
+    ("field", "coverage"),
+    (
+        (
+            "control_input_bias_coverage",
+            {"status": "PENDING", "source_path": "electrical.json", "source_sha256": "d" * 64},
+        ),
+        (
+            "i2c_pullup_heuristic_coverage",
+            {
+                "status": "NOT_APPLICABLE",
+                "source_path": "electrical.json",
+                "source_sha256": "d" * 64,
+            },
+        ),
+        ("pcb_track_width", {"status": "DISABLED", "mode": "off"}),
+    ),
+)
+def test_coverage_change_requires_review_even_when_findings_and_sources_match(
+    field: str, coverage: dict[str, str]
+) -> None:
+    baseline = _report(status="PASS")
+    current = DesignLintReport.model_validate({**baseline.model_dump(), field: coverage})
+    result = reconcile_design_lint_reports(baseline, current)
+
+    assert result.status == "REVIEW"
+    assert result.transitions == ()
+    assert result.changed_source_paths == ()
+    assert any(field in change for change in result.context_changes)
+    assert field in reconciliation_text(result)
+
+
+def test_other_report_context_changes_are_not_silently_unchanged() -> None:
+    baseline = _report(status="PASS")
+    current = DesignLintReport.model_validate(
+        {**baseline.model_dump(), "next_actions": ("Review updated evidence",)}
+    )
+    result = reconcile_design_lint_reports(baseline, current)
+
+    assert result.status == "REVIEW"
+    assert any("next_actions" in change for change in result.context_changes)

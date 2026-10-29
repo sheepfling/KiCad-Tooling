@@ -77,7 +77,7 @@ def init_preferences(
     if not path.is_relative_to(docs) or path.suffix != ".json":
         raise ValueError("Save preferences as a new .json file under the selected project's docs/")
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("x", encoding="utf-8") as stream:
+    with path.open("x", encoding="utf-8", newline="\n") as stream:
         stream.write(preferences.model_dump_json(indent=2) + "\n")
     return path
 

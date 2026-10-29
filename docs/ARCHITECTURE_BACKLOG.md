@@ -180,8 +180,13 @@ change uses an explicit schema migration and old-report tests.
 Reconciliation treats a changed declared source or native netlist digest as
 reviewable context even when the finding set and captured pin connectivity
 are identical. It retains the source paths and both netlist digests in the
-existing report schema. A reconciliation result does not accept findings or
-authorize a build.
+existing report schema. Changes to coverage and other report fields are also
+named in review context, including fields added to the report later. A
+reconciliation result does not accept findings or authorize a build.
+Evaluation blocks duplicate candidate fingerprints before applying ignores.
+When disposition is blocked and no complete finding list is available, the
+report retains source-bound coverage without requiring its counts to match an
+absent list; source identities are still validated.
 
 **Done when:** CLI, MCP, CI, and reconciliation present the same state for the
 same source revision; transitions remain reviewable; no source change silently
@@ -267,7 +272,9 @@ services, including imports of `hwrepo.mcp_*` adapters. Project-source reads
 and optimistic edits are owned by `project_source_access.py`, with bounded
 file reads shared with artifact access; MCP retains compatibility exports.
 The same scoped path, model validation, exact hash, atomic publication, and
-readback checks serve purchasing writes and MCP source edits.
+readback checks serve purchasing writes and MCP source edits. Purchasing
+receipts verify the digest of the exact intended bytes, including no-op saves;
+an equivalent reserialization observed during readback cannot claim success.
 
 **Done when:** the selected operation's CLI and MCP tests compare equivalent
 typed results and failures, and its adapter contains no copied predicate or
@@ -318,6 +325,12 @@ filterable code-quality inventory; keep electrical rule themes, maturity, and
 project policy in their own catalog. Open only clean, reproducible blocking
 checks; keep disputed guidance review-only and record upstream complaints
 outside this repository.
+
+The development extra now pins Alphus, and `quality-gates.toml` defines a
+reproducible runtime-types, Pydantic practices, and Python-style scopes. The
+package CI job runs the first two in advisory report mode; Python-style is
+available on demand while its broader output is reviewed. See
+`ALPHUS_QUALITY_GATES.md` for the command and enforcement boundary.
 
 **Done when:** the checked-in gate plan and installed Alphus revision agree;
 representative bad dependencies and rule registrations fail; existing valid

@@ -126,6 +126,18 @@ peer, mapped-coverage, and PCB groups. Continue moving direct callers to the
 smallest stable theme records their predicates need; do not replace the group
 boundary with a global context of optional scans.
 
+The scanner forwards the bus record to its owner, adding only component-peer
+findings computed during that scan. It does not reconstruct the record from a
+fixed list of fields, so newly added bus evidence is not silently lost between
+the typed scanner and the bus coordinator. The shared observed netlist and
+reviewed connector scope must still agree at the scanner boundary.
+The peer coordinator likewise receives its typed peer group directly. The
+scanner supplies the shared observed netlist, SPI roster, connector scope, and
+USB map separately because other themes consume those same inputs.
+Mapped electrical coverage is passed as its own typed group to its coordinator;
+the USB and power maps remain explicit shared inputs. Adding a field to either
+group does not require rebuilding that group in the central scanner.
+
 ## I²C address candidate route
 
 The other I²C sniffers share the native netlist but have different authority

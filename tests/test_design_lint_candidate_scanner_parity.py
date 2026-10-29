@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import dataclass, replace
 
 import pytest
 
-from kicad_tooling.hwrepo import design_lint_evaluation_candidates
+from kicad_tooling.hwrepo import (
+    design_lint_candidate_aggregation,
+    design_lint_evaluation_candidates,
+)
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.design_lint_bus_inputs import BusCandidateInputs
 from kicad_tooling.hwrepo.design_lint_candidate_aggregation import (
@@ -26,6 +29,7 @@ from kicad_tooling.hwrepo.design_lint_candidate_inputs import (
     PowerCandidateInputs,
 )
 from kicad_tooling.hwrepo.design_lint_types import Candidate
+from kicad_tooling.hwrepo.external_protection_models import ExternalProtectionCoverageReport
 from kicad_tooling.hwrepo.i2c_address_inputs import I2cAddressCandidateInput
 from kicad_tooling.hwrepo.i2c_pullup_inputs import I2cPullupSnifferInput
 from kicad_tooling.hwrepo.models import DesignLintPolicy, NetlistContract
@@ -173,7 +177,101 @@ def test_scanner_rejects_conflicting_shared_bus_inputs() -> None:
     with pytest.raises(ValueError, match="reviewed connector references"):
         replace(inputs, bus=replace(inputs.bus, reviewed_connector_references=("J1",)))
     with pytest.raises(ValueError, match="computed by the candidate scanner"):
-        replace(inputs, bus=replace(inputs.bus, component_peer_findings=candidates(inputs.observed)))
+        replace(
+            inputs, bus=replace(inputs.bus, component_peer_findings=candidates(inputs.observed))
+        )
+
+
+def test_scanner_passes_extended_bus_input_to_its_owner(monkeypatch: pytest.MonkeyPatch) -> None:
+    @dataclass(frozen=True, slots=True)
+    class ExtendedBusInputs(BusCandidateInputs):
+        extension_marker: str = "new theme evidence"
+
+    inputs = _candidate_inputs(i2c_netlist(pullups=()))
+    extended = ExtendedBusInputs(
+        observed=inputs.observed,
+        i2c_address=inputs.bus.i2c_address,
+        i2c_pullup=inputs.bus.i2c_pullup,
+    )
+    inputs = replace(inputs, bus=extended)
+    received: list[BusCandidateInputs] = []
+    original = design_lint_candidate_aggregation.bus_candidates
+
+    def capture(bus: BusCandidateInputs) -> tuple[Candidate, ...]:
+        received.append(bus)
+        return original(bus)
+
+    monkeypatch.setattr(design_lint_candidate_aggregation, "bus_candidates", capture)
+    assert scan_candidates(inputs) == candidates(inputs.observed)
+    assert len(received) == 2
+    assert isinstance(received[0], ExtendedBusInputs)
+    assert received[0].extension_marker == "new theme evidence"
+    assert received[0].i2c_address is extended.i2c_address
+    assert received[0].i2c_pullup is extended.i2c_pullup
+
+
+def test_scanner_passes_extended_peer_input_to_its_owner(monkeypatch: pytest.MonkeyPatch) -> None:
+    @dataclass(frozen=True, slots=True)
+    class ExtendedPeerInputs(PeerCandidateInputs):
+        extension_marker: str = "new peer evidence"
+
+    inputs = _candidate_inputs(i2c_netlist(pullups=()))
+    extended = ExtendedPeerInputs(
+        digital_voltage_context=None,
+        digital_voltage_scan=None,
+        usb_reference_scan=None,
+        serial_reference_scan=None,
+        serial_roster=None,
+        usb_c_port_roster=None,
+    )
+    inputs = replace(inputs, peer=extended)
+    received: list[PeerCandidateInputs] = []
+    original = design_lint_candidate_aggregation.peer_candidates
+
+    def capture(
+        observed: NetlistContract, peer: PeerCandidateInputs, **kwargs: object
+    ) -> tuple[Candidate, ...]:
+        received.append(peer)
+        return original(observed, peer, **kwargs)
+
+    monkeypatch.setattr(design_lint_candidate_aggregation, "peer_candidates", capture)
+    assert scan_candidates(inputs) == candidates(inputs.observed)
+    assert received[0] is extended
+    assert isinstance(received[0], ExtendedPeerInputs)
+    assert received[0].extension_marker == "new peer evidence"
+
+
+def test_scanner_passes_extended_mapped_input_to_its_owner(monkeypatch: pytest.MonkeyPatch) -> None:
+    @dataclass(frozen=True, slots=True)
+    class ExtendedMappedInputs(MappedCandidateInputs):
+        extension_marker: str = "new mapped evidence"
+
+    inputs = _candidate_inputs(i2c_netlist(pullups=()))
+    protection = ExternalProtectionCoverageReport()
+    extended = ExtendedMappedInputs(
+        external_protection=protection,
+        crystal_network=None,
+        regulator_feedback=None,
+        rc_filter=None,
+    )
+    inputs = replace(inputs, mapped=extended)
+    received: list[MappedCandidateInputs] = []
+    original = design_lint_candidate_aggregation.mapped_coverage_candidates
+
+    def capture(
+        observed: NetlistContract, mapped: MappedCandidateInputs, **kwargs: object
+    ) -> tuple[Candidate, ...]:
+        received.append(mapped)
+        return original(observed, mapped, **kwargs)
+
+    monkeypatch.setattr(design_lint_candidate_aggregation, "mapped_coverage_candidates", capture)
+    assert scan_candidates(inputs) == candidates(
+        inputs.observed, external_protection_coverage=protection
+    )
+    assert received[0] is extended
+    assert received[0].external_protection is protection
+    assert isinstance(received[0], ExtendedMappedInputs)
+    assert received[0].extension_marker == "new mapped evidence"
 
 
 @pytest.mark.parametrize(

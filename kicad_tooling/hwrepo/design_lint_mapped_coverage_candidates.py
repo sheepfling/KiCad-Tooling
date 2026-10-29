@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .crystal_network_models import CrystalNetworkCoverageReport
+from .design_lint_candidate_inputs import MappedCandidateInputs
 from .design_lint_crystal_candidates import crystal_network_candidates
 from .design_lint_power_path_candidates import power_path_candidates
 from .design_lint_power_sequence_candidates import power_sequence_candidates
@@ -11,24 +11,18 @@ from .design_lint_rc_filter_candidates import rc_filter_candidates
 from .design_lint_regulator_candidates import regulator_feedback_candidates
 from .design_lint_types import Candidate
 from .design_lint_usb_data_path_candidates import usb_data_path_candidates
-from .external_protection_models import ExternalProtectionCoverageReport
 from .models import (
     NetlistContract,
 )
 from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
-from .rc_filter_models import RcFilterCoverageReport
-from .regulator_feedback_models import RegulatorFeedbackCoverageReport
 from .usb_data_path_models import UsbDataPathMap
 
 
 def mapped_coverage_candidates(
     observed: NetlistContract,
+    inputs: MappedCandidateInputs,
     *,
-    external_protection_coverage: ExternalProtectionCoverageReport | None = None,
-    crystal_network_coverage: CrystalNetworkCoverageReport | None = None,
-    regulator_feedback_coverage: RegulatorFeedbackCoverageReport | None = None,
-    rc_filter_coverage: RcFilterCoverageReport | None = None,
     usb_data_path_map: UsbDataPathMap | None = None,
     usb_data_map_sha256: str | None = None,
     power_path_map: PowerPathMap | None = None,
@@ -36,10 +30,10 @@ def mapped_coverage_candidates(
 ) -> tuple[Candidate, ...]:
     """Build mapped-coverage candidates in stable theme order."""
     return (
-        *protection_candidates(external_protection_coverage),
-        *crystal_network_candidates(crystal_network_coverage),
-        *regulator_feedback_candidates(regulator_feedback_coverage),
-        *rc_filter_candidates(rc_filter_coverage),
+        *protection_candidates(inputs.external_protection),
+        *crystal_network_candidates(inputs.crystal_network),
+        *regulator_feedback_candidates(inputs.regulator_feedback),
+        *rc_filter_candidates(inputs.rc_filter),
         *usb_data_path_candidates(observed, usb_data_path_map, usb_data_map_sha256),
         *power_path_candidates(observed, power_path_map),
         *power_sequence_candidates(observed, power_sequence_map),

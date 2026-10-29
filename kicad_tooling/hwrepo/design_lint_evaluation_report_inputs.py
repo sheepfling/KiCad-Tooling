@@ -66,12 +66,12 @@ def evaluation_report_input(
     )
 
 
-def blocked_wrong_ignore_report(
+def blocked_disposition_report(
     prepared: DesignLintEvaluationPreparation,
     candidates: DesignLintEvaluationCandidates,
     issue: str,
 ) -> DesignLintReport:
-    """Explain a fingerprint ignore that points at a different rule."""
+    """Explain an ambiguous fingerprint or an ignore that points at a different rule."""
     request = prepared.request
     coverage = prepared.coverage
     return DesignLintReport(
@@ -82,6 +82,7 @@ def blocked_wrong_ignore_report(
         native_summary=request.coach.native_summary,
         native_status=request.coach.native_status,
         rule_catalog=prepared.catalog,
+        connector_coverage=request.connector_coverage,
         schematic_geometry=coverage.geometry,
         i2c_address_coverage=coverage.i2c_address,
         external_protection_coverage=coverage.external_protection,
@@ -109,5 +110,13 @@ def blocked_wrong_ignore_report(
         ),
         connector_peer_pin_coverage=candidates.connector_peer_pin_coverage,
         component_peer_pin_coverage=candidates.component_peer_pin_coverage,
+        digital_peer_voltage_coverage=candidates.digital_peer_voltage_coverage,
+        usb_peer_reference_coverage=candidates.usb_peer_reference_coverage,
+        serial_peer_reference_coverage=candidates.serial_peer_reference_coverage,
+        i2c_peer_reference_coverage=candidates.i2c_peer_reference_coverage,
+        spi_peer_reference_coverage=candidates.spi_peer_reference_coverage,
+        can_peer_reference_coverage=candidates.can_peer_reference_coverage,
+        rs485_peer_reference_coverage=candidates.rs485_peer_reference_coverage,
+        mapped_check_runs=candidates.mapped_check_runs,
         issues=(issue,),
     )

@@ -57,6 +57,10 @@ jobs:
           python-version: '3.11'
       - name: Install package check dependencies
         run: python -m pip install --disable-pip-version-check -e '.[dev]'
+      - name: Report Alphus runtime type guidance (advisory)
+        run: python -I -m alphus --rule runtime-types --report
+      - name: Report Alphus Pydantic guidance (advisory)
+        run: python -I -m alphus --rule pydantic-practices --report
       - name: Check tooling and installed wheel against a separate project
         env:
           KICAD_RUN_NATIVE_PCB_FIXTURES: '1'

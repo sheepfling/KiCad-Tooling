@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 from . import parts_workflow, project_source_access
@@ -18,6 +19,7 @@ def save_parts_preferences(
 ) -> McpPurchasingPreferencesResult:
     """Save explicit preferences at the fixed authored path; updates need a current hash."""
     text = preferences.model_dump_json(indent=2) + "\n"
+    intended_sha256 = hashlib.sha256(text.encode("utf-8")).hexdigest()
     if len(text) > project_source_access.MAX_CHUNK:
         raise ValueError("Preferences exceed the supported edit size")
     project = selected_project(root, project_id)
@@ -51,6 +53,8 @@ def save_parts_preferences(
     content = project_source_access.read_project_file(root, project_id, "docs/purchasing.json")
     if content.text is None or content.truncated:
         raise ValueError("Preferences readback exceeded the supported size")
+    if content.sha256 != intended_sha256:
+        raise ValueError("Preferences changed during readback; reread before continuing")
     saved = parse_model_text(content.text, PurchasingPreferences)
     if saved != preferences:
         raise ValueError("Preferences changed during readback; reread before continuing")
@@ -59,7 +63,7 @@ def save_parts_preferences(
         path=relative,
         status=status,
         before_sha256=before,
-        after_sha256=content.sha256,
+        after_sha256=intended_sha256,
         readback_sha256=content.sha256,
         preferences=saved,
     )

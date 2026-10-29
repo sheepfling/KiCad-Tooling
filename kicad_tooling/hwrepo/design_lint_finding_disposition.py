@@ -22,6 +22,12 @@ def resolve_finding_dispositions(
     seen: set[str] = set()
     for item in candidate_results.items:
         key = fingerprint(item)
+        if key in seen:
+            return DesignLintFindingDisposition(
+                seen=frozenset(seen),
+                findings=tuple(findings),
+                issue=f"Multiple candidates share fingerprint {key} for rule {item.rule_id}",
+            )
         seen.add(key)
         override = prepared.overrides.get(item.rule_id)
         mode: Literal["review", "block", "off"] = (
