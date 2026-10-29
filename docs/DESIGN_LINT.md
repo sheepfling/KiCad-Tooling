@@ -747,7 +747,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 240 active rules.
+The catalog currently contains 241 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1400,6 +1400,30 @@ fault/control and hash-seed tests accompany digest-pinned KiCad 10.0.0 and
 KICAD_RUN_NATIVE_USB_C_SBU_UNCONNECTED_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_usb_c_sbu_unconnected_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_unconnected_pin")'
+```
+
+### USB-C controller SBU1/SBU2 pins sharing one net
+
+`bus.usb_c_sbu_same_net` reviews a fitted U/IC with one native SBU1 and one
+SBU2 function in its complete pin inventory when both pins have one direct
+assignment to the same exact net. It skips connectors, DNP parts, duplicate
+roles, incomplete inventories, open pins, and ambiguous assignments. The
+default is `review`; a project can change policy or ignore one exact finding.
+A pair whose native electrical types are both `output` is left to ERC.
+A shared assignment may be intentional. Function names do not establish the
+controller pinout, required separation, or USB-C mode, and the schematic check
+does not prove PCB copper or physical continuity. Synthetic fault/control,
+policy, boundary, ordering, hash-seed, and CLI/MCP parity tests accompany
+source-hashed, digest-pinned KiCad 10.0.0 and 10.0.5 native exports. See the
+[fixture notes](../tests/fixtures/design_lint/usb-c-sbu-same-net/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_usb_c_sbu_unconnected_pin.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_sbu_same_net")'
+
+KICAD_RUN_NATIVE_USB_C_SBU_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_usb_c_sbu_named_rail_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_same_net")'
 ```
 
 ### I3C SDA/SCL pins assigned directly to named rails

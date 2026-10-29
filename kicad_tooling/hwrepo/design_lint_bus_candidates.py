@@ -43,6 +43,7 @@ from .rs485_peer_reference_types import Rs485PeerReferenceScan
 from .spi_participants import SpiRosterContext
 from .spi_peer_reference_scan import SpiPeerReferenceScan
 from .usb_c_cc_same_net import usb_c_cc_same_net_candidates
+from .usb_c_sbu_same_net import usb_c_sbu_same_net_candidates
 from .usb_c_superspeed_lane_labels import usb_c_superspeed_lane_label_mismatch_candidates
 from .usb_data_same_net import usb_data_same_net_candidates
 
@@ -92,6 +93,7 @@ def bus_candidates(
         *usb_c_superspeed_lane_label_mismatch_candidates(observed),
         *usb_data_same_net_candidates(observed),
         *usb_c_cc_same_net_candidates(observed, reviewed_connector_references),
+        *usb_c_sbu_same_net_candidates(observed),
         *named_differential_pair_candidates(observed, pcb_differential_pair_rule_map),
         *i2c_address_candidates(i2c_address_coverage),
         *i2c_responder_coverage_candidates(observed, i2c_address_map),

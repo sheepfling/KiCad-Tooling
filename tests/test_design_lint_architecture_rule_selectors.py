@@ -143,6 +143,10 @@ def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:
             "tests/test_usb_c_sbu_unconnected_pin.py::test_both_connected_and_both_open_pairs_are_quiet",
         ),
         (
+            "bus.usb_c_sbu_same_net",
+            "tests/test_usb_c_sbu_unconnected_pin.py::test_distinct_nets_dnp_connector_duplicate_and_incomplete_inputs_are_quiet",
+        ),
+        (
             "bus.i3c_signal_on_named_rail",
             "tests/test_i3c_signal_named_rail.py::test_neutral_labels_mismatched_channels_and_unsupported_functions_are_controls",
         ),

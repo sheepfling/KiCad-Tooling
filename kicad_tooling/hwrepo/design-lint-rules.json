@@ -5742,6 +5742,48 @@
       "implementation_owner": "kicad_tooling/hwrepo/usb_c_sbu_unconnected_pin.py#unconnected_usb_c_sbu_pins"
     },
     {
+      "rule_id": "bus.usb_c_sbu_same_net",
+      "title": "USB-C controller SBU1 and SBU2 pins share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including fitted state, complete pin inventory, native SBU function identities, and direct net assignments",
+      "predicate": "For each fitted U/IC with exactly one native SBU1 and one SBU2 function in its complete component pin inventory, emit REVIEW when each pin has one unambiguous assignment to the same exact native net.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
+      ],
+      "limitations": [
+        "A shared SBU assignment is a review prompt only. It does not establish that the pins must be separate, identify controller behavior, prove USB-C alternate-mode use, or establish a defect.",
+        "Recognition is limited to a fitted U/IC reference with exactly one SBU1 and one SBU2 function, both present in the complete native pin inventory, and one direct net assignment per pin. Connectors, DNP components, duplicate roles, incomplete inventories, open pins, and ambiguous assignments are skipped.",
+        "When both pins are native outputs, the heuristic is suppressed so ERC can report the electrical conflict. Missing or other electrical types do not establish pin behavior.",
+        "The check uses schematic net assignments only. It does not trace passive paths, infer the exact controller pinout, or establish PCB copper, off-board wiring, or physical continuity. Project-authored interface requirements remain the basis for a blocking decision."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_c_sbu_unconnected_pin.test_controller_sbu1_sbu2_on_one_net_request_review",
+        "tests.test_usb_c_sbu_named_rail_native_fixture_lane.test_native_usb_c_sbu_same_net_fault_and_control_repeat",
+        "tests.test_design_lint_mcp_parity_usb_c_sbu_unconnected.test_usb_c_sbu_same_net_cli_mcp_parity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_c_sbu_unconnected_pin.test_distinct_nets_dnp_connector_duplicate_and_incomplete_inputs_are_quiet",
+        "tests.test_usb_c_sbu_unconnected_pin.test_two_native_output_pins_are_left_to_erc",
+        "tests.test_usb_c_sbu_named_rail_native_fixture_lane.test_native_usb_c_sbu_same_net_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_c_sbu_unconnected_pin.test_sbu_same_net_ordering_is_stable_and_separating_lines_clears_finding",
+        "tests.test_design_lint_determinism_usb_c_sbu_unconnected_pin.test_usb_c_sbu_same_net_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_C_SBU_SAME_NET_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_c_sbu_same_net.py#usb_c_sbu_same_net_candidates",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_c_sbu_same_net.py#usb_c_sbu_same_net_candidates"
+    },
+    {
       "rule_id": "bus.can_unconnected_direction_pin",
       "title": "Recognized CAN/FDCAN direction pin is open on a partially connected channel",
       "status": "active",

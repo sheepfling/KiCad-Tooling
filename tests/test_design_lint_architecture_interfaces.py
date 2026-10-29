@@ -16,6 +16,7 @@ from kicad_tooling.hwrepo import (
     i2c_peer_reference_models,
     i2c_pullup_voltage_models,
     serial_peer_reference_models,
+    usb_c_sbu_same_net,
     usb_c_sbu_unconnected_pin,
     usb_peer_reference_models,
     usb_peer_unsupported_models,
@@ -128,6 +129,19 @@ def test_usb_c_sbu_unconnected_rule_uses_its_focused_protocol_owner() -> None:
     assert owner in rule.implementation_refs
     assert usb_c_sbu_unconnected_pin.unconnected_usb_c_sbu_pins.__module__.endswith(
         "usb_c_sbu_unconnected_pin"
+    )
+
+
+def test_usb_c_sbu_same_net_rule_uses_its_focused_protocol_owner() -> None:
+    owner = "kicad_tooling/hwrepo/usb_c_sbu_same_net.py#usb_c_sbu_same_net_candidates"
+    rule = next(item for item in rule_catalog().rules if item.rule_id == "bus.usb_c_sbu_same_net")
+
+    assert _line_count(HWREPO / "usb_c_sbu_same_net.py") < IMPLEMENTATION_MAX_LINES
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == owner
+    assert owner in rule.implementation_refs
+    assert usb_c_sbu_same_net.usb_c_sbu_same_net_candidates.__module__.endswith(
+        "usb_c_sbu_same_net"
     )
 
 

@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 240 rules are implemented with synthetic regression coverage.
+The following 241 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 240 active rules.
+The catalog currently contains 241 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -583,6 +583,7 @@ skipped under prerelease policy.
 - `bus.usb_c_cc_same_net`
 - `bus.usb_c_sbu_signal_on_named_rail`
 - `bus.usb_c_sbu_unconnected_pin`
+- `bus.usb_c_sbu_same_net`
 - `bus.usb_c_unreviewed_port`
 - `bus.usb_data_path_mismatch`
 - `bus.usb_data_polarity_label_mismatch`
@@ -3291,7 +3292,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 240 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 241 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -5875,6 +5876,41 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_USB_C_SBU_UNCONNECTED_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_usb_c_sbu_unconnected_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_unconnected_pin")'
+  ```
+
+#### LINT-259 — Review USB-C controller SBU1/SBU2 sharing one net
+
+- **Status:** Implemented as default-review
+  `bus.usb_c_sbu_same_net`. Project policy can promote it to `block`, turn it
+  `off`, or ignore one exact finding fingerprint.
+- **Gap:** USB-C connector CC1/CC2 same-net review exists, but a fitted
+  controller whose distinct SBU1 and SBU2 functions collapse onto one native
+  schematic net has no equivalent localized prompt.
+- **Predicate:** Require a fitted U/IC reference, exactly one native SBU1 and
+  SBU2 role, both function pins in the complete native inventory, and one
+  direct net assignment per pin to the same exact net. Skip connectors, DNP
+  parts, duplicate roles, incomplete inventories, open pins, and ambiguous
+  assignments. When both native types are `output`, defer to ERC.
+- **Boundary:** SBU1/SBU2 functions and shared schematic net do not establish
+  the exact controller behavior, whether the lines must remain separate, or
+  the intended alternate-mode use. The check does not trace passive paths or
+  prove PCB copper or physical continuity. A project-authored interface map
+  remains the basis for a blocking decision.
+- **Fixtures and quality gate:** Shared-net fault and distinct-net control,
+  DNP, connector, duplicate-role, incomplete-inventory, open, ambiguous, and
+  both-output controls; configurable policy and exact ignore; deterministic ordering and
+  repair; three-process hash-seed stability; CLI/MCP parity; active-rule
+  reachability and exact selectors; plus source-hashed, repeated KiCad
+  10.0.0/10.0.5 native fault/control exports with zero ERC errors.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_usb_c_sbu_unconnected_pin.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_sbu_same_net")'
+
+  KICAD_RUN_NATIVE_USB_C_SBU_SAME_NET_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_usb_c_sbu_named_rail_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_same_net")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

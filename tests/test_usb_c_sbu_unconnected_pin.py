@@ -9,8 +9,10 @@ from kicad_tooling.hwrepo.design_lint_finding_models import DesignLintIgnore
 from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.models import ComponentContract, DesignLintRuleOverride, NetlistContract
+from kicad_tooling.hwrepo.usb_c_sbu_same_net import usb_c_sbu_same_net_candidates
 from tests.design_lint_fixtures import coach
 from tests.design_lint_fixtures.usb_c_sbu_named_rail import usb_c_sbu_named_rail_netlist
+from tests.design_lint_fixtures.usb_c_sbu_same_net import usb_c_sbu_same_net_netlist
 
 RULE_ID = "bus.usb_c_sbu_unconnected_pin"
 
@@ -165,3 +167,129 @@ def test_reordering_and_repair_preserve_expected_finding_behavior() -> None:
         item.model_dump() for item in reversed_findings
     )
     assert not any(item.rule_id == RULE_ID for item in _report(repaired).findings)
+
+
+SAME_NET_RULE_ID = "bus.usb_c_sbu_same_net"
+
+
+@pytest.mark.design_lint_rule(rule_id=SAME_NET_RULE_ID)
+def test_controller_sbu1_sbu2_on_one_net_request_review() -> None:
+    source = usb_c_sbu_same_net_netlist()
+    report = evaluate("synthetic-usb-c-sbu-same-net", coach(source), DesignLintPolicy())
+    findings = tuple(item for item in report.findings if item.rule_id == SAME_NET_RULE_ID)
+
+    assert report.status == "REVIEW"
+    assert len(findings) == 1
+    assert findings[0].subject == "U1: USB-C SBU1/SBU2 pins share SBU_SHARED"
+    assert findings[0].evidence == {
+        "component": ("U1",),
+        "SBU1_pin": ("U1.1",),
+        "SBU1_function": ("SBU1",),
+        "SBU2_pin": ("U1.2",),
+        "SBU2_function": ("SBU2",),
+        "net": ("SBU_SHARED",),
+    }
+    assert "exact controller pinout" in findings[0].message
+
+
+@pytest.mark.design_lint_rule(rule_id=SAME_NET_RULE_ID)
+def test_distinct_nets_dnp_connector_duplicate_and_incomplete_inputs_are_quiet() -> None:
+    source = usb_c_sbu_same_net_netlist()
+    cases = (
+        usb_c_sbu_same_net_netlist(shared=False),
+        usb_c_sbu_same_net_netlist(dnp=True),
+        usb_c_sbu_same_net_netlist(reference="J1"),
+        usb_c_sbu_same_net_netlist(functions=("SBU1", "SBU1")),
+        usb_c_sbu_same_net_netlist(reference="UFO"),
+        usb_c_sbu_same_net_netlist(inventory=("1",)),
+        source.model_copy(update={"nets": {"SBU_SHARED": ("U1.1",)}}),
+        source.model_copy(update={"nets": {"SBU_SHARED": ("U1.1", "U1.2"), "OTHER": ("U1.2",)}}),
+    )
+
+    assert usb_c_sbu_same_net_candidates(source)
+    for case in cases:
+        assert not usb_c_sbu_same_net_candidates(case)
+
+
+@pytest.mark.design_lint_rule(rule_id=SAME_NET_RULE_ID)
+def test_two_native_output_pins_are_left_to_erc() -> None:
+    source = usb_c_sbu_same_net_netlist()
+    outputs = source.model_copy(
+        update={"pin_electrical_types": {"U1.1": "output", "U1.2": "output"}}
+    )
+    one_output = source.model_copy(
+        update={"pin_electrical_types": {"U1.1": "output", "U1.2": "bidirectional"}}
+    )
+
+    assert not usb_c_sbu_same_net_candidates(outputs)
+    assert usb_c_sbu_same_net_candidates(one_output)
+
+
+@pytest.mark.design_lint_rule(rule_id=SAME_NET_RULE_ID)
+def test_sbu_same_net_policy_can_block_disable_or_exactly_ignore() -> None:
+    source = usb_c_sbu_same_net_netlist()
+    finding = next(
+        item
+        for item in evaluate(
+            "synthetic-usb-c-sbu-same-net", coach(source), DesignLintPolicy()
+        ).findings
+        if item.rule_id == SAME_NET_RULE_ID
+    )
+
+    def reviewed(mode: str) -> DesignLintReport:
+        policy = DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id=SAME_NET_RULE_ID,
+                    mode=mode,
+                    reason="Reviewed synthetic SBU topology",
+                ),
+            )
+        )
+        return evaluate("synthetic-usb-c-sbu-same-net", coach(source), policy)
+
+    blocked = reviewed("block")
+    disabled = reviewed("off")
+    ignored = evaluate(
+        "synthetic-usb-c-sbu-same-net",
+        coach(source),
+        DesignLintPolicy(
+            ignores=(
+                DesignLintIgnore(
+                    rule_id=SAME_NET_RULE_ID,
+                    fingerprint=finding.fingerprint,
+                    reason="Reviewed controller-specific pinout",
+                ),
+            )
+        ),
+    )
+
+    assert blocked.status == "FAIL"
+    assert (
+        next(item for item in blocked.findings if item.rule_id == SAME_NET_RULE_ID).mode == "block"
+    )
+    assert (
+        next(item for item in disabled.findings if item.rule_id == SAME_NET_RULE_ID).disposition
+        == "RULE_OFF"
+    )
+    assert (
+        next(item for item in ignored.findings if item.rule_id == SAME_NET_RULE_ID).disposition
+        == "IGNORED"
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=SAME_NET_RULE_ID)
+def test_sbu_same_net_ordering_is_stable_and_separating_lines_clears_finding() -> None:
+    source = usb_c_sbu_same_net_netlist()
+    reordered = source.model_copy(
+        update={
+            "components": dict(reversed(tuple(source.components.items()))),
+            "nets": dict(reversed(tuple(source.nets.items()))),
+            "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
+        }
+    )
+    first = usb_c_sbu_same_net_candidates(source)
+    second = usb_c_sbu_same_net_candidates(reordered)
+
+    assert first == second
+    assert not usb_c_sbu_same_net_candidates(usb_c_sbu_same_net_netlist(shared=False))
