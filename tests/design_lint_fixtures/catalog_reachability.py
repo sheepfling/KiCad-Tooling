@@ -61,6 +61,9 @@ from tests.design_lint_fixtures.polarized_capacitor import netlist as polarized_
 from tests.design_lint_fixtures.rs485_data_label_mismatch import rs485_data_label_netlist
 from tests.design_lint_fixtures.rs485_data_same_net import rs485_data_same_net_netlist
 from tests.design_lint_fixtures.rs485_signal_named_rail import rs485_signal_named_rail_netlist
+from tests.design_lint_fixtures.serial_endpoint_role_collision import (
+    serial_endpoint_role_netlist,
+)
 from tests.design_lint_fixtures.serial_signal_named_rail import (
     serial_signal_on_named_rail_netlist,
 )
@@ -157,6 +160,7 @@ def catalog_reachability_rule_ids() -> set[str]:
         ),
     )
     result: set[str] = set()
+    result.update(item.rule_id for item in candidates(serial_endpoint_role_netlist()))
     for source_bytes, source_path, unconnected_pins in cases:
         coverage = scan_wire_ends_on_pin_lines(
             source_bytes,

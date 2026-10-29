@@ -23,6 +23,7 @@ from . import mcp_parts as parts
 from . import mcp_parts_extensions as part_tools
 from . import mcp_planning as planning
 from . import mcp_workflow as workflow
+from . import mcp_workflow_design_lint as design_lint_workflow
 from .contracts import read_model, repo_path
 from .design_lint_reconciliation_models import DesignLintReconciliationReport
 from .design_lint_report_models import DesignLintReport
@@ -473,7 +474,7 @@ def create_server(
     ) -> DesignLintRuleCatalog:
         """List lint rules by theme, status, maturity, mode, or ID."""
         with service_operation(operation):
-            return workflow.list_design_lint_rules(
+            return design_lint_workflow.list_design_lint_rules(
                 theme, status, maturity, default_mode, rule_id, rule_id_prefix
             )
 

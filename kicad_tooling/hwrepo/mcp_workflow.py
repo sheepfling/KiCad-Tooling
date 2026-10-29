@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Literal
 
 from ..check_toolchain import cli_executable
 from ..ci import static_pipeline
@@ -25,8 +24,6 @@ from .contracts import read_model, repo_path, write_model
 from .design_lint_reconciliation import reconcile_design_lint_reports
 from .design_lint_reconciliation_models import DesignLintReconciliationReport
 from .design_lint_report_models import DesignLintReport
-from .design_lint_rule_models import DesignLintRuleCatalog
-from .design_lint_rule_types import DesignLintTheme
 from .discovery import load_config
 from .doctor import NativeRunner, doctor
 from .evidence import source_state
@@ -157,25 +154,6 @@ def inspect_contract(root: Path, project_id: str, native_summary: str) -> Contra
 def inspect_design_lint(root: Path, project_id: str, native_summary: str) -> DesignLintReport:
     """Review source-bound heuristic findings through the same typed CLI service."""
     return design_lint.inspect_summary(root, project_id, native_summary_path(root, native_summary))
-
-
-def list_design_lint_rules(
-    theme: DesignLintTheme | None = None,
-    status: Literal["active", "prototype", "retired"] | None = None,
-    maturity: Literal["synthetic_validated", "cohort_candidate", "field_validated"] | None = None,
-    default_mode: Literal["review", "block", "off"] | None = None,
-    rule_id: str | None = None,
-    rule_id_prefix: str | None = None,
-) -> DesignLintRuleCatalog:
-    """Return the packaged rule catalog without reading project evidence."""
-    return design_lint.rule_catalog(
-        theme=theme,
-        status=status,
-        maturity=maturity,
-        default_mode=default_mode,
-        rule_id=rule_id,
-        rule_id_prefix=rule_id_prefix,
-    )
 
 
 def reconcile_design_lint(
