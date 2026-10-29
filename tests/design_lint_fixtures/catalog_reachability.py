@@ -48,6 +48,9 @@ from tests.design_lint_fixtures.connector_coverage import (
 )
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
 from tests.design_lint_fixtures.ethernet_data_labels import ethernet_data_label_netlist
+from tests.design_lint_fixtures.ethernet_data_unconnected import (
+    ethernet_data_unconnected_netlist,
+)
 from tests.design_lint_fixtures.ethernet_management_labels import ethernet_management_netlist
 from tests.design_lint_fixtures.ethernet_signal_named_rail import (
     ethernet_signal_on_named_rail_netlist,
@@ -258,6 +261,10 @@ def catalog_reachability_rule_ids() -> set[str]:
                 labels=("ETH_RX_P", "ETH_RX_N", "ETH_TX_P", "ETH_TX_N"),
             )
         )
+    )
+    result.update(
+        item.rule_id
+        for item in candidates(ethernet_data_unconnected_netlist(open_pins=("U1.1",)))
     )
     result.update(item.rule_id for item in candidates(ethernet_management_netlist()))
     result.update(
