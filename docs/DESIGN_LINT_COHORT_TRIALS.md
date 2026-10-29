@@ -8,11 +8,11 @@ for dispositions and timing; leave unmeasured values unstated.
 
 ## LINT-031 — Candidate analyzer trial and incremental-value register
 
-- **Status:** Partial v24; read-only synthetic comparisons across seven cohort
+- **Status:** Partial v25; read-only synthetic comparisons across seven cohort
   repositories, a first-party public-template applicability replay,
   kicad_skills schematic-rule trials, a ThomsonLint board-export trial, and
-  public project review samples are recorded below, plus a source-only audit of
-  kicad-happy v2.3.1 CP-003. The UART peer heuristic now
+  public project review samples are recorded below, plus source-only audits of
+  kicad-happy v2.3.1 CP-003 and v2.3.2 false-positive fixes. The UART peer heuristic now
   has an alternate-function net-label path, covered by synthetic fault/control
   tests and a pinned public hardware applicability screen; the screen found
   map-coverage candidates, not confirmed defects. A repeated
@@ -42,6 +42,27 @@ for dispositions and timing; leave unmeasured values unstated.
   adoption case. A pinned KiCad Library Tools KLC S5.1 runtime trial is also
   recorded below; it found a valid generic-connector false positive and no
   board-design lint gain.
+
+### Source-only recheck: kicad-happy v2.3.2 false-positive fixes (2026-10-29)
+
+- **Source:** The public [v2.3.2 release notes][happy-v232-release] are pinned
+  to commit [`2fd9aa0fe2d620f36627d9221e8b1393987ae38e`][happy-v232-commit].
+  They report that PU-001 now skips an explicitly no-connected pin and PP-001
+  no longer treats a gate-driver bootstrap pin as a DC supply pin.
+- **Local regression comparison:** LINT-045 only evaluates an assigned
+  active-low select net. A new synthetic control records U2.1 as explicitly
+  unconnected and confirms the missing-pull-up prompt stays quiet. LINT-056's
+  existing bootstrap topology control was strengthened so the BST pin also
+  carries native `power_in` metadata while its fitted capacitor connects to
+  the switch node; the source-path prompt remains quiet. Existing boundary
+  tests keep a BOOT_EN name collision with a capacitor to return reviewable.
+- **Evidence and disposition:** The relevant local SPI and power-path suites
+  passed (71 tests). This was a source-only review of the release notes plus
+  first-party synthetic regression checks; no candidate code was installed or
+  run. The changes add no unique detector behavior over local rules. They
+  identify false-positive boundaries already respected by the local
+  predicates and now protected explicitly by tests. No upstream code, example
+  project, or board fixture was copied.
 
 ### Recorded source audit: kicad-happy CP-003 touch-pad copper clearance (2026-10-13)
 
@@ -2176,3 +2197,5 @@ it does not claim field validation or effectiveness against private boards.
 [happy-cp003-license]: <https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/LICENSE>
 [happy-cp003-release]: https://github.com/aklofas/kicad-happy/releases/tag/v2.3.1
 [happy-cp003-source]: <https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/skills/kicad/scripts/analyze_pcb.py#L5796-L6103>
+[happy-v232-commit]: https://github.com/aklofas/kicad-happy/commit/2fd9aa0fe2d620f36627d9221e8b1393987ae38e
+[happy-v232-release]: https://github.com/aklofas/kicad-happy/releases/tag/v2.3.2

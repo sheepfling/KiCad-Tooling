@@ -131,6 +131,23 @@ def test_spi_select_bias_ignores_valid_controls(control: NetlistContract) -> Non
     )
 
 
+@pytest.mark.design_lint_rule(rule_id="bus.spi_active_low_chip_select_without_pullup")
+def test_explicitly_unconnected_spi_select_does_not_need_a_pullup() -> None:
+    connected = spi_active_low_select_netlist()
+    no_connect = connected.model_copy(
+        update={
+            "nets": {net: pins for net, pins in connected.nets.items() if "U2.1" not in pins},
+            "unconnected_nets": {"unconnected": ("U2.1",)},
+        }
+    )
+
+    report = evaluate("synthetic-spi-bias", coach(no_connect), DesignLintPolicy())
+
+    assert "bus.spi_active_low_chip_select_without_pullup" not in {
+        item.rule_id for item in report.findings
+    }
+
+
 @pytest.mark.parametrize(
     "fault",
     (

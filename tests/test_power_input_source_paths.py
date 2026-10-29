@@ -36,8 +36,17 @@ def test_wrong_rail_with_fitted_decoupling_is_reviewed_without_authored_map() ->
     assert "does not prove that a connection is required" in findings[0].message
 
 
+@pytest.mark.design_lint_rule(rule_id="power.input_without_supported_source_path")
 def test_bootstrap_pin_capacitor_to_switch_node_is_a_valid_control() -> None:
-    netlist = bootstrap_input_netlist()
+    source = bootstrap_input_netlist()
+    netlist = source.model_copy(
+        update={
+            "pin_electrical_types": {
+                **source.pin_electrical_types,
+                "U1.4": "power_in",
+            }
+        }
+    )
 
     assert not power_inputs_without_supported_source_paths(netlist)
     assert RULE_ID not in {item.rule_id for item in candidates(netlist)}

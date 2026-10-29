@@ -15348,7 +15348,8 @@ is not a reason by itself to expand its scope or change its default policy.
   No cohort code was copied.
 - **Fixtures:** Missing bias; direct 10 kΩ and unbranched two-resistor valid
   paths; DNP device and resistor; wrong-rail resistor; zero-ohm and out-of-band
-  values; bare-polarity and output-pin controls; array identity, population,
+  values; bare-polarity, output-pin, and explicitly no-connected select
+  controls; array identity, population,
   channel-net, pin-inventory, and resistance-window faults; exact rule
   `review`/`block`/`off` and fingerprint-ignore behavior; shared CLI/MCP
   parity. The array fault/control schematics and contract are tooling-owned,
@@ -15497,15 +15498,18 @@ is not a reason by itself to expand its scope or change its default policy.
   unsupported path, while the matching `F1`/`Device:Fuse` control clears it.
   This is source-informed first-party coverage, not a runtime trial of
   kicad-happy or a new native export; no cohort code or board source was copied.
-- **Bootstrap boundary (2026-10-23):** A source audit of the current
+- **Bootstrap boundary (2026-10-23; rechecked 2026-10-29):** A source audit of the current
   kicad-happy `PP-001` implementation at commit
-  [`4701c26eba7b9788874a0bf9b45c0a3e81db1628`](https://github.com/aklofas/kicad-happy/commit/4701c26eba7b9788874a0bf9b45c0a3e81db1628)
-  found a name-token exemption for bootstrap pins. A synthetic control confirms
-  LINT-056 stays quiet when a fitted capacitor connects `BST` to the switch
-  node; a paired `BOOT_EN` name collision with only a return capacitor remains
-  reviewable. Keep the existing topology-based evidence boundary and do not
-  add a second PP-001 check. This source audit and typed-netlist pair do not
-  measure candidate runtime behavior, reviewer value, or field precision.
+  [`4701c26eba7b9788874a0bf9b45c0a3e81db1628`][happy-bootstrap-commit] found a name-token exemption
+  for bootstrap pins. A synthetic control confirms LINT-056 stays quiet when a fitted capacitor
+  connects `BST` to the switch node, including when the synthetic pin is explicitly typed
+  `power_in`; a paired `BOOT_EN` name collision with only a return capacitor remains reviewable. The
+  [kicad-happy v2.3.2 release notes][happy-v232-release] report a related PP-001 false-positive fix.
+  The source-only comparison and added control are recorded in the
+  [cohort trial register](DESIGN_LINT_COHORT_TRIALS.md#source-only-recheck-kicad-happy-v232-false-positive-fixes-2026-10-29).
+  Keep the existing topology-based evidence boundary and do not add a second PP-001 check. This
+  source audit and typed-netlist pair do not measure candidate runtime behavior, reviewer value, or
+  field precision.
 - **Predicate:** For a fitted internal native `power_in` pin on a net with a
   fitted, inventoried two-terminal capacitor to a recognized return, emit
   `REVIEW` when no recognized source anchor exists, or when an anchor exists
@@ -17709,3 +17713,5 @@ quality, or first-article continuity.
 [lint086-16nx]: https://github.com/16n-faderbank/16nx/tree/ca7de2233011407fdd791839d711547bf41d33d3
 [rs485-ti-pin-functions]: https://www.ti.com/lit/ds/symlink/sn65hvd485e.pdf
 [rs485-adi-pin-functions]: https://www.analog.com/media/en/technical-documentation/data-sheets/max1487-max491.pdf
+[happy-bootstrap-commit]: https://github.com/aklofas/kicad-happy/commit/4701c26eba7b9788874a0bf9b45c0a3e81db1628
+[happy-v232-release]: https://github.com/aklofas/kicad-happy/releases/tag/v2.3.2

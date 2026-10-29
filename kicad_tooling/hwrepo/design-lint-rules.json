@@ -5194,6 +5194,7 @@
       "valid_control_fixtures": [
         "tests.test_design_lint_spi.test_spi_select_bias_recognizes_pullup_paths",
         "tests.test_design_lint_spi.test_spi_select_bias_ignores_valid_controls",
+        "tests.test_design_lint_spi.test_explicitly_unconnected_spi_select_does_not_need_a_pullup",
         "tests.test_design_lint_spi_bias_arrays.test_exact_array_contract_resolves_only_the_matching_chip_select_prompt",
         "tests.test_spi_bias_arrays_native_fixture_lane.test_native_spi_bias_array_fault_and_control_repeat"
       ],
