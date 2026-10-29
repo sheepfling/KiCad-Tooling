@@ -13,6 +13,7 @@ from .models import ProjectConfig, ProjectKind
 from .pcb_drc_rule_parser import native_ignored_rules, native_rules_with_severity
 
 _SUPPORTED_KICAD_VERSION = re.compile(r"10\.\d+\.\d+\Z")
+_TEXT_VARIABLE = re.compile(r"\$\{([^{}]+)\}")
 
 
 def _source_bound_rule_file(
@@ -134,6 +135,7 @@ def text_variable_custom_drc_rule_candidates(
         raise ValueError("Custom DRC rules changed during design-lint inspection")
     if "${" not in source:
         return ()
+    variable_names = tuple(sorted(set(_TEXT_VARIABLE.findall(source))))
     project_relative = str(config.project)
     board_relative = Path(project_relative).with_suffix(".kicad_pcb").as_posix()
     source_context: dict[str, str] = {}
@@ -161,6 +163,7 @@ def text_variable_custom_drc_rule_candidates(
                 "source_path": (relative,),
                 "source_sha256": (expected_hash,),
                 **{key: (value,) for key, value in source_context.items()},
+                "variable_names": variable_names,
                 "kicad_version": (config.kicad_version,),
             },
         ),

@@ -64,6 +64,7 @@ def test_variable_severity_is_reviewed_without_an_authored_map(tmp_path: Path) -
         "project_sha256": (digest(root / PROJECT),),
         "board_path": (BOARD,),
         "board_sha256": (digest(root / BOARD),),
+        "variable_names": ("MODE",),
         "kicad_version": ("10.0.5",),
     }
     assert "does not evaluate" in candidate.message
@@ -157,6 +158,17 @@ def test_substitution_is_deterministic_and_changes_with_source(tmp_path: Path) -
     assert second[0].subject == first[0].subject
     assert second[0].evidence["source_sha256"] != first[0].evidence["source_sha256"]
     assert fingerprint(second[0]) != fingerprint(first[0])
+
+
+def test_finding_lists_unique_variable_names_without_resolving_values(tmp_path: Path) -> None:
+    root, rules, config = _project(tmp_path)
+    rules.write_text(
+        '(version 1)\n(rule "Synthetic" (condition "${NET} == ${NET}") '
+        "(constraint edge_clearance (min ${WIDTH})))\n# ${NOTE}\n",
+        encoding="utf-8",
+    )
+    (candidate,) = _scan(root, rules, config)
+    assert candidate.evidence["variable_names"] == ("NET", "NOTE", "WIDTH")
 
 
 def test_project_only_variable_change_invalidates_exact_ignore(tmp_path: Path) -> None:

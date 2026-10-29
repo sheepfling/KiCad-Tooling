@@ -9939,7 +9939,7 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "Source-verified .kicad_dru, .kicad_pro, and .kicad_pcb paths and SHA-256 hashes plus configured KiCad version",
-      "predicate": "For a source-bound PCB custom DRC file under the KiCad 10 profile, emit one review candidate when the source contains the text-variable opening token ${. This does not require a project-authored DRC map.",
+      "predicate": "For a source-bound PCB custom DRC file under the KiCad 10 profile, emit one review candidate when the source contains the text-variable opening token ${. Include the sorted unique literal variable names when complete tokens are present; do not resolve their values. This does not require a project-authored DRC map.",
       "supported_kicad_versions": [
         "KiCad 10.x custom DRC source; the exact configured version is retained as context"
       ],

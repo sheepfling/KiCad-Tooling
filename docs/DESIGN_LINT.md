@@ -3440,6 +3440,9 @@ limits against project intent. A token in a comment also prompts review because
 the substitution precedes parsing. The finding does not assert that the
 variable is invalid or that a rule is ignored. Its default is `review`; the
 project may select `block`, `off`, or an exact-fingerprint ignore.
+The finding lists the sorted unique names of complete `${NAME}` tokens it sees;
+it does not expose their values or resolve their origins. A malformed or
+incomplete token still prompts review even when no complete name can be listed.
 The finding binds source-verified custom-rule, project, and board file hashes;
 changing any of them invalidates an exact ignore. The hashes do not bind
 resolved variables or contextual values such as paths or runtime environment.
