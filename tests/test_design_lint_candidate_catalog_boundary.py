@@ -81,7 +81,9 @@ def test_duplicate_candidate_identity_blocks_disposition(ignored: bool) -> None:
     assert key in report.issues[0]
     assert "Multiple candidates share fingerprint" in report.issues[0]
     assert not report.findings
-    assert "Findings: unavailable or incomplete because evaluation is blocked" in text_report(report)
+    assert "Findings: unavailable or incomplete because evaluation is blocked" in text_report(
+        report
+    )
     assert DesignLintReport.model_validate_json(report.model_dump_json()) == report
 
 
@@ -118,6 +120,16 @@ def test_duplicate_disposition_retains_peer_and_mapped_coverage() -> None:
         DesignLintReport.model_validate(
             {**report.model_dump(), "i2c_peer_reference_coverage": mismatched_peer}
         )
+
+
+def test_empty_blocked_report_is_not_presented_as_a_complete_finding_list() -> None:
+    blocked = DesignLintReport(
+        status="BLOCKED", project_id="board", issues=("Native evidence unavailable",)
+    )
+    complete = DesignLintReport(status="PASS", project_id="board")
+    phrase = "Findings: unavailable or incomplete because evaluation is blocked"
+    assert phrase in text_report(blocked)
+    assert phrase not in text_report(complete)
 
 
 def test_duplicate_inventory_candidate_preserves_blocked_evidence() -> None:

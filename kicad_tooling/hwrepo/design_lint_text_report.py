@@ -16,6 +16,8 @@ def text_report(report: DesignLintReport) -> str:
         f"Native summary: {report.native_summary or 'unavailable'}",
         f"Validation summary status: {report.native_status or 'unavailable'}",
     ]
+    if report.status == "BLOCKED" and not report.findings:
+        lines.append("Findings: unavailable or incomplete because evaluation is blocked")
     if report.project_manifest_sha256:
         lines.append(f"Project manifest SHA-256: {report.project_manifest_sha256}")
     if report.policy_path is not None:

@@ -186,7 +186,12 @@ reconciliation result does not accept findings or authorize a build.
 Evaluation blocks duplicate candidate fingerprints before applying ignores.
 When disposition is blocked and no complete finding list is available, the
 report retains source-bound coverage without requiring its counts to match an
-absent list; source identities are still validated.
+absent list; source identities are still validated. Peer-reference and mapped
+check records produced before a disposition failure remain in that blocked
+report so the evidence gap is visible to CLI and MCP consumers.
+For a blocked report with no finding list, text output says the findings are
+unavailable or incomplete; consumers of the unchanged JSON schema must use
+`status` and `issues` rather than interpreting an empty list as a clean scan.
 
 **Done when:** CLI, MCP, CI, and reconciliation present the same state for the
 same source revision; transitions remain reviewable; no source change silently
