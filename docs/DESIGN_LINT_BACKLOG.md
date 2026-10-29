@@ -13820,6 +13820,14 @@ control are documented in the
   controls, policy/ignore, stale/open/ambiguous controls, and deterministic
   ordering; exact KiCad 10.0.0 and 10.0.5 exports reuse the tooling-owned
   two-contact fixture with return/signal and shield/signal role maps.
+- **Hosted acceptance (2026-10-29):** The scoped prerelease gate passed in
+  `v0.5.3rc251` (GitHub Actions run `40876751962`). The native return/signal
+  fault and shield/signal control ran on KiCad 10.0.0 and 10.0.5. The package
+  suite, static checks, wheel build, and installed-wheel rehearsal against a
+  separate project checkout passed; the package publication job was skipped
+  under prerelease policy. The earlier `v0.5.3rc250` run stopped at the
+  repository-wide formatting check; `v0.5.3rc251` contains those formatter
+  corrections.
 - **Focused selection:**
 
   ```sh
