@@ -197,3 +197,27 @@ def test_text_reconciliation_keeps_dismissed_and_removed_rows_reviewable() -> No
     assert "Mapped in connector pinout" in rendered
     assert "NO_LONGER_REPORTED" in rendered
     assert "J1.7 / J2.7" in rendered
+
+
+def test_changed_source_requires_review_when_findings_and_connectivity_match() -> None:
+    result = reconcile_design_lint_reports(
+        _report(status="PASS"), _report(status="PASS", source_sha256="d" * 64)
+    )
+
+    assert result.status == "REVIEW"
+    assert result.changed_source_paths == ("schematic.kicad_sch",)
+    assert result.transitions == ()
+    assert result.connectivity_changes == ()
+    assert "Declared source changed" in reconciliation_text(result)
+
+
+def test_changed_native_netlist_requires_review_when_source_and_findings_match() -> None:
+    result = reconcile_design_lint_reports(
+        _report(status="PASS"), _report(status="PASS", netlist_sha256="e" * 64)
+    )
+
+    assert result.status == "REVIEW"
+    assert result.changed_source_paths == ()
+    assert result.transitions == ()
+    assert result.connectivity_changes == ()
+    assert "Native netlist digest changed" in reconciliation_text(result)

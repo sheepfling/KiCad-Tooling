@@ -257,6 +257,10 @@ def reconcile_design_lint_reports(
             if before_sources.get(path) != after_sources.get(path)
         )
     )
+    if changed_source_paths:
+        context_changes.append(f"Declared source changed for {len(changed_source_paths)} path(s)")
+    if baseline.netlist_sha256 != current.netlist_sha256:
+        context_changes.append("Native netlist digest changed")
     changed = (
         any(item.kind != "PERSISTING" for item in transitions)
         or bool(context_changes)

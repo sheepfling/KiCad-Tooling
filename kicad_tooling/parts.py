@@ -10,6 +10,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
+from .hwrepo.artifact_access import read_regular_bytes
 from .hwrepo.contract_coach import (
     AutoNetlistRunner,
     ContainerNetlistRunner,
@@ -17,7 +18,6 @@ from .hwrepo.contract_coach import (
 )
 from .hwrepo.contracts import read_model
 from .hwrepo.layout import default_project_root
-from .hwrepo.mcp_files import read_regular_bytes
 from .hwrepo.models import CadSourcingReview, SupplierHandoffPlan
 from .hwrepo.part_picker import create_picker, resume_selection, selection
 from .hwrepo.part_picker_view import (

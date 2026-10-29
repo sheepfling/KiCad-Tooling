@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from kicad_tooling.hwrepo import design_lint_evaluation_candidates
@@ -160,6 +162,18 @@ def _legacy_scan(inputs: DesignLintCandidateInputs) -> tuple[Candidate, ...]:
     )
     validate_catalogued_candidates(all_items, inputs.catalog)
     return all_items
+
+
+def test_scanner_rejects_conflicting_shared_bus_inputs() -> None:
+    inputs = _candidate_inputs(i2c_netlist(pullups=()))
+    other = i2c_netlist(pullups=("SDA", "SCL"))
+    other_bus = _candidate_inputs(other).bus
+    with pytest.raises(ValueError, match="one observed native netlist"):
+        replace(inputs, bus=other_bus)
+    with pytest.raises(ValueError, match="reviewed connector references"):
+        replace(inputs, bus=replace(inputs.bus, reviewed_connector_references=("J1",)))
+    with pytest.raises(ValueError, match="computed by the candidate scanner"):
+        replace(inputs, bus=replace(inputs.bus, component_peer_findings=candidates(inputs.observed)))
 
 
 @pytest.mark.parametrize(

@@ -43,7 +43,8 @@ def _refresh_netlist_artifact(root: Path, summary_path: Path, content: str) -> N
     write_model(summary_path, summary.model_copy(update={"artifacts_sha256": artifact_hashes}))
 
 
-def test_design_lint_reconciliation_cli_mcp_parity(tmp_path: Path) -> None:
+@pytest.mark.parametrize("metadata_change", (True, False), ids=("pin-metadata", "digest-only"))
+def test_design_lint_reconciliation_cli_mcp_parity(tmp_path: Path, metadata_change: bool) -> None:
     root, native = synthetic_design_lint_project(
         tmp_path,
         parity_design_lint_policy(DesignLintPolicy()),
@@ -59,10 +60,14 @@ def test_design_lint_reconciliation_cli_mcp_parity(tmp_path: Path) -> None:
     baseline_path = root / "lint-baseline.json"
     baseline_path.write_text(baseline.model_dump_json(), encoding="utf-8")
 
-    changed_netlist = baseline_netlist.replace(
-        '<pin num="4" name="GND" type="passive" />',
-        '<pin num="4" name="RETURN" type="passive" />',
-        1,
+    changed_netlist = (
+        baseline_netlist.replace(
+            '<pin num="4" name="GND" type="passive" />',
+            '<pin num="4" name="RETURN" type="passive" />',
+            1,
+        )
+        if metadata_change
+        else baseline_netlist + "\n"
     )
     assert changed_netlist != baseline_netlist
     _refresh_netlist_artifact(root, native, changed_netlist)
@@ -116,5 +121,6 @@ def test_design_lint_reconciliation_cli_mcp_parity(tmp_path: Path) -> None:
     assert cli.connectivity_comparison == "COMPLETE"
     assert cli.connectivity_changes == ()
     assert tuple((item.pin, item.fields_changed) for item in cli.pin_metadata_changes) == (
-        ("J1.4", ("function",)),
+        (("J1.4", ("function",)),) if metadata_change else ()
     )
+    assert "Native netlist digest changed" in cli.context_changes

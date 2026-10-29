@@ -35,7 +35,6 @@ from .models import (
     PartStatus,
     ProjectKind,
     ProjectManifest,
-    PurchasingPreferences,
 )
 from .part_cad import preview_cad, read_cad_components
 from .parts_workflow import local_path, preferences_path, selected_project
@@ -44,6 +43,7 @@ from .purchasing import (
     _safe_cell,  # pyright: ignore[reportPrivateUsage]
     read_components,
 )
+from .purchasing_preference_models import PurchasingPreferences
 
 
 def _sha(text: str) -> str:

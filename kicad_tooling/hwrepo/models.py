@@ -15,7 +15,6 @@ from pydantic import (
     RootModel,
     StringConstraints,
     ValidationInfo,
-    field_validator,
     model_validator,
 )
 
@@ -39,6 +38,7 @@ from . import digital_peer_voltage_models as _digital_peer_voltage_models
 from . import electrical_analysis_contract_models as _electrical_analysis_contract_models
 from . import electrical_simulation_models as _electrical_simulation_models
 from . import external_protection_models as _external_protection_models
+from . import file_access_models as _file_access_models
 from . import grounding_models as _grounding_models
 from . import i2c_address_models as _i2c_address_models
 from . import i2c_pullup_models as _i2c_pullup_models
@@ -60,6 +60,7 @@ from . import power_connectivity_models as _power_connectivity_models
 from . import power_path_models as _power_path_models
 from . import power_rail_models as _power_rail_models
 from . import power_sequence_models as _power_sequence_models
+from . import purchasing_preference_models as _purchasing_preference_models
 from . import rc_filter_models as _rc_filter_models
 from . import reference_bond_models as _reference_bond_models
 from . import regulator_feedback_models as _regulator_feedback_models
@@ -2017,49 +2018,9 @@ class McpArtifactList(StrictModel):
     next_offset: NonNegativeCount | None = None
 
 
-class McpFileContent(StrictModel):
-    """Bounded Unicode text or metadata; offsets count characters, never bytes."""
-
-    schema_version: Literal["1"] = "1"
-    build_authorized: Literal[False] = False
-    path: RepositoryPath
-    sha256: Digest
-    size_bytes: NonNegativeCount
-    content_kind: Literal["text", "binary", "metadata_only"]
-    text: str | None = None
-    offset: NonNegativeCount
-    total_characters: NonNegativeCount | None = None
-    truncated: bool = False
-    next_offset: NonNegativeCount | None = None
-    note: str | None = None
-
-
-class McpEditPreview(StrictModel):
-    """A proposed exact replacement, without a claim of engineering validation."""
-
-    schema_version: Literal["1"] = "1"
-    build_authorized: Literal[False] = False
-    checks_required: Literal[True] = True
-    project_id: Identifier
-    path: RepositoryPath
-    before_sha256: Digest
-    after_sha256: Digest
-    diff: str
-    validation: Literal["JSON_MODEL", "TEXT_ONLY"]
-    next_command: NonEmptyText
-
-
-class McpEditResult(StrictModel):
-    schema_version: Literal["1"] = "1"
-    build_authorized: Literal[False] = False
-    checks_required: Literal[True] = True
-    status: Literal["APPLIED"] = "APPLIED"
-    project_id: Identifier
-    path: RepositoryPath
-    before_sha256: Digest
-    after_sha256: Digest
-    readback_sha256: Digest
-    next_command: NonEmptyText
+McpFileContent = _file_access_models.McpFileContent
+McpEditPreview = _file_access_models.McpEditPreview
+McpEditResult = _file_access_models.McpEditResult
 
 
 class McpScopeReport(StrictModel):
@@ -2236,37 +2197,8 @@ class ModelPopulationReport(StrictModel):
     error: str | None = None
 
 
-class PurchasingSchemaModel(StrictModel):
-    schema_version: Literal["1"] = "1"
-
-    @field_validator("schema_version", mode="before")
-    @classmethod
-    def exact_schema_version(cls, value: object) -> str:
-        if value != "1":
-            raise ValueError("Unsupported purchasing schema version")
-        return "1"
-
-
-class PurchasingPreferences(PurchasingSchemaModel):
-    """User-selected quantities and exact supplier IDs; no sourcing authority."""
-
-    boards: PositiveCount = 1
-    spare_percent: Annotated[int, Field(ge=0, le=100)] = 0
-    spare_minimum: NonNegativeCount = 0
-    digikey_skus: Mapping[Identifier, Annotated[str, StringConstraints(min_length=1)]] = Field(
-        default_factory=dict
-    )
-
-    @model_validator(mode="after")
-    def exact_supplier_identifiers(self) -> PurchasingPreferences:
-        for identifier in self.digikey_skus.values():
-            if identifier != identifier.strip() or any(
-                ord(character) < 32 or ord(character) == 127 for character in identifier
-            ):
-                raise ValueError(
-                    "DigiKey identifiers must be exact text without padding or control characters"
-                )
-        return self
+PurchasingSchemaModel = _purchasing_preference_models.PurchasingSchemaModel
+PurchasingPreferences = _purchasing_preference_models.PurchasingPreferences
 
 
 class PurchasingComponent(StrictModel):
@@ -2374,17 +2306,7 @@ class PurchasingReport(PurchasingSchemaModel):
     evidence: ContractCoachReport | None = None
 
 
-class McpPurchasingPreferencesResult(StrictModel):
-    schema_version: Literal["1"] = "1"
-    build_authorized: Literal[False] = False
-    purchase_authorized: Literal[False] = False
-    status: Literal["CREATED", "UPDATED"]
-    project_id: Identifier
-    path: RepositoryPath
-    before_sha256: Digest | None = None
-    after_sha256: Digest
-    readback_sha256: Digest
-    preferences: PurchasingPreferences
+McpPurchasingPreferencesResult = _purchasing_preference_models.McpPurchasingPreferencesResult
 
 
 SurfaceAlignment = Literal["aligned", "partial", "cli_only", "mcp_only"]

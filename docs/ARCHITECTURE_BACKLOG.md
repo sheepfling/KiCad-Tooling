@@ -177,6 +177,12 @@ fingerprints. Keep catalog maturity separate from project mode: synthetic
 validation does not authorize a default blocking rule. Any serialized report
 change uses an explicit schema migration and old-report tests.
 
+Reconciliation treats a changed declared source or native netlist digest as
+reviewable context even when the finding set and captured pin connectivity
+are identical. It retains the source paths and both netlist digests in the
+existing report schema. A reconciliation result does not accept findings or
+authorize a build.
+
 **Done when:** CLI, MCP, CI, and reconciliation present the same state for the
 same source revision; transitions remain reviewable; no source change silently
 turns a previous finding into an approval.
@@ -255,6 +261,14 @@ artifact safety and supplier CLI/MCP parity tests cover the route. Project
 selection still has separate CLI and MCP messages around the same registry;
 unify that lookup only when its error contract is decided.
 
+The dependency guard now includes electrical, parts, CAD, layout, selection,
+product, supplier handoff, artifact, project-source, and purchasing-preference
+services, including imports of `hwrepo.mcp_*` adapters. Project-source reads
+and optimistic edits are owned by `project_source_access.py`, with bounded
+file reads shared with artifact access; MCP retains compatibility exports.
+The same scoped path, model validation, exact hash, atomic publication, and
+readback checks serve purchasing writes and MCP source edits.
+
 **Done when:** the selected operation's CLI and MCP tests compare equivalent
 typed results and failures, and its adapter contains no copied predicate or
 project-source parser. Installed-wheel smoke runs against a separate project
@@ -272,6 +286,16 @@ retain identity-compatible public re-exports. Check import cycles and schema
 identity. A physical package hierarchy can follow once owners and dependency
 edges are stable. Keep an inventory of supported import and JSON contracts so
 renames do not masquerade as harmless refactors.
+
+The bounded file-content, edit-preview, and edit-result records now belong to
+`file_access_models.py`. Their established `Mcp*` names remain identity
+exports from `models.py`; the source and artifact services import the owner
+directly. The three generated JSON schemas were compared with their pre-move
+versions, and legacy JSON round trips are regression-tested. Purchasing
+preferences, their schema-version base, and their write result now belong to
+`purchasing_preference_models.py`, with identity-compatible registry exports.
+The preference service and its consumers import that owner directly; nested
+purchasing and selection schemas retain their existing JSON shape.
 
 **Done when:** a new feature's record is placed with its domain, the selected
 legacy imports shrink, old supported imports resolve, and serialized reports

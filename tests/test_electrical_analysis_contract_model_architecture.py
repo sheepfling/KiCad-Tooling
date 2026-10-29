@@ -20,7 +20,7 @@ CONSUMER_FILES = (
     "electrical_evidence.py",
     "electrical_setup.py",
     "generation.py",
-    "mcp_files.py",
+    "project_source_access.py",
 )
 
 

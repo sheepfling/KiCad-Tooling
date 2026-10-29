@@ -49,6 +49,7 @@ services; domain predicates do not call back into CI.
 | Electrical analysis and simulation | `hwrepo/electrical_*`, `simulation_*`, and their typed requirement/model owners                 | Project-authored requirements, declared model inputs, tool-bound measurements | Analysis reports; no implicit approval or manufacturing decision |
 | Parts, CAD, and BOM                | `hwrepo/parts_*`, `cad_*`, BOM and intake services                                              | Project identity, selected source CAD, reviewed mappings                      | Preview, validation, and explicit apply operations               |
 | Generated artifact access          | `hwrepo/artifact_access.py`                                                                     | Configured build scopes, stable regular-file reads                            | Checked artifact paths and bytes for services and adapters       |
+| Project source reads and edits     | `hwrepo/project_source_access.py`, `bounded_file_content.py`                                    | Project scope, validated authored text, expected digest                       | Bounded reads and optimistic edits shared by CLI and MCP         |
 | Product and release                | `hwrepo/product.py`, release and repository services, `ci.py` orchestration                     | Project repository state, release manifest, generated evidence                | Portable acceptance and release evidence through CI/CLI          |
 | CLI surface                        | `cli.py` and focused top-level command modules                                                  | User arguments and local permissions                                          | Calls typed operations and formats their results                 |
 | MCP surface                        | `mcp_server.py` and shared surface mappings                                                     | MCP request, capability permissions, scoped paths                             | Calls typed operations and maps the same typed results           |
@@ -76,8 +77,12 @@ synthetic failure/control inputs and reusable checks in this repository.
    `tool-surfaces.json` documents a narrow adapter exception.
 
 `tests/test_capability_architecture.py` guards the dependency edge for active
-design-lint predicate owners and the supplier artifact service. The
-rule-catalog architecture suites verify that
+design-lint predicate owners and the electrical, parts, CAD, layout, selection,
+product, supplier handoff, and artifact service families. It detects static
+relative and absolute imports of MCP adapters as well as top-level CLI and CI
+surfaces. Purchasing preferences now uses the same project-source operations
+as MCP through their transport-neutral owner. MCP retains compatibility exports.
+The rule-catalog architecture suites verify that
 active owners resolve to theme-owned functions and guard fixture reachability
 and theme markers. Other architecture suites check module size, native version
 lanes, and surface parity.

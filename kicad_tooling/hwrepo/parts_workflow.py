@@ -14,11 +14,11 @@ from .models import (
     PartsCatalog,
     ProjectManifest,
     ProjectRecord,
-    PurchasingPreferences,
     PurchasingReport,
 )
 from .parts_view import render_html
 from .purchasing import plan, read_components, write_csvs
+from .purchasing_preference_models import PurchasingPreferences
 
 
 def selected_project(root: Path, project_id: str) -> ProjectRecord:

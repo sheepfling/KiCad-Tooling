@@ -31,6 +31,7 @@ from .design_lint_rule_models import DesignLintRuleCatalog
 from .design_lint_rule_types import DesignLintTheme
 from .doctor import NativeRunner
 from .doctor import doctor as inspect_environment
+from .file_access_models import McpEditPreview, McpEditResult, McpFileContent
 from .import_inventory import scan_imports as scan_designs
 from .importing import import_project as import_design
 from .inventory import inventory
@@ -56,14 +57,10 @@ from .models import (
     ImportInventoryReport,
     LocalRescueReport,
     McpArtifactList,
-    McpEditPreview,
-    McpEditResult,
-    McpFileContent,
     McpGenerationReport,
     McpModelMapAssignment,
     McpNativeScopeReport,
     McpProjectReport,
-    McpPurchasingPreferencesResult,
     McpScopeReport,
     ModelInventoryReport,
     ModelMapAssignment,
@@ -77,7 +74,6 @@ from .models import (
     ProjectScaffoldReport,
     ProjectTestContract,
     ProjectVerificationReport,
-    PurchasingPreferences,
     PurchasingReport,
     ReleaseExportReport,
     ReleaseManifest,
@@ -91,6 +87,7 @@ from .models import (
     ThreeDView,
     ToolSurfaceReport,
 )
+from .purchasing_preference_models import McpPurchasingPreferencesResult, PurchasingPreferences
 from .scaffold import new_project as scaffold_project
 
 READ_ONLY = ToolAnnotations(

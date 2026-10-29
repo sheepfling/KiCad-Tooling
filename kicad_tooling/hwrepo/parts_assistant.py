@@ -27,7 +27,6 @@ from .models import (
     PartPickerReport,
     PartSelectionAssignment,
     PartSelectionMap,
-    PurchasingPreferences,
     PurchasingReport,
     StrictModel,
 )
@@ -41,6 +40,7 @@ from .parts_workflow import (
     save_report,
     selected_project,
 )
+from .purchasing_preference_models import PurchasingPreferences
 
 MAX_BODY = 64 * 1024
 

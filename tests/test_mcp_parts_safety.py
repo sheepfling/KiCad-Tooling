@@ -157,7 +157,8 @@ class McpPartsSafetyTests(unittest.IsolatedAsyncioTestCase):
 
         with (
             patch(
-                "kicad_tooling.hwrepo.mcp_files.apply_project_edit", side_effect=change_before_apply
+                "kicad_tooling.hwrepo.project_source_access.apply_project_edit",
+                side_effect=change_before_apply,
             ),
             self.assertRaisesRegex(ValueError, "hash mismatch"),
         ):

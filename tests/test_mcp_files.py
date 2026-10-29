@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 from mcp import Client
 
-from kicad_tooling.hwrepo import mcp_files
+from kicad_tooling.hwrepo import bounded_file_content, project_source_access
 from kicad_tooling.hwrepo.mcp_files import (
     apply_project_edit,
     artifact_path,
@@ -132,7 +132,7 @@ class McpFilesTests(unittest.TestCase):
         code = read_artifact(self.root, "build/code.py")
         self.assertEqual(code.content_kind, "metadata_only")
         self.assertIsNone(code.text)
-        with patch.object(mcp_files, "MAX_TEXT_BYTES", 1):
+        with patch.object(bounded_file_content, "MAX_TEXT_BYTES", 1):
             large = read_artifact(self.root, "build/binary.json")
         self.assertEqual(large.content_kind, "metadata_only")
         self.assertEqual(large.sha256, digest(self.build / "binary.json"))
@@ -212,7 +212,7 @@ class McpFilesTests(unittest.TestCase):
             return result
 
         with (
-            patch.object(mcp_files.tempfile, "mkstemp", side_effect=mutate_source),
+            patch.object(project_source_access.tempfile, "mkstemp", side_effect=mutate_source),
             self.assertRaisesRegex(ValueError, "before publication"),
         ):
             apply_project_edit(*self.arguments())
@@ -284,7 +284,10 @@ class McpFilesTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "binary NUL"):
             preview_project_edit(*self.arguments("binary", "new"))
         self.doc.write_text("old text", encoding="utf-8")
-        with patch.object(mcp_files, "MAX_EDIT_BYTES", 2), self.assertRaises(ValueError):
+        with (
+            patch.object(project_source_access, "MAX_EDIT_BYTES", 2),
+            self.assertRaises(ValueError),
+        ):
             apply_project_edit(*self.arguments())
         with self.assertRaises(ValueError):
             preview_project_edit(*self.arguments("old text", "x" * 20_001))

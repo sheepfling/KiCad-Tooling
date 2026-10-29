@@ -139,3 +139,11 @@ class DesignLintCandidateInputs:
     pcb: PcbCandidateInputs
     usb_data_path_map: UsbDataPathMap | None
     additional_candidates: tuple[Candidate, ...] = ()
+
+    def __post_init__(self) -> None:
+        if self.bus.observed is not self.observed and self.bus.observed != self.observed:
+            raise ValueError("Candidate inputs must share one observed native netlist")
+        if self.bus.reviewed_connector_references != self.reviewed_connector_references:
+            raise ValueError("Candidate inputs must share reviewed connector references")
+        if self.bus.component_peer_findings:
+            raise ValueError("Component peer findings are computed by the candidate scanner")

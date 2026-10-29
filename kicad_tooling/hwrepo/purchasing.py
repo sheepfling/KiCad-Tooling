@@ -20,8 +20,8 @@ from .models import (
     PurchasingFinding,
     PurchasingLine,
     PurchasingPlan,
-    PurchasingPreferences,
 )
+from .purchasing_preference_models import PurchasingPreferences
 
 _PLACEHOLDER = re.compile(
     r"(?:^|[^a-z0-9])(unspecified|unknown|training|placeholder|synthetic|example|generic|tbd|todo|none|n/a)(?:$|[^a-z0-9])",
