@@ -173,10 +173,18 @@ def compare(
 
 def design_lint_report(*, fault: bool):
     """Build a complete synthetic design-lint report for hash-seed coverage."""
-    requirements = path_map()
+    full_map = path_map()
+    requirements = full_map.model_copy(update={"paths": (full_map.paths[0],), "bundles": ()})
     observed_netlist = source_netlist()
     observed_snapshot = pcb_snapshot()
     rules = native_rules()
+    rules = rules.replace(
+        """(rule "synthetic-data-length"
+  (condition "A.fromTo('J1-2', 'U1-2')")
+  (constraint length (max 20mm)))
+""",
+        "",
+    )
     if fault:
         rules = rules.replace("(max 20mm)", "(max 19mm)", 1)
     entries = compare(

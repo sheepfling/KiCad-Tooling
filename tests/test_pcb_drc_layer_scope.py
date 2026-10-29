@@ -30,7 +30,9 @@ def test_pair_rule_layer_scope_is_incomplete(
     scoped = source.replace(marker, f"{marker}\n  {layer_clause}")
     (control,) = compare_native_rules(pair_map(), source, frozenset())
     (fault,) = compare_native_rules(pair_map(), scoped, frozenset())
-    assert control.status == "COMPLETE"
+    assert next(item for item in control.constraints if item.constraint == constraint).status == (
+        "COVERED"
+    )
     assert fault.status == "INCOMPLETE"
     result = next(item for item in fault.constraints if item.constraint == constraint)
     assert result.status == "UNSUPPORTED"
@@ -50,11 +52,20 @@ def test_signal_rule_layer_scope_is_incomplete(
     rule_name: str, entry_id: str, constraint: str, layer_clause: str
 ) -> None:
     source = native_rules()
+    if entry_id == "clock":
+        source = source.replace(
+            """(rule "synthetic-data-length"
+  (condition "A.fromTo('J1-2', 'U1-2')")
+  (constraint length (max 20mm)))
+""",
+            "",
+        )
     marker = f'(rule "{rule_name}"'
     scoped = source.replace(marker, f"{marker}\n  {layer_clause}")
     control = next(item for item in compare(rules=source) if item.id == entry_id)
     fault = next(item for item in compare(rules=scoped) if item.id == entry_id)
-    assert control.status == "COMPLETE"
+    control_constraint = next(item for item in control.constraints if item.constraint == constraint)
+    assert control_constraint.status == "COVERED"
     assert fault.status == "INCOMPLETE"
     result = next(item for item in fault.constraints if item.constraint == constraint)
     assert result.status == "UNSUPPORTED"

@@ -9825,10 +9825,11 @@
         "This audits configuration coverage only. KiCad native DRC remains responsible for geometry and physical-rule findings.",
         "Mapped differential-pair edge clearance supports a project-authored minimum only; it does not infer a universal signal-to-edge distance or prove EMI performance.",
         "The v1 rule parser supports exact A.inDiffPair('<selector>') conditions, mm or mil lengths that convert to integer nanometers, and pair suffixes _P/_N or +/-; other condition expressions or naming schemes remain uncovered.",
-        "A layer-scoped or malformed-layer rule is unsupported because the map has no layer scope. This audit does not resolve whether later custom rules override the matching rule.",
+        "A layer-scoped or malformed-layer rule is unsupported because the map has no layer scope. A later same-constraint rule is incomplete when overlap cannot be ruled out; this does not prove an actual override.",
         "A matching rule does not prove the project-authored limit is appropriate for the interface, stack-up, impedance, or signal-integrity target. Additional unconfigured rules are not independently evaluated by this audit."
       ],
       "fault_fixtures": [
+        "tests.test_pcb_drc_precedence.test_later_distinct_pair_selector_is_not_assumed_disjoint",
         "tests.test_pcb_drc_layer_scope.test_pair_rule_layer_scope_is_incomplete",
         "tests.test_pcb_drc_coverage.test_missing_rules_are_a_coverage_gap",
         "tests.test_pcb_drc_coverage.test_wrong_bound_is_a_mismatch",
@@ -9868,11 +9869,13 @@
         "This audits project-authored rule coverage and native endpoint connectivity only. KiCad native DRC remains responsible for measuring actual route length and skew.",
         "An authored edge-clearance minimum is checked against an exact A.NetName rule that applies to all copper on the mapped net, including branches; KiCad DRC measures geometry. The tooling does not infer critical nets or choose a universal edge margin.",
         "Edge-clearance net names containing quotes or control characters are rejected because they cannot be represented by the supported exact A.NetName selector syntax.",
-        "A layer-scoped or malformed-layer rule is unsupported because the map has no layer scope. This audit does not resolve whether later custom rules override the matching rule.",
+        "A layer-scoped or malformed-layer rule is unsupported because the map has no layer scope. Later same-constraint rules are incomplete unless proven disjoint; only distinct literal net-name edge-clearance selectors are proven disjoint. A review does not prove an actual override.",
         "A matching rule does not prove the authored endpoints, length limit, or skew limit are appropriate for the interface, timing budget, impedance, stack-up, or electrical safety target.",
         "Bundle pad selectors must resolve exactly to the mapped fitted board endpoints. Other condition syntax, incomplete netlists, non-mapped paths, off-board wiring, and physical continuity remain outside this audit."
       ],
       "fault_fixtures": [
+        "tests.test_pcb_drc_precedence.test_later_potentially_overlapping_rule_makes_edge_coverage_incomplete",
+        "tests.test_pcb_signal_path_coverage.test_later_path_rule_leaves_first_path_coverage_incomplete",
         "tests.test_pcb_drc_layer_scope.test_signal_rule_layer_scope_is_incomplete",
         "tests.test_pcb_signal_path_coverage.test_missing_wrong_duplicate_and_ignored_native_rules_are_incomplete",
         "tests.test_pcb_signal_path_edge_clearance.test_authored_edge_clearance_bound_requires_exact_selector_and_minimum",
@@ -9882,15 +9885,16 @@
         "tests.test_pcb_signal_path_native.test_native_signal_path_drc_faults_are_repeatable"
       ],
       "valid_control_fixtures": [
-        "tests.test_pcb_signal_path_coverage.test_exact_path_and_bundle_rules_cover_reviewed_map",
+        "tests.test_pcb_drc_precedence.test_earlier_general_rule_and_later_disjoint_net_are_controls",
+        "tests.test_pcb_signal_path_coverage.test_design_lint_reports_wrong_native_path_bound_and_complete_control",
         "tests.test_pcb_signal_path_edge_clearance.test_edge_only_signal_path_is_complete_without_length_or_skew_rules",
-        "tests.test_pcb_signal_path_coverage.test_map_order_and_native_rule_order_are_stable",
+        "tests.test_pcb_signal_path_coverage.test_map_order_stable_and_native_rule_order_changes_precedence",
         "tests.test_pcb_signal_path_mcp_parity.test_disabled_signal_path_coverage_matches_cli_and_mcp",
         "tests.test_pcb_signal_path_native.test_native_signal_path_drc_faults_are_repeatable"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_pcb_signal_path_coverage.test_map_order_and_native_rule_order_are_stable",
+        "tests.test_pcb_signal_path_coverage.test_map_order_stable_and_native_rule_order_changes_precedence",
         "tests.test_pcb_signal_path_coverage.test_wrong_bound_and_wildcard_expansion_mutations_are_detected"
       ],
       "required_native_fixtures": [

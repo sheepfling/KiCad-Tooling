@@ -33,6 +33,7 @@ class NativeRuleConstraint:
     def __init__(
         self,
         rule_name: str,
+        ordinal: int,
         condition: str,
         name: PcbDrcConstraintName,
         minimum_nm: int | None,
@@ -43,6 +44,7 @@ class NativeRuleConstraint:
         layer: str | None,
     ) -> None:
         self.rule_name = rule_name
+        self.ordinal = ordinal
         self.condition = condition
         self.name = name
         self.minimum_nm = minimum_nm
@@ -103,6 +105,7 @@ def _length_nm(value: str) -> int:
 def _parse_constraint(
     source: str,
     rule_name: str,
+    ordinal: int,
     condition: str,
     span: _Span,
     severity: str | None,
@@ -134,6 +137,7 @@ def _parse_constraint(
         issue = f"Rule {rule_name!r} has no explicit min/max bound"
     return NativeRuleConstraint(
         rule_name,
+        ordinal,
         condition,
         cast(PcbDrcConstraintName, name),
         fields.get("min"),
@@ -153,19 +157,18 @@ def native_constraints(source: str) -> tuple[NativeRuleConstraint, ...]:
     if len(versions) != 1 or versions[0] != ("version", "1"):
         raise ValueError("Expected one version 1 root atom in the native DRC rules file")
     result: list[NativeRuleConstraint] = []
+    ordinal = 0
     for rule in nodes:
         header = _atoms(source, rule)
         if not header or header[0] != "rule":
             continue
+        ordinal += 1
         if len(header) != 2:
             raise ValueError("Malformed named rule in the native DRC rules file")
         children = _children(source, rule.start + 1, rule.end - 1)
         conditions = [node for node in children if _atoms(source, node)[:1] == ("condition",)]
-        if len(conditions) != 1:
-            continue
-        condition_atoms = _atoms(source, conditions[0])
-        if len(condition_atoms) != 2:
-            continue
+        condition_atoms = _atoms(source, conditions[0]) if len(conditions) == 1 else ()
+        condition = condition_atoms[1] if len(condition_atoms) == 2 else ""
         severity_clauses = [node for node in children if _atoms(source, node)[:1] == ("severity",)]
         severity: str | None = None
         severity_issue: str | None = None
@@ -202,7 +205,8 @@ def native_constraints(source: str) -> tuple[NativeRuleConstraint, ...]:
             parsed = _parse_constraint(
                 source,
                 header[1],
-                condition_atoms[1],
+                ordinal,
+                condition,
                 node,
                 severity,
                 severity_issue,

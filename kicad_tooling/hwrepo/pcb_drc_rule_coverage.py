@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from fnmatch import fnmatchcase
 
 from kicad_tooling.hwrepo.pcb_drc_models import (
@@ -24,6 +25,19 @@ from .pcb_drc_rule_parser import (
     drc_pad_selector,
     native_constraints,
 )
+
+_EXACT_NET_CONDITION = re.compile(r"A\.NetName == '([^'\\*?\r\n]+)'")
+
+
+def _definitely_disjoint(name: PcbDrcConstraintName, first: str, second: str) -> bool:
+    """Prove only distinct literal net selectors for copper-edge rules disjoint."""
+    if name != "edge_clearance":
+        return False
+    first_net = _EXACT_NET_CONDITION.fullmatch(first)
+    second_net = _EXACT_NET_CONDITION.fullmatch(second)
+    return bool(
+        first_net and second_net and first_net.group(1).casefold() != second_net.group(1).casefold()
+    )
 
 
 def _expected(
@@ -115,6 +129,25 @@ def _compare_constraint(
                 f"Native rule is restricted to layer {match.layer!r}; "
                 "the authored requirement has no layer scope."
             ),
+        )
+    later = tuple(
+        item
+        for item in native
+        if item.name == name
+        and item.ordinal > match.ordinal
+        and not _definitely_disjoint(name, condition, item.condition)
+    )
+    if later:
+        possible = ", ".join(f"{item.rule_name!r} (rule {item.ordinal})" for item in later)
+        return PcbDrcConstraintCoverage(
+            constraint=name,
+            status="UNSUPPORTED",
+            expected_min_nm=expected_minimum,
+            expected_max_nm=expected_maximum,
+            observed_min_nm=match.minimum_nm,
+            observed_max_nm=match.maximum_nm,
+            rule_names=tuple(sorted({match.rule_name, *(item.rule_name for item in later)})),
+            issue=f"Later rule(s) may override this constraint: {possible}.",
         )
     covered = match.minimum_nm == expected_minimum and match.maximum_nm == expected_maximum
     return PcbDrcConstraintCoverage(

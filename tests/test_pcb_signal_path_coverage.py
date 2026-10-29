@@ -39,11 +39,12 @@ from tests.design_lint_fixtures.pcb_signal_path import (
 )
 
 
-def test_exact_path_and_bundle_rules_cover_reviewed_map() -> None:
+def test_later_path_rule_leaves_first_path_coverage_incomplete() -> None:
     entries = compare()
 
     assert [entry.id for entry in entries] == ["clock", "data", "serial-bundle"]
-    assert {entry.status for entry in entries} == {"COMPLETE"}
+    assert [entry.status for entry in entries] == ["INCOMPLETE", "COMPLETE", "COMPLETE"]
+    assert entries[0].constraints[0].status == "UNSUPPORTED"
     assert [constraint.constraint for entry in entries for constraint in entry.constraints] == [
         "length",
         "edge_clearance",
@@ -86,7 +87,7 @@ def test_missing_wrong_duplicate_and_ignored_native_rules_are_incomplete() -> No
     missing = compare(rules=source.replace(data_rule, ""))
     assert next(entry for entry in missing if entry.id == "data").constraints[0].status == "MISSING"
 
-    wrong = compare(rules=source.replace("(max 20mm)", "(max 19mm)", 1))
+    wrong = compare(rules=_clock_rule_last(source.replace("(max 20mm)", "(max 19mm)", 1)))
     assert next(entry for entry in wrong if entry.id == "clock").constraints[0].status == "MISMATCH"
 
     duplicate = (
@@ -104,9 +105,7 @@ def test_missing_wrong_duplicate_and_ignored_native_rules_are_incomplete() -> No
     )
 
     ignored = compare(
-        ignored=frozenset(
-            {"length_out_of_range", "skew_out_of_range", "copper_edge_clearance"}
-        )
+        ignored=frozenset({"length_out_of_range", "skew_out_of_range", "copper_edge_clearance"})
     )
     assert {item.status for entry in ignored for item in entry.constraints} == {"IGNORED"}
 
@@ -134,7 +133,7 @@ def test_supported_nonignored_custom_rule_severities_preserve_coverage(
         f'(rule "synthetic-clock-length"\n  (severity {severity})',
         1,
     )
-    clock = next(entry for entry in compare(rules=rules) if entry.id == "clock")
+    clock = next(entry for entry in compare(rules=_clock_rule_last(rules)) if entry.id == "clock")
     assert clock.status == "COMPLETE"
     assert clock.constraints[0].status == "COVERED"
 
@@ -262,18 +261,30 @@ def test_native_drc_fixture_report_adapter_extracts_typed_fields(tmp_path: Path)
     assert changed.violation_records_sha256 != report.violation_records_sha256
 
 
-def test_map_order_and_native_rule_order_are_stable() -> None:
+def _clock_rule_last(source: str) -> str:
+    chunks = source.strip().split("\n(rule ")
+    clock = next(item for item in chunks[1:] if item.startswith('"synthetic-clock-length"'))
+    others = [item for item in chunks[1:] if item != clock]
+    return chunks[0] + "\n(rule " + "\n(rule ".join((*others, clock))
+
+
+def test_map_order_stable_and_native_rule_order_changes_precedence() -> None:
     requirements = path_map()
     reordered_map = requirements.model_copy(update={"paths": tuple(reversed(requirements.paths))})
     chunks = native_rules().strip().split("\n(rule ")
     reordered_rules = chunks[0] + "\n(rule " + "\n(rule ".join(reversed(chunks[1:]))
 
     original = compare(requirements=requirements)
+    reordered_map_results = compare(requirements=reordered_map)
+    assert original == reordered_map_results
     reordered = compare(requirements=reordered_map, rules=reordered_rules)
-
-    assert [entry.model_dump(mode="json") for entry in original] == [
-        entry.model_dump(mode="json") for entry in reordered
-    ]
+    assert (
+        next(entry for entry in original if entry.id == "clock").constraints[0].status
+        == "UNSUPPORTED"
+    )
+    assert (
+        next(entry for entry in reordered if entry.id == "clock").constraints[0].status == "COVERED"
+    )
 
 
 def test_wrong_bound_and_wildcard_expansion_mutations_are_detected() -> None:

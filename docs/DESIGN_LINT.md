@@ -3351,9 +3351,11 @@ missing coverage.
 
 These maps do not declare a layer scope. A matching native rule with a layer
 clause, or an invalid or repeated layer clause, therefore remains unsupported
-rather than counting as complete coverage. The audit does not resolve whether
-other later custom rules override the matching rule; inspect native rule
-precedence and DRC results for the actual board.
+rather than counting as complete coverage. A later rule with the same
+constraint also leaves coverage incomplete when overlap cannot be ruled out,
+including an ignored rule or an unrecognized condition. This is a conservative
+review prompt; it does not establish that the later rule actually matches.
+KiCad's native rule precedence and board DRC remain authoritative.
 
 `edge_clearance` is an optional project-authored minimum for the mapped pair.
 It must match one active native `(constraint edge_clearance (min ...))` rule
@@ -3684,9 +3686,12 @@ endpoints, and disconnected pads remain review findings.
 
 The map has no layer scope, so a matching rule with a layer clause is
 unsupported even if its selector and bound match. Invalid or repeated layer
-clauses are also unsupported. This audit does not resolve whether later custom
-rules override the matching rule; inspect native rule precedence and DRC
-results for the actual board.
+clauses are also unsupported. A later rule with the same constraint leaves
+coverage incomplete unless the auditor can prove the conditions disjoint. It
+currently proves this only for distinct literal `A.NetName` edge-clearance
+selectors; it does not infer disjointness from different `fromTo` selectors.
+This conservative review prompt does not establish an actual override. Inspect
+native rule precedence and DRC results for the actual board.
 
 For an authored edge-clearance rule, net names containing quotes or control
 characters are rejected because the exact supported `A.NetName` condition

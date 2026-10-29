@@ -1,0 +1,7 @@
+(version 1)
+(rule "general-ignore"
+  (severity ignore)
+  (constraint edge_clearance (min 1mm)))
+(rule "mapped"
+  (condition "A.NetName == 'USB_D_P'")
+  (constraint edge_clearance (min 1mm)))

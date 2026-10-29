@@ -14022,17 +14022,18 @@ control are documented in the
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
-- **Open precedence gap:** KiCad evaluates custom rules in reverse file order,
+- **Rule precedence:** KiCad evaluates custom rules in reverse file order,
   and a later matching rule can override an earlier mapped rule, including
-  when its severity is `ignore`. The current audit does not resolve that
-  precedence and can report complete coverage despite a later unconditional
-  rule of the same constraint type. See the [KiCad 10 custom-rule syntax](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#custom-design-rules).
-  A conservative synthetic prototype detected that case but made seven existing
-  signal-path tests incomplete because separate `fromTo` selectors were not
-  proven disjoint. Before adoption, establish a source-bound disjointness
-  predicate and test rule order and ignored-rule behavior with KiCad 10.0.0
-  and 10.0.5. Audit the differential-pair and mechanical-edge checks for the
-  same issue. No native precedence experiment has yet been run.
+  when its severity is `ignore`. See the [KiCad 10 custom-rule syntax](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#custom-design-rules).
+  The mapped signal-path and differential-pair audits now report incomplete
+  coverage when a later same-constraint rule may overlap. Distinct literal
+  net-name edge selectors are the only currently proven disjoint case; separate
+  `fromTo` selectors remain reviewable even when their mapped nets differ.
+  The native edge-clearance experiment passed on KiCad 10.0.0 and 10.0.5;
+  its [fixture notes](../tests/fixtures/design_lint/drc-rule-precedence/README.md)
+  describe its narrow scope. Audit the mechanical-edge check separately and
+  establish stronger source-bound disjointness evidence before broadening this
+  result.
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.
   The full local package gate passed on 2026-10-08 (2,266 tests passed, 54
   skipped, 2,030 subtests passed), including source and wheel builds,

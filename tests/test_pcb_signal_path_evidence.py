@@ -187,7 +187,9 @@ def scan_fixture(
 def test_source_bound_signal_path_report_binds_native_inputs(tmp_path: Path) -> None:
     report = scan_fixture(tmp_path)
 
-    assert report.status == "COMPLETE"
+    assert report.status == "INCOMPLETE"
+    clock = next(entry for entry in report.entries if entry.id == "clock")
+    assert clock.constraints[0].status == "UNSUPPORTED"
     assert report.mode == "review"
     assert report.board_sha256 is not None
     assert report.native_drc_sha256 is not None
