@@ -196,6 +196,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="spi-unconnected-data-pin",
     ),
     pytest.param(
+        "bus.spi_unconnected_clock_pin",
+        "KICAD_RUN_NATIVE_SPI_UNCONNECTED_CLOCK_FIXTURES",
+        "tests.test_spi_unconnected_clock_native_fixture_lane."
+        "test_native_open_spi_clock_fault_and_connected_control",
+        id="spi-unconnected-clock-pin",
+    ),
+    pytest.param(
         "bus.spi_clock_chip_select_same_net",
         "KICAD_RUN_NATIVE_SPI_CLOCK_CONTROL_SAME_NET_FIXTURES",
         "tests.test_spi_clock_control_same_net_native_fixture_lane."

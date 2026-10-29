@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 246 rules are implemented with synthetic regression coverage.
+The following 247 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 246 active rules.
+The catalog currently contains 247 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -572,6 +572,7 @@ skipped under prerelease policy.
 - `bus.usb_unconnected_data_pin`
 - `bus.spi_unconnected_chip_select`
 - `bus.spi_unconnected_data_pin`
+- `bus.spi_unconnected_clock_pin`
 - `bus.spi_active_low_chip_select_without_pullup`
 - `bus.spi_data_polarity_label_mismatch`
 - `bus.spi_clock_select_label_mismatch`
@@ -3297,7 +3298,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 246 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 247 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -5961,6 +5962,42 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_I3C_UNCONNECTED_PIN_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_i3c_unconnected_pin_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i3c_unconnected_pin")'
+  ```
+
+#### LINT-265 — Review an open SPI clock on an otherwise assigned channel
+
+- **Status:** Implemented as default-off `bus.spi_unconnected_clock_pin`.
+  Projects can enable `review`, promote it to `block`, turn it off, or ignore
+  an exact fingerprint.
+- **Gap:** SPI open-pin checks covered chip-select and data directions, but an
+  explicitly named SCK/SCLK/SPC pin could remain open while another pin on the
+  same component and channel was assigned.
+- **Predicate:** For a fitted U/IC reference, group bounded SPI clock, data, and
+  chip-select pin functions by parsed channel. Review an open clock only when
+  another recognized member has exactly one assigned native net. Entirely open
+  channels and multi-net assignments do not count as evidence of channel use.
+- **Boundary:** An unused or externally controlled clock can be intentional.
+  Function names and neighboring assignments do not prove SPI use or a required
+  clock connection. The check does not inspect firmware, passive paths, PCB
+  copper, or physical continuity; a project-authored interface requirement is
+  needed for a blocking regression.
+- **Evidence:** Synthetic tests cover enabled policy, default-off behavior,
+  exact ignores, assigned-clock and all-open controls, DNP, generic names,
+  different channels, stable ordering, repair, and three-process hash-seed
+  stability. Source-hashed tooling-owned
+  schematics repeat netlist and ERC exports on digest-pinned KiCad 10.0.0 and
+  10.0.5. Focused rule selection, marker registration, and the protocol module
+  size architecture check are included. See the
+  [fixture record](../tests/fixtures/design_lint/spi-unconnected-clock-native/README.md).
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_spi_unconnected_clock_pin.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_unconnected_clock_pin")'
+
+  KICAD_RUN_NATIVE_SPI_UNCONNECTED_CLOCK_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_spi_unconnected_clock_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_unconnected_clock_pin")'
   ```
 
 #### LINT-263 — Review crossed RS-485 A/B line labels

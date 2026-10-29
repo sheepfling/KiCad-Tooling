@@ -11184,6 +11184,49 @@
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/spi_unconnected_data_pins.py#unconnected_spi_data_function_pins"
+    },
+    {
+      "rule_id": "bus.spi_unconnected_clock_pin",
+      "title": "Recognized SPI clock pin is open on an active channel",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted U/IC reference and bounded SPI channel, report an unassigned clock-function pin only when another recognized clock, data, or chip-select pin on that same component and parsed channel has exactly one native net assignment.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only clock aliases accepted by spi_signal_role_and_channel are recognized; generic labels, vendor-specific function names, connector references, and unsupported channel spellings are outside the rule.",
+        "An open clock can be intentional when the interface function is unused or controlled externally. The rule defaults to off and asks for review; it never requires the pin to connect.",
+        "A completely unassigned component/channel is excluded because native pin-function text does not establish SPI use. Multi-net assignments do not count as connected evidence.",
+        "The netlist does not establish firmware configuration, endpoint intent, component behavior, PCB copper, external wiring, or physical continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_spi_unconnected_clock_pin.test_open_clock_with_assigned_same_channel_data_emits_exact_review_evidence",
+        "tests.test_spi_unconnected_clock_native_fixture_lane.test_native_open_spi_clock_fault_and_connected_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_spi_unconnected_clock_pin.test_unsupported_or_inactive_clock_shapes_are_quiet",
+        "tests.test_spi_unconnected_clock_native_fixture_lane.test_native_open_spi_clock_fault_and_connected_control"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_spi_unconnected_clock_pin.test_ordering_is_stable_and_assigning_open_clock_clears_candidate",
+        "tests.test_design_lint_determinism_spi_unconnected_clock_pin.test_spi_unconnected_clock_reports_are_hashseed_deterministic",
+        "tests.test_spi_unconnected_clock_pin.test_native_fixture_sources_match_reviewed_hashes",
+        "tests.test_spi_unconnected_clock_native_fixture_lane.test_native_open_spi_clock_fault_and_connected_control"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SPI_UNCONNECTED_CLOCK_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/spi_unconnected_clock_pin.py#unconnected_spi_clock_function_pins",
+        "kicad_tooling/hwrepo/spi_participants.py#spi_signal_role_and_channel",
+        "kicad_tooling/hwrepo/design_lint_unconnected_interface_candidates.py#unconnected_interface_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/spi_unconnected_clock_pin.py#unconnected_spi_clock_function_pins"
     }
   ]
 }

@@ -39,6 +39,7 @@ BUS_ANALYSIS_MODULES = (
     "design_lint_interfaces_usb_data_polarity.py",
     "usb_unconnected_data.py",
     "spi_unconnected_data_pins.py",
+    "spi_unconnected_clock_pin.py",
     "serial_unconnected_pins.py",
     "i2c_signal_label.py",
     "i2c_same_net.py",

@@ -9,6 +9,7 @@ from .design_lint_types import Candidate
 from .i2c_unconnected_pins import unconnected_i2c_signal_pins
 from .models import NetlistContract
 from .serial_unconnected_pins import unconnected_serial_function_pins
+from .spi_unconnected_clock_pin import unconnected_spi_clock_function_pins
 from .spi_unconnected_data_pins import unconnected_spi_data_function_pins
 from .usb_c_sbu_unconnected_pin import usb_c_sbu_unconnected_pin_candidates
 from .usb_unconnected_data import unconnected_usb_data_pins
@@ -128,6 +129,25 @@ def unconnected_interface_candidates(observed: NetlistContract) -> tuple[Candida
                     "function": (pin.function,),
                     "spi_data_family": (family,),
                     "spi_channel": (pin.channel,),
+                },
+            )
+        )
+    for pin in unconnected_spi_clock_function_pins(observed):
+        found.append(
+            Candidate(
+                rule_id="bus.spi_unconnected_clock_pin",
+                subject=f"{pin.pin}: {pin.function}",
+                message=(
+                    "This native SPI clock-function pin has no net assignment while another "
+                    "recognized pin on the same fitted IC and channel is assigned. Review "
+                    "whether the clock is intentionally unused or a connection is missing. "
+                    "This evidence does not establish SPI use or PCB routing."
+                ),
+                evidence={
+                    pin.pin: (),
+                    "function": (pin.function,),
+                    "spi_channel": (pin.channel,),
+                    "active_peer_pins": pin.active_peer_pins,
                 },
             )
         )

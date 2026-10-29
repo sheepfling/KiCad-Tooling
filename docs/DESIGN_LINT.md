@@ -174,6 +174,20 @@ continuity. See the
   -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_unconnected_data_pin")'
 ```
 
+`bus.spi_unconnected_clock_pin` recognizes bounded SPI clock functions on fitted U/IC references. It
+reviews an open clock only when another clock, data, or chip-select pin on that same component and
+parsed channel has one unambiguous net assignment. Entirely open channels, DNP parts, connector
+references, unsupported functions, and ambiguous assignments are skipped. The default is `off`;
+project policy can enable review, promote it to block, disable it, or ignore an exact finding. An
+unused clock can be intentional, so this does not require a connection or establish firmware use,
+endpoint intent, PCB routing, or continuity. See the
+[source-hashed native fault and control](../tests/fixtures/design_lint/spi-unconnected-clock-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_spi_unconnected_clock_pin.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_unconnected_clock_pin")'
+```
+
 ## Reconcile findings against a source-bound baseline
 
 Use the [source-bound finding reconciliation guide](DESIGN_LINT_RECONCILIATION.md)
@@ -747,7 +761,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 246 active rules.
+The catalog currently contains 247 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

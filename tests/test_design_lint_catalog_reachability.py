@@ -34,6 +34,7 @@ import tests.design_lint_fixtures.rs485_ab_same_net as _rs485_ab_same_net_fixtur
 import tests.design_lint_fixtures.rs485_line_named_rail as _rs485_line_named_rail_fixtures
 import tests.design_lint_fixtures.rs485_unconnected_data_pins as _rs485_unconnected_data_fixtures
 import tests.design_lint_fixtures.serial_unconnected_pins as _serial_unconnected_pin_fixtures
+import tests.design_lint_fixtures.spi_unconnected_clock_pin as _spi_unconnected_clock_fixtures
 import tests.design_lint_fixtures.spi_unconnected_data_pins as _spi_unconnected_data_fixtures
 import tests.design_lint_fixtures.usb_c_cc_endpoint_pairing as _usb_c_cc_endpoint_pairing_fixtures
 import tests.design_lint_fixtures.usb_c_cc_named_rail as _usb_c_cc_named_rail_fixtures
@@ -206,6 +207,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _usb_c_superspeed_lane_fixtures.usb_c_superspeed_lane_fault_netlist(),
         _rs485_ab_same_net_fixtures.rs485_ab_same_net_netlist(),
         _spi_unconnected_data_fixtures.spi_unconnected_data_netlist(),
+        _spi_unconnected_clock_fixtures.spi_unconnected_clock_netlist(open_pins=("U1.1",)),
         _rs485_unconnected_data_fixtures.rs485_unconnected_data_netlist(),
     )
     emitted = {item.rule_id for source in cases for item in candidates(source)}
