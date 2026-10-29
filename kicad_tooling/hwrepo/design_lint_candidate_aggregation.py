@@ -20,6 +20,16 @@ from .control_input_models import ControlInputBiasHeuristicCoverage
 from .crystal_network_models import CrystalNetworkCoverageReport
 from .design_lint_bus_candidates import bus_candidates
 from .design_lint_bus_inputs import BusCandidateInputs
+from .design_lint_candidate_inputs import (
+    ComponentCandidateInputs,
+    ConnectorCandidateInputs,
+    ControlCandidateInputs,
+    DesignLintCandidateInputs,
+    MappedCandidateInputs,
+    PcbCandidateInputs,
+    PeerCandidateInputs,
+    PowerCandidateInputs,
+)
 from .design_lint_catalog import rule_catalog
 from .design_lint_component_candidates import component_candidates
 from .design_lint_component_peer_candidates import component_peer_candidates
@@ -170,7 +180,133 @@ def candidates(
     oscillator_output_path_map: OscillatorOutputPathMap | None = None,
     connector_stateful_contact_map: ConnectorStatefulContactMap | None = None,
 ) -> tuple[Candidate, ...]:
-    """Aggregate thematic candidates and preserve one active-catalog lifecycle."""
+    """Adapt legacy inputs to the shared typed candidate scanner."""
+    return scan_candidates(
+        DesignLintCandidateInputs(
+            observed=observed,
+            catalog=catalog,
+            schematic_geometry=schematic_geometry,
+            reviewed_connector_references=reviewed_connector_references,
+            connector=ConnectorCandidateInputs(
+                coverage=connector_coverage,
+                return_distribution=connector_return_distribution,
+                stateful_contact_map=connector_stateful_contact_map,
+                power_output_review_enabled=connector_power_output_review_enabled,
+            ),
+            component=ComponentCandidateInputs(
+                peer_pin_assignment_scans=peer_pin_assignment_scans,
+                peer_power_output_review_enabled=peer_power_output_review_enabled,
+            ),
+            control=ControlCandidateInputs(
+                input_bias_coverage=control_input_bias_coverage,
+            ),
+            power=PowerCandidateInputs(
+                component_role_map=component_role_map,
+                power_path_map=power_path_map,
+                power_sequence_map=power_sequence_map,
+                oscillator_output_path_map=oscillator_output_path_map,
+                ic_decoupling_map=ic_decoupling_map,
+            ),
+            bus=BusCandidateInputs(
+                observed=observed,
+                i2c_address=I2cAddressCandidateInput.from_candidate_arguments(
+                    observed, i2c_address_map, i2c_address_coverage
+                ),
+                i2c_pullup=I2cPullupSnifferInput.from_legacy_arguments(
+                    observed, i2c_pullup_heuristic_coverage
+                ),
+                complementary_alias_resolution=complementary_alias_resolution,
+                i2c_peer_reference_scan=i2c_peer_reference_scan,
+                spi_roster=spi_roster,
+                spi_peer_reference_scan=spi_peer_reference_scan,
+                can_peer_reference_scan=can_peer_reference_scan,
+                rs485_peer_reference_scan=rs485_peer_reference_scan,
+                pcb_differential_pair_rule_map=pcb_differential_pair_rule_map,
+                reviewed_connector_references=reviewed_connector_references,
+            ),
+            peer=PeerCandidateInputs(
+                digital_voltage_context=digital_peer_voltage_context,
+                digital_voltage_scan=digital_peer_voltage_scan,
+                usb_reference_scan=usb_peer_reference_scan,
+                serial_reference_scan=serial_peer_reference_scan,
+                serial_roster=serial_peer_roster,
+                usb_c_port_roster=usb_c_port_roster,
+            ),
+            mapped=MappedCandidateInputs(
+                external_protection=external_protection_coverage,
+                crystal_network=crystal_network_coverage,
+                regulator_feedback=regulator_feedback_coverage,
+                rc_filter=rc_filter_coverage,
+            ),
+            pcb=PcbCandidateInputs(
+                component_inventory=pcb_component_inventory_coverage,
+                decoupling=pcb_decoupling_coverage,
+                protection_path=pcb_protection_path_coverage,
+                track_width=pcb_track_width_coverage,
+                reference_plane=pcb_reference_plane_coverage,
+                switching_loop=pcb_switching_loop_coverage,
+                differential_pair=pcb_differential_pair_coverage,
+                signal_path=pcb_signal_path_coverage,
+                keepout=pcb_keepout_coverage,
+                rf_antenna=pcb_rf_module_antenna_coverage,
+                touch_pad_clearance=pcb_touch_pad_clearance_coverage,
+                stm32_pin_map=stm32_pin_map_coverage,
+            ),
+            usb_data_path_map=usb_data_path_map,
+        )
+    )
+
+
+def scan_candidates(inputs: DesignLintCandidateInputs) -> tuple[Candidate, ...]:
+    """Aggregate typed theme inputs and preserve one active-catalog lifecycle."""
+    observed = inputs.observed
+    catalog = inputs.catalog
+    schematic_geometry = inputs.schematic_geometry
+    reviewed_connector_references = inputs.reviewed_connector_references
+    connector_coverage = inputs.connector.coverage
+    connector_return_distribution = inputs.connector.return_distribution
+    connector_stateful_contact_map = inputs.connector.stateful_contact_map
+    connector_power_output_review_enabled = inputs.connector.power_output_review_enabled
+    component_role_map = inputs.power.component_role_map
+    power_path_map = inputs.power.power_path_map
+    oscillator_output_path_map = inputs.power.oscillator_output_path_map
+    ic_decoupling_map = inputs.power.ic_decoupling_map
+    peer_pin_assignment_scans = inputs.component.peer_pin_assignment_scans
+    peer_power_output_review_enabled = inputs.component.peer_power_output_review_enabled
+    control_input_bias_coverage = inputs.control.input_bias_coverage
+    digital_peer_voltage_context = inputs.peer.digital_voltage_context
+    digital_peer_voltage_scan = inputs.peer.digital_voltage_scan
+    usb_peer_reference_scan = inputs.peer.usb_reference_scan
+    serial_peer_reference_scan = inputs.peer.serial_reference_scan
+    serial_peer_roster = inputs.peer.serial_roster
+    usb_c_port_roster = inputs.peer.usb_c_port_roster
+    external_protection_coverage = inputs.mapped.external_protection
+    crystal_network_coverage = inputs.mapped.crystal_network
+    regulator_feedback_coverage = inputs.mapped.regulator_feedback
+    rc_filter_coverage = inputs.mapped.rc_filter
+    power_sequence_map = inputs.power.power_sequence_map
+    pcb_component_inventory_coverage = inputs.pcb.component_inventory
+    pcb_decoupling_coverage = inputs.pcb.decoupling
+    pcb_protection_path_coverage = inputs.pcb.protection_path
+    pcb_track_width_coverage = inputs.pcb.track_width
+    pcb_reference_plane_coverage = inputs.pcb.reference_plane
+    pcb_switching_loop_coverage = inputs.pcb.switching_loop
+    pcb_differential_pair_coverage = inputs.pcb.differential_pair
+    pcb_signal_path_coverage = inputs.pcb.signal_path
+    pcb_keepout_coverage = inputs.pcb.keepout
+    pcb_rf_module_antenna_coverage = inputs.pcb.rf_antenna
+    pcb_touch_pad_clearance_coverage = inputs.pcb.touch_pad_clearance
+    stm32_pin_map_coverage = inputs.pcb.stm32_pin_map
+    usb_data_path_map = inputs.usb_data_path_map
+    i2c_address_input = inputs.bus.i2c_address
+    i2c_pullup_input = inputs.bus.i2c_pullup
+    complementary_alias_resolution = inputs.bus.complementary_alias_resolution
+    i2c_peer_reference_scan = inputs.bus.i2c_peer_reference_scan
+    spi_roster = inputs.bus.spi_roster
+    spi_peer_reference_scan = inputs.bus.spi_peer_reference_scan
+    can_peer_reference_scan = inputs.bus.can_peer_reference_scan
+    rs485_peer_reference_scan = inputs.bus.rs485_peer_reference_scan
+    pcb_differential_pair_rule_map = inputs.bus.pcb_differential_pair_rule_map
     found: list[Candidate] = []
     usb_data_map_sha256 = usb_data_path_map_sha256(usb_data_path_map)
     peer_pin_scans = peer_pin_assignment_scans or component_peer_pin_assignment_scans(
@@ -236,12 +372,8 @@ def candidates(
         bus_candidates(
             BusCandidateInputs(
                 observed=observed,
-                i2c_address=I2cAddressCandidateInput.from_candidate_arguments(
-                    observed, i2c_address_map, i2c_address_coverage
-                ),
-                i2c_pullup=I2cPullupSnifferInput.from_legacy_arguments(
-                    observed, i2c_pullup_heuristic_coverage
-                ),
+                i2c_address=i2c_address_input,
+                i2c_pullup=i2c_pullup_input,
                 complementary_alias_resolution=complementary_alias_resolution,
                 i2c_peer_reference_scan=i2c_peer_reference_scan,
                 spi_roster=spi_roster,
@@ -303,5 +435,6 @@ def candidates(
         )
     )
     found.extend(stm32_candidates(stm32_pin_map_coverage))
+    found.extend(inputs.additional_candidates)
     validate_catalogued_candidates(found, catalog)
     return tuple(sorted(found, key=lambda item: (item.rule_id, item.subject)))

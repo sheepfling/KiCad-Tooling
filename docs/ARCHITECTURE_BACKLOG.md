@@ -200,6 +200,16 @@ must enter through a typed theme input or prepared internal record; changing
 either cap requires an explicit migration plan and a corresponding removal of
 legacy surface parameters.
 
+The public `candidates()` adapter and prepared evaluation now construct the
+same required capability-group inputs and call `scan_candidates()`. The
+synthetic I²C missing-pull-up fault and valid-control cases compare candidate
+order, fingerprints, serialized report JSON, and coverage dispositions through
+both routes. The input groups keep shared power requirements in one owner and
+require connector, component, control, power, bus, peer, mapped, and PCB groups
+at the scanner boundary. Continue migrating direct candidate consumers by capability
+group; remove a legacy argument only after its callers have moved and the
+fault/control outputs remain unchanged.
+
 I²C, SPI, CAN, and RS-485 peer rule owners now attach typed identities to their
 internal candidates. Construction and coverage assembly check that each
 identity matches the public evidence fields; coverage uses the typed identities.

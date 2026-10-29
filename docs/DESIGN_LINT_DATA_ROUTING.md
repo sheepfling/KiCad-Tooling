@@ -20,10 +20,10 @@ does not add a rule or change an engineering conclusion.
 3. `design_lint_evaluation_preparation.py` compares source-bound I²C coverage,
    including an empty `COMPLETE` result, with the coach's netlist hash. A
    mismatch blocks the evaluation before candidate scanning.
-4. `design_lint_evaluation_candidates.py` forwards the netlist and coverage
-   through the wide candidate aggregator. That compatibility adapter constructs
-   distinct `I2cPullupSnifferInput` and `I2cAddressCandidateInput` records, then
-   passes one `BusCandidateInputs` record to the bus coordinator.
+4. `design_lint_evaluation_candidates.py` constructs required capability-group
+   inputs directly from prepared, source-bound evidence. The public
+   `candidates()` compatibility adapter constructs those same records from its
+   legacy arguments. Both call `scan_candidates()`.
 5. The I²C predicate emits `Candidate` records. Catalog validation, project
    modes, exact ignores, fingerprints, and report assembly occur after scanning.
    The report and reconciliation retain source identity and review state.
@@ -48,12 +48,13 @@ in the run/report envelope and the coverage record rather than being copied
 into each rule's inputs.
 
 The existing public `candidates()` and `evaluate()` signatures remain as
-compatibility adapters during the pilot. The candidate aggregator constructs
-the typed I²C inputs from the legacy arguments and gives them to the bus
-coordinator as `BusCandidateInputs`. Each I²C predicate consumes its own input
-directly. This step does not add another parameter to either central signature.
-Full evaluation still unpacks prepared evidence into the wide compatibility
-call; moving that route upstream remains open.
+compatibility adapters during the pilot. The public candidate adapter
+constructs typed theme inputs from its legacy arguments; full evaluation builds
+the same required groups from prepared coverage and project policy. Both reach
+the same scanner, and the bus group carries independent I²C pull-up and address
+records through `BusCandidateInputs`. Each I²C predicate consumes its own
+input directly. This step does not add another parameter to either central
+signature.
 
 ## Evidence and decision rules
 
@@ -110,9 +111,10 @@ The focused synthetic, CLI/MCP parity, architecture, Ruff, and Pyright checks
 also passed for the I²C tranche. Keep the existing rule fixtures as the durable
 behavior regressions; the historical comparison was a migration check.
 
-After this pilot, decide the next theme bundle from its actual consumers. A
-bundle should expose the smallest stable data its predicates need. It should
-not become a new global context with every optional scan attached.
+The shared scanner now requires connector, component, control, power, bus,
+peer, mapped-coverage, and PCB groups. Continue moving direct callers to the
+smallest stable theme records their predicates need; do not replace the group
+boundary with a global context of optional scans.
 
 ## I²C address candidate route
 
@@ -152,18 +154,16 @@ and report shapes, fingerprints, and central parameter counts remain stable.
 
 Peer reference scans and pull-up coverage remain separate typed routes; their
 different evidence and authority rules do not belong in an all-optional I²C
-context. The next architecture step is to carry agreed theme records from
-prepared evidence without expanding central compatibility signatures.
+context. Prepared evaluation now carries these records into the same scanner
+without expanding central compatibility signatures.
 
-The public `candidates()` call accepts 49 arguments and is used by direct
-predicate tests as well as full evaluation. Full evaluation already has a typed
-`DesignLintEvaluationPreparation` with current source hashes, resolved
-coverage, and project policy, but it still unpacks that record into the wide
-call. Keep the public call shape for compatibility while moving each agreed
-theme to an internal prepared-evidence route. The internal route must reject
-stale coverage before a predicate can treat it as authoritative; direct
-`candidates()` calls remain unverified observations unless the caller supplies
-and validates the relevant source identity.
+The public `candidates()` call accepts 49 arguments and remains available to
+direct predicate consumers. Full evaluation now builds the grouped scanner
+inputs from `DesignLintEvaluationPreparation`, whose coverage has already been
+source-checked. Keep the public call shape for compatibility and continue
+migrating direct consumers by capability group. Direct `candidates()` calls
+remain unverified observations unless the caller supplies and validates the
+relevant source identity.
 
 Candidate registration has one shared check: after all theme, native, and
 rule-specific candidates are collected, every rule ID must be active in the

@@ -14,6 +14,7 @@ from kicad_tooling.hwrepo import (
     digital_peer_voltage_types,
 )
 from kicad_tooling.hwrepo.design_lint_bus_inputs import BusCandidateInputs
+from kicad_tooling.hwrepo.design_lint_candidate_inputs import DesignLintCandidateInputs
 from tests.lint_architecture_support import (
     FACADE_MAX_LINES,
     HWREPO,
@@ -253,6 +254,62 @@ def test_i2c_address_input_replaces_separate_bus_arguments() -> None:
         route_parameters[name].default is inspect.Parameter.empty
         for name in ("observed", "i2c_address", "i2c_pullup")
     )
+
+
+def test_legacy_and_prepared_candidate_paths_share_required_scanner_inputs() -> None:
+    aggregation = HWREPO / "design_lint_candidate_aggregation.py"
+    evaluation = HWREPO / "design_lint_evaluation_candidates.py"
+    inputs = HWREPO / "design_lint_candidate_inputs.py"
+
+    assert line_count(inputs) < IMPLEMENTATION_MAX_LINES
+    scanner_parameters = inspect.signature(
+        design_lint_candidate_aggregation.scan_candidates
+    ).parameters
+    assert tuple(scanner_parameters) == ("inputs",)
+
+    input_parameters = inspect.signature(DesignLintCandidateInputs).parameters
+    for group_name in (
+        "connector",
+        "component",
+        "control",
+        "power",
+        "bus",
+        "peer",
+        "mapped",
+        "pcb",
+    ):
+        assert input_parameters[group_name].default is inspect.Parameter.empty
+
+    aggregation_tree = ast.parse(aggregation.read_text(encoding="utf-8"))
+    legacy_function = next(
+        node
+        for node in aggregation_tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "candidates"
+    )
+    legacy_calls = [
+        node
+        for node in ast.walk(legacy_function)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "scan_candidates"
+    ]
+    assert len(legacy_calls) == 1
+    assert isinstance(legacy_calls[0].args[0], ast.Call)
+    assert isinstance(legacy_calls[0].args[0].func, ast.Name)
+    assert legacy_calls[0].args[0].func.id == "DesignLintCandidateInputs"
+
+    evaluation_tree = ast.parse(evaluation.read_text(encoding="utf-8"))
+    prepared_calls = [
+        node
+        for node in ast.walk(evaluation_tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "scan_candidates"
+    ]
+    assert len(prepared_calls) == 1
+    assert isinstance(prepared_calls[0].args[0], ast.Call)
+    assert isinstance(prepared_calls[0].args[0].func, ast.Name)
+    assert prepared_calls[0].args[0].func.id == "DesignLintCandidateInputs"
 
 
 def test_public_lint_compatibility_signatures_do_not_grow() -> None:
