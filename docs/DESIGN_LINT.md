@@ -761,7 +761,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 250 active rules.
+The catalog currently contains 251 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -998,6 +998,26 @@ fault/control schematics are inventoried in the
 KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_UNCONNECTED_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_ethernet_management_unconnected_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_unconnected_pin")'
+```
+
+### Ethernet TX/RX data pair has one open pin
+
+`bus.ethernet_data_unconnected_pin` recognizes one exact supported TX or RX positive/negative pin
+pair on a fitted IC with a complete native pin inventory. It requests review when exactly one side
+is open and its mate has one assignment. The rule is off by default because an unused lane can be
+intentional; projects may enable review or blocking after checking their interface requirements. DNP
+devices, duplicate roles, incomplete inventories, and ambiguous assignments are skipped. Native pin
+functions do not establish that the lane is required, its endpoint, routed copper, external wiring,
+or physical continuity. Tooling-owned native fault/control schematics are listed in the
+[fixture notes](../tests/fixtures/design_lint/ethernet-data-unconnected-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_ethernet_data_unconnected_pins.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_data_unconnected_pin")'
+
+KICAD_RUN_NATIVE_ETHERNET_DATA_UNCONNECTED_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_ethernet_data_unconnected_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_data_unconnected_pin")'
 ```
 
 ### Ethernet PHY pins assigned directly to named rails

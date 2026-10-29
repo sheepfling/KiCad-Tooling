@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 250 rules are implemented with synthetic regression coverage.
+The following 251 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 250 active rules.
+The catalog currently contains 251 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -610,6 +610,7 @@ skipped under prerelease policy.
 - `bus.can_signal_on_named_rail`
 - `bus.can_line_on_named_rail`
 - `bus.ethernet_data_label_mismatch`
+- `bus.ethernet_data_unconnected_pin`
 - `bus.ethernet_management_label_mismatch`
 - `bus.ethernet_management_unconnected_pin`
 - `bus.ethernet_management_signal_on_named_rail`
@@ -3328,7 +3329,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 250 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 251 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -13839,6 +13840,36 @@ control are documented in the
   ```sh
   .venv/bin/python -I -m pytest tests/test_connector_mapped_signal_return_sharing.py \
     -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_signal_return_share_net")'
+  ```
+
+#### LINT-267 — Review one-sided open Ethernet TX/RX data pairs
+
+- **Status:** Implemented as the default-off `bus.ethernet_data_unconnected_pin`
+  heuristic. Projects may enable `review`, promote it to `block`, turn it off,
+  or ignore an exact finding fingerprint.
+- **Gap:** Ethernet checks recognize crossed labels, named-rail assignments,
+  and one-sided open MDC/MDIO management pairs. They did not localize an open
+  transmit or receive pin when its complementary data mate was assigned.
+- **Predicate:** For a fitted U/IC reference with a complete native
+  pin-function inventory, recognize exactly one supported positive and
+  negative function for one TX or RX pair. Emit one candidate only when one
+  side has no net assignment and its mate has exactly one. Skip DNP devices,
+  duplicate roles, incomplete inventories, and ambiguous assignments.
+- **Boundary:** A lane can be unused or intentionally partial. Pin functions
+  do not establish an Ethernet connection requirement, endpoint mapping,
+  routed copper, external wiring, or physical continuity. The default remains
+  off; a project-authored interface contract is required for a blocking
+  requirement.
+- **Synthetic evidence:** The typed fault/control suite exercises both
+  directions and polarities, both-open and fully assigned controls, DNP,
+  duplicate roles, incomplete inventories, ambiguity, deterministic ordering,
+  and repair. Native KiCad 10.0.0/10.0.5 fault/control fixture coverage is the
+  remaining release-gate work.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_ethernet_data_unconnected_pins.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_data_unconnected_pin")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

@@ -21,7 +21,12 @@ from .hwrepo.model_primitives import (
 )
 
 EthernetLabelFeature = Literal[
-    "data", "management", "named_rail", "management_named_rail", "management_unconnected"
+    "data",
+    "management",
+    "named_rail",
+    "management_named_rail",
+    "management_unconnected",
+    "data_unconnected",
 ]
 
 
@@ -209,6 +214,45 @@ ETHERNET_LABEL_FIXTURES: Mapping[EthernetLabelFeature, EthernetLabelFixtureExpec
                         EthernetLabelPinExpectation(reference="U1.5", function="MDC", net=None),
                         EthernetLabelPinExpectation(
                             reference="U1.6", function="MDIO", net="ETH_MDIO"
+                        ),
+                    ),
+                ),
+            ),
+            "data_unconnected": EthernetLabelFixtureExpectation(
+                directory="ethernet-data-unconnected-native",
+                rule_id="bus.ethernet_data_unconnected_pin",
+                stage_prefix="ethernet-data-unconnected-fixture",
+                control=EthernetLabelCaseExpectation(
+                    source_sha256="e09b9f446dc871b84c0a88580bed818f4911853db6eba30250fcf6a9678dc87a",
+                    subjects=(),
+                    pins=(
+                        EthernetLabelPinExpectation(
+                            reference="U1.1", function="TDP", net="ETH_TX_P"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.2", function="TDN", net="ETH_TX_N"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.3", function="RDP", net="ETH_RX_P"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.4", function="RDN", net="ETH_RX_N"
+                        ),
+                    ),
+                ),
+                fault=EthernetLabelCaseExpectation(
+                    source_sha256="ab1396840c5b2fff690a759a8303ba12024a66261374595cf3bfcc420884f0f1",
+                    subjects=("U1.1: TDP is open while TDN U1.2 is assigned to ETH_TX_N",),
+                    pins=(
+                        EthernetLabelPinExpectation(reference="U1.1", function="TDP", net=None),
+                        EthernetLabelPinExpectation(
+                            reference="U1.2", function="TDN", net="ETH_TX_N"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.3", function="RDP", net="ETH_RX_P"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.4", function="RDN", net="ETH_RX_N"
                         ),
                     ),
                 ),

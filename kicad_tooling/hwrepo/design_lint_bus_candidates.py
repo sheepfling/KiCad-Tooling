@@ -6,13 +6,11 @@ from .bus_ethernet_pair_labels import (
     ethernet_data_label_mismatch_candidates,
     ethernet_management_label_mismatch_candidates,
 )
-from .bus_ethernet_unconnected_management import (
-    ethernet_management_unconnected_pin_candidates,
-)
 from .bus_signal_pairs import ComplementaryPinFunctionAliasResolution
 from .can_peer_reference_scan import CanPeerReferenceScan
 from .design_lint_bus_named_rail_candidates import bus_named_rail_candidates
 from .design_lint_can_candidates import can_candidates
+from .design_lint_ethernet_unconnected_candidates import ethernet_unconnected_pin_candidates
 from .design_lint_i2c_candidates import (
     i2c_address_candidates,
     i2c_peer_reference_candidates,
@@ -84,7 +82,7 @@ def bus_candidates(
         *rs485_candidates(observed, rs485_peer_reference_scan, component_peer_findings),
         *ethernet_data_label_mismatch_candidates(observed),
         *ethernet_management_label_mismatch_candidates(observed),
-        *ethernet_management_unconnected_pin_candidates(observed),
+        *ethernet_unconnected_pin_candidates(observed),
         *bus_named_rail_candidates(observed),
         *complementary_signal_candidates(observed, complementary_alias_resolution),
         *usb_data_polarity_label_candidates(observed),

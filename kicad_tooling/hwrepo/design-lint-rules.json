@@ -6387,10 +6387,56 @@
         "kicad_tooling/hwrepo/bus_signal_pairs.py#ethernet_management_function_role",
         "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
         "kicad_tooling/hwrepo/casefold_mapping_lookup.py#lookup_unique_casefold",
+        "kicad_tooling/hwrepo/design_lint_ethernet_unconnected_candidates.py#ethernet_unconnected_pin_candidates",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/bus_ethernet_unconnected_management.py#ethernet_management_unconnected_pin_candidates"
+    },
+    {
+      "rule_id": "bus.ethernet_data_unconnected_pin",
+      "title": "Ethernet TX/RX pair has one open pin",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted U/IC with a complete native pin/function inventory and exactly one exact Ethernet TX or RX positive and negative function, emit one configurable review candidate when one pin has no net assignment and its unique pair mate has exactly one assignment.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Recognition uses bounded Ethernet transmit/receive pin-function aliases on fitted U/IC references with a complete native inventory. Connectors, DNP components, duplicate roles, incomplete inventories, and multiply assigned pins are unclassified.",
+        "An open data pin can be intentional when a lane or interface is unused. The default is off because native pin functions do not establish that the lane is required; a project may enable REVIEW or BLOCK after reviewing its interface.",
+        "The finding does not establish Ethernet use, a required controller-to-PHY connection, routed copper, external wiring, or physical continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_ethernet_data_unconnected_pins.test_open_data_pair_pin_is_localized_beside_assigned_mate",
+        "tests.test_ethernet_data_unconnected_native_fixture_lane.test_native_ethernet_data_open_fault_and_connected_control_repeat",
+        "tests.test_design_lint_mcp_parity_ethernet_data_unconnected.test_ethernet_data_unconnected_cli_mcp_parity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_ethernet_data_unconnected_pins.test_both_open_and_fully_assigned_pairs_are_quiet",
+        "tests.test_ethernet_data_unconnected_pins.test_dnp_incomplete_inventory_duplicate_roles_and_ambiguous_pin_are_skipped",
+        "tests.test_ethernet_data_unconnected_native_fixture_lane.test_native_ethernet_data_open_fault_and_connected_control_repeat",
+        "tests.test_design_lint_mcp_parity_ethernet_data_unconnected.test_ethernet_data_unconnected_cli_mcp_parity"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_ethernet_data_unconnected_pins.test_mapping_order_is_stable_and_repair_clears_finding"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_ETHERNET_DATA_UNCONNECTED_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/bus_ethernet_unconnected_data.py#ethernet_data_unconnected_pin_candidates",
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#ethernet_data_pair_function_role",
+        "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
+        "kicad_tooling/hwrepo/casefold_mapping_lookup.py#lookup_unique_casefold",
+        "kicad_tooling/hwrepo/design_lint_ethernet_unconnected_candidates.py#ethernet_unconnected_pin_candidates",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/bus_ethernet_unconnected_data.py#ethernet_data_unconnected_pin_candidates"
     },
     {
       "rule_id": "bus.ethernet_management_signal_on_named_rail",
