@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .design_lint_types import Candidate
 from .models import NetlistContract
+from .peer_reference_candidate_keys import PeerReferenceCandidate, SpiPeerClockKey
 from .spi_bias_heuristics import spi_active_low_chip_selects_without_pullups
 from .spi_participants import SpiRosterContext
 from .spi_peer_reference_scan import SpiPeerReferenceScan, scan_spi_peer_references
@@ -91,8 +92,9 @@ def spi_peer_reference_candidates(
         if bus.incomplete_references:
             evidence["incomplete_reference_evidence"] = bus.incomplete_references
         found.append(
-            Candidate(
+            PeerReferenceCandidate(
                 rule_id="bus.spi_peer_reference_review",
+                identity=SpiPeerClockKey(bus.clock_net),
                 subject=f"SCK {bus.clock_net}: {', '.join(references)}",
                 message=(
                     "Fitted ICs share the same native SPI clock net, and at least two peers "

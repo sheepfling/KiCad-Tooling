@@ -19,6 +19,7 @@ from .can_tx_rx_label_mismatch import can_tx_rx_label_mismatch_candidates
 from .can_tx_rx_same_net import can_tx_rx_same_net_candidates
 from .design_lint_types import Candidate
 from .models import NetlistContract
+from .peer_reference_candidate_keys import CanPeerBusKey, PeerReferenceCandidate
 
 
 def can_candidates(
@@ -164,8 +165,9 @@ def can_peer_reference_candidates(
         if bus.incomplete_references:
             evidence["incomplete_reference_evidence"] = bus.incomplete_references
         found.append(
-            Candidate(
+            PeerReferenceCandidate(
                 rule_id="bus.can_peer_reference_review",
+                identity=CanPeerBusKey(bus.canh_net, bus.canl_net),
                 subject=f"CANH {bus.canh_net} / CANL {bus.canl_net}: {', '.join(participants)}",
                 message=(
                     "Fitted CAN peers share the same native CANH/CANL net pair, and at least "

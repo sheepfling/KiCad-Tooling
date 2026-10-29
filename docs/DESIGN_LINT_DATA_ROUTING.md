@@ -163,10 +163,13 @@ packaged catalog before project modes and ignores are applied. This prevents
 new extension paths appended outside the compatibility aggregator from
 reaching disposition with an unknown rule ID.
 
-Peer-reference coverage has a related boundary. Four protocol rules emit
-candidate evidence keys that identify their bus, clock, or pair. The evaluator
-now converts those keys once into `PeerReferenceCandidateKeys`, with an exact
-one-value check, before building coverage. The public finding evidence and
-fingerprint stay the same. This is an intermediate route; theme services
-should eventually return typed candidate identities alongside findings, so
-coverage does not need to read serialized evidence at all.
+Peer-reference coverage has a related boundary. Four protocol rule owners now
+attach typed bus, clock, or pair identities to their internal candidates. Each
+candidate checks that its typed identity and serialized evidence agree at
+construction and before coverage assembly, since the evidence dictionary can
+be mutated after construction. `PeerReferenceCandidateKeys` collects typed
+identities for coverage; a candidate with the right rule ID but no typed
+identity fails before disposition. The public finding evidence
+and fingerprint stay the same. The broader extension path should formalize
+typed theme results rather than adding metadata fields to the shared candidate
+type for each new rule.

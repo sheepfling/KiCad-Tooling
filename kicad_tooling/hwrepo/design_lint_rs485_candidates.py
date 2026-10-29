@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .design_lint_types import Candidate
 from .models import NetlistContract
+from .peer_reference_candidate_keys import PeerReferenceCandidate, Rs485PeerPairKey
 from .rs485_ab_same_net import rs485_ab_same_net_candidates
 from .rs485_data_label_mismatch import rs485_data_direction_label_candidates
 from .rs485_line_label_mismatch import rs485_line_label_mismatch_candidates
@@ -91,8 +92,9 @@ def rs485_peer_reference_candidates(
         if pair.incomplete_references:
             evidence["incomplete_reference_evidence"] = pair.incomplete_references
         found.append(
-            Candidate(
+            PeerReferenceCandidate(
                 rule_id="bus.rs485_peer_reference_review",
+                identity=Rs485PeerPairKey(pair.bus_id, pair.pair_id),
                 subject=(
                     f"RS-485 bus {pair.bus_id} pair {pair.pair_id}: {', '.join(participants)}"
                 ),

@@ -186,13 +186,18 @@ internal API step is to pass prepared, source-bound theme records directly
 without widening the public compatibility signature or introducing a global
 optional context.
 
-Peer coverage now receives a typed record of I²C, SPI, CAN, and RS-485
-candidate identities. Its adapter validates the one-value evidence fields
-emitted by those rule owners before coverage assembly, so a changed candidate
-shape fails clearly rather than being interpreted through dictionary indexing
-in the evaluator. The longer-term route should carry typed identity directly
-from each theme result, leaving the serialized evidence mapping at the report
-boundary.
+The architecture regression suite now caps the established public candidate
+and evaluator compatibility signatures at 49 and 33 parameters. New evidence
+must enter through a typed theme input or prepared internal record; changing
+either cap requires an explicit migration plan and a corresponding removal of
+legacy surface parameters.
+
+I²C, SPI, CAN, and RS-485 peer rule owners now attach typed identities to their
+internal candidates. Construction and coverage assembly check that each
+identity matches the public evidence fields; coverage uses the typed identities.
+The report and fingerprint continue to use the existing serialized evidence.
+The remaining work is to make typed theme results the general extension path,
+without widening the public candidate API.
 
 **Done when:** the pilot yields equivalent findings and report meaning; adding
 a second rule in that theme needs no new parameter on the 49- or 33-parameter

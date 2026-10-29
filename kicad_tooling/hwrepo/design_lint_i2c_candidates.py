@@ -16,6 +16,7 @@ from .i2c_peer_reference_scan import I2cPeerReferenceScan, scan_i2c_peer_referen
 from .i2c_pullup_inputs import I2cPullupSnifferInput
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import NetlistContract
+from .peer_reference_candidate_keys import I2cPeerBusKey, PeerReferenceCandidate
 
 
 def _i2c_address_evidence(
@@ -227,8 +228,9 @@ def i2c_peer_reference_candidates(
         if bus.incomplete_references:
             evidence["incomplete_reference_evidence"] = bus.incomplete_references
         found.append(
-            Candidate(
+            PeerReferenceCandidate(
                 rule_id="bus.i2c_peer_reference_review",
+                identity=I2cPeerBusKey(bus.sda_net, bus.scl_net),
                 subject=f"SDA {bus.sda_net} / SCL {bus.scl_net}: {', '.join(references)}",
                 message=(
                     "Fitted ICs share the same native I2C SDA and SCL nets, and at least two "
