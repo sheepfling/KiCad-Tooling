@@ -2,18 +2,23 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from .connector_return_distribution_models import ConnectorReturnDistributionCoverageReport
 from .control_input_models import ControlInputBiasHeuristicCoverage
+from .crystal_network_models import CrystalNetworkCoverageReport
 from .design_lint_connectivity_snapshot_models import DesignLintConnectivitySnapshot
 from .design_lint_finding_models import DesignLintFinding
 from .design_lint_mapped_topology_models import DesignLintMappedCheckRun
 from .design_lint_pcb_required_fitted_reference_report import (
     validate_required_fitted_reference_findings,
 )
+from .i2c_address_models import I2cAddressCoverageReport
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .model_primitives import Digest, Identifier, RepositoryPath
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
+from .rc_filter_models import RcFilterCoverageReport
+from .regulator_feedback_models import RegulatorFeedbackCoverageReport
 
 
 def validate_source_bound_evidence(
@@ -23,6 +28,12 @@ def validate_source_bound_evidence(
     netlist_sha256: Digest | None,
     connectivity_snapshot: DesignLintConnectivitySnapshot | None,
     findings: tuple[DesignLintFinding, ...],
+    i2c_address_coverage: I2cAddressCoverageReport,
+    crystal_network_coverage: CrystalNetworkCoverageReport,
+    regulator_feedback_coverage: RegulatorFeedbackCoverageReport,
+    rc_filter_coverage: RcFilterCoverageReport,
+    connector_return_distribution: ConnectorReturnDistributionCoverageReport,
+    connector_interface_catalog_sha256: Digest | None,
     pcb_component_inventory: PcbComponentInventoryCoverageReport,
     control_input_bias_coverage: ControlInputBiasHeuristicCoverage,
     i2c_pullup_heuristic_coverage: I2cPullupHeuristicCoverage,
@@ -30,6 +41,24 @@ def validate_source_bound_evidence(
     pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport,
     mapped_check_runs: tuple[DesignLintMappedCheckRun, ...],
 ) -> None:
+    for name, coverage in (
+        ("I2C address", i2c_address_coverage),
+        ("Crystal network", crystal_network_coverage),
+        ("Regulator feedback", regulator_feedback_coverage),
+        ("RC filter", rc_filter_coverage),
+        ("Connector return-distribution", connector_return_distribution),
+    ):
+        _validate_component_coverage_netlist_hash(
+            name, coverage.status, coverage.netlist_sha256, netlist_sha256
+        )
+    distribution = connector_return_distribution
+    if distribution.status in {"COMPLETE", "INCOMPLETE"} and (
+        connector_interface_catalog_sha256 is None
+        or distribution.interface_catalog_sha256 != connector_interface_catalog_sha256
+    ):
+        raise ValueError(
+            "Connector return-distribution coverage must use this report's interface catalog"
+        )
     snapshot = connectivity_snapshot
     if snapshot is not None and (
         snapshot.project_id != project_id
@@ -129,3 +158,15 @@ def validate_source_bound_evidence(
         expected_finding_count = sum(finding.rule_id == run.rule_id for finding in findings)
         if run.finding_count != expected_finding_count:
             raise ValueError("Mapped-check execution finding count must match the report findings")
+
+
+def _validate_component_coverage_netlist_hash(
+    name: str,
+    status: str,
+    coverage_netlist_sha256: Digest | None,
+    report_netlist_sha256: Digest | None,
+) -> None:
+    if status in {"COMPLETE", "INCOMPLETE"} and (
+        report_netlist_sha256 is None or coverage_netlist_sha256 != report_netlist_sha256
+    ):
+        raise ValueError(f"{name} coverage must use this report's native netlist")

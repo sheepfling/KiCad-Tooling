@@ -153,6 +153,16 @@ class DesignLintReport(StrictModel):
             netlist_sha256=self.netlist_sha256,
             connectivity_snapshot=self.connectivity_snapshot,
             findings=self.findings,
+            i2c_address_coverage=self.i2c_address_coverage,
+            crystal_network_coverage=self.crystal_network_coverage,
+            regulator_feedback_coverage=self.regulator_feedback_coverage,
+            rc_filter_coverage=self.rc_filter_coverage,
+            connector_return_distribution=self.connector_return_distribution,
+            connector_interface_catalog_sha256=(
+                None
+                if self.connector_coverage is None
+                else self.connector_coverage.interface_catalog_sha256
+            ),
             pcb_component_inventory=self.pcb_component_inventory,
             control_input_bias_coverage=self.control_input_bias_coverage,
             i2c_pullup_heuristic_coverage=self.i2c_pullup_heuristic_coverage,
