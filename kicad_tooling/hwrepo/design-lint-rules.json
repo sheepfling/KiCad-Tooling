@@ -9938,13 +9938,13 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
-      "evidence_adapter": "Exact project .kicad_dru source path and SHA-256 plus configured KiCad version",
+      "evidence_adapter": "Source-verified .kicad_dru, .kicad_pro, and .kicad_pcb paths and SHA-256 hashes plus configured KiCad version",
       "predicate": "For a source-bound PCB custom DRC file under the KiCad 10 profile, emit one review candidate when the source contains the text-variable opening token ${. This does not require a project-authored DRC map.",
       "supported_kicad_versions": [
         "KiCad 10.x custom DRC source; the exact configured version is retained as context"
       ],
       "limitations": [
-        "Text-variable substitution is not evaluated or assumed to be invalid. Review the resolved rule severity, conditions, and limits against project intent.",
+        "Text-variable substitution is not evaluated or assumed to be invalid. Source hashes do not bind contextual or runtime values. Review the resolved rule severity, conditions, and limits against project intent.",
         "The conservative token scan includes comments because KiCad substitutes text before parsing. One finding covers the file and does not assert that a disabled rule or design defect exists.",
         "Literal ignore and exclusion checks do not expand variables. Raw source that cannot be parsed keeps inspection blocked; the review candidate does not suppress that failure. Native DRC compilation does not establish that each resolved rule matches its intended objects."
       ],
@@ -9960,7 +9960,9 @@
         "tests.test_pcb_dru_text_variable_review.test_source_hash_and_version_boundaries"
       ],
       "metamorphic_fixtures": [
-        "tests.test_pcb_dru_text_variable_review.test_substitution_is_deterministic_and_changes_with_source"
+        "tests.test_pcb_dru_text_variable_review.test_substitution_is_deterministic_and_changes_with_source",
+        "tests.test_pcb_dru_text_variable_review.test_project_only_variable_change_invalidates_exact_ignore",
+        "tests.test_pcb_dru_text_variable_review.test_board_only_variable_change_invalidates_exact_ignore"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_dru_rule_review.py#text_variable_custom_drc_rule_candidates",

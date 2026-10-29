@@ -23,6 +23,8 @@ from tests.design_lint_fixtures import coach
 pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint]
 RULE_ID = "pcb.custom_drc_text_variable_review"
 RELATIVE = "projects/controller.kicad_dru"
+PROJECT = "projects/controller.kicad_pro"
+BOARD = "projects/controller.kicad_pcb"
 FIXTURES = Path(__file__).parent / "fixtures/design_lint/pcb-dru-text-variable"
 
 
@@ -31,6 +33,7 @@ def _project(tmp_path: Path) -> tuple[Path, Path, ProjectConfig]:
     project = root / "projects/controller.kicad_pro"
     project.parent.mkdir(parents=True)
     project.write_text("{}", encoding="utf-8")
+    (root / BOARD).write_text("(kicad_pcb)", encoding="utf-8")
     rules = root / RELATIVE
     rules.write_bytes((FIXTURES / "variable-severity.kicad_dru").read_bytes())
     config = cast(
@@ -43,7 +46,11 @@ def _project(tmp_path: Path) -> tuple[Path, Path, ProjectConfig]:
 
 
 def _scan(root: Path, rules: Path, config: ProjectConfig):
-    return text_variable_custom_drc_rule_candidates(root, config, {RELATIVE: digest(rules)})
+    return text_variable_custom_drc_rule_candidates(
+        root,
+        config,
+        {RELATIVE: digest(rules), PROJECT: digest(root / PROJECT), BOARD: digest(root / BOARD)},
+    )
 
 
 def test_variable_severity_is_reviewed_without_an_authored_map(tmp_path: Path) -> None:
@@ -53,6 +60,10 @@ def test_variable_severity_is_reviewed_without_an_authored_map(tmp_path: Path) -
     assert candidate.evidence == {
         "source_path": (RELATIVE,),
         "source_sha256": (digest(rules),),
+        "project_path": (PROJECT,),
+        "project_sha256": (digest(root / PROJECT),),
+        "board_path": (BOARD,),
+        "board_sha256": (digest(root / BOARD),),
         "kicad_version": ("10.0.5",),
     }
     assert "does not evaluate" in candidate.message
@@ -107,6 +118,22 @@ def test_source_hash_and_version_boundaries(tmp_path: Path) -> None:
     rules.write_text(rules.read_text(encoding="utf-8") + "\n", encoding="utf-8")
     with pytest.raises(ValueError, match="differ from source-bound"):
         text_variable_custom_drc_rule_candidates(root, config, {RELATIVE: stale})
+    with pytest.raises(ValueError, match="project source is outside source-bound"):
+        text_variable_custom_drc_rule_candidates(root, config, {RELATIVE: digest(rules)})
+    with pytest.raises(ValueError, match="project source differs from source-bound"):
+        text_variable_custom_drc_rule_candidates(
+            root, config, {RELATIVE: digest(rules), PROJECT: "a" * 64}
+        )
+    with pytest.raises(ValueError, match="board source is outside source-bound"):
+        text_variable_custom_drc_rule_candidates(
+            root, config, {RELATIVE: digest(rules), PROJECT: digest(root / PROJECT)}
+        )
+    with pytest.raises(ValueError, match="board source differs from source-bound"):
+        text_variable_custom_drc_rule_candidates(
+            root,
+            config,
+            {RELATIVE: digest(rules), PROJECT: digest(root / PROJECT), BOARD: "a" * 64},
+        )
     other = cast(
         ProjectConfig,
         SimpleNamespace(kind=ProjectKind.PCB, project=config.project, kicad_version="9.0.0"),
@@ -130,6 +157,50 @@ def test_substitution_is_deterministic_and_changes_with_source(tmp_path: Path) -
     assert second[0].subject == first[0].subject
     assert second[0].evidence["source_sha256"] != first[0].evidence["source_sha256"]
     assert fingerprint(second[0]) != fingerprint(first[0])
+
+
+def test_project_only_variable_change_invalidates_exact_ignore(tmp_path: Path) -> None:
+    root, rules, config = _project(tmp_path)
+    project = root / PROJECT
+    project.write_text('{"text_variables":{"MODE":"error"}}', encoding="utf-8")
+    (first,) = _scan(root, rules, config)
+    observed = coach(NetlistContract(components={}, nets={}))
+    policy = DesignLintPolicy(
+        ignores=(
+            DesignLintIgnore(rule_id=RULE_ID, fingerprint=fingerprint(first), reason="Reviewed"),
+        )
+    )
+    original = evaluate("synthetic-dru", observed, policy, pcb_dru_rule_candidates=(first,))
+    assert (
+        next(item for item in original.findings if item.rule_id == RULE_ID).disposition == "IGNORED"
+    )
+    assert _scan(root, rules, config) == (first,)
+    project.write_text('{"text_variables":{"MODE":"ignore"}}', encoding="utf-8")
+    (changed,) = _scan(root, rules, config)
+    assert fingerprint(changed) != fingerprint(first)
+    result = evaluate("synthetic-dru", observed, policy, pcb_dru_rule_candidates=(changed,))
+    assert next(item for item in result.findings if item.rule_id == RULE_ID).disposition == "OPEN"
+    assert result.status == "REVIEW"
+
+
+def test_board_only_variable_change_invalidates_exact_ignore(tmp_path: Path) -> None:
+    root, rules, config = _project(tmp_path)
+    (first,) = _scan(root, rules, config)
+    policy = DesignLintPolicy(
+        ignores=(
+            DesignLintIgnore(rule_id=RULE_ID, fingerprint=fingerprint(first), reason="Reviewed"),
+        )
+    )
+    (root / BOARD).write_text('(kicad_pcb (title_block (title "ignore")))', encoding="utf-8")
+    (changed,) = _scan(root, rules, config)
+    assert fingerprint(changed) != fingerprint(first)
+    result = evaluate(
+        "synthetic-dru",
+        coach(NetlistContract(components={}, nets={})),
+        policy,
+        pcb_dru_rule_candidates=(changed,),
+    )
+    assert next(item for item in result.findings if item.rule_id == RULE_ID).disposition == "OPEN"
 
 
 def test_project_policy_can_review_block_disable_or_ignore(tmp_path: Path) -> None:

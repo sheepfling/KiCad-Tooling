@@ -134,6 +134,20 @@ def text_variable_custom_drc_rule_candidates(
         raise ValueError("Custom DRC rules changed during design-lint inspection")
     if "${" not in source:
         return ()
+    project_relative = str(config.project)
+    board_relative = Path(project_relative).with_suffix(".kicad_pcb").as_posix()
+    source_context: dict[str, str] = {}
+    for label, path in (("project", project_relative), ("board", board_relative)):
+        source_path = repo_path(root.resolve(), path)
+        expected = source_hashes.get(path)
+        if expected is None:
+            raise ValueError(f"KiCad {label} source is outside source-bound project inputs")
+        if not source_path.is_file():
+            raise ValueError(f"Source-bound KiCad {label} source disappeared during inspection")
+        if digest(source_path) != expected:
+            raise ValueError(f"KiCad {label} source differs from source-bound project inputs")
+        source_context[f"{label}_path"] = path
+        source_context[f"{label}_sha256"] = expected
     return (
         Candidate(
             rule_id="pcb.custom_drc_text_variable_review",
@@ -146,6 +160,7 @@ def text_variable_custom_drc_rule_candidates(
             evidence={
                 "source_path": (relative,),
                 "source_sha256": (expected_hash,),
+                **{key: (value,) for key, value in source_context.items()},
                 "kicad_version": (config.kicad_version,),
             },
         ),

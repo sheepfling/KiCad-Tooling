@@ -14036,9 +14036,11 @@ control are documented in the
   project's intent.
 - **Predicate and limits:** Emit one source-bound review candidate for a
   KiCad 10 PCB custom-rule file containing `${`, including in comments. The
-  candidate records path, source digest, and exact configured version. It does
-  not expand variables, infer their values, claim that a rule is ignored, or
-  assert an electrical defect. Literal severity scanning does not expand
+  candidate binds paths and source digests for the rule, project, and board,
+  plus exact configured version, so a source change invalidates an ignore. It
+  does not bind contextual or runtime values, expand variables, infer their
+  values, claim that a rule is ignored, or assert an electrical defect. Literal
+  severity scanning does not expand
   variables; if it cannot parse the raw source, inspection remains `BLOCKED`.
 - **Evidence:** Synthetic tests cover substitution sites, unchanged source,
   missing and stale inputs, policy dispositions, deterministic evidence, and

@@ -55,3 +55,9 @@ def test_custom_drc_substitution_review_matches_cli_and_mcp(tmp_path: Path) -> N
     assert finding.evidence["source_sha256"] == (
         mcp_report.source_hashes["projects/controller/kicad/controller.kicad_dru"],
     )
+    assert finding.evidence["project_sha256"] == (
+        mcp_report.source_hashes["projects/controller/kicad/controller.kicad_pro"],
+    )
+    assert finding.evidence["board_sha256"] == (
+        mcp_report.source_hashes["projects/controller/kicad/controller.kicad_pcb"],
+    )
