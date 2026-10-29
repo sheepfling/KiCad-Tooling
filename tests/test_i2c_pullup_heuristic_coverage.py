@@ -276,6 +276,28 @@ def test_stale_native_netlist_hash_blocks_coverage_instead_of_suppressing() -> N
     assert "different or unavailable native netlist hash" in report.issues[0]
 
 
+def test_unavailable_current_netlist_hash_blocks_source_bound_coverage() -> None:
+    netlist = array_netlist()
+    current = coverage(netlist, array_requirement()).model_copy(
+        update={"netlist_sha256": None}
+    )
+    report = evaluate(
+        "synthetic-i2c-array",
+        ContractCoachReport(
+            status="READY_FOR_REVIEW",
+            project_id="synthetic-i2c-array",
+            observed=netlist,
+            netlist_sha256=None,
+        ),
+        DesignLintPolicy(),
+        i2c_pullup_heuristic_coverage=current,
+    )
+
+    assert report.status == "BLOCKED"
+    assert report.i2c_pullup_heuristic_coverage.status == "BLOCKED"
+    assert "different or unavailable native netlist hash" in report.issues[0]
+
+
 def test_requirement_for_a_different_ordered_bus_does_not_resolve_hint() -> None:
     requirement = array_requirement()
     wrong_bus = requirement.model_copy(

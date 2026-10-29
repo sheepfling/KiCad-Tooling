@@ -65,7 +65,10 @@ def prepare_evaluation(
             if i2c_coverage.status == "BLOCKED"
             else "I2C pull-up coverage uses a different or unavailable native netlist hash."
             if (i2c_coverage.entries or i2c_coverage.voltage_entries)
-            and i2c_coverage.netlist_sha256 != coach.netlist_sha256
+            and (
+                coach.netlist_sha256 is None
+                or i2c_coverage.netlist_sha256 != coach.netlist_sha256
+            )
             else None
         )
         if coverage_issue is not None:
