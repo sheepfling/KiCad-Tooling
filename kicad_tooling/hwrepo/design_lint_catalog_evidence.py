@@ -17,7 +17,13 @@ def validate_field_validation_evidence_sources(
     for rule in catalog.rules:
         for relative_path, expected_digest in sorted(rule.field_validation_evidence.items()):
             path = PurePosixPath(relative_path)
-            if path.is_absolute() or ".." in path.parts or str(path) != relative_path:
+            if (
+                path.is_absolute()
+                or ".." in path.parts
+                or "\\" in relative_path
+                or (path.parts and ":" in path.parts[0])
+                or str(path) != relative_path
+            ):
                 errors.append(
                     f"{rule.rule_id}: evidence path is not repository-relative: {relative_path}"
                 )

@@ -41,7 +41,13 @@ class DesignLintRuleMetadata(StrictModel):
     ) -> dict[RepositoryPath, Digest]:
         for path in value:
             parsed = PurePosixPath(path)
-            if parsed.is_absolute() or ".." in parsed.parts or str(parsed) != path:
+            if (
+                parsed.is_absolute()
+                or ".." in parsed.parts
+                or "\\" in path
+                or (parsed.parts and ":" in parsed.parts[0])
+                or str(parsed) != path
+            ):
                 raise ValueError(
                     "Field-validation evidence paths must be normalized repository-relative paths"
                 )

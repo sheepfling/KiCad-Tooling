@@ -64,9 +64,9 @@ text view displays the maturity and each evidence path/digest. Synthetic tests
 and native compatibility runs alone do not qualify a rule as field validated.
 The repository catalog quality gate also resolves each cited file beneath the
 tooling checkout and verifies its SHA-256, rejecting missing files, changed
-content, and symlinks that escape the repository. Installed tooling can still
-display these provenance records without carrying the review documents in its
-wheel.
+content, Windows drive/backslash paths, and symlinks that escape the repository.
+Installed tooling can still display these provenance records without carrying
+the review documents in its wheel.
 
 The first operational sweep found a stale active-rule fixture locator: the
 catalog named a removed three-case hosted validator, while the existing native

@@ -57,7 +57,17 @@ def test_field_validation_evidence_requires_sha256_digests() -> None:
         DesignLintRuleMetadata.model_validate(entry)
 
 
-@pytest.mark.parametrize("path", ["/tmp/review.md", "../review.md", "docs/../review.md"])
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/tmp/review.md",
+        "../review.md",
+        "docs/../review.md",
+        r"docs\review.md",
+        "C:/review.md",
+        "C:review.md",
+    ],
+)
 def test_field_validation_evidence_paths_must_stay_in_repository(path: str) -> None:
     entry = rule_catalog().rules[0].model_dump(mode="python")
     entry["maturity"] = "field_validated"
