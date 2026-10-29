@@ -30,6 +30,25 @@ _SCOPE = (
 )
 
 
+def _unreviewed_component_pin_evidence(
+    observed: NetlistContract,
+    reference: str,
+    pin_numbers: tuple[str, ...],
+    nets_by_pin: Mapping[str, set[str]],
+) -> tuple[ConnectorUnreviewedPinEvidence, ...]:
+    return tuple(
+        ConnectorUnreviewedPinEvidence(
+            component_pin=f"{reference}.{component_pin_number}",
+            symbol_function=observed.pin_functions.get(f"{reference}.{component_pin_number}"),
+            electrical_type=observed.pin_electrical_types.get(
+                f"{reference}.{component_pin_number}"
+            ),
+            nets=tuple(sorted(nets_by_pin.get(f"{reference}.{component_pin_number}", ()))),
+        )
+        for component_pin_number in pin_numbers
+    )
+
+
 def evaluate(
     observed: NetlistContract,
     project_interfaces: tuple[str, ...],
@@ -119,11 +138,22 @@ def evaluate(
             )
             continue
         if review is None:
+            native_pins = observed.component_pin_numbers.get(reference)
+            unaccounted_pins = () if native_pins is None else tuple(sorted(native_pins))
+            issues = ["No project-owned interface or not-applicable review is declared"]
+            if native_pins is None:
+                issues.append(
+                    "Native netlist has no complete pin-number inventory for this reference"
+                )
             entries.append(
                 ConnectorCoverageEntry(
                     reference=reference,
                     status="UNDECLARED",
-                    issues=("No project-owned interface or not-applicable review is declared",),
+                    component_pins_unaccounted=unaccounted_pins,
+                    unreviewed_component_pin_evidence=_unreviewed_component_pin_evidence(
+                        observed, reference, unaccounted_pins, nets_by_pin
+                    ),
+                    issues=tuple(issues),
                 )
             )
             continue
@@ -192,16 +222,11 @@ def evaluate(
             if component_pins_unknown:
                 issues.append("Review names component pins absent from the exported symbol")
 
-        unreviewed_component_pin_evidence = tuple(
-            ConnectorUnreviewedPinEvidence(
-                component_pin=f"{reference}.{component_pin_number}",
-                symbol_function=observed.pin_functions.get(f"{reference}.{component_pin_number}"),
-                electrical_type=observed.pin_electrical_types.get(
-                    f"{reference}.{component_pin_number}"
-                ),
-                nets=tuple(sorted(nets_by_pin.get(f"{reference}.{component_pin_number}", ()))),
-            )
-            for component_pin_number in component_pins_unaccounted
+        unreviewed_component_pin_evidence = _unreviewed_component_pin_evidence(
+            observed,
+            reference,
+            component_pins_unaccounted,
+            nets_by_pin,
         )
 
         reasoned_open_assignments = tuple(

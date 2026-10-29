@@ -97,16 +97,36 @@ def test_standard_test_point_library_control_does_not_create_connector_coverage(
 
 
 def test_unreviewed_candidate_is_a_coverage_gap_and_keeps_lint_at_review() -> None:
-    coverage = evaluate(observed_connector(), (), ())
+    observed = observed_connector().model_copy(
+        update={
+            "nets": {"TX": ("J1.1",), "SHIELD": ("J1.3",)},
+            "pin_functions": {"J1.1": "TX", "J1.2": "GND", "J1.3": "SHIELD"},
+            "pin_electrical_types": {
+                "J1.1": "output",
+                "J1.2": "passive",
+                "J1.3": "passive",
+            },
+        }
+    )
+    coverage = evaluate(observed, (), ())
     assert (coverage.status) == ("UNDECLARED")
     assert (coverage.entries[0].reference) == ("J1")
     assert (coverage.entries[0].status) == ("UNDECLARED")
+    assert (coverage.entries[0].component_pins_unaccounted) == (("1", "2", "3"))
+    assert tuple(
+        (pin.component_pin, pin.symbol_function, pin.electrical_type, pin.nets)
+        for pin in coverage.entries[0].unreviewed_component_pin_evidence
+    ) == (
+        ("J1.1", "TX", "output", ("TX",)),
+        ("J1.2", "GND", "passive", ()),
+        ("J1.3", "SHIELD", "passive", ("SHIELD",)),
+    )
     report = evaluate_design_lint(
         "synthetic",
         ContractCoachReport(
             status="READY_FOR_REVIEW",
             project_id="synthetic",
-            observed=observed_connector(),
+            observed=observed,
         ),
         DesignLintPolicy(),
         connector_coverage=coverage,
@@ -114,6 +134,9 @@ def test_unreviewed_candidate_is_a_coverage_gap_and_keeps_lint_at_review() -> No
     assert (report.status) == ("REVIEW")
     assert ("Connector coverage: UNDECLARED") in (text_report(report))
     assert ("UNDECLARED connector J1") in (text_report(report))
+    assert (
+        "Unreviewed component pin J1.2: function=GND; electrical_type=passive; nets=<unconnected>"
+    ) in text_report(report)
 
 
 def test_complete_interface_review_accounts_for_every_catalog_and_symbol_pin() -> None:
