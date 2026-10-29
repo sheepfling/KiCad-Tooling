@@ -10,6 +10,7 @@ from kicad_tooling.hwrepo.connector_return_distribution_models import (
 )
 from kicad_tooling.hwrepo.control_input_models import ControlInputBiasHeuristicCoverage
 from kicad_tooling.hwrepo.crystal_network_models import CrystalNetworkCoverageReport
+from kicad_tooling.hwrepo.design_lint_mapped_topology_models import DesignLintMappedCheckRun
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
 from kicad_tooling.hwrepo.i2c_address_models import I2cAddressCoverageReport
@@ -149,6 +150,26 @@ def test_report_rejects_other_evidence_with_missing_top_level_netlist_hash(
                 "status": "PASS",
                 "project_id": "synthetic-source-evidence",
                 field_name: coverage,
+            }
+        )
+
+
+def test_evaluated_mapped_check_requires_a_top_level_report_netlist_hash() -> None:
+    run = DesignLintMappedCheckRun(
+        rule_id="power.mapped_series_path_mismatch",
+        status="EVALUATED",
+        mode="review",
+        map_sha256=_INTERFACE_CATALOG_HASH,
+        netlist_sha256=_REPORT_NETLIST_HASH,
+        requirement_count=1,
+    )
+
+    with pytest.raises(ValueError, match="Mapped-check execution coverage must use this report's native netlist"):
+        DesignLintReport.model_validate(
+            {
+                "status": "PASS",
+                "project_id": "synthetic-source-evidence",
+                "mapped_check_runs": (run,),
             }
         )
 

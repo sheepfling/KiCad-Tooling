@@ -158,12 +158,13 @@ def validate_source_bound_evidence(
     if len(run_ids) != len(set(run_ids)):
         raise ValueError("Mapped-check execution entries must use unique rule IDs")
     for run in mapped_check_runs:
-        if (
-            netlist_sha256 is not None
-            and run.netlist_sha256 is not None
-            and netlist_sha256 != run.netlist_sha256
-        ):
-            raise ValueError("Mapped-check execution must use this report's native netlist")
+        _validate_component_coverage_netlist_hash(
+            "Mapped-check execution",
+            run.status,
+            run.netlist_sha256,
+            netlist_sha256,
+            required_statuses=frozenset({"EVALUATED"}),
+        )
         expected_finding_count = sum(finding.rule_id == run.rule_id for finding in findings)
         if run.finding_count != expected_finding_count:
             raise ValueError("Mapped-check execution finding count must match the report findings")
