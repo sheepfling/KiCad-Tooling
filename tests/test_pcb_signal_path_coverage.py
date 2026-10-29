@@ -128,6 +128,33 @@ def test_path_edge_clearance_requires_exact_project_authored_minimum() -> None:
     assert edge.observed_min_nm == 1_500_000
 
 
+def test_edge_only_signal_path_is_complete_without_length_or_skew_rules() -> None:
+    requirements = PcbSignalPathRuleMap(
+        basis="Synthetic edge-sensitive path",
+        paths=(
+            PcbSignalPathRequirement(
+                id="clock-edge",
+                basis="Synthetic authored edge margin",
+                net="SYNTH_CLK",
+                from_pad="J1.1",
+                to_pad="U1.1",
+                edge_clearance=PcbDrcMinMaxRequirement(min_nm=2_000_000),
+            ),
+        ),
+    )
+    rules = """(version 1)
+(rule "synthetic-clock-edge-clearance"
+  (condition "A.NetName == 'SYNTH_CLK'")
+  (constraint edge_clearance (min 2mm)))
+"""
+
+    (entry,) = compare(requirements=requirements, rules=rules)
+
+    assert entry.id == "clock-edge"
+    assert entry.status == "COMPLETE"
+    assert [item.constraint for item in entry.constraints] == ["edge_clearance"]
+
+
 def test_signal_path_edge_clearance_accepts_minimum_only() -> None:
     with pytest.raises(ValidationError, match="only an authored minimum"):
         PcbSignalPathRequirement(

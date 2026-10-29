@@ -9878,6 +9878,7 @@
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_signal_path_coverage.test_exact_path_and_bundle_rules_cover_reviewed_map",
+        "tests.test_pcb_signal_path_coverage.test_edge_only_signal_path_is_complete_without_length_or_skew_rules",
         "tests.test_pcb_signal_path_coverage.test_map_order_and_native_rule_order_are_stable",
         "tests.test_pcb_signal_path_mcp_parity.test_disabled_signal_path_coverage_matches_cli_and_mcp",
         "tests.test_pcb_signal_path_native.test_native_signal_path_drc_faults_are_repeatable"
