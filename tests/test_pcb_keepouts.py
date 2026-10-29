@@ -63,7 +63,7 @@ def area(
 def snapshot(
     areas: tuple[PcbRuleAreaObservation, ...] = (), *, schema_version: str = "11"
 ) -> PcbConnectivitySnapshot:
-    values = {
+    values: dict[str, object] = {
         "schema_version": schema_version,
         "board_sha256": "a" * 64,
         "kicad_version": "10.0.5",
@@ -320,10 +320,12 @@ def test_keepout_lint_finding_supports_review_block_off_and_exact_ignore() -> No
     from tests.design_lint_fixtures import coach
 
     mapping = mapping_for()
-    coverage = incomplete_report(mapping)
+    observed = NetlistContract(components={}, nets={})
+    observed_hash = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
+    coverage = incomplete_report(mapping).model_copy(update={"netlist_sha256": observed_hash})
     report = evaluate(
         "synthetic-keepout",
-        coach(NetlistContract(components={}, nets={})),
+        coach(observed, observed_hash),
         DesignLintPolicy(pcb_keepout_map=mapping),
         pcb_keepout_coverage=coverage,
     )
@@ -335,7 +337,7 @@ def test_keepout_lint_finding_supports_review_block_off_and_exact_ignore() -> No
 
     blocked = evaluate(
         "synthetic-keepout",
-        coach(NetlistContract(components={}, nets={})),
+        coach(observed, observed_hash),
         DesignLintPolicy(
             pcb_keepout_map=mapping,
             rules=(
@@ -352,7 +354,7 @@ def test_keepout_lint_finding_supports_review_block_off_and_exact_ignore() -> No
 
     disabled = evaluate(
         "synthetic-keepout",
-        coach(NetlistContract(components={}, nets={})),
+        coach(observed, observed_hash),
         DesignLintPolicy(
             pcb_keepout_map=mapping,
             rules=(
@@ -370,7 +372,7 @@ def test_keepout_lint_finding_supports_review_block_off_and_exact_ignore() -> No
 
     ignored = evaluate(
         "synthetic-keepout",
-        coach(NetlistContract(components={}, nets={})),
+        coach(observed, observed_hash),
         DesignLintPolicy(
             pcb_keepout_map=mapping,
             ignores=(

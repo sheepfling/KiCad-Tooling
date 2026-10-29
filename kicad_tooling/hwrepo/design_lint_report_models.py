@@ -201,7 +201,19 @@ class DesignLintReport(StrictModel):
                 self.pcb_switching_loop,
                 self.pcb_touch_pad_clearance_coverage,
                 self.pcb_track_width,
-            )
+            ),
+            report_netlist_sha256=self.netlist_sha256,
+            netlist_reports=(
+                self.pcb_component_inventory,
+                self.pcb_decoupling,
+                self.pcb_keepout_coverage,
+                self.pcb_protection_path,
+                self.pcb_reference_plane,
+                self.pcb_rf_module_antenna_coverage,
+                self.pcb_switching_loop,
+                self.pcb_touch_pad_clearance_coverage,
+                self.pcb_track_width,
+            ),
         )
         validate_catalogued_findings(
             rule_catalog=self.rule_catalog,

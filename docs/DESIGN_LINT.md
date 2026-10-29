@@ -1697,9 +1697,10 @@ heuristics cannot run on an empty inventory. A nonempty inventory alone does
 not establish completeness, which remains the job of the independently authored
 component/net contract.
 
-PCB coverage sections in one report must agree on each available board
+PCB coverage sections in one report must agree with the report's native netlist
+SHA-256 when they carry one, and agree with each other on available board
 SHA-256, exact KiCad version, and native image. A mismatch means the report
-combines evidence from different board revisions or toolchains and is rejected;
+combines evidence from different source revisions or toolchains and is rejected;
 an incomplete section may omit values it could not establish. Matching hashes
 make the evidence internally consistent, but do not establish board approval
 or manufacturing readiness.
