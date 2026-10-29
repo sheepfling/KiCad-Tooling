@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo import design_lint_evaluation_candidates
-from kicad_tooling.hwrepo.design_lint import candidates, evaluate, fingerprint
+from kicad_tooling.hwrepo.design_lint import candidates, evaluate, fingerprint, text_report
 from kicad_tooling.hwrepo.design_lint_pcb_component_inventory_candidates import (
     pcb_component_inventory_candidates,
 )
@@ -81,6 +81,8 @@ def test_duplicate_candidate_identity_blocks_disposition(ignored: bool) -> None:
     assert key in report.issues[0]
     assert "Multiple candidates share fingerprint" in report.issues[0]
     assert not report.findings
+    assert "Findings: unavailable or incomplete because evaluation is blocked" in text_report(report)
+    assert DesignLintReport.model_validate_json(report.model_dump_json()) == report
 
 
 def test_duplicate_disposition_retains_peer_and_mapped_coverage() -> None:
@@ -109,6 +111,13 @@ def test_duplicate_disposition_retains_peer_and_mapped_coverage() -> None:
         "mapped_check_runs",
     ):
         assert getattr(report, name) == getattr(normal, name)
+    peer = report.i2c_peer_reference_coverage
+    assert peer is not None
+    mismatched_peer = type(peer).model_validate({**peer.model_dump(), "netlist_sha256": "f" * 64})
+    with pytest.raises(ValidationError, match="I2C peer-reference coverage must use"):
+        DesignLintReport.model_validate(
+            {**report.model_dump(), "i2c_peer_reference_coverage": mismatched_peer}
+        )
 
 
 def test_duplicate_inventory_candidate_preserves_blocked_evidence() -> None:
