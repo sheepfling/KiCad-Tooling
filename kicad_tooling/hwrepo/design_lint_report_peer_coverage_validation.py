@@ -29,7 +29,7 @@ def validate_peer_coverage(
     if len(voltage_coverage_ids) != len(set(voltage_coverage_ids)):
         raise ValueError("Digital-peer voltage coverage entries must use unique rule IDs")
     for item in digital_peer_voltage_coverage:
-        if netlist_sha256 is not None and item.netlist_sha256 != netlist_sha256:
+        if item.netlist_sha256 != netlist_sha256:
             raise ValueError("Digital-peer voltage coverage must use this report's netlist")
         expected_groups = sum(finding.rule_id == item.rule_id for finding in findings)
         if item.candidate_group_count != expected_groups:
@@ -55,49 +55,49 @@ def validate_peer_coverage(
     ):
         raise ValueError("Component peer-pin coverage must include every supported rule")
     for item in component_peer_pin_coverage:
-        if netlist_sha256 is not None and item.netlist_sha256 != netlist_sha256:
+        if item.netlist_sha256 != netlist_sha256:
             raise ValueError("Component peer-pin coverage must use this report's netlist")
         expected_findings = sum(finding.rule_id == item.rule_id for finding in findings)
         if item.finding_count != expected_findings:
             raise ValueError("Component peer-pin findings must match report findings")
     if usb_peer_reference_coverage is not None:
         item = usb_peer_reference_coverage
-        if netlist_sha256 is not None and item.netlist_sha256 != netlist_sha256:
+        if item.netlist_sha256 != netlist_sha256:
             raise ValueError("USB peer-reference coverage must use this report's netlist")
         expected_groups = sum(finding.rule_id == item.rule_id for finding in findings)
         if item.candidate_group_count != expected_groups:
             raise ValueError("USB peer-reference candidate counts must match report findings")
     if serial_peer_reference_coverage is not None:
         item = serial_peer_reference_coverage
-        if netlist_sha256 is not None and item.netlist_sha256 != netlist_sha256:
+        if item.netlist_sha256 != netlist_sha256:
             raise ValueError("Serial peer-reference coverage must use this report's netlist")
         expected_groups = sum(finding.rule_id == item.rule_id for finding in findings)
         if item.candidate_group_count != expected_groups:
             raise ValueError("Serial peer-reference candidate counts must match report findings")
     if i2c_peer_reference_coverage is not None:
         item = i2c_peer_reference_coverage
-        if netlist_sha256 is not None and item.netlist_sha256 != netlist_sha256:
+        if item.netlist_sha256 != netlist_sha256:
             raise ValueError("I2C peer-reference coverage must use this report's netlist")
         expected_groups = sum(finding.rule_id == item.rule_id for finding in findings)
         if item.candidate_group_count != expected_groups:
             raise ValueError("I2C peer-reference candidate counts must match report findings")
     if spi_peer_reference_coverage is not None:
         item = spi_peer_reference_coverage
-        if netlist_sha256 is not None and item.netlist_sha256 != netlist_sha256:
+        if item.netlist_sha256 != netlist_sha256:
             raise ValueError("SPI peer-reference coverage must use this report's netlist")
         expected_groups = sum(finding.rule_id == item.rule_id for finding in findings)
         if item.candidate_group_count != expected_groups:
             raise ValueError("SPI peer-reference candidate counts must match report findings")
     if can_peer_reference_coverage is not None:
         item = can_peer_reference_coverage
-        if netlist_sha256 is not None and item.netlist_sha256 != netlist_sha256:
+        if item.netlist_sha256 != netlist_sha256:
             raise ValueError("CAN peer-reference coverage must use this report's netlist")
         expected_groups = sum(finding.rule_id == item.rule_id for finding in findings)
         if item.candidate_group_count != expected_groups:
             raise ValueError("CAN peer-reference candidate counts must match report findings")
     if rs485_peer_reference_coverage is not None:
         item = rs485_peer_reference_coverage
-        if netlist_sha256 is not None and item.netlist_sha256 != netlist_sha256:
+        if item.netlist_sha256 != netlist_sha256:
             raise ValueError("RS-485 peer-reference coverage must use this report's netlist")
         expected_groups = sum(finding.rule_id == item.rule_id for finding in findings)
         if item.candidate_group_count != expected_groups:

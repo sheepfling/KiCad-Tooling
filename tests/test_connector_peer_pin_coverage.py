@@ -14,7 +14,7 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
 )
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint]
+pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.evidence_lint]
 
 _REFERENCES = ("J1", "J2", "J3")
 _NETLIST_SHA256 = "a" * 64
@@ -41,7 +41,7 @@ def peer_netlist(
     )
     if open_generic_pin:
         return_nets = {"GND": tuple(f"{reference}.2" for reference in references[:-1])}
-    inventories = {
+    inventories: dict[str, tuple[str, ...]] = {
         reference: ("1", "2")
         for reference in references
         if reference != missing_inventory_reference and reference != empty_inventory_reference
@@ -109,6 +109,28 @@ def test_common_peer_assignments_are_counted_without_a_finding() -> None:
     assert coverage.repeated_function_finding_count == 0
     assert "Connector peer-pin heuristic coverage: EVALUATED" in text_report(report)
     assert _NETLIST_SHA256 in text_report(report)
+
+
+def test_report_rejects_peer_coverage_without_top_level_netlist_hash() -> None:
+    report = report_for(peer_netlist())
+    payload = report.model_dump(mode="python")
+    payload["netlist_sha256"] = None
+    payload["digital_peer_voltage_coverage"] = ()
+    payload["component_peer_pin_coverage"] = ()
+    for field_name in (
+        "usb_peer_reference_coverage",
+        "serial_peer_reference_coverage",
+        "i2c_peer_reference_coverage",
+        "spi_peer_reference_coverage",
+        "can_peer_reference_coverage",
+        "rs485_peer_reference_coverage",
+    ):
+        payload[field_name] = None
+
+    with pytest.raises(
+        ValueError, match="Connector peer-pin coverage must use this report's native netlist"
+    ):
+        DesignLintReport.model_validate(payload)
 
 
 def test_split_meaningful_returns_are_reported_and_counted() -> None:

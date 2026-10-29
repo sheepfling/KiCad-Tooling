@@ -13,7 +13,7 @@ def validate_connector_peer_pin_coverage(
 ) -> None:
     if connector_peer_pin_coverage is not None:
         item = connector_peer_pin_coverage
-        if netlist_sha256 is not None and item.netlist_sha256 != netlist_sha256:
+        if item.netlist_sha256 != netlist_sha256:
             raise ValueError("Connector peer-pin coverage must use this report's native netlist")
         expected_counts = (
             (
