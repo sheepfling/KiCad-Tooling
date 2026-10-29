@@ -66,7 +66,7 @@ from tests.test_pcb_track_width import (
 
 def pcb_rule_ids() -> set[str]:
     """Emit representative PCB inventory and custom-rule candidates."""
-    netlist_sha256 = "a" * 64
+    netlist_sha256 = "f" * 64
     observed = NetlistContract(components={}, nets={})
     coach = ContractCoachReport(
         status="READY_FOR_REVIEW",
@@ -328,11 +328,12 @@ def pcb_rule_ids() -> set[str]:
     )
 
     keepout_map = keepout_mapping()
+    keepout_coverage = incomplete_keepout_report(keepout_map)
     keepout_result = evaluate(
         "synthetic-keepout",
-        empty_coach,
+        empty_coach.model_copy(update={"netlist_sha256": keepout_coverage.netlist_sha256}),
         DesignLintPolicy(pcb_keepout_map=keepout_map),
-        pcb_keepout_coverage=incomplete_keepout_report(keepout_map),
+        pcb_keepout_coverage=keepout_coverage,
     )
     result.update(item.rule_id for item in keepout_result.findings)
 

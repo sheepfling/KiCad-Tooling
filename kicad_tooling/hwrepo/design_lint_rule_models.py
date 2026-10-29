@@ -19,6 +19,7 @@ class DesignLintRuleMetadata(StrictModel):
     implementation_owner: NonEmptyText = "legacy"
     status: Literal["active", "prototype", "retired"]
     maturity: Literal["synthetic_validated", "cohort_candidate", "field_validated"]
+    field_validation_evidence: tuple[NonEmptyText, ...] = ()
     default_mode: Literal["review", "block", "off"]
     evidence_adapter: NonEmptyText
     predicate: NonEmptyText
@@ -34,6 +35,10 @@ class DesignLintRuleMetadata(StrictModel):
 
     @model_validator(mode="after")
     def active_rule_has_regressions(self) -> DesignLintRuleMetadata:
+        if self.maturity == "field_validated" and not self.field_validation_evidence:
+            raise ValueError("Field-validated rules need independently reviewed evidence")
+        if self.maturity != "field_validated" and self.field_validation_evidence:
+            raise ValueError("Field-validation evidence requires field-validated maturity")
         if self.status == "active" and (not self.fault_fixtures or not self.valid_control_fixtures):
             raise ValueError("Active design-lint rules need fault and valid-control fixtures")
         if not self.supported_kicad_versions:

@@ -29,11 +29,17 @@ def catalog_text(catalog: DesignLintRuleCatalog) -> str:
                     f"{item.rule_id} — {item.title} [{item.status}; theme {item.theme}; "
                     f"default {item.default_mode}]"
                 ),
+                f"  Maturity: {item.maturity}",
                 f"  Owner: {item.implementation_owner}",
                 f"  Predicate: {item.predicate}",
                 f"  Evidence: {item.evidence_adapter}",
                 f"  KiCad: {'; '.join(item.supported_kicad_versions)}",
                 f"  Limits: {' '.join(item.limitations)}",
+                *(
+                    (f"  Field validation: {'; '.join(item.field_validation_evidence)}",)
+                    if item.field_validation_evidence
+                    else ()
+                ),
             )
         )
     return "\n".join(lines)

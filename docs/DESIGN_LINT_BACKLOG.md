@@ -57,6 +57,12 @@ when recording dispositions, supported-path denominators, seeded mutations, or
 review time. Rule-specific sections may add typed counts without changing the
 shared evidence boundaries.
 
+Catalog maturity is now evidence-constrained: `field_validated` requires a
+reference to independently reviewed field evidence, and other maturity levels
+cannot carry that claim. The catalog text view displays the maturity and its
+evidence reference. Synthetic tests and native compatibility runs alone do not
+qualify a rule as field validated.
+
 The first operational sweep found a stale active-rule fixture locator: the
 catalog named a removed three-case hosted validator, while the existing native
 fixture test validates four cases. The locator now points to that four-case
@@ -14849,6 +14855,9 @@ control are documented in the
   cannot make a release decision. Do not copy code or rule text until
   provenance and license are reviewed. Keep AI and hosted services outside
   blocking verification.
+- **Maturity evidence:** Field-validation claims in the rule catalog must
+  cite independently reviewed field evidence; synthetic or native fixture
+  results alone cannot support that maturity.
 - **Done when:** Every adopted concept has an independent fixture-backed rule
   specification, provenance/license record, and a decision to implement,
   defer, or reject.
