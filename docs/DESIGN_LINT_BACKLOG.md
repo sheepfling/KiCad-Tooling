@@ -2256,7 +2256,9 @@ is not a reason by itself to expand its scope or change its default policy.
   typed-netlist follow-up applies the same pin pattern to spaced
   `0V PWM 1`–`0V PWM 4`, underscored `0V_PWM_1`–`0V_PWM_4`, and compact
   `0V_PWM1`–`0V_PWM4` names; all three produce the numbered-return review. A
-  common `0V PWM` net is a quiet control. A tooling-owned synthetic native
+  common `0V PWM` net is a quiet control. A focused contract-coach regression
+  keeps the four spaced names and exact DB9 pin memberships visible while the
+  relationship is still unreviewed. A tooling-owned synthetic native
   fault/control pair now also preserves the spaced labels through KiCad export.
   This covers the failure's naming pattern without importing a board. A
   local exact-version native run on 2026-10-12 passed for KiCad 10.0.0 and
