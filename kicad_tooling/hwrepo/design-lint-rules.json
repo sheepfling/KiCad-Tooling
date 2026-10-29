@@ -684,8 +684,7 @@
         "tests.test_ci_hosted_connector_returns.test_footprint_alias_open_peer_is_validated_on_pinned_native_versions"
       ],
       "metamorphic_fixtures": [
-        "tests.test_connector_footprint_power_input.test_named_power_input_open_is_stable_under_mapping_order",
-        "tests.test_connector_footprint_power_input.test_open_power_input_assignment_is_stable_under_mapping_order"
+        "tests.test_connector_footprint_power_input.test_named_power_input_open_is_stable_under_mapping_order"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_footprint_open_named_candidates.py#open_named_outlier_candidates",
@@ -9705,27 +9704,27 @@
         "The check does not establish parasitics, switching behavior, emissions, stability, thermal performance, manufacturing quality, or electrical suitability of the project-selected threshold. Hardware or simulation validation remains separate."
       ],
       "fault_fixtures": [
-        "tests.test_pcb_switching_loop_geometry.PcbSwitchingLoopGeometryTests.test_enlarged_loop_exceeds_project_area_limit",
+        "tests.test_pcb_switching_loop_geometry.test_enlarged_loop_exceeds_project_area_limit",
         "tests.test_pcb_switching_loop_native_fixture_lane.test_native_switching_loop_geometry_fixtures",
-        "tests.test_pcb_switching_loop_geometry.PcbSwitchingLoopGeometryTests.test_split_filled_return_plane_is_reported",
-        "tests.test_pcb_switching_loop_geometry.PcbSwitchingLoopGeometryTests.test_multiple_shared_plane_islands_are_reported_as_ambiguous",
-        "tests.test_pcb_switching_loop_geometry.PcbSwitchingLoopGeometryTests.test_schema_nine_requires_valid_contours_for_every_filled_island",
+        "tests.test_pcb_switching_loop_geometry.test_split_filled_return_plane_is_reported",
+        "tests.test_pcb_switching_loop_geometry.test_multiple_shared_plane_islands_are_reported_as_ambiguous",
+        "tests.test_pcb_switching_loop_geometry.test_schema_nine_requires_valid_contours_for_every_filled_island",
         "tests.test_native_pcb_probe.test_canonicalization_rejects_degenerate_native_rings",
-        "tests.test_pcb_switching_loop_geometry.PcbSwitchingLoopGeometryTests.test_absent_layer_is_unsupported_and_missing_stack_is_schema_error",
-        "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_missing_and_branching_trace_paths_are_incomplete",
-        "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_arc_without_schema_15_measurement_remains_incomplete",
-        "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_multilayer_trace_joins_at_an_observed_via_and_checks_scope",
-        "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_native_arc_midpoint_and_length_resolve_in_schema_15",
+        "tests.test_pcb_switching_loop_geometry.test_absent_layer_is_unsupported_and_missing_stack_is_schema_error",
+        "tests.test_pcb_switching_loop_routes.test_missing_and_branching_trace_paths_are_incomplete",
+        "tests.test_pcb_switching_loop_routes.test_arc_without_schema_15_measurement_remains_incomplete",
+        "tests.test_pcb_switching_loop_routes.test_multilayer_trace_joins_at_an_observed_via_and_checks_scope",
+        "tests.test_pcb_switching_loop_routes.test_native_arc_midpoint_and_length_resolve_in_schema_15",
         "tests.test_pcb_switching_loop_routes.test_design_lint_reports_ambiguous_trace_chain_incomplete"
       ],
       "valid_control_fixtures": [
-        "tests.test_pcb_switching_loop_geometry.PcbSwitchingLoopGeometryTests.test_compact_loop_and_shared_multilayer_plane_pass_authored_geometry_screen",
+        "tests.test_pcb_switching_loop_geometry.test_compact_loop_and_shared_multilayer_plane_pass_authored_geometry_screen",
         "tests.test_pcb_switching_loop_native_fixture_lane.test_native_switching_loop_geometry_fixtures",
-        "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_detour_changes_trace_measurement_while_pad_center_proxy_stays_fixed",
-        "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_schema_nine_plane_edge_reports_exact_filled_contour_area",
-        "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_route_resolution_is_visible_in_review_finding_and_text_report",
-        "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_multilayer_trace_joins_at_an_observed_via_and_checks_scope",
-        "tests.test_pcb_switching_loop_geometry.PcbSwitchingLoopGeometryTests.test_missing_threshold_emits_review_and_policy_is_configurable",
+        "tests.test_pcb_switching_loop_routes.test_detour_changes_trace_measurement_while_pad_center_proxy_stays_fixed",
+        "tests.test_pcb_switching_loop_routes.test_schema_nine_plane_edge_reports_exact_filled_contour_area",
+        "tests.test_pcb_switching_loop_routes.test_route_resolution_is_visible_in_review_finding_and_text_report",
+        "tests.test_pcb_switching_loop_routes.test_multilayer_trace_joins_at_an_observed_via_and_checks_scope",
+        "tests.test_pcb_switching_loop_geometry.test_missing_threshold_emits_review_and_policy_is_configurable",
         "tests.test_native_pcb_probe.test_ring_canonicalization_ignores_rotation_direction_and_duplicate_points",
         "tests.test_native_pcb_probe.test_island_contours_keep_native_indexes_and_sort_canonical_holes",
         "tests.test_native_pcb_probe.test_rule_area_observation_serializes_outline_holes_layers_and_restrictions",
@@ -9734,8 +9733,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_pcb_switching_loop_geometry.PcbSwitchingLoopGeometryTests.test_pad_inventory_order_preserves_area_finding_and_compact_repair_clears_it",
-        "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_track_inventory_order_preserves_resolved_route_finding_and_snapshot_binding"
+        "tests.test_pcb_switching_loop_geometry.test_pad_inventory_order_preserves_area_finding_and_compact_repair_clears_it",
+        "tests.test_pcb_switching_loop_routes.test_track_inventory_order_preserves_resolved_route_finding_and_snapshot_binding"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_PCB_FIXTURES"

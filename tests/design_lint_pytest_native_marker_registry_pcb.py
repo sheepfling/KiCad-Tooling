@@ -11,6 +11,8 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_pcb_switching_loop_native_fixture_lane.py": frozenset(
             {"pcb_lint", "return_path_lint"}
         ),
+        "test_pcb_switching_loop_geometry.py": frozenset({"pcb_lint", "return_path_lint"}),
+        "test_pcb_switching_loop_routes.py": frozenset({"pcb_lint", "return_path_lint"}),
         "test_pcb_return_path_native_fixture_lane.py": frozenset({"pcb_lint", "return_path_lint"}),
         "test_pcb_access_fixture_lane.py": frozenset({"pcb_lint"}),
         "test_pcb_touch_pad_clearance.py": frozenset({"pcb_lint"}),
