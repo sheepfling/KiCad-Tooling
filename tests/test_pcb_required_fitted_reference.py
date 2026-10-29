@@ -203,7 +203,9 @@ def test_map_order_and_observation_order_do_not_change_results() -> None:
         "basis": requirements.basis,
         "requirements": [
             item.model_dump(mode="json")
-            for item in sorted(requirements.requirements, key=lambda item: item.reference.casefold())
+            for item in sorted(
+                requirements.requirements, key=lambda item: item.reference.casefold()
+            )
         ],
     }
     expected_legacy_hash = hashlib.sha256(
@@ -213,6 +215,7 @@ def test_map_order_and_observation_order_do_not_change_results() -> None:
     assert compare_required_fitted_references(requirements, observed, board) == (
         compare_required_fitted_references(reversed_requirements, observed, board)
     )
+
 
 @pytest.mark.design_lint_rule(rule_id=RULE)
 def test_rule_mode_is_quiet_without_requirements_and_blocking_with_them() -> None:

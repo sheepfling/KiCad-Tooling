@@ -145,9 +145,7 @@ def test_native_shared_net_is_reviewed_only_for_distinct_mapped_signals(
     assert shield_coverage.status == "COMPLETE"
     assert len(shield_findings) == 1
     assert shield_findings[0].evidence["assigned_net"] == ("SHARED_SIGNAL_NET",)
-    assert not any(
-        item.rule_id == SHIELD_SIGNAL_RULE_ID for item in shield_control.findings
-    )
+    assert not any(item.rule_id == SHIELD_SIGNAL_RULE_ID for item in shield_control.findings)
 
     return_fault, return_coverage = signal_sharing_report(
         observed,

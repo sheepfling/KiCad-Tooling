@@ -85,9 +85,7 @@ def _candidate_evidence(
         "observed_symbol": (() if item.observed_symbol is None else (item.observed_symbol,)),
         "expected_part_id": (() if item.expected_part_id is None else (item.expected_part_id,)),
         "observed_part_id": (() if item.observed_part_id is None else (item.observed_part_id,)),
-        "schematic_dnp": (
-            () if item.schematic_dnp is None else (str(item.schematic_dnp).lower(),)
-        ),
+        "schematic_dnp": (() if item.schematic_dnp is None else (str(item.schematic_dnp).lower(),)),
         "board_dnp": (() if item.board_dnp is None else (str(item.board_dnp).lower(),)),
         "requirement_map_sha256": (coverage.map_sha256 or "unavailable",),
         "netlist_sha256": (report.netlist_sha256 or "unavailable",),

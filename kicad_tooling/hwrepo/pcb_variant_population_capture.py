@@ -37,9 +37,8 @@ class PcbVariantPopulationCapture:
         source_names = tuple(source.variant.casefold() for source in self.sources)
         evidence_names = tuple(item.variant.casefold() for item in self.coverage.evidence)
         if self.coverage.status == "COMPLETE":
-            if (
-                len(set(source_names)) != len(source_names)
-                or set(source_names) != set(evidence_names)
+            if len(set(source_names)) != len(source_names) or set(source_names) != set(
+                evidence_names
             ):
                 raise ValueError(
                     "Complete variant sources must match the source-bound evidence inventory"

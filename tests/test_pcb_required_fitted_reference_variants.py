@@ -130,7 +130,8 @@ def test_named_variant_requirement_catches_matching_schematic_and_board_dnp() ->
         f"{VARIANT}:board_all=build/design-lint/variant/board-all.csv@" + "3" * 64,
         f"{VARIANT}:board_all_command=build/design-lint/variant/board-all.command.json@" + "4" * 64,
         f"{VARIANT}:board_fitted=build/design-lint/variant/board-fitted.csv@" + "5" * 64,
-        f"{VARIANT}:board_fitted_command=build/design-lint/variant/board-fitted.command.json@" + "6" * 64,
+        f"{VARIANT}:board_fitted_command=build/design-lint/variant/board-fitted.command.json@"
+        + "6" * 64,
     )
     assert any(
         f"U1 in variant '{VARIANT}'" in line
@@ -191,9 +192,7 @@ def test_variant_names_resolve_case_insensitively_and_map_hash_is_order_stable()
         variant="Synthetic Assembly B",
         requirements=(requirement,),
     )
-    reordered = requirements.model_copy(
-        update={"variants": (*requirements.variants, second)}
-    )
+    reordered = requirements.model_copy(update={"variants": (*requirements.variants, second)})
     assert required_fitted_reference_map_sha256(reordered) == required_fitted_reference_map_sha256(
         reordered.model_copy(update={"variants": tuple(reversed(reordered.variants))})
     )

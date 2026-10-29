@@ -80,9 +80,7 @@ def compare_required_fitted_references(
                 variant_ambiguous_symbols.add(key)
             variant_symbols[key] = symbol
         variant_dnp = {reference.casefold() for reference in source.netlist.dnp_components}
-        variant_board = _unique_reference_set(
-            source.board_references, source.variant, "board"
-        )
+        variant_board = _unique_reference_set(source.board_references, source.variant, "board")
         variant_fitted = _unique_reference_set(
             source.fitted_board_references, source.variant, "fitted board"
         )
@@ -228,15 +226,15 @@ def _compare_variant_requirements(
                     basis=requirement.basis,
                     expected_footprint=requirement.footprint,
                     expected_symbol=requirement.symbol,
-                    observed_symbol=(
-                        None if key in ambiguous_symbols else variant_symbol
-                    ),
+                    observed_symbol=(None if key in ambiguous_symbols else variant_symbol),
                     expected_part_id=requirement.part_id,
                     observed_part_id=None if component is None else component.part_id,
                     schematic_footprint=None if component is None else component.footprint,
                     board_footprint=board_footprint,
                     schematic_dnp=None if component is None else key in schematic_dnp,
-                    board_dnp=(None if key not in board_references else key not in fitted_board_references),
+                    board_dnp=(
+                        None if key not in board_references else key not in fitted_board_references
+                    ),
                     violations=tuple(violations),
                 )
             )
@@ -258,9 +256,7 @@ def _unique_variants(
 def _unique_reference_set(references: tuple[str, ...], variant: str, source: str) -> set[str]:
     normalized = {reference.casefold() for reference in references}
     if any(not reference.strip() for reference in references) or len(normalized) != len(references):
-        raise ValueError(
-            f"Variant {variant!r} has duplicate case-insensitive {source} references"
-        )
+        raise ValueError(f"Variant {variant!r} has duplicate case-insensitive {source} references")
     return normalized
 
 
@@ -288,9 +284,7 @@ def required_fitted_reference_map_sha256(requirements: PcbRequiredFittedReferenc
                     )
                 ],
             }
-            for variant in sorted(
-                requirements.variants, key=lambda item: item.variant.casefold()
-            )
+            for variant in sorted(requirements.variants, key=lambda item: item.variant.casefold())
         ]
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()

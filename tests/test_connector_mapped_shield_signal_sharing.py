@@ -60,8 +60,7 @@ def test_mapped_shield_sharing_a_signal_net_requests_review() -> None:
     assert coverage.status == "COMPLETE"
     (finding,) = _findings(report)
     assert finding.subject == (
-        "mapped shield contacts J1.1 and signal contacts J1.2 share native net "
-        "SHARED_SIGNAL_NET"
+        "mapped shield contacts J1.1 and signal contacts J1.2 share native net SHARED_SIGNAL_NET"
     )
     assert finding.evidence == {
         "shield_component_pin": ("J1.1",),
@@ -76,9 +75,7 @@ def test_mapped_shield_sharing_a_signal_net_requests_review() -> None:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_separate_nets_and_return_only_bond_are_controls() -> None:
-    separate, _ = _report(
-        signal_sharing_netlist(first_net="CHASSIS", second_net="UART_RX")
-    )
+    separate, _ = _report(signal_sharing_netlist(first_net="CHASSIS", second_net="UART_RX"))
     return_only_bond, _ = _report(
         signal_sharing_netlist(),
         coverage=_coverage(signal_sharing_netlist(), roles=("shield", "return")),
@@ -103,9 +100,7 @@ def test_dnp_open_ambiguous_and_stale_maps_are_controls() -> None:
         unconnected_pin_reasons={"1": "Intentional test open"},
     )
     reasoned_open, _ = _report(source, coverage=open_coverage)
-    multi_net_source = source.model_copy(
-        update={"nets": {**source.nets, "SECOND": ("J1.1",)}}
-    )
+    multi_net_source = source.model_copy(update={"nets": {**source.nets, "SECOND": ("J1.1",)}})
     multi_net, _ = _report(multi_net_source)
     stale = _coverage(source).model_copy(update={"status": "INCOMPLETE"})
     incomplete, _ = _report(source, coverage=stale)
@@ -128,31 +123,37 @@ def test_review_block_off_and_exact_ignore_policy_apply() -> None:
     blocked, _ = _report(
         source,
         policy=DesignLintPolicy(
-            rules=(DesignLintRuleOverride(
-                rule_id=RULE_ID,
-                mode="block",
-                reason="Synthetic project requires disposition of shield signal bonds.",
-            ),)
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id=RULE_ID,
+                    mode="block",
+                    reason="Synthetic project requires disposition of shield signal bonds.",
+                ),
+            )
         ),
     )
     disabled, _ = _report(
         source,
         policy=DesignLintPolicy(
-            rules=(DesignLintRuleOverride(
-                rule_id=RULE_ID,
-                mode="off",
-                reason="Synthetic project explicitly reviewed this heuristic.",
-            ),)
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id=RULE_ID,
+                    mode="off",
+                    reason="Synthetic project explicitly reviewed this heuristic.",
+                ),
+            )
         ),
     )
     ignored, _ = _report(
         source,
         policy=DesignLintPolicy(
-            ignores=(DesignLintIgnore(
-                rule_id=RULE_ID,
-                fingerprint=baseline.fingerprint,
-                reason="The shield-to-signal connection is intentional in this fixture.",
-            ),)
+            ignores=(
+                DesignLintIgnore(
+                    rule_id=RULE_ID,
+                    fingerprint=baseline.fingerprint,
+                    reason="The shield-to-signal connection is intentional in this fixture.",
+                ),
+            )
         ),
     )
 

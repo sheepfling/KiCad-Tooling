@@ -339,8 +339,7 @@ def test_component_inventory_findings_match_cli_and_mcp(
     (variant_required_finding,) = tuple(
         item
         for item in mcp_report.findings
-        if item.rule_id == REQUIRED_FITTED_RULE
-        and item.evidence.get("variant") == (VARIANT,)
+        if item.rule_id == REQUIRED_FITTED_RULE and item.evidence.get("variant") == (VARIANT,)
     )
     assert variant_required_finding.subject == (
         f"U6 in variant '{VARIANT}': required fitted component does not match source"

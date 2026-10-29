@@ -58,8 +58,7 @@ def test_mapped_signal_sharing_a_return_net_requests_review() -> None:
     assert coverage.status == "COMPLETE"
     (finding,) = _findings(report)
     assert finding.subject == (
-        "mapped return contacts J1.1 and signal contacts J1.2 share native net "
-        "SHARED_SIGNAL_NET"
+        "mapped return contacts J1.1 and signal contacts J1.2 share native net SHARED_SIGNAL_NET"
     )
     assert finding.evidence == {
         "return_component_pin": ("J1.1",),
@@ -74,9 +73,7 @@ def test_mapped_signal_sharing_a_return_net_requests_review() -> None:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_separate_nets_and_non_signal_peer_roles_are_controls() -> None:
-    separate, _ = _report(
-        signal_sharing_netlist(first_net="SIGNAL_RETURN", second_net="UART_RX")
-    )
+    separate, _ = _report(signal_sharing_netlist(first_net="SIGNAL_RETURN", second_net="UART_RX"))
     return_and_shield, _ = _report(
         signal_sharing_netlist(),
         coverage=_coverage(signal_sharing_netlist(), roles=("return", "shield")),
@@ -106,13 +103,11 @@ def test_dnp_open_ambiguous_and_stale_coverage_are_controls() -> None:
         unconnected_pin_reasons={"1": "Intentional synthetic open"},
     )
     reasoned_open, _ = _report(source, coverage=open_coverage)
-    multi_net_source = source.model_copy(
-        update={"nets": {**source.nets, "SECOND": ("J1.1",)}}
-    )
+    multi_net_source = source.model_copy(update={"nets": {**source.nets, "SECOND": ("J1.1",)}})
     multi_net, _ = _report(multi_net_source)
-    incomplete, _ = _report(source, coverage=_coverage(source).model_copy(
-        update={"status": "INCOMPLETE"}
-    ))
+    incomplete, _ = _report(
+        source, coverage=_coverage(source).model_copy(update={"status": "INCOMPLETE"})
+    )
     digestless, _ = _report(
         source, coverage=_coverage(source).model_copy(update={"interface_catalog_sha256": None})
     )
@@ -131,27 +126,39 @@ def test_review_block_off_and_exact_ignore_policy_apply() -> None:
     baseline = _findings(_report(source)[0])[0]
     blocked, _ = _report(
         source,
-        policy=DesignLintPolicy(rules=(DesignLintRuleOverride(
-            rule_id=RULE_ID,
-            mode="block",
-            reason="Synthetic project requires disposition of signal-to-return ties.",
-        ),)),
+        policy=DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id=RULE_ID,
+                    mode="block",
+                    reason="Synthetic project requires disposition of signal-to-return ties.",
+                ),
+            )
+        ),
     )
     disabled, _ = _report(
         source,
-        policy=DesignLintPolicy(rules=(DesignLintRuleOverride(
-            rule_id=RULE_ID,
-            mode="off",
-            reason="Synthetic project reviewed this heuristic.",
-        ),)),
+        policy=DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id=RULE_ID,
+                    mode="off",
+                    reason="Synthetic project reviewed this heuristic.",
+                ),
+            )
+        ),
     )
     ignored, _ = _report(
         source,
-        policy=DesignLintPolicy(ignores=(DesignLintIgnore(
-            rule_id=RULE_ID,
-            fingerprint=baseline.fingerprint,
-            reason="The mapped signal return tie is intentional in this fixture.",
-        ),)),
+        policy=DesignLintPolicy(
+            ignores=(
+                DesignLintIgnore(
+                    rule_id=RULE_ID,
+                    fingerprint=baseline.fingerprint,
+                    reason="The mapped signal return tie is intentional in this fixture.",
+                ),
+            )
+        ),
     )
 
     assert blocked.status == "FAIL"
@@ -162,8 +169,6 @@ def test_review_block_off_and_exact_ignore_policy_apply() -> None:
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_candidate_is_stable_under_netlist_mapping_order() -> None:
     source = signal_sharing_netlist()
-    reordered = source.model_copy(
-        update={"nets": dict(reversed(tuple(source.nets.items())))}
-    )
+    reordered = source.model_copy(update={"nets": dict(reversed(tuple(source.nets.items())))})
 
     assert _findings(_report(source)[0]) == _findings(_report(reordered)[0])

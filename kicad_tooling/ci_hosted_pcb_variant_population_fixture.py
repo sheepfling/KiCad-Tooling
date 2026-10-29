@@ -224,9 +224,7 @@ def pcb_variant_population_fixture_lane(
                 "netlist": evidence.netlist_sha256,
                 "board_all_positions": evidence.board_all_positions_sha256,
                 "board_fitted_positions": evidence.board_fitted_positions_sha256,
-                "required_reference_snapshot": digest(
-                    snapshot_receipt / "snapshot.json"
-                ),
+                "required_reference_snapshot": digest(snapshot_receipt / "snapshot.json"),
             }
 
         log.event(
