@@ -64,7 +64,10 @@ def i2c_address_candidates(
 ) -> tuple[Candidate, ...]:
     """Build I2C address mismatch and collision prompts from declared coverage."""
     found: list[Candidate] = []
-    if i2c_address_coverage is not None:
+    if i2c_address_coverage is not None and i2c_address_coverage.status in {
+        "COMPLETE",
+        "INCOMPLETE",
+    }:
         for entry in i2c_address_coverage.entries:
             if (
                 entry.status == "COMPLETE"

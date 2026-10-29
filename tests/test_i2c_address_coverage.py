@@ -7,6 +7,7 @@ import hashlib
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import evaluate
+from kicad_tooling.hwrepo.i2c_address_models import I2cAddressCoverageReport
 from kicad_tooling.hwrepo.i2c_addressing import scan_i2c_address_map
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
@@ -156,6 +157,23 @@ def test_stale_complete_address_coverage_cannot_hide_current_collision() -> None
     assert report.i2c_address_coverage.status == "BLOCKED"
     assert report.i2c_address_coverage.entries == ()
     assert any("different or unavailable native netlist hash" in issue for issue in report.issues)
+
+
+def test_configured_address_map_rejects_not_requested_coverage() -> None:
+    specification = address_map(responder("U1", strap=False), responder("U2", strap=False))
+    observed = address_netlist(specification)
+    report = evaluate(
+        "synthetic-i2c-addresses",
+        coach(observed),
+        DesignLintPolicy(i2c_address_map=specification),
+        i2c_address_coverage=I2cAddressCoverageReport(),
+    )
+
+    assert report.status == "BLOCKED"
+    assert report.i2c_address_coverage.status == "BLOCKED"
+    assert report.i2c_address_coverage.entries == ()
+    assert any("no source-bound comparison coverage" in issue for issue in report.issues)
+    assert "bus.i2c_address_collision" not in {item.rule_id for item in report.findings}
 
 
 def test_address_map_candidate_skips_declared_dnp_and_non_ic_controls() -> None:

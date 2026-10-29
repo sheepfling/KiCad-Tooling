@@ -5,6 +5,8 @@ from __future__ import annotations
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import evaluate
+from kicad_tooling.hwrepo.design_lint_i2c_candidates import i2c_address_candidates
+from kicad_tooling.hwrepo.i2c_address_models import I2cAddressCoverageReport
 from kicad_tooling.hwrepo.i2c_addressing import scan_i2c_address_map
 from kicad_tooling.hwrepo.models import DesignLintIgnore, DesignLintPolicy, DesignLintRuleOverride
 from tests.design_lint_fixtures.i2c_addresses import (
@@ -37,6 +39,33 @@ def test_same_segment_static_address_collision_is_reported() -> None:
     assert len(collisions) == 1
     assert collisions[0].subject == "MAIN: U1, U2 at 0x50"
     assert collisions[0].evidence["U1.address"] == ("expected 0x50; observed 0x50",)
+
+
+def test_blocked_address_coverage_keeps_entries_as_diagnostics_only() -> None:
+    spec = address_map(responder("U1", strap=False), responder("U2", strap=False))
+    observed = address_netlist(spec)
+    complete = scan_i2c_address_map(spec, observed, _NETLIST_HASH)
+    blocked = I2cAddressCoverageReport(
+        status="BLOCKED",
+        netlist_sha256=complete.netlist_sha256,
+        entries=complete.entries,
+        issue="Address evidence is unavailable",
+    )
+
+    assert {item.rule_id for item in i2c_address_candidates(complete)} == {
+        "bus.i2c_address_collision"
+    }
+    assert i2c_address_candidates(blocked) == ()
+
+    report = evaluate(
+        "synthetic-i2c-addresses",
+        coach(observed),
+        DesignLintPolicy(i2c_address_map=spec),
+        i2c_address_coverage=blocked,
+    )
+    assert report.status == "BLOCKED"
+    assert report.i2c_address_coverage.entries == complete.entries
+    assert "bus.i2c_address_collision" not in {item.rule_id for item in report.findings}
 
 
 def test_collision_order_is_stable_and_separate_segments_clear_it() -> None:

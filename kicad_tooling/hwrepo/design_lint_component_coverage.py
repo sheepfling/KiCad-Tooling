@@ -70,6 +70,12 @@ def resolve_component_map_coverage(
                     netlist_sha256=netlist_sha256,
                     issue=f"Could not compare the I2C address map with native evidence: {exc}",
                 )
+    if policy.i2c_address_map is not None and i2c_address_coverage.status == "NOT_REQUESTED":
+        i2c_address_coverage = I2cAddressCoverageReport(
+            status="BLOCKED",
+            netlist_sha256=netlist_sha256,
+            issue="Configured I2C address map has no source-bound comparison coverage",
+        )
     issue = _stale_netlist_coverage_issue(
         i2c_address_coverage.status,
         i2c_address_coverage.netlist_sha256,
