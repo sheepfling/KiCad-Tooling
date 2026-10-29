@@ -72,7 +72,10 @@ def test_project_authored_minimum_is_covered_by_exact_native_rule() -> None:
     assert constraints[0].name == "physical_clearance"
     assert constraints[0].layer == "F.Courtyard"
     assert constraints[0].minimum_nm == 1_500_000
-    assert mechanical_edge_rule_coverage_issue(_requirement(), constraints) is None
+    assert (
+        mechanical_edge_rule_coverage_issue(_requirement(), constraints, kicad_version="10.0.5")
+        is None
+    )
 
 
 @pytest.mark.parametrize(

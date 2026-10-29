@@ -789,8 +789,18 @@ The catalog currently contains 254 active rules.
 source-bound `.kicad_dru` has the named `physical_clearance` rule for the exact
 front or back courtyard layer, the `Edge.Cuts` condition, the exact minimum,
 and blocking severity. It also prompts when another native rule declares the
-same exact scope. The rule is opt-in: projects that have no reviewed
-courtyard-to-edge minimum do not receive a prompt.
+same exact scope, or a later `physical_clearance` rule may apply on that
+courtyard layer. KiCad evaluates later rules first; an unknown condition or
+unrestricted layer is treated as a possible overlap. A valid rule restricted
+to the opposite courtyard is disjoint for rule selection. The lint also checks
+the unconditional physical-clearance and physical-hole-clearance search
+radius, even for earlier or opposite-side rules: a radius smaller than the
+authored minimum can prevent KiCad from finding nearby items. Conditional-only
+coverage is accepted for KiCad 10.0.5; synthetic native evidence did not
+establish it for 10.0.0, so other versions require a sufficient unconditional
+physical-clearance radius. The prompt asks for review and does not prove that a
+later rule overrides the authored requirement. The rule is opt-in: projects
+that have no reviewed courtyard-to-edge minimum do not receive a prompt.
 
 ```json
 {

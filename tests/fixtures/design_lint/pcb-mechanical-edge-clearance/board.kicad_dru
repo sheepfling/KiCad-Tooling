@@ -1,4 +1,7 @@
 (version 1)
+(rule "physical-search-radius-anchor"
+  (severity ignore)
+  (constraint physical_clearance (min 2mm)))
 (rule "front-mechanical-board-edge-clearance"
   (layer "F.Courtyard")
   (constraint physical_clearance (min 1.5mm))

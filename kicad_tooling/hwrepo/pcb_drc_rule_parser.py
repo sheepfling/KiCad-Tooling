@@ -27,6 +27,7 @@ RULE_SEVERITY = MappingProxyType(
     }
 )
 _LENGTH = re.compile(r"^([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+))(mm|mil)$")
+NativePcbConstraintName = PcbDrcConstraintName | Literal["physical_hole_clearance"]
 
 
 class NativeRuleConstraint:
@@ -35,7 +36,8 @@ class NativeRuleConstraint:
         rule_name: str,
         ordinal: int,
         condition: str,
-        name: PcbDrcConstraintName,
+        condition_unconditional: bool,
+        name: NativePcbConstraintName,
         minimum_nm: int | None,
         maximum_nm: int | None,
         issue: str | None,
@@ -46,6 +48,7 @@ class NativeRuleConstraint:
         self.rule_name = rule_name
         self.ordinal = ordinal
         self.condition = condition
+        self.condition_unconditional = condition_unconditional
         self.name = name
         self.minimum_nm = minimum_nm
         self.maximum_nm = maximum_nm
@@ -107,6 +110,7 @@ def _parse_constraint(
     rule_name: str,
     ordinal: int,
     condition: str,
+    condition_unconditional: bool,
     span: _Span,
     severity: str | None,
     severity_issue: str | None,
@@ -114,7 +118,11 @@ def _parse_constraint(
     layer_issue: str | None,
 ) -> NativeRuleConstraint | None:
     atoms = _atoms(source, span)
-    if len(atoms) != 2 or atoms[1] not in {*RULE_SEVERITY, "physical_clearance"}:
+    if len(atoms) != 2 or atoms[1] not in {
+        *RULE_SEVERITY,
+        "physical_clearance",
+        "physical_hole_clearance",
+    }:
         return None
     name = atoms[1]
     fields: dict[str, int] = {}
@@ -139,7 +147,8 @@ def _parse_constraint(
         rule_name,
         ordinal,
         condition,
-        cast(PcbDrcConstraintName, name),
+        condition_unconditional,
+        cast(NativePcbConstraintName, name),
         fields.get("min"),
         fields.get("max"),
         issue,
@@ -207,6 +216,7 @@ def native_constraints(source: str) -> tuple[NativeRuleConstraint, ...]:
                 header[1],
                 ordinal,
                 condition,
+                not conditions,
                 node,
                 severity,
                 severity_issue,

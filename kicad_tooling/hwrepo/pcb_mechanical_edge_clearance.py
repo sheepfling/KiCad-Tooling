@@ -23,6 +23,8 @@ _EDGE_CONDITION = "B.Layer == 'Edge.Cuts'"
 def mechanical_edge_rule_coverage_issue(
     requirement: PcbMechanicalEdgeClearanceRequirement,
     constraints: tuple[NativeRuleConstraint, ...],
+    *,
+    kicad_version: str | None = None,
 ) -> str | None:
     named = tuple(
         item
@@ -66,6 +68,40 @@ def mechanical_edge_rule_coverage_issue(
         )
     if item.minimum_nm != requirement.minimum_clearance_nm or item.maximum_nm is not None:
         return "The native physical-clearance bound differs from the project minimum."
+    opposite_layer = (
+        "B.Courtyard" if requirement.courtyard_layer == "F.Courtyard" else "F.Courtyard"
+    )
+    later = tuple(
+        other
+        for other in constraints
+        if other.name == "physical_clearance"
+        and other.ordinal > item.ordinal
+        and not (other.layer == opposite_layer and other.issue is None)
+    )
+    if later:
+        names = ", ".join(f"{other.rule_name} (rule {other.ordinal})" for other in later)
+        return f"Later native physical-clearance rules may override this scope: {names}."
+    radius_rules = tuple(
+        other
+        for other in constraints
+        if other.name in {"physical_clearance", "physical_hole_clearance"}
+    )
+    if any(not other.condition and not other.condition_unconditional for other in radius_rules):
+        return "A physical-clearance rule has an unsupported or empty condition clause."
+    unconditional = tuple(other for other in radius_rules if other.condition_unconditional)
+    if any(other.issue is not None or other.minimum_nm is None for other in unconditional):
+        return "The unconditional physical-clearance search radius cannot be determined."
+    if unconditional:
+        radius = max(other.minimum_nm or 0 for other in unconditional)
+        if radius < requirement.minimum_clearance_nm:
+            return (
+                "The unconditional physical-clearance search radius is below the project minimum."
+            )
+    elif kicad_version != "10.0.5":
+        return (
+            "Conditional-only physical-clearance coverage is not established for this KiCad "
+            "version; require a sufficient unconditional physical-clearance search radius."
+        )
     return None
 
 
@@ -92,7 +128,9 @@ def mechanical_edge_rule_coverage_candidates(
     map_sha256 = hashlib.sha256(requirements.model_dump_json().encode("utf-8")).hexdigest()
     candidates: list[Candidate] = []
     for requirement in requirements.requirements:
-        issue = mechanical_edge_rule_coverage_issue(requirement, constraints)
+        issue = mechanical_edge_rule_coverage_issue(
+            requirement, constraints, kicad_version=config.kicad_version
+        )
         if issue is None:
             continue
         matching = tuple(

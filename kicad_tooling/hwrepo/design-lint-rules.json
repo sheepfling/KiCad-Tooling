@@ -10432,26 +10432,38 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "Project-authored exact courtyard layer, native rule name, Edge.Cuts condition, and minimum compared with source-bound KiCad DRC rules",
-      "predicate": "For each project-authored mechanical clearance requirement, require one named native physical_clearance rule with the exact courtyard layer, Edge.Cuts condition, positive minimum, blocking severity, and no competing rule on the same exact scope. Emit a review candidate for missing, mismatched, suppressed, or ambiguous rule coverage.",
+      "predicate": "For each project-authored mechanical clearance requirement, require one named native physical_clearance rule with the exact courtyard layer, Edge.Cuts condition, positive minimum, blocking severity, no competing rule on the same exact scope, no later physical_clearance rule that may overlap its courtyard layer, and a sufficient or verified native search radius. Emit a review candidate for missing, mismatched, suppressed, or ambiguous rule coverage.",
       "supported_kicad_versions": [
         "KiCad 10.0.0 and 10.0.5 digest-pinned native DRC fixtures"
       ],
       "limitations": [
         "The project owner must author the courtyard side and minimum from an independently reviewed mechanical requirement. This rule does not choose a universal component-to-edge clearance.",
         "The lint verifies source-bound rule coverage and ambiguity. KiCad native DRC measures the actual board geometry; this lint does not establish enclosure fit, manufacturing tolerance, fabricated geometry, or mechanical approval.",
-        "Rules with conditions other than the exact supported Edge.Cuts comparison are not interpreted. Their behavioral effects remain outside this bounded checker."
+        "Later physical-clearance rules are treated as potentially overlapping unless their only valid explicit layer is the opposite courtyard. Their conditions are not interpreted; a review prompt does not prove an override.",
+        "Unconditional physical-clearance and physical-hole-clearance minima determine the native search radius even for earlier, ignored, or opposite-layer rules. If any exist, their largest supported minimum must cover the authored minimum. Conditional-only search is verified for the synthetic fixture on KiCad 10.0.5; a sufficient unconditional radius is required on 10.0.0 and unverified versions."
       ],
       "fault_fixtures": [
+        "tests.test_pcb_mechanical_edge_precedence.test_later_potentially_overlapping_rule_leaves_mechanical_coverage_unconfirmed",
+        "tests.test_pcb_mechanical_edge_precedence.test_small_unconditional_radius_is_not_credited_even_without_precedence_overlap",
+        "tests.test_pcb_mechanical_edge_precedence.test_small_unconditional_hole_clearance_reduces_search_radius",
+        "tests.test_pcb_mechanical_edge_precedence.test_empty_or_malformed_condition_cannot_be_a_search_radius_anchor",
+        "tests.test_pcb_mechanical_edge_precedence.test_conditional_only_rule_requires_verified_version_or_sufficient_anchor",
         "tests.test_pcb_mechanical_edge_clearance.test_wrong_or_suppressed_native_rule_is_incomplete",
         "tests.test_pcb_mechanical_edge_clearance.test_duplicate_physical_clearance_constraints_are_ambiguous",
         "tests.test_pcb_mechanical_edge_clearance.test_competing_rule_for_exact_same_scope_keeps_coverage_incomplete",
         "tests.test_pcb_mechanical_edge_clearance.test_source_bound_scan_reports_missing_requirement_rule_and_policy_off",
-        "tests.test_pcb_mechanical_edge_clearance_native.test_native_drc_detects_clearance_fault_and_accepts_control"
+        "tests.test_pcb_mechanical_edge_clearance_native.test_native_drc_detects_clearance_fault_and_accepts_control",
+        "tests.test_pcb_mechanical_edge_clearance_native.test_native_drc_mechanical_rule_precedence"
       ],
       "valid_control_fixtures": [
+        "tests.test_pcb_mechanical_edge_precedence.test_earlier_general_rule_does_not_override_the_mapped_rule",
+        "tests.test_pcb_mechanical_edge_precedence.test_later_opposite_courtyard_or_other_constraint_is_disjoint",
+        "tests.test_pcb_mechanical_edge_precedence.test_conditional_only_rule_requires_verified_version_or_sufficient_anchor",
+        "tests.test_pcb_mechanical_edge_precedence.test_sufficient_unconditional_hole_clearance_is_a_radius_control",
         "tests.test_pcb_mechanical_edge_clearance.test_project_authored_minimum_is_covered_by_exact_native_rule",
         "tests.test_pcb_mechanical_edge_clearance.test_requirement_map_rejects_duplicate_side_or_rule_identity",
-        "tests.test_pcb_mechanical_edge_clearance_native.test_native_drc_detects_clearance_fault_and_accepts_control"
+        "tests.test_pcb_mechanical_edge_clearance_native.test_native_drc_detects_clearance_fault_and_accepts_control",
+        "tests.test_pcb_mechanical_edge_clearance_native.test_native_drc_mechanical_rule_precedence"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [

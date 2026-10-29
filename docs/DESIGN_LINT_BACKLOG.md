@@ -13378,9 +13378,10 @@ control are documented in the
 - **Predicate:** For each project-authored front or back courtyard minimum,
   require the named source-bound `physical_clearance` rule to target that exact
   courtyard layer and `Edge.Cuts`, enforce the exact positive minimum, retain
-  blocking severity, and have no second rule with the same exact scope. The
-  review candidate reports the authored expectation, observed native rule, and
-  source and DRC evidence digests.
+  blocking severity, have no competing or potentially overriding later rule,
+  and have a sufficient or verified native search radius. The review candidate
+  reports the authored expectation, observed native rule, and source and DRC
+  evidence digests.
 - **Boundary:** The project owner selects the mechanical requirement and
   custom rule name. This check confirms rule coverage; KiCad DRC measures the
   actual board geometry. Neither result proves enclosure fit, manufacturing
@@ -13394,6 +13395,10 @@ control are documented in the
   `KICAD_RUN_NATIVE_PCB_FIXTURES`. The boards contain no project source; see
   the
   [synthetic fixture note](../tests/fixtures/design_lint/pcb-mechanical-edge-clearance/README.md).
+  Native controls found that insufficient unconditional physical or physical-hole
+  clearance minima can suppress the fault, regardless of rule order or layer.
+  The conditional-only fixture reported the fault on 10.0.5 but not 10.0.0;
+  the check requires a sufficient unconditional radius for unverified versions.
 - **Determinism:** LINT-080 compares complete source-bound reports for the
   weak-rule fault and exact-rule control across three independent Python
   processes. The map, project, board, DRC receipt, and netlist match; the native
@@ -14031,9 +14036,9 @@ control are documented in the
   `fromTo` selectors remain reviewable even when their mapped nets differ.
   The native edge-clearance experiment passed on KiCad 10.0.0 and 10.0.5;
   its [fixture notes](../tests/fixtures/design_lint/drc-rule-precedence/README.md)
-  describe its narrow scope. Audit the mechanical-edge check separately and
-  establish stronger source-bound disjointness evidence before broadening this
-  result.
+  describe its narrow scope. LINT-209 separately covers mechanical rule
+  precedence and search-radius limitations. Establish stronger source-bound
+  disjointness evidence before broadening this result.
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.
   The full local package gate passed on 2026-10-08 (2,266 tests passed, 54
   skipped, 2,030 subtests passed), including source and wheel builds,
