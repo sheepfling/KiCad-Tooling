@@ -3040,9 +3040,10 @@ probe observations. Schema 11 adds rule-area evidence; schema 12 adds source-
 bound footprint identity, fitted state, board origin, canonical orientation,
 and board side; schema 13 adds native footprint value fields. Schema 14 adds
 exact touch-pad-to-filled-copper clearance observations and the digest of the
-explicit requests supplied to the native probe. Current source-bound KiCad 10
-geometry captures use schema 14. These additions retain the earlier aperture
-and zone-contour evidence.
+explicit requests supplied to the native probe. Schema 15 adds native arc
+midpoints and centerline lengths. Current source-bound KiCad 10 geometry
+captures use schema 15. These additions retain the earlier aperture and
+zone-contour evidence.
 The probe copies each native filled-zone polygon set and calls KiCad's
 `SHAPE_POLY_SET.Unfracture()` before recording its outlines and holes. This
 preserves clearances that KiCad's filled result represents as fractured outline
@@ -3051,8 +3052,10 @@ effective pad/via copper shapes for contact evidence and records other native
 tracks connected at each endpoint. This
 supports exact endpoint-adjacency evidence on the pinned KiCad versions. It
 can resolve an explicitly mapped trace edge to one unique native track chain,
-and reports its ordered integer-nanometer centerline and length. Missing,
-branched, ambiguous, or arc-containing chains remain incomplete. Candidate
+and reports its ordered integer-nanometer centerline and length. Schema 15
+also records native arc midpoint and length evidence, so measured arc chains
+can be resolved; arcs in older snapshots remain incomplete. Missing, branched,
+or ambiguous chains remain incomplete. Candidate
 tracks come from KiCad's
 [`CONNECTIVITY_DATA.GetConnectedTracks`](https://docs.kicad.org/doxygen-python-10.0/classpcbnew_1_1CONNECTIVITY__DATA.html)
 API, then native effective track shapes are checked at the exact endpoint.
@@ -3094,7 +3097,8 @@ evidence, produces a review candidate. The default is `review`; project
 policy can select `block` or `off`, and exact fingerprint ignores remain
 available.
 
-The native measurement is carried by source-bound PCB snapshot schema 14.
+The native measurement is carried by source-bound PCB snapshot schema 14 or
+later.
 The snapshot records the exact pad, requested nets and layer, matching-zone
 count, closest zone UUID, measured integer-nanometer distance, and a digest of
 the canonical probe request set. The request set is generated from the
@@ -3811,8 +3815,8 @@ and footprint restrictions. A missing or duplicate name, changed geometry,
 changed layer, changed restriction, or native snapshot older than schema 11 is
 incomplete. Snapshot schema 12 and later retain that keepout evidence and add
 source-bound footprint placement identity, origin, orientation, and board side.
-Snapshot schema 13 adds the native footprint value; schema 14 retains that
-evidence. The project
+Snapshot schema 13 adds the native footprint value; schemas 14 and 15 retain
+that evidence. The project
 owner must author the digest, layers, flags, and basis
 from an independent approved source; do not generate the requirement by
 accepting whatever shape happens to be on the board.

@@ -150,6 +150,9 @@ class PcbSwitchingLoopRouteEdgeCoverage(StrictModel):
     kind: Literal["trace", "component", "plane"]
     status: Literal["RESOLVED", "DECLARED", "INCOMPLETE"]
     track_uuids: tuple[NativePcbUuid, ...] = ()
+    track_geometry_kinds: tuple[Literal["segment", "arc"], ...] = ()
+    track_midpoints_nm: tuple[tuple[int, int] | None, ...] = ()
+    track_lengths_nm: tuple[PositiveCount | None, ...] = ()
     vertices_nm: tuple[tuple[int, int], ...] = ()
     length_nm: NonNegativeCount | None = None
     plane_zone_uuid: NativePcbUuid | None = None
@@ -165,6 +168,9 @@ class PcbSwitchingLoopRouteEdgeCoverage(StrictModel):
             if (
                 self.length_nm is None
                 or len(self.vertices_nm) != len(self.track_uuids) + 1
+                or len(self.track_geometry_kinds) != len(self.track_uuids)
+                or len(self.track_midpoints_nm) != len(self.track_uuids)
+                or len(self.track_lengths_nm) != len(self.track_uuids)
                 or self.issue is not None
                 or self.plane_zone_uuid is not None
                 or self.plane_island_index is not None
@@ -173,10 +179,32 @@ class PcbSwitchingLoopRouteEdgeCoverage(StrictModel):
                 raise ValueError(
                     "A resolved trace edge needs a length, one more vertex than tracks, and no issue"
                 )
+            for kind, midpoint, length in zip(
+                self.track_geometry_kinds,
+                self.track_midpoints_nm,
+                self.track_lengths_nm,
+                strict=True,
+            ):
+                if kind == "segment" and midpoint is not None:
+                    raise ValueError("A resolved segment cannot have an arc midpoint")
+                if kind == "arc" and (midpoint is None or length is None):
+                    raise ValueError("A resolved arc needs midpoint and native length evidence")
+                if length is None:
+                    raise ValueError("A resolved trace track needs a measured centerline length")
+            if (
+                sum(length for length in self.track_lengths_nm if length is not None)
+                != self.length_nm
+            ):
+                raise ValueError(
+                    "Resolved trace length must equal the sum of measured track lengths"
+                )
         elif self.status == "DECLARED":
             if (
                 self.kind == "trace"
                 or self.track_uuids
+                or self.track_geometry_kinds
+                or self.track_midpoints_nm
+                or self.track_lengths_nm
                 or self.vertices_nm
                 or self.length_nm is not None
             ):
@@ -205,6 +233,8 @@ class PcbSwitchingLoopRouteEdgeCoverage(StrictModel):
         else:
             if self.issue is None:
                 raise ValueError("An incomplete route edge must explain the evidence gap")
+            if self.track_geometry_kinds or self.track_midpoints_nm or self.track_lengths_nm:
+                raise ValueError("An incomplete route edge cannot claim measured track geometry")
             if self.kind == "plane":
                 if (self.plane_zone_uuid is None) != (self.plane_island_index is None):
                     raise ValueError(

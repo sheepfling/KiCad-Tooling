@@ -18,6 +18,7 @@ from tests.design_lint_fixtures.pcb_switching_loop_reports import (
 )
 from tests.design_lint_fixtures.pcb_switching_loop_routes import (
     contoured_snapshot,
+    legacy_arc_snapshot,
     long_routed_snapshot,
     route_track,
     routed_mapping,
@@ -33,6 +34,7 @@ __all__ = [
     "contoured_snapshot",
     "coverage",
     "design_lint_report",
+    "legacy_arc_snapshot",
     "long_routed_snapshot",
     "loop_pad",
     "mapping",

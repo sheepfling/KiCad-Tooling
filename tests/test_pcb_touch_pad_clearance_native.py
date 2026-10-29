@@ -142,7 +142,7 @@ def test_native_measurement_is_bound_to_exact_pad_zone_and_authored_request(
     assert command.returncode == 0, command.stderr or command.error
     assert observed is not None
     assert observed.kicad_version == expected_version
-    assert observed.schema_version == "14"
+    assert observed.schema_version == "15"
     assert observed.probe_sha256 == expected_probe_sha256()
     assert native_pcb_command_matches(
         command,

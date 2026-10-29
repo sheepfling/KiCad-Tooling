@@ -15190,17 +15190,14 @@ control are documented in the
 
 #### LINT-039 — Explicit switching-loop edge and copper-geometry evidence
 
-- **Status:** Implemented v1 within the documented boundary. Native track
-  geometry-kind, endpoint pad/via contacts, and same-layer track adjacency use
-  PCB snapshot schema 8; schema 9 adds canonical integer-nanometer filled-zone
-  island outlines and holes; the active probe now emits schema 10, adding
-  target aperture shape and diameter to access-probe observations. Current
-  source-bound geometry scans require schema 10. The opt-in edge map resolves a unique trace chain
-  and measures its centerline length; plane edges identify one shared island
-  and report its contour area. The exact-version native fixture lane passed on
-  digest-pinned KiCad 10.0.0 and 10.0.5, and the installed-wheel external-project
-  gate passed on 2026-09-29. Component internals and full routed-loop area remain
-  explicitly deferred.
+- **Status:** Implemented v1 within the documented boundary. The active
+  source-bound PCB probe emits schema 15, including native arc midpoint and
+  centerline-length evidence. The opt-in edge map resolves a unique trace chain
+  containing segments or measured arcs; arcs in older snapshots remain
+  incomplete. Plane edges identify one shared island and report its contour
+  area. Component internals and full routed-loop area remain explicitly
+  deferred. The schema-15 arc fixture is updated for the exact-version native
+  lane; its hosted result is pending.
 - **Problem:** LINT-023's pad-center polygon is deterministic but does not follow
   the copper route. The native snapshot retains track endpoints, pad/via
   contacts, and native track adjacency, yet the ordered pad list does not say
@@ -15214,9 +15211,9 @@ control are documented in the
   and report ordered integer-nanometer vertices and length. Component edges
   remain explicit transitions between mapped pins; plane edges verify a shared
   native filled island and report its contour area when schema 9 evidence is
-  present. Return `INCOMPLETE` for
-  missing edge evidence, unsupported arc geometry, branch ambiguity, stale
-  pads, or a route that cannot be uniquely resolved. The current result reports
+  present. Return `INCOMPLETE` for missing edge evidence, unmeasured legacy
+  arcs, branch ambiguity, stale pads, or a route that cannot be uniquely
+  resolved. Schema 15 uses native arc midpoint and length observations. The result reports
   the pad-center area proxy and per-edge trace lengths; it does not calculate a
   full routed-loop polygon or area. The contour area is not a current-density,
   parasitic, or electrical-performance estimate.
@@ -15239,8 +15236,8 @@ control are documented in the
   evidence to contain a zone identity and positive contour area. The fixture maps a foreign-net
   through-hole VDD pad inside the plane; the native hole ring around it has exact bounds
   12.3995–13.6005 mm on both axes, and the pad remains outside the GND connected-island inventory.
-  The lane also confirms the 15 mm route chain, keeps arc geometry unsupported, and reports the
-  split plane as incomplete. A first native run exposed that the synthetic front-plane map placed
+  The lane also confirms the 15 mm route chain and reports the split plane as
+  incomplete. A first native run exposed that the synthetic front-plane map placed
   its return pad outside its zone; the fixture zone was extended to cover that mapped pad before the
   successful version matrix. Python fixtures verify exact hole-subtracted area and that multiple
   candidate islands remain ambiguous. Contours do not establish electrical current distribution. See
@@ -15248,7 +15245,8 @@ control are documented in the
   [KiCad `SHAPE.Collide` API](https://docs.kicad.org/doxygen-python-10.0/classpcbnew_1_1SHAPE.html),
   [`PAD.GetEffectiveShape`](https://docs.kicad.org/doxygen-python-10.0/classpcbnew_1_1PAD.html), and
   [`CONNECTIVITY_DATA.GetConnectedTracks`](https://docs.kicad.org/doxygen-python-10.0/classpcbnew_1_1CONNECTIVITY__DATA.html)
-  references.
+  references. Schema 15 arc midpoint and length capture is covered by synthetic
+  regressions; the exact-version native acceptance remains pending.
 - **Boundary:** This comparison must not infer that similar nets should join,
   select a current path through a branch, or claim loop inductance, return
   adequacy, emissions, thermal performance, or electrical behavior. A routed

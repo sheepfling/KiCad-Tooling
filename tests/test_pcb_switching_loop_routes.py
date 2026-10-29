@@ -18,6 +18,7 @@ from tests.design_lint_fixtures.pcb_switching_loop import (
     contoured_snapshot,
     coverage,
     design_lint_report,
+    legacy_arc_snapshot,
     long_routed_snapshot,
     routed_mapping,
     routed_snapshot,
@@ -68,12 +69,11 @@ class PcbSwitchingLoopRouteTests(unittest.TestCase):
         self.assertEqual(result.route_edges[0].vertices_nm[-1], (1_000_000, 0))
         self.assertEqual(result.route_edges[0].length_nm, 1_000_000)
 
-    def test_missing_branching_and_arc_trace_paths_are_incomplete(self) -> None:
+    def test_missing_and_branching_trace_paths_are_incomplete(self) -> None:
         cases = (
             (routed_snapshot(disconnected=True), "No native track is observed"),
             (routed_snapshot(branch=True), "More than one native track chain"),
             (routed_snapshot(spur=True), "connected branch"),
-            (routed_snapshot(arc=True), "unsupported arc geometry"),
         )
         for observed, expected_issue in cases:
             with self.subTest(expected_issue=expected_issue):
@@ -81,6 +81,23 @@ class PcbSwitchingLoopRouteTests(unittest.TestCase):
                 self.assertEqual(result.route_status, "INCOMPLETE")
                 self.assertEqual(result.route_edges[0].status, "INCOMPLETE")
                 self.assertIn(expected_issue, result.route_edges[0].issue)
+
+    def test_native_arc_midpoint_and_length_resolve_in_schema_15(self) -> None:
+        result = pcb_switching_loop_entries(routed_mapping(), routed_snapshot(arc=True))[0]
+        trace = result.route_edges[0]
+
+        self.assertEqual(trace.status, "RESOLVED")
+        self.assertEqual(trace.track_geometry_kinds, ("arc",))
+        self.assertEqual(trace.track_midpoints_nm, ((500_000, -500_000),))
+        self.assertEqual(trace.track_lengths_nm, (1_570_796,))
+        self.assertEqual(trace.vertices_nm, ((0, 0), (1_000_000, 0)))
+        self.assertEqual(trace.length_nm, 1_570_796)
+
+    def test_arc_without_schema_15_measurement_remains_incomplete(self) -> None:
+        result = pcb_switching_loop_entries(routed_mapping(), legacy_arc_snapshot())[0]
+
+        self.assertEqual(result.route_edges[0].status, "INCOMPLETE")
+        self.assertIn("require native PCB snapshot schema 15", result.route_edges[0].issue)
 
     def test_multilayer_trace_joins_at_an_observed_via_and_checks_scope(self) -> None:
         observed = via_routed_snapshot()

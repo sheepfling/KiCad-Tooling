@@ -79,7 +79,7 @@ def pcb_reference_plane_via_fixture_lane(
             if snapshot is None:
                 raise ValueError("Native PCB reference-via fixture returned no snapshot")
             if (
-                snapshot.schema_version not in {"10", "11", "12", "13", "14"}
+                snapshot.schema_version not in {"10", "11", "12", "13", "14", "15"}
                 or snapshot.board_sha256 != source_hash
                 or snapshot.kicad_version != config.kicad_version
                 or snapshot.image != config.image
@@ -251,7 +251,7 @@ def pcb_reference_plane_narrow_void_fixture_lane(
                 if snapshot is None:
                     raise ValueError(f"Native reference-plane {case} returned no snapshot")
                 if (
-                    snapshot.schema_version not in {"10", "11", "12", "13", "14"}
+                    snapshot.schema_version not in {"10", "11", "12", "13", "14", "15"}
                     or snapshot.board_sha256 != source_hash
                     or snapshot.kicad_version != config.kicad_version
                     or snapshot.image != config.image

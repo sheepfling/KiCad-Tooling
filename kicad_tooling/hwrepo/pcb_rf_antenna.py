@@ -162,7 +162,7 @@ def _check_keepout(
     if keepout is None:
         return (), None, None, (), (None, None, None, None, None), ()
     if (
-        snapshot.schema_version not in {"12", "13", "14"}
+        snapshot.schema_version not in {"12", "13", "14", "15"}
         or "footprints" not in snapshot.model_fields_set
     ):
         issues.append(

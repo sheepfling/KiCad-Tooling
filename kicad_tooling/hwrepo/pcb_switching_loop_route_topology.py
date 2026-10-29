@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import deque
 from collections.abc import Mapping
 from math import isqrt
+from typing import Literal
 
 from .pcb_connectivity_observations import (
     PcbPadConnectivityObservation,
@@ -112,7 +113,7 @@ def resolve_switching_loop_trace_edge(
     endpoint_issue = mapped_endpoint_issue(edge, specification, pads)
     if endpoint_issue is not None:
         return incomplete_route_edge(index, edge, endpoint_issue)
-    if snapshot.schema_version not in {"8", "9", "10", "11", "12", "13", "14"}:
+    if snapshot.schema_version not in {"8", "9", "10", "11", "12", "13", "14", "15"}:
         return incomplete_route_edge(
             index, edge, "Native track endpoint-contact evidence requires PCB snapshot schema 8+"
         )
@@ -290,15 +291,10 @@ def resolve_switching_loop_trace_edge(
                 track_path,
             )
 
-    path_tracks = tuple(tracks_by_id[track_id] for track_id in track_path)
-    if any(track.geometry_kind != "segment" for track in path_tracks):
-        return incomplete_route_edge(
-            index,
-            edge,
-            "The resolved path contains unsupported arc geometry",
-            track_path,
-        )
     vertices: list[tuple[int, int]] = []
+    geometry_kinds: list[Literal["segment", "arc"]] = []
+    midpoints: list[tuple[int, int] | None] = []
+    track_lengths: list[int] = []
     length_nm = 0
     for track_id, from_node, to_node in zip(track_path, node_path[:-1], node_path[1:], strict=True):
         track = tracks_by_id[track_id]
@@ -321,7 +317,29 @@ def resolve_switching_loop_trace_edge(
         if not vertices:
             vertices.append(ordered[0])
         vertices.append(ordered[1])
-        length_nm += _rounded_segment_length_nm(*ordered)
+        if track.geometry_kind not in {"segment", "arc"}:
+            return incomplete_route_edge(
+                index, edge, "Resolved route track has no supported geometry kind", track_path
+            )
+        geometry_kinds.append(track.geometry_kind)
+        midpoints.append(track.arc_mid_nm)
+        if track.geometry_kind == "segment":
+            track_length_nm = _rounded_segment_length_nm(*ordered)
+        elif (
+            snapshot.schema_version == "15"
+            and track.arc_mid_nm is not None
+            and track.arc_length_nm is not None
+        ):
+            track_length_nm = track.arc_length_nm
+        else:
+            return incomplete_route_edge(
+                index,
+                edge,
+                "Arc centerline length and midpoint require native PCB snapshot schema 15",
+                track_path,
+            )
+        track_lengths.append(track_length_nm)
+        length_nm += track_length_nm
     return PcbSwitchingLoopRouteEdgeCoverage(
         edge_index=index,
         from_pad=edge.from_pad,
@@ -329,6 +347,9 @@ def resolve_switching_loop_trace_edge(
         kind=edge.kind,
         status="RESOLVED",
         track_uuids=track_path,
+        track_geometry_kinds=tuple(geometry_kinds),
+        track_midpoints_nm=tuple(midpoints),
+        track_lengths_nm=tuple(track_lengths),
         vertices_nm=tuple(vertices),
         length_nm=length_nm,
     )

@@ -121,6 +121,10 @@ class NativeTrack(Protocol):
 
     def GetEnd(self) -> NativePoint: ...
 
+    def GetLength(self) -> int: ...
+
+    def GetMid(self) -> NativePoint: ...
+
     def GetEffectiveShape(self, layer: int) -> NativeShape | None: ...
 
 
@@ -402,6 +406,8 @@ class TrackObservation(TypedDict):
     start_nm: list[int]
     end_nm: list[int]
     geometry_kind: Literal["segment", "arc"]
+    arc_mid_nm: list[int] | None
+    arc_length_nm: int | None
     start_pads: list[str]
     end_pads: list[str]
     start_vias: list[str]
@@ -411,7 +417,7 @@ class TrackObservation(TypedDict):
 
 
 class NativeProbeSnapshot(TypedDict):
-    schema_version: Literal["14"]
+    schema_version: Literal["15"]
     board_sha256: str
     kicad_version: str
     zones_refilled: bool

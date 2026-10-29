@@ -107,7 +107,7 @@ def pcb_schematic_pcb_pad_net_fixture_lane(
                     expected_board_sha256=board_hash,
                     purpose=f"{case} schematic-to-PCB pad net comparison",
                 )
-                if observed_snapshot.schema_version not in {"12", "13", "14"}:
+                if observed_snapshot.schema_version not in {"12", "13", "14", "15"}:
                     raise ValueError(
                         "Native pad net comparison requires snapshot schema 12, 13, or 14"
                     )

@@ -77,7 +77,7 @@ def capture_verified_pcb_snapshot(
     if snapshot is None:
         raise ValueError(f"Native {purpose} returned no connectivity snapshot")
     if (
-        snapshot.schema_version not in {"10", "11", "12", "13", "14"}
+        snapshot.schema_version not in {"10", "11", "12", "13", "14", "15"}
         or snapshot.board_sha256 != expected_board_sha256
         or snapshot.kicad_version != context.config.kicad_version
         or snapshot.image != context.config.image

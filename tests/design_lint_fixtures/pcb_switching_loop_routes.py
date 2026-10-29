@@ -5,13 +5,17 @@ from __future__ import annotations
 from typing import Literal
 
 from kicad_tooling.hwrepo.models import (
-    PcbConnectivitySnapshot,
     PcbSwitchingLoopEdge,
     PcbSwitchingLoopMap,
     PcbSwitchingLoopRequirement,
     PcbTrackObservation,
     PcbViaObservation,
 )
+from kicad_tooling.hwrepo.pcb_connectivity_observations import (
+    PcbFootprintPlacementObservation,
+    PcbZoneFilledIslandObservation,
+)
+from kicad_tooling.hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from tests.design_lint_fixtures.pcb_switching_loop_core import (
     PLANE_UUID_2,
     requirement,
@@ -68,6 +72,8 @@ def route_track(
     start_tracks: tuple[str, ...] = (),
     end_tracks: tuple[str, ...] = (),
     geometry_kind: Literal["segment", "arc"] = "segment",
+    arc_mid_nm: tuple[int, int] | None = None,
+    arc_length_nm: int | None = None,
     layer: str = "F.Cu",
 ) -> PcbTrackObservation:
     return PcbTrackObservation(
@@ -78,6 +84,8 @@ def route_track(
         start_nm=start,
         end_nm=end,
         geometry_kind=geometry_kind,
+        arc_mid_nm=arc_mid_nm,
+        arc_length_nm=arc_length_nm,
         start_pads=start_pads,
         end_pads=end_pads,
         start_vias=start_vias,
@@ -178,7 +186,66 @@ def routed_snapshot(
                 start_pads=("U1.1",),
                 end_pads=("C1.1",),
                 geometry_kind="arc" if arc else "segment",
+                arc_mid_nm=(500_000, -500_000) if arc else None,
+                arc_length_nm=1_570_796 if arc else None,
             ),
+        )
+    if arc:
+        from kicad_tooling.hwrepo.pcb_touch_pad_clearance_models import (
+            PcbTouchPadClearanceObservation,
+        )
+
+        arc_zones = tuple(
+            zone.model_copy(
+                update={
+                    "filled_islands": (
+                        PcbZoneFilledIslandObservation(
+                            island_index=0,
+                            outline_nm=((0, 0), (1_000_000, 0), (1_000_000, 1_000_000)),
+                        ),
+                    )
+                }
+            )
+            for zone in base.zones
+        )
+        footprints = tuple(
+            PcbFootprintPlacementObservation(
+                reference=reference,
+                footprint=footprint,
+                dnp=False,
+                value=f"Synthetic {reference}",
+                position_nm=positions,
+                orientation_microdegrees=0,
+                side="F.Cu",
+            )
+            for reference, footprint, positions in (
+                ("U1", "Synthetic:IC_QFN", (0, 0)),
+                ("C1", "Synthetic:Cap_0603", (1_000_000, 100_000)),
+            )
+        )
+        touch_observation = PcbTouchPadClearanceObservation(
+            requirement_id="arc-fixture-unmeasured-touch-clearance",
+            pad="U1.1",
+            expected_pad_net="VDD",
+            observed_pad_net="VDD",
+            reference_net="GND",
+            layer="B.Cu",
+            matching_zone_count=1,
+            closest_zone_uuid=None,
+            distance_nm=None,
+            status="UNSUPPORTED_LAYER",
+        )
+        base = base.model_copy(update={"zones": arc_zones})
+        return PcbConnectivitySnapshot.model_validate(
+            {
+                **base.model_dump(),
+                "schema_version": "15",
+                "tracks": tracks,
+                "footprints": footprints,
+                "rule_areas": (),
+                "touch_pad_clearance_observations": (touch_observation,),
+                "touch_pad_clearance_requests_sha256": "d" * 64,
+            }
         )
     return PcbConnectivitySnapshot(
         schema_version="8",
@@ -196,6 +263,17 @@ def routed_snapshot(
         tracks=tracks,
         copper_layers=base.copper_layers,
     )
+
+
+def legacy_arc_snapshot() -> PcbConnectivitySnapshot:
+    data = routed_snapshot(arc=True).model_dump()
+    data["schema_version"] = "8"
+    data.pop("touch_pad_clearance_observations")
+    data.pop("touch_pad_clearance_requests_sha256")
+    for track in data["tracks"]:
+        track.pop("arc_mid_nm")
+        track.pop("arc_length_nm")
+    return PcbConnectivitySnapshot.model_validate(data)
 
 
 def long_routed_snapshot(segment_count: int) -> PcbConnectivitySnapshot:

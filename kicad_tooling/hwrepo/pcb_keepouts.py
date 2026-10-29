@@ -40,7 +40,7 @@ def pcb_keepout_entries(
         issues: list[str] = []
         area: PcbRuleAreaObservation | None = None
         matches = areas_by_name.get(requirement.name.casefold(), [])
-        if snapshot.schema_version not in {"11", "12", "13", "14"}:
+        if snapshot.schema_version not in {"11", "12", "13", "14", "15"}:
             issues.append("Native PCB snapshot schema 11 or newer rule-area evidence is required")
         elif not matches:
             issues.append(f"No native rule area is named {requirement.name!r}")

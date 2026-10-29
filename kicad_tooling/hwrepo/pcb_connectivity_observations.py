@@ -177,6 +177,8 @@ class PcbTrackObservation(StrictModel):
     start_nm: tuple[int, int]
     end_nm: tuple[int, int]
     geometry_kind: Literal["segment", "arc"] | None = None
+    arc_mid_nm: tuple[int, int] | None = None
+    arc_length_nm: PositiveCount | None = None
     start_pads: tuple[Reference, ...] = ()
     end_pads: tuple[Reference, ...] = ()
     start_vias: tuple[Digest, ...] = ()
@@ -186,6 +188,10 @@ class PcbTrackObservation(StrictModel):
 
     @model_validator(mode="after")
     def unique_endpoint_contacts(self) -> PcbTrackObservation:
+        if self.geometry_kind == "segment" and (
+            self.arc_mid_nm is not None or self.arc_length_nm is not None
+        ):
+            raise ValueError("Native segment geometry cannot carry arc midpoint or length")
         for label, contacts in (
             ("start pads", self.start_pads),
             ("end pads", self.end_pads),

@@ -39,7 +39,7 @@ def touch_pad_clearance_entries(
             issues.append("source-bound native netlist has no assigned schematic net for this pad")
         elif schematic_net != requirement.expected_pad_net:
             issues.append("authored touch-pad net differs from the native schematic netlist")
-        if snapshot.schema_version != "14" or (
+        if snapshot.schema_version not in {"14", "15"} or (
             "touch_pad_clearance_observations" not in snapshot.model_fields_set
         ):
             issues.append("exact native touch-pad clearance observations are unavailable")

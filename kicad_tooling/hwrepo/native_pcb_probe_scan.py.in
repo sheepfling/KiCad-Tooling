@@ -94,6 +94,7 @@ def main(
             raise ValueError(f"Unsupported native copper track geometry {item_class}")
         start = track.GetStart()
         end = track.GetEnd()
+        arc_mid = track.GetMid() if geometry_kind == "arc" else None
         row: TrackObservation = {
             "uuid": track.m_Uuid.AsString(),
             "net": track.GetNetname() or None,
@@ -102,6 +103,8 @@ def main(
             "start_nm": [int(start.x), int(start.y)],
             "end_nm": [int(end.x), int(end.y)],
             "geometry_kind": geometry_kind,
+            "arc_mid_nm": None if arc_mid is None else [int(arc_mid.x), int(arc_mid.y)],
+            "arc_length_nm": int(track.GetLength()) if geometry_kind == "arc" else None,
             "start_pads": [],
             "end_pads": [],
             "start_vias": [],
@@ -360,7 +363,7 @@ def main(
     )
 
     output: NativeProbeSnapshot = {
-        "schema_version": "14",
+        "schema_version": "15",
         "board_sha256": sha256(board_path),
         "kicad_version": native_pcbnew.GetBuildVersion(),
         "zones_refilled": zones_refilled,

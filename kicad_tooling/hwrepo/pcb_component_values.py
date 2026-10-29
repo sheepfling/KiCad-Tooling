@@ -13,7 +13,7 @@ def compare_schematic_pcb_values(
     snapshot: PcbConnectivitySnapshot,
 ) -> tuple[PcbComponentValueMismatch, ...]:
     """Review exact value-text differences for components fitted in both CAD sources."""
-    if snapshot.schema_version not in {"13", "14"}:
+    if snapshot.schema_version not in {"13", "14", "15"}:
         raise ValueError(
             "PCB component value comparison requires native snapshot schema 13 or later"
         )

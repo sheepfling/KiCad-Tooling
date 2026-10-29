@@ -151,7 +151,7 @@ def verify_switching_loop_geometry_cases(ctx: SwitchingLoopContext):
                     )
                 stack = {layer.casefold() for layer in snapshot.copper_layers}
                 if (
-                    snapshot.schema_version not in {"10", "11", "12", "13", "14"}
+                    snapshot.schema_version not in {"10", "11", "12", "13", "14", "15"}
                     or snapshot.board_sha256 != source_hash
                     or snapshot.kicad_version != ctx.config.kicad_version
                     or (snapshot.image != ctx.config.image)
@@ -263,6 +263,8 @@ def verify_switching_loop_geometry_cases(ctx: SwitchingLoopContext):
                     if (
                         len(tracks) != 1
                         or tracks[0].geometry_kind != "arc"
+                        or tracks[0].arc_mid_nm != (17500000, 5000000)
+                        or tracks[0].arc_length_nm != 19110085
                         or tracks[0].start_pads != ("U1.1",)
                         or (tracks[0].end_pads != ("C2.1",))
                         or tracks[0].start_vias
@@ -377,17 +379,21 @@ def verify_switching_loop_geometry_cases(ctx: SwitchingLoopContext):
                     if case_name == "arc-trace":
                         if (
                             trace_entry.route_status != "INCOMPLETE"
-                            or trace_entry.route_edges[0].status != "INCOMPLETE"
+                            or trace_entry.route_edges[0].status != "RESOLVED"
                             or trace_entry.route_edges[0].track_uuids
                             != tuple(item.uuid for item in tracks)
-                            or (trace_entry.route_edges[0].length_nm is not None)
-                            or (trace_entry.route_edges[0].issue is None)
-                            or ("unsupported arc geometry" not in trace_entry.route_edges[0].issue)
+                            or trace_entry.route_edges[0].track_geometry_kinds != ("arc",)
+                            or trace_entry.route_edges[0].track_midpoints_nm
+                            != ((17500000, 5000000),)
+                            or trace_entry.route_edges[0].track_lengths_nm != (19110085,)
+                            or trace_entry.route_edges[0].vertices_nm
+                            != ((10000000, 10000000), (25000000, 10000000))
+                            or trace_entry.route_edges[0].length_nm != 19110085
                         ):
                             raise ValueError(
-                                f"Native arc trace was not conservatively reported as unsupported: {trace_entry}"
+                                f"Native arc trace measurement differs from the exact fixture geometry: {trace_entry}"
                             )
-                        resolved_trace_length_nm = "UNSUPPORTED_ARC"
+                        resolved_trace_length_nm = trace_entry.route_edges[0].length_nm
                     elif (
                         trace_entry.route_status != "INCOMPLETE"
                         or trace_entry.route_edges[0].status != "RESOLVED"
