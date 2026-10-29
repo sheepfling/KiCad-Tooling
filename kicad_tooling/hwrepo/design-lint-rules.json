@@ -9825,9 +9825,11 @@
         "This audits configuration coverage only. KiCad native DRC remains responsible for geometry and physical-rule findings.",
         "Mapped differential-pair edge clearance supports a project-authored minimum only; it does not infer a universal signal-to-edge distance or prove EMI performance.",
         "The v1 rule parser supports exact A.inDiffPair('<selector>') conditions, mm or mil lengths that convert to integer nanometers, and pair suffixes _P/_N or +/-; other condition expressions or naming schemes remain uncovered.",
+        "A layer-scoped or malformed-layer rule is unsupported because the map has no layer scope. This audit does not resolve whether later custom rules override the matching rule.",
         "A matching rule does not prove the project-authored limit is appropriate for the interface, stack-up, impedance, or signal-integrity target. Additional unconfigured rules are not independently evaluated by this audit."
       ],
       "fault_fixtures": [
+        "tests.test_pcb_drc_layer_scope.test_pair_rule_layer_scope_is_incomplete",
         "tests.test_pcb_drc_coverage.test_missing_rules_are_a_coverage_gap",
         "tests.test_pcb_drc_coverage.test_wrong_bound_is_a_mismatch",
         "tests.test_pcb_drc_coverage.test_native_ignored_severity_is_not_credited_as_coverage",
@@ -9866,10 +9868,12 @@
         "This audits project-authored rule coverage and native endpoint connectivity only. KiCad native DRC remains responsible for measuring actual route length and skew.",
         "An authored edge-clearance minimum is checked against an exact A.NetName rule that applies to all copper on the mapped net, including branches; KiCad DRC measures geometry. The tooling does not infer critical nets or choose a universal edge margin.",
         "Edge-clearance net names containing quotes or control characters are rejected because they cannot be represented by the supported exact A.NetName selector syntax.",
+        "A layer-scoped or malformed-layer rule is unsupported because the map has no layer scope. This audit does not resolve whether later custom rules override the matching rule.",
         "A matching rule does not prove the authored endpoints, length limit, or skew limit are appropriate for the interface, timing budget, impedance, stack-up, or electrical safety target.",
         "Bundle pad selectors must resolve exactly to the mapped fitted board endpoints. Other condition syntax, incomplete netlists, non-mapped paths, off-board wiring, and physical continuity remain outside this audit."
       ],
       "fault_fixtures": [
+        "tests.test_pcb_drc_layer_scope.test_signal_rule_layer_scope_is_incomplete",
         "tests.test_pcb_signal_path_coverage.test_missing_wrong_duplicate_and_ignored_native_rules_are_incomplete",
         "tests.test_pcb_signal_path_edge_clearance.test_authored_edge_clearance_bound_requires_exact_selector_and_minimum",
         "tests.test_pcb_signal_path_edge_clearance.test_edge_rule_duplicates_and_ignored_severity_do_not_count_as_coverage",

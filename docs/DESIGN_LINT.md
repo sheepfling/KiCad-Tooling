@@ -3349,6 +3349,12 @@ ignored checks, unsupported syntax or units, and unrecognized pair names
 remain incomplete review findings. A missing `.kicad_dru` file is reported as
 missing coverage.
 
+These maps do not declare a layer scope. A matching native rule with a layer
+clause, or an invalid or repeated layer clause, therefore remains unsupported
+rather than counting as complete coverage. The audit does not resolve whether
+other later custom rules override the matching rule; inspect native rule
+precedence and DRC results for the actual board.
+
 `edge_clearance` is an optional project-authored minimum for the mapped pair.
 It must match one active native `(constraint edge_clearance (min ...))` rule
 under the exact `A.inDiffPair(...)` selector. KiCad DRC measures the copper to
@@ -3675,6 +3681,12 @@ board-edge margin. Ignored native DRC
 severities and a matching custom rule with `(severity ignore)` do not count as
 coverage. Absent or duplicate rules, changed bounds, unsupported syntax, stale
 endpoints, and disconnected pads remain review findings.
+
+The map has no layer scope, so a matching rule with a layer clause is
+unsupported even if its selector and bound match. Invalid or repeated layer
+clauses are also unsupported. This audit does not resolve whether later custom
+rules override the matching rule; inspect native rule precedence and DRC
+results for the actual board.
 
 For an authored edge-clearance rule, net names containing quotes or control
 characters are rejected because the exact supported `A.NetName` condition

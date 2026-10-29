@@ -104,6 +104,18 @@ def _compare_constraint(
             rule_names=(match.rule_name,),
             issue=match.issue,
         )
+    if match.layer is not None:
+        return PcbDrcConstraintCoverage(
+            constraint=name,
+            status="UNSUPPORTED",
+            expected_min_nm=expected_minimum,
+            expected_max_nm=expected_maximum,
+            rule_names=(match.rule_name,),
+            issue=(
+                f"Native rule is restricted to layer {match.layer!r}; "
+                "the authored requirement has no layer scope."
+            ),
+        )
     covered = match.minimum_nm == expected_minimum and match.maximum_nm == expected_maximum
     return PcbDrcConstraintCoverage(
         constraint=name,

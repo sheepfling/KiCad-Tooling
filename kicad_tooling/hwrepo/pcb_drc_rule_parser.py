@@ -108,13 +108,14 @@ def _parse_constraint(
     severity: str | None,
     severity_issue: str | None,
     layer: str | None,
+    layer_issue: str | None,
 ) -> NativeRuleConstraint | None:
     atoms = _atoms(source, span)
     if len(atoms) != 2 or atoms[1] not in {*RULE_SEVERITY, "physical_clearance"}:
         return None
     name = atoms[1]
     fields: dict[str, int] = {}
-    issue: str | None = None
+    issue: str | None = layer_issue
     for child in _children(source, span.start + 1, span.end - 1):
         values = _atoms(source, child)
         if not values or values[0] == "opt":
@@ -186,10 +187,15 @@ def native_constraints(source: str) -> tuple[NativeRuleConstraint, ...]:
                 severity = severity_atoms[1]
         layer_clauses = [node for node in children if _atoms(source, node)[:1] == ("layer",)]
         layer: str | None = None
-        if len(layer_clauses) == 1:
+        layer_issue: str | None = None
+        if len(layer_clauses) > 1:
+            layer_issue = "Native rule has multiple layer clauses."
+        elif layer_clauses:
             layer_atoms = _atoms(source, layer_clauses[0])
-            if len(layer_atoms) == 2:
+            if len(layer_atoms) == 2 and layer_atoms[1]:
                 layer = layer_atoms[1]
+            else:
+                layer_issue = "Unsupported native rule layer clause."
         for node in children:
             if _atoms(source, node)[:1] != ("constraint",):
                 continue
@@ -201,6 +207,7 @@ def native_constraints(source: str) -> tuple[NativeRuleConstraint, ...]:
                 severity,
                 severity_issue,
                 layer,
+                layer_issue,
             )
             if parsed is not None:
                 result.append(parsed)
