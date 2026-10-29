@@ -4,10 +4,10 @@ These synthetic boards test an authored 1.0 mm minimum copper-to-board-edge
 clearance for the exact `USB_D_P` / `USB_D_N` pair. The source is the small
 differential-pair board used by LINT-022, with a separate near-edge mutation.
 
-| Fixture | Track centerlines | Expected native DRC result |
-| --- | --- | --- |
-| `control.kicad_pcb` | y=10 mm and y=10.5 mm inside a 0–20 mm board height | No `copper_edge_clearance` violation |
-| `fault.kicad_pcb` | y=0.5 mm and y=1.0 mm beside the y=0 mm board edge | One or more `copper_edge_clearance` violations |
+| Fixture             | Track centerlines                                   | Expected native DRC result                     |
+| ------------------- | --------------------------------------------------- | ---------------------------------------------- |
+| `control.kicad_pcb` | y=10 mm and y=10.5 mm inside a 0–20 mm board height | No `copper_edge_clearance` violation           |
+| `fault.kicad_pcb`   | y=0.5 mm and y=1.0 mm beside the y=0 mm board edge  | One or more `copper_edge_clearance` violations |
 
 Both cases use the same `board.kicad_dru` rule and the exact
 `A.inDiffPair('USB_D_')` selector. The 1.0 mm threshold is synthetic test data,

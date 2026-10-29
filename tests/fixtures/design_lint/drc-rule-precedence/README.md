@@ -6,11 +6,11 @@ This tooling-owned experiment uses the near-edge synthetic board from
 `A.NetName == 'USB_D_P'` rule requires 1 mm. Each case uses the same board and
 settings; only rule order differs.
 
-| Rules | Expected `copper_edge_clearance` violations |
-| --- | --- |
-| Mapped rule alone | One or more |
-| Mapped rule followed by unconditional ignore | Zero |
-| Unconditional ignore followed by mapped rule | One or more |
+| Rules                                        | Expected `copper_edge_clearance` violations |
+| -------------------------------------------- | ------------------------------------------- |
+| Mapped rule alone                            | One or more                                 |
+| Mapped rule followed by unconditional ignore | Zero                                        |
+| Unconditional ignore followed by mapped rule | One or more                                 |
 
 On the digest-pinned KiCad 10.0.0 and 10.0.5 images, each case was run twice.
 The mapped-only and mapped-last cases each produced one edge violation per
@@ -21,13 +21,13 @@ does it establish an electrical or physical design requirement.
 
 Input SHA-256 values:
 
-| Input | SHA-256 |
-| --- | --- |
+| Input                                                 | SHA-256                                                            |
+| ----------------------------------------------------- | ------------------------------------------------------------------ |
 | `../differential-pair-edge-clearance/fault.kicad_pcb` | `a8c166d11f4da490c371981a5e10f99b4daa83e7d93ef47e03099db3a7fa0ffc` |
 | `../differential-pair-edge-clearance/board.kicad_pro` | `8a425ec5146b893183eb7105d263ccab994c53d1775d8385e42407ca5bdb741d` |
-| `mapped-only.kicad_dru` | `3e0317545b38a59063859e14728ec6b6b488f1ae8c4372696b789d98bfee8051` |
-| `general-last.kicad_dru` | `42b59f329ab2bb6bcc7aed4ac4f8f019efe28d232a33db512870fb13cf1ccc3d` |
-| `mapped-last.kicad_dru` | `b1b1368d81af14ff66704ffdde59eac6b576b58336437587438469e756d9fdbe` |
+| `mapped-only.kicad_dru`                               | `3e0317545b38a59063859e14728ec6b6b488f1ae8c4372696b789d98bfee8051` |
+| `general-last.kicad_dru`                              | `42b59f329ab2bb6bcc7aed4ac4f8f019efe28d232a33db512870fb13cf1ccc3d` |
+| `mapped-last.kicad_dru`                               | `b1b1368d81af14ff66704ffdde59eac6b576b58336437587438469e756d9fdbe` |
 
 Run from the tooling checkout:
 

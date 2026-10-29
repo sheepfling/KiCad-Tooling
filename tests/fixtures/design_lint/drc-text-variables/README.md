@@ -11,13 +11,13 @@ reported at least one copper-edge violation, and both substituted overrides
 reported none. The test compares the native results only; no project-specific
 requirement or physical design approval follows from this synthetic example.
 
-| Input | SHA-256 |
-| --- | --- |
+| Input                                                 | SHA-256                                                            |
+| ----------------------------------------------------- | ------------------------------------------------------------------ |
 | `../differential-pair-edge-clearance/fault.kicad_pcb` | `a8c166d11f4da490c371981a5e10f99b4daa83e7d93ef47e03099db3a7fa0ffc` |
-| `board.kicad_pro` | `c86b6ba3c14b91e9c581e5fcdd7b47503ceec69965874e3c95383f629ac58205` |
-| `control.kicad_dru` | `3e0317545b38a59063859e14728ec6b6b488f1ae8c4372696b789d98bfee8051` |
-| `type-override.kicad_dru` | `e3bc9b39dca9bdbadb052958aed103ca498074a35560b00a01a02f554358875c` |
-| `condition-override.kicad_dru` | `36027adfa8c61b01f7a6f042efadcc1c95776d124bf8aa042a1634824217df59` |
+| `board.kicad_pro`                                     | `c86b6ba3c14b91e9c581e5fcdd7b47503ceec69965874e3c95383f629ac58205` |
+| `control.kicad_dru`                                   | `3e0317545b38a59063859e14728ec6b6b488f1ae8c4372696b789d98bfee8051` |
+| `type-override.kicad_dru`                             | `e3bc9b39dca9bdbadb052958aed103ca498074a35560b00a01a02f554358875c` |
+| `condition-override.kicad_dru`                        | `36027adfa8c61b01f7a6f042efadcc1c95776d124bf8aa042a1634824217df59` |
 
 Run from the tooling checkout:
 
