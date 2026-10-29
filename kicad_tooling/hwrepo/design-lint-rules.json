@@ -6408,6 +6408,7 @@
       "limitations": [
         "Recognition uses bounded Ethernet transmit/receive pin-function aliases on fitted U/IC references with a complete native inventory. Connectors, DNP components, duplicate roles, incomplete inventories, and multiply assigned pins are unclassified.",
         "An open data pin can be intentional when a lane or interface is unused. The default is off because native pin functions do not establish that the lane is required; a project may enable REVIEW or BLOCK after reviewing its interface.",
+        "The generic bus.complementary_pair_assignment rule already reviews this incomplete-pair condition. This rule adds a more direct open-pin and mate description, not a new defect class; disable the generic rule when opting into this one to avoid duplicate findings. Reviewer preference for the narrower wording has not been measured.",
         "The finding does not establish Ethernet use, a required controller-to-PHY connection, routed copper, external wiring, or physical continuity."
       ],
       "fault_fixtures": [

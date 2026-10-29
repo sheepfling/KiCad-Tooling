@@ -88,6 +88,30 @@ def test_rule_defaults_off_and_supports_review_block_and_exact_ignore() -> None:
     default = evaluate("synthetic-ethernet-data-open", coach(source), DesignLintPolicy())
     finding = next(item for item in default.findings if item.rule_id == RULE_ID)
     assert finding.mode == "off"
+    assert any(item.rule_id == "bus.complementary_pair_assignment" for item in default.findings)
+
+    focused = evaluate(
+        "synthetic-ethernet-data-open",
+        coach(source),
+        DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id=RULE_ID, mode="review", reason="Use the focused Ethernet prompt"
+                ),
+                DesignLintRuleOverride(
+                    rule_id="bus.complementary_pair_assignment",
+                    mode="off",
+                    reason="Avoid a duplicate generic pair prompt",
+                ),
+            )
+        ),
+    )
+    visible_findings = tuple(
+        item
+        for item in focused.findings
+        if item.rule_id in {RULE_ID, "bus.complementary_pair_assignment"} and item.mode != "off"
+    )
+    assert tuple(item.rule_id for item in visible_findings) == (RULE_ID,)
 
     reviewed = evaluate(
         "synthetic-ethernet-data-open",

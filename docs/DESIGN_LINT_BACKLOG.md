@@ -13847,14 +13847,20 @@ control are documented in the
 - **Status:** Implemented as the default-off `bus.ethernet_data_unconnected_pin`
   heuristic. Projects may enable `review`, promote it to `block`, turn it off,
   or ignore an exact finding fingerprint.
-- **Gap:** Ethernet checks recognize crossed labels, named-rail assignments,
-  and one-sided open MDC/MDIO management pairs. They did not localize an open
-  transmit or receive pin when its complementary data mate was assigned.
+- **Gap:** The generic `bus.complementary_pair_assignment` rule already
+  catches this condition, but reports the TX/RX pair as incomplete rather than
+  naming the open side and assigned mate in the subject. This rule offers a
+  more direct pin-level review description; it does not add a defect class.
 - **Predicate:** For a fitted U/IC reference with a complete native
   pin-function inventory, recognize exactly one supported positive and
   negative function for one TX or RX pair. Emit one candidate only when one
   side has no net assignment and its mate has exactly one. Skip DNP devices,
   duplicate roles, incomplete inventories, and ambiguous assignments.
+- **Incremental value:** This is a review-localization option over the generic
+  complementary-pair finding, not independent detection. The rule is off by
+  default. If a project enables it for Ethernet, turn off the overlapping
+  generic rule for that scope to avoid duplicate findings. Reviewer effort and
+  preference for the narrower wording have not been measured.
 - **Boundary:** A lane can be unused or intentionally partial. Pin functions
   do not establish an Ethernet connection requirement, endpoint mapping,
   routed copper, external wiring, or physical continuity. The default remains

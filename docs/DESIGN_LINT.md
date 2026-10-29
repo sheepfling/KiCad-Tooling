@@ -1010,6 +1010,10 @@ devices, duplicate roles, incomplete inventories, and ambiguous assignments are 
 functions do not establish that the lane is required, its endpoint, routed copper, external wiring,
 or physical continuity. Tooling-owned native fault/control schematics are listed in the
 [fixture notes](../tests/fixtures/design_lint/ethernet-data-unconnected-native/README.md).
+The generic `bus.complementary_pair_assignment` rule already reports this incomplete-pair
+condition. This rule offers a more direct open-pin and mate description; enabling both can
+produce duplicate findings. Disable the generic rule when opting into this narrower Ethernet
+review.
 
 ```sh
 .venv/bin/python -I -m pytest tests/test_ethernet_data_unconnected_pins.py \
