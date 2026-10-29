@@ -27,6 +27,11 @@ def regulator_required_passive_candidates(
         references = (
             requirement.regulator.reference,
             *(item.component.reference for item in requirement.required_passives),
+            *(
+                passive.component.reference
+                for alternative in requirement.approved_alternatives
+                for passive in alternative.required_passives
+            ),
         )
         findings.append(
             Candidate(
@@ -44,6 +49,10 @@ def regulator_required_passive_candidates(
                     "required_passive_roles": tuple(
                         f"{item.role}:{item.component.reference}"
                         for item in requirement.required_passives
+                    ),
+                    "approved_alternatives": tuple(
+                        f"{alternative.id}:{alternative.basis}"
+                        for alternative in requirement.approved_alternatives
                     ),
                     "components": tuple(sorted(references, key=str.casefold)),
                     "issues": issues,

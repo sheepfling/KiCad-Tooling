@@ -43,6 +43,14 @@ class RegulatorRequiredPassive(StrictModel):
     component: RegulatorPassiveComponentRequirement
 
 
+class RegulatorPassiveTopologyAlternative(StrictModel):
+    """One explicitly approved alternative passive set for the same regulator."""
+
+    id: Identifier
+    basis: NonEmptyText
+    required_passives: Annotated[tuple[RegulatorRequiredPassive, ...], Field(min_length=1)]
+
+
 class RegulatorPassiveTopologyRequirement(StrictModel):
     """One regulator application topology required by project-reviewed evidence."""
 
@@ -50,15 +58,23 @@ class RegulatorPassiveTopologyRequirement(StrictModel):
     basis: NonEmptyText
     regulator: RegulatorPassiveComponentRequirement
     required_passives: Annotated[tuple[RegulatorRequiredPassive, ...], Field(min_length=1)]
+    approved_alternatives: tuple[RegulatorPassiveTopologyAlternative, ...] = ()
 
     @model_validator(mode="after")
     def unique_topology_components(self) -> RegulatorPassiveTopologyRequirement:
-        references = (
-            self.regulator.reference,
-            *(item.component.reference for item in self.required_passives),
+        variants = (
+            (self.id, self.required_passives),
+            *((item.id, item.required_passives) for item in self.approved_alternatives),
         )
-        if len({item.casefold() for item in references}) != len(references):
-            raise ValueError("Regulator passive topology component references must be unique")
+        if len({item[0].casefold() for item in variants}) != len(variants):
+            raise ValueError("Regulator passive topology variant IDs must be unique")
+        for _, passives in variants:
+            references = (
+                self.regulator.reference,
+                *(item.component.reference for item in passives),
+            )
+            if len({item.casefold() for item in references}) != len(references):
+                raise ValueError("Regulator passive topology component references must be unique")
         return self
 
 

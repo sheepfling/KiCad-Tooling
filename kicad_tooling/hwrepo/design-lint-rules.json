@@ -9391,23 +9391,25 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "Project-authored regulator and passive identity/pin map compared with the source-bound native netlist contract",
-      "predicate": "For each explicitly mapped regulator application, report if the regulator or any required passive is absent, marked DNP, or differs in exact value, symbol, footprint, optional PART_ID, complete native pin inventory, or expected pin-to-net assignments. A map may explicitly require pins to remain unconnected.",
+      "predicate": "For each explicitly mapped regulator application, report if the regulator is absent or differs from its exact identity and pin map, or if none of the explicitly authored required-passive topology variants matches exact component identity, fitted state, complete native pin inventory, and expected pin-to-net assignments. A map may explicitly require pins to remain unconnected.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; exact project catalog version is enforced by native export, while this synthetic regression lane exercises the typed netlist boundary"
       ],
       "limitations": [
         "The project-authored basis and required topology are not verified against datasheets or application notes by this check; reviewers must approve them independently.",
         "Exact string identities and schematic net assignments do not establish component electrical adequacy, tolerances, stability, placement, copper connectivity, or manufacturing readiness.",
-        "The check does not infer regulators or required parts from references, names, values, symbol descriptions, or cohort examples; intentional alternatives need their own reviewed map."
+        "The check does not infer regulators or required parts from references, names, values, symbol descriptions, or cohort examples; every accepted alternative must be separately authored and reviewed. Parts exclusive to other mapped variants must be absent or DNP, so mixed fitted populations remain reviewable."
       ],
       "fault_fixtures": [
         "tests.test_regulator_required_passives.test_missing_required_compensation_passive_is_reviewed",
         "tests.test_regulator_required_passives.test_dnp_or_wrong_net_required_passive_is_reported_and_can_block",
+        "tests.test_regulator_required_passives.test_explicitly_approved_alternative_topology_is_a_valid_control",
         "tests.test_regulator_required_passives_parity.test_authored_regulator_passive_rule_matches_cli_and_mcp",
         "tests.test_regulator_required_passives_native_fixture.test_native_regulator_passive_topology_faults_and_control_are_source_bound"
       ],
       "valid_control_fixtures": [
         "tests.test_regulator_required_passives.test_exact_present_topology_is_a_valid_control",
+        "tests.test_regulator_required_passives.test_explicitly_approved_alternative_topology_is_a_valid_control",
         "tests.test_regulator_required_passives_native_fixture.test_native_regulator_passive_topology_faults_and_control_are_source_bound"
       ],
       "metamorphic_status": "covered",

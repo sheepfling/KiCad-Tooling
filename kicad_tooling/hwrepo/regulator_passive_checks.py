@@ -79,12 +79,40 @@ def regulator_passive_topology_issues(
     """Return deterministic topology issues for each authored regulator entry."""
     results: list[tuple[str, tuple[str, ...]]] = []
     for item in requirements.requirements:
-        issues = list(_component_issues(item.regulator, observed))
-        for passive in item.required_passives:
-            issues.extend(
+        regulator_issues = _component_issues(item.regulator, observed)
+        variants = ((item.id, item.required_passives),) + tuple(
+            (alternative.id, alternative.required_passives)
+            for alternative in item.approved_alternatives
+        )
+        all_variant_references = {
+            passive.component.reference.casefold()
+            for _, passives in variants
+            for passive in passives
+        }
+        dnp_references = {reference.casefold() for reference in observed.dnp_components}
+        if regulator_issues:
+            results.append((item.id, regulator_issues))
+            continue
+        variant_issues: list[str] = []
+        matched_variant = False
+        for variant_id, passives in variants:
+            selected_references = {passive.component.reference.casefold() for passive in passives}
+            variant_issue_set = {
                 f"{passive.role}: {message}"
+                for passive in passives
                 for message in _component_issues(passive.component, observed)
-            )
-        if issues:
-            results.append((item.id, tuple(sorted(set(issues)))))
+            }
+            for reference in all_variant_references - selected_references:
+                if (
+                    reference not in dnp_references
+                    and lookup_unique_casefold(observed.components, reference) is not None
+                ):
+                    variant_issue_set.add(f"unselected variant component {reference} is fitted")
+            issues = tuple(sorted(variant_issue_set))
+            if not issues:
+                matched_variant = True
+                break
+            variant_issues.extend(f"approved variant {variant_id!r}: {issue}" for issue in issues)
+        if not matched_variant:
+            results.append((item.id, tuple(sorted(set(variant_issues)))))
     return tuple(results)

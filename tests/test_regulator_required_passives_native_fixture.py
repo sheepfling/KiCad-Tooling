@@ -25,6 +25,7 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.power_lint]
 FIXTURES = MappingProxyType(
     {
         "control": "regulator-required-passive-native/control.kicad_sch",
+        "alternate-control": "regulator-required-passive-native/alternate-control.kicad_sch",
         "missing-passive": "regulator-required-passive-native/missing-passive.kicad_sch",
         "wrong-net": "regulator-required-passive-native/wrong-net.kicad_sch",
     }
@@ -32,6 +33,7 @@ FIXTURES = MappingProxyType(
 EXPECTED_SOURCE_HASHES = MappingProxyType(
     {
         "control": "10ac24d66c489a3258d3827d571cb2ab826ee76ef5a97070a1e9a87274854c7f",
+        "alternate-control": "279638135bc6ea387892159b3c8e65b75d4f62932b323414753e3cd1cdeb018b",
         "missing-passive": "920b189071c13b2fcbf0dc31137d908c9bf38caadef495efea1ef2b0fd6e9a5b",
         "wrong-net": "0468d7a5b636346e0f56e656ece602cce87200f5a07daa7b3b5ebe93445466ea",
     }
@@ -39,6 +41,7 @@ EXPECTED_SOURCE_HASHES = MappingProxyType(
 EXPECTED_SUBJECTS = MappingProxyType(
     {
         "control": None,
+        "alternate-control": None,
         "missing-passive": "U1: required passive topology differs",
         "wrong-net": "U1: required passive topology differs",
     }
@@ -74,7 +77,7 @@ def test_native_regulator_passive_topology_faults_and_control_are_source_bound(
             hashlib.sha256((fixture_root / relative).read_bytes()).hexdigest()
             == (EXPECTED_SOURCE_HASHES[case])
         )
-    policy = DesignLintPolicy(regulator_passive_topology_map=topology_map())
+    policy = DesignLintPolicy(regulator_passive_topology_map=topology_map(include_alternative=True))
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(
         tmp_path,
@@ -110,7 +113,8 @@ def test_native_regulator_passive_topology_faults_and_control_are_source_bound(
         f"{case}:{EXPECTED_SOURCE_HASHES[case]}" for case in FIXTURES
     )
     assert_native_fixture_mounts(root, native["command_receipt"])
-    assert not any(item.rule_id == RULE_ID for item in reports["control"].findings)
+    for case in ("control", "alternate-control"):
+        assert not any(item.rule_id == RULE_ID for item in reports[case].findings)
     for case in ("missing-passive", "wrong-net"):
         finding = next(item for item in reports[case].findings if item.rule_id == RULE_ID)
         assert finding.mode == "review"

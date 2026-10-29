@@ -6643,3 +6643,94 @@ pad. Review the physical access path and first-article test separately.
 [misc-drc-settings-100]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/board_design_settings.cpp
 [misc-drc-settings-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/board_design_settings.cpp
 [rs485-data-fixture]: ../tests/fixtures/design_lint/rs485-data-direction-label-mismatch/README.md
+
+## Review mapped regulator passive topology variants
+
+`power.regulator_required_passive_topology_mismatch` compares a project-authored
+regulator identity and complete pin map with the source-bound native netlist.
+The primary `required_passives` set and each `approved_alternatives` entry are
+complete, exact component and pin-to-net maps. The rule is quiet only when the
+regulator matches and one whole passive set matches; it never combines parts
+from separate alternatives. Parts exclusive to other variants must be absent
+or DNP, so a mixed fitted population remains reviewable. Reviewers must approve
+every variant and its source basis independently. This review does not establish component
+electrical adequacy, compensation stability, placement, PCB copper, or
+manufacturing readiness. The rule defaults to `review` and supports project
+`block`, `off`, and exact-finding ignores.
+
+A policy may declare an alternative like this:
+
+```json
+{
+  "design_lint": {
+    "regulator_passive_topology_map": {
+      "basis": "Reviewed regulator application note and approved BOM variants",
+      "requirements": [
+        {
+          "id": "main-regulator",
+          "basis": "Reviewed primary compensation topology",
+          "regulator": {
+            "reference": "U1",
+            "value": "ADJ-REGULATOR",
+            "symbol": "Regulator:Example",
+            "footprint": "Package_SO:SOIC-8",
+            "pins": [
+              {"pin": "U1.1", "net": "REG_OUT"},
+              {"pin": "U1.2", "net": "FB"},
+              {"pin": "U1.3", "net": "VIN"},
+              {"pin": "U1.4", "net": "GND"},
+              {"pin": "U1.5", "net": null},
+              {"pin": "U1.6", "net": null},
+              {"pin": "U1.7", "net": null},
+              {"pin": "U1.8", "net": null}
+            ]
+          },
+          "required_passives": [
+            {
+              "role": "feedback-compensation",
+              "component": {
+                "reference": "C1",
+                "value": "100pF",
+                "symbol": "Device:C",
+                "footprint": "Capacitor_SMD:C_0603_1608Metric",
+                "pins": [
+                  {"pin": "C1.1", "net": "REG_OUT"},
+                  {"pin": "C1.2", "net": "FB"}
+                ]
+              }
+            }
+          ],
+          "approved_alternatives": [
+            {
+              "id": "alternate-compensation",
+              "basis": "Reviewed alternate BOM population",
+              "required_passives": [
+                {
+                  "role": "feedback-compensation",
+                  "component": {
+                    "reference": "C2",
+                    "value": "10pF",
+                    "symbol": "Device:C",
+                    "footprint": "Capacitor_SMD:C_0603_1608Metric",
+                    "pins": [
+                      {"pin": "C2.1", "net": "REG_OUT"},
+                      {"pin": "C2.2", "net": "FB"}
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+This example is structural only. Replace identities, pin maps, and bases with independently reviewed
+project requirements. Every alternative must identify a whole acceptable population; a mixed or
+partial population remains reviewable. See the
+[LINT-270 backlog record](DESIGN_LINT_BACKLOG.md#lint-270--review-mapped-regulator-required-passive-topology-mismatches)
+and the
+[synthetic native fixtures](../tests/fixtures/design_lint/regulator-required-passive-native/README.md).
