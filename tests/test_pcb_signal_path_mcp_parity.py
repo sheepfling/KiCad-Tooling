@@ -18,6 +18,9 @@ from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     DesignLintReport,
     DesignLintRuleOverride,
+    PcbDrcMinMaxRequirement,
+    PcbSignalPathRequirement,
+    PcbSignalPathRuleMap,
 )
 from tests.design_lint_fixtures.pcb_signal_path import path_map
 from tests.mcp_parity_support import semantic_design_lint_report
@@ -27,8 +30,27 @@ from tests.synthetic_design_lint_project import (
 )
 
 
-def test_disabled_signal_path_coverage_matches_cli_and_mcp(tmp_path: Path) -> None:
-    requirements = path_map()
+@pytest.mark.parametrize("edge_only", (False, True))
+def test_disabled_signal_path_coverage_matches_cli_and_mcp(
+    tmp_path: Path, edge_only: bool
+) -> None:
+    requirements = (
+        PcbSignalPathRuleMap(
+            basis="Synthetic edge-only interface requirement",
+            paths=(
+                PcbSignalPathRequirement(
+                    id="edge-only-clock",
+                    basis="Synthetic board-edge margin",
+                    net="SYNTH_CLK",
+                    from_pad="J1.1",
+                    to_pad="U1.1",
+                    edge_clearance=PcbDrcMinMaxRequirement(min_nm=2_000_000),
+                ),
+            ),
+        )
+        if edge_only
+        else path_map()
+    )
     policy = DesignLintPolicy(
         pcb_signal_path_rule_map=requirements,
         rules=(
