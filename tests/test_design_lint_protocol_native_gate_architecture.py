@@ -287,6 +287,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="rs485-line-named-rail",
     ),
     pytest.param(
+        "bus.rs485_line_label_mismatch",
+        "KICAD_RUN_NATIVE_RS485_LINE_LABEL_MISMATCH_FIXTURES",
+        "tests.test_rs485_line_label_mismatch_native_fixture_lane."
+        "test_native_rs485_line_label_fault_and_control_repeat",
+        id="rs485-line-label-mismatch",
+    ),
+    pytest.param(
         "bus.rs485_unconnected_data_pin",
         "KICAD_RUN_NATIVE_RS485_UNCONNECTED_DATA_PIN_FIXTURES",
         "tests.test_rs485_unconnected_data_pins_native_fixture_lane."

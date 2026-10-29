@@ -183,6 +183,10 @@ def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:
             "tests/test_rs485_line_named_rail.py::test_explicit_rs485_line_pins_on_named_rails_request_review[U1.1-GND-A-a-U1.2]",
         ),
         (
+            "bus.rs485_line_label_mismatch",
+            "tests/test_rs485_line_label_mismatch.py::test_crossed_explicit_rs485_line_labels_request_review_with_pin_evidence",
+        ),
+        (
             "bus.rs485_unconnected_data_pin",
             "tests/test_rs485_unconnected_data_pins.py::test_open_rs485_data_pin_emits_pair_identity_and_net_evidence",
         ),

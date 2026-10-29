@@ -5915,6 +5915,27 @@ is not a reason by itself to expand its scope or change its default policy.
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_same_net")'
   ```
 
+#### LINT-263 — Review crossed RS-485 A/B line labels
+
+- **Status:** Implemented as default-review `bus.rs485_line_label_mismatch`.
+  Project policy can promote it to `block`, turn it off, or ignore one exact
+  finding fingerprint.
+- **Gap:** Existing checks review A/B pins shorted together and pins on named
+  rails, but do not flag explicit opposite RS485_A/RS485_B labels on separate
+  A/B pins.
+- **Predicate:** For a fitted U/IC with explicit RS-485 identity, exactly one
+  native A and B function, complete pin inventory, and one distinct net per
+  pin, compare only exact unindexed RS485_A/RS485_B and
+  RS485_LINE_A/RS485_LINE_B labels. Emit a review finding for each conflict.
+- **Boundary:** Vendor A/B conventions vary. Generic and numbered labels,
+  connectors, DNP parts, incomplete inventories, duplicates, ambiguous nets,
+  and shared-net cases are skipped. This name-based signal is not an approved
+  pinout, bus map, PCB connectivity result, or physical continuity proof.
+- **Evidence:** Synthetic fault/control, exact native KiCad 10.0.0/10.0.5
+  fault/control exports, policy, ordering, CLI/MCP parity, catalog reachability,
+  and focused selector coverage. The local native run requires Docker access;
+  CI runs the digest-pinned fixture lane.
+
 #### LINT-262 — Review same-role serial connector and controller pins
 
 - **Status:** Implemented as default-review `bus.serial_endpoint_role_collision`.

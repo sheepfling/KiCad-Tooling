@@ -186,6 +186,7 @@ DesignLintRuleId = Literal[
     "bus.rs485_data_input_output_same_net",
     "bus.rs485_ab_same_net",
     "bus.rs485_line_on_named_rail",
+    "bus.rs485_line_label_mismatch",
     "bus.rs485_signal_on_named_rail",
     "bus.rs485_unconnected_data_pin",
     "bus.ethernet_data_label_mismatch",

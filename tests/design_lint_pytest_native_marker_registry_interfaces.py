@@ -132,6 +132,13 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_rs485_data_input_output_same_net_native_fixture_lane.py": frozenset(
             {"interface_lint", "native_kicad", "slow"}
         ),
+        "test_rs485_line_label_mismatch.py": frozenset({"interface_lint"}),
+        "test_rs485_line_label_mismatch_native_fixture_lane.py": frozenset(
+            {"interface_lint", "native_kicad", "slow"}
+        ),
+        "test_design_lint_mcp_parity_rs485_line_label_mismatch.py": frozenset(
+            {"interface_lint", "parity_lint", "slow", "template_checkout"}
+        ),
         "test_rs485_unconnected_data_pins.py": frozenset({"interface_lint"}),
         "test_rs485_unconnected_data_pins_native_fixture_lane.py": frozenset(
             {"interface_lint", "native_kicad", "slow"}

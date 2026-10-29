@@ -220,6 +220,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_RS485_LINE_NAMED_RAIL_FIXTURES",
         ),
         (
+            "bus.rs485_line_label_mismatch",
+            "KICAD_RUN_NATIVE_RS485_LINE_LABEL_MISMATCH_FIXTURES",
+        ),
+        (
             "bus.rs485_unconnected_data_pin",
             "KICAD_RUN_NATIVE_RS485_UNCONNECTED_DATA_PIN_FIXTURES",
         ),

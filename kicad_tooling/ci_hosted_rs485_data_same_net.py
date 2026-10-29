@@ -44,6 +44,13 @@ _LINE_NAMED_RAIL_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
         "control": "ec8a53ce7ae539d233baf7952e773adb1911cd5d930c98f4b120d22b6865c4e3",
     }
 )
+_LINE_LABEL_MISMATCH_RULE_ID = "bus.rs485_line_label_mismatch"
+_LINE_LABEL_MISMATCH_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
+    {
+        "fault": "088e4f94449678f4ccb01569d69220dc3c225e533848a8e91a05586d6eac1400",
+        "control": "fee16129e0b52695475b47f2da3d3e83dc559ec405e2c8b4ca9456069e7bc9d6",
+    }
+)
 
 
 def rs485_data_same_net_fixture_lane(
@@ -67,13 +74,20 @@ def rs485_line_named_rail_fixture_lane(
     _rs485_fixture_lane(root, version=version, image=image, log=log, feature="line_named_rail")
 
 
+def rs485_line_label_mismatch_fixture_lane(
+    root: Path, *, version: str, image: str, log: HostedLog
+) -> None:
+    """Repeat exact native exports for crossed RS-485 line-label fixtures."""
+    _rs485_fixture_lane(root, version=version, image=image, log=log, feature="line_label_mismatch")
+
+
 def _rs485_fixture_lane(
     root: Path,
     *,
     version: str,
     image: str,
     log: HostedLog,
-    feature: Literal["same_net", "named_rail", "line_named_rail"],
+    feature: Literal["same_net", "named_rail", "line_named_rail", "line_label_mismatch"],
 ) -> None:
     """Run the source-bound native lane shared by the RS-485 heuristics."""
 
@@ -82,7 +96,7 @@ def _rs485_fixture_lane(
         raise ValueError(f"RS-485 native fixtures do not cover KiCad {version} with this image")
     pinned = pinned_image(image)
     expected_functions = {"U1.1": "D", "U1.2": "R"}
-    if feature == "line_named_rail":
+    if feature in {"line_named_rail", "line_label_mismatch"}:
         expected_functions = {"U1.1": "A", "U1.2": "B"}
     if feature == "same_net":
         fixture_directory = "rs485-data-same-net"
@@ -115,7 +129,7 @@ def _rs485_fixture_lane(
             "fault": {"GND": ("U1.1",), "HOST_RX": ("U1.2",)},
             "control": {"HOST_TX": ("U1.1",), "HOST_RX": ("U1.2",)},
         }
-    else:
+    elif feature == "line_named_rail":
         fixture_directory = "rs485-line-named-rail"
         stage_prefix = "rs485-line-named-rail-fixture"
         rule_id = _LINE_NAMED_RAIL_RULE_ID
@@ -127,6 +141,23 @@ def _rs485_fixture_lane(
         }
         expected_nets = {
             "fault": {"GND": ("U1.1",), "HOST_RX": ("U1.2",)},
+            "control": {"RS485_A": ("U1.1",), "RS485_B": ("U1.2",)},
+        }
+    else:
+        fixture_directory = "rs485-line-label-mismatch"
+        stage_prefix = "rs485-line-label-mismatch-fixture"
+        rule_id = _LINE_LABEL_MISMATCH_RULE_ID
+        source_names = {"fault": "fault.kicad_sch", "control": "control.kicad_sch"}
+        reviewed_hashes = _LINE_LABEL_MISMATCH_SOURCE_HASHES
+        expected_subjects = {
+            "fault": (
+                "U1.1: RS-485 A function on RS485_B",
+                "U1.2: RS-485 B function on RS485_A",
+            ),
+            "control": (),
+        }
+        expected_nets = {
+            "fault": {"RS485_B": ("U1.1",), "RS485_A": ("U1.2",)},
             "control": {"RS485_A": ("U1.1",), "RS485_B": ("U1.2",)},
         }
     fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint" / fixture_directory
@@ -221,7 +252,7 @@ def _rs485_fixture_lane(
                     f"Native RS-485 {feature} {case} lost expected pin functions: "
                     f"{expected_functions!r}"
                 )
-            if feature == "line_named_rail" and (
+            if feature in {"line_named_rail", "line_label_mismatch"} and (
                 observed.component_symbols.get("U1") != "Synthetic:Rs485Transceiver"
                 or observed.components.get("U1") is None
                 or observed.components["U1"].value != "RS-485 transceiver"

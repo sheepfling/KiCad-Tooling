@@ -1091,6 +1091,28 @@ KICAD_RUN_NATIVE_RS485_AB_SAME_NET_FIXTURES=1 \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_ab_same_net")'
 ```
 
+### RS-485 A/B function and net-label conflicts
+
+`bus.rs485_line_label_mismatch` reviews an explicitly identified, fitted
+RS-485 transceiver when its complete pin inventory has one exact A and B
+function, each has one distinct net assignment, and exact unindexed
+`RS485_A`/`RS485_B` or `RS485_LINE_A`/`RS485_LINE_B` labels name the opposite
+role. Generic or numbered labels, connectors, DNP parts, incomplete inventories,
+and ambiguous assignments remain quiet. The default is `review`: conventions
+vary, so this clue does not establish the authoritative pinout, bus topology,
+PCB routing, or physical continuity. A shared A/B net remains handled by
+`bus.rs485_ab_same_net`. Source hashes and scope are in the
+[synthetic fixture record](../tests/fixtures/design_lint/rs485-line-label-mismatch/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_rs485_line_label_mismatch.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.rs485_line_label_mismatch")'
+
+KICAD_RUN_NATIVE_RS485_LINE_LABEL_MISMATCH_FIXTURES=1 \
+  .venv/bin/python -I -m pytest tests/test_rs485_line_label_mismatch_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_line_label_mismatch")'
+```
+
 ### CAN TX/RX pin and net-label direction review
 
 `bus.can_tx_rx_label_mismatch` compares explicit CAN/FDCAN TX/TXD and RX/RXD

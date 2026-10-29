@@ -7158,6 +7158,46 @@
       "implementation_owner": "kicad_tooling/hwrepo/rs485_line_named_rail.py#rs485_line_on_named_rail_candidates"
     },
     {
+      "rule_id": "bus.rs485_line_label_mismatch",
+      "title": "RS-485 line pin function conflicts with its net label",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted, explicitly identified RS-485 U/IC with exactly one native A and B function, complete component pin inventory, and one exact assignment per pin, emit REVIEW for a pin whose exact unindexed RS485_A/RS485_B or RS485_LINE_A/RS485_LINE_B net label names the opposite line role.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
+      ],
+      "limitations": [
+        "Only exact A/B native function names, bounded RS-485 identity, and unindexed RS485_A/RS485_B or RS485_LINE_A/RS485_LINE_B labels are recognized. Generic A/B labels, numbered bus labels, connectors, DNP parts, incomplete inventories, ambiguous assignments, and duplicate roles are skipped.",
+        "This is a name-based REVIEW clue, not an authoritative part pinout or defect verdict. RS-485 A/B naming conventions and transceiver polarity can vary; the check does not establish bus membership, PCB routing, cable polarity, or physical continuity. A project-authored exact pin map is required for a blocking requirement.",
+        "A/B pins assigned to the same net remain owned by bus.rs485_ab_same_net."
+      ],
+      "fault_fixtures": [
+        "tests.test_rs485_line_label_mismatch.test_crossed_explicit_rs485_line_labels_request_review_with_pin_evidence",
+        "tests.test_rs485_line_label_mismatch_native_fixture_lane.test_native_rs485_line_label_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_rs485_line_label_mismatch.test_matching_generic_numbered_and_unsupported_rs485_labels_are_controls",
+        "tests.test_rs485_line_label_mismatch_native_fixture_lane.test_native_rs485_line_label_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_rs485_line_label_mismatch.test_reordering_is_stable_and_corrected_labels_clear_the_findings"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_RS485_LINE_LABEL_MISMATCH_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/rs485_line_label_mismatch.py#rs485_line_label_mismatch_candidates",
+        "kicad_tooling/hwrepo/rs485_line_functions.py#rs485_bus_line_role",
+        "kicad_tooling/hwrepo/rs485_data_functions.py#explicit_rs485_transceiver_identity",
+        "kicad_tooling/hwrepo/design_lint_rs485_candidates.py#rs485_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/rs485_line_label_mismatch.py#rs485_line_label_mismatch_candidates"
+    },
+    {
       "rule_id": "bus.rs485_signal_on_named_rail",
       "title": "RS-485 transceiver data pin assigned to a named rail",
       "status": "active",
