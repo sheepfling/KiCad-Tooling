@@ -45,6 +45,7 @@ HASHSEED_REPORT_FAMILIES = (
     "usb_c_cc_named_rail",
     "usb_c_cc_same_net",
     "usb_c_cc_controller_same_net",
+    "usb_c_cc_endpoint_pairing",
     "usb_c_sbu_named_rail",
     "usb_c_sbu_unconnected_pin",
     "usb_c_sbu_same_net",

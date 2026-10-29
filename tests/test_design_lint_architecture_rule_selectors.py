@@ -257,6 +257,10 @@ def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:
             "tests/test_usb_c_cc_same_net.py::test_controller_cc1_cc2_shared_net_requests_review_with_separated_control",
         ),
         (
+            "bus.usb_c_cc_endpoint_crossed",
+            "tests/test_usb_c_cc_endpoint_pairing.py::test_crossed_connector_controller_cc_assignments_request_review",
+        ),
+        (
             "bus.spi_clock_chip_select_same_net",
             (
                 "tests/test_spi_clock_chip_select_same_net.py::"

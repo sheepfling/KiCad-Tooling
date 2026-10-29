@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 242 rules are implemented with synthetic regression coverage.
+The following 243 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 242 active rules.
+The catalog currently contains 243 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -582,6 +582,7 @@ skipped under prerelease policy.
 - `bus.usb_c_cc_signal_on_named_rail`
 - `bus.usb_c_cc_same_net`
 - `bus.usb_c_cc_controller_same_net`
+- `bus.usb_c_cc_endpoint_crossed`
 - `bus.usb_c_sbu_signal_on_named_rail`
 - `bus.usb_c_sbu_unconnected_pin`
 - `bus.usb_c_sbu_same_net`
@@ -3293,7 +3294,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 242 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 243 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -5914,6 +5915,44 @@ is not a reason by itself to expand its scope or change its default policy.
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_same_net")'
   ```
 
+
+#### LINT-261 — Review crossed USB-C CC endpoint assignments
+
+- **Status:** Implemented as default-review `bus.usb_c_cc_endpoint_crossed`.
+  Project policy can promote it to `block`, turn it off, or ignore an exact
+  finding fingerprint.
+- **Gap:** Existing CC checks cover CC1/CC2 merged together at one endpoint or
+  assigned to named rails. They do not flag two distinct connector/controller
+  lines whose CC1 and CC2 roles are reversed between endpoints.
+- **Predicate:** For one recognized fitted USB-C connector and one numeric
+  fitted U/IC controller, require exactly one native CC1 and CC2 function in
+  each complete pin inventory and one direct assignment per pin. Prompt when
+  the endpoints use two distinct nets and their CC1/CC2 net assignments are
+  exactly inverted. Skip duplicate groups, DNP endpoints, open or ambiguous
+  assignments, same-net pairs, and incomplete inventories.
+- **Boundary:** This is a topology clue for human review. Controller labeling,
+  port role, datasheet behavior, and deliberate signal crossing can make a
+  match valid. The rule does not establish a defect, USB-C compliance, passive
+  path behavior, PCB copper, or physical continuity. Project-authored pinout
+  requirements remain the basis for blocking.
+- **Evidence:** Synthetic crossed/direct controls, ambiguity and inventory
+  controls, policy behavior, catalog reachability, focused selection,
+  determinism, and CLI/MCP parity are covered. Digest-pinned native fault and
+  control fixture exports use KiCad 10.0.0 and 10.0.5; each asserts the exact
+  assignments, no ERC errors, and repeatable normalized netlists.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_usb_c_cc_endpoint_pairing.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_cc_endpoint_crossed")'
+
+  .venv/bin/python -I -m pytest tests/test_design_lint_mcp_parity_usb_c_sbu_unconnected.py \
+    -m 'design_lint and interface_lint and parity_lint and design_lint_rule(rule_id="bus.usb_c_cc_endpoint_crossed")'
+
+  KICAD_RUN_NATIVE_USB_C_CC_ENDPOINT_CROSSED_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_usb_c_cc_endpoint_crossed_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_cc_endpoint_crossed")'
+  ```
 
 #### LINT-260 — Review USB-C controller CC1/CC2 pins sharing one net
 

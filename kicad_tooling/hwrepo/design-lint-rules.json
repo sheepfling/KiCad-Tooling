@@ -5787,6 +5787,50 @@
       "implementation_owner": "kicad_tooling/hwrepo/usb_c_cc_controller_same_net.py#usb_c_cc_controller_same_net_candidates"
     },
     {
+      "rule_id": "bus.usb_c_cc_endpoint_crossed",
+      "title": "USB-C connector and controller CC1/CC2 nets appear crossed",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad native XML netlist normalized by kicad_tooling.validate.read_netlist, including connector identity, native CC1/CC2 functions, complete pin inventories, fitted state, and direct net assignments",
+      "predicate": "For a unique fitted USB-C connector candidate and numeric U/IC controller with exactly one native CC1 and CC2 function in each complete pin inventory, emit REVIEW when both endpoints have distinct, unambiguous direct CC nets and the two endpoint role assignments are exactly inverted.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
+      ],
+      "limitations": [
+        "A crossed-role match is a review clue only. Some controllers intentionally label or route CC pins in ways that require datasheet and port-map interpretation; this heuristic does not establish the correct pinout or prove a defect.",
+        "Recognition is limited to a unique connector/controller pair with exact native CC1/CC2 function roles, complete pin inventories, fitted state, and one direct assignment per role. Duplicate endpoint groups, DNP parts, open pins, same-net assignments, and ambiguous assignments are skipped.",
+        "Controller discovery is limited to numeric U/IC references and connector discovery to the shared connector-candidate recognizer. Other designator conventions or custom symbols without recognized identity are not discovered.",
+        "The check compares schematic net assignments only. It does not trace passive components, verify USB-C electrical requirements, or establish PCB copper, off-board wiring, or physical continuity. Project-authored port and pinout requirements remain the basis for blocking decisions."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_c_cc_endpoint_pairing.test_crossed_connector_controller_cc_assignments_request_review",
+        "tests.test_design_lint_mcp_parity_usb_c_sbu_unconnected.test_usb_c_cc_endpoint_crossed_cli_mcp_parity",
+        "tests.test_usb_c_cc_endpoint_crossed_native_fixture_lane.test_native_usb_c_cc_endpoint_crossed_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_c_cc_endpoint_pairing.test_direct_mapping_and_other_incomplete_or_ambiguous_cases_are_controls",
+        "tests.test_usb_c_cc_endpoint_crossed_native_fixture_lane.test_native_usb_c_cc_endpoint_crossed_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_c_cc_endpoint_pairing.test_endpoint_order_is_stable_and_corrected_mapping_clears_the_finding",
+        "tests.test_design_lint_determinism_usb_c_cc_endpoint_pairing.test_crossed_usb_c_cc_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_C_CC_ENDPOINT_CROSSED_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_c_cc_endpoint_pairing.py#crossed_usb_c_cc_endpoint_candidates",
+        "kicad_tooling/hwrepo/bus_signal_roles.py#usb_c_cc_role",
+        "kicad_tooling/hwrepo/connector_identity.py#connector_candidate_references",
+        "kicad_tooling/hwrepo/netlist_pin_assignments.py#netlist_pin_net_index",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_c_cc_endpoint_pairing.py#crossed_usb_c_cc_endpoint_candidates"
+    },
+    {
       "rule_id": "bus.usb_c_sbu_same_net",
       "title": "USB-C controller SBU1 and SBU2 pins share one net",
       "status": "active",

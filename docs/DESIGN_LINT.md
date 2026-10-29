@@ -747,7 +747,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 242 active rules.
+The catalog currently contains 243 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1429,6 +1429,30 @@ errors and repeatable normalized netlists.
 KICAD_RUN_NATIVE_USB_C_CC_CONTROLLER_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_usb_c_cc_same_net_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_cc_controller_same_net")'
+```
+
+### USB-C connector/controller CC1/CC2 nets appear crossed
+
+`bus.usb_c_cc_endpoint_crossed` reviews a recognized fitted USB-C connector
+and fitted numeric U/IC controller when each has exactly one native CC1 and
+CC2 function in a complete pin inventory, each role has one direct net
+assignment, and the two distinct nets are exactly inverted between endpoints.
+The default is `review`; project policy can promote, disable, or ignore an
+exact finding. This is a topology clue only: controller pin labels and port
+maps need datasheet review, and the rule does not prove a defect, USB-C
+compliance, PCB copper, or continuity. Synthetic direct/crossed controls,
+policy checks, determinism, CLI/MCP parity, and digest-pinned KiCad 10.0.0 and
+10.0.5 native exports accompany it. The native lane asserts zero ERC errors
+and repeatable normalized netlists. See the
+[fixture notes](../tests/fixtures/design_lint/usb-c-cc-endpoint-crossed/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_usb_c_cc_endpoint_pairing.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_cc_endpoint_crossed")'
+
+KICAD_RUN_NATIVE_USB_C_CC_ENDPOINT_CROSSED_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_usb_c_cc_endpoint_crossed_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_cc_endpoint_crossed")'
 ```
 
 ### USB-C controller SBU1/SBU2 pins sharing one net

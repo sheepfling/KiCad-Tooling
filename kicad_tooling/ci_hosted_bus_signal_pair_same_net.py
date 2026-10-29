@@ -28,6 +28,7 @@ def bus_signal_pair_same_net_fixture_lane(
     image: str,
     log: HostedLog,
     fixture: BusSignalPairFixtureExpectation,
+    event_prefix: str | None = None,
 ) -> None:
     """Repeat source-bound netlist/ERC exports and compare a typed review result."""
     protocol = fixture.protocol
@@ -106,7 +107,7 @@ def bus_signal_pair_same_net_fixture_lane(
         "-ec",
         script,
     )
-    stage_prefix = f"{protocol}-{pair_name}-same-net-fixture"
+    stage_prefix = event_prefix or f"{protocol}-{pair_name}-same-net-fixture"
     log.event(
         f"{stage_prefix}/native-export",
         "START",
@@ -221,3 +222,23 @@ def bus_signal_pair_same_net_fixture_lane(
         repeatable="true",
     )
     log.finish()
+
+
+def bus_signal_pair_topology_fixture_lane(
+    root: Path,
+    *,
+    version: str,
+    image: str,
+    log: HostedLog,
+    fixture: BusSignalPairFixtureExpectation,
+    event_prefix: str,
+) -> None:
+    """Run exact-version native exports for a typed two-endpoint topology case."""
+    bus_signal_pair_same_net_fixture_lane(
+        root,
+        version=version,
+        image=image,
+        log=log,
+        fixture=fixture,
+        event_prefix=event_prefix,
+    )

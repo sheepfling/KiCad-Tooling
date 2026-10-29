@@ -161,6 +161,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="usb-c-cc-controller-same-net",
     ),
     pytest.param(
+        "bus.usb_c_cc_endpoint_crossed",
+        "KICAD_RUN_NATIVE_USB_C_CC_ENDPOINT_CROSSED_FIXTURES",
+        "tests.test_usb_c_cc_endpoint_crossed_native_fixture_lane."
+        "test_native_usb_c_cc_endpoint_crossed_fault_and_control_repeat",
+        id="usb-c-cc-endpoint-crossed",
+    ),
+    pytest.param(
         "bus.rs485_ab_same_net",
         "KICAD_RUN_NATIVE_RS485_AB_SAME_NET_FIXTURES",
         "tests.test_rs485_ab_same_net_native_fixture_lane."

@@ -127,6 +127,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "usb_data_same_net_candidates",
         "usb_c_same_net_candidates",
         "usb_c_sbu_same_net_candidates",
+        "crossed_usb_c_cc_endpoint_candidates",
         "named_differential_pair_candidates",
         "i2c_address_candidates",
         "i2c_responder_coverage_candidates",
