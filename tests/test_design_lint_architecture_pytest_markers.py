@@ -163,6 +163,7 @@ def test_return_path_registry_entries_exist_and_receive_both_lint_markers() -> N
 def test_marker_registry_owners_stay_below_review_threshold() -> None:
     for name in (
         "design_lint_return_path_test_markers.py",
+        "design_lint_interface_test_markers.py",
         "design_lint_pytest_native_marker_registry.py",
         "design_lint_pytest_native_marker_registry_interfaces.py",
         "design_lint_pytest_native_marker_registry_connectors.py",

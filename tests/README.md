@@ -94,8 +94,9 @@ that use the shared reference root still require the public checkout.
 Run one module with `python -I -B -m pytest -q tests/test_product.py`.
 
 Focused runs use registered markers. `tests/design_lint_test_markers.py`
-assigns lint areas by test module; areas can overlap when a fixture checks more
-than one concern. Active rule fixture references in the catalog also attach a
+assembles theme-owned marker registries, including the interface registry in
+`tests/design_lint_interface_test_markers.py`. Areas can overlap when a fixture
+checks more than one concern. Active rule fixture references in the catalog also attach a
 `design_lint_rule(rule_id=...)` marker, so one rule's fault, control,
 metamorphic, CLI/MCP, and native cases can be selected together. Execution-cost
 markers live in `tests/execution_test_markers.py`; mixed modules mark only the
@@ -405,9 +406,9 @@ PCB, return-path, or parity regressions; combine them with `-k` to select a test
 parametrized fault/control case. `native_kicad` selects exact-version fixtures and still
 requires each fixture's documented version and environment settings. Markers
 narrow local runs; the package acceptance gate continues to run the complete
-suite. Add each new lint test module to its area in
-`tests/design_lint_test_markers.py`; `tests/conftest.py` applies those markers and
-keeps it in both the focused area and the portable `design_lint` selection.
+suite. Add each new lint test module to its corresponding theme registry;
+`tests/conftest.py` applies those markers and keeps it in both the focused area
+and the portable `design_lint` selection.
 External cohort source comparisons use the opt-in `cohort_trial` marker and run
 only when their pinned source checkout is supplied through the documented
 environment variable.
