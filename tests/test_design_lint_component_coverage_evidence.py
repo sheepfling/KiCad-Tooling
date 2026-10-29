@@ -41,9 +41,7 @@ _INTERFACE_CATALOG_HASH = "c" * 64
         ),
         (
             "regulator_feedback_coverage",
-            RegulatorFeedbackCoverageReport(
-                status="COMPLETE", netlist_sha256=_STALE_NETLIST_HASH
-            ),
+            RegulatorFeedbackCoverageReport(status="COMPLETE", netlist_sha256=_STALE_NETLIST_HASH),
         ),
         (
             "rc_filter_coverage",
@@ -98,7 +96,9 @@ def test_peer_coverage_requires_a_top_level_report_netlist_digest() -> None:
         authored_map_state="not_configured",
     )
 
-    with pytest.raises(ValueError, match="Digital-peer voltage coverage must use this report's netlist"):
+    with pytest.raises(
+        ValueError, match="Digital-peer voltage coverage must use this report's netlist"
+    ):
         DesignLintReport.model_validate(
             {
                 "status": "PASS",
@@ -164,7 +164,9 @@ def test_evaluated_mapped_check_requires_a_top_level_report_netlist_hash() -> No
         requirement_count=1,
     )
 
-    with pytest.raises(ValueError, match="Mapped-check execution coverage must use this report's native netlist"):
+    with pytest.raises(
+        ValueError, match="Mapped-check execution coverage must use this report's native netlist"
+    ):
         DesignLintReport.model_validate(
             {
                 "status": "PASS",

@@ -241,7 +241,5 @@ def _stale_netlist_coverage_issue(
     if status not in {"COMPLETE", "INCOMPLETE"}:
         return None
     if current_netlist_sha256 is None or coverage_netlist_sha256 != current_netlist_sha256:
-        return (
-            f"{coverage_name} coverage uses a different or unavailable native netlist hash."
-        )
+        return f"{coverage_name} coverage uses a different or unavailable native netlist hash."
     return None

@@ -249,8 +249,7 @@ def pcb_variant_population_fixture_lane(
                     .relative_to(context.root)
                     .as_posix(),
                     snapshot_sha256=digest(snapshot_receipt / "snapshot.json"),
-                    probe_sha256=capture.coverage.board_variant_probe_sha256
-                    or "0" * 64,
+                    probe_sha256=capture.coverage.board_variant_probe_sha256 or "0" * 64,
                     value_mode="review",
                     variant_population=capture,
                 )
@@ -283,13 +282,11 @@ def pcb_variant_population_fixture_lane(
                         len(value_mismatches) != 1
                         or value_mismatches[0].reference != "U1"
                         or value_mismatches[0].variant != VARIANT
-                        or value_mismatches[0].board_value
-                        != "Synthetic variant stale label"
+                        or value_mismatches[0].board_value != "Synthetic variant stale label"
                         or value_mismatches[0].schematic_value != "Synthetic identity probe"
                     ):
                         raise ValueError(
-                            "Native named-variant value fault changed: "
-                            f"{value_mismatches}"
+                            f"Native named-variant value fault changed: {value_mismatches}"
                         )
                     else:
                         variant_value_fault = True

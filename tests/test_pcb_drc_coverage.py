@@ -164,7 +164,10 @@ def test_wrong_bound_is_a_mismatch() -> None:
 def test_edge_clearance_bound_is_project_authored_and_exact() -> None:
     altered = rules_text().replace("(constraint edge_clearance (min 1.0mm))", "")
     (missing,) = compare_native_rules(pair_map(), altered, frozenset())
-    assert next(item for item in missing.constraints if item.constraint == "edge_clearance").status == "MISSING"
+    assert (
+        next(item for item in missing.constraints if item.constraint == "edge_clearance").status
+        == "MISSING"
+    )
 
     changed = rules_text().replace("(min 1.0mm)", "(min 0.8mm)")
     (mismatched,) = compare_native_rules(pair_map(), changed, frozenset())

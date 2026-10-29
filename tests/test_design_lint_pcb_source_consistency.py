@@ -22,8 +22,13 @@ _BOARD_B = "b" * 64
 
 
 def _pcb_reports(
-    *, board_a: str = _BOARD_A, board_b: str = _BOARD_A, version_a: str = "10.0.5",
-    version_b: str = "10.0.5", image_a: str = "sha256:image-a", image_b: str = "sha256:image-a",
+    *,
+    board_a: str = _BOARD_A,
+    board_b: str = _BOARD_A,
+    version_a: str = "10.0.5",
+    version_b: str = "10.0.5",
+    image_a: str = "sha256:image-a",
+    image_b: str = "sha256:image-a",
 ) -> dict[str, object]:
     return {
         "pcb_decoupling": PcbDecouplingCoverageReport(

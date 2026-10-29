@@ -31,7 +31,10 @@ EXPECTED_SOURCE_HASHES = {
 
 
 def test_same_voltage_native_fixture_sources_match_reviewed_hashes() -> None:
-    root = Path(__file__).resolve().parent / "fixtures/design_lint/connector-footprint-same-voltage-power-input-native"
+    root = (
+        Path(__file__).resolve().parent
+        / "fixtures/design_lint/connector-footprint-same-voltage-power-input-native"
+    )
     assert {
         case: hashlib.sha256((root / f"{name}.kicad_sch").read_bytes()).hexdigest()
         for case, name in ((FAULT_CASE, "fault"), (CONTROL_CASE, "control"))

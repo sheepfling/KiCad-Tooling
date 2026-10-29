@@ -31,9 +31,7 @@ from tests.synthetic_design_lint_project import (
 
 
 @pytest.mark.parametrize("edge_only", (False, True))
-def test_disabled_signal_path_coverage_matches_cli_and_mcp(
-    tmp_path: Path, edge_only: bool
-) -> None:
+def test_disabled_signal_path_coverage_matches_cli_and_mcp(tmp_path: Path, edge_only: bool) -> None:
     requirements = (
         PcbSignalPathRuleMap(
             basis="Synthetic edge-only interface requirement",

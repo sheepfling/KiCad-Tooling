@@ -17,7 +17,7 @@ from tests.synthetic_design_lint_project import (
     synthetic_design_lint_project,
 )
 
-_EXPECTED_FAULTS = ("length_out_of_range", "skew_out_of_range")
+_EXPECTED_FAULTS = ("length_out_of_range", "skew_out_of_range", "copper_edge_clearance")
 
 
 def _install_mock_native_run(
@@ -113,19 +113,20 @@ def test_native_lane_records_generated_source_and_report_hashes(
     assert result["repeatable"] == "true"
 
 
+@pytest.mark.parametrize("missing", _EXPECTED_FAULTS)
 def test_native_lane_rejects_a_fault_missing_one_expected_violation(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, missing: str
 ) -> None:
     project = "controller"
     root, config = _copy_project(tmp_path, "10.0.0")
     _install_mock_native_run(
         monkeypatch,
         kicad_version="10.0.0",
-        fault_types=("length_out_of_range",),
+        fault_types=tuple(item for item in _EXPECTED_FAULTS if item != missing),
     )
     log = HostedLog(root, "signal-path-lane-missed-fault")
 
-    with pytest.raises(ValueError, match="missed length/skew"):
+    with pytest.raises(ValueError, match="missed an authored geometry rule"):
         pcb_signal_path_drc_fixture_lane(root, project=project, image=config.image, log=log)
 
 

@@ -15,8 +15,7 @@ def test_pcb_signal_path_rule_selects_native_fault_control_case() -> None:
     )
     native_fixture = "KICAD_RUN_NATIVE_PCB_FIXTURES"
     native_test = (
-        "tests.test_pcb_signal_path_native."
-        "test_native_signal_path_drc_faults_are_repeatable"
+        "tests.test_pcb_signal_path_native.test_native_signal_path_drc_faults_are_repeatable"
     )
 
     assert native_fixture in rule.required_native_fixtures

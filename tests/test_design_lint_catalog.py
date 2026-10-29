@@ -119,7 +119,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "pcb.board_only_footprint",
             "pcb.required_fitted_reference",
             "connector.footprint_peer_pin_all_open",
-                "connector.footprint_same_voltage_power_input_unanchored",
+            "connector.footprint_same_voltage_power_input_unanchored",
             "connector.generic_peer_pin_all_open",
             "component.generic_peer_pin_all_open",
             "component.generic_peer_pin_mixed_open",

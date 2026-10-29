@@ -143,7 +143,9 @@ def pcb_signal_path_drc_fixture_lane(
     if control_exit != 0 or target_types & set(control_types):
         raise ValueError(f"Native signal-path control produced target findings: {control_types}")
     if fault_exit != 5 or not target_types <= set(fault_types):
-        raise ValueError(f"Native signal-path fault missed an authored geometry rule: {fault_types}")
+        raise ValueError(
+            f"Native signal-path fault missed an authored geometry rule: {fault_types}"
+        )
     if ignored_exit != 0 or target_types & set(ignored_types):
         raise ValueError(
             f"Native signal-path ignored-rule control produced target findings: {ignored_types}"

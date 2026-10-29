@@ -42,8 +42,7 @@ def unanchored_same_voltage_power_input_candidates(
             Candidate(
                 rule_id=RULE_ID,
                 subject=(
-                    f"{item.value} [{item.footprint}] pin {item.pin_number} "
-                    f"({item.pin_function})"
+                    f"{item.value} [{item.footprint}] pin {item.pin_number} ({item.pin_function})"
                 ),
                 message=(
                     "Fitted connector peers have matching native pin metadata and explicit "
@@ -59,9 +58,7 @@ def unanchored_same_voltage_power_input_candidates(
                     "pin_function": (item.pin_function,),
                     "pin_electrical_type": (item.pin_electrical_type.strip().casefold(),),
                     "nominal_voltage_v": (str(voltage),),
-                    "assignments": tuple(
-                        f"{pin}={net}" for pin, net, _ in assignments
-                    ),
+                    "assignments": tuple(f"{pin}={net}" for pin, net, _ in assignments),
                     "symbols": item.symbols,
                     **(
                         {}

@@ -73,7 +73,9 @@ class PcbSignalPathRequirement(StrictModel):
         if self.edge_clearance is not None and any(
             character in "'\\\"" or ord(character) < 32 for character in self.net
         ):
-            raise ValueError("Signal-path edge-clearance net cannot be represented exactly in a rule")
+            raise ValueError(
+                "Signal-path edge-clearance net cannot be represented exactly in a rule"
+            )
         return self
 
 
@@ -376,7 +378,9 @@ class PcbSignalPathRuleCoverageEntry(StrictModel):
                 or self.path_ids
             ):
                 raise ValueError("Signal-path coverage entries need exact path endpoints")
-            if not any(item.constraint in {"length", "edge_clearance"} for item in self.constraints):
+            if not any(
+                item.constraint in {"length", "edge_clearance"} for item in self.constraints
+            ):
                 raise ValueError("Signal-path coverage entries need a length or edge constraint")
         elif (
             self.from_pad_pattern is None

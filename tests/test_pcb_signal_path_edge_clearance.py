@@ -33,9 +33,10 @@ def test_authored_edge_clearance_bound_requires_exact_selector_and_minimum() -> 
     wrong_selector = source.replace("'SYNTH_CLK'", "'SYNTH_DATA'")
     mismatched_selector = compare(rules=wrong_selector)
     clock = next(entry for entry in mismatched_selector if entry.id == "clock")
-    assert next(
-        item for item in clock.constraints if item.constraint == "edge_clearance"
-    ).status == "MISSING"
+    assert (
+        next(item for item in clock.constraints if item.constraint == "edge_clearance").status
+        == "MISSING"
+    )
 
     wrong_bound = compare(
         rules=source.replace(
@@ -55,7 +56,10 @@ def test_edge_rule_duplicates_and_ignored_severity_do_not_count_as_coverage() ->
   (condition "A.NetName == 'SYNTH_CLK'")
   (constraint edge_clearance (min 2mm)))
 """
-    duplicated = compare(rules=source + edge_rule.replace('"synthetic-clock-edge-clearance"', '"duplicate-edge-clearance"'))
+    duplicated = compare(
+        rules=source
+        + edge_rule.replace('"synthetic-clock-edge-clearance"', '"duplicate-edge-clearance"')
+    )
     clock = next(entry for entry in duplicated if entry.id == "clock")
     edge = next(item for item in clock.constraints if item.constraint == "edge_clearance")
     assert edge.status == "AMBIGUOUS"
@@ -72,9 +76,10 @@ def test_edge_rule_duplicates_and_ignored_severity_do_not_count_as_coverage() ->
 
     disabled = compare(ignored=frozenset({"copper_edge_clearance"}))
     clock = next(entry for entry in disabled if entry.id == "clock")
-    assert next(
-        item for item in clock.constraints if item.constraint == "edge_clearance"
-    ).status == "IGNORED"
+    assert (
+        next(item for item in clock.constraints if item.constraint == "edge_clearance").status
+        == "IGNORED"
+    )
 
 
 def test_edge_only_signal_path_is_complete_without_length_or_skew_rules() -> None:

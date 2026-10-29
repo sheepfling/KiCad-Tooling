@@ -198,18 +198,14 @@ def test_four_db9_explicit_ground_roles_review_split_nets_and_accept_common_cont
     fault = _lint(split)
     control = _lint(common)
     return_findings = [
-        item
-        for item in fault.findings
-        if item.rule_id == "connector.repeated_pin_function"
+        item for item in fault.findings if item.rule_id == "connector.repeated_pin_function"
     ]
 
     assert fault.status == "REVIEW"
     assert len(return_findings) == 1
     assert return_findings[0].subject == "Synthetic:DB9: ground/return"
     assert {pin: return_findings[0].evidence[pin] for pin in pins} == {
-        f"J{port}.{pin}": (f"RETURN_{port}",)
-        for port in range(1, 5)
-        for pin in (7, 9)
+        f"J{port}.{pin}": (f"RETURN_{port}",) for port in range(1, 5) for pin in (7, 9)
     }
     assert control.status == "PASS"
     assert "connector.repeated_pin_function" not in {item.rule_id for item in control.findings}
