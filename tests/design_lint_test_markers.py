@@ -25,6 +25,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_catalog_reachability.py",
                 "tests/test_design_lint_architecture_catalog.py",
                 "tests/test_design_lint_field_maturity.py",
+                "tests/test_design_lint_field_evidence_sources.py",
                 "tests/test_design_lint_fixture_reachability.py",
                 "tests/test_design_lint_architecture_theme_suites.py",
                 "tests/test_design_lint_architecture_pcb_mechanical_edge.py",
