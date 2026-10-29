@@ -9605,14 +9605,14 @@
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
-      "evidence_adapter": "Project-authored exact pad order and return-plane layer compared with source-bound KiCad 10 pcbnew snapshot schema 10, including native track endpoint contacts and canonical filled-zone island contours",
+      "evidence_adapter": "Project-authored exact pad order and return-plane layer compared with source-bound KiCad 10 pcbnew snapshot schema 15, including native track endpoint contacts, canonical filled-zone island contours, and arc midpoint and length observations",
       "predicate": "For each explicit switching-loop pad order, verify exact footprint, net, fitted state, and unique native pad center; compute the integer shoelace area of the authored pad-center polygon, compare it with an optional project limit, verify that mapped return pads share one filled island, and optionally resolve project-mapped trace edges into unique native track chains with ordered vertices and lengths.",
       "supported_kicad_versions": [
         "KiCad 10 native pcbnew API; each configured project's exact version and digest-pinned image are checked"
       ],
       "limitations": [
         "The loop-area metric is only a polygon through project-authored pad centers. Explicit trace edges report per-edge centerlines and lengths, and plane edges report one exact shared filled-island contour area; the analyzer does not calculate a full routed-loop area or connect trace geometry through component internals.",
-        "Trace edges require an exact project-mapped net and copper-layer scope and exactly one native path. Missing contacts, branch ambiguity, multiple paths, unsupported arcs, out-of-scope vias, or stale pad mapping remain incomplete.",
+        "Trace edges require an exact project-mapped net and copper-layer scope and exactly one native path. Missing contacts, branch ambiguity, multiple paths, arcs in snapshots older than schema 15, out-of-scope vias, or stale pad mapping remain incomplete.",
         "The return-plane result requires all mapped pads to touch one same-net filled zone island on one declared copper layer. Routes formed from multiple zones/tracks can remain incomplete even when the overall net is connected.",
         "The check does not establish parasitics, switching behavior, emissions, stability, thermal performance, manufacturing quality, or electrical suitability of the project-selected threshold. Hardware or simulation validation remains separate."
       ],
@@ -9624,8 +9624,10 @@
         "tests.test_pcb_switching_loop_geometry.PcbSwitchingLoopGeometryTests.test_schema_nine_requires_valid_contours_for_every_filled_island",
         "tests.test_native_pcb_probe.test_canonicalization_rejects_degenerate_native_rings",
         "tests.test_pcb_switching_loop_geometry.PcbSwitchingLoopGeometryTests.test_absent_layer_is_unsupported_and_missing_stack_is_schema_error",
-        "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_missing_branching_and_arc_trace_paths_are_incomplete",
+        "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_missing_and_branching_trace_paths_are_incomplete",
+        "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_arc_without_schema_15_measurement_remains_incomplete",
         "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_multilayer_trace_joins_at_an_observed_via_and_checks_scope",
+        "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_native_arc_midpoint_and_length_resolve_in_schema_15",
         "tests.test_pcb_switching_loop_routes.test_design_lint_reports_ambiguous_trace_chain_incomplete"
       ],
       "valid_control_fixtures": [
@@ -10239,7 +10241,7 @@
       "valid_control_fixtures": [
         "tests.test_pcb_rf_antenna.test_exact_module_identity_feed_and_local_keepout_transform_complete",
         "tests.test_pcb_rf_antenna.test_explicit_external_antenna_and_dnp_dispositions_are_supported",
-        "tests.test_pcb_keepouts_native.test_native_schema_14_snapshot_records_keepout_footprint_and_empty_touch_evidence",
+        "tests.test_pcb_keepouts_native.test_native_schema_15_snapshot_records_keepout_footprint_and_empty_touch_evidence",
         "tests.test_pcb_rf_antenna_mcp_parity.test_disabled_rf_antenna_coverage_matches_cli_and_mcp",
         "tests.test_pcb_rf_antenna_mcp_parity.test_enabled_rf_antenna_fault_and_control_match_cli_and_mcp"
       ],

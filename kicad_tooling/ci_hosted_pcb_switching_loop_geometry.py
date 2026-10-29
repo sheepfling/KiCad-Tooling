@@ -260,20 +260,30 @@ def verify_switching_loop_geometry_cases(ctx: SwitchingLoopContext):
                             "Native track endpoint and same-layer adjacency evidence differs from the synthetic connected chain"
                         )
                 elif case_name == "arc-trace":
+                    observed_endpoints = (
+                        None if not tracks else (tracks[0].start_pads, tracks[0].end_pads)
+                    )
+                    expected_endpoints = {
+                        (("U1.1",), ("C2.1",)),
+                        (("C2.1",), ("U1.1",)),
+                    }
                     if (
                         len(tracks) != 1
                         or tracks[0].geometry_kind != "arc"
                         or tracks[0].arc_mid_nm != (17500000, 5000000)
                         or tracks[0].arc_length_nm != 19110085
-                        or tracks[0].start_pads != ("U1.1",)
-                        or (tracks[0].end_pads != ("C2.1",))
+                        or observed_endpoints not in expected_endpoints
                         or tracks[0].start_vias
                         or tracks[0].end_vias
                         or tracks[0].start_tracks
                         or tracks[0].end_tracks
                     ):
                         raise ValueError(
-                            "Native arc endpoint evidence differs from the synthetic board"
+                            "Native arc evidence differs from the synthetic board: "
+                            f"geometry={tracks[0].geometry_kind if tracks else None!r}, "
+                            f"midpoint={tracks[0].arc_mid_nm if tracks else None!r}, "
+                            f"length={tracks[0].arc_length_nm if tracks else None!r}, "
+                            f"endpoints={observed_endpoints if tracks else None!r}"
                         )
                 elif len(tracks) != 1 or (
                     tracks[0].geometry_kind != "segment"
