@@ -2251,6 +2251,12 @@ is not a reason by itself to expand its scope or change its default policy.
   fitted-versus-DNP connector pair also checks that
   population-dependent pin hints ignore DNP peers while preserving findings on
   fitted connectors. These check the project-authored relationship contract.
+- **Neutral-label evidence:** `tests/test_electrical_return_contracts.py`
+  verifies that an explicit common-return requirement rejects two neutral net
+  assignments and accepts the common-net control; a separately authored
+  isolation requirement accepts two neutral domains and rejects their short.
+  The return-name heuristic is quiet in these cases, showing that the authored
+  contract checks the intended pin relationships without relying on labels.
 - **Related heuristic regressions:** A four-connector synthetic case uses
   DB9 pins 7/9 on separately named `RETURN_PORT_1` through `RETURN_PORT_4`
   and exercises both repeated-function and numbered-return review candidates,

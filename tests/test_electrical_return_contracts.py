@@ -200,6 +200,64 @@ def test_separate_serial_returns_pass_when_isolation_is_declared() -> None:
     assert checks["grounding/return-net-review"].status == "FAIL"
 
 
+def test_neutral_net_names_do_not_hide_a_required_common_return() -> None:
+    components = {
+        reference: ComponentContract(value="Synthetic part", footprint="")
+        for reference in ("U1", "J1", "J2")
+    }
+    pins = ("U1.2", "J1.4", "J2.4")
+    split = NetlistContract(
+        components=components,
+        nets={"N_A": ("U1.2", "J1.4"), "N_B": ("J2.4",)},
+    )
+    common = NetlistContract(components=components, nets={"N_COMMON": pins})
+    requirement = GroundingAnalysis(
+        basis="Synthetic approved pinout requires one common return domain",
+        domains=(GroundDomain(net="N_COMMON", pins=pins),),
+    )
+
+    split_checks = {row.id: row for row in grounding_checks(requirement, split)}
+    common_checks = {row.id: row for row in grounding_checks(requirement, common)}
+
+    assert split_checks["grounding/N_COMMON"].status == "FAIL"
+    assert split_checks["grounding/component-coverage"].status == "PASS"
+    assert "grounding/return-net-review" not in split_checks
+    assert all(row.status == "PASS" for row in common_checks.values())
+
+
+def test_neutral_net_names_preserve_explicitly_isolated_return_domains() -> None:
+    components = {
+        reference: ComponentContract(value="Synthetic part", footprint="")
+        for reference in ("U1", "U2", "J1", "J2")
+    }
+    first_domain = ("U1.3", "J1.5")
+    second_domain = ("U2.3", "J2.5")
+    isolated = NetlistContract(
+        components=components,
+        nets={"N_A": first_domain, "N_B": second_domain},
+    )
+    shorted = NetlistContract(
+        components=components,
+        nets={"N_SHARED": (*first_domain, *second_domain)},
+    )
+    requirement = GroundingAnalysis(
+        basis="Synthetic approved pinout requires isolated return domains",
+        domains=(
+            GroundDomain(net="N_A", pins=first_domain),
+            GroundDomain(net="N_B", pins=second_domain),
+        ),
+    )
+
+    isolated_checks = {row.id: row for row in grounding_checks(requirement, isolated)}
+    shorted_checks = {row.id: row for row in grounding_checks(requirement, shorted)}
+
+    assert all(row.status == "PASS" for row in isolated_checks.values())
+    assert shorted_checks["grounding/N_A"].status == "FAIL"
+    assert shorted_checks["grounding/N_B"].status == "FAIL"
+    assert shorted_checks["grounding/component-coverage"].status == "PASS"
+    assert "grounding/return-net-review" not in shorted_checks
+
+
 def test_one_stray_usb_return_is_caught_by_the_declared_pinout() -> None:
     observed = NetlistContract(
         components={
