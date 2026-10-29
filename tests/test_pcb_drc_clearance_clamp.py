@@ -23,6 +23,7 @@ from tests.design_lint_fixtures.pcb_signal_path import (
     incomplete_signal_report,
     native_rules,
     path_map,
+    signal_source_hashes,
     source_netlist,
 )
 from tests.test_pcb_drc_coverage import pair_map, rules_text
@@ -59,7 +60,7 @@ def test_clamped_signal_rule_obeys_project_disposition(mode: str, status: str) -
     coach = ContractCoachReport(
         status="READY_FOR_REVIEW",
         project_id="synthetic-clamp",
-        source_hashes={},
+        source_hashes=signal_source_hashes(),
         netlist_sha256="5" * 64,
         observed=source_netlist(),
     )

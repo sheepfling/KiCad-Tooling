@@ -29,6 +29,8 @@ For the planned lint and heuristic work, priorities, and completion evidence,
 see the [design lint backlog](docs/DESIGN_LINT_BACKLOG.md).
 For the product architecture, feature-development path, and staged reorganization, see the
 [architecture backlog](docs/ARCHITECTURE_BACKLOG.md).
+For proposed user-facing workflows and visualization priorities, see the
+[product feature backlog](docs/FEATURE_BACKLOG.md).
 
 ## Try the separate package
 
@@ -64,6 +66,36 @@ reviewed edits, exports, downloads, or supplier submissions. The template's
 The board renderer creates six orthographic and four angled views by default.
 See [3D view selection](docs/3D_VIEWS.md) to request a smaller view set from
 the CLI or MCP.
+
+For a BOM and parts review, run `kicad-team parts --project <id>` from the
+project checkout. The text report lists the purchasing groups and their build
+quantities; the fresh receipt also contains `report.json`, `report.txt`, and
+`index.html`. When a plan is available, the page includes a searchable
+component checklist and the receipt includes a review BOM CSV. The
+checklist can filter by purchasing-group membership and findings independently,
+and its search works with both filters. Group membership alone does not resolve
+part findings. The `prepare_parts` MCP tool returns the same structured plan. A fresh native
+capture needs the project's exact KiCad toolchain; MCP also requires exports
+and checks to be enabled, or a saved source-bound native summary can be used.
+Unresolved components still need review before a purchasing list is ready.
+
+To plot retained simulation waveforms, install the `charts` extra and run
+`kicad-team electrical-charts --receipt build/<electrical-run>/electrical.json`
+from the project checkout. This exports PNG, SVG, and full-precision CSV from
+the saved, hash-checked transient and AC data without rerunning the simulation.
+MCP exposes the same operation as `export_electrical_charts` when exports are
+enabled. These charts cover declared simulation cases; they do not import
+arbitrary measurement or telemetry files. See [waveform charts](docs/WAVEFORM_CHARTS.md)
+for the full-run and measurement-window views.
+
+For schematic and PCB review, [explore saved findings](docs/FINDINGS_VIEW.md)
+on the retained KiCad drawings and keep unlocated findings visible alongside them.
+
+To see selected native drawings, findings, parts, 3D, simulation and verification
+receipts together, create an offline [project review overview](docs/REVIEW_OVERVIEW.md).
+It shows the original status and whether each receipt is current, stale, missing,
+unavailable, or of unknown freshness. CLI and the export-enabled MCP server use
+the same saved-evidence service.
 
 ## Configure another layout or KiCad version
 

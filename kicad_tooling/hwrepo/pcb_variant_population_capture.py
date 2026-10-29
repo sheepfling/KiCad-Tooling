@@ -15,15 +15,16 @@ from pathlib import Path
 from pydantic import JsonValue
 
 from ..validate import hashes, read_netlist
+from .command_evidence_models import CommandEvidence
 from .contract_coach import pinned_image, run_command
 from .contracts import kicad_variant_names, repo_path, write_model
 from .evidence import digest
-from .models import CommandEvidence, ProjectConfig
 from .pcb_component_inventory_models import (
     PcbVariantPopulationCoverage,
     PcbVariantPopulationEvidence,
 )
 from .pcb_component_population import PcbVariantPopulationSource
+from .project_models import ProjectConfig
 
 
 @dataclass(frozen=True, slots=True)

@@ -66,7 +66,7 @@ def antenna_report(*, fault: bool) -> JsonObject:
     coach = ContractCoachReport(
         status="READY_FOR_REVIEW",
         project_id="synthetic-rf",
-        source_hashes={},
+        source_hashes={"projects/synthetic/synthetic.kicad_pcb": board_sha256},
         netlist_sha256=netlist_sha256,
         observed=source_netlist,
     )

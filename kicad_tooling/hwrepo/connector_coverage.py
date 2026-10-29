@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 from typing import Literal
 
 from .connector_coverage_models import (
@@ -34,7 +35,7 @@ def _unreviewed_component_pin_evidence(
     observed: NetlistContract,
     reference: str,
     pin_numbers: tuple[str, ...],
-    nets_by_pin: Mapping[str, set[str]],
+    nets_by_pin: Mapping[str, AbstractSet[str]],
 ) -> tuple[ConnectorUnreviewedPinEvidence, ...]:
     return tuple(
         ConnectorUnreviewedPinEvidence(

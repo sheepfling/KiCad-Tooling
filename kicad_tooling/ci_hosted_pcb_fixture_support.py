@@ -8,8 +8,8 @@ from pathlib import Path
 
 from .ci_hosted_support import HostedLog
 from .hwrepo.electrical import selected_config
-from .hwrepo.models import ProjectConfig
 from .hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
+from .hwrepo.project_models import ProjectConfig
 
 
 class HostedPcbFixtureFailure(RuntimeError):

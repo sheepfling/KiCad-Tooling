@@ -8,7 +8,11 @@ from pathlib import Path
 from .contracts import read_model, repo_path
 from .discovery import load_registry
 from .layout import layout
-from .models import ProductIndex, ProjectRecord, ProjectRegistry
+from .product_models import ProductIndex
+from .project_models import (
+    ProjectRecord,
+    ProjectRegistry,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,6 +27,22 @@ class ProjectSelector:
     @property
     def active(self) -> bool:
         return bool(self.project_ids or self.tags or self.excluded_tags or self.product_ids)
+
+
+class UnknownProjectError(ValueError):
+    """An exact project ID is absent from the authoritative registry."""
+
+    def __init__(self, project_id: str) -> None:
+        self.project_id = project_id
+        super().__init__(f"Unknown project {project_id!r}")
+
+
+def resolve_project(root: Path, project_id: str) -> ProjectRecord:
+    """Resolve one exact project ID without assuming the checkout layout."""
+    project = next((item for item in load_registry(root).projects if item.id == project_id), None)
+    if project is None:
+        raise UnknownProjectError(project_id)
+    return project
 
 
 def duplicate_values(values: tuple[str, ...], label: str) -> None:

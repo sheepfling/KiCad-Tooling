@@ -8,6 +8,7 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+from .command_evidence_models import CommandEvidence
 from .container_git import git_metadata_mounts
 from .contracts import read_model, repo_path, write_model
 from .discovery import load_config, load_registry
@@ -16,16 +17,10 @@ from .generation import expected_outputs
 from .layout import layout
 from .markdown import release_review, write_markdown
 from .models import (
-    CommandEvidence,
     ElectricalAnalysisReport,
     EvidenceFile,
     InterfacesCatalog,
     LibrariesCatalog,
-    PolicyIssue,
-    ProductIndex,
-    ProductRecord,
-    ProjectManifest,
-    ProjectRecord,
     ReleaseArtifact,
     ReleaseArtifactKind,
     ReleaseClass,
@@ -39,7 +34,16 @@ from .models import (
     ScopedReleasePortableReport,
     ValidationSummary,
 )
+from .policy_issue_models import PolicyIssue
 from .portable_evidence import verify_release_portable
+from .product_models import (
+    ProductIndex,
+    ProductRecord,
+)
+from .project_models import (
+    ProjectManifest,
+    ProjectRecord,
+)
 from .release import (
     configured_toolchains,
     load_release_repository,

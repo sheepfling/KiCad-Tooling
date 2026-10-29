@@ -12,7 +12,11 @@ from pathlib import Path
 from .hwrepo.contracts import read_model, repo_path
 from .hwrepo.discovery import settings
 from .hwrepo.layout import default_project_root
-from .hwrepo.models import ToolchainAssessment, ToolchainRecord, ToolchainsCatalog
+from .hwrepo.models import ToolchainAssessment
+from .hwrepo.project_models import (
+    ToolchainRecord,
+    ToolchainsCatalog,
+)
 
 MACOS_KICAD_CLI = Path("/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli")
 

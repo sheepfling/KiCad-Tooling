@@ -84,6 +84,8 @@ EXPORT_TOOLS = frozenset(
         "prepare_supplier_handoff",
         "export_electrical_charts",
         "export_electrical_chart_suite",
+        "export_findings_view",
+        "export_review_overview",
         "source_cad",
         "preview_cad_import",
     }

@@ -222,48 +222,56 @@ def render_case(
             "python -m pip install -e '.[charts]'."
         ) from exc
 
-    count = sum(1 + (panel.phase is not None) for panel in panels)
-    figure = Figure(figsize=(10, 2.8 * count + 0.9), layout="constrained")
-    FigureCanvasAgg(figure)
-    axes = figure.subplots(count, 1, sharex=True, squeeze=False)
     x = data.axis
     # Average/RMS thresholds describe a measured interval, while an inrush
-    # excursion can be orders of magnitude larger. Plot that interval in detail;
-    # the complete sampled series remains available in the CSV export.
+    # excursion can be orders of magnitude larger. Show both the complete run
+    # and the interval in detail, each with its own axis scale.
     detail_window = isinstance(case, TransientAnalysis) and any(
         measure.statistic in {"avg", "rms"} for measure in case.measures
     )
+    count = sum(1 + (panel.phase is not None) for panel in panels)
     if detail_window:
-        first = min(measure.start for measure in case.measures)
-        last = max(measure.stop for measure in case.measures)
-        margin = (last - first) * 0.03
-        visible = tuple(
-            index for index, value in enumerate(x) if first - margin <= value <= last + margin
-        )
-    else:
-        visible = tuple(range(len(x)))
-    shown_x = tuple(x[index] for index in visible)
+        count *= 2
+    figure = Figure(figsize=(10, 2.8 * count + 0.9), layout="constrained")
+    FigureCanvasAgg(figure)
+    axes = figure.subplots(count, 1, sharex=not detail_window, squeeze=False)
+    full = tuple(range(len(x)))
     axis_label = "Time (s)" if isinstance(case, TransientAnalysis) else "Frequency (Hz)"
     position = 0
     for panel in panels:
-        chart = axes[position, 0]
-        position += 1
-        chart.plot(
-            shown_x,
-            tuple(panel.values[index] for index in visible),
-            color="#155a85",
-            linewidth=1.2,
-            label=panel.label,
+        margin = (panel.measure.stop - panel.measure.start) * 0.03
+        visible = (
+            tuple(
+                index
+                for index, value in enumerate(x)
+                if panel.measure.start - margin <= value <= panel.measure.stop + margin
+            )
+            if detail_window
+            else full
         )
-        chart.axvspan(
-            panel.measure.start,
-            panel.measure.stop,
-            alpha=0.12,
-            color="#d39d27",
-            label="Measured window",
+        views = (
+            (("Full run", full), ("Measurement window detail", visible))
+            if detail_window
+            else (("", visible),)
         )
-        if panel.comparable_limits:
-            if panel.measure.statistic == "pp":
+        for view_name, indices in views:
+            chart = axes[position, 0]
+            position += 1
+            chart.plot(
+                tuple(x[index] for index in indices),
+                tuple(panel.values[index] for index in indices),
+                color="#155a85",
+                linewidth=1.2,
+                label=panel.label,
+            )
+            chart.axvspan(
+                panel.measure.start,
+                panel.measure.stop,
+                alpha=0.12,
+                color="#d39d27",
+                label="Measured window",
+            )
+            if panel.comparable_limits and panel.measure.statistic == "pp":
                 chart.text(
                     0.99,
                     0.98,
@@ -276,7 +284,7 @@ def render_case(
                     verticalalignment="top",
                     fontsize=8,
                 )
-            else:
+            elif panel.comparable_limits:
                 for label, limit, color in (
                     ("lower limit", panel.measure.minimum, "#247046"),
                     ("upper limit", panel.measure.maximum, "#af3939"),
@@ -291,24 +299,27 @@ def render_case(
                             linewidth=1,
                             label=(f"{panel.measure.statistic} {label} {limit:g} {panel.unit}"),
                         )
-        else:
-            chart.text(
-                0.99,
-                0.98,
-                "Derived magnitude; limits apply to ngspice measure",
-                transform=chart.transAxes,
-                horizontalalignment="right",
-                verticalalignment="top",
-                fontsize=8,
-            )
-        chart.set_ylabel(f"{panel.measure.id} ({panel.unit})")
-        chart.grid(True, alpha=0.25)
-        chart.legend(loc="best", fontsize=8)
+            else:
+                chart.text(
+                    0.99,
+                    0.98,
+                    "Derived magnitude; limits apply to ngspice measure",
+                    transform=chart.transAxes,
+                    horizontalalignment="right",
+                    verticalalignment="top",
+                    fontsize=8,
+                )
+            chart.set_ylabel(f"{panel.measure.id} ({panel.unit})")
+            chart.grid(True, alpha=0.25)
+            chart.legend(loc="best", fontsize=8)
+            if detail_window:
+                chart.set_title(f"{panel.measure.id}: {view_name}", fontsize=9)
+                chart.set_xlabel(axis_label)
         if panel.phase is not None:
             phase_chart = axes[position, 0]
             position += 1
             phase_chart.plot(
-                shown_x,
+                tuple(x[index] for index in visible),
                 tuple(panel.phase[index] for index in visible),
                 color="#7d5596",
                 linewidth=1.2,
@@ -327,7 +338,8 @@ def render_case(
     axes[-1, 0].set_xlabel(axis_label)
     # Matplotlib leaves these keyword argument signatures partially untyped.
     subtitle = (
-        "ngspice model output; measurement window detail, full samples in CSV"
+        "ngspice model output; full run and measurement window detail; "
+        "avg/rms limits apply to the window statistic"
         if detail_window
         else "ngspice model output"
     )

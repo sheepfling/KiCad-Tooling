@@ -33,10 +33,8 @@ from .models import (
     LibrariesCatalog,
     ModelMapAssignment,
     ModelPopulationReport,
-    ProjectKind,
-    ProjectManifest,
-    ProjectRegistry,
 )
+from .project_models import ProjectKind, ProjectManifest, ProjectRegistry
 
 # Preserve the original service-module import surface for existing consumers.
 __all__ = [

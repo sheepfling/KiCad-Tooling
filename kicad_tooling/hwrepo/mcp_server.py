@@ -24,7 +24,8 @@ from . import mcp_parts_extensions as part_tools
 from . import mcp_planning as planning
 from . import mcp_workflow as workflow
 from . import mcp_workflow_design_lint as design_lint_workflow
-from .contracts import read_model, repo_path
+from .cad_source_models import CadImportReport, CadSourcingReview, CadStepReport
+from .contracts import repo_path
 from .design_lint_reconciliation_models import DesignLintReconciliationReport
 from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
@@ -32,17 +33,16 @@ from .design_lint_rule_types import DesignLintTheme
 from .doctor import NativeRunner
 from .doctor import doctor as inspect_environment
 from .file_access_models import McpEditPreview, McpEditResult, McpFileContent
+from .findings_view import build_findings_view
+from .findings_view_models import FindingsViewReport
 from .import_inventory import scan_imports as scan_designs
 from .importing import import_project as import_design
-from .inventory import inventory
 from .layout import layout, workflow_guide
+from .mcp_project_inventory import register_project_inventory_tools
 from .mcp_server_guardrails import import_path, service_operation
 from .mcp_workflow_documents import DOCUMENTS, DocumentName
 from .models import (
     AutoCadReport,
-    CadImportReport,
-    CadSourcingReview,
-    CadStepReport,
     ContractCoachReport,
     DiagnosticReport,
     ElectricalAnalysisReport,
@@ -54,13 +54,11 @@ from .models import (
     ForeignFormat,
     ForeignPcbReport,
     ImpactPlan,
-    ImportInventoryReport,
     LocalRescueReport,
     McpArtifactList,
     McpGenerationReport,
     McpModelMapAssignment,
     McpNativeScopeReport,
-    McpProjectReport,
     McpScopeReport,
     ModelInventoryReport,
     ModelMapAssignment,
@@ -68,27 +66,29 @@ from .models import (
     PartPickerReport,
     PartSelectionAssignment,
     PartSelectionReport,
-    ProjectImportReport,
-    ProjectKind,
-    ProjectManifest,
-    ProjectScaffoldReport,
-    ProjectTestContract,
     ProjectVerificationReport,
     PurchasingReport,
     ReleaseExportReport,
     ReleaseManifest,
     ReleasePackageReport,
     ReleaseReadinessReport,
-    SourcingSnapshotReport,
     SupplierHandoffReport,
     TemplateDoctorReport,
-    TemplateInventoryReport,
     ThreeDReport,
     ThreeDView,
-    ToolSurfaceReport,
+)
+from .project_models import (
+    ImportInventoryReport,
+    ProjectImportReport,
+    ProjectKind,
+    ProjectScaffoldReport,
 )
 from .purchasing_preference_models import McpPurchasingPreferencesResult, PurchasingPreferences
+from .review_overview import build_review_overview
+from .review_overview_models import ReviewOverviewReport
 from .scaffold import new_project as scaffold_project
+from .sourcing_models import SourcingSnapshotReport
+from .surface_models import ToolSurfaceReport
 
 READ_ONLY = ToolAnnotations(
     read_only_hint=True,
@@ -166,12 +166,7 @@ def create_server(
         ),
     )
 
-    def list_projects() -> TemplateInventoryReport:
-        """Discover project IDs, products, tags and toolchains; presence is not validation."""
-        with service_operation(operation):
-            return inventory(root)
-
-    server.tool(annotations=READ_ONLY)(list_projects)
+    register_project_inventory_tools(server, root, operation, READ_ONLY)
 
     def inspect_tool_surfaces() -> ToolSurfaceReport:
         """Compare CLI and full MCP coverage, declared gaps and interface drift.
@@ -231,28 +226,6 @@ def create_server(
             return planning.inspect_sourcing_snapshot(root, path)
 
     server.tool(annotations=READ_ONLY)(inspect_sourcing_snapshot)
-
-    def get_project(project_id: str) -> McpProjectReport:
-        """Read one registered project's inventory, manifest and authored test expectations."""
-        with service_operation(operation):
-            report = inventory(root)
-            if report.status != "PASS":
-                raise ValueError(
-                    "Project discovery failed: "
-                    + "; ".join(issue.message for issue in report.issues)
-                )
-            project = next((item for item in report.projects if item.id == project_id), None)
-            if project is None:
-                raise ValueError(f"Unknown project ID: {project_id}. Call list_projects first.")
-            path = repo_path(root, project.manifest)
-            manifest = read_model(path, ProjectManifest)
-            contract_path = repo_path(path.parent, manifest.checks)
-            contract = (
-                read_model(contract_path, ProjectTestContract) if contract_path.is_file() else None
-            )
-            return McpProjectReport(project=project, manifest=manifest, contract=contract)
-
-    server.tool(annotations=READ_ONLY)(get_project)
 
     def doctor(
         project_id: str | None = None,
@@ -898,6 +871,57 @@ def create_server(
         server.tool(annotations=EDIT)(init_electrical)
 
     if allow_exports:
+
+        def export_review_overview(
+            project_id: str,
+            view_id: str,
+            native_summary: str | None = None,
+            findings_view: str | None = None,
+            parts_report: str | None = None,
+            three_d_report: str | None = None,
+            charts_report: str | None = None,
+            verification_report: str | None = None,
+        ) -> ReviewOverviewReport:
+            """Index explicitly selected saved evidence in one offline project page.
+
+            Missing, stale, unavailable and unknown receipts remain distinct. This
+            does not run checks or grant electrical or release approval.
+            """
+            with service_operation(operation):
+                return build_review_overview(
+                    root,
+                    project_id,
+                    native_summary=None if native_summary is None else Path(native_summary),
+                    findings_view=None if findings_view is None else Path(findings_view),
+                    parts_report=None if parts_report is None else Path(parts_report),
+                    three_d_report=None if three_d_report is None else Path(three_d_report),
+                    charts_report=None if charts_report is None else Path(charts_report),
+                    verification_report=None
+                    if verification_report is None
+                    else Path(verification_report),
+                    output=workflow.fresh_output(root, "review-overview", view_id),
+                )
+
+        server.tool(annotations=CREATE_ONLY)(export_review_overview)
+
+        def export_findings_view(
+            project_id: str, view_id: str, native_summary: str, lint_report: str | None = None
+        ) -> FindingsViewReport:
+            """Export an offline review of saved source-bound ERC, DRC, and optional lint evidence.
+
+            This reads existing evidence, does not execute KiCad or lint, and keeps
+            unmapped findings visible. Outputs use a fresh build/findings-view/view_id.
+            """
+            with service_operation(operation):
+                return build_findings_view(
+                    root,
+                    project_id,
+                    Path(native_summary),
+                    workflow.fresh_output(root, "findings-view", view_id),
+                    None if lint_report is None else Path(lint_report),
+                )
+
+        server.tool(annotations=CREATE_ONLY)(export_findings_view)
 
         def capture_electrical_inputs(
             project_id: str,

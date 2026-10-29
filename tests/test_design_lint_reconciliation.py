@@ -181,6 +181,71 @@ def test_duplicate_fingerprints_block_without_guessing_a_match() -> None:
     assert report.baseline_findings == (duplicate, duplicate)
 
 
+@pytest.mark.parametrize("invalid_side", ["baseline", "current"])
+@pytest.mark.parametrize("failure", ["blocked", "unbound"])
+def test_incomplete_or_unbound_report_does_not_invent_finding_transitions(
+    invalid_side: str, failure: str
+) -> None:
+    retained = _finding("6" * 64)
+    other = _finding("7" * 64)
+    baseline = _report(findings=(retained,))
+    current = _report(findings=(other,))
+    if invalid_side == "baseline":
+        baseline = _report(
+            findings=(retained,),
+            status="BLOCKED" if failure == "blocked" else "REVIEW",
+            netlist_sha256=None if failure == "unbound" else "b" * 64,
+        )
+    else:
+        current = _report(
+            findings=(other,),
+            status="BLOCKED" if failure == "blocked" else "REVIEW",
+            netlist_sha256=None if failure == "unbound" else "b" * 64,
+        )
+
+    result = reconcile_design_lint_reports(baseline, current)
+
+    assert result.status == "BLOCKED"
+    assert result.transitions == ()
+    assert result.baseline_findings == (retained,)
+    assert result.current_findings == (other,)
+    rendered = reconciliation_text(result)
+    assert "comparison unavailable" in rendered
+    assert "NO_LONGER_REPORTED" not in rendered
+    assert "NEW [" not in rendered
+    assert "J1.7 / J2.7" in rendered
+
+
+def test_blocked_empty_current_findings_do_not_look_resolved() -> None:
+    finding = _finding("8" * 64)
+    result = reconcile_design_lint_reports(_report(findings=(finding,)), _report(status="BLOCKED"))
+
+    assert result.status == "BLOCKED"
+    assert result.transitions == ()
+    assert result.baseline_findings == (finding,)
+    assert "NO_LONGER_REPORTED" not in reconciliation_text(result)
+
+
+def test_incompatible_native_snapshots_do_not_classify_finding_changes() -> None:
+    finding = _finding("9" * 64)
+    baseline = _report(findings=(finding,))
+    current = _report()
+    assert current.connectivity_snapshot is not None
+    current = current.model_copy(
+        update={
+            "connectivity_snapshot": current.connectivity_snapshot.model_copy(
+                update={"kicad_version": "10.0.0"}
+            )
+        }
+    )
+
+    result = reconcile_design_lint_reports(baseline, current)
+    assert result.status == "BLOCKED"
+    assert result.connectivity_comparison == "INCOMPATIBLE"
+    assert result.transitions == ()
+    assert result.baseline_findings == (finding,)
+
+
 def test_text_reconciliation_keeps_dismissed_and_removed_rows_reviewable() -> None:
     ignored = _finding("8" * 64, disposition="IGNORED", reason="Mapped in connector pinout")
     removed = _finding("9" * 64)

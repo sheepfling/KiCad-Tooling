@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import os
 import stat
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Protocol
 
@@ -22,15 +23,18 @@ from kicad_tooling.hwrepo.pin_connectivity_models import PinConnectivityAnalysis
 
 from ..validate import hashes
 from .contracts import parse_model_text, read_model, repo_path
-from .discovery import load_config, load_registry
+from .discovery import load_config
 from .models import (
     ElectricalCheck,
     NetlistContract,
+)
+from .project_models import (
     ProjectConfig,
     ProjectKind,
     ProjectManifest,
 )
 from .return_nets import return_net_groups
+from .selection import resolve_project
 
 SimulationCase = TransientAnalysis | FrequencyAnalysis
 
@@ -70,9 +74,7 @@ def model_digest(path: Path) -> str:
 
 
 def selected_config(root: Path, project_id: str) -> ProjectConfig:
-    project = next((p for p in load_registry(root).projects if p.id == project_id), None)
-    if project is None:
-        raise ValueError(f"Unknown project {project_id!r}")
+    project = resolve_project(root, project_id)
     return load_config(root, project.config)
 
 
@@ -111,7 +113,7 @@ def bound_inputs(
     source = hashes(root, config.source_roots)
     if set(source) != set(config.required_inputs):
         raise ValueError("Repair the declared design source inventory before electrical analysis")
-    project = next(p for p in load_registry(root).projects if p.id == config.project_id)
+    project = resolve_project(root, config.project_id)
     manifest_path = repo_path(root, project.config)
     manifest = read_model(manifest_path, ProjectManifest)
     checks_path = repo_path(manifest_path.parent, manifest.checks)
@@ -134,6 +136,31 @@ def bound_inputs(
                 raise ValueError(f"{case.id}: stale reviewed model hash: {name}")
             inputs[name] = actual
     return inputs
+
+
+def bind_electrical_inputs(
+    root: Path,
+    config: ProjectConfig,
+    contract: ElectricalAnalysisContract,
+    expected: Mapping[str, str] | None = None,
+    *,
+    mismatch_message: str = "Electrical inputs changed during analysis",
+) -> dict[str, str]:
+    """Bind the parsed records to current inputs and recheck an existing binding."""
+    actual = bound_inputs(root, config, contract)
+    if (
+        selected_config(root, config.project_id) != config
+        or load_analysis(root, config) != contract
+    ):
+        message = (
+            "Electrical configuration or requirements changed while binding inputs"
+            if expected is None
+            else mismatch_message
+        )
+        raise ValueError(message)
+    if expected is not None and actual != expected:
+        raise ValueError(mismatch_message)
+    return actual
 
 
 def grounding_checks(

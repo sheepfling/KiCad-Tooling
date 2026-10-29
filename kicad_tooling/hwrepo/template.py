@@ -13,7 +13,6 @@ from .contracts import read_model, repo_path, write_model
 from .layout import layout
 from .licensing import template_license
 from .models import (
-    PolicyIssue,
     TemplateAdoptionRecord,
     TemplateBootstrapReport,
     TemplateContract,
@@ -22,6 +21,7 @@ from .models import (
     TemplateUpgradePlan,
     TemplateUpgradesCatalog,
 )
+from .policy_issue_models import PolicyIssue
 from .repository import ephemeral, generated_artifact
 
 CONTRACT_PATH = "templates/template-contract.json"

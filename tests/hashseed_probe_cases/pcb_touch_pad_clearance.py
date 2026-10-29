@@ -50,7 +50,7 @@ def clearance_report(*, distance_nm: int) -> JsonObject:
     coach = ContractCoachReport(
         status="READY_FOR_REVIEW",
         project_id="synthetic-touch-clearance",
-        source_hashes={},
+        source_hashes={"projects/synthetic-touch-clearance/board.kicad_pcb": board_sha256},
         netlist_sha256=netlist_sha256,
         observed=source_netlist,
     )

@@ -95,12 +95,31 @@ def mechanical_edge_report(*, fault: bool) -> JsonObject:
         command_path = native_directory / "drc.command.json"
         command_bytes = command.model_dump_json().encode("utf-8")
         command_path.write_bytes(command_bytes)
+        config = ProjectConfig.model_construct(
+            kind=ProjectKind.PCB,
+            project_id=_PROJECT_ID,
+            toolchain_id="synthetic-kicad-10",
+            project=_PROJECT_RELATIVE,
+            source_roots=("projects/synthetic-mechanical-edge-clearance",),
+            kicad_version=_KICAD_VERSION,
+            image="ghcr.io/kicad/kicad:10.0.5@sha256:" + "a" * 64,
+        )
+        source_hashes = hashes(root, config.source_roots)
         summary = ValidationSummary(
             timestamp_utc="2026-10-23T00:00:00Z",
             checked_commit="synthetic-source-commit",
             project_id=_PROJECT_ID,
             project_kind=ProjectKind.PCB,
-            checks={"drc": CheckEvidence(status="PASS", returncode=0, findings=0)},
+            checks={
+                "drc": CheckEvidence(status="PASS", returncode=0, findings=0),
+                "toolchain": CheckEvidence(
+                    status="PASS",
+                    observed_version=config.kicad_version,
+                    image=config.image,
+                ),
+                "source_scope": CheckEvidence(status="PASS", source_hashes=source_hashes),
+                "source_unchanged": CheckEvidence(status="PASS", source_hashes=source_hashes),
+            },
             status="PASS",
             artifacts_sha256={
                 "drc.json": _sha256(drc_bytes),
@@ -110,13 +129,6 @@ def mechanical_edge_report(*, fault: bool) -> JsonObject:
         summary_path = native_directory / "summary.json"
         summary_path.write_text(summary.model_dump_json(), encoding="utf-8")
 
-        config = ProjectConfig.model_construct(
-            kind=ProjectKind.PCB,
-            project=_PROJECT_RELATIVE,
-            source_roots=("projects/synthetic-mechanical-edge-clearance",),
-            kicad_version=_KICAD_VERSION,
-        )
-        source_hashes = hashes(root, config.source_roots)
         requirement_map = PcbMechanicalEdgeClearanceMap(
             basis="Synthetic reviewed connector-body clearance requirement",
             requirements=(

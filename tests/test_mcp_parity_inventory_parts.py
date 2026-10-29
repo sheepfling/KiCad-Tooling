@@ -268,6 +268,18 @@ class _McpParityInventoryPartsCases(McpParityHarness):
                 (Path(cli.receipt_dir) / name).read_bytes(),
                 (Path(mcp.receipt_dir) / name).read_bytes(),
             )
+        cli_text = (Path(cli.receipt_dir) / "report.txt").read_text(encoding="utf-8")
+        mcp_text = (Path(mcp.receipt_dir) / "report.txt").read_text(encoding="utf-8")
+        self.assertEqual(
+            cli_text.replace(cli.receipt_dir, "<receipt>"),
+            mcp_text.replace(mcp.receipt_dir, "<receipt>"),
+        )
+        self.assertIn(
+            "- resistor-1k rev A: Vishay MRS25000C1001FCT00; "
+            "references: R1, R2; per board: 2; required: 20; spares: 3; order quantity: 23",
+            mcp_text,
+        )
+        self.assertIn("Excluded references: C1 (DNP)", mcp_text)
 
     async def _case_test_parts_stale_evidence_parity(self) -> None:
         native = self.native_evidence()

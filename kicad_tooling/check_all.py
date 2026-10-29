@@ -15,10 +15,12 @@ from .hwrepo.models import (
     CheckAllSummary,
     CheckEvidence,
     ProjectCheckSummary,
+)
+from .hwrepo.product import check as check_product
+from .hwrepo.project_models import (
     ProjectKind,
     ProjectRecord,
 )
-from .hwrepo.product import check as check_product
 from .hwrepo.repository import check_repository
 from .hwrepo.selection import ProjectSelector, resolve_project_ids
 from .lint_registry import lint

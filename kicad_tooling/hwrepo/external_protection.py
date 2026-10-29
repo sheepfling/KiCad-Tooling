@@ -12,10 +12,8 @@ from .external_protection_models import (
     ExternalProtectionDeviceRequirement,
     ExternalProtectionMap,
 )
-from .models import (
-    ComponentContract,
-    NetlistContract,
-)
+from .models import NetlistContract
+from .project_models import ComponentContract
 
 
 def _device_issues(

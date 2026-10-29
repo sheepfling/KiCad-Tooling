@@ -101,13 +101,13 @@ from .hwrepo.contracts import (
 )
 from .hwrepo.hosted_preview import preview_lane
 from .hwrepo.layout import default_project_root
-from .hwrepo.models import (
-    ForeignPcbReport,
+from .hwrepo.models import ForeignPcbReport
+from .hwrepo.native_container_context import NATIVE_CONTAINER_IMAGE_ENV
+from .hwrepo.project_models import (
     ProjectImportReport,
     ProjectKind,
     ProjectManifest,
 )
-from .hwrepo.native_container_context import NATIVE_CONTAINER_IMAGE_ENV
 
 __all__ = (
     "TWO_PIN_COMPONENT_FIXTURE_CASES",

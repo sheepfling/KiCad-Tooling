@@ -19,7 +19,7 @@ from .connector_return_distribution_models import ConnectorReturnDistributionCov
 from .connector_stateful_contact_models import ConnectorStatefulContactMap
 from .control_input_models import ControlInputBiasHeuristicCoverage
 from .crystal_network_models import CrystalNetworkCoverageReport
-from .design_lint_bus_candidates import bus_candidates
+from .design_lint_bus_candidates import scan_bus_candidates
 from .design_lint_bus_inputs import BusCandidateInputs
 from .design_lint_candidate_inputs import (
     ComponentCandidateInputs,
@@ -27,26 +27,27 @@ from .design_lint_candidate_inputs import (
     ControlCandidateInputs,
     DesignLintCandidateInputs,
     MappedCandidateInputs,
-    PcbCandidateInputs,
     PeerCandidateInputs,
     PowerCandidateInputs,
 )
+from .design_lint_candidate_results import DesignLintCandidateScanResult
 from .design_lint_catalog import rule_catalog
 from .design_lint_component_candidates import component_candidates
 from .design_lint_component_peer_candidates import component_peer_candidates
-from .design_lint_connector_candidates import connector_candidates
-from .design_lint_control_candidates import control_candidates
+from .design_lint_connector_candidates import scan_connector_candidates
+from .design_lint_control_candidates import scan_control_candidates
 from .design_lint_mapped_coverage_candidates import mapped_coverage_candidates
 from .design_lint_pcb_board_only_candidates import pcb_board_only_footprint_candidates
 from .design_lint_pcb_component_inventory_candidates import (
     pcb_component_inventory_candidates,
 )
-from .design_lint_pcb_measurement_candidates import pcb_measurement_coverage_candidates
+from .design_lint_pcb_inputs import PcbCandidateInputs
+from .design_lint_pcb_measurement_candidates import scan_pcb_measurement_candidates
 from .design_lint_pcb_pad_net_candidates import pcb_pad_net_candidates
 from .design_lint_pcb_required_fitted_reference_candidates import (
     pcb_required_fitted_reference_candidates,
 )
-from .design_lint_pcb_requirement_candidates import pcb_requirement_coverage_candidates
+from .design_lint_pcb_requirement_candidates import scan_pcb_requirement_candidates
 from .design_lint_peer_candidates import peer_candidates
 from .design_lint_power_candidates import power_candidates
 from .design_lint_return_distribution_candidates import return_distribution_candidates
@@ -86,6 +87,7 @@ from .pcb_switching_loop_models import (
 )
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
+from .peer_reference_candidate_keys import PeerReferenceCandidateKeys
 from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
 from .rc_filter_models import RcFilterCoverageReport
@@ -198,8 +200,9 @@ def candidates(
                 peer_pin_assignment_scans=peer_pin_assignment_scans,
                 peer_power_output_review_enabled=peer_power_output_review_enabled,
             ),
-            control=ControlCandidateInputs(
-                input_bias_coverage=control_input_bias_coverage,
+            control=ControlCandidateInputs.from_legacy_arguments(
+                observed,
+                control_input_bias_coverage,
             ),
             power=PowerCandidateInputs(
                 component_role_map=component_role_map,
@@ -258,8 +261,10 @@ def candidates(
     )
 
 
-def scan_candidates(inputs: DesignLintCandidateInputs) -> tuple[Candidate, ...]:
-    """Aggregate typed theme inputs and preserve one active-catalog lifecycle."""
+def scan_candidate_result(
+    inputs: DesignLintCandidateInputs,
+) -> DesignLintCandidateScanResult:
+    """Aggregate typed theme outputs and preserve one active-catalog lifecycle."""
     observed = inputs.observed
     catalog = inputs.catalog
     schematic_geometry = inputs.schematic_geometry
@@ -274,19 +279,8 @@ def scan_candidates(inputs: DesignLintCandidateInputs) -> tuple[Candidate, ...]:
     ic_decoupling_map = inputs.power.ic_decoupling_map
     peer_pin_assignment_scans = inputs.component.peer_pin_assignment_scans
     peer_power_output_review_enabled = inputs.component.peer_power_output_review_enabled
-    control_input_bias_coverage = inputs.control.input_bias_coverage
     power_sequence_map = inputs.power.power_sequence_map
     pcb_component_inventory_coverage = inputs.pcb.component_inventory
-    pcb_decoupling_coverage = inputs.pcb.decoupling
-    pcb_protection_path_coverage = inputs.pcb.protection_path
-    pcb_track_width_coverage = inputs.pcb.track_width
-    pcb_reference_plane_coverage = inputs.pcb.reference_plane
-    pcb_switching_loop_coverage = inputs.pcb.switching_loop
-    pcb_differential_pair_coverage = inputs.pcb.differential_pair
-    pcb_signal_path_coverage = inputs.pcb.signal_path
-    pcb_keepout_coverage = inputs.pcb.keepout
-    pcb_rf_module_antenna_coverage = inputs.pcb.rf_antenna
-    pcb_touch_pad_clearance_coverage = inputs.pcb.touch_pad_clearance
     stm32_pin_map_coverage = inputs.pcb.stm32_pin_map
     usb_data_path_map = inputs.usb_data_path_map
     spi_roster = inputs.bus.spi_roster
@@ -306,25 +300,21 @@ def scan_candidates(inputs: DesignLintCandidateInputs) -> tuple[Candidate, ...]:
         if peer_power_output_review_enabled
         else frozenset[str]()
     )
-    found.extend(
-        connector_candidates(
-            observed,
-            connector_coverage=connector_coverage,
-            reviewed_connector_references=reviewed_connector_references,
-            power_output_review_enabled=connector_power_output_review_enabled,
-            stateful_contact_map=connector_stateful_contact_map,
-        )
+    connector_result = scan_connector_candidates(
+        observed,
+        connector_coverage=connector_coverage,
+        reviewed_connector_references=reviewed_connector_references,
+        power_output_review_enabled=connector_power_output_review_enabled,
+        stateful_contact_map=connector_stateful_contact_map,
     )
+    found.extend(connector_result.candidates)
     found.extend(return_distribution_candidates(connector_return_distribution))
     found.extend(pcb_component_inventory_candidates(pcb_component_inventory_coverage))
     found.extend(pcb_board_only_footprint_candidates(pcb_component_inventory_coverage))
     found.extend(pcb_required_fitted_reference_candidates(pcb_component_inventory_coverage))
     found.extend(pcb_pad_net_candidates(pcb_component_inventory_coverage))
-    control_findings, control_pin_keys = control_candidates(
-        observed,
-        control_input_bias_coverage=control_input_bias_coverage,
-    )
-    found.extend(control_findings)
+    control_result = scan_control_candidates(inputs.control)
+    found.extend(control_result.candidates)
     found.extend(
         component_candidates(
             observed,
@@ -348,12 +338,13 @@ def scan_candidates(inputs: DesignLintCandidateInputs) -> tuple[Candidate, ...]:
         observed,
         peer_pin_scans=peer_pin_scans,
         reviewed_connector_references=reviewed_connector_references,
-        control_pin_keys=control_pin_keys,
+        control_pin_keys=control_result.unconnected_pin_keys,
     )
     found.extend(component_peer_findings)
-    found.extend(
-        bus_candidates(replace(inputs.bus, component_peer_findings=component_peer_findings))
+    bus_result = scan_bus_candidates(
+        replace(inputs.bus, component_peer_findings=component_peer_findings)
     )
+    found.extend(bus_result.candidates)
     if schematic_geometry is not None:
         found.extend(schematic_geometry_candidates(schematic_geometry))
     found.extend(
@@ -376,25 +367,20 @@ def scan_candidates(inputs: DesignLintCandidateInputs) -> tuple[Candidate, ...]:
             power_sequence_map=power_sequence_map,
         )
     )
-    found.extend(
-        pcb_measurement_coverage_candidates(
-            pcb_decoupling_coverage=pcb_decoupling_coverage,
-            pcb_protection_path_coverage=pcb_protection_path_coverage,
-            pcb_track_width_coverage=pcb_track_width_coverage,
-            pcb_reference_plane_coverage=pcb_reference_plane_coverage,
-        )
-    )
-    found.extend(
-        pcb_requirement_coverage_candidates(
-            pcb_switching_loop_coverage=pcb_switching_loop_coverage,
-            pcb_differential_pair_coverage=pcb_differential_pair_coverage,
-            pcb_signal_path_coverage=pcb_signal_path_coverage,
-            pcb_keepout_coverage=pcb_keepout_coverage,
-            pcb_rf_module_antenna_coverage=pcb_rf_module_antenna_coverage,
-            pcb_touch_pad_clearance_coverage=pcb_touch_pad_clearance_coverage,
-        )
-    )
+    found.extend(scan_pcb_measurement_candidates(inputs.pcb))
+    found.extend(scan_pcb_requirement_candidates(inputs.pcb))
     found.extend(stm32_candidates(stm32_pin_map_coverage))
     found.extend(inputs.additional_candidates)
-    validate_catalogued_candidates(found, catalog)
-    return tuple(sorted(found, key=lambda item: (item.rule_id, item.subject)))
+    items = tuple(sorted(found, key=lambda item: (item.rule_id, item.subject)))
+    validate_catalogued_candidates(items, catalog)
+    additional_peer_keys = PeerReferenceCandidateKeys.from_candidates(inputs.additional_candidates)
+    return DesignLintCandidateScanResult(
+        candidates=items,
+        peer_reference_keys=bus_result.peer_reference_keys.merge(additional_peer_keys),
+        connector_peer_pin_finding_counts=connector_result.peer_pin_finding_counts,
+    )
+
+
+def scan_candidates(inputs: DesignLintCandidateInputs) -> tuple[Candidate, ...]:
+    """Compatibility adapter for callers that need only the flattened findings."""
+    return scan_candidate_result(inputs).candidates

@@ -11,14 +11,14 @@ from .markdown import markdown_text, retitled_document
 from .models import (
     InterfacesCatalog,
     LibrariesCatalog,
-    PartsCatalog,
-    PolicyIssue,
-    ProductIndex,
-    ProjectDiscovery,
     TemplateAdoptionRecord,
     TemplateContract,
     TemplateInitReport,
 )
+from .part_catalog_models import PartsCatalog
+from .policy_issue_models import PolicyIssue
+from .product_models import ProductIndex
+from .project_models import ProjectDiscovery
 from .template import version_key
 
 

@@ -18,7 +18,7 @@ from .discovery import manifest_paths, settings
 from .electrical import simulation_cases
 from .electrical_analysis_contract_models import ElectricalAnalysisContract
 from .file_access_models import McpEditPreview, McpEditResult, McpFileContent
-from .models import (
+from .project_models import (
     ProjectManifest,
     ProjectTestContract,
     ToolchainsCatalog,

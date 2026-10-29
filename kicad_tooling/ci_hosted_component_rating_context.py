@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from .hwrepo.models import ProjectConfig
+from .hwrepo.project_models import ProjectConfig
 
 
 @dataclass(frozen=True, slots=True)

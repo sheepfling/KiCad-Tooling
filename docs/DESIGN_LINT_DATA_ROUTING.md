@@ -203,3 +203,55 @@ identity fails before disposition. The public finding evidence
 and fingerprint stay the same. The broader extension path should formalize
 typed theme results rather than adding metadata fields to the shared candidate
 type for each new rule.
+
+## Control-input candidate route
+
+| Input or output   | Owner                                      | Meaning at the theme boundary                                                                                                                                                    |
+| ----------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Observed topology | Native coach's `NetlistContract`           | Required; the shared scanner rejects a different observation from the bus or control group.                                                                                      |
+| Bias coverage     | Project context and evaluation preparation | The project electrical contract can cover a bias hint. Missing legacy input becomes `NOT_CONFIGURED`; stale, unbound, or blocked coverage stops full evaluation before scanning. |
+| Control result    | `design_lint_control_candidates`           | `ControlCandidateResult` carries findings and normalized unconnected pin keys. The component-peer service uses the keys only to avoid duplicate prompts.                         |
+
+The scanner passes `ControlCandidateInputs` directly to the theme and consumes
+the named result. The older `control_candidates()` tuple interface remains an
+adapter, as do the central compatibility signatures. Full evaluation validates
+coverage identity before the theme sees it; a direct caller of either candidate
+API must establish source identity itself. Candidate order, evidence,
+fingerprints, and serialized reports remain unchanged by this routing change.
+
+## PCB measurement and requirement candidate route
+
+| Input or output             | Owner                                                                                              | Meaning at the candidate boundary                                                                                                                                                  |
+| --------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Project maps and policy     | Project-owned contract, normalized by `design_lint_pcb_coverage_policy` and evaluation preparation | A configured but unavailable or mismatched scan is represented by its coverage status and issue; an off rule is disabled, not measured.                                            |
+| Native PCB and DRC evidence | Geometry and DRC capture services                                                                  | Coverage records carry the applicable source, receipt, and map identities; the candidate translators do not run native tools.                                                      |
+| PCB coverage group          | `design_lint_pcb_inputs.PcbCandidateInputs`                                                        | The scanner passes the same typed group to the measurement and requirement owners. Legacy direct candidate calls may still omit coverage; omission alone is not positive coverage. |
+| Candidates                  | PCB measurement and requirement translators                                                        | Existing rule IDs, evidence and fingerprints are retained. `COMPLETE`, `INCOMPLETE`, `BLOCKED`, `DISABLED`, and not-requested meanings remain in their respective reports.         |
+
+The existing keyword-based PCB candidate functions remain callable. The new
+typed entry points route the group to those existing translators; they do not
+validate file freshness independently. Full project inspection owns source
+capture and freshness checks, while prepared evaluation owns map and mode
+normalization. Direct callers must establish the evidence identity themselves.
+
+Differential-pair coverage is accepted for a configured, enabled map only
+when its retained map digest matches the current authored map. Missing,
+disabled, or differently bound coverage becomes `BLOCKED`; scanned coverage
+without a current map is also blocked. Project policy can explicitly turn the
+rule off, which produces `DISABLED` instead of claiming coverage.
+An explicit `off` override takes precedence even when no authored map exists.
+The prepared evaluation also checks the retained source-inventory digest and
+the project, board, and rules identities against the current coach inventory.
+Signal-path coverage uses the same source check and map binding before its
+findings are translated. This check covers scanned `COMPLETE` and `INCOMPLETE`
+reports; an explicitly disabled rule remains `DISABLED`.
+Keepout, RF antenna, and touch-pad geometry coverage follow the same map and
+board-source checks. Their reports are normalized by the geometry coverage
+policy, which blocks scanned reports without a current map or matching board
+identity.
+Switching-loop, reference-plane, and protection-path coverage use the shared
+board-source identity service and mapped-coverage policy. Scanned reports
+reach candidate translation only when both their map digest and board
+path/hash match the current authored map and coach source inventory. A scanned
+report without its map is blocked; explicit `off` overrides disable the route
+even when no map is present.

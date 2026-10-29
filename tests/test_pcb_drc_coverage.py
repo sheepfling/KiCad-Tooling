@@ -12,6 +12,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintIgnore,
     DesignLintPolicy,
     DesignLintRuleOverride,
+    PcbDifferentialPairRuleCoverageEntry,
     PcbDifferentialPairRuleCoverageReport,
     PcbDifferentialPairRuleMap,
     PcbDifferentialPairRuleRequirement,
@@ -19,6 +20,7 @@ from kicad_tooling.hwrepo.models import (
     PcbDrcMinMaxRequirement,
 )
 from kicad_tooling.hwrepo.pcb_drc_rule_coverage import compare_native_rules
+from kicad_tooling.hwrepo.pcb_drc_source_evidence import source_inventory_sha256
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -53,13 +55,20 @@ def rules_text() -> str:
     return (FIXTURES / "control.kicad_dru").read_text(encoding="utf-8")
 
 
+def pair_source_hashes() -> dict[str, str]:
+    return {
+        "kicad/controller.kicad_pro": "c" * 64,
+        "kicad/controller.kicad_pcb": "d" * 64,
+    }
+
+
 def incomplete_report() -> PcbDifferentialPairRuleCoverageReport:
     (entry,) = compare_native_rules(pair_map(), "", frozenset())
     return PcbDifferentialPairRuleCoverageReport(
         status="INCOMPLETE",
         mode="review",
-        map_sha256="a" * 64,
-        source_inventory_sha256="b" * 64,
+        map_sha256=hashlib.sha256(pair_map().model_dump_json().encode("utf-8")).hexdigest(),
+        source_inventory_sha256=source_inventory_sha256(pair_source_hashes()),
         project_path="kicad/controller.kicad_pro",
         project_sha256="c" * 64,
         rules_path="kicad/controller.kicad_dru",
@@ -126,7 +135,10 @@ def test_rule_and_requirement_order_preserve_coverage_but_bound_mutation_is_dete
     map_reordered_coverage = compare_native_rules(
         reordered_requirements, native_source, frozenset()
     )
-    by_id = lambda entries: {item.id: item.model_dump(mode="json") for item in entries}
+
+    def by_id(entries: tuple[PcbDifferentialPairRuleCoverageEntry, ...]) -> dict[str, str]:
+        return {item.id: item.model_dump_json() for item in entries}
+
     assert source_coverage == native_reordered_coverage
     assert by_id(source_coverage) == by_id(map_reordered_coverage)
     assert [item.id for item in map_reordered_coverage] == [
@@ -292,9 +304,11 @@ def test_incomplete_coverage_emits_a_configurable_review_finding() -> None:
     from kicad_tooling.hwrepo.design_lint import evaluate
     from tests.design_lint_fixtures import coach, observed
 
+    source_coach = coach(observed()).model_copy(update={"source_hashes": pair_source_hashes()})
+
     report = evaluate(
         "synthetic-pair",
-        coach(observed()),
+        source_coach,
         DesignLintPolicy(pcb_differential_pair_rule_map=pair_map()),
         pcb_differential_pair_coverage=incomplete_report(),
     )
@@ -306,7 +320,7 @@ def test_incomplete_coverage_emits_a_configurable_review_finding() -> None:
 
     blocked = evaluate(
         "synthetic-pair",
-        coach(observed()),
+        source_coach,
         DesignLintPolicy(
             pcb_differential_pair_rule_map=pair_map(),
             rules=(
@@ -323,7 +337,7 @@ def test_incomplete_coverage_emits_a_configurable_review_finding() -> None:
 
     disabled = evaluate(
         "synthetic-pair",
-        coach(observed()),
+        source_coach,
         DesignLintPolicy(
             pcb_differential_pair_rule_map=pair_map(),
             rules=(
@@ -344,7 +358,7 @@ def test_incomplete_coverage_emits_a_configurable_review_finding() -> None:
 
     ignored = evaluate(
         "synthetic-pair",
-        coach(observed()),
+        source_coach,
         DesignLintPolicy(
             pcb_differential_pair_rule_map=pair_map(),
             ignores=(
@@ -362,3 +376,62 @@ def test_incomplete_coverage_emits_a_configurable_review_finding() -> None:
     )
     assert ignored.status == report.status
     assert ignored_finding.disposition == "IGNORED"
+
+
+@pytest.mark.parametrize(
+    "state", ["different-map", "different-map-complete", "not-requested", "disabled"]
+)
+def test_configured_pair_map_rejects_unbound_coverage(state: str) -> None:
+    from kicad_tooling.hwrepo.design_lint import evaluate
+    from tests.design_lint_fixtures import coach, observed
+
+    if state == "different-map-complete":
+        coverage = PcbDifferentialPairRuleCoverageReport.model_validate_json(
+            incomplete_report()
+            .model_copy(
+                update={
+                    "status": "COMPLETE",
+                    "map_sha256": "0" * 64,
+                    "entries": compare_native_rules(pair_map(), rules_text(), frozenset()),
+                }
+            )
+            .model_dump_json()
+        )
+    elif state == "different-map":
+        coverage = incomplete_report().model_copy(update={"map_sha256": "0" * 64})
+    elif state == "not-requested":
+        coverage = PcbDifferentialPairRuleCoverageReport()
+    else:
+        coverage = PcbDifferentialPairRuleCoverageReport(status="DISABLED", mode="off")
+
+    report = evaluate(
+        "synthetic-pair",
+        coach(observed()),
+        DesignLintPolicy(pcb_differential_pair_rule_map=pair_map()),
+        pcb_differential_pair_coverage=coverage,
+    )
+
+    assert report.status == "BLOCKED"
+    assert report.pcb_differential_pair_rules.status == "BLOCKED"
+    assert "current project-authored map" in (report.pcb_differential_pair_rules.issue or "")
+    assert not any(
+        item.rule_id == "pcb.differential_pair_rule_coverage" for item in report.findings
+    )
+
+
+def test_pair_coverage_without_current_map_cannot_authorize_findings() -> None:
+    from kicad_tooling.hwrepo.design_lint import evaluate
+    from tests.design_lint_fixtures import coach, observed
+
+    report = evaluate(
+        "synthetic-pair",
+        coach(observed()),
+        DesignLintPolicy(),
+        pcb_differential_pair_coverage=incomplete_report(),
+    )
+    assert report.status == "BLOCKED"
+    assert report.pcb_differential_pair_rules.status == "BLOCKED"
+    assert "no current project-authored map" in (report.pcb_differential_pair_rules.issue or "")
+    assert not any(
+        item.rule_id == "pcb.differential_pair_rule_coverage" for item in report.findings
+    )

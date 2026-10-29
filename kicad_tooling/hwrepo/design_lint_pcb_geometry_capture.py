@@ -6,17 +6,19 @@ from pathlib import Path
 
 from ..validate import hashes
 from .contract_coach import pinned_image
-from .contracts import repo_path, write_model
+from .contracts import repo_path
 from .design_lint_pcb_coverage_common import PcbGeometrySourceEvidence
 from .discovery import ProjectConfig
 from .evidence import digest
-from .models import ContractCoachReport, ProjectKind
+from .models import ContractCoachReport
+from .pcb_geometry_receipts import verify_pcb_geometry_receipts, write_pcb_geometry_snapshot
 from .pcb_return_path_capture import (
     capture_native_pcb_connectivity,
     expected_probe_sha256,
     native_pcb_command_matches,
 )
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceRequestSet
+from .project_models import ProjectKind
 
 
 def capture_pcb_geometry_source(
@@ -65,11 +67,11 @@ def capture_pcb_geometry_source(
             "Native PCB geometry evidence does not match the reviewed source/toolchain"
         )
     snapshot_path = output / "snapshot.json"
-    write_model(snapshot_path, snapshot)
+    write_pcb_geometry_snapshot(snapshot_path, snapshot)
     if digest(board_path) != board_hash or hashes(root, config.source_roots) != coach.source_hashes:
         raise ValueError("Project sources changed during native PCB geometry capture")
     command_path = output / "native.command.json"
-    return PcbGeometrySourceEvidence(
+    evidence = PcbGeometrySourceEvidence(
         board_path=board_relative,
         board_sha256=board_hash,
         snapshot_relative_path=snapshot_path.relative_to(root).as_posix(),
@@ -81,3 +83,12 @@ def capture_pcb_geometry_source(
         command_path=command_path,
         command_sha256=digest(command_path),
     )
+    verify_pcb_geometry_receipts(
+        evidence.snapshot,
+        evidence.snapshot_path,
+        evidence.snapshot_sha256,
+        evidence.command,
+        evidence.command_path,
+        evidence.command_sha256,
+    )
+    return evidence

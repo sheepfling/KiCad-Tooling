@@ -33,6 +33,7 @@ from .connector_identity import (
     similar_connector_pin_groups,
 )
 from .connector_part_id_peer_models import ConnectorPartIdPeerPinCoverage
+from .connector_peer_pin_candidate_results import ConnectorPeerPinFindingCounts
 from .connector_peer_pin_models import ConnectorPeerPinHeuristicCoverage
 from .connector_peer_pin_scan import (
     scan_connector_part_id_peer_pins,
@@ -47,22 +48,7 @@ def connector_peer_pin_heuristic_coverage(
     reviewed_connector_pins: Mapping[str, ConnectorMappedPinEvidence] | None = None,
     peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
     *,
-    repeated_function_finding_count: int,
-    peer_pin_outlier_finding_count: int,
-    peer_pin_divergence_finding_count: int,
-    generic_peer_pin_all_open_finding_count: int = 0,
-    part_id_peer_pin_outlier_finding_count: int = 0,
-    part_id_peer_pin_divergence_finding_count: int = 0,
-    footprint_peer_pin_divergence_finding_count: int = 0,
-    footprint_named_signal_divergence_finding_count: int = 0,
-    footprint_named_power_input_divergence_finding_count: int = 0,
-    footprint_named_power_input_all_open_finding_count: int = 0,
-    footprint_named_power_output_all_open_finding_count: int = 0,
-    footprint_named_signal_all_open_finding_count: int = 0,
-    footprint_named_power_output_divergence_finding_count: int = 0,
-    footprint_named_passive_divergence_finding_count: int = 0,
-    footprint_peer_pin_open_outlier_finding_count: int = 0,
-    footprint_peer_pin_all_open_finding_count: int = 0,
+    finding_counts: ConnectorPeerPinFindingCounts,
 ) -> ConnectorPeerPinHeuristicCoverage:
     """Summarize exact-symbol, PART_ID, and footprint-alias comparisons."""
     candidate_references = connector_candidate_references(observed, declared_references)
@@ -286,8 +272,8 @@ def connector_peer_pin_heuristic_coverage(
         different_assignment_pin_group_count=part_id_different_assignment_count,
         all_unassigned_pin_group_count=part_id_all_unassigned_count,
         open_assignment_pin_group_count=part_id_open_assignment_count,
-        outlier_finding_count=part_id_peer_pin_outlier_finding_count,
-        divergence_finding_count=part_id_peer_pin_divergence_finding_count,
+        outlier_finding_count=finding_counts.part_id_peer_pin_outlier_finding_count,
+        divergence_finding_count=finding_counts.part_id_peer_pin_divergence_finding_count,
     )
     footprint_scan = scan_connector_footprint_peer_pin_assignments(
         observed,
@@ -310,31 +296,39 @@ def connector_peer_pin_heuristic_coverage(
     footprint_alias_coverage = build_connector_footprint_peer_pin_coverage(
         footprint_scan,
         netlist_sha256,
-        generic_divergence_finding_count=footprint_peer_pin_divergence_finding_count,
-        open_outlier_finding_count=footprint_peer_pin_open_outlier_finding_count,
-        all_open_finding_count=footprint_peer_pin_all_open_finding_count,
+        generic_divergence_finding_count=(
+            finding_counts.footprint_peer_pin_divergence_finding_count
+        ),
+        open_outlier_finding_count=(finding_counts.footprint_peer_pin_open_outlier_finding_count),
+        all_open_finding_count=finding_counts.footprint_peer_pin_all_open_finding_count,
         named_signal_divergence=named_signal_divergence,
-        named_signal_divergence_finding_count=footprint_named_signal_divergence_finding_count,
+        named_signal_divergence_finding_count=(
+            finding_counts.footprint_named_signal_divergence_finding_count
+        ),
         named_power_input_divergence=named_power_input_divergence,
         named_power_input_divergence_finding_count=(
-            footprint_named_power_input_divergence_finding_count
+            finding_counts.footprint_named_power_input_divergence_finding_count
         ),
         named_power_input_all_open=named_power_input_all_open,
         named_power_input_all_open_finding_count=(
-            footprint_named_power_input_all_open_finding_count
+            finding_counts.footprint_named_power_input_all_open_finding_count
         ),
         named_power_output_all_open=named_power_output_all_open,
         named_power_output_all_open_finding_count=(
-            footprint_named_power_output_all_open_finding_count
+            finding_counts.footprint_named_power_output_all_open_finding_count
         ),
         named_signal_all_open=named_signal_all_open,
-        named_signal_all_open_finding_count=footprint_named_signal_all_open_finding_count,
+        named_signal_all_open_finding_count=(
+            finding_counts.footprint_named_signal_all_open_finding_count
+        ),
         named_power_output_divergence=named_power_output_divergence,
         named_power_output_divergence_finding_count=(
-            footprint_named_power_output_divergence_finding_count
+            finding_counts.footprint_named_power_output_divergence_finding_count
         ),
         named_passive_divergence=named_passive_divergence,
-        named_passive_divergence_finding_count=footprint_named_passive_divergence_finding_count,
+        named_passive_divergence_finding_count=(
+            finding_counts.footprint_named_passive_divergence_finding_count
+        ),
     )
 
     if not candidate_references:
@@ -400,8 +394,10 @@ def connector_peer_pin_heuristic_coverage(
         repeated_function_groups_with_open_assignment_count=(
             repeated_function_groups_with_open_assignment_count
         ),
-        repeated_function_finding_count=repeated_function_finding_count,
-        peer_pin_outlier_finding_count=peer_pin_outlier_finding_count,
-        peer_pin_divergence_finding_count=peer_pin_divergence_finding_count,
-        generic_peer_pin_all_open_finding_count=generic_peer_pin_all_open_finding_count,
+        repeated_function_finding_count=finding_counts.repeated_function_finding_count,
+        peer_pin_outlier_finding_count=finding_counts.peer_pin_outlier_finding_count,
+        peer_pin_divergence_finding_count=finding_counts.peer_pin_divergence_finding_count,
+        generic_peer_pin_all_open_finding_count=(
+            finding_counts.generic_peer_pin_all_open_finding_count
+        ),
     )

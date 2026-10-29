@@ -21,14 +21,14 @@ from .model_inventory import inspect_models
 from .models import (
     DiagnosticFinding,
     DiagnosticReport,
-    PartsCatalog,
-    PartStatus,
-    ProjectKind,
-    ProjectManifest,
     ProjectStaticPipelineReport,
-    ToolchainsCatalog,
     ValidationSummary,
 )
+from .part_catalog_models import (
+    PartsCatalog,
+    PartStatus,
+)
+from .project_models import ProjectKind, ProjectManifest, ToolchainsCatalog
 from .repository import cad_dependencies
 from .selection import ProjectSelector, resolve_project_ids
 

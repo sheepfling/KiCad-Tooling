@@ -1,0 +1,20 @@
+{
+  "$schema": "https://schemas.kicad.org/drc.v1.json",
+  "coordinate_units": "mm",
+  "kicad_version": "VERSION",
+  "included_severities": ["error", "warning", "exclusion"],
+  "ignored_checks": [],
+  "source": "controller.kicad_pcb",
+  "violations": [],
+  "unconnected_items": [
+    {"type": "unconnected_items", "severity": "error", "description": "Missing connection between items",
+     "items": [
+       {"description": "R1 pad 1", "pos": {"x": 100.0, "y": 100.0}},
+       {"description": "R2 pad 1", "pos": {"x": 100.0, "y": 110.0}}
+     ]}
+  ],
+  "schematic_parity": [
+    {"type": "value_mismatch", "severity": "warning", "description": "Different value",
+     "items": [{"description": "R1", "pos": {"x": 10.0, "y": 10.0}}]}
+  ]
+}

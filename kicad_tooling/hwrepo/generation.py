@@ -21,6 +21,19 @@ from .electrical_analysis_contract_models import ElectricalAnalysisContract
 from .evidence import digest as file_digest
 from .layout import CONFIG_NAME, layout
 from .models import (
+    LibrariesCatalog,
+    LibrarySbom,
+    ReleaseManifest,
+    ReleasePoliciesCatalog,
+    SnapshotManifest,
+    SnapshotVerification,
+    TemplateAdoptionRecord,
+    TemplateContract,
+    TemplateUpgradesCatalog,
+)
+from .part_catalog_models import PartRecord
+from .product import excluded, load_repository, occurrences
+from .product_models import (
     AssemblyKind,
     BomRow,
     ConnectionKind,
@@ -28,27 +41,18 @@ from .models import (
     ElectricalView,
     HarnessSchedule,
     HarnessScheduleRow,
-    LibrariesCatalog,
-    LibrarySbom,
-    PartRecord,
     ProductIndex,
     ProductRecord,
-    ProjectManifest,
-    ProjectTestContract,
-    ReleaseManifest,
-    ReleasePoliciesCatalog,
-    SnapshotManifest,
-    SnapshotVerification,
-    SourcingSnapshot,
     SystemConnectionView,
     SystemView,
-    TemplateAdoptionRecord,
-    TemplateContract,
-    TemplateUpgradesCatalog,
     Variant,
 )
-from .product import excluded, load_repository, occurrences
+from .project_models import (
+    ProjectManifest,
+    ProjectTestContract,
+)
 from .repository import ephemeral
+from .sourcing_models import SourcingSnapshot
 
 
 def csv_cell(value: str) -> str:

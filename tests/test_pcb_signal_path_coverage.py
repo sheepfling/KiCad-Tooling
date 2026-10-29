@@ -35,6 +35,7 @@ from tests.design_lint_fixtures.pcb_signal_path import (
     native_rules,
     path_map,
     pcb_snapshot,
+    signal_source_hashes,
     source_netlist,
 )
 
@@ -334,7 +335,7 @@ def test_signal_path_coverage_has_review_block_off_ignore_and_missing_evidence_m
     coach = ContractCoachReport(
         status="READY_FOR_REVIEW",
         project_id="synthetic-paths",
-        source_hashes={},
+        source_hashes=signal_source_hashes(),
         netlist_sha256="5" * 64,
         observed=source,
     )

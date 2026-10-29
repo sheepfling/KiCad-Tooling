@@ -8,7 +8,7 @@ from urllib.parse import quote
 
 from snakemd import Document, Inline, MDList, Paragraph
 
-from .models import ProjectKind
+from .project_models import ProjectKind
 
 
 def paragraph(document: Document, *content: str | Inline) -> None:

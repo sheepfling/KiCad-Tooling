@@ -1,7 +1,8 @@
 """I/O boundary helpers.
 
 Raw JSON is decoded here only. Callers must immediately validate it into a
-Pydantic model from hwrepo.models; dictionaries do not cross this boundary.
+Pydantic model owned by its domain; dictionaries do not cross this boundary.
+The models module remains a compatibility registry for supported imports.
 """
 
 from __future__ import annotations
@@ -15,7 +16,12 @@ from typing import TypeVar, cast
 
 from pydantic import BaseModel, JsonValue, TypeAdapter
 
-from .models import CadProviderIdentity, KiCadForeignImportSummary, ProjectManifest
+from .cad_source_models import CadProviderIdentity
+from .native_drc_findings import NativeDrcReport, parse_native_drc
+from .project_models import (
+    KiCadForeignImportSummary,
+    ProjectManifest,
+)
 
 Model = TypeVar("Model", bound=BaseModel)
 
@@ -37,6 +43,8 @@ class KiCadErcViolation:
     severity: str
     description: str | None
     items: tuple[KiCadErcItem, ...]
+    excluded: bool = False
+    sheet_path: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,6 +166,12 @@ def read_kicad_erc_report(path: Path) -> KiCadErcReport:
                 raise ValueError(
                     f"{path}: ERC sheet {sheet_index} violation {violation_index} has an invalid description"
                 )
+            excluded = values.get("excluded", False)
+            if not isinstance(excluded, bool):
+                raise ValueError(f"{path}: ERC finding has an invalid exclusion")  # noqa: TRY004 - native boundary
+            sheet_path = sheet.get("path", "")
+            if not isinstance(sheet_path, str):
+                raise ValueError(f"{path}: ERC sheet has an invalid path")  # noqa: TRY004 - native boundary
             raw_items = values.get("items", [])
             if not isinstance(raw_items, list):
                 raise ValueError(  # noqa: TRY004 - input boundary
@@ -206,6 +220,8 @@ def read_kicad_erc_report(path: Path) -> KiCadErcReport:
                     severity=severity,
                     description=description,
                     items=tuple(items),
+                    excluded=excluded,
+                    sheet_path=sheet_path,
                 )
             )
     return KiCadErcReport(kicad_version=version, violations=tuple(violations))
@@ -217,6 +233,11 @@ def read_kicad_drc_parity(path: Path) -> KiCadDrcParitySummary:
     if not isinstance(document, dict):
         return KiCadDrcParitySummary(has_findings=False)
     return KiCadDrcParitySummary(has_findings=bool(document.get("schematic_parity")))
+
+
+def read_kicad_drc_findings(path: Path) -> NativeDrcReport:
+    """Decode native DRC JSON at the shared boundary into review records."""
+    return parse_native_drc(_read_external_json(path))
 
 
 def kicad_variant_names(path: Path) -> tuple[str, ...]:

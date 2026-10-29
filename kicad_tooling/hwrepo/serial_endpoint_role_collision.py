@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from types import MappingProxyType
+
 from .connector_identity import connector_candidate_references
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
@@ -10,7 +12,7 @@ from .netlist_pin_assignments import netlist_pin_net_index
 from .serial_participants import is_serial_ic_reference, serial_function_role_and_channel
 
 RULE_ID: DesignLintRuleId = "bus.serial_endpoint_role_collision"
-_ROLE_LABELS = {"tx": "TX", "rx": "RX"}
+_ROLE_LABELS = MappingProxyType({"tx": "TX", "rx": "RX"})
 
 
 def serial_endpoint_role_collision_candidates(

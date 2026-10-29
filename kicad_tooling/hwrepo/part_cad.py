@@ -21,11 +21,14 @@ from .model_population import _validate_shared_roots  # pyright: ignore[reportPr
 from .models import (
     PartCadChanges,
     PartCadComponent,
-    PartRecord,
     PartSourceEdit,
+)
+from .part_catalog_models import PartRecord
+from .project_models import (
     ProjectKind,
     ProjectManifest,
 )
+from .selection import resolve_project
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,9 +162,7 @@ def _library_units(source: str, root: _Span) -> set[str]:
 
 def _read_schematic(root: Path, project_id: str) -> _Schematic:
     root = root.resolve()
-    record = next((item for item in load_registry(root).projects if item.id == project_id), None)
-    if record is None:
-        raise ValueError(f"Unknown project {project_id!r}")
+    record = resolve_project(root, project_id)
     config = load_config(root, record.config)
     if config.kind not in {ProjectKind.PCB, ProjectKind.SCHEMATIC}:
         raise ValueError("Part selection requires a schematic-backed PCB or schematic project")

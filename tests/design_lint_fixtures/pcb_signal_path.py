@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 from pathlib import Path
 
 from kicad_tooling.hwrepo.design_lint import evaluate
@@ -23,6 +22,7 @@ from kicad_tooling.hwrepo.models import (
     PcbSignalPathRuleMap,
 )
 from kicad_tooling.hwrepo.pcb_drc_rule_coverage import compare_native_signal_path_rules
+from kicad_tooling.hwrepo.pcb_drc_source_evidence import source_inventory_sha256
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures/design_lint/differential-pair"
 
@@ -200,22 +200,16 @@ def design_lint_report(*, fault: bool):
     netlist_sha256 = digest(observed_netlist.model_dump_json())
     snapshot_sha256 = digest(observed_snapshot.model_dump_json())
     map_sha256 = digest(requirements.model_dump_json())
+    source_hashes = {
+        "hardware/synthetic-paths.kicad_pro": digest("synthetic project source"),
+        "hardware/synthetic-paths.kicad_dru": digest(rules),
+        "hardware/synthetic-paths.kicad_pcb": observed_snapshot.board_sha256,
+    }
     coverage = PcbSignalPathRuleCoverageReport(
         status="INCOMPLETE" if fault else "COMPLETE",
         mode="review",
         map_sha256=map_sha256,
-        source_inventory_sha256=digest(
-            json.dumps(
-                {
-                    "map_sha256": map_sha256,
-                    "netlist_sha256": netlist_sha256,
-                    "rules_sha256": digest(rules),
-                    "snapshot_sha256": snapshot_sha256,
-                },
-                sort_keys=True,
-                separators=(",", ":"),
-            )
-        ),
+        source_inventory_sha256=source_inventory_sha256(source_hashes),
         project_path="hardware/synthetic-paths.kicad_pro",
         project_sha256=digest("synthetic project source"),
         rules_path="hardware/synthetic-paths.kicad_dru",
@@ -239,7 +233,7 @@ def design_lint_report(*, fault: bool):
     coach = ContractCoachReport(
         status="READY_FOR_REVIEW",
         project_id="synthetic-paths",
-        source_hashes={},
+        source_hashes=source_hashes,
         netlist_sha256=netlist_sha256,
         observed=observed_netlist,
     )
@@ -249,6 +243,14 @@ def design_lint_report(*, fault: bool):
         DesignLintPolicy(pcb_signal_path_rule_map=requirements),
         pcb_signal_path_coverage=coverage,
     )
+
+
+def signal_source_hashes() -> dict[str, str]:
+    return {
+        "hardware/synthetic.kicad_pro": "e" * 64,
+        "hardware/synthetic.kicad_dru": "f" * 64,
+        "hardware/synthetic.kicad_pcb": "a" * 64,
+    }
 
 
 def incomplete_signal_report(requirements: PcbSignalPathRuleMap) -> PcbSignalPathRuleCoverageReport:
@@ -274,7 +276,7 @@ def incomplete_signal_report(requirements: PcbSignalPathRuleMap) -> PcbSignalPat
         status="INCOMPLETE",
         mode="review",
         map_sha256=map_sha,
-        source_inventory_sha256="d" * 64,
+        source_inventory_sha256=source_inventory_sha256(signal_source_hashes()),
         project_path="hardware/synthetic.kicad_pro",
         project_sha256="e" * 64,
         rules_path="hardware/synthetic.kicad_dru",

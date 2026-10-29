@@ -6,7 +6,12 @@ from dataclasses import replace
 
 import pytest
 
+from kicad_tooling.hwrepo.connector_peer_pin_candidate_results import (
+    ConnectorPeerPinFindingCounts,
+)
+from kicad_tooling.hwrepo.design_lint_bus_candidates import BusCandidateResult
 from kicad_tooling.hwrepo.design_lint_candidate_aggregation import fingerprint
+from kicad_tooling.hwrepo.design_lint_candidate_results import DesignLintCandidateScanResult
 from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.peer_reference_candidate_keys import (
     CanPeerBusKey,
@@ -60,6 +65,41 @@ def test_peer_candidate_keys_are_typed_and_case_normalized() -> None:
     assert keys.spi_clocks == frozenset({"spi_clk"})
     assert keys.can_buses == frozenset({("can_h", "can_l")})
     assert keys.rs485_pairs == frozenset({("main", "a")})
+
+
+def test_peer_candidate_keys_merge_theme_results() -> None:
+    items = _candidates()
+    first = PeerReferenceCandidateKeys.from_candidates(items[:2])
+    second = PeerReferenceCandidateKeys.from_candidates(items[2:])
+
+    assert first.merge(second) == PeerReferenceCandidateKeys.from_candidates(items)
+
+
+def test_typed_scan_results_reject_unmatched_peer_keys() -> None:
+    items = _candidates()
+    empty = PeerReferenceCandidateKeys.from_candidates(())
+
+    with pytest.raises(ValueError, match="Bus candidate peer keys"):
+        BusCandidateResult(candidates=items, peer_reference_keys=empty)
+    with pytest.raises(ValueError, match="Candidate scan peer keys"):
+        DesignLintCandidateScanResult(
+            candidates=items,
+            peer_reference_keys=empty,
+            connector_peer_pin_finding_counts=ConnectorPeerPinFindingCounts(),
+        )
+
+
+def test_aggregate_scan_result_rejects_connector_counts_that_disagree_with_findings() -> None:
+    items = _candidates()
+
+    with pytest.raises(ValueError, match="connector counts must match typed candidates"):
+        DesignLintCandidateScanResult(
+            candidates=items,
+            peer_reference_keys=PeerReferenceCandidateKeys.from_candidates(items),
+            connector_peer_pin_finding_counts=ConnectorPeerPinFindingCounts(
+                peer_pin_outlier_finding_count=1
+            ),
+        )
 
 
 @pytest.mark.parametrize(("index", "field"), ((0, "SDA"), (1, "SCK"), (2, "CANL"), (3, "pair")))

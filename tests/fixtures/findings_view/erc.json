@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.kicad.org/erc.v1.json",
+  "coordinate_units": "mm",
+  "kicad_version": "VERSION",
+  "included_severities": ["error", "warning", "exclusion"],
+  "ignored_checks": [],
+  "source": "controller.kicad_sch",
+  "sheets": [{"path": "/", "violations": [
+    {"type": "pin_not_connected", "severity": "error", "description": "Pin not connected",
+     "items": [{"description": "Symbol R1 pin 1", "pos": {"x": 0.762, "y": 0.7112}}]}
+  ]}]
+}

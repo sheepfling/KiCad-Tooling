@@ -111,3 +111,12 @@ class PeerReferenceCandidateKeys:
             else:
                 rs485.add((identity.bus_id.casefold(), identity.pair_id.casefold()))
         return cls(frozenset(i2c), frozenset(spi), frozenset(can), frozenset(rs485))
+
+    def merge(self, other: PeerReferenceCandidateKeys) -> PeerReferenceCandidateKeys:
+        """Combine typed peer identities returned by independent theme owners."""
+        return PeerReferenceCandidateKeys(
+            i2c_buses=self.i2c_buses | other.i2c_buses,
+            spi_clocks=self.spi_clocks | other.spi_clocks,
+            can_buses=self.can_buses | other.can_buses,
+            rs485_pairs=self.rs485_pairs | other.rs485_pairs,
+        )

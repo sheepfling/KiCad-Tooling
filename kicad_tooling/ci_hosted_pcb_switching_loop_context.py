@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Protocol
 
 from .hwrepo.electrical import selected_config
-from .hwrepo.models import ProjectConfig
+from .hwrepo.project_models import ProjectConfig
 
 
 class SwitchingLoopLog(Protocol):

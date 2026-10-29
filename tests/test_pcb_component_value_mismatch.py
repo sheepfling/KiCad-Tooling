@@ -324,8 +324,9 @@ def test_schema_12_remains_supported_for_inventory_but_blocks_value_comparison()
     assert "schema 13" in candidate.evidence["coverage_issue"][0]
 
 
+@pytest.mark.parametrize("changed_receipt", [None, "snapshot.json", "native.command.json"])
 def test_value_only_policy_captures_and_compares_native_footprint_values(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, changed_receipt: str | None
 ) -> None:
     policy = DesignLintPolicy(
         rules=(
@@ -383,6 +384,19 @@ def test_value_only_policy_captures_and_compares_native_footprint_values(
         write_model(output / "native.command.json", command)
         return command, native_snapshot
 
+    original_layout = design_lint_pcb_geometry_scan.layout_coverage_reports
+
+    def evaluate_then_change_receipt(**kwargs):
+        reports = original_layout(**kwargs)
+        if changed_receipt is not None:
+            target = kwargs["evidence"].snapshot_path.parent / changed_receipt
+            target.write_bytes(target.read_bytes() + b" ")
+        return reports
+
+    monkeypatch.setattr(
+        design_lint_pcb_geometry_scan, "layout_coverage_reports", evaluate_then_change_receipt
+    )
+
     monkeypatch.setattr(
         design_lint_pcb_geometry_capture,
         "capture_native_pcb_connectivity",
@@ -414,6 +428,10 @@ def test_value_only_policy_captures_and_compares_native_footprint_values(
         native_summary,
     )[-1]
 
+    if changed_receipt is not None:
+        assert coverage.status == "BLOCKED"
+        assert "differs from source-bound evidence" in (coverage.issue or "")
+        return
     assert coverage.status == "COMPLETE"
     assert coverage.value_comparison_status == "COMPLETE"
     assert tuple(

@@ -12,14 +12,16 @@ from .connector_coverage import (
 )
 from .connector_peer_pin_coverage import connector_peer_pin_heuristic_coverage
 from .design_lint_bus_inputs import BusCandidateInputs
-from .design_lint_candidate_aggregation import scan_candidates, validate_catalogued_candidates
+from .design_lint_candidate_aggregation import (
+    scan_candidate_result,
+    validate_catalogued_candidates,
+)
 from .design_lint_candidate_inputs import (
     ComponentCandidateInputs,
     ConnectorCandidateInputs,
     ControlCandidateInputs,
     DesignLintCandidateInputs,
     MappedCandidateInputs,
-    PcbCandidateInputs,
     PeerCandidateInputs,
     PowerCandidateInputs,
 )
@@ -28,12 +30,12 @@ from .design_lint_evaluation_types import (
     DesignLintEvaluationPreparation,
 )
 from .design_lint_mapped_topology_coverage import mapped_topology_coverage_runs
+from .design_lint_pcb_inputs import PcbCandidateInputs
 from .design_lint_peer_evaluation import scan_peer_design_lint_evidence
 from .design_lint_power_regulator_passives import regulator_required_passive_candidates
 from .i2c_address_inputs import I2cAddressCandidateInput
 from .i2c_peer_reference_coverage import i2c_peer_reference_coverage
 from .i2c_pullup_inputs import I2cPullupSnifferInput
-from .peer_reference_candidate_keys import PeerReferenceCandidateKeys
 from .rs485_peer_reference_coverage import rs485_peer_reference_coverage
 from .spi_peer_reference_coverage import spi_peer_reference_coverage
 
@@ -72,7 +74,7 @@ def scan_evaluation_candidates(
         if connector_power_output_override is not None
         else prepared.default_modes["connector.unconnected_power_output"]
     )
-    items = scan_candidates(
+    scan_result = scan_candidate_result(
         DesignLintCandidateInputs(
             observed=observed,
             catalog=prepared.catalog,
@@ -88,8 +90,9 @@ def scan_evaluation_candidates(
                 peer_pin_assignment_scans=peer_evidence.peer_pin_assignment_scans,
                 peer_power_output_review_enabled=peer_power_output_mode != "off",
             ),
-            control=ControlCandidateInputs(
-                input_bias_coverage=coverage.control_input_bias,
+            control=ControlCandidateInputs.from_legacy_arguments(
+                observed,
+                coverage.control_input_bias,
             ),
             power=PowerCandidateInputs(
                 component_role_map=policy.component_role_map,
@@ -150,6 +153,7 @@ def scan_evaluation_candidates(
             ),
         )
     )
+    items = scan_result.candidates
     items = (
         *items,
         *regulator_required_passive_candidates(observed, policy.regulator_passive_topology_map),
@@ -166,7 +170,7 @@ def scan_evaluation_candidates(
     can_peer_coverage = None
     rs485_peer_coverage = None
     if coach.netlist_sha256 is not None:
-        peer_keys = PeerReferenceCandidateKeys.from_candidates(items)
+        peer_keys = scan_result.peer_reference_keys
         i2c_peer_coverage = i2c_peer_reference_coverage(
             peer_evidence.i2c_peer_reference_scan,
             prepared.default_modes,
@@ -204,73 +208,7 @@ def scan_evaluation_candidates(
             peer_evidence.reviewed_connector_references,
             source_matched_connector_pin_evidence(observed, request.connector_coverage),
             source_matched_connector_peer_assignment_groups(observed, request.connector_coverage),
-            repeated_function_finding_count=sum(
-                item.rule_id == "connector.repeated_pin_function" for item in items
-            ),
-            peer_pin_outlier_finding_count=sum(
-                item.rule_id == "connector.peer_pin_assignment_outlier" for item in items
-            ),
-            peer_pin_divergence_finding_count=sum(
-                item.rule_id == "connector.peer_pin_assignment_divergence" for item in items
-            ),
-            generic_peer_pin_all_open_finding_count=sum(
-                item.rule_id == "connector.generic_peer_pin_all_open" for item in items
-            ),
-            part_id_peer_pin_outlier_finding_count=sum(
-                item.rule_id == "connector.peer_pin_assignment_outlier"
-                and item.evidence.get("peer_identity_basis") == ("part_id",)
-                for item in items
-            ),
-            part_id_peer_pin_divergence_finding_count=sum(
-                item.rule_id == "connector.peer_pin_assignment_divergence"
-                and item.evidence.get("peer_identity_basis") == ("part_id",)
-                for item in items
-            ),
-            footprint_peer_pin_divergence_finding_count=sum(
-                item.rule_id == "connector.footprint_peer_pin_assignment_divergence"
-                for item in items
-            ),
-            footprint_named_signal_divergence_finding_count=sum(
-                item.rule_id == "connector.footprint_named_signal_assignment_divergence"
-                for item in items
-            ),
-            footprint_named_power_input_divergence_finding_count=sum(
-                item.rule_id == "connector.footprint_named_power_input_assignment_divergence"
-                for item in items
-            ),
-            footprint_named_power_input_all_open_finding_count=sum(
-                item.rule_id == "connector.footprint_named_power_input_all_open" for item in items
-            ),
-            footprint_named_power_output_all_open_finding_count=sum(
-                item.rule_id == "connector.footprint_named_power_output_all_open" for item in items
-            ),
-            footprint_named_signal_all_open_finding_count=sum(
-                item.rule_id == "connector.footprint_named_signal_all_open" for item in items
-            ),
-            footprint_named_power_output_divergence_finding_count=sum(
-                item.rule_id == "connector.footprint_named_power_output_assignment_divergence"
-                for item in items
-            ),
-            footprint_named_passive_divergence_finding_count=sum(
-                item.rule_id == "connector.footprint_named_passive_assignment_divergence"
-                for item in items
-            ),
-            footprint_peer_pin_open_outlier_finding_count=sum(
-                item.rule_id
-                in {
-                    "connector.footprint_peer_pin_open_outlier",
-                    "connector.footprint_named_power_input_open_outlier",
-                    "connector.footprint_named_signal_input_open_outlier",
-                    "connector.footprint_named_power_output_open_outlier",
-                    "connector.footprint_named_signal_output_open_outlier",
-                    "connector.footprint_named_signal_mode_dependent_open_outlier",
-                    "connector.footprint_named_passive_open_outlier",
-                }
-                for item in items
-            ),
-            footprint_peer_pin_all_open_finding_count=sum(
-                item.rule_id == "connector.footprint_peer_pin_all_open" for item in items
-            ),
+            finding_counts=scan_result.connector_peer_pin_finding_counts,
         )
     )
     component_peer_pin_coverage = (

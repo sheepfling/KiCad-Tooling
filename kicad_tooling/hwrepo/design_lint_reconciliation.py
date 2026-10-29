@@ -128,13 +128,6 @@ def reconcile_design_lint_reports(
     ``NO_LONGER_REPORTED`` records are change evidence, not accepted dismissals.
     Ignored and rule-off findings remain present in both reports and transitions.
     """
-    transitions = (
-        _finding_transitions(baseline, current)
-        if baseline.project_id == current.project_id
-        and len({item.fingerprint for item in baseline.findings}) == len(baseline.findings)
-        and len({item.fingerprint for item in current.findings}) == len(current.findings)
-        else ()
-    )
     baseline_snapshot = baseline.connectivity_snapshot
     current_snapshot = current.connectivity_snapshot
     connectivity_comparison: Literal["COMPLETE", "PARTIAL", "UNAVAILABLE", "INCOMPATIBLE"]
@@ -193,6 +186,9 @@ def reconcile_design_lint_reports(
     )
     if baseline.project_id != current.project_id:
         issues += ("Baseline and current reports belong to different project IDs",)
+    # A blocked or unbound report may not contain a complete finding list.
+    # Keep the raw rows, but do not infer additions or removals from that list.
+    transitions = () if issues else _finding_transitions(baseline, current)
 
     context_changes: list[str] = []
     if baseline.status != current.status:

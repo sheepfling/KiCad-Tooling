@@ -200,7 +200,10 @@ def snapshot(
 
 
 def coverage_report(
-    mapped: PcbDecouplingMap, evidence: PcbConnectivitySnapshot
+    mapped: PcbDecouplingMap,
+    evidence: PcbConnectivitySnapshot,
+    *,
+    netlist_sha256: str,
 ) -> PcbDecouplingCoverageReport:
     entries = pcb_decoupling_entries(mapped, evidence)
     return PcbDecouplingCoverageReport(
@@ -214,6 +217,6 @@ def coverage_report(
         probe_sha256=evidence.probe_sha256,
         kicad_version=evidence.kicad_version,
         image=evidence.image,
-        netlist_sha256="f" * 64,
+        netlist_sha256=netlist_sha256,
         entries=entries,
     )

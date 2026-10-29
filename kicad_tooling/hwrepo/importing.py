@@ -12,7 +12,11 @@ from .contracts import lexical_absolute_path, repo_path, repo_path_is_within, wr
 from .discovery import project_destination
 from .evidence import digest as file_digest
 from .markdown import imported_project_readme, write_markdown
-from .models import ComponentIdentity, ProjectImportReport, ProjectKind
+from .project_models import (
+    ComponentIdentity,
+    ProjectImportReport,
+    ProjectKind,
+)
 from .repository import ephemeral, generated_artifact, unmanaged_artifact
 from .scaffold import prepare_manifest, write_scaffold
 

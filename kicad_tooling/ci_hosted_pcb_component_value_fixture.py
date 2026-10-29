@@ -20,10 +20,10 @@ from .hwrepo.models import (
     ContractCoachReport,
     DesignLintPolicy,
     NetlistContract,
-    ProjectKind,
 )
 from .hwrepo.pcb_component_inventory import evaluate_native_component_inventory_coverage
 from .hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
+from .hwrepo.project_models import ProjectKind
 from .validate import read_netlist
 
 

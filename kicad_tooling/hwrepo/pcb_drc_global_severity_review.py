@@ -9,7 +9,6 @@ from .contracts import repo_path
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .evidence import digest
-from .models import ProjectConfig, ProjectKind
 from .pcb_drc_project_settings import (
     configured_core_drc_check_severities,
     configured_dfm_drc_check_severities,
@@ -17,6 +16,10 @@ from .pcb_drc_project_settings import (
     configured_miscellaneous_drc_check_severities,
     configured_signal_integrity_drc_check_severities,
     configured_warning_default_drc_check_severities,
+)
+from .project_models import (
+    ProjectConfig,
+    ProjectKind,
 )
 
 WARNING_DEFAULT_DRC_SUPPORTED_VERSIONS = frozenset(

@@ -13,13 +13,15 @@ from pathlib import Path
 from urllib.parse import quote
 
 from .models import (
-    PartRecord,
-    PartsCatalog,
-    PartStatus,
     PurchasingComponent,
     PurchasingFinding,
     PurchasingLine,
     PurchasingPlan,
+)
+from .part_catalog_models import (
+    PartRecord,
+    PartsCatalog,
+    PartStatus,
 )
 from .purchasing_preference_models import PurchasingPreferences
 

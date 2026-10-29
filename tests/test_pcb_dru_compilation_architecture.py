@@ -23,11 +23,18 @@ def test_custom_rule_compilation_owner_stays_small_and_uses_theme_owned_records(
         if isinstance(node, ast.ImportFrom) and node.module == "models"
         for alias in node.names
     }
+    imported_records = {
+        (node.module, alias.name)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom)
+        for alias in node.names
+    }
 
     assert len(source.splitlines()) < 500
     assert len(NATIVE_REPORT_OWNER.read_text(encoding="utf-8").splitlines()) < 500
     assert "PcbDruCompilationReport" not in imported_models
-    assert "CommandEvidence" in imported_models
+    assert ("command_evidence_models", "CommandEvidence") in imported_records
+    assert ("models", "CommandEvidence") not in imported_records
     assert (
         not (ROOT / "kicad_tooling/hwrepo/models.py")
         .read_text(encoding="utf-8")

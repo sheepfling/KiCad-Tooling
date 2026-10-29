@@ -378,7 +378,7 @@ else:
                             self.assertEqual(set(mcp.commands), {"version", "top"})
                         else:
                             expected_files = {f"{view}.png" for view in DEFAULT_THREE_D_VIEWS}
-                            expected_files.update({"board.step", "board.glb"})
+                            expected_files.update({"board.step", "board.glb", "index.html"})
                             self.assertEqual(set(mcp.artifacts_sha256), expected_files)
                         self.assertEqual(source_state(self.root), before)
 
@@ -412,7 +412,7 @@ else:
                 )
                 self.assertEqual(
                     set(mcp_selected.artifacts_sha256),
-                    {"back.png", "angled-90.png", "board.step", "board.glb"},
+                    {"back.png", "angled-90.png", "board.step", "board.glb", "index.html"},
                 )
                 self.assertEqual(source_state(self.root), before)
 

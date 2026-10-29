@@ -9,8 +9,11 @@ from pathlib import Path
 from .contracts import repo_path
 from .design_lint_types import Candidate
 from .evidence import digest
-from .models import ProjectConfig, ProjectKind
 from .pcb_drc_rule_parser import native_ignored_rules, native_rules_with_severity
+from .project_models import (
+    ProjectConfig,
+    ProjectKind,
+)
 
 _SUPPORTED_KICAD_VERSION = re.compile(r"10\.\d+\.\d+\Z")
 _TEXT_VARIABLE = re.compile(r"\$\{([^{}]+)\}")

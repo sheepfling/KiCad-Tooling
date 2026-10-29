@@ -8,7 +8,15 @@ from pathlib import Path
 from .contracts import read_model, repo_path, repo_path_is_within
 from .discovery import load_registry
 from .layout import CONFIG_NAME, layout
-from .models import ImpactPlan, LibrariesCatalog, ProductIndex, ProductRecord, ProjectManifest
+from .models import (
+    ImpactPlan,
+    LibrariesCatalog,
+)
+from .product_models import (
+    ProductIndex,
+    ProductRecord,
+)
+from .project_models import ProjectManifest
 
 # These authored root documents affect the workflow's policy or agent behavior.
 POLICY_MARKDOWN = frozenset({"AGENTS.md", "CLAUDE.md", "LICENSE.md"})

@@ -182,6 +182,18 @@
       ]
     },
     {
+      "module": "kicad_tooling.findings_view",
+      "commands": [],
+      "options": [
+        "--format",
+        "--lint-report",
+        "--native-summary",
+        "--output",
+        "--project",
+        "--root"
+      ]
+    },
+    {
       "module": "kicad_tooling.governance_audit",
       "commands": [],
       "options": [
@@ -335,6 +347,22 @@
         "--release-id",
         "--root",
         "--variant"
+      ]
+    },
+    {
+      "module": "kicad_tooling.review_overview",
+      "commands": [],
+      "options": [
+        "--charts-report",
+        "--findings-view",
+        "--format",
+        "--native-summary",
+        "--output",
+        "--parts-report",
+        "--project",
+        "--root",
+        "--three-d-report",
+        "--verification-report"
       ]
     },
     {
@@ -625,12 +653,34 @@
       ]
     },
     {
+      "name": "export_findings_view",
+      "parameters": [
+        "lint_report",
+        "native_summary",
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
       "name": "export_project",
       "parameters": [
         "assembly_variant",
         "export_id",
         "project_id",
         "runner"
+      ]
+    },
+    {
+      "name": "export_review_overview",
+      "parameters": [
+        "charts_report",
+        "findings_view",
+        "native_summary",
+        "parts_report",
+        "project_id",
+        "three_d_report",
+        "verification_report",
+        "view_id"
       ]
     },
     {
@@ -1340,11 +1390,12 @@
         "export_3d"
       ],
       "alignment": "aligned",
-      "reason": "Both export six orthographic and four angled PCB views by default, or a matching selected view set, plus STEP and GLB using the selected exact runner and declared KiCad assembly variant.",
+      "reason": "Both export six orthographic and four angled PCB views by default, or a matching selected view set, plus STEP and GLB using the selected exact runner and declared KiCad assembly variant. Retained outputs include an offline review gallery.",
       "scope": "core",
       "gaps": [],
       "constraints": [
         "CLI repeats --view to select output images; MCP accepts the same names in views and defaults to all ten camera views.",
+        "The gallery links only to verified retained artifacts, and identifies failed partial exports.",
         "CLI accepts --cli and --output; MCP selects a fresh directory by view_id and requires allow-checks plus allow-exports."
       ],
       "parity_tests": [
@@ -1946,6 +1997,46 @@
       ],
       "parity_tests": [
         "tests.test_new_workflow_parity.NewWorkflowParityTests.test_saved_electrical_charts_and_suite_match_cli"
+      ]
+    },
+    {
+      "id": "project-review-overview",
+      "cli": [
+        "kicad_tooling.review_overview"
+      ],
+      "mcp": [
+        "export_review_overview"
+      ],
+      "alignment": "aligned",
+      "reason": "Both index the same explicitly selected saved receipts through one typed source and artifact freshness service.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and chooses a fresh output by view_id; neither surface discovers the latest receipt or executes engineering checks.",
+        "Parts output files and verification summaries without retained source or artifact hashes remain marked unknown where binding cannot be established."
+      ],
+      "parity_tests": [
+        "tests.test_review_overview_parity.test_cli_mcp_review_overview_parity"
+      ]
+    },
+    {
+      "id": "findings-view",
+      "cli": [
+        "kicad_tooling.findings_view"
+      ],
+      "mcp": [
+        "export_findings_view"
+      ],
+      "alignment": "aligned",
+      "reason": "Both generate an offline source-bound schematic and PCB review from the same retained native findings and optional design-lint snapshot.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "Only supported PCB DRC and single-root schematic lint geometry receive markers; ERC, parity and unsupported locations remain listed.",
+        "MCP requires exports and chooses a fresh output by view_id; both surfaces read existing evidence and do not execute native tools."
+      ],
+      "parity_tests": [
+        "tests.test_findings_view_parity.test_cli_mcp_findings_view_parity"
       ]
     },
     {

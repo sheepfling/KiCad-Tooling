@@ -7,7 +7,11 @@ import shlex
 from pathlib import Path
 
 from .importing import import_project
-from .models import ImportInventoryCandidate, ImportInventoryReport, ProjectKind
+from .project_models import (
+    ImportInventoryCandidate,
+    ImportInventoryReport,
+    ProjectKind,
+)
 from .repository import ephemeral
 
 

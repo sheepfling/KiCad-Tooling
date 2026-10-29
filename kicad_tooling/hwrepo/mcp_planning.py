@@ -12,7 +12,9 @@ from .mcp_workflow import fresh_output, pcb_config
 from .models import (
     ImpactPlan,
     ModelPopulationReport,
-    PolicyIssue,
+)
+from .policy_issue_models import PolicyIssue
+from .sourcing_models import (
     SourcingSnapshot,
     SourcingSnapshotReport,
 )

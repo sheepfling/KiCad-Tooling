@@ -13,7 +13,7 @@ from pathlib import Path
 from .contracts import read_model, repo_path
 from .discovery import manifest_paths
 from .layout import layout, within_roots
-from .models import ProductIndex
+from .product_models import ProductIndex
 
 
 def artifact_path(root: Path, value: str) -> Path:

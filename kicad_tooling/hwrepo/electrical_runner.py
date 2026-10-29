@@ -10,6 +10,7 @@ import kicad_tooling.hwrepo.electrical_analysis_contract_models as electrical_co
 from kicad_tooling.hwrepo import pcb_test_access_models
 
 from .can_termination_contract import can_termination_checks
+from .command_evidence_models import CommandEvidence
 from .component_power_ratings import component_power_rating_checks
 from .component_voltage_ratings import component_voltage_rating_checks
 from .connector_contact_ratings import connector_contact_rating_checks
@@ -24,7 +25,7 @@ from .contracts import repo_path, write_model
 from .control_input_checks import control_input_checks
 from .digital_peer_voltages import digital_peer_voltage_checks
 from .electrical import (
-    bound_inputs,
+    bind_electrical_inputs,
     grounding_checks,
     load_analysis,
     pin_relationship_checks,
@@ -35,16 +36,15 @@ from .electrical import (
 from .evidence import digest, source_state
 from .i2c_pullup_contract import i2c_pullup_checks
 from .models import (
-    CommandEvidence,
     ElectricalAnalysisReport,
     ElectricalCheck,
     ElectricalSuiteReport,
-    ProjectKind,
 )
 from .mosfet_stress import mosfet_stress_checks
 from .pcb_return_path_capture import capture_native_pcb_connectivity, expected_probe_sha256
 from .pcb_return_path_checks import pcb_return_path_checks
 from .power_connectivity import power_connectivity_checks
+from .project_models import ProjectKind
 from .rs485_heuristics import rs485_checks
 from .selection import ProjectSelector, resolve_project_ids
 from .serial_heuristics import serial_peer_checks
@@ -148,7 +148,7 @@ def analyze(
             high_frequency: electrical_contracts.HighFrequencyAnalysis | ElectricalAnalysisState = (
                 contract.high_frequency
             )
-            inputs = bound_inputs(root, config, contract)
+            inputs = bind_electrical_inputs(root, config, contract)
             write_model(output / "requirements.json", contract)
             netlist = None
             needs_netlist = any(
@@ -777,8 +777,7 @@ def analyze(
                             checks.append(
                                 ElectricalCheck(id=case.id, status="FAIL", detail=str(exc))
                             )
-            if bound_inputs(root, config, load_analysis(root, config) or contract) != inputs:
-                raise ValueError("Electrical inputs changed during analysis")
+            bind_electrical_inputs(root, config, contract, inputs)
             if source_state(root) != source:
                 raise ValueError("Repository source changed during electrical analysis")
             status = (

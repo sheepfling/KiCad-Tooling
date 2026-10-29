@@ -31,11 +31,14 @@ from .design_lint_project_contexts import (
 from .design_lint_report_models import DesignLintReport
 from .design_lint_schematic_coverage import scan_schematic_geometry
 from .design_lint_stm32_coverage import scan_stm32_pin_maps
-from .discovery import load_config, load_registry
+from .discovery import load_config
 from .evidence import digest
-from .models import (
-    ProjectManifest,
+from .models import ValidationSummary
+from .native_netlist_evidence import (
+    capture_native_netlist_evidence,
+    native_netlist_evidence_matches,
 )
+from .native_summary_binding import validate_native_toolchain
 from .pcb_drc_exclusion_review import source_bound_pcb_drc_exclusion_candidates
 from .pcb_drc_global_severity_review import (
     downgraded_electrical_drc_check_candidates,
@@ -58,6 +61,8 @@ from .pcb_dru_rule_review import (
     text_variable_custom_drc_rule_candidates,
 )
 from .pcb_mechanical_edge_clearance import mechanical_edge_rule_coverage_candidates
+from .project_models import ProjectManifest
+from .selection import resolve_project
 
 
 def inspect_design_lint_summary(
@@ -68,9 +73,13 @@ def inspect_design_lint_summary(
 ) -> DesignLintReport:
     """Read the exact native source and the current project-owned lint decisions."""
     root = root.resolve()
+    try:
+        native_evidence = capture_native_netlist_evidence(native_summary)
+    except OSError:
+        native_evidence = None
     coach = inspect_contract_summary(root, project_id, native_summary)
     try:
-        project = next(item for item in load_registry(root).projects if item.id == project_id)
+        project = resolve_project(root, project_id)
         manifest_path = repo_path(root, project.config)
         manifest_hash = digest(manifest_path)
         manifest = read_model(manifest_path, ProjectManifest)
@@ -91,6 +100,18 @@ def inspect_design_lint_summary(
             )
         if coach.netlist_sha256 is None:
             raise ValueError("Native netlist hash is unavailable for connectivity snapshot capture")
+        if (
+            native_evidence is None
+            or native_evidence.netlist_sha256 != coach.netlist_sha256
+            or not native_netlist_evidence_matches(native_summary, native_evidence)
+        ):
+            raise ValueError(
+                "Native netlist evidence changed while starting design-lint inspection"
+            )
+        summary_path = (
+            native_summary / "summary.json" if native_summary.is_dir() else native_summary
+        )
+        validate_native_toolchain(read_model(summary_path, ValidationSummary), config)
         if hashes(root, config.source_roots) != coach.source_hashes:
             raise ValueError("Declared source changed while reading design-lint policy")
         mechanical_edge_rule_candidates = mechanical_edge_rule_coverage_candidates(
@@ -298,6 +319,14 @@ def inspect_design_lint_summary(
             raise ValueError("Project manifest or lint policy changed during inspection")
         if hashes(root, config.source_roots) != coach.source_hashes:
             raise ValueError("Declared project source changed during design-lint inspection")
+        if not native_netlist_evidence_matches(native_summary, native_evidence):
+            raise ValueError("Native netlist evidence changed during design-lint inspection")
+        current_config = load_config(root, project.config)
+        if (current_config.kicad_version, current_config.image) != (
+            config.kicad_version,
+            config.image,
+        ):
+            raise ValueError("Project toolchain changed during design-lint inspection")
         # Revalidate the assembled report so the final cross-field contract is
         # checked after adding manifest, policy, and connectivity evidence.
         return DesignLintReport.model_validate(

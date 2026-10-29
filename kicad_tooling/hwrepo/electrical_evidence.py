@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .command_evidence_models import CommandEvidence
 from .contracts import read_model, repo_path
 from .electrical import (
-    bound_inputs,
+    bind_electrical_inputs,
     load_analysis,
     policy_issues,
     selected_config,
@@ -16,13 +17,15 @@ from .electrical_analysis_contract_models import ElectricalAnalysisContract
 from .electrical_evidence_contract_checks import retained_electrical_contract_checks
 from .evidence import digest, evidence_path, verify_source
 from .models import (
-    CommandEvidence,
     ElectricalAnalysisReport,
     EvidenceFile,
-    ProjectKind,
-    ProjectRecord,
     ReleaseClass,
     SourceState,
+)
+from .native_netlist_evidence import native_netlist_evidence_matches
+from .project_models import (
+    ProjectKind,
+    ProjectRecord,
 )
 from .spice import measured_checks, observed_versions, simulation_deck, waveform_checks
 
@@ -63,11 +66,14 @@ def verify_electrical(
     issues = policy_issues(root, config)
     if issues:
         raise ValueError("Electrical requirements are invalid: " + "; ".join(issues))
-    if dict(report.input_sha256) != bound_inputs(root, config, contract):
-        raise ValueError("Electrical evidence inputs differ from reviewed source/model bindings")
-    for name, expected in report.artifacts_sha256.items():
-        if digest(repo_path(path.parent, name)) != expected:
-            raise ValueError(f"Missing or changed electrical artifact: {name}")
+    bind_electrical_inputs(
+        root,
+        config,
+        contract,
+        report.input_sha256,
+        mismatch_message="Electrical evidence inputs differ from reviewed source/model bindings",
+    )
+    _verify_artifact_hashes(path.parent, report)
 
     def artifact(name: str) -> Path:
         if name not in report.artifacts_sha256:
@@ -76,8 +82,8 @@ def verify_electrical(
 
     if read_model(artifact("requirements.json"), ElectricalAnalysisContract) != contract:
         raise ValueError("Retained electrical requirements differ from committed requirements")
-    retained_checks, requires_pcb_connectivity = retained_electrical_contract_checks(
-        root, config, contract, report, native, artifact
+    retained_checks, requires_pcb_connectivity, native_identity = (
+        retained_electrical_contract_checks(root, config, contract, report, native, artifact)
     )
     checks = list(retained_checks)
     cases = simulation_cases(contract)
@@ -111,4 +117,17 @@ def verify_electrical(
         or any(row.status not in {"PASS", "NOT_APPLICABLE"} for row in checks)
     ):
         raise ValueError("Retained electrical checks fail or omit reviewed requirements")
+    evidence_path(root, reference)
+    if native_identity is not None and not native_netlist_evidence_matches(
+        evidence_path(root, native), native_identity
+    ):
+        raise ValueError("Native netlist evidence changed during electrical verification")
+    bind_electrical_inputs(root, config, contract, report.input_sha256)
+    _verify_artifact_hashes(path.parent, report)
     return report
+
+
+def _verify_artifact_hashes(directory: Path, report: ElectricalAnalysisReport) -> None:
+    for name, expected in report.artifacts_sha256.items():
+        if digest(repo_path(directory, name)) != expected:
+            raise ValueError(f"Missing or changed electrical artifact: {name}")

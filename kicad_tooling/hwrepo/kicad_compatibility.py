@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from typing import Literal
 
-from .models import ProjectConfig, ToolchainRecord
+from .project_models import (
+    ProjectConfig,
+    ToolchainRecord,
+)
 
 KiCadCliProfile = Literal["kicad-10"]
 

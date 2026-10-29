@@ -286,6 +286,7 @@ def test_design_lint_emits_configurable_review_finding_for_fault() -> None:
         project_id="synthetic-protection",
         observed=NetlistContract(components={}, nets={}),
         netlist_sha256="f" * 64,
+        source_hashes={"projects/synthetic/project.kicad_pcb": "a" * 64},
     )
 
     report = evaluate(
@@ -300,3 +301,34 @@ def test_design_lint_emits_configurable_review_finding_for_fault() -> None:
     assert report.pcb_protection_path.status == "INCOMPLETE"
     assert finding.mode == "review"
     assert finding.evidence["connector_to_protection_pad_center_distance"] == ("100001 nm",)
+
+
+def test_design_lint_requires_current_map_and_board_for_coverage() -> None:
+    mapped = mapping()
+    measured = coverage_report(mapped, snapshot())
+    board_path = "projects/synthetic/project.kicad_pcb"
+    native = ContractCoachReport(
+        status="READY_FOR_REVIEW",
+        project_id="synthetic-protection",
+        observed=NetlistContract(components={}, nets={}),
+        netlist_sha256="f" * 64,
+        source_hashes={board_path: "a" * 64},
+    )
+    stale_board = native.model_copy(update={"source_hashes": {board_path: "d" * 64}})
+
+    stale_source_report = evaluate(
+        "synthetic-protection",
+        stale_board,
+        DesignLintPolicy(pcb_protection_path_map=mapped),
+        pcb_protection_path_coverage=measured,
+    )
+    stale_map = mapped.model_copy(update={"basis": "Changed authored map"})
+    stale_map_report = evaluate(
+        "synthetic-protection",
+        native,
+        DesignLintPolicy(pcb_protection_path_map=stale_map),
+        pcb_protection_path_coverage=measured,
+    )
+
+    assert stale_source_report.pcb_protection_path.status == "BLOCKED"
+    assert stale_map_report.pcb_protection_path.status == "BLOCKED"

@@ -18,7 +18,8 @@ from .hwrepo.contracts import read_model, write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
-from .hwrepo.models import ContractCoachReport, ProjectTestContract
+from .hwrepo.models import ContractCoachReport
+from .hwrepo.project_models import ProjectTestContract
 from .validate import read_netlist
 
 RULE_ID = "oscillator.output_load_path_mismatch"

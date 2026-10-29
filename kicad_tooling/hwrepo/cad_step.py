@@ -13,11 +13,12 @@ from pathlib import Path
 
 from .cad_library import _native_footprint, inspect_bundle  # pyright: ignore[reportPrivateUsage]
 from .cad_source import _cached  # pyright: ignore[reportPrivateUsage]
+from .cad_source_models import CadSourceReport, CadStepReport
+from .command_evidence_models import CommandEvidence
 from .contracts import parse_easyeda_identity, repo_path, write_model
 from .discovery import load_config
 from .evidence import digest as file_digest
 from .kicad_compatibility import require_cli_profile
-from .models import CadSourceReport, CadStepReport, CommandEvidence
 from .part_cad import _nodes, _quote, _root, _tokens  # pyright: ignore[reportPrivateUsage]
 from .parts_workflow import selected_project
 from .three_d import _command, _valid_artifact  # pyright: ignore[reportPrivateUsage]

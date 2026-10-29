@@ -8,16 +8,20 @@ from pathlib import Path
 from .contracts import read_model, repo_path
 from .discovery import load_registry
 from .layout import layout
-from .models import (
+from .policy_issue_models import PolicyIssue
+from .product_models import (
+    ProductIndex,
+    ProductRecord,
+)
+from .project_inventory_models import (
     InventoryGroup,
     InventoryProject,
     InventoryToolchain,
-    PolicyIssue,
-    ProductIndex,
-    ProductRecord,
+    TemplateInventoryReport,
+)
+from .project_models import (
     ProjectManifest,
     ProjectTestContract,
-    TemplateInventoryReport,
     ToolchainsCatalog,
 )
 

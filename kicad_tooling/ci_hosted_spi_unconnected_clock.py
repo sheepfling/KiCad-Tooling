@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import MappingProxyType
 
 from .ci_hosted_named_rail_fixtures import named_rail_fixture_lane
 from .ci_hosted_spi_native import SPI_NATIVE_TOOLCHAINS
 from .ci_hosted_support import HostedLog
 
-_SOURCE_HASHES = {
-    "control": "cf9cf52926767b8d4a3ba311bec79f669d95a2d3fc4865cdc895ab7b48c9e738",
-    "fault": "bd2d07d875ef4b580a8d378dfc92d757c4a856b4ce76b5f2167810184fe0f214",
-}
+_SOURCE_HASHES = MappingProxyType(
+    {
+        "control": "cf9cf52926767b8d4a3ba311bec79f669d95a2d3fc4865cdc895ab7b48c9e738",
+        "fault": "bd2d07d875ef4b580a8d378dfc92d757c4a856b4ce76b5f2167810184fe0f214",
+    }
+)
 
 
 def spi_unconnected_clock_fixture_lane(

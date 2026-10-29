@@ -11,7 +11,6 @@ from ..validate import hashes
 from .analysis_state_models import AnalysisPending
 from .contract_coach import receipt_directory
 from .contracts import read_model, repo_path, write_model
-from .discovery import load_registry
 from .electrical import (
     load_analysis,
     model_digest,
@@ -23,10 +22,13 @@ from .electrical_analysis_contract_models import ElectricalAnalysisContract
 from .models import (
     ElectricalInputInventory,
     ElectricalSetupReport,
+)
+from .project_models import (
     ProjectKind,
     ProjectManifest,
     ProjectTestContract,
 )
+from .selection import resolve_project
 
 GUIDE = "docs/workflow/ELECTRICAL_ANALYSIS.md"
 
@@ -43,7 +45,7 @@ def initialize(
         raise ValueError(
             f"Electrical contract already configured: {config.electrical}; edit it or use --capture-inputs"
         )
-    project = next(p for p in load_registry(root).projects if p.id == project_id)
+    project = resolve_project(root, project_id)
     manifest_path = repo_path(root, project.config)
     manifest = read_model(manifest_path, ProjectManifest)
     checks = repo_path(manifest_path.parent, manifest.checks)
@@ -183,7 +185,7 @@ def capture_inputs(
     config = selected_config(root, project_id)
     if config.kind not in {ProjectKind.PCB, ProjectKind.SCHEMATIC}:
         raise ValueError("Electrical inputs require a pcb or schematic project")
-    project = next(p for p in load_registry(root).projects if p.id == project_id)
+    project = resolve_project(root, project_id)
     island = repo_path(root, project.config).parent
     current = hashes(root, config.source_roots)
     if set(current) != set(config.required_inputs):

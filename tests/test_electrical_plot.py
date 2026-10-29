@@ -9,6 +9,7 @@ import unittest
 from itertools import pairwise
 from pathlib import Path
 from types import MappingProxyType
+from unittest.mock import patch
 
 from kicad_tooling.hwrepo.electrical_plot import _complex_phase, _panels, render_case
 from kicad_tooling.hwrepo.models import FrequencyAnalysis, SimulationMeasure, TransientAnalysis
@@ -161,6 +162,100 @@ class ElectricalPlotTests(unittest.TestCase):
         self.assertEqual(len(phases), 4)
         self.assertTrue(all(right > left for left, right in pairwise(phases)))
         self.assertAlmostEqual(phases[-1], math.radians(190))
+
+    @unittest.skipUnless(
+        importlib.util.find_spec("matplotlib"), "optional Matplotlib not installed"
+    )
+    def test_transient_average_and_rms_keep_startup_and_window_detail(self) -> None:
+        from matplotlib.figure import Figure
+
+        data = WaveformData(
+            axis_name="time",
+            axis=(0.0, 0.1, 0.5, 0.75, 1.0),
+            series=(
+                WaveformSeries(
+                    name="i(value0)", unit="current", values=(0j, 8 + 0j, 1 + 0j, 1 + 0j, 1 + 0j)
+                ),
+            ),
+        )
+        original_savefig = Figure.savefig
+        for statistic in ("avg", "rms"):
+            measure = _measure("-i(vrail)", "A", 0.5, 1.0).model_copy(
+                update={"statistic": statistic}
+            )
+            case = _transient().model_copy(update={"measures": (measure,)})
+            snapshots = []
+
+            def capture(figure, *args, _snapshots=snapshots, **kwargs):
+                original_savefig(figure, *args, **kwargs)
+                _snapshots.append(
+                    [
+                        (
+                            axis.get_title(),
+                            tuple(axis.lines[0].get_xdata()),
+                            tuple(axis.lines[0].get_ydata()),
+                            axis.get_xlim(),
+                        )
+                        for axis in figure.axes
+                    ]
+                )
+
+            with self.subTest(statistic=statistic), tempfile.TemporaryDirectory() as directory:
+                with patch.object(Figure, "savefig", autospec=True, side_effect=capture):
+                    render_case(
+                        data, case, Path(directory) / "chart.png", Path(directory) / "chart.svg"
+                    )
+                self.assertEqual(len(snapshots), 2)
+                overview, detail = snapshots[0]
+                self.assertIn("Full run", overview[0])
+                self.assertEqual(overview[1], data.axis)
+                self.assertEqual(overview[2][1], 8.0)
+                self.assertLessEqual(overview[3][0], 0.0)
+                self.assertGreaterEqual(overview[3][1], 1.0)
+                self.assertIn("Measurement window detail", detail[0])
+                self.assertEqual(detail[1], (0.5, 0.75, 1.0))
+                self.assertEqual(detail[2], (1.0, 1.0, 1.0))
+                self.assertGreater(detail[3][0], 0.1)
+                self.assertIn(
+                    "avg/rms limits apply to the window statistic",
+                    (Path(directory) / "chart.svg").read_text(),
+                )
+
+    @unittest.skipUnless(
+        importlib.util.find_spec("matplotlib"), "optional Matplotlib not installed"
+    )
+    def test_disjoint_measurements_get_independent_window_detail(self) -> None:
+        from matplotlib.axes import Axes
+
+        axis = (0.0, 0.1, 0.2, 0.5, 0.8, 0.9, 1.0)
+        data = WaveformData(
+            axis_name="time",
+            axis=axis,
+            series=(
+                WaveformSeries(name="i(value0)", unit="current", values=(1 + 0j,) * len(axis)),
+                WaveformSeries(name="i(value1)", unit="current", values=(2 + 0j,) * len(axis)),
+            ),
+        )
+        early = _measure("-i(vrail)", "A", 0.1, 0.2).model_copy(
+            update={"id": "early", "statistic": "avg"}
+        )
+        late = _measure("-i(vrail)", "A", 0.8, 1.0).model_copy(
+            update={"id": "late", "statistic": "rms"}
+        )
+        case = _transient().model_copy(update={"measures": (early, late)})
+        original_plot = Axes.plot
+        plotted = []
+
+        def capture(chart, x, y, *args, **kwargs):
+            plotted.append(tuple(x))
+            return original_plot(chart, x, y, *args, **kwargs)
+
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.object(Axes, "plot", autospec=True, side_effect=capture),
+        ):
+            render_case(data, case, Path(directory) / "chart.png", Path(directory) / "chart.svg")
+        self.assertEqual(plotted, [axis, (0.1, 0.2), axis, (0.8, 0.9, 1.0)])
 
     @unittest.skipUnless(
         importlib.util.find_spec("matplotlib"), "optional Matplotlib not installed"

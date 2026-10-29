@@ -9,8 +9,9 @@ from typing import TypeAlias
 import kicad_tooling.hwrepo.electrical_analysis_contract_models as electrical_contracts
 from kicad_tooling.hwrepo import pcb_test_access_models
 
-from ..validate import read_netlist
+from ..validate import hashes
 from .can_termination_contract import can_termination_checks
+from .command_evidence_models import CommandEvidence
 from .component_power_ratings import component_power_rating_checks
 from .component_voltage_ratings import component_voltage_rating_checks
 from .connector_contact_ratings import connector_contact_rating_checks
@@ -19,22 +20,24 @@ from .control_input_checks import control_input_checks
 from .digital_peer_voltages import digital_peer_voltage_checks
 from .electrical import grounding_checks, pin_relationship_checks, power_budget_checks
 from .electrical_analysis_contract_models import ElectricalAnalysisContract
-from .evidence import digest, evidence_path
+from .evidence import digest
 from .i2c_pullup_contract import i2c_pullup_checks
 from .models import (
-    CommandEvidence,
     ElectricalAnalysisReport,
     ElectricalCheck,
     EvidenceFile,
-    ProjectConfig,
-    ProjectKind,
 )
 from .mosfet_stress import mosfet_stress_checks
+from .native_netlist_evidence import NativeNetlistEvidenceIdentity, read_bound_native_netlist
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_return_path_capture import expected_probe_sha256, native_pcb_command_matches
 from .pcb_return_path_checks import pcb_return_path_checks
 from .pcb_test_access_models import PcbAccessProbeRequestSet
 from .power_connectivity import power_connectivity_checks
+from .project_models import (
+    ProjectConfig,
+    ProjectKind,
+)
 from .rs485_heuristics import rs485_checks
 from .serial_heuristics import serial_peer_checks
 from .spi_contract import spi_checks
@@ -58,7 +61,7 @@ def retained_electrical_contract_checks(
     report: ElectricalAnalysisReport,
     native: EvidenceFile,
     artifact: Callable[[str], Path],
-) -> tuple[tuple[ElectricalCheck, ...], bool]:
+) -> tuple[tuple[ElectricalCheck, ...], bool, NativeNetlistEvidenceIdentity | None]:
     """Compare retained contract dispositions and artifacts with native evidence."""
     grounding: (
         electrical_contracts.GroundingAnalysis
@@ -113,9 +116,8 @@ def retained_electrical_contract_checks(
         contract.high_frequency
     )
     checks: list[ElectricalCheck] = []
-    netlist = (
-        read_netlist(evidence_path(root, native).parent / "netlist.xml")
-        if isinstance(grounding, electrical_contracts.GroundingAnalysis)
+    needs_netlist = (
+        isinstance(grounding, electrical_contracts.GroundingAnalysis)
         or isinstance(pin_connectivity, electrical_contracts.PinConnectivityAnalysis)
         or isinstance(i2c_pullups, electrical_contracts.I2cPullupAnalysis)
         or isinstance(can_termination, electrical_contracts.CanTerminationAnalysis)
@@ -135,7 +137,11 @@ def retained_electrical_contract_checks(
         or isinstance(control_inputs, electrical_contracts.ControlInputsAnalysis)
         or isinstance(power_connectivity, electrical_contracts.PowerConnectivityAnalysis)
         or isinstance(test_access, electrical_contracts.TestAccessAnalysis)
-        else None
+    )
+    netlist, native_identity = (
+        read_bound_native_netlist(root, native, config, hashes(root, config.source_roots))
+        if needs_netlist
+        else (None, None)
     )
     if isinstance(grounding, electrical_contracts.GroundingAnalysis):
         assert netlist is not None
@@ -442,4 +448,4 @@ def retained_electrical_contract_checks(
         isinstance(pcb_return_paths, electrical_contracts.PcbReturnPathsAnalysis)
         or access_probe_requests is not None
     )
-    return tuple(checks), requires_pcb_connectivity
+    return tuple(checks), requires_pcb_connectivity, native_identity

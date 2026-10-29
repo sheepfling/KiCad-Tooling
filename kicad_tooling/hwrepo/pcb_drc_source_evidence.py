@@ -11,9 +11,13 @@ from pathlib import Path, PureWindowsPath
 from pydantic import JsonValue
 
 from ..validate import hashes
+from .command_evidence_models import CommandEvidence
 from .contracts import read_model, repo_path
 from .evidence import digest
-from .models import CommandEvidence, ProjectConfig, ValidationSummary
+from .models import ValidationSummary
+from .native_summary_binding import validate_native_summary_binding
+from .pcb_drc_models import PcbDifferentialPairRuleCoverageReport, PcbSignalPathRuleCoverageReport
+from .project_models import ProjectConfig
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,6 +37,8 @@ class BoundDrcEvidence:
     summary_file: Path
     summary_sha256_before: str
     drc_file: Path
+    command_file: Path
+    command_sha256: str
     rules_source: str
     ignored_checks: frozenset[str]
 
@@ -73,6 +79,7 @@ def source_bound_drc_evidence(
         raise ValueError("Native summary is outside the current repository") from exc
     summary_hash_before = digest(summary_file)
     summary = read_model(summary_file, ValidationSummary)
+    validate_native_summary_binding(summary, config, source_hashes)
     drc_relative = "drc.json"
     command_relative = "drc.command.json"
     if not {drc_relative, command_relative} <= summary.artifacts_sha256.keys():
@@ -139,7 +146,7 @@ def source_bound_drc_evidence(
         if not isinstance(key, str):
             raise TypeError("Native DRC report has malformed ignored-check evidence")
         ignored.add(key)
-    return BoundDrcEvidence(
+    evidence = BoundDrcEvidence(
         project_path=project_relative,
         project_sha256=project_hash,
         rules_path=rules_relative,
@@ -149,15 +156,19 @@ def source_bound_drc_evidence(
         native_summary_path=summary_relative,
         native_summary_sha256=summary_hash_before,
         native_drc_path=(summary_file.parent / drc_relative).relative_to(root).as_posix(),
-        native_drc_sha256=digest(drc_file),
+        native_drc_sha256=summary.artifacts_sha256[drc_relative],
         project_file=project_file,
         board_file=board_file,
         summary_file=summary_file,
         summary_sha256_before=summary_hash_before,
         drc_file=drc_file,
+        command_file=command_file,
+        command_sha256=summary.artifacts_sha256[command_relative],
         rules_source=rules_source,
         ignored_checks=frozenset(ignored),
     )
+    _verify_native_drc_unchanged(evidence)
+    return evidence
 
 
 def source_inventory_sha256(source_hashes: Mapping[str, str]) -> str:
@@ -168,6 +179,25 @@ def source_inventory_sha256(source_hashes: Mapping[str, str]) -> str:
     ).hexdigest()
 
 
+def drc_coverage_matches_sources(
+    report: PcbDifferentialPairRuleCoverageReport | PcbSignalPathRuleCoverageReport,
+    source_hashes: Mapping[str, str],
+) -> bool:
+    """Check a scanned DRC coverage report against the current source inventory."""
+    return bool(
+        source_hashes
+        and report.source_inventory_sha256 == source_inventory_sha256(source_hashes)
+        and report.project_path is not None
+        and report.project_sha256 is not None
+        and source_hashes.get(report.project_path) == report.project_sha256
+        and report.board_path is not None
+        and report.board_sha256 is not None
+        and source_hashes.get(report.board_path) == report.board_sha256
+        and report.rules_path is not None
+        and source_hashes.get(report.rules_path) == report.rules_sha256
+    )
+
+
 def verify_source_bound_drc_unchanged(
     root: Path,
     config: ProjectConfig,
@@ -176,5 +206,18 @@ def verify_source_bound_drc_unchanged(
 ) -> None:
     if hashes(root, config.source_roots) != source_hashes:
         raise ValueError("Declared source changed while checking native DRC rule coverage")
-    if digest(evidence.summary_file) != evidence.summary_sha256_before:
-        raise ValueError("Native summary changed while checking DRC rule coverage")
+    _verify_native_drc_unchanged(evidence)
+
+
+def _verify_native_drc_unchanged(evidence: BoundDrcEvidence) -> None:
+    for path, expected, label in (
+        (evidence.summary_file, evidence.summary_sha256_before, "summary"),
+        (evidence.drc_file, evidence.native_drc_sha256, "DRC report"),
+        (evidence.command_file, evidence.command_sha256, "DRC command"),
+    ):
+        try:
+            actual = digest(path)
+        except FileNotFoundError as exc:
+            raise ValueError(f"Native {label} changed while checking DRC rule coverage") from exc
+        if actual != expected:
+            raise ValueError(f"Native {label} changed while checking DRC rule coverage")

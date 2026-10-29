@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Literal
 
 from ..check_toolchain import cli_executable, toolchain
+from .command_evidence_models import CommandEvidence
 from .contract_coach import docker_prefix, pinned_image, run_command
 from .contracts import read_kicad_import_summary
 from .diagnostic_journal import DiagnosticJournal
@@ -15,9 +16,10 @@ from .doctor import NativeRunner, doctor
 from .evidence import digest as file_digest
 from .importing import import_project
 from .models import (
-    CommandEvidence,
     ForeignFormat,
     ForeignPcbReport,
+)
+from .project_models import (
     KiCadForeignImportSummary,
     ProjectImportReport,
 )

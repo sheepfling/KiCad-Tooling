@@ -18,10 +18,7 @@ from .design_lint_pcb_layout_coverage import layout_coverage_reports
 from .design_lint_pcb_measurement_coverage import measurement_coverage_reports
 from .design_lint_policy_models import DesignLintPolicy
 from .discovery import ProjectConfig
-from .models import (
-    ContractCoachReport,
-    ProjectKind,
-)
+from .models import ContractCoachReport
 from .pcb_board_only_footprint_models import PcbBoardOnlyFootprintCoverage
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport, PcbDecouplingMap
@@ -29,6 +26,7 @@ from .pcb_drc_models import (
     PcbSignalPathRuleCoverageReport,
     PcbSignalPathRuleMap,
 )
+from .pcb_geometry_receipts import verify_pcb_geometry_receipts
 from .pcb_keepout_models import (
     PcbKeepoutCoverageReport,
     PcbKeepoutMap,
@@ -55,6 +53,7 @@ from .pcb_track_width_models import (
     PcbTrackWidthCoverageReport,
     PcbTrackWidthMap,
 )
+from .project_models import ProjectKind
 
 
 def scan_pcb_geometry(
@@ -292,6 +291,14 @@ def scan_pcb_geometry(
             touch_pad_clearance_map=touch_pad_clearance_map,
             modes=modes,
             evidence=evidence,
+        )
+        verify_pcb_geometry_receipts(
+            evidence.snapshot,
+            evidence.snapshot_path,
+            evidence.snapshot_sha256,
+            evidence.command,
+            evidence.command_path,
+            evidence.command_sha256,
         )
         return (
             decoupling_report,

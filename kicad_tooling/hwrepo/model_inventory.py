@@ -20,10 +20,9 @@ from .models import (
     InventoryStatus,
     ModelAssignment,
     ModelInventoryReport,
-    ProjectConfig,
-    ProjectKind,
     Resolution,
 )
+from .project_models import ProjectConfig, ProjectKind
 from .repository import cad_dependencies
 
 # Preserve the original service-module import surface for existing consumers.

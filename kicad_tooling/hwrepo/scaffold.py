@@ -14,7 +14,12 @@ from .discovery import load_registry, project_destination, settings
 from .layout import layout
 from .markdown import design_notes, project_readme, write_markdown
 from .model_primitives import Identifier, RepositoryPath
-from .models import ProjectKind, ProjectManifest, ProjectScaffoldReport, ToolchainsCatalog
+from .project_models import (
+    ProjectKind,
+    ProjectManifest,
+    ProjectScaffoldReport,
+    ToolchainsCatalog,
+)
 
 _IDENTIFIER_ADAPTER: TypeAdapter[str] = TypeAdapter(Identifier)
 _REPOSITORY_PATH_ADAPTER: TypeAdapter[RepositoryPath] = TypeAdapter(RepositoryPath)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .design_lint_pcb_inputs import PcbCandidateInputs
 from .design_lint_types import Candidate
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
@@ -16,6 +17,18 @@ from .pcb_switching_loop_models import (
 )
 from .pcb_touch_pad_clearance import touch_pad_clearance_violations
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
+
+
+def scan_pcb_requirement_candidates(inputs: PcbCandidateInputs) -> tuple[Candidate, ...]:
+    """Route the PCB group's resolved requirement coverage to its translators."""
+    return pcb_requirement_coverage_candidates(
+        pcb_switching_loop_coverage=inputs.switching_loop,
+        pcb_differential_pair_coverage=inputs.differential_pair,
+        pcb_signal_path_coverage=inputs.signal_path,
+        pcb_keepout_coverage=inputs.keepout,
+        pcb_rf_module_antenna_coverage=inputs.rf_antenna,
+        pcb_touch_pad_clearance_coverage=inputs.touch_pad_clearance,
+    )
 
 
 def pcb_requirement_coverage_candidates(

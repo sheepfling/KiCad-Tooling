@@ -150,8 +150,46 @@ route reviews.
 Project inspection now rechecks the declared source inventory after scanning
 and connectivity capture. An edit, addition, or removal during that work
 blocks the result rather than presenting findings bound to the earlier source.
+The native coach and project inspection also recheck the validation summary,
+netlist, and netlist-command bytes across their reads. Project inspection
+revalidates the selected exact toolchain against the summary and checks it
+again before returning. These are freshness checks, not filesystem locks.
+The shared PCB DRC evidence service likewise rechecks the native summary, DRC
+report, and DRC command after parsing and after coverage evaluation; the
+reported DRC hash remains the one bound by the summary.
+Both netlist and DRC consumers validate the summary's project, exact toolchain,
+and completed source-scope hashes through the same native-summary boundary.
+A completed DRC with violations can still provide evidence; it is not treated
+as a clean DRC result.
+Differential-pair evaluation now checks both the authored map and the current
+coach source inventory before accepting scanned DRC coverage. Project, board,
+and rules identities must also agree with that inventory; stale coverage is
+blocked before it can create findings. Signal-path evaluation uses the same
+source-binding check and also requires the current authored map. Regression
+cases cover complete, incomplete, stale, disabled, and mapless reports.
+Keepout, RF antenna, and touch-pad coverage now require their retained board
+path and digest to match the current source inventory, with a current authored
+map. Their common policy owns this check in
+`design_lint_pcb_geometry_coverage_policy`; the mapped DRC policy stays
+separate.
+PCB geometry capture now retains explicit null observations required by its
+versioned snapshot schema, verifies the typed snapshot and command against
+their receipt bytes, and checks them again after coverage evaluation. Signal
+path coverage applies the same checks when called independently.
 The manifest, lint policy, and consulted project-owned requirements are also
 rechecked after capture; a changed input blocks the assembled report.
+Electrical analysis separately checks that its selected configuration and
+parsed requirements still match after input hashes are captured and again
+after evaluation, so a mid-binding edit cannot produce a passing report for
+an older in-memory contract with newer recorded input hashes.
+Retained electrical evidence verification also rechecks the report, declared
+inputs, and retained artifact hashes after parsing and evaluating them. A
+changed receipt or source input cannot be accepted on the initial hash alone.
+When replay needs a native netlist, it validates the summary's project,
+toolchain, source scope, netlist hash, and export command through the shared
+native owner; it rechecks that evidence after electrical evaluation.
+Release native verification also rechecks the retained summary, its artifact
+inventory, and the repository source state after replaying the native checks.
 
 Control-input bias coverage follows the same boundary: a completed scan keeps
 the observed netlist hash even when it finds no candidate nets. Evaluation
@@ -195,6 +233,10 @@ report retains source-bound coverage without requiring its counts to match an
 absent list; source identities are still validated. Peer-reference and mapped
 check records produced before a disposition failure remain in that blocked
 report so the evidence gap is visible to CLI and MCP consumers.
+Reconciliation does not assign finding transitions when either report is
+blocked or unbound, the project IDs differ, fingerprints are duplicated, or
+native snapshot versions are incompatible. It retains the raw findings from
+both sides for review instead of treating an incomplete list as a removal.
 For a blocked report with no finding list, text output says the findings are
 unavailable or incomplete; consumers of the unchanged JSON schema must use
 `status` and `issues` rather than interpreting an empty list as a clean scan.
@@ -249,8 +291,29 @@ I²C, SPI, CAN, and RS-485 peer rule owners now attach typed identities to their
 internal candidates. Construction and coverage assembly check that each
 identity matches the public evidence fields; coverage uses the typed identities.
 The report and fingerprint continue to use the existing serialized evidence.
-The remaining work is to make typed theme results the general extension path,
+The bus theme now returns its findings with those peer keys in a
+BusCandidateResult. Prepared evaluation consumes the typed result directly;
+the flattened scan_candidates() remains an adapter for existing callers.
+The connector coordinator now returns ConnectorPeerPinFindingCounts with its
+candidate tuple. Prepared evaluation no longer recovers sixteen coverage
+counts by scanning the flattened candidates; the aggregate result checks the
+typed counts against its candidates, while published-report validation still
+reconciles counts with findings. Apply the same result contract to other
+themes when their findings carry secondary coverage or deduplication data,
 without widening the public candidate API.
+
+The control-input theme now receives its observed netlist and explicit bias
+coverage as one typed input, and returns a named result containing candidates
+and the pin keys used for peer deduplication. The scanner rejects mixed control
+and bus observations; the existing tuple-returning control function remains a
+compatibility adapter. Fault, valid-control, and unconnected cases compare
+candidate fingerprints and complete report JSON across the central routes.
+The PCB candidate group now has a PCB-owned input record. The central scanner
+passes it intact to typed measurement and requirement entry points, retaining
+the keyword-based translators as compatibility functions. Differential-pair
+fault and valid-control cases compare candidate order and fingerprints across
+the old and typed routes; the route and absence states are documented in the
+data-routing decision.
 
 **Done when:** the pilot yields equivalent findings and report meaning; adding
 a second rule in that theme needs no new parameter on the 49- or 33-parameter
@@ -273,9 +336,19 @@ The supplier handoff tranche moved generated-artifact scope and stable file
 reads into `hwrepo/artifact_access.py`. The supplier service now uses that
 shared owner directly; MCP keeps its existing import surface. A focused
 architecture check guards the service against MCP imports, and the existing
-artifact safety and supplier CLI/MCP parity tests cover the route. Project
-selection still has separate CLI and MCP messages around the same registry;
-unify that lookup only when its error contract is decided.
+artifact safety and supplier CLI/MCP parity tests cover the route.
+Single-project lookup now has a shared selection owner and a typed missing-ID
+error. Electrical analysis, contract coaching, part-CAD, and MCP workflows use
+it while retaining their existing user-facing guidance; registry failures are
+not relabeled as missing projects. Other consumers can migrate incrementally.
+Electrical setup and input binding, design-lint inspection, and release-native
+verification use the same error when a project disappears between lookups;
+design lint reports that failure as `BLOCKED` with a nonempty issue.
+MCP project detail now uses a typed request and a read-only project-detail
+service. The service owns inventory gating, registered-ID resolution, manifest
+and authored-contract reads; the MCP handler retains operation policy and
+argument mapping. The capability map records the response and no-side-effect
+boundary.
 
 The dependency guard now includes electrical, parts, CAD, layout, selection,
 product, supplier handoff, artifact, project-source, and purchasing-preference
@@ -314,6 +387,49 @@ preferences, their schema-version base, and their write result now belong to
 `purchasing_preference_models.py`, with identity-compatible registry exports.
 The preference service and its consumers import that owner directly; nested
 purchasing and selection schemas retain their existing JSON shape.
+Surface inventory and parity records now live in `surface_models.py`, with a
+shared transport-neutral `PolicyIssue` in `policy_issue_models.py`. The
+surface service and MCP adapter import their owner directly, while the former
+registry exports remain identical. Internal policy consumers now import the
+shared issue owner directly; an architecture test guards the registry boundary.
+`CommandEvidence` now belongs to `command_evidence_models.py`, whose only
+dependency is the shared model-primitives layer. Native, electrical, PCB, CAD,
+release, and journal services import that owner directly; `models.py` keeps an
+identity-compatible export. A focused architecture test guards the leaf
+boundary, direct imports, size, JSON round trip, and compatibility identity.
+The manually captured `SupplierOffer`, `SourcingSnapshot`, and
+`SourcingSnapshotReport` records now belong to `sourcing_models.py`. The
+sourcing service, CLI, MCP planning adapter, and schema generator import them
+from that owner; `models.py` preserves identity-compatible exports. The
+report's non-authorizing build state and schema version stay unchanged.
+Project configuration, manifests, validation contracts, registry records,
+toolchain catalogs, and intake receipts now belong to `project_models.py`.
+That owner depends on shared primitives plus the design-lint policy and
+connector-review contract owners. Production modules import project records
+directly across the repository; `models.py` retains identity-compatible
+exports for existing callers. The schemas keep their existing fields and
+serialization behavior.
+Project inventory rows, grouping/toolchain summaries, and the MCP project
+detail report now belong to `project_inventory_models.py`, which composes the
+project contract owner with shared primitives and policy issues. Inventory and
+MCP services import these records directly; legacy registry exports retain
+their identity and JSON contracts.
+Product indexes, assemblies, terminals, connections, variants, evidence links,
+assurance, product policy, BOM/harness schedules, and generated product views
+now belong to `product_models.py`. Product, generation, selection, inventory,
+impact, and release services import those records from the product owner;
+`models.py` remains the compatibility export for existing callers.
+The authored parts status, CAD binding, part record, and catalog now belong to
+`part_catalog_models.py`. Purchasing, product, CAD, sourcing, inventory,
+release, and catalog services import those records directly; the registry
+keeps identity-compatible exports and the catalog JSON shape is unchanged.
+The sourced-CAD lifecycle contracts now belong to `cad_source_models.py`:
+provider identity, frozen bundles, source and STEP reports, bundle checks,
+import plans and reports, and the combined sourcing review. Contract parsing,
+source capture, library validation, STEP review, workflows, MCP, and the browser
+adapter import these records directly. `models.py` retains identity-compatible
+exports; focused architecture coverage guards the primitive/evidence boundary,
+internal imports, and JSON round trips.
 
 **Done when:** a new feature's record is placed with its domain, the selected
 legacy imports shrink, old supported imports resolve, and serialized reports

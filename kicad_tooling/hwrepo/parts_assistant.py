@@ -15,14 +15,11 @@ from pathlib import Path, PurePosixPath
 from typing import cast
 from urllib.parse import parse_qsl
 
+from .cad_source_models import CadImportReport, CadSourceReport, CadSourcingReview, CadStepReport
 from .contract_coach import AutoNetlistRunner, NetlistRunner, project_context
 from .contracts import repo_path
 from .evidence import digest
 from .models import (
-    CadImportReport,
-    CadSourceReport,
-    CadSourcingReview,
-    CadStepReport,
     DigiKeyHandoffResult,
     PartPickerReport,
     PartSelectionAssignment,

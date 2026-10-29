@@ -16,10 +16,12 @@ from .models import (
     ModelMap,
     ModelMapAssignment,
     ModelPopulationReport,
-    ProjectConfig,
-    ProjectKind,
     ThreeDReport,
     ThreeDView,
+)
+from .project_models import (
+    ProjectConfig,
+    ProjectKind,
 )
 
 

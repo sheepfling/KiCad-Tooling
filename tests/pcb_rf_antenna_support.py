@@ -204,7 +204,7 @@ def lint_report(
     coach = ContractCoachReport(
         status="READY_FOR_REVIEW",
         project_id="synthetic-rf",
-        source_hashes={},
+        source_hashes={"projects/synthetic/synthetic.kicad_pcb": HASH},
         netlist_sha256=HASH,
         observed=source_netlist,
     )

@@ -13,6 +13,14 @@ The default bundle contains six straight-on views (`top.png`, `bottom.png`,
 `board.step` and `board.glb`. The PNGs and a JSON receipt are saved under a fresh
 ignored receipt under `build/`.
 
+Open `index.html` in the receipt to browse the views and download the available
+STEP and GLB files. The gallery records the export and model-coverage status and
+links only to outputs whose hashes still match when it is created. If an export
+stops after producing some files, the gallery labels the failed result and shows
+only the retained views and exchange files. If a retained file changes or goes
+missing during the export, the receipt fails and the gallery omits it. No gallery
+is created when the run produces no outputs, including a model-only check.
+
 Straight-on renders request a 1600 by 900 canvas. Angled renders request a square
 1600 by 1600 canvas and a camera margin so quarter-turn views have room for the board.
 Inspect unusually tall components and unusual board geometry for clipping.

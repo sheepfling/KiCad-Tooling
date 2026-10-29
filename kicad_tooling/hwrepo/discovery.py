@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .contracts import read_model, repo_path
 from .layout import RESERVED_DIRECTORIES, layout, source_directory
-from .models import (
+from .project_models import (
     ProjectConfig,
     ProjectDiscovery,
     ProjectManifest,

@@ -14,29 +14,38 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal, Protocol, TypeVar
 
+from kicad_tooling.hwrepo.command_evidence_models import CommandEvidence
 from kicad_tooling.hwrepo.models import (
-    CommandEvidence,
     ContractCoachReport,
     ContractDifference,
-    HarnessInterfaceValidationContract,
     NetlistContract,
+    ValidationSummary,
+)
+from kicad_tooling.hwrepo.project_models import (
+    HarnessInterfaceValidationContract,
     PcbOnlyValidationContract,
     PcbValidationContract,
     ProjectConfig,
     ProjectKind,
     SchematicValidationContract,
     SystemWiringValidationContract,
-    ValidationSummary,
 )
 
 from ..check_toolchain import cli_executable
 from ..validate import hashes, read_netlist
 from .connector_identity import similar_connector_pin_groups
 from .contracts import read_model, repo_path, write_model
-from .discovery import load_config, load_registry
+from .discovery import load_config
 from .evidence import digest
 from .kicad_compatibility import require_cli_profile
+from .native_netlist_evidence import (
+    capture_native_netlist_evidence,
+    native_netlist_evidence_matches,
+    validate_native_netlist_export,
+)
+from .native_summary_binding import validate_native_summary_binding
 from .return_nets import return_net_groups
+from .selection import resolve_project
 
 Item = TypeVar("Item")
 
@@ -232,9 +241,7 @@ def project_context(
     root: Path, project_id: str
 ) -> tuple[ProjectConfig, NetlistContract, dict[str, str]]:
     """Resolve only a schematic-backed island and its complete declared inputs."""
-    project = next((item for item in load_registry(root).projects if item.id == project_id), None)
-    if project is None:
-        raise ValueError(f"Unknown project {project_id!r}")
+    project = resolve_project(root, project_id)
     if project.kind is ProjectKind.PCB_ONLY:
         raise ValueError(
             "PCB-only has no authoritative schematic or electrical contract. "
@@ -406,55 +413,20 @@ def inspect_summary(root: Path, project_id: str, native_summary: Path) -> Contra
     try:
         config, authored, current = project_context(root, project_id)
         kind = config.kind
+        initial_evidence = capture_native_netlist_evidence(summary_path)
         summary = read_model(summary_path, ValidationSummary)
-        if summary.project_id != project_id or summary.project_kind is not config.kind:
-            raise ValueError("Native summary belongs to another project or project kind")
-        toolchain_check = summary.checks.get("toolchain")
-        if (
-            toolchain_check is None
-            or toolchain_check.status != "PASS"
-            or toolchain_check.error is not None
-            or toolchain_check.observed_version != config.kicad_version
-            or toolchain_check.image != config.image
-        ):
-            raise ValueError(
-                "Native summary toolchain version or image differs from the current "
-                "project configuration; rerun native KiCad validation"
-            )
-        for key in ("source_scope", "source_unchanged"):
-            check = summary.checks.get(key)
-            if (
-                check is None
-                or check.status != "PASS"
-                or check.error is not None
-                or check.source_hashes != current
-            ):
-                raise ValueError(f"Native {key} hashes do not match current declared source")
-        netlist_check = summary.checks.get("netlist")
-        if (
-            netlist_check is None
-            or netlist_check.status == "NOT_RUN"
-            or netlist_check.returncode != 0
-        ):
-            raise ValueError("Native netlist export was not executed successfully")
+        validate_native_summary_binding(summary, config, current)
+        validate_native_netlist_export(summary_path, summary, initial_evidence)
         netlist_path = summary_path.parent / "netlist.xml"
-        netlist_hash = digest(netlist_path)
-        if summary.artifacts_sha256.get("netlist.xml") != netlist_hash:
-            raise ValueError("Native netlist bytes differ from the summary artifact hash")
-        command_path = summary_path.parent / "netlist.command.json"
-        if summary.artifacts_sha256.get("netlist.command.json") != digest(command_path):
-            raise ValueError(
-                "Native netlist command evidence differs from the summary artifact hash"
-            )
-        command = read_model(command_path, CommandEvidence)
-        if command.returncode != 0 or command.error is not None:
-            raise ValueError("Native netlist command evidence records a failed export")
+        netlist_hash = initial_evidence.netlist_sha256
         observed = read_netlist(netlist_path)
         if not observed.components:
             raise ValueError(
                 "Native netlist contains no component records; source-bound inventory and "
                 "design lint cannot be evaluated"
             )
+        if not native_netlist_evidence_matches(summary_path, initial_evidence):
+            raise ValueError("Native netlist evidence changed while reading the validation summary")
         if hashes(root, config.source_roots) != current:
             raise ValueError("Declared source changed while reading native evidence")
         return ready_report(

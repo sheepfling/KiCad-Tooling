@@ -16,16 +16,10 @@ from .evidence import digest as file_digest
 from .evidence import source_state
 from .layout import layout
 from .models import (
-    Assurance,
     DeviationStatus,
     GovernanceRecord,
     InterfacesCatalog,
     LibrariesCatalog,
-    PolicyIssue,
-    ProductIndex,
-    ProductRecord,
-    ProjectKind,
-    ProjectRecord,
     ReleaseArtifactKind,
     ReleaseAssurancePolicy,
     ReleaseClass,
@@ -35,11 +29,17 @@ from .models import (
     ReleaseStatus,
     ReleaseVariant,
     TeamPolicy,
-    ToolchainsCatalog,
 )
 from .native_evidence import verify_native
+from .policy_issue_models import PolicyIssue
 from .portable_evidence import verify_release_portable
 from .product import ProductRepository, excluded, load_repository, occurrences
+from .product_models import (
+    Assurance,
+    ProductIndex,
+    ProductRecord,
+)
+from .project_models import ProjectKind, ProjectRecord, ToolchainsCatalog
 
 MATURITY_ORDER: Mapping[str, int] = MappingProxyType(
     {

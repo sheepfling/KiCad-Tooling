@@ -6,9 +6,9 @@ from pathlib import Path
 
 from .contracts import read_model, repo_path
 from .discovery import load_registry
-from .models import (
-    PartsCatalog,
-    PolicyIssue,
+from .part_catalog_models import PartsCatalog
+from .policy_issue_models import PolicyIssue
+from .sourcing_models import (
     SourcingSnapshot,
     SourcingSnapshotReport,
 )

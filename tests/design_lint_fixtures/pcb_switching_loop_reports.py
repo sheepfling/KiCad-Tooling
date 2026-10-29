@@ -43,6 +43,7 @@ def coach() -> ContractCoachReport:
         project_id="synthetic-loop",
         observed=NetlistContract(components={}, nets={}),
         netlist_sha256="f" * 64,
+        source_hashes={"projects/synthetic/board.kicad_pcb": "a" * 64},
     )
 
 

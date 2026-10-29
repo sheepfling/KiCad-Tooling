@@ -17,8 +17,12 @@ from .hwrepo.contract_coach import ContainerNetlistRunner
 from .hwrepo.contracts import write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.evidence import digest
-from .hwrepo.models import ContractCoachReport, DesignLintPolicy, ProjectKind
+from .hwrepo.models import (
+    ContractCoachReport,
+    DesignLintPolicy,
+)
 from .hwrepo.pcb_component_inventory import evaluate_native_component_inventory_coverage
+from .hwrepo.project_models import ProjectKind
 from .validate import read_netlist
 
 _FIXTURE_HASHES = MappingProxyType(

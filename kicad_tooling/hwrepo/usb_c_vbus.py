@@ -6,10 +6,10 @@ from decimal import Decimal
 
 from .capacitance_values import parse_capacitance_pf
 from .models import (
-    ComponentContract,
     ElectricalCheck,
     NetlistContract,
 )
+from .project_models import ComponentContract
 from .usb_c_models import (
     UsbCVbusCapacitanceRequirement,
     UsbCVbusPathRequirement,

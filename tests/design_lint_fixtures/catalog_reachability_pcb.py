@@ -35,7 +35,7 @@ from tests.design_lint_fixtures import pcb_reference_planes as _pcb_reference_pl
 from tests.design_lint_fixtures import pcb_switching_loop as _pcb_switching_loop_fixtures
 from tests.design_lint_fixtures.pcb_signal_path import incomplete_signal_report, path_map
 from tests.test_pcb_drc_coverage import incomplete_report as incomplete_pair_report
-from tests.test_pcb_drc_coverage import pair_map
+from tests.test_pcb_drc_coverage import pair_map, pair_source_hashes
 from tests.test_pcb_keepouts import incomplete_report as incomplete_keepout_report
 from tests.test_pcb_keepouts import mapping_for as keepout_mapping
 from tests.test_pcb_protection_path import (
@@ -73,6 +73,10 @@ def pcb_rule_ids() -> set[str]:
         project_id="synthetic-pcb-inventory",
         netlist_sha256=netlist_sha256,
         observed=observed,
+        source_hashes={
+            "projects/synthetic/board.kicad_pcb": "a" * 64,
+            "projects/synthetic/project.kicad_pcb": "a" * 64,
+        },
     )
     inventory = PcbComponentInventoryCoverageReport(
         status="COMPLETE",
@@ -245,6 +249,8 @@ def pcb_rule_ids() -> set[str]:
     )
     result = {finding.rule_id for finding in report.findings}
     empty_coach = coach
+    if empty_coach.netlist_sha256 is None:
+        raise AssertionError("Synthetic coach must retain its native netlist digest")
     decoupling_map = _pcb_decoupling_support.mapping(
         _pcb_decoupling_support.requirement(maximum_um=None)
     )
@@ -253,7 +259,9 @@ def pcb_rule_ids() -> set[str]:
         empty_coach,
         DesignLintPolicy(pcb_decoupling_map=decoupling_map),
         pcb_decoupling_coverage=_pcb_decoupling_support.coverage_report(
-            decoupling_map, _pcb_decoupling_support.snapshot()
+            decoupling_map,
+            _pcb_decoupling_support.snapshot(),
+            netlist_sha256=empty_coach.netlist_sha256,
         ),
     )
     result.update(item.rule_id for item in decoupling_result.findings)
@@ -315,6 +323,7 @@ def pcb_rule_ids() -> set[str]:
             project_id="synthetic-switching-loop",
             netlist_sha256=netlist_sha256,
             observed=observed_netlist(),
+            source_hashes={"projects/synthetic/board.kicad_pcb": "a" * 64},
         ),
         DesignLintPolicy(pcb_switching_loop_map=switching_loop_map),
         pcb_switching_loop_coverage=_pcb_switching_loop_fixtures.coverage(
@@ -325,7 +334,7 @@ def pcb_rule_ids() -> set[str]:
 
     pair_result = evaluate(
         "synthetic-differential-pair",
-        empty_coach,
+        empty_coach.model_copy(update={"source_hashes": pair_source_hashes()}),
         DesignLintPolicy(pcb_differential_pair_rule_map=pair_map()),
         pcb_differential_pair_coverage=incomplete_pair_report(),
     )
@@ -342,7 +351,12 @@ def pcb_rule_ids() -> set[str]:
     keepout_coverage = incomplete_keepout_report(keepout_map)
     keepout_result = evaluate(
         "synthetic-keepout",
-        empty_coach.model_copy(update={"netlist_sha256": keepout_coverage.netlist_sha256}),
+        empty_coach.model_copy(
+            update={
+                "netlist_sha256": keepout_coverage.netlist_sha256,
+                "source_hashes": {keepout_coverage.board_path: keepout_coverage.board_sha256},
+            }
+        ),
         DesignLintPolicy(pcb_keepout_map=keepout_map),
         pcb_keepout_coverage=keepout_coverage,
     )

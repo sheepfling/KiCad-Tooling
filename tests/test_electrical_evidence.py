@@ -8,8 +8,10 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.hwrepo import electrical_evidence
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.discovery import load_registry
+from kicad_tooling.hwrepo.electrical import SimulationCase
 from kicad_tooling.hwrepo.electrical_evidence import required_projects
 from kicad_tooling.hwrepo.electrical_runner import analyze
 from kicad_tooling.hwrepo.evidence import digest, source_state
@@ -21,6 +23,7 @@ from kicad_tooling.hwrepo.models import (
     ControlSignalRequirement,
     ElectricalAnalysisContract,
     ElectricalAnalysisReport,
+    ElectricalCheck,
     PinConnectivityAnalysis,
     PinRelationshipRule,
     ReleaseClass,
@@ -36,7 +39,7 @@ from tests.electrical_evidence_support import (
     reject_omitted_electrical_checks,
 )
 from tests.electrical_evidence_support import (
-    electrical_evidence_workspace as _electrical_evidence_workspace_fixture,  # noqa: F401
+    electrical_evidence_workspace as _electrical_evidence_workspace_fixture,  # noqa: F401  # pyright: ignore[reportUnusedImport]
 )
 from tests.electrical_i2c_support import i2c_pullup_window_requirement
 from tests.electrical_power_connectivity_support import power_connectivity_requirement
@@ -343,6 +346,39 @@ def test_changed_model_waveform_or_case_deck_cannot_reuse_receipt(
     model.write_bytes(model.read_bytes() + b"\n* changed\n")
     with pytest.raises(ValueError, match="stale"):
         electrical_evidence_workspace.verify()
+
+
+@pytest.mark.parametrize("target", ["report", "waveform", "requirements"])
+def test_evidence_changed_during_recheck_is_rejected(
+    electrical_evidence_workspace: ElectricalEvidenceWorkspace,
+    monkeypatch: pytest.MonkeyPatch,
+    target: str,
+) -> None:
+    workspace = electrical_evidence_workspace
+    original = electrical_evidence.waveform_checks
+    changed = False
+
+    def mutate_after_read(path: Path, case: SimulationCase) -> tuple[ElectricalCheck, ...]:
+        nonlocal changed
+        checks = original(path, case)
+        if not changed:
+            changed = True
+            selected = (
+                workspace.path
+                if target == "report"
+                else path
+                if target == "waveform"
+                else workspace.root / ISLAND / "tests/electrical.json"
+            )
+            selected.write_bytes(selected.read_bytes() + b" ")
+        return checks
+
+    monkeypatch.setattr(electrical_evidence, "waveform_checks", mutate_after_read)
+    with pytest.raises(
+        ValueError, match="(Evidence hash differs|changed electrical artifact|inputs changed)"
+    ):
+        workspace.verify()
+    assert changed
 
 
 def test_declared_contracts_gate_review_and_build_releases_require_applicability(

@@ -17,8 +17,8 @@ from typing import Literal
 from pydantic import JsonValue
 
 from .contracts import read_model, repo_path
-from .models import (
-    PolicyIssue,
+from .policy_issue_models import PolicyIssue
+from .surface_models import (
     ToolCliSnapshot,
     ToolMcpSnapshot,
     ToolSurfaceMapping,

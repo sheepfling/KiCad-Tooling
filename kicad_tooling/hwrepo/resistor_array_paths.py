@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from .models import ComponentContract, NetlistContract
+from .models import NetlistContract
+from .project_models import ComponentContract
 
 
 @dataclass(frozen=True, slots=True)

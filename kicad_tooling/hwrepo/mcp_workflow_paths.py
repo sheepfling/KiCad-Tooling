@@ -9,8 +9,9 @@ from pydantic import TypeAdapter
 
 from .artifact_access import artifact_file, artifact_path
 from .contracts import repo_path
-from .discovery import load_registry
-from .models import Identifier, ProjectRecord
+from .models import Identifier
+from .project_models import ProjectRecord
+from .selection import UnknownProjectError, resolve_project
 
 _IDENTIFIER: TypeAdapter[str] = TypeAdapter(Identifier)
 
@@ -23,10 +24,10 @@ def identifier(value: str) -> str:
 def selected_project(root: Path, project_id: str) -> ProjectRecord:
     """Resolve one registered project by its validated identifier."""
     identifier(project_id)
-    project = next((item for item in load_registry(root).projects if item.id == project_id), None)
-    if project is None:
-        raise ValueError(f"Unknown project ID: {project_id}. Call list_projects first.")
-    return project
+    try:
+        return resolve_project(root, project_id)
+    except UnknownProjectError as exc:
+        raise ValueError(f"Unknown project ID: {project_id}. Call list_projects first.") from exc
 
 
 def native_summary_path(root: Path, value: str) -> Path:

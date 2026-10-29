@@ -24,11 +24,11 @@ from .evidence import digest
 from .models import (
     Digest,
     DigiKeyHandoffPayload,
-    PartsCatalog,
     PurchasingReport,
     SupplierHandoffPlan,
     SupplierHandoffReport,
 )
+from .part_catalog_models import PartsCatalog
 from .parts_workflow import input_hashes, preferences_path, selected_project
 from .purchasing import plan as purchasing_plan
 from .purchasing import read_components

@@ -13,9 +13,11 @@ import unittest
 import zipfile
 from datetime import date
 from pathlib import Path
+from typing import Literal
 from unittest.mock import patch
 
 from kicad_tooling.ci import static_pipeline
+from kicad_tooling.hwrepo import native_evidence
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.discovery import load_config
 from kicad_tooling.hwrepo.documentation import check as check_docs
@@ -31,6 +33,7 @@ from kicad_tooling.hwrepo.models import (
     CommandEvidence,
     DeviationStatus,
     GenerationReport,
+    ProjectConfig,
     ProjectStaticPipelineReport,
     ProjectTestsReport,
     ReleaseArtifact,
@@ -310,7 +313,7 @@ class ReleaseEvidenceTests(unittest.TestCase):
             StaticPipelineReport,
         )
         checks = static_pipeline(self.root, list(selected))
-        self.assertIsInstance(checks, ProjectStaticPipelineReport)
+        assert isinstance(checks, ProjectStaticPipelineReport)
         self.assertEqual(checks.status, "PASS")
         scoped = ScopedReleasePortableReport(source=self.source, projects=selected, checks=checks)
         path = self.directory / "selected-portable.json"
@@ -392,12 +395,11 @@ class ReleaseEvidenceTests(unittest.TestCase):
 
         with patch("kicad_tooling.hwrepo.releasing.run_native", side_effect=copy_native):
             prepared = prepare(self.root, "selected", (self.project_id,), cli="kicad-cli")
-        self.assertEqual(prepared.evidence.portable.path, "build/releases/selected/portable.json")
+        evidence = prepared.evidence
+        assert evidence is not None
+        self.assertEqual(evidence.portable.path, "build/releases/selected/portable.json")
         self.assertEqual(check(self.root, prepared).status, "PASS")
-        portable = read_model(
-            self.root / prepared.evidence.portable.path,
-            ScopedReleasePortableReport,
-        )
+        portable = read_model(self.root / evidence.portable.path, ScopedReleasePortableReport)
         self.assertEqual(portable.projects, (self.project_id,))
         self.assertEqual(portable.source, self.source)
         archive = self.parent / "selected.zip"
@@ -435,6 +437,37 @@ class ReleaseEvidenceTests(unittest.TestCase):
             verify_native(
                 self.root, reference(self.root, self.native_path), self.source, self.project_id
             )
+
+    def test_native_receipts_and_source_are_rechecked_after_evaluation(self) -> None:
+        original_check = native_evidence.check_report
+        for target in (
+            self.native_path,
+            self.native_path.parent / "erc.json",
+            self.native_path.parent / "erc.command.json",
+            self.root / self.config.required_inputs[0],
+        ):
+            with self.subTest(target=target):
+                original = target.read_bytes()
+                saved_reference = reference(self.root, self.native_path)
+
+                def change_after_read(
+                    path: Path,
+                    kind: Literal["erc", "drc"],
+                    config: ProjectConfig | None = None,
+                    target_path: Path = target,
+                ) -> int:
+                    result = original_check(path, kind, config)
+                    target_path.write_bytes(target_path.read_bytes() + b" ")
+                    return result
+
+                try:
+                    failure = self.assertRaisesRegex(
+                        ValueError, "(hash differs|changed native artifact|source changed)"
+                    )
+                    with patch.object(native_evidence, "check_report", change_after_read), failure:
+                        verify_native(self.root, saved_reference, self.source, self.project_id)
+                finally:
+                    target.write_bytes(original)
 
     def test_tampering_missing_extra_and_unsafe_archive_members_fail(self) -> None:
         archive = self.parent / "good.zip"

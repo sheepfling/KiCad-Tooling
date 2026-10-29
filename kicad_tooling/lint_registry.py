@@ -17,16 +17,16 @@ from .hwrepo.models import (
     GovernanceRecord,
     InterfacesCatalog,
     LibrariesCatalog,
-    PartsCatalog,
-    PartStatus,
-    ProductRecord,
-    ProjectKind,
-    ProjectManifest,
     ReleaseClass,
     ReleasePoliciesCatalog,
     TeamPolicy,
-    ToolchainsCatalog,
 )
+from .hwrepo.part_catalog_models import (
+    PartsCatalog,
+    PartStatus,
+)
+from .hwrepo.product_models import ProductRecord
+from .hwrepo.project_models import ProjectKind, ProjectManifest, ToolchainsCatalog
 from .hwrepo.selection import ProjectSelector, resolve_project_ids
 from .validate import hashes
 

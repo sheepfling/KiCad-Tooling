@@ -25,10 +25,10 @@ from .models import (
     AutoCadPlan,
     AutoCadProvenance,
     AutoCadReport,
-    ProjectManifest,
 )
 from .part_picker import _snapshot, _verify_snapshot  # pyright: ignore[reportPrivateUsage]
 from .parts_workflow import local_path, selected_project
+from .project_models import ProjectManifest
 
 
 @dataclass(frozen=True, slots=True)

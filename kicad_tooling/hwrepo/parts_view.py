@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from html import escape
 from pathlib import PurePosixPath
 
@@ -24,7 +25,8 @@ a{color:#166758;text-underline-offset:3px}.button{display:inline-block;backgroun
 text-decoration:none;padding:10px 16px;border-radius:8px;font-weight:650;margin:8px 8px 0 0}
 .secondary{background:#edf3f1;color:#205f51}.toolbar{display:flex;align-items:center;gap:16px;
 flex-wrap:wrap;margin:18px 0}input[type=search]{font:inherit;padding:10px 13px;border:1px solid #b7c3ce;
-border-radius:8px;flex:1;min-width:210px}input:focus{outline:2px solid #3b8f7e;outline-offset:2px}
+border-radius:8px;flex:1;min-width:210px}select{font:inherit;padding:9px;border:1px solid #b7c3ce;
+border-radius:8px}input:focus,select:focus{outline:2px solid #3b8f7e;outline-offset:2px}
 label{font-size:14px}table{border-collapse:collapse;width:100%;font-size:14px}th{text-align:left;
 font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:#f6f8fa;color:#536174}
 th,td{padding:14px 12px;border-bottom:1px solid #e3e8ed;vertical-align:top}td small{display:block;
@@ -40,19 +42,23 @@ footer{font-size:12px;color:#657284;margin-top:26px}button{cursor:pointer} [hidd
 SCRIPT = """
 const search = document.getElementById('search');
 const issues = document.getElementById('issues-only');
+const grouping = document.getElementById('grouping');
 function filterRows() {
   const query = search.value.toLowerCase();
   let shown = 0;
   document.querySelectorAll('#components tbody tr').forEach(row => {
     const visible = row.textContent.toLowerCase().includes(query)
+      && (grouping.value === 'all' || row.dataset.grouping === grouping.value)
       && (!issues.checked || row.dataset.issue === 'yes');
     row.hidden = !visible;
     shown += visible ? 1 : 0;
   });
-  document.getElementById('row-count').textContent = shown + ' component(s) shown';
+  document.getElementById('row-count').textContent = shown === 0
+    ? 'No components match the current filters.' : shown + ' component(s) shown';
 }
 if (search) { search.addEventListener('input', filterRows);
-  issues.addEventListener('change', filterRows); filterRows(); }
+  issues.addEventListener('change', filterRows);
+  grouping.addEventListener('change', filterRows); filterRows(); }
 """
 
 
@@ -154,21 +160,43 @@ Use an assembly multiplier of 1 and no extra attrition; these quantities already
             )
             sections.append("<section><h2>What needs attention</h2>" + findings + "</section>")
         rows: list[str] = []
+        global_blockers = any(not finding.references for finding in plan.findings)
+        reference_counts = Counter(component.reference for component in plan.components)
         for component in plan.components:
             problems = tuple(f for f in plan.findings if component.reference in f.references)
-            global_blockers = any(not f.references for f in plan.findings)
-            excluded = component.reference in plan.excluded_references
+            excluded = component.dnp or component.exclude_from_bom
+            ambiguous = reference_counts[component.reference] > 1
             line = next(
-                (item for item in plan.lines if component.reference in item.references), None
+                (
+                    item
+                    for item in plan.lines
+                    if not excluded and not ambiguous and component.reference in item.references
+                ),
+                None,
             )
             detail = (
                 "Excluded from purchasing"
                 if excluded
+                else "Duplicate reference; purchasing group membership is ambiguous"
+                if ambiguous
                 else " / ".join(f.message for f in problems)
                 if problems
                 else "Resolve catalog / preferences above"
                 if global_blockers
+                else "Not in a purchasing group"
+                if line is None
                 else "Part details complete"
+            )
+            if (excluded or ambiguous) and problems:
+                detail += " / " + " / ".join(f.message for f in problems)
+            grouping = (
+                "excluded"
+                if excluded
+                else "ambiguous"
+                if ambiguous
+                else "grouped"
+                if line is not None
+                else "ungrouped"
             )
             part = escape(component.part_id or "No PART_ID assigned")
             if line is not None:
@@ -178,7 +206,8 @@ Use an assembly multiplier of 1 and no extra attrition; these quantities already
                     'rel="noopener noreferrer">Find in DigiKey</a>'
                 )
             rows.append(
-                f'<tr data-issue="{"yes" if problems or (global_blockers and not excluded) else "no"}"><td><strong>'
+                f'<tr data-grouping="{grouping}" '
+                f'data-issue="{"yes" if problems or (not excluded and (ambiguous or global_blockers or line is None)) else "no"}"><td><strong>'
                 f"{escape(component.reference)}</strong></td><td>{escape(component.value)}"
                 f"<small>{escape(component.footprint or 'No footprint assigned')}</small></td>"
                 f"<td>{part}</td><td>{escape(detail)}</td></tr>"
@@ -186,8 +215,13 @@ Use an assembly multiplier of 1 and no extra attrition; these quantities already
         sections.append(
             """<section><h2>Component checklist</h2><div class="toolbar">
 <input id="search" type="search" aria-label="Search component references, values or part numbers"
-placeholder="Search reference, value or part number…"><label><input type="checkbox" id="issues-only">
-Only items needing attention</label></div><p class="muted" id="row-count" aria-live="polite"></p>
+placeholder="Search reference, value or part number…"><label for="grouping">Purchasing group</label>
+<select id="grouping"><option value="all">All components</option><option value="grouped">In a group</option>
+<option value="ungrouped">Fitted, not grouped</option><option value="ambiguous">Fitted, ambiguous reference</option>
+<option value="excluded">Excluded</option></select>
+<label><input type="checkbox" id="issues-only">Only items needing attention</label></div>
+<p class="muted">Group membership does not mean all findings are resolved.</p>
+<p class="muted" id="row-count" aria-live="polite"></p>
 <div class="table-scroll"><table id="components"><thead><tr><th>Reference</th><th>Value / footprint</th>
 <th>Catalog part</th><th>Next step</th></tr></thead><tbody>"""
             + "".join(rows)
@@ -202,7 +236,7 @@ Only items needing attention</label></div><p class="muted" id="row-count" aria-l
             )
             sections.append(
                 '<section><h2>Quantity worksheet</h2><p class="muted">'
-                "Counts for resolved purchasing groups. The complete list is released "
+                "Counts for purchasing groups; group membership can still have findings. The complete list is released "
                 "for supplier review only after all details are resolved.</p>"
                 '<div class="table-scroll"><table><thead><tr><th>Part</th><th>Per board</th>'
                 "<th>Needed</th><th>Spares</th><th>Order</th></tr></thead><tbody>"

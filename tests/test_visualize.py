@@ -284,7 +284,11 @@ class VisualizeTests(unittest.TestCase):
             good = generate(self.root, PROJECT, runner="local", output=Path("build/good-export"))
         self.assertEqual(good.status, "PASS", good.next_actions)
         self.assertEqual(good.runner, "local")
-        self.assertEqual(set(good.artifacts_sha256), set(payloads))
+        self.assertEqual(set(good.artifacts_sha256), set(payloads) | {"index.html"})
+        gallery = (Path(good.run_directory) / "index.html").read_text(encoding="utf-8")
+        self.assertIn('src="top.png"', gallery)
+        self.assertIn('href="board.glb"', gallery)
+        self.assertIn("Export status: <strong>PASS</strong>", gallery)
         for filename, payload in payloads.items():
             self.assertEqual(good.artifacts_sha256[filename], hashlib.sha256(payload).hexdigest())
             self.assertEqual((Path(good.run_directory) / filename).read_bytes(), payload)
@@ -316,6 +320,7 @@ class VisualizeTests(unittest.TestCase):
             )
         self.assertEqual(changed.status, "FAIL")
         self.assertIn("source changed", changed.error or "")
+        self.assertFalse((Path(changed.run_directory) / "index.html").exists())
         self.assertNotEqual(self.board.read_bytes(), original)
 
     def test_selected_views_render_only_requested_pngs_plus_exchange_geometry(self) -> None:
@@ -353,7 +358,83 @@ class VisualizeTests(unittest.TestCase):
             )
         self.assertEqual(report.status, "PASS", report.next_actions)
         self.assertEqual(set(report.commands), {"version", "back", "angled-90", "step", "glb"})
-        self.assertEqual(set(report.artifacts_sha256), set(payloads))
+        self.assertEqual(set(report.artifacts_sha256), set(payloads) | {"index.html"})
+        gallery = (Path(report.run_directory) / "index.html").read_text(encoding="utf-8")
+        self.assertIn('src="back.png"', gallery)
+        self.assertNotIn('src="top.png"', gallery)
+
+    def test_changed_retained_view_fails_export_and_is_not_listed_as_valid(self) -> None:
+        payloads = {"top.png": PNG, "board.step": STEP, "board.glb": GLB}
+
+        def mutating_export(
+            _root: Path,
+            output: Path,
+            _config: object,
+            _selected: str,
+            _cli: str,
+            args: tuple[str, ...],
+            timeout: int = 300,
+        ) -> CommandEvidence:
+            _ = timeout
+            if args == ("version",):
+                return evidence(args, stdout="10.0.5\n")
+            filename = Path(args[args.index("-o") + 1]).name
+            (output / filename).write_bytes(payloads[filename])
+            if filename == "board.glb":
+                (output / "top.png").write_bytes(PNG + b"changed during export")
+            return evidence(args)
+
+        with (
+            patch("kicad_tooling.hwrepo.three_d.doctor", return_value=passing_doctor()),
+            patch("kicad_tooling.hwrepo.three_d._run_kicad", side_effect=mutating_export),
+        ):
+            report = generate(
+                self.root,
+                PROJECT,
+                runner="local",
+                views=("top",),
+                output=Path("build/changed-view"),
+            )
+        self.assertEqual(report.status, "FAIL")
+        self.assertNotIn("top.png", report.artifacts_sha256)
+        self.assertIn("top.png", report.next_actions[0])
+        self.assertEqual(set(report.artifacts_sha256), {"board.step", "board.glb", "index.html"})
+        gallery = (Path(report.run_directory) / "index.html").read_text(encoding="utf-8")
+        self.assertIn("Export status: <strong>FAIL</strong>", gallery)
+        self.assertIn("Recorded files missing or changed: top.png", gallery)
+        self.assertNotIn('src="top.png"', gallery)
+
+    def test_partial_export_gallery_shows_failure_and_only_retained_artifacts(self) -> None:
+        def partial_export(
+            _root: Path,
+            output: Path,
+            _config: object,
+            _selected: str,
+            _cli: str,
+            args: tuple[str, ...],
+            timeout: int = 300,
+        ) -> CommandEvidence:
+            _ = timeout
+            if args == ("version",):
+                return evidence(args, stdout="10.0.5\n")
+            filename = Path(args[args.index("-o") + 1]).name
+            if filename == "top.png":
+                (output / filename).write_bytes(PNG)
+                return evidence(args)
+            return evidence(args, stderr="render failed", returncode=1)
+
+        with (
+            patch("kicad_tooling.hwrepo.three_d.doctor", return_value=passing_doctor()),
+            patch("kicad_tooling.hwrepo.three_d._run_kicad", side_effect=partial_export),
+        ):
+            report = generate(self.root, PROJECT, runner="local", output=Path("build/partial"))
+        self.assertEqual(report.status, "FAIL")
+        self.assertEqual(set(report.artifacts_sha256), {"top.png", "index.html"})
+        gallery = (Path(report.run_directory) / "index.html").read_text(encoding="utf-8")
+        self.assertIn("Export status: <strong>FAIL</strong>", gallery)
+        self.assertIn('src="top.png"', gallery)
+        self.assertNotIn('src="bottom.png"', gallery)
+        self.assertNotIn('href="board.glb"', gallery)
 
     def test_duplicate_views_are_rejected_before_native_runner_selection(self) -> None:
         with patch("kicad_tooling.hwrepo.three_d.doctor") as native:

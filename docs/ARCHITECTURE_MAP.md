@@ -61,6 +61,25 @@ inventory. Before adding a feature, follow its existing service imports and
 requirements and per-project approvals in the project repository. Keep
 synthetic failure/control inputs and reusable checks in this repository.
 
+## Representative operation routes
+
+These are starting points for extending existing operations; the surface
+registry remains the authoritative inventory of commands, MCP names, parity
+tests, and adapter exceptions.
+
+| Operation              | Shared entry point and inputs                                                                                | Result and effects                                                                                          | Registered surface mapping                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Project selection      | `selection.select_projects`: `ProjectRegistry`, `ProjectSelector`, optional `ProductIndex`                   | Deterministic `ProjectRecord` tuple; rejects unknown or duplicate selections                                | Used by selection-aware operations; see their mappings in `tool-surfaces.json` |
+| Project detail         | `project_detail.read_project_detail`: repository root and `ProjectDetailRequest`                             | `McpProjectReport`; reads the registered manifest and optional authored check contract without side effects | MCP `get_project`; response name remains compatible with its schema            |
+| Design lint inspection | `design_lint_project_inspection.inspect_design_lint_summary`: project root and ID, native summary, evaluator | `DesignLintReport`; combines project-owned policy with source-bound native evidence                         | `design-lint`: CLI and `inspect_design_lint` MCP                               |
+| Electrical analysis    | `electrical_runner.analyze`: root and project ID, optional native summary and runner choices                 | `ElectricalAnalysisReport` and generated receipt under the configured build scope                           | `electrical-analysis`: CLI and `analyze_electrical` MCP                        |
+| Parts preparation      | `parts_workflow.prepare`: root, project ID, receipt directory, runner and optional preferences               | `PurchasingReport` with source-bound inputs; writes planning receipts                                       | `parts-preparation`: CLI and `prepare_parts` MCP                               |
+| Release readiness      | `release.check`: root and authored `ReleaseManifest`                                                         | `ReleaseReadinessReport`; read-only readiness check, no release authorization                               | `release-readiness`: CLI and `check_release` MCP                               |
+
+These entries describe current routes rather than promising that all operation
+inputs have already been consolidated into request models. In particular, the
+design-lint evaluator callback remains a compatibility boundary under SA-05.
+
 ## Dependency rules
 
 1. Adapters depend on typed operations and shared services. Services do not
@@ -76,13 +95,14 @@ synthetic failure/control inputs and reusable checks in this repository.
 5. CLI, MCP, and CI expose the same typed operation unless
    `tool-surfaces.json` documents a narrow adapter exception.
 
-`tests/test_capability_architecture.py` guards the dependency edge for active
-design-lint predicate owners and the electrical, parts, CAD, layout, selection,
-product, supplier handoff, and artifact service families. It detects static
-relative and absolute imports of MCP adapters as well as top-level CLI and CI
-surfaces. Purchasing preferences now uses the same project-source operations
-as MCP through their transport-neutral owner. MCP retains compatibility exports.
-The rule-catalog architecture suites verify that
-active owners resolve to theme-owned functions and guard fixture reachability
-and theme markers. Other architecture suites check module size, native version
-lanes, and surface parity.
+`tests/test_capability_architecture.py` guards the dependency edge for active design-lint predicate
+owners and electrical, parts, CAD, native evidence, PCB geometry, release, layout, selection,
+product, supplier handoff, and artifact services. It derives top-level CLI surface modules from the
+checked-in surface registry and detects static relative and absolute imports of those modules and
+MCP adapters. `validate.py` is an explicit exception: it currently owns native validation services
+as well as a CLI entry point. This static check does not detect dynamic imports or enforce every
+domain-to-domain edge. Purchasing preferences uses the same project-source operations as MCP through
+their transport-neutral owner. MCP retains compatibility exports. The rule-catalog architecture
+suites verify that active owners resolve to theme-owned functions and guard fixture reachability and
+theme markers. Other architecture suites check module size, native version lanes, and surface
+parity.

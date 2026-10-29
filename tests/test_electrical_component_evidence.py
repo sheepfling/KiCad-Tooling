@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 
+from kicad_tooling.hwrepo import electrical_evidence
+from kicad_tooling.hwrepo.electrical import SimulationCase
+from kicad_tooling.hwrepo.models import ElectricalCheck
 from tests.electrical_evidence_support import (
     ElectricalEvidenceWorkspace,
     reject_omitted_electrical_checks,
 )
 from tests.electrical_evidence_support import (
-    electrical_evidence_workspace as _electrical_evidence_workspace_fixture,  # noqa: F401
+    electrical_evidence_workspace as _electrical_evidence_workspace_fixture,  # noqa: F401  # pyright: ignore[reportUnusedImport]
 )
 from tests.test_component_power_ratings import (
     native_netlist_xml as component_power_netlist_xml,
@@ -114,3 +118,40 @@ def test_component_requirement_replays_and_rejects_omitted_checks(
     assert {check.id: check for check in result.checks}[expected_check_id].status == "PASS"
     electrical_evidence_workspace.verify()
     reject_omitted_electrical_checks(electrical_evidence_workspace, omitted_check_ids)
+
+
+@pytest.mark.parametrize("name", ["summary.json", "netlist.xml", "netlist.command.json"])
+def test_native_netlist_evidence_changed_during_electrical_replay_is_rejected(
+    electrical_evidence_workspace: ElectricalEvidenceWorkspace,
+    monkeypatch: pytest.MonkeyPatch,
+    name: str,
+) -> None:
+    workspace = electrical_evidence_workspace
+    workspace.run_native_requirement(
+        contract_field="component_voltage_ratings",
+        requirement=component_voltage_requirement(),
+        netlist_xml=component_voltage_netlist_xml(),
+        output_name="native-freshness",
+    )
+    workspace.verify()
+    target = (workspace.root / workspace.native.path).parent / name
+    original_bytes = target.read_bytes()
+    target.write_bytes(original_bytes + b" ")
+    with pytest.raises(ValueError):
+        workspace.verify()
+    target.write_bytes(original_bytes)
+    original = electrical_evidence.waveform_checks
+    changed = False
+
+    def mutate_after_read(path: Path, case: SimulationCase) -> tuple[ElectricalCheck, ...]:
+        nonlocal changed
+        checks = original(path, case)
+        if not changed:
+            changed = True
+            target.write_bytes(target.read_bytes() + b" ")
+        return checks
+
+    monkeypatch.setattr(electrical_evidence, "waveform_checks", mutate_after_read)
+    with pytest.raises(ValueError, match="(Native netlist evidence changed|Evidence hash differs)"):
+        workspace.verify()
+    assert changed

@@ -16,7 +16,7 @@ from typing import TypeVar
 
 from pydantic import BaseModel
 
-from kicad_tooling.hwrepo.models import CommandEvidence
+from kicad_tooling.hwrepo.command_evidence_models import CommandEvidence
 
 _Result = TypeVar("_Result", bound=BaseModel)
 

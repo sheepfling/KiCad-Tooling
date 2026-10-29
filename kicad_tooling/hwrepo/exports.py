@@ -21,11 +21,13 @@ from .generation import csv_cell
 from .kicad_compatibility import require_cli_profile
 from .models import (
     EvidenceFile,
-    PartsCatalog,
-    ProjectManifest,
     ReleaseExportReport,
-    ReleaseExportSettings,
     SourceState,
+)
+from .part_catalog_models import PartsCatalog
+from .project_models import (
+    ProjectManifest,
+    ReleaseExportSettings,
 )
 
 

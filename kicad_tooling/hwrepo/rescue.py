@@ -11,7 +11,11 @@ from .diagnostic_journal import DiagnosticJournal
 from .diagnostics import finding, quote_argument, repository_guidance
 from .discovery import load_config, manifest_paths
 from .layout import layout, within_roots, workflow_guide
-from .models import DiagnosticFinding, LocalRescueReport, ProjectManifest
+from .models import (
+    DiagnosticFinding,
+    LocalRescueReport,
+)
+from .project_models import ProjectManifest
 from .repository import cad_dependencies
 
 DIAGNOSTICS_GUIDE = "docs/workflow/DIAGNOSTICS.md"

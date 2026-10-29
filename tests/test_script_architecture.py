@@ -76,7 +76,8 @@ class ScriptArchitectureTests(unittest.TestCase):
         self.assertIn("class DocumentationPolicyReport", source)
         self.assertIn("class ReleaseManifest", source)
         self.assertIn("class TemplateContract", source)
-        self.assertIn("class SourcingSnapshot", source)
+        sourcing_models = self.source("kicad_tooling/hwrepo/sourcing_models.py")
+        self.assertIn("class SourcingSnapshot", sourcing_models)
         self.assertIn("class TemplateMetricsReport", source)
 
 

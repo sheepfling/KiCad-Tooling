@@ -9,7 +9,6 @@ from enum import Enum
 from typing import Annotated, Literal
 
 from pydantic import (
-    AwareDatetime,
     ConfigDict,
     Field,
     RootModel,
@@ -19,6 +18,7 @@ from pydantic import (
 )
 
 from . import analysis_state_models as _analysis_state_models
+from . import cad_source_models as _cad_source_models
 from . import can_termination_models as _can_termination_models
 from . import component_peer_pin_models as _component_peer_pin_models
 from . import component_rating_models as _component_rating_models
@@ -43,6 +43,7 @@ from . import grounding_models as _grounding_models
 from . import i2c_address_models as _i2c_address_models
 from . import i2c_pullup_models as _i2c_pullup_models
 from . import mosfet_stress_models as _mosfet_stress_models
+from . import part_catalog_models as _part_catalog_models
 from . import pcb_connectivity_observations as _pcb_connectivity_observations
 from . import pcb_connectivity_snapshot as _pcb_connectivity_snapshot
 from . import pcb_decoupling_models as _pcb_decoupling_models
@@ -56,10 +57,14 @@ from . import pcb_switching_loop_models as _pcb_switching_loop_models
 from . import pcb_test_access_models as _pcb_test_access_models
 from . import pcb_track_width_models as _pcb_track_width_models
 from . import pin_connectivity_models as _pin_connectivity_models
+from . import policy_issue_models as _policy_issue_models
 from . import power_connectivity_models as _power_connectivity_models
 from . import power_path_models as _power_path_models
 from . import power_rail_models as _power_rail_models
 from . import power_sequence_models as _power_sequence_models
+from . import product_models as _product_models
+from . import project_inventory_models as _project_inventory_models
+from . import project_models as _project_models
 from . import purchasing_preference_models as _purchasing_preference_models
 from . import rc_filter_models as _rc_filter_models
 from . import reference_bond_models as _reference_bond_models
@@ -71,12 +76,15 @@ from . import serial_logic_models as _serial_logic_models
 from . import serial_peer_models as _serial_peer_models
 from . import serial_peer_reference_models as _serial_peer_reference_models
 from . import signal_pair_models as _signal_pair_models
+from . import sourcing_models as _sourcing_models
 from . import spi_models as _spi_models
 from . import stm32_pin_map_models as _stm32_pin_map_models
+from . import surface_models as _surface_models
 from . import usb_c_models as _usb_c_models
 from . import usb_data_path_models as _usb_data_path_models
 from . import usb_peer_reference_models as _usb_peer_reference_models
 from . import usb_reference_pin_models as _usb_reference_pin_models
+from .command_evidence_models import CommandEvidence
 from .model_primitives import (
     Digest,
     ElectricalPositive,  # noqa: F401  # pyright: ignore[reportUnusedImport]
@@ -89,7 +97,7 @@ from .model_primitives import (
     NonNegativeCount,
     NonNegativeMeasure,  # noqa: F401  # pyright: ignore[reportUnusedImport]
     PositiveCount,
-    PositiveMeasure,
+    PositiveMeasure,  # noqa: F401  # pyright: ignore[reportUnusedImport]
     Reference,
     RepositoryPath,
     Stm32PortPin,  # noqa: F401  # pyright: ignore[reportUnusedImport]
@@ -98,6 +106,78 @@ from .model_primitives import (
     TemplateVersion,
 )
 from .netlist_contract_inputs import NetlistRawValue, normalize_native_unconnected_nets
+
+ToolchainRecord = _project_models.ToolchainRecord
+ToolchainsCatalog = _project_models.ToolchainsCatalog
+ComponentIdentity = _project_models.ComponentIdentity
+ProjectKind = _project_models.ProjectKind
+ProjectRecord = _project_models.ProjectRecord
+CatalogPaths = _project_models.CatalogPaths
+ProjectRegistry = _project_models.ProjectRegistry
+ComponentContract = _project_models.ComponentContract
+IgnoredChecks = _project_models.IgnoredChecks
+PcbValidationContract = _project_models.PcbValidationContract
+PcbOnlyValidationContract = _project_models.PcbOnlyValidationContract
+SchematicValidationContract = _project_models.SchematicValidationContract
+ProductTraceabilityValidationContract = _project_models.ProductTraceabilityValidationContract
+SystemWiringValidationContract = _project_models.SystemWiringValidationContract
+HarnessInterfaceValidationContract = _project_models.HarnessInterfaceValidationContract
+ProjectValidationContract = _project_models.ProjectValidationContract
+ProjectConfig = _project_models.ProjectConfig
+ProjectDiscovery = _project_models.ProjectDiscovery
+ReleaseExportSettings = _project_models.ReleaseExportSettings
+ProjectManifest = _project_models.ProjectManifest
+ProjectTestContract = _project_models.ProjectTestContract
+ProjectScaffoldReport = _project_models.ProjectScaffoldReport
+ProjectImportReport = _project_models.ProjectImportReport
+KiCadForeignImportSummary = _project_models.KiCadForeignImportSummary
+ImportInventoryCandidate = _project_models.ImportInventoryCandidate
+ImportInventoryReport = _project_models.ImportInventoryReport
+SchematicGeometryRuleId = _schematic_geometry_models.SchematicGeometryRuleId
+SchematicGeometryRuleCoverageStatus = _schematic_geometry_models.SchematicGeometryRuleCoverageStatus
+SchematicGeometrySourceBinding = _schematic_geometry_models.SchematicGeometrySourceBinding
+SchematicGeometryCoverage = _schematic_geometry_models.SchematicGeometryCoverage
+
+
+InventoryProject = _project_inventory_models.InventoryProject
+McpProjectReport = _project_inventory_models.McpProjectReport
+InventoryGroup = _project_inventory_models.InventoryGroup
+InventoryToolchain = _project_inventory_models.InventoryToolchain
+TemplateInventoryReport = _project_inventory_models.TemplateInventoryReport
+
+
+PartStatus = _part_catalog_models.PartStatus
+PartCadBinding = _part_catalog_models.PartCadBinding
+PartRecord = _part_catalog_models.PartRecord
+PartsCatalog = _part_catalog_models.PartsCatalog
+
+
+Assurance = _product_models.Assurance
+ProductIndexEntry = _product_models.ProductIndexEntry
+ProductIndex = _product_models.ProductIndex
+AssemblyKind = _product_models.AssemblyKind
+AssemblyMember = _product_models.AssemblyMember
+Assembly = _product_models.Assembly
+TerminalKind = _product_models.TerminalKind
+Terminal = _product_models.Terminal
+ConnectionKind = _product_models.ConnectionKind
+Connection = _product_models.Connection
+Variant = _product_models.Variant
+EvidenceKind = _product_models.EvidenceKind
+Evidence = _product_models.Evidence
+Harness = _product_models.Harness
+MechanicalHandoff = _product_models.MechanicalHandoff
+ProductRecord = _product_models.ProductRecord
+ProductPolicyReport = _product_models.ProductPolicyReport
+Occurrence = _product_models.Occurrence
+BomRow = _product_models.BomRow
+HarnessScheduleRow = _product_models.HarnessScheduleRow
+HarnessSchedule = _product_models.HarnessSchedule
+ElectricalConnectionView = _product_models.ElectricalConnectionView
+ElectricalView = _product_models.ElectricalView
+SystemConnectionView = _product_models.SystemConnectionView
+SystemView = _product_models.SystemView
+
 
 CrystalLoadCapRequirement = _crystal_network_models.CrystalLoadCapRequirement
 CrystalNetworkRequirement = _crystal_network_models.CrystalNetworkRequirement
@@ -453,60 +533,6 @@ class SchematicTextMetricsResource(StrictModel):
         return self
 
 
-class Assurance(str, Enum):
-    UNKNOWN = "unknown"
-    ASSUMED = "assumed"
-    INFERRED = "inferred"
-    OBSERVED = "observed"
-    MANUFACTURER_DOCUMENTED = "manufacturer_documented"
-    VERIFIED = "verified"
-    NOT_APPLICABLE = "not_applicable"
-
-
-class PartStatus(str, Enum):
-    TRAINING = "not_for_manufacture"
-    APPROVED = "approved"
-
-
-class PartCadBinding(StrictModel):
-    """Reviewed symbol, value, package and source model for one catalog part."""
-
-    symbol_id: NonEmptyText
-    value: NonEmptyText
-    footprint: Annotated[str, StringConstraints(pattern=r"^[^:\r\n]+:[^:\r\n]+$")]
-    model: RepositoryPath
-    digikey_sku: Annotated[str, StringConstraints(min_length=1)] | None = None
-
-    @model_validator(mode="after")
-    def exact_sku(self) -> PartCadBinding:
-        if self.digikey_sku is not None and (
-            self.digikey_sku != self.digikey_sku.strip()
-            or any(ord(char) < 32 or ord(char) == 127 for char in self.digikey_sku)
-        ):
-            raise ValueError("DigiKey SKU must be exact text without padding or control characters")
-        return self
-
-
-class PartRecord(StrictModel):
-    id: Identifier
-    revision: Identifier
-    description: NonEmptyText
-    part_class: NonEmptyText
-    unit: Literal["each"]
-    manufacturer: NonEmptyText
-    mpn: NonEmptyText
-    datasheet_url: NonEmptyText
-    lifecycle: NonEmptyText
-    status: PartStatus
-    approved_alternates: tuple[Identifier, ...] = ()
-    cad: PartCadBinding | None = None
-
-
-class PartsCatalog(StrictModel):
-    schema_version: NonEmptyText
-    parts: tuple[PartRecord, ...]
-
-
 class InterfacePin(StrictModel):
     number: NonEmptyText
     signal: NonEmptyText
@@ -558,624 +584,10 @@ class LibrarySbom(StrictModel):
     libraries: tuple[LibraryRecord, ...]
 
 
-class ToolchainRecord(StrictModel):
-    id: Identifier
-    kicad_version: NonEmptyText
-    cli_profile: Literal["kicad-10"] | None = None
-    image: NonEmptyText
-    desktop_edit_policy: NonEmptyText
-    installer_source: NonEmptyText
-    migration_policy: NonEmptyText
-
-
-class ToolchainsCatalog(StrictModel):
-    schema_version: NonEmptyText
-    toolchains: tuple[ToolchainRecord, ...]
-
-
-class ComponentIdentity(StrictModel):
-    required: bool
-    part_ids: tuple[Identifier, ...]
-
-
-class ProjectKind(str, Enum):
-    """The engineering deliverable represented by one native KiCad project."""
-
-    PCB = "pcb"
-    PCB_ONLY = "pcb_only"
-    SCHEMATIC = "schematic"
-    SYSTEM_WIRING = "system_wiring"
-    HARNESS_INTERFACE = "harness_interface"
-
-    @property
-    def domain_name(self) -> str:
-        """Return the human-facing directory name for this design kind."""
-        return {
-            ProjectKind.PCB: "pcb",
-            ProjectKind.PCB_ONLY: "pcb-only",
-            ProjectKind.SCHEMATIC: "schematic",
-            ProjectKind.SYSTEM_WIRING: "system-wiring",
-            ProjectKind.HARNESS_INTERFACE: "harness-interface",
-        }[self]
-
-    @property
-    def design_root(self) -> str:
-        """Return the canonical root for adopted-repository project sources."""
-        return "projects"
-
-    @property
-    def example_root(self) -> str:
-        """Return the fixture root used by this template's reference projects."""
-        return f"examples/{self.design_root}"
-
-    @property
-    def accepted_roots(self) -> tuple[str, str]:
-        """Return canonical and template-fixture roots accepted by repository policy."""
-        return (self.design_root, self.example_root)
-
-
-class ProjectRecord(StrictModel):
-    id: Identifier
-    kind: ProjectKind
-    status: Literal["training_fixture", "engineering", "release_candidate"]
-    assurance_profile: Literal["training", "development", "production"]
-    config: RepositoryPath
-    project: RepositoryPath
-    component_identity: ComponentIdentity
-    tags: tuple[Identifier, ...] = ()
-    interfaces: tuple[Identifier, ...] = ()
-    library_ids: tuple[Identifier, ...] = ()
-    mechanical_handoff: RepositoryPath | None = None
-    governance_record: RepositoryPath | None = None
-
-
-class CatalogPaths(StrictModel):
-    parts: RepositoryPath
-    interfaces: RepositoryPath
-    libraries: RepositoryPath
-    toolchains: RepositoryPath
-    release_policies: RepositoryPath
-
-
-class ProjectRegistry(StrictModel):
-    schema_version: NonEmptyText
-    catalogs: CatalogPaths
-    projects: tuple[ProjectRecord, ...]
-
-
-class ComponentContract(StrictModel):
-    value: NonEmptyText
-    footprint: str
-    part_id: Identifier | None = None
-
-
-class IgnoredChecks(StrictModel):
-    erc: tuple[Identifier, ...]
-    drc: tuple[Identifier, ...]
-
-
-class PcbValidationContract(StrictModel):
-    """Native checks and independent electrical contract for a board deliverable."""
-
-    kind: Literal[ProjectKind.PCB]
-    components: Mapping[Identifier, ComponentContract]
-    nets: Mapping[NetName, tuple[Reference, ...]]
-    expected_ignored_checks: IgnoredChecks
-
-
-class PcbOnlyValidationContract(StrictModel):
-    """Native board-layout checks where no authoritative schematic is available."""
-
-    kind: Literal[ProjectKind.PCB_ONLY]
-    expected_ignored_checks: IgnoredChecks
-
-
-class SchematicValidationContract(StrictModel):
-    """Native checks for a schematic-only deliverable with no manufactured PCB."""
-
-    kind: Literal[ProjectKind.SCHEMATIC]
-    components: Mapping[Identifier, ComponentContract] = Field(default_factory=dict)
-    nets: Mapping[NetName, tuple[Reference, ...]] = Field(default_factory=dict)
-    expected_ignored_checks: IgnoredChecks
-
-
-class ProductTraceabilityValidationContract(StrictModel):
-    """Shared typed authority for KiCad product, wiring, and harness review views."""
-
-    product_id: Identifier
-    connection_ids: tuple[Identifier, ...]
-    terminal_ids: tuple[Identifier, ...]
-    harness_ids: tuple[Identifier, ...]
-    expected_ignored_checks: IgnoredChecks
-
-    def require_complete_unique_coverage(self, *extra: tuple[str, tuple[str, ...]]) -> None:
-        for label, values in (
-            ("connection_ids", self.connection_ids),
-            ("terminal_ids", self.terminal_ids),
-            ("harness_ids", self.harness_ids),
-            *extra,
-        ):
-            if not values:
-                raise ValueError(f"{label} must not be empty for a product traceability view")
-            if len(set(values)) != len(values):
-                raise ValueError(f"{label} must not contain duplicates")
-
-
-class SystemWiringValidationContract(ProductTraceabilityValidationContract):
-    """Trace a whole-system KiCad view to every typed product relationship."""
-
-    kind: Literal[ProjectKind.SYSTEM_WIRING]
-    mechanical_handoff_ids: tuple[Identifier, ...]
-
-    @model_validator(mode="after")
-    def complete_unique_coverage(self) -> SystemWiringValidationContract:
-        self.require_complete_unique_coverage(
-            ("mechanical_handoff_ids", self.mechanical_handoff_ids)
-        )
-        return self
-
-
-class HarnessInterfaceValidationContract(ProductTraceabilityValidationContract):
-    """Trace a harness-interface sheet to only its owned electrical conductors."""
-
-    kind: Literal[ProjectKind.HARNESS_INTERFACE]
-
-    @model_validator(mode="after")
-    def complete_unique_coverage(self) -> HarnessInterfaceValidationContract:
-        self.require_complete_unique_coverage()
-        return self
-
-
-ProjectValidationContract = Annotated[
-    PcbValidationContract
-    | PcbOnlyValidationContract
-    | SchematicValidationContract
-    | SystemWiringValidationContract
-    | HarnessInterfaceValidationContract,
-    Field(discriminator="kind"),
-]
-
-
-SchematicGeometryRuleId = _schematic_geometry_models.SchematicGeometryRuleId
-SchematicGeometryRuleCoverageStatus = _schematic_geometry_models.SchematicGeometryRuleCoverageStatus
-SchematicGeometrySourceBinding = _schematic_geometry_models.SchematicGeometrySourceBinding
-SchematicGeometryCoverage = _schematic_geometry_models.SchematicGeometryCoverage
-
-
-class ProjectConfig(StrictModel):
-    schema_version: NonEmptyText
-    kind: ProjectKind
-    assurance_profile: Literal["training", "development", "production"]
-    not_for_manufacture: bool
-    project_id: Identifier
-    component_identity: ComponentIdentity
-    toolchain_id: Identifier
-    kicad_version: NonEmptyText
-    cli_profile: Literal["kicad-10"] | None = None
-    image: NonEmptyText
-    project: RepositoryPath
-    source_roots: tuple[RepositoryPath, ...]
-    required_inputs: tuple[RepositoryPath, ...]
-    validation: ProjectValidationContract
-    electrical: RepositoryPath | None = None
-    design_lint: DesignLintPolicy | None = None
-    interfaces: tuple[Identifier, ...] = ()
-    connector_reviews: tuple[ConnectorInterfaceReview, ...] = ()
-    connector_inventory_review: ConnectorInventoryReview | None = None
-
-    @model_validator(mode="after")
-    def matching_project_kind(self) -> ProjectConfig:
-        if self.kind is not self.validation.kind:
-            raise ValueError("project kind must match validation contract kind")
-        if (
-            self.design_lint is not None
-            and (
-                self.design_lint.pcb_decoupling_map is not None
-                or self.design_lint.pcb_protection_path_map is not None
-                or self.design_lint.pcb_track_width_map is not None
-                or self.design_lint.pcb_reference_plane_map is not None
-                or self.design_lint.pcb_switching_loop_map is not None
-                or self.design_lint.pcb_differential_pair_rule_map is not None
-                or self.design_lint.pcb_signal_path_rule_map is not None
-                or self.design_lint.pcb_mechanical_edge_clearance_map is not None
-                or self.design_lint.pcb_keepout_map is not None
-                or self.design_lint.pcb_rf_module_antenna_map is not None
-                or self.design_lint.pcb_touch_pad_clearance_map is not None
-            )
-            and self.kind is not ProjectKind.PCB
-        ):
-            raise ValueError("PCB geometry maps require an authoritative PCB project")
-        return self
-
-
-class ProjectDiscovery(StrictModel):
-    """Repository-wide dependencies and roots; project records live with boards."""
-
-    schema_version: Literal["1"] = "1"
-    catalogs: CatalogPaths
-    project_roots: Annotated[tuple[RepositoryPath, ...], Field(min_length=1)]
-    project_depth: Annotated[int, Field(ge=1, le=8)] = 1
-
-    @model_validator(mode="after")
-    def unique_project_roots(self) -> ProjectDiscovery:
-        if len({name.casefold() for name in self.project_roots}) != len(self.project_roots):
-            raise ValueError("Discovery roots must be unique")
-        return self
-
-
-class ReleaseExportSettings(StrictModel):
-    """Manufacturer-facing settings reviewed with each board's source."""
-
-    gerber_layers: Annotated[tuple[NonEmptyText, ...], Field(min_length=1)]
-    coordinate_origin: Literal["absolute", "plot"] = "absolute"
-    position_units: Literal["mm", "in"] = "mm"
-    assembly_variant: NonEmptyText | None = None
-    supplier_formats: tuple[Literal["odb", "ipc2581", "ipcd356"], ...] = ()
-
-    @model_validator(mode="after")
-    def unique_supplier_formats(self) -> ReleaseExportSettings:
-        if len(set(self.supplier_formats)) != len(self.supplier_formats):
-            raise ValueError("supplier_formats must not contain duplicates")
-        return self
-
-
-class ProjectManifest(StrictModel):
-    """Authored project-local inputs. Shared paths are explicitly repository-relative."""
-
-    schema_version: Literal["1"] = "1"
-    id: Identifier
-    kind: ProjectKind
-    status: Literal["training_fixture", "engineering", "release_candidate"]
-    assurance_profile: Literal["training", "development", "production"]
-    toolchain_id: Identifier
-    project: RepositoryPath
-    source_roots: tuple[RepositoryPath, ...]
-    required_inputs: tuple[RepositoryPath, ...]
-    checks: RepositoryPath = "tests/contract.json"
-    shared_source_roots: tuple[RepositoryPath, ...] = ()
-    shared_inputs: tuple[RepositoryPath, ...] = ()
-    component_identity: ComponentIdentity
-    tags: tuple[Identifier, ...] = ()
-    interfaces: tuple[Identifier, ...] = ()
-    connector_reviews: tuple[ConnectorInterfaceReview, ...] = ()
-    connector_inventory_review: ConnectorInventoryReview | None = None
-    library_ids: tuple[Identifier, ...] = ()
-    mechanical_handoff: RepositoryPath | None = None
-    governance_record: RepositoryPath | None = None
-    release_exports: ReleaseExportSettings | None = None
-
-    @model_validator(mode="after")
-    def unique_connector_reviews(self) -> ProjectManifest:
-        references = [item.reference.casefold() for item in self.connector_reviews]
-        if len(set(references)) != len(references):
-            raise ValueError("Connector review references must be unique")
-        if len(set(self.interfaces)) != len(self.interfaces):
-            raise ValueError("Project interface IDs must be unique")
-        interface_ids = {
-            item.interface_id for item in self.connector_reviews if item.interface_id is not None
-        }
-        if not interface_ids <= set(self.interfaces):
-            raise ValueError("Connector reviews must reference declared project interfaces")
-        return self
-
-
-class ProjectTestContract(StrictModel):
-    schema_version: Literal["1"] = "1"
-    validation: ProjectValidationContract
-    electrical: RepositoryPath | None = None
-    design_lint: DesignLintPolicy | None = None
-
-    @model_validator(mode="after")
-    def lint_requires_netlist(self) -> ProjectTestContract:
-        if self.design_lint is not None and self.validation.kind not in {
-            ProjectKind.PCB,
-            ProjectKind.SCHEMATIC,
-        }:
-            raise ValueError("design_lint requires a pcb or schematic netlist")
-        if (
-            self.design_lint is not None
-            and (
-                self.design_lint.pcb_decoupling_map is not None
-                or self.design_lint.pcb_protection_path_map is not None
-                or self.design_lint.pcb_track_width_map is not None
-                or self.design_lint.pcb_reference_plane_map is not None
-                or self.design_lint.pcb_switching_loop_map is not None
-                or self.design_lint.pcb_differential_pair_rule_map is not None
-                or self.design_lint.pcb_signal_path_rule_map is not None
-                or self.design_lint.pcb_mechanical_edge_clearance_map is not None
-                or self.design_lint.pcb_keepout_map is not None
-                or self.design_lint.pcb_rf_module_antenna_map is not None
-                or self.design_lint.pcb_touch_pad_clearance_map is not None
-            )
-            and self.validation.kind is not ProjectKind.PCB
-        ):
-            raise ValueError("PCB geometry maps require an authoritative PCB project")
-        return self
-
-
-class ProjectScaffoldReport(StrictModel):
-    status: Literal["PASS", "FAIL"]
-    directory: str
-    issues: tuple[str, ...] = ()
-    next_step: str = "Create the native KiCad design, then complete the test contract and run kicad_tooling.verify."
-
-
-class ProjectImportReport(StrictModel):
-    """Import receipt; copying source is separate from accepting its engineering checks."""
-
-    status: Literal["PASS", "FAIL"]
-    directory: str
-    source_project: str
-    dry_run: bool
-    copied_sha256: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
-    excluded: Mapping[RepositoryPath, str] = Field(default_factory=dict)
-    issues: tuple[str, ...] = ()
-    review_required: Literal[True] = True
-    next_step: str = "Review dependencies, populate independent test expectations, then run kicad_tooling.verify. Import does not approve the design."
-
-
-class KiCadForeignImportSummary(StrictModel):
-    """Narrow projection of KiCad's retained, version-specific JSON import report."""
-
-    source_format: NonEmptyText
-    mapped_layers: int
-    errors: tuple[str, ...]
-    warnings: tuple[str, ...]
-
-
-class ImportInventoryCandidate(StrictModel):
-    """One suggested island and its unchanged-source import preview."""
-
-    source_project: NonEmptyText
-    suggested_project_id: Identifier
-    kind: ProjectKind | None
-    preview: ProjectImportReport
-    next_command: NonEmptyText
-
-
-class ImportInventoryReport(StrictModel):
-    """Read-only bulk intake plan; candidates still require individual review."""
-
-    schema_version: Literal["1"] = "1"
-    lane: Literal["IMPORT_INVENTORY"] = "IMPORT_INVENTORY"
-    source_directory: NonEmptyText
-    status: Literal["PASS", "NEEDS_WORK"]
-    copied: Literal[False] = False
-    candidates: tuple[ImportInventoryCandidate, ...] = ()
-    skipped_local_state: tuple[NonEmptyText, ...] = ()
-    issues: tuple[NonEmptyText, ...] = ()
-    next_step: NonEmptyText = (
-        "Review each candidate and its exclusions; run one import-project command per accepted design. "
-        "An import preview is not electrical validation."
-    )
-
-
-class ProductIndexEntry(StrictModel):
-    id: Identifier
-    path: RepositoryPath
-    project_ids: tuple[Identifier, ...]
-
-
-class ProductIndex(StrictModel):
-    schema_version: Literal["1"]
-    products: tuple[ProductIndexEntry, ...]
-
-    @model_validator(mode="after")
-    def unique_product_ids(self) -> ProductIndex:
-        ids = [product.id.casefold() for product in self.products]
-        if len(ids) != len(set(ids)):
-            raise ValueError("Duplicate product IDs in catalog/products.json")
-        return self
-
-
-class AssemblyKind(str, Enum):
-    PURCHASED = "purchased"
-    BUILT = "built"
-    PHANTOM = "phantom"
-
-
-class AssemblyMember(StrictModel):
-    ref: Identifier
-    item: Reference
-    quantity: PositiveCount
-
-
-class Assembly(StrictModel):
-    id: Identifier
-    revision: Identifier
-    kind: AssemblyKind
-    members: tuple[AssemblyMember, ...]
-    purchase_part: Reference | None = None
-    project_id: Identifier | None = None
-
-
-class TerminalKind(str, Enum):
-    ELECTRICAL = "electrical"
-    MECHANICAL = "mechanical"
-    LOGICAL = "logical"
-
-
-class Terminal(StrictModel):
-    id: Identifier
-    instance: Reference
-    pin: Identifier
-    kind: TerminalKind
-    exclusive: bool
-    interface_id: Identifier | None = None
-    interface_pin: NonEmptyText | None = None
-
-
-class ConnectionKind(str, Enum):
-    ELECTRICAL = "electrical"
-    FUNCTIONAL = "functional"
-    MECHANICAL = "mechanical"
-    PROTOCOL = "protocol"
-
-
-class Connection(StrictModel):
-    id: Identifier
-    kind: ConnectionKind
-    from_terminal: Annotated[Identifier, Field(alias="from")]
-    to_terminal: Annotated[Identifier, Field(alias="to")]
-    variants: tuple[Identifier, ...]
-    assurance: Assurance
-    evidence: tuple[Identifier, ...]
-    harness: Identifier | None = None
-
-
-class Variant(StrictModel):
-    id: Identifier
-    revision: Identifier
-    exclude: tuple[Reference, ...]
-    board_variants: Mapping[Identifier, NonEmptyText] = Field(default_factory=dict)
-
-
-class EvidenceKind(str, Enum):
-    DESIGN_NOTE = "design_note"
-    OBSERVATION = "observation"
-    DATASHEET = "datasheet"
-    TEST_REPORT = "test_report"
-
-
-class Evidence(StrictModel):
-    id: Identifier
-    kind: EvidenceKind
-    path: RepositoryPath
-    sha256: Digest
-    claims: tuple[Identifier, ...]
-
-
-class Harness(StrictModel):
-    id: Identifier
-    revision: Identifier
-    instance: Reference
-    length_mm: PositiveMeasure
-    conductor_area_mm2: PositiveMeasure
-    assurance: Assurance
-    evidence: tuple[Identifier, ...]
-
-
-class MechanicalHandoff(StrictModel):
-    id: Identifier
-    instances: tuple[Reference, ...]
-    units: Literal["mm"]
-    datum: NonEmptyText
-    drawing: RepositoryPath
-    assurance: Assurance
-    evidence: tuple[Identifier, ...]
-    open_items: tuple[NonEmptyText, ...]
-
-
-class ProductRecord(StrictModel):
-    schema_version: Literal["1"]
-    id: Identifier
-    revision: Identifier
-    maturity: Literal["training", "engineering_review", "prototype", "pilot", "production"]
-    root_assembly: Identifier
-    assemblies: tuple[Assembly, ...]
-    terminals: tuple[Terminal, ...]
-    connections: tuple[Connection, ...]
-    variants: tuple[Variant, ...]
-    evidence: tuple[Evidence, ...]
-    harnesses: tuple[Harness, ...]
-    mechanical: tuple[MechanicalHandoff, ...]
-    blocking_issues: tuple[NonEmptyText, ...]
-
-
-class PolicyIssue(StrictModel):
-    code: NonEmptyText
-    location: NonEmptyText
-    message: NonEmptyText
-
-
-class ProductPolicyReport(StrictModel):
-    schema_version: Literal["1"] = "1"
-    lane: Literal["PRODUCT_POLICY"] = "PRODUCT_POLICY"
-    build_authorized: Literal[False] = False
-    status: Literal["PASS", "FAIL"]
-    products: tuple[Identifier, ...]
-    open_items: Mapping[Identifier, tuple[NonEmptyText, ...]]
-    issues: tuple[PolicyIssue, ...]
-
-
-class Occurrence(StrictModel):
-    item: Reference
-    quantity: PositiveCount
-
-
-class BomRow(StrictModel):
-    part_id: Identifier
-    revision: Identifier
-    quantity: PositiveCount
-    unit: Literal["each"]
-    instances: NonEmptyText
-    manufacturer: NonEmptyText
-    mpn: NonEmptyText
-    disposition: Literal["NOT FOR MANUFACTURE"]
-
-
-class HarnessScheduleRow(StrictModel):
-    """One non-procurement harness schedule row for a selected product variant."""
-
-    harness_id: Identifier
-    revision: Identifier
-    instance: Reference
-    length_mm: PositiveMeasure
-    conductor_area_mm2: PositiveMeasure
-    electrical_connection_ids: tuple[Identifier, ...]
-    endpoint_terminal_ids: tuple[Identifier, ...]
-    assurance: Assurance
-    evidence: tuple[Identifier, ...]
-    disposition: Literal["NOT FOR MANUFACTURE"]
-
-
-class HarnessSchedule(StrictModel):
-    schema_version: Literal["1"] = "1"
-    product: Identifier
-    revision: Identifier
-    variant: Identifier
-    variant_revision: Identifier
-    build_authorized: Literal[False] = False
-    rows: tuple[HarnessScheduleRow, ...]
-
-
-class ElectricalConnectionView(StrictModel):
-    id: Identifier
-    from_terminal: Annotated[Terminal, Field(alias="from")]
-    to_terminal: Annotated[Terminal, Field(alias="to")]
-    harness: Identifier | None = None
-    assurance: Assurance
-    evidence: tuple[Identifier, ...]
-
-
-class ElectricalView(StrictModel):
-    schema_version: Literal["1"] = "1"
-    product: Identifier
-    revision: Identifier
-    variant: Identifier
-    variant_revision: Identifier
-    build_authorized: Literal[False] = False
-    connections: tuple[ElectricalConnectionView, ...]
-
-
-class SystemConnectionView(StrictModel):
-    id: Identifier
-    kind: ConnectionKind
-    from_terminal: Annotated[Terminal, Field(alias="from")]
-    to_terminal: Annotated[Terminal, Field(alias="to")]
-    harness: Identifier | None = None
-    assurance: Assurance
-    evidence: tuple[Identifier, ...]
-
-
-class SystemView(StrictModel):
-    schema_version: Literal["1"] = "1"
-    product: Identifier
-    revision: Identifier
-    variant: Identifier
-    variant_revision: Identifier
-    build_authorized: Literal[False] = False
-    connections: tuple[SystemConnectionView, ...]
+PolicyIssue = _policy_issue_models.PolicyIssue
+SupplierOffer = _sourcing_models.SupplierOffer
+SourcingSnapshot = _sourcing_models.SourcingSnapshot
+SourcingSnapshotReport = _sourcing_models.SourcingSnapshotReport
 
 
 class SnapshotManifest(StrictModel):
@@ -1442,15 +854,6 @@ class ImpactPlan(StrictModel):
     docs_changed: bool = False
 
 
-class CommandEvidence(StrictModel):
-    argv: tuple[NonEmptyText, ...]
-    started_utc: NonEmptyText
-    returncode: int
-    stdout: str = ""
-    stderr: str = ""
-    error: str | None = None
-
-
 class ReleaseExportReport(StrictModel):
     schema_version: Literal["1"] = "1"
     project_id: Identifier
@@ -1592,60 +995,6 @@ class TemplateDoctorReport(StrictModel):
     next_actions: tuple[NonEmptyText, ...] = ()
 
 
-class InventoryProject(StrictModel):
-    """Declared island and whether its authored inputs are present for a check."""
-
-    id: Identifier
-    kind: ProjectKind
-    status: Literal["training_fixture", "engineering", "release_candidate"]
-    assurance_profile: Literal["training", "development", "production"]
-    manifest: RepositoryPath
-    project: RepositoryPath
-    toolchain_id: Identifier
-    tags: tuple[Identifier, ...]
-    products: tuple[Identifier, ...]
-    readiness: Literal["INPUTS_PRESENT", "NEEDS_INPUTS"]
-    missing_inputs: tuple[RepositoryPath, ...] = ()
-    next_command: NonEmptyText
-
-
-class McpProjectReport(StrictModel):
-    """One project's declared inputs; inspection never authorizes manufacturing."""
-
-    schema_version: Literal["1"] = "1"
-    build_authorized: Literal[False] = False
-    project: InventoryProject
-    manifest: ProjectManifest
-    contract: ProjectTestContract | None
-
-
-class InventoryGroup(StrictModel):
-    """One product or tag and its selected project IDs."""
-
-    id: Identifier
-    project_ids: tuple[Identifier, ...]
-
-
-class InventoryToolchain(StrictModel):
-    id: Identifier
-    kicad_version: NonEmptyText
-
-
-class TemplateInventoryReport(StrictModel):
-    """Read-only discovery; input presence is not validation or release approval."""
-
-    schema_version: Literal["1"] = "1"
-    lane: Literal["TEMPLATE_INVENTORY"] = "TEMPLATE_INVENTORY"
-    build_authorized: Literal[False] = False
-    status: Literal["PASS", "FAIL"]
-    projects: tuple[InventoryProject, ...] = ()
-    products: tuple[InventoryGroup, ...] = ()
-    tags: tuple[InventoryGroup, ...] = ()
-    toolchains: tuple[InventoryToolchain, ...] = ()
-    issues: tuple[PolicyIssue, ...] = ()
-    next_actions: tuple[NonEmptyText, ...] = ()
-
-
 class DiagnosticFinding(StrictModel):
     """One observed failure or review task with a concrete repair path."""
 
@@ -1718,38 +1067,6 @@ class TemplateUpgradePlan(StrictModel):
     target_version: NonEmptyText
     status: Literal["PASS", "FAIL"]
     upgrades: tuple[TemplateUpgrade, ...]
-    issues: tuple[PolicyIssue, ...]
-
-
-class SupplierOffer(StrictModel):
-    id: Identifier
-    part_id: Identifier
-    supplier: NonEmptyText
-    supplier_sku: NonEmptyText
-    source_url: NonEmptyText
-    region: NonEmptyText
-    currency: Annotated[str, StringConstraints(pattern=r"^[A-Z]{3}$")]
-    quantity_break: PositiveCount
-    unit_price_minor: NonNegativeCount
-    availability: NonEmptyText
-    lead_time_days: NonNegativeCount | None = None
-
-
-class SourcingSnapshot(StrictModel):
-    schema_version: Literal["1"] = "1"
-    snapshot_id: Identifier
-    source_commit: GitCommit
-    observed_at: AwareDatetime
-    offers: tuple[SupplierOffer, ...]
-
-
-class SourcingSnapshotReport(StrictModel):
-    schema_version: Literal["1"] = "1"
-    lane: Literal["SOURCING_SNAPSHOT"] = "SOURCING_SNAPSHOT"
-    build_authorized: Literal[False] = False
-    snapshot_id: Identifier
-    offers: NonNegativeCount
-    status: Literal["PASS", "FAIL"]
     issues: tuple[PolicyIssue, ...]
 
 
@@ -2309,53 +1626,12 @@ class PurchasingReport(PurchasingSchemaModel):
 McpPurchasingPreferencesResult = _purchasing_preference_models.McpPurchasingPreferencesResult
 
 
-SurfaceAlignment = Literal["aligned", "partial", "cli_only", "mcp_only"]
-
-
-class ToolCliSnapshot(StrictModel):
-    module: NonEmptyText
-    commands: tuple[NonEmptyText, ...] = ()
-    options: tuple[NonEmptyText, ...] = ()
-
-
-class ToolMcpSnapshot(StrictModel):
-    name: Identifier
-    parameters: tuple[Identifier, ...] = ()
-
-
-class ToolSurfaceMapping(StrictModel):
-    id: Identifier
-    cli: tuple[NonEmptyText, ...] = ()
-    mcp: tuple[Identifier, ...] = ()
-    alignment: SurfaceAlignment
-    reason: NonEmptyText
-    scope: Literal["core", "administration", "adapter"]
-    gaps: tuple[NonEmptyText, ...] = ()
-    constraints: tuple[NonEmptyText, ...] = ()
-    exception: NonEmptyText | None = None
-    parity_tests: tuple[NonEmptyText, ...] = ()
-
-
-class ToolSurfacesCatalog(StrictModel):
-    schema_version: Literal["2"] = "2"
-    cli: tuple[ToolCliSnapshot, ...]
-    mcp: tuple[ToolMcpSnapshot, ...]
-    capabilities: tuple[ToolSurfaceMapping, ...]
-
-
-class ToolSurfaceReport(StrictModel):
-    schema_version: Literal["2"] = "2"
-    build_authorized: Literal[False] = False
-    status: Literal["PASS", "FAIL"]
-    coverage_status: Literal["PASS", "FAIL"]
-    parity_status: Literal["PASS", "FAIL"]
-    behavior_verification: Literal["NOT_RUN"] = "NOT_RUN"
-    mcp_verification: Literal["LIVE", "STATIC_ONLY", "UNAVAILABLE"]
-    cli: tuple[ToolCliSnapshot, ...]
-    mcp: tuple[ToolMcpSnapshot, ...]
-    capabilities: tuple[ToolSurfaceMapping, ...]
-    issues: tuple[PolicyIssue, ...] = ()
-    notes: tuple[NonEmptyText, ...] = ()
+SurfaceAlignment = _surface_models.SurfaceAlignment
+ToolCliSnapshot = _surface_models.ToolCliSnapshot
+ToolMcpSnapshot = _surface_models.ToolMcpSnapshot
+ToolSurfaceMapping = _surface_models.ToolSurfaceMapping
+ToolSurfacesCatalog = _surface_models.ToolSurfacesCatalog
+ToolSurfaceReport = _surface_models.ToolSurfaceReport
 
 
 class McpNativeScopeReport(StrictModel):
@@ -2699,107 +1975,15 @@ class ElectricalChartsSuiteReport(StrictModel):
     reports: tuple[ElectricalChartsReport, ...]
 
 
-class CadProviderIdentity(StrictModel):
-    supplier_id: Annotated[str, StringConstraints(pattern=r"^C[1-9][0-9]*$")]
-    component_supplier_id: Annotated[str, StringConstraints(pattern=r"^C[1-9][0-9]*$")]
-    manufacturer: NonEmptyText
-    mpn: NonEmptyText
-    package: NonEmptyText
-    symbol_name: NonEmptyText
-    model_uuid: Annotated[str, StringConstraints(pattern=r"^[a-f0-9]{32}$")]
-    model_title: str = ""
-
-
-class CadSourceFile(StrictModel):
-    path: RepositoryPath
-    sha256: Digest
-    source_url: str | None = None
-
-
-class CadSourceBundle(StrictModel):
-    schema_version: Literal["1"] = "1"
-    provider: Literal["easyeda"] = "easyeda"
-    supplier_id: Annotated[str, StringConstraints(pattern=r"^C[1-9][0-9]*$")]
-    manufacturer: NonEmptyText
-    mpn: NonEmptyText
-    package: NonEmptyText
-    symbol_file: RepositoryPath
-    symbol_name: NonEmptyText
-    footprint_file: RepositoryPath
-    footprint_name: NonEmptyText
-    model_file: RepositoryPath
-    files: tuple[CadSourceFile, ...]
-    source_url: NonEmptyText
-    source_sha256: Digest
-    retrieved_at: NonEmptyText
-    converter_version: Literal["1.0.1"] = "1.0.1"
-    converter_sha256: Digest | None = None
-    issues: tuple[NonEmptyText, ...] = ()
-
-
-class CadSourceReport(StrictModel):
-    status: Literal["READY", "BLOCKED"]
-    supplier_id: str
-    bundle_directory: str | None = None
-    bundle: CadSourceBundle | None = None
-    cache_hit: bool = False
-    issues: tuple[NonEmptyText, ...] = ()
-    receipt_directory: str
-
-
-class CadStepReport(StrictModel):
-    schema_version: Literal["1"] = "1"
-    status: Literal["REVIEW", "BLOCKED"]
-    project_id: Identifier
-    supplier_id: str
-    source_bundle_sha256: Digest | None = None
-    source_step_sha256: Digest | None = None
-    kicad_version: str | None = None
-    image: str | None = None
-    artifacts_sha256: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
-    commands: Mapping[str, CommandEvidence] = Field(default_factory=dict)
-    issues: tuple[NonEmptyText, ...] = ()
-    receipt_directory: str
-    alignment_verified: Literal[False] = False
-    physical_fit_verified: Literal[False] = False
-
-
-class CadBundleCheck(StrictModel):
-    status: Literal["READY", "BLOCKED"]
-    symbol_pins: tuple[str, ...] = ()
-    footprint_pads: tuple[str, ...] = ()
-    model_references: tuple[str, ...] = ()
-    issues: tuple[NonEmptyText, ...] = ()
-    physical_fit_verified: Literal[False] = False
-
-
-class CadImportPlan(StrictModel):
-    schema_version: Literal["1"] = "1"
-    project_id: Identifier
-    bundle_dir: str
-    bundle_sha256: Digest
-    preconditions: Mapping[RepositoryPath, Digest | None]
-    after_hashes: Mapping[RepositoryPath, Digest]
-
-
-class CadImportReport(StrictModel):
-    status: Literal["PLAN", "APPLIED", "BLOCKED"]
-    project_id: Identifier
-    symbol_id: str | None = None
-    footprint_id: str | None = None
-    files: tuple[RepositoryPath, ...] = ()
-    issues: tuple[NonEmptyText, ...] = ()
-    check: CadBundleCheck | None = None
-    plan_path: str | None = None
-    receipt_directory: str
-    diff: str = ""
-    build_authorized: Literal[False] = False
-
-
-class CadSourcingReview(StrictModel):
-    source: CadSourceReport
-    import_plan: CadImportReport | None = None
-    review_id: str
+CadProviderIdentity = _cad_source_models.CadProviderIdentity
+CadSourceFile = _cad_source_models.CadSourceFile
+CadSourceBundle = _cad_source_models.CadSourceBundle
+CadSourceReport = _cad_source_models.CadSourceReport
+CadStepReport = _cad_source_models.CadStepReport
+CadBundleCheck = _cad_source_models.CadBundleCheck
+CadImportPlan = _cad_source_models.CadImportPlan
+CadImportReport = _cad_source_models.CadImportReport
+CadSourcingReview = _cad_source_models.CadSourcingReview
 
 
 def register_design_lint_report(report_type: type[StrictModel]) -> None:

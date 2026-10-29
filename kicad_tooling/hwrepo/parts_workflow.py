@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import tempfile
+from collections import Counter
 from pathlib import Path
 
 from .contract_coach import NetlistRunner, capture, inspect_summary, project_context
@@ -10,13 +11,13 @@ from .contracts import read_model, repo_path, write_model
 from .discovery import load_registry
 from .evidence import digest
 from .layout import CONFIG_NAME, layout
-from .models import (
-    PartsCatalog,
+from .models import PurchasingReport
+from .part_catalog_models import PartsCatalog
+from .parts_view import render_html
+from .project_models import (
     ProjectManifest,
     ProjectRecord,
-    PurchasingReport,
 )
-from .parts_view import render_html
 from .purchasing import plan, read_components, write_csvs
 from .purchasing_preference_models import PurchasingPreferences
 
@@ -231,6 +232,13 @@ def prepare(
 
 def text_report(report: PurchasingReport) -> str:
     lines = [f"Parts to order: {report.status}", f"Project: {report.project_id}"]
+    if report.native_status is not None:
+        lines.append(f"Native validation: {report.native_status}")
+        if report.native_status == "FAIL":
+            lines.append(
+                "Inspect the retained validation receipt and its individual checks before using "
+                "this parts plan. Part metadata can still be reviewed."
+            )
     if report.plan is not None:
         p = report.plan.preferences
         lines.append(
@@ -241,6 +249,53 @@ def text_report(report: PurchasingReport) -> str:
             f"Purchasing groups: {len(report.plan.lines)}; excluded references: "
             f"{len(report.plan.excluded_references)}; issues: {len(report.plan.findings)}"
         )
+        counts = Counter(component.reference for component in report.plan.components)
+        ambiguous = {
+            component.reference
+            for component in report.plan.components
+            if not component.dnp
+            and not component.exclude_from_bom
+            and counts[component.reference] > 1
+        }
+        if ambiguous:
+            lines.append(
+                "Purchasing group membership is ambiguous for duplicate fitted references: "
+                + ", ".join(sorted(ambiguous))
+                + ". Repair duplicate schematic references."
+            )
+        if report.plan.lines:
+            lines.append("BOM groups:")
+            for group in report.plan.lines:
+                lines.append(
+                    f"- {group.part_id} rev {group.revision}: {group.manufacturer} {group.mpn}; "
+                    f"references: {', '.join(group.references)}; per board: {group.per_board}; "
+                    f"required: {group.required}; spares: {group.spares}; "
+                    f"order quantity: {group.quantity}"
+                )
+        else:
+            lines.append("BOM groups: none available for ordering review.")
+        grouped = {reference for group in report.plan.lines for reference in group.references}
+        ungrouped = tuple(
+            component.reference
+            for component in report.plan.components
+            if not component.dnp
+            and not component.exclude_from_bom
+            and component.reference not in ambiguous
+            and component.reference not in grouped
+        )
+        if ungrouped:
+            lines.append(f"Fitted references without a BOM group: {', '.join(ungrouped)}")
+        excluded: list[str] = []
+        for component in report.plan.components:
+            reasons: list[str] = []
+            if component.dnp:
+                reasons.append("DNP")
+            if component.exclude_from_bom:
+                reasons.append("excluded from BOM")
+            if reasons:
+                excluded.append(f"{component.reference} ({', '.join(reasons)})")
+        if excluded:
+            lines.append(f"Excluded references: {', '.join(excluded)}")
         for finding in report.plan.findings[:8]:
             refs = ", ".join(finding.references)
             lines.append(

@@ -31,6 +31,7 @@ from kicad_tooling.hwrepo.models import (
     ElectricalAnalysisContract,
     ElectricalAnalysisReport,
     ElectricalCheck,
+    ProjectConfig,
 )
 from kicad_tooling.hwrepo.spice import (
     expanded_deck,
@@ -286,10 +287,66 @@ class ElectricalTests(unittest.TestCase):
         config = selected_config(root, PROJECT)
         self.assertIsNotNone(load_analysis(root, config))
         before = bound_inputs(root, config, contract)
-        with patch("kicad_tooling.hwrepo.electrical_runner.bound_inputs", side_effect=[before, {}]):
+        with patch("kicad_tooling.hwrepo.electrical.bound_inputs", side_effect=[before, {}]):
             report = analyze(root, PROJECT)
         self.assertEqual(report.status, "FAIL")
         self.assertIn("changed during", report.checks[-1].detail)
+
+    def test_binding_rejects_configuration_or_requirements_changed_after_loading(self) -> None:
+        for target in ("requirements", "manifest"):
+            with self.subTest(target=target):
+                root = self.stage()
+                install_fixture(root)
+                path = (
+                    root
+                    / ISLAND
+                    / ("tests/electrical.json" if target == "requirements" else "project.json")
+                )
+
+                def change_before_hashing(
+                    root: Path,
+                    config: ProjectConfig,
+                    contract: ElectricalAnalysisContract,
+                    path: Path = path,
+                    target: str = target,
+                ) -> dict[str, str]:
+                    payload = json.loads(path.read_text(encoding="utf-8"))
+                    if target == "requirements":
+                        payload["ngspice_version"] = "99.99"
+                    else:
+                        payload["assurance_profile"] = (
+                            "development"
+                            if payload["assurance_profile"] != "development"
+                            else "training"
+                        )
+                    path.write_text(json.dumps(payload), encoding="utf-8")
+                    return bound_inputs(root, config, contract)
+
+                with patch(
+                    "kicad_tooling.hwrepo.electrical.bound_inputs",
+                    side_effect=change_before_hashing,
+                ):
+                    report = analyze(root, PROJECT)
+
+                self.assertEqual(report.status, "FAIL")
+                self.assertIn("changed while binding inputs", report.checks[-1].detail)
+
+    def test_selected_toolchain_is_rechecked_after_evaluation(self) -> None:
+        root = self.stage()
+        contract = install_fixture(root)
+        contract = contract.model_copy(update={"power": NA, "high_frequency": NA, "grounding": NA})
+        write_model(root / ISLAND / "tests/electrical.json", contract)
+        config = selected_config(root, PROJECT)
+        changed = config.model_copy(update={"kicad_version": config.kicad_version + ".changed"})
+
+        with patch(
+            "kicad_tooling.hwrepo.electrical.selected_config",
+            side_effect=[config, changed],
+        ):
+            report = analyze(root, PROJECT)
+
+        self.assertEqual(report.status, "FAIL")
+        self.assertIn("Electrical inputs changed during analysis", report.checks[-1].detail)
 
     def test_timeout_receipt_and_missing_waveforms_fail(self) -> None:
         root = self.stage()

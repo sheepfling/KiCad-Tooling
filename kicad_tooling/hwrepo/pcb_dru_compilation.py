@@ -9,9 +9,9 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Literal
 
+from .command_evidence_models import CommandEvidence
 from .contracts import write_model
 from .model_primitives import Digest, NonEmptyText, NonNegativeCount, RepositoryPath, StrictModel
-from .models import CommandEvidence
 from .pcb_dru_compilation_native_report import (
     PROBE_BOARD_NAME,
 )

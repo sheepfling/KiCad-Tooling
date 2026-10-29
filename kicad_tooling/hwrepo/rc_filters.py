@@ -9,10 +9,8 @@ from decimal import Decimal, DecimalException, localcontext
 from .capacitance_values import parse_capacitance_pf
 from .casefold_mapping_lookup import lookup_unique_casefold as _lookup
 from .component_references import is_capacitor_reference
-from .models import (
-    ComponentContract,
-    NetlistContract,
-)
+from .models import NetlistContract
+from .project_models import ComponentContract
 from .rc_filter_models import (
     RcFilterCoverageEntry,
     RcFilterCoverageReport,

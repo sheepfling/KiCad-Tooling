@@ -1,43 +1,22 @@
-"""Normalize configured PCB coverage states and source-map bindings."""
+"""Normalize mapped PCB coverage states and source identities."""
 
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
 from .design_lint_policy_models import DesignLintPolicy
+from .pcb_board_source_binding import pcb_board_source_matches
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
     PcbDifferentialPairRuleMap,
-    PcbSignalPathRuleCoverageReport,
 )
-from .pcb_keepout_models import (
-    PcbKeepoutCoverageReport,
-)
-from .pcb_protection_path_models import (
-    PcbProtectionPathCoverageReport,
-    PcbProtectionPathMap,
-)
+from .pcb_drc_source_evidence import drc_coverage_matches_sources
+from .pcb_protection_path_models import PcbProtectionPathCoverageReport, PcbProtectionPathMap
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport, PcbReferencePlaneMap
-from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
-from .pcb_switching_loop_models import (
-    PcbSwitchingLoopCoverageReport,
-    PcbSwitchingLoopMap,
-)
-from .pcb_touch_pad_clearance_models import (
-    PcbTouchPadClearanceCoverageReport,
-)
-
-
-@dataclass(frozen=True, slots=True)
-class PcbInputCoveragePolicyState:
-    """Coverage reports for source-bound signal, keepout, and antenna maps."""
-
-    signal_path: PcbSignalPathRuleCoverageReport
-    keepout: PcbKeepoutCoverageReport
-    rf_antenna: PcbRfModuleAntennaCoverageReport
-    touch_pad_clearance: PcbTouchPadClearanceCoverageReport
+from .pcb_switching_loop_models import PcbSwitchingLoopCoverageReport, PcbSwitchingLoopMap
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,204 +34,10 @@ class PcbMappedCoveragePolicyState:
     switching_loop_mode: Literal["review", "block", "off"]
 
 
-def normalize_pcb_input_coverage_policy(
-    policy: DesignLintPolicy,
-    *,
-    pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None,
-    pcb_keepout_coverage: PcbKeepoutCoverageReport | None,
-    pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None,
-    pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport | None,
-) -> PcbInputCoveragePolicyState:
-    """Apply modes and map identity to signal-path, keepout, and antenna coverage."""
-    signal_path_map = policy.pcb_signal_path_rule_map
-
-    signal_path_override = next(
-        (item for item in policy.rules if item.rule_id == "pcb.signal_path_rule_coverage"),
-        None,
-    )
-
-    signal_path_mode: Literal["review", "block", "off"] = (
-        "review" if signal_path_override is None else signal_path_override.mode
-    )
-
-    signal_path_map_sha256 = (
-        hashlib.sha256(signal_path_map.model_dump_json().encode("utf-8")).hexdigest()
-        if signal_path_map is not None
-        else None
-    )
-
-    if signal_path_map is None:
-        pcb_signal_path_coverage = pcb_signal_path_coverage or PcbSignalPathRuleCoverageReport()
-    elif signal_path_mode == "off":
-        pcb_signal_path_coverage = PcbSignalPathRuleCoverageReport(
-            status="DISABLED", mode="off", map_sha256=signal_path_map_sha256
-        )
-    elif pcb_signal_path_coverage is None:
-        pcb_signal_path_coverage = PcbSignalPathRuleCoverageReport(
-            status="BLOCKED",
-            mode=signal_path_mode,
-            map_sha256=signal_path_map_sha256,
-            issue="Source-bound native PCB and DRC evidence was not supplied for the signal-path map",
-        )
-    elif (
-        pcb_signal_path_coverage.map_sha256 != signal_path_map_sha256
-        or pcb_signal_path_coverage.status == "NOT_REQUESTED"
-    ):
-        pcb_signal_path_coverage = PcbSignalPathRuleCoverageReport(
-            status="BLOCKED",
-            mode=signal_path_mode,
-            map_sha256=signal_path_map_sha256,
-            issue="Signal-path coverage does not bind the current project-authored map",
-        )
-    else:
-        pcb_signal_path_coverage = pcb_signal_path_coverage.model_copy(
-            update={"mode": signal_path_mode}
-        )
-
-    keepout_map = policy.pcb_keepout_map
-
-    keepout_override = next(
-        (item for item in policy.rules if item.rule_id == "pcb.keepout_intent_coverage"),
-        None,
-    )
-
-    keepout_mode: Literal["review", "block", "off"] = (
-        "review" if keepout_override is None else keepout_override.mode
-    )
-
-    keepout_map_sha256 = (
-        hashlib.sha256(keepout_map.model_dump_json().encode("utf-8")).hexdigest()
-        if keepout_map is not None
-        else None
-    )
-
-    if keepout_map is None:
-        pcb_keepout_coverage = pcb_keepout_coverage or PcbKeepoutCoverageReport()
-    elif keepout_mode == "off":
-        pcb_keepout_coverage = PcbKeepoutCoverageReport(
-            status="DISABLED", mode="off", map_sha256=keepout_map_sha256
-        )
-    elif pcb_keepout_coverage is None:
-        pcb_keepout_coverage = PcbKeepoutCoverageReport(
-            status="BLOCKED",
-            mode=keepout_mode,
-            map_sha256=keepout_map_sha256,
-            issue="Source-bound native PCB geometry was not supplied for the keepout map",
-        )
-    elif pcb_keepout_coverage.map_sha256 != keepout_map_sha256 or pcb_keepout_coverage.status in {
-        "NOT_REQUESTED",
-        "DISABLED",
-    }:
-        pcb_keepout_coverage = PcbKeepoutCoverageReport(
-            status="BLOCKED",
-            mode=keepout_mode,
-            map_sha256=keepout_map_sha256,
-            issue="Keepout coverage does not bind the current project-authored map",
-        )
-    else:
-        pcb_keepout_coverage = pcb_keepout_coverage.model_copy(update={"mode": keepout_mode})
-
-    rf_antenna_map = policy.pcb_rf_module_antenna_map
-
-    rf_antenna_override = next(
-        (item for item in policy.rules if item.rule_id == "pcb.rf_module_antenna_keepout_coverage"),
-        None,
-    )
-
-    rf_antenna_mode: Literal["review", "block", "off"] = (
-        "review" if rf_antenna_override is None else rf_antenna_override.mode
-    )
-
-    rf_antenna_map_sha256 = (
-        hashlib.sha256(rf_antenna_map.model_dump_json().encode("utf-8")).hexdigest()
-        if rf_antenna_map is not None
-        else None
-    )
-
-    if rf_antenna_map is None:
-        pcb_rf_module_antenna_coverage = (
-            pcb_rf_module_antenna_coverage or PcbRfModuleAntennaCoverageReport()
-        )
-    elif rf_antenna_mode == "off":
-        pcb_rf_module_antenna_coverage = PcbRfModuleAntennaCoverageReport(
-            status="DISABLED", mode="off", map_sha256=rf_antenna_map_sha256
-        )
-    elif pcb_rf_module_antenna_coverage is None:
-        pcb_rf_module_antenna_coverage = PcbRfModuleAntennaCoverageReport(
-            status="BLOCKED",
-            mode=rf_antenna_mode,
-            map_sha256=rf_antenna_map_sha256,
-            issue="Source-bound native PCB geometry was not supplied for the RF module map",
-        )
-    elif (
-        pcb_rf_module_antenna_coverage.map_sha256 != rf_antenna_map_sha256
-        or pcb_rf_module_antenna_coverage.status in {"NOT_REQUESTED", "DISABLED"}
-    ):
-        pcb_rf_module_antenna_coverage = PcbRfModuleAntennaCoverageReport(
-            status="BLOCKED",
-            mode=rf_antenna_mode,
-            map_sha256=rf_antenna_map_sha256,
-            issue="RF module coverage does not bind the current project-authored map",
-        )
-    else:
-        pcb_rf_module_antenna_coverage = pcb_rf_module_antenna_coverage.model_copy(
-            update={"mode": rf_antenna_mode}
-        )
-    touch_pad_clearance_map = policy.pcb_touch_pad_clearance_map
-    touch_pad_clearance_override = next(
-        (item for item in policy.rules if item.rule_id == "pcb.touch_pad_reference_clearance"),
-        None,
-    )
-    touch_pad_clearance_mode: Literal["review", "block", "off"] = (
-        "review" if touch_pad_clearance_override is None else touch_pad_clearance_override.mode
-    )
-    touch_pad_clearance_map_sha256 = (
-        hashlib.sha256(touch_pad_clearance_map.model_dump_json().encode("utf-8")).hexdigest()
-        if touch_pad_clearance_map is not None
-        else None
-    )
-    if touch_pad_clearance_map is None:
-        pcb_touch_pad_clearance_coverage = (
-            pcb_touch_pad_clearance_coverage or PcbTouchPadClearanceCoverageReport()
-        )
-    elif touch_pad_clearance_mode == "off":
-        pcb_touch_pad_clearance_coverage = PcbTouchPadClearanceCoverageReport(
-            status="DISABLED",
-            mode="off",
-            map_sha256=touch_pad_clearance_map_sha256,
-        )
-    elif pcb_touch_pad_clearance_coverage is None:
-        pcb_touch_pad_clearance_coverage = PcbTouchPadClearanceCoverageReport(
-            status="BLOCKED",
-            mode=touch_pad_clearance_mode,
-            map_sha256=touch_pad_clearance_map_sha256,
-            issue="Source-bound native PCB geometry was not supplied for the touch-pad clearance map",
-        )
-    elif (
-        pcb_touch_pad_clearance_coverage.map_sha256 != touch_pad_clearance_map_sha256
-        or pcb_touch_pad_clearance_coverage.status in {"NOT_REQUESTED", "DISABLED"}
-    ):
-        pcb_touch_pad_clearance_coverage = PcbTouchPadClearanceCoverageReport(
-            status="BLOCKED",
-            mode=touch_pad_clearance_mode,
-            map_sha256=touch_pad_clearance_map_sha256,
-            issue="Touch-pad clearance coverage does not bind the current project-authored map",
-        )
-    else:
-        pcb_touch_pad_clearance_coverage = pcb_touch_pad_clearance_coverage.model_copy(
-            update={"mode": touch_pad_clearance_mode}
-        )
-    return PcbInputCoveragePolicyState(
-        signal_path=pcb_signal_path_coverage,
-        keepout=pcb_keepout_coverage,
-        rf_antenna=pcb_rf_module_antenna_coverage,
-        touch_pad_clearance=pcb_touch_pad_clearance_coverage,
-    )
-
-
 def normalize_pcb_mapped_coverage_policy(
     policy: DesignLintPolicy,
     *,
+    source_hashes: Mapping[str, str],
     pcb_differential_pair_coverage: PcbDifferentialPairRuleCoverageReport | None,
     pcb_switching_loop_coverage: PcbSwitchingLoopCoverageReport | None,
     pcb_reference_plane_coverage: PcbReferencePlaneCoverageReport | None,
@@ -276,12 +61,52 @@ def normalize_pcb_mapped_coverage_policy(
         else None
     )
 
-    if pair_map is not None and pair_mode == "off":
+    if pair_mode == "off":
         pcb_differential_pair_coverage = PcbDifferentialPairRuleCoverageReport(
             status="DISABLED",
             mode="off",
             map_sha256=pair_map_sha256,
         )
+    elif (
+        pair_map is None
+        and pcb_differential_pair_coverage is not None
+        and pcb_differential_pair_coverage.status in {"COMPLETE", "INCOMPLETE"}
+    ):
+        pcb_differential_pair_coverage = PcbDifferentialPairRuleCoverageReport(
+            status="BLOCKED",
+            issue="Differential-pair coverage has no current project-authored map",
+        )
+    elif pair_map is not None and pcb_differential_pair_coverage is None:
+        pcb_differential_pair_coverage = PcbDifferentialPairRuleCoverageReport(
+            status="BLOCKED",
+            mode=pair_mode,
+            map_sha256=pair_map_sha256,
+            issue="Source-bound native DRC evidence was not supplied for the differential-pair map",
+        )
+    elif pair_map is not None and pcb_differential_pair_coverage is not None:
+        if pcb_differential_pair_coverage.status in {"NOT_REQUESTED", "DISABLED"} or (
+            pcb_differential_pair_coverage.status in {"COMPLETE", "INCOMPLETE"}
+            and pcb_differential_pair_coverage.map_sha256 != pair_map_sha256
+        ):
+            pcb_differential_pair_coverage = PcbDifferentialPairRuleCoverageReport(
+                status="BLOCKED",
+                mode=pair_mode,
+                map_sha256=pair_map_sha256,
+                issue="Differential-pair coverage does not bind the current project-authored map",
+            )
+        elif pcb_differential_pair_coverage.status in {"COMPLETE", "INCOMPLETE"} and not (
+            drc_coverage_matches_sources(pcb_differential_pair_coverage, source_hashes)
+        ):
+            pcb_differential_pair_coverage = PcbDifferentialPairRuleCoverageReport(
+                status="BLOCKED",
+                mode=pair_mode,
+                map_sha256=pair_map_sha256,
+                issue="Differential-pair coverage differs from the current native source inventory",
+            )
+        else:
+            pcb_differential_pair_coverage = pcb_differential_pair_coverage.model_copy(
+                update={"mode": pair_mode}
+            )
 
     loop_override = next(
         (item for item in policy.rules if item.rule_id == "pcb.switching_loop_geometry"),
@@ -293,12 +118,64 @@ def normalize_pcb_mapped_coverage_policy(
     )
 
     loop_map = policy.pcb_switching_loop_map
+    loop_map_sha256 = (
+        hashlib.sha256(loop_map.model_dump_json().encode("utf-8")).hexdigest()
+        if loop_map is not None
+        else None
+    )
 
-    if loop_map is not None and loop_mode == "off":
+    if loop_mode == "off":
         pcb_switching_loop_coverage = PcbSwitchingLoopCoverageReport(
             status="DISABLED",
             mode="off",
-            map_sha256=hashlib.sha256(loop_map.model_dump_json().encode("utf-8")).hexdigest(),
+            map_sha256=loop_map_sha256,
+        )
+    elif (
+        loop_map is None
+        and pcb_switching_loop_coverage is not None
+        and (pcb_switching_loop_coverage.status in {"COMPLETE", "INCOMPLETE"})
+    ):
+        pcb_switching_loop_coverage = PcbSwitchingLoopCoverageReport(
+            status="BLOCKED",
+            issue="Switching-loop coverage has no current project-authored map",
+        )
+    elif loop_map is None:
+        pcb_switching_loop_coverage = (
+            pcb_switching_loop_coverage or PcbSwitchingLoopCoverageReport()
+        )
+    elif pcb_switching_loop_coverage is None:
+        pcb_switching_loop_coverage = PcbSwitchingLoopCoverageReport(
+            status="BLOCKED",
+            mode=loop_mode,
+            map_sha256=loop_map_sha256,
+            issue="Source-bound native PCB geometry was not supplied for the switching-loop map",
+        )
+    elif pcb_switching_loop_coverage.status in {"NOT_REQUESTED", "DISABLED"} or (
+        pcb_switching_loop_coverage.status in {"COMPLETE", "INCOMPLETE"}
+        and pcb_switching_loop_coverage.map_sha256 != loop_map_sha256
+    ):
+        pcb_switching_loop_coverage = PcbSwitchingLoopCoverageReport(
+            status="BLOCKED",
+            mode=loop_mode,
+            map_sha256=loop_map_sha256,
+            issue="Switching-loop coverage does not bind the current project-authored map",
+        )
+    elif pcb_switching_loop_coverage.status in {"COMPLETE", "INCOMPLETE"} and not (
+        pcb_board_source_matches(
+            pcb_switching_loop_coverage.board_path,
+            pcb_switching_loop_coverage.board_sha256,
+            source_hashes,
+        )
+    ):
+        pcb_switching_loop_coverage = PcbSwitchingLoopCoverageReport(
+            status="BLOCKED",
+            mode=loop_mode,
+            map_sha256=loop_map_sha256,
+            issue="Switching-loop coverage differs from the current PCB source",
+        )
+    else:
+        pcb_switching_loop_coverage = pcb_switching_loop_coverage.model_copy(
+            update={"mode": loop_mode}
         )
 
     reference_plane_map: PcbReferencePlaneMap | None = policy.pcb_reference_plane_map
@@ -318,22 +195,56 @@ def normalize_pcb_mapped_coverage_policy(
         else None
     )
 
-    if pcb_reference_plane_coverage is None:
-        if reference_plane_map is None:
-            pcb_reference_plane_coverage = PcbReferencePlaneCoverageReport()
-        elif reference_plane_mode == "off":
-            pcb_reference_plane_coverage = PcbReferencePlaneCoverageReport(
-                status="DISABLED",
-                mode="off",
-                map_sha256=reference_plane_map_sha256,
-            )
-        else:
-            pcb_reference_plane_coverage = PcbReferencePlaneCoverageReport(
-                status="BLOCKED",
-                mode=reference_plane_mode,
-                map_sha256=reference_plane_map_sha256,
-                issue="Source-bound native PCB geometry was not supplied for the reference-plane map",
-            )
+    if reference_plane_mode == "off":
+        pcb_reference_plane_coverage = PcbReferencePlaneCoverageReport(
+            status="DISABLED", mode="off", map_sha256=reference_plane_map_sha256
+        )
+    elif (
+        reference_plane_map is None
+        and pcb_reference_plane_coverage is not None
+        and (pcb_reference_plane_coverage.status in {"COMPLETE", "INCOMPLETE"})
+    ):
+        pcb_reference_plane_coverage = PcbReferencePlaneCoverageReport(
+            status="BLOCKED", issue="Reference-plane coverage has no current project-authored map"
+        )
+    elif reference_plane_map is None:
+        pcb_reference_plane_coverage = (
+            pcb_reference_plane_coverage or PcbReferencePlaneCoverageReport()
+        )
+    elif pcb_reference_plane_coverage is None:
+        pcb_reference_plane_coverage = PcbReferencePlaneCoverageReport(
+            status="BLOCKED",
+            mode=reference_plane_mode,
+            map_sha256=reference_plane_map_sha256,
+            issue="Source-bound native PCB geometry was not supplied for the reference-plane map",
+        )
+    elif pcb_reference_plane_coverage.status in {"NOT_REQUESTED", "DISABLED"} or (
+        pcb_reference_plane_coverage.status in {"COMPLETE", "INCOMPLETE"}
+        and pcb_reference_plane_coverage.map_sha256 != reference_plane_map_sha256
+    ):
+        pcb_reference_plane_coverage = PcbReferencePlaneCoverageReport(
+            status="BLOCKED",
+            mode=reference_plane_mode,
+            map_sha256=reference_plane_map_sha256,
+            issue="Reference-plane coverage does not bind the current project-authored map",
+        )
+    elif pcb_reference_plane_coverage.status in {"COMPLETE", "INCOMPLETE"} and not (
+        pcb_board_source_matches(
+            pcb_reference_plane_coverage.board_path,
+            pcb_reference_plane_coverage.board_sha256,
+            source_hashes,
+        )
+    ):
+        pcb_reference_plane_coverage = PcbReferencePlaneCoverageReport(
+            status="BLOCKED",
+            mode=reference_plane_mode,
+            map_sha256=reference_plane_map_sha256,
+            issue="Reference-plane coverage differs from the current PCB source",
+        )
+    else:
+        pcb_reference_plane_coverage = pcb_reference_plane_coverage.model_copy(
+            update={"mode": reference_plane_mode}
+        )
 
     protection_path_map: PcbProtectionPathMap | None = policy.pcb_protection_path_map
 
@@ -352,22 +263,56 @@ def normalize_pcb_mapped_coverage_policy(
         else None
     )
 
-    if pcb_protection_path_coverage is None:
-        if protection_path_map is None:
-            pcb_protection_path_coverage = PcbProtectionPathCoverageReport()
-        elif protection_path_mode == "off":
-            pcb_protection_path_coverage = PcbProtectionPathCoverageReport(
-                status="DISABLED",
-                mode=protection_path_mode,
-                map_sha256=protection_path_map_sha256,
-            )
-        else:
-            pcb_protection_path_coverage = PcbProtectionPathCoverageReport(
-                status="BLOCKED",
-                mode=protection_path_mode,
-                map_sha256=protection_path_map_sha256,
-                issue="Source-bound native PCB geometry was not supplied for the protection path map",
-            )
+    if protection_path_mode == "off":
+        pcb_protection_path_coverage = PcbProtectionPathCoverageReport(
+            status="DISABLED", mode="off", map_sha256=protection_path_map_sha256
+        )
+    elif (
+        protection_path_map is None
+        and pcb_protection_path_coverage is not None
+        and (pcb_protection_path_coverage.status in {"COMPLETE", "INCOMPLETE"})
+    ):
+        pcb_protection_path_coverage = PcbProtectionPathCoverageReport(
+            status="BLOCKED", issue="Protection-path coverage has no current project-authored map"
+        )
+    elif protection_path_map is None:
+        pcb_protection_path_coverage = (
+            pcb_protection_path_coverage or PcbProtectionPathCoverageReport()
+        )
+    elif pcb_protection_path_coverage is None:
+        pcb_protection_path_coverage = PcbProtectionPathCoverageReport(
+            status="BLOCKED",
+            mode=protection_path_mode,
+            map_sha256=protection_path_map_sha256,
+            issue="Source-bound native PCB geometry was not supplied for the protection path map",
+        )
+    elif pcb_protection_path_coverage.status in {"NOT_REQUESTED", "DISABLED"} or (
+        pcb_protection_path_coverage.status in {"COMPLETE", "INCOMPLETE"}
+        and pcb_protection_path_coverage.map_sha256 != protection_path_map_sha256
+    ):
+        pcb_protection_path_coverage = PcbProtectionPathCoverageReport(
+            status="BLOCKED",
+            mode=protection_path_mode,
+            map_sha256=protection_path_map_sha256,
+            issue="Protection-path coverage does not bind the current project-authored map",
+        )
+    elif pcb_protection_path_coverage.status in {"COMPLETE", "INCOMPLETE"} and not (
+        pcb_board_source_matches(
+            pcb_protection_path_coverage.board_path,
+            pcb_protection_path_coverage.board_sha256,
+            source_hashes,
+        )
+    ):
+        pcb_protection_path_coverage = PcbProtectionPathCoverageReport(
+            status="BLOCKED",
+            mode=protection_path_mode,
+            map_sha256=protection_path_map_sha256,
+            issue="Protection-path coverage differs from the current PCB source",
+        )
+    else:
+        pcb_protection_path_coverage = pcb_protection_path_coverage.model_copy(
+            update={"mode": protection_path_mode}
+        )
     return PcbMappedCoveragePolicyState(
         differential_pair=pcb_differential_pair_coverage,
         switching_loop=pcb_switching_loop_coverage,

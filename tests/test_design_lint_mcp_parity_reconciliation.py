@@ -43,8 +43,14 @@ def _refresh_netlist_artifact(root: Path, summary_path: Path, content: str) -> N
     write_model(summary_path, summary.model_copy(update={"artifacts_sha256": artifact_hashes}))
 
 
-@pytest.mark.parametrize("metadata_change", (True, False), ids=("pin-metadata", "digest-only"))
-def test_design_lint_reconciliation_cli_mcp_parity(tmp_path: Path, metadata_change: bool) -> None:
+@pytest.mark.parametrize(
+    ("metadata_change", "blocked_baseline"),
+    ((True, False), (False, False), (False, True)),
+    ids=("pin-metadata", "digest-only", "blocked-baseline"),
+)
+def test_design_lint_reconciliation_cli_mcp_parity(
+    tmp_path: Path, metadata_change: bool, blocked_baseline: bool
+) -> None:
     root, native = synthetic_design_lint_project(
         tmp_path,
         parity_design_lint_policy(DesignLintPolicy()),
@@ -55,6 +61,8 @@ def test_design_lint_reconciliation_cli_mcp_parity(tmp_path: Path, metadata_chan
     baseline_process = run_design_lint_cli(tmp_path, root, native)
     assert baseline_process.returncode in (0, 1), baseline_process.stderr
     baseline = DesignLintReport.model_validate_json(baseline_process.stdout)
+    if blocked_baseline:
+        baseline = baseline.model_copy(update={"status": "BLOCKED"})
     assert baseline.connectivity_snapshot is not None
     assert baseline.connectivity_snapshot.pin_metadata_coverage == "COMPLETE"
     baseline_path = root / "lint-baseline.json"
@@ -116,6 +124,14 @@ def test_design_lint_reconciliation_cli_mcp_parity(tmp_path: Path, metadata_chan
 
     mcp = asyncio.run(reconcile_with_mcp())
     assert cli == mcp
+    if blocked_baseline:
+        assert cli.status == "BLOCKED"
+        assert cli.transitions == ()
+        assert sorted(item.fingerprint for item in cli.baseline_findings) == sorted(
+            item.fingerprint for item in baseline.findings
+        )
+        assert cli.issue is not None and "Baseline design-lint report is BLOCKED" in cli.issue
+        return
     assert cli.status == "REVIEW", cli.model_dump_json(indent=2)
     assert cli.pin_metadata_comparison == "COMPLETE"
     assert cli.connectivity_comparison == "COMPLETE"

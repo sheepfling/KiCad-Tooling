@@ -36,7 +36,6 @@ from .models import (
     LocalRescueReport,
     McpGenerationReport,
     McpScopeReport,
-    ProjectManifest,
     ReleaseClass,
     ReleaseExportReport,
     ReleaseManifest,
@@ -45,6 +44,7 @@ from .models import (
     ReleaseStatus,
 )
 from .portable_evidence import verify_release_portable
+from .project_models import ProjectManifest
 from .release import check as release_check
 from .selection import ProjectSelector, resolve_project_ids
 from .sharding import shard_projects

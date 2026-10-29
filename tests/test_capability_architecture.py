@@ -3,24 +3,30 @@
 from __future__ import annotations
 
 import ast
+from functools import lru_cache
 from pathlib import Path
 
 import pytest
 
+from kicad_tooling.hwrepo.contracts import read_model
 from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
+from kicad_tooling.hwrepo.surface_models import ToolSurfacesCatalog
 
 pytestmark = pytest.mark.architecture
 
 _REPOSITORY_ROOT = Path(__file__).parents[1]
-_FORBIDDEN_SURFACE_MODULES = frozenset(
-    {
+
+
+@lru_cache(maxsize=1)
+def _forbidden_surface_modules() -> frozenset[str]:
+    catalog = read_model(_REPOSITORY_ROOT / "kicad_tooling/tool-surfaces.json", ToolSurfacesCatalog)
+    # validate.py is both a registered CLI and the current native validation service.
+    return frozenset(
+        item.module for item in catalog.cli if item.module != "kicad_tooling.validate"
+    ) | {
         "kicad_tooling.cli",
         "kicad_tooling.mcp_server",
-        "kicad_tooling.template",
-        "kicad_tooling.ci",
-        "kicad_tooling.ci_hosted",
     }
-)
 
 
 def _module_imports(source: str, owner_path: Path) -> tuple[str, ...]:
@@ -51,7 +57,7 @@ def _surface_dependencies(imports: tuple[str, ...]) -> tuple[str, ...]:
         for item in imports
         if any(
             item == forbidden or item.startswith(f"{forbidden}.")
-            for forbidden in _FORBIDDEN_SURFACE_MODULES
+            for forbidden in _forbidden_surface_modules()
         )
         or item.startswith("kicad_tooling.hwrepo.mcp_")
     )
@@ -81,6 +87,9 @@ def test_active_rule_predicates_do_not_depend_on_application_surfaces() -> None:
         "from kicad_tooling.mcp_server import create_server",
         "import kicad_tooling.cli",
         "from kicad_tooling.ci import static_pipeline",
+        "from kicad_tooling.design_lint import main",
+        "from kicad_tooling import release",
+        "import kicad_tooling.check_all",
         "from kicad_tooling import ci",
         "from .. import ci",
         "from .mcp_files import read_project_file",
@@ -104,7 +113,7 @@ def test_domain_imports_are_not_rejected_as_surface_dependencies() -> None:
 
 def test_stable_capability_services_do_not_depend_on_application_surfaces() -> None:
     directory = _REPOSITORY_ROOT / "kicad_tooling/hwrepo"
-    prefixes = ("electrical", "parts_", "cad_")
+    prefixes = ("electrical", "parts_", "cad_", "native_", "pcb_geometry_")
     standalone = {
         "layout",
         "selection",
@@ -114,6 +123,12 @@ def test_stable_capability_services_do_not_depend_on_application_surfaces() -> N
         "bounded_file_content",
         "project_source_access",
         "purchasing_preferences",
+        "release",
+        "portable_evidence",
+        "pcb_return_path_capture",
+        "pcb_drc_source_evidence",
+        "pcb_drc_source_scan",
+        "project_detail",
     }
     paths = sorted(
         path
@@ -143,3 +158,37 @@ def test_project_source_operations_have_compatible_mcp_exports() -> None:
         "apply_project_edit",
     ):
         assert getattr(mcp_files, name) is getattr(project_source_access, name)
+
+
+def test_project_inventory_mcp_adapters_delegate_to_shared_services() -> None:
+    server_path = _REPOSITORY_ROOT / "kicad_tooling/hwrepo/mcp_server.py"
+    server_tree = ast.parse(server_path.read_text(encoding="utf-8"))
+    server_calls = {
+        node.func.id
+        for node in ast.walk(server_tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
+    adapter_path = _REPOSITORY_ROOT / "kicad_tooling/hwrepo/mcp_project_inventory.py"
+    adapter_tree = ast.parse(adapter_path.read_text(encoding="utf-8"))
+    handlers = {
+        node.name: node
+        for node in ast.walk(adapter_tree)
+        if isinstance(node, ast.FunctionDef) and node.name in {"list_projects", "get_project"}
+    }
+
+    assert "register_project_inventory_tools" in server_calls
+    assert set(handlers) == {"list_projects", "get_project"}
+    project_calls = {
+        node.func.id
+        for node in ast.walk(handlers["get_project"])
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
+
+    assert "read_project_detail" in project_calls
+    assert not {"inventory", "read_model", "repo_path"} & project_calls
+    inventory_calls = {
+        node.func.id
+        for node in ast.walk(handlers["list_projects"])
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
+    assert "inventory" in inventory_calls

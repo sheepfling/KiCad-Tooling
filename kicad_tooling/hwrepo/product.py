@@ -10,55 +10,42 @@ import xml.etree.ElementTree as ET
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol, TypeAlias, TypeVar
+from typing import Protocol, TypeVar
 
 from kicad_tooling.hwrepo.models import (
+    InterfaceRecord,
+    InterfacesCatalog,
+    NetlistIdentityReport,
+)
+from kicad_tooling.hwrepo.part_catalog_models import (
+    PartRecord,
+    PartsCatalog,
+    PartStatus,
+)
+from kicad_tooling.hwrepo.product_models import (
     AssemblyKind,
     Assurance,
     Connection,
     ConnectionKind,
     EvidenceKind,
     Harness,
-    HarnessInterfaceValidationContract,
-    InterfaceRecord,
-    InterfacesCatalog,
     MechanicalHandoff,
-    NetlistIdentityReport,
     Occurrence,
-    PartRecord,
-    PartsCatalog,
-    PartStatus,
-    PcbOnlyValidationContract,
-    PcbValidationContract,
-    PolicyIssue,
     ProductIndex,
     ProductPolicyReport,
     ProductRecord,
-    ProjectConfig,
-    ProjectKind,
-    ProjectRecord,
-    SchematicValidationContract,
-    SystemWiringValidationContract,
     Terminal,
     TerminalKind,
     Variant,
 )
 
+from . import project_models
 from .contracts import read_model, repo_path
 from .discovery import load_config, load_registry
 from .evidence import digest as file_digest
 from .layout import RepositoryLayout, layout, within_roots
-
-LoadedProjectValidation: TypeAlias = (
-    PcbValidationContract
-    | PcbOnlyValidationContract
-    | SchematicValidationContract
-    | SystemWiringValidationContract
-    | HarnessInterfaceValidationContract
-)
-ProductViewValidation: TypeAlias = (
-    SystemWiringValidationContract | HarnessInterfaceValidationContract
-)
+from .policy_issue_models import PolicyIssue
+from .project_models import ProductViewValidation
 
 
 class HasIdentifier(Protocol):
@@ -76,7 +63,7 @@ class ProductRepository:
     product_project_ids: Mapping[str, tuple[str, ...]]
     parts: Mapping[str, PartRecord]
     interfaces: Mapping[str, InterfaceRecord]
-    projects: Mapping[str, ProjectRecord]
+    projects: Mapping[str, project_models.ProjectRecord]
     issues: tuple[PolicyIssue, ...]
 
 
@@ -131,7 +118,7 @@ def validate_product(
     product: ProductRecord,
     parts: Mapping[str, PartRecord],
     interfaces: Mapping[str, InterfaceRecord],
-    projects: Mapping[str, ProjectRecord],
+    projects: Mapping[str, project_models.ProjectRecord],
 ) -> tuple[PolicyIssue, ...]:
     """Apply cross-record rules that cannot be expressed in one Pydantic model."""
     issues: list[PolicyIssue] = []
@@ -159,8 +146,8 @@ def validate_product(
     if product.root_assembly not in assemblies:
         fail("ASSEMBLY_REF", "root_assembly", "Missing root assembly")
 
-    configurations: dict[str, PcbValidationContract] = {}
-    project_bindings: dict[str, ProjectRecord] = {}
+    configurations: dict[str, project_models.PcbValidationContract] = {}
+    project_bindings: dict[str, project_models.ProjectRecord] = {}
     for assembly in assemblies.values():
         member_refs: set[str] = set()
         for member in assembly.members:
@@ -194,13 +181,13 @@ def validate_product(
                 fail("PROJECT_REF", assembly.id, assembly.project_id)
                 continue
             try:
-                project_config: ProjectConfig = load_config(root, project.config)
-                validation: LoadedProjectValidation = project_config.validation
+                project_config: project_models.ProjectConfig = load_config(root, project.config)
+                validation: project_models.ProjectValidationContract = project_config.validation
                 project_bindings[assembly.id] = project
                 if (
                     assembly.kind is not AssemblyKind.BUILT
-                    or project_config.kind is not ProjectKind.PCB
-                    or not isinstance(validation, PcbValidationContract)
+                    or project_config.kind is not project_models.ProjectKind.PCB
+                    or not isinstance(validation, project_models.PcbValidationContract)
                 ):
                     fail("KICAD_MEMBERS", assembly.id, "Only a built assembly may map to KiCad")
                 else:
@@ -472,7 +459,7 @@ def load_repository(
     product_project_ids: dict[str, tuple[str, ...]] = {}
     parts: Mapping[str, PartRecord] = {}
     interfaces: Mapping[str, InterfaceRecord] = {}
-    projects: Mapping[str, ProjectRecord] = {}
+    projects: Mapping[str, project_models.ProjectRecord] = {}
     try:
         configuration = layout(root)
         index = read_model(repo_path(root, configuration.products), ProductIndex)
@@ -515,14 +502,21 @@ def load_repository(
             # Its own board contract is checked by the selected registry lane.
             if relevant_project_ids is not None and (
                 project.id not in relevant_project_ids
-                or project.kind not in {ProjectKind.SYSTEM_WIRING, ProjectKind.HARNESS_INTERFACE}
+                or project.kind
+                not in {
+                    project_models.ProjectKind.SYSTEM_WIRING,
+                    project_models.ProjectKind.HARNESS_INTERFACE,
+                }
             ):
                 continue
-            config: ProjectConfig = load_config(root, project.config)
-            validation: LoadedProjectValidation = config.validation
+            config: project_models.ProjectConfig = load_config(root, project.config)
+            validation: project_models.ProjectValidationContract = config.validation
             if isinstance(
                 validation,
-                (SystemWiringValidationContract, HarnessInterfaceValidationContract),
+                (
+                    project_models.SystemWiringValidationContract,
+                    project_models.HarnessInterfaceValidationContract,
+                ),
             ):
                 product_view_projects_by_product.setdefault(validation.product_id, []).append(
                     (project.id, validation)
@@ -590,11 +584,11 @@ def load_repository(
             for project_id, validation in wiring_projects:
                 issue_code = (
                     "SYSTEM_WIRING_CONTRACT"
-                    if isinstance(validation, SystemWiringValidationContract)
+                    if isinstance(validation, project_models.SystemWiringValidationContract)
                     else "HARNESS_INTERFACE_CONTRACT"
                 )
                 try:
-                    if isinstance(validation, SystemWiringValidationContract):
+                    if isinstance(validation, project_models.SystemWiringValidationContract):
                         validate_system_wiring_contract(product, validation)
                     else:
                         validate_harness_interface_contract(product, validation)
@@ -688,7 +682,7 @@ def check(
 
 
 def validate_system_wiring_contract(
-    product: ProductRecord, validation: SystemWiringValidationContract
+    product: ProductRecord, validation: project_models.SystemWiringValidationContract
 ) -> None:
     """Fail unless a system diagram declares complete typed product traceability.
 
@@ -723,7 +717,7 @@ def validate_system_wiring_contract(
 
 
 def validate_harness_interface_contract(
-    product: ProductRecord, validation: HarnessInterfaceValidationContract
+    product: ProductRecord, validation: project_models.HarnessInterfaceValidationContract
 ) -> None:
     """Fail unless a harness view owns exactly its declared electrical conductors."""
     connections = {connection.id: connection for connection in product.connections}
@@ -756,10 +750,10 @@ def validate_harness_interface_contract(
         raise ValueError("Harness interface terminal coverage differs from conductor endpoints")
 
 
-def check_system_wiring_contract(root: Path, config: ProjectConfig) -> None:
+def check_system_wiring_contract(root: Path, config: project_models.ProjectConfig) -> None:
     """Resolve a system-wiring project to its one typed product contract."""
-    validation: LoadedProjectValidation = config.validation
-    if not isinstance(validation, SystemWiringValidationContract):
+    validation: project_models.ProjectValidationContract = config.validation
+    if not isinstance(validation, project_models.SystemWiringValidationContract):
         raise TypeError("System wiring check requires a system_wiring configuration")
     repository = load_repository(root, (config.project_id,))
     if repository.issues:
@@ -774,10 +768,10 @@ def check_system_wiring_contract(root: Path, config: ProjectConfig) -> None:
     validate_system_wiring_contract(products[0], validation)
 
 
-def check_harness_interface_contract(root: Path, config: ProjectConfig) -> None:
+def check_harness_interface_contract(root: Path, config: project_models.ProjectConfig) -> None:
     """Resolve a harness-interface project to its one typed product contract."""
-    validation: LoadedProjectValidation = config.validation
-    if not isinstance(validation, HarnessInterfaceValidationContract):
+    validation: project_models.ProjectValidationContract = config.validation
+    if not isinstance(validation, project_models.HarnessInterfaceValidationContract):
         raise TypeError("Harness interface check requires a harness_interface configuration")
     repository = load_repository(root, (config.project_id,))
     if repository.issues:
@@ -820,9 +814,12 @@ def check_project_netlist(root: Path, project_id: str, path: Path) -> NetlistIde
             raise ValueError(f"Duplicate KiCad fields at {reference}")
         components[reference] = {field.attrib["name"]: field.text or "" for field in fields}
     if project.component_identity.required:
-        config: ProjectConfig = load_config(root, project.config)
-        validation: LoadedProjectValidation = config.validation
-        if isinstance(validation, (PcbValidationContract, SchematicValidationContract)):
+        config: project_models.ProjectConfig = load_config(root, project.config)
+        validation: project_models.ProjectValidationContract = config.validation
+        if isinstance(
+            validation,
+            (project_models.PcbValidationContract, project_models.SchematicValidationContract),
+        ):
             expected_parts = {
                 ref: component.part_id for ref, component in validation.components.items()
             }

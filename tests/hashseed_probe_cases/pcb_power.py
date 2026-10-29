@@ -37,9 +37,9 @@ def pcb_decoupling_lint_report(*, capacitor_distance_nm: int) -> JsonObject:
     """Serialize the mapped PCB decoupling boundary through the shared linter."""
     mapped = pcb_decoupling_mapping(pcb_decoupling_requirement(maximum_um=100))
     snapshot = pcb_decoupling_snapshot(distances_nm={"C1": capacitor_distance_nm})
-    coverage = pcb_decoupling_coverage_report(mapped, snapshot)
     observed = NetlistContract(components={}, nets={})
     netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
+    coverage = pcb_decoupling_coverage_report(mapped, snapshot, netlist_sha256=netlist_sha256)
     report = evaluate(
         "synthetic-pcb-decoupling-distance-boundary",
         coach(observed, netlist_sha256),

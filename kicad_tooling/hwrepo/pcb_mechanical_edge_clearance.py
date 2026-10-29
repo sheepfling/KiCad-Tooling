@@ -8,7 +8,6 @@ from pathlib import Path
 
 from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_types import Candidate
-from .models import ProjectConfig, ProjectKind
 from .pcb_drc_rule_parser import (
     NativeRuleConstraint,
     native_clearance_limit_issue,
@@ -19,6 +18,10 @@ from .pcb_drc_source_evidence import (
     verify_source_bound_drc_unchanged,
 )
 from .pcb_mechanical_edge_models import PcbMechanicalEdgeClearanceRequirement
+from .project_models import (
+    ProjectConfig,
+    ProjectKind,
+)
 
 RULE_ID = "pcb.mechanical_edge_clearance_rule_coverage"
 _EDGE_CONDITION = "B.Layer == 'Edge.Cuts'"

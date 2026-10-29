@@ -9,9 +9,10 @@ from .component_role_models import ComponentRoleMap
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_return_distribution_models import ConnectorReturnDistributionCoverageReport
 from .connector_stateful_contact_models import ConnectorStatefulContactMap
-from .control_input_models import ControlInputBiasHeuristicCoverage
 from .crystal_network_models import CrystalNetworkCoverageReport
 from .design_lint_bus_inputs import BusCandidateInputs
+from .design_lint_control_candidates import ControlCandidateInputs
+from .design_lint_pcb_inputs import PcbCandidateInputs
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .design_lint_types import Candidate
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
@@ -19,19 +20,6 @@ from .external_protection_models import ExternalProtectionCoverageReport
 from .ic_decoupling_models import IcDecouplingMap
 from .models import NetlistContract
 from .oscillator_output_path_models import OscillatorOutputPathMap
-from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
-from .pcb_decoupling_models import PcbDecouplingCoverageReport
-from .pcb_drc_models import (
-    PcbDifferentialPairRuleCoverageReport,
-    PcbSignalPathRuleCoverageReport,
-)
-from .pcb_keepout_models import PcbKeepoutCoverageReport
-from .pcb_protection_path_models import PcbProtectionPathCoverageReport
-from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport
-from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
-from .pcb_switching_loop_models import PcbSwitchingLoopCoverageReport
-from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
-from .pcb_track_width_models import PcbTrackWidthCoverageReport
 from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
 from .rc_filter_models import RcFilterCoverageReport
@@ -39,7 +27,6 @@ from .regulator_feedback_models import RegulatorFeedbackCoverageReport
 from .schematic_geometry import SchematicGeometryScan
 from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_types import SerialPeerReferenceScan
-from .stm32_pin_map_models import Stm32PinMapCoverageReport
 from .usb_c_ports import UsbCPortRosterContext
 from .usb_data_path_models import UsbDataPathMap
 from .usb_peer_reference_types import UsbPeerReferenceScan
@@ -61,13 +48,6 @@ class ComponentCandidateInputs:
 
     peer_pin_assignment_scans: ComponentPeerPinAssignmentScans | None
     peer_power_output_review_enabled: bool
-
-
-@dataclass(frozen=True, slots=True)
-class ControlCandidateInputs:
-    """Control-input coverage resolved for one candidate pass."""
-
-    input_bias_coverage: ControlInputBiasHeuristicCoverage | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,24 +84,6 @@ class MappedCandidateInputs:
 
 
 @dataclass(frozen=True, slots=True)
-class PcbCandidateInputs:
-    """Native PCB measurement and authored requirement coverage."""
-
-    component_inventory: PcbComponentInventoryCoverageReport | None
-    decoupling: PcbDecouplingCoverageReport | None
-    protection_path: PcbProtectionPathCoverageReport | None
-    track_width: PcbTrackWidthCoverageReport | None
-    reference_plane: PcbReferencePlaneCoverageReport | None
-    switching_loop: PcbSwitchingLoopCoverageReport | None
-    differential_pair: PcbDifferentialPairRuleCoverageReport | None
-    signal_path: PcbSignalPathRuleCoverageReport | None
-    keepout: PcbKeepoutCoverageReport | None
-    rf_antenna: PcbRfModuleAntennaCoverageReport | None
-    touch_pad_clearance: PcbTouchPadClearanceCoverageReport | None
-    stm32_pin_map: Stm32PinMapCoverageReport | None
-
-
-@dataclass(frozen=True, slots=True)
 class DesignLintCandidateInputs:
     """All required theme groups for shared legacy and prepared scans."""
 
@@ -142,6 +104,8 @@ class DesignLintCandidateInputs:
 
     def __post_init__(self) -> None:
         if self.bus.observed is not self.observed and self.bus.observed != self.observed:
+            raise ValueError("Candidate inputs must share one observed native netlist")
+        if self.control.observed is not self.observed and self.control.observed != self.observed:
             raise ValueError("Candidate inputs must share one observed native netlist")
         if self.bus.reviewed_connector_references != self.reviewed_connector_references:
             raise ValueError("Candidate inputs must share reviewed connector references")

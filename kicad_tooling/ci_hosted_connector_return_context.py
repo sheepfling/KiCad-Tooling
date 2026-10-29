@@ -31,8 +31,8 @@ from .hwrepo.models import (
     ContractCoachReport,
     DesignLintPolicy,
     NetlistContract,
-    ProjectConfig,
 )
+from .hwrepo.project_models import ProjectConfig
 from .validate import read_netlist
 
 

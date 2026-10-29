@@ -18,7 +18,7 @@ from .hwrepo.importing import import_project
 from .hwrepo.initialization import initialize
 from .hwrepo.inventory import format_inventory, inventory
 from .hwrepo.layout import default_project_root
-from .hwrepo.models import ProjectKind
+from .hwrepo.project_models import ProjectKind
 from .hwrepo.rescue import format_rescue, rescue_project
 from .hwrepo.scaffold import new_project
 from .hwrepo.template import bootstrap, plan_upgrade, preflight

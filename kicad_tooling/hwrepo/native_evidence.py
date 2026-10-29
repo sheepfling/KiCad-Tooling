@@ -11,16 +11,23 @@ from kicad_tooling.hwrepo import pcb_test_access_models
 
 from ..validate import check_netlist, check_report, read_netlist, svg_files
 from .can_termination_contract import can_termination_checks
+from .command_evidence_models import CommandEvidence
 from .contracts import read_model, repo_path
 from .control_input_checks import control_input_checks
-from .discovery import load_config, load_registry
+from .discovery import load_config
 from .electrical import grounding_checks, load_analysis
-from .evidence import digest, evidence_path, verify_source
+from .evidence import digest, evidence_path, source_state, verify_source
 from .i2c_pullup_contract import i2c_pullup_checks
-from .models import CommandEvidence, EvidenceFile, ProjectKind, SourceState, ValidationSummary
+from .models import (
+    EvidenceFile,
+    SourceState,
+    ValidationSummary,
+)
 from .power_connectivity import power_connectivity_checks
 from .product import check_project_netlist
+from .project_models import ProjectKind
 from .rs485_heuristics import rs485_checks
+from .selection import resolve_project
 from .test_access import evaluate_test_access_checks, pcb_accessibility_checks
 
 ElectricalAnalysisState: TypeAlias = (
@@ -42,7 +49,7 @@ def verify_native(
     path = evidence_path(root, reference)
     report = read_model(path, ValidationSummary)
     verify_source(report.source, source)
-    project = next(project for project in load_registry(root).projects if project.id == project_id)
+    project = resolve_project(root, project_id)
     config = load_config(root, project.config)
     validation: ProjectValidation = config.validation
     if report.checked_commit != source.commit or report.project_id != project_id:
@@ -105,9 +112,7 @@ def verify_native(
         raise ValueError("Native design inventory differs from committed inputs")
     if not report.artifacts_sha256:
         raise ValueError("Native report retains no artifacts")
-    for name, expected_digest in report.artifacts_sha256.items():
-        if digest(repo_path(path.parent, name)) != expected_digest:
-            raise ValueError(f"Missing or changed native artifact: {name}")
+    _verify_native_artifacts(path.parent, report)
     # Re-evaluate the retained native outputs, rather than trusting summary labels.
 
     if config.electrical is not None:
@@ -235,4 +240,14 @@ def verify_native(
         command = read_model(path.parent / filename, CommandEvidence)
         if command.returncode != 0 or command.error is not None:
             raise ValueError(f"Retained native command failed: {name}")
+    evidence_path(root, reference)
+    _verify_native_artifacts(path.parent, report)
+    if source_state(root) != source:
+        raise ValueError("Repository source changed during native evidence verification")
     return report
+
+
+def _verify_native_artifacts(directory: Path, report: ValidationSummary) -> None:
+    for name, expected_digest in report.artifacts_sha256.items():
+        if digest(repo_path(directory, name)) != expected_digest:
+            raise ValueError(f"Missing or changed native artifact: {name}")

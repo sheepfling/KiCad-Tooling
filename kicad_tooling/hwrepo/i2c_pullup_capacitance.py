@@ -8,7 +8,11 @@ from .capacitance_values import parse_capacitance_pf
 from .capacitor_symbols import is_capacitor_symbol
 from .component_references import is_capacitor_reference
 from .i2c_pullup_models import I2cPullupElectricalWindow
-from .models import ComponentContract, ElectricalCheck, NetlistContract
+from .models import (
+    ElectricalCheck,
+    NetlistContract,
+)
+from .project_models import ComponentContract
 
 
 def i2c_pullup_capacitance_check(

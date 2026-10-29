@@ -7,8 +7,9 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal
 
+from .command_evidence_models import CommandEvidence
 from .evidence import digest
-from .models import CommandEvidence, NetlistContract, ProjectConfig
+from .models import NetlistContract
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageEntry,
@@ -23,6 +24,8 @@ from .pcb_drc_source_evidence import (
     source_inventory_sha256,
     verify_source_bound_drc_unchanged,
 )
+from .pcb_geometry_receipts import verify_pcb_geometry_receipts
+from .project_models import ProjectConfig
 
 
 def scan_source_bound_rule_map(
@@ -110,10 +113,11 @@ def scan_source_bound_signal_path_map(
             "Native PCB snapshot or command is outside the current repository"
         ) from exc
     board_hash = evidence.board_sha256
+    verify_pcb_geometry_receipts(
+        snapshot, snapshot_path, snapshot_sha256, pcb_command, pcb_command_path, pcb_command_sha256
+    )
     if (
         digest(evidence.board_file) != board_hash
-        or digest(snapshot_path) != snapshot_sha256
-        or digest(pcb_command_path) != pcb_command_sha256
         or snapshot.board_sha256 != board_hash
         or snapshot.kicad_version != config.kicad_version
         or snapshot.zones_refilled is not True
@@ -129,6 +133,9 @@ def scan_source_bound_signal_path_map(
         snapshot,
     )
     verify_source_bound_drc_unchanged(root, config, source_hashes, evidence)
+    verify_pcb_geometry_receipts(
+        snapshot, snapshot_path, snapshot_sha256, pcb_command, pcb_command_path, pcb_command_sha256
+    )
     return PcbSignalPathRuleCoverageReport(
         status="COMPLETE" if all(item.status == "COMPLETE" for item in entries) else "INCOMPLETE",
         mode=mode,

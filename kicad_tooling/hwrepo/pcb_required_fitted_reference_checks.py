@@ -5,9 +5,10 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 from typing import TypeVar
 
-from .models import ComponentContract, NetlistContract
+from .models import NetlistContract
 from .pcb_component_population import PcbVariantPopulationSource
 from .pcb_connectivity_observations import PcbFootprintPlacementObservation
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
@@ -18,6 +19,7 @@ from .pcb_required_fitted_reference_models import (
     PcbRequiredFittedReferenceVariant,
     PcbRequiredFittedReferenceViolation,
 )
+from .project_models import ComponentContract
 
 ValueT = TypeVar("ValueT")
 
@@ -117,8 +119,8 @@ def _compare_requirements(
     schematic: Mapping[str, ComponentContract],
     board: Mapping[str, PcbFootprintPlacementObservation],
     symbols: Mapping[str, str],
-    ambiguous_symbols: set[str],
-    schematic_dnp: set[str],
+    ambiguous_symbols: AbstractSet[str],
+    schematic_dnp: AbstractSet[str],
 ) -> list[PcbRequiredFittedReferenceMismatch]:
     mismatches: list[PcbRequiredFittedReferenceMismatch] = []
     for requirement in requirements:
@@ -179,10 +181,10 @@ def _compare_variant_requirements(
     variant_requirements: PcbRequiredFittedReferenceVariant,
     schematic: Mapping[str, ComponentContract],
     symbols: Mapping[str, str],
-    ambiguous_symbols: set[str],
-    schematic_dnp: set[str],
-    board_references: set[str],
-    fitted_board_references: set[str],
+    ambiguous_symbols: AbstractSet[str],
+    schematic_dnp: AbstractSet[str],
+    board_references: AbstractSet[str],
+    fitted_board_references: AbstractSet[str],
     base_board: Mapping[str, PcbFootprintPlacementObservation],
 ) -> list[PcbRequiredFittedReferenceMismatch]:
     mismatches: list[PcbRequiredFittedReferenceMismatch] = []

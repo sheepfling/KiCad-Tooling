@@ -9,7 +9,8 @@ from typing import Literal, Protocol, TypeVar
 
 from pydantic import BaseModel
 
-from .models import CommandEvidence, Digest
+from .command_evidence_models import CommandEvidence
+from .models import Digest
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 
 PcbRuleMode = Literal["review", "block", "off"]

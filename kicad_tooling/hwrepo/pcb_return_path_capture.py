@@ -8,10 +8,10 @@ import os
 import sys
 from pathlib import Path
 
+from .command_evidence_models import CommandEvidence
 from .contract_coach import pinned_image, run_command
 from .contracts import repo_path, write_model
 from .evidence import digest
-from .models import CommandEvidence, ProjectConfig
 from .native_container_context import (
     NATIVE_CONTAINER_IMAGE_ENV,
     native_container_image_marker,
@@ -19,6 +19,7 @@ from .native_container_context import (
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_test_access_models import PcbAccessProbeRequestSet
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceRequestSet
+from .project_models import ProjectConfig
 
 NATIVE_PROBE_SOURCE_PARTS = (
     "native_pcb_probe.py.in",

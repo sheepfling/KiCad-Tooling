@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
-from kicad_tooling.hwrepo.contracts import write_model
+from kicad_tooling.hwrepo import pcb_drc_source_evidence as drc_evidence
+from kicad_tooling.hwrepo import pcb_drc_source_scan
+from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import (
     CheckEvidence,
@@ -22,6 +25,7 @@ from kicad_tooling.hwrepo.models import (
     ValidationSummary,
 )
 from kicad_tooling.hwrepo.pcb_drc_source_scan import scan_source_bound_signal_path_map
+from kicad_tooling.hwrepo.pcb_geometry_receipts import write_pcb_geometry_snapshot
 from kicad_tooling.validate import hashes
 from tests.design_lint_fixtures.pcb_signal_path import (
     native_rules,
@@ -109,7 +113,15 @@ def source_bound_fixture(root: Path) -> SourceBoundFixture:
         timestamp_utc="synthetic",
         checked_commit="synthetic",
         project_id=config.project_id,
-        checks={"drc": CheckEvidence(status="PASS", returncode=0)},
+        project_kind=config.kind,
+        checks={
+            "drc": CheckEvidence(status="PASS", returncode=0),
+            "source_scope": CheckEvidence(status="PASS", source_hashes=source_hashes),
+            "source_unchanged": CheckEvidence(status="PASS", source_hashes=source_hashes),
+            "toolchain": CheckEvidence(
+                status="PASS", observed_version=config.kicad_version, image=config.image
+            ),
+        },
         status="PASS",
         artifacts_sha256={
             "drc.json": digest(drc_path),
@@ -125,7 +137,7 @@ def source_bound_fixture(root: Path) -> SourceBoundFixture:
         }
     )
     snapshot_path = native / "pcb-connectivity.json"
-    write_model(snapshot_path, snapshot)
+    write_pcb_geometry_snapshot(snapshot_path, snapshot)
     pcb_command = CommandEvidence(
         argv=("python3", "native_pcb_probe.py"),
         started_utc="synthetic",
@@ -144,6 +156,92 @@ def source_bound_fixture(root: Path) -> SourceBoundFixture:
         pcb_command_path,
         digest(pcb_command_path),
     )
+
+
+@pytest.mark.parametrize(
+    "failure",
+    ["project", "kind", "version", "image", "source_scope", "source_unchanged", "missing"],
+)
+def test_drc_evidence_rejects_unbound_native_summary(tmp_path: Path, failure: str) -> None:
+    config, source_hashes, native, *_ = source_bound_fixture(tmp_path)
+    summary_path = native / "summary.json"
+    summary = read_model(summary_path, ValidationSummary)
+    checks = dict(summary.checks)
+    if failure == "project":
+        summary = summary.model_copy(update={"project_id": "other-project"})
+    elif failure == "kind":
+        summary = summary.model_copy(update={"project_kind": ProjectKind.SCHEMATIC})
+    elif failure in {"version", "image"}:
+        field = "observed_version" if failure == "version" else "image"
+        checks["toolchain"] = checks["toolchain"].model_copy(update={field: "different"})
+    elif failure == "missing":
+        del checks["source_unchanged"]
+    else:
+        checks[failure] = checks[failure].model_copy(update={"source_hashes": {}})
+    write_model(summary_path, summary.model_copy(update={"checks": checks}))
+
+    with pytest.raises(ValueError, match="Native (summary|source_)"):
+        drc_evidence.source_bound_drc_evidence(tmp_path, config, source_hashes, native)
+
+
+def test_failed_native_drc_can_still_supply_bound_evidence(tmp_path: Path) -> None:
+    config, source_hashes, native, *_ = source_bound_fixture(tmp_path)
+    summary_path = native / "summary.json"
+    summary = read_model(summary_path, ValidationSummary)
+    command_path = native / "drc.command.json"
+    command = read_model(command_path, CommandEvidence).model_copy(update={"returncode": 5})
+    write_model(command_path, command)
+    checks = dict(summary.checks)
+    checks["drc"] = CheckEvidence(status="FAIL", returncode=5)
+    summary = summary.model_copy(
+        update={
+            "status": "FAIL",
+            "checks": checks,
+            "artifacts_sha256": {
+                **summary.artifacts_sha256,
+                "drc.command.json": digest(command_path),
+            },
+        }
+    )
+    write_model(summary_path, summary)
+
+    evidence = drc_evidence.source_bound_drc_evidence(tmp_path, config, source_hashes, native)
+    assert evidence.native_drc_sha256 == summary.artifacts_sha256["drc.json"]
+
+
+@pytest.mark.parametrize("name", ["summary.json", "drc.json", "drc.command.json"])
+@pytest.mark.parametrize("remove", [False, True])
+def test_drc_evidence_rechecks_receipts_after_evaluation(
+    tmp_path: Path, name: str, remove: bool
+) -> None:
+    config, source_hashes, native, *_ = source_bound_fixture(tmp_path)
+    evidence = drc_evidence.source_bound_drc_evidence(tmp_path, config, source_hashes, native)
+    target = native / name
+    if remove:
+        target.unlink()
+    else:
+        target.write_bytes(target.read_bytes() + b" ")
+    with pytest.raises(ValueError, match="changed while checking DRC"):
+        drc_evidence.verify_source_bound_drc_unchanged(tmp_path, config, source_hashes, evidence)
+
+
+@pytest.mark.parametrize("name", ["summary.json", "drc.json", "drc.command.json"])
+def test_drc_evidence_rejects_receipt_changed_during_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str
+) -> None:
+    config, source_hashes, native, *_ = source_bound_fixture(tmp_path)
+    target = native / name
+    original_read_text = Path.read_text
+
+    def changing_read(path: Path, encoding: str | None = None, errors: str | None = None) -> str:
+        contents = original_read_text(path, encoding=encoding, errors=errors)
+        if path == target:
+            path.write_bytes(path.read_bytes() + b" ")
+        return contents
+
+    monkeypatch.setattr(Path, "read_text", changing_read)
+    with pytest.raises(ValueError, match="changed while checking DRC"):
+        drc_evidence.source_bound_drc_evidence(tmp_path, config, source_hashes, native)
 
 
 def scan_fixture(
@@ -166,7 +264,7 @@ def scan_fixture(
     ) = source_bound_fixture(root) if fixture is None else fixture
     chosen_snapshot = snapshot or default_snapshot
     if snapshot is not None:
-        write_model(snapshot_path, snapshot)
+        write_pcb_geometry_snapshot(snapshot_path, snapshot)
     return scan_source_bound_signal_path_map(
         root,
         config,
@@ -219,5 +317,66 @@ def test_source_bound_signal_path_report_keeps_disconnected_copper_incomplete(
 
 
 def test_source_bound_signal_path_report_rejects_stale_snapshot_digest(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match="snapshot or command differs"):
+    with pytest.raises(ValueError, match="snapshot differs"):
         scan_fixture(tmp_path, snapshot_hash="e" * 64)
+
+
+@pytest.mark.parametrize("record", ["snapshot", "command"])
+def test_signal_path_rejects_typed_record_not_matching_retained_receipt(
+    tmp_path: Path, record: str
+) -> None:
+    (
+        config,
+        source_hashes,
+        native,
+        snapshot,
+        snapshot_path,
+        snapshot_hash,
+        command,
+        command_path,
+        command_hash,
+    ) = source_bound_fixture(tmp_path)
+    if record == "snapshot":
+        snapshot = snapshot.model_copy(update={"zones_refilled": False})
+    else:
+        command = command.model_copy(update={"started_utc": "different"})
+    with pytest.raises(ValueError, match=f"{record} differs"):
+        scan_source_bound_signal_path_map(
+            tmp_path,
+            config,
+            path_map(),
+            source_netlist(),
+            source_hashes,
+            native,
+            snapshot,
+            snapshot_path,
+            snapshot_hash,
+            command,
+            command_path,
+            command_hash,
+            "review",
+        )
+
+
+@pytest.mark.parametrize("name", ["pcb-connectivity.json", "pcb.command.json"])
+def test_signal_path_rechecks_geometry_receipts_after_evaluation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str
+) -> None:
+    fixture = source_bound_fixture(tmp_path)
+    original = pcb_drc_source_scan.verify_source_bound_drc_unchanged
+
+    def mutate_after_evaluation(
+        root: Path,
+        config: ProjectConfig,
+        source_hashes: Mapping[str, str],
+        evidence: drc_evidence.BoundDrcEvidence,
+    ) -> None:
+        original(root, config, source_hashes, evidence)
+        target = fixture[2] / name
+        target.write_bytes(target.read_bytes() + b" ")
+
+    monkeypatch.setattr(
+        pcb_drc_source_scan, "verify_source_bound_drc_unchanged", mutate_after_evaluation
+    )
+    with pytest.raises(ValueError, match="differs from source-bound evidence"):
+        scan_fixture(tmp_path, fixture=fixture)

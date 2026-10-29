@@ -14,7 +14,7 @@ from types import MappingProxyType
 from typing import Protocol
 from urllib.parse import urlsplit
 
-from .models import CommandEvidence
+from .command_evidence_models import CommandEvidence
 from .spice import observed_versions
 
 # Reviewed upstream archive pin already used by the template's electrical lane.

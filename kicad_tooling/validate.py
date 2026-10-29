@@ -27,18 +27,15 @@ from .hwrepo.evidence import source_state
 from .hwrepo.generation import csv_cell
 from .hwrepo.kicad_compatibility import require_cli_profile
 from .hwrepo.layout import default_project_root
-from .hwrepo.models import (
-    CheckEvidence,
-    CommandEvidence,
+from .hwrepo.models import CheckEvidence, CommandEvidence, NetlistContract, ValidationSummary
+from .hwrepo.pcb_dru_compilation import run_pcb_dru_compilation_probe
+from .hwrepo.project_models import (
     ComponentContract,
-    NetlistContract,
     PcbValidationContract,
     ProjectConfig,
     ProjectKind,
     SchematicValidationContract,
-    ValidationSummary,
 )
-from .hwrepo.pcb_dru_compilation import run_pcb_dru_compilation_probe
 from .hwrepo.return_nets import return_net_groups
 
 ValidationContract: TypeAlias = (

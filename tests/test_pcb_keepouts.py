@@ -154,7 +154,7 @@ def design_lint_report(*, fault: bool):
     coach = ContractCoachReport(
         status="READY_FOR_REVIEW",
         project_id="synthetic-keepout",
-        source_hashes={},
+        source_hashes={"kicad/synthetic.kicad_pcb": "a" * 64},
         netlist_sha256=netlist_sha256,
         observed=observed_netlist,
     )
@@ -325,7 +325,9 @@ def test_keepout_lint_finding_supports_review_block_off_and_exact_ignore() -> No
     coverage = incomplete_report(mapping).model_copy(update={"netlist_sha256": observed_hash})
     report = evaluate(
         "synthetic-keepout",
-        coach(observed, observed_hash),
+        coach(observed, observed_hash).model_copy(
+            update={"source_hashes": {"kicad/synthetic.kicad_pcb": "a" * 64}}
+        ),
         DesignLintPolicy(pcb_keepout_map=mapping),
         pcb_keepout_coverage=coverage,
     )
@@ -337,7 +339,9 @@ def test_keepout_lint_finding_supports_review_block_off_and_exact_ignore() -> No
 
     blocked = evaluate(
         "synthetic-keepout",
-        coach(observed, observed_hash),
+        coach(observed, observed_hash).model_copy(
+            update={"source_hashes": {"kicad/synthetic.kicad_pcb": "a" * 64}}
+        ),
         DesignLintPolicy(
             pcb_keepout_map=mapping,
             rules=(
@@ -354,7 +358,9 @@ def test_keepout_lint_finding_supports_review_block_off_and_exact_ignore() -> No
 
     disabled = evaluate(
         "synthetic-keepout",
-        coach(observed, observed_hash),
+        coach(observed, observed_hash).model_copy(
+            update={"source_hashes": {"kicad/synthetic.kicad_pcb": "a" * 64}}
+        ),
         DesignLintPolicy(
             pcb_keepout_map=mapping,
             rules=(
@@ -372,7 +378,9 @@ def test_keepout_lint_finding_supports_review_block_off_and_exact_ignore() -> No
 
     ignored = evaluate(
         "synthetic-keepout",
-        coach(observed, observed_hash),
+        coach(observed, observed_hash).model_copy(
+            update={"source_hashes": {"kicad/synthetic.kicad_pcb": "a" * 64}}
+        ),
         DesignLintPolicy(
             pcb_keepout_map=mapping,
             ignores=(
@@ -387,3 +395,52 @@ def test_keepout_lint_finding_supports_review_block_off_and_exact_ignore() -> No
     )
     ignored_finding = next(item for item in ignored.findings if item.rule_id == finding.rule_id)
     assert ignored_finding.disposition == "IGNORED"
+
+
+@pytest.mark.parametrize("binding", ["stale-board", "no-current-map"])
+def test_scanned_keepout_coverage_requires_current_board_and_map(binding: str) -> None:
+    from tests.design_lint_fixtures import coach
+
+    mapping = mapping_for()
+    observed = NetlistContract(components={}, nets={})
+    observed_hash = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
+    coverage = incomplete_report(mapping).model_copy(update={"netlist_sha256": observed_hash})
+    source_hashes = {"kicad/synthetic.kicad_pcb": "a" * 64}
+    policy = DesignLintPolicy(pcb_keepout_map=mapping)
+    if binding == "stale-board":
+        source_hashes["kicad/synthetic.kicad_pcb"] = "f" * 64
+    else:
+        policy = DesignLintPolicy()
+
+    report = evaluate(
+        "synthetic-keepout",
+        coach(observed, observed_hash).model_copy(update={"source_hashes": source_hashes}),
+        policy,
+        pcb_keepout_coverage=coverage,
+    )
+    assert report.status == "BLOCKED"
+    assert report.pcb_keepout_coverage.status == "BLOCKED"
+    assert not any(item.rule_id == "pcb.keepout_intent_coverage" for item in report.findings)
+
+
+def test_explicitly_disabled_keepout_without_map_stays_disabled() -> None:
+    from tests.design_lint_fixtures import coach
+
+    observed = NetlistContract(components={}, nets={})
+    observed_hash = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
+    report = evaluate(
+        "synthetic-keepout",
+        coach(observed, observed_hash),
+        DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id="pcb.keepout_intent_coverage",
+                    mode="off",
+                    reason="Synthetic disabled state without a project map",
+                ),
+            ),
+        ),
+        pcb_keepout_coverage=incomplete_report(),
+    )
+    assert report.pcb_keepout_coverage.status == "DISABLED"
+    assert not any(item.rule_id == "pcb.keepout_intent_coverage" for item in report.findings)

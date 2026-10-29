@@ -26,18 +26,19 @@ from .models import (
     PartCadComponent,
     PartPickerItem,
     PartPickerReport,
-    PartRecord,
-    PartsCatalog,
     PartSelectionAssignment,
     PartSelectionMap,
     PartSelectionReport,
     PartSourceEdit,
-    PartStatus,
-    ProjectKind,
-    ProjectManifest,
 )
 from .part_cad import preview_cad, read_cad_components
+from .part_catalog_models import (
+    PartRecord,
+    PartsCatalog,
+    PartStatus,
+)
 from .parts_workflow import local_path, preferences_path, selected_project
+from .project_models import ProjectKind, ProjectManifest
 from .purchasing import (
     _PLACEHOLDER,  # pyright: ignore[reportPrivateUsage]
     _safe_cell,  # pyright: ignore[reportPrivateUsage]

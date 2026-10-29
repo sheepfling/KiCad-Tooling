@@ -8,8 +8,9 @@ from pathlib import Path
 
 from .hwrepo.contracts import read_model, repo_path
 from .hwrepo.layout import default_project_root
-from .hwrepo.models import PolicyIssue, SourcingSnapshot, SourcingSnapshotReport
+from .hwrepo.policy_issue_models import PolicyIssue
 from .hwrepo.sourcing import check
+from .hwrepo.sourcing_models import SourcingSnapshot, SourcingSnapshotReport
 
 
 def format_sourcing(report: SourcingSnapshotReport, *, limit: int = 5) -> str:

@@ -9,7 +9,6 @@ from pathlib import Path
 from .ci_hosted_support import HostedLog
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
-from .hwrepo.models import ProjectConfig
 from .hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .hwrepo.pcb_reference_plane_models import (
     PcbReferencePlaneMap,
@@ -21,6 +20,7 @@ from .hwrepo.pcb_return_path_capture import (
     expected_probe_sha256,
     native_pcb_command_matches,
 )
+from .hwrepo.project_models import ProjectConfig
 
 
 def pcb_reference_plane_via_fixture_lane(

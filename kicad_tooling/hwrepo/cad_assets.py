@@ -16,7 +16,6 @@ from .contracts import lexical_absolute_path, read_model, repo_path, repo_path_i
 from .discovery import load_config, load_registry
 from .model_inventory import _atoms, _children, _Span  # pyright: ignore[reportPrivateUsage]
 from .model_population import _validate_shared_roots  # pyright: ignore[reportPrivateUsage]
-from .models import ProjectManifest
 from .part_cad import (
     _field,  # pyright: ignore[reportPrivateUsage]
     _nodes,  # pyright: ignore[reportPrivateUsage]
@@ -27,6 +26,7 @@ from .part_cad import (
     _scalar,  # pyright: ignore[reportPrivateUsage]
     _tokens,  # pyright: ignore[reportPrivateUsage]
 )
+from .project_models import ProjectManifest
 
 
 class MissingFootprintError(ValueError):

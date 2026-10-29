@@ -3522,7 +3522,7 @@ is not a reason by itself to expand its scope or change its default policy.
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
 - **Status:** Implemented v86. The cross-process probe supports themed report
-  selectors and retains the complete 291-report inventory gate. Fault/control
+  selectors and retains the complete 307-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor

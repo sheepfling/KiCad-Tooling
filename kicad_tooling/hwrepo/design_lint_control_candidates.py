@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from .control_input_inventory import (
     connected_control_inputs_without_visible_rail_resistor,
     unconnected_control_inputs,
@@ -12,12 +14,43 @@ from .models import NetlistContract
 from .open_drain_heuristics import open_output_bias_gaps
 
 
+@dataclass(frozen=True, slots=True)
+class ControlCandidateInputs:
+    """One native observation and the resolved control-bias coverage for it."""
+
+    observed: NetlistContract
+    input_bias_coverage: ControlInputBiasHeuristicCoverage
+
+    @classmethod
+    def from_legacy_arguments(
+        cls, observed: NetlistContract, coverage: ControlInputBiasHeuristicCoverage | None
+    ) -> ControlCandidateInputs:
+        return cls(observed, coverage or ControlInputBiasHeuristicCoverage())
+
+
+@dataclass(frozen=True, slots=True)
+class ControlCandidateResult:
+    """Control findings and the pin identities used by peer deduplication."""
+
+    candidates: tuple[Candidate, ...]
+    unconnected_pin_keys: frozenset[str]
+
+
 def control_candidates(
     observed: NetlistContract,
     *,
     control_input_bias_coverage: ControlInputBiasHeuristicCoverage | None = None,
 ) -> tuple[tuple[Candidate, ...], frozenset[str]]:
-    """Build control-input findings and the pin keys used to avoid duplicate prompts."""
+    """Preserve the existing tuple interface for direct callers."""
+    result = scan_control_candidates(
+        ControlCandidateInputs.from_legacy_arguments(observed, control_input_bias_coverage)
+    )
+    return result.candidates, result.unconnected_pin_keys
+
+
+def scan_control_candidates(inputs: ControlCandidateInputs) -> ControlCandidateResult:
+    """Build control-input findings from the theme's resolved inputs."""
+    observed = inputs.observed
     found: list[Candidate] = []
     unconnected_controls = unconnected_control_inputs(observed)
 
@@ -44,9 +77,7 @@ def control_candidates(
 
     covered_control_nets = {
         entry.net.casefold()
-        for entry in (
-            () if control_input_bias_coverage is None else control_input_bias_coverage.entries
-        )
+        for entry in inputs.input_bias_coverage.entries
         if entry.status == "COVERED"
     }
 
@@ -109,4 +140,4 @@ def control_candidates(
                 },
             )
         )
-    return tuple(found), frozenset(control_pin_keys)
+    return ControlCandidateResult(tuple(found), frozenset(control_pin_keys))

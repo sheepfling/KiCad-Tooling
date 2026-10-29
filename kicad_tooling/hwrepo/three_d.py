@@ -13,6 +13,7 @@ from typing import Literal
 
 from ..check_toolchain import cli_executable
 from ..validate import hashes
+from .command_evidence_models import CommandEvidence
 from .contracts import repo_path
 from .diagnostic_journal import DiagnosticJournal
 from .discovery import load_config, load_registry
@@ -22,18 +23,20 @@ from .model_inventory import inspect_models
 from .models import (
     DEFAULT_THREE_D_VIEWS,
     THREE_D_VIEWS,
-    CommandEvidence,
     ExportMode,
     ExportStatus,
     ModelInventoryReport,
-    ProjectConfig,
-    ProjectKind,
     SelectedRunner,
     ThreeDReport,
     ThreeDView,
 )
+from .project_models import (
+    ProjectConfig,
+    ProjectKind,
+)
+from .three_d_gallery import finalize_gallery
+from .three_d_gallery import valid_artifact as _valid_artifact
 
-# Preserve the original service-module import surface for existing consumers.
 __all__ = [
     "ExportMode",
     "ExportStatus",
@@ -148,18 +151,6 @@ def _local_path_argument(root: Path, output: Path, value: str) -> str:
     if len(parts) > 2 and path.is_relative_to(PurePosixPath("/work")):
         return str(root.joinpath(*parts[2:]))
     return value
-
-
-def _valid_artifact(path: Path, kind: str) -> bool:
-    if not path.is_file() or path.stat().st_size < 16:
-        return False
-    with path.open("rb") as stream:
-        header = stream.read(32)
-    if kind == "png":
-        return header.startswith(b"\x89PNG\r\n\x1a\n")
-    if kind == "glb":
-        return header.startswith(b"glTF\x02\x00\x00\x00")
-    return header.startswith(b"ISO-10303-21") if kind == "step" else False
 
 
 def _selected(root: Path, project_id: str) -> tuple[ProjectConfig, str]:
@@ -465,6 +456,15 @@ def generate(
                         "Project source changed while the 3D receipt was being generated; "
                         "discard this receipt and rerun from a stable source snapshot"
                     )
+        status, actions = finalize_gallery(
+            journal.directory,
+            project_id,
+            status,
+            inventory.status if inventory else "NOT_RUN",
+            artifacts,
+            actions,
+            assembly_variant,
+        )
     except KeyboardInterrupt as exc:
         journal.fail(exc)
         raise

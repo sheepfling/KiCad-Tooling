@@ -2,11 +2,22 @@
 
 from __future__ import annotations
 
+from .design_lint_pcb_inputs import PcbCandidateInputs
 from .design_lint_types import Candidate
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_protection_path_models import PcbProtectionPathCoverageReport
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
+
+
+def scan_pcb_measurement_candidates(inputs: PcbCandidateInputs) -> tuple[Candidate, ...]:
+    """Route the PCB group's resolved measurement coverage to its translators."""
+    return pcb_measurement_coverage_candidates(
+        pcb_decoupling_coverage=inputs.decoupling,
+        pcb_protection_path_coverage=inputs.protection_path,
+        pcb_track_width_coverage=inputs.track_width,
+        pcb_reference_plane_coverage=inputs.reference_plane,
+    )
 
 
 def pcb_measurement_coverage_candidates(

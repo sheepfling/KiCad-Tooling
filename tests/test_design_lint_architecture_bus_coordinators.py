@@ -229,7 +229,7 @@ def test_i2c_address_input_replaces_separate_bus_arguments() -> None:
         for node in ast.walk(aggregator_tree)
         if isinstance(node, ast.Call)
         and isinstance(node.func, ast.Name)
-        and node.func.id == "bus_candidates"
+        and node.func.id == "scan_bus_candidates"
     )
     (bus_call,) = bus_calls
     assert len(bus_call.args) == 1
@@ -296,12 +296,55 @@ def test_legacy_and_prepared_candidate_paths_share_required_scanner_inputs() -> 
         for node in ast.walk(evaluation_tree)
         if isinstance(node, ast.Call)
         and isinstance(node.func, ast.Name)
-        and node.func.id == "scan_candidates"
+        and node.func.id == "scan_candidate_result"
     ]
     assert len(prepared_calls) == 1
     assert isinstance(prepared_calls[0].args[0], ast.Call)
     assert isinstance(prepared_calls[0].args[0].func, ast.Name)
     assert prepared_calls[0].args[0].func.id == "DesignLintCandidateInputs"
+
+    candidate_results = HWREPO / "design_lint_candidate_results.py"
+    assert line_count(candidate_results) < IMPLEMENTATION_MAX_LINES
+    result_tree = ast.parse(candidate_results.read_text(encoding="utf-8"))
+    result_type = next(
+        node
+        for node in result_tree.body
+        if isinstance(node, ast.ClassDef) and node.name == "DesignLintCandidateScanResult"
+    )
+    result_fields = {
+        node.target.id
+        for node in result_type.body
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name)
+    }
+    assert result_fields == {
+        "candidates",
+        "peer_reference_keys",
+        "connector_peer_pin_finding_counts",
+    }
+
+    connector_result_owner = HWREPO / "connector_peer_pin_candidate_results.py"
+    connector_coordinator = HWREPO / "design_lint_connector_candidates.py"
+    evaluation_source = evaluation.read_text(encoding="utf-8")
+    assert line_count(connector_result_owner) < IMPLEMENTATION_MAX_LINES
+    connector_tree = ast.parse(connector_result_owner.read_text(encoding="utf-8"))
+    connector_counts = next(
+        node
+        for node in connector_tree.body
+        if isinstance(node, ast.ClassDef) and node.name == "ConnectorPeerPinFindingCounts"
+    )
+    assert {
+        node.target.id
+        for node in connector_counts.body
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name)
+    } >= {
+        "repeated_function_finding_count",
+        "peer_pin_outlier_finding_count",
+        "peer_pin_divergence_finding_count",
+        "footprint_peer_pin_open_outlier_finding_count",
+    }
+    assert "def scan_connector_candidates(" in connector_coordinator.read_text(encoding="utf-8")
+    assert "finding_counts=scan_result.connector_peer_pin_finding_counts" in evaluation_source
+    assert "connector.footprint_named_power_input_all_open" not in evaluation_source
 
 
 def test_public_lint_compatibility_signatures_do_not_grow() -> None:

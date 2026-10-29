@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
+from kicad_tooling.hwrepo.connector_peer_pin_candidate_results import (
+    ConnectorCandidateResult,
+    ConnectorPeerPinFindingCounts,
+)
 from kicad_tooling.hwrepo.connector_pins import connector_peer_pin_heuristic_coverage
 from kicad_tooling.hwrepo.design_lint import evaluate as evaluate_design_lint
 from kicad_tooling.hwrepo.design_lint import text_report
+from kicad_tooling.hwrepo.design_lint_connector_candidates import scan_connector_candidates
 from kicad_tooling.hwrepo.models import (
     ContractCoachReport,
     DesignLintPolicy,
@@ -160,6 +167,28 @@ def test_open_generic_peer_pin_is_reported_with_a_valid_common_control() -> None
     assert "connector.peer_pin_assignment_outlier" in {item.rule_id for item in report.findings}
 
 
+def test_connector_scan_returns_typed_peer_coverage_counts() -> None:
+    result = scan_connector_candidates(peer_netlist(open_generic_pin=True))
+
+    assert result.peer_pin_finding_counts.peer_pin_outlier_finding_count == 1
+    assert result.peer_pin_finding_counts == ConnectorPeerPinFindingCounts.from_candidates(
+        result.candidates
+    )
+
+
+def test_connector_scan_result_rejects_counts_that_disagree_with_its_findings() -> None:
+    result = scan_connector_candidates(peer_netlist(open_generic_pin=True))
+
+    with pytest.raises(ValueError, match="must match connector candidates"):
+        ConnectorCandidateResult(
+            candidates=result.candidates,
+            peer_pin_finding_counts=ConnectorPeerPinFindingCounts(),
+        )
+
+    with pytest.raises(ValueError, match="must match connector candidates"):
+        replace(result, peer_pin_finding_counts=ConnectorPeerPinFindingCounts())
+
+
 @pytest.mark.parametrize(
     ("observed", "expected_findings", "expected_common_groups"),
     (
@@ -201,9 +230,7 @@ def test_incomplete_inventory_is_visible_as_a_coverage_gap(observed: NetlistCont
     coverage = connector_peer_pin_heuristic_coverage(
         observed,
         _NETLIST_SHA256,
-        repeated_function_finding_count=0,
-        peer_pin_outlier_finding_count=0,
-        peer_pin_divergence_finding_count=0,
+        finding_counts=ConnectorPeerPinFindingCounts(),
     )
 
     assert coverage.status == "INCOMPLETE_PIN_INVENTORY"
@@ -217,9 +244,7 @@ def test_all_dnp_candidates_have_a_distinct_no_fitted_status() -> None:
     coverage = connector_peer_pin_heuristic_coverage(
         peer_netlist(dnp_references=_REFERENCES),
         _NETLIST_SHA256,
-        repeated_function_finding_count=0,
-        peer_pin_outlier_finding_count=0,
-        peer_pin_divergence_finding_count=0,
+        finding_counts=ConnectorPeerPinFindingCounts(),
     )
 
     assert coverage.status == "NO_FITTED_CONNECTORS"

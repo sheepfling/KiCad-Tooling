@@ -24,9 +24,9 @@ from .design_lint_missing_evidence import (
     missing_evidence_report,
 )
 from .design_lint_pcb_coverage_policy import (
-    normalize_pcb_input_coverage_policy,
     normalize_pcb_mapped_coverage_policy,
 )
+from .design_lint_pcb_geometry_coverage_policy import normalize_pcb_input_coverage_policy
 from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_schematic_coverage import (
@@ -56,6 +56,7 @@ def prepare_evaluation(
     catalog = rule_catalog()
     input_pcb_coverage = normalize_pcb_input_coverage_policy(
         policy,
+        source_hashes=coach.source_hashes,
         pcb_signal_path_coverage=request.pcb_signal_path_coverage,
         pcb_keepout_coverage=request.pcb_keepout_coverage,
         pcb_rf_module_antenna_coverage=request.pcb_rf_module_antenna_coverage,
@@ -129,6 +130,7 @@ def prepare_evaluation(
     )
     mapped_pcb_coverage = normalize_pcb_mapped_coverage_policy(
         policy,
+        source_hashes=coach.source_hashes,
         pcb_differential_pair_coverage=request.pcb_differential_pair_coverage,
         pcb_switching_loop_coverage=request.pcb_switching_loop_coverage,
         pcb_reference_plane_coverage=request.pcb_reference_plane_coverage,
