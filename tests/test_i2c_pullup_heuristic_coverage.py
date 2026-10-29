@@ -6,13 +6,17 @@ import pytest
 
 from kicad_tooling.hwrepo.bus_heuristics import i2c_pullup_heuristic_coverage
 from kicad_tooling.hwrepo.design_lint import candidates, evaluate, text_report
-from kicad_tooling.hwrepo.i2c_pullup_models import I2cPullupResistorToleranceRequirement
+from kicad_tooling.hwrepo.i2c_pullup_models import (
+    I2cPullupHeuristicCoverage,
+    I2cPullupResistorToleranceRequirement,
+)
 from kicad_tooling.hwrepo.models import (
     ContractCoachReport,
     DesignLintPolicy,
     I2cPullupAnalysis,
     NetlistContract,
 )
+from tests.design_lint_fixtures.buses import i2c_netlist
 from tests.design_lint_fixtures.i2c_arrays import (
     array_netlist,
     array_netlist_with_capacitor,
@@ -276,11 +280,44 @@ def test_stale_native_netlist_hash_blocks_coverage_instead_of_suppressing() -> N
     assert "different or unavailable native netlist hash" in report.issues[0]
 
 
+def test_empty_complete_coverage_retains_native_identity_and_rejects_stale_input() -> None:
+    netlist = i2c_netlist(pullups=("SDA", "SCL"))
+    current = coverage(netlist, array_requirement())
+    assert current.status == "COMPLETE"
+    assert current.entries == ()
+    assert current.voltage_entries == ()
+    assert current.netlist_sha256 == "a" * 64
+
+    coach = ContractCoachReport(
+        status="READY_FOR_REVIEW",
+        project_id="synthetic-i2c-array",
+        observed=netlist,
+        netlist_sha256="a" * 64,
+    )
+    report = evaluate(
+        coach.project_id, coach, DesignLintPolicy(), i2c_pullup_heuristic_coverage=current
+    )
+    assert report.status != "BLOCKED"
+    assert report.i2c_pullup_heuristic_coverage.netlist_sha256 == coach.netlist_sha256
+
+    for stale in (
+        current.model_copy(update={"netlist_sha256": "c" * 64}),
+        I2cPullupHeuristicCoverage.model_validate(current.model_dump(exclude={"netlist_sha256"})),
+    ):
+        blocked = evaluate(
+            coach.project_id,
+            coach,
+            DesignLintPolicy(),
+            i2c_pullup_heuristic_coverage=stale,
+        )
+        assert blocked.status == "BLOCKED"
+        assert blocked.i2c_pullup_heuristic_coverage.status == "BLOCKED"
+        assert "different or unavailable native netlist hash" in blocked.issues[0]
+
+
 def test_unavailable_current_netlist_hash_blocks_source_bound_coverage() -> None:
     netlist = array_netlist()
-    current = coverage(netlist, array_requirement()).model_copy(
-        update={"netlist_sha256": None}
-    )
+    current = coverage(netlist, array_requirement()).model_copy(update={"netlist_sha256": None})
     report = evaluate(
         "synthetic-i2c-array",
         ContractCoachReport(

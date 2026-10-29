@@ -254,7 +254,8 @@ def i2c_pullup_heuristic_coverage(
         status=coverage_status,
         source_path=source_path,
         source_sha256=source_sha256,
-        netlist_sha256=netlist_sha256 if gaps or voltage_entries else None,
+        # COMPLETE with no hint entries still asserts that this netlist was scanned.
+        netlist_sha256=netlist_sha256,
         entries=tuple(entries),
         voltage_entries=voltage_entries,
     )

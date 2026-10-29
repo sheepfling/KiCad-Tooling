@@ -141,6 +141,12 @@ receipt. Reuse existing hash and path services. Keep native adapters bounded
 to the versions they support. A rule may opt into only the evidence it needs,
 but its report must show why evidence was unavailable or stale.
 
+The I²C pull-up coverage pilot now retains its netlist hash for a `COMPLETE`
+scan with no hint entries. Evaluation rejects a missing or stale hash for that
+positive state, while old serialized records remain parseable. Apply the same
+positive-state source-binding check to other coverage families during their
+route reviews.
+
 **Done when:** a stale hash, wrong native version, absent source, and unsupported
 topology produce distinct, tested outcomes across representative schematic
 and PCB capabilities. Receipts remain portable and comparable.

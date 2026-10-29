@@ -58,6 +58,11 @@ once the other evidence families have agreed routes.
 - `NOT_CONFIGURED`, `PENDING`, `NOT_APPLICABLE`, `COMPLETE`, `OPEN`, and
   `BLOCKED` are coverage states, not interchangeable Boolean values. Preserve
   the existing predicate behavior for each state during the pilot.
+- `COMPLETE` is a positive scan result even when it has no hint entries. The
+  producer retains the native netlist hash in that case; evaluation blocks a
+  missing or stale hash before accepting the result. Older serialized records
+  remain readable, but an unbound `COMPLETE` result cannot authorize a current
+  evaluation.
 - The I²C rule remains a review heuristic when no reviewed requirement covers
   it. A project-authored, source-matched requirement may supply coverage; it
   does not turn an inferred net name into a requirement.
