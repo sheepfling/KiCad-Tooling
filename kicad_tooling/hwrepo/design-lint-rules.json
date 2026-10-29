@@ -9403,10 +9403,12 @@
       "fault_fixtures": [
         "tests.test_regulator_required_passives.test_missing_required_compensation_passive_is_reviewed",
         "tests.test_regulator_required_passives.test_dnp_or_wrong_net_required_passive_is_reported_and_can_block",
-        "tests.test_regulator_required_passives_parity.test_authored_regulator_passive_rule_matches_cli_and_mcp"
+        "tests.test_regulator_required_passives_parity.test_authored_regulator_passive_rule_matches_cli_and_mcp",
+        "tests.test_regulator_required_passives_native_fixture.test_native_regulator_passive_topology_faults_and_control_are_source_bound"
       ],
       "valid_control_fixtures": [
-        "tests.test_regulator_required_passives.test_exact_present_topology_is_a_valid_control"
+        "tests.test_regulator_required_passives.test_exact_present_topology_is_a_valid_control",
+        "tests.test_regulator_required_passives_native_fixture.test_native_regulator_passive_topology_faults_and_control_are_source_bound"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -9419,7 +9421,10 @@
         "kicad_tooling/hwrepo/design_lint_evaluation_candidates.py#scan_evaluation_candidates"
       ],
       "theme": "power",
-      "implementation_owner": "kicad_tooling/hwrepo/design_lint_power_regulator_passives.py#regulator_required_passive_candidates"
+      "implementation_owner": "kicad_tooling/hwrepo/design_lint_power_regulator_passives.py#regulator_required_passive_candidates",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_REGULATOR_REQUIRED_PASSIVE_FIXTURES"
+      ]
     },
     {
       "rule_id": "power.regulator_feedback_mismatch",

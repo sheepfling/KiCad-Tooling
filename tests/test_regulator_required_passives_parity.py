@@ -2,68 +2,58 @@
 
 from __future__ import annotations
 
-import os
+import asyncio
+import json
+from pathlib import Path
 
 import pytest
+from mcp import Client
+
+from kicad_tooling.hwrepo.mcp_server import create_server
+from kicad_tooling.hwrepo.models import DesignLintPolicy, DesignLintReport
+from tests.electrical_parity_support import contract_netlist_xml
+from tests.mcp_parity_support import semantic_design_lint_report
+from tests.synthetic_design_lint_project import (
+    install_synthetic_netlist,
+    run_design_lint_cli,
+    synthetic_design_lint_project,
+)
+from tests.test_regulator_feedback import regulator_netlist
+from tests.test_regulator_required_passives import RULE_ID, topology_map
 
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.power_lint,
     pytest.mark.parity_lint,
     pytest.mark.slow,
-    pytest.mark.template_checkout,
-    pytest.mark.skipif(
-        not os.environ.get("KICAD_TEMPLATE_ROOT"),
-        reason="CLI/MCP parity needs the separate public template checkout",
-    ),
 ]
 
-from mcp import Client
 
-from kicad_tooling.hwrepo.contracts import read_model, write_model
-from kicad_tooling.hwrepo.mcp_server import create_server
-from kicad_tooling.hwrepo.models import DesignLintPolicy, DesignLintReport, ProjectTestContract
-from tests.mcp_parity_support import McpParityHarness, run_mcp_parity
-from tests.test_regulator_required_passives import RULE_ID, topology_map
+def test_authored_regulator_passive_rule_matches_cli_and_mcp(tmp_path: Path) -> None:
+    source = regulator_netlist()
+    policy = DesignLintPolicy(regulator_passive_topology_map=topology_map())
+    root, native = synthetic_design_lint_project(tmp_path, policy)
+    install_synthetic_netlist(native, contract_netlist_xml(source))
 
-
-class _RegulatorPassiveParityCases(McpParityHarness):
-    async def _case_test_authored_regulator_passive_rule_matches_cli_and_mcp(self) -> None:
-        native = self.native_evidence()
-        contract_path = self.island / "tests/contract.json"
-        contract = read_model(contract_path, ProjectTestContract)
-        policy = (contract.design_lint or DesignLintPolicy()).model_copy(
-            update={"regulator_passive_topology_map": topology_map()}
-        )
-        write_model(contract_path, contract.model_copy(update={"design_lint": policy}))
-
-        async with Client(create_server(self.root), mode="legacy") as client:
-            cli = await self.cli(
-                "kicad_tooling.design_lint",
-                DesignLintReport,
-                "--project",
-                "controller",
-                "--native-summary",
-                str(native),
-                expected_exit=1,
-            )
-            mcp = await self.call(
-                client,
+    async def exercise() -> None:
+        async with Client(create_server(root), mode="legacy") as client:
+            process = run_design_lint_cli(tmp_path, root, native)
+            assert process.returncode in {0, 1}, process.stderr + process.stdout
+            cli = DesignLintReport.model_validate_json(process.stdout)
+            result = await client.call_tool(
                 "inspect_design_lint",
-                DesignLintReport,
                 {
                     "project_id": "controller",
-                    "native_summary": native.relative_to(self.root).as_posix(),
+                    "native_summary": native.relative_to(root).as_posix(),
                 },
             )
-        self.assertEqual(cli, mcp)
-        finding = next(item for item in mcp.findings if item.rule_id == RULE_ID)
-        self.assertEqual(finding.mode, "review")
-        self.assertIn("not verified by this check", finding.message)
+            assert not result.is_error, result.content
+            assert result.structured_content is not None
+            mcp = DesignLintReport.model_validate_json(json.dumps(result.structured_content))
+            assert semantic_design_lint_report(cli) == semantic_design_lint_report(mcp)
+            assert process.returncode == (0 if cli.status == "PASS" else 1)
+            finding = next(item for item in mcp.findings if item.rule_id == RULE_ID)
+            assert finding.mode == "review"
+            assert "not verified by this check" in finding.message
 
-
-def test_authored_regulator_passive_rule_matches_cli_and_mcp() -> None:
-    run_mcp_parity(
-        _RegulatorPassiveParityCases,
-        "_case_test_authored_regulator_passive_rule_matches_cli_and_mcp",
-    )
+    asyncio.run(exercise())
