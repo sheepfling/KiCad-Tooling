@@ -89,6 +89,7 @@ def test_default_review_policy_can_block_disable_and_ignore_exact_candidate() ->
     source = rs485_unconnected_line_netlist()
     finding = next(item for item in _report(source).findings if item.rule_id == RULE_ID)
     assert _report(source).findings[0].mode == "review"
+    assert finding.disposition == "OPEN"
     assert _report(source, mode="review").status == "REVIEW"
     assert _report(source, mode="block").status == "FAIL"
     assert _report(source, mode="off").status == "PASS"

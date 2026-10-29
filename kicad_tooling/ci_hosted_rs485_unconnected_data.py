@@ -246,10 +246,10 @@ def rs485_unconnected_data_pin_fixture_lane(
                 raise ValueError(
                     f"Native RS-485 open-{fixture_kind} {case} default evidence changed"
                 )
-            expected_disposition = "RULE_OFF" if default_mode == "off" else "REVIEW"
+            expected_disposition = "RULE_OFF" if default_mode == "off" else "OPEN"
             expected_default = ((default_mode, expected_disposition),) if case == "fault" else ()
             if default_dispositions[(case, run)] != expected_default:
-                raise ValueError(f"Native RS-485 open-data {case} default policy changed")
+                raise ValueError(f"Native RS-485 open-{fixture_kind} {case} default policy changed")
             log.event(
                 f"{stage}/{case}",
                 "PASS",
