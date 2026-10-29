@@ -5,6 +5,8 @@ It uses `python -m pip install -e '.[dev,cad]'` from this tooling checkout in an
 environment; the project-facing extras alone do not install Ruff, Pyright or package build tools.
 The shared Python regression suite belongs to this repository. Board contracts,
 firmware checks, and product integration tests remain in their project repository.
+The [Alphus quality checks](../docs/ALPHUS_QUALITY_GATES.md) document the
+advisory analysis available alongside the test suite.
 Pytest is the canonical test runner. Write new tests as `test_*` functions using
 plain `assert`, pytest fixtures, and parametrization where they clarify cases.
 Do not add new `unittest.TestCase` tests. Existing `TestCase` tests remain
@@ -24,6 +26,11 @@ fixtures; their source boundary and pinned hashes are recorded in the
 The named connector supply/return pin fault and control are also synthetic
 tooling fixtures; their source boundary and pinned hashes are recorded in the
 [connector pin fixture README](fixtures/design_lint/unconnected-named-connector-pins/README.md).
+Additional synthetic native fixtures record the
+[connector power-input comparison](fixtures/design_lint/connector-footprint-same-voltage-power-input-native/README.md),
+[differential-pair edge clearance](fixtures/design_lint/differential-pair-edge-clearance/README.md),
+[custom-rule text variables](fixtures/design_lint/drc-text-variables/README.md), and
+[native clearance clamp](fixtures/design_lint/drc-clearance-clamp/README.md).
 The non-connector named supply/return-pin faults and assigned control have a separate
 [component pin fixture README](fixtures/design_lint/unconnected-named-component-pins/README.md) and
 a focused native lane per rule.
