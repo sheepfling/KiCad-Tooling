@@ -10713,25 +10713,28 @@
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
-      "evidence_adapter": "Source-bound schematic netlist value fields compared with KiCad native PCB footprint value fields in snapshot schema 13 or later",
-      "predicate": "For each case-insensitive reference with a nonempty schematic footprint assignment that is fitted in both sources, compare the schematic component value with the placed native PCB footprint value after trimming surrounding whitespace. Report only exact text differences.",
+      "evidence_adapter": "Source-bound base schematic netlist and KiCad native PCB footprint value snapshot schema 13 or later, plus same-name named-variant netlist and PCB position exports",
+      "predicate": "For the base design and each same-name named variant, compare case-insensitive references with a nonempty schematic footprint assignment that are fitted in both paired source exports. Compare exact value text after trimming surrounding whitespace and report only differences. Never substitute the base export for a missing variant export.",
       "supported_kicad_versions": [
         "KiCad 10.0.0 and 10.0.5 native pcbnew API; exact project version and digest-pinned image are checked"
       ],
       "limitations": [
         "This compares two CAD text fields. It does not establish electrical equivalence, component identity, assembly intent, physical population, or whether a displayed value is required on the board.",
         "The check is case-sensitive and reports formatting differences after trimming surrounding whitespace. Approved board-specific labels and intentional alternate text may be ignored by exact fingerprint or disabled through the project rule mode.",
-        "Only references present and footprint-assigned in the schematic and placed in the PCB are compared. DNP components, mismatched population states, off-board components, board-only footprints, and named design-variant values are outside this comparison.",
-        "The check requires a source-bound schematic netlist and native PCB footprint value snapshot schema 13 or later. Missing, stale, or older snapshot evidence is a coverage gap and never a clean result."
+        "Only references present and footprint-assigned in both paired exports are compared. DNP components, mismatched population states, off-board components, and board-only footprints are outside this comparison.",
+        "The check requires a source-bound schematic netlist and native PCB footprint value snapshot schema 13 or later for base values. Named variants require complete same-name schematic netlist and PCB position exports; missing or stale evidence blocks coverage and never produces a clean result.",
+        "This compares CAD text fields. It does not establish electrical equivalence, component identity, assembly intent, physical population, or whether a displayed value is required on the board."
       ],
       "fault_fixtures": [
         "tests.test_pcb_component_value_mismatch.test_value_difference_is_reviewable_configurable_and_source_bound",
+        "tests.test_pcb_component_value_mismatch.test_named_variant_values_compare_same_name_fitted_sources_and_localize_findings",
         "tests.test_pcb_component_value_mismatch.test_value_only_policy_captures_and_compares_native_footprint_values",
         "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
         "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_component_value_mismatch.test_matching_trimmed_values_and_noncomparable_parts_are_controls",
+        "tests.test_pcb_component_value_mismatch.test_named_variant_values_compare_same_name_fitted_sources_and_localize_findings",
         "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
         "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound"
       ],

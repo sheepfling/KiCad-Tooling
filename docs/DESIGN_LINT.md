@@ -3775,10 +3775,11 @@ lifecycle.
 
 `pcb.schematic_pcb_value_mismatch` compares the schematic netlist value with
 the native PCB footprint value for each case-insensitive reference that has a
-schematic footprint assignment and is fitted in both sources. It trims
-surrounding whitespace and then compares case-sensitive text exactly. A
-difference is a review prompt, since a board may intentionally show a shorter
-label or another approved value string.
+schematic footprint assignment and is fitted in both sources. It also compares
+each named variant's schematic netlist with the PCB position export for the
+same exact variant name. Each comparison trims surrounding whitespace and then
+compares case-sensitive text exactly. A difference is a review prompt, since a
+board may intentionally show a shorter label or another approved value string.
 
 This check defaults to `review`; project policy can select `block`, `off`, or
 an exact fingerprint ignore. It requires source-bound footprint value fields
@@ -3788,12 +3789,19 @@ until a schema 13-or-later capture is available. Findings bind the netlist,
 board, snapshot,
 KiCad version, image, and probe digests.
 
-The comparison excludes DNP components, references missing from either file,
-components without a schematic footprint assignment, population mismatches,
-board-only footprints, and named variant values. It compares CAD text only; it
+The comparison excludes DNP components, references missing from either paired
+export, components without a schematic footprint assignment, population
+mismatches, and board-only footprints. Variant comparisons require complete,
+source-bound same-name schematic netlist and PCB position exports; an absent or
+incomplete variant export blocks value coverage. Findings bind the variant
+project, schematic, board, probe, command, and export digests. No default
+variant is substituted for a named variant. This compares CAD text only; it
 does not identify a part, establish electrical equivalence, or determine
-assembly intent. The exact-version synthetic native lane exercises a matching
-control and one stale-board-value fault on KiCad 10.0.0 and 10.0.5.
+assembly intent. Synthetic regressions cover a variant mismatch, matching
+control, DNP control, incomplete export, and source evidence localization. The
+exact-version native lanes exercise base value fault/control exports and named
+variant population exports on KiCad 10.0.0 and 10.0.5; they do not yet exercise
+a native variant-specific value mismatch.
 
 ## Review mapped PCB keepout intent
 

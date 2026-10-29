@@ -26,7 +26,10 @@ from kicad_tooling.hwrepo.models import (
 from kicad_tooling.hwrepo.pcb_component_inventory import (
     evaluate_native_component_inventory_coverage,
 )
-from kicad_tooling.hwrepo.pcb_component_inventory_models import PcbVariantPopulationCoverage
+from kicad_tooling.hwrepo.pcb_component_inventory_models import (
+    PcbVariantPopulationCoverage,
+    PcbVariantPopulationEvidence,
+)
 from kicad_tooling.hwrepo.pcb_component_population import PcbVariantPopulationSource
 from kicad_tooling.hwrepo.pcb_component_values import compare_schematic_pcb_values
 from kicad_tooling.hwrepo.pcb_variant_population_capture import PcbVariantPopulationCapture
@@ -227,6 +230,55 @@ def test_named_variant_values_compare_same_name_fitted_sources_and_localize_find
         netlist=netlist(components={"R1": FOOTPRINT}, values={"R1": "10k"}, dnp=("R1",)),
     )
     assert compare_schematic_pcb_values(base, board, (dnp_source,)) == ()
+
+    report = complete_report(base, board, value_mode="review").model_copy(
+        update={
+            "value_mismatches": (mismatch,),
+            "variant_population": PcbVariantPopulationCoverage(
+                status="COMPLETE",
+                project_path="projects/synthetic/controller.kicad_pro",
+                project_sha256="d" * 64,
+                schematic_path="projects/synthetic/controller.kicad_sch",
+                schematic_sha256="e" * 64,
+                board_path="projects/synthetic/controller.kicad_pcb",
+                board_sha256="f" * 64,
+                kicad_version="10.0.5",
+                image="ghcr.io/kicad/kicad:10.0.5@sha256:" + "a" * 64,
+                board_variant_probe_path="build/variant/probe.json",
+                board_variant_probe_sha256="1" * 64,
+                board_variant_request_path="build/variant/request.json",
+                board_variant_request_sha256="2" * 64,
+                board_variant_command_path="build/variant/command.json",
+                board_variant_command_sha256="3" * 64,
+                evidence=(
+                    PcbVariantPopulationEvidence(
+                        variant="Assembly A",
+                        netlist_path="build/variant/assembly-a.net",
+                        netlist_sha256="4" * 64,
+                        netlist_command_path="build/variant/netlist-command.json",
+                        netlist_command_sha256="5" * 64,
+                        board_all_positions_path="build/variant/assembly-a-all.csv",
+                        board_all_positions_sha256="6" * 64,
+                        board_all_command_path="build/variant/all-command.json",
+                        board_all_command_sha256="7" * 64,
+                        board_fitted_positions_path="build/variant/assembly-a-fitted.csv",
+                        board_fitted_positions_sha256="8" * 64,
+                        board_fitted_command_path="build/variant/fitted-command.json",
+                        board_fitted_command_sha256="9" * 64,
+                    ),
+                ),
+            ),
+        }
+    )
+    (candidate,) = tuple(
+        item for item in pcb_component_inventory_candidates(report) if item.rule_id == RULE_ID
+    )
+    assert candidate.subject == "R1: schematic and PCB value fields differ in Assembly A"
+    assert candidate.evidence["variant"] == ("Assembly A",)
+    assert candidate.evidence["variant_project_sha256"] == ("d" * 64,)
+    assert candidate.evidence["variant_netlist_sha256"] == ("4" * 64,)
+    assert candidate.evidence["variant_board_all_positions_sha256"] == ("6" * 64,)
+    assert candidate.evidence["variant_board_fitted_positions_sha256"] == ("8" * 64,)
 
 
 def test_named_variant_value_comparison_blocks_when_export_is_incomplete() -> None:

@@ -9405,27 +9405,35 @@ control are documented in the
 - **Priority:** P1 fabrication-handoff consistency. The schematic component
   value and board footprint value can drift after separate edits or an
   incomplete board update.
-- **Predicate:** For each case-insensitive schematic reference with a
-  nonempty assigned footprint, require a matching PCB placement and fitted
-  state in both sources. Compare the exact value strings after trimming
-  surrounding whitespace; retain case sensitivity and report only differences.
+- **Predicate:** For the base design and each same-name named variant, compare
+  case-insensitive schematic references with a nonempty assigned footprint
+  that are fitted in both paired source exports. Compare exact value strings
+  after trimming surrounding whitespace; retain case sensitivity and report
+  only differences. Never substitute the base export for a missing named
+  variant export.
 - **Boundary:** A different value may be an intentional board label or an
   approved display choice. The finding does not establish part identity,
   electrical equivalence, assembly intent, or the correct manufacturing
-  variant. DNP components, population mismatches, board-only footprints,
-  schematic-only/off-board components, and variant-specific fields are outside
-  this check. Projects can choose `review`, `block`, or `off`, and suppress a
-  reviewed exact finding through the existing fingerprint lifecycle.
+  variant. DNP components, population mismatches, board-only footprints, and
+  schematic-only/off-board components are outside this check. Named-variant
+  comparisons require complete same-name schematic and PCB exports; unavailable
+  value evidence blocks coverage. Projects can choose `review`, `block`, or
+  `off`, and suppress a reviewed exact finding through the existing fingerprint
+  lifecycle.
 - **Evidence:** Findings bind the netlist, board, native snapshot, KiCad
   version, image, and probe digests. Snapshot schema 12 remains supported for
   footprint inventory and population checks; it keeps value coverage blocked
   until schema 13 or later is captured.
-- **Fixtures:** Synthetic unit cases cover changed value text, matching
-  trimmed values, DNP and incomplete-reference controls, case sensitivity,
-  ordering, policy modes, and stale-ignore detection. CLI/MCP parity carries a
-  typed value finding. The digest-pinned native lane repeats one matching
-  control and one stale-board-value fault on KiCad 10.0.0 and 10.0.5. The
-  fixture is tooling-owned and synthetic.
+- **Fixtures:** Synthetic unit cases cover changed base and named-variant value
+  text, matching trimmed values, DNP and incomplete-reference controls,
+  incomplete variant exports, case sensitivity, ordering, policy modes, and
+  stale-ignore detection. Named-variant findings carry the matching variant's
+  project, schematic, board, probe, command, and export receipts. CLI/MCP
+  parity carries a typed base value finding. The digest-pinned native lane
+  repeats one matching control and one stale-board-value fault on KiCad 10.0.0
+  and 10.0.5; the variant lane verifies same-name native exports, but a native
+  variant-specific value fault/control remains future fixture work. All
+  fixtures are tooling-owned and synthetic.
 - **Cohort context:** The kicad-happy XV schematic/PCB consistency family
   motivated the audit. The local predicate is first-party and uses native
   KiCad evidence; no cohort implementation was copied or executed.
@@ -17551,7 +17559,7 @@ candidate commit and installation inputs before any new runtime comparison.
 | CC-001 connector/contact current versus PCB copper | LINT-021 measures project-mapped net track widths; LINT-071 checks authored component power dissipation. LINT-077 now checks owner-authored current against an exact per-contact rating. Neither local check calculates copper ampacity. | The contact slice is implemented in LINT-077 with exact identity/pin binding; hosted native pass, run 38143123091. Defer copper-capacity work until an independently reviewed model defines stack-up, temperature, vias/zones, route topology, branching, and current allocation. Do not infer ratings or current sharing from net names or a net-wide minimum width. The public candidate implementation was not installed or runtime-tested; only its documented question informed this narrower local contract. |
 | EG-001 external-connector ESD coverage             | LINT-034 requires a reviewed protection disposition per scoped connector pin; LINT-060 checks mapped PCB entry and return-via geometry.                                                                                                  | Pinned source review found no bounded gap beyond LINT-034; retain no new rule. See the source-review note below.                                                                                                                                                                                                                                                                                                                                                                                                   |
 | DA-001 decoupling strategy adequacy                | LINT-046 reviews fitted-capacitor presence; LINT-020 measures project-mapped PCB placement; LINT-136 compares exact mapped capacitors with an authored nominal minimum for one IC power pin.                                             | LINT-136 closes a narrow explicit-requirement gap without adopting the cohort's inferred one-capacitor-per-IC suggestion. Its exact-version hosted gate passed on `v0.5.1rc35` (run `39311021307`). The rule does not choose a universal value or replace placement/return checks.                                                                                                                                                                                                                                 |
-| XV-001..003 schematic/PCB consistency              | Existing verification binds native schematic/netlist and PCB artifacts.                                                                                                                                                                  | LINT-102 compares schematic references and assigned footprints; LINT-111 compares base and declared named-variant DNP flags; LINT-112 compares schematic/PCB values; LINT-129 reviews board-only footprint references; LINT-130 checks explicitly required fitted references for the base and mapped variants. Variant-aware value comparison remains deferred. Cohort source review informed the audit; no code was imported or executed.                                                                         |
+| XV-001..003 schematic/PCB consistency              | Existing verification binds native schematic/netlist and PCB artifacts.                                                                                                                                                                  | LINT-102 compares schematic references and assigned footprints; LINT-111 compares base and declared named-variant DNP flags; LINT-112 compares schematic/PCB values for the base and same-name declared variants; LINT-129 reviews board-only footprint references; LINT-130 checks explicitly required fitted references for the base and mapped variants. Variant export gaps block LINT-112 coverage. Cohort source review informed the audit; no code was imported or executed.                                |
 | CC-001 style ampacity-target net-class proposal    | LINT-021 accepts project-authored minimum widths and records exact native track measurements.                                                                                                                                            | Treat the public [kicad-tools ampacity-target proposal](https://github.com/rjwalters/kicad-tools/issues/4216) as an unimplemented research lead, not a cohort feature to import. Any future derivation needs a documented, licensed/available calculation basis, explicit copper and temperature assumptions, boundary tests, and comparison with an independent reference. Preserve authored widths as screens until that evidence exists.                                                                        |
 | Mapped bundle route length and inter-signal skew   | LINT-095 audits project-authored exact endpoints, bundle membership, and active native DRC length/skew rules; LINT-022 covers differential-pair constraint coverage.                                                                     | Keep using native DRC for route measurement and LINT-095 for authored intent and rule coverage. Reconsider a separate geometry engine only if it adds independently confirmed coverage or materially clearer localization beyond those checks.                                                                                                                                                                                                                                                                     |
 | Thermal-via coverage for mapped dissipating parts  | LINT-071 compares exact-part dissipated power with an authored derated power limit; it does not estimate package temperature or via benefit.                                                                                             | Keep deferred until a project-authored thermal requirement identifies the exact package, heat path, layers, connected via population, copper stack, and boundary basis. Test any narrow geometry screen against pad-connected, unconnected, wrong-plane, DNP, and datasheet-supported alternatives. Stop if via count or density is presented as thermal adequacy without an independently reviewed model.                                                                                                         |
