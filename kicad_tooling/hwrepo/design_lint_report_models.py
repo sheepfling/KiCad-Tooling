@@ -21,6 +21,12 @@ from .design_lint_finding_models import (
     DesignLintRuleOverride,
 )
 from .design_lint_mapped_topology_models import DesignLintMappedCheckRun
+from .design_lint_report_catalog_validation import validate_catalogued_findings
+from .design_lint_report_connector_coverage_validation import (
+    validate_connector_peer_pin_coverage,
+)
+from .design_lint_report_evidence_validation import validate_source_bound_evidence
+from .design_lint_report_peer_coverage_validation import validate_peer_coverage
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
 from .external_protection_models import ExternalProtectionCoverageReport
@@ -141,13 +147,6 @@ class DesignLintReport(StrictModel):
 
     @model_validator(mode="after")
     def findings_are_catalogued(self) -> DesignLintReport:
-        from .design_lint_report_catalog_validation import validate_catalogued_findings
-        from .design_lint_report_connector_coverage_validation import (
-            validate_connector_peer_pin_coverage,
-        )
-        from .design_lint_report_evidence_validation import validate_source_bound_evidence
-        from .design_lint_report_peer_coverage_validation import validate_peer_coverage
-
         validate_source_bound_evidence(
             project_id=self.project_id,
             source_hashes=self.source_hashes,

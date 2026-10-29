@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Literal
+import hashlib
+import json
 
 import pytest
 
@@ -23,7 +24,10 @@ from kicad_tooling.hwrepo.models import (
 from kicad_tooling.hwrepo.pcb_component_inventory import (
     evaluate_native_component_inventory_coverage,
 )
-from kicad_tooling.hwrepo.pcb_component_population import compare_schematic_pcb_population
+from kicad_tooling.hwrepo.pcb_component_population import (
+    compare_schematic_pcb_population,
+)
+from kicad_tooling.hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from kicad_tooling.hwrepo.pcb_required_fitted_reference_checks import (
     compare_required_fitted_references,
     required_fitted_reference_map_sha256,
@@ -40,6 +44,9 @@ from tests.design_lint_fixtures.pcb_component_inventory import (
     coach,
     netlist,
     snapshot,
+)
+from tests.design_lint_fixtures.pcb_component_inventory import (
+    required_fitted_reference_coverage as _coverage,
 )
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint]
@@ -65,28 +72,6 @@ def _requirement_map(
     )
 
 
-def _coverage(
-    observed: NetlistContract,
-    board,
-    requirements: PcbRequiredFittedReferenceMap,
-    *,
-    mode: Literal["review", "block", "off"] = "block",
-):
-    return evaluate_native_component_inventory_coverage(
-        observed,
-        board,
-        mode="off",
-        netlist_sha256=NETLIST_SHA256,
-        board_path="synthetic/controller.kicad_pcb",
-        board_sha256=BOARD_SHA256,
-        snapshot_path="build/design-lint/native/snapshot.json",
-        snapshot_sha256=SNAPSHOT_SHA256,
-        probe_sha256=PROBE_SHA256,
-        required_fitted_reference_map=requirements,
-        required_fitted_reference_mode=mode,
-    )
-
-
 @pytest.mark.design_lint_rule(rule_id=RULE)
 def test_explicit_requirement_catches_both_sources_marked_dnp() -> None:
     observed = netlist(components={"U1": FOOTPRINT}, dnp=("U1",))
@@ -105,6 +90,8 @@ def test_explicit_requirement_catches_both_sources_marked_dnp() -> None:
     coverage = _coverage(observed, board, requirements)
     (candidate,) = pcb_required_fitted_reference_candidates(coverage)
     assert candidate.subject == "U1: required fitted component does not match source"
+    assert "variant" not in candidate.evidence
+    assert "variant_evidence" not in candidate.evidence
     assert candidate.evidence["violations"] == (
         "schematic_component_dnp",
         "board_footprint_dnp",
@@ -159,7 +146,11 @@ def test_matching_fitted_reference_is_a_quiet_control() -> None:
     ),
     ids=("missing-from-schematic", "missing-from-board", "wrong-footprint"),
 )
-def test_explicit_requirement_reports_source_mismatches(observed, board, expected) -> None:
+def test_explicit_requirement_reports_source_mismatches(
+    observed: NetlistContract,
+    board: PcbConnectivitySnapshot,
+    expected: tuple[str, ...],
+) -> None:
     (mismatch,) = compare_required_fitted_references(_requirement_map("U1"), observed, board)
 
     assert mismatch.violations == expected
@@ -207,10 +198,21 @@ def test_map_order_and_observation_order_do_not_change_results() -> None:
     assert required_fitted_reference_map_sha256(requirements) == (
         required_fitted_reference_map_sha256(reversed_requirements)
     )
+    legacy_payload = {
+        "schema_version": requirements.schema_version,
+        "basis": requirements.basis,
+        "requirements": [
+            item.model_dump(mode="json")
+            for item in sorted(requirements.requirements, key=lambda item: item.reference.casefold())
+        ],
+    }
+    expected_legacy_hash = hashlib.sha256(
+        json.dumps(legacy_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    assert required_fitted_reference_map_sha256(requirements) == expected_legacy_hash
     assert compare_required_fitted_references(requirements, observed, board) == (
         compare_required_fitted_references(reversed_requirements, observed, board)
     )
-
 
 @pytest.mark.design_lint_rule(rule_id=RULE)
 def test_rule_mode_is_quiet_without_requirements_and_blocking_with_them() -> None:

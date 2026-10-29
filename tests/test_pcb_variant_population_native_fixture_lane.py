@@ -32,6 +32,7 @@ pytestmark = [
 
 
 @pytest.mark.parametrize("project,version", NATIVE_KICAD_PROJECTS, ids=lambda value: value)
+@pytest.mark.design_lint_rule(rule_id="pcb.required_fitted_reference")
 def test_native_named_variant_population_faults_and_control_are_source_bound(
     tmp_path: Path,
     project: str,

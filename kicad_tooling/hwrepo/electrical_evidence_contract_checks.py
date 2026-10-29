@@ -70,22 +70,48 @@ def retained_electrical_contract_checks(
         | electrical_contracts.AnalysisNotApplicable
         | electrical_contracts.AnalysisPending
     ) = contract.pcb_return_paths
-    pin_connectivity = contract.pin_connectivity
-    i2c_pullups = contract.i2c_pullups
-    can_termination = contract.can_termination
-    usb_c = contract.usb_c
-    spi = contract.spi
-    serial_peers = contract.serial_peers
-    digital_peer_voltages = contract.digital_peer_voltages
-    component_voltage_ratings = contract.component_voltage_ratings
-    component_power_ratings = contract.component_power_ratings
-    connector_contact_ratings = contract.connector_contact_ratings
-    mosfet_stress = contract.mosfet_stress
-    rs485 = contract.rs485
-    control_inputs = contract.control_inputs
-    power_connectivity = contract.power_connectivity
-    test_access = contract.test_access
-    high_frequency = contract.high_frequency
+    pin_connectivity: (
+        electrical_contracts.PinConnectivityAnalysis | ElectricalAnalysisState | None
+    ) = contract.pin_connectivity
+    i2c_pullups: electrical_contracts.I2cPullupAnalysis | ElectricalAnalysisState | None = (
+        contract.i2c_pullups
+    )
+    can_termination: (
+        electrical_contracts.CanTerminationAnalysis | ElectricalAnalysisState | None
+    ) = contract.can_termination
+    usb_c: electrical_contracts.UsbCAnalysis | ElectricalAnalysisState | None = contract.usb_c
+    spi: electrical_contracts.SpiAnalysis | ElectricalAnalysisState | None = contract.spi
+    serial_peers: electrical_contracts.SerialPeerAnalysis | ElectricalAnalysisState | None = (
+        contract.serial_peers
+    )
+    digital_peer_voltages: (
+        electrical_contracts.DigitalPeerVoltageAnalysis | ElectricalAnalysisState | None
+    ) = contract.digital_peer_voltages
+    component_voltage_ratings: (
+        electrical_contracts.ComponentVoltageRatingAnalysis | ElectricalAnalysisState | None
+    ) = contract.component_voltage_ratings
+    component_power_ratings: (
+        electrical_contracts.ComponentPowerRatingAnalysis | ElectricalAnalysisState | None
+    ) = contract.component_power_ratings
+    connector_contact_ratings: (
+        electrical_contracts.ConnectorContactRatingAnalysis | ElectricalAnalysisState | None
+    ) = contract.connector_contact_ratings
+    mosfet_stress: electrical_contracts.MosfetStressAnalysis | ElectricalAnalysisState | None = (
+        contract.mosfet_stress
+    )
+    rs485: electrical_contracts.Rs485Analysis | ElectricalAnalysisState | None = contract.rs485
+    control_inputs: electrical_contracts.ControlInputsAnalysis | ElectricalAnalysisState | None = (
+        contract.control_inputs
+    )
+    power_connectivity: (
+        electrical_contracts.PowerConnectivityAnalysis | ElectricalAnalysisState | None
+    ) = contract.power_connectivity
+    test_access: electrical_contracts.TestAccessAnalysis | ElectricalAnalysisState | None = (
+        contract.test_access
+    )
+    high_frequency: electrical_contracts.HighFrequencyAnalysis | ElectricalAnalysisState = (
+        contract.high_frequency
+    )
     checks: list[ElectricalCheck] = []
     netlist = (
         read_netlist(evidence_path(root, native).parent / "netlist.xml")

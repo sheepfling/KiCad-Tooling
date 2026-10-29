@@ -18,6 +18,7 @@ from .ci_hosted_connector_return_fixture_sources import (
     connector_return_fixture_sources,
 )
 from .ci_hosted_support import tooling_checkout_root
+from .hwrepo.connector_stateful_contact_models import ConnectorStatefulContactMap
 from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
 from .hwrepo.design_lint import evaluate
@@ -212,10 +213,6 @@ def prepare_connector_return_fixture_context(
             )
             policy = DesignLintPolicy()
             if case in {"stateful-contact-fault", "stateful-contact-control"}:
-                from .hwrepo.connector_stateful_contact_models import (
-                    ConnectorStatefulContactMap,
-                )
-
                 policy = DesignLintPolicy(
                     connector_stateful_contact_map=ConnectorStatefulContactMap.model_validate_json(
                         json.dumps(

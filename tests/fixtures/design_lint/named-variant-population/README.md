@@ -11,10 +11,12 @@ These are tooling-owned synthetic sources for the named-variant DNP check:
   two PCB fixtures from the synthetic footprint-identity control board.
 
 The native lane copies these fixed source files and the matching synthetic
-schematics into temporary project directories. It exercises both mismatch
-directions, a fitted control, and a board that lacks the declared variant. The
-last case must block before default-variant exports are compared. All inputs are
-synthetic; no customer, company, or project board is stored.
+schematics into temporary project directories. It exercises both DNP mismatch
+directions, a fitted control, and a board that lacks the declared variant. It
+also compares an explicit `pcb.required_fitted_reference` requirement against
+the exact named-variant schematic netlist and board population exports. The
+missing-variant case must block before default-variant exports are compared.
+All inputs are synthetic; no customer, company, or project board is stored.
 
 Fixture hashes:
 

@@ -761,7 +761,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 247 active rules.
+The catalog currently contains 248 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -3635,12 +3635,13 @@ electrical role, assembly state, or manufacturing intent. A project may decide
 that one unmatched reference is an error and another is intentional; the
 checker only supplies the review prompt.
 
-## Require selected base-assembly references to be fitted
+## Require selected references to be fitted in the base assembly or a variant
 
 `pcb.required_fitted_reference` checks a project-authored list of exact
-references that must be fitted in the base assembly. The map is a requirement;
-component similarity, a repeated design pattern, or a matching DNP state does
-not create one.
+references that must be fitted in the base assembly and any explicitly named
+assembly variants. The map is a requirement; component similarity, a repeated
+design pattern, or a matching DNP state does not create one. Variant names must
+match project-declared KiCad variant names (case-insensitive).
 
 ```json
 {
@@ -3654,6 +3655,18 @@ not create one.
           "footprint": "Package_QFP:TQFP-48",
           "basis": "Required interface controller"
         }
+      ],
+      "variants": [
+        {
+          "variant": "Assembly A",
+          "requirements": [
+            {
+              "reference": "U1",
+              "footprint": "Package_QFP:TQFP-48",
+              "basis": "Required in this assembly"
+            }
+          ]
+        }
       ]
     }
   }
@@ -3664,15 +3677,20 @@ For every listed reference, the checker requires a non-DNP source schematic
 component and a non-DNP native PCB footprint with the exact footprint ID. A
 map entry may also require exact symbol and PART_ID identity. This catches a
 required part omitted from both sources or marked DNP in both, while the
-schematic-to-PCB DNP consistency check correctly sees no disagreement.
+schematic-to-PCB DNP consistency check correctly sees no disagreement. Variant
+entries use the same-name source-bound schematic netlist and native all/fitted
+board exports; the source-bound PCB snapshot supplies footprint identity.
+Missing or incomplete exports for a required variant block coverage.
 
 A configured map activates the rule in `block` mode by default. A project can
 select `review` or `off` with the normal rule override; an explicitly enabled
 rule without a map blocks coverage. Findings bind the canonical requirement
-map, netlist, board, native snapshot, KiCad version, image, and probe. The rule
-supports the base assembly only; it does not resolve named variants, validate
-the requirement against an external BOM or approval record, or establish
-physical population. Exact ignores follow the standard fingerprint lifecycle.
+map, netlist, board, native snapshot, KiCad version, image, and probe. Variant
+findings also include the exact variant project, schematic, board, probe, and
+all/fitted export digests. The rule does not validate requirements against an
+external BOM or approval record, infer variants omitted from the map, or
+establish physical population. Exact ignores follow the standard fingerprint
+lifecycle.
 
 ## Review schematic and PCB component-value differences
 

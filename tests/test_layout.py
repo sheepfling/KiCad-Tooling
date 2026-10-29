@@ -126,7 +126,13 @@ library_roots = ["shared/cad"]
         return self.root / report.directory
 
     def test_nested_scaffold_inventory_and_mcp_source_share_identity(self) -> None:
+        self.manifest["required_inputs"] = ["tests/REPLACE-WITH-PROJECT-ID-contract.json"]
+        write_json(self.root, "starter/pcb-project-config.example.json", self.manifest)
         island = self.create()
+        saved_manifest = json.loads((island / "project.json").read_text(encoding="utf-8"))
+        self.assertEqual("board", saved_manifest["id"])
+        self.assertEqual("kicad/board.kicad_pro", saved_manifest["project"])
+        self.assertEqual(["tests/board-contract.json"], saved_manifest["required_inputs"])
         report = inventory(self.root)
         self.assertEqual("PASS", report.status, report.issues)
         self.assertEqual("hardware/team-a/board/project.json", report.projects[0].manifest)

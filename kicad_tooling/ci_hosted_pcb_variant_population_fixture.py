@@ -8,11 +8,18 @@ from pathlib import Path
 
 from .ci_hosted_pcb_fixture_support import (
     HostedPcbFixtureFailure,
+    capture_verified_pcb_snapshot,
     prepare_pcb_fixture,
 )
 from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.evidence import digest
 from .hwrepo.pcb_component_population import compare_variant_population_source
+from .hwrepo.pcb_required_fitted_reference_checks import compare_required_fitted_references
+from .hwrepo.pcb_required_fitted_reference_models import (
+    PcbRequiredFittedReference,
+    PcbRequiredFittedReferenceMap,
+    PcbRequiredFittedReferenceVariant,
+)
 from .hwrepo.pcb_variant_population_capture import (
     capture_variant_population,
 )
@@ -169,11 +176,57 @@ def pcb_variant_population_fixture_lane(
                 raise ValueError(
                     f"Native {case} variant population state changed: {observed_state}"
                 )
+            board_hash = observed_source_hashes[board.relative_to(context.root).as_posix()]
+            snapshot_receipt = context.scratch / f"{case}-required-reference-pcb-receipt"
+            board_snapshot = capture_verified_pcb_snapshot(
+                context,
+                variant_config,
+                snapshot_receipt,
+                expected_board_sha256=board_hash,
+                purpose=f"{case} required fitted-reference PCB",
+            )
+            required_map = PcbRequiredFittedReferenceMap(
+                basis="synthetic native fixture requires U1 in the named assembly",
+                variants=(
+                    PcbRequiredFittedReferenceVariant(
+                        variant=VARIANT,
+                        requirements=(
+                            PcbRequiredFittedReference(
+                                reference="U1",
+                                footprint="Synthetic:Probe_Module",
+                                basis="U1 must be fitted in this native variant fixture",
+                            ),
+                        ),
+                    ),
+                ),
+            )
+            required_mismatches = compare_required_fitted_references(
+                required_map,
+                source.netlist,
+                board_snapshot,
+                variants=capture.sources,
+            )
+            observed_required_violations = (
+                () if not required_mismatches else required_mismatches[0].violations
+            )
+            expected_required_violations = {
+                "board-only-dnp": ("board_footprint_dnp",),
+                "schematic-only-dnp": ("schematic_component_dnp",),
+                "both-fitted": (),
+            }[case]
+            if observed_required_violations != expected_required_violations:
+                raise ValueError(
+                    "Native named-variant fitted-reference results changed: "
+                    f"{observed_required_violations}"
+                )
             evidence = capture.coverage.evidence[0]
             capture_hashes[case] = {
                 "netlist": evidence.netlist_sha256,
                 "board_all_positions": evidence.board_all_positions_sha256,
                 "board_fitted_positions": evidence.board_fitted_positions_sha256,
+                "required_reference_snapshot": digest(
+                    snapshot_receipt / "snapshot.json"
+                ),
             }
 
         log.event(

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from hashlib import sha256
-from typing import Literal
+from typing import Literal, cast
 
 from kicad_tooling.hwrepo.contracts import model_json_bytes
 from kicad_tooling.hwrepo.models import (
@@ -25,6 +25,10 @@ from kicad_tooling.hwrepo.pcb_component_inventory_models import (
 )
 from kicad_tooling.hwrepo.pcb_component_population import compare_schematic_pcb_population
 from kicad_tooling.hwrepo.pcb_component_values import compare_schematic_pcb_values
+from kicad_tooling.hwrepo.pcb_required_fitted_reference_models import (
+    PcbRequiredFittedReferenceMap,
+)
+from kicad_tooling.hwrepo.pcb_variant_population_capture import PcbVariantPopulationCapture
 
 NETLIST_SHA256 = "a" * 64
 BOARD_SHA256 = "b" * 64
@@ -201,7 +205,9 @@ def complete_report(
         snapshot_path="build/design-lint/native/snapshot.json",
         snapshot_sha256=SNAPSHOT_SHA256,
         snapshot_schema=(
-            board.schema_version if board.schema_version in {"12", "13", "14"} else "12"
+            cast(Literal["12", "13", "14"], board.schema_version)
+            if board.schema_version in {"12", "13", "14"}
+            else "12"
         ),
         kicad_version=board.kicad_version,
         image=board.image,
@@ -226,6 +232,31 @@ def complete_report(
             if value_mode != "off" and board.schema_version not in {"13", "14"}
             else None
         ),
+    )
+
+
+def required_fitted_reference_coverage(
+    observed: NetlistContract,
+    board: PcbConnectivitySnapshot,
+    requirements: PcbRequiredFittedReferenceMap,
+    *,
+    mode: ReviewMode = "block",
+    variant_population: PcbVariantPopulationCapture | None = None,
+) -> PcbComponentInventoryCoverageReport:
+    """Build source-bound synthetic coverage for fitted-reference assertions."""
+    return evaluate_native_component_inventory_coverage(
+        observed,
+        board,
+        mode="off",
+        netlist_sha256=NETLIST_SHA256,
+        board_path="synthetic/controller.kicad_pcb",
+        board_sha256=BOARD_SHA256,
+        snapshot_path="build/design-lint/native/snapshot.json",
+        snapshot_sha256=SNAPSHOT_SHA256,
+        probe_sha256=PROBE_SHA256,
+        required_fitted_reference_map=requirements,
+        required_fitted_reference_mode=mode,
+        variant_population=variant_population,
     )
 
 

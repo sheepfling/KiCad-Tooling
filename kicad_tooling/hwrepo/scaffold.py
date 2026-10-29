@@ -13,10 +13,14 @@ from .contracts import read_model, repo_path, write_model
 from .discovery import load_registry, project_destination, settings
 from .layout import layout
 from .markdown import design_notes, project_readme, write_markdown
-from .model_primitives import Identifier
+from .model_primitives import Identifier, RepositoryPath
 from .models import ProjectKind, ProjectManifest, ProjectScaffoldReport, ToolchainsCatalog
 
 _IDENTIFIER_ADAPTER: TypeAdapter[str] = TypeAdapter(Identifier)
+_REPOSITORY_PATH_ADAPTER: TypeAdapter[RepositoryPath] = TypeAdapter(RepositoryPath)
+_REQUIRED_INPUTS_ADAPTER: TypeAdapter[tuple[RepositoryPath, ...]] = TypeAdapter(
+    tuple[RepositoryPath, ...]
+)
 
 
 def prepare_manifest(
@@ -33,13 +37,18 @@ def prepare_manifest(
     # changed field is independently validated as an Identifier. The manifest's
     # cross-field validator covers connector/interface consistency, not its ID.
     project_placeholder = "REPLACE-WITH-PROJECT-ID"
-    project = template.project.replace(project_placeholder, project_id)
-    required_inputs = tuple(
-        item.replace(project_placeholder, project_id) for item in template.required_inputs
+    project = _REPOSITORY_PATH_ADAPTER.validate_python(
+        template.project.replace(project_placeholder, project_id), strict=True
     )
-    manifest_data = template.model_dump(mode="python")
-    manifest_data.update({"id": project_id, "project": project, "required_inputs": required_inputs})
-    manifest = ProjectManifest.model_validate(manifest_data)
+    required_inputs = _REQUIRED_INPUTS_ADAPTER.validate_python(
+        tuple(item.replace(project_placeholder, project_id) for item in template.required_inputs),
+        strict=True,
+    )
+    # Validate each edited field against its schema. ProjectManifest's model-level
+    # invariants concern connector/interface fields, which remain from this validated template.
+    manifest = template.model_copy(
+        update={"id": project_id, "project": project, "required_inputs": required_inputs}
+    )
     policy = settings(root)
     toolchains = read_model(repo_path(root, policy.catalogs.toolchains), ToolchainsCatalog)
     if toolchain_id not in {toolchain.id for toolchain in toolchains.toolchains}:

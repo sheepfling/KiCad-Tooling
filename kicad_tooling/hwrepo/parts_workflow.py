@@ -17,6 +17,7 @@ from .models import (
     PurchasingPreferences,
     PurchasingReport,
 )
+from .parts_view import render_html
 from .purchasing import plan, read_components, write_csvs
 
 
@@ -264,8 +265,6 @@ def text_report(report: PurchasingReport) -> str:
 
 
 def save_report(output: Path, report: PurchasingReport) -> None:
-    from .parts_view import render_html
-
     write_model(output / "report.json", report)
     (output / "report.txt").write_text(text_report(report) + "\n", encoding="utf-8")
     (output / "index.html").write_text(render_html(report), encoding="utf-8")

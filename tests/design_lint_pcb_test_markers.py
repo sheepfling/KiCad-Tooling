@@ -12,6 +12,8 @@ PCB_LINT_TEST_MODULES = frozenset(
         "tests/test_pcb_native_container_probe.py",
         "tests/test_pcb_schematic_pad_net_native_fixture_lane.py",
         "tests/test_pcb_component_inventory_mcp_parity.py",
+        "tests/test_pcb_required_fitted_reference.py",
+        "tests/test_pcb_required_fitted_reference_variants.py",
         "tests/test_pcb_component_inventory_native_fixture_lane.py",
         "tests/test_pcb_variant_population_native_fixture_lane.py",
         "tests/test_design_lint_determinism_pcb_component_inventory.py",

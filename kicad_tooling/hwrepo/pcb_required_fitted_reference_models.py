@@ -10,7 +10,7 @@ from .model_primitives import Digest, Identifier, NonEmptyText, NonNegativeCount
 
 
 class PcbRequiredFittedReference(StrictModel):
-    """One independently reviewed component reference required in the base assembly."""
+    """One independently reviewed component reference required in an assembly."""
 
     reference: Identifier
     footprint: NonEmptyText
@@ -19,18 +19,38 @@ class PcbRequiredFittedReference(StrictModel):
     part_id: Identifier | None = None
 
 
+class PcbRequiredFittedReferenceVariant(StrictModel):
+    """Required fitted-reference list for one exact KiCad assembly variant."""
+
+    variant: NonEmptyText
+    requirements: Annotated[tuple[PcbRequiredFittedReference, ...], Field(min_length=1)]
+
+    @model_validator(mode="after")
+    def unique_references(self) -> PcbRequiredFittedReferenceVariant:
+        references = tuple(item.reference.casefold() for item in self.requirements)
+        if len(set(references)) != len(references):
+            raise ValueError("Variant fitted-reference requirements must be unique")
+        return self
+
+
 class PcbRequiredFittedReferenceMap(StrictModel):
     """Project-owned list of exact PCB component identities that must be fitted."""
 
     schema_version: Literal["1"] = "1"
     basis: NonEmptyText
-    requirements: Annotated[tuple[PcbRequiredFittedReference, ...], Field(min_length=1)]
+    requirements: tuple[PcbRequiredFittedReference, ...] = ()
+    variants: tuple[PcbRequiredFittedReferenceVariant, ...] = ()
 
     @model_validator(mode="after")
     def unique_references(self) -> PcbRequiredFittedReferenceMap:
+        if not self.requirements and not self.variants:
+            raise ValueError("Required fitted-reference map needs base or variant requirements")
         references = tuple(item.reference.casefold() for item in self.requirements)
         if len(set(references)) != len(references):
             raise ValueError("Required fitted PCB references must be unique case-insensitively")
+        variants = tuple(item.variant.casefold() for item in self.variants)
+        if len(set(variants)) != len(variants):
+            raise ValueError("Required fitted-reference variants must be unique case-insensitively")
         return self
 
 
@@ -52,6 +72,7 @@ class PcbRequiredFittedReferenceMismatch(StrictModel):
     """One required-reference record that does not satisfy its fitted identity."""
 
     reference: Identifier
+    variant: NonEmptyText | None = None
     basis: NonEmptyText
     expected_footprint: NonEmptyText
     expected_symbol: NonEmptyText | None = None
@@ -83,7 +104,10 @@ class PcbRequiredFittedReferenceCoverage(StrictModel):
 
     @model_validator(mode="after")
     def consistent_coverage(self) -> PcbRequiredFittedReferenceCoverage:
-        references = tuple(item.reference.casefold() for item in self.mismatches)
+        references = tuple(
+            ("" if item.variant is None else item.variant.casefold(), item.reference.casefold())
+            for item in self.mismatches
+        )
         if len(set(references)) != len(references):
             raise ValueError("Required fitted PCB mismatch references must be unique")
         if self.status == "COMPLETE":

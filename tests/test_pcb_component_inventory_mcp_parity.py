@@ -16,10 +16,12 @@ from kicad_tooling.hwrepo.contracts import parse_model_text
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
+    ContractCoachReport,
     DesignLintPolicy,
     DesignLintRuleOverride,
     PcbKeepoutCoverageReport,
     PcbProtectionPathCoverageReport,
+    ProjectConfig,
 )
 from kicad_tooling.hwrepo.pcb_board_only_footprint_models import (
     PcbBoardOnlyFootprint,
@@ -31,6 +33,8 @@ from kicad_tooling.hwrepo.pcb_component_inventory_models import (
     PcbFootprintIdentityMismatch,
     PcbMissingFootprintPlacement,
     PcbPopulationMismatch,
+    PcbVariantPopulationCoverage,
+    PcbVariantPopulationEvidence,
 )
 from kicad_tooling.hwrepo.pcb_decoupling_models import PcbDecouplingCoverageReport
 from kicad_tooling.hwrepo.pcb_drc_models import PcbSignalPathRuleCoverageReport
@@ -41,6 +45,7 @@ from kicad_tooling.hwrepo.pcb_required_fitted_reference_models import (
     PcbRequiredFittedReferenceCoverage,
     PcbRequiredFittedReferenceMap,
     PcbRequiredFittedReferenceMismatch,
+    PcbRequiredFittedReferenceVariant,
 )
 from kicad_tooling.hwrepo.pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from kicad_tooling.hwrepo.pcb_switching_loop_models import PcbSwitchingLoopCoverageReport
@@ -54,6 +59,8 @@ from tests.synthetic_design_lint_project import synthetic_design_lint_project
 pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint, pytest.mark.parity_lint]
 BOARD_ONLY_RULE = "pcb.board_only_footprint"
 REQUIRED_FITTED_RULE = "pcb.required_fitted_reference"
+VARIANT = "Synthetic Assembly A"
+SYNTHETIC_IMAGE = "registry.invalid/kicad:10.0.5@sha256:" + "a" * 64
 
 
 @pytest.mark.design_lint_rule(rule_id=BOARD_ONLY_RULE)
@@ -70,6 +77,18 @@ def test_component_inventory_findings_match_cli_and_mcp(
                 reference="U1",
                 footprint="Package_QFP:TQFP-48",
                 basis="required for synthetic parity check",
+            ),
+        ),
+        variants=(
+            PcbRequiredFittedReferenceVariant(
+                variant=VARIANT,
+                requirements=(
+                    PcbRequiredFittedReference(
+                        reference="U6",
+                        footprint="Package_QFP:TQFP-48",
+                        basis="required in the synthetic named assembly",
+                    ),
+                ),
             ),
         ),
     )
@@ -92,7 +111,13 @@ def test_component_inventory_findings_match_cli_and_mcp(
         ),
     )
 
-    def synthetic_geometry_scan(root, config, coach, policy, native_summary):
+    def synthetic_geometry_scan(
+        root: Path,
+        config: ProjectConfig,
+        coach: ContractCoachReport,
+        policy: DesignLintPolicy,
+        native_summary: Path,
+    ):
         del root, policy, native_summary
         return (
             PcbDecouplingCoverageReport(),
@@ -136,6 +161,40 @@ def test_component_inventory_findings_match_cli_and_mcp(
                         board_dnp=True,
                     ),
                 ),
+                variant_population=PcbVariantPopulationCoverage(
+                    status="COMPLETE",
+                    project_path="projects/synthetic/controller.kicad_pro",
+                    project_sha256="1" * 64,
+                    schematic_path="projects/synthetic/controller.kicad_sch",
+                    schematic_sha256="2" * 64,
+                    board_path="projects/synthetic/controller.kicad_pcb",
+                    board_sha256="b" * 64,
+                    kicad_version=config.kicad_version,
+                    image=config.image,
+                    board_variant_probe_path="build/design-lint/variant/probe.py",
+                    board_variant_probe_sha256="3" * 64,
+                    board_variant_request_path="build/design-lint/variant/request.json",
+                    board_variant_request_sha256="4" * 64,
+                    board_variant_command_path="build/design-lint/variant/probe.command.json",
+                    board_variant_command_sha256="5" * 64,
+                    evidence=(
+                        PcbVariantPopulationEvidence(
+                            variant=VARIANT,
+                            netlist_path="build/design-lint/variant/netlist.xml",
+                            netlist_sha256="6" * 64,
+                            netlist_command_path="build/design-lint/variant/netlist.command.json",
+                            netlist_command_sha256="7" * 64,
+                            board_all_positions_path="build/design-lint/variant/all.csv",
+                            board_all_positions_sha256="8" * 64,
+                            board_all_command_path="build/design-lint/variant/all.command.json",
+                            board_all_command_sha256="9" * 64,
+                            board_fitted_positions_path="build/design-lint/variant/fitted.csv",
+                            board_fitted_positions_sha256="a" * 64,
+                            board_fitted_command_path="build/design-lint/variant/fitted.command.json",
+                            board_fitted_command_sha256="f" * 64,
+                        ),
+                    ),
+                ),
                 value_comparison_status="COMPLETE",
                 value_mismatches=(
                     PcbComponentValueMismatch(
@@ -168,11 +227,22 @@ def test_component_inventory_findings_match_cli_and_mcp(
                     status="COMPLETE",
                     mode="review",
                     map_sha256="e" * 64,
-                    requirement_count=1,
+                    requirement_count=2,
                     mismatches=(
                         PcbRequiredFittedReferenceMismatch(
                             reference="U1",
                             basis="synthetic required fitted component",
+                            expected_footprint="Package_QFP:TQFP-48",
+                            schematic_footprint="Package_QFP:TQFP-48",
+                            board_footprint="Package_QFP:TQFP-48",
+                            schematic_dnp=False,
+                            board_dnp=True,
+                            violations=("board_footprint_dnp",),
+                        ),
+                        PcbRequiredFittedReferenceMismatch(
+                            reference="U6",
+                            variant=VARIANT,
+                            basis="required in the synthetic named assembly",
                             expected_footprint="Package_QFP:TQFP-48",
                             schematic_footprint="Package_QFP:TQFP-48",
                             board_footprint="Package_QFP:TQFP-48",
@@ -260,7 +330,33 @@ def test_component_inventory_findings_match_cli_and_mcp(
     assert board_only_finding.subject == ("H_MOUNT1: PCB footprint has no schematic counterpart")
     assert board_only_finding.evidence["footprint"] == ("MountingHole:NPTH",)
     (required_finding,) = tuple(
-        item for item in mcp_report.findings if item.rule_id == REQUIRED_FITTED_RULE
+        item
+        for item in mcp_report.findings
+        if item.rule_id == REQUIRED_FITTED_RULE and not item.evidence.get("variant")
     )
     assert required_finding.subject == "U1: required fitted component does not match source"
     assert required_finding.evidence["violations"] == ("board_footprint_dnp",)
+    (variant_required_finding,) = tuple(
+        item
+        for item in mcp_report.findings
+        if item.rule_id == REQUIRED_FITTED_RULE
+        and item.evidence.get("variant") == (VARIANT,)
+    )
+    assert variant_required_finding.subject == (
+        f"U6 in variant '{VARIANT}': required fitted component does not match source"
+    )
+    assert variant_required_finding.evidence["variant_evidence"] == (
+        f"tool=10.0.5@{SYNTHETIC_IMAGE}",
+        "project=projects/synthetic/controller.kicad_pro@" + "1" * 64,
+        "schematic=projects/synthetic/controller.kicad_sch@" + "2" * 64,
+        "board=projects/synthetic/controller.kicad_pcb@" + "b" * 64,
+        "variant_probe=build/design-lint/variant/probe.py@" + "3" * 64,
+        "variant_request=build/design-lint/variant/request.json@" + "4" * 64,
+        "variant_probe_command=build/design-lint/variant/probe.command.json@" + "5" * 64,
+        f"{VARIANT}:netlist=build/design-lint/variant/netlist.xml@" + "6" * 64,
+        f"{VARIANT}:netlist_command=build/design-lint/variant/netlist.command.json@" + "7" * 64,
+        f"{VARIANT}:board_all=build/design-lint/variant/all.csv@" + "8" * 64,
+        f"{VARIANT}:board_all_command=build/design-lint/variant/all.command.json@" + "9" * 64,
+        f"{VARIANT}:board_fitted=build/design-lint/variant/fitted.csv@" + "a" * 64,
+        f"{VARIANT}:board_fitted_command=build/design-lint/variant/fitted.command.json@" + "f" * 64,
+    )

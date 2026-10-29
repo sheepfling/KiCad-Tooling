@@ -33,6 +33,9 @@ def test_required_fitted_models_and_predicate_stay_in_pcb_theme_owners() -> None
     assert pcb_required_fitted_reference_models.PcbRequiredFittedReferenceMap.__module__.endswith(
         "pcb_required_fitted_reference_models"
     )
+    assert pcb_required_fitted_reference_models.PcbRequiredFittedReferenceVariant.__module__.endswith(
+        "pcb_required_fitted_reference_models"
+    )
 
     tree = ast.parse(predicate_path.read_text(encoding="utf-8"), filename=predicate_path.name)
     functions = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}

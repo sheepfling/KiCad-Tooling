@@ -219,12 +219,24 @@ def evaluate_native_component_inventory_coverage(
                             required_fitted_reference_map,
                             netlist,
                             snapshot,
+                            variants=(
+                                variant_population.sources
+                                if variant_population is not None
+                                and variant_coverage.status == "COMPLETE"
+                                else ()
+                            ),
                         )
                         required_fitted_coverage = PcbRequiredFittedReferenceCoverage(
                             status="COMPLETE",
                             mode=required_fitted_reference_mode,
                             map_sha256=required_map_sha256,
-                            requirement_count=len(required_fitted_reference_map.requirements),
+                            requirement_count=(
+                                len(required_fitted_reference_map.requirements)
+                                + sum(
+                                    len(item.requirements)
+                                    for item in required_fitted_reference_map.variants
+                                )
+                            ),
                             mismatches=mismatches,
                         )
                     except ValueError as exc:

@@ -6993,8 +6993,8 @@
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
-      "evidence_adapter": "Synthetic normalized netlist; KiCad XML netlist uses kicad_tooling.validate.read_netlist",
-      "predicate": "For a fitted U/IC reference with explicit bounded RS-485 identity, complete native pin-function and pin-number inventory, and exactly one recognized A and one B function, emit a review candidate when one line pin is unassigned and its paired line pin has exactly one assignment.",
+      "evidence_adapter": "KiCad XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted U/IC reference with explicit bounded RS-485 identity, complete native pin-function and pin-number inventory, and exactly one recognized A and one B function, emit a prototype candidate when one line pin is unassigned and its paired line pin has exactly one assignment.",
       "supported_kicad_versions": [
         "KiCad 10.0.0 and 10.0.5 digest-pinned native export lanes"
       ],
@@ -10336,31 +10336,37 @@
       "maturity": "synthetic_validated",
       "default_mode": "block",
       "evidence_adapter": "Project-authored required-reference map compared with source-bound native schematic netlist and exact KiCad PCB footprint snapshot schema 12, 13, or 14",
-      "predicate": "For each reference in the project-authored required fitted-reference map, require a matching non-DNP schematic component and native PCB footprint with the exact mapped footprint ID. When supplied, also require exact native symbol and PART_ID identity. Report each missing or DNP reference and each identity mismatch; do not infer requirements from similar components.",
+      "predicate": "For each reference in the project-authored required fitted-reference map for the base assembly or explicitly named variants, require a matching non-DNP schematic component and fitted native PCB footprint with the exact mapped footprint ID. Variant requirements use the same-name source-bound native schematic netlist and board population exports; unavailable or incomplete variant evidence blocks coverage. When supplied, also require exact native symbol and PART_ID identity. Report each missing, DNP, or identity mismatch; do not infer requirements from similar components.",
       "supported_kicad_versions": [
         "KiCad 10.0.0 and 10.0.5 native pcbnew API; exact project version and digest-pinned image are checked"
       ],
       "limitations": [
-        "The map is an independently authored project requirement for the base assembly. A missing map is not evidence that all project components are required; if the rule is explicitly enabled without a map, coverage blocks.",
-        "The check compares exact case-insensitive reference identity and exact footprint, optional symbol, optional PART_ID, and DNP values. It does not infer fitted parts from matching peers, validate the requirement against a BOM or approval record, resolve assembly variants, or prove physical population.",
-        "The check requires a source-bound native netlist digest and KiCad PCB footprint snapshot schema 12, 13, or 14. Missing, stale, duplicate, or unsupported evidence is a coverage gap and never a clean result."
+        "The project-authored map independently states which references are required in the base assembly or each exact named variant. A missing map is not evidence that all project components are required; if the rule is explicitly enabled without a map, coverage blocks.",
+        "The check compares exact case-insensitive reference identity and exact footprint, optional symbol, optional PART_ID, and DNP state. It does not infer fitted parts from matching peers, validate the requirement against a BOM or approval record, resolve variants not named in the map, or prove physical population.",
+        "Variant requirements need complete source-bound KiCad netlist and all/fitted board exports for that exact named variant. The base PCB snapshot supplies footprint identity; variant exports supply fitted state. Missing, stale, duplicate, or unsupported evidence is a coverage gap and never a clean result.",
+        "The check requires a source-bound native netlist digest and KiCad PCB footprint snapshot schema 12, 13, or 14. Missing, stale, duplicate, or unsupported base evidence is a coverage gap and never a clean result."
       ],
       "fault_fixtures": [
         "tests.test_pcb_required_fitted_reference.test_explicit_requirement_catches_both_sources_marked_dnp",
         "tests.test_pcb_required_fitted_reference.test_explicit_requirement_reports_source_mismatches",
         "tests.test_pcb_required_fitted_reference.test_enabled_rule_without_a_map_blocks_instead_of_passing",
         "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
-        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound"
+        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound",
+        "tests.test_pcb_required_fitted_reference_variants.test_named_variant_requirement_catches_matching_schematic_and_board_dnp",
+        "tests.test_pcb_variant_population_native_fixture_lane.test_native_named_variant_population_faults_and_control_are_source_bound"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_required_fitted_reference.test_matching_fitted_reference_is_a_quiet_control",
         "tests.test_pcb_required_fitted_reference.test_map_order_and_observation_order_do_not_change_results",
         "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
-        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound"
+        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound",
+        "tests.test_pcb_required_fitted_reference_variants.test_named_variant_fitted_requirement_is_quiet_and_missing_exports_block",
+        "tests.test_pcb_variant_population_native_fixture_lane.test_native_named_variant_population_faults_and_control_are_source_bound"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_pcb_required_fitted_reference.test_map_order_and_observation_order_do_not_change_results",
+        "tests.test_pcb_required_fitted_reference_variants.test_variant_names_resolve_case_insensitively_and_map_hash_is_order_stable",
         "tests.test_design_lint_determinism_pcb_required_fitted_reference.test_required_fitted_reference_reports_are_source_bound_and_deterministic"
       ],
       "required_native_fixtures": [
@@ -10374,7 +10380,9 @@
         "kicad_tooling/hwrepo/design_lint_pcb_component_inventory_scan.py#scan_pcb_component_inventory",
         "kicad_tooling/hwrepo/design_lint_pcb_required_fitted_reference_candidates.py#pcb_required_fitted_reference_candidates",
         "kicad_tooling/hwrepo/design_lint_pcb_required_fitted_reference_report.py#required_fitted_reference_report_lines",
-        "kicad_tooling/ci_hosted_pcb_population_fixture.py#pcb_population_mismatch_fixture_lane"
+        "kicad_tooling/ci_hosted_pcb_population_fixture.py#pcb_population_mismatch_fixture_lane",
+        "kicad_tooling/hwrepo/pcb_component_population.py#PcbVariantPopulationSource",
+        "kicad_tooling/hwrepo/pcb_variant_population_capture.py#capture_variant_population"
       ],
       "theme": "pcb",
       "implementation_owner": "kicad_tooling/hwrepo/pcb_required_fitted_reference_checks.py#compare_required_fitted_references"

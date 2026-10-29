@@ -33,6 +33,20 @@ class PcbVariantPopulationCapture:
     sources: tuple[PcbVariantPopulationSource, ...]
     coverage: PcbVariantPopulationCoverage
 
+    def __post_init__(self) -> None:
+        source_names = tuple(source.variant.casefold() for source in self.sources)
+        evidence_names = tuple(item.variant.casefold() for item in self.coverage.evidence)
+        if self.coverage.status == "COMPLETE":
+            if (
+                len(set(source_names)) != len(source_names)
+                or set(source_names) != set(evidence_names)
+            ):
+                raise ValueError(
+                    "Complete variant sources must match the source-bound evidence inventory"
+                )
+        elif self.sources:
+            raise ValueError("Incomplete variant capture cannot expose parsed source records")
+
 
 def capture_variant_population(
     root: Path,

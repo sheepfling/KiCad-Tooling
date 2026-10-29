@@ -39,8 +39,9 @@ def required_fitted_reference_report_lines(
         )
     ]
     for item in coverage.mismatches:
+        scope = "" if item.variant is None else f" in variant '{item.variant}'"
         lines.append(
-            f"  {item.reference}: "
+            f"  {item.reference}{scope}: "
             + ", ".join(item.violations)
             + f" (expected {item.expected_footprint})"
         )
