@@ -22,7 +22,9 @@ def test_catalog_points_to_bounded_serial_role_owner_and_dispatches_it() -> None
     owner_path = ROOT / OWNER
     owner_tree = ast.parse(owner_path.read_text(encoding="utf-8"))
     owner_names = {
-        node.name for node in owner_tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        node.name
+        for node in owner_tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
     }
     dispatcher_path = ROOT / "kicad_tooling/hwrepo/design_lint_serial_signal_candidates.py"
     dispatcher = ast.parse(dispatcher_path.read_text(encoding="utf-8"))

@@ -21,8 +21,12 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
 
 
 def _report(source, *, mode: str | None = None, ignore: DesignLintIgnore | None = None):
-    rules = () if mode is None else (
-        DesignLintRuleOverride(rule_id=RULE_ID, mode=mode, reason="Review UART endpoint roles"),
+    rules = (
+        ()
+        if mode is None
+        else (
+            DesignLintRuleOverride(rule_id=RULE_ID, mode=mode, reason="Review UART endpoint roles"),
+        )
     )
     ignores = () if ignore is None else (ignore,)
     return evaluate(
@@ -74,7 +78,9 @@ def test_correctly_crossed_tx_rx_and_unsupported_endpoints_are_controls() -> Non
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_project_policy_can_block_disable_and_ignore_exact_role_findings() -> None:
-    initial = next(item for item in _report(serial_endpoint_role_netlist()).findings if item.rule_id == RULE_ID)
+    initial = next(
+        item for item in _report(serial_endpoint_role_netlist()).findings if item.rule_id == RULE_ID
+    )
     blocked = _report(serial_endpoint_role_netlist(), mode="block")
     disabled = _report(serial_endpoint_role_netlist(), mode="off")
     ignored = _report(
@@ -87,8 +93,13 @@ def test_project_policy_can_block_disable_and_ignore_exact_role_findings() -> No
     )
 
     assert blocked.status == "FAIL"
-    assert next(item for item in disabled.findings if item.rule_id == RULE_ID).disposition == "RULE_OFF"
-    assert next(item for item in ignored.findings if item.rule_id == RULE_ID).disposition == "IGNORED"
+    assert (
+        next(item for item in disabled.findings if item.rule_id == RULE_ID).disposition
+        == "RULE_OFF"
+    )
+    assert (
+        next(item for item in ignored.findings if item.rule_id == RULE_ID).disposition == "IGNORED"
+    )
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -96,7 +107,9 @@ def test_assignment_order_is_stable_and_crossing_the_roles_clears_findings() -> 
     source = serial_endpoint_role_netlist()
     reordered = source.model_copy(update={"nets": dict(reversed(tuple(source.nets.items())))})
 
-    assert serial_endpoint_role_collision_candidates(source) == serial_endpoint_role_collision_candidates(
-        reordered
+    assert serial_endpoint_role_collision_candidates(
+        source
+    ) == serial_endpoint_role_collision_candidates(reordered)
+    assert not serial_endpoint_role_collision_candidates(
+        serial_endpoint_role_netlist(collision=False)
     )
-    assert not serial_endpoint_role_collision_candidates(serial_endpoint_role_netlist(collision=False))

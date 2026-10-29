@@ -24,10 +24,7 @@ def serial_endpoint_role_collision_candidates(
     always a review clue unless project policy says otherwise.
     """
     references = {reference.casefold(): reference for reference in observed.components}
-    connectors = {
-        reference.casefold()
-        for reference in connector_candidate_references(observed)
-    }
+    connectors = {reference.casefold() for reference in connector_candidate_references(observed)}
     dnp = {reference.casefold() for reference in observed.dnp_components}
     inventory = {
         reference.casefold(): {str(number).casefold() for number in numbers}

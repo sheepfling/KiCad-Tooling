@@ -38,15 +38,12 @@ def test_native_serial_endpoint_role_fault_and_crossed_control_repeat(
     tmp_path: Path, version: str, image: str
 ) -> None:
     log = HostedLog(tmp_path, f"native-serial-endpoint-role-{version}")
-    serial_endpoint_role_collision_fixture_lane(
-        tmp_path, version=version, image=image, log=log
-    )
+    serial_endpoint_role_collision_fixture_lane(tmp_path, version=version, image=image, log=log)
     prefix = "serial-endpoint-role-collision-fixture/"
     results = {
         item["stage"]: item
         for item in (
-            json.loads(line)
-            for line in log.events.read_text(encoding="utf-8").splitlines()
+            json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines()
         )
         if item.get("stage", "").startswith(prefix)
     }
