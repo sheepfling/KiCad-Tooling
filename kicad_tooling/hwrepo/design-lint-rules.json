@@ -4791,7 +4791,7 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "A component with distinct assigned SDA and SCL nets has either line without a visible 1 kΩ through 100 kΩ path to a named positive rail. A path is one conventional R-designated fitted resistor, an exact native Device:R symbol with complete two-pin inventory (including a non-R reference), or an unbranched series chain of supported fitted resistors, with each resistor and the total nominal resistance in range; every intermediate net must contain exactly the two recognized resistor pins.",
+      "predicate": "A component with distinct assigned SDA and SCL nets has either line without a visible 1 k\u03a9 through 100 k\u03a9 path to a named positive rail. A path is one conventional R-designated fitted resistor, an exact native Device:R symbol with complete two-pin inventory (including a non-R reference), or an unbranched series chain of supported fitted resistors, with each resistor and the total nominal resistance in range; every intermediate net must contain exactly the two recognized resistor pins.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
@@ -4871,12 +4871,12 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For a recognized assigned SDA/SCL bus, fitted R-designated resistors and exact native Device:R symbols with complete two-pin inventories under non-R references, each from 1 kΩ through 100 kΩ, are grouped into direct or unbranched series paths with total nominal resistance in the same range. Paths to one named positive rail are combined in parallel; a line is reported when its nominal equivalent resistance is below 1 kΩ.",
+      "predicate": "For a recognized assigned SDA/SCL bus, fitted R-designated resistors and exact native Device:R symbols with complete two-pin inventories under non-R references, each from 1 k\u03a9 through 100 k\u03a9, are grouped into direct or unbranched series paths with total nominal resistance in the same range. Paths to one named positive rail are combined in parallel; a line is reported when its nominal equivalent resistance is below 1 k\u03a9.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
-        "The 1 kΩ boundary is a broad review threshold, not a universal electrical requirement; project-specific requirements and rule modes remain authoritative.",
+        "The 1 k\u03a9 boundary is a broad review threshold, not a universal electrical requirement; project-specific requirements and rule modes remain authoritative.",
         "Non-R references require the exact native Device:R symbol ID and complete pin-number inventory 1 and 2. Custom resistor symbols and other resistor identities are unsupported. Only directly connected or unbranched series paths of discrete resistors are recognized; arrays, branched paths, multiple pull-up rails, internal pull-ups, and remote pull-ups are not calculated.",
         "This heuristic uses nominal resistance only and does not establish resistor tolerance, sink-current margin, bus voltage compatibility, capacitance, rise time, or timing. A separate project-authored electrical-window check can optionally apply a maximum per-resistor tolerance bound, but does not verify its cited source or scope."
       ],
@@ -4908,14 +4908,14 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For an assigned SDA/SCL pair recognized from one fitted component's native pin functions, collect fitted R-designated direct or unbranched resistor paths and exact native Device:R symbols with complete two-pin inventories under non-R references, between 1 kΩ and 100 kΩ, to recognized positive rails. Emit one review candidate when the combined SDA/SCL paths use more than one distinct normalized positive-rail family.",
+      "predicate": "For an assigned SDA/SCL pair recognized from one fitted component's native pin functions, collect fitted R-designated direct or unbranched resistor paths and exact native Device:R symbols with complete two-pin inventories under non-R references, between 1 k\u03a9 and 100 k\u03a9, to recognized positive rails. Emit one review candidate when the combined SDA/SCL paths use more than one distinct normalized positive-rail family.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Rail families come from a narrow net-name or pin-function allowlist. Custom positive rail names without a recognized power-pin function are not included.",
         "Different families are a review cue, not proof of incompatible voltages. The check does not resolve rail values, device input limits, level shifting, rail sequencing, external pull-ups, resistor arrays, or active pull-up circuits.",
-        "Non-R references require the exact native Device:R symbol ID and complete pin-number inventory 1 and 2; custom resistor symbols and other identities are unsupported. Only fitted resistor paths with each resistor and total path in the 1 kΩ–100 kΩ detection range are followed; this is not a universal I2C resistor requirement."
+        "Non-R references require the exact native Device:R symbol ID and complete pin-number inventory 1 and 2; custom resistor symbols and other identities are unsupported. Only fitted resistor paths with each resistor and total path in the 1 k\u03a9\u2013100 k\u03a9 detection range are followed; this is not a universal I2C resistor requirement."
       ],
       "fault_fixtures": [
         "tests.test_design_lint_i2c_pullup_rail_families.test_i2c_pullups_to_distinct_rail_families_request_review",
@@ -4944,14 +4944,14 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For each fitted U/IC with recognized, uniquely assigned native SDA/SCL pin functions on a distinct net pair, inspect each line with a recognized fitted direct or unbranched 1 kΩ–100 kΩ resistor path to a named positive rail, or with a source-matched project-authored resistor-array channel in that range. Emit a REVIEW candidate when no unique exact ordered bus requirement supplies an I2cPullupVoltageCompatibilityRequirement covering every recognized fitted U/IC endpoint pin on that line, or when its source-bound pull-up or voltage-compatibility check does not pass.",
+      "predicate": "For each fitted U/IC with recognized, uniquely assigned native SDA/SCL pin functions on a distinct net pair, inspect each line with a recognized fitted direct or unbranched 1 k\u03a9\u2013100 k\u03a9 resistor path to a named positive rail, or with a source-matched project-authored resistor-array channel in that range. Emit a REVIEW candidate when no unique exact ordered bus requirement supplies an I2cPullupVoltageCompatibilityRequirement covering every recognized fitted U/IC endpoint pin on that line, or when its source-bound pull-up or voltage-compatibility check does not pass.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "This is a contract-coverage prompt, not a voltage calculation or safety verdict. It does not infer rail voltage, input tolerance, level shifting, pin direction, or electrical compatibility from names.",
         "Only fitted U/IC endpoints with recognized SDA/SCL native function aliases and uniquely assigned nets are included. Connectors and off-board peers are not endpoint evidence; DNP, incomplete, ambiguous, and unsupported multi-segment endpoints are skipped.",
-        "Discrete visible pull-ups are limited to recognized R-designated resistors or exact Device:R symbols in direct or unbranched paths from 1 kΩ through 100 kΩ. A resistor array counts only when an exact project-authored channel map matches native component identity, complete pin inventory, fitted state, and signal/rail pin assignments; unmapped, stale, DNP, or ambiguous arrays are not discovered. Active, internal, and off-board pull-ups are not discovered.",
+        "Discrete visible pull-ups are limited to recognized R-designated resistors or exact Device:R symbols in direct or unbranched paths from 1 k\u03a9 through 100 k\u03a9. A resistor array counts only when an exact project-authored channel map matches native component identity, complete pin inventory, fitted state, and signal/rail pin assignments; unmapped, stale, DNP, or ambiguous arrays are not discovered. Active, internal, and off-board pull-ups are not discovered.",
         "A complete input-limit map establishes only authored coverage. The separate electrical contract check evaluates its mapped maximum limits; neither check validates the cited datasheet or proves PCB connectivity."
       ],
       "fault_fixtures": [
@@ -5126,15 +5126,15 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "A non-DNP pin with an explicitly active-low chip-select function and native input/input_low electrical type has one assigned non-return net, while no fitted conventional resistor path from that net to a recognized positive rail has a per-resistor and total nominal value between 1 kΩ and 100 kΩ. Direct and unbranched two-terminal resistor chains are recognized. A resistor-array channel counts only when a project-authored SPI contract maps its exact signal/rail pins and nets, component symbol, footprint, value, optional PART_ID, complete pin inventory, and reviewed nominal channel resistance, and all native identity and net checks pass.",
+      "predicate": "A non-DNP pin with an explicitly active-low chip-select function and native input/input_low electrical type has one assigned non-return net, while no fitted conventional resistor path from that net to a recognized positive rail has a per-resistor and total nominal value between 1 k\u03a9 and 100 k\u03a9. Direct and unbranched two-terminal resistor chains are recognized. A resistor-array channel counts only when a project-authored SPI contract maps its exact signal/rail pins and nets, component symbol, footprint, value, optional PART_ID, complete pin inventory, and reviewed nominal channel resistance, and all native identity and net checks pass.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The rule recognizes only the bounded active-low function aliases documented in DESIGN_LINT.md and exported native input/input_low pin types.",
         "A missing visible path can be valid when the device has an internal bias, the controller guarantees the idle state, or bias is supplied off-board; no firmware or runtime state is inspected.",
-        "Direct and unbranched conventional two-terminal resistor chains are traced without a project map. A resistor array counts only through an exact project-authored SPI map; stale identity, DNP state, wrong or unconnected pin nets, incomplete pin inventory, or a channel outside the 1 kΩ–100 kΩ review band keeps the prompt open. The nominal channel resistance is an authored assumption, not a native measurement. Jumpers, active bias circuits, off-board bias, and uncommon positive-rail names remain outside the predicate.",
-        "The 1 kΩ–100 kΩ interval is a broad review-detection window, not a recommended value or proof of valid logic thresholds, reset sequencing, device selection, or signal integrity."
+        "Direct and unbranched conventional two-terminal resistor chains are traced without a project map. A resistor array counts only through an exact project-authored SPI map; stale identity, DNP state, wrong or unconnected pin nets, incomplete pin inventory, or a channel outside the 1 k\u03a9\u2013100 k\u03a9 review band keeps the prompt open. The nominal channel resistance is an authored assumption, not a native measurement. Jumpers, active bias circuits, off-board bias, and uncommon positive-rail names remain outside the predicate.",
+        "The 1 k\u03a9\u2013100 k\u03a9 interval is a broad review-detection window, not a recommended value or proof of valid logic thresholds, reset sequencing, device selection, or signal integrity."
       ],
       "fault_fixtures": [
         "tests.test_design_lint_spi.test_spi_active_low_select_bias_hint_is_review_only_and_configurable",
@@ -5642,7 +5642,7 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_usb_c_cc_same_net.test_finding_order_is_stable_and_separating_cc_nets_clears_it",
-        "tests.test_design_lint_determinism_usb_c_cc_same_net.test_usb_c_cc_same_net_reports_are_hashseed_deterministic"
+        "tests.test_design_lint_determinism_usb_c_cc_same_net.test_usb_c_cc_controller_same_net_reports_are_hashseed_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_USB_C_CC_SAME_NET_FIXTURES"
@@ -5740,6 +5740,51 @@
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/usb_c_sbu_unconnected_pin.py#unconnected_usb_c_sbu_pins"
+    },
+    {
+      "rule_id": "bus.usb_c_cc_controller_same_net",
+      "title": "USB-C controller CC1 and CC2 pins share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad native XML netlist normalized by kicad_tooling.validate.read_netlist, including fitted state, complete pin inventory, native CC1/CC2 function identities, and direct net assignments",
+      "predicate": "For each fitted U/IC with exactly one native CC1 and one CC2 function in its complete component pin inventory, emit REVIEW when each pin has one unambiguous assignment to the same exact native net.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
+      ],
+      "limitations": [
+        "A shared CC assignment is a review prompt only. It does not establish the exact controller behavior, whether the pins must be separate, USB-C role, compliance, or a defect; some designs may intentionally share these pins.",
+        "Recognition is limited to a fitted numeric U/IC reference with exactly one CC1 and one CC2 function, both present in the complete native pin inventory, and one direct net assignment per pin. Connectors, DNP components, duplicate roles, incomplete inventories, open pins, and ambiguous assignments are skipped.",
+        "When both pins are native outputs, the heuristic is suppressed so ERC can report the electrical conflict. Missing or other electrical types do not establish pin behavior.",
+        "The check uses schematic net assignments only. It does not trace passive components or establish PCB copper, off-board wiring, or physical continuity. Project-authored interface requirements remain the basis for a blocking decision."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_c_cc_same_net.test_controller_cc1_cc2_shared_net_requests_review_with_separated_control",
+        "tests.test_design_lint_mcp_parity_usb_c_sbu_unconnected.test_usb_c_cc_controller_same_net_cli_mcp_parity",
+        "tests.test_usb_c_cc_same_net_native_fixture_lane.test_native_usb_c_cc_controller_same_net_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_c_cc_same_net.test_controller_cc1_cc2_shared_net_requests_review_with_separated_control",
+        "tests.test_usb_c_cc_same_net.test_controller_cc_shared_net_skips_dnp_incomplete_ambiguous_and_output_pairs",
+        "tests.test_usb_c_cc_same_net_native_fixture_lane.test_native_usb_c_cc_controller_same_net_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_c_cc_same_net.test_controller_cc_finding_order_is_stable_and_separation_clears_it",
+        "tests.test_design_lint_determinism_usb_c_cc_same_net.test_usb_c_cc_controller_same_net_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_C_CC_CONTROLLER_SAME_NET_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_c_cc_controller_same_net.py#usb_c_cc_controller_same_net_candidates",
+        "kicad_tooling/hwrepo/bus_signal_roles.py#usb_c_cc_role",
+        "kicad_tooling/hwrepo/netlist_pin_assignments.py#netlist_pin_net_index",
+        "kicad_tooling/hwrepo/design_lint_usb_c_same_net_candidates.py#usb_c_same_net_candidates",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_c_cc_controller_same_net.py#usb_c_cc_controller_same_net_candidates"
     },
     {
       "rule_id": "bus.usb_c_sbu_same_net",
@@ -5862,7 +5907,7 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "A component exposing distinct assigned CANH and CANL nets has no fitted direct two-terminal resistor from 108 Ω through 132 Ω across those nets.",
+      "predicate": "A component exposing distinct assigned CANH and CANL nets has no fitted direct two-terminal resistor from 108 \u03a9 through 132 \u03a9 across those nets.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
@@ -5894,7 +5939,7 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For a fitted component exposing uniquely assigned CANH and CANL pins on distinct native nets, emit a review candidate when more than two fitted direct two-terminal resistors from 108 Ω through 132 Ω span that exact net pair.",
+      "predicate": "For a fitted component exposing uniquely assigned CANH and CANL pins on distinct native nets, emit a review candidate when more than two fitted direct two-terminal resistors from 108 \u03a9 through 132 \u03a9 span that exact net pair.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; native fixture acceptance is pinned to 10.0.0 and 10.0.5"
       ],
@@ -6061,7 +6106,7 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For each fitted pin with a bounded native TD+/TD−, TDP/TDN, RD+/RD−, or RDP/RDN function and exactly one assigned net, compare its Ethernet TX/RX direction and polarity with a bounded TX/RX plus polarity net-name alias, optionally prefixed by Ethernet, ETH, or MDI. Emit one REVIEW candidate when the recognized roles conflict.",
+      "predicate": "For each fitted pin with a bounded native TD+/TD\u2212, TDP/TDN, RD+/RD\u2212, or RDP/RDN function and exactly one assigned net, compare its Ethernet TX/RX direction and polarity with a bounded TX/RX plus polarity net-name alias, optionally prefixed by Ethernet, ETH, or MDI. Emit one REVIEW candidate when the recognized roles conflict.",
       "supported_kicad_versions": [
         "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
       ],
@@ -6698,7 +6743,7 @@
         "KiCad 10 CLI profile; the selected project exact catalogued version is checked before export"
       ],
       "limitations": [
-        "Only bounded MOSI, SDI, COPI, MISO, SDO, and CIPO aliases on fitted U/IC references are recognized. These are bus data-role names and do not prove the IC’s configured direction. Connector references, DNP parts, open or multiply assigned pins, duplicate roles, cross-channel pairs, missing pin inventory, and inconsistent inventory are skipped.",
+        "Only bounded MOSI, SDI, COPI, MISO, SDO, and CIPO aliases on fitted U/IC references are recognized. These are bus data-role names and do not prove the IC\u2019s configured direction. Connector references, DNP parts, open or multiply assigned pins, duplicate roles, cross-channel pairs, missing pin inventory, and inconsistent inventory are skipped.",
         "A shared input/output net can be intentional for loopback, single-wire operation, or part-specific behavior. This rule defaults to off and asks for review; pin-function names do not prove protocol participation, device mode, required topology, or that the pins must be separate.",
         "Missing electrical-type metadata is recorded as unknown; only two explicit native output types suppress this candidate because ERC can report that conflict.",
         "The finding concerns native schematic net assignments only. It does not prove PCB copper continuity, off-board wiring, firmware state, or electrical suitability."
@@ -8715,8 +8760,8 @@
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
-      "evidence_adapter": "KiCad native XML netlist normalized by kicad_tooling.validate.read_netlist, including complete native pin inventories, supported USB 2.0 D+/D− or bounded USB SuperSpeed pin functions, exact native net membership for direct SuperSpeed pairs, direct or one-fitted-Device:R-per-line USB 2.0 paths, exact map-backed inline-component paths, explicit bounded return-like reference-pin functions, passive/power-input or narrowly accepted unspecified electrical types, and unique net assignments",
-      "predicate": "For a fitted numeric or reviewed connector candidate and a fitted U/IC PHY, recognize supported USB 2.0 D+ and D− paths plus bounded direct USB SuperSpeed complementary pairs. USB 2.0 paths retain the existing direct, one-fitted-resistor, exact-mapped-inline, and exact-mapped-protection-shunt rules. For SuperSpeed, require complete native pin inventories and function/type metadata, exactly one positive and one negative pin per endpoint family, connector TX to PHY RX or connector RX to PHY TX, matching positive and negative nets, and exactly the two endpoint pins on each net. Both endpoint reference pins must have explicit bounded return-like functions and either passive/power_in electrical types or an unspecified type paired with that explicit return-like function, assigned to one unique net per endpoint. The USB peer-reference disposition predicate emits a default REVIEW prompt when those reference nets differ and no exact authored map covers the path; common reference is quiet. USB 2.0 maps suppress only when their exact data topology and reference policy match. A superspeed_interfaces map suppresses only when one exact direct SuperSpeed path, both endpoint identities, all mapped data/reference pins and nets, and the reviewed reference policy match. A stale map is reported by bus.usb_data_path_mismatch.",
+      "evidence_adapter": "KiCad native XML netlist normalized by kicad_tooling.validate.read_netlist, including complete native pin inventories, supported USB 2.0 D+/D\u2212 or bounded USB SuperSpeed pin functions, exact native net membership for direct SuperSpeed pairs, direct or one-fitted-Device:R-per-line USB 2.0 paths, exact map-backed inline-component paths, explicit bounded return-like reference-pin functions, passive/power-input or narrowly accepted unspecified electrical types, and unique net assignments",
+      "predicate": "For a fitted numeric or reviewed connector candidate and a fitted U/IC PHY, recognize supported USB 2.0 D+ and D\u2212 paths plus bounded direct USB SuperSpeed complementary pairs. USB 2.0 paths retain the existing direct, one-fitted-resistor, exact-mapped-inline, and exact-mapped-protection-shunt rules. For SuperSpeed, require complete native pin inventories and function/type metadata, exactly one positive and one negative pin per endpoint family, connector TX to PHY RX or connector RX to PHY TX, matching positive and negative nets, and exactly the two endpoint pins on each net. Both endpoint reference pins must have explicit bounded return-like functions and either passive/power_in electrical types or an unspecified type paired with that explicit return-like function, assigned to one unique net per endpoint. The USB peer-reference disposition predicate emits a default REVIEW prompt when those reference nets differ and no exact authored map covers the path; common reference is quiet. USB 2.0 maps suppress only when their exact data topology and reference policy match. A superspeed_interfaces map suppresses only when one exact direct SuperSpeed path, both endpoint identities, all mapped data/reference pins and nets, and the reviewed reference policy match. A stale map is reported by bus.usb_data_path_mismatch.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],

@@ -38,6 +38,7 @@ import tests.design_lint_fixtures.spi_unconnected_data_pins as _spi_unconnected_
 import tests.design_lint_fixtures.usb_c_cc_named_rail as _usb_c_cc_named_rail_fixtures
 import tests.design_lint_fixtures.usb_c_cc_same_net as _usb_c_cc_same_net_fixtures
 import tests.design_lint_fixtures.usb_c_sbu_named_rail as _usb_c_sbu_fixture_builder
+import tests.design_lint_fixtures.usb_c_sbu_same_net as _usb_c_sbu_same_net_fixture_builders
 import tests.design_lint_fixtures.usb_c_sbu_same_net as _usb_c_sbu_same_net_fixtures
 import tests.design_lint_fixtures.usb_c_superspeed_lanes as _usb_c_superspeed_lane_fixtures
 import tests.design_lint_fixtures.usb_data_same_net as _usb_data_same_net_fixtures
@@ -495,6 +496,12 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     emitted.update(
         item.rule_id
         for item in candidates(_usb_c_sbu_same_net_fixtures.usb_c_sbu_same_net_netlist())
+    )
+    emitted.update(
+        item.rule_id
+        for item in candidates(
+            _usb_c_sbu_same_net_fixture_builders.usb_c_cc_controller_same_net_netlist()
+        )
     )
     emitted.update(
         item.rule_id

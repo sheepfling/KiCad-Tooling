@@ -42,6 +42,8 @@ REPORT_ORDER = (
     "usb_c_cc_named_rail_control",
     "usb_c_cc_same_net_fault",
     "usb_c_cc_same_net_control",
+    "usb_c_cc_controller_same_net_fault",
+    "usb_c_cc_controller_same_net_control",
     "usb_c_sbu_named_rail_fault",
     "usb_c_sbu_named_rail_control",
     "usb_c_sbu_unconnected_pin_fault",
@@ -342,6 +344,9 @@ REPORT_BUILDERS = MappingProxyType(
         "usb_signal_named_rail": ("tests.hashseed_probe_cases.usb_signal_named_rail"),
         "usb_c_cc_named_rail": "tests.hashseed_probe_cases.usb_c_cc_named_rail",
         "usb_c_cc_same_net": "tests.hashseed_probe_cases.usb_c_cc_same_net",
+        "usb_c_cc_controller_same_net": (
+            "tests.hashseed_probe_cases.usb_c_cc_controller_same_net"
+        ),
         "usb_c_sbu_named_rail": "tests.hashseed_probe_cases.usb_c_sbu_named_rail",
         "usb_c_sbu_unconnected_pin": "tests.hashseed_probe_cases.usb_c_sbu_unconnected_pin",
         "usb_c_sbu_same_net": "tests.hashseed_probe_cases.usb_c_sbu_same_net",

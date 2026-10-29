@@ -747,7 +747,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 241 active rules.
+The catalog currently contains 242 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1400,6 +1400,35 @@ fault/control and hash-seed tests accompany digest-pinned KiCad 10.0.0 and
 KICAD_RUN_NATIVE_USB_C_SBU_UNCONNECTED_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_usb_c_sbu_unconnected_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_unconnected_pin")'
+```
+
+
+### USB-C controller CC1/CC2 pins sharing one net
+
+`bus.usb_c_cc_controller_same_net` reviews a fitted numeric U/IC reference
+when its complete native inventory contains exactly one CC1 and one CC2
+function and both pins have one direct assignment to the same exact net. It
+skips DNP components, duplicate roles, incomplete inventories, open or
+ambiguous assignments, and pairs whose native types are both `output` so ERC
+can report that conflict. The default is `review`; project policy can promote
+the finding to `block`, turn it off, or ignore an exact fingerprint. Shared
+assignments may be intentional. Function names do not establish the exact
+controller behavior or required separation, and the schematic check does not
+trace passive paths or establish PCB copper or continuity. Synthetic fault and
+control, XML-normalized CLI/MCP parity, and digest-pinned KiCad 10.0.0 and
+10.0.5 native export tests are covered. The native fixtures assert zero ERC
+errors and repeatable normalized netlists.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_usb_c_cc_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_cc_controller_same_net")'
+
+.venv/bin/python -I -m pytest tests/test_design_lint_mcp_parity_usb_c_sbu_unconnected.py \
+  -m 'design_lint and interface_lint and parity_lint and design_lint_rule(rule_id="bus.usb_c_cc_controller_same_net")'
+
+KICAD_RUN_NATIVE_USB_C_CC_CONTROLLER_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_usb_c_cc_same_net_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_cc_controller_same_net")'
 ```
 
 ### USB-C controller SBU1/SBU2 pins sharing one net

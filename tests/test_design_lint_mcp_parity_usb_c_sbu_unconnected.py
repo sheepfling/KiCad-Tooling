@@ -25,6 +25,7 @@ from tests.mcp_parity_support import McpParityHarness, run_mcp_parity
 
 RULE_ID = "bus.usb_c_sbu_unconnected_pin"
 SAME_NET_RULE_ID = "bus.usb_c_sbu_same_net"
+CONTROLLER_CC_RULE_ID = "bus.usb_c_cc_controller_same_net"
 
 
 class _UsbCSbuUnconnectedParityCases(McpParityHarness):
@@ -114,6 +115,49 @@ class _UsbCSbuUnconnectedParityCases(McpParityHarness):
         self.assertEqual(len(cli_findings), 1)
         self.assertEqual(cli_findings[0].subject, "U1: USB-C SBU1/SBU2 pins share SBU_SHARED")
 
+    async def _case_usb_c_cc_controller_same_net_cli_mcp_parity(self) -> None:
+        native = self.native_evidence()
+        observed = NetlistContract(
+            components={
+                "U1": ComponentContract(
+                    value="Synthetic USB-C controller", footprint="Synthetic:QFN"
+                )
+            },
+            nets={"CC_SHARED": ("U1.1", "U1.2")},
+            component_symbols={"U1": "Synthetic:USB_C_Controller"},
+            pin_functions={"U1.1": "CC1", "U1.2": "CC2"},
+            component_pin_numbers={"U1": ("1", "2")},
+        )
+        (native.parent / "netlist.xml").write_text(peer_pin_netlist_xml(observed), encoding="utf-8")
+        self.rehash_native_netlist(native)
+
+        async with Client(create_server(self.root), mode="legacy") as client:
+            cli = await self.cli(
+                "kicad_tooling.design_lint",
+                DesignLintReport,
+                "--project",
+                "controller",
+                "--native-summary",
+                str(native),
+                expected_exit=1,
+            )
+            mcp = await self.call(
+                client,
+                "inspect_design_lint",
+                DesignLintReport,
+                {
+                    "project_id": "controller",
+                    "native_summary": native.relative_to(self.root).as_posix(),
+                },
+            )
+        cli_findings = tuple(item for item in cli.findings if item.rule_id == CONTROLLER_CC_RULE_ID)
+
+        self.assertEqual(cli, mcp)
+        self.assertEqual(len(cli_findings), 1)
+        self.assertEqual(
+            cli_findings[0].subject, "U1: USB-C controller CC1/CC2 pins share CC_SHARED"
+        )
+
 
 def test_usb_c_sbu_unconnected_cli_mcp_parity() -> None:
     run_mcp_parity(
@@ -127,4 +171,12 @@ def test_usb_c_sbu_same_net_cli_mcp_parity() -> None:
     run_mcp_parity(
         _UsbCSbuUnconnectedParityCases,
         "_case_usb_c_sbu_same_net_cli_mcp_parity",
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=CONTROLLER_CC_RULE_ID)
+def test_usb_c_cc_controller_same_net_cli_mcp_parity() -> None:
+    run_mcp_parity(
+        _UsbCSbuUnconnectedParityCases,
+        "_case_usb_c_cc_controller_same_net_cli_mcp_parity",
     )

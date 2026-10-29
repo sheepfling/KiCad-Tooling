@@ -26,3 +26,20 @@ def test_usb_c_cc_same_net_reports_are_hashseed_deterministic() -> None:
         "J1: USB-C CC1/CC2 pins share CC_SHARED",
     )
     assert not any(item["rule_id"] == RULE_ID for item in control["findings"])
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.usb_c_cc_controller_same_net")
+def test_usb_c_cc_controller_same_net_reports_are_hashseed_deterministic() -> None:
+    reports = hashseed_probe_reports(families=("usb_c_cc_controller_same_net",))
+    fault = reports["usb_c_cc_controller_same_net_fault"]
+    control = reports["usb_c_cc_controller_same_net_control"]
+    controller_fault = tuple(
+        item for item in fault["findings"] if item["rule_id"] == "bus.usb_c_cc_controller_same_net"
+    )
+
+    assert tuple(item["subject"] for item in controller_fault) == (
+        "U1: USB-C controller CC1/CC2 pins share CC_SHARED",
+    )
+    assert not any(
+        item["rule_id"] == "bus.usb_c_cc_controller_same_net" for item in control["findings"]
+    )

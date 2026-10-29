@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 241 rules are implemented with synthetic regression coverage.
+The following 242 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 241 active rules.
+The catalog currently contains 242 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -581,6 +581,7 @@ skipped under prerelease policy.
 - `bus.usb_c_unconnected_cc_pin`
 - `bus.usb_c_cc_signal_on_named_rail`
 - `bus.usb_c_cc_same_net`
+- `bus.usb_c_cc_controller_same_net`
 - `bus.usb_c_sbu_signal_on_named_rail`
 - `bus.usb_c_sbu_unconnected_pin`
 - `bus.usb_c_sbu_same_net`
@@ -3292,7 +3293,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 241 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 242 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -5911,6 +5912,45 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_USB_C_SBU_SAME_NET_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_usb_c_sbu_named_rail_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_same_net")'
+  ```
+
+
+#### LINT-260 — Review USB-C controller CC1/CC2 pins sharing one net
+
+- **Status:** Implemented as default-review `bus.usb_c_cc_controller_same_net`.
+  Project policy can promote it to `block`, disable it, or ignore an exact
+  finding fingerprint.
+- **Gap:** Connector CC1/CC2 same-net review did not cover the corresponding
+  controller-side pins. A connector-side finding may be absent when the
+  connector is not recognized or when the issue lies between controller pins.
+- **Predicate:** For a fitted numeric U/IC reference, require exactly one
+  native CC1 and CC2 function, both in the complete component pin inventory,
+  each assigned directly to the same exact net. Skip DNP, duplicate roles,
+  incomplete inventory, open or multiply assigned pins, and two-output pairs
+  that native ERC should diagnose.
+- **Boundary:** Same-net function evidence is a review clue, not a claim that
+  these controller pins must be separate or that a defect exists. It does not
+  identify exact controller behavior, role, USB-C compliance, passive paths,
+  PCB copper, or physical continuity. Blocking requires a project-authored
+  interface requirement.
+- **Evidence:** Synthetic shared-net fault and separated-net control, DNP,
+  duplicate-role, incomplete-inventory, ambiguous-assignment, two-output,
+  policy, deterministic-order, catalog-reachability, focused-selector, and
+  CLI/MCP parity regressions. Exact-version KiCad 10.0.0/10.0.5 native
+  fault/control exports reuse the public synthetic CC fixture, assert zero ERC
+  errors, and compare repeated normalized exports.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_usb_c_cc_same_net.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_cc_controller_same_net")'
+
+  .venv/bin/python -I -m pytest tests/test_design_lint_mcp_parity_usb_c_sbu_unconnected.py \
+    -m 'design_lint and interface_lint and parity_lint and design_lint_rule(rule_id="bus.usb_c_cc_controller_same_net")'
+
+  KICAD_RUN_NATIVE_USB_C_CC_CONTROLLER_SAME_NET_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_usb_c_cc_same_net_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_cc_controller_same_net")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

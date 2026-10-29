@@ -143,6 +143,17 @@ def test_usb_c_sbu_same_net_rule_uses_its_focused_protocol_owner() -> None:
     assert usb_c_sbu_same_net.usb_c_sbu_same_net_candidates.__module__.endswith(
         "usb_c_sbu_same_net"
     )
+    controller_owner = (
+        "kicad_tooling/hwrepo/usb_c_cc_controller_same_net.py#"
+        "usb_c_cc_controller_same_net_candidates"
+    )
+    controller_rule = next(
+        item for item in rule_catalog().rules if item.rule_id == "bus.usb_c_cc_controller_same_net"
+    )
+    assert _line_count(HWREPO / "usb_c_cc_controller_same_net.py") < IMPLEMENTATION_MAX_LINES
+    assert controller_rule.theme == "interfaces"
+    assert controller_rule.implementation_owner == controller_owner
+    assert controller_owner in controller_rule.implementation_refs
 
 
 def test_interface_coverage_models_live_in_theme_owners() -> None:

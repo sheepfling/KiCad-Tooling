@@ -31,10 +31,8 @@ from .design_lint_spi_signal_candidates import spi_signal_candidates
 from .design_lint_two_wire_signal_candidates import two_wire_signal_candidates
 from .design_lint_types import Candidate
 from .design_lint_unconnected_interface_candidates import unconnected_interface_candidates
-from .i2c_address_models import (
-    I2cAddressCoverageReport,
-    I2cAddressMap,
-)
+from .design_lint_usb_c_same_net_candidates import usb_c_same_net_candidates
+from .i2c_address_models import I2cAddressCoverageReport, I2cAddressMap
 from .i2c_peer_reference_scan import I2cPeerReferenceScan
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import NetlistContract
@@ -42,7 +40,6 @@ from .pcb_drc_models import PcbDifferentialPairRuleMap
 from .rs485_peer_reference_types import Rs485PeerReferenceScan
 from .spi_participants import SpiRosterContext
 from .spi_peer_reference_scan import SpiPeerReferenceScan
-from .usb_c_cc_same_net import usb_c_cc_same_net_candidates
 from .usb_c_sbu_same_net import usb_c_sbu_same_net_candidates
 from .usb_c_superspeed_lane_labels import usb_c_superspeed_lane_label_mismatch_candidates
 from .usb_data_same_net import usb_data_same_net_candidates
@@ -92,7 +89,7 @@ def bus_candidates(
         *usb_data_polarity_label_candidates(observed),
         *usb_c_superspeed_lane_label_mismatch_candidates(observed),
         *usb_data_same_net_candidates(observed),
-        *usb_c_cc_same_net_candidates(observed, reviewed_connector_references),
+        *usb_c_same_net_candidates(observed, reviewed_connector_references),
         *usb_c_sbu_same_net_candidates(observed),
         *named_differential_pair_candidates(observed, pcb_differential_pair_rule_map),
         *i2c_address_candidates(i2c_address_coverage),
