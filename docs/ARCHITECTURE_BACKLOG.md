@@ -150,6 +150,8 @@ route reviews.
 Project inspection now rechecks the declared source inventory after scanning
 and connectivity capture. An edit, addition, or removal during that work
 blocks the result rather than presenting findings bound to the earlier source.
+The manifest, lint policy, and consulted project-owned requirements are also
+rechecked after capture; a changed input blocks the assembled report.
 
 Control-input bias coverage follows the same boundary: a completed scan keeps
 the observed netlist hash even when it finds no candidate nets. Evaluation

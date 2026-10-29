@@ -20,7 +20,7 @@ from tests.synthetic_design_lint_project import synthetic_design_lint_project
 pytestmark = [pytest.mark.design_lint, pytest.mark.evidence_lint]
 
 
-@pytest.mark.parametrize("change", ("edit", "add", "remove"))
+@pytest.mark.parametrize("change", ("edit", "add", "remove", "manifest", "policy"))
 def test_source_change_after_evaluation_blocks_project_inspection(
     tmp_path: Path, change: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -46,8 +46,15 @@ def test_source_change_after_evaluation_blocks_project_inspection(
             source.write_text("changed while evaluating\n", encoding="utf-8")
         elif change == "add":
             (source.parent / "added.kicad_sch").write_text("new source\n", encoding="utf-8")
-        else:
+        elif change == "remove":
             source.unlink()
+        else:
+            path = (
+                root
+                / "projects/controller"
+                / ("project.json" if change == "manifest" else "tests/contract.json")
+            )
+            path.write_text(path.read_text(encoding="utf-8") + "\n", encoding="utf-8")
         return snapshot
 
     monkeypatch.setattr(
@@ -55,10 +62,12 @@ def test_source_change_after_evaluation_blocks_project_inspection(
     )
     report = inspect_design_lint_summary(root, "controller", native, evaluate)
     assert report.status == "BLOCKED"
-    assert any(
-        "Declared project source changed during design-lint inspection" in issue
-        for issue in report.issues
+    expected = (
+        "Project manifest or lint policy changed during inspection"
+        if change in {"manifest", "policy"}
+        else "Declared project source changed during design-lint inspection"
     )
+    assert any(expected in issue for issue in report.issues)
     assert report.connectivity_snapshot is None
 
 

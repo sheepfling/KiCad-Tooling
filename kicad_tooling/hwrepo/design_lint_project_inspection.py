@@ -230,6 +230,14 @@ def inspect_design_lint_summary(
             pcb_dru_rule_candidates=pcb_dru_rule_candidates,
             pcb_native_drc_candidates=pcb_native_drc_candidates,
         )
+        connectivity_snapshot = capture_connectivity_snapshot(
+            project_id=project_id,
+            observed=coach.observed,
+            source_hashes=report.source_hashes,
+            netlist_sha256=coach.netlist_sha256,
+            kicad_version=config.kicad_version,
+            toolchain_image=config.image,
+        )
         connector_catalog = report.connector_coverage
         if (
             digest(manifest_path) != manifest_hash
@@ -286,14 +294,6 @@ def inspect_design_lint_summary(
             )
         ):
             raise ValueError("Project manifest or lint policy changed during inspection")
-        connectivity_snapshot = capture_connectivity_snapshot(
-            project_id=project_id,
-            observed=coach.observed,
-            source_hashes=report.source_hashes,
-            netlist_sha256=coach.netlist_sha256,
-            kicad_version=config.kicad_version,
-            toolchain_image=config.image,
-        )
         if hashes(root, config.source_roots) != coach.source_hashes:
             raise ValueError("Declared project source changed during design-lint inspection")
         # Revalidate the assembled report so the final cross-field contract is
