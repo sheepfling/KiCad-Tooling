@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 251 rules are implemented with synthetic regression coverage.
+The following 252 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 251 active rules.
+The catalog currently contains 252 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -465,6 +465,7 @@ skipped under prerelease policy.
 - `connector.peer_power_output_named_assignment_divergence`
 - `connector.peer_power_input_named_assignment_divergence`
 - `component.repeated_supply_pin_function`
+- `component.same_voltage_power_inputs_split`
 - `component.repeated_return_pin_function`
 - `component.repeated_signal_pin_assignment_divergence`
 - `component.repeated_signal_pin_unassigned`
@@ -3340,7 +3341,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 251 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 252 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -13893,6 +13894,40 @@ control are documented in the
   ```sh
   .venv/bin/python -I -m pytest tests/test_ethernet_data_unconnected_pins.py \
     -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_data_unconnected_pin")'
+  ```
+
+#### LINT-268 — Review split IC supply inputs with matching voltage labels
+
+- **Status:** Implemented as the configurable default-off
+  `component.same_voltage_power_inputs_split` review heuristic.
+- **Gap:** The existing repeated-supply rule compares matching native supply
+  functions. It intentionally leaves distinct functions such as VDD and VDDIO
+  alone, even when both are assigned to different net names carrying the same
+  explicit nominal-voltage clue.
+- **Predicate:** Require a fitted U/IC component with complete native
+  pin-number, function, and electrical-type inventories. Review only when at
+  least two distinct recognized supply functions are native `power_in` pins,
+  every participating pin has one assignment, the labels use the same
+  supported positive nominal voltage, and the net names differ.
+- **Policy and limits:** Projects can enable `review`, promote to `block`, or
+  keep the check off. The candidate asks whether filtering or a separate
+  supply domain is intentional; it never claims that the rails should be
+  joined. Net labels do not establish actual voltage, source validity, current
+  capacity, or PCB continuity.
+- **Synthetic evidence:** Same-voltage split fault; common-net control;
+  different-voltage, passive-pin, repeated-function, DNP, incomplete-inventory,
+  open-pin, and connector exclusions; project mode selection and stable
+  fingerprints.
+- **Native evidence:** Tooling-owned fault/control schematics are source-hashed
+  and registered for digest-pinned KiCad 10.0.0/10.0.5 exports. The hosted
+  lane passed locally against both exact versions on 2026-10-29. The tagged
+  hosted acceptance lane still provides the release check; this does not
+  establish field effectiveness or measure reviewer value.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_component_same_voltage_power_input_domains.py \
+    -m 'design_lint and component_lint and power_lint and design_lint_rule(rule_id="component.same_voltage_power_inputs_split")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

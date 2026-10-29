@@ -40,6 +40,14 @@ def _collect_rule_nodes(rule_ids: str | tuple[str, ...]) -> subprocess.Completed
 
 RULE_NODE_CASES = (
     (
+        "component.same_voltage_power_inputs_split",
+        "tests/test_component_same_voltage_power_input_domains.py::test_split_distinct_supply_functions_on_equal_voltage_labels_are_reviewed",
+    ),
+    (
+        "component.same_voltage_power_inputs_split",
+        "tests/test_design_lint_mcp_parity_same_voltage_power_input.py::test_same_voltage_power_input_review_matches_between_cli_and_mcp",
+    ),
+    (
         "power.pin_function_net_role_conflict",
         "tests/test_power_pin_net_roles.py::test_positive_supply_pin_on_return_net",
     ),

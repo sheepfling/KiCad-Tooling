@@ -5,6 +5,10 @@ from __future__ import annotations
 COMPONENT_LINT_TEST_MODULES = frozenset(
     {
         "tests/test_component_unconnected_power_output.py",
+        "tests/test_component_same_voltage_power_input_domains.py",
+        "tests/test_component_same_voltage_power_input_native_fixture_lane.py",
+        "tests/test_design_lint_mcp_parity_same_voltage_power_input.py",
+        "tests/test_design_lint_architecture_same_voltage_power_inputs.py",
         "tests/test_component_power_fixture_lane.py",
         "tests/test_component_power_input_native_fixture_lane.py",
         "tests/test_component_peer_pin_all_open.py",

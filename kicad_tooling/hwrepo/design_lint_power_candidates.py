@@ -6,6 +6,7 @@ from .component_pin_patterns import (
     component_supply_pins_on_different_nets,
     unconnected_generic_power_input_component_pins,
 )
+from .component_power_input_domains import same_voltage_power_inputs_on_different_nets
 from .component_power_output_candidates import unconnected_power_output_candidates
 from .component_role_models import ComponentRoleMap
 from .component_roles import resolve_component_role_map
@@ -39,6 +40,24 @@ def power_candidates(
             reviewed_connector_references=reviewed_connector_references,
         )
     )
+    for split in same_voltage_power_inputs_on_different_nets(observed):
+        found.append(
+            Candidate(
+                rule_id="component.same_voltage_power_inputs_split",
+                subject=(
+                    f"{split.reference} ({split.symbol}): distinct supply inputs on "
+                    f"separate {split.nominal_voltage} V-labeled nets"
+                ),
+                message=(
+                    "Distinct native power-input functions on this fitted IC are assigned "
+                    "to separate net labels with the same explicit nominal-voltage clue. "
+                    "Review whether the split is intentional, such as filtering or a separate "
+                    "supply domain. The labels do not establish actual voltage or require the "
+                    "nets to be joined."
+                ),
+                evidence=split.pins,
+            )
+        )
     found.extend(ic_decoupling_candidates(observed, ic_decoupling_map))
     found.extend(positive_supply_pins_on_negative_rails(observed))
     mapped_capacitor_references = tuple(

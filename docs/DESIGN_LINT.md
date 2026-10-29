@@ -491,6 +491,25 @@ PCB continuity, external bonding, or physical isolation. See the
   -m 'design_lint and return_path_lint and design_lint_rule(rule_id="component.repeated_return_pin_function")'
 ```
 
+## Review split IC supply inputs with matching voltage labels
+
+`component.same_voltage_power_inputs_split` is an opt-in REVIEW prompt for a
+fitted U/IC component with a complete native pin inventory. It requires at
+least two distinct recognized supply functions on `power_in` pins, one net
+assignment per pin, different net names, and the same supported explicit
+positive-voltage value in those labels. For example, VDD on `+3V3` and VDDIO
+on `3.3V` is reviewable when a project enables the rule. Filtering and
+intentional separate domains remain valid; the prompt never requires a tie.
+Net labels do not establish actual voltage, source validity, current capacity,
+or PCB continuity. Project policy may enable review, block, or off. See the
+[synthetic fixture record](../tests/fixtures/design_lint/same-voltage-power-input-split/README.md)
+for the fault/control source hashes and exact-version native fixture.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_component_same_voltage_power_input_domains.py \
+  -m 'design_lint and component_lint and power_lint and design_lint_rule(rule_id="component.same_voltage_power_inputs_split")'
+```
+
 ## Review repeated signal pins on one component
 
 `component.repeated_signal_pin_assignment_divergence` is an opt-in REVIEW
@@ -761,7 +780,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 251 active rules.
+The catalog currently contains 252 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

@@ -11,6 +11,9 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.a
 
 def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> None:
     expected_cases_by_rule = {
+        "component.same_voltage_power_inputs_split": {
+            "tests.test_component_same_voltage_power_input_native_fixture_lane.test_native_same_voltage_power_input_fault_and_control_are_focused_and_repeatable",
+        },
         "connector.repeated_pin_function": {
             "tests.test_native_db9_return_contracts.test_native_db9_return_contracts_are_source_bound_and_repeatable",
             "tests.test_native_db9_return_contracts.test_db9_return_lane_exports_only_fault_and_control",
@@ -227,6 +230,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
     )
     native_fixture_by_rule["component.unconnected_supply_pin"] = (
         "KICAD_RUN_NATIVE_COMPONENT_NAMED_SUPPLY_PIN_FIXTURES"
+    )
+    native_fixture_by_rule["component.same_voltage_power_inputs_split"] = (
+        "KICAD_RUN_NATIVE_COMPONENT_SAME_VOLTAGE_POWER_INPUT_FIXTURES"
     )
     native_fixture_by_rule["component.unconnected_return_pin"] = (
         "KICAD_RUN_NATIVE_COMPONENT_NAMED_RETURN_PIN_FIXTURES"

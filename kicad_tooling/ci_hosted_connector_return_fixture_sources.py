@@ -179,6 +179,10 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         / "unconnected-named-component-pins/return-fault.kicad_sch",
         "unconnected-named-component-power-control": fixture_root
         / "unconnected-named-component-pins/control.kicad_sch",
+        "same-voltage-power-input-split-fault": fixture_root
+        / "same-voltage-power-input-split/fault.kicad_sch",
+        "same-voltage-power-input-common-control": fixture_root
+        / "same-voltage-power-input-split/control.kicad_sch",
         "repeated-signal-pin-fault": fixture_root
         / "repeated-signal-pin-functions-native/fault.kicad_sch",
         "repeated-signal-pin-control": fixture_root
@@ -347,6 +351,8 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = MappingProxyType(
         "unconnected-named-component-supply-fault": "f1ab42010ec4d41b3ea971e797a7cdff6c020fdaf86e7aae9e2f94664731d18e",
         "unconnected-named-component-return-fault": "43a421486e1ac8f138269128715a45e47fc1998a266d631c8461ffaaf58f9357",
         "unconnected-named-component-power-control": "65e95e66fe3af0ce5136e5763f10f4b3aec71f658f790db929793a45c1895000",
+        "same-voltage-power-input-split-fault": "a83fb517ec8c31cd3c90ca31e1ecf117cf7397e273b659e6a928a32e44b21ce3",
+        "same-voltage-power-input-common-control": "3b9f69a92e9e46a574c3b4a54ec801995bd82867e24e706400021944deae69a3",
         "repeated-signal-pin-fault": "b03de491d57a86e201815bfbf6912d7c63a8619e8f7592367d53a4da472ef2fe",
         "repeated-signal-pin-control": "016f91ed152f01ff9bb0fcef924263984243a1a81c74d0a0647ebbd4e57d7e2d",
         "repeated-signal-pin-unassigned-fault": "dce2628e41a0964ddfd5befab4afb4fab43da4ff5ef3a1247e1cbdc5e38841ae",
