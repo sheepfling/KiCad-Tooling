@@ -225,15 +225,28 @@ def compare_native_signal_path_rules(
 
     entries: list[PcbSignalPathRuleCoverageEntry] = []
     for path in sorted(requirements.paths, key=lambda item: item.id.casefold()):
-        if path.length is None:
+        if path.length is None and path.edge_clearance is None:
             continue
         path_issues = endpoint_issues(path)
         condition = (
             f"A.fromTo('{drc_pad_selector(path.from_pad)}', '{drc_pad_selector(path.to_pad)}')"
         )
-        constraints = (
-            _compare_constraint(condition, "length", path.length, native, ignored_checks),
-        )
+        constraints_list: list[PcbDrcConstraintCoverage] = []
+        if path.length is not None:
+            constraints_list.append(
+                _compare_constraint(condition, "length", path.length, native, ignored_checks)
+            )
+        if path.edge_clearance is not None:
+            constraints_list.append(
+                _compare_constraint(
+                    f"A.NetName == '{path.net}'",
+                    "edge_clearance",
+                    path.edge_clearance,
+                    native,
+                    ignored_checks,
+                )
+            )
+        constraints = tuple(constraints_list)
         entries.append(
             PcbSignalPathRuleCoverageEntry(
                 id=path.id,

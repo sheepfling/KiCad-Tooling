@@ -34,6 +34,8 @@ def _add_footprint(
         raise RuntimeError(f"Could not load synthetic test footprint {_FOOTPRINT_NAME}")
     footprint.SetReference(reference)
     footprint.SetValue("SYNTHETIC")
+    footprint.Reference().SetVisible(False)
+    footprint.Value().SetVisible(False)
     footprint.SetPosition(pcbnew.VECTOR2I(pcbnew.FromMM(x_mm), pcbnew.FromMM(y_mm)))
     board.Add(footprint)
     pads = {pad.GetNumber(): pad for pad in footprint.Pads()}
@@ -72,6 +74,9 @@ def _rules(
 (rule \"synthetic-clock-length\"
   {severity}(condition \"A.fromTo('J1-1', 'U1-1')\")
   (constraint length (max {maximum_mm:g}mm)))
+(rule \"synthetic-clock-edge-clearance\"
+  {severity}(condition \"A.NetName == 'SYNTH_CLK'\")
+  (constraint edge_clearance (min 2mm)))
 (rule \"synthetic-data-length\"
   {severity}(condition \"A.fromTo('J1-2', 'U1-2')\")
   (constraint length (max {maximum_mm:g}mm)))
@@ -124,7 +129,8 @@ def create(directory: Path, expected_version: str) -> None:
             nets["SYNTH_DATA"],
         )
 
-        outline = ((5.0, 5.0), (35.0, 5.0), (35.0, 30.0), (5.0, 30.0))
+        bottom_edge_y = 5.0 if case == "control" else 8.5
+        outline = ((5.0, bottom_edge_y), (35.0, bottom_edge_y), (35.0, 30.0), (5.0, 30.0))
         for start_point, end_point in zip(outline, (*outline[1:], outline[0]), strict=True):
             _edge(board, start_point, end_point)
 

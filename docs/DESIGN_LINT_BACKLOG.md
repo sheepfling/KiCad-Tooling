@@ -14043,7 +14043,8 @@ control are documented in the
   KiCad DRC already measures these quantities, but project-authored endpoint
   intent can be absent or can drift away from the active native rule.
 - **Predicate:** The project maps exact `reference.pad` endpoints, native net,
-  independent basis, optional length bounds, and bundles with exact member
+  independent basis, optional length and minimum edge-clearance bounds, and
+  bundles with exact member
   path IDs, pad-selector patterns, and maximum skew. Each endpoint must be on
   the declared net in both the current native schematic netlist and PCB pad
   inventory; it must be fitted and in the same native copper component as its
@@ -14077,6 +14078,15 @@ control are documented in the
   and that its endpoints match source and copper evidence. It does not select
   an electrically appropriate length or skew limit, evaluate off-board
   wiring, or establish physical continuity.
+- **Board-edge extension:** An optional project-authored minimum
+  `edge_clearance` may be attached to an exact mapped path. The audit requires
+  one active native `edge_clearance` rule with the same minimum and exact
+  `A.NetName` selector for the mapped net; KiCad DRC measures the geometry.
+  This rule applies to all copper on that net, including branches beyond the
+  mapped endpoints. It does not infer which nets are critical or choose a
+  general edge margin. The native fixture moves a synthetic board edge to
+  distinguish a near-edge fault from an interior control on KiCad 10.0.0 and
+  10.0.5.
 - **Rule-scoped native gate registration (2026-10-12):** The exact-version DRC
   fault/control test was included in broad PCB acceptance but absent from this
   rule's fixture catalog, so `Lint-Rule: pcb.signal_path_rule_coverage` could

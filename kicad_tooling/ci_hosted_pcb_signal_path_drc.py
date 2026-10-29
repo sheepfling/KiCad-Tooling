@@ -105,7 +105,11 @@ def pcb_signal_path_drc_fixture_lane(
         for case in ("control", "fault", "ignored")
         for kind, suffix in (("board", "kicad_pcb"), ("rules", "kicad_dru"))
     }
-    target_types = {"length_out_of_range", "skew_out_of_range"}
+    target_types = {
+        "length_out_of_range",
+        "skew_out_of_range",
+        "copper_edge_clearance",
+    }
     observed: dict[str, dict[str, tuple[tuple[str, ...], str, int]]] = {}
     report_hashes: dict[str, str] = {}
     for case in ("control", "fault", "ignored"):
@@ -139,7 +143,7 @@ def pcb_signal_path_drc_fixture_lane(
     if control_exit != 0 or target_types & set(control_types):
         raise ValueError(f"Native signal-path control produced target findings: {control_types}")
     if fault_exit != 5 or not target_types <= set(fault_types):
-        raise ValueError(f"Native signal-path fault missed length/skew: {fault_types}")
+        raise ValueError(f"Native signal-path fault missed an authored geometry rule: {fault_types}")
     if ignored_exit != 0 or target_types & set(ignored_types):
         raise ValueError(
             f"Native signal-path ignored-rule control produced target findings: {ignored_types}"

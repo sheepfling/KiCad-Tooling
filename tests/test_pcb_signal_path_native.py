@@ -126,7 +126,7 @@ def _retain_native_receipt(project_root: Path, log: HostedLog, project: str) -> 
     ("kicad_version", "image"),
     tuple(PINNED_NATIVE_KICAD_IMAGES.items()),
 )
-def test_native_from_to_length_and_skew_faults_are_repeatable(
+def test_native_signal_path_drc_faults_are_repeatable(
     tmp_path: Path, kicad_version: str, image: str
 ) -> None:
     project = f"signal-path-{kicad_version.replace('.', '-')}"
@@ -151,7 +151,11 @@ def test_native_from_to_length_and_skew_faults_are_repeatable(
         and item.get("status") == "PASS"
     )
     output = root / result["artifact_directory"]
-    expected_findings = {"length_out_of_range", "skew_out_of_range"}
+    expected_findings = {
+        "length_out_of_range",
+        "skew_out_of_range",
+        "copper_edge_clearance",
+    }
     control = set(result["control_violation_types"].split(",")) - {""}
     fault = set(result["fault_violation_types"].split(",")) - {""}
     ignored = set(result["ignored_violation_types"].split(",")) - {""}

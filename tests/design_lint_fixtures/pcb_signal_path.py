@@ -38,6 +38,7 @@ def path_map() -> PcbSignalPathRuleMap:
                 from_pad="J1.1",
                 to_pad="U1.1",
                 length=PcbDrcMinMaxRequirement(max_nm=20_000_000),
+                edge_clearance=PcbDrcMinMaxRequirement(min_nm=2_000_000),
             ),
             PcbSignalPathRequirement(
                 id="data",
@@ -66,6 +67,9 @@ def native_rules() -> str:
 (rule "synthetic-clock-length"
   (condition "A.fromTo('J1-1', 'U1-1')")
   (constraint length (max 20mm)))
+(rule "synthetic-clock-edge-clearance"
+  (condition "A.NetName == 'SYNTH_CLK'")
+  (constraint edge_clearance (min 2mm)))
 (rule "synthetic-data-length"
   (condition "A.fromTo('J1-2', 'U1-2')")
   (constraint length (max 20mm)))

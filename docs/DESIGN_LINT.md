@@ -3606,11 +3606,12 @@ stores marker/comment records under the project settings path
 [kicad-10-drc-exclusions]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#design-rule-checking
 [kicad-10-project-drc-exclusions]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.7/pcbnew/board_design_settings.cpp
 
-## Review mapped PCB signal-path length and bundle skew
+## Review mapped PCB signal-path DRC coverage
 
 Use `design_lint.pcb_signal_path_rule_map` when a reviewed interface or timing
-requirement defines exact PCB endpoint pads and a route-length or bundle-skew
-limit. The values below are synthetic examples only:
+requirement defines exact PCB endpoint pads and route-length, bundle-skew, or
+minimum board-edge clearance limits. The values below are synthetic examples
+only:
 
 ```json
 {
@@ -3625,7 +3626,8 @@ limit. The values below are synthetic examples only:
           "net": "SYNTH_CLK",
           "from_pad": "J1.1",
           "to_pad": "U1.1",
-          "length": {"max_nm": 20000000}
+          "length": {"max_nm": 20000000},
+          "edge_clearance": {"min_nm": 2000000}
         },
         {
           "id": "data",
@@ -3663,8 +3665,13 @@ source-bound schematic netlist and native PCB inventory. Endpoint pads must be
 fitted, assigned to that net, and present in the same native copper component.
 For a bundle, each KiCad `fromTo()` wildcard must resolve to exactly the mapped
 endpoint set; an additional matching board pad makes coverage incomplete. The
-project's `.kicad_dru` must contain exactly one matching `A.fromTo()` rule with
-the authored integer-nanometer length or skew bounds. Ignored native DRC
+project's `.kicad_dru` must contain exactly one matching `A.fromTo()` rule
+with each authored length or skew bound. An edge-clearance minimum requires
+one rule with the exact `A.NetName` selector for the mapped net; that native
+rule applies to all copper on the net, including branches. KiCad DRC measures
+the route geometry; the tooling only checks the authored minimum and exact
+rule coverage. It does not infer signal criticality or select a universal
+board-edge margin. Ignored native DRC
 severities and a matching custom rule with `(severity ignore)` do not count as
 coverage. Absent or duplicate rules, changed bounds, unsupported syntax, stale
 endpoints, and disconnected pads remain review findings.

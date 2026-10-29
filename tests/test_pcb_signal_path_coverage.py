@@ -46,16 +46,23 @@ def test_exact_path_and_bundle_rules_cover_reviewed_map() -> None:
     assert {entry.status for entry in entries} == {"COMPLETE"}
     assert [constraint.constraint for entry in entries for constraint in entry.constraints] == [
         "length",
+        "edge_clearance",
         "length",
         "skew",
     ]
+    clock_edge = next(
+        item
+        for entry in entries
+        for item in entry.constraints
+        if item.constraint == "edge_clearance"
+    )
+    assert clock_edge.observed_min_nm == 2_000_000
     assert [
-        constraint.observed_max_nm for entry in entries for constraint in entry.constraints
-    ] == [
-        20_000_000,
-        20_000_000,
-        100_000,
-    ]
+        item.observed_max_nm
+        for entry in entries
+        for item in entry.constraints
+        if item.constraint != "edge_clearance"
+    ] == [20_000_000, 20_000_000, 100_000]
 
 
 def test_design_lint_reports_wrong_native_path_bound_and_complete_control() -> None:
@@ -96,8 +103,41 @@ def test_missing_wrong_duplicate_and_ignored_native_rules_are_incomplete() -> No
         == "AMBIGUOUS"
     )
 
-    ignored = compare(ignored=frozenset({"length_out_of_range", "skew_out_of_range"}))
+    ignored = compare(
+        ignored=frozenset(
+            {"length_out_of_range", "skew_out_of_range", "copper_edge_clearance"}
+        )
+    )
     assert {item.status for entry in ignored for item in entry.constraints} == {"IGNORED"}
+
+
+def test_path_edge_clearance_requires_exact_project_authored_minimum() -> None:
+    source = native_rules()
+    edge_rule = """(rule \"synthetic-clock-edge-clearance\"
+  (condition \"A.NetName == 'SYNTH_CLK'\")
+  (constraint edge_clearance (min 2mm)))
+"""
+    missing = compare(rules=source.replace(edge_rule, ""))
+    clock = next(entry for entry in missing if entry.id == "clock")
+    assert next(item for item in clock.constraints if item.constraint == "edge_clearance").status == "MISSING"
+
+    wrong = compare(rules=source.replace("(constraint edge_clearance (min 2mm))", "(constraint edge_clearance (min 1.5mm))"))
+    clock = next(entry for entry in wrong if entry.id == "clock")
+    edge = next(item for item in clock.constraints if item.constraint == "edge_clearance")
+    assert edge.status == "MISMATCH"
+    assert edge.observed_min_nm == 1_500_000
+
+
+def test_signal_path_edge_clearance_accepts_minimum_only() -> None:
+    with pytest.raises(ValidationError, match="only an authored minimum"):
+        PcbSignalPathRequirement(
+            id="edge-path",
+            basis="Synthetic authored edge margin",
+            net="SYNTH_CLK",
+            from_pad="J1.1",
+            to_pad="U1.1",
+            edge_clearance=PcbDrcMinMaxRequirement(min_nm=2_000_000, max_nm=3_000_000),
+        )
 
 
 def test_custom_rule_ignore_severity_is_not_credited_for_a_path_or_bundle() -> None:

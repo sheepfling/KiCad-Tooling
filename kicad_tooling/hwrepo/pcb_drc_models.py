@@ -48,7 +48,7 @@ PcbDrcPadSelectorPattern = Annotated[
 
 
 class PcbSignalPathRequirement(StrictModel):
-    """One project-mapped PCB pad-to-pad path and its optional native length limit."""
+    """One project-mapped PCB pad-to-pad path and its native DRC limits."""
 
     id: Identifier
     basis: NonEmptyText
@@ -56,6 +56,7 @@ class PcbSignalPathRequirement(StrictModel):
     from_pad: Reference
     to_pad: Reference
     length: PcbDrcMinMaxRequirement | None = None
+    edge_clearance: PcbDrcMinMaxRequirement | None = None
 
     @model_validator(mode="after")
     def exact_path_endpoints(self) -> PcbSignalPathRequirement:
@@ -65,6 +66,10 @@ class PcbSignalPathRequirement(StrictModel):
             raise ValueError("A PCB signal path needs two distinct endpoint pads")
         if self.from_pad.count(".") != 1 or self.to_pad.count(".") != 1:
             raise ValueError("PCB signal-path endpoints must use exact reference.pad values")
+        if self.length is None and self.edge_clearance is None:
+            raise ValueError("A PCB signal path needs a length or edge-clearance bound")
+        if self.edge_clearance is not None and self.edge_clearance.max_nm is not None:
+            raise ValueError("Signal-path edge clearance supports only an authored minimum")
         return self
 
 
@@ -148,9 +153,12 @@ class PcbSignalPathRuleMap(StrictModel):
                 raise ValueError("A signal path can belong to only one skew bundle")
             bundle_members.update(member_keys)
         if any(
-            item.length is None and item.id.casefold() not in bundle_members for item in self.paths
+            item.length is None
+            and item.edge_clearance is None
+            and item.id.casefold() not in bundle_members
+            for item in self.paths
         ):
-            raise ValueError("Every signal path needs a length bound or a skew-bundle membership")
+            raise ValueError("Every signal path needs a DRC bound or a skew-bundle membership")
         return self
 
 
@@ -364,8 +372,8 @@ class PcbSignalPathRuleCoverageEntry(StrictModel):
                 or self.path_ids
             ):
                 raise ValueError("Signal-path coverage entries need exact path endpoints")
-            if not any(item.constraint == "length" for item in self.constraints):
-                raise ValueError("Signal-path coverage entries need a length constraint")
+            if not any(item.constraint in {"length", "edge_clearance"} for item in self.constraints):
+                raise ValueError("Signal-path coverage entries need a length or edge constraint")
         elif (
             self.from_pad_pattern is None
             or self.to_pad_pattern is None
