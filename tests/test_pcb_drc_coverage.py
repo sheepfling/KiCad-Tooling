@@ -43,6 +43,7 @@ def pair_map() -> PcbDifferentialPairRuleMap:
                 diff_pair_gap=PcbDrcMinMaxRequirement(min_nm=150_000, max_nm=500_000),
                 skew=PcbDrcMaximumRequirement(max_nm=100_000),
                 uncoupled_length=PcbDrcMaximumRequirement(max_nm=200_000),
+                edge_clearance=PcbDrcMinMaxRequirement(min_nm=1_000_000),
             ),
         ),
     )
@@ -89,9 +90,12 @@ def test_exact_native_rules_cover_authored_pair_constraints() -> None:
         "COVERED",
         "COVERED",
         "COVERED",
+        "COVERED",
     ]
     assert entry.constraints[0].observed_min_nm == 250_000
     assert entry.constraints[1].observed_max_nm == 500_000
+    edge = next(item for item in entry.constraints if item.constraint == "edge_clearance")
+    assert edge.observed_min_nm == 1_000_000
 
 
 def test_rule_and_requirement_order_preserve_coverage_but_bound_mutation_is_detected() -> None:
@@ -155,6 +159,30 @@ def test_wrong_bound_is_a_mismatch() -> None:
     gap = next(item for item in entry.constraints if item.constraint == "diff_pair_gap")
     assert gap.status == "MISMATCH"
     assert gap.observed_max_nm == 450_000
+
+
+def test_edge_clearance_bound_is_project_authored_and_exact() -> None:
+    altered = rules_text().replace("(constraint edge_clearance (min 1.0mm))", "")
+    (missing,) = compare_native_rules(pair_map(), altered, frozenset())
+    assert next(item for item in missing.constraints if item.constraint == "edge_clearance").status == "MISSING"
+
+    changed = rules_text().replace("(min 1.0mm)", "(min 0.8mm)")
+    (mismatched,) = compare_native_rules(pair_map(), changed, frozenset())
+    edge = next(item for item in mismatched.constraints if item.constraint == "edge_clearance")
+    assert edge.status == "MISMATCH"
+    assert edge.observed_min_nm == 800_000
+
+
+def test_edge_clearance_requires_a_minimum_only() -> None:
+    with pytest.raises(ValueError, match="only an authored minimum"):
+        PcbDifferentialPairRuleRequirement(
+            id="usb-data",
+            basis="Synthetic interface requirement",
+            positive_net="USB_D_P",
+            negative_net="USB_D_N",
+            pair_selector="USB_D_",
+            edge_clearance=PcbDrcMinMaxRequirement(min_nm=1_000_000, max_nm=2_000_000),
+        )
 
 
 def test_duplicate_matching_rules_are_ambiguous() -> None:

@@ -14275,10 +14275,18 @@ control are documented in the
 
 #### LINT-022 — Differential-pair physical constraint evidence
 
-- **Status:** Implemented v1 as `pcb.differential_pair_rule_coverage`; review
+- **Status:** Implemented v2 as `pcb.differential_pair_rule_coverage`; review
   by default, with project-authored `review`, `block`, `off`, and exact-ignore
-  decisions. Independent pair-geometry validation remains deferred.
-- **Inspiration:** [pcb-inspector](https://github.com/takzen/pcb-inspector).
+  decisions. v2 adds an optional authored minimum copper-to-board-edge
+  clearance for one mapped differential pair, checked against KiCad's exact
+  native DRC rule and geometry result. Independent pair-geometry validation
+  remains deferred.
+- **Inspiration:** [pcb-inspector](https://github.com/takzen/pcb-inspector) and
+  kicad-happy's NR-001 critical-net edge-routing review. NR-001 uses fixed
+  1 mm/2 mm thresholds and segment-midpoint sampling in the inspected
+  [`v2.2.1` release source](https://github.com/aklofas/kicad-happy/blob/v2.2.1/skills/kicad/scripts/cross_analysis.py).
+  This tooling does not adopt that unconfigured net-class heuristic; the
+  added check requires an exact project-authored pair and minimum.
 - **Native reference:** The
   [KiCad 10 PCB Editor manual](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html) documents custom
   width, pair-gap, length, skew, and uncoupled-length constraints. Netclass widths are routing
@@ -14315,8 +14323,11 @@ control are documented in the
   bounds; missing files, wrong-pair selectors, wrong bounds, duplicate rules,
   globally ignored checks, custom rules with `(severity ignore)`, unsupported
   severity clauses, unsupported units, and unsupported net suffixes remain
-  visible. The native DRC matrix above verifies that KiCad 10.0.0 and 10.0.5
-  catch each corresponding geometry fault when its authored rule exists.
+  visible. An optional `edge_clearance.min_nm` requires an exact active native
+  edge-clearance rule for the authored pair. Tooling-owned near-edge and
+  interior controls exercise this rule with exact KiCad 10.0.0/10.0.5 DRC.
+  The native DRC matrix verifies that KiCad catches each corresponding
+  geometry fault when its authored rule exists.
 - **Done for v1:** Typed pair map, exact rule parser, source-bound board,
   project settings, rule file and native DRC evidence, policy modes, catalog,
   synthetic fault/control coverage, and CLI/MCP parity. Future work can expand

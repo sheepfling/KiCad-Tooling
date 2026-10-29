@@ -11,3 +11,6 @@
 (rule "synthetic-dp-uncoupled"
   (condition "A.inDiffPair('USB_D_')")
   (constraint diff_pair_uncoupled (max 0.2mm)))
+(rule "synthetic-dp-edge-clearance"
+  (condition "A.inDiffPair('USB_D_')")
+  (constraint edge_clearance (min 1.0mm)))

@@ -3320,7 +3320,8 @@ recommended USB limits.
           "track_width": {"min_nm": 250000},
           "diff_pair_gap": {"min_nm": 150000, "max_nm": 500000},
           "skew": {"max_nm": 100000},
-          "uncoupled_length": {"max_nm": 200000}
+          "uncoupled_length": {"max_nm": 200000},
+          "edge_clearance": {"min_nm": 1000000}
         }
       ]
     },
@@ -3347,6 +3348,12 @@ unsupported. Supported lengths are `mm` and `mil`; supported net suffixes are
 ignored checks, unsupported syntax or units, and unrecognized pair names
 remain incomplete review findings. A missing `.kicad_dru` file is reported as
 missing coverage.
+
+`edge_clearance` is an optional project-authored minimum for the mapped pair.
+It must match one active native `(constraint edge_clearance (min ...))` rule
+under the exact `A.inDiffPair(...)` selector. KiCad DRC measures the copper to
+board-edge distance; this audit checks the configured bound and never chooses
+a universal distance or infers which signals are critical.
 
 The report binds the project settings, board, optional rule file, native DRC
 report and command, validation summary, selected KiCad version, project image,

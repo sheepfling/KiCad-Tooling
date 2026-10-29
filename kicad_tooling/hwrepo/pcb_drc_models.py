@@ -171,6 +171,7 @@ class PcbDifferentialPairRuleRequirement(StrictModel):
     diff_pair_gap: PcbDrcMinMaxRequirement | None = None
     skew: PcbDrcMaximumRequirement | None = None
     uncoupled_length: PcbDrcMaximumRequirement | None = None
+    edge_clearance: PcbDrcMinMaxRequirement | None = None
 
     @model_validator(mode="after")
     def complete_pair_requirement(self) -> PcbDifferentialPairRuleRequirement:
@@ -183,9 +184,17 @@ class PcbDifferentialPairRuleRequirement(StrictModel):
             raise ValueError("The pair selector must be a prefix of both explicitly named nets")
         if not any(
             item is not None
-            for item in (self.track_width, self.diff_pair_gap, self.skew, self.uncoupled_length)
+            for item in (
+                self.track_width,
+                self.diff_pair_gap,
+                self.skew,
+                self.uncoupled_length,
+                self.edge_clearance,
+            )
         ):
             raise ValueError("A differential-pair requirement needs at least one DRC constraint")
+        if self.edge_clearance is not None and self.edge_clearance.max_nm is not None:
+            raise ValueError("Differential-pair edge clearance supports only an authored minimum")
         return self
 
 
@@ -216,6 +225,7 @@ PcbDrcConstraintName = Literal[
     "diff_pair_uncoupled",
     "length",
     "physical_clearance",
+    "edge_clearance",
 ]
 
 PcbDrcConstraintCoverageStatus = Literal[

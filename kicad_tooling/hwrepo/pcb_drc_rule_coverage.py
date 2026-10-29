@@ -147,6 +147,7 @@ def compare_native_rules(
             ("diff_pair_gap", requirement.diff_pair_gap),
             ("skew", requirement.skew),
             ("diff_pair_uncoupled", requirement.uncoupled_length),
+            ("edge_clearance", requirement.edge_clearance),
         )
         entry_issues: list[str] = []
         if not _recognized_pair_names(

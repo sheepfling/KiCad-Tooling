@@ -23,6 +23,7 @@ RULE_SEVERITY = MappingProxyType(
         "skew": "skew_out_of_range",
         "diff_pair_uncoupled": "diff_pair_uncoupled_length_too_long",
         "length": "length_out_of_range",
+        "edge_clearance": "copper_edge_clearance",
     }
 )
 _LENGTH = re.compile(r"^([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+))(mm|mil)$")
