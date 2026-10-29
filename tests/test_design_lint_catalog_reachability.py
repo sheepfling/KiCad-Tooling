@@ -517,5 +517,9 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     emitted.update(
         item.rule_id for item in candidates(_i3c_same_net_fixtures.i3c_same_net_netlist())
     )
+    i3c_open_sda = _i3c_same_net_fixtures.i3c_same_net_netlist().model_copy(
+        update={"nets": {"I3C_SCL": ("U1.2",)}}
+    )
+    emitted.update(item.rule_id for item in candidates(i3c_open_sda))
     active = {item.rule_id for item in rule_catalog().rules if item.status == "active"}
     assert emitted == active

@@ -36,6 +36,7 @@ def named_rail_fixture_lane(
     expected_subjects: Mapping[str, tuple[str, ...]],
     expected_pin_functions: Mapping[str, str] | None = None,
     expected_unconnected_pins: Mapping[str, tuple[str, ...]] | None = None,
+    stage_prefix_override: str | None = None,
 ) -> None:
     """Export and relint exact fault/control schematics on one pinned KiCad image."""
 
@@ -109,7 +110,7 @@ def named_rail_fixture_lane(
         "-ec",
         script,
     )
-    stage_prefix = f"{protocol}-{feature}-named-rail-fixture"
+    stage_prefix = stage_prefix_override or f"{protocol}-{feature}-named-rail-fixture"
     log.event(
         f"{stage_prefix}/native-export",
         "START",

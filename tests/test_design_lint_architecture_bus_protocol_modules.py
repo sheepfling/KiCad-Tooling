@@ -16,6 +16,7 @@ BUS_ANALYSIS_MODULES = (
     "bus_signal_roles.py",
     "i3c_signal_named_rail.py",
     "i3c_same_net.py",
+    "i3c_unconnected_pins.py",
     "usb_data_same_net.py",
     "design_lint_two_wire_signal_candidates.py",
     "design_lint_serial_signal_candidates.py",

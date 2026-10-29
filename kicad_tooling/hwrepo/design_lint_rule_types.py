@@ -128,6 +128,7 @@ DesignLintRuleId = Literal[
     "bus.i2c_signal_label_role_mismatch",
     "bus.i2c_signal_on_named_rail",
     "bus.i3c_signal_on_named_rail",
+    "bus.i3c_unconnected_pin",
     "bus.i3c_sda_scl_same_net",
     "bus.i2c_sda_scl_same_net",
     "bus.i2c_address_mismatch",

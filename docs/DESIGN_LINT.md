@@ -747,7 +747,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 244 active rules.
+The catalog currently contains 246 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1608,6 +1608,32 @@ Source hashes and fixture details are in the
 KICAD_RUN_NATIVE_I3C_SDA_SCL_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_i3c_same_net_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i3c_sda_scl_same_net")'
+```
+
+### I3C open SDA/SCL pair review
+
+`bus.i3c_unconnected_pin` prompts when exactly one explicit I3C SDA/SCL
+function pin is unassigned while its matching channel peer has one direct net
+assignment. It requires a fitted numeric U/IC reference and a complete
+component pin-number inventory. All-open pairs, connectors, DNP components,
+duplicate or mismatched channel roles, incomplete inventories, and ambiguous
+assignments are skipped. The rule defaults off because function labels do not
+prove that the interface is used; project policy can enable review, promote it
+to `block`, disable it, or ignore one exact finding. It does not trace passive
+paths or establish PCB continuity. Synthetic source hashes and exact native
+results are documented in the
+[tooling-owned fixture record](../tests/fixtures/design_lint/i3c-unconnected-pin-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_i3c_unconnected_pins.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i3c_unconnected_pin")'
+
+.venv/bin/python -I -m pytest tests/test_design_lint_mcp_parity_i3c_unconnected.py \
+  -m 'design_lint and interface_lint and parity_lint and design_lint_rule(rule_id="bus.i3c_unconnected_pin")'
+
+KICAD_RUN_NATIVE_I3C_UNCONNECTED_PIN_FIXTURES=1 \
+  .venv/bin/python -I -m pytest tests/test_i3c_unconnected_pin_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i3c_unconnected_pin")'
 ```
 
 ## Run the lint lane

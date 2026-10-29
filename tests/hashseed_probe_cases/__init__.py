@@ -34,6 +34,7 @@ HASHSEED_REPORT_FAMILIES = (
     "i2c_signal_named_rail",
     "i3c_signal_named_rail",
     "i3c_same_net",
+    "i3c_unconnected_pin",
     "usb_dp_dm_same_net",
     "serial_signal_named_rail",
     "spi_signal_named_rail",

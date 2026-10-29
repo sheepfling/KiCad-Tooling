@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 244 rules are implemented with synthetic regression coverage.
+The following 246 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 244 active rules.
+The catalog currently contains 246 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -546,7 +546,9 @@ skipped under prerelease policy.
 - `bus.i2c_signal_on_named_rail`
 - `bus.i3c_signal_on_named_rail`
 - `bus.i3c_sda_scl_same_net`
+- `bus.i3c_unconnected_pin`
 - `bus.i2c_sda_scl_same_net`
+- `bus.serial_endpoint_role_collision`
 - `bus.spi_unmapped_participant`
 - `bus.serial_unmapped_peer`
 - `bus.serial_unconnected_pin`
@@ -562,6 +564,7 @@ skipped under prerelease policy.
 - `bus.rs485_data_direction_label_mismatch`
 - `bus.rs485_data_input_output_same_net`
 - `bus.rs485_ab_same_net`
+- `bus.rs485_line_label_mismatch`
 - `bus.rs485_line_on_named_rail`
 - `bus.rs485_signal_on_named_rail`
 - `bus.rs485_unconnected_data_pin`
@@ -3294,7 +3297,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 244 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 246 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -5913,6 +5916,51 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_USB_C_SBU_SAME_NET_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_usb_c_sbu_named_rail_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_same_net")'
+  ```
+
+#### LINT-264 — Review one-sided open I3C SDA/SCL pairs
+
+- **Status:** Implemented as default-off `bus.i3c_unconnected_pin`. Project
+  policy can enable `review`, promote it to `block`, turn it off, or ignore an
+  exact finding fingerprint.
+- **Gap:** Existing I3C checks recognize pins assigned to named rails or both
+  signal roles assigned to one net. They did not localize one missing SDA or
+  SCL assignment when the paired role is present.
+- **Predicate:** For a fitted numeric U/IC reference, group exactly one
+  explicit I3C SDA and SCL function by matching optional channel. Require both
+  pins to appear in the component pin-number inventory. Emit a prompt only
+  when one pin has no net assignment and its peer has exactly one. Skip
+  connectors, DNP parts, duplicate roles, mismatched channels, incomplete
+  inventory, and multiply assigned pins.
+- **Boundary:** Partial bus use can be intentional. Function names do not
+  establish I3C support, required connectivity, firmware use, routed copper,
+  or physical continuity. All-open pairs stay quiet because they provide no
+  independent indication that the interface is in use. A project-authored
+  interface requirement is needed to turn this review clue into a blocking
+  regression.
+- **Fixtures and quality gate:** Typed fault cases cover both open-pin
+  directions; controls cover both-open, both-assigned, DNP, connector,
+  duplicate roles, mismatched channels, incomplete inventory, ambiguous
+  assignments, policy, input ordering, and repair. Catalog reachability,
+  focused selection, marker registration, and the under-500-line protocol
+  architecture check are included. Three-process hash-seed coverage and
+  synthetic CLI/MCP report parity are also required. Source-hashed native
+  fault/control schematics repeat netlist and ERC exports on digest-pinned
+  KiCad 10.0.0/10.0.5, checking the explicit no-connect pin and expected
+  candidate; see the
+  [fixture record](../tests/fixtures/design_lint/i3c-unconnected-pin-native/README.md).
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_i3c_unconnected_pins.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i3c_unconnected_pin")'
+
+  .venv/bin/python -I -m pytest tests/test_design_lint_mcp_parity_i3c_unconnected.py \
+    -m 'design_lint and interface_lint and parity_lint and design_lint_rule(rule_id="bus.i3c_unconnected_pin")'
+
+  KICAD_RUN_NATIVE_I3C_UNCONNECTED_PIN_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_i3c_unconnected_pin_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i3c_unconnected_pin")'
   ```
 
 #### LINT-263 — Review crossed RS-485 A/B line labels

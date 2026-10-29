@@ -159,6 +159,10 @@ def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:
             "tests/test_i3c_signal_same_net.py::test_dnp_open_duplicate_mismatched_channel_and_incomplete_inventory_are_skipped",
         ),
         (
+            "bus.i3c_unconnected_pin",
+            "tests/test_i3c_unconnected_pins.py::test_all_open_and_both_assigned_pairs_are_quiet",
+        ),
+        (
             "bus.serial_tx_rx_label_mismatch",
             "tests/test_serial_tx_rx_label_mismatch.py::test_opposite_uart_labels_are_reviewed_while_pins_remain_separate",
         ),

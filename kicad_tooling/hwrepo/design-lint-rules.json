@@ -4785,6 +4785,51 @@
       "implementation_owner": "kicad_tooling/hwrepo/i2c_unconnected_pins.py#unconnected_i2c_signal_pins"
     },
     {
+      "rule_id": "bus.i3c_unconnected_pin",
+      "title": "Recognized I3C pin is open on a partially connected pair",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted numeric U/IC reference with exactly one explicit I3C SDA and one I3C SCL role in the same optional channel, complete native pin-number inventory, report an unassigned member only when its paired role has exactly one direct native net assignment.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only explicit I3C SDA/SCL aliases accepted by i3c_signal_identity are recognized; I2C-only names, generic signal names, connectors, and unsupported vendor aliases are outside the predicate.",
+        "An entirely open pair is excluded because native function text does not establish I3C use. A partially assigned pair can be intentional, so the rule defaults off and asks for review only when a project enables it.",
+        "Duplicate roles, mismatched channels, missing or inconsistent pin inventories, DNP components, and multiply assigned pins are excluded because the native evidence does not identify one unique partial pair.",
+        "The netlist does not establish endpoint intent, firmware configuration, PCB copper, external wiring, or physical continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_i3c_unconnected_pins.test_one_open_member_reports_its_channel_peer",
+        "tests.test_i3c_unconnected_pins.test_channel_duplicates_inventory_dnp_and_ambiguous_assignments_are_quiet",
+        "tests.test_i3c_unconnected_pins.test_unique_channels_are_checked_independently",
+        "tests.test_i3c_unconnected_pin_native_fixture_lane.test_native_i3c_unconnected_pin_fault_and_control_repeat",
+        "tests.test_design_lint_mcp_parity_i3c_unconnected.test_i3c_unconnected_cli_mcp_parity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_i3c_unconnected_pins.test_all_open_and_both_assigned_pairs_are_quiet",
+        "tests.test_i3c_unconnected_pins.test_channel_duplicates_inventory_dnp_and_ambiguous_assignments_are_quiet",
+        "tests.test_i3c_unconnected_pin_native_fixture_lane.test_native_i3c_unconnected_pin_fault_and_control_repeat"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_i3c_unconnected_pins.test_ordering_is_stable_and_connecting_open_pin_clears_prompt",
+        "tests.test_design_lint_determinism_i3c_unconnected_pin.test_i3c_unconnected_pin_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I3C_UNCONNECTED_PIN_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/i3c_unconnected_pins.py#unconnected_i3c_signal_pins",
+        "kicad_tooling/hwrepo/design_lint_two_wire_signal_candidates.py#i3c_unconnected_signal_candidates",
+        "kicad_tooling/hwrepo/bus_signal_roles.py#i3c_signal_identity"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/i3c_unconnected_pins.py#unconnected_i3c_signal_pins"
+    },
+    {
       "rule_id": "bus.i2c_missing_pullup",
       "title": "Named I2C bus lacks visible local pull-up path",
       "status": "active",
