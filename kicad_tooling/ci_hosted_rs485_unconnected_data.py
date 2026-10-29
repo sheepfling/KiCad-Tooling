@@ -29,29 +29,64 @@ _SOURCE_HASHES = MappingProxyType(
         "control": "fa1ee6811e6351691e186c70411c6fbb139acbbebbb99e556136ad36818ea588",
     }
 )
+_LINE_RULE_ID = "bus.rs485_unconnected_line_pin"
+_LINE_SOURCE_HASHES = MappingProxyType(
+    {
+        "fault": "646edf03c83e0280e27ef7158872dc99e00890da0ddc3a7fce6ac65f1badf84d",
+        "control": "41f8292b1cfe2e9487f7f14abbce16ddf26e187e9998feee52cfc9aaab919462",
+    }
+)
 
 
 def rs485_unconnected_data_pin_fixture_lane(
-    root: Path, *, version: str, image: str, log: HostedLog
+    root: Path,
+    *,
+    version: str,
+    image: str,
+    log: HostedLog,
+    line_fixture: bool = False,
 ) -> None:
-    """Repeat exact native netlist/ERC exports for open and connected RS-485 data pins."""
+    """Repeat exact native netlist/ERC exports for an RS-485 open-pin pair."""
     root = root.resolve()
+    fixture_kind = "line" if line_fixture else "data"
     if (version, image) not in RS485_UNCONNECTED_DATA_TOOLCHAINS:
-        raise ValueError(f"RS-485 open-data fixtures do not cover KiCad {version} with this image")
+        raise ValueError(
+            f"RS-485 open-{fixture_kind} fixtures do not cover KiCad {version} with this image"
+        )
     pinned = pinned_image(image)
-    fixture_root = (
-        tooling_checkout_root() / "tests/fixtures/design_lint/rs485-unconnected-data-native"
+    fixture_root = tooling_checkout_root() / (
+        f"tests/fixtures/design_lint/rs485-unconnected-{fixture_kind}-native"
     )
     sources = {
         "fault": fixture_root / "fault.kicad_sch",
         "control": fixture_root / "control.kicad_sch",
     }
     source_hashes = MappingProxyType({case: digest(source) for case, source in sources.items()})
-    if source_hashes != _SOURCE_HASHES:
-        raise ValueError("RS-485 open-data sources differ from reviewed hashes")
+    expected_hashes = _LINE_SOURCE_HASHES if line_fixture else _SOURCE_HASHES
+    if source_hashes != expected_hashes:
+        raise ValueError(f"RS-485 open-{fixture_kind} sources differ from reviewed hashes")
+    rule_id = _LINE_RULE_ID if line_fixture else _RULE_ID
+    stage = f"rs485-unconnected-{fixture_kind}-fixture"
+    expected_functions = (
+        {"U1.1": "A", "U1.2": "B"}
+        if line_fixture
+        else {
+            "U1.1": "D",
+            "U1.2": "R",
+        }
+    )
+    control_nets = (
+        {"RS485_A": ("U1.1",), "RS485_B": ("U1.2",)}
+        if line_fixture
+        else {"HOST_TX": ("U1.1",), "HOST_RX": ("U1.2",)}
+    )
+    default_mode = "review" if line_fixture else "off"
+    expected_subject = "U1.2: RS-485 B bus-line function is open" if line_fixture else "U1.2: R"
 
     scratch = Path(
-        tempfile.mkdtemp(prefix=f"rs485-open-data-{version}-", dir=log.directory.resolve())
+        tempfile.mkdtemp(
+            prefix=f"rs485-open-{fixture_kind}-{version}-", dir=log.directory.resolve()
+        )
     )
     inputs = scratch / "input"
     inputs.mkdir()
@@ -103,7 +138,7 @@ def rs485_unconnected_data_pin_fixture_lane(
         script,
     )
     log.event(
-        "rs485-unconnected-data-fixture/native-export",
+        f"{stage}/native-export",
         "START",
         project=f"kicad-{version}",
         kicad_version=version,
@@ -126,24 +161,28 @@ def rs485_unconnected_data_pin_fixture_lane(
             netlist_path = output / f"{case}.{run}.netlist.xml"
             erc_path = output / f"{case}.{run}.erc.json"
             if not netlist_path.is_file() or not erc_path.is_file():
-                raise ValueError(f"Native KiCad omitted RS-485 open-data {case} evidence")
+                raise ValueError(f"Native KiCad omitted RS-485 open-{fixture_kind} {case} evidence")
             observed = read_netlist(netlist_path)
             if observed.component_pin_numbers.get("U1") != ("1", "2"):
-                raise ValueError(f"Native RS-485 open-data {case} lost pin inventory")
-            if (
-                observed.pin_functions.get("U1.1") != "D"
-                or observed.pin_functions.get("U1.2") != "R"
+                raise ValueError(f"Native RS-485 open-{fixture_kind} {case} lost pin inventory")
+            if any(
+                observed.pin_functions.get(pin) != function
+                for pin, function in expected_functions.items()
             ):
-                raise ValueError(f"Native RS-485 open-data {case} lost D/R pin functions")
+                raise ValueError(f"Native RS-485 open-{fixture_kind} {case} lost pin functions")
             expected_nets = (
-                {"HOST_TX": ("U1.1",)}
+                {
+                    net: tuple(pin for pin in pins if pin != "U1.2")
+                    for net, pins in control_nets.items()
+                }
                 if case == "fault"
-                else {"HOST_TX": ("U1.1",), "HOST_RX": ("U1.2",)}
+                else control_nets
             )
+            expected_nets = {net: pins for net, pins in expected_nets.items() if pins}
             if any(observed.nets.get(net) != pins for net, pins in expected_nets.items()):
                 actual_nets = {net: observed.nets.get(net) for net in expected_nets}
                 raise ValueError(
-                    f"Native RS-485 open-data {case} assignments changed: "
+                    f"Native RS-485 open-{fixture_kind} {case} assignments changed: "
                     f"expected={expected_nets!r}, actual={actual_nets!r}"
                 )
             normalized = json.dumps(
@@ -157,9 +196,11 @@ def rs485_unconnected_data_pin_fixture_lane(
             if erc.kicad_version != version or any(
                 item.severity == "error" for item in erc.violations
             ):
-                raise ValueError(f"Native ERC reported errors for RS-485 open-data {case}")
+                raise ValueError(
+                    f"Native ERC reported errors for RS-485 open-{fixture_kind} {case}"
+                )
 
-            project_id = f"synthetic-rs485-unconnected-data-{case}"
+            project_id = f"synthetic-rs485-unconnected-{fixture_kind}-{case}"
             coach_report = ContractCoachReport(
                 status="READY_FOR_REVIEW",
                 project_id=project_id,
@@ -173,7 +214,7 @@ def rs485_unconnected_data_pin_fixture_lane(
                 DesignLintPolicy(
                     rules=(
                         DesignLintRuleOverride(
-                            rule_id=_RULE_ID,
+                            rule_id=rule_id,
                             mode="review",
                             reason="Native open-data regression fixture",
                         ),
@@ -181,31 +222,36 @@ def rs485_unconnected_data_pin_fixture_lane(
                 ),
             )
             default_subjects[(case, run)] = tuple(
-                item.subject for item in default_report.findings if item.rule_id == _RULE_ID
+                item.subject for item in default_report.findings if item.rule_id == rule_id
             )
             default_dispositions[(case, run)] = tuple(
                 (item.mode, item.disposition)
                 for item in default_report.findings
-                if item.rule_id == _RULE_ID
+                if item.rule_id == rule_id
             )
             review_subjects[(case, run)] = tuple(
-                item.subject for item in review_report.findings if item.rule_id == _RULE_ID
+                item.subject for item in review_report.findings if item.rule_id == rule_id
             )
 
-    expected_review = {"fault": ("U1.2: R",), "control": ()}
+    expected_review = {"fault": (expected_subject,), "control": ()}
     for case in sources:
         for run in ("first", "repeat"):
             if normalized_hashes[(case, run)] != normalized_hashes[(case, "first")]:
-                raise ValueError(f"Native RS-485 open-data {case} exports are not repeatable")
+                raise ValueError(
+                    f"Native RS-485 open-{fixture_kind} {case} exports are not repeatable"
+                )
             if review_subjects[(case, run)] != expected_review[case]:
-                raise ValueError(f"Native RS-485 open-data {case} review result changed")
+                raise ValueError(f"Native RS-485 open-{fixture_kind} {case} review result changed")
             if default_subjects[(case, run)] != expected_review[case]:
-                raise ValueError(f"Native RS-485 open-data {case} default-off evidence changed")
-            expected_default = (("off", "RULE_OFF"),) if case == "fault" else ()
+                raise ValueError(
+                    f"Native RS-485 open-{fixture_kind} {case} default evidence changed"
+                )
+            expected_disposition = "RULE_OFF" if default_mode == "off" else "REVIEW"
+            expected_default = ((default_mode, expected_disposition),) if case == "fault" else ()
             if default_dispositions[(case, run)] != expected_default:
                 raise ValueError(f"Native RS-485 open-data {case} default policy changed")
             log.event(
-                f"rs485-unconnected-data-fixture/{case}",
+                f"{stage}/{case}",
                 "PASS",
                 project=f"kicad-{version}",
                 kicad_version=version,
@@ -213,12 +259,12 @@ def rs485_unconnected_data_pin_fixture_lane(
                 source_sha256=source_hashes[case],
                 normalized_netlist_sha256=normalized_hashes[(case, run)],
                 repeatable="true",
-                default_mode="off",
+                default_mode=default_mode,
                 review_subjects=";".join(review_subjects[(case, run)]) or "none",
                 erc_errors="none",
             )
     log.event(
-        "rs485-unconnected-data-fixture/native-export",
+        f"{stage}/native-export",
         "PASS",
         project=f"kicad-{version}",
         kicad_version=version,
@@ -226,3 +272,16 @@ def rs485_unconnected_data_pin_fixture_lane(
         command_receipt=receipt.relative_to(root).as_posix(),
     )
     log.finish()
+
+
+def rs485_unconnected_line_pin_fixture_lane(
+    root: Path, *, version: str, image: str, log: HostedLog
+) -> None:
+    """Run the shared exact-version lane with the RS-485 A/B line fixtures."""
+    rs485_unconnected_data_pin_fixture_lane(
+        root,
+        version=version,
+        image=image,
+        log=log,
+        line_fixture=True,
+    )

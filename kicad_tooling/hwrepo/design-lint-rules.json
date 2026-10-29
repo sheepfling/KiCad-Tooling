@@ -6996,25 +6996,29 @@
       "evidence_adapter": "Synthetic normalized netlist; KiCad XML netlist uses kicad_tooling.validate.read_netlist",
       "predicate": "For a fitted U/IC reference with explicit bounded RS-485 identity, complete native pin-function and pin-number inventory, and exactly one recognized A and one B function, emit a review candidate when one line pin is unassigned and its paired line pin has exactly one assignment.",
       "supported_kicad_versions": [
-        "Synthetic normalized netlist only; native KiCad versions not yet validated"
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native export lanes"
       ],
       "limitations": [
         "A/B line use may be intentionally partial; the rule asks for review and does not assert that the line must be connected.",
-        "Synthetic netlist behavior is covered; exact-version native fixture validation is still required. Pin assignments do not prove PCB copper continuity or interface requirements.",
+        "The rule observes schematic net assignments only; it does not prove PCB copper continuity, interface requirements, firmware use, off-board wiring, or physical continuity.",
         "DNP, non-IC, generic or unsupported identities, incomplete inventory, duplicate or ambiguous A/B functions, both-open pairs, and multi-net assignments are skipped."
       ],
       "fault_fixtures": [
-        "tests.test_rs485_unconnected_line_pins.test_one_open_line_is_localized_with_its_assigned_pair_member"
+        "tests.test_rs485_unconnected_line_pins.test_one_open_line_is_localized_with_its_assigned_pair_member",
+        "tests.test_rs485_unconnected_line_native_fixture_lane.test_native_open_rs485_line_fault_and_connected_control"
       ],
       "valid_control_fixtures": [
         "tests.test_rs485_unconnected_line_pins.test_complete_pair_and_unsupported_identity_shapes_are_quiet",
-        "tests.test_rs485_unconnected_line_pins.test_incomplete_duplicate_and_ambiguous_pair_evidence_is_skipped"
+        "tests.test_rs485_unconnected_line_pins.test_incomplete_duplicate_and_ambiguous_pair_evidence_is_skipped",
+        "tests.test_rs485_unconnected_line_native_fixture_lane.test_native_open_rs485_line_fault_and_connected_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_rs485_unconnected_line_pins.test_mapping_order_is_stable_and_assignment_repair_clears_candidate"
       ],
-      "required_native_fixtures": [],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_RS485_UNCONNECTED_LINE_PIN_FIXTURES"
+      ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/rs485_unconnected_line_pin.py#rs485_unconnected_line_pin_candidates",
         "kicad_tooling/hwrepo/rs485_data_functions.py#explicit_rs485_transceiver_identity",

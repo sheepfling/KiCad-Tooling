@@ -36,6 +36,7 @@ BUS_ANALYSIS_MODULES = (
     "rs485_ab_same_net.py",
     "rs485_line_label_mismatch.py",
     "rs485_unconnected_data_pins.py",
+    "rs485_unconnected_line_pin.py",
     "design_lint_interfaces_usb_data_polarity.py",
     "usb_unconnected_data.py",
     "spi_unconnected_data_pins.py",

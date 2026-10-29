@@ -81,6 +81,7 @@ NATIVE_INTERFACE_THEME_SUITES = (
     "test_ci_hosted_usb_c_ports.py",
     "test_ci_hosted_stm32.py",
     "test_ci_hosted_control_inputs.py",
+    "test_rs485_unconnected_line_native_fixture_lane.py",
 )
 COMPONENT_PEER_POWER_THEME_SUITES = (
     "test_component_peer_power_input_divergence.py",

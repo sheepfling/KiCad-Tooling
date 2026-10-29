@@ -164,6 +164,7 @@ INTERFACE_LINT_TEST_MODULES = frozenset(
         "tests/test_rs485_unconnected_data_pins.py",
         "tests/test_rs485_unconnected_data_pins_native_fixture_lane.py",
         "tests/test_rs485_unconnected_line_pins.py",
+        "tests/test_rs485_unconnected_line_native_fixture_lane.py",
         "tests/test_serial_tx_output_sharing.py",
         "tests/test_serial_tx_output_sharing_native_fixture_lane.py",
         "tests/test_serial_unconnected_pins.py",

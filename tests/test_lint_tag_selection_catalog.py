@@ -232,6 +232,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_RS485_UNCONNECTED_DATA_PIN_FIXTURES",
         ),
         (
+            "bus.rs485_unconnected_line_pin",
+            "KICAD_RUN_NATIVE_RS485_UNCONNECTED_LINE_PIN_FIXTURES",
+        ),
+        (
             "bus.serial_tx_outputs_share_net",
             "KICAD_RUN_NATIVE_SERIAL_TX_OUTPUT_SHARING_FIXTURES",
         ),
