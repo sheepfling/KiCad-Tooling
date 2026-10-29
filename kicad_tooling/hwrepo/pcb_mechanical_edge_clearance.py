@@ -26,6 +26,8 @@ def mechanical_edge_rule_coverage_issue(
     *,
     kicad_version: str | None = None,
 ) -> str | None:
+    if any(item.name == "unresolved_text_variable" for item in constraints):
+        return "Native DRC rule text contains a text variable substitution this audit does not evaluate."
     named = tuple(
         item
         for item in constraints

@@ -25,6 +25,7 @@ PCB_LINT_TEST_MODULES = frozenset(
         "tests/test_pcb_decoupling_native_fixture_lane.py",
         "tests/test_pcb_drc_coverage.py",
         "tests/test_pcb_drc_precedence_native.py",
+        "tests/test_pcb_drc_text_variables_native.py",
         "tests/test_pcb_differential_pair_edge_clearance_native.py",
         "tests/test_pcb_mechanical_edge_clearance.py",
         "tests/test_pcb_mechanical_edge_clearance_native.py",

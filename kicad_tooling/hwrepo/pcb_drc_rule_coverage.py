@@ -58,6 +58,14 @@ def _compare_constraint(
     ignored_checks: frozenset[str],
 ) -> PcbDrcConstraintCoverage:
     expected_minimum, expected_maximum = _expected(name, bounds)
+    if any(item.name == "unresolved_text_variable" for item in native):
+        return PcbDrcConstraintCoverage(
+            constraint=name,
+            status="UNSUPPORTED",
+            expected_min_nm=expected_minimum,
+            expected_max_nm=expected_maximum,
+            issue="Native DRC rule text contains a text variable substitution this audit does not evaluate.",
+        )
     matches = tuple(item for item in native if item.condition == condition and item.name == name)
     severity = RULE_SEVERITY[name]
     if severity in ignored_checks:

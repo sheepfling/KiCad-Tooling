@@ -59,6 +59,11 @@ _NON_RULE_NATIVE_TESTS = MappingProxyType(
             "test_native_drc_rule_order_controls_mapped_edge_constraint",
         ): "This native experiment establishes rule-order behavior independently; it does not invoke the mapped-rule audit.",
         (
+            "tests.test_pcb_drc_text_variables_native",
+            None,
+            "test_native_project_variables_can_override_exact_edge_rule",
+        ): "This native experiment demonstrates project text-variable expansion; it does not invoke the mapped-rule audit.",
+        (
             "tests.test_pcb_return_path_native_fixture_lane",
             None,
             "test_native_return_path_fixture_cases_on_supported_kicad",

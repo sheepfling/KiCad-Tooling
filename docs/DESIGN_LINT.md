@@ -802,6 +802,11 @@ physical-clearance radius. The prompt asks for review and does not prove that a
 later rule overrides the authored requirement. The rule is opt-in: projects
 that have no reviewed courtyard-to-edge minimum do not receive a prompt.
 
+Custom DRC source containing `${` is treated as unsupported by this coverage
+audit. KiCad substitutes project text variables before parsing, so unexpanded
+substitution can alter rule types, conditions, layers, or complete rules. This
+conservative check also includes occurrences in comments.
+
 ```json
 {
   "design_lint": {
@@ -3366,6 +3371,8 @@ constraint also leaves coverage incomplete when overlap cannot be ruled out,
 including an ignored rule or an unrecognized condition. This is a conservative
 review prompt; it does not establish that the later rule actually matches.
 KiCad's native rule precedence and board DRC remain authoritative.
+Custom DRC source containing `${` is unsupported because project text-variable
+substitution can change the parsed rules before KiCad evaluates them.
 
 `edge_clearance` is an optional project-authored minimum for the mapped pair.
 It must match one active native `(constraint edge_clearance (min ...))` rule
@@ -3702,6 +3709,8 @@ currently proves this only for distinct literal `A.NetName` edge-clearance
 selectors; it does not infer disjointness from different `fromTo` selectors.
 This conservative review prompt does not establish an actual override. Inspect
 native rule precedence and DRC results for the actual board.
+Custom DRC source containing `${` is unsupported because project text-variable
+substitution can change the parsed rules before KiCad evaluates them.
 
 For an authored edge-clearance rule, net names containing quotes or control
 characters are rejected because the exact supported `A.NetName` condition

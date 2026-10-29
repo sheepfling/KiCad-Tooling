@@ -27,7 +27,9 @@ RULE_SEVERITY = MappingProxyType(
     }
 )
 _LENGTH = re.compile(r"^([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+))(mm|mil)$")
-NativePcbConstraintName = PcbDrcConstraintName | Literal["physical_hole_clearance"]
+NativePcbConstraintName = (
+    PcbDrcConstraintName | Literal["physical_hole_clearance", "unresolved_text_variable"]
+)
 
 
 class NativeRuleConstraint:
@@ -161,6 +163,25 @@ def _parse_constraint(
 def native_constraints(source: str) -> tuple[NativeRuleConstraint, ...]:
     if not source.strip():
         return ()
+    # KiCad expands text variables before parsing, including in rule types and
+    # whole clauses. Without the source-bound project expansion the apparent
+    # rules cannot establish complete coverage or precedence.
+    if "${" in source:
+        return (
+            NativeRuleConstraint(
+                "<unresolved text variable>",
+                0,
+                "",
+                False,
+                "unresolved_text_variable",
+                None,
+                None,
+                "Native DRC rule text contains a text variable substitution this audit does not evaluate.",
+                None,
+                None,
+                None,
+            ),
+        )
     nodes = _children(source, 0, len(source))
     versions = [_atoms(source, node) for node in nodes if _atoms(source, node)[:1] == ("version",)]
     if len(versions) != 1 or versions[0] != ("version", "1"):
