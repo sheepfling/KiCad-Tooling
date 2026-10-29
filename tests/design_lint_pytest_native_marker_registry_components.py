@@ -12,6 +12,10 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_design_lint_determinism_power_connectivity.py": frozenset({"power_lint"}),
         "test_electrical_power_connectivity.py": frozenset({"power_lint"}),
         "test_regulator_feedback.py": frozenset({"power_lint"}),
+        "test_regulator_required_passives.py": frozenset({"power_lint"}),
+        "test_regulator_required_passives_parity.py": frozenset(
+            {"parity_lint", "power_lint", "slow"}
+        ),
         "test_regulator_feedback_native_fixture.py": frozenset(
             {"native_kicad", "power_lint", "slow"}
         ),

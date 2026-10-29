@@ -64,6 +64,10 @@ RULE_NODE_CASES = (
         "tests/test_power_pin_net_roles.py::test_positive_supply_pin_on_return_net",
     ),
     (
+        "power.regulator_required_passive_topology_mismatch",
+        "tests/test_regulator_required_passives.py::test_missing_required_compensation_passive_is_reviewed",
+    ),
+    (
         "power.named_supply_pin_on_negative_rail",
         "tests/test_power_negative_rail.py::test_named_supply_pin_on_negative_rail_is_reviewed",
     ),

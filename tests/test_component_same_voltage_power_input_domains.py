@@ -34,6 +34,15 @@ def test_split_distinct_supply_functions_on_equal_voltage_labels_are_reviewed() 
     assert "do not establish actual voltage" in findings[0].message
 
 
+def same_voltage_power_input_split_rule_ids() -> set[str]:
+    report = evaluate(
+        "synthetic-supply-domains",
+        coach(same_voltage_power_input_netlist()),
+        same_voltage_power_input_review_policy(),
+    )
+    return {item.rule_id for item in report.findings}
+
+
 @pytest.mark.parametrize(
     "source",
     [

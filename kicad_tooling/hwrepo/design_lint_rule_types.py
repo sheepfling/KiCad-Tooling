@@ -214,6 +214,7 @@ DesignLintRuleId = Literal[
     "oscillator.crystal_load_network_mismatch",
     "oscillator.output_load_path_mismatch",
     "power.regulator_feedback_mismatch",
+    "power.regulator_required_passive_topology_mismatch",
     "filter.rc_corner_mismatch",
     "pcb.decoupling_proximity",
     "pcb.protection_entry_path",

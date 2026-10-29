@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 253 rules are implemented with synthetic regression coverage.
+The following 254 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 253 active rules.
+The catalog currently contains 254 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -650,6 +650,7 @@ skipped under prerelease policy.
 - `protection.mapped_device_mismatch`
 - `oscillator.crystal_load_network_mismatch`
 - `power.regulator_feedback_mismatch`
+- `power.regulator_required_passive_topology_mismatch`
 - `filter.rc_corner_mismatch`
 - `pcb.decoupling_proximity`
 - `pcb.protection_entry_path`
@@ -3342,7 +3343,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 253 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 254 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -13968,6 +13969,44 @@ control are documented in the
     -m 'design_lint and connector_lint and power_lint and design_lint_rule(rule_id="connector.footprint_same_voltage_power_input_unanchored")'
   ```
 
+#### LINT-270 — Review mapped regulator-required passive topology mismatches
+
+- **Status:** Implemented as default-review
+  `power.regulator_required_passive_topology_mismatch`. Project policy can
+  promote the rule to `block`, turn it `off`, or ignore one exact finding.
+- **Incremental value:** LINT-036 checks mapped adjustable-regulator divider
+  behavior but does not require application-specific compensation parts. On
+  the synthetic fault where C1 is missing, LINT-036 remains quiet while this
+  rule reports the missing authored component. This demonstrates a distinct
+  coverage class on synthetic inputs; it is not a field-performance result.
+- **Predicate:** For each project-authored topology, compare the exact
+  regulator and required passive references, values, symbols, footprints,
+  optional PART_IDs, complete pin-number inventories, fitted state, and each
+  pin's expected net (including explicitly unconnected pins) against the
+  native-netlist contract. Findings include the authored basis and map digest.
+- **Policy and limits:** The rule never infers a requirement from reference
+  design, part name, value, or pin label. The authored basis is not verified
+  against a datasheet. Exact schematic identity and connectivity do not prove
+  electrical adequacy, compensation stability, placement, copper, or
+  manufacturing readiness. Keep decisions at REVIEW until source evidence is
+  independently approved.
+- **Synthetic evidence:** Missing and DNP compensation capacitor faults,
+  wrong-net fault, exact fitted control, REVIEW/BLOCK/OFF behavior, mapping
+  order stability, catalog reachability, focused pytest selection, architecture
+  ownership, and a registered CLI/MCP semantic parity case. The parity test
+  requires `KICAD_TEMPLATE_ROOT` and was skipped in the local environment;
+  CI must execute it with the separate public template checkout.
+- **Native evidence gap:** No dedicated source-hashed KiCad schematic
+  fault/control fixture or exact-version export has been added. Catalog
+  maturity therefore remains `synthetic_validated`; do not count this as a
+  native-verified production gate yet.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_regulator_required_passives.py \
+    -m 'design_lint and power_lint and design_lint_rule(rule_id="power.regulator_required_passive_topology_mismatch")'
+  ```
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.
@@ -17558,7 +17597,7 @@ design.
 | Critical signal routes near the board edge           | LINT-095 maps exact signal endpoints and verifies source net membership, fitted PCB pads, copper connectivity, and project-authored native length/skew rules. Native edge-clearance DRC may also overlap. | The inspected kicad-happy NR-001 source classifies high-speed nets and measures each segment midpoint against supported outline edges using fixed 1 mm/2 mm bands. It supports rect/line/arc entries but skips circle/polygon/curve; midpoint sampling can miss a near-edge endpoint or a short excursion along a longer segment. Its changelog records a producer/consumer mismatch fix. Before considering a local feature, pin the candidate revision and compare tooling-owned fault/control inputs, including midpoint misses and unsupported outlines, then measure incremental value beyond native edge-clearance DRC. | Do not infer criticality from net names or adopt fixed edge distances as universal requirements. Defer if geometry is unsupported, valid control is flagged, or findings duplicate native DRC without clearer review evidence. The inspected source was the moving `main` branch; no candidate code has been installed or runtime-tested for this row. |
 | Transformer-isolated converter feedback topology     | LINT-036 regulator feedback and LINT-034 interface/protection contracts                                                                                                                                   | Trial an authored map for exact controller feedback pins, optocoupler/secondary reference parts, and expected connectivity. Use source-bound device limits only for explicit comparisons; do not label topology matching as loop-stability proof.                                                                                                                                                                                                                                                                                                                                                                             | The candidate depends on generic component-name guesses, copied reference designs, or undocumented compensation assumptions; the local check duplicates a source-bound feedback contract without clearer findings.                                                                                                                                     |
 | Supercapacitor and energy-storage operating envelope | LINT-064 voltage ratings, LINT-071 power ratings, and power-path maps                                                                                                                                     | Inventory the distinct requirement fields needed for exact storage-part identity, working voltage, charge/discharge path, and owner-authored operating bounds. Build fault/control cases only after selecting a narrow source-backed use case.                                                                                                                                                                                                                                                                                                                                                                                | Safe charge current, inrush, hold-up, life, or energy behavior would be inferred from symbol connectivity without part-specific ratings, state assumptions, and reviewed calculations.                                                                                                                                                                 |
-| Regulator-required passive topology                   | LINT-046 reviews capacitor presence; LINT-136 checks an authored decoupling minimum; LINT-036 checks adjustable feedback; LINT-055 recognizes a narrow bootstrap topology; mapped series paths already have exact component/pin checks. | The [kicad-happy datasheet-verification notes](https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md) describe missing external components per datasheet pin specs and application-circuit decoupling. This is a mutable cohort reference, not a validated local detector. Evaluate only the incremental gap using project-authored requirements for exact regulator identity, required passive identity, complete native pins, expected pin-to-net topology, and reviewed source basis. Pin a candidate revision before trial; seed missing, DNP, wrong-identity, wrong-net, and valid alternate-topology controls; compare against existing rules on identical synthetic inputs. | Do not import extracted facts as requirements or infer passives from regulator names, reference circuits, or pin labels. Defer if exact part/pin evidence and a valid approved alternative cannot be represented, if results duplicate existing coverage, or if support would add another global evaluator parameter rather than a focused power-theme input. |
+| Regulator-required passive topology                   | LINT-046 reviews capacitor presence; LINT-136 checks an authored decoupling minimum; LINT-036 checks adjustable feedback; LINT-055 recognizes a narrow bootstrap topology; mapped series paths already have exact component/pin checks. | LINT-270 now compares a project-authored exact regulator and required-passive map against native-netlist component identity, complete pin inventory, DNP state, and pin-to-net assignments. A synthetic missing-compensation-capacitor case is quiet under LINT-036 but reported by the new rule. The external [kicad-happy datasheet-verification notes](https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md) motivated the gap; no cohort runtime or reviewer-value trial is claimed. The local gate has synthetic fault/control coverage and CLI/MCP parity registered, but lacks an exact-version native source fixture. | Do not import extracted facts as requirements or infer passives from regulator names, reference circuits, or pin labels. The authored basis is not independently verified. Keep the rule at REVIEW until part-specific evidence is reviewed; do not claim electrical adequacy, placement, or copper continuity. Add exact-version native source fixtures and a valid approved alternate topology before treating the gate as mature beyond synthetic validation. |
 | PWM LED driver-to-load topology                      | LINT-048 direct LED assignment and LINT-063 output-driven LED path review                                                                                                                                 | The explicit power map now covers two synthetic channels: both exact A-to-K paths suppress their prompts, while a partial map leaves the unmatched channel reviewable. One- and two-channel native source fixtures are registered for KiCad 10.0.0/10.0.5.                                                                                                                                                                                                                                                                                                                                                                    | The proposal merely rediscovers a directly driven LED, assumes PWM means a missing resistor, or needs current/brightness limits that the project has not supplied. The mapped role does not establish current regulation or adequacy.                                                                                                                  |
 | Audio jack switch-contact state                      | Implemented by LINT-178 using project-authored exact connector identity and contact-state maps                                                                                                            | Keep the synthetic fault/control and exact-version native gate; add mapped variants only when a distinct stateful-contact failure has source-backed pin identity and a valid control.                                                                                                                                                                                                                                                                                                                                                                                                                                         | Defer any broader discovery rule if exact part identity, source-backed contact states, or a useful deterministic failure cannot be supplied without guessing from symbol or reference names.                                                                                                                                                           |
 | Symbol-library convention admission                  | Board design lint does not validate symbol-library authoring conventions                                                                                                                                  | LINT-031's pinned KLC S5.1 trial detects its upstream fault/control pair, but warns on a valid generic `Connector` symbol. Consider a separate optional library-admission preflight only if custom or supplier library intake becomes an explicit workflow.                                                                                                                                                                                                                                                                                                                                                                   | Keep outside electrical design lint; KLC permits exceptions and manual review, and the current checker misclassifies generic Connector libraries.                                                                                                                                                                                                      |

@@ -90,6 +90,12 @@ from tests.serial_participant_support import (
     same_net_serial_netlist,
     serial_tx_output_netlist,
 )
+from tests.test_component_same_voltage_power_input_domains import (
+    same_voltage_power_input_split_rule_ids,
+)
+from tests.test_connector_footprint_same_voltage_power_input import (
+    same_voltage_connector_power_input_rule_ids,
+)
 from tests.test_connector_mapped_interface_signal_unassigned import _coverage, _netlist
 from tests.test_connector_stateful_contacts import _map as _stateful_contact_map
 from tests.test_connector_stateful_contacts import _observed as _stateful_contact_netlist
@@ -97,6 +103,7 @@ from tests.test_oscillator_output_paths import (
     oscillator_output_netlist,
     oscillator_output_path_map,
 )
+from tests.test_regulator_required_passives import catalog_reachable_rule_ids
 
 TESTS = Path(__file__).resolve().parents[1]
 
@@ -263,8 +270,7 @@ def catalog_reachability_rule_ids() -> set[str]:
         )
     )
     result.update(
-        item.rule_id
-        for item in candidates(ethernet_data_unconnected_netlist(open_pins=("U1.1",)))
+        item.rule_id for item in candidates(ethernet_data_unconnected_netlist(open_pins=("U1.1",)))
     )
     result.update(item.rule_id for item in candidates(ethernet_management_netlist()))
     result.update(
@@ -343,4 +349,9 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         usb_signal_on_named_rail_netlist(),
         usb_data_pair_crossing_netlist(),
     )
-    return {item.rule_id for source in cases for item in candidates(source)}
+    return (
+        {item.rule_id for source in cases for item in candidates(source)}
+        | catalog_reachable_rule_ids()
+        | same_voltage_power_input_split_rule_ids()
+        | same_voltage_connector_power_input_rule_ids()
+    )

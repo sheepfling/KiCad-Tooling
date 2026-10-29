@@ -52,6 +52,10 @@ def _enabled_report(source: NetlistContract):
     )
 
 
+def same_voltage_connector_power_input_rule_ids() -> set[str]:
+    return {item.rule_id for item in _enabled_report(_netlist()).findings}
+
+
 def test_unanchored_peer_power_inputs_with_equal_voltage_labels_are_reviewed() -> None:
     source = _netlist()
     report = lint_report(source)

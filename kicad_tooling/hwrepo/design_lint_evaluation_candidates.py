@@ -18,6 +18,7 @@ from .design_lint_evaluation_types import (
 )
 from .design_lint_mapped_topology_coverage import mapped_topology_coverage_runs
 from .design_lint_peer_evaluation import scan_peer_design_lint_evidence
+from .design_lint_power_regulator_passives import regulator_required_passive_candidates
 from .i2c_peer_reference_coverage import i2c_peer_reference_coverage
 from .rs485_peer_reference_coverage import rs485_peer_reference_coverage
 from .spi_peer_reference_coverage import spi_peer_reference_coverage
@@ -107,6 +108,10 @@ def scan_evaluation_candidates(
         ic_decoupling_map=policy.ic_decoupling_map,
         oscillator_output_path_map=policy.oscillator_output_path_map,
         connector_stateful_contact_map=policy.connector_stateful_contact_map,
+    )
+    items = (
+        *items,
+        *regulator_required_passive_candidates(observed, policy.regulator_passive_topology_map),
     )
     items = tuple(
         sorted(

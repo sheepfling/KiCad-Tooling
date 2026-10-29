@@ -31,6 +31,7 @@ from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
 from .rc_filter_models import RcFilterMap
 from .regulator_feedback_models import RegulatorFeedbackMap
+from .regulator_passive_models import RegulatorPassiveTopologyMap
 from .signal_pair_models import ComplementaryPinFunctionAliasMap
 from .stm32_pin_map_models import Stm32CubeMxPinMap
 from .usb_data_path_models import UsbDataPathMap
@@ -54,6 +55,7 @@ class DesignLintPolicy(StrictModel):
     crystal_network_map: CrystalNetworkMap | None = None
     oscillator_output_path_map: OscillatorOutputPathMap | None = None
     regulator_feedback_map: RegulatorFeedbackMap | None = None
+    regulator_passive_topology_map: RegulatorPassiveTopologyMap | None = None
     rc_filter_map: RcFilterMap | None = None
     connector_return_distribution_map: ConnectorReturnDistributionMap | None = None
     connector_stateful_contact_map: ConnectorStatefulContactMap | None = None
