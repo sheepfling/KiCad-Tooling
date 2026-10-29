@@ -85,9 +85,7 @@ def test_active_rule_predicates_do_not_depend_on_application_surfaces() -> None:
     ),
 )
 def test_surface_dependency_guard_rejects_transport_and_ci_imports(source: str) -> None:
-    assert _surface_dependencies(
-        _module_imports(source, Path("kicad_tooling/hwrepo/sample.py"))
-    )
+    assert _surface_dependencies(_module_imports(source, Path("kicad_tooling/hwrepo/sample.py")))
 
 
 def test_domain_imports_are_not_rejected_as_surface_dependencies() -> None:
@@ -98,3 +96,11 @@ def test_domain_imports_are_not_rejected_as_surface_dependencies() -> None:
     )
 
     assert _surface_dependencies(imports) == ()
+
+
+@pytest.mark.parametrize("owner", ("artifact_access", "supplier_handoff"))
+def test_supplier_artifact_services_do_not_import_mcp_adapters(owner: str) -> None:
+    relative = Path(f"kicad_tooling/hwrepo/{owner}.py")
+    imports = _module_imports((_REPOSITORY_ROOT / relative).read_text(encoding="utf-8"), relative)
+    adapters = tuple(item for item in imports if item.startswith("kicad_tooling.hwrepo.mcp_"))
+    assert not adapters, f"{owner} imports MCP adapters: {adapters}"

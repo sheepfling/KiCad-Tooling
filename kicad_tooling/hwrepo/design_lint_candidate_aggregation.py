@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Sequence
 
 from .bus_signal_pairs import (
     ComplementaryPinFunctionAliasResolution,
@@ -44,6 +45,7 @@ from .design_lint_types import Candidate
 from .design_lint_usb_peer_candidates import usb_data_path_map_sha256
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
 from .external_protection_models import ExternalProtectionCoverageReport
+from .i2c_address_inputs import I2cAddressCandidateInput
 from .i2c_address_models import (
     I2cAddressCoverageReport,
     I2cAddressMap,
@@ -98,6 +100,21 @@ def fingerprint(item: Candidate) -> str:
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
+
+
+def validate_catalogued_candidates(
+    items: Sequence[Candidate],
+    catalog: DesignLintRuleCatalog | None = None,
+) -> None:
+    """Reject candidates from any theme that are absent from the active catalog."""
+    active_ids = {
+        item.rule_id for item in (catalog or rule_catalog()).rules if item.status == "active"
+    }
+    unknown_ids = sorted({item.rule_id for item in items} - active_ids)
+    if unknown_ids:
+        raise ValueError(
+            f"Design-lint candidates emit rules absent from the active catalog: {unknown_ids}"
+        )
 
 
 def candidates(
@@ -216,9 +233,10 @@ def candidates(
     found.extend(
         bus_candidates(
             observed,
+            i2c_address=I2cAddressCandidateInput.from_candidate_arguments(
+                observed, i2c_address_map, i2c_address_coverage
+            ),
             complementary_alias_resolution=complementary_alias_resolution,
-            i2c_address_coverage=i2c_address_coverage,
-            i2c_address_map=i2c_address_map,
             i2c_pullup_heuristic_coverage=i2c_pullup_heuristic_coverage,
             i2c_peer_reference_scan=i2c_peer_reference_scan,
             spi_roster=spi_roster,
@@ -279,12 +297,5 @@ def candidates(
         )
     )
     found.extend(stm32_candidates(stm32_pin_map_coverage))
-    active_ids = {
-        item.rule_id for item in (catalog or rule_catalog()).rules if item.status == "active"
-    }
-    unknown_ids = sorted({item.rule_id for item in found} - active_ids)
-    if unknown_ids:
-        raise ValueError(
-            f"Design-lint candidates emit rules absent from the active catalog: {unknown_ids}"
-        )
+    validate_catalogued_candidates(found, catalog)
     return tuple(sorted(found, key=lambda item: (item.rule_id, item.subject)))

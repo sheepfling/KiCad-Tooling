@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from .design_lint_types import Candidate
+from .i2c_address_inputs import I2cAddressCandidateInput
 from .i2c_address_models import (
     I2cAddressCoverageReport,
     I2cAddressMap,
@@ -153,6 +154,16 @@ def i2c_responder_coverage_candidates(
             )
         )
     return tuple(found)
+
+
+def i2c_address_theme_candidates(
+    inputs: I2cAddressCandidateInput,
+) -> tuple[Candidate, ...]:
+    """Preserve address-map findings followed by unmapped-responder prompts."""
+    return (
+        *i2c_address_candidates(inputs.coverage),
+        *i2c_responder_coverage_candidates(inputs.observed, inputs.address_map),
+    )
 
 
 def i2c_peer_reference_candidates(

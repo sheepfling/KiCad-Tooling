@@ -11,7 +11,7 @@ from .connector_coverage import (
     source_matched_connector_pin_evidence,
 )
 from .connector_peer_pin_coverage import connector_peer_pin_heuristic_coverage
-from .design_lint_candidate_aggregation import candidates
+from .design_lint_candidate_aggregation import candidates, validate_catalogued_candidates
 from .design_lint_evaluation_types import (
     DesignLintEvaluationCandidates,
     DesignLintEvaluationPreparation,
@@ -20,6 +20,7 @@ from .design_lint_mapped_topology_coverage import mapped_topology_coverage_runs
 from .design_lint_peer_evaluation import scan_peer_design_lint_evidence
 from .design_lint_power_regulator_passives import regulator_required_passive_candidates
 from .i2c_peer_reference_coverage import i2c_peer_reference_coverage
+from .peer_reference_candidate_keys import PeerReferenceCandidateKeys
 from .rs485_peer_reference_coverage import rs485_peer_reference_coverage
 from .spi_peer_reference_coverage import spi_peer_reference_coverage
 
@@ -119,67 +120,40 @@ def scan_evaluation_candidates(
             key=lambda item: (item.rule_id, item.subject),
         )
     )
+    validate_catalogued_candidates(items, prepared.catalog)
     i2c_peer_coverage = None
     spi_peer_coverage = None
     can_peer_coverage = None
     rs485_peer_coverage = None
     if coach.netlist_sha256 is not None:
-        i2c_candidate_bus_keys = frozenset(
-            (
-                item.evidence["SDA"][0].casefold(),
-                item.evidence["SCL"][0].casefold(),
-            )
-            for item in items
-            if item.rule_id == "bus.i2c_peer_reference_review"
-        )
+        peer_keys = PeerReferenceCandidateKeys.from_candidates(items)
         i2c_peer_coverage = i2c_peer_reference_coverage(
             peer_evidence.i2c_peer_reference_scan,
             prepared.default_modes,
             prepared.overrides,
             coach.netlist_sha256,
-            candidate_bus_keys=i2c_candidate_bus_keys,
-        )
-        spi_candidate_clock_keys = frozenset(
-            item.evidence["SCK"][0].casefold()
-            for item in items
-            if item.rule_id == "bus.spi_peer_reference_review"
+            candidate_bus_keys=peer_keys.i2c_buses,
         )
         spi_peer_coverage = spi_peer_reference_coverage(
             peer_evidence.spi_peer_reference_scan,
             prepared.default_modes,
             prepared.overrides,
             coach.netlist_sha256,
-            candidate_clock_keys=spi_candidate_clock_keys,
-        )
-        can_candidate_bus_keys = frozenset(
-            (
-                item.evidence["CANH"][0].casefold(),
-                item.evidence["CANL"][0].casefold(),
-            )
-            for item in items
-            if item.rule_id == "bus.can_peer_reference_review"
+            candidate_clock_keys=peer_keys.spi_clocks,
         )
         can_peer_coverage = can_peer_reference_coverage(
             peer_evidence.can_peer_reference_scan,
             prepared.default_modes,
             prepared.overrides,
             coach.netlist_sha256,
-            candidate_bus_keys=can_candidate_bus_keys,
-        )
-        rs485_candidate_keys = frozenset(
-            (
-                item.evidence["bus"][0].casefold(),
-                item.evidence["pair"][0].casefold(),
-            )
-            for item in items
-            if item.rule_id == "bus.rs485_peer_reference_review"
+            candidate_bus_keys=peer_keys.can_buses,
         )
         rs485_peer_coverage = rs485_peer_reference_coverage(
             peer_evidence.rs485_peer_reference_scan,
             prepared.default_modes,
             prepared.overrides,
             coach.netlist_sha256,
-            candidate_keys=rs485_candidate_keys,
+            candidate_keys=peer_keys.rs485_pairs,
         )
     connector_peer_pin_coverage = (
         None

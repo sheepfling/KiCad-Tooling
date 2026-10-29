@@ -27,6 +27,8 @@ For reviewable pattern warnings, exact ignores, and per-project rule modes,
 see [design lint](docs/DESIGN_LINT.md).
 For the planned lint and heuristic work, priorities, and completion evidence,
 see the [design lint backlog](docs/DESIGN_LINT_BACKLOG.md).
+For the product architecture, feature-development path, and staged reorganization, see the
+[architecture backlog](docs/ARCHITECTURE_BACKLOG.md).
 
 ## Try the separate package
 

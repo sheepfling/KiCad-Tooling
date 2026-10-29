@@ -135,8 +135,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "crossed_usb_c_cc_endpoint_candidates",
         "usb_c_sbu_same_net_candidates",
         "named_differential_pair_candidates",
-        "i2c_address_candidates",
-        "i2c_responder_coverage_candidates",
+        "i2c_address_theme_candidates",
     ]
     assert not candidate_constructions, "Bus dispatch should not construct lint findings."
 
@@ -187,7 +186,7 @@ def test_i2c_pullup_typed_boundary_has_one_theme_owner() -> None:
     typed_service = HWREPO / "design_lint_i2c_pullup_candidates.py"
     legacy_adapter = HWREPO / "design_lint_i2c_candidates.py"
 
-    assert line_count(typed_inputs) < FACADE_MAX_LINES
+    assert line_count(typed_inputs) < IMPLEMENTATION_MAX_LINES
     assert line_count(typed_service) < IMPLEMENTATION_MAX_LINES
     input_tree = ast.parse(typed_inputs.read_text(encoding="utf-8"))
     assert any(
@@ -201,3 +200,39 @@ def test_i2c_pullup_typed_boundary_has_one_theme_owner() -> None:
         if isinstance(node, ast.ImportFrom)
     }
     assert "I2cPullupSnifferInput" in adapter_imports["i2c_pullup_inputs"]
+
+
+def test_i2c_address_input_replaces_separate_bus_arguments() -> None:
+    typed_inputs = HWREPO / "i2c_address_inputs.py"
+    aggregator = HWREPO / "design_lint_candidate_aggregation.py"
+    facade = HWREPO / "design_lint_bus_candidates.py"
+
+    assert line_count(typed_inputs) < IMPLEMENTATION_MAX_LINES
+    input_tree = ast.parse(typed_inputs.read_text(encoding="utf-8"))
+    assert any(
+        isinstance(node, ast.ClassDef) and node.name == "I2cAddressCandidateInput"
+        for node in input_tree.body
+    )
+    aggregator_tree = ast.parse(aggregator.read_text(encoding="utf-8"))
+    bus_calls = (
+        node
+        for node in ast.walk(aggregator_tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "bus_candidates"
+    )
+    bus_keywords = [{keyword.arg for keyword in call.keywords} for call in bus_calls]
+    assert len(bus_keywords) == 1
+    assert "i2c_address" in bus_keywords[0]
+    assert "i2c_address_map" not in bus_keywords[0]
+    assert "i2c_address_coverage" not in bus_keywords[0]
+    facade_tree = ast.parse(facade.read_text(encoding="utf-8"))
+    bus_function = next(
+        node
+        for node in facade_tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "bus_candidates"
+    )
+    arguments = {argument.arg for argument in bus_function.args.kwonlyargs}
+    assert "i2c_address" in arguments
+    assert "i2c_address_map" not in arguments
+    assert "i2c_address_coverage" not in arguments

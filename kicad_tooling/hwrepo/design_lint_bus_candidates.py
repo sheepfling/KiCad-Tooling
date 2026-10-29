@@ -10,9 +10,8 @@ from .design_lint_bus_named_rail_candidates import bus_named_rail_candidates
 from .design_lint_can_candidates import can_candidates
 from .design_lint_ethernet_unconnected_candidates import ethernet_unconnected_pin_candidates
 from .design_lint_i2c_candidates import (
-    i2c_address_candidates,
+    i2c_address_theme_candidates,
     i2c_peer_reference_candidates,
-    i2c_responder_coverage_candidates,
 )
 from .design_lint_i2c_pullup_candidates import i2c_pullup_theme_candidates
 from .design_lint_interfaces_usb_data_polarity import usb_data_polarity_label_candidates
@@ -28,7 +27,7 @@ from .design_lint_two_wire_signal_candidates import two_wire_signal_candidates
 from .design_lint_types import Candidate
 from .design_lint_unconnected_interface_candidates import unconnected_interface_candidates
 from .design_lint_usb_c_same_net_candidates import usb_c_same_net_candidates
-from .i2c_address_models import I2cAddressCoverageReport, I2cAddressMap
+from .i2c_address_inputs import I2cAddressCandidateInput
 from .i2c_peer_reference_scan import I2cPeerReferenceScan
 from .i2c_pullup_inputs import I2cPullupSnifferInput
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
@@ -46,9 +45,8 @@ from .usb_data_same_net import usb_data_same_net_candidates
 def bus_candidates(
     observed: NetlistContract,
     *,
+    i2c_address: I2cAddressCandidateInput,
     complementary_alias_resolution: ComplementaryPinFunctionAliasResolution | None = None,
-    i2c_address_coverage: I2cAddressCoverageReport | None = None,
-    i2c_address_map: I2cAddressMap | None = None,
     i2c_pullup_heuristic_coverage: I2cPullupHeuristicCoverage | None = None,
     i2c_peer_reference_scan: I2cPeerReferenceScan | None = None,
     spi_roster: SpiRosterContext | None = None,
@@ -94,6 +92,5 @@ def bus_candidates(
         *crossed_usb_c_cc_endpoint_candidates(observed),
         *usb_c_sbu_same_net_candidates(observed),
         *named_differential_pair_candidates(observed, pcb_differential_pair_rule_map),
-        *i2c_address_candidates(i2c_address_coverage),
-        *i2c_responder_coverage_candidates(observed, i2c_address_map),
+        *i2c_address_theme_candidates(i2c_address),
     )

@@ -11,18 +11,21 @@ import tempfile
 from pathlib import Path
 from typing import Literal, NamedTuple
 
+from .artifact_access import (
+    artifact_path,
+    file_fingerprint,
+    read_regular_bytes,
+)
 from .contracts import parse_model_text, read_model, repo_path, validate_json_object
 from .discovery import manifest_paths, settings
 from .electrical import simulation_cases
 from .electrical_analysis_contract_models import ElectricalAnalysisContract
-from .layout import layout, within_roots
 from .models import (
     McpArtifactEntry,
     McpArtifactList,
     McpEditPreview,
     McpEditResult,
     McpFileContent,
-    ProductIndex,
     ProjectManifest,
     ProjectTestContract,
     PurchasingPreferences,
@@ -81,40 +84,6 @@ FORBIDDEN_SOURCE_PARTS = frozenset(
 )
 
 
-def artifact_path(root: Path, value: str) -> Path:
-    """Confine artifact paths to build trees; restored source is a separate boundary.
-
-    The path may name an existing file/directory or a new output destination. Each
-    caller checks the required kind. No symlink component or parent traversal is allowed.
-    """
-    path = repo_path(root, value)
-    parts = path.relative_to(root.resolve()).parts
-    boundary: int | None = None
-    if parts[0] == "build":
-        boundary = 0
-    else:
-        for index, component in enumerate(parts):
-            if component != "build" or index == 0:
-                continue
-            owner = "/".join(parts[:index])
-            # Project paths must resolve to an actual configured island. Product
-            # artifact scope retains its configured source-root boundary.
-            if any(path.parent == root.resolve() / owner for path in manifest_paths(root)):
-                boundary = index
-                break
-            if within_roots(owner, layout(root).product_roots):
-                products = read_model(repo_path(root, layout(root).products), ProductIndex)
-                if any(Path(entry.path).parent.as_posix() == owner for entry in products.products):
-                    boundary = index
-                    break
-    if boundary is None or "restores" in parts[boundary + 1 :]:
-        raise ValueError(
-            "Artifacts must be under a direct repository/project/product build/; "
-            "restored source is not an artifact read scope"
-        )
-    return path
-
-
 def _bounds(offset: int | bool, limit: int | bool, maximum: int) -> None:
     if (
         isinstance(offset, bool)
@@ -123,37 +92,6 @@ def _bounds(offset: int | bool, limit: int | bool, maximum: int) -> None:
         or not 1 <= limit <= maximum
     ):
         raise ValueError(f"Use offset >= 0 and a limit between 1 and {maximum}")
-
-
-def _fingerprint(value: os.stat_result) -> tuple[int, int, int, int, int]:
-    return value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns, value.st_ctime_ns
-
-
-def _bytes(path: Path, maximum: int | None = None) -> tuple[bytes, os.stat_result]:
-    """Read a stable regular file without following a final-component symlink."""
-    if not stat.S_ISREG(path.lstat().st_mode):
-        raise ValueError("Select a regular file without symlinks")
-    descriptor = os.open(
-        path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
-    )
-    with os.fdopen(descriptor, "rb") as stream:
-        before = os.fstat(stream.fileno())
-        if not stat.S_ISREG(before.st_mode):
-            raise ValueError("Select a regular file")
-        if maximum is not None and before.st_size > maximum:
-            raise ValueError(f"File exceeds the {maximum}-byte limit")
-        data = stream.read() if maximum is None else stream.read(maximum + 1)
-        after = os.fstat(stream.fileno())
-        if _fingerprint(before) != _fingerprint(after):
-            raise ValueError("File changed while reading; retry from fresh metadata")
-        if maximum is not None and len(data) > maximum:
-            raise ValueError(f"File exceeds the {maximum}-byte limit")
-    return data, after
-
-
-def read_regular_bytes(path: Path, maximum: int | None = None) -> tuple[bytes, os.stat_result]:
-    """Expose the stable, bounded regular-file boundary to other review adapters."""
-    return _bytes(path, maximum)
 
 
 def _digest(path: Path) -> tuple[str, int]:
@@ -170,7 +108,7 @@ def _digest(path: Path) -> tuple[str, int]:
         while block := stream.read(1024 * 1024):
             digest.update(block)
         after = os.fstat(stream.fileno())
-        if _fingerprint(before) != _fingerprint(after):
+        if file_fingerprint(before) != file_fingerprint(after):
             raise ValueError("File changed while reading; retry from fresh metadata")
     return digest.hexdigest(), after.st_size
 
@@ -233,7 +171,7 @@ def _content(root: Path, path: Path, offset: int, limit: int, permit_text: bool)
             offset=offset,
             note="Content is not exposed for this file type or size; metadata only.",
         )
-    data, _ = _bytes(path, MAX_TEXT_BYTES)
+    data, _ = read_regular_bytes(path, MAX_TEXT_BYTES)
     digest = hashlib.sha256(data).hexdigest()
     try:
         text = data.decode("utf-8")
@@ -405,7 +343,7 @@ def _validate_edit(
                 part.startswith(".") or part.casefold() in FORBIDDEN_SOURCE_PARTS for part in parts
             ):
                 raise ValueError("Electrical requirements must name an authored local JSON sidecar")
-            data, _ = _bytes(sidecar, MAX_EDIT_BYTES)
+            data, _ = read_regular_bytes(sidecar, MAX_EDIT_BYTES)
             _validate_electrical(root, island, project_id, data.decode("utf-8"))
         return "JSON_MODEL"
     if _electrical_sidecar(island, relative):
@@ -442,7 +380,7 @@ def _prepare_edit(
     if max(len(old_text), len(new_text)) > MAX_CHUNK:
         raise ValueError(f"Edit fragments must not exceed {MAX_CHUNK} characters")
     selected = project_file_path(root, project_id, path)
-    before, information = _bytes(selected, MAX_EDIT_BYTES)
+    before, information = read_regular_bytes(selected, MAX_EDIT_BYTES)
     digest = hashlib.sha256(before).hexdigest()
     if digest != expected_sha256:
         raise ValueError("Source hash mismatch; read the current file and review a fresh edit")
@@ -513,13 +451,13 @@ def apply_project_edit(
             os.fsync(stream.fileno())
         temporary.chmod(stat.S_IMODE(edit.information.st_mode))
         current = project_file_path(root, project_id, path)
-        current_bytes, information = _bytes(current, MAX_EDIT_BYTES)
-        if current_bytes != edit.before or _fingerprint(information) != _fingerprint(
+        current_bytes, information = read_regular_bytes(current, MAX_EDIT_BYTES)
+        if current_bytes != edit.before or file_fingerprint(information) != file_fingerprint(
             edit.information
         ):
             raise ValueError("Source changed before publication; edit was not applied")
         os.replace(temporary, current)
-        verified, _ = _bytes(project_file_path(root, project_id, path), MAX_EDIT_BYTES)
+        verified, _ = read_regular_bytes(project_file_path(root, project_id, path), MAX_EDIT_BYTES)
         readback = hashlib.sha256(verified).hexdigest()
         if readback != edit.preview.after_sha256:
             raise ValueError(

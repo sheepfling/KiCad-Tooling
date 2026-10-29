@@ -7,9 +7,9 @@ from pathlib import Path
 
 from pydantic import TypeAdapter
 
+from .artifact_access import artifact_file, artifact_path
 from .contracts import repo_path
 from .discovery import load_registry
-from .mcp_files import artifact_path
 from .models import Identifier, ProjectRecord
 
 _IDENTIFIER: TypeAdapter[str] = TypeAdapter(Identifier)
@@ -27,14 +27,6 @@ def selected_project(root: Path, project_id: str) -> ProjectRecord:
     if project is None:
         raise ValueError(f"Unknown project ID: {project_id}. Call list_projects first.")
     return project
-
-
-def artifact_file(root: Path, value: str) -> Path:
-    """Require a repository-contained generated artifact file."""
-    path = artifact_path(root, value)
-    if not path.is_file():
-        raise ValueError(f"Select an existing generated artifact file: {value}")
-    return path
 
 
 def native_summary_path(root: Path, value: str) -> Path:

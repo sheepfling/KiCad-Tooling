@@ -16,12 +16,11 @@ from pydantic import TypeAdapter
 
 from ..platforms import is_posix_host
 from . import digikey_handoff
+from .artifact_access import artifact_file, read_regular_bytes
 from .contract_coach import project_context
 from .contracts import parse_model_text, read_model, repo_path, write_model
 from .discovery import load_registry
 from .evidence import digest
-from .mcp_files import read_regular_bytes
-from .mcp_workflow import artifact_file, selected_project
 from .models import (
     Digest,
     DigiKeyHandoffPayload,
@@ -30,7 +29,7 @@ from .models import (
     SupplierHandoffPlan,
     SupplierHandoffReport,
 )
-from .parts_workflow import input_hashes, preferences_path
+from .parts_workflow import input_hashes, preferences_path, selected_project
 from .purchasing import plan as purchasing_plan
 from .purchasing import read_components
 
