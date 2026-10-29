@@ -12,7 +12,6 @@ import tests.component_peer_power_input_support as _component_peer_power_input_s
 import tests.connector_footprint_peer_support as _connector_footprint_peer_support
 import tests.design_lint_fixtures as _tests_design_lint_fixtures
 import tests.design_lint_fixtures.can_line_named_rail as _can_line_named_rail_fixtures
-import tests.design_lint_fixtures.can_unconnected_direction_pins as _can_unconnected_direction_fixtures
 import tests.design_lint_fixtures.component_peer_pin_all_open as _component_peer_pin_all_open
 import tests.design_lint_fixtures.component_return_domains as _component_return_domains
 import tests.design_lint_fixtures.connector_mapped_supply_return_net as _mapped_supply_return_net
@@ -21,7 +20,6 @@ import tests.design_lint_fixtures.connector_peer_pin_all_open as _connector_peer
 import tests.design_lint_fixtures.connector_return_supply as _connector_return_supply_fixtures
 import tests.design_lint_fixtures.i2c_addresses as _tests_i2c_address_fixtures
 import tests.design_lint_fixtures.i2c_signal_label as _i2c_signal_label_fixtures
-import tests.design_lint_fixtures.i2c_unconnected_pins as _i2c_unconnected_pin_fixtures
 import tests.design_lint_fixtures.i3c_same_net as _i3c_same_net_fixtures
 import tests.design_lint_fixtures.i3c_signal_named_rail as _i3c_signal_named_rail_fixtures
 import tests.design_lint_fixtures.ic_decoupling as _ic_decoupling_fixtures
@@ -30,12 +28,7 @@ import tests.design_lint_fixtures.mosfet_terminal_same_net as _mosfet_terminal_s
 import tests.design_lint_fixtures.power_input_paths as _power_input_paths
 import tests.design_lint_fixtures.power_pin_net_roles as _power_pin_net_roles
 import tests.design_lint_fixtures.repeated_signal_pin_functions as _repeated_signal_pin_fixtures
-import tests.design_lint_fixtures.rs485_ab_same_net as _rs485_ab_same_net_fixtures
 import tests.design_lint_fixtures.rs485_line_named_rail as _rs485_line_named_rail_fixtures
-import tests.design_lint_fixtures.rs485_unconnected_data_pins as _rs485_unconnected_data_fixtures
-import tests.design_lint_fixtures.serial_unconnected_pins as _serial_unconnected_pin_fixtures
-import tests.design_lint_fixtures.spi_unconnected_clock_pin as _spi_unconnected_clock_fixtures
-import tests.design_lint_fixtures.spi_unconnected_data_pins as _spi_unconnected_data_fixtures
 import tests.design_lint_fixtures.usb_c_cc_endpoint_pairing as _usb_c_cc_endpoint_pairing_fixtures
 import tests.design_lint_fixtures.usb_c_cc_named_rail as _usb_c_cc_named_rail_fixtures
 import tests.design_lint_fixtures.usb_c_cc_same_net as _usb_c_cc_same_net_fixtures
@@ -43,8 +36,6 @@ import tests.design_lint_fixtures.usb_c_sbu_named_rail as _usb_c_sbu_fixture_bui
 import tests.design_lint_fixtures.usb_c_sbu_same_net as _usb_c_sbu_same_net_fixture_builders
 import tests.design_lint_fixtures.usb_c_sbu_same_net as _usb_c_sbu_same_net_fixtures
 import tests.design_lint_fixtures.usb_c_superspeed_lanes as _usb_c_superspeed_lane_fixtures
-import tests.design_lint_fixtures.usb_data_same_net as _usb_data_same_net_fixtures
-import tests.design_lint_fixtures.usb_unconnected_data as _usb_unconnected_data_fixtures
 import tests.external_protection_support as _external_protection_support
 import tests.rs485_peer_reference_support as _rs485_peer_reference_support
 import tests.test_can_excess_termination as _tests_test_can_excess_termination
@@ -92,6 +83,9 @@ from tests.design_lint_fixtures.connector_mapped_signal_sharing import (
     signal_sharing_coverage,
     signal_sharing_netlist,
     signal_sharing_report,
+)
+from tests.design_lint_fixtures.unconnected_protocol_reachability import (
+    unconnected_protocol_candidate_rule_ids,
 )
 from tests.electrical_i2c_support import i2c_series_pullup_netlist
 from tests.power_sequence_support import (
@@ -199,16 +193,6 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
             ("108R", "120R", "132R")
         ),
         _usb_peer_reference_support.usb_peer_netlist(),
-        _usb_unconnected_data_fixtures.usb_unconnected_data_netlist(),
-        _can_unconnected_direction_fixtures.can_unconnected_direction_netlist(),
-        _serial_unconnected_pin_fixtures.serial_unconnected_netlist(),
-        _i2c_unconnected_pin_fixtures.i2c_unconnected_netlist(),
-        _usb_data_same_net_fixtures.usb_data_same_net_netlist(),
-        _usb_c_superspeed_lane_fixtures.usb_c_superspeed_lane_fault_netlist(),
-        _rs485_ab_same_net_fixtures.rs485_ab_same_net_netlist(),
-        _spi_unconnected_data_fixtures.spi_unconnected_data_netlist(),
-        _spi_unconnected_clock_fixtures.spi_unconnected_clock_netlist(open_pins=("U1.1",)),
-        _rs485_unconnected_data_fixtures.rs485_unconnected_data_netlist(),
     )
     emitted = {item.rule_id for source in cases for item in candidates(source)}
     mapped_supply_source = _mapped_supply_return_net.mapped_supply_return_net_netlist()
@@ -216,6 +200,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         mapped_supply_source
     )
     emitted.update(item.rule_id for item in mapped_supply_report.findings)
+    emitted.update(unconnected_protocol_candidate_rule_ids())
     emitted.update(protocol_peer_candidate_rule_ids())
     emitted.update(item.rule_id for item in candidates(_mosfet_gate_source_bias_fixtures.netlist()))
     emitted.update(
