@@ -82,9 +82,9 @@ def test_pinned_export_detects_nonstandard_reference_and_keeps_test_point_contro
 
     log = HostedLog(root, "connector-inventory")
     with (
-        patch("kicad_tooling.hwrepo.electrical.selected_config", return_value=config),
-        patch("kicad_tooling.hwrepo.contract_coach.run_command", side_effect=fake_run_command),
-        patch("kicad_tooling.validate.read_netlist", side_effect=fake_read_netlist),
+        patch("kicad_tooling.ci_hosted_connector_inventory.selected_config", return_value=config),
+        patch("kicad_tooling.ci_hosted_connector_inventory.run_command", side_effect=fake_run_command),
+        patch("kicad_tooling.ci_hosted_connector_inventory.read_netlist", side_effect=fake_read_netlist),
     ):
         connector_inventory_fixture_lane(
             root,
