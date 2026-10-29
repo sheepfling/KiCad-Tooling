@@ -196,7 +196,7 @@ def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:
         ),
         (
             "bus.rs485_unconnected_line_pin",
-            "tests/test_rs485_unconnected_line_pins.py::test_one_open_line_is_localized_with_its_assigned_pair_member[a]",
+            "tests/test_rs485_unconnected_line_pins.py::test_one_open_line_is_localized_with_its_assigned_pair_member",
         ),
         (
             "bus.serial_tx_outputs_share_net",

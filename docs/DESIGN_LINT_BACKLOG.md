@@ -5122,6 +5122,10 @@ is not a reason by itself to expand its scope or change its default policy.
       -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_unconnected_data_pin")'
   ```
 
+The separate A/B line-pair heuristic is tracked as
+`bus.rs485_unconnected_line_pin`; its source-hashed synthetic native fault and
+control are documented in the [A/B line fixture record](../tests/fixtures/design_lint/rs485-unconnected-line-native/README.md).
+
 #### LINT-237 — Review Ethernet PHY pin functions that contradict net labels
 
 - **Status:** Implemented as `bus.ethernet_data_label_mismatch`, owned by
