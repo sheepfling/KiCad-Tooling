@@ -9865,6 +9865,7 @@
       "limitations": [
         "This audits project-authored rule coverage and native endpoint connectivity only. KiCad native DRC remains responsible for measuring actual route length and skew.",
         "An authored edge-clearance minimum is checked against an exact A.NetName rule that applies to all copper on the mapped net, including branches; KiCad DRC measures geometry. The tooling does not infer critical nets or choose a universal edge margin.",
+        "Edge-clearance net names containing quotes or control characters are rejected because they cannot be represented by the supported exact A.NetName selector syntax.",
         "A matching rule does not prove the authored endpoints, length limit, or skew limit are appropriate for the interface, timing budget, impedance, stack-up, or electrical safety target.",
         "Bundle pad selectors must resolve exactly to the mapped fitted board endpoints. Other condition syntax, incomplete netlists, non-mapped paths, off-board wiring, and physical continuity remain outside this audit."
       ],

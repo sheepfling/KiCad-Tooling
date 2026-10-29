@@ -3676,6 +3676,10 @@ severities and a matching custom rule with `(severity ignore)` do not count as
 coverage. Absent or duplicate rules, changed bounds, unsupported syntax, stale
 endpoints, and disconnected pads remain review findings.
 
+For an authored edge-clearance rule, net names containing quotes or control
+characters are rejected because the exact supported `A.NetName` condition
+cannot represent them safely.
+
 The report binds the project and board, optional rule file, native DRC receipt,
 native PCB snapshot and command, KiCad version, and source inventory. Projects
 can select `review`, `block`, `off`, or an exact fingerprint ignore. Missing

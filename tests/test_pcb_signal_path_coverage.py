@@ -139,6 +139,16 @@ def test_signal_path_edge_clearance_accepts_minimum_only() -> None:
             edge_clearance=PcbDrcMinMaxRequirement(min_nm=2_000_000, max_nm=3_000_000),
         )
 
+    with pytest.raises(ValidationError, match="cannot be represented exactly"):
+        PcbSignalPathRequirement(
+            id="quoted-edge-path",
+            basis="Synthetic unsafe native selector",
+            net="SYNTH'CLK",
+            from_pad="J1.1",
+            to_pad="U1.1",
+            edge_clearance=PcbDrcMinMaxRequirement(min_nm=2_000_000),
+        )
+
 
 def test_custom_rule_ignore_severity_is_not_credited_for_a_path_or_bundle() -> None:
     ignored_rules = native_rules().replace(

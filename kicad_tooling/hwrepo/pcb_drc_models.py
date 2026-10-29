@@ -70,6 +70,10 @@ class PcbSignalPathRequirement(StrictModel):
             raise ValueError("A PCB signal path needs a length or edge-clearance bound")
         if self.edge_clearance is not None and self.edge_clearance.max_nm is not None:
             raise ValueError("Signal-path edge clearance supports only an authored minimum")
+        if self.edge_clearance is not None and any(
+            character in "'\\\"" or ord(character) < 32 for character in self.net
+        ):
+            raise ValueError("Signal-path edge-clearance net cannot be represented exactly in a rule")
         return self
 
 
