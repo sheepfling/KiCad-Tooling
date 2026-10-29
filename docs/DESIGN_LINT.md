@@ -3019,9 +3019,11 @@ KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
 
 ## Review mapped PCB track widths
 
-Add a project-authored minimum for each exact net that needs a width screen.
-The example is synthetic; choose thresholds from the project's reviewed
-fabrication and electrical requirements.
+Add a project-authored minimum for each exact net that needs a width screen, or
+use `"*"` for one board-wide minimum applied to every native track item,
+including items without an assigned net. The board-wide scope cannot be mixed
+with exact-net requirements in one map. The example is synthetic; choose
+thresholds from the project's reviewed fabrication and electrical requirements.
 
 ```json
 {
@@ -3033,7 +3035,7 @@ fabrication and electrical requirements.
         {
           "id": "synthetic-core-rail",
           "basis": "Synthetic project minimum for this routed net",
-          "net": "VDD",
+          "net": "*",
           "minimum_width_um": 250
         }
       ]
@@ -3044,10 +3046,12 @@ fabrication and electrical requirements.
 
 The check compares native integer-nanometer track widths against the authored
 micrometer minimum, including the exact boundary. A finding records each
-below-minimum track's native UUID, copper layer, width, and endpoints. Nets
-with no track items produce incomplete coverage, since their copper may be
+below-minimum track's native UUID, copper layer, width, and endpoints. Exact-net
+requirements include only assigned tracks on that net; a `"*"` requirement
+includes assigned and unassigned track items across the board. An exact net
+with no track items produces incomplete coverage, since its copper may be
 zone-only or unrouted. A single minimum applies across all copper layers for a
-mapped net. This screen does not inspect zones or vias, establish track
+scope. This screen does not inspect zones or vias, establish track
 connectivity, or calculate ampacity, temperature rise, pulse-current limits,
 or electrical performance. It is not a replacement for native DRC or a
 project-specific copper calculation.

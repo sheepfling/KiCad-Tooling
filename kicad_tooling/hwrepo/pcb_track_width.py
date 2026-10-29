@@ -14,14 +14,15 @@ def pcb_track_width_entries(
     specification: PcbTrackWidthMap,
     snapshot: PcbConnectivitySnapshot,
 ) -> tuple[PcbTrackWidthCoverageEntry, ...]:
-    """Compare exact native track-item widths with authored per-net screens."""
+    """Compare native track widths with authored exact-net or board-wide screens."""
     entries: list[PcbTrackWidthCoverageEntry] = []
     for requirement in specification.requirements:
         observed = sorted(
             (
                 item
                 for item in snapshot.tracks
-                if item.net is not None and item.net.casefold() == requirement.net.casefold()
+                if requirement.net == "*"
+                or (item.net is not None and item.net.casefold() == requirement.net.casefold())
             ),
             key=lambda item: item.uuid.casefold(),
         )
@@ -41,8 +42,13 @@ def pcb_track_width_entries(
             ()
             if tracks
             else (
-                f"No native track items were observed on mapped net {requirement.net}; "
-                + "the route may be zone-only or outside this track-width screen",
+                (
+                    "No native track items were observed on the board-wide screen; "
+                    "there may be no routed copper"
+                    if requirement.net == "*"
+                    else f"No native track items were observed on mapped net {requirement.net}; "
+                    + "the route may be zone-only or outside this track-width screen"
+                ),
             )
         )
         entries.append(

@@ -171,9 +171,14 @@ def pcb_measurement_coverage_candidates(
             found.append(
                 Candidate(
                     rule_id="pcb.minimum_track_width",
-                    subject=f"{entry.id}: net {entry.net}",
+                    subject=(
+                        f"{entry.id}: all native track items"
+                        if entry.net == "*"
+                        else f"{entry.id}: net {entry.net}"
+                    ),
                     message=(
-                        "Review the mapped PCB track widths against the project's explicit net "
+                        "Review the mapped PCB track widths against the project's explicit "
+                        "track-width "
                         "screen. This measurement does not calculate current capacity or "
                         "temperature rise."
                     ),

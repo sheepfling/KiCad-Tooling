@@ -149,6 +149,43 @@ def test_exact_boundary_passes_and_other_nets_are_excluded() -> None:
     assert not any(item.rule_id == RULE for item in report.findings)
 
 
+def test_board_wide_scope_measures_every_net_and_unassigned_track_deterministically() -> None:
+    spec = mapping(requirement(net="*", minimum_um=250))
+    observed = snapshot(
+        track("003", "GND", 251_000, y_nm=2_000_000),
+        track("001", "VDD", 249_000),
+        PcbTrackObservation(
+            uuid="00000000-0000-0000-0000-000000000002",
+            net=None,
+            layer="B.Cu",
+            width_nm=250_000,
+            start_nm=(0, 0),
+            end_nm=(1_000_000, 0),
+        ),
+    )
+
+    measured = coverage(spec, observed)
+    entry = measured.entries[0]
+    assert entry.status == "COMPLETE"
+    assert [item.track_uuid[-3:] for item in entry.tracks] == ["001", "002", "003"]
+    assert [item.below_minimum for item in entry.tracks] == [True, False, False]
+
+    report = evaluate(
+        "synthetic-width",
+        coach(),
+        DesignLintPolicy(pcb_track_width_map=spec),
+        pcb_track_width_coverage=measured,
+    )
+    finding = next(item for item in report.findings if item.rule_id == RULE)
+    assert finding.subject == "core-rail: all native track items"
+    assert finding.evidence["below_minimum_track_uuids"] == (entry.tracks[0].track_uuid,)
+
+
+def test_board_wide_scope_cannot_overlap_per_net_scopes() -> None:
+    with pytest.raises(ValidationError, match="cannot be combined"):
+        mapping(requirement(net="*"), requirement(net="VDD", id="vdd"))
+
+
 def test_track_order_preserves_measurement_and_finding_but_boundary_repair_clears_it() -> None:
     spec = mapping(requirement(minimum_um=251))
     narrow = track("001", "VDD", 250_000)

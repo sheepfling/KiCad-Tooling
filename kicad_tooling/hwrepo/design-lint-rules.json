@@ -9628,27 +9628,31 @@
     },
     {
       "rule_id": "pcb.minimum_track_width",
-      "title": "Mapped PCB net contains a track below its authored width screen",
+      "title": "Mapped PCB track scope contains a track below its authored width screen",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "Project-authored net-width map compared with source-bound KiCad 10 pcbnew track inventory in connectivity snapshot schema 6",
-      "predicate": "For each explicitly mapped net, compare every native KiCad track item's integer-nanometer width with that net's project-authored minimum micrometer screen; report exact track UUID, layer, width, and endpoint coordinates, or incomplete coverage when no native track item is assigned to the net.",
+      "predicate": "For each exact-net requirement, compare every native KiCad track item assigned to that net with its project-authored minimum micrometer screen. An explicit net='*' requirement instead screens every board track item, including items without an assigned net, and cannot be combined with exact-net requirements. Report exact track UUID, layer, width, and endpoint coordinates; exact-net coverage is incomplete when no native item is assigned to that net.",
       "supported_kicad_versions": [
         "KiCad 10 native pcbnew API; each configured project's exact version and digest-pinned image are checked"
       ],
       "limitations": [
-        "Only project-mapped net names and native track-item widths are checked; the rule does not infer rails or intended current from net names or topology.",
+        "Only explicit exact-net scopes or an explicit board-wide '*' scope are checked; the rule does not infer rails or intended current from net names or topology.",
         "The screen does not calculate ampacity, temperature rise, pulse-current limits, plane spreading, via bottlenecks, or electrical performance.",
         "A net with no track items may use zones or have no routed copper; report incomplete coverage rather than treating either case as a width pass or defect."
       ],
       "fault_fixtures": [
         "tests.test_pcb_track_width.test_below_minimum_width_is_exactly_measured",
-        "tests.test_pcb_track_width.test_missing_track_inventory_remains_incomplete_review"
+        "tests.test_pcb_track_width.test_missing_track_inventory_remains_incomplete_review",
+        "tests.test_pcb_track_width.test_board_wide_scope_measures_every_net_and_unassigned_track_deterministically",
+        "tests.test_pcb_track_width_native_fixture_lane.test_native_track_width_controls_on_supported_kicad"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_track_width.test_exact_boundary_passes_and_other_nets_are_excluded",
-        "tests.test_pcb_track_width.test_project_policy_can_review_block_disable_or_exactly_ignore"
+        "tests.test_pcb_track_width.test_project_policy_can_review_block_disable_or_exactly_ignore",
+        "tests.test_pcb_track_width.test_board_wide_scope_cannot_overlap_per_net_scopes",
+        "tests.test_design_lint_mcp_parity_pcb_layout.test_pcb_decoupling_track_width_and_switching_loop_map_parity"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -9662,7 +9666,10 @@
         "kicad_tooling/ci_hosted_pcb_track_width_fixture.py#track_width_fixture_lane"
       ],
       "theme": "pcb",
-      "implementation_owner": "kicad_tooling/hwrepo/pcb_track_width.py#pcb_track_width_entries"
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_track_width.py#pcb_track_width_entries",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ]
     },
     {
       "rule_id": "pcb.reference_plane_coverage",

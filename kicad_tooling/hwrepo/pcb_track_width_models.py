@@ -18,7 +18,7 @@ from .model_primitives import (
 
 
 class PcbTrackWidthRequirement(StrictModel):
-    """Project-authored minimum width screen for one exact PCB net."""
+    """Project-authored minimum width screen for an exact net or all tracks (`*`)."""
 
     id: Identifier
     basis: NonEmptyText
@@ -37,8 +37,13 @@ class PcbTrackWidthMap(StrictModel):
     def unique_net_requirements(self) -> PcbTrackWidthMap:
         if len({item.id.casefold() for item in self.requirements}) != len(self.requirements):
             raise ValueError("PCB track-width requirement IDs must be unique")
-        if len({item.net.casefold() for item in self.requirements}) != len(self.requirements):
-            raise ValueError("A PCB net can have only one mapped minimum track width")
+        scopes = [item.net.casefold() for item in self.requirements]
+        if len(set(scopes)) != len(scopes):
+            raise ValueError("A PCB track-width scope can have only one mapped minimum")
+        if "*" in scopes and len(scopes) != 1:
+            raise ValueError(
+                "The board-wide '*' track-width scope cannot be combined with net scopes"
+            )
         return self
 
 

@@ -113,9 +113,9 @@ class _DesignLintMcpParityPcbLayoutCases(McpParityHarness):
                 basis="Synthetic KiCad native width parity map",
                 requirements=(
                     PcbTrackWidthRequirement(
-                        id="synthetic-vdd-width",
-                        basis="Synthetic 251 um screen against a 250 um track",
-                        net="VDD",
+                        id="synthetic-board-width",
+                        basis="Synthetic board-wide 251 um screen against 250 um tracks",
+                        net="*",
                         minimum_width_um=251,
                     ),
                 ),
@@ -304,7 +304,8 @@ class _DesignLintMcpParityPcbLayoutCases(McpParityHarness):
         )
         self.assertIn("length 500000 nm", route_finding.evidence["trace_route_edges"][0])
         finding = next(item for item in mcp.findings if item.rule_id == "pcb.minimum_track_width")
-        self.assertEqual(finding.evidence["net"], ("VDD",))
+        self.assertEqual(finding.evidence["net"], ("*",))
+        self.assertIn("all native track items", finding.subject)
         reference_finding = next(
             item
             for item in mcp.findings

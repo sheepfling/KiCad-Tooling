@@ -14251,8 +14251,9 @@ control are documented in the
   with project-authored `review`, `block`, `off`, and exact-ignore decisions.
 - **Inspiration:** [pcb-inspector](https://github.com/takzen/pcb-inspector).
 - **Evidence and check:** A PCB project's `design_lint.pcb_track_width_map`
-  names exact nets, project-authored minimum micrometer widths, and each
-  requirement's basis. Compare every native KiCad track item's integer
+  names exact nets or the explicit `*` board-wide scope, project-authored
+  minimum micrometer widths, and each requirement's basis. A board-wide scope
+  cannot be combined with exact-net scopes. Compare every native KiCad track item's integer
   nanometer width with the configured minimum. Findings retain the track UUID,
   layer, exact width, and endpoints. A net with no track items has incomplete
   coverage because it may be zone-only or unrouted. One threshold applies
@@ -14263,7 +14264,7 @@ control are documented in the
   DRC and any project-specific copper calculation remain separate evidence.
 - **Fixtures:** Native 250 um segment at the exact 250 um boundary and below a
   251 um screen; unrelated-net exclusion; zone-only/unrouted incomplete
-  coverage; review, block, off, exact-ignore, and repeated-snapshot controls
+  coverage; board-wide assigned and unassigned track coverage; review, block, off, exact-ignore, and repeated-snapshot controls
   using synthetic boards on pinned KiCad 10.0.0 and 10.0.5. CLI and MCP parity
   use the same typed service and snapshot.
 - **Done:** Typed project map, deterministic native measurements, explicit

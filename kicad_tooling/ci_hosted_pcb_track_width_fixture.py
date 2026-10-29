@@ -17,7 +17,7 @@ from .hwrepo.pcb_track_width_models import PcbTrackWidthMap, PcbTrackWidthRequir
 
 
 def track_width_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
-    """Check the authored width boundary and a one-micrometre fault control."""
+    """Check exact-net and board-wide width boundaries and fault controls."""
     context = prepare_pcb_fixture(
         root,
         project=project,
@@ -38,9 +38,9 @@ def track_width_fixture_lane(root: Path, *, project: str, image: str, log: Hoste
         basis="Synthetic exact-width boundary control",
         requirements=(
             PcbTrackWidthRequirement(
-                id="vdd-boundary",
+                id="board-boundary",
                 basis="Synthetic 250 um boundary fixture",
-                net="VDD",
+                net="*",
                 minimum_width_um=250,
             ),
         ),
@@ -49,9 +49,9 @@ def track_width_fixture_lane(root: Path, *, project: str, image: str, log: Hoste
         basis="Synthetic below-width fault control",
         requirements=(
             PcbTrackWidthRequirement(
-                id="vdd-fault",
+                id="board-fault",
                 basis="Synthetic 251 um threshold against a 250 um track",
-                net="VDD",
+                net="*",
                 minimum_width_um=251,
             ),
         ),
@@ -67,24 +67,25 @@ def track_width_fixture_lane(root: Path, *, project: str, image: str, log: Hoste
                 purpose="PCB track-width fixture",
             )
             track_inventory = {item.net: item for item in snapshot.tracks}
-            if set(track_inventory) != {"VDD", "GND", "DATA"} or any(
-                item.width_nm != 250_000 or item.layer != "F.Cu"
-                for item in track_inventory.values()
+            if (
+                set(track_inventory) != {"VDD", "GND", "DATA"}
+                or len(snapshot.tracks) != 4
+                or any(item.width_nm != 250_000 or item.layer != "F.Cu" for item in snapshot.tracks)
             ):
                 raise ValueError(
-                    "Native track inventory differs from the synthetic 250 um VDD/GND/DATA fixture"
+                    "Native track inventory differs from the synthetic four-segment 250 um fixture"
                 )
             boundary = pcb_track_width_entries(boundary_map, snapshot)
             fault = pcb_track_width_entries(fault_map, snapshot)
             if (
                 len(boundary) != 1
                 or boundary[0].status != "COMPLETE"
-                or len(boundary[0].tracks) != 1
-                or boundary[0].tracks[0].below_minimum
+                or len(boundary[0].tracks) != len(snapshot.tracks)
+                or any(item.below_minimum for item in boundary[0].tracks)
                 or len(fault) != 1
                 or fault[0].status != "COMPLETE"
-                or len(fault[0].tracks) != 1
-                or not fault[0].tracks[0].below_minimum
+                or len(fault[0].tracks) != len(snapshot.tracks)
+                or not all(item.below_minimum for item in fault[0].tracks)
             ):
                 raise ValueError("Native track-width fault/boundary controls changed")
             if retained_snapshot is None:
