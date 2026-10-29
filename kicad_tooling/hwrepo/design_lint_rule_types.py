@@ -29,6 +29,7 @@ DesignLintRuleId = Literal[
     "connector.footprint_named_passive_open_outlier",
     "connector.footprint_named_passive_assignment_divergence",
     "connector.footprint_named_power_input_assignment_divergence",
+    "connector.footprint_same_voltage_power_input_unanchored",
     "connector.footprint_named_power_output_assignment_divergence",
     "connector.footprint_peer_pin_all_open",
     "connector.peer_power_input_open_assignment",

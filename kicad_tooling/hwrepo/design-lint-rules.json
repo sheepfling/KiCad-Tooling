@@ -685,7 +685,7 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_connector_footprint_power_input.test_named_power_input_open_is_stable_under_mapping_order",
-        "tests.test_connector_footprint_peer_parity.test_footprint_alias_review_matches_cli_and_mcp"
+        "tests.test_connector_footprint_power_input.test_open_power_input_assignment_is_stable_under_mapping_order"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_footprint_open_named_candidates.py#open_named_outlier_candidates",
@@ -733,7 +733,7 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_connector_footprint_signal_input.test_named_signal_input_open_is_stable_under_mapping_order",
-        "tests.test_connector_footprint_peer_parity.test_footprint_alias_review_matches_cli_and_mcp"
+        "tests.test_connector_footprint_signal_input.test_named_signal_input_open_is_stable_under_mapping_order"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
@@ -935,6 +935,51 @@
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_named_passive_divergence.py#evaluate_footprint_named_passive_assignment_divergence",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "metamorphic_not_applicable_basis": null
+    },
+    {
+      "rule_id": "connector.footprint_same_voltage_power_input_unanchored",
+      "title": "Unanchored connector power inputs use separate same-voltage labels",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among fitted connector instances with distinct native symbols and no PART_ID, require exact nonempty value and footprint matches, complete identical pin inventories, and matching nonempty per-pin native function and electrical-type metadata. Compare peers within a current source-matched peer_assignment_group when all peers have one; otherwise retain the unscoped comparison. For an identical pin whose native electrical type is power_in, require each peer to have exactly one assignment, at least two distinct net labels, and the same supported explicit positive nominal voltage on every label. Emit a REVIEW candidate only when the group has no other common-net anchor. This is a review clue, not a requirement to join the rails.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Equal explicit voltage labels do not prove the actual potential, source identity, current capacity, or intended common domain. Filtering, source separation, and isolation may be intentional.",
+        "The predicate requires exact peer value, footprint, symbol pin inventory, function, electrical type, and one net assignment per peer. Missing or ambiguous metadata is not a finding.",
+        "Only native power_in contacts and supported explicit positive-voltage labels are considered. Generic/non-voltage labels, differing nominal voltages, power_out, passive, signal, and other electrical types remain outside the rule.",
+        "The rule applies only when no other pin in the same current peer scope has one common assigned net. Anchored divergences remain with connector.footprint_named_power_input_assignment_divergence.",
+        "DNP and PART_ID-bearing components are excluded. Automatic connector discovery is bounded to J/P/X/CN references, standard Connector libraries, and exact project-reviewed interface references. Schematic assignments do not establish PCB continuity or off-board wiring."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_footprint_same_voltage_power_input.test_unanchored_peer_power_inputs_with_equal_voltage_labels_are_reviewed",
+        "tests.test_connector_footprint_same_voltage_power_input_native_fixture_lane.test_native_same_voltage_connector_power_inputs_fault_and_control_repeatably",
+        "tests.test_connector_footprint_same_voltage_power_input_parity.test_unanchored_same_voltage_power_input_matches_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_footprint_same_voltage_power_input.test_different_voltages_common_net_and_ineligible_pin_roles_are_controls",
+        "tests.test_connector_footprint_same_voltage_power_input_native_fixture_lane.test_native_same_voltage_connector_power_inputs_fault_and_control_repeatably",
+        "tests.test_connector_footprint_same_voltage_power_input_parity.test_unanchored_same_voltage_power_input_matches_cli_and_mcp"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_footprint_same_voltage_power_input.test_equal_voltage_peer_prompt_is_stable_under_mapping_order"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_footprint_same_voltage_power_input.py#unanchored_same_voltage_power_input_candidates",
+        "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_same_voltage_power_input.py#unanchored_same_voltage_power_input_candidates",
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
       ],

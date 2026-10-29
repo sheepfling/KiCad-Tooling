@@ -80,6 +80,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_connector_footprint_named_power_output_divergence.py",
                 "tests/test_connector_footprint_named_power_output_native_fixture_lane.py",
                 "tests/test_connector_footprint_peer_parity.py",
+                "tests/test_connector_footprint_same_voltage_power_input_parity.py",
                 "tests/test_connector_named_power_output_native_fixture_lane.py",
                 "tests/test_design_lint_mcp_parity_connector_power_output.py",
                 "tests/test_component_unconnected_power_output.py",

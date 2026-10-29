@@ -40,6 +40,18 @@ def _collect_rule_nodes(rule_ids: str | tuple[str, ...]) -> subprocess.Completed
 
 RULE_NODE_CASES = (
     (
+        "connector.footprint_same_voltage_power_input_unanchored",
+        "tests/test_connector_footprint_same_voltage_power_input.py::test_unanchored_peer_power_inputs_with_equal_voltage_labels_are_reviewed",
+    ),
+    (
+        "connector.footprint_same_voltage_power_input_unanchored",
+        "tests/test_connector_footprint_same_voltage_power_input_parity.py::test_unanchored_same_voltage_power_input_matches_cli_and_mcp",
+    ),
+    (
+        "connector.footprint_same_voltage_power_input_unanchored",
+        "tests/test_connector_footprint_same_voltage_power_input_native_fixture_lane.py::test_native_same_voltage_connector_power_inputs_fault_and_control_repeatably",
+    ),
+    (
         "component.same_voltage_power_inputs_split",
         "tests/test_component_same_voltage_power_input_domains.py::test_split_distinct_supply_functions_on_equal_voltage_labels_are_reviewed",
     ),

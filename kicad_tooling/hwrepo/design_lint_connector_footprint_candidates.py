@@ -51,6 +51,9 @@ from .connector_footprint_power_input import footprint_named_power_input_open_ou
 from .connector_footprint_power_output import (
     footprint_named_power_output_open_outlier_candidates,
 )
+from .connector_footprint_same_voltage_power_input import (
+    unanchored_same_voltage_power_input_candidates,
+)
 from .connector_footprint_signal_input import (
     footprint_named_signal_input_open_outlier_candidates,
 )
@@ -150,6 +153,7 @@ def connector_footprint_peer_pin_candidates(
         *divergence_candidates,
         *named_signal_divergence.candidates,
         *named_power_input_divergence.candidates,
+        *unanchored_same_voltage_power_input_candidates(scan),
         *named_power_input_all_open.candidates,
         *named_power_output_all_open.candidates,
         *named_signal_all_open.candidates,

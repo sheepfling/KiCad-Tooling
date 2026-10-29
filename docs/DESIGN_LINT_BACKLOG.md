@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 252 rules are implemented with synthetic regression coverage.
+The following 253 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 252 active rules.
+The catalog currently contains 253 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -451,6 +451,7 @@ skipped under prerelease policy.
 - `connector.footprint_named_passive_open_outlier`
 - `connector.footprint_named_signal_assignment_divergence`
 - `connector.footprint_named_power_input_assignment_divergence`
+- `connector.footprint_same_voltage_power_input_unanchored`
 - `connector.footprint_named_power_output_assignment_divergence`
 - `connector.footprint_named_passive_assignment_divergence`
 - `connector.footprint_named_power_input_all_open`
@@ -3341,7 +3342,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 252 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 253 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -13928,6 +13929,36 @@ control are documented in the
   ```sh
   .venv/bin/python -I -m pytest tests/test_component_same_voltage_power_input_domains.py \
     -m 'design_lint and component_lint and power_lint and design_lint_rule(rule_id="component.same_voltage_power_inputs_split")'
+  ```
+
+#### LINT-269 — Review unanchored connector power inputs on equal-voltage labels
+
+- **Status:** Implemented as opt-in
+  `connector.footprint_same_voltage_power_input_unanchored`.
+- **Gap:** Existing footprint-peer power-input divergence requires another
+  shared pin as an anchor. A pair of otherwise comparable connectors can have
+  no shared assignments at all, so split supply contacts escape that review.
+- **Predicate:** Require fitted connector candidates with distinct native
+  symbols and no PART_ID, exact matching value and footprint, complete
+  identical pin inventories, matching nonempty function/type metadata, a
+  `power_in` contact with exactly one assignment per peer, distinct net names,
+  and the same supported explicit positive nominal voltage on every net.
+  Emit only when the peer scope has no common-net anchor.
+- **Policy and limits:** The rule defaults to `off`; projects may select
+  `review`, `block`, or `off` through standard overrides and exact ignores.
+  Equal voltage labels do not establish source identity, current capacity,
+  domain intent, or a requirement to connect rails. Filters, separate sources,
+  and isolation remain valid possibilities. Anchored cases stay with the
+  existing power-input divergence rule.
+- **Synthetic evidence:** Equal-voltage split with no anchor; common-net,
+  different-voltage, anchored, passive, return-function, DNP, PART_ID,
+  incomplete-inventory, unsupported-label controls; default-off and explicit
+  review policy; deterministic mapping order.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_connector_footprint_same_voltage_power_input.py \
+    -m 'design_lint and connector_lint and power_lint and design_lint_rule(rule_id="connector.footprint_same_voltage_power_input_unanchored")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
