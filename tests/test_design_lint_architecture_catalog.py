@@ -3,11 +3,8 @@
 from __future__ import annotations
 
 import ast
-import fnmatch
 import json
-import tomllib
 from collections.abc import Set as AbstractSet
-from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
 
@@ -20,6 +17,10 @@ from kicad_tooling.hwrepo.design_lint_rule_models import (
     DesignLintRuleMetadata,
 )
 from kicad_tooling.hwrepo.design_lint_rule_types import DesignLintRuleId, DesignLintTheme
+from tests.design_lint_fixture_reachability import (
+    RULE_FIXTURE_FIELDS,
+    fixture_module_path,
+)
 from tests.lint_architecture_support import (
     HWREPO,
     IMPLEMENTATION_MAX_LINES,
@@ -38,7 +39,6 @@ RULE_MODEL_NAMES = (
 RULE_TYPE_NAMES = ("DesignLintRuleId", "DesignLintTheme")
 LEGACY_MODEL_IMPORTS = frozenset({*RULE_MODEL_NAMES, *RULE_TYPE_NAMES})
 RULE_OWNER_MODULES = ("design_lint_rule_models.py", "design_lint_rule_types.py")
-RULE_FIXTURE_FIELDS = ("fault_fixtures", "valid_control_fixtures", "metamorphic_fixtures")
 RULE_THEME_MARKERS = MappingProxyType(
     {
         "components": "component_lint",
@@ -50,21 +50,6 @@ RULE_THEME_MARKERS = MappingProxyType(
         "pcb": "pcb_lint",
     }
 )
-
-
-def _fixture_module_path(reference: str) -> Path | None:
-    """Find the Python module that owns a catalogued fixture reference."""
-    parts = reference.split(".")
-    if not parts or parts[0] != "tests":
-        return None
-    for end in range(len(parts), 1, -1):
-        module = REPO_ROOT.joinpath(*parts[:end]).with_suffix(".py")
-        if module.is_file():
-            return module
-        package = REPO_ROOT.joinpath(*parts[:end], "__init__.py")
-        if package.is_file():
-            return package
-    return None
 
 
 def _module_pytest_markers(path: Path) -> set[str]:
@@ -91,118 +76,6 @@ def _module_pytest_markers(path: Path) -> set[str]:
             ):
                 markers.add(node.attr)
     return markers
-
-
-def _test_function_exists(
-    tree: ast.Module, owner_names: tuple[str, ...], function_name: str
-) -> bool:
-    """Check that a catalogued test function is defined in its module or class."""
-    body: list[ast.stmt] = tree.body
-    for owner_name in owner_names:
-        owner = next(
-            (
-                statement
-                for statement in body
-                if isinstance(statement, ast.ClassDef) and statement.name == owner_name
-            ),
-            None,
-        )
-        if owner is None:
-            return False
-        if any(
-            isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef))
-            and statement.name == "__init__"
-            for statement in owner.body
-        ):
-            return False
-        body = owner.body
-    return any(
-        isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef))
-        and statement.name == function_name
-        for statement in body
-    )
-
-
-@lru_cache(maxsize=1)
-def _pytest_naming_options() -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
-    config = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    options = config["tool"]["pytest"]["ini_options"]
-    return (
-        tuple(options.get("python_files", ("test_*.py",))),
-        tuple(options.get("python_classes", ("Test",))),
-        tuple(options.get("python_functions", ("test",))),
-    )
-
-
-def _pytest_discovers_fixture_target(
-    module_path: Path, owner_names: tuple[str, ...], function_name: str
-) -> bool:
-    """Check the configured pytest naming rules for a fixture target."""
-    file_patterns, class_patterns, function_patterns = _pytest_naming_options()
-    return (
-        any(fnmatch.fnmatchcase(module_path.name, pattern) for pattern in file_patterns)
-        and all(
-            any(fnmatch.fnmatchcase(name, pattern) for pattern in class_patterns)
-            for name in owner_names
-        )
-        and any(fnmatch.fnmatchcase(function_name, pattern) for pattern in function_patterns)
-    )
-
-
-@pytest.mark.rule_gate_integrity
-def test_fixture_targets_follow_pytest_collection_names_and_class_controls() -> None:
-    module = REPO_ROOT / "tests" / "test_fixture_target.py"
-    assert _pytest_discovers_fixture_target(module, (), "test_detects_the_fault")
-    assert not _pytest_discovers_fixture_target(module, (), "detects_the_fault")
-    assert not _pytest_discovers_fixture_target(
-        REPO_ROOT / "tests" / "fixture_target.py", (), "test_detects_the_fault"
-    )
-    assert _pytest_discovers_fixture_target(module, ("FixtureTargetTests",), "test_fault")
-    assert not _pytest_discovers_fixture_target(module, ("FixtureTargetHelper",), "test_fault")
-
-    collectable = ast.parse("class FixtureTargetTests:\n    def test_fault(self): ...\n")
-    with_initializer = ast.parse(
-        "class FixtureTargetTests:\n    def __init__(self): ...\n    def test_fault(self): ...\n"
-    )
-    assert _test_function_exists(collectable, ("FixtureTargetTests",), "test_fault")
-    assert not _test_function_exists(with_initializer, ("FixtureTargetTests",), "test_fault")
-
-
-@pytest.mark.rule_gate_integrity
-def test_active_rule_fixture_references_resolve_to_pytest_discoverable_tests() -> None:
-    catalog = json.loads((HWREPO / "design-lint-rules.json").read_text(encoding="utf-8"))
-    trees: dict[Path, ast.Module] = {}
-    missing: list[str] = []
-    for rule in catalog["rules"]:
-        if rule.get("status") != "active":
-            continue
-        for field in RULE_FIXTURE_FIELDS:
-            for reference in rule.get(field, []):
-                module_path = _fixture_module_path(reference)
-                if module_path is None:
-                    missing.append(reference)
-                    continue
-                parts = reference.split(".")
-                module_parts = module_path.relative_to(REPO_ROOT).with_suffix("").parts
-                if module_parts[-1] == "__init__":
-                    module_parts = module_parts[:-1]
-                node_parts = parts[len(module_parts) :]
-                if not node_parts:
-                    missing.append(reference)
-                    continue
-                if module_path not in trees:
-                    trees[module_path] = ast.parse(
-                        module_path.read_text(encoding="utf-8"), filename=str(module_path)
-                    )
-                tree = trees[module_path]
-                owner_names = tuple(node_parts[:-1])
-                function_name = node_parts[-1]
-                if not _test_function_exists(tree, owner_names, function_name) or not (
-                    _pytest_discovers_fixture_target(module_path, owner_names, function_name)
-                ):
-                    missing.append(reference)
-
-    assert not missing, f"Active rule fixture references must resolve to test functions: {missing}"
 
 
 def test_catalog_types_have_small_rule_owned_modules() -> None:
@@ -283,7 +156,7 @@ def test_active_rule_fixture_modules_have_design_lint_and_theme_markers() -> Non
             unmapped_themes[rule["rule_id"]] = str(theme)
         for field in RULE_FIXTURE_FIELDS:
             for reference in rule.get(field, []):
-                module = _fixture_module_path(reference)
+                module = fixture_module_path(reference)
                 if module is None:
                     unresolved.append(reference)
                     continue

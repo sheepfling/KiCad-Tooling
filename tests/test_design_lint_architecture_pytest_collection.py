@@ -28,6 +28,7 @@ def test_selector_architecture_suites_are_in_the_catalog_gate() -> None:
     for module in (
         "tests/test_design_lint_architecture_pytest_markers.py",
         "tests/test_design_lint_architecture_pytest_collection.py",
+        "tests/test_design_lint_fixture_reachability.py",
         "tests/test_design_lint_architecture_rule_selectors.py",
         "tests/test_design_lint_architecture_theme_suites.py",
     ):
@@ -66,7 +67,11 @@ def test_rule_gate_also_collects_cross_rule_integrity_checks() -> None:
         in result.stdout
     )
     assert (
-        "tests/test_design_lint_architecture_catalog.py::test_active_rule_fixture_references_resolve_to_pytest_discoverable_tests"
+        "tests/test_design_lint_fixture_reachability.py::test_active_rule_fixture_references_resolve_to_pytest_discoverable_tests"
+        in result.stdout
+    )
+    assert (
+        "tests/test_design_lint_fixture_reachability.py::test_fixture_targets_follow_pytest_collection_names_and_class_controls"
         in result.stdout
     )
     assert (

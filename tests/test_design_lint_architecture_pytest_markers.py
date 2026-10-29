@@ -180,6 +180,7 @@ def test_cross_theme_architecture_suites_do_not_claim_area_markers() -> None:
     for filename in (
         "test_design_lint_architecture_pytest_markers.py",
         "test_design_lint_architecture_pytest_collection.py",
+        "test_design_lint_fixture_reachability.py",
         "test_design_lint_architecture_rule_selectors.py",
         "test_design_lint_architecture_theme_suites.py",
     ):
