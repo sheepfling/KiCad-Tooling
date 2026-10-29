@@ -19,6 +19,7 @@ from .connector_stateful_contact_models import ConnectorStatefulContactMap
 from .control_input_models import ControlInputBiasHeuristicCoverage
 from .crystal_network_models import CrystalNetworkCoverageReport
 from .design_lint_bus_candidates import bus_candidates
+from .design_lint_bus_inputs import BusCandidateInputs
 from .design_lint_catalog import rule_catalog
 from .design_lint_component_candidates import component_candidates
 from .design_lint_component_peer_candidates import component_peer_candidates
@@ -51,6 +52,7 @@ from .i2c_address_models import (
     I2cAddressMap,
 )
 from .i2c_peer_reference_scan import I2cPeerReferenceScan
+from .i2c_pullup_inputs import I2cPullupSnifferInput
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .ic_decoupling_models import IcDecouplingMap
 from .models import NetlistContract
@@ -232,20 +234,24 @@ def candidates(
     found.extend(component_peer_findings)
     found.extend(
         bus_candidates(
-            observed,
-            i2c_address=I2cAddressCandidateInput.from_candidate_arguments(
-                observed, i2c_address_map, i2c_address_coverage
-            ),
-            complementary_alias_resolution=complementary_alias_resolution,
-            i2c_pullup_heuristic_coverage=i2c_pullup_heuristic_coverage,
-            i2c_peer_reference_scan=i2c_peer_reference_scan,
-            spi_roster=spi_roster,
-            spi_peer_reference_scan=spi_peer_reference_scan,
-            can_peer_reference_scan=can_peer_reference_scan,
-            rs485_peer_reference_scan=rs485_peer_reference_scan,
-            component_peer_findings=component_peer_findings,
-            pcb_differential_pair_rule_map=pcb_differential_pair_rule_map,
-            reviewed_connector_references=reviewed_connector_references,
+            BusCandidateInputs(
+                observed=observed,
+                i2c_address=I2cAddressCandidateInput.from_candidate_arguments(
+                    observed, i2c_address_map, i2c_address_coverage
+                ),
+                i2c_pullup=I2cPullupSnifferInput.from_legacy_arguments(
+                    observed, i2c_pullup_heuristic_coverage
+                ),
+                complementary_alias_resolution=complementary_alias_resolution,
+                i2c_peer_reference_scan=i2c_peer_reference_scan,
+                spi_roster=spi_roster,
+                spi_peer_reference_scan=spi_peer_reference_scan,
+                can_peer_reference_scan=can_peer_reference_scan,
+                rs485_peer_reference_scan=rs485_peer_reference_scan,
+                component_peer_findings=component_peer_findings,
+                pcb_differential_pair_rule_map=pcb_differential_pair_rule_map,
+                reviewed_connector_references=reviewed_connector_references,
+            )
         )
     )
     if schematic_geometry is not None:

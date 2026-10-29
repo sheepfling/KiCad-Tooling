@@ -17,25 +17,26 @@ does not add a rule or change an engineering conclusion.
    netlist. It records contract path/hash when present, netlist hash, coverage
    status, and per-bus entries. It distinguishes an absent, pending, reviewed,
    or not-applicable electrical requirement.
-3. `design_lint_evaluation_preparation.py` compares populated I²C coverage
-   entries with the coach's netlist hash. A mismatch blocks the evaluation
-   before candidate scanning.
+3. `design_lint_evaluation_preparation.py` compares source-bound I²C coverage,
+   including an empty `COMPLETE` result, with the coach's netlist hash. A
+   mismatch blocks the evaluation before candidate scanning.
 4. `design_lint_evaluation_candidates.py` forwards the netlist and coverage
-   through the wide candidate aggregator. The bus coordinator normalizes the
-   pair into `I2cPullupSnifferInput`, and the I²C theme service consumes it.
+   through the wide candidate aggregator. That compatibility adapter constructs
+   distinct `I2cPullupSnifferInput` and `I2cAddressCandidateInput` records, then
+   passes one `BusCandidateInputs` record to the bus coordinator.
 5. The I²C predicate emits `Candidate` records. Catalog validation, project
    modes, exact ignores, fingerprints, and report assembly occur after scanning.
    The report and reconciliation retain source identity and review state.
 
 ## Data to route into the theme
 
-| Input                     | Producer and owner                  | I²C pull-up use                                                                                      | Absence or mismatch                                                             |
-| ------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Run identity              | Project inspection and native coach | Kept in the report envelope; binds source, native summary, and catalog                               | Missing source or native proof blocks before scanning                           |
-| Observed netlist          | Native coach as `NetlistContract`   | Required for local resistor, pin, and net topology                                                   | No ready netlist means no predicate run                                         |
-| Project electrical intent | Project-owned electrical contract   | Read by the coverage producer, never inferred by the predicate                                       | Absent/pending/not-applicable remain distinct coverage states                   |
-| Pull-up coverage          | `I2cPullupHeuristicCoverage`        | Required typed input at the theme boundary; can suppress a hint only with matching reviewed coverage | Stale populated coverage blocks before scanning; `NOT_CONFIGURED` is not a pass |
-| Candidate output          | I²C predicate                       | Stable rule ID, subject, message, and exact evidence                                                 | Unknown active rule ID fails catalog validation                                 |
+| Input                     | Producer and owner                  | I²C pull-up use                                                                                      | Absence or mismatch                                                                |
+| ------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Run identity              | Project inspection and native coach | Kept in the report envelope; binds source, native summary, and catalog                               | Missing source or native proof blocks before scanning                              |
+| Observed netlist          | Native coach as `NetlistContract`   | Required for local resistor, pin, and net topology                                                   | No ready netlist means no predicate run                                            |
+| Project electrical intent | Project-owned electrical contract   | Read by the coverage producer, never inferred by the predicate                                       | Absent/pending/not-applicable remain distinct coverage states                      |
+| Pull-up coverage          | `I2cPullupHeuristicCoverage`        | Required typed input at the theme boundary; can suppress a hint only with matching reviewed coverage | Stale source-bound coverage blocks before scanning; `NOT_CONFIGURED` is not a pass |
+| Candidate output          | I²C predicate                       | Stable rule ID, subject, message, and exact evidence                                                 | Unknown active rule ID fails catalog validation                                    |
 
 **Decision:** the first theme input is a frozen typed
 `I2cPullupSnifferInput` containing `observed: NetlistContract` and
@@ -47,11 +48,12 @@ in the run/report envelope and the coverage record rather than being copied
 into each rule's inputs.
 
 The existing public `candidates()` and `evaluate()` signatures remain as
-compatibility adapters during the pilot. The bus coordinator constructs the
-typed I²C input from its current arguments; the I²C predicate consumes that
-input directly. This local first step does not add another parameter to either
-central signature. A later migration can build typed theme inputs upstream
-once the other evidence families have agreed routes.
+compatibility adapters during the pilot. The candidate aggregator constructs
+the typed I²C inputs from the legacy arguments and gives them to the bus
+coordinator as `BusCandidateInputs`. Each I²C predicate consumes its own input
+directly. This step does not add another parameter to either central signature.
+Full evaluation still unpacks prepared evidence into the wide compatibility
+call; moving that route upstream remains open.
 
 ## Evidence and decision rules
 
@@ -140,7 +142,8 @@ The address-map scanner already consumes a typed `I2cAddressMap`, a typed
 native `NetlistContract`, and the netlist digest. The coverage resolver checks
 freshness and absence before candidates run. Candidate aggregation now groups
 the observed netlist, project map, and resolved coverage into a frozen
-`I2cAddressCandidateInput` and passes that one record to the bus coordinator.
+`I2cAddressCandidateInput`, and pairs it with the separately typed pull-up
+input in `BusCandidateInputs`. The bus boundary rejects mixed native netlists.
 The I²C address theme uses it for map mismatch/collision and unmapped-responder
 prompts in their existing order. Missing coverage at the public `candidates()`
 compatibility boundary becomes explicit `NOT_REQUESTED`; full evaluation still

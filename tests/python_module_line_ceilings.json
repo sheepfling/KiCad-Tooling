@@ -9,7 +9,6 @@
     "kicad_tooling/hwrepo/electrical_runner.py": 856,
     "kicad_tooling/hwrepo/generation.py": 522,
     "kicad_tooling/hwrepo/hosted_governance.py": 740,
-    "kicad_tooling/hwrepo/mcp_files.py": 539,
     "kicad_tooling/hwrepo/mcp_server.py": 1264,
     "kicad_tooling/hwrepo/model_inventory.py": 513,
     "kicad_tooling/hwrepo/model_population.py": 633,

@@ -13,6 +13,7 @@ from kicad_tooling.hwrepo import (
     design_lint_peer_candidates,
     digital_peer_voltage_types,
 )
+from kicad_tooling.hwrepo.design_lint_bus_inputs import BusCandidateInputs
 from tests.lint_architecture_support import (
     FACADE_MAX_LINES,
     HWREPO,
@@ -210,10 +211,12 @@ def test_i2c_pullup_typed_boundary_has_one_theme_owner() -> None:
 
 def test_i2c_address_input_replaces_separate_bus_arguments() -> None:
     typed_inputs = HWREPO / "i2c_address_inputs.py"
+    bus_inputs = HWREPO / "design_lint_bus_inputs.py"
     aggregator = HWREPO / "design_lint_candidate_aggregation.py"
     facade = HWREPO / "design_lint_bus_candidates.py"
 
     assert line_count(typed_inputs) < IMPLEMENTATION_MAX_LINES
+    assert line_count(bus_inputs) < IMPLEMENTATION_MAX_LINES
     input_tree = ast.parse(typed_inputs.read_text(encoding="utf-8"))
     assert any(
         isinstance(node, ast.ClassDef) and node.name == "I2cAddressCandidateInput"
@@ -227,21 +230,29 @@ def test_i2c_address_input_replaces_separate_bus_arguments() -> None:
         and isinstance(node.func, ast.Name)
         and node.func.id == "bus_candidates"
     )
-    bus_keywords = [{keyword.arg for keyword in call.keywords} for call in bus_calls]
-    assert len(bus_keywords) == 1
-    assert "i2c_address" in bus_keywords[0]
-    assert "i2c_address_map" not in bus_keywords[0]
-    assert "i2c_address_coverage" not in bus_keywords[0]
+    (bus_call,) = bus_calls
+    assert len(bus_call.args) == 1
+    route = bus_call.args[0]
+    assert isinstance(route, ast.Call)
+    assert isinstance(route.func, ast.Name) and route.func.id == "BusCandidateInputs"
+    route_keywords = {keyword.arg for keyword in route.keywords}
+    assert {"observed", "i2c_address", "i2c_pullup"} <= route_keywords
+    assert "i2c_address_map" not in route_keywords
+    assert "i2c_address_coverage" not in route_keywords
+    assert "i2c_pullup_heuristic_coverage" not in route_keywords
     facade_tree = ast.parse(facade.read_text(encoding="utf-8"))
     bus_function = next(
         node
         for node in facade_tree.body
         if isinstance(node, ast.FunctionDef) and node.name == "bus_candidates"
     )
-    arguments = {argument.arg for argument in bus_function.args.kwonlyargs}
-    assert "i2c_address" in arguments
-    assert "i2c_address_map" not in arguments
-    assert "i2c_address_coverage" not in arguments
+    assert [argument.arg for argument in bus_function.args.args] == ["inputs"]
+    assert not bus_function.args.kwonlyargs
+    route_parameters = inspect.signature(BusCandidateInputs).parameters
+    assert all(
+        route_parameters[name].default is inspect.Parameter.empty
+        for name in ("observed", "i2c_address", "i2c_pullup")
+    )
 
 
 def test_public_lint_compatibility_signatures_do_not_grow() -> None:

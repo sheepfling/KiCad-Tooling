@@ -177,8 +177,10 @@ turns a previous finding into an approval.
 
 The I²C pull-up route now enters one typed theme service, and the I²C address
 route carries the observed netlist, project map, and resolved coverage as one
-theme input. The [data-routing decision](DESIGN_LINT_DATA_ROUTING.md) records
-their different absence rules and the pull-up migration comparison. Keep the
+theme input. The bus coordinator now receives both through `BusCandidateInputs`
+and rejects mixed native observations. The
+[data-routing decision](DESIGN_LINT_DATA_ROUTING.md) records their different
+absence rules and the pull-up migration comparison. Keep the
 current public evaluator as a compatibility adapter while callers migrate.
 Preserve deterministic ordering, fingerprints, catalog ownership checks, and
 source-bound evidence. Route the next agreed theme inputs only after their
