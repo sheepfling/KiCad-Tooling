@@ -47,8 +47,8 @@ _LINE_NAMED_RAIL_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
 _LINE_LABEL_MISMATCH_RULE_ID = "bus.rs485_line_label_mismatch"
 _LINE_LABEL_MISMATCH_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
     {
-        "fault": "088e4f94449678f4ccb01569d69220dc3c225e533848a8e91a05586d6eac1400",
-        "control": "fee16129e0b52695475b47f2da3d3e83dc559ec405e2c8b4ca9456069e7bc9d6",
+        "fault": "fee16129e0b52695475b47f2da3d3e83dc559ec405e2c8b4ca9456069e7bc9d6",
+        "control": "088e4f94449678f4ccb01569d69220dc3c225e533848a8e91a05586d6eac1400",
     }
 )
 

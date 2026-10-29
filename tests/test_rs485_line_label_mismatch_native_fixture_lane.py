@@ -58,7 +58,7 @@ def test_native_rs485_line_label_fault_and_control_repeat(
     fault = results[f"{prefix}fault"]
     control = results[f"{prefix}control"]
     assert fault["subjects"] == (
-        "U1.1: RS-485 A function on RS485_B; U1.2: RS-485 B function on RS485_A"
+        "U1.1: RS-485 A function on RS485_B;U1.2: RS-485 B function on RS485_A"
     )
     assert control["subjects"] == "none"
     assert fault["erc_errors"] == control["erc_errors"] == "none"

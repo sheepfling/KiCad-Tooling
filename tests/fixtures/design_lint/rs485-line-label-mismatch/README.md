@@ -6,8 +6,8 @@ pins so native ERC does not decide the line-name review.
 
 | Case                | Source SHA-256                                                     |
 | ------------------- | ------------------------------------------------------------------ |
-| `control.kicad_sch` | `fee16129e0b52695475b47f2da3d3e83dc559ec405e2c8b4ca9456069e7bc9d6` |
-| `fault.kicad_sch`   | `088e4f94449678f4ccb01569d69220dc3c225e533848a8e91a05586d6eac1400` |
+| `control.kicad_sch` | `088e4f94449678f4ccb01569d69220dc3c225e533848a8e91a05586d6eac1400` |
+| `fault.kicad_sch`   | `fee16129e0b52695475b47f2da3d3e83dc559ec405e2c8b4ca9456069e7bc9d6` |
 
 The fault reverses the explicit RS485_A/RS485_B labels on the A/B pin
 functions. The control assigns each function to its matching label. The
