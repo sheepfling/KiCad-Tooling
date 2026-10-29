@@ -15396,8 +15396,9 @@ control are documented in the
   containing segments or measured arcs; arcs in older snapshots remain
   incomplete. Plane edges identify one shared island and report its contour
   area. Component internals and full routed-loop area remain explicitly
-  deferred. The schema-15 arc fixture is updated for the exact-version native
-  lane; its hosted result is pending.
+  deferred. The schema-15 arc fixture passed the focused exact-version native
+  lane on 2026-10-29; both configured KiCad versions exercised the four fixture
+  stages with repeated captures.
 - **Problem:** LINT-023's pad-center polygon is deterministic but does not follow
   the copper route. The native snapshot retains track endpoints, pad/via
   contacts, and native track adjacency, yet the ordered pad list does not say
@@ -15447,7 +15448,17 @@ control are documented in the
   [`PAD.GetEffectiveShape`](https://docs.kicad.org/doxygen-python-10.0/classpcbnew_1_1PAD.html), and
   [`CONNECTIVITY_DATA.GetConnectedTracks`](https://docs.kicad.org/doxygen-python-10.0/classpcbnew_1_1CONNECTIVITY__DATA.html)
   references. Schema 15 arc midpoint and length capture is covered by synthetic
-  regressions; the exact-version native acceptance remains pending.
+  regressions and exact-version native acceptance. On 2026-10-29, the focused
+  lane passed both pytest cases, one on KiCad 10.0.0 and one on KiCad 10.0.5.
+  The complete catalog-selected LINT-039 gate also passed (`35 passed, 5,911
+  deselected`), including its required native fixture lane.
+  Each case asserted repeat captures for the front-plane, arc-trace, inner-plane,
+  and split-inner-plane fixtures, including the exact native arc trace length
+  (`19,110,084 nm`). The run used the public KiCad-Test catalog at commit
+  `ed89536f0dbbcb013145af2994fef41b2250143e` and its pinned images:
+  KiCad 10.0.0 (`sha256:9549d3a08e0822f9434a9eda0782c812451ab4a733c73535f9e8beed42039bc3`)
+  and KiCad 10.0.5
+  (`sha256:fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c`).
 - **Boundary:** This comparison must not infer that similar nets should join,
   select a current path through a branch, or claim loop inductance, return
   adequacy, emissions, thermal performance, or electrical behavior. A routed
