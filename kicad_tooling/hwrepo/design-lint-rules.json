@@ -948,7 +948,7 @@
       "default_mode": "off",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Among fitted connector instances with distinct native symbols and no PART_ID, require exact nonempty value and footprint matches, complete identical pin inventories, and matching nonempty per-pin native function and electrical-type metadata. Compare peers within a current source-matched peer_assignment_group when all peers have one; otherwise retain the unscoped comparison. For an identical pin whose native electrical type is power_in, require each peer to have exactly one assignment, at least two distinct net labels, and the same supported explicit positive nominal voltage on every label. Emit a REVIEW candidate only when the group has no other common-net anchor. This is a review clue, not a requirement to join the rails.",
+      "predicate": "Among fitted connector instances with distinct native symbols and no PART_ID, require exact nonempty value and footprint matches, complete identical pin inventories, and matching nonempty per-pin native function and electrical-type metadata. Compare peers within a current source-matched peer_assignment_group when all peers have one; otherwise retain the unscoped comparison. For an identical pin whose native electrical type is power_in, require each peer to have exactly one assignment, at least two distinct net labels, and the same supported explicit positive nominal voltage on every label. Emit a REVIEW candidate only when the group has no other common-net anchor. The candidate adds a normalized voltage context to connector.repeated_pin_function; it is not independent defect detection or a requirement to join the rails.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
@@ -957,6 +957,7 @@
         "The predicate requires exact peer value, footprint, symbol pin inventory, function, electrical type, and one net assignment per peer. Missing or ambiguous metadata is not a finding.",
         "Only native power_in contacts and supported explicit positive-voltage labels are considered. Generic/non-voltage labels, differing nominal voltages, power_out, passive, signal, and other electrical types remain outside the rule.",
         "The rule applies only when no other pin in the same current peer scope has one common assigned net. Anchored divergences remain with connector.footprint_named_power_input_assignment_divergence.",
+        "The same synthetic fault already produces connector.repeated_pin_function. Independent detection gain is not expected; whether the normalized voltage evidence improves review has not been measured, so the rule remains off by default.",
         "DNP and PART_ID-bearing components are excluded. Automatic connector discovery is bounded to J/P/X/CN references, standard Connector libraries, and exact project-reviewed interface references. Schematic assignments do not establish PCB continuity or off-board wiring."
       ],
       "fault_fixtures": [

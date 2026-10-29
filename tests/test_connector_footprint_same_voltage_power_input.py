@@ -57,10 +57,12 @@ def test_unanchored_peer_power_inputs_with_equal_voltage_labels_are_reviewed() -
     report = lint_report(source)
     off_finding = next(item for item in report.findings if item.rule_id == RULE_ID)
     assert off_finding.disposition == "RULE_OFF"
+    assert any(item.rule_id == "connector.repeated_pin_function" for item in report.findings)
 
     reviewed = _enabled_report(source)
     finding = next(item for item in reviewed.findings if item.rule_id == RULE_ID)
     assert finding.disposition == "OPEN"
+    assert any(item.rule_id == "connector.repeated_pin_function" for item in reviewed.findings)
     assert finding.evidence["nominal_voltage_v"] == ("3.3",)
     assert finding.evidence["assignments"] == ("J1.2=+3V3", "J2.2=3.3V")
     assert "do not prove these domains should be joined" in finding.message

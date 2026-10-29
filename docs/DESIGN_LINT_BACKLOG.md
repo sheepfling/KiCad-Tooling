@@ -13935,9 +13935,11 @@ control are documented in the
 
 - **Status:** Implemented as opt-in
   `connector.footprint_same_voltage_power_input_unanchored`.
-- **Gap:** Existing footprint-peer power-input divergence requires another
-  shared pin as an anchor. A pair of otherwise comparable connectors can have
-  no shared assignments at all, so split supply contacts escape that review.
+- **Incremental value:** The initial hypothesis that unanchored split supplies
+  escaped peer review was disproved. The synthetic fault already produces
+  `connector.repeated_pin_function`. This rule adds an explicit normalized
+  voltage clue beside that existing finding; it does not add independent
+  detection.
 - **Predicate:** Require fitted connector candidates with distinct native
   symbols and no PART_ID, exact matching value and footprint, complete
   identical pin inventories, matching nonempty function/type metadata, a
@@ -13949,11 +13951,16 @@ control are documented in the
   Equal voltage labels do not establish source identity, current capacity,
   domain intent, or a requirement to connect rails. Filters, separate sources,
   and isolation remain valid possibilities. Anchored cases stay with the
-  existing power-input divergence rule.
+  existing power-input divergence rule. Reviewer value for the added voltage
+  context has not been measured, so do not promote the rule based on this
+  synthetic evidence alone.
 - **Synthetic evidence:** Equal-voltage split with no anchor; common-net,
   different-voltage, anchored, passive, return-function, DNP, PART_ID,
   incomplete-inventory, unsupported-label controls; default-off and explicit
   review policy; deterministic mapping order.
+- **Baseline evidence:** The unanchored synthetic fault also emits
+  `connector.repeated_pin_function`, both before and after this rule is enabled.
+  Treat this rule as optional report enrichment, not a new defect class.
 - **Focused selection:**
 
   ```sh
