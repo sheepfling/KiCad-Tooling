@@ -123,6 +123,7 @@ class PcbComponentValueMismatch(StrictModel):
     reference: Identifier
     schematic_value: NonEmptyText
     board_value: str
+    variant: NonEmptyText | None = None
 
 
 class PcbComponentInventoryComparison(StrictModel):
@@ -194,7 +195,10 @@ class PcbComponentInventoryCoverageReport(StrictModel):
         ]
         if len(population_keys) != len(set(population_keys)):
             raise ValueError("PCB population mismatch references must be unique")
-        value_references = [item.reference.casefold() for item in self.value_mismatches]
+        value_references = [
+            (item.variant.casefold() if item.variant is not None else "", item.reference.casefold())
+            for item in self.value_mismatches
+        ]
         if len(value_references) != len(set(value_references)):
             raise ValueError("PCB value mismatch references must be unique")
         if self.value_comparison_status == "COMPLETE" and self.snapshot_schema not in {

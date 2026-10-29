@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from .models import NetlistContract
@@ -18,6 +19,7 @@ class PcbVariantPopulationSource:
     netlist: NetlistContract
     board_references: tuple[str, ...]
     fitted_board_references: tuple[str, ...]
+    board_values: Mapping[str, str] | None = None
 
 
 def compare_schematic_pcb_population(

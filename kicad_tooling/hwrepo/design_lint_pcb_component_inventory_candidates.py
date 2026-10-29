@@ -239,8 +239,8 @@ def pcb_component_inventory_candidates(
                 rule_id="pcb.schematic_pcb_value_mismatch",
                 subject="native PCB footprint values unavailable",
                 message=(
-                    "The source-bound native PCB snapshot does not provide the footprint value "
-                    "fields required for comparison. No value-consistency conclusion is available."
+                    "Source-bound PCB value evidence is incomplete, including any declared named "
+                    "variant exports. No value-consistency conclusion is available."
                 ),
                 evidence={
                     "coverage_issue": (
@@ -260,9 +260,17 @@ def pcb_component_inventory_candidates(
     candidates.extend(
         Candidate(
             rule_id="pcb.schematic_pcb_value_mismatch",
-            subject=f"{item.reference}: schematic and PCB value fields differ",
+            subject=(
+                f"{item.reference}: schematic and PCB value fields differ"
+                if item.variant is None
+                else f"{item.reference}: schematic and PCB value fields differ in {item.variant}"
+            ),
             message=(
-                "The schematic value and placed PCB footprint value differ as text. Review which "
+                "The same-name schematic and PCB variant value fields differ as text. Review which "
+                "value should appear for this assembly variant. This comparison does not establish "
+                "electrical equivalence, part identity, physical population, or assembly intent."
+                if item.variant is not None
+                else "The schematic value and placed PCB footprint value differ as text. Review which "
                 "value should appear in the fabrication source; this comparison does not establish "
                 "electrical equivalence, part identity, physical population, or assembly intent."
             ),
@@ -278,6 +286,7 @@ def pcb_component_inventory_candidates(
                 "kicad_version": (report.kicad_version or "unavailable",),
                 "image": (report.image or "unavailable",),
                 "probe_sha256": (report.probe_sha256 or "unavailable",),
+                **_variant_population_evidence(report, item.variant),
             },
         )
         for item in report.value_mismatches

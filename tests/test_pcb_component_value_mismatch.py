@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -25,7 +26,10 @@ from kicad_tooling.hwrepo.models import (
 from kicad_tooling.hwrepo.pcb_component_inventory import (
     evaluate_native_component_inventory_coverage,
 )
+from kicad_tooling.hwrepo.pcb_component_inventory_models import PcbVariantPopulationCoverage
+from kicad_tooling.hwrepo.pcb_component_population import PcbVariantPopulationSource
 from kicad_tooling.hwrepo.pcb_component_values import compare_schematic_pcb_values
+from kicad_tooling.hwrepo.pcb_variant_population_capture import PcbVariantPopulationCapture
 from kicad_tooling.validate import hashes
 from tests.design_lint_fixtures.pcb_component_inventory import (
     BOARD_SHA256,
@@ -192,6 +196,57 @@ def test_value_comparison_is_order_independent_and_values_are_case_sensitive() -
     assert reordered == first
 
 
+def test_named_variant_values_compare_same_name_fitted_sources_and_localize_findings() -> None:
+    base = netlist(components={"R1": FOOTPRINT}, values={"R1": "1k"})
+    board = snapshot(
+        "R1",
+        schema_version="13",
+        footprint_by_reference={"R1": FOOTPRINT},
+        value_by_reference={"R1": "1k"},
+    )
+    mismatch_source = PcbVariantPopulationSource(
+        variant="Assembly A",
+        netlist=netlist(components={"R1": FOOTPRINT}, values={"R1": "10k"}),
+        board_references=("R1",),
+        fitted_board_references=("R1",),
+        board_values={"R1": "10K"},
+    )
+    (mismatch,) = compare_schematic_pcb_values(base, board, (mismatch_source,))
+    assert (mismatch.reference, mismatch.schematic_value, mismatch.board_value) == (
+        "R1",
+        "10k",
+        "10K",
+    )
+    assert mismatch.variant == "Assembly A"
+
+    control_source = replace(mismatch_source, board_values={"R1": "10k"})
+    assert compare_schematic_pcb_values(base, board, (control_source,)) == ()
+
+    dnp_source = replace(
+        mismatch_source,
+        netlist=netlist(components={"R1": FOOTPRINT}, values={"R1": "10k"}, dnp=("R1",)),
+    )
+    assert compare_schematic_pcb_values(base, board, (dnp_source,)) == ()
+
+
+def test_named_variant_value_comparison_blocks_when_export_is_incomplete() -> None:
+    base = netlist(components={"R1": FOOTPRINT}, values={"R1": "1k"})
+    board = snapshot(
+        "R1",
+        schema_version="13",
+        footprint_by_reference={"R1": FOOTPRINT},
+        value_by_reference={"R1": "1k"},
+    )
+    source = PcbVariantPopulationSource(
+        variant="Assembly A",
+        netlist=base,
+        board_references=("R1",),
+        fitted_board_references=("R1",),
+    )
+    with pytest.raises(ValueError, match="PCB value export is unavailable"):
+        compare_schematic_pcb_values(base, board, (source,))
+
+
 def test_schema_12_remains_supported_for_inventory_but_blocks_value_comparison() -> None:
     observed = netlist(components={"R1": FOOTPRINT}, values={"R1": "10k"})
     board = snapshot("R1", footprint_by_reference={"R1": FOOTPRINT})
@@ -290,6 +345,13 @@ def test_value_only_policy_captures_and_compares_native_footprint_values(
         design_lint_pcb_geometry_capture,
         "native_pcb_command_matches",
         lambda *_args, **_kwargs: True,
+    )
+    monkeypatch.setattr(
+        "kicad_tooling.hwrepo.design_lint_pcb_component_inventory_scan.capture_variant_population",
+        lambda *_args, **_kwargs: PcbVariantPopulationCapture(
+            sources=(),
+            coverage=PcbVariantPopulationCoverage(status="NOT_APPLICABLE"),
+        ),
     )
 
     coverage = design_lint_pcb_geometry_scan.scan_pcb_geometry(

@@ -257,8 +257,26 @@ def evaluate_native_component_inventory_coverage(
             )
             if value_mode != "off":
                 if snapshot.schema_version in {"13", "14", "15"}:
-                    value_mismatches = compare_schematic_pcb_values(netlist, snapshot)
-                    value_comparison_status = "COMPLETE"
+                    if variant_coverage.status == "BLOCKED":
+                        value_comparison_issue = (
+                            "Named-variant value evidence is unavailable: "
+                            f"{variant_coverage.issue or 'native variant export failed'}"
+                        )
+                    else:
+                        try:
+                            value_mismatches = compare_schematic_pcb_values(
+                                netlist,
+                                snapshot,
+                                variants=(
+                                    variant_population.sources
+                                    if variant_population is not None
+                                    and variant_coverage.status == "COMPLETE"
+                                    else ()
+                                ),
+                            )
+                            value_comparison_status = "COMPLETE"
+                        except ValueError as exc:
+                            value_comparison_issue = str(exc)
                 else:
                     value_comparison_issue = "PCB component value comparison needs native footprint snapshot schema 13 or later"
         except ValueError as exc:

@@ -256,7 +256,7 @@ def capture_variant_population(
             write_model(fitted_command_path, fitted_command)
             _require_export(fitted_command, fitted_positions_path, variant, "fitted PCB positions")
 
-            board_references = _position_references(all_positions_path)
+            board_references, board_values = _position_records(all_positions_path)
             fitted_references = _position_references(fitted_positions_path)
             netlist_relative = netlist_path.relative_to(root).as_posix()
             all_relative = all_positions_path.relative_to(root).as_posix()
@@ -286,6 +286,7 @@ def capture_variant_population(
                     netlist=observed_netlist,
                     board_references=board_references,
                     fitted_board_references=fitted_references,
+                    board_values=board_values,
                 )
             )
 
@@ -398,6 +399,10 @@ def _require_export(
 
 
 def _position_references(path: Path) -> tuple[str, ...]:
+    return _position_records(path)[0]
+
+
+def _position_records(path: Path) -> tuple[tuple[str, ...], dict[str, str] | None]:
     with path.open(encoding="utf-8-sig", newline="") as stream:
         reader = csv.DictReader(stream)
         if reader.fieldnames is None:
@@ -408,14 +413,25 @@ def _position_references(path: Path) -> tuple[str, ...]:
         )
         if reference_column is None:
             raise ValueError(f"KiCad position export has no reference column: {path.name}")
-        references = tuple(
-            (row.get(reference_column) or "").strip()
-            for row in reader
-            if any(value and value.strip() for value in row.values())
+        value_column = next(
+            (name for name in reader.fieldnames if name.strip().casefold() in {"val", "value"}),
+            None,
         )
+        rows = tuple(
+            row for row in reader if any(value and value.strip() for value in row.values())
+        )
+        references = tuple((row.get(reference_column) or "").strip() for row in rows)
     keys = [reference.casefold() for reference in references]
     if any(not reference for reference in references) or len(keys) != len(set(keys)):
         raise ValueError(
             f"KiCad position export contains blank or duplicate references: {path.name}"
         )
-    return references
+    values = (
+        None
+        if value_column is None
+        else {
+            reference: (row.get(value_column) or "").strip()
+            for reference, row in zip(references, rows, strict=True)
+        }
+    )
+    return references, values

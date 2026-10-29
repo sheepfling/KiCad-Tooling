@@ -99,6 +99,8 @@ def scan_pcb_component_inventory(
             kicad_version=evidence.snapshot.kicad_version,
         )
         if population_mode != "off"
+        or value_mode != "off"
+        or required_fitted_reference_mode != "off"
         else None
     )
     return evaluate_native_component_inventory_coverage(
