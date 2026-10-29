@@ -1,0 +1,2 @@
+(version 1)
+(rule "mapped" (condition "A.NetName == 'USB_D_P'") (constraint edge_clearance (min 600mm)))

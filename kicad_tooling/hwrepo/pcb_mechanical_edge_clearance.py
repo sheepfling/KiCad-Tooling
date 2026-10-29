@@ -9,7 +9,11 @@ from pathlib import Path
 from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_types import Candidate
 from .models import ProjectConfig, ProjectKind
-from .pcb_drc_rule_parser import NativeRuleConstraint, native_constraints
+from .pcb_drc_rule_parser import (
+    NativeRuleConstraint,
+    native_clearance_limit_issue,
+    native_constraints,
+)
 from .pcb_drc_source_evidence import (
     source_bound_drc_evidence,
     verify_source_bound_drc_unchanged,
@@ -70,6 +74,9 @@ def mechanical_edge_rule_coverage_issue(
         )
     if item.minimum_nm != requirement.minimum_clearance_nm or item.maximum_nm is not None:
         return "The native physical-clearance bound differs from the project minimum."
+    limit_issue = native_clearance_limit_issue(requirement.minimum_clearance_nm)
+    if limit_issue is not None:
+        return limit_issue
     opposite_layer = (
         "B.Courtyard" if requirement.courtyard_layer == "F.Courtyard" else "F.Courtyard"
     )

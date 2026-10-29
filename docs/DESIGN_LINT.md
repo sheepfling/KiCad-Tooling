@@ -802,6 +802,11 @@ physical-clearance radius. The prompt asks for review and does not prove that a
 later rule overrides the authored requirement. The rule is opt-in: projects
 that have no reviewed courtyard-to-edge minimum do not receive a prompt.
 
+KiCad 10.0.0 and 10.0.5 clamp native clearance minima above 500 mm to
+500 mm. An authored mechanical minimum above that value remains incomplete;
+larger minima are also unverified on other versions. The project-owned
+requirement is retained for review.
+
 Custom DRC source containing `${` is treated as unsupported by this coverage
 audit. KiCad substitutes project text variables before parsing, so unexpanded
 substitution can alter rule types, conditions, layers, or complete rules. This
@@ -3375,6 +3380,8 @@ Custom DRC source containing `${` is unsupported because project text-variable
 substitution can change the parsed rules before KiCad evaluates them.
 
 `edge_clearance` is an optional project-authored minimum for the mapped pair.
+Requirements above 500 mm remain incomplete: KiCad 10.0.0 and 10.0.5 clamp
+the applied minimum to 500 mm, and other versions have not been verified.
 It must match one active native `(constraint edge_clearance (min ...))` rule
 under the exact `A.inDiffPair(...)` selector. KiCad DRC measures the copper to
 board-edge distance; this audit checks the configured bound and never chooses
@@ -3715,6 +3722,9 @@ substitution can change the parsed rules before KiCad evaluates them.
 For an authored edge-clearance rule, net names containing quotes or control
 characters are rejected because the exact supported `A.NetName` condition
 cannot represent them safely.
+An authored edge-clearance minimum above 500 mm remains incomplete. KiCad
+10.0.0 and 10.0.5 clamp the native minimum to 500 mm; coverage above that
+limit is unverified on other versions.
 
 The report binds the project and board, optional rule file, native DRC receipt,
 native PCB snapshot and command, KiCad version, and source inventory. Projects

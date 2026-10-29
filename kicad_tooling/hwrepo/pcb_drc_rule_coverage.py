@@ -23,6 +23,7 @@ from .pcb_drc_rule_parser import (
     RULE_SEVERITY,
     NativeRuleConstraint,
     drc_pad_selector,
+    native_clearance_limit_issue,
     native_constraints,
 )
 
@@ -158,6 +159,19 @@ def _compare_constraint(
             issue=f"Later rule(s) may override this constraint: {possible}.",
         )
     covered = match.minimum_nm == expected_minimum and match.maximum_nm == expected_maximum
+    if covered and name == "edge_clearance" and expected_minimum is not None:
+        limit_issue = native_clearance_limit_issue(expected_minimum)
+        if limit_issue is not None:
+            return PcbDrcConstraintCoverage(
+                constraint=name,
+                status="UNSUPPORTED",
+                expected_min_nm=expected_minimum,
+                expected_max_nm=expected_maximum,
+                observed_min_nm=match.minimum_nm,
+                observed_max_nm=match.maximum_nm,
+                rule_names=(match.rule_name,),
+                issue=limit_issue,
+            )
     return PcbDrcConstraintCoverage(
         constraint=name,
         status="COVERED" if covered else "MISMATCH",

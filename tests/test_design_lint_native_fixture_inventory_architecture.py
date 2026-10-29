@@ -59,6 +59,11 @@ _NON_RULE_NATIVE_TESTS = MappingProxyType(
             "test_native_drc_rule_order_controls_mapped_edge_constraint",
         ): "This native experiment establishes rule-order behavior independently; it does not invoke the mapped-rule audit.",
         (
+            "tests.test_pcb_drc_clearance_clamp_native",
+            None,
+            "test_native_drc_clamps_600mm_edge_requirement_to_500mm",
+        ): "This native experiment establishes the KiCad clearance clamp independently; it does not invoke the mapped-rule audit.",
+        (
             "tests.test_pcb_drc_text_variables_native",
             None,
             "test_native_project_variables_can_override_exact_edge_rule",

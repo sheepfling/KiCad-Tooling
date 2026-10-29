@@ -31,6 +31,20 @@ NativePcbConstraintName = (
     PcbDrcConstraintName | Literal["physical_hole_clearance", "unresolved_text_variable"]
 )
 
+# KiCad 10.0.0 and 10.0.5 clamp clearance minima to 500 mm. Other
+# versions need separate evidence before larger minima can be credited.
+_AUDITED_MAX_CLEARANCE_NM = 500_000_000
+
+
+def native_clearance_limit_issue(minimum_nm: int) -> str | None:
+    """Keep oversized authored clearance bounds reviewable on every version."""
+    if minimum_nm <= _AUDITED_MAX_CLEARANCE_NM:
+        return None
+    return (
+        "KiCad 10.0.0 and 10.0.5 clamp clearance minima to 500 mm; "
+        "coverage above that limit is not established for other versions."
+    )
+
 
 class NativeRuleConstraint:
     def __init__(

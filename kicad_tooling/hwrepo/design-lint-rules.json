@@ -9822,6 +9822,7 @@
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
+        "KiCad 10.0.0 and 10.0.5 clamp native clearance minima above 500 mm; larger requirements remain incomplete for all versions until separately verified.",
         "This audits configuration coverage only. KiCad native DRC remains responsible for geometry and physical-rule findings.",
         "Mapped differential-pair edge clearance supports a project-authored minimum only; it does not infer a universal signal-to-edge distance or prove EMI performance.",
         "The v1 rule parser supports exact A.inDiffPair('<selector>') conditions, mm or mil lengths that convert to integer nanometers, and pair suffixes _P/_N or +/-; other condition expressions or naming schemes remain uncovered.",
@@ -9830,6 +9831,7 @@
         "A matching rule does not prove the project-authored limit is appropriate for the interface, stack-up, impedance, or signal-integrity target. Additional unconfigured rules are not independently evaluated by this audit."
       ],
       "fault_fixtures": [
+        "tests.test_pcb_drc_clearance_clamp.test_mapped_pair_edge_minimum_is_not_credited_above_audited_limit",
         "tests.test_pcb_drc_text_variables.test_pair_rule_coverage_does_not_credit_unresolved_substitution",
         "tests.test_pcb_drc_precedence.test_later_distinct_pair_selector_is_not_assumed_disjoint",
         "tests.test_pcb_drc_layer_scope.test_pair_rule_layer_scope_is_incomplete",
@@ -9840,6 +9842,7 @@
         "tests.test_pcb_differential_pair_edge_clearance_native.test_native_drc_detects_pair_edge_clearance_fault_and_accepts_control"
       ],
       "valid_control_fixtures": [
+        "tests.test_pcb_drc_clearance_clamp.test_mapped_pair_edge_minimum_is_not_credited_above_audited_limit",
         "tests.test_pcb_drc_text_variables.test_no_substitutions_leave_exact_rule_coverage_available",
         "tests.test_pcb_drc_coverage.test_exact_native_rules_cover_authored_pair_constraints",
         "tests.test_pcb_drc_coverage.test_rule_for_another_pair_does_not_cover_requirement",
@@ -9847,10 +9850,12 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
+        "tests.test_pcb_drc_clearance_clamp.test_mapped_pair_edge_minimum_is_not_credited_above_audited_limit",
         "tests.test_pcb_drc_coverage.test_rule_and_requirement_order_preserve_coverage_but_bound_mutation_is_detected",
         "tests.test_design_lint_determinism_pcb_drc.test_differential_pair_drc_coverage_reports_remain_source_bound_and_deterministic"
       ],
       "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_clearance_limit_issue",
         "kicad_tooling/hwrepo/pcb_drc_rule_coverage.py#compare_native_rules",
         "kicad_tooling/hwrepo/design_lint.py#inspect_summary"
       ],
@@ -9869,6 +9874,7 @@
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
+        "KiCad 10.0.0 and 10.0.5 clamp native clearance minima above 500 mm; larger requirements remain incomplete for all versions until separately verified.",
         "This audits project-authored rule coverage and native endpoint connectivity only. KiCad native DRC remains responsible for measuring actual route length and skew.",
         "An authored edge-clearance minimum is checked against an exact A.NetName rule that applies to all copper on the mapped net, including branches; KiCad DRC measures geometry. The tooling does not infer critical nets or choose a universal edge margin.",
         "Edge-clearance net names containing quotes or control characters are rejected because they cannot be represented by the supported exact A.NetName selector syntax.",
@@ -9878,6 +9884,8 @@
         "Bundle pad selectors must resolve exactly to the mapped fitted board endpoints. Other condition syntax, incomplete netlists, non-mapped paths, off-board wiring, and physical continuity remain outside this audit."
       ],
       "fault_fixtures": [
+        "tests.test_pcb_drc_clearance_clamp.test_mapped_signal_edge_minimum_is_not_credited_above_audited_limit",
+        "tests.test_pcb_drc_clearance_clamp.test_clamped_signal_rule_obeys_project_disposition",
         "tests.test_pcb_drc_text_variables.test_signal_rule_coverage_does_not_credit_unresolved_substitution",
         "tests.test_pcb_drc_text_variables.test_unexpanded_variable_in_mapped_bound_cannot_be_credited",
         "tests.test_pcb_drc_precedence.test_later_potentially_overlapping_rule_makes_edge_coverage_incomplete",
@@ -9891,6 +9899,7 @@
         "tests.test_pcb_signal_path_native.test_native_signal_path_drc_faults_are_repeatable"
       ],
       "valid_control_fixtures": [
+        "tests.test_pcb_drc_clearance_clamp.test_mapped_signal_edge_minimum_is_not_credited_above_audited_limit",
         "tests.test_pcb_drc_text_variables.test_no_substitutions_leave_exact_rule_coverage_available",
         "tests.test_pcb_drc_precedence.test_earlier_general_rule_and_later_disjoint_net_are_controls",
         "tests.test_pcb_signal_path_coverage.test_design_lint_reports_wrong_native_path_bound_and_complete_control",
@@ -9901,6 +9910,7 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
+        "tests.test_pcb_drc_clearance_clamp.test_mapped_signal_edge_minimum_is_not_credited_above_audited_limit",
         "tests.test_pcb_signal_path_coverage.test_map_order_stable_and_native_rule_order_changes_precedence",
         "tests.test_pcb_signal_path_coverage.test_wrong_bound_and_wildcard_expansion_mutations_are_detected"
       ],
@@ -9908,6 +9918,7 @@
         "KICAD_RUN_NATIVE_PCB_FIXTURES"
       ],
       "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_clearance_limit_issue",
         "kicad_tooling/hwrepo/pcb_drc_rule_coverage.py#compare_native_signal_path_rules",
         "kicad_tooling/hwrepo/design_lint_pcb_geometry_scan.py#scan_pcb_geometry",
         "kicad_tooling/hwrepo/design_lint.py#inspect_summary"
@@ -10444,6 +10455,7 @@
         "KiCad 10.0.0 and 10.0.5 digest-pinned native DRC fixtures"
       ],
       "limitations": [
+        "KiCad 10.0.0 and 10.0.5 clamp native clearance minima above 500 mm; larger requirements remain incomplete for all versions until separately verified.",
         "The project owner must author the courtyard side and minimum from an independently reviewed mechanical requirement. This rule does not choose a universal component-to-edge clearance.",
         "The lint verifies source-bound rule coverage and ambiguity. KiCad native DRC measures the actual board geometry; this lint does not establish enclosure fit, manufacturing tolerance, fabricated geometry, or mechanical approval.",
         "Later physical-clearance rules are treated as potentially overlapping unless their only valid explicit layer is the opposite courtyard. Their conditions are not interpreted; a review prompt does not prove an override.",
@@ -10451,6 +10463,7 @@
         "Unconditional physical-clearance and physical-hole-clearance minima determine the native search radius even for earlier, ignored, or opposite-layer rules. If any exist, their largest supported minimum must cover the authored minimum. Conditional-only search is verified for the synthetic fixture on KiCad 10.0.5; a sufficient unconditional radius is required on 10.0.0 and unverified versions."
       ],
       "fault_fixtures": [
+        "tests.test_pcb_drc_clearance_clamp.test_mechanical_edge_minimum_respects_audited_limit",
         "tests.test_pcb_drc_text_variables.test_mechanical_coverage_does_not_credit_unresolved_substitution",
         "tests.test_pcb_mechanical_edge_precedence.test_later_potentially_overlapping_rule_leaves_mechanical_coverage_unconfirmed",
         "tests.test_pcb_mechanical_edge_precedence.test_small_unconditional_radius_is_not_credited_even_without_precedence_overlap",
@@ -10465,6 +10478,7 @@
         "tests.test_pcb_mechanical_edge_clearance_native.test_native_drc_mechanical_rule_precedence"
       ],
       "valid_control_fixtures": [
+        "tests.test_pcb_drc_clearance_clamp.test_mechanical_edge_minimum_respects_audited_limit",
         "tests.test_pcb_drc_text_variables.test_no_substitutions_leave_exact_rule_coverage_available",
         "tests.test_pcb_mechanical_edge_precedence.test_earlier_general_rule_does_not_override_the_mapped_rule",
         "tests.test_pcb_mechanical_edge_precedence.test_later_opposite_courtyard_or_other_constraint_is_disjoint",
@@ -10477,6 +10491,7 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
+        "tests.test_pcb_drc_clearance_clamp.test_mechanical_edge_minimum_respects_audited_limit",
         "tests.test_pcb_mechanical_edge_clearance.test_rule_comparison_is_stable_under_native_rule_order",
         "tests.test_design_lint_determinism_pcb_mechanical_edge.test_mechanical_edge_fault_and_control_reports_are_source_bound_and_deterministic"
       ],
@@ -10484,6 +10499,7 @@
         "KICAD_RUN_NATIVE_PCB_FIXTURES"
       ],
       "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_clearance_limit_issue",
         "kicad_tooling/hwrepo/pcb_mechanical_edge_clearance.py#mechanical_edge_rule_coverage_issue",
         "kicad_tooling/hwrepo/pcb_mechanical_edge_clearance.py#mechanical_edge_rule_coverage_candidates",
         "kicad_tooling/hwrepo/pcb_mechanical_edge_models.py#PcbMechanicalEdgeClearanceMap",
