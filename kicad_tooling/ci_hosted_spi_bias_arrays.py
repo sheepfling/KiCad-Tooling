@@ -41,12 +41,14 @@ def spi_bias_array_fixture_lane(
     sources = {
         "control": fixture_root / "control.kicad_sch",
         "fault": fixture_root / "fault.kicad_sch",
+        "no-connect": fixture_root / "no-connect.kicad_sch",
     }
     contract_path = fixture_root / "spi.json"
     source_hashes = {case: digest(source) for case, source in sources.items()}
     expected_source_hashes = {
         "control": "ffe5cb313f55aa3f0105392a66ca5eb24c021e448e22daed75ec9c6cc8474203",
         "fault": "930e3ea9fd621140ff739c1ff13cd64182c325c5bf8fefe4db7a4e2d231d2e18",
+        "no-connect": "2182e63210555eb3e9eb9d2afdf07164e71988e1c40e54d2712277e071413474",
     }
     expected_contract_hash = "ecadc621e352e50f891f081447b38b993014592e35b52ff1cde653a6251599cb"
     if source_hashes != expected_source_hashes:
@@ -78,7 +80,7 @@ def spi_bias_array_fixture_lane(
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
         f'test "$actual" = "{version}"\n'
-        "for case in control fault; do\n"
+        "for case in control fault no-connect; do\n"
         "  for run in first repeat; do\n"
         '    kicad-cli sch export netlist --format kicadxml --output "/output/$case.$run.netlist.xml" '
         '"/fixtures/$case.kicad_sch"\n'
@@ -156,6 +158,14 @@ def spi_bias_array_fixture_lane(
                 raise ValueError(f"Native {case} export lost the active-low SPI input function")
             if observed.pin_electrical_types.get("U2.1", "").casefold() != "input":
                 raise ValueError(f"Native {case} export lost the SPI input electrical type")
+            assigned_select = any("U2.1" in pins for pins in observed.nets.values())
+            unconnected_select = any("U2.1" in pins for pins in observed.unconnected_nets.values())
+            if case == "no-connect" and (assigned_select or not unconnected_select):
+                raise ValueError(
+                    "Native no-connect export did not preserve explicit U2.1 open state"
+                )
+            if case != "no-connect" and (not assigned_select or unconnected_select):
+                raise ValueError(f"Native {case} export changed the assigned SPI select pin")
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
                 sort_keys=True,
@@ -186,8 +196,12 @@ def spi_bias_array_fixture_lane(
                 if item.rule_id == "bus.spi_active_low_chip_select_without_pullup"
             )
 
-    expected_status = {"control": "PASS", "fault": "FAIL"}
-    expected_findings = {"control": (), "fault": ("SPI_CS_N: active-low SPI chip-select bias",)}
+    expected_status = {"control": "PASS", "fault": "FAIL", "no-connect": "FAIL"}
+    expected_findings = {
+        "control": (),
+        "fault": ("SPI_CS_N: active-low SPI chip-select bias",),
+        "no-connect": (),
+    }
     for case in sources:
         if normalized_hashes[(case, "first")] != normalized_hashes[(case, "repeat")]:
             raise ValueError(f"Native SPI bias-array {case} exports are not repeatable")
@@ -219,6 +233,7 @@ def spi_bias_array_fixture_lane(
             repeat_normalized_netlist_sha256=normalized_hashes[(case, "repeat")],
             array_check_status=array_statuses[(case, "first")],
             finding_subjects=";".join(findings[(case, "first")]) or "none",
+            explicit_unconnected_select=("U2.1" if case == "no-connect" else "none"),
             repeatable="true",
         )
     log.event(

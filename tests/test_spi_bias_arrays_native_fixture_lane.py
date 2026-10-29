@@ -56,16 +56,21 @@ def test_native_spi_bias_array_fault_and_control_repeat(
         "spi-bias-array-fixture/native-export",
         "spi-bias-array-fixture/control",
         "spi-bias-array-fixture/fault",
+        "spi-bias-array-fixture/no-connect",
     }
     native_export = results["spi-bias-array-fixture/native-export"]
     assert_native_fixture_mounts(tmp_path, native_export["command_receipt"])
     control = results["spi-bias-array-fixture/control"]
     fault = results["spi-bias-array-fixture/fault"]
+    no_connect = results["spi-bias-array-fixture/no-connect"]
     assert control["array_check_status"] == "PASS"
     assert control["finding_subjects"] == "none"
     assert fault["array_check_status"] == "FAIL"
     assert fault["finding_subjects"] == "SPI_CS_N: active-low SPI chip-select bias"
-    for result in (control, fault):
+    assert no_connect["array_check_status"] == "FAIL"
+    assert no_connect["finding_subjects"] == "none"
+    assert no_connect["explicit_unconnected_select"] == "U2.1"
+    for result in (control, fault, no_connect):
         assert result["status"] == "PASS"
         assert result["kicad_version"] == version
         assert result["image"] == image
@@ -74,4 +79,4 @@ def test_native_spi_bias_array_fault_and_control_repeat(
         assert re.fullmatch(r"[0-9a-f]{64}", result["source_sha256"])
         assert re.fullmatch(r"[0-9a-f]{64}", result["contract_sha256"])
         assert re.fullmatch(r"[0-9a-f]{64}", result["normalized_netlist_sha256"])
-    assert control["contract_sha256"] == fault["contract_sha256"]
+    assert control["contract_sha256"] == fault["contract_sha256"] == no_connect["contract_sha256"]

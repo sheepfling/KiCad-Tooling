@@ -896,6 +896,12 @@ standalone parity work when it closes a demonstrated feature regression.
   miswired maps, unrecognized rails, resistance bounds, and the fact that one
   mapped channel does not silence another chip-select gap. Digest-pinned KiCad
   10.0.0/10.0.5 fixtures cover a correct channel and a wrong-net fault.
+  The same exact-version native lane now includes an explicit no-connect case:
+  KiCad must retain U2.1 as unconnected, the mapped array contract must remain
+  failed for that open endpoint, and the missing-pull-up heuristic must stay
+  quiet. This closes the gap between the typed `unconnected_nets` anti-control
+  and actual native-export behavior; it does not treat the open pin as
+  electrically acceptable.
 - **Single-rule gate integrity:** `Lint-Rule` prerelease tags now add a narrow
   cross-rule slice that verifies every active rule has a valid theme-owned
   predicate, catalogued fixtures retain their theme markers, and catalogued
@@ -15349,12 +15355,14 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Fixtures:** Missing bias; direct 10 kΩ and unbranched two-resistor valid
   paths; DNP device and resistor; wrong-rail resistor; zero-ohm and out-of-band
   values; bare-polarity, output-pin, and explicitly no-connected select
-  controls; array identity, population,
-  channel-net, pin-inventory, and resistance-window faults; exact rule
-  `review`/`block`/`off` and fingerprint-ignore behavior; shared CLI/MCP
-  parity. The array fault/control schematics and contract are tooling-owned,
-  source-hashed, and exported repeatedly by the KiCad 10.0.0/10.0.5 package
-  acceptance lane.
+  controls; array identity, population, channel-net, pin-inventory, and
+  resistance-window faults; exact rule `review`/`block`/`off` and
+  fingerprint-ignore behavior; shared CLI/MCP parity. The array
+  fault/control schematics and contract are tooling-owned, source-hashed, and
+  exported repeatedly by the KiCad 10.0.0/10.0.5 package acceptance lane. The
+  native no-connect control requires explicit unconnected-pin evidence and
+  confirms the pull-up heuristic stays quiet while the mapped array check
+  reports the open endpoint.
 - **Done:** Catalog entry, deterministic predicate, rule-policy lifecycle,
   source-bound report evidence, synthetic and native fault/control coverage,
   public cohort source attribution, and user documentation are implemented. No
