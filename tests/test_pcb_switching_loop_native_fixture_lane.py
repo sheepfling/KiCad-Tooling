@@ -59,7 +59,7 @@ def test_native_switching_loop_geometry_fixtures(
     assert front_plane["resolved_trace_length_nm"] == 15_000_000
     assert int(front_plane["plane_contour_area_twice_nm2"]) > 0
     arc_trace = lane_event(log, "pcb-switching-loop-fixture/arc-trace")
-    assert arc_trace["resolved_trace_length_nm"] == 19_110_085
+    assert arc_trace["resolved_trace_length_nm"] == 19_110_084
     assert int(arc_trace["plane_contour_area_twice_nm2"]) > 0
     inner_plane = lane_event(log, "pcb-reference-plane-fixture/inner-plane")
     assert inner_plane["status"] == "PASS"

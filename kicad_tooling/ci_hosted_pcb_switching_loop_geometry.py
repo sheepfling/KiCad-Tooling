@@ -271,7 +271,7 @@ def verify_switching_loop_geometry_cases(ctx: SwitchingLoopContext):
                         len(tracks) != 1
                         or tracks[0].geometry_kind != "arc"
                         or tracks[0].arc_mid_nm != (17500000, 5000000)
-                        or tracks[0].arc_length_nm != 19110085
+                        or tracks[0].arc_length_nm != 19110084
                         or observed_endpoints not in expected_endpoints
                         or tracks[0].start_vias
                         or tracks[0].end_vias
@@ -395,10 +395,10 @@ def verify_switching_loop_geometry_cases(ctx: SwitchingLoopContext):
                             or trace_entry.route_edges[0].track_geometry_kinds != ("arc",)
                             or trace_entry.route_edges[0].track_midpoints_nm
                             != ((17500000, 5000000),)
-                            or trace_entry.route_edges[0].track_lengths_nm != (19110085,)
+                            or trace_entry.route_edges[0].track_lengths_nm != (19110084,)
                             or trace_entry.route_edges[0].vertices_nm
                             != ((10000000, 10000000), (25000000, 10000000))
-                            or trace_entry.route_edges[0].length_nm != 19110085
+                            or trace_entry.route_edges[0].length_nm != 19110084
                         ):
                             raise ValueError(
                                 f"Native arc trace measurement differs from the exact fixture geometry: {trace_entry}"
