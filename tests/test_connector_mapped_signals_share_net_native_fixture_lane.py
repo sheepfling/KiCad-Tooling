@@ -29,11 +29,13 @@ pytestmark = [
 ]
 
 RULE_ID = "connector.mapped_signals_share_net"
+SHIELD_SIGNAL_RULE_ID = "connector.mapped_shield_signal_share_net"
 FIXTURE_CASE = "mapped-distinct-signals-share-net"
 EXPECTED_SOURCE_SHA256 = "3716e8019bc5d5572d8a4f2e9112e01aecd69a8c035354c37e92aa481a0595ba"
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=SHIELD_SIGNAL_RULE_ID)
 @pytest.mark.skipif(
     os.environ.get("KICAD_RUN_NATIVE_CONNECTOR_FIXTURES") != "1",
     reason="exact-version native connector fixtures run in package acceptance",
@@ -118,3 +120,29 @@ def test_native_shared_net_is_reviewed_only_for_distinct_mapped_signals(
     assert fault_findings[0].evidence["component_pin"] == ("J1.1", "J1.2")
     assert fault_findings[0].evidence["interface_signal"] == ("CONTROL_A", "CONTROL_B")
     assert not control_findings
+
+    shield_fault, shield_coverage = signal_sharing_report(
+        observed,
+        coverage=signal_sharing_coverage(
+            observed,
+            signal_names=("CABLE_SHIELD", "USB_DATA"),
+            roles=("shield", "signal"),
+        ),
+    )
+    shield_control, _shield_control_coverage = signal_sharing_report(
+        observed,
+        coverage=signal_sharing_coverage(
+            observed,
+            signal_names=("SIGNAL_RETURN", "USB_DATA"),
+            roles=("return", "signal"),
+        ),
+    )
+    shield_findings = tuple(
+        item for item in shield_fault.findings if item.rule_id == SHIELD_SIGNAL_RULE_ID
+    )
+    assert shield_coverage.status == "COMPLETE"
+    assert len(shield_findings) == 1
+    assert shield_findings[0].evidence["assigned_net"] == ("SHARED_SIGNAL_NET",)
+    assert not any(
+        item.rule_id == SHIELD_SIGNAL_RULE_ID for item in shield_control.findings
+    )

@@ -3698,6 +3698,45 @@
       "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#mapped_shield_contacts_on_supply_rails"
     },
     {
+      "rule_id": "connector.mapped_shield_signal_share_net",
+      "title": "Mapped connector shield shares a native net with a signal",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-matched connector interface roles and KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For complete, current source-matched connector interface coverage, emit a REVIEW candidate when one or more fitted mapped shield contacts and one or more fitted mapped signal contacts each have exactly one assignment to the same native net.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "A shield-to-signal net assignment is a review cue only. Intentional shield bonds, component-level filters, and project-specific EMC topology may be valid.",
+        "The predicate requires complete current connector role maps and exact one-net assignments. DNP connectors, reasoned opens, ambiguous assignments, stale or digestless coverage, and unmapped contacts are excluded.",
+        "The finding does not infer the correct bond, inspect intervening circuitry, determine signal integrity or EMC performance, or prove PCB copper continuity, chassis bonding, or external wiring."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_mapped_shield_signal_sharing.test_mapped_shield_sharing_a_signal_net_requests_review",
+        "tests.test_connector_mapped_signals_share_net_native_fixture_lane.test_native_shared_net_is_reviewed_only_for_distinct_mapped_signals"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_mapped_shield_signal_sharing.test_separate_nets_and_return_only_bond_are_controls",
+        "tests.test_connector_mapped_shield_signal_sharing.test_dnp_open_ambiguous_and_stale_maps_are_controls",
+        "tests.test_connector_mapped_signals_share_net_native_fixture_lane.test_native_shared_net_is_reviewed_only_for_distinct_mapped_signals"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_mapped_shield_signal_sharing.test_finding_is_stable_under_netlist_and_interface_order"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_mapped_shield_signal_sharing.py#mapped_shields_sharing_signal_nets",
+        "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_shield_signal_sharing.py#mapped_shields_sharing_signal_nets"
+    },
+    {
       "rule_id": "connector.return_pin_on_positive_rail",
       "title": "Connector return pin is assigned to a positive rail",
       "status": "active",

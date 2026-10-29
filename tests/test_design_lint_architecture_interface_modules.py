@@ -16,6 +16,7 @@ I2C_PEER_REFERENCE_MODULES = (
 CONNECTOR_MAPPED_SIGNAL_MODULES = (
     "connector_mapped_interface_pins.py",
     "connector_mapped_signal_sharing.py",
+    "connector_mapped_shield_signal_sharing.py",
     "connector_mapped_signal_split_nets.py",
 )
 

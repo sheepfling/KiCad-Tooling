@@ -11,6 +11,7 @@ from tests.design_lint_fixtures.rs485_ab_same_net import rs485_ab_same_net_netli
 from tests.design_lint_fixtures.rs485_unconnected_data_pins import (
     rs485_unconnected_data_netlist,
 )
+from tests.design_lint_fixtures.rs485_unconnected_line_pin import rs485_unconnected_line_netlist
 from tests.design_lint_fixtures.serial_unconnected_pins import serial_unconnected_netlist
 from tests.design_lint_fixtures.spi_unconnected_clock_pin import (
     spi_unconnected_clock_netlist,
@@ -32,6 +33,7 @@ def unconnected_protocol_candidate_rule_ids() -> set[str]:
         i2c_unconnected_netlist(),
         rs485_ab_same_net_netlist(),
         rs485_unconnected_data_netlist(),
+        rs485_unconnected_line_netlist(),
         serial_unconnected_netlist(),
         spi_unconnected_clock_netlist(open_pins=("U1.1",)),
         spi_unconnected_data_netlist(),

@@ -270,12 +270,20 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     )
     for source, signal_names in (
         (signal_sharing_netlist(), ("CONTROL_A", "CONTROL_B")),
+        (signal_sharing_netlist(), ("CABLE_SHIELD", "UART_RX")),
         (
             signal_sharing_netlist(first_net="CONTACT_NET_A", second_net="CONTACT_NET_B"),
             ("CONTROL_A", "control_a"),
         ),
     ):
-        mapped_coverage = signal_sharing_coverage(source, signal_names=signal_names)
+        if signal_names == ("CABLE_SHIELD", "UART_RX"):
+            mapped_coverage = signal_sharing_coverage(
+                source,
+                signal_names=signal_names,
+                roles=("shield", "signal"),
+            )
+        else:
+            mapped_coverage = signal_sharing_coverage(source, signal_names=signal_names)
         mapped_report, _ = signal_sharing_report(source, coverage=mapped_coverage)
         emitted.update(item.rule_id for item in mapped_report.findings)
     i2c_pullup_source = i2c_series_pullup_netlist()

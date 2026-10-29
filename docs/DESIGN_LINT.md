@@ -761,7 +761,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 248 active rules.
+The catalog currently contains 249 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

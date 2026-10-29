@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 248 rules are implemented with synthetic regression coverage.
+The following 249 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 248 active rules.
+The catalog currently contains 249 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -422,6 +422,7 @@ skipped under prerelease policy.
 - `connector.mapped_supply_domains_share_net`
 - `connector.return_supply_scope_singleton`
 - `connector.stateful_contact_topology_mismatch`
+- `connector.mapped_shield_signal_share_net`
 - `connector.peer_pin_assignment_outlier`
 - `connector.peer_pin_assignment_divergence`
 - `connector.footprint_peer_pin_assignment_divergence`
@@ -3320,7 +3321,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 248 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 249 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -13770,6 +13771,34 @@ control are documented in the
     -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2c_pullup_input_limit_coverage")'
   ```
 
+#### LINT-222 — Review mapped connector shields sharing signal nets
+
+- **Status:** Implemented as the default-`review` rule
+  `connector.mapped_shield_signal_share_net`.
+- **Gap:** Existing mapped-connector rules review shield contacts assigned to
+  return-like or supply-like labels and distinct signal contacts sharing a
+  net. They do not identify a shield contact and a signal contact that the
+  complete interface maps show are directly assigned to that same net.
+- **Predicate:** For complete current connector coverage, group fitted,
+  source-matched shield and signal contacts by their one assigned native net.
+  Emit REVIEW when a net has at least one contact of each role.
+- **Boundary:** A shield-to-signal bond can be intentional through a reviewed
+  EMC or protection design. This prompt does not decide the correct bond,
+  inspect intervening circuitry, establish cable/chassis behavior, or prove
+  PCB copper continuity. DNP connectors, reasoned opens, ambiguous assignments,
+  incomplete/stale maps, and digestless coverage are excluded.
+- **Fixtures:** Synthetic fault/control, DNP/open/ambiguous/stale coverage,
+  policy, exact-ignore, and order-stability cases are registered. The native
+  regression reuses a tooling-owned two-contact schematic with repeated exact
+  KiCad exports; alternate source-matched role maps exercise the fault and
+  role control. Hosted KiCad 10.0.0/10.0.5 acceptance is pending.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_connector_mapped_shield_signal_sharing.py \
+    -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_shield_signal_share_net")'
+  ```
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.
@@ -17309,7 +17338,7 @@ candidate commit and installation inputs before any new runtime comparison.
 | CC-001 connector/contact current versus PCB copper | LINT-021 measures project-mapped net track widths; LINT-071 checks authored component power dissipation. LINT-077 now checks owner-authored current against an exact per-contact rating. Neither local check calculates copper ampacity. | The contact slice is implemented in LINT-077 with exact identity/pin binding; hosted native pass, run 38143123091. Defer copper-capacity work until an independently reviewed model defines stack-up, temperature, vias/zones, route topology, branching, and current allocation. Do not infer ratings or current sharing from net names or a net-wide minimum width. The public candidate implementation was not installed or runtime-tested; only its documented question informed this narrower local contract. |
 | EG-001 external-connector ESD coverage             | LINT-034 requires a reviewed protection disposition per scoped connector pin; LINT-060 checks mapped PCB entry and return-via geometry.                                                                                                  | Pinned source review found no bounded gap beyond LINT-034; retain no new rule. See the source-review note below.                                                                                                                                                                                                                                                                                                                                                                                                   |
 | DA-001 decoupling strategy adequacy                | LINT-046 reviews fitted-capacitor presence; LINT-020 measures project-mapped PCB placement; LINT-136 compares exact mapped capacitors with an authored nominal minimum for one IC power pin.                                             | LINT-136 closes a narrow explicit-requirement gap without adopting the cohort's inferred one-capacitor-per-IC suggestion. Its exact-version hosted gate passed on `v0.5.1rc35` (run `39311021307`). The rule does not choose a universal value or replace placement/return checks.                                                                                                                                                                                                                                 |
-| XV-001..003 schematic/PCB consistency              | Existing verification binds native schematic/netlist and PCB artifacts.                                                                                                                                                                  | LINT-102 compares schematic references and assigned footprints; LINT-111 compares base and declared named-variant DNP flags; LINT-112 compares schematic/PCB values; LINT-129 reviews board-only footprint references; LINT-130 checks explicitly required fitted references in the base assembly and explicitly mapped named variants. Variant-aware value comparison remains deferred. Cohort source review informed the audit; no code was imported or executed.                                                         |
+| XV-001..003 schematic/PCB consistency              | Existing verification binds native schematic/netlist and PCB artifacts.                                                                                                                                                                  | LINT-102 compares schematic references and assigned footprints; LINT-111 compares base and declared named-variant DNP flags; LINT-112 compares schematic/PCB values; LINT-129 reviews board-only footprint references; LINT-130 checks explicitly required fitted references for the base and mapped variants. Variant-aware value comparison remains deferred. Cohort source review informed the audit; no code was imported or executed.                                                                         |
 | CC-001 style ampacity-target net-class proposal    | LINT-021 accepts project-authored minimum widths and records exact native track measurements.                                                                                                                                            | Treat the public [kicad-tools ampacity-target proposal](https://github.com/rjwalters/kicad-tools/issues/4216) as an unimplemented research lead, not a cohort feature to import. Any future derivation needs a documented, licensed/available calculation basis, explicit copper and temperature assumptions, boundary tests, and comparison with an independent reference. Preserve authored widths as screens until that evidence exists.                                                                        |
 | Mapped bundle route length and inter-signal skew   | LINT-095 audits project-authored exact endpoints, bundle membership, and active native DRC length/skew rules; LINT-022 covers differential-pair constraint coverage.                                                                     | Keep using native DRC for route measurement and LINT-095 for authored intent and rule coverage. Reconsider a separate geometry engine only if it adds independently confirmed coverage or materially clearer localization beyond those checks.                                                                                                                                                                                                                                                                     |
 | Thermal-via coverage for mapped dissipating parts  | LINT-071 compares exact-part dissipated power with an authored derated power limit; it does not estimate package temperature or via benefit.                                                                                             | Keep deferred until a project-authored thermal requirement identifies the exact package, heat path, layers, connected via population, copper stack, and boundary basis. Test any narrow geometry screen against pad-connected, unconnected, wrong-plane, DNP, and datasheet-supported alternatives. Stop if via count or density is presented as thermal adequacy without an independently reviewed model.                                                                                                         |

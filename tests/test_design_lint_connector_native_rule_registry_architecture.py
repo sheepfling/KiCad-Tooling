@@ -106,6 +106,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.mapped_signals_share_net": {
             "tests.test_connector_mapped_signals_share_net_native_fixture_lane.test_native_shared_net_is_reviewed_only_for_distinct_mapped_signals",
         },
+        "connector.mapped_shield_signal_share_net": {
+            "tests.test_connector_mapped_signals_share_net_native_fixture_lane.test_native_shared_net_is_reviewed_only_for_distinct_mapped_signals",
+        },
         "connector.mapped_signals_split_nets": {
             "tests.test_connector_mapped_signals_split_nets_native_fixture_lane.test_native_split_nets_are_reviewed_only_for_repeated_mapped_signal",
         },
