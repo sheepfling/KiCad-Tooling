@@ -11,13 +11,14 @@ import asyncio
 from collections.abc import MutableMapping, Sequence
 from importlib.util import find_spec
 from pathlib import Path
-from types import EllipsisType
 from typing import Literal
 
 from pydantic import JsonValue
 
 from .contracts import read_model, repo_path
 from .policy_issue_models import PolicyIssue
+from .surface_cli_discovery import discover_cli as _discover_cli
+from .surface_mcp_discovery import discover_mcp as _discover_mcp
 from .surface_models import (
     ToolCliSnapshot,
     ToolMcpSnapshot,
@@ -75,161 +76,14 @@ CORE_WORKFLOWS = frozenset(
 )
 
 
-def _literal_string(expression: ast.expr) -> str | None:
-    if not isinstance(expression, ast.Constant):
-        return None
-    value: str | bytes | int | float | complex | bool | None | EllipsisType = expression.value
-    return value if isinstance(value, str) else None
-
-
-def _strings(node: ast.AST, location: str) -> tuple[str, ...]:
-    if not isinstance(node, (ast.Tuple, ast.List, ast.Set)):
-        raise ValueError(  # noqa: TRY004 - keep the parser's established value-error contract
-            f"{location}: surface choices must be literal strings"
-        )
-    elements: list[ast.expr] = node.elts
-    values = tuple(_literal_string(item) for item in elements)
-    if any(value is None for value in values):
-        raise ValueError(f"{location}: surface choices must be literal strings")
-    return tuple(value for value in values if value is not None)
-
-
-def _string(node: ast.expr, location: str) -> str:
-    value = _literal_string(node)
-    if value is None:
-        raise TypeError(f"{location}: surface name must be a literal string")
-    return value
-
-
-def _is_main_guard(node: ast.AST) -> bool:
-    if not isinstance(node, ast.Compare):
-        return False
-    left: ast.expr = node.left
-    if not isinstance(left, ast.Name) or left.id != "__name__":
-        return False
-    comparators: list[ast.expr] = node.comparators
-    return any(_literal_string(value) == "__main__" for value in comparators)
-
-
 def discover_cli(root: Path) -> tuple[ToolCliSnapshot, ...]:
-    """Discover first-party Python CLI modules, command choices and option names."""
-    snapshots: list[ToolCliSnapshot] = []
-    for candidate in sorted(repo_path(root, "kicad_tooling").rglob("*.py")):
-        path = repo_path(root, candidate.relative_to(root).as_posix())
-        if not path.is_file():
-            raise ValueError(f"CLI source must be a regular file: {path}")
-        if path.name == "__main__.py":
-            # The installed entry point dispatches existing commands; it adds no
-            # new workflow capability of its own.
-            continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        # Public CLIs use a main function or a __main__ module/guard. Supporting
-        # either catches a new entry point even before it follows our convention.
-        is_cli = (
-            path.name == "__main__.py"
-            or any(
-                isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "main"
-                for node in tree.body
-            )
-            or any(_is_main_guard(node) for node in ast.walk(tree))
-        )
-        if not is_cli:
-            continue
-        commands: set[str] = set()
-        options: set[str] = set()
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
-                continue
-            location = f"{path.relative_to(root)}:{node.lineno}"
-            if node.func.attr == "add_parser":
-                if not node.args:
-                    raise ValueError(f"{location}: subcommand name is missing")
-                commands.add(_string(node.args[0], location))
-                for keyword in node.keywords:
-                    if keyword.arg == "aliases":
-                        commands.update(_strings(keyword.value, location))
-            if node.func.attr != "add_argument":
-                continue
-            names = tuple(_string(value, location) for value in node.args)
-            options.update(name for name in names if name.startswith("-"))
-            if names and not names[0].startswith("-"):
-                for keyword in node.keywords:
-                    if keyword.arg == "choices":
-                        commands.update(_strings(keyword.value, location))
-        module = ".".join(path.relative_to(root).with_suffix("").parts)
-        snapshots.append(
-            ToolCliSnapshot(
-                module=module,
-                commands=tuple(sorted(commands)),
-                options=tuple(sorted(options)),
-            )
-        )
-    return tuple(snapshots)
-
-
-def _is_tool_call(node: ast.AST) -> bool:
-    return (
-        isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Attribute)
-        and node.func.attr == "tool"
-    )
+    """Compatibility export for static first-party CLI declaration discovery."""
+    return _discover_cli(root)
 
 
 def discover_mcp(root: Path) -> tuple[ToolMcpSnapshot, ...]:
-    """Read all conditional registrations without importing the optional SDK."""
-    path = repo_path(root, "kicad_tooling/hwrepo/mcp_server.py")
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    functions = {
-        node.name: node
-        for node in ast.walk(tree)
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-    }
-    snapshots: list[ToolMcpSnapshot] = []
-    recognized: set[int] = set()
-    for node in ast.walk(tree):
-        function: ast.FunctionDef | ast.AsyncFunctionDef | None = None
-        declaration: ast.Call | None = None
-        if isinstance(node, ast.Call) and _is_tool_call(node.func):
-            registration_args: list[ast.expr] = node.args
-            if len(registration_args) != 1 or not isinstance(registration_args[0], ast.Name):
-                raise ValueError(f"{path}:{node.lineno}: unsupported MCP tool registration")
-            function = functions.get(registration_args[0].id)
-            declaration = node.func if isinstance(node.func, ast.Call) else None
-        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            decorators = [value for value in node.decorator_list if _is_tool_call(value)]
-            if decorators:
-                if len(decorators) != 1:
-                    raise ValueError(f"{path}:{node.lineno}: repeated MCP tool decorator")
-                function = node
-                declaration = decorators[0] if isinstance(decorators[0], ast.Call) else None
-        if declaration is None:
-            continue
-        if function is None or declaration.args:
-            raise ValueError(f"{path}:{declaration.lineno}: unsupported MCP tool registration")
-        recognized.add(id(declaration))
-        name = function.name
-        for keyword in declaration.keywords:
-            if keyword.arg == "name":
-                name = _string(keyword.value, f"{path}:{declaration.lineno}")
-        arguments = function.args
-        if arguments.vararg is not None or arguments.kwarg is not None:
-            raise ValueError(
-                f"{path}:{declaration.lineno}: variadic MCP tool parameters are unsupported"
-            )
-        parameters = tuple(
-            sorted(
-                argument.arg
-                for argument in (
-                    *arguments.posonlyargs,
-                    *arguments.args,
-                    *arguments.kwonlyargs,
-                )
-            )
-        )
-        snapshots.append(ToolMcpSnapshot(name=name, parameters=parameters))
-    if any(_is_tool_call(node) and id(node) not in recognized for node in ast.walk(tree)):
-        raise ValueError(f"{path}: unsupported dynamic MCP tool registration")
-    return tuple(sorted(snapshots, key=lambda item: item.name))
+    """Compatibility export for static MCP declaration discovery."""
+    return _discover_mcp(root)
 
 
 async def _live_mcp(root: Path) -> tuple[ToolMcpSnapshot, ...]:

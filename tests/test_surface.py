@@ -12,6 +12,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.contracts import parse_model_text, read_model, write_model
@@ -26,6 +27,8 @@ from kicad_tooling.hwrepo.surface import (
     inspect_tool_surfaces,
 )
 from tests.support import SOURCE_ROOT, TEST_ROOT, reference_root
+
+pytestmark = pytest.mark.parity_lint
 
 
 class ToolSurfaceTests(unittest.TestCase):
@@ -172,15 +175,34 @@ class ToolSurfaceTests(unittest.TestCase):
         self.assertIn("future_tool", self.messages(report, "untracked_surface"))
         self.assertIn("future_tool", self.messages(report, "unmapped_surface"))
 
+    def test_mcp_registration_in_an_imported_owner_is_discovered(self) -> None:
+        (self.root / "kicad_tooling/hwrepo/mcp_server.py").write_text(
+            "from .mcp_test_tools import register_test_tools as add_test_tools\n"
+            "def create_server(server):\n    add_test_tools(server)\n",
+            encoding="utf-8",
+        )
+        (self.root / "kicad_tooling/hwrepo/mcp_test_tools.py").write_text(
+            "def register_test_tools(server):\n"
+            "    def health(include_details: bool = False) -> str:\n"
+            "        return 'ok'\n"
+            "    server.tool(name='health')(health)\n",
+            encoding="utf-8",
+        )
+
+        self.assertEqual(
+            discover_mcp(self.root),
+            (ToolMcpSnapshot(name="health", parameters=("include_details",)),),
+        )
+
     def test_mcp_parameter_and_removal_drift_are_detected(self) -> None:
         self.replace_source(
-            "kicad_tooling/hwrepo/mcp_server.py",
+            "kicad_tooling/hwrepo/mcp_project_inventory.py",
             "def list_projects()",
             "def list_projects(limit: int = 10)",
         )
         self.replace_source(
-            "kicad_tooling/hwrepo/mcp_server.py",
-            "    server.tool(annotations=READ_ONLY)(get_project)\n",
+            "kicad_tooling/hwrepo/mcp_project_inventory.py",
+            "    server.tool(annotations=read_only)(get_project)\n",
             "",
         )
         report = self.report()
@@ -212,9 +234,9 @@ class ToolSurfaceTests(unittest.TestCase):
             SOURCE_ROOT / "kicad_tooling/hardware.py", self.root / "kicad_tooling/hardware.py"
         )
         self.replace_source(
-            "kicad_tooling/hwrepo/mcp_server.py",
-            "server.tool(annotations=READ_ONLY)(get_project)",
-            "server.tool(annotations=READ_ONLY)(tool_from_configuration())",
+            "kicad_tooling/hwrepo/mcp_project_inventory.py",
+            "server.tool(annotations=read_only)(get_project)",
+            "server.tool(annotations=read_only)(tool_from_configuration())",
         )
         report = self.report()
         self.assertEqual(report.status, "FAIL")

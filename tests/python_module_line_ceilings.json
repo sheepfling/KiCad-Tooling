@@ -18,7 +18,6 @@
     "kicad_tooling/hwrepo/parts_assistant.py": 974,
     "kicad_tooling/hwrepo/product.py": 864,
     "kicad_tooling/hwrepo/release.py": 793,
-    "kicad_tooling/hwrepo/surface.py": 590,
     "kicad_tooling/hwrepo/test_access.py": 522,
     "kicad_tooling/hwrepo/three_d.py": 512,
     "kicad_tooling/lint_registry.py": 579,

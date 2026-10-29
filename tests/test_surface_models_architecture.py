@@ -89,3 +89,19 @@ def test_owners_do_not_import_registry_and_surface_consumers_import_owner() -> N
             and any(alias.name in SURFACE_NAMES for alias in node.names)
             for node in ast.walk(tree)
         )
+
+
+def test_surface_discovery_owners_are_bounded_and_used() -> None:
+    for filename in ("surface_ast.py", "surface_cli_discovery.py", "surface_mcp_discovery.py"):
+        source = (PACKAGE / filename).read_text(encoding="utf-8")
+        assert len(source.splitlines()) < 500
+    facade = ast.parse((PACKAGE / "surface.py").read_text(encoding="utf-8"))
+    imports = {node.module for node in ast.walk(facade) if isinstance(node, ast.ImportFrom)}
+    assert "surface_cli_discovery" in imports
+    assert "surface_mcp_discovery" in imports
+    for filename in ("surface_cli_discovery.py", "surface_mcp_discovery.py"):
+        tree = ast.parse((PACKAGE / filename).read_text(encoding="utf-8"))
+        assert any(
+            isinstance(node, ast.ImportFrom) and node.module == "surface_ast"
+            for node in ast.walk(tree)
+        )
