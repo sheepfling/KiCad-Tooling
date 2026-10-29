@@ -19,6 +19,7 @@ from kicad_tooling.hwrepo.pcb_component_inventory_models import (
 from kicad_tooling.hwrepo.pcb_variant_population_capture import (
     _position_references,
     capture_variant_population,
+    supports_named_variant_pcb_values,
 )
 from kicad_tooling.validate import hashes
 from tests.design_lint_fixtures.pcb_component_inventory import netlist
@@ -27,6 +28,12 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint]
 
 IMAGE = "registry.example/kicad:10.0.5@sha256:" + "e" * 64
 VARIANT = "Assembly A"
+
+
+def test_named_variant_pcb_value_support_is_exact_version_scoped() -> None:
+    assert not supports_named_variant_pcb_values("10.0.0")
+    assert supports_named_variant_pcb_values("10.0.5")
+    assert not supports_named_variant_pcb_values("10.1.0")
 
 
 def make_project(tmp_path: Path) -> tuple[Path, SimpleNamespace]:

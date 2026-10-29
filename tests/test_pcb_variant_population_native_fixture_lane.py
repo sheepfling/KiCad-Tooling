@@ -33,6 +33,7 @@ pytestmark = [
 
 @pytest.mark.parametrize("project,version", NATIVE_KICAD_PROJECTS, ids=lambda value: value)
 @pytest.mark.design_lint_rule(rule_id="pcb.required_fitted_reference")
+@pytest.mark.design_lint_rule(rule_id="pcb.schematic_pcb_value_mismatch")
 def test_native_named_variant_population_faults_and_control_are_source_bound(
     tmp_path: Path,
     project: str,
@@ -53,18 +54,32 @@ def test_native_named_variant_population_faults_and_control_are_source_bound(
     assert event["schematic_only_dnp"] == "U1"
     assert event["both_fitted_mismatches"] == ""
     assert event["missing_board_variant_blocked"] == "true"
+    if version == "10.0.0":
+        assert event["variant_value_fault"] == "false"
+        assert event["variant_value_control"] == "false"
+        assert event["variant_value_coverage_blocked"] == "true"
+    else:
+        assert event["variant_value_fault"] == "true"
+        assert event["variant_value_control"] == "true"
+        assert event["variant_value_coverage_blocked"] == "false"
     assert event["board_variant_presence_probed"] == "true"
     source_hashes = json.loads(event["source_hashes"])
-    assert len(source_hashes) == 12
+    assert len(source_hashes) == 15
     assert all(len(value) == 64 for value in source_hashes.values())
     export_hashes = json.loads(event["native_export_hashes"])
-    assert set(export_hashes) == {"board-only-dnp", "schematic-only-dnp", "both-fitted"}
+    assert set(export_hashes) == {
+        "board-only-dnp",
+        "schematic-only-dnp",
+        "both-fitted",
+        "variant-value-fault",
+    }
     assert all(len(value) == 64 for case in export_hashes.values() for value in case.values())
     probe_hashes = json.loads(event["board_variant_probe_hashes"])
     assert set(probe_hashes) == {
         "board-only-dnp",
         "schematic-only-dnp",
         "both-fitted",
+        "variant-value-fault",
         "board-missing-variant",
     }
     assert all(len(value) == 64 for value in probe_hashes.values())

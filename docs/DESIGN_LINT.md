@@ -3798,10 +3798,13 @@ project, schematic, board, probe, command, and export digests. No default
 variant is substituted for a named variant. This compares CAD text only; it
 does not identify a part, establish electrical equivalence, or determine
 assembly intent. Synthetic regressions cover a variant mismatch, matching
-control, DNP control, incomplete export, and source evidence localization. The
-exact-version native lanes exercise base value fault/control exports and named
-variant population exports on KiCad 10.0.0 and 10.0.5; they do not yet exercise
-a native variant-specific value mismatch.
+control, DNP control, incomplete export, and source evidence localization. Base
+value comparisons are supported by the exact-version native lanes on KiCad
+10.0.0 and 10.0.5. Named-variant value comparison is supported on KiCad
+10.0.5, with a fixed, digest-pinned synthetic value fault and matching control.
+KiCad 10.0.0 does not preserve the variant value in its PCB position export,
+so named-variant value coverage blocks there instead of treating the base value
+as a match.
 
 ## Review mapped PCB keepout intent
 

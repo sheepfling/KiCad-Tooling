@@ -10498,7 +10498,7 @@
       "evidence_adapter": "Source-bound native schematic netlist compared with exact KiCad native PCB footprint snapshot schema 12, 13, or 14",
       "predicate": "For each schematic component with a nonempty assigned footprint that is not marked DNP, compare its reference case-insensitively with the native PCB footprint inventory. Report a review candidate when the reference is absent or when the exact assigned footprint identity differs from the placed native footprint identity.",
       "supported_kicad_versions": [
-        "KiCad 10.0.0 and 10.0.5 native pcbnew API; exact project version and digest-pinned image are checked"
+        "Base values: KiCad 10.0.0 and 10.0.5 native PCB snapshot; named-variant values: KiCad 10.0.5 PCB position export only. KiCad 10.0.0 named-variant value coverage is blocked because its native position export does not preserve the variant override. Exact project version and digest-pinned image are checked."
       ],
       "limitations": [
         "The check does not infer whether a fitted schematic component is intended to be off-board or whether two different footprint identities are geometrically equivalent. Projects can suppress a reviewed exception with the existing exact-fingerprint ignore lifecycle.",
@@ -10511,13 +10511,15 @@
         "tests.test_pcb_component_inventory.test_missing_native_inventory_evidence_is_not_reported_as_clean",
         "tests.test_pcb_component_inventory.test_unsupported_snapshot_schema_is_a_coverage_gap",
         "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
-        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound"
+        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound",
+        "tests.test_pcb_variant_population_native_fixture_lane.test_native_named_variant_population_faults_and_control_are_source_bound"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_component_inventory.test_placed_reference_dnp_empty_assignment_and_board_extras_are_controls",
         "tests.test_pcb_component_inventory.test_reference_and_inventory_order_do_not_change_comparison",
         "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
-        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound"
+        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound",
+        "tests.test_pcb_variant_population_native_fixture_lane.test_native_named_variant_population_faults_and_control_are_source_bound"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -10722,7 +10724,7 @@
         "This compares two CAD text fields. It does not establish electrical equivalence, component identity, assembly intent, physical population, or whether a displayed value is required on the board.",
         "The check is case-sensitive and reports formatting differences after trimming surrounding whitespace. Approved board-specific labels and intentional alternate text may be ignored by exact fingerprint or disabled through the project rule mode.",
         "Only references present and footprint-assigned in both paired exports are compared. DNP components, mismatched population states, off-board components, and board-only footprints are outside this comparison.",
-        "The check requires a source-bound schematic netlist and native PCB footprint value snapshot schema 13 or later for base values. Named variants require complete same-name schematic netlist and PCB position exports; missing or stale evidence blocks coverage and never produces a clean result.",
+        "The check requires a source-bound schematic netlist and native PCB footprint value snapshot schema 13 or later for base values. Named variants require complete same-name schematic netlist and PCB position exports; missing, stale, or unsupported version evidence blocks coverage and never produces a clean result.",
         "This compares CAD text fields. It does not establish electrical equivalence, component identity, assembly intent, physical population, or whether a displayed value is required on the board."
       ],
       "fault_fixtures": [

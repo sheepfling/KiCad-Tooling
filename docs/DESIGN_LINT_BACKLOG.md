@@ -9429,11 +9429,13 @@ control are documented in the
   incomplete variant exports, case sensitivity, ordering, policy modes, and
   stale-ignore detection. Named-variant findings carry the matching variant's
   project, schematic, board, probe, command, and export receipts. CLI/MCP
-  parity carries a typed base value finding. The digest-pinned native lane
-  repeats one matching control and one stale-board-value fault on KiCad 10.0.0
-  and 10.0.5; the variant lane verifies same-name native exports, but a native
-  variant-specific value fault/control remains future fixture work. All
-  fixtures are tooling-owned and synthetic.
+  parity carries a typed base value finding. Digest-pinned native lanes repeat
+  a base matching control and stale-board-value fault on KiCad 10.0.0 and
+  10.0.5. On KiCad 10.0.5, a named-variant value mismatch and matching control
+  also pass using a fixed, hash-pinned PCB fixture generated with the pinned
+  KiCad API. KiCad 10.0.0 does not preserve variant values in the PCB position
+  export, so the same evidence is deliberately withheld and value coverage
+  blocks. All fixtures are tooling-owned and synthetic.
 - **Cohort context:** The kicad-happy XV schematic/PCB consistency family
   motivated the audit. The local predicate is first-party and uses native
   KiCad evidence; no cohort implementation was copied or executed.

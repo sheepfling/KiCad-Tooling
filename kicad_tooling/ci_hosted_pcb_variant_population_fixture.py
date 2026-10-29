@@ -1,4 +1,4 @@
-"""Exact KiCad fault/control evidence for named-variant DNP consistency."""
+"""Exact KiCad fault/control evidence for named-variant population and values."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from .ci_hosted_pcb_fixture_support import (
 )
 from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.evidence import digest
+from .hwrepo.pcb_component_inventory import evaluate_native_component_inventory_coverage
 from .hwrepo.pcb_component_population import compare_variant_population_source
 from .hwrepo.pcb_required_fitted_reference_checks import compare_required_fitted_references
 from .hwrepo.pcb_required_fitted_reference_models import (
@@ -79,6 +80,12 @@ def pcb_variant_population_fixture_lane(
             None,
             (False, False),
         ),
+        "variant-value-fault": (
+            schematic_root / "control.kicad_sch",
+            fixture_root / "board-u1-variant-value-mismatch.kicad_pcb",
+            (),
+            (False, False),
+        ),
     }
     expected_fixture_hashes = {
         project_source: "c2e8cac912a1257972f849bae9f142a3ca771de283f4f37571bcf07c1c75fcb3",
@@ -87,6 +94,9 @@ def pcb_variant_population_fixture_lane(
         ),
         fixture_root / "board-fitted.kicad_pcb": (
             "3d8b2a60b9f847a6a530acf1f146734c64c9437d600c6683c1123b1f13aead76"
+        ),
+        fixture_root / "board-u1-variant-value-mismatch.kicad_pcb": (
+            "398e5cd2258e4c59e33f1badf50835a67ff330fc41b0a493727e53b51c1a5e2c"
         ),
         schematic_root / "control.kicad_sch": (
             "3acf612f93c0f2f48c6b469928ab9366fc2374644966b9bf07087c8a4cd808f8"
@@ -101,6 +111,9 @@ def pcb_variant_population_fixture_lane(
     source_hashes: dict[str, str] = {}
     capture_hashes: dict[str, dict[str, str]] = {}
     probe_hashes: dict[str, str] = {}
+    variant_value_control = False
+    variant_value_fault = False
+    variant_value_coverage_blocked = False
 
     try:
         for source, expected in expected_fixture_hashes.items():
@@ -148,7 +161,10 @@ def pcb_variant_population_fixture_lane(
                 kicad_version=context.config.kicad_version,
             )
             if capture.coverage.board_variant_probe_sha256 is None:
-                raise ValueError(f"Native {case} capture omitted the board-variant probe receipt")
+                raise ValueError(
+                    f"Native {case} capture omitted the board-variant probe receipt: "
+                    f"{capture.coverage.issue or 'no issue reported'}"
+                )
             probe_hashes[case] = capture.coverage.board_variant_probe_sha256
             if expected_mismatches is None:
                 if (
@@ -213,12 +229,70 @@ def pcb_variant_population_fixture_lane(
                 "board-only-dnp": ("board_footprint_dnp",),
                 "schematic-only-dnp": ("schematic_component_dnp",),
                 "both-fitted": (),
+                "variant-value-fault": (),
             }[case]
             if observed_required_violations != expected_required_violations:
                 raise ValueError(
                     "Native named-variant fitted-reference results changed: "
                     f"{observed_required_violations}"
                 )
+            if case in {"both-fitted", "variant-value-fault"}:
+                variant_evidence = capture.coverage.evidence[0]
+                value_coverage = evaluate_native_component_inventory_coverage(
+                    source.netlist,
+                    board_snapshot,
+                    mode="off",
+                    netlist_sha256=variant_evidence.netlist_sha256,
+                    board_path=board.relative_to(context.root).as_posix(),
+                    board_sha256=board_hash,
+                    snapshot_path=(snapshot_receipt / "snapshot.json")
+                    .relative_to(context.root)
+                    .as_posix(),
+                    snapshot_sha256=digest(snapshot_receipt / "snapshot.json"),
+                    probe_sha256=capture.coverage.board_variant_probe_sha256
+                    or "0" * 64,
+                    value_mode="review",
+                    variant_population=capture,
+                )
+                if context.config.kicad_version == "10.0.0":
+                    if source.board_values is not None:
+                        raise ValueError(
+                            "KiCad 10.0.0 unexpectedly supplied variant PCB value evidence"
+                        )
+                    if value_coverage.value_comparison_status != "BLOCKED" or not (
+                        value_coverage.value_comparison_issue
+                        and "PCB value export is unavailable"
+                        in value_coverage.value_comparison_issue
+                    ):
+                        raise ValueError(
+                            "KiCad 10.0.0 did not block its unsupported variant-value export"
+                        )
+                    variant_value_coverage_blocked = True
+                else:
+                    if value_coverage.value_comparison_status != "COMPLETE":
+                        raise ValueError(
+                            "Native named-variant value coverage did not complete: "
+                            f"{value_coverage.value_comparison_issue}"
+                        )
+                    value_mismatches = value_coverage.value_mismatches
+                    if case == "both-fitted":
+                        if value_mismatches or source.board_values is None:
+                            raise ValueError("Native named-variant value control was not quiet")
+                        variant_value_control = True
+                    elif (
+                        len(value_mismatches) != 1
+                        or value_mismatches[0].reference != "U1"
+                        or value_mismatches[0].variant != VARIANT
+                        or value_mismatches[0].board_value
+                        != "Synthetic variant stale label"
+                        or value_mismatches[0].schematic_value != "Synthetic identity probe"
+                    ):
+                        raise ValueError(
+                            "Native named-variant value fault changed: "
+                            f"{value_mismatches}"
+                        )
+                    else:
+                        variant_value_fault = True
             evidence = capture.coverage.evidence[0]
             capture_hashes[case] = {
                 "netlist": evidence.netlist_sha256,
@@ -237,6 +311,9 @@ def pcb_variant_population_fixture_lane(
             schematic_only_dnp="U1",
             both_fitted_mismatches="",
             missing_board_variant_blocked="true",
+            variant_value_fault=str(variant_value_fault).lower(),
+            variant_value_control=str(variant_value_control).lower(),
+            variant_value_coverage_blocked=str(variant_value_coverage_blocked).lower(),
             source_hashes=json.dumps(source_hashes, sort_keys=True),
             native_export_hashes=json.dumps(capture_hashes, sort_keys=True),
             board_variant_probe_hashes=json.dumps(probe_hashes, sort_keys=True),

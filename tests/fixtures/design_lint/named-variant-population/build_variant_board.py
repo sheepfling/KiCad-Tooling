@@ -13,6 +13,8 @@ import pcbnew as _pcbnew  # type: ignore[import-not-found]
 class FootprintVariant(Protocol):
     def SetDNP(self, value: bool) -> None: ...
 
+    def SetFieldValue(self, name: str, value: str) -> None: ...
+
 
 class BoardFootprint(Protocol):
     def GetReference(self) -> str: ...
@@ -38,10 +40,13 @@ native_pcbnew = cast(NativePcbnew, _pcbnew)
 def main(arguments: Sequence[str] | None = None) -> None:
     """Copy one synthetic board and set the named variant DNP state for U1."""
     values = sys.argv[1:] if arguments is None else arguments
-    if len(values) != 4:
-        raise SystemExit("usage: build_variant_board.py INPUT OUTPUT VARIANT U1_DNP")
+    if len(values) not in {4, 5}:
+        raise SystemExit(
+            "usage: build_variant_board.py INPUT OUTPUT VARIANT U1_DNP [U1_VARIANT_VALUE]"
+        )
     input_path, output_path = (Path(value) for value in values[:2])
-    variant, raw_dnp = values[2:]
+    variant, raw_dnp = values[2:4]
+    variant_value = values[4] if len(values) == 5 else None
     if not variant.strip() or raw_dnp not in {"true", "false"}:
         raise ValueError("Variant name and DNP state must be explicit")
 
@@ -52,7 +57,10 @@ def main(arguments: Sequence[str] | None = None) -> None:
     target_found = False
     for footprint in board.GetFootprints():
         if footprint.GetReference().casefold() == "u1":
-            footprint.AddVariant(variant).SetDNP(raw_dnp == "true")
+            footprint_variant = footprint.AddVariant(variant)
+            footprint_variant.SetDNP(raw_dnp == "true")
+            if variant_value is not None:
+                footprint_variant.SetFieldValue("Value", variant_value)
             target_found = True
         else:
             footprint.AddVariant(variant).SetDNP(False)

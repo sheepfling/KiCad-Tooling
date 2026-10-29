@@ -47,6 +47,11 @@ class PcbVariantPopulationCapture:
             raise ValueError("Incomplete variant capture cannot expose parsed source records")
 
 
+def supports_named_variant_pcb_values(kicad_version: str) -> bool:
+    """Whether the pinned native PCB position exporter preserves variant values."""
+    return kicad_version == "10.0.5"
+
+
 def capture_variant_population(
     root: Path,
     config: ProjectConfig,
@@ -257,6 +262,8 @@ def capture_variant_population(
             _require_export(fitted_command, fitted_positions_path, variant, "fitted PCB positions")
 
             board_references, board_values = _position_records(all_positions_path)
+            if not supports_named_variant_pcb_values(kicad_version):
+                board_values = None
             fitted_references = _position_references(fitted_positions_path)
             netlist_relative = netlist_path.relative_to(root).as_posix()
             all_relative = all_positions_path.relative_to(root).as_posix()
