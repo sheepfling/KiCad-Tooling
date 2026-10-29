@@ -5932,9 +5932,10 @@ is not a reason by itself to expand its scope or change its default policy.
   and shared-net cases are skipped. This name-based signal is not an approved
   pinout, bus map, PCB connectivity result, or physical continuity proof.
 - **Evidence:** Synthetic fault/control, exact native KiCad 10.0.0/10.0.5
-  fault/control exports, policy, ordering, CLI/MCP parity, catalog reachability,
-  and focused selector coverage. The local native run requires Docker access;
-  CI runs the digest-pinned fixture lane.
+  fault/control exports, policy, ordering, three-process hash-seed stability,
+  CLI/MCP parity, catalog reachability, and focused selector coverage. The
+  local native run requires Docker access; CI runs the digest-pinned fixture
+  lane.
 
 #### LINT-262 — Review same-role serial connector and controller pins
 

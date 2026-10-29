@@ -53,6 +53,7 @@ HASHSEED_REPORT_FAMILIES = (
     "rs485_signal_named_rail",
     "rs485_line_named_rail",
     "rs485_ab_same_net",
+    "rs485_line_label_mismatch",
     "analog",
     "schematic_geometry",
 )

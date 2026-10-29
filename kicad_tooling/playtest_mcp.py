@@ -5,12 +5,13 @@ from __future__ import annotations
 import sys
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Protocol, TypeAlias, TypedDict, cast
+from typing import Protocol, TypeAlias, cast
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from mcp.types import AudioContent, EmbeddedResource, ImageContent, ResourceLink, TextContent
 from pydantic import JsonValue, TypeAdapter
+from typing_extensions import TypedDict
 
 McpContentBlock: TypeAlias = (
     TextContent | ImageContent | AudioContent | ResourceLink | EmbeddedResource
