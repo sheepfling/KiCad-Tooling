@@ -100,6 +100,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_USB_C_SBU_NAMED_RAIL_FIXTURES",
         ),
         (
+            "bus.usb_c_sbu_unconnected_pin",
+            "KICAD_RUN_NATIVE_USB_C_SBU_UNCONNECTED_FIXTURES",
+        ),
+        (
             "bus.i3c_signal_on_named_rail",
             "KICAD_RUN_NATIVE_I3C_SIGNAL_NAMED_RAIL_FIXTURES",
         ),

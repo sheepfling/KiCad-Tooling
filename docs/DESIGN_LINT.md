@@ -747,7 +747,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 239 active rules.
+The catalog currently contains 240 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1376,6 +1376,30 @@ fault/control exports. See the
 KICAD_RUN_NATIVE_USB_C_SBU_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_usb_c_sbu_named_rail_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_signal_on_named_rail")'
+```
+
+### USB-C SBU pin open beside an assigned peer
+
+`bus.usb_c_sbu_unconnected_pin` reviews a fitted U/IC when exactly one native
+SBU1/SBU2 pin is directly assigned and its paired function pin is open. It
+requires both functions in the complete native inventory and skips DNP parts,
+connectors, duplicate roles, incomplete inventories, both-open pairs, and
+ambiguous assignments. One SBU line may be intentionally unused; function
+names do not establish controller identity, alternate-mode use, or a required
+connection. The default is `review`, and project policy can set `block` or
+`off` or ignore an exact fingerprint. The schematic check does not trace
+passive paths or establish PCB copper or physical continuity. Synthetic
+fault/control and hash-seed tests accompany digest-pinned KiCad 10.0.0 and
+10.0.5 native exports. See the
+[fixture notes](../tests/fixtures/design_lint/usb-c-sbu-unconnected-pin/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_usb_c_sbu_unconnected_pin.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_sbu_unconnected_pin")'
+
+KICAD_RUN_NATIVE_USB_C_SBU_UNCONNECTED_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_usb_c_sbu_unconnected_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_unconnected_pin")'
 ```
 
 ### I3C SDA/SCL pins assigned directly to named rails

@@ -16,6 +16,7 @@ from kicad_tooling.hwrepo import (
     i2c_peer_reference_models,
     i2c_pullup_voltage_models,
     serial_peer_reference_models,
+    usb_c_sbu_unconnected_pin,
     usb_peer_reference_models,
     usb_peer_unsupported_models,
 )
@@ -113,6 +114,21 @@ def test_i3c_named_rail_rule_stays_in_a_focused_protocol_module() -> None:
     module = HWREPO / "i3c_signal_named_rail.py"
 
     assert _line_count(module) < IMPLEMENTATION_MAX_LINES
+
+
+def test_usb_c_sbu_unconnected_rule_uses_its_focused_protocol_owner() -> None:
+    owner = "kicad_tooling/hwrepo/usb_c_sbu_unconnected_pin.py#unconnected_usb_c_sbu_pins"
+    rule = next(
+        item for item in rule_catalog().rules if item.rule_id == "bus.usb_c_sbu_unconnected_pin"
+    )
+
+    assert _line_count(HWREPO / "usb_c_sbu_unconnected_pin.py") < IMPLEMENTATION_MAX_LINES
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == owner
+    assert owner in rule.implementation_refs
+    assert usb_c_sbu_unconnected_pin.unconnected_usb_c_sbu_pins.__module__.endswith(
+        "usb_c_sbu_unconnected_pin"
+    )
 
 
 def test_interface_coverage_models_live_in_theme_owners() -> None:

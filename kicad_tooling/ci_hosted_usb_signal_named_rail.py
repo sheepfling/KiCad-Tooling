@@ -34,6 +34,13 @@ _SBU_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
         "control": "ad15d977415856e97c8e701c653d20f26e9cc9d9751d662dcba0f459491fde87",
     }
 )
+_SBU_UNCONNECTED_RULE_ID = "bus.usb_c_sbu_unconnected_pin"
+_SBU_UNCONNECTED_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
+    {
+        "fault": "7244d4285c4624aadc302905ab051462e16280a56e8dfe01b1791aea701f6bed",
+        "control": "9b16bfcbc1efff9a72db1ac636a3decdb069f0136b827d03b6aed72ea66128d7",
+    }
+)
 
 
 def usb_signal_named_rail_fixture_lane(
@@ -57,14 +64,24 @@ def usb_c_sbu_named_rail_fixture_lane(
     _usb_named_rail_fixture_lane(root, version=version, image=image, log=log, feature="sbu")
 
 
+def usb_c_sbu_unconnected_fixture_lane(
+    root: Path, *, version: str, image: str, log: HostedLog
+) -> None:
+    """Repeat native exports for asymmetric SBU pin assignments."""
+    _usb_named_rail_fixture_lane(
+        root, version=version, image=image, log=log, feature="sbu-unconnected"
+    )
+
+
 def _usb_named_rail_fixture_lane(
     root: Path,
     *,
     version: str,
     image: str,
     log: HostedLog,
-    feature: Literal["signal", "cc", "sbu"],
+    feature: Literal["signal", "cc", "sbu", "sbu-unconnected"],
 ) -> None:
+    expected_unconnected_pins = None
     if feature == "signal":
         protocol = "usb"
         rule_id = _SIGNAL_RULE_ID
@@ -108,7 +125,7 @@ def _usb_named_rail_fixture_lane(
             ),
             "control": (),
         }
-    else:
+    elif feature == "sbu":
         protocol = "usb-c"
         rule_id = _SBU_RULE_ID
         fixture_directory = "usb-c-sbu-named-rail"
@@ -133,6 +150,30 @@ def _usb_named_rail_fixture_lane(
             ),
             "control": (),
         }
+        expected_unconnected_pins = None
+    else:
+        protocol = "usb-c"
+        rule_id = _SBU_UNCONNECTED_RULE_ID
+        fixture_directory = "usb-c-sbu-unconnected-pin"
+        source_hashes = _SBU_UNCONNECTED_SOURCE_HASHES
+        expected_pin_functions = {
+            "J1.1": "SBU1",
+            "J1.2": "SBU2",
+            "U1.1": "SBU1",
+            "U1.2": "SBU2",
+        }
+        expected_nets = {
+            "fault": {"SBU1_BUS": ("J1.1",), "SBU2_BUS": ("J1.2", "U1.2")},
+            "control": {
+                "SBU1_BUS": ("J1.1", "U1.1"),
+                "SBU2_BUS": ("J1.2", "U1.2"),
+            },
+        }
+        expected_subjects = {
+            "fault": ("U1.1: SBU1",),
+            "control": (),
+        }
+        expected_unconnected_pins = {"fault": ("U1.1",), "control": ()}
 
     named_rail_fixture_lane(
         root,
@@ -147,4 +188,5 @@ def _usb_named_rail_fixture_lane(
         expected_pin_functions=expected_pin_functions,
         expected_nets=expected_nets,
         expected_subjects=expected_subjects,
+        expected_unconnected_pins=expected_unconnected_pins,
     )

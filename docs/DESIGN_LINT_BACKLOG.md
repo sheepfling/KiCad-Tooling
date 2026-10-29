@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 239 rules are implemented with synthetic regression coverage.
+The following 240 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 239 active rules.
+The catalog currently contains 240 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -582,6 +582,7 @@ skipped under prerelease policy.
 - `bus.usb_c_cc_signal_on_named_rail`
 - `bus.usb_c_cc_same_net`
 - `bus.usb_c_sbu_signal_on_named_rail`
+- `bus.usb_c_sbu_unconnected_pin`
 - `bus.usb_c_unreviewed_port`
 - `bus.usb_data_path_mismatch`
 - `bus.usb_data_polarity_label_mismatch`
@@ -3290,7 +3291,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 239 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 240 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -5838,6 +5839,42 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_UNCONNECTED_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_ethernet_management_unconnected_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_unconnected_pin")'
+  ```
+
+#### LINT-258 — Review one-sided open USB-C SBU function pairs
+
+- **Status:** Implemented as default-review
+  `bus.usb_c_sbu_unconnected_pin`. Project policy can promote it to `block`,
+  turn it `off`, or ignore one exact finding fingerprint.
+- **Gap:** USB-C SBU named-rail and same-net checks cover assigned functions,
+  but a fitted controller with exactly one SBU function pin open beside an
+  assigned peer has no localized review prompt.
+- **Predicate:** Require a fitted U/IC reference, exactly one native SBU1 and
+  one SBU2 function, both pins in the complete native inventory, and exactly
+  one direct assignment on one pin while the other has none. Report the open
+  member. Skip both-open and both-assigned pairs, DNP parts, connectors,
+  duplicate roles, incomplete inventories, and ambiguous assignments.
+- **Boundary:** Partial SBU use can be intentional. Function names do not
+  prove controller identity, alternate-mode use, required connectivity,
+  routed copper, or physical continuity. The check does not trace passive
+  paths. A project-authored interface requirement is needed to make a mismatch
+  release-blocking.
+- **Fixtures and quality gate:** Both open-pin directions, both-connected and
+  both-open controls, DNP, connector-only, duplicate-role, incomplete-inventory
+  and ambiguous-assignment controls, policy and exact-ignore behavior,
+  mapping-order and repair metamorphism, three-process hash-seed stability,
+  catalog reachability, focused selector and marker, plus digest-pinned
+  repeated KiCad 10.0.0/10.0.5 native fault/control exports with expected
+  unconnected-pin inventory and zero ERC errors.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_usb_c_sbu_unconnected_pin.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_sbu_unconnected_pin")'
+
+  KICAD_RUN_NATIVE_USB_C_SBU_UNCONNECTED_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_usb_c_sbu_unconnected_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_unconnected_pin")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

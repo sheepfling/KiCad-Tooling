@@ -112,6 +112,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="usb-c-sbu-named-rail",
     ),
     pytest.param(
+        "bus.usb_c_sbu_unconnected_pin",
+        "KICAD_RUN_NATIVE_USB_C_SBU_UNCONNECTED_FIXTURES",
+        "tests.test_usb_c_sbu_unconnected_native_fixture_lane."
+        "test_native_usb_c_sbu_unconnected_fault_and_control_repeat",
+        id="usb-c-sbu-unconnected",
+    ),
+    pytest.param(
         "bus.i3c_signal_on_named_rail",
         "KICAD_RUN_NATIVE_I3C_SIGNAL_NAMED_RAIL_FIXTURES",
         "tests.test_i3c_signal_named_rail_native_fixture_lane."

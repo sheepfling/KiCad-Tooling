@@ -35,6 +35,7 @@ def named_rail_fixture_lane(
     expected_nets: Mapping[str, Mapping[str, tuple[str, ...]]],
     expected_subjects: Mapping[str, tuple[str, ...]],
     expected_pin_functions: Mapping[str, str] | None = None,
+    expected_unconnected_pins: Mapping[str, tuple[str, ...]] | None = None,
 ) -> None:
     """Export and relint exact fault/control schematics on one pinned KiCad image."""
 
@@ -140,6 +141,12 @@ def named_rail_fixture_lane(
                 expected_pin_functions
             ):
                 raise ValueError(f"Native {protocol} {feature} {case} pin functions changed")
+            if expected_unconnected_pins is not None:
+                unconnected_pins = tuple(
+                    sorted(pin for pins in observed.unconnected_nets.values() for pin in pins)
+                )
+                if unconnected_pins != tuple(sorted(expected_unconnected_pins[case])):
+                    raise ValueError(f"Native {protocol} {feature} {case} unconnected pins changed")
             if any(observed.nets.get(net) != pins for net, pins in expected_nets[case].items()):
                 raise ValueError(
                     f"Native {protocol} {feature} named-rail {case} net assignments changed"

@@ -5701,6 +5701,47 @@
       "implementation_owner": "kicad_tooling/hwrepo/usb_c_sbu_named_rail.py#usb_c_sbu_signal_on_named_rail_candidates"
     },
     {
+      "rule_id": "bus.usb_c_sbu_unconnected_pin",
+      "title": "USB-C SBU function pin is open beside an assigned peer",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including fitted state, complete component pin inventory, exact SBU1/SBU2 functions, and direct net assignments",
+      "predicate": "For each fitted U/IC with exactly one SBU1 and one SBU2 function in its complete native pin inventory, emit REVIEW for the one pin with no assignment only when its paired function pin has exactly one assignment. Skip pairs with both pins open or assigned, duplicate roles, incomplete inventory, DNP parts, or ambiguous assignments.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
+      ],
+      "limitations": [
+        "An open SBU function beside an assigned peer is a review prompt only. It does not establish USB-C controller identity, alternate-mode use, required connectivity, a defect, routed copper, or physical continuity.",
+        "One SBU line can be intentionally unused. Both-open pairs are skipped because native function text alone does not establish interface use.",
+        "The heuristic recognizes only one SBU1 and one SBU2 function on a fitted U/IC reference with both pins present in complete native inventory. Connectors, DNP parts, duplicate or generic functions, incomplete inventories, and multiple assignments are skipped.",
+        "The check uses direct schematic net assignments and does not trace passive paths or off-board wiring. Project-authored USB-C or interface requirements are needed to turn the observation into a release gate."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_c_sbu_unconnected_pin.test_one_open_sbu_pin_beside_assigned_peer_requests_review",
+        "tests.test_usb_c_sbu_unconnected_native_fixture_lane.test_native_usb_c_sbu_unconnected_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_c_sbu_unconnected_pin.test_both_connected_and_both_open_pairs_are_quiet",
+        "tests.test_usb_c_sbu_unconnected_pin.test_dnp_connector_duplicate_role_incomplete_inventory_and_ambiguous_pin_are_skipped",
+        "tests.test_usb_c_sbu_unconnected_native_fixture_lane.test_native_usb_c_sbu_unconnected_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_c_sbu_unconnected_pin.test_reordering_and_repair_preserve_expected_finding_behavior"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_C_SBU_UNCONNECTED_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_c_sbu_unconnected_pin.py#unconnected_usb_c_sbu_pins",
+        "kicad_tooling/hwrepo/usb_c_sbu_unconnected_pin.py#usb_c_sbu_unconnected_pin_candidates",
+        "kicad_tooling/hwrepo/design_lint_unconnected_interface_candidates.py#unconnected_interface_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_c_sbu_unconnected_pin.py#unconnected_usb_c_sbu_pins"
+    },
+    {
       "rule_id": "bus.can_unconnected_direction_pin",
       "title": "Recognized CAN/FDCAN direction pin is open on a partially connected channel",
       "status": "active",

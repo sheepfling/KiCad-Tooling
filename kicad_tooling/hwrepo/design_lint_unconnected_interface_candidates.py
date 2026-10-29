@@ -10,6 +10,7 @@ from .i2c_unconnected_pins import unconnected_i2c_signal_pins
 from .models import NetlistContract
 from .serial_unconnected_pins import unconnected_serial_function_pins
 from .spi_unconnected_data_pins import unconnected_spi_data_function_pins
+from .usb_c_sbu_unconnected_pin import usb_c_sbu_unconnected_pin_candidates
 from .usb_unconnected_data import unconnected_usb_data_pins
 
 
@@ -150,4 +151,5 @@ def unconnected_interface_candidates(observed: NetlistContract) -> tuple[Candida
                 },
             )
         )
+    found.extend(usb_c_sbu_unconnected_pin_candidates(observed))
     return tuple(found)
