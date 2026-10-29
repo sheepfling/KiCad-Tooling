@@ -7,7 +7,12 @@ import ast
 import pytest
 
 from kicad_tooling.hwrepo import design_lint_peer_candidates, digital_peer_voltage_types
-from tests.lint_architecture_support import FACADE_MAX_LINES, HWREPO, line_count
+from tests.lint_architecture_support import (
+    FACADE_MAX_LINES,
+    HWREPO,
+    IMPLEMENTATION_MAX_LINES,
+    line_count,
+)
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -62,6 +67,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
     facade = HWREPO / "design_lint_bus_candidates.py"
     modules = (
         "design_lint_i2c_candidates.py",
+        "design_lint_i2c_pullup_candidates.py",
         "design_lint_spi_candidates.py",
         "design_lint_unconnected_interface_candidates.py",
         "design_lint_can_candidates.py",
@@ -107,7 +113,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
     ]
 
     assert [name for _, name in calls] == [
-        "i2c_pullup_candidates",
+        "i2c_pullup_theme_candidates",
         "i2c_peer_reference_candidates",
         "two_wire_signal_candidates",
         "serial_signal_candidates",
@@ -174,3 +180,24 @@ def test_control_and_digital_peer_rule_refs_point_to_their_owners() -> None:
         "kicad_tooling/hwrepo/digital_peer_voltage_scan.py#unmapped_serial_peer_voltage_reviews"
         in text
     )
+
+
+def test_i2c_pullup_typed_boundary_has_one_theme_owner() -> None:
+    typed_inputs = HWREPO / "i2c_pullup_inputs.py"
+    typed_service = HWREPO / "design_lint_i2c_pullup_candidates.py"
+    legacy_adapter = HWREPO / "design_lint_i2c_candidates.py"
+
+    assert line_count(typed_inputs) < FACADE_MAX_LINES
+    assert line_count(typed_service) < IMPLEMENTATION_MAX_LINES
+    input_tree = ast.parse(typed_inputs.read_text(encoding="utf-8"))
+    assert any(
+        isinstance(node, ast.ClassDef) and node.name == "I2cPullupSnifferInput"
+        for node in input_tree.body
+    )
+    adapter_tree = ast.parse(legacy_adapter.read_text(encoding="utf-8"))
+    adapter_imports = {
+        node.module: {alias.name for alias in node.names}
+        for node in adapter_tree.body
+        if isinstance(node, ast.ImportFrom)
+    }
+    assert "I2cPullupSnifferInput" in adapter_imports["i2c_pullup_inputs"]

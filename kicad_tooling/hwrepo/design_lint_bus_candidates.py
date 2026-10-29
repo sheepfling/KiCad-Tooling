@@ -1,7 +1,5 @@
 """Coordinate theme-specific bus and signal-pair candidate translators."""
 
-from __future__ import annotations
-
 from .bus_ethernet_pair_labels import (
     ethernet_data_label_mismatch_candidates,
     ethernet_management_label_mismatch_candidates,
@@ -14,9 +12,9 @@ from .design_lint_ethernet_unconnected_candidates import ethernet_unconnected_pi
 from .design_lint_i2c_candidates import (
     i2c_address_candidates,
     i2c_peer_reference_candidates,
-    i2c_pullup_candidates,
     i2c_responder_coverage_candidates,
 )
+from .design_lint_i2c_pullup_candidates import i2c_pullup_theme_candidates
 from .design_lint_interfaces_usb_data_polarity import usb_data_polarity_label_candidates
 from .design_lint_rs485_candidates import rs485_candidates
 from .design_lint_serial_signal_candidates import serial_signal_candidates
@@ -32,6 +30,7 @@ from .design_lint_unconnected_interface_candidates import unconnected_interface_
 from .design_lint_usb_c_same_net_candidates import usb_c_same_net_candidates
 from .i2c_address_models import I2cAddressCoverageReport, I2cAddressMap
 from .i2c_peer_reference_scan import I2cPeerReferenceScan
+from .i2c_pullup_inputs import I2cPullupSnifferInput
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import NetlistContract
 from .pcb_drc_models import PcbDifferentialPairRuleMap
@@ -61,8 +60,11 @@ def bus_candidates(
     reviewed_connector_references: tuple[str, ...] = (),
 ) -> tuple[Candidate, ...]:
     """Coordinate bus and pair checks while preserving their stable output order."""
+    i2c_pullup_input = I2cPullupSnifferInput.from_legacy_arguments(
+        observed, i2c_pullup_heuristic_coverage
+    )
     return (
-        *i2c_pullup_candidates(observed, i2c_pullup_heuristic_coverage),
+        *i2c_pullup_theme_candidates(i2c_pullup_input),
         *i2c_peer_reference_candidates(
             observed,
             i2c_peer_reference_scan,
