@@ -36,7 +36,13 @@ def catalog_text(catalog: DesignLintRuleCatalog) -> str:
                 f"  KiCad: {'; '.join(item.supported_kicad_versions)}",
                 f"  Limits: {' '.join(item.limitations)}",
                 *(
-                    (f"  Field validation: {'; '.join(item.field_validation_evidence)}",)
+                    (
+                        "  Field validation evidence: "
+                        + "; ".join(
+                            f"{path} (SHA-256 {sha256})"
+                            for path, sha256 in sorted(item.field_validation_evidence.items())
+                        ),
+                    )
                     if item.field_validation_evidence
                     else ()
                 ),

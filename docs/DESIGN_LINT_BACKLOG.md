@@ -58,10 +58,10 @@ review time. Rule-specific sections may add typed counts without changing the
 shared evidence boundaries.
 
 Catalog maturity is now evidence-constrained: `field_validated` requires a
-reference to independently reviewed field evidence, and other maturity levels
-cannot carry that claim. The catalog text view displays the maturity and its
-evidence reference. Synthetic tests and native compatibility runs alone do not
-qualify a rule as field validated.
+repository-relative evidence path and SHA-256 digest for independently reviewed
+field evidence, and other maturity levels cannot carry that claim. The catalog
+text view displays the maturity and each evidence path/digest. Synthetic tests
+and native compatibility runs alone do not qualify a rule as field validated.
 
 The first operational sweep found a stale active-rule fixture locator: the
 catalog named a removed three-case hosted validator, while the existing native

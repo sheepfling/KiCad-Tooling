@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from pathlib import PurePosixPath
 from typing import Annotated, Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from .design_lint_rule_types import DesignLintRuleId, DesignLintTheme
-from .model_primitives import Digest, NonEmptyText, StrictModel
+from .model_primitives import Digest, NonEmptyText, RepositoryPath, StrictModel
 
 
 class DesignLintRuleMetadata(StrictModel):
@@ -19,7 +20,7 @@ class DesignLintRuleMetadata(StrictModel):
     implementation_owner: NonEmptyText = "legacy"
     status: Literal["active", "prototype", "retired"]
     maturity: Literal["synthetic_validated", "cohort_candidate", "field_validated"]
-    field_validation_evidence: tuple[NonEmptyText, ...] = ()
+    field_validation_evidence: dict[RepositoryPath, Digest] = Field(default_factory=dict)
     default_mode: Literal["review", "block", "off"]
     evidence_adapter: NonEmptyText
     predicate: NonEmptyText
@@ -33,10 +34,25 @@ class DesignLintRuleMetadata(StrictModel):
     metamorphic_not_applicable_basis: NonEmptyText | None = None
     implementation_refs: tuple[NonEmptyText, ...]
 
+    @field_validator("field_validation_evidence")
+    @classmethod
+    def evidence_paths_are_repository_relative(
+        cls, value: dict[RepositoryPath, Digest]
+    ) -> dict[RepositoryPath, Digest]:
+        for path in value:
+            parsed = PurePosixPath(path)
+            if parsed.is_absolute() or ".." in parsed.parts or str(parsed) != path:
+                raise ValueError(
+                    "Field-validation evidence paths must be normalized repository-relative paths"
+                )
+        return value
+
     @model_validator(mode="after")
     def active_rule_has_regressions(self) -> DesignLintRuleMetadata:
         if self.maturity == "field_validated" and not self.field_validation_evidence:
-            raise ValueError("Field-validated rules need independently reviewed evidence")
+            raise ValueError(
+                "Field-validated rules need independently reviewed, source-hashed evidence"
+            )
         if self.maturity != "field_validated" and self.field_validation_evidence:
             raise ValueError("Field-validation evidence requires field-validated maturity")
         if self.status == "active" and (not self.fault_fixtures or not self.valid_control_fixtures):
