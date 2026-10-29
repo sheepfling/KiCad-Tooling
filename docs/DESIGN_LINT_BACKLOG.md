@@ -15217,10 +15217,11 @@ control are documented in the
   the pad-center area proxy and per-edge trace lengths; it does not calculate a
   full routed-loop polygon or area. The contour area is not a current-density,
   parasitic, or electrical-performance estimate.
-- **Evidence foundation:** Snapshot schema 8 records each track's segment/arc kind, pad/via
-  contacts, and connected tracks at endpoints. Native effective copper shapes determine
-  pad/via/track contact, and track candidates come from `CONNECTIVITY_DATA.GetConnectedTracks`. The
-  schema checks that every contact refers to a same-net observed object. Native fixtures have
+- **Evidence foundation:** Snapshot schema 8 records each track's segment/arc
+  kind, pad/via contacts, and connected tracks at endpoints. Native effective
+  copper shapes determine pad/via/track contact. Track candidates come from
+  `CONNECTIVITY_DATA.GetConnectedTracks`. The schema checks that every contact
+  refers to a same-net observed object. Native fixtures have
   exercised the synthetic two-segment trace chain and an unsupported arc on KiCad 10.0.0 and 10.0.5.
   Python fixtures test detours, missing and ambiguous paths, arcs, and a 1,100-segment chain. Schema
   9 copies each native filled polygon set and calls `SHAPE_POLY_SET.Unfracture()` before reading its
@@ -15229,9 +15230,9 @@ control are documented in the
   API-shaped test doubles exercise ring rotation and direction normalization, duplicate-point
   cleanup, hole ordering, and degenerate-ring rejection. The hosted fixture lane passed all four
   cases twice on both digest-pinned KiCad 10.0.0
-  (`ghcr.io/kicad/kicad:10.0.0@sha256:9549d3a08e0822f9434a9eda0782c812451ab4a733c73535f9e8beed42039bc3`)
+  (sha256:9549d3a08e0822f9434a9eda0782c812451ab4a733c73535f9e8beed42039bc3)
   and KiCad 10.0.5
-  (`ghcr.io/kicad/kicad:10.0.5@sha256:fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c`).
+  (sha256:fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c).
   It asserts the synthetic inner-plane bounds are exactly 6 mm square, and requires plane route
   evidence to contain a zone identity and positive contour area. The fixture maps a foreign-net
   through-hole VDD pad inside the plane; the native hole ring around it has exact bounds
