@@ -147,6 +147,19 @@ positive state, while old serialized records remain parseable. Apply the same
 positive-state source-binding check to other coverage families during their
 route reviews.
 
+Control-input bias coverage follows the same boundary: a completed scan keeps
+the observed netlist hash even when it finds no candidate nets. Evaluation
+blocks stale or unbound completed coverage and coverage containing entries
+before those entries can suppress a prompt. Legacy unbound records remain
+readable; they cannot authorize evaluation against a current netlist.
+Covered control-input and I²C pull-up or voltage entries also require a
+contract path and digest at evaluation. Project inspection verifies the
+contract bytes during the run; a direct evaluator caller must verify those
+bytes itself because the evaluator has no project root.
+Evaluation also rejects covered control-input or I²C decisions carried by
+`NOT_CONFIGURED`, `PENDING`, or `NOT_APPLICABLE` coverage. `OPEN` coverage may
+still resolve some entries while leaving others reviewable.
+
 **Done when:** a stale hash, wrong native version, absent source, and unsupported
 topology produce distinct, tested outcomes across representative schematic
 and PCB capabilities. Receipts remain portable and comparable.

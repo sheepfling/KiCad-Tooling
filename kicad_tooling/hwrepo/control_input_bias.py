@@ -128,6 +128,33 @@ def control_input_bias_heuristic_coverage(
         status=status,
         source_path=source_path,
         source_sha256=source_sha256,
-        netlist_sha256=netlist_sha256 if gaps else None,
+        netlist_sha256=netlist_sha256,
         entries=tuple(entries),
     )
+
+
+def control_input_bias_coverage_issue(
+    coverage: ControlInputBiasHeuristicCoverage,
+    current_netlist_sha256: str | None,
+) -> str | None:
+    """Reject completed or suppressing coverage that is not bound to this netlist."""
+    if coverage.status == "BLOCKED":
+        return coverage.issue or "Control-input bias coverage is blocked."
+    if coverage.status not in {"COMPLETE", "OPEN"} and any(
+        entry.status == "COVERED" for entry in coverage.entries
+    ):
+        return "Covered control-input bias requires complete or open coverage."
+    if coverage.source_path is None and any(
+        entry.status == "COVERED" for entry in coverage.entries
+    ):
+        return "Covered control-input bias requires an identified electrical contract."
+    has_evidence = (
+        coverage.status == "COMPLETE"
+        or bool(coverage.entries)
+        or coverage.netlist_sha256 is not None
+    )
+    if has_evidence and (
+        current_netlist_sha256 is None or coverage.netlist_sha256 != current_netlist_sha256
+    ):
+        return "Control-input bias coverage uses a different or unavailable native netlist hash."
+    return None

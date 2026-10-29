@@ -61,11 +61,21 @@ signature.
 - `NOT_CONFIGURED`, `PENDING`, `NOT_APPLICABLE`, `COMPLETE`, `OPEN`, and
   `BLOCKED` are coverage states, not interchangeable Boolean values. Preserve
   the existing predicate behavior for each state during the pilot.
+- A `COVERED` decision can occur only in `COMPLETE` or `OPEN` coverage. The
+  latter can include both covered and open entries. Evaluation blocks a record
+  that combines a covered decision with an unresolved state before the
+  decision can suppress a review prompt. Older contradictory records remain
+  parseable for diagnosis.
 - `COMPLETE` is a positive scan result even when it has no hint entries. The
   producer retains the native netlist hash in that case; evaluation blocks a
   missing or stale hash before accepting the result. Older serialized records
   remain readable, but an unbound `COMPLETE` result cannot authorize a current
   evaluation.
+- A covered pull-up or voltage entry must identify the electrical contract by
+  path and digest before evaluation can use it. Project inspection reads and
+  rechecks those bytes during the run. The lower-level evaluator has no project
+  root, so it requires the identity but relies on its caller to verify that
+  identity against the current contract.
 - The I²C rule remains a review heuristic when no reviewed requirement covers
   it. A project-authored, source-matched requirement may supply coverage; it
   does not turn an inferred net name into a requirement.

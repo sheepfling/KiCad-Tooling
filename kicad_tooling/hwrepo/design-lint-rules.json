@@ -4791,12 +4791,16 @@
       ],
       "fault_fixtures": [
         "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_connected_control_input_without_visible_bias_is_review_only_and_configurable",
+        "tests.test_control_bias_evidence_boundary.test_unbound_or_stale_control_coverage_blocks_before_suppression",
+        "tests.test_control_bias_evidence_boundary.test_covered_control_without_contract_identity_cannot_suppress_review",
         "tests.test_design_lint_bootstrap_controls.test_unproven_bootstrap_topology_keeps_boot_candidate_reviewable",
         "tests.test_ci_hosted_control_inputs.test_native_public_demos_record_connected_bias_and_unconnected_controls",
         "tests.test_design_lint_control_input_arrays.test_stale_or_miswired_array_maps_keep_bias_prompt_open"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_connected_control_bias_prompt_checks_assignments_and_valid_controls",
+        "tests.test_control_bias_evidence_boundary.test_empty_complete_coverage_keeps_netlist_identity",
+        "tests.test_control_bias_evidence_boundary.test_blocked_coverage_keeps_its_reason_and_absent_coverage_stays_reviewable",
         "tests.test_design_lint_bootstrap_controls.test_bootstrap_capacitor_node_is_not_a_biased_control_input",
         "tests.test_design_lint_bootstrap_controls.test_bare_boot_with_bootstrap_capacitor_is_not_a_bias_gap",
         "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_exact_source_bound_contract_decision_satisfies_heuristic_coverage",
@@ -5016,6 +5020,9 @@
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_series_pullup_paths_are_bounded_and_unbranched",
         "tests.test_design_lint_i2c_missing_pullups.test_connecting_one_line_leaves_only_the_other_pullup_missing",
         "tests.test_i2c_pullup_heuristic_coverage.test_missing_or_failing_exact_requirement_keeps_the_review_prompt_open",
+        "tests.test_i2c_coverage_source_boundary.test_covered_pullup_without_contract_identity_blocks_evaluation",
+        "tests.test_i2c_coverage_source_boundary.test_covered_voltage_without_contract_identity_blocks_evaluation",
+        "tests.test_i2c_coverage_source_boundary.test_unresolved_state_cannot_contain_covered_evidence",
         "tests.test_i2c_pullup_heuristic_coverage.test_changed_array_part_identity_keeps_missing_pullup_prompt_open",
         "tests.test_i2c_pullup_heuristic_coverage.test_wrong_array_channel_tolerance_scope_keeps_the_i2c_prompt_open",
         "tests.test_i2c_pullup_heuristic_coverage.test_failing_electrical_window_keeps_the_i2c_prompt_open",

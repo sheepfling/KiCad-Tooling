@@ -9,6 +9,7 @@ pytestmark = [
     pytest.mark.slow,
     pytest.mark.template_checkout,
     pytest.mark.design_lint,
+    pytest.mark.pcb_lint,
 ]
 
 import os

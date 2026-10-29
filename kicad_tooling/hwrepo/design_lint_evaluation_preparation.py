@@ -9,6 +9,8 @@ from .bus_signal_pairs import (
     resolve_complementary_pin_function_aliases,
 )
 from .component_roles import resolve_component_role_map
+from .control_input_bias import control_input_bias_coverage_issue
+from .control_input_models import ControlInputBiasHeuristicCoverage
 from .design_lint_catalog import rule_catalog
 from .design_lint_component_coverage import resolve_component_map_coverage
 from .design_lint_evaluation_types import (
@@ -33,6 +35,7 @@ from .design_lint_schematic_coverage import (
 )
 from .design_lint_stm32_coverage import resolve_stm32_pin_map_coverage
 from .external_protection_models import ExternalProtectionCoverageReport
+from .i2c_pullup_heuristics import i2c_pullup_coverage_issue
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
@@ -58,23 +61,39 @@ def prepare_evaluation(
         pcb_rf_module_antenna_coverage=request.pcb_rf_module_antenna_coverage,
         pcb_touch_pad_clearance_coverage=request.pcb_touch_pad_clearance_coverage,
     )
+    if request.control_input_bias_coverage is not None:
+        control_coverage = request.control_input_bias_coverage
+        control_issue = control_input_bias_coverage_issue(control_coverage, coach.netlist_sha256)
+        if control_issue is not None:
+            blocked_control = ControlInputBiasHeuristicCoverage(
+                status="BLOCKED",
+                source_path=control_coverage.source_path,
+                source_sha256=control_coverage.source_sha256,
+                issue=control_issue,
+            )
+            return DesignLintEvaluationPreparationResult(
+                report=DesignLintReport(
+                    status="BLOCKED",
+                    project_id=request.project_id,
+                    source_hashes=coach.source_hashes,
+                    netlist_sha256=coach.netlist_sha256,
+                    native_summary=coach.native_summary,
+                    native_status=coach.native_status,
+                    rule_catalog=catalog,
+                    control_input_bias_coverage=blocked_control,
+                    pcb_signal_path_rules=input_pcb_coverage.signal_path,
+                    pcb_keepout_coverage=input_pcb_coverage.keepout,
+                    pcb_rf_module_antenna_coverage=input_pcb_coverage.rf_antenna,
+                    pcb_touch_pad_clearance_coverage=input_pcb_coverage.touch_pad_clearance,
+                    issues=(control_issue,),
+                    next_actions=(
+                        "Recreate control-input bias coverage from the current native netlist and contract.",
+                    ),
+                )
+            )
     if request.i2c_pullup_heuristic_coverage is not None:
         i2c_coverage = request.i2c_pullup_heuristic_coverage
-        coverage_issue = (
-            i2c_coverage.issue
-            if i2c_coverage.status == "BLOCKED"
-            else "I2C pull-up coverage uses a different or unavailable native netlist hash."
-            if (
-                i2c_coverage.status == "COMPLETE"
-                or i2c_coverage.entries
-                or i2c_coverage.voltage_entries
-                or i2c_coverage.netlist_sha256 is not None
-            )
-            and (
-                coach.netlist_sha256 is None or i2c_coverage.netlist_sha256 != coach.netlist_sha256
-            )
-            else None
-        )
+        coverage_issue = i2c_pullup_coverage_issue(i2c_coverage, coach.netlist_sha256)
         if coverage_issue is not None:
             blocked_coverage = I2cPullupHeuristicCoverage(
                 status="BLOCKED",

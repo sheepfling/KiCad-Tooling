@@ -261,6 +261,33 @@ def i2c_pullup_heuristic_coverage(
     )
 
 
+def i2c_pullup_coverage_issue(
+    coverage: I2cPullupHeuristicCoverage,
+    current_netlist_sha256: str | None,
+) -> str | None:
+    """Reject I2C coverage that is incomplete, unowned, or stale before suppression."""
+    covered_entries = tuple(
+        item for item in (*coverage.entries, *coverage.voltage_entries) if item.status == "COVERED"
+    )
+    if coverage.status == "BLOCKED":
+        return coverage.issue or "I2C pull-up coverage is blocked."
+    if coverage.status not in {"COMPLETE", "OPEN"} and covered_entries:
+        return "Covered I2C pull-up evidence requires complete or open coverage."
+    if coverage.source_path is None and covered_entries:
+        return "Covered I2C pull-up evidence requires an identified electrical contract."
+    has_evidence = (
+        coverage.status == "COMPLETE"
+        or bool(coverage.entries)
+        or bool(coverage.voltage_entries)
+        or coverage.netlist_sha256 is not None
+    )
+    if has_evidence and (
+        current_netlist_sha256 is None or coverage.netlist_sha256 != current_netlist_sha256
+    ):
+        return "I2C pull-up coverage uses a different or unavailable native netlist hash."
+    return None
+
+
 def i2c_buses_with_low_equivalent_pullup_resistance(
     observed: NetlistContract,
 ) -> tuple[I2cLowEquivalentResistance, ...]:
