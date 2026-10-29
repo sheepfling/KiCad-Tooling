@@ -1697,6 +1697,13 @@ heuristics cannot run on an empty inventory. A nonempty inventory alone does
 not establish completeness, which remains the job of the independently authored
 component/net contract.
 
+PCB coverage sections in one report must agree on each available board
+SHA-256, exact KiCad version, and native image. A mismatch means the report
+combines evidence from different board revisions or toolchains and is rejected;
+an incomplete section may omit values it could not establish. Matching hashes
+make the evidence internally consistent, but do not establish board approval
+or manufacturing readiness.
+
 The `net.numbered_returns` review also groups numbered protocol return labels
 such as `USB1_GND`/`USB2_GND`, `UART1_GND`/`UART2_GND`, `CAN1_GND`/`CAN2_GND`,
 `I2C1_0V`/`I2C2_0V`, and `SPI1_RET`/`SPI2_RET`. It asks whether each family’s

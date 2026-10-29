@@ -26,6 +26,7 @@ from .design_lint_report_connector_coverage_validation import (
     validate_connector_peer_pin_coverage,
 )
 from .design_lint_report_evidence_validation import validate_source_bound_evidence
+from .design_lint_report_pcb_evidence_validation import validate_pcb_source_consistency
 from .design_lint_report_peer_coverage_validation import validate_peer_coverage
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
@@ -186,6 +187,21 @@ class DesignLintReport(StrictModel):
             netlist_sha256=self.netlist_sha256,
             findings=self.findings,
             connector_peer_pin_coverage=self.connector_peer_pin_coverage,
+        )
+        validate_pcb_source_consistency(
+            (
+                self.pcb_component_inventory,
+                self.pcb_decoupling,
+                self.pcb_differential_pair_rules,
+                self.pcb_keepout_coverage,
+                self.pcb_protection_path,
+                self.pcb_reference_plane,
+                self.pcb_rf_module_antenna_coverage,
+                self.pcb_signal_path_rules,
+                self.pcb_switching_loop,
+                self.pcb_touch_pad_clearance_coverage,
+                self.pcb_track_width,
+            )
         )
         validate_catalogued_findings(
             rule_catalog=self.rule_catalog,
