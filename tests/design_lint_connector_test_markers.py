@@ -5,6 +5,7 @@ from __future__ import annotations
 CONNECTOR_LINT_TEST_MODULES = frozenset(
     {
         "tests/test_connector_unconnected_power_output.py",
+        "tests/test_contract_coach_numbered_return_report.py",
         "tests/test_design_lint_connector_power_pins.py",
         "tests/test_design_lint_connector_named_power_input_peers.py",
         "tests/test_design_lint_connector_named_power_output_peers.py",

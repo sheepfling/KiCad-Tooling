@@ -11,44 +11,12 @@ import pytest
 from kicad_tooling.hwrepo.contract_coach import inspect_summary, text_report
 from kicad_tooling.hwrepo.contracts import write_model
 from kicad_tooling.hwrepo.evidence import digest
-from kicad_tooling.hwrepo.models import (
-    CheckEvidence,
-    ContractCoachReport,
-    ProjectKind,
-)
-from kicad_tooling.hwrepo.return_nets import return_net_groups
+from kicad_tooling.hwrepo.models import CheckEvidence, ProjectKind
 from kicad_tooling.hwrepo.scaffold import new_project
 from kicad_tooling.validate import read_netlist
 from tests.contract_coach_support import NETLIST
-from tests.design_lint_fixtures import four_db9_return_domains
 
 pytestmark = pytest.mark.slow
-
-
-def test_incomplete_contract_report_localizes_numbered_db9_return_nets() -> None:
-    source = four_db9_return_domains()
-    observed = source.model_copy(
-        update={
-            "nets": {
-                f"0V PWM {reference}": (f"J{reference}.7", f"J{reference}.9")
-                for reference in range(1, 5)
-            }
-        }
-    )
-    report = ContractCoachReport(
-        status="READY_FOR_REVIEW",
-        project_id="synthetic-four-db9",
-        observed=observed,
-        return_net_groups=return_net_groups(observed),
-        next_actions=("Review the independently authored connector pinout.",),
-    )
-
-    rendered = text_report(report)
-
-    assert "Possible split returns (0V PWM):" in rendered
-    for reference in range(1, 5):
-        assert f"0V PWM {reference}: J{reference}.7, J{reference}.9" in rendered
-    assert "independently authored" in rendered
 
 
 def test_netlist_retains_dnp_status_for_population_heuristics(
