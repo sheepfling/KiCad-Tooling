@@ -53,8 +53,22 @@ def connector_peer_report_lines(report: DesignLintReport) -> list[str]:
                 lines.append(f"    Unmapped interface pin: {pin}")
             for pin in entry.interface_pins_unknown:
                 lines.append(f"    Unknown interface pin: {pin}")
-            for pin in entry.component_pins_unaccounted:
-                lines.append(f"    Unreviewed component pin: {pin}")
+            unreviewed = {
+                pin.component_pin.rsplit(".", 1)[-1]: pin
+                for pin in entry.unreviewed_component_pin_evidence
+            }
+            for pin_number in entry.component_pins_unaccounted:
+                evidence = unreviewed.get(pin_number)
+                if evidence is None:
+                    lines.append(f"    Unreviewed component pin: {pin_number}")
+                    continue
+                function = evidence.symbol_function or "<unnamed>"
+                electrical_type = evidence.electrical_type or "<unknown>"
+                nets = ", ".join(evidence.nets) or "<unconnected>"
+                lines.append(
+                    f"    Unreviewed component pin {evidence.component_pin}: "
+                    f"function={function}; electrical_type={electrical_type}; nets={nets}"
+                )
             for pin in entry.component_pins_unknown:
                 lines.append(f"    Unknown component pin: {pin}")
             for issue in entry.issues:

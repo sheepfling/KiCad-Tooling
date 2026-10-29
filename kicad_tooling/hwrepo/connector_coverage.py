@@ -11,6 +11,7 @@ from .connector_coverage_models import (
     ConnectorInterfaceReview,
     ConnectorInventoryReview,
     ConnectorMappedPinEvidence,
+    ConnectorUnreviewedPinEvidence,
 )
 from .connector_identity import connector_candidate_references
 from .models import (
@@ -191,6 +192,18 @@ def evaluate(
             if component_pins_unknown:
                 issues.append("Review names component pins absent from the exported symbol")
 
+        unreviewed_component_pin_evidence = tuple(
+            ConnectorUnreviewedPinEvidence(
+                component_pin=f"{reference}.{component_pin_number}",
+                symbol_function=observed.pin_functions.get(f"{reference}.{component_pin_number}"),
+                electrical_type=observed.pin_electrical_types.get(
+                    f"{reference}.{component_pin_number}"
+                ),
+                nets=tuple(sorted(nets_by_pin.get(f"{reference}.{component_pin_number}", ()))),
+            )
+            for component_pin_number in component_pins_unaccounted
+        )
+
         reasoned_open_assignments = tuple(
             sorted(
                 component_pin_number
@@ -233,6 +246,7 @@ def evaluate(
                 interface_pin_map=dict(sorted(review.pin_map.items())),
                 unlisted_pin_reasons=dict(sorted(review.unlisted_pin_reasons.items())),
                 mapped_pins=mapped_pins,
+                unreviewed_component_pin_evidence=unreviewed_component_pin_evidence,
                 interface_pins_unmapped=interface_pins_unmapped,
                 interface_pins_unknown=unknown_interface_pins,
                 component_pins_unaccounted=component_pins_unaccounted,

@@ -104,6 +104,7 @@ SCHEMATIC_GEOMETRY_RULE_TYPES = (
     "SchematicGeometryRuleCoverageStatus",
 )
 CONNECTOR_PEER_PIN_TYPES = ("ConnectorPinRole",)
+NEW_CONNECTOR_THEME_MODELS = ("ConnectorUnreviewedPinEvidence",)
 
 
 def _top_level_definitions(path) -> set[str]:
@@ -148,6 +149,19 @@ def test_new_touch_clearance_models_stay_in_their_theme_owner() -> None:
     )
     assert not (set(NEW_THEME_MODELS) & _top_level_definitions(HWREPO / "models.py"))
     assert all(not hasattr(compatibility_models, name) for name in NEW_THEME_MODELS)
+
+
+@pytest.mark.connector_lint
+def test_new_connector_pin_evidence_model_stays_in_its_theme_owner() -> None:
+    owner_path = HWREPO / "connector_coverage_models.py"
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert set(NEW_CONNECTOR_THEME_MODELS) <= _top_level_definitions(owner_path)
+    assert all(
+        getattr(connector_coverage_models, name).__module__ == connector_coverage_models.__name__
+        for name in NEW_CONNECTOR_THEME_MODELS
+    )
+    assert not (set(NEW_CONNECTOR_THEME_MODELS) & _top_level_definitions(HWREPO / "models.py"))
+    assert all(not hasattr(compatibility_models, name) for name in NEW_CONNECTOR_THEME_MODELS)
 
 
 def test_stateful_contact_models_have_a_connector_theme_owner() -> None:
@@ -206,6 +220,7 @@ def test_connector_peer_pin_role_has_theme_owner_and_compatible_export() -> None
 def test_internal_services_import_lint_models_from_their_theme_owners() -> None:
     moved_names = {name for _, names in MODEL_OWNERS.values() for name in names}
     moved_names.update(NEW_THEME_MODELS)
+    moved_names.update(NEW_CONNECTOR_THEME_MODELS)
     moved_names.update(OSCILLATOR_OUTPUT_PATH_MODELS)
     moved_names.update(SCHEMATIC_GEOMETRY_RULE_TYPES)
     moved_names.update(CONNECTOR_PEER_PIN_TYPES)

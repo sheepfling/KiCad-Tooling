@@ -30,6 +30,15 @@ class ConnectorMappedPinEvidence(StrictModel):
     nets: tuple[NetName, ...] = ()
 
 
+class ConnectorUnreviewedPinEvidence(StrictModel):
+    """Native symbol and assignment evidence for a pin absent from project review."""
+
+    component_pin: Reference
+    symbol_function: NonEmptyText | None = None
+    electrical_type: NonEmptyText | None = None
+    nets: tuple[NetName, ...] = ()
+
+
 class ConnectorInterfaceReview(StrictModel):
     """Project-owned pinout and intentional-open decisions for one connector."""
 
@@ -111,6 +120,7 @@ class ConnectorCoverageEntry(StrictModel):
     interface_pin_map: Mapping[NonEmptyText, NonEmptyText] = Field(default_factory=dict)
     unlisted_pin_reasons: Mapping[NonEmptyText, NonEmptyText] = Field(default_factory=dict)
     mapped_pins: tuple[ConnectorMappedPinEvidence, ...] = ()
+    unreviewed_component_pin_evidence: tuple[ConnectorUnreviewedPinEvidence, ...] = ()
     interface_pins_unmapped: tuple[NonEmptyText, ...] = ()
     interface_pins_unknown: tuple[NonEmptyText, ...] = ()
     component_pins_unaccounted: tuple[NonEmptyText, ...] = ()
@@ -134,6 +144,15 @@ class ConnectorCoverageEntry(StrictModel):
             )
         ):
             raise ValueError("Not-applicable connectors cannot join comparison groups")
+        if self.unreviewed_component_pin_evidence:
+            evidence_numbers = tuple(
+                pin.component_pin.rsplit(".", 1)[-1]
+                for pin in self.unreviewed_component_pin_evidence
+            )
+            if evidence_numbers != self.component_pins_unaccounted:
+                raise ValueError(
+                    "Unreviewed pin evidence must match the ordered unaccounted pin inventory"
+                )
         return self
 
 

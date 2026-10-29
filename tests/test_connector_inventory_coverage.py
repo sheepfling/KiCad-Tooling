@@ -141,6 +141,7 @@ def test_complete_interface_review_accounts_for_every_catalog_and_symbol_pin() -
     assert (coverage.entries[0].interface_pin_map) == ({"1": "1", "2": "2"})
     assert (coverage.entries[0].mapped_pins[0].interface_signal) == ("TX")
     assert (coverage.entries[0].mapped_pins[0].nets) == (("TX",))
+    assert (coverage.entries[0].unreviewed_component_pin_evidence) == (())
     assert (coverage.entries[0].unlisted_pin_reasons) == (
         {"3": "Synthetic shield pin reviewed separately"}
     )
@@ -235,6 +236,13 @@ def test_reviewed_custom_symbol_discovers_exact_symbol_peers_for_coverage() -> N
 
 
 def test_missing_and_unknown_catalog_or_symbol_pins_are_named() -> None:
+    observed = observed_connector().model_copy(
+        update={
+            "nets": {"TX": ("J1.1",), "SHIELD": ("J1.3",)},
+            "pin_functions": {"J1.2": "GND", "J1.3": "SHIELD"},
+            "pin_electrical_types": {"J1.2": "passive", "J1.3": "passive"},
+        }
+    )
     review = ConnectorInterfaceReview(
         reference="J1",
         disposition="interface",
@@ -243,7 +251,7 @@ def test_missing_and_unknown_catalog_or_symbol_pins_are_named() -> None:
         pin_map={"1": "1", "stale": "9"},
     )
     coverage = evaluate(
-        observed_connector(),
+        observed,
         ("debug-port",),
         (review,),
         interfaces={"debug-port": interface_record()},
@@ -255,6 +263,51 @@ def test_missing_and_unknown_catalog_or_symbol_pins_are_named() -> None:
     assert (entry.interface_pins_unknown) == (("stale",))
     assert (entry.component_pins_unaccounted) == (("2", "3"))
     assert (entry.component_pins_unknown) == (("9",))
+    assert tuple(
+        (
+            pin.component_pin,
+            pin.symbol_function,
+            pin.electrical_type,
+            pin.nets,
+        )
+        for pin in entry.unreviewed_component_pin_evidence
+    ) == (
+        ("J1.2", "GND", "passive", ()),
+        ("J1.3", "SHIELD", "passive", ("SHIELD",)),
+    )
+    reordered_observed = observed.model_copy(
+        update={
+            "nets": dict(reversed(tuple(observed.nets.items()))),
+            "component_pin_numbers": {"J1": tuple(reversed(observed.component_pin_numbers["J1"]))},
+            "pin_functions": dict(reversed(tuple(observed.pin_functions.items()))),
+            "pin_electrical_types": dict(reversed(tuple(observed.pin_electrical_types.items()))),
+        }
+    )
+    reordered_coverage = evaluate(
+        reordered_observed,
+        ("debug-port",),
+        (review,),
+        interfaces={"debug-port": interface_record()},
+    )
+    assert (
+        reordered_coverage.entries[0].unreviewed_component_pin_evidence
+        == entry.unreviewed_component_pin_evidence
+    )
+
+    report = evaluate_design_lint(
+        "synthetic",
+        ContractCoachReport(status="READY_FOR_REVIEW", project_id="synthetic", observed=observed),
+        DesignLintPolicy(),
+        connector_coverage=coverage,
+    )
+    rendered = text_report(report)
+    assert report.status == "REVIEW"
+    assert (
+        "Unreviewed component pin J1.2: function=GND; electrical_type=passive; nets=<unconnected>"
+    ) in rendered
+    assert (
+        "Unreviewed component pin J1.3: function=SHIELD; electrical_type=passive; nets=SHIELD"
+    ) in rendered
 
 
 def test_explicit_not_applicable_decision_covers_a_candidate_without_joining_nets() -> None:

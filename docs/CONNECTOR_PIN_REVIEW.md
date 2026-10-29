@@ -110,7 +110,11 @@ can say that the complete schematic inventory was reviewed and none are
 present. `service-serial` must exist in the configured interface catalog.
 Coverage compares catalog pin numbers and the complete pin-number inventory
 exported for each symbol; it does not compare signal names or assert net
-relationships. Use the electrical contract's `pin_connectivity` and
+relationships. For exported pins omitted from the review map and unlisted-pin
+reasons, the report shows KiCad's native symbol function, electrical type, and
+net assignment when available, including `<unconnected>` for an open pin. This
+makes an open ground-looking contact visible for review without asserting that
+it must be connected. Use the electrical contract's `pin_connectivity` and
 `grounding` sections for required common nets, isolated domains, and grounds.
 
 ## Scope comparisons between similar connector instances
