@@ -10,7 +10,7 @@ unused-channel reasons.
 | ------------------- | ---------------------------------------- | -------------- | ------------------- |
 | `control.kicad_sch` | RN1.1 on `SPI_CS_N`, RN1.2 on `+3V3`     | PASS           | no pull-up prompt   |
 | `fault.kicad_sch`   | RN1.1 on `SPI_CS_WRONG`, RN1.2 on `+3V3` | FAIL           | prompt remains open |
-| `no-connect.kicad_sch` | U2.1 explicitly open; controller bias remains mapped | FAIL | no pull-up prompt |
+| `no-connect.kicad_sch` | U2.1 explicitly open; controller bias remains mapped | endpoint FAIL, array PASS | no pull-up prompt |
 
 `spi.json` binds the controller, peripheral, and array using synthetic symbol,
 footprint, value, `PART_ID`, and channel metadata. The nominal 10 kΩ channel
@@ -32,6 +32,7 @@ versioned KiCad image, normalizes both native netlists, checks repeatability,
 compares the mapped-array electrical result, and verifies the SPI lint finding.
 For the explicit no-connect case it also requires native `U2.1` unconnected-pin
 evidence and confirms that the missing-bias prompt stays quiet; the separate
-array contract correctly remains a failure because its mapped peripheral pin
-is open. This lane does not run ERC/DRC or establish electrical approval or PCB
-continuity.
+SPI endpoint contract correctly remains a failure because its mapped peripheral
+pin is open, while the separate resistor-array channel check passes because its
+own two mapped pins remain connected. This lane does not run ERC/DRC or establish
+electrical approval or PCB continuity.

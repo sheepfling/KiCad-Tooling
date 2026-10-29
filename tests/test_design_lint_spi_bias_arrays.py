@@ -196,6 +196,22 @@ def test_exact_array_contract_resolves_only_the_matching_chip_select_prompt() ->
     assert RULE_ID in _report(observed, None)
 
 
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_open_peripheral_select_fails_endpoint_but_keeps_array_channel_valid() -> None:
+    connected = _array_netlist()
+    nets = {
+        net: tuple(pin for pin in pins if pin != "U2.1") for net, pins in connected.nets.items()
+    }
+    observed = connected.model_copy(
+        update={"nets": nets, "unconnected_nets": {"unconnected": ("U2.1",)}}
+    )
+    analysis = _analysis(_array_requirement())
+    checks = {item.id: item for item in spi_checks(analysis, observed)}
+
+    assert checks["spi/main/device/flash/pins"].status == "FAIL"
+    assert checks["spi/bias-array/RN1/chip-select"].status == "PASS"
+
+
 @pytest.mark.parametrize(
     ("fault", "expected_issue"),
     (

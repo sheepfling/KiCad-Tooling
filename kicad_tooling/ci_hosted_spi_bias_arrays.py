@@ -146,6 +146,7 @@ def spi_bias_array_fixture_lane(
     raw_hashes: dict[tuple[str, str], str] = {}
     array_statuses: dict[tuple[str, str], str] = {}
     array_details: dict[tuple[str, str], str] = {}
+    endpoint_statuses: dict[tuple[str, str], str] = {}
     findings: dict[tuple[str, str], tuple[str, ...]] = {}
     for case, source in sources.items():
         for run in ("first", "repeat"):
@@ -174,11 +175,15 @@ def spi_bias_array_fixture_lane(
             ).encode("utf-8")
             normalized_hashes[(case, run)] = hashlib.sha256(normalized).hexdigest()
             check_id = "spi/bias-array/RN1/peripheral-select"
-            array_checks = {item.id: item for item in spi_checks(analysis, observed)}
-            if check_id not in array_checks:
+            checks_by_id = {item.id: item for item in spi_checks(analysis, observed)}
+            if check_id not in checks_by_id:
                 raise ValueError(f"Native {case} did not produce the mapped SPI array check")
-            array_statuses[(case, run)] = array_checks[check_id].status
-            array_details[(case, run)] = array_checks[check_id].detail
+            array_statuses[(case, run)] = checks_by_id[check_id].status
+            array_details[(case, run)] = checks_by_id[check_id].detail
+            endpoint_check_id = "spi/main/device/peripheral/pins"
+            if endpoint_check_id not in checks_by_id:
+                raise ValueError(f"Native {case} did not produce the SPI endpoint check")
+            endpoint_statuses[(case, run)] = checks_by_id[endpoint_check_id].status
             report = evaluate(
                 f"synthetic-spi-bias-array-{case}",
                 ContractCoachReport(
@@ -196,7 +201,12 @@ def spi_bias_array_fixture_lane(
                 if item.rule_id == "bus.spi_active_low_chip_select_without_pullup"
             )
 
-    expected_status = {"control": "PASS", "fault": "FAIL", "no-connect": "FAIL"}
+    expected_status = {"control": "PASS", "fault": "FAIL", "no-connect": "PASS"}
+    expected_endpoint_status = {
+        "control": "PASS",
+        "fault": "PASS",
+        "no-connect": "FAIL",
+    }
     expected_findings = {
         "control": (),
         "fault": ("SPI_CS_N: active-low SPI chip-select bias",),
@@ -212,6 +222,13 @@ def spi_bias_array_fixture_lane(
             )
         if array_statuses[(case, "repeat")] != array_statuses[(case, "first")]:
             raise ValueError(f"Native SPI bias-array {case} check changed between exports")
+        if endpoint_statuses[(case, "first")] != expected_endpoint_status[case]:
+            raise ValueError(
+                f"Native SPI {case} endpoint check is {endpoint_statuses[(case, 'first')]}; "
+                f"expected {expected_endpoint_status[case]}"
+            )
+        if endpoint_statuses[(case, "repeat")] != endpoint_statuses[(case, "first")]:
+            raise ValueError(f"Native SPI {case} endpoint check changed between exports")
         if findings[(case, "first")] != expected_findings[case]:
             raise ValueError(
                 f"Native SPI bias-array {case} findings are {findings[(case, 'first')]!r}; "
@@ -232,6 +249,7 @@ def spi_bias_array_fixture_lane(
             normalized_netlist_sha256=normalized_hashes[(case, "first")],
             repeat_normalized_netlist_sha256=normalized_hashes[(case, "repeat")],
             array_check_status=array_statuses[(case, "first")],
+            endpoint_check_status=endpoint_statuses[(case, "first")],
             finding_subjects=";".join(findings[(case, "first")]) or "none",
             explicit_unconnected_select=("U2.1" if case == "no-connect" else "none"),
             repeatable="true",

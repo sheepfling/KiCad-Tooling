@@ -67,7 +67,8 @@ def test_native_spi_bias_array_fault_and_control_repeat(
     assert control["finding_subjects"] == "none"
     assert fault["array_check_status"] == "FAIL"
     assert fault["finding_subjects"] == "SPI_CS_N: active-low SPI chip-select bias"
-    assert no_connect["array_check_status"] == "FAIL"
+    assert no_connect["array_check_status"] == "PASS"
+    assert no_connect["endpoint_check_status"] == "FAIL"
     assert no_connect["finding_subjects"] == "none"
     assert no_connect["explicit_unconnected_select"] == "U2.1"
     for result in (control, fault, no_connect):

@@ -897,11 +897,11 @@ standalone parity work when it closes a demonstrated feature regression.
   mapped channel does not silence another chip-select gap. Digest-pinned KiCad
   10.0.0/10.0.5 fixtures cover a correct channel and a wrong-net fault.
   The same exact-version native lane now includes an explicit no-connect case:
-  KiCad must retain U2.1 as unconnected, the mapped array contract must remain
-  failed for that open endpoint, and the missing-pull-up heuristic must stay
-  quiet. This closes the gap between the typed `unconnected_nets` anti-control
-  and actual native-export behavior; it does not treat the open pin as
-  electrically acceptable.
+  KiCad must retain U2.1 as unconnected, the SPI endpoint contract must fail,
+  the separate resistor-array channel check must pass for its connected mapped
+  pins, and the missing-pull-up heuristic must stay quiet. This closes the gap
+  between the typed `unconnected_nets` anti-control and actual native-export
+  behavior; it does not treat the open pin as electrically acceptable.
 - **Single-rule gate integrity:** `Lint-Rule` prerelease tags now add a narrow
   cross-rule slice that verifies every active rule has a valid theme-owned
   predicate, catalogued fixtures retain their theme markers, and catalogued
@@ -15361,8 +15361,8 @@ is not a reason by itself to expand its scope or change its default policy.
   fault/control schematics and contract are tooling-owned, source-hashed, and
   exported repeatedly by the KiCad 10.0.0/10.0.5 package acceptance lane. The
   native no-connect control requires explicit unconnected-pin evidence and
-  confirms the pull-up heuristic stays quiet while the mapped array check
-  reports the open endpoint.
+  confirms the pull-up heuristic stays quiet while the SPI endpoint check
+  reports the open pin and the separate array-channel check passes.
 - **Done:** Catalog entry, deterministic predicate, rule-policy lifecycle,
   source-bound report evidence, synthetic and native fault/control coverage,
   public cohort source attribution, and user documentation are implemented. No
