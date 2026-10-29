@@ -40,6 +40,14 @@ def _collect_rule_nodes(rule_ids: str | tuple[str, ...]) -> subprocess.Completed
 
 RULE_NODE_CASES = (
     (
+        "pcb.custom_drc_text_variable_review",
+        "tests/test_pcb_dru_text_variable_review.py::test_variable_severity_is_reviewed_without_an_authored_map",
+    ),
+    (
+        "pcb.custom_drc_text_variable_review",
+        "tests/test_design_lint_mcp_parity_pcb_dru_text_variable.py::test_custom_drc_substitution_review_matches_cli_and_mcp",
+    ),
+    (
         "connector.footprint_same_voltage_power_input_unanchored",
         "tests/test_connector_footprint_same_voltage_power_input.py::test_unanchored_peer_power_inputs_with_equal_voltage_labels_are_reviewed",
     ),

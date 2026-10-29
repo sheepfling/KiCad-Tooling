@@ -59,6 +59,11 @@ _NON_RULE_NATIVE_TESTS = MappingProxyType(
             "test_native_drc_rule_order_controls_mapped_edge_constraint",
         ): "This native experiment establishes rule-order behavior independently; it does not invoke the mapped-rule audit.",
         (
+            "tests.test_pcb_drc_severity_text_variable_native",
+            None,
+            "test_native_project_variable_selects_custom_rule_severity",
+        ): "This native experiment demonstrates severity substitution independently; it does not invoke the custom-rule lint analyzer.",
+        (
             "tests.test_pcb_drc_clearance_clamp_native",
             None,
             "test_native_drc_clamps_600mm_edge_requirement_to_500mm",

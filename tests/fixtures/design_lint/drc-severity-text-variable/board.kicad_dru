@@ -1,0 +1,5 @@
+(version 1)
+(rule "variable-severity"
+  (severity ${MODE})
+  (condition "A.NetName == 'USB_D_P'")
+  (constraint edge_clearance (min 1mm)))

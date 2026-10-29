@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 254 rules are implemented with synthetic regression coverage.
+The following 255 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 254 active rules.
+The catalog currently contains 255 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -661,6 +661,7 @@ skipped under prerelease policy.
 - `pcb.signal_path_rule_coverage`
 - `pcb.custom_drc_rule_ignored`
 - `pcb.custom_drc_rule_excluded`
+- `pcb.custom_drc_text_variable_review`
 - `pcb.core_drc_check_ignored`
 - `pcb.core_drc_check_warning`
 - `pcb.dfm_drc_check_ignored`
@@ -3343,7 +3344,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 254 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 255 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -14024,6 +14025,27 @@ control are documented in the
   .venv/bin/python -I -m pytest tests/test_regulator_required_passives.py \
     -m 'design_lint and power_lint and design_lint_rule(rule_id="power.regulator_required_passive_topology_mismatch")'
   ```
+
+#### LINT-271 — Review unevaluated custom DRC text-variable substitutions
+
+- **Status:** Implemented as default-review `pcb.custom_drc_text_variable_review`.
+  Project policy may select `block`, `off`, or a reasoned exact-fingerprint ignore.
+- **Gap:** With no authored DRC map, the literal ignore and exclusion scanners
+  do not identify a rule whose severity is supplied by `${MODE}`. A valid
+  native DRC run does not establish whether that resolved severity matches the
+  project's intent.
+- **Predicate and limits:** Emit one source-bound review candidate for a
+  KiCad 10 PCB custom-rule file containing `${`, including in comments. The
+  candidate records path, source digest, and exact configured version. It does
+  not expand variables, infer their values, claim that a rule is ignored, or
+  assert an electrical defect. Literal severity scanning does not expand
+  variables; if it cannot parse the raw source, inspection remains `BLOCKED`.
+- **Evidence:** Synthetic tests cover substitution sites, unchanged source,
+  missing and stale inputs, policy dispositions, deterministic evidence, and
+  CLI/MCP parity. An independent native synthetic experiment on KiCad 10.0.0
+  and 10.0.5 confirms project severity substitution and records the version
+  difference in exclusion markers; it does not exercise the local predicate.
+  See [fixture notes](../tests/fixtures/design_lint/drc-severity-text-variable/README.md).
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

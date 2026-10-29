@@ -9930,6 +9930,44 @@
       "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_rule_coverage.py#compare_native_signal_path_rules"
     },
     {
+      "rule_id": "pcb.custom_drc_text_variable_review",
+      "title": "Custom DRC text-variable substitutions need review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_dru_rule_review.py#text_variable_custom_drc_rule_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact project .kicad_dru source path and SHA-256 plus configured KiCad version",
+      "predicate": "For a source-bound PCB custom DRC file under the KiCad 10 profile, emit one review candidate when the source contains the text-variable opening token ${. This does not require a project-authored DRC map.",
+      "supported_kicad_versions": [
+        "KiCad 10.x custom DRC source; the exact configured version is retained as context"
+      ],
+      "limitations": [
+        "Text-variable substitution is not evaluated or assumed to be invalid. Review the resolved rule severity, conditions, and limits against project intent.",
+        "The conservative token scan includes comments because KiCad substitutes text before parsing. One finding covers the file and does not assert that a disabled rule or design defect exists.",
+        "Literal ignore and exclusion checks do not expand variables. Raw source that cannot be parsed keeps inspection blocked; the review candidate does not suppress that failure. Native DRC compilation does not establish that each resolved rule matches its intended objects."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_dru_text_variable_review.test_variable_severity_is_reviewed_without_an_authored_map",
+        "tests.test_pcb_dru_text_variable_review.test_other_substitution_sites_are_reviewed_without_assuming_their_value",
+        "tests.test_pcb_dru_text_variable_review.test_unparseable_raw_substitution_does_not_suppress_parser_errors",
+        "tests.test_pcb_dru_text_variable_review.test_project_policy_can_review_block_disable_or_ignore",
+        "tests.test_design_lint_mcp_parity_pcb_dru_text_variable.test_custom_drc_substitution_review_matches_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_dru_text_variable_review.test_no_substitution_and_absent_rules_are_quiet",
+        "tests.test_pcb_dru_text_variable_review.test_source_hash_and_version_boundaries"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_dru_text_variable_review.test_substitution_is_deterministic_and_changes_with_source"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_dru_rule_review.py#text_variable_custom_drc_rule_candidates",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_summary"
+      ]
+    },
+    {
       "rule_id": "pcb.custom_drc_rule_ignored",
       "title": "Explicitly ignored custom PCB rules need intentional review",
       "theme": "pcb",

@@ -780,7 +780,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 254 active rules.
+The catalog currently contains 255 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -3429,6 +3429,24 @@ normal board DRC run for board geometry. Neither result establishes electrical
 approval or fabrication readiness. The tooling-owned synthetic control and
 fault, plus the exact-version native lane, are documented in
 [`tests/fixtures/design_lint/pcb-dru-rule-compilation/`](../tests/fixtures/design_lint/pcb-dru-rule-compilation/README.md).
+
+## Review custom PCB rule text-variable substitutions
+
+`pcb.custom_drc_text_variable_review` asks for review when a source-bound
+`.kicad_dru` contains `${`, without requiring a project-authored rule map. KiCad
+expands text variables before parsing; this tooling does not evaluate that
+substitution. Review the resolved rules and their severities, conditions, and
+limits against project intent. A token in a comment also prompts review because
+the substitution precedes parsing. The finding does not assert that the
+variable is invalid or that a rule is ignored. Its default is `review`; the
+project may select `block`, `off`, or an exact-fingerprint ignore.
+
+The literal ignore and exclusion scanners do not expand variables. If raw
+source cannot be parsed, inspection remains `BLOCKED`; the review candidate
+does not suppress the parsing failure. A separate
+[synthetic native experiment](../tests/fixtures/design_lint/drc-severity-text-variable/README.md)
+demonstrates KiCad's severity substitution on the pinned 10.0.0 and 10.0.5
+images; it does not run the local lint analyzer or establish project intent.
 
 ## Review explicitly ignored custom PCB rules
 

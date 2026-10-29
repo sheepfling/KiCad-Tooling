@@ -1,0 +1,4 @@
+(version 1)
+(rule "SyntheticActive"
+  (severity error)
+  (constraint edge_clearance (min 1mm)))

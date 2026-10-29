@@ -115,3 +115,38 @@ def excluded_custom_drc_rule_candidates(
         )
         for rule in excluded_rules
     )
+
+
+def text_variable_custom_drc_rule_candidates(
+    root: Path,
+    config: ProjectConfig,
+    source_hashes: Mapping[str, str],
+) -> tuple[Candidate, ...]:
+    """Request review when source contains a KiCad substitution not evaluated here."""
+    if _SUPPORTED_KICAD_VERSION.fullmatch(config.kicad_version) is None:
+        return ()
+    source_file = _source_bound_rule_file(root, config, source_hashes)
+    if source_file is None:
+        return ()
+    relative, rules_file, expected_hash = source_file
+    source = rules_file.read_text(encoding="utf-8")
+    if digest(rules_file) != expected_hash:
+        raise ValueError("Custom DRC rules changed during design-lint inspection")
+    if "${" not in source:
+        return ()
+    return (
+        Candidate(
+            rule_id="pcb.custom_drc_text_variable_review",
+            subject=f"{relative}#text-variable-substitution",
+            message=(
+                "This custom DRC source contains text-variable substitution that this audit "
+                "does not evaluate. Review the resolved rules and their severity, conditions, "
+                "and limits against the project's intended policy."
+            ),
+            evidence={
+                "source_path": (relative,),
+                "source_sha256": (expected_hash,),
+                "kicad_version": (config.kicad_version,),
+            },
+        ),
+    )

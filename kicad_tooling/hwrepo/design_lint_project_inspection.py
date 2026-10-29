@@ -55,6 +55,7 @@ from .pcb_drc_source_scan import scan_source_bound_rule_map
 from .pcb_dru_rule_review import (
     excluded_custom_drc_rule_candidates,
     ignored_custom_drc_rule_candidates,
+    text_variable_custom_drc_rule_candidates,
 )
 from .pcb_mechanical_edge_clearance import mechanical_edge_rule_coverage_candidates
 
@@ -103,6 +104,7 @@ def inspect_design_lint_summary(
             *mechanical_edge_rule_candidates,
             *ignored_custom_drc_rule_candidates(root, config, coach.source_hashes),
             *excluded_custom_drc_rule_candidates(root, config, coach.source_hashes),
+            *text_variable_custom_drc_rule_candidates(root, config, coach.source_hashes),
         )
         pcb_native_drc_candidates = (
             *ignored_core_native_drc_check_candidates(root, config, coach.source_hashes),

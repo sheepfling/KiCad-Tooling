@@ -208,6 +208,12 @@ def pcb_rule_ids() -> set[str]:
         message="Synthetic custom DRC rule assigns exclusion severity.",
         evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
     )
+    text_variable_rule = Candidate(
+        rule_id="pcb.custom_drc_text_variable_review",
+        subject="projects/synthetic/controller.kicad_dru#text-variable-substitution",
+        message="Synthetic custom DRC text substitution requires review.",
+        evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
+    )
     mechanical_edge_rule = Candidate(
         rule_id="pcb.mechanical_edge_clearance_rule_coverage",
         subject="projects/synthetic/controller.kicad_dru#front-edge",
@@ -219,7 +225,12 @@ def pcb_rule_ids() -> set[str]:
         coach,
         DesignLintPolicy(),
         pcb_component_inventory_coverage=inventory,
-        pcb_dru_rule_candidates=(ignored_rule, excluded_custom_rule, mechanical_edge_rule),
+        pcb_dru_rule_candidates=(
+            ignored_rule,
+            excluded_custom_rule,
+            text_variable_rule,
+            mechanical_edge_rule,
+        ),
         pcb_native_drc_candidates=(
             ignored_core_check,
             ignored_dfm_check,

@@ -1,0 +1,4 @@
+(version 1)
+(rule "SyntheticSeverity"
+  (severity ${MODE})
+  (constraint edge_clearance (min 1mm)))
