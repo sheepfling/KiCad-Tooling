@@ -67,6 +67,7 @@ PCB_LINT_TEST_MODULES = frozenset(
         "tests/test_pcb_touch_pad_clearance_mcp_parity.py",
         "tests/test_pcb_touch_pad_clearance_native.py",
         "tests/test_pcb_signal_path_coverage.py",
+        "tests/test_pcb_signal_path_edge_clearance.py",
         "tests/test_pcb_signal_path_evidence.py",
         "tests/test_pcb_signal_path_hosted_schedule.py",
         "tests/test_pcb_signal_path_lane.py",

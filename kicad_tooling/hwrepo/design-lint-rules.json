@@ -9871,14 +9871,15 @@
       ],
       "fault_fixtures": [
         "tests.test_pcb_signal_path_coverage.test_missing_wrong_duplicate_and_ignored_native_rules_are_incomplete",
-        "tests.test_pcb_signal_path_coverage.test_path_edge_clearance_requires_exact_project_authored_minimum",
+        "tests.test_pcb_signal_path_edge_clearance.test_authored_edge_clearance_bound_requires_exact_selector_and_minimum",
+        "tests.test_pcb_signal_path_edge_clearance.test_edge_rule_duplicates_and_ignored_severity_do_not_count_as_coverage",
         "tests.test_pcb_signal_path_coverage.test_source_net_and_copper_faults_remain_incomplete",
         "tests.test_pcb_signal_path_coverage.test_bundle_selector_must_not_include_unmapped_pads",
         "tests.test_pcb_signal_path_native.test_native_signal_path_drc_faults_are_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_signal_path_coverage.test_exact_path_and_bundle_rules_cover_reviewed_map",
-        "tests.test_pcb_signal_path_coverage.test_edge_only_signal_path_is_complete_without_length_or_skew_rules",
+        "tests.test_pcb_signal_path_edge_clearance.test_edge_only_signal_path_is_complete_without_length_or_skew_rules",
         "tests.test_pcb_signal_path_coverage.test_map_order_and_native_rule_order_are_stable",
         "tests.test_pcb_signal_path_mcp_parity.test_disabled_signal_path_coverage_matches_cli_and_mcp",
         "tests.test_pcb_signal_path_native.test_native_signal_path_drc_faults_are_repeatable"
