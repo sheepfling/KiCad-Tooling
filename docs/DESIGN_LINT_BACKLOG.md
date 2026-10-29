@@ -13858,9 +13858,11 @@ control are documented in the
   duplicate roles, incomplete inventories, and ambiguous assignments.
 - **Incremental value:** This is a review-localization option over the generic
   complementary-pair finding, not independent detection. The rule is off by
-  default. If a project enables it for Ethernet, turn off the overlapping
-  generic rule for that scope to avoid duplicate findings. Reviewer effort and
-  preference for the narrower wording have not been measured.
+  default. To use the pin-specific wording without losing generic pair checks
+  elsewhere, enable this rule and exact-ignore the overlapping generic finding
+  after review. Do not turn off the generic rule project-wide solely to remove
+  this duplicate. Reviewer effort and preference for the narrower wording have
+  not been measured.
 - **Boundary:** A lane can be unused or intentionally partial. Pin functions
   do not establish an Ethernet connection requirement, endpoint mapping,
   routed copper, external wiring, or physical continuity. The default remains
@@ -13869,8 +13871,12 @@ control are documented in the
 - **Synthetic evidence:** The typed fault/control suite exercises both
   directions and polarities, both-open and fully assigned controls, DNP,
   duplicate roles, incomplete inventories, ambiguity, deterministic ordering,
-  and repair. Native KiCad 10.0.0/10.0.5 fault/control fixture coverage is the
-  remaining release-gate work.
+  and repair. The digest-pinned native KiCad 10.0.0/10.0.5 fault/control lane
+  passed in hosted acceptance for `v0.5.3rc254` (GitHub Actions run
+  `40881074688`) with `KICAD_RUN_NATIVE_ETHERNET_DATA_UNCONNECTED_FIXTURES=1`.
+  That establishes repeatable exports and predicate behavior on these two
+  synthetic cases; it does not add independent detection or measure reviewer
+  value.
 - **Focused selection:**
 
   ```sh

@@ -1012,8 +1012,9 @@ or physical continuity. Tooling-owned native fault/control schematics are listed
 [fixture notes](../tests/fixtures/design_lint/ethernet-data-unconnected-native/README.md).
 The generic `bus.complementary_pair_assignment` rule already reports this incomplete-pair
 condition. This rule offers a more direct open-pin and mate description; enabling both can
-produce duplicate findings. Disable the generic rule when opting into this narrower Ethernet
-review.
+produce duplicate findings. Keep the generic rule enabled for its other interface coverage. If
+the pin-specific wording is preferred, add an exact ignore for the generic finding after review;
+this suppresses only that fingerprint rather than disabling the generic rule across the project.
 
 ```sh
 .venv/bin/python -I -m pytest tests/test_ethernet_data_unconnected_pins.py \
