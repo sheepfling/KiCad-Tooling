@@ -263,6 +263,35 @@ def test_dnp_unmapped_or_stale_arrays_are_not_guessed_as_pullups() -> None:
     assert stale_result.voltage_entries == ()
 
 
+def test_stale_voltage_only_coverage_blocks_evaluation() -> None:
+    netlist = _mapped_array_netlist()
+    requirement = _array_requirement_with_voltage_limits()
+    current = coverage(netlist, requirement)
+    assert current.entries
+    assert current.voltage_entries
+    assert all(entry.status == "COVERED" for entry in current.voltage_entries)
+
+    stale = current.model_copy(update={"netlist_sha256": "c" * 64})
+    coach = ContractCoachReport(
+        status="READY_FOR_REVIEW",
+        project_id="synthetic-i2c-voltage-coverage",
+        observed=netlist,
+        netlist_sha256="a" * 64,
+    )
+    report = evaluate(
+        coach.project_id,
+        coach,
+        DesignLintPolicy(),
+        i2c_pullup_heuristic_coverage=stale,
+    )
+
+    assert report.status == "BLOCKED"
+    assert report.i2c_pullup_heuristic_coverage.status == "BLOCKED"
+    assert report.i2c_pullup_heuristic_coverage.entries == ()
+    assert report.i2c_pullup_heuristic_coverage.voltage_entries == ()
+    assert "different or unavailable native netlist hash" in report.issues[0]
+
+
 @pytest.mark.design_lint_rule(rule_id="bus.i2c_pullup_input_limit_coverage")
 def test_array_channels_outside_visible_resistance_window_are_excluded() -> None:
     requirement = array_requirement()
