@@ -37,9 +37,6 @@ from .connector_footprint_peer_metadata import (
 from .connector_footprint_peer_metadata_open import (
     connector_footprint_peer_pin_metadata_open_outliers,
 )
-from .connector_footprint_peer_unanchored_divergence import (
-    reviewed_unanchored_connector_alias_divergences,
-)
 from .connector_footprint_peer_missing_metadata import (
     connector_footprint_peer_pin_missing_metadata_assignment_divergences,
 )
@@ -49,6 +46,9 @@ from .connector_footprint_peer_missing_metadata_open import (
 from .connector_footprint_peer_pin_types import ConnectorFootprintPeerPinScan
 from .connector_footprint_peer_pins import (
     scan_connector_footprint_peer_pin_assignments,
+)
+from .connector_footprint_peer_unanchored_divergence import (
+    reviewed_unanchored_connector_alias_divergences,
 )
 from .connector_footprint_power_input import footprint_named_power_input_open_outlier_candidates
 from .connector_footprint_power_output import (
