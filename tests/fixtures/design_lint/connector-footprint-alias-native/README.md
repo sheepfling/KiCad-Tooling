@@ -1,10 +1,11 @@
 # Synthetic connector footprint-alias fixtures
 
-These tooling-owned schematics exercise a review heuristic for fitted,
+These tooling-owned schematics exercise review heuristics for fitted,
 PART_ID-free connector symbols that share the same value, footprint, complete
 pin inventory, and native pin metadata. The default cases use generic passive
 `Pin_1`/`Pin_2` labels; the numeric cases use native pin-function names `1`/`7`.
-Pin 1 is the common assignment anchor in every case.
+Except for the explicitly unanchored case, pin 1 is the common assignment
+anchor.
 
 | Fixture                        | Pin function labels | J1 pin 2          | J2 pin 2          | Expected result                                                   |
 | ------------------------------ | ------------------- | ----------------- | ----------------- | ----------------------------------------------------------------- |
@@ -15,6 +16,12 @@ Pin 1 is the common assignment anchor in every case.
 | `numeric-fault.kicad_sch`      | `1` / `7`           | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_3` | `REVIEW` for `connector.footprint_peer_pin_assignment_divergence` |
 | `numeric-control.kicad_sch`    | `1` / `7`           | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_2` | No footprint-alias divergence                                     |
 | `numeric-open-fault.kicad_sch` | `1` / `7`           | `SYNTHETIC_NET_2` | unassigned        | `REVIEW` for `connector.footprint_peer_pin_open_outlier`          |
+
+`unanchored-fault.kicad_sch` assigns both generic pins to different nets on
+J1 and J2, leaving no shared-net anchor. It is evaluated only when a current
+source-matched connector map explicitly scopes both instances into one
+reviewed peer group, and emits a REVIEW prompt for each differing contact.
+That scope asks for review; it does not assert that either pair must be joined.
 
 The mixed-open case is a review prompt: J1 and J2 have one exact common anchor
 on pin 1, and J2 pin 2 is open while J1 pin 2 is assigned. Neither case asserts
@@ -48,3 +55,4 @@ SHA-256 source digests:
 - `numeric-fault.kicad_sch`: `505a7b2d1eaa74c54d476c5cab9cfcc41649ed51a64f2da4ebd9f5beb6a74f94`
 - `numeric-control.kicad_sch`: `c8140e9cf9030ccb646121631d186cef97b7d9c76b0d994c2cb3648aaae28a27`
 - `numeric-open-fault.kicad_sch`: `1a011151f612ba45769e859e0ada0cf67da46dea50d062e0559e4591f537d270`
+- `unanchored-fault.kicad_sch`: `2d8fbf390f3b154d77c0bbc603a7260ddc0ff27cf3b9b2e74ab19242dfc4aa40`

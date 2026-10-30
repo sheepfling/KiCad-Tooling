@@ -706,6 +706,15 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **LINT-272 unanchored connector-alias assignments:** The existing footprint
+  peer scan counted generic per-pin splits but stayed silent when every contact
+  differed and there was no common-net anchor. A new default-REVIEW candidate
+  covers only current, source-matched connector aliases inside one explicitly
+  reviewed `peer_assignment_group`; common assignments, stale or incomplete
+  maps, open or ambiguous target contacts, DNP peers, named functions, and
+  separate peer groups remain quiet. Focused synthetic fault/control,
+  policy, exact-ignore, and ordering tests pass (14 cases). Exact native
+  acceptance for this source-matched scope is still pending.
 - **LINT-010 source-evidence gap:** The optional capacitance scope now checks
   exact fitted contributors on native bus nets against reviewed effective-
   capacitance maxima and a residual-loading bound. Explicit non-C contributor
@@ -14048,6 +14057,50 @@ control are documented in the
   and 10.0.5 confirms project severity substitution and records the version
   difference in exclusion markers; it does not exercise the local predicate.
   See [fixture notes](../tests/fixtures/design_lint/drc-severity-text-variable/README.md).
+
+#### LINT-272 — Review unanchored generic assignments across connector aliases
+
+- **Status:** Implemented as default-review
+  `connector.footprint_peer_pin_unanchored_assignment_divergence`. The shared
+  footprint-alias scan retains exact per-pin evidence; the rule owner only
+  emits candidates when current source-matched connector coverage places all
+  compared instances in one reviewed peer-assignment group with a nonempty
+  basis.
+- **Gap:** The existing alias rule requires a separate common-net pin to
+  anchor a generic assignment difference. When every contact is split across
+  otherwise similar aliases, the scan reports `NO_SHARED_ASSIGNMENT_ANCHOR`
+  and emits no finding, even when the project explicitly scoped the peers for
+  comparison.
+- **Predicate:** Fitted connector aliases must have distinct native symbols,
+  no `PART_ID`, exact nonempty value and footprint matches, complete matching
+  pin inventories, and identical nonempty native function and electrical-type
+  metadata. A compared `Pin_N` or numeric-only contact must have exactly one
+  assignment per peer and at least two distinct nets. The complete
+  source-matched interface map must place every peer in the same exact
+  `peer_assignment_group` and supply its review basis. Emit one candidate per
+  split pin only when no pin in that same scope is a common-net anchor.
+- **Boundary:** The peer group scopes comparison; it does not state that
+  corresponding contacts must match, nor that the observed nets must be joined,
+  bonded, or isolated. Missing or stale maps do not activate the rule. Open,
+  ambiguous, DNP, incomplete, metadata-mismatched, meaningful-function, and
+  `PART_ID` cases remain with their existing checks or outside this predicate.
+  The finding does not establish physical connector roles, off-board wiring, or
+  PCB copper continuity.
+- **Fixtures and value:** The synthetic typed-netlist fault has two generic
+  alias pins split across distinct nets, no common anchor, and a current
+  source-matched peer group. Before this rule, the baseline emitted no
+  footprint-alias finding; the new rule emits exact pin assignments. Controls
+  cover common assignments, absent and separate peer scopes, stale mappings,
+  DNP, incomplete inventories and native metadata, open and ambiguous target
+  pins, meaningful function labels, `review`/`block`/`off`, exact ignores, and
+  reordered maps. The same evidence is reported in alias coverage as
+  `reviewed_unanchored_divergence_finding_count`.
+- **Acceptance still needed:** The 14 focused synthetic cases pass locally.
+  A digest-pinned exact-version native fault/control test now exercises the
+  source-matched peer scope twice on KiCad 10.0.0 and 10.0.5; prerelease CI
+  selects it through `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES`. Native acceptance
+  remains pending that run. No cohort code, proprietary project source, or
+  project expectation was imported.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

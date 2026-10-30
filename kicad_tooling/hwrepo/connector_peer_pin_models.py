@@ -85,6 +85,7 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
     non_generic_different_assignment_pin_group_count: NonNegativeCount
     common_anchor_group_count: NonNegativeCount
     unanchored_different_assignment_pin_group_count: NonNegativeCount
+    reviewed_unanchored_divergence_finding_count: NonNegativeCount = 0
     divergence_finding_count: NonNegativeCount
     open_peer_pin_group_count: NonNegativeCount
     unanchored_open_peer_pin_group_count: NonNegativeCount
@@ -147,6 +148,10 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
             self.generic_different_assignment_pin_group_count
         ):
             raise ValueError("Unanchored differences must be generic differing pin groups")
+        if self.reviewed_unanchored_divergence_finding_count > (
+            self.unanchored_different_assignment_pin_group_count
+        ):
+            raise ValueError("Reviewed unanchored findings must be eligible generic differences")
         if self.divergence_finding_count + self.unanchored_different_assignment_pin_group_count != (
             self.generic_different_assignment_pin_group_count
         ):
@@ -266,7 +271,10 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
             else "NO_COMPARABLE_ASSIGNMENTS"
             if self.evaluated_pin_group_count == 0
             else "NO_SHARED_ASSIGNMENT_ANCHOR"
-            if self.common_anchor_group_count == 0
+            if (
+                self.common_anchor_group_count == 0
+                and self.reviewed_unanchored_divergence_finding_count == 0
+            )
             else "PARTIALLY_EVALUATED"
             if incomplete_count > 0
             else "NO_DIVERGENT_ASSIGNMENTS"
@@ -276,6 +284,7 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
                 + self.named_power_input_different_assignment_pin_group_count
                 + self.named_power_output_different_assignment_pin_group_count
                 + self.named_passive_different_assignment_pin_group_count
+                + self.reviewed_unanchored_divergence_finding_count
                 == 0
             )
             else "EVALUATED"

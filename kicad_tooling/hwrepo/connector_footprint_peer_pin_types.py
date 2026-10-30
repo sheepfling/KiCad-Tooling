@@ -116,6 +116,7 @@ class ConnectorFootprintPeerPinScan:
     unanchored_all_open_peer_pin_group_count: int
     all_open_finding_count: int
     divergences: tuple[ConnectorFootprintPeerPinDivergence, ...]
+    unanchored_divergences: tuple[ConnectorFootprintPeerPinDivergence, ...]
     named_divergences: tuple[ConnectorFootprintPeerPinNamedDivergence, ...]
     open_outliers: tuple[ConnectorFootprintPeerPinOpenOutlier, ...]
     all_open: tuple[ConnectorFootprintPeerPinAllOpen, ...]

@@ -37,6 +37,9 @@ from .connector_footprint_peer_metadata import (
 from .connector_footprint_peer_metadata_open import (
     connector_footprint_peer_pin_metadata_open_outliers,
 )
+from .connector_footprint_peer_unanchored_divergence import (
+    reviewed_unanchored_connector_alias_divergences,
+)
 from .connector_footprint_peer_missing_metadata import (
     connector_footprint_peer_pin_missing_metadata_assignment_divergences,
 )
@@ -151,6 +154,7 @@ def connector_footprint_peer_pin_candidates(
         *missing_metadata_open_outliers,
         *metadata_open_outliers,
         *divergence_candidates,
+        *reviewed_unanchored_connector_alias_divergences(scan),
         *named_signal_divergence.candidates,
         *named_power_input_divergence.candidates,
         *unanchored_same_voltage_power_input_candidates(scan),

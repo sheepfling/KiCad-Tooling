@@ -87,6 +87,7 @@ def scan_connector_footprint_peer_pin_assignments(
     all_open_peer_pin_group_count = 0
     unanchored_all_open_peer_pin_group_count = 0
     divergences: list[ConnectorFootprintPeerPinDivergence] = []
+    unanchored_divergences: list[ConnectorFootprintPeerPinDivergence] = []
     named_divergences: list[ConnectorFootprintPeerPinNamedDivergence] = []
     open_outliers: list[ConnectorFootprintPeerPinOpenOutlier] = []
     all_open: list[ConnectorFootprintPeerPinAllOpen] = []
@@ -330,6 +331,22 @@ def scan_connector_footprint_peer_pin_assignments(
                     named_open_assignments
                 )
                 unanchored_all_open_peer_pin_group_count += len(generic_all_open_assignments)
+                for pin_number, assignments in generic_differences:
+                    unanchored_divergences.append(
+                        ConnectorFootprintPeerPinDivergence(
+                            footprint=footprint_display,
+                            value=value_display,
+                            pin_number=pin_number,
+                            pin_function=functions[
+                                f"{scope_references[0]}.{pin_number}".casefold()
+                            ],
+                            assignments=dict(sorted(assignments.items())),
+                            symbols=peer_symbols,
+                            common_anchor_pin_numbers=(),
+                            peer_assignment_group=peer_group,
+                            peer_assignment_basis=basis,
+                        )
+                    )
             for pin_number, assignments in named_all_open_assignments:
                 named_all_open.append(
                     ConnectorFootprintPeerPinNamedAllOpen(
@@ -349,6 +366,15 @@ def scan_connector_footprint_peer_pin_assignments(
                 )
 
     divergences.sort(
+        key=lambda item: (
+            item.footprint.casefold(),
+            item.value.casefold(),
+            item.pin_number.casefold(),
+            (item.peer_assignment_group or "").casefold(),
+            tuple(pin.casefold() for pin in item.assignments),
+        )
+    )
+    unanchored_divergences.sort(
         key=lambda item: (
             item.footprint.casefold(),
             item.value.casefold(),
@@ -422,6 +448,7 @@ def scan_connector_footprint_peer_pin_assignments(
         unanchored_all_open_peer_pin_group_count=unanchored_all_open_peer_pin_group_count,
         all_open_finding_count=len(all_open),
         divergences=tuple(divergences),
+        unanchored_divergences=tuple(unanchored_divergences),
         named_divergences=tuple(named_divergences),
         open_outliers=tuple(open_outliers),
         all_open=tuple(all_open),

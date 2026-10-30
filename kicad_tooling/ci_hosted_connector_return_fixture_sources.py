@@ -53,6 +53,8 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         "footprint-alias-fault": fixture_root / "connector-footprint-alias-native/fault.kicad_sch",
         "footprint-alias-control": fixture_root
         / "connector-footprint-alias-native/control.kicad_sch",
+        "footprint-alias-unanchored-fault": fixture_root
+        / "connector-footprint-alias-native/unanchored-fault.kicad_sch",
         "footprint-alias-open-fault": fixture_root
         / "connector-footprint-alias-native/open-fault.kicad_sch",
         "footprint-alias-all-open-fault": fixture_root
@@ -292,6 +294,7 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = MappingProxyType(
         "peer-pin-part-id-split-fault": "8530bab2ac3537a821be48321e9bb713aa8b2933d714902cc5a30fb4168fa192",
         "footprint-alias-fault": "e45b8069603078c1a26198b962b96b20d8a7f9dff39b195b7bb6399e00b323c0",
         "footprint-alias-control": "d5c77a1b8de808ab82c9f98f0172af7f6f933ce43536dabe00c6fbf83e048e28",
+        "footprint-alias-unanchored-fault": "2d8fbf390f3b154d77c0bbc603a7260ddc0ff27cf3b9b2e74ab19242dfc4aa40",
         "footprint-alias-open-fault": "ba6fd627b7a8e994ca554dbb9f3a1d67197f8a48d5302c5ee6c78318be424605",
         "footprint-alias-all-open-fault": "798d07bb64d60bbeab73b7203e052ce557e50b6da6453044ec4ccef686f78c27",
         "footprint-alias-numeric-fault": "505a7b2d1eaa74c54d476c5cab9cfcc41649ed51a64f2da4ebd9f5beb6a74f94",

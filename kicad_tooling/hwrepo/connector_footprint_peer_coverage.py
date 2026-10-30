@@ -21,6 +21,7 @@ def build_connector_footprint_peer_pin_coverage(
     netlist_sha256: str,
     *,
     generic_divergence_finding_count: int,
+    reviewed_unanchored_divergence_finding_count: int,
     open_outlier_finding_count: int,
     all_open_finding_count: int,
     named_signal_divergence: _NamedCoverageEvaluation,
@@ -59,7 +60,10 @@ def build_connector_footprint_peer_pin_coverage(
         else "NO_COMPARABLE_ASSIGNMENTS"
         if scan.evaluated_pin_group_count == 0
         else "NO_SHARED_ASSIGNMENT_ANCHOR"
-        if scan.common_anchor_group_count == 0
+        if (
+            scan.common_anchor_group_count == 0
+            and reviewed_unanchored_divergence_finding_count == 0
+        )
         else "PARTIALLY_EVALUATED"
         if incomplete_count > 0
         else "NO_DIVERGENT_ASSIGNMENTS"
@@ -69,6 +73,7 @@ def build_connector_footprint_peer_pin_coverage(
             + named_power_input_divergence.candidate_count
             + named_power_output_divergence.candidate_count
             + named_passive_divergence.candidate_count
+            + reviewed_unanchored_divergence_finding_count
             == 0
         )
         else "EVALUATED"
@@ -97,6 +102,9 @@ def build_connector_footprint_peer_pin_coverage(
         common_anchor_group_count=scan.common_anchor_group_count,
         unanchored_different_assignment_pin_group_count=(
             scan.unanchored_different_assignment_pin_group_count
+        ),
+        reviewed_unanchored_divergence_finding_count=(
+            reviewed_unanchored_divergence_finding_count
         ),
         divergence_finding_count=generic_divergence_finding_count,
         open_peer_pin_group_count=scan.open_peer_pin_group_count,
