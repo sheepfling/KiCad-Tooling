@@ -14,11 +14,12 @@ from .hwrepo.doctor import doctor
 from .hwrepo.foreign_pcb import convert_pcb
 from .hwrepo.foreign_pcb import render_text as render_foreign_pcb
 from .hwrepo.import_inventory import format_import_inventory, scan_imports
+from .hwrepo.import_review import apply_reviewed_import
 from .hwrepo.importing import import_project
 from .hwrepo.initialization import initialize
 from .hwrepo.inventory import format_inventory, inventory
 from .hwrepo.layout import default_project_root
-from .hwrepo.project_models import ProjectKind
+from .hwrepo.project_models import ProjectImportReport, ProjectKind
 from .hwrepo.rescue import format_rescue, rescue_project
 from .hwrepo.scaffold import new_project
 from .hwrepo.template import bootstrap, plan_upgrade, preflight
@@ -92,6 +93,9 @@ def main() -> int:
     parser.add_argument(
         "--dry-run", action="store_true", help="Preview an import without writing files"
     )
+    parser.add_argument(
+        "--review-receipt", type=Path, help="Saved import-review receipt to enforce before import"
+    )
     parser.add_argument("--native-report", type=Path, help="Project native summary.json to explain")
     parser.add_argument(
         "--bom", type=Path, help="Native assembly/bom.csv to check for part identities"
@@ -123,6 +127,8 @@ def main() -> int:
         parser.error("--source-dir requires scan-imports")
     if args.command != "import-project" and args.dry_run:
         parser.error("--dry-run options require import-project")
+    if args.review_receipt is not None and (args.command != "import-project" or args.dry_run):
+        parser.error("--review-receipt requires import-project without --dry-run")
     if args.command != "diagnose" and (args.native_report or args.bom):
         parser.error("--native-report and --bom require diagnose")
     if args.command not in {"diagnose", "rescue"} and (
@@ -191,9 +197,23 @@ def main() -> int:
     elif args.command == "import-project":
         if args.project_id is None or args.toolchain is None or args.source is None:
             parser.error("import-project requires --source, --project-id and --toolchain")
-        result = import_project(
-            args.root, args.source, args.project_id, args.toolchain, args.dry_run
-        )
+        if args.review_receipt is None:
+            result = import_project(
+                args.root, args.source, args.project_id, args.toolchain, args.dry_run
+            )
+        else:
+            try:
+                result = apply_reviewed_import(
+                    args.root, args.source, args.project_id, args.toolchain, args.review_receipt
+                )
+            except (OSError, ValueError, TypeError) as exc:
+                result = ProjectImportReport(
+                    status="FAIL",
+                    directory=args.project_id,
+                    source_project=args.source.name,
+                    dry_run=False,
+                    issues=(str(exc),),
+                )
     elif args.command == "convert-pcb":
         if args.project_id is None or args.toolchain is None or args.source is None:
             parser.error("convert-pcb requires --source, --project-id and --toolchain")

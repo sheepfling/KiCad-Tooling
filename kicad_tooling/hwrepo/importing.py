@@ -53,7 +53,12 @@ def schematic_files(source: Path, schematic: Path) -> set[Path]:
 
 
 def import_project(
-    root: Path, source_project: Path, project_id: str, toolchain_id: str, dry_run: bool = False
+    root: Path,
+    source_project: Path,
+    project_id: str,
+    toolchain_id: str,
+    dry_run: bool = False,
+    expected_preview: ProjectImportReport | None = None,
 ) -> ProjectImportReport:
     """Copy one project atomically; never modify the source or generate test truth."""
     root = root.resolve()
@@ -141,6 +146,15 @@ def import_project(
         )
         if dry_run:
             return report
+        if expected_preview is not None and (
+            not expected_preview.dry_run
+            or expected_preview.status != "PASS"
+            or expected_preview.directory != report.directory
+            or expected_preview.source_project != report.source_project
+            or dict(expected_preview.copied_sha256) != copied
+            or dict(expected_preview.excluded) != excluded
+        ):
+            raise ValueError("Import source or selection changed since the saved preview")
         destination.parent.mkdir(parents=True, exist_ok=True)
         stage = Path(tempfile.mkdtemp(prefix=".import-project-", dir=destination.parent))
         manifest = manifest.model_copy(

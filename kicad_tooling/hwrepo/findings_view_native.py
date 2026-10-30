@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import tempfile
+from collections import Counter
+from collections.abc import Mapping
 from pathlib import Path, PureWindowsPath
 from typing import Literal
 
@@ -11,7 +13,12 @@ from ..validate import check_report
 from .artifact_access import read_regular_bytes
 from .command_evidence_models import CommandEvidence
 from .contracts import parse_model_text, read_kicad_drc_findings, read_kicad_erc_report, repo_path
-from .findings_view_mapping import DRC_MAPPING_VERSIONS, SCHEMATIC_MAPPING_VERSIONS, drc_finding
+from .findings_view_mapping import (
+    DRC_MAPPING_VERSIONS,
+    SCHEMATIC_MAPPING_VERSIONS,
+    drc_finding,
+    erc_finding,
+)
 from .findings_view_models import ReviewDrawing, ReviewFinding
 from .findings_view_svg import prepare_drawing
 from .models import ValidationSummary
@@ -155,6 +162,8 @@ def native_findings(
     artifacts: NativeArtifacts,
     config: ProjectConfig,
     board: ReviewDrawing | None,
+    schematic: tuple[ReviewDrawing, ...],
+    source_hashes: Mapping[str, str],
 ) -> tuple[tuple[ReviewFinding, ...], tuple[str, ...]]:
     findings: list[ReviewFinding] = []
     issues: list[str] = []
@@ -162,6 +171,16 @@ def native_findings(
         ("erc", ".kicad_sch"),
         ("drc", ".kicad_pcb"),
     )
+    counts = Counter(
+        drawing.sheet_instance_path
+        for drawing in schematic
+        if drawing.sheet_instance_path is not None
+    )
+    sheet_drawings = {
+        drawing.sheet_instance_path: drawing
+        for drawing in schematic
+        if drawing.sheet_instance_path is not None and counts[drawing.sheet_instance_path] == 1
+    }
     for kind, source_extension in kinds:
         check = artifacts.summary.checks.get(kind)
         if check is None or check.status == "NOT_RUN" or check.returncode not in {0, 5}:
@@ -183,28 +202,10 @@ def native_findings(
         if erc is not None:
             if erc.kicad_version != config.kicad_version:
                 raise ValueError("Native ERC version differs from the project toolchain")
+            if erc.source and PureWindowsPath(erc.source).name != Path(source).name:
+                raise ValueError("Native ERC source differs from the selected schematic")
             for item in erc.violations:
-                findings.append(
-                    ReviewFinding(
-                        origin="ERC",
-                        rule=item.type,
-                        severity=f"{item.severity}{' / excluded' if item.excluded else ''}",
-                        title=item.description or item.type,
-                        description="; ".join(
-                            part
-                            for part in (item.sheet_path, *(i.description for i in item.items))
-                            if part
-                        ),
-                        evidence={
-                            "sheet": (item.sheet_path,) if item.sheet_path else (),
-                            "native_items": tuple(
-                                f"{part.description or 'Item'}: {part.x}, {part.y} (native coordinates; unmapped)"
-                                for part in item.items
-                            ),
-                        },
-                        unmapped_reason="ERC-to-schematic coordinate conversion is not verified.",
-                    )
-                )
+                findings.append(erc_finding(item, erc, source, sheet_drawings, source_hashes))
         elif drc is not None:
             if (
                 drc.version != config.kicad_version

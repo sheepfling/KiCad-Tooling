@@ -30,10 +30,7 @@ from .models import (
     ThreeDReport,
     ThreeDView,
 )
-from .project_models import (
-    ProjectConfig,
-    ProjectKind,
-)
+from .project_models import ProjectConfig, ProjectKind
 from .three_d_gallery import finalize_gallery
 from .three_d_gallery import valid_artifact as _valid_artifact
 
@@ -464,6 +461,7 @@ def generate(
             artifacts,
             actions,
             assembly_variant,
+            source,
         )
     except KeyboardInterrupt as exc:
         journal.fail(exc)

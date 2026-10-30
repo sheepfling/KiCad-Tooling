@@ -23,3 +23,5 @@ run. AC charts retain their frequency scale and applicable phase displays.
 
 These plots represent the saved ngspice model output and declared measurements.
 They do not import arbitrary measurement files or establish physical behavior.
+For project-owned CSV measurements, use the separate
+[measured-series importer](MEASURED_SERIES.md) with explicit time and unit mappings.

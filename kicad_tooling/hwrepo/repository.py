@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import re
 import subprocess
+from collections.abc import Collection
+from dataclasses import dataclass
 from pathlib import Path, PurePosixPath, PureWindowsPath
+from typing import Literal
 from urllib.parse import urlsplit
 
 from ..git import run_git_text
@@ -194,6 +197,44 @@ def unmanaged_artifact(name: str) -> bool:
     return path.suffix.casefold() in UNMANAGED_ARTIFACT_SUFFIXES
 
 
+@dataclass(frozen=True, slots=True)
+class CadReference:
+    """One literal CAD path observed in a native source file."""
+
+    kind: Literal["uri", "model"]
+    location: str
+    value: str
+
+
+def cad_references(root: Path, file: Path, text: str) -> tuple[CadReference, ...]:
+    """Share exact location and value extraction with portable CAD validation."""
+    result: list[CadReference] = []
+    previous_match = 0
+    line = 1
+    for match in re.finditer(r'\((uri|model)\s+"([^"\n]*)"', text):
+        line += text.count("\n", previous_match, match.start())
+        previous_match = match.start()
+        result.append(
+            CadReference(
+                kind="uri" if match.group(1) == "uri" else "model",
+                location=f"{file.relative_to(root).as_posix()}:{line}",
+                value=match.group(2),
+            )
+        )
+    return tuple(result)
+
+
+def import_source_roots(copied: Collection[str]) -> frozenset[str]:
+    """Expand imported file paths into the declared directory scope for CAD review."""
+    roots: set[str] = set()
+    for name in copied:
+        parent = PurePosixPath(name).parent
+        while parent != PurePosixPath("."):
+            roots.add(parent.as_posix())
+            parent = parent.parent
+    return frozenset(roots)
+
+
 def cad_dependencies(
     root: Path,
     file: Path,
@@ -212,13 +253,9 @@ def cad_dependencies(
             text,
         )
     )
-    previous_match = 0
-    line = 1
-    for match in re.finditer(r'\((?:uri|model)\s+"([^"\n]*)"', text):
-        value = match.group(1)
-        line += text.count("\n", previous_match, match.start())
-        previous_match = match.start()
-        label = f"{file.relative_to(root).as_posix()}:{line}"
+    for reference in cad_references(root, file, text):
+        value = reference.value
+        label = reference.location
         embedded_uri = urlsplit(value)
         if embedded_uri.scheme == "kicad-embed":
             # The containing native file is itself inventoried and hashed. Check

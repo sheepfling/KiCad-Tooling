@@ -10,12 +10,15 @@ from typing import Literal
 
 from .evidence import digest
 from .models import THREE_D_VIEWS
+from .three_d_glb import inspect_glb
+from .three_d_viewer import write_viewer
 
 
 @dataclass(frozen=True, slots=True)
 class GalleryResult:
     sha256: str
     changed: tuple[str, ...]
+    viewer_artifacts: Mapping[str, str]
 
 
 def valid_artifact(path: Path, kind: str) -> bool:
@@ -27,7 +30,7 @@ def valid_artifact(path: Path, kind: str) -> bool:
     if kind == "png":
         return header.startswith(b"\x89PNG\r\n\x1a\n")
     if kind == "glb":
-        return header.startswith(b"glTF\x02\x00\x00\x00")
+        return inspect_glb(path) is not None
     return header.startswith(b"ISO-10303-21") if kind == "step" else False
 
 
@@ -39,6 +42,7 @@ def write_gallery(
     artifacts: Mapping[str, str],
     actions: Sequence[str],
     assembly_variant: str | None = None,
+    source_sha256: Mapping[str, str] | None = None,
 ) -> GalleryResult | None:
     """Write a gallery only when native outputs exist and report changed files.
 
@@ -56,12 +60,39 @@ def write_gallery(
         path = directory / name
         try:
             valid = path.is_file() and not path.is_symlink() and digest(path) == artifacts[name]
+            if valid and name == "board.glb":
+                valid = valid_artifact(path, "glb")
         except OSError:
             valid = False
         if valid:
             available.append(name)
         else:
             missing.append(name)
+    viewer_artifacts: Mapping[str, str] = {}
+    viewer_note = ""
+    if "board.glb" in available:
+        try:
+            viewer = write_viewer(
+                directory,
+                project_id,
+                model_status,
+                artifacts["board.glb"],
+                actions,
+                assembly_variant,
+                source_sha256 or {},
+                has_step="board.step" in available,
+            )
+        except ValueError:
+            available.remove("board.glb")
+            missing.append("board.glb")
+        else:
+            if viewer is None:
+                viewer_note = (
+                    "<p>The GLB uses external resources and cannot open in this offline viewer.</p>"
+                )
+            else:
+                viewer_artifacts = viewer
+                viewer_note = '<p><a href="viewer.html">Open interactive 3D model</a></p>'
     pictures = "".join(
         f'<figure><a href="{escape(name, quote=True)}"><img src="{escape(name, quote=True)}" '
         f'alt="{escape(name.removesuffix(".png"), quote=True)} board view"></a>'
@@ -99,13 +130,15 @@ figcaption{{font-weight:600}}.notice{{padding:1rem;background:#fff4d6}}a{{color:
 <p>Assembly variant: {variant}.</p>
 <p class="notice">A failed export may contain only a partial set of views. Inspect images and geometry before mechanical decisions.</p>
 {missing_text}<ul>{warnings}</ul><h2>Board views</h2><div class="views">{pictures}</div>
-<h2>Exchange files</h2><p>{links}</p><p><a href="visualization.json">Visualization receipt</a></p>
+<h2>Exchange files</h2><p>{links}</p>{viewer_note}<p><a href="visualization.json">Visualization receipt</a></p>
 </body></html>
 """
     path = directory / "index.html"
     with path.open("x", encoding="utf-8", newline="\n") as stream:
         stream.write(document)
-    return GalleryResult(sha256=digest(path), changed=tuple(missing))
+    return GalleryResult(
+        sha256=digest(path), changed=tuple(missing), viewer_artifacts=viewer_artifacts
+    )
 
 
 def finalize_gallery(
@@ -116,10 +149,18 @@ def finalize_gallery(
     artifacts: dict[str, str],
     actions: tuple[str, ...],
     assembly_variant: str | None = None,
+    source_sha256: Mapping[str, str] | None = None,
 ) -> tuple[Literal["PASS", "FAIL", "ERROR"], tuple[str, ...]]:
     """Bind gallery and report status to the same verified output inventory."""
     gallery = write_gallery(
-        directory, project_id, status, model_status, artifacts, actions, assembly_variant
+        directory,
+        project_id,
+        status,
+        model_status,
+        artifacts,
+        actions,
+        assembly_variant,
+        source_sha256,
     )
     if gallery is None:
         return status, actions
@@ -134,4 +175,5 @@ def finalize_gallery(
             *actions,
         )
     artifacts["index.html"] = gallery.sha256
+    artifacts.update(gallery.viewer_artifacts)
     return status, actions

@@ -12,11 +12,8 @@ from .contracts import repo_path
 from .design_lint_policy_models import DesignLintPolicy
 from .discovery import ProjectConfig
 from .schematic_geometry import (
-    MAX_SHEET_OCCURRENCES,
     SchematicGeometryScan,
-    resolve_schematic_sheet_path,
     scan_schematic_geometry_tree,
-    schematic_sheet_references,
 )
 from .schematic_geometry_models import (
     SchematicGeometryCoverage,
@@ -24,6 +21,7 @@ from .schematic_geometry_models import (
     SchematicGeometryRuleId,
     SchematicGeometrySourceBinding,
 )
+from .schematic_source_tree import verified_schematic_sources
 
 SCHEMATIC_GEOMETRY_RULE_IDS: tuple[SchematicGeometryRuleId, ...] = (
     "schematic.wire_end_on_pin_line",
@@ -164,39 +162,9 @@ def scan_schematic_geometry(
                 "Primary schematic is absent from the source-bound native summary hashes"
             )
 
-        source_files: dict[str, bytes] = {}
-        pending = [relative_path]
-        while pending:
-            current_path = pending.pop()
-            if current_path in source_files:
-                continue
-            if len(source_files) >= MAX_SHEET_OCCURRENCES:
-                raise ValueError(
-                    f"Schematic source tree exceeds {MAX_SHEET_OCCURRENCES} unique files"
-                )
-            current_file = repo_path(root, current_path)
-            expected_hash = coach.source_hashes.get(current_path)
-            if expected_hash is None:
-                raise ValueError(
-                    "Referenced hierarchical schematic is absent from the "
-                    f"source-bound native summary hashes: {current_path}"
-                )
-            source = current_file.read_bytes()
-            actual_hash = hashlib.sha256(source).hexdigest()
-            if actual_hash != expected_hash:
-                raise ValueError(
-                    f"Schematic differs from the source-bound native summary: {current_path}"
-                )
-            source_files[current_path] = source
-            for sheet in schematic_sheet_references(source):
-                child_path = resolve_schematic_sheet_path(
-                    current_path,
-                    project_directory,
-                    sheet.file,
-                )
-                repo_path(root, child_path)
-                if child_path not in source_files:
-                    pending.append(child_path)
+        source_files = verified_schematic_sources(
+            root, relative_path, project_directory, coach.source_hashes
+        )
 
         unconnected_pins = frozenset(
             pin for pins in coach.observed.unconnected_nets.values() for pin in pins

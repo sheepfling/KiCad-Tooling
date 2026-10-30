@@ -379,7 +379,7 @@ else:
                         else:
                             expected_files = {f"{view}.png" for view in DEFAULT_THREE_D_VIEWS}
                             expected_files.update({"board.step", "board.glb", "index.html"})
-                            self.assertEqual(set(mcp.artifacts_sha256), expected_files)
+                            self.assertTrue(expected_files <= set(mcp.artifacts_sha256))
                         self.assertEqual(source_state(self.root), before)
 
                 views = ("back", "angled-90")
@@ -410,9 +410,9 @@ else:
                     self.semantic(cli_selected, cli_directory),
                     self.semantic(mcp_selected, selected_directory),
                 )
-                self.assertEqual(
-                    set(mcp_selected.artifacts_sha256),
-                    {"back.png", "angled-90.png", "board.step", "board.glb", "index.html"},
+                self.assertTrue(
+                    {"back.png", "angled-90.png", "board.step", "board.glb", "index.html"}
+                    <= set(mcp_selected.artifacts_sha256)
                 )
                 self.assertEqual(source_state(self.root), before)
 

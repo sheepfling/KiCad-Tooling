@@ -28,6 +28,7 @@ from kicad_tooling.hwrepo.models import (
     PurchasingReport,
     ValidationSummary,
 )
+from kicad_tooling.hwrepo.parts_receipts import PartsOutputManifest, read_parts_receipt
 from kicad_tooling.hwrepo.parts_view import render_html
 from kicad_tooling.hwrepo.parts_workflow import (
     init_preferences,
@@ -199,6 +200,19 @@ class PartsWorkflowTests(unittest.TestCase):
         self.assertTrue((receipt / "digikey.csv").is_file())
         save_report(receipt, report)
         self.assertEqual(read_model(receipt / "report.json", PurchasingReport), report)
+        manifest = read_model(receipt / "parts-artifacts.json", PartsOutputManifest)
+        self.assertEqual(manifest.report_sha256, digest(receipt / "report.json"))
+        self.assertEqual(
+            set(manifest.artifacts_sha256),
+            {"index.html", "report.txt", *report.artifacts},
+        )
+        self.assertTrue(
+            all(digest(receipt / name) == sha for name, sha in manifest.artifacts_sha256.items())
+        )
+        read_parts_receipt(self.root, receipt / "report.json", report.project_id)
+        (receipt / "report.json").write_bytes((receipt / "report.json").read_bytes() + b"\n")
+        with self.assertRaisesRegex(ValueError, "manifest does not bind"):
+            read_parts_receipt(self.root, receipt / "report.json", report.project_id)
 
     def test_source_catalog_and_preferences_drift_blocks_publication(self) -> None:
         preferences = self.island / "docs/purchasing.json"

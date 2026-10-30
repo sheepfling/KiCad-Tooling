@@ -21,6 +21,32 @@ only the retained views and exchange files. If a retained file changes or goes
 missing during the export, the receipt fails and the gallery omits it. No gallery
 is created when the run produces no outputs, including a model-only check.
 
+When a complete, self-contained GLB was retained, the gallery also links to
+`viewer.html`. Open it directly from the receipt, including with a `file://`
+browser URL. Drag to rotate, Shift-drag or right-drag to pan, and scroll to zoom.
+The Fit, orientation, pan, and zoom buttons work by keyboard. Focus the model
+for arrow-key rotation, Shift plus arrow-key pan, `+`/`-` zoom, and `F` fit. The page
+embeds the exact GLB bytes checked against `board.glb` and records the board
+source hashes, model-coverage status, export notes, and links to retained
+exchange files and `visualization.json`. It also retains `viewer.js` and its
+MIT license in the receipt, with all three viewer files hashed in the report.
+No network request or local server is needed to render the snapshot.
+
+An opt-in browser regression opens the retained sample GLB directly from disk
+and exercises the orientation, zoom, and keyboard controls. Set
+`KICAD_VIEWER_BROWSER` to an installed Chrome-family executable and run
+`python -I -m pytest tests/test_three_d_viewer_browser.py -q` from this tooling
+checkout. The check needs a browser that can run headless with WebGL; it skips
+when no browser path is provided. It checks that the page renders, responds to
+controls, and loads no remote resources.
+
+A missing, truncated, or structurally invalid GLB is excluded from the gallery
+and fails the export receipt. A GLB with external image or buffer references
+remains an exchange file, but gets no offline viewer link. If the browser lacks
+WebGL or the model cannot render, the viewer displays an error. The viewer is a
+visual aid; missing model assignments are still shown as review notes, and a
+rendered board does not establish enclosure fit or clearance.
+
 Straight-on renders request a 1600 by 900 canvas. Angled renders request a square
 1600 by 1600 canvas and a camera margin so quarter-turn views have room for the board.
 Inspect unusually tall components and unusual board geometry for clipping.
@@ -43,6 +69,18 @@ full bundle, or pass an array such as `['top', 'angled', 'angled-90']`. Its
 
 Inspect the actual images and geometry before making mechanical decisions. A
 render is a review aid, not physical-fit or manufacturing approval.
+
+For a project-owned adjacent enclosure GLB and explicit coordinate placement,
+see [mechanical assembly review](ASSEMBLY_REVIEW.md).
+
+The offline renderer is bundled from Three.js `0.181.0` and esbuild `0.25.12`.
+Its editable source is `kicad_tooling/hwrepo/assets/three_d_viewer.src.js`; the
+checked-in browser bundle is `three_d_viewer.js`. To rebuild it, install those
+exact npm packages in a temporary directory, copy the source beside its
+`node_modules`, then run esbuild with `--bundle --format=iife --minify
+--target=es2020` and the license banner. The package includes the upstream
+Three.js MIT license as `threejs-LICENSE.txt`. Runtime receipts use the bundled
+copy and do not fetch npm packages.
 
 ## Portable preview orchestration
 

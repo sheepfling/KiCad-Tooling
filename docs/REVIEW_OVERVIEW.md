@@ -24,9 +24,11 @@ with `--allow-exports`; it takes the same selected receipt paths plus a fresh
 
 The native receipt supplies schematic and PCB SVG links only for recorded,
 hash-matched outputs. Findings, 3D, and chart links likewise require their
-saved artifact hashes. The parts report saves source/input and netlist hashes,
-but its HTML and CSV outputs do not yet have saved artifact hashes; those links
-are labelled **snapshot hash only**. Verification's top-level report has no
+saved artifact hashes. A new parts receipt includes `parts-artifacts.json`,
+which binds `report.json` to its HTML, text, and CSV hashes. The overview links
+only matching outputs and marks changed or missing ones stale. Older parts
+receipts without this manifest remain **snapshot hash only** and have unknown
+output freshness. Verification's top-level report has no
 standalone source hash inventory. Inspect the stage receipts for its evidence.
 
 Each card retains the original check status separately from freshness:

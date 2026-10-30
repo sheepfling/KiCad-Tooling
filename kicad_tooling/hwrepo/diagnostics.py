@@ -8,7 +8,7 @@ import xml.etree.ElementTree as ET
 from collections import Counter
 from collections.abc import Sequence
 from contextlib import nullcontext
-from pathlib import Path, PurePosixPath, PureWindowsPath
+from pathlib import Path, PureWindowsPath
 from typing import Literal
 
 from ..platforms import is_windows_host
@@ -29,7 +29,7 @@ from .part_catalog_models import (
     PartStatus,
 )
 from .project_models import ProjectKind, ProjectManifest, ToolchainsCatalog
-from .repository import cad_dependencies
+from .repository import cad_dependencies, import_source_roots
 from .selection import ProjectSelector, resolve_project_ids
 
 IMPORT_GUIDE = "docs/workflow/IMPORT_WORKFLOW.md"
@@ -158,12 +158,7 @@ def diagnose_import(
         toolchain = next(item for item in toolchains.toolchains if item.id == toolchain_id)
         major = toolchain.kicad_version.split(".")[0]
         copied = frozenset(preview.copied_sha256)
-        source_roots: set[str] = set()
-        for name in copied:
-            parent = PurePosixPath(name).parent
-            while parent != PurePosixPath("."):
-                source_roots.add(parent.as_posix())
-                parent = parent.parent
+        source_roots = import_source_roots(copied)
         source_dir = source.parent.resolve()
         for name in sorted(copied):
             path = source_dir / name

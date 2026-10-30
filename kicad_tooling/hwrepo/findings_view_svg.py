@@ -20,6 +20,32 @@ class DrawingSvg:
     can_map_mm: bool
 
 
+def schematic_title_identity(content: bytes) -> tuple[tuple[str, ...], str] | None:
+    """Read unique hidden sheet/file title fields from a sanitized KiCad SVG."""
+    try:
+        root = ET.fromstring(content)
+    except ET.ParseError:
+        return None
+    labels = [
+        (node.text or "").strip()
+        for node in root.iter(f"{{{SVG}}}text")
+        if node.attrib.get("opacity") == "0"
+        and node.attrib.get("stroke-opacity") == "0"
+        and node.attrib.get("text-anchor") == "start"
+    ]
+    sheets = [label.removeprefix("Sheet: ") for label in labels if label.startswith("Sheet: ")]
+    files = [label.removeprefix("File: ") for label in labels if label.startswith("File: ")]
+    if len(sheets) != 1 or len(files) != 1:
+        return None
+    sheet = sheets[0]
+    if not sheet.startswith("/") or (sheet != "/" and not sheet.endswith("/")):
+        return None
+    names = () if sheet == "/" else tuple(sheet[1:-1].split("/"))
+    if any(not name for name in names) or "/" in files[0] or "\\" in files[0]:
+        return None
+    return names, files[0]
+
+
 def prepare_drawing(data: bytes, kind: str) -> DrawingSvg:
     """Strip the document type and reject active/external content before embedding."""
     try:

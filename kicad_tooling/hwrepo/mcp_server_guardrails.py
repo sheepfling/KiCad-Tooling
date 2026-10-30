@@ -20,6 +20,7 @@ def import_path(
     scopes: tuple[Path, ...],
     *,
     directory: bool = False,
+    require_project: bool = True,
 ) -> Path:
     """Authorize a source before the importer resolves its parent or reads siblings."""
     candidate = Path(source).expanduser()
@@ -33,8 +34,12 @@ def import_path(
             if directory:
                 if not path.is_dir():
                     raise ValueError("Select an existing import source directory")
-            elif path.suffix != ".kicad_pro" or not path.is_file():
-                raise ValueError("Select an existing .kicad_pro file, not a directory")
+            elif not path.is_file() or (require_project and path.suffix != ".kicad_pro"):
+                raise ValueError(
+                    "Select an existing .kicad_pro file, not a directory"
+                    if require_project
+                    else "Select an existing source file, not a directory"
+                )
             return path
     raise ValueError(
         "Import source is outside the checkout and configured --import-root directories"

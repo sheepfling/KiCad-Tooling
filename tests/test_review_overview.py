@@ -23,6 +23,7 @@ from kicad_tooling.hwrepo.models import (
     ThreeDReport,
     ValidationSummary,
 )
+from kicad_tooling.hwrepo.parts_workflow import save_report
 from kicad_tooling.hwrepo.review_overview import build_review_overview
 from kicad_tooling.hwrepo.review_overview_html import render_review_overview
 from kicad_tooling.hwrepo.review_overview_models import (
@@ -196,6 +197,49 @@ def test_overview_keeps_original_status_and_freshness_separate(
     assert "not an electrical" in html
     assert "https://" not in html
     assert not report.build_authorized
+
+
+def test_hash_bound_parts_outputs_are_current_then_stale(
+    saved_receipts: tuple[Path, dict[str, Path]],
+) -> None:
+    root, paths = saved_receipts
+    parts_path = paths["parts"]
+    saved = read_model(parts_path, PurchasingReport)
+    save_report(parts_path.parent, saved)
+    current = build_review_overview(
+        root,
+        "controller",
+        parts_report=parts_path,
+        output=Path("build/review-overview/parts-current"),
+    )
+    item = next(item for item in current.items if item.kind == "parts")
+    assert item.freshness == "CURRENT"
+    assert {link.label for link in item.links} >= {"Open parts checklist", "bom.csv"}
+    assert all(link.receipt_bound for link in item.links if link.label != "Selected receipt")
+    bom = parts_path.parent / "bom.csv"
+    original_bom = bom.read_bytes()
+    bom.write_text("changed", encoding="utf-8")
+    stale = build_review_overview(
+        root,
+        "controller",
+        parts_report=parts_path,
+        output=Path("build/review-overview/parts-stale"),
+    )
+    item = next(item for item in stale.items if item.kind == "parts")
+    assert item.freshness == "STALE"
+    assert not any(link.label == "bom.csv" for link in item.links)
+    assert any("bom.csv" in issue for issue in item.issues)
+    bom.write_bytes(original_bom)
+    (parts_path.parent / "index.html").write_text("changed", encoding="utf-8")
+    stale_page = build_review_overview(
+        root,
+        "controller",
+        parts_report=parts_path,
+        output=Path("build/review-overview/parts-page-stale"),
+    )
+    item = next(item for item in stale_page.items if item.kind == "parts")
+    assert item.freshness == "STALE"
+    assert not any(link.label == "Open parts checklist" for link in item.links)
 
 
 def test_mixed_revisions_changed_artifacts_and_missing_selection(

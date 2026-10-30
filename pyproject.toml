@@ -57,6 +57,8 @@ include = ["kicad_tooling", "kicad_tooling.*"]
   "pcb_variant_probe.py.in",
   "schematic-text-metrics.json",
   "fixtures/*.kicad_pcb",
+  "assets/three_d_viewer.js",
+  "assets/threejs-LICENSE.txt",
 ]
 
 [tool.pytest.ini_options]

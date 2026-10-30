@@ -28,7 +28,7 @@ PNG = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg=="
 )
 STEP = b"ISO-10303-21;\nHEADER;\nENDSEC;\nDATA;\nENDSEC;\nEND-ISO-10303-21;\n"
-GLB = bytes.fromhex("676c5446020000001c000000080000004a534f4e7b7d202020202020")
+GLB = (Path(__file__).parent / "fixtures" / "three_d_board.glb").read_bytes()
 
 
 def passing_doctor() -> TemplateDoctorReport:
@@ -284,10 +284,14 @@ class VisualizeTests(unittest.TestCase):
             good = generate(self.root, PROJECT, runner="local", output=Path("build/good-export"))
         self.assertEqual(good.status, "PASS", good.next_actions)
         self.assertEqual(good.runner, "local")
-        self.assertEqual(set(good.artifacts_sha256), set(payloads) | {"index.html"})
+        self.assertEqual(
+            set(good.artifacts_sha256),
+            set(payloads) | {"index.html", "viewer.html", "viewer.js", "viewer-license.txt"},
+        )
         gallery = (Path(good.run_directory) / "index.html").read_text(encoding="utf-8")
         self.assertIn('src="top.png"', gallery)
         self.assertIn('href="board.glb"', gallery)
+        self.assertIn('href="viewer.html"', gallery)
         self.assertIn("Export status: <strong>PASS</strong>", gallery)
         for filename, payload in payloads.items():
             self.assertEqual(good.artifacts_sha256[filename], hashlib.sha256(payload).hexdigest())
@@ -358,7 +362,10 @@ class VisualizeTests(unittest.TestCase):
             )
         self.assertEqual(report.status, "PASS", report.next_actions)
         self.assertEqual(set(report.commands), {"version", "back", "angled-90", "step", "glb"})
-        self.assertEqual(set(report.artifacts_sha256), set(payloads) | {"index.html"})
+        self.assertEqual(
+            set(report.artifacts_sha256),
+            set(payloads) | {"index.html", "viewer.html", "viewer.js", "viewer-license.txt"},
+        )
         gallery = (Path(report.run_directory) / "index.html").read_text(encoding="utf-8")
         self.assertIn('src="back.png"', gallery)
         self.assertNotIn('src="top.png"', gallery)
@@ -398,7 +405,17 @@ class VisualizeTests(unittest.TestCase):
         self.assertEqual(report.status, "FAIL")
         self.assertNotIn("top.png", report.artifacts_sha256)
         self.assertIn("top.png", report.next_actions[0])
-        self.assertEqual(set(report.artifacts_sha256), {"board.step", "board.glb", "index.html"})
+        self.assertEqual(
+            set(report.artifacts_sha256),
+            {
+                "board.step",
+                "board.glb",
+                "index.html",
+                "viewer.html",
+                "viewer.js",
+                "viewer-license.txt",
+            },
+        )
         gallery = (Path(report.run_directory) / "index.html").read_text(encoding="utf-8")
         self.assertIn("Export status: <strong>FAIL</strong>", gallery)
         self.assertIn("Recorded files missing or changed: top.png", gallery)

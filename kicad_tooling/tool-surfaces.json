@@ -2,6 +2,30 @@
   "schema_version": "2",
   "cli": [
     {
+      "module": "kicad_tooling.assembly_review",
+      "commands": [],
+      "options": [
+        "--board-receipt",
+        "--format",
+        "--output",
+        "--placement-contract",
+        "--project",
+        "--root"
+      ]
+    },
+    {
+      "module": "kicad_tooling.bom_compare",
+      "commands": [],
+      "options": [
+        "--after",
+        "--before",
+        "--format",
+        "--output",
+        "--project",
+        "--root"
+      ]
+    },
+    {
       "module": "kicad_tooling.check_all",
       "commands": [],
       "options": [
@@ -120,6 +144,18 @@
       ]
     },
     {
+      "module": "kicad_tooling.cross_probe",
+      "commands": [],
+      "options": [
+        "--findings-view",
+        "--format",
+        "--output",
+        "--parts-report",
+        "--project",
+        "--root"
+      ]
+    },
+    {
       "module": "kicad_tooling.design_lint",
       "commands": [],
       "options": [
@@ -204,6 +240,17 @@
       ]
     },
     {
+      "module": "kicad_tooling.grounding_view",
+      "commands": [],
+      "options": [
+        "--format",
+        "--net",
+        "--output",
+        "--receipt",
+        "--root"
+      ]
+    },
+    {
       "module": "kicad_tooling.hardware",
       "commands": [
         "check",
@@ -240,6 +287,18 @@
       ]
     },
     {
+      "module": "kicad_tooling.import_review",
+      "commands": [],
+      "options": [
+        "--format",
+        "--output",
+        "--project-id",
+        "--root",
+        "--source",
+        "--toolchain"
+      ]
+    },
+    {
       "module": "kicad_tooling.lint_registry",
       "commands": [],
       "options": [
@@ -264,6 +323,34 @@
         "--allow-writes",
         "--import-root",
         "--root"
+      ]
+    },
+    {
+      "module": "kicad_tooling.measured_comparison",
+      "commands": [],
+      "options": [
+        "--alignment",
+        "--baseline",
+        "--candidate",
+        "--channel",
+        "--format",
+        "--output",
+        "--project",
+        "--root"
+      ]
+    },
+    {
+      "module": "kicad_tooling.measured_series",
+      "commands": [],
+      "options": [
+        "--channel",
+        "--format",
+        "--output",
+        "--project",
+        "--root",
+        "--source",
+        "--time-column",
+        "--time-unit"
       ]
     },
     {
@@ -322,6 +409,53 @@
       ]
     },
     {
+      "module": "kicad_tooling.physical_voltage",
+      "commands": [],
+      "options": [
+        "--capture",
+        "--format",
+        "--measured-receipt",
+        "--output",
+        "--project",
+        "--requirement",
+        "--root"
+      ]
+    },
+    {
+      "module": "kicad_tooling.power_tree_view",
+      "commands": [],
+      "options": [
+        "--format",
+        "--output",
+        "--rail",
+        "--receipt",
+        "--root"
+      ]
+    },
+    {
+      "module": "kicad_tooling.product_visual",
+      "commands": [],
+      "options": [
+        "--format",
+        "--output",
+        "--product",
+        "--root",
+        "--variant"
+      ]
+    },
+    {
+      "module": "kicad_tooling.product_variant_bom",
+      "commands": [],
+      "options": [
+        "--after-variant",
+        "--before-variant",
+        "--format",
+        "--output",
+        "--product",
+        "--root"
+      ]
+    },
+    {
       "module": "kicad_tooling.release",
       "commands": [
         "check",
@@ -350,6 +484,20 @@
       ]
     },
     {
+      "module": "kicad_tooling.review_handoff",
+      "commands": [],
+      "options": [
+        "--baseline",
+        "--candidate",
+        "--fingerprint",
+        "--format",
+        "--notes",
+        "--output",
+        "--project",
+        "--root"
+      ]
+    },
+    {
       "module": "kicad_tooling.review_overview",
       "commands": [],
       "options": [
@@ -372,6 +520,21 @@
         "--format",
         "--root",
         "--snapshot"
+      ]
+    },
+    {
+      "module": "kicad_tooling.supplier_analysis",
+      "commands": [],
+      "options": [
+        "--after",
+        "--as-of",
+        "--before",
+        "--format",
+        "--max-age-days",
+        "--output",
+        "--parts-receipt",
+        "--project",
+        "--root"
       ]
     },
     {
@@ -415,6 +578,7 @@
         "--native-report",
         "--ngspice",
         "--project-id",
+        "--review-receipt",
         "--root",
         "--runner",
         "--source",
@@ -430,6 +594,20 @@
         "--cli",
         "--config",
         "--output",
+        "--root"
+      ]
+    },
+    {
+      "module": "kicad_tooling.verification_history",
+      "commands": [],
+      "options": [
+        "--baseline",
+        "--baseline-release",
+        "--candidate",
+        "--candidate-release",
+        "--format",
+        "--output",
+        "--project",
         "--root"
       ]
     },
@@ -593,6 +771,47 @@
       ]
     },
     {
+      "name": "compare_measured_runs",
+      "parameters": [
+        "alignment",
+        "baseline",
+        "candidate",
+        "channel",
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "compare_parts_bom",
+      "parameters": [
+        "after",
+        "before",
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "compare_product_variant_bom",
+      "parameters": [
+        "after_variant",
+        "before_variant",
+        "product_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "compare_supplier_offers",
+      "parameters": [
+        "after",
+        "as_of",
+        "before",
+        "max_age_days",
+        "parts_receipt",
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
       "name": "convert_pcb",
       "parameters": [
         "input_format",
@@ -639,6 +858,24 @@
       ]
     },
     {
+      "name": "export_assembly_review",
+      "parameters": [
+        "board_receipt",
+        "placement_contract",
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "export_bom_cross_probe",
+      "parameters": [
+        "findings_view",
+        "parts_report",
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
       "name": "export_electrical_chart_suite",
       "parameters": [
         "suite",
@@ -662,12 +899,66 @@
       ]
     },
     {
+      "name": "export_grounding_view",
+      "parameters": [
+        "net",
+        "receipt",
+        "view_id"
+      ]
+    },
+    {
+      "name": "export_import_review",
+      "parameters": [
+        "project_id",
+        "source",
+        "toolchain_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "export_physical_voltage_review",
+      "parameters": [
+        "capture",
+        "measured_receipt",
+        "project_id",
+        "requirement",
+        "view_id"
+      ]
+    },
+    {
+      "name": "export_power_tree_view",
+      "parameters": [
+        "rail",
+        "receipt",
+        "view_id"
+      ]
+    },
+    {
+      "name": "export_product_visual",
+      "parameters": [
+        "product_id",
+        "variant_id",
+        "view_id"
+      ]
+    },
+    {
       "name": "export_project",
       "parameters": [
         "assembly_variant",
         "export_id",
         "project_id",
         "runner"
+      ]
+    },
+    {
+      "name": "export_review_handoff_packet",
+      "parameters": [
+        "baseline",
+        "candidate",
+        "fingerprints",
+        "notes",
+        "project_id",
+        "view_id"
       ]
     },
     {
@@ -680,6 +971,17 @@
         "project_id",
         "three_d_report",
         "verification_report",
+        "view_id"
+      ]
+    },
+    {
+      "name": "export_verification_history",
+      "parameters": [
+        "baseline",
+        "baseline_release",
+        "candidate",
+        "candidate_release",
+        "project_id",
         "view_id"
       ]
     },
@@ -700,9 +1002,21 @@
       ]
     },
     {
+      "name": "import_measured_time_series",
+      "parameters": [
+        "channels",
+        "project_id",
+        "source",
+        "time_column",
+        "time_unit",
+        "view_id"
+      ]
+    },
+    {
       "name": "import_project",
       "parameters": [
         "project_id",
+        "review_receipt",
         "source",
         "toolchain_id"
       ]
@@ -993,6 +1307,105 @@
   ],
   "capabilities": [
     {
+      "id": "mechanical-assembly-review",
+      "cli": [
+        "kicad_tooling.assembly_review"
+      ],
+      "mcp": [
+        "export_assembly_review"
+      ],
+      "alignment": "aligned",
+      "reason": "Both join an explicit current board 3D receipt and project-owned, hash-bound adjacent GLB placement contract into the same offline visual overlay.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id. Units and named frames are explicit; an absent or stale enclosure or missing placement produces an incomplete board-only review.",
+        "No mesh interference, tolerance, clearance, or physical-fit calculation is performed."
+      ],
+      "parity_tests": [
+        "tests.test_assembly_review.test_cli_mcp_assembly_review_parity"
+      ]
+    },
+    {
+      "id": "product-visual-review",
+      "cli": [
+        "kicad_tooling.product_visual"
+      ],
+      "mcp": [
+        "export_product_visual"
+      ],
+      "alignment": "aligned",
+      "reason": "Both project one selected authored product variant through the canonical assembly, system and harness services into a source-bound offline review.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id. Broken references remain visible with issues and no canonical system or harness projection.",
+        "All lines are authored product relations, not observed wiring or build approval."
+      ],
+      "parity_tests": [
+        "tests.test_product_visual.test_cli_mcp_product_visual_parity"
+      ]
+    },
+    {
+      "id": "product-variant-bom-comparison",
+      "cli": [
+        "kicad_tooling.product_variant_bom"
+      ],
+      "mcp": [
+        "compare_product_variant_bom"
+      ],
+      "alignment": "aligned",
+      "reason": "Both compare two explicit authored product variants using the canonical BOM projection and retain source-bound per-variant visual reviews.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id. Only variants of one product source revision can be compared.",
+        "Unresolved product contracts keep instance differences visible but prevent canonical BOM quantity projection; no purchase or build approval is granted."
+      ],
+      "parity_tests": [
+        "tests.test_product_variant_bom.test_cli_mcp_product_variant_bom_parity"
+      ]
+    },
+    {
+      "id": "bom-comparison",
+      "cli": [
+        "kicad_tooling.bom_compare"
+      ],
+      "mcp": [
+        "compare_parts_bom"
+      ],
+      "alignment": "aligned",
+      "reason": "Both compare two explicit source-bound parts plans and retain reference, population, identity, revision, finding, and grouped quantity differences.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports. The selected receipts must belong to the same project and retain their exact netlists. Parts receipts do not record a variant identity, so the comparison labels that scope as unknown."
+      ],
+      "parity_tests": [
+        "tests.test_bom_compare.test_cli_mcp_bom_compare_parity"
+      ]
+    },
+    {
+      "id": "bom-design-cross-probe",
+      "cli": [
+        "kicad_tooling.cross_probe"
+      ],
+      "mcp": [
+        "export_bom_cross_probe"
+      ],
+      "alignment": "aligned",
+      "reason": "Both join explicit source-matched parts and findings-drawing receipts, locate exact fitted references in saved PCB and schematic sources, and create a local reversible marker view without rerunning native tools.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id. Duplicate, DNP, excluded, unplaced, back-side and unsupported locations remain visible without implying a valid matched placement.",
+        "Hierarchical symbols retain source coordinates and sheet-instance paths; only a uniquely mapped root schematic drawing gets markers. Variant identity is not recorded by the selected receipts."
+      ],
+      "parity_tests": [
+        "tests.test_cross_probe.test_cli_mcp_cross_probe_parity"
+      ]
+    },
+    {
       "id": "project-inventory",
       "cli": [
         "kicad_tooling.template list"
@@ -1075,11 +1488,33 @@
       "gaps": [],
       "constraints": [
         "MCP source paths must stay within the fixed checkout or startup import roots; CLI accepts caller-selected sources.",
-        "CLI uses --dry-run; MCP separates preview from creation and gates creation with allow-writes."
+        "CLI uses --dry-run; MCP separates preview from creation and gates creation with allow-writes.",
+        "Both surfaces optionally require a saved import review receipt and reject changed copied source or repository configuration before creation."
       ],
       "parity_tests": [
         "tests.test_mcp_parity_imports.test_import_preview_parity",
-        "tests.test_mcp_parity_imports.test_import_write_parity"
+        "tests.test_mcp_parity_imports.test_import_write_parity",
+        "tests.test_import_review.test_cli_mcp_import_review_parity"
+      ]
+    },
+    {
+      "id": "import-onboarding-review",
+      "cli": [
+        "kicad_tooling.import_review"
+      ],
+      "mcp": [
+        "export_import_review"
+      ],
+      "alignment": "aligned",
+      "reason": "Both render the ordinary dry-run import and diagnostics as one source-bound offline review with files, CAD references, toolchain, and actions.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and permits only its configured import roots; CLI accepts an explicitly selected source file.",
+        "A clear preview is not engineering validation or import approval; applying it remains a separate write operation."
+      ],
+      "parity_tests": [
+        "tests.test_import_review.test_cli_mcp_import_review_parity"
       ]
     },
     {
@@ -1390,12 +1825,12 @@
         "export_3d"
       ],
       "alignment": "aligned",
-      "reason": "Both export six orthographic and four angled PCB views by default, or a matching selected view set, plus STEP and GLB using the selected exact runner and declared KiCad assembly variant. Retained outputs include an offline review gallery.",
+      "reason": "Both export six orthographic and four angled PCB views by default, or a matching selected view set, plus STEP and GLB using the selected exact runner and declared KiCad assembly variant. Retained outputs include an offline review gallery and, for a verified self-contained GLB, an interactive viewer snapshot.",
       "scope": "core",
       "gaps": [],
       "constraints": [
         "CLI repeats --view to select output images; MCP accepts the same names in views and defaults to all ten camera views.",
-        "The gallery links only to verified retained artifacts, and identifies failed partial exports.",
+        "The gallery links only to verified retained artifacts, identifies failed partial exports, and records the bundled offline viewer and its license when a self-contained GLB is available.",
         "CLI accepts --cli and --output; MCP selects a fresh directory by view_id and requires allow-checks plus allow-exports."
       ],
       "parity_tests": [
@@ -2000,6 +2435,45 @@
       ]
     },
     {
+      "id": "measured-series-import",
+      "cli": [
+        "kicad_tooling.measured_series"
+      ],
+      "mcp": [
+        "import_measured_time_series"
+      ],
+      "alignment": "aligned",
+      "reason": "Both import one bounded project-owned CSV through the same time and channel mapping service and retain source bytes, hashes, full-precision data, and offline plots.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id; the CLI chooses a fresh ignored build directory. The user declares time interpretation and each channel unit. No acceptance limit or physical origin is inferred."
+      ],
+      "parity_tests": [
+        "tests.test_measured_series_parity.test_cli_mcp_measured_series_parity"
+      ]
+    },
+    {
+      "id": "measured-series-comparison",
+      "cli": [
+        "kicad_tooling.measured_comparison"
+      ],
+      "mcp": [
+        "compare_measured_runs"
+      ],
+      "alignment": "aligned",
+      "reason": "Both overlay two explicit hash-verified measured receipts with selected channel and time alignment, retaining full source CSVs and offline interaction.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id. Selected channel units must match exactly; each saved artifact and report is verified before plotting.",
+        "Historical project sources are labeled. Traces are not interpolated and no acceptance limit or condition equivalence is inferred."
+      ],
+      "parity_tests": [
+        "tests.test_measured_comparison.test_cli_mcp_measured_comparison_parity"
+      ]
+    },
+    {
       "id": "project-review-overview",
       "cli": [
         "kicad_tooling.review_overview"
@@ -2020,6 +2494,65 @@
       ]
     },
     {
+      "id": "verification-history",
+      "cli": [
+        "kicad_tooling.verification_history"
+      ],
+      "mcp": [
+        "export_verification_history"
+      ],
+      "alignment": "aligned",
+      "reason": "Both compare two explicitly selected saved overview receipts and optional release manifests through the same typed history service.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id; neither surface chooses a revision or reruns a check.",
+        "Saved overview freshness is capture-time state; every snapshot is separately labeled against the live source at comparison time.",
+        "Release manifest status and artifact presence are separate from packaging and approval."
+      ],
+      "parity_tests": [
+        "tests.test_verification_history.test_cli_mcp_verification_history_parity"
+      ]
+    },
+    {
+      "id": "grounding-view",
+      "cli": [
+        "kicad_tooling.grounding_view"
+      ],
+      "mcp": [
+        "export_grounding_view"
+      ],
+      "alignment": "aligned",
+      "reason": "Both compare one explicitly authored ground domain with saved, hash-bound netlist observations and retain missing or unreviewed pins.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id. This view reports schematic netlist membership only; it does not infer common grounds or physical copper continuity."
+      ],
+      "parity_tests": [
+        "tests.test_grounding_view.test_cli_mcp_grounding_view_parity"
+      ]
+    },
+    {
+      "id": "power-tree-view",
+      "cli": [
+        "kicad_tooling.power_tree_view"
+      ],
+      "mcp": [
+        "export_power_tree_view"
+      ],
+      "alignment": "aligned",
+      "reason": "Both render one authored source/load rail with retained, hash-bound netlist membership and optional authored budget values.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id. Missing native evidence stays unreviewed; the view does not infer topology from net names or prove PCB copper or component behavior."
+      ],
+      "parity_tests": [
+        "tests.test_power_tree_view.test_cli_mcp_power_tree_view_parity"
+      ]
+    },
+    {
       "id": "findings-view",
       "cli": [
         "kicad_tooling.findings_view"
@@ -2032,11 +2565,12 @@
       "scope": "core",
       "gaps": [],
       "constraints": [
-        "Only supported PCB DRC and single-root schematic lint geometry receive markers; ERC, parity and unsupported locations remain listed.",
+        "Supported PCB DRC, source-bound schematic geometry, and exact KiCad 10.0.6 UUID-sheet ERC items receive markers only on verified drawings; parity and unsupported locations remain listed.",
         "MCP requires exports and chooses a fresh output by view_id; both surfaces read existing evidence and do not execute native tools."
       ],
       "parity_tests": [
-        "tests.test_findings_view_parity.test_cli_mcp_findings_view_parity"
+        "tests.test_findings_view_parity.test_cli_mcp_findings_view_parity",
+        "tests.test_findings_view_erc.test_cli_mcp_mapped_erc_parity"
       ]
     },
     {
@@ -2146,6 +2680,65 @@
         "tests.test_pcb_return_path_native_fixture_lane.test_native_return_path_fixture_cases_on_supported_kicad",
         "tests.test_ci_hosted_pcb_return_paths.test_pcb_return_fixture_checks_native_connectivity_zone_via_and_net_tie_evidence",
         "tests.test_ci_hosted_pcb_fixture_schedule.test_pcb_return_fixture_rejects_an_untested_kicad_minor_before_native_execution"
+      ]
+    },
+    {
+      "id": "physical-voltage-review",
+      "cli": [
+        "kicad_tooling.physical_voltage"
+      ],
+      "mcp": [
+        "export_physical_voltage_review"
+      ],
+      "alignment": "aligned",
+      "reason": "Both review the same saved measured-series receipt against project-owned capture context and an optional authored voltage envelope through one typed service.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id; CLI chooses a fresh ignored build directory. Exact units and conditions must match. Missing limits, stale evidence, and unsupported kinds are visible, and no physical origin or approval is inferred."
+      ],
+      "parity_tests": [
+        "tests.test_physical_voltage.test_cli_mcp_physical_voltage_parity"
+      ]
+    },
+    {
+      "id": "review-handoff",
+      "cli": [
+        "kicad_tooling.review_handoff"
+      ],
+      "mcp": [
+        "export_review_handoff_packet"
+      ],
+      "alignment": "aligned",
+      "reason": "Both package the same explicit overview snapshots, selected findings, and project-owned reviewer notes through one typed service.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id; CLI chooses a fresh ignored build directory. Notes stay project-owned and are read-only here; no approval is inferred.",
+        "Evidence is retained only when selected receipt hashes still match; absent drawings and outdated fingerprints remain visible."
+      ],
+      "parity_tests": [
+        "tests.test_review_handoff.test_cli_mcp_review_handoff_parity"
+      ]
+    },
+    {
+      "id": "supplier-analysis",
+      "cli": [
+        "kicad_tooling.supplier_analysis"
+      ],
+      "mcp": [
+        "compare_supplier_offers"
+      ],
+      "alignment": "aligned",
+      "reason": "Both compare the same two explicit dated sourcing snapshots against one saved source-bound BOM using the same typed pricing service.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id; CLI chooses a fresh ignored build directory. As-of date and maximum age are explicit. Packaging is never assumed and currencies are never converted.",
+        "Availability, lead times and offer prices are recorded observations; neither surface places an order or authorizes purchasing."
+      ],
+      "parity_tests": [
+        "tests.test_supplier_analysis.test_cli_mcp_supplier_analysis_parity"
       ]
     }
   ]

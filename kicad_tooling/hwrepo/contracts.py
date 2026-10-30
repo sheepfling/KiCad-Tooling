@@ -18,41 +18,17 @@ from pydantic import BaseModel, JsonValue, TypeAdapter
 
 from .cad_source_models import CadProviderIdentity
 from .native_drc_findings import NativeDrcReport, parse_native_drc
+from .native_erc_report import KiCadErcItem as KiCadErcItem  # noqa: PLC0414 - compatibility
+from .native_erc_report import KiCadErcReport, parse_native_erc
+from .native_erc_report import (
+    KiCadErcViolation as KiCadErcViolation,  # noqa: PLC0414 - compatibility
+)
 from .project_models import (
     KiCadForeignImportSummary,
     ProjectManifest,
 )
 
 Model = TypeVar("Model", bound=BaseModel)
-
-
-@dataclass(frozen=True, slots=True)
-class KiCadErcItem:
-    """Small typed projection of one native ERC detail item."""
-
-    description: str | None
-    x: int | float | None
-    y: int | float | None
-
-
-@dataclass(frozen=True, slots=True)
-class KiCadErcViolation:
-    """Native ERC rule result used by deterministic fixture comparisons."""
-
-    type: str
-    severity: str
-    description: str | None
-    items: tuple[KiCadErcItem, ...]
-    excluded: bool = False
-    sheet_path: str = ""
-
-
-@dataclass(frozen=True, slots=True)
-class KiCadErcReport:
-    """Versioned, narrow projection of a KiCad ERC JSON report."""
-
-    kicad_version: str
-    violations: tuple[KiCadErcViolation, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -121,110 +97,8 @@ def _read_external_json(path: Path) -> JsonValue:
 
 
 def read_kicad_erc_report(path: Path) -> KiCadErcReport:
-    """Decode native ERC JSON into the exact fields used by fixture checks."""
-    document: JsonValue = _read_external_json(path)
-    if not isinstance(document, dict):
-        raise ValueError(f"{path}: expected an ERC report object")  # noqa: TRY004 - input boundary
-    report: dict[str, JsonValue] = cast(dict[str, JsonValue], document)
-    version = report.get("kicad_version")
-    if not isinstance(version, str) or not version.strip():
-        raise ValueError(f"{path}: ERC report has no KiCad version")
-    sheets = report.get("sheets")
-    if not isinstance(sheets, list):
-        raise ValueError(f"{path}: ERC report sheets must be a list")  # noqa: TRY004 - input boundary
-
-    violations: list[KiCadErcViolation] = []
-    raw_sheets: list[JsonValue] = cast(list[JsonValue], sheets)
-    for sheet_index, raw_value in enumerate(raw_sheets):
-        raw_sheet: JsonValue = raw_value
-        if not isinstance(raw_sheet, dict):
-            raise ValueError(f"{path}: ERC sheet {sheet_index} must be an object")  # noqa: TRY004 - input boundary
-        sheet: dict[str, JsonValue] = cast(dict[str, JsonValue], raw_sheet)
-        raw_violations = sheet.get("violations", [])
-        if not isinstance(raw_violations, list):
-            raise ValueError(f"{path}: ERC sheet {sheet_index} violations must be a list")  # noqa: TRY004 - input boundary
-        violation_values: list[JsonValue] = cast(list[JsonValue], raw_violations)
-        for violation_index, violation_value in enumerate(violation_values):
-            raw_violation: JsonValue = violation_value
-            if not isinstance(raw_violation, dict):
-                raise ValueError(  # noqa: TRY004 - input boundary
-                    f"{path}: ERC sheet {sheet_index} violation {violation_index} must be an object"
-                )
-            values: dict[str, JsonValue] = cast(dict[str, JsonValue], raw_violation)
-            violation_type = values.get("type")
-            severity = values.get("severity")
-            if not isinstance(violation_type, str) or not violation_type.strip():
-                raise ValueError(
-                    f"{path}: ERC sheet {sheet_index} violation {violation_index} has no type"
-                )
-            if not isinstance(severity, str) or not severity.strip():
-                raise ValueError(
-                    f"{path}: ERC sheet {sheet_index} violation {violation_index} has no severity"
-                )
-            description = values.get("description")
-            if description is not None and not isinstance(description, str):
-                raise ValueError(
-                    f"{path}: ERC sheet {sheet_index} violation {violation_index} has an invalid description"
-                )
-            excluded = values.get("excluded", False)
-            if not isinstance(excluded, bool):
-                raise ValueError(f"{path}: ERC finding has an invalid exclusion")  # noqa: TRY004 - native boundary
-            sheet_path = sheet.get("path", "")
-            if not isinstance(sheet_path, str):
-                raise ValueError(f"{path}: ERC sheet has an invalid path")  # noqa: TRY004 - native boundary
-            raw_items = values.get("items", [])
-            if not isinstance(raw_items, list):
-                raise ValueError(  # noqa: TRY004 - input boundary
-                    f"{path}: ERC sheet {sheet_index} violation {violation_index} items must be a list"
-                )
-            items: list[KiCadErcItem] = []
-            raw_item_values: list[JsonValue] = cast(list[JsonValue], raw_items)
-            for item_index, item_value in enumerate(raw_item_values):
-                raw_item: JsonValue = item_value
-                if not isinstance(raw_item, dict):
-                    raise ValueError(  # noqa: TRY004 - input boundary
-                        f"{path}: ERC sheet {sheet_index} violation {violation_index} item {item_index} must be an object"
-                    )
-                item: dict[str, JsonValue] = cast(dict[str, JsonValue], raw_item)
-                item_description = item.get("description")
-                if item_description is not None and not isinstance(item_description, str):
-                    raise ValueError(
-                        f"{path}: ERC sheet {sheet_index} violation {violation_index} item {item_index} has an invalid description"
-                    )
-                raw_position: JsonValue = item.get("pos", {})
-                if not isinstance(raw_position, dict):
-                    raise ValueError(  # noqa: TRY004 - input boundary
-                        f"{path}: ERC sheet {sheet_index} violation {violation_index} item {item_index} position must be an object"
-                    )
-                position: dict[str, JsonValue] = cast(dict[str, JsonValue], raw_position)
-                coordinates: list[int | float | None] = []
-                for axis in ("x", "y"):
-                    coordinate = position.get(axis)
-                    if coordinate is not None and (
-                        isinstance(coordinate, bool) or not isinstance(coordinate, (int, float))
-                    ):
-                        raise ValueError(
-                            f"{path}: ERC sheet {sheet_index} violation {violation_index} item {item_index} has an invalid {axis} coordinate"
-                        )
-                    coordinates.append(coordinate)
-                items.append(
-                    KiCadErcItem(
-                        description=item_description,
-                        x=coordinates[0],
-                        y=coordinates[1],
-                    )
-                )
-            violations.append(
-                KiCadErcViolation(
-                    type=violation_type,
-                    severity=severity,
-                    description=description,
-                    items=tuple(items),
-                    excluded=excluded,
-                    sheet_path=sheet_path,
-                )
-            )
-    return KiCadErcReport(kicad_version=version, violations=tuple(violations))
+    """Decode native ERC JSON at the shared boundary into typed review records."""
+    return parse_native_erc(_read_external_json(path))
 
 
 def read_kicad_drc_parity(path: Path) -> KiCadDrcParitySummary:

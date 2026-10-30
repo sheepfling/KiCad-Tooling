@@ -65,12 +65,16 @@ reviewed edits, exports, downloads, or supplier submissions. The template's
 
 The board renderer creates six orthographic and four angled views by default.
 See [3D view selection](docs/3D_VIEWS.md) to request a smaller view set from
-the CLI or MCP.
+the CLI or MCP. A verified self-contained GLB also gets an offline interactive
+viewer with rotate, pan, zoom, and orientation controls in the same receipt.
+For an explicitly positioned enclosure GLB, use `kicad-team assembly-review`
+or MCP `export_assembly_review`; see [mechanical assembly review](docs/ASSEMBLY_REVIEW.md).
 
 For a BOM and parts review, run `kicad-team parts --project <id>` from the
 project checkout. The text report lists the purchasing groups and their build
 quantities; the fresh receipt also contains `report.json`, `report.txt`, and
-`index.html`. When a plan is available, the page includes a searchable
+`index.html`, plus `parts-artifacts.json` with saved output hashes. When a plan
+is available, the page includes a searchable
 component checklist and the receipt includes a review BOM CSV. The
 checklist can filter by purchasing-group membership and findings independently,
 and its search works with both filters. Group membership alone does not resolve
@@ -78,14 +82,47 @@ part findings. The `prepare_parts` MCP tool returns the same structured plan. A 
 capture needs the project's exact KiCad toolchain; MCP also requires exports
 and checks to be enabled, or a saved source-bound native summary can be used.
 Unresolved components still need review before a purchasing list is ready.
+Two saved parts receipts can be compared with `kicad-team bom-compare` or MCP
+`compare_parts_bom`; see [BOM comparison](docs/BOM_COMPARISON.md).
+Two authored variants of one product can be compared with
+`kicad-team product-variant-bom` or MCP `compare_product_variant_bom`; the
+same [BOM comparison guide](docs/BOM_COMPARISON.md) explains both scopes.
+To navigate from a source-matched parts receipt to saved schematic and PCB
+drawings, use `kicad-team cross-probe` or MCP `export_bom_cross_probe`; see
+[BOM cross-probing](docs/CROSS_PROBE.md).
+To inspect one authored return net against saved netlist evidence, use
+`kicad-team grounding-view` or MCP `export_grounding_view`; see
+[grounding view](docs/GROUNDING_VIEW.md).
+To inspect one authored power rail's source groups, loads, netlist membership,
+and current budget, use `kicad-team power-tree-view` or MCP
+`export_power_tree_view`; see [power-tree view](docs/POWER_TREE_VIEW.md).
+To explore one product variant's assembly and harness relationships, use
+`kicad-team product-visual` or MCP `export_product_visual`; see
+[product visual review](docs/PRODUCT_VISUAL.md).
+To compare two saved project review snapshots and optional release manifests,
+use `kicad-team verification-history` or MCP `export_verification_history`;
+see [verification history](docs/VERIFICATION_HISTORY.md).
+To carry selected findings and attributed reviewer notes across two saved
+revisions, use `kicad-team review-handoff` or MCP
+`export_review_handoff_packet`; see [review handoff](docs/REVIEW_HANDOFF.md).
+To compare two dated supplier snapshots for a saved BOM, use
+`kicad-team supplier-analysis` or MCP `compare_supplier_offers`; see
+[supplier analysis](docs/SUPPLIER_ANALYSIS.md).
 
 To plot retained simulation waveforms, install the `charts` extra and run
 `kicad-team electrical-charts --receipt build/<electrical-run>/electrical.json`
 from the project checkout. This exports PNG, SVG, and full-precision CSV from
 the saved, hash-checked transient and AC data without rerunning the simulation.
 MCP exposes the same operation as `export_electrical_charts` when exports are
-enabled. These charts cover declared simulation cases; they do not import
-arbitrary measurement or telemetry files. See [waveform charts](docs/WAVEFORM_CHARTS.md)
+enabled. These charts cover declared simulation cases. Project-owned CSV
+measurements use `kicad-team measured-series` or MCP `import_measured_time_series`
+with explicit time and channel units; see [measured series](docs/MEASURED_SERIES.md).
+To overlay two saved runs, use `kicad-team measured-comparison` or MCP
+`compare_measured_runs` with one channel and explicit time alignment.
+For one authored voltage envelope, use `kicad-team physical-voltage` or MCP
+`export_physical_voltage_review` on a saved measured-series receipt; see
+[physical voltage review](docs/PHYSICAL_VOLTAGE.md).
+See [waveform charts](docs/WAVEFORM_CHARTS.md)
 for the full-run and measurement-window views.
 
 For schematic and PCB review, [explore saved findings](docs/FINDINGS_VIEW.md)
@@ -96,6 +133,10 @@ receipts together, create an offline [project review overview](docs/REVIEW_OVERV
 It shows the original status and whether each receipt is current, stale, missing,
 unavailable, or of unknown freshness. CLI and the export-enabled MCP server use
 the same saved-evidence service.
+For a source file that has not yet been imported, create an offline
+[import and onboarding review](docs/IMPORT_REVIEW.md) to inspect files, CAD
+dependencies, the declared toolchain, and repair actions. A saved review can
+also guard the later explicit import against changed source.
 
 ## Configure another layout or KiCad version
 

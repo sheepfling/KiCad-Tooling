@@ -15,6 +15,7 @@ from .models import (
     ValidationSummary,
 )
 from .native_summary_binding import validate_native_toolchain
+from .parts_receipts import read_parts_output_manifest
 from .project_models import ProjectKind
 from .review_overview_evidence import (
     ReviewContext,
@@ -224,19 +225,40 @@ def _parts(context: ReviewContext, path: Path) -> OverviewItem:
             stale.append("Retained parts netlist changed or is missing.")
     else:
         unknown.append("Parts receipt has no retained netlist hash.")
+    manifest_path = path.parent / "parts-artifacts.json"
+    manifest_present = manifest_path.exists() or manifest_path.is_symlink()
+    recorded: dict[str, str] = {}
+    if manifest_present:
+        try:
+            manifest = read_parts_output_manifest(path.parent, checksum)
+        except (OSError, ValueError):
+            stale.append("Parts output manifest is invalid or no longer binds the report.")
+        else:
+            if manifest is not None:
+                recorded = dict(manifest.artifacts_sha256)
+                artifact_stale, artifact_unknown = _integrity(context, path, recorded)
+                stale.extend(artifact_stale)
+                unknown.extend(artifact_unknown)
+                for name in ("index.html", "report.txt", *report.artifacts):
+                    if name not in recorded:
+                        stale.append(f"Parts output has no recorded hash: {name}")
+    else:
+        unknown.append(
+            "Parts HTML and CSV outputs have no saved artifact hashes; links are snapshot-only."
+        )
     links: list[OverviewLink] = []
     for name, label in (
         ("index.html", "Open parts checklist"),
         *((item, item) for item in report.artifacts),
     ):
-        link = checked_link(context, path.parent / name, label)
+        if manifest_present and name not in recorded:
+            continue
+        link = checked_link(context, path.parent / name, label, recorded.get(name))
         if link is None:
-            stale.append(f"Parts output changed or is missing: {name}")
+            if not manifest_present:
+                stale.append(f"Parts output changed or is missing: {name}")
         else:
             links.append(link)
-    unknown.append(
-        "Parts HTML and CSV outputs have no saved artifact hashes; links are snapshot-only."
-    )
     return _result(
         context,
         "parts",

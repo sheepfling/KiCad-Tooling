@@ -13,6 +13,7 @@ from .evidence import digest
 from .layout import CONFIG_NAME, layout
 from .models import PurchasingReport
 from .part_catalog_models import PartsCatalog
+from .parts_receipts import PartsOutputManifest
 from .parts_view import render_html
 from .project_models import (
     ProjectManifest,
@@ -323,3 +324,11 @@ def save_report(output: Path, report: PurchasingReport) -> None:
     write_model(output / "report.json", report)
     (output / "report.txt").write_text(text_report(report) + "\n", encoding="utf-8")
     (output / "index.html").write_text(render_html(report), encoding="utf-8")
+    names = ("index.html", "report.txt", *report.artifacts)
+    write_model(
+        output / "parts-artifacts.json",
+        PartsOutputManifest(
+            report_sha256=digest(output / "report.json"),
+            artifacts_sha256={name: digest(repo_path(output, name)) for name in names},
+        ),
+    )

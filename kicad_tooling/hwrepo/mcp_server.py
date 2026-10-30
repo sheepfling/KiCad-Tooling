@@ -36,10 +36,12 @@ from .file_access_models import McpEditPreview, McpEditResult, McpFileContent
 from .findings_view import build_findings_view
 from .findings_view_models import FindingsViewReport
 from .import_inventory import scan_imports as scan_designs
+from .import_review import apply_reviewed_import
 from .importing import import_project as import_design
 from .layout import layout, workflow_guide
 from .mcp_project_inventory import register_project_inventory_tools
 from .mcp_server_guardrails import import_path, service_operation
+from .mcp_visualization_exports import register_visualization_export_tools
 from .mcp_workflow_documents import DOCUMENTS, DocumentName
 from .models import (
     AutoCadReport,
@@ -616,7 +618,12 @@ def create_server(
 
         server.tool(annotations=CREATE_ONLY)(new_project)
 
-        def import_project(source: str, project_id: str, toolchain_id: str) -> ProjectImportReport:
+        def import_project(
+            source: str,
+            project_id: str,
+            toolchain_id: str,
+            review_receipt: str | None = None,
+        ) -> ProjectImportReport:
             """Copy a previously reviewed import into a new project; preserve original source.
 
             Call preview_import first and review every exclusion. Source directory scope
@@ -624,6 +631,10 @@ def create_server(
             """
             with service_operation(operation):
                 path = import_path(root, source, permitted_sources)
+                if review_receipt is not None:
+                    return apply_reviewed_import(
+                        root, path, project_id, toolchain_id, Path(review_receipt)
+                    )
                 return import_design(root, path, project_id, toolchain_id)
 
         server.tool(annotations=CREATE_ONLY)(import_project)
@@ -953,6 +964,8 @@ def create_server(
                 return new_workflows.export_electrical_chart_suite(root, view_id, suite)
 
         server.tool(annotations=CREATE_ONLY)(export_electrical_chart_suite)
+
+        register_visualization_export_tools(server, root, operation, CREATE_ONLY, permitted_sources)
 
     if allow_checks:
 

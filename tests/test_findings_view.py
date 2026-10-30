@@ -15,6 +15,7 @@ from kicad_tooling.hwrepo.design_lint_finding_models import (
     DesignLintFinding,
     DesignLintRuleOverride,
 )
+from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.findings_view import build_findings_view
 from kicad_tooling.hwrepo.findings_view_html import render_findings_view
 from kicad_tooling.hwrepo.findings_view_mapping import design_lint_finding, drc_finding
@@ -22,6 +23,12 @@ from kicad_tooling.hwrepo.findings_view_models import FindingsViewReport
 from kicad_tooling.hwrepo.findings_view_svg import prepare_drawing
 from kicad_tooling.hwrepo.models import ProjectTestContract, ValidationSummary
 from kicad_tooling.hwrepo.native_drc_findings import NativeDrcFinding, NativeDrcItem
+from kicad_tooling.hwrepo.project_models import ProjectManifest, ToolchainsCatalog
+from kicad_tooling.hwrepo.schematic_geometry_source import source_tree_sha256
+from kicad_tooling.hwrepo.schematic_source_tree import (
+    schematic_instance_bindings,
+    verified_schematic_sources,
+)
 from tests.findings_view_support import (
     add_lint_snapshot,
     add_native_review,
@@ -53,13 +60,13 @@ def test_source_bound_view_maps_supported_board_and_schematic_findings(
     assert report.lint_status == "REVIEW"
     assert [item.origin for item in report.findings] == ["ERC", "DRC", "DRC", "DESIGN_LINT"]
     erc, drc, parity, lint_finding = report.findings
-    assert not erc.markers and "not verified" in (erc.unmapped_reason or "")
+    assert not erc.markers and "exact KiCad 10.0.6 UUID sheet" in (erc.unmapped_reason or "")
     assert [(point.x_mm, point.y_mm) for point in drc.markers] == [(100.0, 100.0), (100.0, 110.0)]
     assert not parity.markers and parity.unmapped_reason
     assert [(point.x_mm, point.y_mm) for point in lint_finding.markers] == [(50.0, 40.0)]
     assert lint_finding.fingerprint == "1" * 64
     assert lint_finding.evidence["crossing_mm"] == ("50.000000,40.000000",)
-    assert "0.762, 0.7112 (native coordinates; unmapped)" in erc.evidence["native_items"][0]
+    assert "0.762, 0.7112 (raw ERC position)" in erc.evidence["native_items"][0]
     html = (output / "index.html").read_text(encoding="utf-8")
     assert 'cx="100.000000" cy="110.000000"' in html
     assert 'cx="50.000000" cy="40.000000"' in html
@@ -270,7 +277,10 @@ def test_unverified_coordinate_conventions_do_not_create_markers(
     )
     # This field contains a wire segment, not an exact collision location.
     assert not design_lint_finding(
-        finding, {"schematic": schematic}, report.source_hashes, source, "10.0.5", "/"
+        finding,
+        {"/": schematic.model_copy(update={"schematic_source": source})},
+        report.source_hashes,
+        "10.0.5",
     ).markers
 
 
@@ -312,3 +322,173 @@ def test_real_lint_geometry_snapshot_maps_its_exact_root_instance(tmp_path: Path
     view = build_findings_view(root, "controller", native, lint_report=snapshot)
     mapped = next(f for f in view.findings if f.rule == "schematic.unmarked_wire_crossing")
     assert [(point.x_mm, point.y_mm) for point in mapped.markers] == [(127.0, 127.0)]
+
+
+def test_reused_child_sheet_findings_map_to_distinct_drawings(tmp_path: Path) -> None:
+    root, island, _ = parity_workspace(tmp_path)
+    catalog_path = root / "catalog/toolchains.json"
+    catalog = read_model(catalog_path, ToolchainsCatalog)
+    write_model(
+        catalog_path,
+        catalog.model_copy(
+            update={
+                "toolchains": (
+                    *catalog.toolchains,
+                    catalog.toolchains[-1].model_copy(
+                        update={
+                            "id": "kicad-10.0.6",
+                            "kicad_version": "10.0.6",
+                            "image": "ghcr.io/kicad/kicad:10.0.6@sha256:" + "a" * 64,
+                        }
+                    ),
+                )
+            }
+        ),
+    )
+    manifest_path = island / "project.json"
+    manifest = read_model(manifest_path, ProjectManifest)
+    write_model(manifest_path, manifest.model_copy(update={"toolchain_id": "kicad-10.0.6"}))
+    fixture = Path(__file__).parent / "fixtures/design_lint/repeated-sheet"
+    primary = island / "kicad/controller.kicad_sch"
+    child = island / "kicad/repeated-channel.kicad_sch"
+    primary.write_bytes((fixture / "repeated-sheet-root.kicad_sch").read_bytes())
+    child.write_bytes((fixture / "repeated-channel.kicad_sch").read_bytes())
+    native = parity_native_evidence(root, island)
+    add_native_review(root, native)
+    summary = read_model(native, ValidationSummary)
+    names = (
+        ("controller.svg", "/", "controller.kicad_sch"),
+        ("controller-InstanceA.svg", "/InstanceA/", "repeated-channel.kicad_sch"),
+        ("controller-InstanceB.svg", "/InstanceB/", "repeated-channel.kicad_sch"),
+    )
+    artifacts = dict(summary.artifacts_sha256)
+    for name, sheet, source_name in names:
+        path = native.parent / "schematic" / name
+        raw = (
+            '<svg xmlns="http://www.w3.org/2000/svg" width="200mm" height="150mm" '
+            'viewBox="0 0 200 150"><desc>Image generated by Eeschema-SVG</desc>'
+            f'<text text-anchor="start" opacity="0" stroke-opacity="0">File: {source_name}</text>'
+            f'<text text-anchor="start" opacity="0" stroke-opacity="0">Sheet: {sheet}</text>'
+            '<path d="M 20 40 L 80 40" stroke="black"/></svg>'
+        )
+        path.write_bytes(prepare_drawing(raw.encode("utf-8"), "schematic").content)
+        artifacts[f"schematic/{name}"] = hashlib.sha256(path.read_bytes()).hexdigest()
+    check = summary.checks["schematic_svg"]
+    write_model(
+        native,
+        summary.model_copy(
+            update={
+                "checks": {
+                    **summary.checks,
+                    "schematic_svg": check.model_copy(
+                        update={
+                            "files": tuple(f"schematic/{name}" for name, _, _ in names),
+                        }
+                    ),
+                },
+                "artifacts_sha256": artifacts,
+            }
+        ),
+    )
+    lint_path = add_lint_snapshot(root, native)
+    lint = read_model(lint_path, DesignLintReport)
+    source_hashes = lint.source_hashes
+    primary_name = primary.relative_to(root).as_posix()
+    child_name = child.relative_to(root).as_posix()
+    source_files = verified_schematic_sources(
+        root, primary_name, primary.parent.relative_to(root).as_posix(), source_hashes
+    )
+    bindings = schematic_instance_bindings(
+        source_files, primary_name, primary.parent.relative_to(root).as_posix()
+    )
+    child_bindings = [item for item in bindings if item.source_path == child_name]
+    assert len(child_bindings) == 2
+    findings = tuple(
+        DesignLintFinding(
+            rule_id="schematic.unmarked_wire_crossing",
+            fingerprint=str(index) * 64,
+            subject=f"Crossing in {binding.sheet_path[0]}",
+            message="Review crossing.",
+            mode="review",
+            disposition="OPEN",
+            evidence={
+                "schematic": (child_name,),
+                "schematic_sha256": (source_hashes[child_name],),
+                "sheet_instance_path": (binding.sheet_instance_path,),
+                "crossing_mm": ("50,40",),
+                "kicad_version": ("10.0.6",),
+            },
+        )
+        for index, binding in enumerate(child_bindings, 1)
+    )
+    write_model(
+        lint_path,
+        lint.model_copy(
+            update={
+                "findings": findings,
+                "schematic_geometry": lint.schematic_geometry.model_copy(
+                    update={
+                        "source_tree_sha256": source_tree_sha256(
+                            {name: source_hashes[name] for name in source_files}
+                        ),
+                        "source_bindings": bindings,
+                        "finding_count": 2,
+                    }
+                ),
+            }
+        ),
+    )
+    report = build_findings_view(root, "controller", native, lint_report=lint_path)
+    mapped = {item.title: item for item in report.findings if item.origin == "DESIGN_LINT"}
+    assert len(mapped) == 2
+    drawing_by_sheet = {
+        item.sheet_path: item for item in report.drawings if item.kind == "schematic"
+    }
+    for binding in child_bindings:
+        finding = mapped[f"Crossing in {binding.sheet_path[0]}"]
+        assert len(finding.markers) == 1
+        marker = finding.markers[0]
+        assert marker.sheet_instance_path == binding.sheet_instance_path
+        assert marker.drawing_file == drawing_by_sheet[binding.sheet_path].file
+    assert (
+        mapped["Crossing in InstanceA"].markers[0].drawing_file
+        != mapped["Crossing in InstanceB"].markers[0].drawing_file
+    )
+    html = (Path(report.output_directory) / "index.html").read_text(encoding="utf-8")
+    for finding in mapped.values():
+        marker_id = f"marker-{report.findings.index(finding) + 1}-1"
+        drawing_file = finding.markers[0].drawing_file
+        assert drawing_file is not None
+        section = html.split(f'id="drawing-{drawing_file}"', 1)[1].split("</section>", 1)[0]
+        assert f'id="{marker_id}"' in section
+        for other in drawing_by_sheet.values():
+            if other.file != drawing_file:
+                other_section = html.split(f'id="drawing-{other.file}"', 1)[1].split(
+                    "</section>", 1
+                )[0]
+                assert f'id="{marker_id}"' not in other_section
+
+    first_svg = native.parent / "schematic/controller-InstanceA.svg"
+    second_svg = native.parent / "schematic/controller-InstanceB.svg"
+    second_svg.write_bytes(first_svg.read_bytes())
+    changed = read_model(native, ValidationSummary)
+    write_model(
+        native,
+        changed.model_copy(
+            update={
+                "artifacts_sha256": {
+                    **changed.artifacts_sha256,
+                    "schematic/controller-InstanceB.svg": hashlib.sha256(
+                        second_svg.read_bytes()
+                    ).hexdigest(),
+                }
+            }
+        ),
+    )
+    ambiguous = build_findings_view(
+        root, "controller", native, Path("build/findings-view/ambiguous"), lint_path
+    )
+    ambiguous_findings = [item for item in ambiguous.findings if item.origin == "DESIGN_LINT"]
+    assert len(ambiguous_findings) == 2
+    assert all(not item.markers and item.unmapped_reason for item in ambiguous_findings)
+    assert any("no unique verified sheet instance" in issue for issue in ambiguous.issues)

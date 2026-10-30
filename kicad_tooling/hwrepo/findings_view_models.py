@@ -2,12 +2,21 @@
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Mapping
 from typing import Literal
 
 from pydantic import Field
 
-from .model_primitives import Digest, FiniteMeasure, Identifier, NonEmptyText, StrictModel
+from .contracts import model_json_bytes
+from .model_primitives import (
+    Digest,
+    FiniteMeasure,
+    Identifier,
+    NonEmptyText,
+    RepositoryPath,
+    StrictModel,
+)
 
 
 class FindingMarker(StrictModel):
@@ -15,6 +24,8 @@ class FindingMarker(StrictModel):
     x_mm: FiniteMeasure
     y_mm: FiniteMeasure
     detail: str = ""
+    drawing_file: RepositoryPath | None = None
+    sheet_instance_path: NonEmptyText | None = None
 
 
 class ReviewFinding(StrictModel):
@@ -29,6 +40,11 @@ class ReviewFinding(StrictModel):
     unmapped_reason: str | None = None
 
 
+def finding_fingerprint(finding: ReviewFinding) -> str:
+    """Use the explicit finding identity or its stable typed payload digest."""
+    return finding.fingerprint or hashlib.sha256(model_json_bytes(finding)).hexdigest()
+
+
 class ReviewDrawing(StrictModel):
     kind: Literal["schematic", "pcb"]
     file: str
@@ -37,6 +53,10 @@ class ReviewDrawing(StrictModel):
     width_mm: FiniteMeasure
     height_mm: FiniteMeasure
     mapping_supported: bool
+    sheet_instance_path: NonEmptyText | None = None
+    sheet_path: tuple[NonEmptyText, ...] = ()
+    schematic_source: RepositoryPath | None = None
+    schematic_source_sha256: Digest | None = None
 
 
 class FindingsViewReport(StrictModel):

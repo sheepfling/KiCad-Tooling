@@ -18,6 +18,7 @@ from .findings_view_html import render_findings_view
 from .findings_view_mapping import design_lint_finding
 from .findings_view_models import FindingsViewReport, ReviewDrawing
 from .findings_view_native import NativeArtifacts, drawings, native_findings
+from .findings_view_sheets import bind_schematic_drawings
 from .models import ValidationSummary
 from .native_summary_binding import validate_native_summary_binding
 from .project_models import ProjectManifest
@@ -108,25 +109,28 @@ def build_findings_view(
                 )
     native = NativeArtifacts(root, selected.parent, summary)
     output_drawings = drawings(native, config)
+    primary = Path(config.project).with_suffix(".kicad_sch").as_posix()
+    output_drawings, source_bindings, source_tree_hash, sheet_issues = bind_schematic_drawings(
+        root, primary, config.kicad_version, source_hashes, output_drawings
+    )
     schematic = tuple(drawing for drawing, _ in output_drawings if drawing.kind == "schematic")
     board = next((drawing for drawing, _ in output_drawings if drawing.kind == "pcb"), None)
-    findings, native_issues = native_findings(native, config, board)
-    issues = list(native_issues)
+    findings, native_issues = native_findings(native, config, board, schematic, source_hashes)
+    issues = [*native_issues, *sheet_issues]
     if not schematic:
         issues.append("No validated schematic SVG is available in this native receipt.")
     if board is None:
         issues.append("No validated PCB SVG is available in this native receipt.")
-    if len(schematic) > 1:
+    if len(schematic) > 1 and not source_bindings:
         issues.append(
-            "Multiple schematic sheets are displayed; schematic markers require a unique root sheet."
+            "Multiple schematic sheets are displayed; markers need exact sheet-instance binding."
         )
     if any(not item.mapping_supported for item, _ in output_drawings):
         issues.append(
             "At least one SVG has an unsupported coordinate frame; it is displayed without markers."
         )
-    issues.append(
-        "ERC positions remain unmapped because their schematic conversion is not verified."
-    )
+    if any(item.origin == "ERC" and item.unmapped_reason for item in findings):
+        issues.append("Some ERC item positions have no verified schematic marker.")
     lint_status: Literal["NOT_SUPPLIED", "PASS", "REVIEW", "FAIL", "BLOCKED"] = "NOT_SUPPLIED"
     lint_hash: str | None = None
     if lint_report is None:
@@ -151,13 +155,35 @@ def build_findings_view(
             native.read("netlist.xml")
             native.read("netlist.command.json")
             lookup: dict[str, ReviewDrawing] = {}
-            if len(schematic) == 1:
-                lookup["schematic"] = schematic[0]
-            if board is not None:
-                lookup["pcb"] = board
-            primary = Path(config.project).with_suffix(".kicad_sch").as_posix()
+            exact_bindings = {
+                (item.source_path, item.source_sha256, item.sheet_instance_path, item.sheet_path)
+                for item in source_bindings
+            }
+            lint_bindings = {
+                (item.source_path, item.source_sha256, item.sheet_instance_path, item.sheet_path)
+                for item in lint.schematic_geometry.source_bindings
+            }
+            if (
+                source_tree_hash is not None
+                and source_tree_hash == lint.schematic_geometry.source_tree_sha256
+                and exact_bindings == lint_bindings
+                and lint.schematic_geometry.status in {"COMPLETE", "PARTIAL"}
+                and lint.schematic_geometry.kicad_version == config.kicad_version
+                and lint.schematic_geometry.netlist_sha256 == lint.netlist_sha256
+            ):
+                lookup.update(
+                    (drawing.sheet_instance_path, drawing)
+                    for drawing in schematic
+                    if drawing.sheet_instance_path is not None
+                )
+            elif source_bindings:
+                issues.append(
+                    "Design-lint sheet bindings differ from the verified source tree; "
+                    "hierarchical markers remain unmapped."
+                )
             single_root_sheet = (
-                len(schematic) == 1
+                config.kicad_version != "10.0.6"
+                and len(schematic) == 1
                 and Path(schematic[0].source_artifact).name == f"{Path(primary).stem}.svg"
                 and len(lint.schematic_geometry.source_bindings) == 1
                 and lint.schematic_geometry.status in {"COMPLETE", "PARTIAL"}
@@ -191,10 +217,16 @@ def build_findings_view(
                 if single_root_sheet
                 else None
             )
-            findings += tuple(
-                design_lint_finding(
-                    item, lookup, source_hashes, primary, config.kicad_version, root_instance
+            if root_instance is not None and len(schematic) == 1:
+                lookup[root_instance] = schematic[0].model_copy(
+                    update={
+                        "schematic_source": primary,
+                        "schematic_source_sha256": source_hashes[primary],
+                        "sheet_instance_path": root_instance,
+                    }
                 )
+            findings += tuple(
+                design_lint_finding(item, lookup, source_hashes, config.kicad_version)
                 for item in lint.findings
             )
             issues.append(

@@ -72,7 +72,11 @@ def _drawing(report: FindingsViewReport, drawing: ReviewDrawing) -> str:
     circles: list[str] = []
     for number, finding in enumerate(report.findings, 1):
         for point_number, marker in enumerate(finding.markers, 1):
-            if marker.drawing != drawing.kind:
+            matching_drawings = sum(item.kind == drawing.kind for item in report.drawings)
+            if marker.drawing != drawing.kind or not (
+                marker.drawing_file == drawing.file
+                or (marker.drawing_file is None and matching_drawings == 1)
+            ):
                 continue
             label = escape(f"{number}: {finding.title}")
             circles.append(
@@ -81,7 +85,18 @@ def _drawing(report: FindingsViewReport, drawing: ReviewDrawing) -> str:
                 f'<circle cx="{marker.x_mm:.6f}" cy="{marker.y_mm:.6f}" r="1.8"/></a>'
             )
     title = "Schematic" if drawing.kind == "schematic" else "PCB"
-    display_title = escape(f"{title} · {PurePosixPath(drawing.source_artifact).name}")
+    sheet_label = "/" + "/".join(drawing.sheet_path) + "/" if drawing.sheet_path else "/"
+    display_title = escape(
+        f"{title} · {sheet_label} · {PurePosixPath(drawing.source_artifact).name}"
+        if drawing.kind == "schematic" and drawing.sheet_instance_path is not None
+        else f"{title} · {PurePosixPath(drawing.source_artifact).name}"
+    )
+    instance_note = (
+        f"<p class='muted'>Sheet instance: <code>{escape(drawing.sheet_instance_path)}</code> · "
+        f"source: <code>{escape(drawing.schematic_source or '')}</code></p>"
+        if drawing.sheet_instance_path is not None
+        else ""
+    )
     canvas_id = escape(f"canvas-{drawing.file}", quote=True)
     overlay = (
         f'<svg viewBox="0 0 {drawing.width_mm:.6f} {drawing.height_mm:.6f}" '
@@ -96,7 +111,7 @@ def _drawing(report: FindingsViewReport, drawing: ReviewDrawing) -> str:
     )
     return (
         f'<section id="drawing-{escape(drawing.file, quote=True)}"><h2>{display_title}</h2>'
-        f'<p class="muted">{note}</p>'
+        f'{instance_note}<p class="muted">{note}</p>'
         f'<div class="zoom-controls" aria-label="{title} zoom controls">'
         f'<button type="button" data-zoom="out" data-target="{canvas_id}">Zoom out</button>'
         f'<button type="button" data-zoom="in" data-target="{canvas_id}">Zoom in</button>'
@@ -122,7 +137,7 @@ def render_findings_view(report: FindingsViewReport) -> str:
     for number, finding in enumerate(report.findings, 1):
         links = " ".join(
             f'<a href="#marker-{number}-{index}">{escape(marker.drawing)} '
-            f"{marker.x_mm:g}, {marker.y_mm:g} mm</a>"
+            f"{escape(marker.detail)} {marker.x_mm:g}, {marker.y_mm:g} mm</a>"
             for index, marker in enumerate(finding.markers, 1)
         )
         missing = (

@@ -28,9 +28,11 @@ class SupplierOffer(StrictModel):
     region: NonEmptyText
     currency: Annotated[str, StringConstraints(pattern=r"^[A-Z]{3}$")]
     quantity_break: PositiveCount
-    unit_price_minor: NonNegativeCount
+    unit_price_minor: NonNegativeCount | None = None
     availability: NonEmptyText
     lead_time_days: NonNegativeCount | None = None
+    minimum_order_quantity: PositiveCount | None = None
+    package_multiple: PositiveCount | None = None
 
 
 class SourcingSnapshot(StrictModel):

@@ -67,6 +67,8 @@ REQUIRED_WHEEL_ASSETS = frozenset(
         "kicad_tooling/hwrepo/pcb_variant_probe.py.in",
         "kicad_tooling/hwrepo/native_pcb_probe_touch_clearance.py.in",
         "kicad_tooling/hwrepo/schematic-text-metrics.json",
+        "kicad_tooling/hwrepo/assets/three_d_viewer.js",
+        "kicad_tooling/hwrepo/assets/threejs-LICENSE.txt",
         "kicad_tooling/hwrepo/fixtures/pcb-return-alternate-layer-via.kicad_pcb",
         "kicad_tooling/hwrepo/fixtures/pcb-return-alternate-layer-open.kicad_pcb",
         "kicad_tooling/hwrepo/fixtures/pcb-return-zone-connected.kicad_pcb",

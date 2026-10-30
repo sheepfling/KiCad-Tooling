@@ -46,7 +46,11 @@ def power_connectivity_requirement(
                 source_groups=(
                     PowerSourceGroupRequirement(
                         id="approved-inputs",
-                        basis="At least one approved input connector is populated",
+                        basis=(
+                            "All approved input connectors are populated"
+                            if source_selection == "all"
+                            else "At least one approved input connector is populated"
+                        ),
                         selection=source_selection,
                         endpoints=source_endpoints,
                     ),

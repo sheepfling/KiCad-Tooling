@@ -24,6 +24,7 @@ from .project_models import (
     ToolchainsCatalog,
 )
 from .purchasing_preference_models import PurchasingPreferences
+from .selection import resolve_project
 
 MAX_EDIT_BYTES = 1024 * 1024
 MAX_DIFF = 60_000
@@ -60,6 +61,40 @@ def _island(root: Path, project_id: str) -> Path:
         )
     # Do not parse the manifest here: this reader/editor also repairs malformed JSON.
     return matches[0]
+
+
+def project_owned_source_path(
+    root: Path,
+    project_id: str,
+    source: Path,
+    suffix: str,
+    *,
+    require_existing: bool = True,
+) -> tuple[Path, str]:
+    """Select a regular, portable authored input inside one project island."""
+    root = root.resolve()
+    resolve_project(root, project_id)
+    try:
+        relative = source.relative_to(root) if source.is_absolute() else source
+    except ValueError as exc:
+        raise ValueError("Selected source must be inside the project island") from exc
+    path = repo_path(root, relative.as_posix())
+    island = _island(root, project_id)
+    if not path.is_relative_to(island):
+        raise ValueError("Selected source must be inside the project island")
+    inner = path.relative_to(island)
+    if (
+        path.suffix.lower() != suffix
+        or any(
+            part.startswith(".")
+            or part.casefold() in {"build", "generated", "releases", "restores"}
+            for part in inner.parts
+        )
+        or (require_existing and not path.is_file())
+        or (path.is_file() and path.stat().st_mode & 0o111)
+    ):
+        raise ValueError(f"Select an existing non-executable project-owned {suffix} source")
+    return path, relative.as_posix()
 
 
 def _test_contract(island: Path, value: str) -> bool:
