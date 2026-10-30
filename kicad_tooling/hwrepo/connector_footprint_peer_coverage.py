@@ -103,9 +103,7 @@ def build_connector_footprint_peer_pin_coverage(
         unanchored_different_assignment_pin_group_count=(
             scan.unanchored_different_assignment_pin_group_count
         ),
-        reviewed_unanchored_divergence_finding_count=(
-            reviewed_unanchored_divergence_finding_count
-        ),
+        reviewed_unanchored_divergence_finding_count=(reviewed_unanchored_divergence_finding_count),
         divergence_finding_count=generic_divergence_finding_count,
         open_peer_pin_group_count=scan.open_peer_pin_group_count,
         unanchored_open_peer_pin_group_count=scan.unanchored_open_peer_pin_group_count,

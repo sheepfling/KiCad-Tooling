@@ -96,9 +96,7 @@ def lint_report(observed, coverage=None, policy: DesignLintPolicy | None = None)
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_unanchored_generic_alias_assignments_in_reviewed_peer_group_need_review() -> None:
-    observed = peer_netlist(
-        assignments=(("PORT_A", "PORT_B"), ("DATA_A", "DATA_B"))
-    )
+    observed = peer_netlist(assignments=(("PORT_A", "PORT_B"), ("DATA_A", "DATA_B")))
     coverage = reviewed_coverage(observed)
 
     assert source_matched_connector_peer_assignment_groups(observed, coverage) == {
@@ -175,13 +173,9 @@ def test_incomplete_or_named_alias_evidence_stays_quiet(
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_stale_peer_mapping_does_not_scope_changed_native_assignments() -> None:
-    original = peer_netlist(
-        assignments=(("PORT_A", "PORT_B"), ("DATA_A", "DATA_B"))
-    )
+    original = peer_netlist(assignments=(("PORT_A", "PORT_B"), ("DATA_A", "DATA_B")))
     coverage = reviewed_coverage(original)
-    changed = peer_netlist(
-        assignments=(("COMMON", "COMMON"), ("DATA_A", "DATA_B"))
-    )
+    changed = peer_netlist(assignments=(("COMMON", "COMMON"), ("DATA_A", "DATA_B")))
 
     assert source_matched_connector_peer_assignment_groups(changed, coverage) == {}
     report = lint_report(changed, coverage)
@@ -194,9 +188,7 @@ def test_stale_peer_mapping_does_not_scope_changed_native_assignments() -> None:
     (("review", "OPEN"), ("block", "OPEN"), ("off", "RULE_OFF")),
 )
 def test_reviewed_unanchored_candidate_obeys_project_mode(mode: str, disposition: str) -> None:
-    observed = peer_netlist(
-        assignments=(("PORT_A", "PORT_B"), ("DATA_A", "DATA_B"))
-    )
+    observed = peer_netlist(assignments=(("PORT_A", "PORT_B"), ("DATA_A", "DATA_B")))
     policy = DesignLintPolicy(
         rules=(
             DesignLintRuleOverride(
@@ -220,9 +212,7 @@ def test_reviewed_unanchored_candidate_obeys_project_mode(mode: str, disposition
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_unanchored_finding_is_stable_under_native_mapping_reordering() -> None:
-    observed = peer_netlist(
-        assignments=(("PORT_A", "PORT_B"), ("DATA_A", "DATA_B"))
-    )
+    observed = peer_netlist(assignments=(("PORT_A", "PORT_B"), ("DATA_A", "DATA_B")))
     reordered = observed.model_copy(
         update={
             "nets": dict(reversed(tuple(observed.nets.items()))),
@@ -244,9 +234,7 @@ def test_unanchored_finding_is_stable_under_native_mapping_reordering() -> None:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_exact_ignore_is_limited_to_one_unanchored_pin_fingerprint() -> None:
-    observed = peer_netlist(
-        assignments=(("PORT_A", "PORT_B"), ("DATA_A", "DATA_B"))
-    )
+    observed = peer_netlist(assignments=(("PORT_A", "PORT_B"), ("DATA_A", "DATA_B")))
     initial = lint_report(observed, reviewed_coverage(observed))
     ignored = next(item for item in initial.findings if item.rule_id == RULE_ID)
     policy = DesignLintPolicy(
@@ -314,8 +302,7 @@ def test_native_unanchored_alias_fault_and_common_control_repeat(
     } == {
         NATIVE_FAULT_CASE: fixture_root
         / "connector-footprint-alias-native/unanchored-fault.kicad_sch",
-        NATIVE_CONTROL_CASE: fixture_root
-        / "connector-footprint-alias-native/control.kicad_sch",
+        NATIVE_CONTROL_CASE: fixture_root / "connector-footprint-alias-native/control.kicad_sch",
     }
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
@@ -365,9 +352,12 @@ def test_native_unanchored_alias_fault_and_common_control_repeat(
     fault_findings = tuple(item for item in fault_reports[0].findings if item.rule_id == RULE_ID)
     assert len(fault_findings) == 2
     assert fault_reports[1].model_dump(mode="json") == fault_reports[0].model_dump(mode="json")
-    assert not any(item.rule_id == RULE_ID for report in control_reports for item in report.findings)
+    assert not any(
+        item.rule_id == RULE_ID for report in control_reports for item in report.findings
+    )
     assert control_reports[1].model_dump(mode="json") == control_reports[0].model_dump(mode="json")
     for case in NATIVE_CASES:
-        assert context.normalized_netlist_hashes[case, "first"] == context.normalized_netlist_hashes[
-            case, "repeat"
-        ]
+        assert (
+            context.normalized_netlist_hashes[case, "first"]
+            == context.normalized_netlist_hashes[case, "repeat"]
+        )
