@@ -713,8 +713,9 @@ standalone parity work when it closes a demonstrated feature regression.
   reviewed `peer_assignment_group`; common assignments, stale or incomplete
   maps, open or ambiguous target contacts, DNP peers, named functions, and
   separate peer groups remain quiet. Focused synthetic fault/control,
-  policy, exact-ignore, and ordering tests pass (14 cases). Exact native
-  acceptance for this source-matched scope is still pending.
+  policy, exact-ignore, and ordering tests pass (16 selected tests). Exact
+  native acceptance for this source-matched scope passed in prerelease run
+  `41124115839`.
 - **LINT-010 source-evidence gap:** The optional capacitance scope now checks
   exact fitted contributors on native bus nets against reviewed effective-
   capacitance maxima and a residual-loading bound. Explicit non-C contributor
@@ -14095,12 +14096,11 @@ control are documented in the
   pins, meaningful function labels, `review`/`block`/`off`, exact ignores, and
   reordered maps. The same evidence is reported in alias coverage as
   `reviewed_unanchored_divergence_finding_count`.
-- **Acceptance still needed:** The 14 focused synthetic cases pass locally.
-  A digest-pinned exact-version native fault/control test now exercises the
-  source-matched peer scope twice on KiCad 10.0.0 and 10.0.5; prerelease CI
-  selects it through `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES`. Native acceptance
-  remains pending that run. No cohort code, proprietary project source, or
-  project expectation was imported.
+- **Acceptance:** The focused synthetic selection passed locally (16 tests).
+  Prerelease run `41124115839` enabled
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES` and passed the digest-pinned native
+  fault/control exports twice on KiCad 10.0.0 and 10.0.5. No cohort code,
+  proprietary project source, or project expectation was imported.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

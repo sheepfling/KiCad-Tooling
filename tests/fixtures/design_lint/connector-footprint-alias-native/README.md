@@ -40,6 +40,11 @@ versions. This confirms deterministic schematic-export and lint behavior; it
 does not establish that similar connectors have the same electrical role or
 require common nets.
 
+The unanchored fault/control pair passed its exact-version native acceptance
+in prerelease run `41124115839`, with repeated KiCad 10.0.0 and 10.0.5 exports.
+The comparison used a synthetic, source-matched peer map and did not infer a
+required connection.
+
 The matching footprint and value are clues for review, not proof that the
 connectors have the same electrical role. The rule does not require common
 nets. A project may disable or ignore it with an authored reason, and a
