@@ -91,6 +91,11 @@ def render_verification_history(root: Path, report: VerificationHistoryReport) -
         f"<td>{escape(item.after)}</td><td>{escape(item.detail)}</td></tr>"
         for item in report.check_changes
     )
+    stage_rows = "".join(
+        f"<tr><th>{escape(item.name)}</th><td>{escape(item.change)}</td>"
+        f"<td>{escape(item.before)}</td><td>{escape(item.after)}</td></tr>"
+        for item in report.stage_changes
+    )
     finding_rows = "".join(
         f"<tr><th>{escape(item.origin)} · {escape(item.rule)} · {escape(item.title)}</th>"
         f"<td>{escape(item.change)}</td>"
@@ -132,6 +137,7 @@ HISTORICAL does not apply to the live source. Saved check results are not rerun 
 {_table("Selected evidence", ("Area", "Change", "Baseline", "Candidate"), evidence_rows, "No evidence selected.")}
 {_table("Changed source bytes", ("Path", "Change", "Baseline SHA-256", "Candidate SHA-256"), source_rows, "Source inventories match.")}
 {_table("Native checks", ("Check", "Baseline", "Candidate", "Detail"), check_rows, "No native checks are available in either selected snapshot.")}
+{_table("Verification stages", ("Stage", "Change", "Baseline", "Candidate"), stage_rows, "No verification summary was selected.")}
 {_table("Findings", ("Finding", "Change", "Baseline fingerprint", "Candidate fingerprint", "Explanation"), finding_rows, finding_empty)}
 {_table("Declared release artifacts", ("Artifact ID", "Change", "Baseline", "Candidate"), artifact_rows, "No release artifacts were selected.")}
 <p class="muted">A missing or changed findings report does not mean a finding was resolved.

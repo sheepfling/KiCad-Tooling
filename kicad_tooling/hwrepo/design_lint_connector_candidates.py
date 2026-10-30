@@ -45,6 +45,7 @@ def connector_candidates(
             observed,
             reviewed_connector_references,
             source_matched_connector_peer_assignment_groups(observed, connector_coverage),
+            connector_coverage,
         ),
         *return_domain_candidates(
             observed,

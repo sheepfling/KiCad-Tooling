@@ -33,6 +33,7 @@ from .verification_history_models import (
     HistorySourceChange,
     VerificationHistoryReport,
 )
+from .verification_history_stages import stage_changes
 
 
 def _change(before: object | None, after: object | None) -> Change:
@@ -280,6 +281,7 @@ def compare_verification_history(
         source_changes=_source_changes(old, new),
         evidence_changes=_evidence_changes(old, new),
         check_changes=_check_changes(old, new),
+        stage_changes=stage_changes(old, new),
         finding_changes=_finding_changes(old, new),
         artifact_changes=_artifact_changes(old_release, new_release),
         output_directory=str(directory),

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from .connector_coverage_models import ConnectorCoverageReport
 from .connector_footprint_named_passive_divergence import (
     evaluate_footprint_named_passive_assignment_divergence,
 )
@@ -50,6 +51,9 @@ from .connector_footprint_peer_pins import (
 from .connector_footprint_peer_unanchored_divergence import (
     reviewed_unanchored_connector_alias_divergences,
 )
+from .connector_footprint_peer_unanchored_scope_review import (
+    unreviewed_unanchored_connector_alias_scope,
+)
 from .connector_footprint_power_input import footprint_named_power_input_open_outlier_candidates
 from .connector_footprint_power_output import (
     footprint_named_power_output_open_outlier_candidates,
@@ -72,6 +76,7 @@ def connector_footprint_peer_pin_candidates(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
     peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
+    connector_coverage: ConnectorCoverageReport | None = None,
 ) -> tuple[Candidate, ...]:
     """Create review prompts when footprint-similar connector pin assignments differ."""
     scan = scan_connector_footprint_peer_pin_assignments(
@@ -155,6 +160,7 @@ def connector_footprint_peer_pin_candidates(
         *metadata_open_outliers,
         *divergence_candidates,
         *reviewed_unanchored_connector_alias_divergences(scan),
+        *unreviewed_unanchored_connector_alias_scope(scan, observed, connector_coverage),
         *named_signal_divergence.candidates,
         *named_power_input_divergence.candidates,
         *unanchored_same_voltage_power_input_candidates(scan),

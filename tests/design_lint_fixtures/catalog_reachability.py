@@ -14,6 +14,12 @@ from tests.connector_footprint_peer_support import (
     named_signal_all_open_netlist,
     named_signal_mode_dependent_open_netlist,
     peer_metadata_divergence_netlist,
+    peer_netlist,
+)
+from tests.connector_peer_unanchored_scope_support import (
+    PEER_GROUP,
+    lint_report,
+    reviewed_coverage,
 )
 from tests.design_lint_fixtures import (
     can_netlist,
@@ -106,6 +112,18 @@ from tests.test_oscillator_output_paths import (
 from tests.test_regulator_required_passives import catalog_reachable_rule_ids
 
 TESTS = Path(__file__).resolve().parents[1]
+
+
+def connector_peer_scope_rule_ids() -> set[str]:
+    """Reach both scoped and unscoped connector-alias assignment rules."""
+    observed = peer_netlist(assignments=(("PORT_A", "PORT_B"), ("DATA_A", "DATA_B")))
+    coverages = (
+        reviewed_coverage(observed, (None, None)),
+        reviewed_coverage(observed, (PEER_GROUP, PEER_GROUP)),
+    )
+    return {
+        item.rule_id for coverage in coverages for item in lint_report(observed, coverage).findings
+    }
 
 
 def catalog_reachability_rule_ids() -> set[str]:

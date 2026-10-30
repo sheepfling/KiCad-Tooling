@@ -12,6 +12,19 @@ from .review_overview_models import Freshness, OverviewKind
 
 EvidenceState = Literal["CURRENT", "STALE", "MISSING", "UNAVAILABLE", "NOT_SELECTED"]
 CheckState = Literal["PASS", "FAIL", "NOT_RUN", "MISSING", "STALE", "UNAVAILABLE"]
+StageState = Literal[
+    "PASS",
+    "FAIL",
+    "ERROR",
+    "REVIEW",
+    "BLOCKED",
+    "NOT_CONFIGURED",
+    "NEEDS_WORK",
+    "NOT_RUN",
+    "MISSING",
+    "STALE",
+    "UNAVAILABLE",
+]
 Change = Literal["ADDED", "REMOVED", "CHANGED", "UNCHANGED"]
 
 
@@ -48,6 +61,15 @@ class HistoryCheckChange(StrictModel):
     before: CheckState
     after: CheckState
     detail: str = ""
+
+
+class HistoryStageChange(StrictModel):
+    name: Literal[
+        "verification", "portable", "doctor", "native", "design_lint", "electrical", "diagnosis"
+    ]
+    change: Change
+    before: StageState
+    after: StageState
 
 
 class HistorySourceChange(StrictModel):
@@ -105,6 +127,7 @@ class VerificationHistoryReport(StrictModel):
     source_changes: tuple[HistorySourceChange, ...]
     evidence_changes: tuple[HistoryEvidenceChange, ...]
     check_changes: tuple[HistoryCheckChange, ...]
+    stage_changes: tuple[HistoryStageChange, ...] = ()
     finding_changes: tuple[HistoryFindingChange, ...]
     artifact_changes: tuple[HistoryArtifactChange, ...]
     output_directory: str

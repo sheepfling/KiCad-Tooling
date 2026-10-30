@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 from collections.abc import Collection
@@ -13,6 +14,7 @@ from urllib.parse import urlsplit
 from ..git import run_git_text
 from .contracts import lexical_absolute_path, repo_path, repo_path_is_within
 from .discovery import load_config, load_registry, settings
+from .evidence import digest
 from .models import RepositoryPolicyReport
 
 LOCAL_STATE_NAMES = frozenset(
@@ -184,6 +186,46 @@ def generated_artifact(name: str) -> bool:
         and path.parts[0].casefold() in {"generated", "schemas"}
         and name not in {"generated/README.md", "schemas/README.md"}
     ) or path.suffix.casefold() in {".gbr", ".gbrjob", ".ger", ".drl", ".pos", ".net"}
+
+
+def checkout_input_hashes(root: Path) -> dict[str, str]:
+    """Inventory non-ephemeral checkout bytes, including untracked inputs."""
+    root = root.resolve()
+    if not root.is_dir():
+        raise ValueError("Repository source root is missing")
+    result: dict[str, str] = {}
+    entries = 0
+
+    def fail(error: OSError) -> None:
+        raise error
+
+    for directory, names, files in os.walk(root, topdown=True, onerror=fail):
+        base = Path(directory)
+        kept: list[str] = []
+        for name in sorted(names):
+            path = base / name
+            relative = path.relative_to(root).as_posix()
+            if name == ".git" or ephemeral(relative):
+                continue
+            if path.is_symlink():
+                raise ValueError(f"Checkout input directory is a symlink: {relative}")
+            entries += 1
+            if entries > 20000:
+                raise ValueError("Checkout input inventory exceeds the 20000-entry limit")
+            kept.append(name)
+        names[:] = kept
+        for name in sorted(files):
+            path = base / name
+            relative = path.relative_to(root).as_posix()
+            if name == ".git" or ephemeral(relative):
+                continue
+            if path.is_symlink():
+                raise ValueError(f"Checkout input file is a symlink: {relative}")
+            entries += 1
+            if entries > 20000:
+                raise ValueError("Checkout input inventory exceeds the 20000-entry limit")
+            result[relative] = digest(repo_path(root, relative))
+    return result
 
 
 def unmanaged_artifact(name: str) -> bool:

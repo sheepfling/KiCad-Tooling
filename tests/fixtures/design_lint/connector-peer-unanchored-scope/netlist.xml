@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export>
+  <components>
+    <comp ref="J1">
+      <value>Synthetic two-contact port</value>
+      <footprint>Synthetic:Connector_2x1</footprint>
+      <libsource lib="Synthetic" part="GenericPortA" />
+    </comp>
+    <comp ref="J2">
+      <value>Synthetic two-contact port</value>
+      <footprint>Synthetic:Connector_2x1</footprint>
+      <libsource lib="Synthetic" part="GenericPortB" />
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="Synthetic" part="GenericPortA">
+      <pins>
+        <pin num="1" name="Pin_1" type="passive" />
+        <pin num="2" name="Pin_2" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="GenericPortB">
+      <pins>
+        <pin num="1" name="Pin_1" type="passive" />
+        <pin num="2" name="Pin_2" type="passive" />
+      </pins>
+    </libpart>
+  </libparts>
+  <nets>
+    <net name="PORT_A"><node ref="J1" pin="1" /></net>
+    <net name="PORT_B"><node ref="J2" pin="1" /></net>
+    <net name="DATA_A"><node ref="J1" pin="2" /></net>
+    <net name="DATA_B"><node ref="J2" pin="2" /></net>
+  </nets>
+</export>

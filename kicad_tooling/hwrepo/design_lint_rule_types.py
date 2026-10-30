@@ -13,6 +13,7 @@ DesignLintRuleId = Literal[
     "connector.peer_pin_assignment_divergence",
     "connector.footprint_peer_pin_assignment_divergence",
     "connector.footprint_peer_pin_unanchored_assignment_divergence",
+    "connector.footprint_peer_unanchored_scope_unreviewed",
     "connector.footprint_peer_pin_metadata_assignment_divergence",
     "connector.footprint_peer_pin_missing_metadata_assignment_divergence",
     "connector.footprint_peer_pin_missing_metadata_open_outlier",

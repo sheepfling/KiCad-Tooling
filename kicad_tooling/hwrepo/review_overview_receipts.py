@@ -9,7 +9,6 @@ from .findings_view_models import FindingsViewReport
 from .models import (
     ElectricalAnalysisReport,
     ElectricalChartsReport,
-    ProjectVerificationReport,
     PurchasingReport,
     ThreeDReport,
     ValidationSummary,
@@ -28,38 +27,8 @@ from .review_overview_evidence import (
     source_mismatch,
 )
 from .review_overview_models import OverviewItem, OverviewKind, OverviewLink
-
-
-def _result(
-    context: ReviewContext,
-    kind: OverviewKind,
-    path: Path,
-    report_hash: str,
-    status: str,
-    *,
-    source_hashes: dict[str, str] | None = None,
-    source_commit: str | None = None,
-    links: tuple[OverviewLink, ...] = (),
-    stale: tuple[str, ...] = (),
-    unknown: tuple[str, ...] = (),
-    notes: tuple[str, ...] = (),
-) -> OverviewItem:
-    report_link = checked_link(context, path, "Selected receipt", report_hash)
-    if report_link is None:
-        stale = (*stale, "Selected receipt changed during overview creation.")
-    else:
-        report_link = report_link.model_copy(update={"receipt_bound": False})
-    return OverviewItem(
-        kind=kind,
-        selected_path=path.relative_to(context.root).as_posix(),
-        status=status,
-        freshness="STALE" if stale else "UNKNOWN" if unknown else "CURRENT",
-        report_sha256=report_hash,
-        source_commit=source_commit,
-        source_hashes=source_hashes or {},
-        links=((report_link,) if report_link is not None else ()) + links,
-        issues=(*stale, *unknown, *notes),
-    )
+from .review_overview_result import receipt_result as _result
+from .review_overview_verification import inspect_verification
 
 
 def _integrity(
@@ -404,25 +373,6 @@ def _simulation(context: ReviewContext, path: Path) -> OverviewItem:
     )
 
 
-def _verification(context: ReviewContext, path: Path) -> OverviewItem:
-    report, checksum = read_receipt(path, ProjectVerificationReport)
-    if report.project_id != context.project_id or not recorded_directory(
-        context.root, report.run_directory, path.parent
-    ):
-        raise ValueError("Verification receipt has a different project or output directory")
-    return _result(
-        context,
-        "verification",
-        path,
-        checksum,
-        report.status,
-        unknown=(
-            "Verification summary has no standalone source hash inventory; inspect its stage receipts.",
-        ),
-        notes=(f"Depth: {report.depth}", *report.next_actions),
-    )
-
-
 def inspect_receipt(context: ReviewContext, kind: OverviewKind, path: Path) -> OverviewItem:
     """Contain malformed or obsolete receipts to their own overview card."""
     relative = path.relative_to(context.root).as_posix()
@@ -440,7 +390,7 @@ def inspect_receipt(context: ReviewContext, kind: OverviewKind, path: Path) -> O
         "parts": _parts,
         "three_d": _three_d,
         "simulation": _simulation,
-        "verification": _verification,
+        "verification": inspect_verification,
     }
     try:
         return handlers[kind](context, path)

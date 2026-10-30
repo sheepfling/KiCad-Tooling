@@ -91,6 +91,8 @@ CONNECTOR_LINT_TEST_MODULES = frozenset(
         "tests/test_design_lint_determinism_connector_all_open.py",
         "tests/test_connector_signal_peer_pin_all_open.py",
         "tests/test_connector_peer_pin_coverage.py",
+        "tests/test_connector_peer_unanchored_assignments.py",
+        "tests/test_connector_peer_unanchored_scope.py",
         "tests/test_connector_peer_scope.py",
         "tests/test_connector_return_scope.py",
         "tests/test_connector_supply_scope.py",

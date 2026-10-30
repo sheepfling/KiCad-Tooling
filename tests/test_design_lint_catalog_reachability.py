@@ -74,6 +74,7 @@ from kicad_tooling.hwrepo.stm32_pin_map_models import Stm32PinMapCoverageReport
 from kicad_tooling.hwrepo.usb_c_ports import UsbCPortRosterContext
 from tests.design_lint_fixtures.catalog_reachability import (
     catalog_reachability_rule_ids,
+    connector_peer_scope_rule_ids,
     protocol_peer_candidate_rule_ids,
 )
 from tests.design_lint_fixtures.catalog_reachability_pcb import pcb_rule_ids
@@ -325,6 +326,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         item.rule_id for item in candidates(i2c_observed, i2c_address_coverage=i2c_coverage)
     )
     emitted.update(catalog_reachability_rule_ids())
+    emitted.update(connector_peer_scope_rule_ids())
     unreviewed_protection = evaluate_external_protection(
         None,
         _external_protection_support.observed_netlist(),

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Literal
 
 import pytest
 from mcp import Client
@@ -13,6 +14,7 @@ from kicad_tooling.hwrepo.findings_view_models import FindingsViewReport, Review
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
     CheckEvidence,
+    ProjectVerificationReport,
     ReleaseArtifact,
     ReleaseArtifactKind,
     ReleaseClass,
@@ -21,11 +23,18 @@ from kicad_tooling.hwrepo.models import (
     ValidationSummary,
 )
 from kicad_tooling.hwrepo.project_models import ProjectKind
-from kicad_tooling.hwrepo.review_overview_models import OverviewItem, ReviewOverviewReport
+from kicad_tooling.hwrepo.repository import checkout_input_hashes
+from kicad_tooling.hwrepo.review_overview_models import (
+    OverviewItem,
+    OverviewLink,
+    ReviewOverviewReport,
+)
 from kicad_tooling.hwrepo.verification_history import compare_verification_history
 from kicad_tooling.hwrepo.verification_history_models import VerificationHistoryReport
+from kicad_tooling.hwrepo.verification_receipts import save_verification_output_manifest
 from kicad_tooling.validate import hashes
 from tests.mcp_parity_support import McpParityHarness, parity_workspace, run_mcp_parity
+from tests.verify_support import native_summary
 
 pytestmark = pytest.mark.template_checkout
 MANIFEST = "examples/projects/controller/project.json"
@@ -153,6 +162,64 @@ def _fixtures(root: Path) -> tuple[Path, Path, Path, Path]:
     return baseline, candidate, release_dir / "baseline.json", release_dir / "candidate.json"
 
 
+def _add_verification(
+    root: Path, overview_path: Path, *, status: Literal["PASS", "FAIL"], with_native: bool
+) -> Path:
+    directory = root / "build/verify-history" / overview_path.parent.name
+    directory.mkdir(parents=True)
+    receipt = directory / "verification.json"
+    write_model(
+        receipt,
+        ProjectVerificationReport(
+            project_id="controller",
+            depth="native" if with_native else "portable",
+            status=status,
+            run_directory=str(directory),
+            native=native_summary("FAIL") if with_native else None,
+        ),
+    )
+    overview = read_model(overview_path, ReviewOverviewReport)
+    item = OverviewItem(
+        kind="verification",
+        selected_path=receipt.relative_to(root).as_posix(),
+        status=status,
+        freshness="UNKNOWN",
+        report_sha256=digest(receipt),
+    )
+    write_model(overview_path, overview.model_copy(update={"items": (*overview.items, item)}))
+    return receipt
+
+
+def _bind_verification(root: Path, overview_path: Path, receipt: Path) -> None:
+    directory = receipt.parent
+    (directory / "verification.txt").write_text("Recorded outcome\n", encoding="utf-8")
+    (directory / "run.json").write_text("{}\n", encoding="utf-8")
+    (directory / "events.log").write_text("verification complete\n", encoding="utf-8")
+    manifest = save_verification_output_manifest(root, directory, checkout_input_hashes(root))
+    manifest_path = directory / "verification-artifacts.json"
+    overview = read_model(overview_path, ReviewOverviewReport)
+    items = tuple(
+        item.model_copy(
+            update={
+                "freshness": "CURRENT",
+                "source_hashes": dict(manifest.source_hashes),
+                "links": (
+                    OverviewLink(
+                        label="Verification hash manifest",
+                        path=manifest_path.relative_to(root).as_posix(),
+                        sha256=digest(manifest_path),
+                        receipt_bound=False,
+                    ),
+                ),
+            }
+        )
+        if item.kind == "verification"
+        else item
+        for item in overview.items
+    )
+    write_model(overview_path, overview.model_copy(update={"items": items}))
+
+
 def test_cross_revision_checks_findings_and_release_artifacts(tmp_path: Path) -> None:
     root, _, _ = parity_workspace(tmp_path)
     baseline, candidate, old_release, new_release = _fixtures(root)
@@ -214,6 +281,105 @@ def test_changed_native_receipt_is_stale_instead_of_passed(tmp_path: Path) -> No
     report = compare_verification_history(root, "controller", baseline, candidate)
     check = next(item for item in report.check_changes if item.name == "erc")
     assert check.before == "STALE" and check.after == "PASS"
+
+
+def test_verification_stage_history_keeps_not_run_missing_and_stale_distinct(
+    tmp_path: Path,
+) -> None:
+    root, _, _ = parity_workspace(tmp_path)
+    baseline, candidate, _, _ = _fixtures(root)
+    old_receipt = _add_verification(root, baseline, status="FAIL", with_native=True)
+    new_receipt = _add_verification(root, candidate, status="PASS", with_native=False)
+    report = compare_verification_history(root, "controller", baseline, candidate)
+    stages = {item.name: item for item in report.stage_changes}
+    assert (stages["verification"].before, stages["verification"].after) == ("FAIL", "PASS")
+    assert (stages["native"].before, stages["native"].after) == ("FAIL", "NOT_RUN")
+    assert stages["electrical"].change == "UNCHANGED"
+    assert "Verification stages" in (Path(report.output_directory) / "index.html").read_text()
+
+    old_receipt.write_text(old_receipt.read_text() + " ", encoding="utf-8")
+    new_receipt.unlink()
+    changed = compare_verification_history(root, "controller", baseline, candidate)
+    stages = {item.name: item for item in changed.stage_changes}
+    assert (stages["verification"].before, stages["verification"].after) == (
+        "STALE",
+        "MISSING",
+    )
+    assert (stages["native"].before, stages["native"].after) == ("STALE", "MISSING")
+
+
+def test_verification_history_rejects_another_project_even_with_matching_hash(
+    tmp_path: Path,
+) -> None:
+    root, _, _ = parity_workspace(tmp_path)
+    baseline, candidate, _, _ = _fixtures(root)
+    receipt = _add_verification(root, baseline, status="PASS", with_native=False)
+    saved = read_model(receipt, ProjectVerificationReport)
+    write_model(receipt, saved.model_copy(update={"project_id": "another-project"}))
+    overview = read_model(baseline, ReviewOverviewReport)
+    items = tuple(
+        item.model_copy(update={"report_sha256": digest(receipt)})
+        if item.kind == "verification"
+        else item
+        for item in overview.items
+    )
+    write_model(baseline, overview.model_copy(update={"items": items}))
+    report = compare_verification_history(root, "controller", baseline, candidate)
+    stage = next(item for item in report.stage_changes if item.name == "verification")
+    assert (stage.before, stage.after) == ("STALE", "NOT_RUN")
+
+
+def test_history_rechecks_bound_verification_manifest_and_stage_outputs(tmp_path: Path) -> None:
+    root, _, _ = parity_workspace(tmp_path)
+    baseline, candidate, _, _ = _fixtures(root)
+    receipt = _add_verification(root, baseline, status="FAIL", with_native=True)
+    _bind_verification(root, baseline, receipt)
+    first = compare_verification_history(root, "controller", baseline, candidate)
+    item = next(entry for entry in first.evidence_changes if entry.kind == "verification")
+    assert item.before.integrity == "CURRENT"
+    assert first.baseline.source_relation == "HISTORICAL"
+    assert first.stage_changes[0].before == "FAIL"
+
+    source = root / MANIFEST
+    original_source = source.read_text(encoding="utf-8")
+    source.write_text(original_source + "\n", encoding="utf-8")
+    historical = compare_verification_history(root, "controller", baseline, candidate)
+    evidence = next(entry for entry in historical.evidence_changes if entry.kind == "verification")
+    assert evidence.before.integrity == "CURRENT"
+    assert historical.candidate.source_relation == "HISTORICAL"
+    source.write_text(original_source, encoding="utf-8")
+
+    stage = receipt.parent / "verification.txt"
+    original = stage.read_text(encoding="utf-8")
+    stage.write_text(original + "changed\n", encoding="utf-8")
+    changed = compare_verification_history(root, "controller", baseline, candidate)
+    assert changed.stage_changes[0].before == "STALE"
+    evidence = next(entry for entry in changed.evidence_changes if entry.kind == "verification")
+    assert any("verification.txt" in issue for issue in evidence.before.issues)
+    stage.write_text(original, encoding="utf-8")
+
+    manifest_path = receipt.parent / "verification-artifacts.json"
+    manifest_text = manifest_path.read_text(encoding="utf-8")
+    manifest_path.write_text(manifest_text + " ", encoding="utf-8")
+    changed = compare_verification_history(root, "controller", baseline, candidate)
+    assert changed.stage_changes[0].before == "STALE"
+    manifest_path.write_text(manifest_text, encoding="utf-8")
+
+    saved_overview = read_model(baseline, ReviewOverviewReport)
+    items = tuple(
+        entry.model_copy(update={"source_hashes": {MANIFEST: "0" * 64}})
+        if entry.kind == "verification"
+        else entry
+        for entry in saved_overview.items
+    )
+    write_model(baseline, saved_overview.model_copy(update={"items": items}))
+    mismatched = compare_verification_history(root, "controller", baseline, candidate)
+    assert mismatched.stage_changes[0].before == "STALE"
+    write_model(baseline, saved_overview)
+
+    manifest_path.unlink()
+    missing = compare_verification_history(root, "controller", baseline, candidate)
+    assert missing.stage_changes[0].before == "STALE"
 
 
 def test_release_commit_mismatch_is_explicit(tmp_path: Path) -> None:

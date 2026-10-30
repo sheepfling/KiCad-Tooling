@@ -34,6 +34,7 @@ class ConnectorPeerPinFindingCounts:
     part_id_peer_pin_divergence_finding_count: int = 0
     footprint_peer_pin_divergence_finding_count: int = 0
     footprint_peer_pin_unanchored_divergence_finding_count: int = 0
+    footprint_peer_unreviewed_scope_finding_count: int = 0
     footprint_named_signal_divergence_finding_count: int = 0
     footprint_named_power_input_divergence_finding_count: int = 0
     footprint_named_power_input_all_open_finding_count: int = 0
@@ -72,6 +73,9 @@ class ConnectorPeerPinFindingCounts:
             ],
             footprint_peer_pin_unanchored_divergence_finding_count=counts[
                 "connector.footprint_peer_pin_unanchored_assignment_divergence"
+            ],
+            footprint_peer_unreviewed_scope_finding_count=counts[
+                "connector.footprint_peer_unanchored_scope_unreviewed"
             ],
             footprint_named_signal_divergence_finding_count=counts[
                 "connector.footprint_named_signal_assignment_divergence"

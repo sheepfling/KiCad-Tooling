@@ -69,7 +69,8 @@ def _card(root: Path, directory: Path, item: OverviewItem) -> str:
         else ""
     )
     source = (
-        f"<p><small>Source files:</small> {len(item.source_hashes)}; "
+        f"<p><small>{'Checkout inputs' if item.kind == 'verification' else 'Source files'}:"
+        f"</small> {len(item.source_hashes)}; "
         f"<small>inventory SHA-256:</small> <code>{source_tree_sha256(item.source_hashes)}</code></p>"
         if item.source_hashes
         else '<p class="muted">No source hash inventory in this receipt.</p>'

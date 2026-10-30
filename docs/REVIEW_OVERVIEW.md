@@ -28,8 +28,13 @@ saved artifact hashes. A new parts receipt includes `parts-artifacts.json`,
 which binds `report.json` to its HTML, text, and CSV hashes. The overview links
 only matching outputs and marks changed or missing ones stale. Older parts
 receipts without this manifest remain **snapshot hash only** and have unknown
-output freshness. Verification's top-level report has no
-standalone source hash inventory. Inspect the stage receipts for its evidence.
+output freshness. When checkout inputs can be inventoried, new verification runs
+include `verification-artifacts.json`. It binds the summary to a run-start
+inventory of non-ephemeral checkout inputs, records whether those inputs stayed
+stable during the run, and hashes the top-level journal and stage files. The
+overview links matching stage files. It marks changed inputs or outputs stale.
+Receipts without the manifest retain unknown freshness. The native and
+electrical stage receipts retain their detailed evidence.
 
 Each card retains the original check status separately from freshness:
 

@@ -6,92 +6,32 @@ from typing import cast
 
 import pytest
 
-from kicad_tooling.hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
 from kicad_tooling.hwrepo.connector_coverage import (
     source_matched_connector_peer_assignment_groups,
 )
-from kicad_tooling.hwrepo.design_lint import evaluate as evaluate_design_lint
 from kicad_tooling.hwrepo.models import (
-    ConnectorInterfaceReview,
-    ConnectorInventoryReview,
-    ContractCoachReport,
     DesignLintIgnore,
     DesignLintPolicy,
     DesignLintRuleOverride,
-    InterfacePin,
-    InterfaceRecord,
 )
 from tests.connector_footprint_peer_support import (
-    NETLIST_SHA256,
     PeerNetlistOverrides,
     peer_netlist,
+)
+from tests.connector_peer_unanchored_scope_support import (
+    PEER_BASIS,
+    PEER_GROUP,
+    lint_report,
+    reviewed_coverage,
 )
 
 pytestmark = [pytest.mark.connector_lint, pytest.mark.design_lint]
 
 RULE_ID = "connector.footprint_peer_pin_unanchored_assignment_divergence"
-PEER_GROUP = "synthetic-peer-connectors"
-PEER_BASIS = "Synthetic connector pinouts were reviewed as one peer set"
+SCOPE_RULE_ID = "connector.footprint_peer_unanchored_scope_unreviewed"
 NATIVE_FAULT_CASE = "footprint-alias-unanchored-fault"
 NATIVE_CONTROL_CASE = "footprint-alias-control"
 NATIVE_CASES = (NATIVE_FAULT_CASE, NATIVE_CONTROL_CASE)
-
-
-def reviewed_coverage(observed, groups: tuple[str, str] = (PEER_GROUP, PEER_GROUP)):
-    interface = InterfaceRecord(
-        id="synthetic-generic-port",
-        revision="synthetic-1",
-        pins=tuple(
-            InterfacePin(
-                number=str(number),
-                signal=f"contact-{number}",
-                direction="bidirectional",
-                voltage_domain="synthetic-domain",
-                mating="synthetic peer",
-                orientation="straight",
-                mechanical_clearance="synthetic",
-            )
-            for number in (1, 2)
-        ),
-    )
-    reviews = tuple(
-        ConnectorInterfaceReview(
-            reference=reference,
-            disposition="interface",
-            basis="Synthetic exact pin mapping",
-            interface_id="synthetic-generic-port",
-            pin_map={"1": "1", "2": "2"},
-            peer_assignment_group=group,
-            peer_assignment_basis=PEER_BASIS,
-        )
-        for reference, group in zip(("J1", "J2"), groups, strict=True)
-    )
-    return evaluate_connector_coverage(
-        observed,
-        ("synthetic-generic-port",),
-        reviews,
-        interfaces={"synthetic-generic-port": interface},
-        interface_catalog_path="catalog/interfaces.json",
-        interface_catalog_sha256="f" * 64,
-        inventory_review=ConnectorInventoryReview(
-            basis="Synthetic connector inventory was reviewed"
-        ),
-    )
-
-
-def lint_report(observed, coverage=None, policy: DesignLintPolicy | None = None):
-    coach = ContractCoachReport(
-        status="READY_FOR_REVIEW",
-        project_id="synthetic-peer-unanchored-assignment",
-        observed=observed,
-        netlist_sha256=NETLIST_SHA256,
-    )
-    return evaluate_design_lint(
-        coach.project_id,
-        coach,
-        policy or DesignLintPolicy(),
-        connector_coverage=coverage,
-    )
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -258,6 +198,7 @@ def test_exact_ignore_is_limited_to_one_unanchored_pin_fingerprint() -> None:
 @pytest.mark.native_kicad
 @pytest.mark.slow
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=SCOPE_RULE_ID)
 @pytest.mark.skipif(
     __import__("os").environ.get("KICAD_RUN_NATIVE_CONNECTOR_FIXTURES") != "1",
     reason="digest-pinned native connector fixtures run in package acceptance",
@@ -349,6 +290,20 @@ def test_native_unanchored_alias_fault_and_common_control_repeat(
         )
         for run in ("first", "repeat")
     )
+    fault_scope_reports = tuple(
+        lint_report(
+            context.observed_contracts[NATIVE_FAULT_CASE, run],
+            reviewed_coverage(context.observed_contracts[NATIVE_FAULT_CASE, run], (None, None)),
+        )
+        for run in ("first", "repeat")
+    )
+    control_scope_reports = tuple(
+        lint_report(
+            context.observed_contracts[NATIVE_CONTROL_CASE, run],
+            reviewed_coverage(context.observed_contracts[NATIVE_CONTROL_CASE, run], (None, None)),
+        )
+        for run in ("first", "repeat")
+    )
     fault_findings = tuple(item for item in fault_reports[0].findings if item.rule_id == RULE_ID)
     assert len(fault_findings) == 2
     assert fault_reports[1].model_dump(mode="json") == fault_reports[0].model_dump(mode="json")
@@ -356,6 +311,21 @@ def test_native_unanchored_alias_fault_and_common_control_repeat(
         item.rule_id == RULE_ID for report in control_reports for item in report.findings
     )
     assert control_reports[1].model_dump(mode="json") == control_reports[0].model_dump(mode="json")
+    fault_scope_findings = tuple(
+        item for item in fault_scope_reports[0].findings if item.rule_id == SCOPE_RULE_ID
+    )
+    assert len(fault_scope_findings) == 1
+    assert fault_scope_reports[1].model_dump(mode="json") == fault_scope_reports[0].model_dump(
+        mode="json"
+    )
+    assert not any(
+        item.rule_id == SCOPE_RULE_ID
+        for report in control_scope_reports
+        for item in report.findings
+    )
+    assert control_scope_reports[1].model_dump(mode="json") == control_scope_reports[0].model_dump(
+        mode="json"
+    )
     for case in NATIVE_CASES:
         assert (
             context.normalized_netlist_hashes[case, "first"]

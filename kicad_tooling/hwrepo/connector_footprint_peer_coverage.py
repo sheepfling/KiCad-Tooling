@@ -22,6 +22,7 @@ def build_connector_footprint_peer_pin_coverage(
     *,
     generic_divergence_finding_count: int,
     reviewed_unanchored_divergence_finding_count: int,
+    unreviewed_peer_assignment_scope_finding_count: int,
     open_outlier_finding_count: int,
     all_open_finding_count: int,
     named_signal_divergence: _NamedCoverageEvaluation,
@@ -104,6 +105,9 @@ def build_connector_footprint_peer_pin_coverage(
             scan.unanchored_different_assignment_pin_group_count
         ),
         reviewed_unanchored_divergence_finding_count=(reviewed_unanchored_divergence_finding_count),
+        unreviewed_peer_assignment_scope_finding_count=(
+            unreviewed_peer_assignment_scope_finding_count
+        ),
         divergence_finding_count=generic_divergence_finding_count,
         open_peer_pin_group_count=scan.open_peer_pin_group_count,
         unanchored_open_peer_pin_group_count=scan.unanchored_open_peer_pin_group_count,

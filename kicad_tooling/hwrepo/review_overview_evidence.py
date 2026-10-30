@@ -75,16 +75,11 @@ def source_mismatch(
     return None
 
 
-def checked_link(
-    context: ReviewContext,
-    path: Path,
-    label: str,
-    expected: str | None = None,
-) -> OverviewLink | None:
-    """Link only stable local files, matching the receipt hash when one exists."""
+def checked_artifact_digest(root: Path, path: Path) -> str | None:
+    """Hash a stable regular generated file without following symlinks."""
     try:
-        relative = path.relative_to(context.root).as_posix()
-        selected = artifact_path(context.root, relative)
+        relative = path.relative_to(root).as_posix()
+        selected = artifact_path(root, relative)
         if not stat.S_ISREG(selected.lstat().st_mode):
             return None
         descriptor = os.open(
@@ -103,16 +98,29 @@ def checked_link(
                 after
             ) != file_fingerprint(os.stat(selected, follow_symlinks=False)):
                 return None
-            actual = checksum.hexdigest()
-        if expected is not None and actual != expected:
-            return None
+            return checksum.hexdigest()
+    except (OSError, ValueError):
+        return None
+
+
+def checked_link(
+    context: ReviewContext,
+    path: Path,
+    label: str,
+    expected: str | None = None,
+) -> OverviewLink | None:
+    """Link only stable local files, matching the receipt hash when one exists."""
+    actual = checked_artifact_digest(context.root, path)
+    if actual is None or expected is not None and actual != expected:
+        return None
+    try:
         return OverviewLink(
             label=label,
-            path=relative,
+            path=path.relative_to(context.root).as_posix(),
             sha256=actual,
             receipt_bound=expected is not None,
         )
-    except (OSError, ValueError):
+    except ValueError:
         return None
 
 

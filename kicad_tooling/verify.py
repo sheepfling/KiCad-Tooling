@@ -29,7 +29,9 @@ from .hwrepo.models import (
     ProjectVerificationReport,
 )
 from .hwrepo.native_container_context import NATIVE_CONTAINER_IMAGE_ENV
+from .hwrepo.repository import checkout_input_hashes
 from .hwrepo.selection import ProjectSelector, resolve_project_ids
+from .hwrepo.verification_receipts import save_verification_output_manifest
 
 Depth = Literal["portable", "native", "electrical"]
 
@@ -169,6 +171,11 @@ def verify(
         if not output.is_relative_to(root / "build"):
             raise ValueError("Verification output must be under this repository's ignored build/")
     journal = DiagnosticJournal(root, project_id, output, label="verify")
+    try:
+        source_before = checkout_input_hashes(root)
+    except (OSError, ValueError) as exc:
+        source_before = None
+        journal.event("source-manifest", "UNAVAILABLE", str(exc))
     portable: ProjectStaticPipelineReport | None = None
     config = None
     native_doctor = None
@@ -422,6 +429,11 @@ def verify(
         (journal.directory / "verification.txt").write_text(human_text + "\n", encoding="utf-8")
     else:
         journal.finish_named("verification", result, human_text, status)
+    if source_before is not None:
+        try:
+            save_verification_output_manifest(root, journal.directory, source_before)
+        except (OSError, ValueError) as exc:
+            journal.event("source-manifest", "UNAVAILABLE", str(exc))
     return result
 
 

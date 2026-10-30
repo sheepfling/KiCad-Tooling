@@ -457,6 +457,55 @@
       ]
     },
     {
+      "rule_id": "connector.footprint_peer_unanchored_scope_unreviewed",
+      "title": "Unanchored connector alias assignments lack a reviewed peer scope",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist and matched against complete current project connector coverage",
+      "predicate": "Among fitted connector aliases with distinct native symbols, no PART_ID, exact nonempty value and footprint matches, identical complete pin inventories, and identical nonempty native function and electrical-type metadata, find one-net-per-peer divergent generic contacts in an unanchored alias scope. Emit one REVIEW candidate per alias cohort only when every compared connector has a complete current source-matched pin map, the complete connector inventory is reviewed, and no peer_assignment_group is authored for any compared reference. A missing or stale map does not activate this review.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Value, footprint, symbol, inventory, and pin-metadata similarities identify review candidates; they do not prove the connectors are intended peers.",
+        "The finding asks whether to compare these references or keep them separate. It does not require matching nets, joining contacts, or assert electrical isolation.",
+        "Only unanchored generic Pin_N or numeric-only contacts with exactly one differing net assignment per peer are considered. Common anchors, open or ambiguous pins, named functions, mismatched metadata, and incomplete inventories are excluded.",
+        "A complete current connector inventory and source-matched pin maps are required. Missing, incomplete, stale, not-applicable, or partially mapped connector coverage stays quiet and remains with coverage checks.",
+        "DNP and PART_ID-bearing components are excluded. Automatic connector discovery remains bounded to J/P/X/CN references, standard Connector libraries, and exact project-reviewed interface references.",
+        "The rule uses schematic netlist evidence and does not establish PCB copper continuity, off-board wiring, connector role, or physical continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_peer_unanchored_scope.test_complete_source_matched_maps_without_peer_scope_prompt_once_per_alias_group",
+        "tests.test_connector_peer_unanchored_scope.test_unanchored_scope_review_cli_mcp_parity",
+        "tests.test_connector_peer_unanchored_assignments.test_native_unanchored_alias_fault_and_common_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_peer_unanchored_scope.test_no_prompt_for_common_anchor_or_noneligible_scope",
+        "tests.test_connector_peer_unanchored_scope.test_missing_or_source_stale_connector_coverage_does_not_activate_scope_prompt",
+        "tests.test_connector_peer_unanchored_assignments.test_native_unanchored_alias_fault_and_common_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_peer_unanchored_scope.test_scope_prompt_fingerprint_is_stable_under_native_mapping_reordering",
+        "tests.test_connector_peer_unanchored_scope.test_scope_prompt_obeys_project_policy",
+        "tests.test_connector_peer_unanchored_scope.test_scope_prompt_exact_ignore_matches_only_its_fingerprint",
+        "tests.test_connector_peer_unanchored_assignments.test_native_unanchored_alias_fault_and_common_control_repeat"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
+        "kicad_tooling/hwrepo/connector_footprint_peer_unanchored_scope_review.py#unreviewed_unanchored_connector_alias_scope",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_peer_unanchored_scope_review.py#unreviewed_unanchored_connector_alias_scope",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "connector.footprint_peer_pin_metadata_assignment_divergence",
       "title": "Connector peer pin metadata differs where assigned nets split",
       "status": "active",

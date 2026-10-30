@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 255 rules are implemented with synthetic regression coverage.
+The following 257 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 255 active rules.
+The catalog currently contains 257 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -438,6 +438,8 @@ skipped under prerelease policy.
 - `connector.peer_pin_assignment_outlier`
 - `connector.peer_pin_assignment_divergence`
 - `connector.footprint_peer_pin_assignment_divergence`
+- `connector.footprint_peer_pin_unanchored_assignment_divergence`
+- `connector.footprint_peer_unanchored_scope_unreviewed`
 - `connector.footprint_peer_pin_metadata_assignment_divergence`
 - `connector.footprint_peer_pin_metadata_open_outlier`
 - `connector.footprint_peer_pin_missing_metadata_assignment_divergence`
@@ -716,6 +718,13 @@ standalone parity work when it closes a demonstrated feature regression.
   policy, exact-ignore, and ordering tests pass (16 selected tests). Exact
   native acceptance for this source-matched scope passed in prerelease run
   `41124115839`.
+- **LINT-273 missing connector peer scope:** Follow LINT-272 with one
+  default-REVIEW prompt when similar connector aliases have unanchored generic
+  pin splits, complete current source-matched pin maps, and a reviewed full
+  connector inventory, but no authored `peer_assignment_group`. The prompt
+  asks whether the interfaces should be compared or kept separate; it does not
+  infer connectivity. Require synthetic controls, CLI/MCP parity, and the same
+  digest-pinned exact-version connector fixture lane before acceptance.
 - **LINT-010 source-evidence gap:** The optional capacitance scope now checks
   exact fitted contributors on native bus nets against reviewed effective-
   capacitance maxima and a residual-loading bound. Explicit non-C contributor
@@ -3354,7 +3363,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 255 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 257 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -14101,6 +14110,36 @@ control are documented in the
   `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES` and passed the digest-pinned native
   fault/control exports twice on KiCad 10.0.0 and 10.0.5. No cohort code,
   proprietary project source, or project expectation was imported.
+
+#### LINT-273 — Review missing peer scope for unanchored connector alias splits
+
+- **Status:** In progress. The candidate is limited to a complete, current
+  connector inventory whose exact interface pin maps still match the native
+  netlist. Each similar alias must have no authored peer-assignment group.
+- **Gap:** LINT-272 correctly stays quiet without a reviewed comparison group.
+  A complete map can still leave repeated connector aliases with split generic
+  assignments and no common-net anchor, without prompting anyone to decide
+  whether the ports should be compared or intentionally separate.
+- **Predicate:** Reuse the bounded footprint-alias scan and its exact
+  `unanchored_divergences`. Require fitted peers with distinct native symbols,
+  no `PART_ID`, exact nonempty value and footprint, complete identical pin
+  inventories, matching nonempty native function and electrical metadata,
+  one differing assigned net per eligible generic pin, and zero common-net
+  anchors. Emit one REVIEW prompt per alias cohort only when each peer has a
+  current `COVERED` connector map and the inventory review is complete, while
+  every compared peer omits `peer_assignment_group`.
+- **Boundary:** Similarity and split assignments only justify explicit review.
+  The rule does not state that the connectors are peers, that nets must match,
+  or that contacts should be joined or isolated. Absent, stale, incomplete,
+  not-applicable, split-scope, DNP, `PART_ID`, open, ambiguous, named-function,
+  incomplete-inventory, and mismatched-metadata cases remain quiet or with
+  existing coverage checks.
+- **Evidence plan:** Synthetic fault/control fixtures cover current unscoped
+  maps, reviewed and separate scopes, common anchors, stale or incomplete
+  coverage, policy overrides, exact ignores, and deterministic ordering. The
+  existing digest-pinned native connector fault/control pair can exercise both
+  the missing-scope prompt and LINT-272 at KiCad 10.0.0 and 10.0.5. Add a
+  source-bound CLI/MCP parity case before marking the rule accepted.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

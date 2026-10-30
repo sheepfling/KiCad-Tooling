@@ -11,7 +11,7 @@ from .artifact_access import read_regular_bytes
 from .contracts import parse_model_text, repo_path
 from .evidence import digest
 from .findings_view_models import FindingsViewReport
-from .models import ReleaseManifest, ValidationSummary
+from .models import ProjectVerificationReport, ReleaseManifest, ValidationSummary
 from .review_overview_evidence import read_receipt, recorded_directory, selected_receipt
 from .review_overview_models import OverviewItem, ReviewOverviewReport
 from .schematic_geometry_source import source_tree_sha256
@@ -21,6 +21,7 @@ from .verification_history_models import (
     HistoryRelease,
     HistorySnapshot,
 )
+from .verification_history_verification import recheck_verification
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,6 +31,7 @@ class SavedSnapshot:
     evidence: tuple[HistoryEvidence, ...]
     native: ValidationSummary | None
     findings: FindingsViewReport | None
+    verification: ProjectVerificationReport | None
 
 
 def _relative(root: Path, requested: Path) -> str:
@@ -64,6 +66,8 @@ def _item(root: Path, item: OverviewItem) -> tuple[HistoryEvidence, object | Non
                 parsed = read_receipt(path, ValidationSummary)[0]
             elif item.kind == "findings":
                 parsed = read_receipt(path, FindingsViewReport)[0]
+            elif item.kind == "verification":
+                parsed = read_receipt(path, ProjectVerificationReport)[0]
         except (OSError, ValueError, TypeError) as exc:
             state = "UNAVAILABLE"
             issues.append(f"Selected receipt is unavailable: {exc}")
@@ -108,6 +112,7 @@ def load_snapshot(
     records: list[HistoryEvidence] = []
     native: ValidationSummary | None = None
     findings: FindingsViewReport | None = None
+    verification: ProjectVerificationReport | None = None
     for item in overview.items:
         record, parsed = _item(root, item)
         if item.kind == "native" and isinstance(parsed, ValidationSummary):
@@ -146,6 +151,29 @@ def load_snapshot(
                         ),
                     }
                 )
+        if item.kind == "verification" and isinstance(parsed, ProjectVerificationReport):
+            verification = parsed
+            if (
+                parsed.project_id != project_id
+                or item.selected_path is None
+                or not recorded_directory(
+                    root, parsed.run_directory, root / Path(item.selected_path).parent
+                )
+            ):
+                verification = None
+                record = record.model_copy(
+                    update={
+                        "integrity": "STALE",
+                        "issues": (
+                            *record.issues,
+                            "Verification project or receipt directory differs from the overview.",
+                        ),
+                    }
+                )
+            if verification is not None:
+                record = recheck_verification(root, item, record)
+                if record.integrity != "CURRENT":
+                    verification = None
         records.append(record)
     commit = native.checked_commit if native is not None else None
     if not overview.current_source_hashes:
@@ -172,6 +200,7 @@ def load_snapshot(
         evidence=tuple(records),
         native=native,
         findings=findings,
+        verification=verification,
     )
 
 

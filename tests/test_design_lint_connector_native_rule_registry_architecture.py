@@ -55,6 +55,12 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.footprint_peer_pin_assignment_divergence": {
             "tests.test_ci_hosted_connector_returns.test_footprint_alias_peer_assignments_are_validated_on_pinned_native_versions",
         },
+        "connector.footprint_peer_pin_unanchored_assignment_divergence": {
+            "tests.test_connector_peer_unanchored_assignments.test_native_unanchored_alias_fault_and_common_control_repeat",
+        },
+        "connector.footprint_peer_unanchored_scope_unreviewed": {
+            "tests.test_connector_peer_unanchored_assignments.test_native_unanchored_alias_fault_and_common_control_repeat",
+        },
         "connector.footprint_peer_pin_open_outlier": {
             "tests.test_ci_hosted_connector_returns.test_footprint_alias_open_peer_is_validated_on_pinned_native_versions",
         },

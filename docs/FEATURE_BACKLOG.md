@@ -41,9 +41,9 @@ checkout on 2026-10-30, including uncommitted work; it does not claim a release.
 [overview](REVIEW_OVERVIEW.md) with source and artifact freshness, drawing and
 report links, and CLI/MCP parity. New parts receipts now bind their HTML, text,
 and CSV outputs to the saved report through a hash manifest; older parts
-receipts still show unknown output freshness. Top-level verification source
-binding remains unavailable, so that card retains unknown freshness where
-appropriate.
+receipts still show unknown output freshness. New verification receipts with a
+captured input inventory bind the saved summary to checkout inputs and top-level
+stage files; receipts without the manifest retain unknown freshness.
 
 **First slice:** Generate one local page for a selected project that links to
 chosen schematic/PCB, findings, parts, 3D, simulation, and verification
@@ -245,13 +245,14 @@ from observed wiring and retains links to the underlying records.
 
 **Current slice:** [Verification history](VERIFICATION_HISTORY.md) compares
 two explicitly chosen saved project overviews, retaining source and manifest
-hashes, selected receipt integrity, individual native check states, findings
-fingerprints, and optional declared release artifacts. It marks each snapshot
-against the current checkout separately from its capture-time freshness. A
-missing findings receipt cannot create a false resolved finding. The existing
-overview's verification summary lacks standalone source binding, so its
-category remains unknown where appropriate; historical stage-level verification
-and release readiness trends remain open.
+hashes, selected receipt integrity, individual native check and verification
+stage states, findings fingerprints, and optional declared release artifacts.
+It marks each snapshot against the current checkout separately from its
+capture-time freshness. A missing findings receipt cannot create a false
+resolved finding. New verification receipts carry checkout input and stage-file
+hashes for the overview; historical receipts without those hashes remain
+unknown. History rechecks a captured verification manifest and its outputs
+before showing stage deltas. Release readiness trends remain open.
 
 **First slice:** Compare two explicitly chosen revision snapshots and show
 changes in checks, findings, source, and available release artifacts. Keep

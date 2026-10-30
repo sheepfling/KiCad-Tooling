@@ -16,6 +16,7 @@ import pytest
 from kicad_tooling.check_toolchain import cli_executable
 from kicad_tooling.ci import project_static_pipeline
 from kicad_tooling.hwrepo.contracts import write_model
+from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import (
     CheckAllSummary,
     CheckEvidence,
@@ -23,6 +24,8 @@ from kicad_tooling.hwrepo.models import (
     ValidationSummary,
 )
 from kicad_tooling.hwrepo.native_container_context import NATIVE_CONTAINER_IMAGE_ENV
+from kicad_tooling.hwrepo.review_overview import build_review_overview
+from kicad_tooling.hwrepo.verification_receipts import read_verification_output_manifest
 from kicad_tooling.verify import container_command, format_report, run_command, verify
 from tests.verify_support import VerifyFixture, native_summary
 
@@ -41,8 +44,84 @@ class VerifyTests(VerifyFixture):
         self.assertEqual(json.loads((receipt / "verification.json").read_text())["status"], "PASS")
         self.assertIn("portable", (receipt / "events.log").read_text())
         self.assertEqual(json.loads((receipt / "run.json").read_text())["status"], "PASS")
+        manifest = read_verification_output_manifest(receipt, digest(receipt / "verification.json"))
+        self.assertIsNotNone(manifest)
+        assert manifest is not None
+        self.assertTrue(manifest.source_stable)
+        self.assertIn("portable.json", manifest.artifacts_sha256)
+        self.assertIn("examples/projects/controller/project.json", manifest.source_hashes)
         self.assertIn("Electrical analysis: NOT_RUN", format_report(first))
         self.assertIn("--init", " ".join(first.next_actions))
+
+    def test_overview_detects_changed_verification_output_and_source(self) -> None:
+        result = verify(self.root, "controller")
+        selected = Path(result.run_directory) / "verification.json"
+
+        def item(name: str):
+            overview = build_review_overview(
+                self.root,
+                "controller",
+                verification_report=selected,
+                output=Path("build/review-overview") / name,
+            )
+            return next(entry for entry in overview.items if entry.kind == "verification")
+
+        current = item("verification-current")
+        self.assertEqual(current.freshness, "CURRENT")
+        self.assertTrue(any(link.label == "portable.json" for link in current.links))
+        self.assertIn(
+            "Checkout inputs",
+            (self.root / "build/review-overview/verification-current/index.html").read_text(),
+        )
+        saved_text = selected.parent / "verification.txt"
+        original = saved_text.read_text(encoding="utf-8")
+        saved_text.write_text(original + "changed\n", encoding="utf-8")
+        changed_output = item("verification-output-changed")
+        self.assertEqual(changed_output.freshness, "STALE")
+        self.assertFalse(any(link.label == "verification.txt" for link in changed_output.links))
+        saved_text.write_text(original, encoding="utf-8")
+        manifest_path = selected.parent / "verification-artifacts.json"
+        original_manifest = manifest_path.read_text(encoding="utf-8")
+        manifest = read_verification_output_manifest(selected.parent, digest(selected))
+        assert manifest is not None
+        write_model(
+            manifest_path,
+            manifest.model_copy(update={"report_sha256": "0" * 64}),
+        )
+        invalid = item("verification-manifest-changed")
+        self.assertEqual(invalid.freshness, "STALE")
+        self.assertFalse(any(link.label == "portable.json" for link in invalid.links))
+        manifest_path.write_text(original_manifest, encoding="utf-8")
+        source = self.root / "examples/projects/controller/project.json"
+        original_source = source.read_text(encoding="utf-8")
+        source.write_text(original_source + "\n", encoding="utf-8")
+        self.assertEqual(item("verification-source-changed").freshness, "STALE")
+        source.write_text(original_source, encoding="utf-8")
+        (self.root / "docs/untracked-review.md").write_text("new project input\n", encoding="utf-8")
+        self.assertEqual(item("verification-input-added").freshness, "STALE")
+
+    def test_source_changed_during_verification_marks_receipt_unstable(self) -> None:
+        baseline = project_static_pipeline(self.root, ("controller",))
+        source = self.root / "examples/projects/controller/project.json"
+
+        def change_source(*_args: object) -> object:
+            source.write_text(source.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+            return baseline
+
+        with patch("kicad_tooling.verify.project_static_pipeline", side_effect=change_source):
+            result = verify(self.root, "controller")
+        receipt = Path(result.run_directory)
+        manifest = read_verification_output_manifest(receipt, digest(receipt / "verification.json"))
+        assert manifest is not None
+        self.assertFalse(manifest.source_stable)
+        overview = build_review_overview(
+            self.root,
+            "controller",
+            verification_report=receipt / "verification.json",
+            output=Path("build/review-overview/unstable-verification"),
+        )
+        item = next(entry for entry in overview.items if entry.kind == "verification")
+        self.assertEqual(item.freshness, "STALE")
 
     def test_cli_json_stdout_stays_parseable_while_progress_goes_to_stderr(self) -> None:
         command = subprocess.run(
