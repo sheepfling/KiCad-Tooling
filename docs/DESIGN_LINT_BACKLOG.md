@@ -14136,8 +14136,9 @@ control are documented in the
   existing coverage checks.
 - **Evidence plan:** Synthetic fault/control fixtures cover current unscoped
   maps, reviewed and separate scopes, common anchors, stale or incomplete
-  coverage, policy overrides, exact ignores, and deterministic ordering. The
-  existing digest-pinned native connector fault/control pair can exercise both
+  coverage, policy overrides, exact ignores, and deterministic ordering. See the
+  [fixture notes](../tests/fixtures/design_lint/connector-peer-unanchored-scope/README.md).
+  The existing digest-pinned native connector fault/control pair can exercise both
   the missing-scope prompt and LINT-272 at KiCad 10.0.0 and 10.0.5. Add a
   source-bound CLI/MCP parity case before marking the rule accepted.
 
