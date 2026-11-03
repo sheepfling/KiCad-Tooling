@@ -17,13 +17,13 @@ from unittest.mock import patch
 
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.diagnostic_journal import DiagnosticJournal
+from kicad_tooling.hwrepo.diagnostic_reporting import format_text
 from kicad_tooling.hwrepo.diagnostics import (
     bom_binding_findings,
     bom_findings,
     diagnose_import,
     diagnose_project,
     finding,
-    format_text,
     native_findings,
     quote_argument,
     report,

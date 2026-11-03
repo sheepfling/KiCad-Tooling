@@ -13,7 +13,8 @@ from .hwrepo.diagnostic_operation_models import (
     ImportDiagnosticRequest,
     ProjectDiagnosticRequest,
 )
-from .hwrepo.diagnostics import diagnose_import_request, diagnose_project_request, format_text
+from .hwrepo.diagnostic_reporting import format_text
+from .hwrepo.diagnostics import diagnose_import_request, diagnose_project_request
 from .hwrepo.doctor import doctor
 from .hwrepo.foreign_pcb import convert_pcb
 from .hwrepo.foreign_pcb import render_text as render_foreign_pcb

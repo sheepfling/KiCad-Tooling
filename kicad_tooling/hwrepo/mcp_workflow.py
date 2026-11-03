@@ -11,12 +11,12 @@ from . import (
     contract_coach,
     design_lint,
     diagnostics,
-    generation,
     packaging,
     releasing,
     rescue,
 )
 from . import mcp_3d_workflow as _mcp_3d_workflow
+from . import mcp_generation_workflow as _mcp_generation_workflow
 from . import mcp_workflow_paths as _mcp_workflow_paths
 from . import model_population as _model_population
 from .contracts import read_model, repo_path, write_model
@@ -29,6 +29,7 @@ from .diagnostic_operation_models import (
     ProjectDiagnosticRequest,
     ProjectRescueRequest,
 )
+from .diagnostic_reporting import format_text
 from .diagnostics_models import DiagnosticReport, LocalRescueReport
 from .discovery import load_config
 from .doctor import NativeRunner, doctor
@@ -38,7 +39,6 @@ from .exports import require_declared_variant, verify_exports
 from .mcp_workflow_journal import journal
 from .models import (
     ContractCoachReport,
-    McpGenerationReport,
     McpScopeReport,
     ReleaseExportReport,
     ReleaseManifest,
@@ -55,6 +55,7 @@ from .sharding import shard_projects
 
 # Preserve the former import surface while implementation lives in owner modules.
 model_population = _model_population
+generate_views = _mcp_generation_workflow.generate_views
 apply_model_population = _mcp_3d_workflow.apply_model_population
 export_3d = _mcp_3d_workflow.export_3d
 inspect_3d_models = _mcp_3d_workflow.inspect_3d_models
@@ -85,7 +86,7 @@ def diagnose_import(
             receipt,
         )
         result = result.model_copy(update={"run_directory": str(receipt.directory)})
-        receipt.finish(result, diagnostics.format_text(result, "full"), result.status)
+        receipt.finish(result, format_text(result, "full"), result.status)
         return result
 
 
@@ -111,7 +112,7 @@ def diagnose_project(
             receipt,
         )
         result = result.model_copy(update={"run_directory": str(receipt.directory)})
-        receipt.finish(result, diagnostics.format_text(result, "full"), result.status)
+        receipt.finish(result, format_text(result, "full"), result.status)
         return result
 
 
@@ -489,29 +490,3 @@ def restore_package(root: Path, archive: str, restore_id: str) -> ReleasePackage
     output = fresh_output(root, "restores", restore_id)
     output.parent.mkdir(parents=True, exist_ok=True)
     return packaging.restore(path, output)
-
-
-def generate_views(
-    root: Path,
-    view_id: str,
-    project_ids: tuple[str, ...] = (),
-    product_ids: tuple[str, ...] = (),
-    tags: tuple[str, ...] = (),
-    exclude_tags: tuple[str, ...] = (),
-) -> McpGenerationReport:
-    """Render validated product/BOM projections into a fresh ignored review directory."""
-    selector = ProjectSelector(
-        project_ids=project_ids,
-        product_ids=product_ids,
-        tags=tags,
-        excluded_tags=exclude_tags,
-    )
-    selected = resolve_project_ids(root, selector) if selector.active else None
-    output = fresh_output(root, "views", view_id)
-    output.mkdir(parents=True, exist_ok=False)
-    names = generation.generate(root, output=output, selected_project_ids=selected)
-    return McpGenerationReport(
-        status="PASS",
-        directory=output.relative_to(root).as_posix(),
-        files=tuple((output / name).relative_to(root).as_posix() for name in names),
-    )

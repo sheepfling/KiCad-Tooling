@@ -9,9 +9,9 @@ from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
+from .command_evidence_models import CommandEvidence
 from .contracts import write_model
 from .generation import csv_cell
-from .models import CommandEvidence
 from .project_models import ComponentContract
 
 
@@ -27,6 +27,8 @@ def svg_files(output: Path, name: str) -> list[Path]:
         if ET.parse(path).getroot().tag != "{http://www.w3.org/2000/svg}svg":
             raise ValueError("Export is not an SVG document")
     return files
+
+
 def execute(argv: Sequence[str], cwd: Path, output: Path, name: str) -> CommandEvidence:
     record = CommandEvidence(
         argv=tuple(argv),
@@ -53,6 +55,8 @@ def execute(argv: Sequence[str], cwd: Path, output: Path, name: str) -> CommandE
         record = record.model_copy(update={"error": str(exc)})
     write_model(output / f"{name}.command.json", record)
     return record
+
+
 def write_native_bom(
     path: Path,
     components: Mapping[str, ComponentContract],

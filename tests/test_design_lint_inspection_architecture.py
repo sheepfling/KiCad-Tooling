@@ -42,7 +42,9 @@ def test_inspection_request_has_a_bounded_owner_and_explicit_fields() -> None:
         )
 
 
-def test_legacy_inspection_adapter_builds_the_typed_request(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_legacy_inspection_adapter_builds_the_typed_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     seen: list[tuple[Path, DesignLintInspectionRequest]] = []
 
     def inspect(root: Path, request: DesignLintInspectionRequest) -> object:
@@ -62,18 +64,20 @@ def test_legacy_inspection_adapter_builds_the_typed_request(monkeypatch: pytest.
 
 
 @pytest.mark.parametrize(
-    "relative_path",
+    ("relative_path", "request_type", "operation"),
     (
-        "design_lint.py",
-        "hwrepo/mcp_workflow.py",
-        "verify.py",
+        ("design_lint.py", "DesignLintInspectionRequest", "inspect_request"),
+        ("hwrepo/mcp_workflow.py", "DesignLintInspectionRequest", "inspect_request"),
+        ("verify.py", "ProjectVerificationRequest", "verify_request"),
     ),
 )
-def test_cli_mcp_and_verify_use_the_shared_typed_operation(relative_path: str) -> None:
+def test_cli_mcp_and_verify_use_their_shared_typed_operation(
+    relative_path: str, request_type: str, operation: str
+) -> None:
     source = (PACKAGE / relative_path).read_text(encoding="utf-8")
 
-    assert "DesignLintInspectionRequest" in source
-    assert "inspect_request" in source
+    assert request_type in source
+    assert operation in source
 
 
 def test_inspection_service_owns_evaluation_without_surface_dependencies() -> None:
@@ -88,6 +92,5 @@ def test_inspection_service_owns_evaluation_without_surface_dependencies() -> No
     assert "design_lint_evaluator" in imported
     assert "design_lint_inspection_models" in imported
     assert not any(
-        module.endswith((".cli", ".mcp_server", ".ci")) or ".mcp_" in module
-        for module in imported
+        module.endswith((".cli", ".mcp_server", ".ci")) or ".mcp_" in module for module in imported
     )

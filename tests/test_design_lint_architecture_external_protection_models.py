@@ -29,9 +29,6 @@ EXPECTED_OWNER_IMPORTS = MappingProxyType(
         "design_lint_evaluation_preparation.py": frozenset({"ExternalProtectionCoverageReport"}),
         "design_lint_evaluation_types.py": frozenset({"ExternalProtectionCoverageReport"}),
         "design_lint_evaluator.py": frozenset({"ExternalProtectionCoverageReport"}),
-        "design_lint_mapped_coverage_candidates.py": frozenset(
-            {"ExternalProtectionCoverageReport"}
-        ),
         "design_lint_protection_candidates.py": frozenset({"ExternalProtectionCoverageReport"}),
         "external_protection.py": frozenset(
             {

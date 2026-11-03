@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import cast
 
 import pytest
@@ -200,7 +201,7 @@ def test_exact_ignore_is_limited_to_one_unanchored_pin_fingerprint() -> None:
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=SCOPE_RULE_ID)
 @pytest.mark.skipif(
-    __import__("os").environ.get("KICAD_RUN_NATIVE_CONNECTOR_FIXTURES") != "1",
+    os.environ.get("KICAD_RUN_NATIVE_CONNECTOR_FIXTURES") != "1",
     reason="digest-pinned native connector fixtures run in package acceptance",
 )
 @pytest.mark.parametrize(

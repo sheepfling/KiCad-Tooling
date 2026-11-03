@@ -132,6 +132,18 @@ def test_request_and_response_owners_remain_below_review_limits() -> None:
     for relative in (
         "kicad_tooling/hwrepo/diagnostic_operation_models.py",
         "kicad_tooling/hwrepo/diagnostics_models.py",
+        "kicad_tooling/hwrepo/diagnostic_reporting.py",
     ):
         path = _ROOT / relative
         assert len(path.read_text(encoding="utf-8").splitlines()) < 500
+
+
+def test_diagnostic_report_formatter_owns_only_typed_report_rendering() -> None:
+    path = _ROOT / "kicad_tooling/hwrepo/diagnostic_reporting.py"
+    modules = {
+        node.module
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
+        if isinstance(node, ast.ImportFrom) and node.module is not None
+    }
+
+    assert modules == {"__future__", "pathlib", "typing", "diagnostics_models"}

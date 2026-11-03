@@ -17,6 +17,7 @@ from . import mcp_checks as checks
 from . import mcp_conversion as conversion
 from . import mcp_electrical as electrical
 from . import mcp_files as files
+from . import mcp_generation_workflow as view_workflow
 from . import mcp_new_workflows as new_workflows
 from . import mcp_parts as parts
 from . import mcp_parts_extensions as part_tools
@@ -753,7 +754,7 @@ def create_server(
             These catalog-derived projections are distinct from native assembly/purchasing BOMs.
             """
             with service_operation(operation):
-                return workflow.generate_views(
+                return view_workflow.generate_views(
                     root,
                     view_id,
                     tuple(project_ids or ()),

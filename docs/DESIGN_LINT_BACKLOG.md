@@ -718,13 +718,15 @@ standalone parity work when it closes a demonstrated feature regression.
   policy, exact-ignore, and ordering tests pass (16 selected tests). Exact
   native acceptance for this source-matched scope passed in prerelease run
   `41124115839`.
-- **LINT-273 missing connector peer scope:** Follow LINT-272 with one
-  default-REVIEW prompt when similar connector aliases have unanchored generic
-  pin splits, complete current source-matched pin maps, and a reviewed full
-  connector inventory, but no authored `peer_assignment_group`. The prompt
-  asks whether the interfaces should be compared or kept separate; it does not
-  infer connectivity. Require synthetic controls, CLI/MCP parity, and the same
-  digest-pinned exact-version connector fixture lane before acceptance.
+- **LINT-273 missing connector peer scope:** Implemented as the default-REVIEW
+  prompt for complete, current connector maps with unanchored generic pin
+  splits and no authored `peer_assignment_group`. It asks whether the
+  interfaces should be compared or kept separate; it does not infer
+  connectivity. The scoped release gate passed in `v0.5.3rc332` (GitHub Actions
+  run `41737054038`), including synthetic controls, CLI/MCP parity, the
+  digest-pinned native connector fixture lane, and the installed-wheel check
+  against a separate project checkout. Public-board applicability and
+  independent reviewer-value measurements remain open.
 - **LINT-010 source-evidence gap:** The optional capacitance scope now checks
   exact fitted contributors on native bus nets against reviewed effective-
   capacitance maxima and a residual-loading bound. Explicit non-C contributor
@@ -14113,9 +14115,11 @@ control are documented in the
 
 #### LINT-273 — Review missing peer scope for unanchored connector alias splits
 
-- **Status:** In progress. The candidate is limited to a complete, current
-  connector inventory whose exact interface pin maps still match the native
-  netlist. Each similar alias must have no authored peer-assignment group.
+- **Status:** Implemented as default-REVIEW
+  `connector.footprint_peer_unanchored_scope_unreviewed`. The candidate is
+  limited to a complete, current connector inventory whose exact interface
+  pin maps still match the native netlist. Each similar alias must have no
+  authored peer-assignment group.
 - **Gap:** LINT-272 correctly stays quiet without a reviewed comparison group.
   A complete map can still leave repeated connector aliases with split generic
   assignments and no common-net anchor, without prompting anyone to decide
@@ -14134,13 +14138,19 @@ control are documented in the
   not-applicable, split-scope, DNP, `PART_ID`, open, ambiguous, named-function,
   incomplete-inventory, and mismatched-metadata cases remain quiet or with
   existing coverage checks.
-- **Evidence plan:** Synthetic fault/control fixtures cover current unscoped
+- **Evidence:** Synthetic fault/control fixtures cover current unscoped
   maps, reviewed and separate scopes, common anchors, stale or incomplete
   coverage, policy overrides, exact ignores, and deterministic ordering. See the
   [fixture notes](../tests/fixtures/design_lint/connector-peer-unanchored-scope/README.md).
-  The existing digest-pinned native connector fault/control pair can exercise both
-  the missing-scope prompt and LINT-272 at KiCad 10.0.0 and 10.0.5. Add a
-  source-bound CLI/MCP parity case before marking the rule accepted.
+  The existing digest-pinned native connector fault/control pair exercises both
+  the missing-scope prompt and LINT-272. The source-bound
+  `test_unanchored_scope_review_cli_mcp_parity` case compares the CLI and MCP
+  reports.
+- **Acceptance:** The `Lint-Rule` gate passed in `v0.5.3rc332` (GitHub Actions
+  run `41737054038`). It enabled `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES` and passed
+  the installed-wheel checks against a separate project checkout. This
+  establishes synthetic behavior and native export compatibility, not
+  independently measured public-board applicability or reviewer value.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

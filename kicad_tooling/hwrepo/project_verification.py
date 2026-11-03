@@ -10,18 +10,19 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
+from .command_evidence_models import CommandEvidence
 from .container_git import git_metadata_mounts
 from .contracts import read_model
 from .design_lint_report_models import DesignLintReport
 from .diagnostic_journal import DiagnosticJournal
 from .diagnostic_operation_models import ProjectDiagnosticRequest
-from .diagnostics import diagnose_project_request, format_text
+from .diagnostic_reporting import format_text
+from .diagnostics import diagnose_project_request
 from .diagnostics_models import DiagnosticReport
 from .discovery import load_config, load_registry
 from .doctor import doctor
 from .models import (
     CheckAllSummary,
-    CommandEvidence,
     ProjectVerificationReport,
 )
 from .native_container_context import NATIVE_CONTAINER_IMAGE_ENV
