@@ -96,7 +96,9 @@ class _BoardVariantParity(McpParityHarness):
             "after_variant": "ALT",
         }
         async with Client(create_server(self.root, allow_exports=True), mode="legacy") as client:
-            mcp = await self.call(client, "compare_board_variants", BoardVariantComparisonReport, arguments)
+            mcp = await self.call(
+                client, "compare_board_variants", BoardVariantComparisonReport, arguments
+            )
         self.receipt_equal(cli, mcp, "output_directory")
         self.assertEqual(
             (Path(cli.output_directory) / "index.html").read_bytes(),

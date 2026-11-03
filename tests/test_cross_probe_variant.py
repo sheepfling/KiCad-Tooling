@@ -31,7 +31,9 @@ from tests.test_cross_probe import saved_inputs
 pytestmark = pytest.mark.template_checkout
 
 
-def _variant_files(root: Path, variant: str, netlist: bytes, fitted: str) -> PcbVariantPopulationEvidence:
+def _variant_files(
+    root: Path, variant: str, netlist: bytes, fitted: str
+) -> PcbVariantPopulationEvidence:
     config = load_config(root, "examples/projects/controller/project.json")
     directory = root / "build/design-lint/variant-evidence"
     directory.mkdir(parents=True, exist_ok=True)
@@ -194,7 +196,10 @@ def test_named_variants_show_different_population_and_withhold_board_markers(
     assert "Selected native variant: ALT" in html
     assert 'id="marker-1-pcb-1"' not in html
     assert "J9" in html
-    assert read_model(Path(alternate.output_directory) / "cross-probe.json", CrossProbeReport) == alternate
+    assert (
+        read_model(Path(alternate.output_directory) / "cross-probe.json", CrossProbeReport)
+        == alternate
+    )
 
 
 def test_changed_or_missing_variant_evidence_is_rejected(tmp_path: Path) -> None:
@@ -246,7 +251,9 @@ def test_retagged_command_with_wrong_native_input_is_rejected(tmp_path: Path) ->
         command.model_copy(
             update={
                 "argv": tuple(
-                    "/work/another-board.kicad_pcb" if arg.endswith("/controller.kicad_pcb") else arg
+                    "/work/another-board.kicad_pcb"
+                    if arg.endswith("/controller.kicad_pcb")
+                    else arg
                     for arg in command.argv
                 )
             }

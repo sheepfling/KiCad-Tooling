@@ -36,7 +36,9 @@ def main() -> int:
         print(report.model_dump_json(indent=2))
     else:
         changed = sum(item.change != "UNCHANGED" for item in report.references)
-        print(f"Board variants: {report.before.name} → {report.after.name}; {changed} changed references")
+        print(
+            f"Board variants: {report.before.name} → {report.after.name}; {changed} changed references"
+        )
         print(f"Open: {report.output_directory}/index.html")
     return 0
 

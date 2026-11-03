@@ -110,7 +110,7 @@ This view does not approve parts, purchasing, assembly, or release.</p>
 <th>{escape(report.before.name)}</th><th>{escape(report.after.name)}</th></tr></thead>
 <tbody>{quantity_rows}</tbody></table></div></section>
 <section><h2>Unresolved fitted references</h2><ul>{unresolved}</ul></section>
-<section><h2>Issues</h2><ul>{issues or '<li>None recorded.</li>'}</ul></section>
+<section><h2>Issues</h2><ul>{issues or "<li>None recorded.</li>"}</ul></section>
 <section><h2>Source and evidence</h2><details><summary>Show hashes and saved native files</summary>
 {_source_rows(report)}</details><p><a href="comparison.json">Structured comparison record</a></p>
 </section></main></body></html>"""

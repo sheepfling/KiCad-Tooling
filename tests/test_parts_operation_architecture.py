@@ -79,9 +79,15 @@ def test_typed_operation_maps_to_the_shared_planner_and_retains_one_receipt(
         issues=("synthetic architecture seam",),
     )
 
-    monkeypatch.setattr(parts_workflow, "_selected_netlist_runner", lambda _request: selected_runner)
-    monkeypatch.setattr(parts_workflow, "prepare", lambda *args: (prepare_calls.append(args), report)[1])
-    monkeypatch.setattr(parts_workflow, "save_report", lambda path, value: saved.append((path, value)))
+    monkeypatch.setattr(
+        parts_workflow, "_selected_netlist_runner", lambda _request: selected_runner
+    )
+    monkeypatch.setattr(
+        parts_workflow, "prepare", lambda *args: (prepare_calls.append(args), report)[1]
+    )
+    monkeypatch.setattr(
+        parts_workflow, "save_report", lambda path, value: saved.append((path, value))
+    )
 
     result = parts_workflow.prepare_request(root, request)
 

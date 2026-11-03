@@ -27,10 +27,14 @@ def _mapping(value: JsonValue, label: str) -> Mapping[str, JsonValue]:
     if not isinstance(value, dict):
         raise TypeError(f"{label}: expected object")
     return cast(Mapping[str, JsonValue], value)
+
+
 def _sequence(value: JsonValue, label: str) -> tuple[JsonValue, ...]:
     if not isinstance(value, list):
         raise TypeError(f"{label}: expected list")
     return tuple(cast(list[JsonValue], value))
+
+
 def check_report(
     path: Path,
     kind: Literal["erc", "drc"],
@@ -73,6 +77,8 @@ def check_report(
             drc_categories += ("schematic_parity",)
         findings = tuple(_sequence(data.get(key), f"DRC {key}") for key in drc_categories)
     return sum(len(items) for items in findings)
+
+
 def native_report_examples(path: Path, kind: str) -> tuple[str, ...]:
     """Read a few rule descriptions from KiCad JSON for the repair coach."""
     try:
@@ -101,6 +107,8 @@ def native_report_examples(path: Path, kind: str) -> tuple[str, ...]:
         return tuple(examples)
     except (OSError, ValueError, TypeError):
         return ()
+
+
 def read_netlist(path: Path) -> NetlistContract:
     """Parse actual KiCad names, including hierarchical nets and unassigned footprints."""
     tree = ET.parse(path).getroot()
@@ -198,6 +206,8 @@ def read_netlist(path: Path) -> NetlistContract:
         pin_electrical_types=pin_electrical_types,
         component_pin_numbers=component_pin_numbers,
     )
+
+
 def check_netlist(
     path: Path, validation: PcbValidationContract | SchematicValidationContract
 ) -> NetlistContract:

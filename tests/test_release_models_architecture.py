@@ -60,7 +60,9 @@ def test_production_modules_import_release_models_from_their_owners() -> None:
             names = {alias.name for alias in node.names}
             misplaced = (_RELEASE_TYPE_NAMES | _RELEASE_REPORT_NAMES) & names
             if misplaced:
-                violations.append(f"{path.relative_to(_REPOSITORY_ROOT)}:{node.lineno}: {sorted(misplaced)}")
+                violations.append(
+                    f"{path.relative_to(_REPOSITORY_ROOT)}:{node.lineno}: {sorted(misplaced)}"
+                )
 
     assert not violations, "Production imports must use release model owners: " + "; ".join(
         violations
@@ -86,5 +88,7 @@ def test_models_registry_reexports_preserve_release_identity_and_json() -> None:
         manifest="build/releases/candidate-1/manifest.json",
     )
 
-    assert models.ReleaseReadinessReport.model_validate_json(readiness.model_dump_json()) == readiness
+    assert (
+        models.ReleaseReadinessReport.model_validate_json(readiness.model_dump_json()) == readiness
+    )
     assert models.ReleasePackageReport.model_validate_json(package.model_dump_json()) == package
