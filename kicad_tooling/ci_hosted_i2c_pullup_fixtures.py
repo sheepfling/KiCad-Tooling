@@ -25,8 +25,8 @@ from .hwrepo.models import (
     ElectricalCheck,
     NetlistContract,
 )
+from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.resistor_paths import visible_resistor_pullups
-from .validate import read_netlist
 
 
 def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:

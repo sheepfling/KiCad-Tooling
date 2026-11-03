@@ -56,7 +56,7 @@ class McpPartsSafetyTests(unittest.IsolatedAsyncioTestCase):
             )
             for absent in ("allow_checks", "output", "cli", "root"):
                 self.assertNotIn(absent, tool.input_schema["properties"])
-            with patch("kicad_tooling.hwrepo.parts_workflow.prepare") as prepare:
+            with patch("kicad_tooling.hwrepo.parts_workflow.prepare_request") as prepare:
                 result = await client.call_tool(
                     "prepare_parts",
                     {
@@ -80,7 +80,7 @@ class McpPartsSafetyTests(unittest.IsolatedAsyncioTestCase):
                 path.unlink(missing_ok=True)
                 os.mkfifo(path)
                 try:
-                    with patch("kicad_tooling.hwrepo.parts_workflow.prepare") as prepare:
+                    with patch("kicad_tooling.hwrepo.parts_workflow.prepare_request") as prepare:
                         with self.assertRaisesRegex(ValueError, "regular"):
                             mcp_parts.prepare_parts(
                                 self.root, "controller", "special-file", self.summary
@@ -95,7 +95,7 @@ class McpPartsSafetyTests(unittest.IsolatedAsyncioTestCase):
     @unittest.skipIf(os.name == "nt", "POSIX FIFO")
     def test_special_default_preferences_are_rejected_before_any_reader(self) -> None:
         os.mkfifo(self.preferences)
-        with patch("kicad_tooling.hwrepo.parts_workflow.prepare") as prepare:
+        with patch("kicad_tooling.hwrepo.parts_workflow.prepare_request") as prepare:
             with self.assertRaises(ValueError):
                 mcp_parts.prepare_parts(
                     self.root, "controller", "special-preferences", self.summary
@@ -113,7 +113,7 @@ class McpPartsSafetyTests(unittest.IsolatedAsyncioTestCase):
             parent.symlink_to(external, target_is_directory=True)
         except OSError as exc:
             self.skipTest(str(exc))
-        with patch("kicad_tooling.hwrepo.parts_workflow.prepare") as prepare:
+        with patch("kicad_tooling.hwrepo.parts_workflow.prepare_request") as prepare:
             with self.assertRaisesRegex(ValueError, "Linked"):
                 mcp_parts.prepare_parts(self.root, "controller", "new-review", self.summary)
             prepare.assert_not_called()
@@ -123,7 +123,7 @@ class McpPartsSafetyTests(unittest.IsolatedAsyncioTestCase):
         output.mkdir(parents=True)
         existing = output / "report.json"
         existing.write_bytes(b"existing review")
-        with patch("kicad_tooling.hwrepo.parts_workflow.prepare") as prepare:
+        with patch("kicad_tooling.hwrepo.parts_workflow.prepare_request") as prepare:
             with self.assertRaisesRegex(ValueError, "already exists"):
                 mcp_parts.prepare_parts(self.root, "controller", "already-exists", self.summary)
             prepare.assert_not_called()

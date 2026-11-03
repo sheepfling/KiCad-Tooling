@@ -7,21 +7,21 @@ from typing import Literal, TypeAlias
 from uuid import uuid4
 
 import kicad_tooling.hwrepo.electrical_analysis_contract_models as electrical_contracts
-from kicad_tooling.hwrepo import pcb_test_access_models
 
-from .can_termination_contract import can_termination_checks
 from .command_evidence_models import CommandEvidence
 from .component_power_ratings import component_power_rating_checks
 from .component_voltage_ratings import component_voltage_rating_checks
 from .connector_contact_ratings import connector_contact_rating_checks
 from .contract_coach import (
     AutoNetlistRunner,
+    ContainerNetlistRunner,
+    LocalNetlistRunner,
     NetlistRunner,
     capture,
     inspect_summary,
     receipt_directory,
 )
-from .contracts import repo_path, write_model
+from .contracts import write_model
 from .control_input_checks import control_input_checks
 from .digital_peer_voltages import digital_peer_voltage_checks
 from .electrical import (
@@ -33,30 +33,50 @@ from .electrical import (
     selected_config,
     simulation_cases,
 )
+from .electrical_bus_evaluation import (
+    ElectricalBusEvaluationRequest,
+    evaluate_electrical_bus_requirements,
+)
+from .electrical_netlist_evidence import (
+    ElectricalNetlistEvidence,
+    NetlistEvidenceNotRequested,
+    NetlistEvidenceObserved,
+    admit_netlist_evidence,
+)
+from .electrical_operation_models import ElectricalAnalysisRequest
+from .electrical_pcb_evaluation import (
+    ElectricalPcbReturnEvaluationRequest,
+    ElectricalTestAccessEvaluationRequest,
+    evaluate_electrical_test_access,
+    evaluate_pcb_return_paths,
+)
+from .electrical_pcb_evidence import (
+    ElectricalPcbEvidence,
+    PcbEvidenceNotRequested,
+    PcbEvidenceObserved,
+    admit_pcb_evidence,
+)
+from .electrical_simulation_evaluation import (
+    ElectricalSimulationEvaluationRequest,
+    evaluate_electrical_simulations,
+)
+from .electrical_simulation_evidence import SimulationVersionObserved
 from .evidence import digest, source_state
-from .i2c_pullup_contract import i2c_pullup_checks
+from .model_primitives import Digest, RepositoryPath
 from .models import (
     ElectricalAnalysisReport,
     ElectricalCheck,
     ElectricalSuiteReport,
+    NetlistContract,
 )
 from .mosfet_stress import mosfet_stress_checks
 from .pcb_return_path_capture import capture_native_pcb_connectivity, expected_probe_sha256
-from .pcb_return_path_checks import pcb_return_path_checks
 from .power_connectivity import power_connectivity_checks
 from .project_models import ProjectKind
 from .rs485_heuristics import rs485_checks
 from .selection import ProjectSelector, resolve_project_ids
 from .serial_heuristics import serial_peer_checks
-from .spi_contract import spi_checks
-from .spice import executable_path, run_case, simulator_version
-from .test_access import (
-    evaluate_test_access_checks,
-    pcb_access_probe_request_set,
-    pcb_accessibility_checks,
-    pcb_probe_envelope_checks,
-)
-from .usb_c_contract import usb_c_checks
+from .test_access import pcb_access_probe_request_set
 
 ElectricalAnalysisState: TypeAlias = (
     electrical_contracts.AnalysisNotApplicable | electrical_contracts.AnalysisPending
@@ -72,6 +92,44 @@ def analyze(
     ngspice: str = "ngspice",
     runner: NetlistRunner | None = None,
 ) -> ElectricalAnalysisReport:
+    """Compatibility adapter for the typed electrical-analysis operation."""
+    request = ElectricalAnalysisRequest(
+        project_id=project_id,
+        output=output,
+        native_summary=native_summary,
+        cli=cli,
+        ngspice=ngspice,
+    )
+    if runner is None:
+        return analyze_request(root, request)
+    return _analyze(root, request, runner)
+
+
+def analyze_request(
+    root: Path,
+    request: ElectricalAnalysisRequest,
+) -> ElectricalAnalysisReport:
+    """Run electrical analysis from one typed request and the selected fixed runner."""
+    return _analyze(root, request, None)
+
+
+def _selected_netlist_runner(request: ElectricalAnalysisRequest) -> NetlistRunner:
+    if request.runner_mode == "local":
+        return LocalNetlistRunner(request.cli)
+    if request.runner_mode == "container":
+        return ContainerNetlistRunner()
+    return AutoNetlistRunner(request.cli)
+
+
+def _analyze(
+    root: Path,
+    request: ElectricalAnalysisRequest,
+    runner: NetlistRunner | None,
+) -> ElectricalAnalysisReport:
+    project_id = request.project_id
+    output = request.output
+    native_summary = request.native_summary
+    ngspice = request.ngspice
     root = root.resolve()
     source = source_state(root)
     if native_summary is not None and not native_summary.is_absolute():
@@ -81,7 +139,7 @@ def analyze(
     output = receipt_directory(root, project_id, output)
     checks: list[ElectricalCheck] = []
     commands: dict[str, CommandEvidence] = {}
-    inputs: dict[str, str] = {}
+    inputs: dict[RepositoryPath, Digest] = {}
     status = "FAIL"
     try:
         config = selected_config(root, project_id)
@@ -150,7 +208,10 @@ def analyze(
             )
             inputs = bind_electrical_inputs(root, config, contract)
             write_model(output / "requirements.json", contract)
-            netlist = None
+            netlist_evidence: ElectricalNetlistEvidence = NetlistEvidenceNotRequested(
+                project_id=project_id
+            )
+            netlist: NetlistContract | None = None
             needs_netlist = any(
                 (
                     isinstance(grounding, electrical_contracts.GroundingAnalysis),
@@ -185,13 +246,22 @@ def analyze(
                 if native_summary is None:
                     netlist_output = output / "netlist"
                     netlist_output.mkdir()
-                    observed = capture(
-                        root, project_id, netlist_output, runner or AutoNetlistRunner(cli)
+                    netlist_report = capture(
+                        root,
+                        project_id,
+                        netlist_output,
+                        runner or _selected_netlist_runner(request),
                     )
                 else:
-                    observed = inspect_summary(root, project_id, native_summary)
-                write_model(output / "netlist-evidence.json", observed)
-                netlist = observed.observed
+                    netlist_report = inspect_summary(root, project_id, native_summary)
+                write_model(output / "netlist-evidence.json", netlist_report)
+                netlist_evidence = admit_netlist_evidence(
+                    netlist_report,
+                    project_id,
+                    {name: inputs[name] for name in config.required_inputs},
+                )
+                if isinstance(netlist_evidence, NetlistEvidenceObserved):
+                    netlist = netlist_evidence.observed
             if isinstance(grounding, electrical_contracts.GroundingAnalysis):
                 if netlist is None:
                     checks.append(
@@ -218,82 +288,80 @@ def analyze(
                 if isinstance(test_access, electrical_contracts.TestAccessAnalysis)
                 else None
             )
-            pcb_snapshot = None
-            pcb_probe_error: str | None = None
+            pcb_evidence: ElectricalPcbEvidence = PcbEvidenceNotRequested(project_id=project_id)
             needs_pcb_probe = (
                 isinstance(pcb_return_paths, electrical_contracts.PcbReturnPathsAnalysis)
                 or access_probe_requests is not None
             )
-            if needs_pcb_probe and config.kind is ProjectKind.PCB:
-                try:
-                    if access_probe_requests is None:
-                        command, pcb_snapshot = capture_native_pcb_connectivity(
-                            root, config, output / "pcb-connectivity"
-                        )
-                    else:
-                        command, pcb_snapshot = capture_native_pcb_connectivity(
-                            root,
-                            config,
-                            output / "pcb-connectivity",
-                            access_probe_requests=access_probe_requests,
-                        )
-                    commands["pcb-connectivity"] = command
-                    if pcb_snapshot is None:
-                        pcb_probe_error = (
-                            "KiCad native PCB probing did not produce evidence; inspect "
-                            "pcb-connectivity/native.command.json."
-                        )
-                    else:
-                        write_model(output / "pcb-connectivity/snapshot.json", pcb_snapshot)
-                except (OSError, ValueError) as exc:
-                    pcb_probe_error = str(exc)
-            if isinstance(pcb_return_paths, electrical_contracts.PcbReturnPathsAnalysis):
+            if needs_pcb_probe:
                 if config.kind is not ProjectKind.PCB:
-                    checks.append(
-                        ElectricalCheck(
-                            id="pcb-return-paths/source",
-                            status="FAIL",
-                            detail="PCB return-path requirements need an authoritative PCB project.",
-                        )
+                    pcb_evidence = admit_pcb_evidence(
+                        project_id,
+                        None,
+                        None,
+                        reason="PCB native evidence requires an authoritative PCB project.",
+                        access_probe_requests=access_probe_requests,
                     )
                 else:
-                    if pcb_snapshot is None:
-                        checks.append(
-                            ElectricalCheck(
-                                id="pcb-return-paths/native-probe",
-                                status="NOT_RUN",
-                                detail=pcb_probe_error
-                                or "KiCad native PCB probing did not produce evidence.",
+                    try:
+                        if access_probe_requests is None:
+                            command, pcb_snapshot = capture_native_pcb_connectivity(
+                                root, config, output / "pcb-connectivity"
                             )
-                        )
-                    else:
-                        board_path = repo_path(root, config.project).with_suffix(".kicad_pcb")
-                        checks.extend(
-                            pcb_return_path_checks(
-                                pcb_return_paths,
+                        else:
+                            command, pcb_snapshot = capture_native_pcb_connectivity(
+                                root,
+                                config,
+                                output / "pcb-connectivity",
+                                access_probe_requests=access_probe_requests,
+                            )
+                        commands["pcb-connectivity"] = command
+                        if pcb_snapshot is None:
+                            pcb_evidence = admit_pcb_evidence(
+                                project_id,
+                                command,
+                                None,
+                                reason=(
+                                    "KiCad native PCB probing did not produce evidence; inspect "
+                                    "pcb-connectivity/native.command.json."
+                                ),
+                                access_probe_requests=access_probe_requests,
+                            )
+                        else:
+                            write_model(output / "pcb-connectivity/snapshot.json", pcb_snapshot)
+                            pcb_evidence = admit_pcb_evidence(
+                                project_id,
+                                command,
                                 pcb_snapshot,
-                                board_sha256=digest(board_path),
-                                kicad_version=config.kicad_version,
-                                image=config.image,
-                                probe_sha256=expected_probe_sha256(),
+                                access_probe_requests=access_probe_requests,
                             )
+                    except (OSError, ValueError) as exc:
+                        pcb_evidence = admit_pcb_evidence(
+                            project_id,
+                            None,
+                            None,
+                            reason=str(exc) or "KiCad native PCB probing did not produce evidence.",
+                            access_probe_requests=access_probe_requests,
                         )
-            elif isinstance(pcb_return_paths, electrical_contracts.AnalysisPending):
-                checks.append(
-                    ElectricalCheck(
-                        id="pcb-return-paths",
-                        status="NOT_CONFIGURED",
-                        detail=pcb_return_paths.reason,
+            checks.extend(
+                evaluate_pcb_return_paths(
+                    ElectricalPcbReturnEvaluationRequest(
+                        project_id=project_id,
+                        root=root,
+                        config=config,
+                        requirement=pcb_return_paths,
+                        evidence=pcb_evidence,
+                        expected_probe_sha256=(
+                            expected_probe_sha256()
+                            if isinstance(
+                                pcb_return_paths, electrical_contracts.PcbReturnPathsAnalysis
+                            )
+                            and isinstance(pcb_evidence, PcbEvidenceObserved)
+                            else None
+                        ),
                     )
                 )
-            else:
-                checks.append(
-                    ElectricalCheck(
-                        id="pcb-return-paths",
-                        status="NOT_APPLICABLE",
-                        detail=pcb_return_paths.reason,
-                    )
-                )
+            )
             if isinstance(pin_connectivity, electrical_contracts.PinConnectivityAnalysis):
                 if netlist is None:
                     checks.append(
@@ -315,98 +383,18 @@ def analyze(
                         detail=pin_connectivity.reason,
                     )
                 )
-            if isinstance(i2c_pullups, electrical_contracts.I2cPullupAnalysis):
-                if netlist is None:
-                    checks.append(
-                        ElectricalCheck(
-                            id="i2c-pullups",
-                            status="FAIL",
-                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
-                        )
-                    )
-                else:
-                    checks.extend(i2c_pullup_checks(i2c_pullups, netlist))
-            elif i2c_pullups is not None:
-                checks.append(
-                    ElectricalCheck(
-                        id="i2c-pullups",
-                        status=(
-                            "NOT_CONFIGURED"
-                            if isinstance(i2c_pullups, electrical_contracts.AnalysisPending)
-                            else "NOT_APPLICABLE"
-                        ),
-                        detail=i2c_pullups.reason,
+            checks.extend(
+                evaluate_electrical_bus_requirements(
+                    ElectricalBusEvaluationRequest(
+                        project_id=project_id,
+                        netlist_evidence=netlist_evidence,
+                        i2c_pullups=i2c_pullups,
+                        can_termination=can_termination,
+                        usb_c=usb_c,
+                        spi=spi,
                     )
                 )
-            if isinstance(can_termination, electrical_contracts.CanTerminationAnalysis):
-                if netlist is None:
-                    checks.append(
-                        ElectricalCheck(
-                            id="can-termination",
-                            status="FAIL",
-                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
-                        )
-                    )
-                else:
-                    checks.extend(can_termination_checks(can_termination, netlist))
-            elif can_termination is not None:
-                checks.append(
-                    ElectricalCheck(
-                        id="can-termination",
-                        status=(
-                            "NOT_CONFIGURED"
-                            if isinstance(can_termination, electrical_contracts.AnalysisPending)
-                            else "NOT_APPLICABLE"
-                        ),
-                        detail=can_termination.reason,
-                    )
-                )
-            if isinstance(usb_c, electrical_contracts.UsbCAnalysis):
-                if netlist is None:
-                    checks.append(
-                        ElectricalCheck(
-                            id="usb-c",
-                            status="FAIL",
-                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
-                        )
-                    )
-                else:
-                    checks.extend(usb_c_checks(usb_c, netlist))
-            elif usb_c is not None:
-                checks.append(
-                    ElectricalCheck(
-                        id="usb-c",
-                        status=(
-                            "NOT_CONFIGURED"
-                            if isinstance(usb_c, electrical_contracts.AnalysisPending)
-                            else "NOT_APPLICABLE"
-                        ),
-                        detail=usb_c.reason,
-                    )
-                )
-            if isinstance(spi, electrical_contracts.SpiAnalysis):
-                if netlist is None:
-                    checks.append(
-                        ElectricalCheck(
-                            id="spi",
-                            status="FAIL",
-                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
-                        )
-                    )
-                else:
-                    checks.extend(spi_checks(spi, netlist))
-            elif spi is not None:
-                checks.append(
-                    ElectricalCheck(
-                        id="spi",
-                        status=(
-                            "NOT_CONFIGURED"
-                            if isinstance(spi, electrical_contracts.AnalysisPending)
-                            else "NOT_APPLICABLE"
-                        ),
-                        detail=spi.reason,
-                    )
-                )
+            )
             if isinstance(serial_peers, electrical_contracts.SerialPeerAnalysis):
                 if netlist is None:
                     checks.append(
@@ -632,115 +620,18 @@ def analyze(
                         detail=power_connectivity.reason,
                     )
                 )
-            if isinstance(test_access, electrical_contracts.TestAccessAnalysis):
-                pcb_accessibility: (
-                    pcb_test_access_models.PcbAccessAnalysis | ElectricalAnalysisState
-                ) = test_access.pcb_accessibility
-                if netlist is None:
-                    checks.append(
-                        ElectricalCheck(
-                            id="test-access/schematic",
-                            status="FAIL",
-                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
-                        )
-                    )
-                else:
-                    checks.extend(evaluate_test_access_checks(test_access, netlist))
-                if isinstance(pcb_accessibility, pcb_test_access_models.PcbAccessAnalysis):
-                    if config.kind is not ProjectKind.PCB:
-                        checks.append(
-                            ElectricalCheck(
-                                id="test-access/pcb-accessibility/source",
-                                status="FAIL",
-                                detail="PCB access evidence is required, but this project has no PCB project kind.",
-                            )
-                        )
-                    else:
-                        board_path = repo_path(root, config.project).with_suffix(".kicad_pcb")
-                        checks.extend(
-                            pcb_accessibility_checks(
-                                test_access,
-                                pcb_accessibility,
-                                board_path,
-                            )
-                        )
-                elif isinstance(pcb_accessibility, electrical_contracts.AnalysisPending):
-                    checks.append(
-                        ElectricalCheck(
-                            id="test-access/pcb-accessibility",
-                            status="NOT_CONFIGURED",
-                            detail=pcb_accessibility.reason,
-                        )
-                    )
-                else:
-                    checks.append(
-                        ElectricalCheck(
-                            id="test-access/pcb-accessibility",
-                            status="NOT_APPLICABLE",
-                            detail=pcb_accessibility.reason,
-                        )
-                    )
-                if access_probe_requests is not None:
-                    if config.kind is not ProjectKind.PCB:
-                        checks.append(
-                            ElectricalCheck(
-                                id="test-access/pcb-probe-envelope/source",
-                                status="FAIL",
-                                detail="Probe-envelope evidence requires an authoritative PCB project.",
-                            )
-                        )
-                    elif pcb_snapshot is None:
-                        checks.append(
-                            ElectricalCheck(
-                                id="test-access/pcb-probe-envelope/native-probe",
-                                status="NOT_RUN",
-                                detail=pcb_probe_error
-                                or "KiCad native PCB probing did not produce evidence.",
-                            )
-                        )
-                    else:
-                        checks.extend(pcb_probe_envelope_checks(test_access, pcb_snapshot))
-            elif test_access is not None:
-                access_status = (
-                    "NOT_CONFIGURED"
-                    if isinstance(test_access, electrical_contracts.AnalysisPending)
-                    else "NOT_APPLICABLE"
-                )
-                checks.append(
-                    ElectricalCheck(
-                        id="test-access/schematic",
-                        status=access_status,
-                        detail=test_access.reason,
+            checks.extend(
+                evaluate_electrical_test_access(
+                    ElectricalTestAccessEvaluationRequest(
+                        project_id=project_id,
+                        root=root,
+                        config=config,
+                        requirement=test_access,
+                        netlist_evidence=netlist_evidence,
+                        pcb_evidence=pcb_evidence,
                     )
                 )
-                checks.append(
-                    ElectricalCheck(
-                        id="test-access/pcb-accessibility",
-                        status=access_status,
-                        detail=test_access.reason,
-                    )
-                )
-            else:
-                checks.append(
-                    ElectricalCheck(
-                        id="test-access/schematic",
-                        status="NOT_CONFIGURED",
-                        detail=(
-                            "No test_access requirement or explicit not-applicable decision is "
-                            "recorded in tests/electrical.json."
-                        ),
-                    )
-                )
-                checks.append(
-                    ElectricalCheck(
-                        id="test-access/pcb-accessibility",
-                        status="NOT_CONFIGURED",
-                        detail=(
-                            "No PCB test-access requirements or explicit not-applicable decision "
-                            "is recorded in tests/electrical.json."
-                        ),
-                    )
-                )
+            )
             if isinstance(
                 high_frequency,
                 (electrical_contracts.AnalysisNotApplicable, electrical_contracts.AnalysisPending),
@@ -755,28 +646,23 @@ def analyze(
                     )
                 )
             checks.extend(power_budget_checks(contract.power))
-            cases = simulation_cases(contract)
-            if cases:
-                executable = executable_path(ngspice)
-                try:
-                    commands["version"] = simulator_version(
-                        output, executable, contract.ngspice_version
-                    )
-                except ValueError as exc:
-                    checks.extend(
-                        ElectricalCheck(id=case.id, status="NOT_RUN", detail=str(exc))
-                        for case in cases
-                    )
-                else:
-                    for case in cases:
-                        try:
-                            command, measured = run_case(root, output, executable, case)
-                            commands[case.id] = command
-                            checks.extend(measured)
-                        except (OSError, ValueError) as exc:
-                            checks.append(
-                                ElectricalCheck(id=case.id, status="FAIL", detail=str(exc))
-                            )
+            simulation = evaluate_electrical_simulations(
+                ElectricalSimulationEvaluationRequest(
+                    project_id=project_id,
+                    root=root,
+                    output=output,
+                    ngspice=ngspice,
+                    expected_version=contract.ngspice_version,
+                    source_sha256={name: inputs[name] for name in config.required_inputs},
+                    cases=simulation_cases(contract),
+                )
+            )
+            if isinstance(simulation.version, SimulationVersionObserved):
+                commands["version"] = simulation.version.command
+            for result in simulation.cases:
+                if result.command is not None:
+                    commands[result.case.id] = result.command
+                checks.extend(result.checks)
             bind_electrical_inputs(root, config, contract, inputs)
             if source_state(root) != source:
                 raise ValueError("Repository source changed during electrical analysis")
@@ -815,7 +701,11 @@ def analyze_scope(
     """Run the same selected electrical scope for CLI and MCP, retaining every result."""
     identifiers = resolve_project_ids(root, selector or ProjectSelector())
     reports = tuple(
-        analyze(root, project_id, cli=cli, ngspice=ngspice) for project_id in identifiers
+        analyze_request(
+            root,
+            ElectricalAnalysisRequest(project_id=project_id, cli=cli, ngspice=ngspice),
+        )
+        for project_id in identifiers
     )
     return ElectricalSuiteReport(
         status="PASS" if reports and all(report.status == "PASS" for report in reports) else "FAIL",

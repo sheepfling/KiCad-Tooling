@@ -52,3 +52,12 @@ product contract or a catalog identity is unresolved, instance rows remain
 visible but canonical BOM quantities are unavailable and the result is
 `REVIEW`. No measured board population, approved substitute, purchase, build,
 or release decision is inferred from either comparison.
+
+To compare saved product views from **different source revisions**, use
+[product revision BOM comparison](PRODUCT_REVISION_BOM.md). New views retain the
+parts catalog bytes needed to reconstruct each side's historical quantities.
+
+To compare two **observed named KiCad board populations** from one retained
+design-lint receipt, use [board-variant comparison](BOARD_VARIANT_COMPARISON.md).
+It shows fitted PCB quantity changes beside schematic population changes and
+keeps references without a matching part identity unresolved.

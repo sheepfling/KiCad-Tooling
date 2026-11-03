@@ -12,7 +12,6 @@ from mcp.server.mcpserver.exceptions import ResourceError
 from mcp.types import ToolAnnotations
 from pydantic import Field, StrictInt
 
-from ..verify import Depth, verify
 from . import mcp_3d_workflow as workflow_3d
 from . import mcp_checks as checks
 from . import mcp_conversion as conversion
@@ -30,33 +29,30 @@ from .design_lint_reconciliation_models import DesignLintReconciliationReport
 from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .design_lint_rule_types import DesignLintTheme
+from .diagnostics_models import DiagnosticReport, LocalRescueReport
 from .doctor import NativeRunner
 from .doctor import doctor as inspect_environment
+from .electrical_chart_models import ElectricalChartsReport, ElectricalChartsSuiteReport
 from .file_access_models import McpEditPreview, McpEditResult, McpFileContent
-from .findings_view import build_findings_view
-from .findings_view_models import FindingsViewReport
 from .import_inventory import scan_imports as scan_designs
 from .import_review import apply_reviewed_import
 from .importing import import_project as import_design
 from .layout import layout, workflow_guide
 from .mcp_project_inventory import register_project_inventory_tools
+from .mcp_release import register_release_tools
 from .mcp_server_guardrails import import_path, service_operation
 from .mcp_visualization_exports import register_visualization_export_tools
 from .mcp_workflow_documents import DOCUMENTS, DocumentName
 from .models import (
     AutoCadReport,
     ContractCoachReport,
-    DiagnosticReport,
     ElectricalAnalysisReport,
-    ElectricalChartsReport,
-    ElectricalChartsSuiteReport,
     ElectricalInputInventory,
     ElectricalSetupReport,
     ElectricalSuiteReport,
     ForeignFormat,
     ForeignPcbReport,
     ImpactPlan,
-    LocalRescueReport,
     McpArtifactList,
     McpGenerationReport,
     McpModelMapAssignment,
@@ -72,8 +68,6 @@ from .models import (
     PurchasingReport,
     ReleaseExportReport,
     ReleaseManifest,
-    ReleasePackageReport,
-    ReleaseReadinessReport,
     SupplierHandoffReport,
     TemplateDoctorReport,
     ThreeDReport,
@@ -85,6 +79,9 @@ from .project_models import (
     ProjectKind,
     ProjectScaffoldReport,
 )
+from .project_verification import verify_request
+from .project_verification_models import ProjectVerificationRequest
+from .project_verification_models import VerificationDepth as Depth
 from .purchasing_preference_models import McpPurchasingPreferencesResult, PurchasingPreferences
 from .review_overview import build_review_overview
 from .review_overview_models import ReviewOverviewReport
@@ -488,19 +485,14 @@ def create_server(
 
     server.tool(annotations=CREATE_ONLY)(preview_model_population)
 
-    def check_release(manifest: str) -> ReleaseReadinessReport:
-        """Verify a retained release manifest and its source/evidence; creates no approval."""
-        with service_operation(operation):
-            return workflow.check_release(root, manifest)
-
-    server.tool(annotations=READ_ONLY)(check_release)
-
-    def verify_package(archive: str) -> ReleasePackageReport:
-        """Verify an ignored ZIP through temporary restore without running restored project code."""
-        with service_operation(operation):
-            return workflow.verify_package(root, archive)
-
-    server.tool(annotations=READ_ONLY)(verify_package)
+    register_release_tools(
+        server,
+        root,
+        operation,
+        READ_ONLY,
+        CREATE_ONLY,
+        allow_exports=allow_exports,
+    )
 
     if allow_checks:
 
@@ -541,11 +533,16 @@ def create_server(
             and dependencies. Inspect status, diagnosis and run_directory in the report.
             """
             with service_operation(operation):
-                if depth == "portable" and runner != "auto":
-                    raise ValueError("A local or container runner requires native depth")
                 # DiagnosticJournal creates this directory; reject links before it writes.
                 repo_path(root, "build/diagnostics")
-                return verify(root, project_id, depth=depth, runner=runner)
+                return verify_request(
+                    root,
+                    ProjectVerificationRequest(
+                        project_id=project_id,
+                        depth=depth,
+                        runner=runner,
+                    ),
+                )
 
         server.tool(annotations=EXECUTION)(check_project)
 
@@ -767,20 +764,6 @@ def create_server(
 
         server.tool(annotations=CREATE_ONLY)(generate_views)
 
-        def package_release(manifest: str, package_id: str) -> ReleasePackageReport:
-            """Verify and package retained release evidence into a fresh ignored ZIP; no publishing."""
-            with service_operation(operation):
-                return workflow.package_release(root, manifest, package_id)
-
-        server.tool(annotations=CREATE_ONLY)(package_release)
-
-        def restore_package(archive: str, restore_id: str) -> ReleasePackageReport:
-            """Restore an ignored ZIP to a fresh ignored checkout, without executing its scripts."""
-            with service_operation(operation):
-                return workflow.restore_package(root, archive, restore_id)
-
-        server.tool(annotations=CREATE_ONLY)(restore_package)
-
         if allow_checks:
 
             def export_project(
@@ -914,25 +897,6 @@ def create_server(
                 )
 
         server.tool(annotations=CREATE_ONLY)(export_review_overview)
-
-        def export_findings_view(
-            project_id: str, view_id: str, native_summary: str, lint_report: str | None = None
-        ) -> FindingsViewReport:
-            """Export an offline review of saved source-bound ERC, DRC, and optional lint evidence.
-
-            This reads existing evidence, does not execute KiCad or lint, and keeps
-            unmapped findings visible. Outputs use a fresh build/findings-view/view_id.
-            """
-            with service_operation(operation):
-                return build_findings_view(
-                    root,
-                    project_id,
-                    Path(native_summary),
-                    workflow.fresh_output(root, "findings-view", view_id),
-                    None if lint_report is None else Path(lint_report),
-                )
-
-        server.tool(annotations=CREATE_ONLY)(export_findings_view)
 
         def capture_electrical_inputs(
             project_id: str,

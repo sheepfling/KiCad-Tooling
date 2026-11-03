@@ -71,6 +71,12 @@ CHECK_TOOLS = frozenset(
 WRITE_TOOLS = frozenset({"new_project", "import_project"})
 EXPORT_TOOLS = frozenset(
     {
+        "compare_board_variants",
+        "compare_electrical_ac_runs",
+        "compare_product_revision_bom",
+        "export_assembly_review",
+        "export_bom_cross_probe",
+        "export_connectivity_view",
         "package_release",
         "restore_package",
         "generate_views",
@@ -93,6 +99,9 @@ EXPORT_TOOLS = frozenset(
         "compare_product_variant_bom",
         "export_grounding_view",
         "export_findings_view",
+        "export_power_tree_view",
+        "export_product_visual",
+        "export_release_readiness_view",
         "export_review_overview",
         "export_verification_history",
         "export_import_review",

@@ -17,7 +17,7 @@ from .hwrepo.contracts import read_kicad_erc_report, write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 
 def spi_data_same_net_fixture_lane(root: Path, *, version: str, image: str, log: HostedLog) -> None:

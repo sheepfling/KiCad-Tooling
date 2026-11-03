@@ -98,11 +98,22 @@ def _drawing(report: CrossProbeReport, drawing: ReviewDrawing) -> str:
 
 def render_cross_probe(report: CrossProbeReport) -> str:
     """Keep unsupported references visible and make each supported link reversible."""
+    named = report.variant_scope == "NAMED_OBSERVED"
     rows = "".join(
         f'<tr class="component" id="component-{number}"><th>{escape(entry.reference)}</th>'
-        f"<td>{escape(entry.population)}</td><td>{escape(entry.part_id or 'Unresolved')}<br>"
+        f"<td>{escape(entry.population)}"
+        + ("<br><small>Variant native</small>" if entry.origin == "VARIANT_NATIVE" else "")
+        + f"</td><td>{escape(entry.part_id or 'Unresolved')}<br>"
         f"{escape(entry.value)}<br>{escape(entry.footprint)}</td>"
-        f"<td>{_location_links(entry.board, number, 'pcb')}</td>"
+        + (
+            f"<td>{escape(entry.variant_schematic)}</td><td>{escape(entry.variant_board)}</td>"
+            f"<td>{escape(entry.variant_part_id or 'Unresolved')}<br>"
+            f"{escape(entry.variant_value or '')}<br>"
+            f"{escape(entry.variant_footprint or '')}</td>"
+            if named
+            else ""
+        )
+        + f"<td>{_location_links(entry.board, number, 'pcb')}</td>"
         f"<td>{_location_links(entry.schematic, number, 'schematic')}</td>"
         f"<td>{escape('; '.join(entry.issues))}</td></tr>"
         for number, entry in enumerate(report.entries, 1)
@@ -112,22 +123,50 @@ def render_cross_probe(report: CrossProbeReport) -> str:
         for path, sha in sorted(report.source_hashes.items())
     )
     issues = "".join(f"<li>{escape(item)}</li>" for item in report.issues)
+    variant_note = (
+        f"Selected native variant: {escape(report.assembly_variant or '')}. "
+        "Schematic and PCB population are observed from retained native exports. "
+        "The parts receipt has no variant identity; differences are shown per reference."
+        if named
+        else "Variant identity is not recorded by these receipts."
+    )
+    variant_sources = (
+        f"<p>Named variant design-lint receipt: <code>{escape(report.variant_lint_report or '')}"
+        f"</code> SHA-256 <code>{report.variant_lint_report_sha256 or ''}</code>.</p>"
+        + "<ul>"
+        + "".join(
+            f"<li><code>{escape(path)}</code> SHA-256 <code>{sha}</code></li>"
+            for path, sha in sorted(report.variant_evidence_sha256.items())
+        )
+        + "</ul>"
+        + (
+            "<p>PCB references absent from the variant schematic netlist: "
+            + ", ".join(escape(item) for item in report.variant_board_only)
+            + ".</p>"
+            if report.variant_board_only
+            else ""
+        )
+        if named
+        else ""
+    )
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BOM and design: {escape(report.project_id)}</title><style>{_STYLE}</style></head>
 <body><main><h1>BOM and design: {escape(report.project_id)}</h1>
 <p class="note">Reference locations support navigation only. They do not approve a part, footprint,
-assembly, electrical design, or release. Variant identity is not recorded by these receipts.</p>
+assembly, electrical design, or release. {variant_note}</p>
 <section><h2>Components</h2><label for="reference-search">Search references and parts</label>
 <p><input id="reference-search" type="search" autocomplete="off"></p>
 <p id="count" aria-live="polite"></p><div class="scroll"><table><thead><tr>
-<th>Reference</th><th>Population</th><th>Part / value / footprint</th><th>PCB</th>
+<th>Reference</th><th>Parts population</th><th>Part / value / footprint</th>
+{"<th>Variant schematic</th><th>Variant PCB</th><th>Variant part / value / footprint</th>" if named else ""}<th>PCB</th>
 <th>Schematic</th><th>Notes</th></tr></thead><tbody>{rows}</tbody></table></div></section>
 {"".join(_drawing(report, drawing) for drawing in report.drawings)}
 <section><h2>Source and receipt identity</h2><p>Parts receipt: <code>{escape(report.parts_report)}</code>
 SHA-256 <code>{report.parts_report_sha256}</code>.</p>
 <p>Findings drawing receipt: <code>{escape(report.findings_view)}</code>
 SHA-256 <code>{report.findings_view_sha256}</code>.</p><ul>{source_rows}</ul>
+{variant_sources}
 <p><a href="cross-probe.json">Structured navigation record</a></p></section>
 <section><h2>Unmapped evidence</h2><ul>{issues}</ul></section>
 </main><script>{_SCRIPT}</script></body></html>"""

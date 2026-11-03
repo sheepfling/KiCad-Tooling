@@ -12,8 +12,8 @@ from .command_evidence_models import CommandEvidence
 from .contracts import read_model, repo_path
 from .discovery import load_registry
 from .layout import layout
-from .models import ProjectTestsReport
 from .product_models import ProductIndex
+from .project_static_pipeline_models import ProjectTestsReport
 
 
 def _run_suite(root: Path, directory: Path) -> CommandEvidence:

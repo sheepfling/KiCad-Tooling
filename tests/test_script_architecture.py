@@ -17,7 +17,8 @@ JSON_ADAPTERS = frozenset(
         "kicad_tooling/hwrepo/contracts.py",
         # GitHub API JSON is validated into narrow Pydantic response models at this boundary.
         "kicad_tooling/hwrepo/hosted_governance.py",
-        "kicad_tooling/validate.py",
+        # Native ERC/DRC JSON is checked against project toolchain identity before use.
+        "kicad_tooling/hwrepo/native_report_parsing.py",
         # Native PCB probe output is validated as a strict snapshot before models are built.
         "kicad_tooling/hwrepo/pcb_return_path_capture.py",
         # Native variant-probe JSON is bound to board and project digests before use.
@@ -27,6 +28,8 @@ JSON_ADAPTERS = frozenset(
         "kicad_tooling/hwrepo/pcb_drc_source_evidence.py",
         # Native custom-rule probe JSON has a focused identity and sentinel adapter.
         "kicad_tooling/hwrepo/pcb_dru_compilation_native_report.py",
+        # Retained glTF JSON chunks are parsed under binary envelope and size limits.
+        "kicad_tooling/hwrepo/three_d_glb.py",
     }
 )
 # Discover services automatically so a new module cannot evade architecture checks.
@@ -38,6 +41,38 @@ CORE_MODULES = tuple(
         and path.relative_to(ROOT).as_posix() not in JSON_ADAPTERS | {"kicad_tooling/hardware.py"}
     )
 )
+
+
+def _uses_raw_json_decoder(source: str) -> bool:
+    tree = ast.parse(source)
+    json_modules: set[str] = set()
+    decoder_names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            json_modules.update(
+                alias.asname or alias.name.split(".")[0]
+                for alias in node.names
+                if alias.name == "json" or alias.name.startswith("json.")
+            )
+        elif isinstance(node, ast.ImportFrom) and node.module == "json":
+            decoder_names.update(
+                alias.asname or alias.name
+                for alias in node.names
+                if alias.name in {"load", "loads"}
+            )
+
+    return any(
+        isinstance(node, ast.Call)
+        and (
+            isinstance(node.func, ast.Name)
+            and node.func.id in decoder_names
+            or isinstance(node.func, ast.Attribute)
+            and node.func.attr in {"load", "loads"}
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id in json_modules
+        )
+        for node in ast.walk(tree)
+    )
 
 
 class ScriptArchitectureTests(unittest.TestCase):
@@ -62,8 +97,13 @@ class ScriptArchitectureTests(unittest.TestCase):
         all_modules = (*CORE_MODULES, *JSON_ADAPTERS)
         for relative in all_modules:
             with self.subTest(module=relative):
-                calls_json_loads = "json.loads(" in self.source(relative)
-                self.assertEqual(calls_json_loads, relative in JSON_ADAPTERS)
+                decodes_json = _uses_raw_json_decoder(self.source(relative))
+                self.assertEqual(decodes_json, relative in JSON_ADAPTERS)
+
+    def test_json_decoder_gate_detects_import_aliases(self) -> None:
+        self.assertTrue(_uses_raw_json_decoder("import json as decoder\ndecoder.loads('{}')"))
+        self.assertTrue(_uses_raw_json_decoder("from json import loads as decode\ndecode('{}')"))
+        self.assertFalse(_uses_raw_json_decoder("json_text = '{}'; print(json_text)"))
 
     def test_model_primitives_define_closed_inputs_and_ci_outputs_remain_typed(self) -> None:
         primitive_source = self.source("kicad_tooling/hwrepo/model_primitives.py")
@@ -73,7 +113,9 @@ class ScriptArchitectureTests(unittest.TestCase):
         self.assertIn("class ValidationSummary", source)
         self.assertIn("class CheckAllSummary", source)
         self.assertIn("class ToolchainAssessment", source)
-        self.assertIn("class DocumentationPolicyReport", source)
+        documentation_models = self.source("kicad_tooling/hwrepo/documentation_models.py")
+        self.assertIn("class DocumentationPolicyReport", documentation_models)
+        self.assertIn("from .documentation_models import", source)
         self.assertIn("class ReleaseManifest", source)
         self.assertIn("class TemplateContract", source)
         sourcing_models = self.source("kicad_tooling/hwrepo/sourcing_models.py")

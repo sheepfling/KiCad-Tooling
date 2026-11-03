@@ -24,7 +24,7 @@ from .hwrepo.contracts import write_model
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import ElectricalCheck, NetlistContract
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 
 def can_termination_native_fixture_lane(

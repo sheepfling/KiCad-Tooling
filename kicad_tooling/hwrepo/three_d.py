@@ -11,8 +11,6 @@ from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from typing import Literal
 
-from ..check_toolchain import cli_executable
-from ..validate import hashes
 from .command_evidence_models import CommandEvidence
 from .contracts import repo_path
 from .diagnostic_journal import DiagnosticJournal
@@ -30,7 +28,9 @@ from .models import (
     ThreeDReport,
     ThreeDView,
 )
+from .native_toolchain import cli_executable
 from .project_models import ProjectConfig, ProjectKind
+from .project_source_hashes import hash_project_sources as hashes
 from .three_d_gallery import finalize_gallery
 from .three_d_gallery import valid_artifact as _valid_artifact
 

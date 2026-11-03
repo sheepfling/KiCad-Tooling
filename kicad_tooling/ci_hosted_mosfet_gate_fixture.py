@@ -27,7 +27,7 @@ from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
 from .hwrepo.mosfet_gate_connectivity import RULE_ID, SOURCE_BIAS_RULE_ID
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 MOSFET_GATE_FIXTURE_CASES = MappingProxyType(
     {

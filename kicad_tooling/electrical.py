@@ -8,13 +8,8 @@ import sys
 from pathlib import Path
 
 from .hwrepo.cli_output import summary
-from .hwrepo.contract_coach import (
-    AutoNetlistRunner,
-    ContainerNetlistRunner,
-    LocalNetlistRunner,
-    NetlistRunner,
-)
-from .hwrepo.electrical_runner import analyze, format_report
+from .hwrepo.electrical_operation_models import ElectricalAnalysisRequest
+from .hwrepo.electrical_runner import analyze_request, format_report
 from .hwrepo.electrical_setup import capture_inputs, initialize
 from .hwrepo.layout import default_project_root
 
@@ -118,21 +113,16 @@ def main() -> int:
                 )
             )
             return 0
-        runner: NetlistRunner = (
-            LocalNetlistRunner(args.cli)
-            if args.runner == "local"
-            else ContainerNetlistRunner()
-            if args.runner == "container"
-            else AutoNetlistRunner(args.cli)
-        )
-        report = analyze(
+        report = analyze_request(
             args.root,
-            args.project,
-            args.output,
-            args.native_summary,
-            args.cli,
-            args.ngspice,
-            runner,
+            ElectricalAnalysisRequest(
+                project_id=args.project,
+                output=args.output,
+                native_summary=args.native_summary,
+                cli=args.cli,
+                ngspice=args.ngspice,
+                runner_mode=args.runner,
+            ),
         )
     except (OSError, ValueError) as exc:
         print(f"Electrical command could not finish: {exc}", file=sys.stderr)

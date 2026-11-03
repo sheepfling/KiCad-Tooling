@@ -10,11 +10,12 @@ from pathlib import Path
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.three_d_gallery import finalize_gallery, valid_artifact, write_gallery
 from kicad_tooling.hwrepo.three_d_glb import inspect_glb
+from tests.json_types import JsonObject
 
 BOARD = (Path(__file__).parent / "fixtures" / "three_d_board.glb").read_bytes()
 
 
-def _glb(document: dict[str, object]) -> bytes:
+def _glb(document: JsonObject) -> bytes:
     chunk = json.dumps(document).encode("utf-8")
     chunk += b" " * (-len(chunk) % 4)
     return (

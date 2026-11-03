@@ -98,7 +98,10 @@ Snapshot at clean revision `5d9b0b41` on 2026-10-29:
 **Outcome:** each stage knows which authored intent and observed evidence it
 receives, who produced them, and what absence or staleness means. **Start:**
 the [design-lint data routing decision](DESIGN_LINT_DATA_ROUTING.md), which
-traces I²C pull-up hints from native capture through finding disposition.
+traces I²C pull-up hints from native capture through finding disposition, and
+the [electrical analysis routing decision](ELECTRICAL_ANALYSIS_DATA_ROUTING.md),
+which traces authored requirements, source-bound netlist/PCB evidence, and
+simulation results through the versioned receipt.
 
 Specify the run identity, project-owned intent, native observations, optional
 theme coverage, derived scans, candidates, and report fields as separate typed
@@ -106,10 +109,37 @@ inputs. Record which hashes and exact tool versions bind them. Decide whether a
 theme receives an unavailable-evidence state or stops before scanning. Keep
 the current public report and fingerprints stable during the pilot.
 
-**Done when:** one existing rule family has an agreed input/output table and
+Electrical analysis now has a parallel route decision and a typed netlist
+admission in `electrical_netlist_evidence.py`. The admission keeps the full
+`ContractCoachReport`, checks project identity and exact source hashes, and
+distinguishes `NOT_REQUESTED`, `UNAVAILABLE`, and `OBSERVED` evidence before
+existing theme predicates run. I²C pull-up, CAN termination, USB-C, and SPI
+state dispatch now belongs to `electrical_bus_evaluation.py`, whose narrow
+request pairs those four typed requirement sections with the admitted netlist.
+The runner keeps the established check order while delegating those predicates
+to their existing owners. Focused tests cover blocked, incomplete,
+cross-project, stale-source, unrequested evidence, and attempted status
+misclassification. On 2026-10-31, the electrical and capability architecture
+slice passed with 288 tests and 34 subtests; one exact native KiCad test was
+skipped because this run did not configure its native lane. Ruff, focused
+Pyright, Rumdl, and `git diff --check` also passed. Preserve the existing
+report schema; do not introduce a global optional evidence context or split
+modules to meet a line threshold.
+
+PCB return-path and test-access evaluation now have separate typed requests in
+`electrical_pcb_evaluation.py`. `electrical_pcb_evidence.py` preserves the
+capture state, returned command, snapshot, and probe-request digest. The
+runner plans and performs capture, then delegates return-path, schematic
+access, PCB pad access, and probe-envelope evaluation in their existing order.
+Focused source-bound receipt and CLI/MCP parity tests continue to cover those
+stages; architecture checks now prevent the runner from calling their
+predicates directly.
+
+**Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify
 the right producer for a new datum; no module split is needed to express the
-route. Hold physical reorganization until this decision and its pilot pass.
+route. Hold physical reorganization until each family route and its focused
+checks pass.
 
 ### SA-02 — Publish the capability and dependency map
 
@@ -124,6 +154,20 @@ product, and release. Record input/output contracts, source authority, allowed
 dependencies, and CLI/MCP/CI mapping. Extend the transport dependency check
 from active rule owners to other stable domain service families. Existing
 catalog architecture checks guard active rule owners and their theme functions.
+Audit hybrid modules that host both a CLI and reusable stage functions as
+explicit migration items. Project verification's portable and native lanes now
+call typed services under `hwrepo`; the `ci.py` and `check_all.py` functions
+remain compatibility adapters. Governance lint also has focused owners in
+`governance_lint.py` and `governance_records.py`, and its former 579-line CLI
+module is now a small adapter. Declared project source hashing now belongs to
+`project_source_hashes.hash_project_sources`; `validate.hashes` is its legacy
+export. Single-project native validation now belongs to
+`native_project_validation.validate_project` with a strict
+`NativeProjectValidationRequest`. `native_report_parsing.py` and
+`native_command.py` own native output parsing and command capture, while
+`native_toolchain.py` owns catalog selection and executable resolution.
+`validate.py` keeps the registered CLI and old positional Python adapter;
+`check_toolchain.py` likewise keeps its CLI and compatibility exports.
 
 **Done when:** a contributor can place a proposed feature without guessing;
 one intentionally wrong import and one wrong catalog owner fail focused tests;
@@ -137,7 +181,8 @@ report models, and project inspection orchestration.
 
 Document and normalize the stages: requested source scope, exact toolchain,
 capture, parsed typed evidence, applicability/coverage, evaluation, and
-receipt. Reuse existing hash and path services. Keep native adapters bounded
+receipt. Use `project_source_hashes.hash_project_sources` for declared source
+inventories and the shared path service for path boundaries. Keep native adapters bounded
 to the versions they support. A rule may opt into only the evidence it needs,
 but its report must show why evidence was unavailable or stale.
 
@@ -203,6 +248,16 @@ bytes itself because the evaluator has no project root.
 Evaluation also rejects covered control-input or I²C decisions carried by
 `NOT_CONFIGURED`, `PENDING`, or `NOT_APPLICABLE` coverage. `OPEN` coverage may
 still resolve some entries while leaving others reviewable.
+
+Electrical simulation now has a typed request and result lifecycle. The
+request checks every case's reviewed source-hash map against the current
+design-source inventory before simulator invocation. Version evidence
+distinguishes no cases, unavailable exact-version capture, and a matching
+version command; each result retains its authored case, command when one was
+returned, and measurement/waveform checks. A wrong or unavailable simulator
+version leaves all cases `NOT_RUN`, while case preparation failures remain
+case-scoped `FAIL` results. The public command index is unchanged; the failed
+version command remains available in its hashed artifact receipt.
 
 **Done when:** a stale hash, wrong native version, absent source, and unsupported
 topology produce distinct, tested outcomes across representative schematic
@@ -349,6 +404,51 @@ service. The service owns inventory gating, registered-ID resolution, manifest
 and authored-contract reads; the MCP handler retains operation policy and
 argument mapping. The capability map records the response and no-side-effect
 boundary.
+Design-lint inspection now uses `DesignLintInspectionRequest` for the project
+ID and retained native summary path. CLI, MCP workflow, and verification route
+through the same typed operation; the compatibility facade maps its older
+three-argument call into that request. The inspection service owns evaluator
+selection, project-policy reads, source freshness checks, and report assembly.
+Electrical analysis now follows the same operation pattern with
+`ElectricalAnalysisRequest`. CLI, MCP, verification, release preparation, and
+scope checks select the same typed operation; runner choice, native summary,
+tool names, and receipt path travel together. The former positional `analyze`
+call remains an adapter, including its injected runner seam for native tests.
+Parts preparation now uses `PartsPreparationRequest` across CLI and MCP. The
+operation receives the already-scoped receipt path, optional native summary,
+reviewed preferences, quantity overrides, and runner selection; it calls the
+shared planner and owns report, HTML, and artifact-manifest publication. MCP's
+fresh-capture and export permissions stay at the adapter boundary, and the old
+positional planner remains available for existing callers.
+Project verification now has a capability-owned `project_verification`
+orchestrator and strict `ProjectVerificationRequest`. CLI and MCP map into the
+same request; portable/native/electrical depth compatibility is validated by
+the request contract, and the former positional Python function remains a
+thin adapter. The orchestrator owns source hashing, fresh receipt creation,
+stage execution, and the composed verification report.
+The portable lane now accepts `ProjectStaticPipelineRequest`, and native
+validation accepts `NativeProjectCheckRequest`; CI, MCP, and verification use
+those service owners. `ci.py`, `check_all.py`, and `lint_registry.py` retain
+their command and compatibility surfaces. Governance catalog and record
+decisions now live in `governance_lint.py` and `governance_records.py`.
+Findings-view export registration now lives with the other visualization
+exports in `mcp_visualization_exports.py`. It retains the export permission
+gate and delegates to the same typed `build_findings_view` service used by the
+CLI; an architecture regression guards that ownership boundary.
+Release checks and archive operations now register through `mcp_release.py`.
+Read-only checks retain their default availability, while package and restore
+remain behind the export permission; every handler delegates to the existing
+path-scoped workflow service.
+Project diagnosis, import diagnosis, and local rescue now receive strict
+requests with the selected project and their declared source/evidence. The
+project request validates portable-report identity and requires a native
+summary when a BOM is supplied. Every operation checks that its diagnostic
+journal belongs to the same checkout and project before writing evidence.
+CLI, MCP, import review, and project verification now route through these
+request operations. The rescue CLI uses its positional adapter to build the
+same typed request. The former service functions remain compatibility
+adapters. The portable pipeline report still comes from the compatibility
+registry and remains an explicit SA-07 contract-owner migration item.
 
 The dependency guard now includes electrical, parts, CAD, layout, selection,
 product, supplier handoff, artifact, project-source, and purchasing-preference
@@ -419,6 +519,12 @@ assurance, product policy, BOM/harness schedules, and generated product views
 now belong to `product_models.py`. Product, generation, selection, inventory,
 impact, and release services import those records from the product owner;
 `models.py` remains the compatibility export for existing callers.
+The release maturity enum now belongs to `release_model_types.py`; readiness
+and package reports belong to `release_report_models.py`, whose only record
+dependencies are shared primitives, policy issues, and release types. Release
+services, the MCP adapter, and the CLI import the owner modules directly.
+`models.py` retains identity-compatible exports, and architecture tests guard
+module size, import boundaries, identity, and JSON round trips.
 The authored parts status, CAD binding, part record, and catalog now belong to
 `part_catalog_models.py`. Purchasing, product, CAD, sourcing, inventory,
 release, and catalog services import those records directly; the registry
@@ -430,6 +536,25 @@ source capture, library validation, STEP review, workflows, MCP, and the browser
 adapter import these records directly. `models.py` retains identity-compatible
 exports; focused architecture coverage guards the primitive/evidence boundary,
 internal imports, and JSON round trips.
+Diagnostic findings, project coaching reports, and partial rescue reports now
+belong to `diagnostics_models.py`. Diagnostic, rescue, import-review,
+project-verification, and MCP services import those contracts directly;
+`models.py` retains identity-compatible exports. Their existing schema version
+and the explicit non-authorizing rescue state are unchanged. Architecture
+coverage guards primitive-only dependencies, direct internal imports, export
+identity, and JSON round trips.
+The selected-project static pipeline's generation, project-test, and combined
+reports now belong to `project_static_pipeline_models.py`. Its governance and
+repository subreports have leaf owners in `governance_lint_models.py` and
+`repository_policy_models.py`. Pipeline, CI, diagnostic, and verification
+services import these records from their owners; `models.py` keeps
+identity-compatible exports. A focused architecture test guards dependency
+direction, owner size, public identity, and JSON round trips.
+The authored documentation graph policy, waiver, issue, and report records now
+belong to `documentation_models.py`. The documentation checker imports them
+directly, and the central registry preserves the former public names. The
+architecture suite guards the primitive-only dependency boundary, direct
+service import, export identity, and serialized policy/report round trips.
 
 **Done when:** a new feature's record is placed with its domain, the selected
 legacy imports shrink, old supported imports resolve, and serialized reports
@@ -458,6 +583,9 @@ reproducible runtime-types, Pydantic practices, and Python-style scopes. The
 package CI job runs the first two in advisory report mode; Python-style is
 available on demand while its broader output is reviewed. See
 `ALPHUS_QUALITY_GATES.md` for the command and enforcement boundary.
+The source-derived raw-JSON boundary now recognizes aliased `json.load(s)`
+imports and classifies native KiCad report and bounded GLB parsing as explicit
+adapters; it no longer exempts `validate.py` after parsing moved to its owner.
 
 **Done when:** the checked-in gate plan and installed Alphus revision agree;
 representative bad dependencies and rule registrations fail; existing valid

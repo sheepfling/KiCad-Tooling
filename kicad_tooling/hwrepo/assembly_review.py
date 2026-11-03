@@ -6,7 +6,6 @@ import hashlib
 from pathlib import Path
 from uuid import uuid4
 
-from ..validate import hashes
 from .artifact_access import artifact_file, read_regular_bytes
 from .assembly_review_html import render_assembly_review
 from .assembly_review_models import AssemblyPlacementContract, AssemblyReviewReport
@@ -15,6 +14,7 @@ from .contracts import parse_model_text, repo_path, write_model
 from .discovery import load_config
 from .evidence import digest
 from .models import ThreeDReport
+from .project_source_hashes import hash_project_sources as hashes
 from .review_overview_evidence import read_receipt, recorded_directory, selected_receipt
 from .selection import resolve_project
 from .three_d_glb import inspect_glb

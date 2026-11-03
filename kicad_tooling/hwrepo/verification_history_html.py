@@ -10,6 +10,7 @@ from .contracts import relative_path_from, repo_path
 from .verification_history_models import (
     HistoryArtifact,
     HistoryEvidence,
+    HistoryReadiness,
     HistoryRelease,
     HistorySnapshot,
     VerificationHistoryReport,
@@ -62,6 +63,21 @@ def _artifact(item: HistoryArtifact | None) -> str:
     )
 
 
+def _readiness(item: HistoryReadiness) -> str:
+    if item.receipt is None:
+        return "No saved readiness check selected"
+    details = " · ".join(
+        (f"computed {item.status}", f"receipt {item.integrity}", item.checked_on or "date unknown")
+    )
+    issues = f"<small>{escape('; '.join(item.issues))}</small>" if item.issues else ""
+    codes = (
+        f"<small>Policy issue codes: {escape(', '.join(item.issue_codes))}</small>"
+        if item.issue_codes
+        else ""
+    )
+    return f"{escape(details)} · <code>{escape(item.receipt)}</code>{codes}{issues}"
+
+
 def _table(title: str, headings: tuple[str, ...], rows: str, empty: str) -> str:
     header = "".join(f"<th>{escape(item)}</th>" for item in headings)
     body = rows or f'<tr><td colspan="{len(headings)}" class="muted">{escape(empty)}</td></tr>'
@@ -109,6 +125,17 @@ def render_verification_history(root: Path, report: VerificationHistoryReport) -
         f"<td>{_artifact(item.before)}</td><td>{_artifact(item.after)}</td></tr>"
         for item in report.artifact_changes
     )
+    readiness = report.readiness_change
+    readiness_rows = (
+        f"<tr><th>Computed release check</th><td>{escape(readiness.change)}</td>"
+        f"<td>{_readiness(readiness.before)}</td><td>{_readiness(readiness.after)}</td></tr>"
+    )
+    readiness_delta = (
+        f"Added issue codes: {escape(', '.join(readiness.added_issue_codes) or 'none')}; "
+        f"resolved issue codes: {escape(', '.join(readiness.removed_issue_codes) or 'none')}."
+        if readiness.comparison_available
+        else "Issue-code changes unavailable until both readiness receipts match their selected inputs."
+    )
     missing_findings = next(item for item in report.evidence_changes if item.kind == "findings")
     finding_empty = (
         "Finding comparison unavailable because one selected findings receipt is missing, stale, or not selected."
@@ -140,6 +167,9 @@ HISTORICAL does not apply to the live source. Saved check results are not rerun 
 {_table("Verification stages", ("Stage", "Change", "Baseline", "Candidate"), stage_rows, "No verification summary was selected.")}
 {_table("Findings", ("Finding", "Change", "Baseline fingerprint", "Candidate fingerprint", "Explanation"), finding_rows, finding_empty)}
 {_table("Declared release artifacts", ("Artifact ID", "Change", "Baseline", "Candidate"), artifact_rows, "No release artifacts were selected.")}
+{_table("Release readiness", ("Check", "Change", "Baseline", "Candidate"), readiness_rows, "No readiness checks were selected.")}
+<p>{readiness_delta}</p>
 <p class="muted">A missing or changed findings report does not mean a finding was resolved.
+Saved readiness outcomes are historical computed checks. A stale or missing receipt does not imply improvement.
 Release manifests and their artifact availability are displayed separately from approval and packaging.</p>
 </main></html>"""

@@ -28,6 +28,8 @@ class DiagnosticJournal:
         label: str = "diagnose",
     ) -> None:
         root = root.resolve()
+        self.root = root
+        self.project_id = project_id
         if output is None:
             parent = root / "build/diagnostics"
             parent.mkdir(parents=True, exist_ok=True)
@@ -53,6 +55,11 @@ class DiagnosticJournal:
         }
         self._write_metadata()
         self.event("run", "START", f"diagnostic receipt: {directory}")
+
+    def require_scope(self, root: Path, project_id: str) -> None:
+        """Reject attempts to attach a run receipt to another checkout or project."""
+        if root.resolve() != self.root or project_id != self.project_id:
+            raise ValueError("Diagnostic receipt scope does not match the operation")
 
     def _write_metadata(self) -> None:
         (self.directory / "run.json").write_text(

@@ -9,7 +9,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import Any
+from typing import Literal, TypedDict
 
 import pytest
 
@@ -23,7 +23,24 @@ pytestmark = pytest.mark.slow
 _FIXTURES = Path(__file__).parent / "fixtures"
 
 
-def _browser_observation(tmp_path: Path, page: Path) -> dict[str, Any]:
+class EnclosureToggleState(TypedDict):
+    initialVisible: Literal["true", "false"]
+    hidden: Literal["true", "false"]
+    restored: Literal["true", "false"]
+
+
+class BrowserObservation(TypedDict):
+    canvas: bool
+    focusable: bool
+    initial: str
+    top: str
+    zoom: str
+    keyboard: str
+    resources: list[str]
+    enclosure: EnclosureToggleState | None
+
+
+def _browser_observation(tmp_path: Path, page: Path) -> BrowserObservation:
     browser_path = os.environ.get("KICAD_VIEWER_BROWSER")
     if not browser_path:
         pytest.skip("Set KICAD_VIEWER_BROWSER to an installed Chrome-family browser executable")
@@ -58,7 +75,7 @@ def _browser_observation(tmp_path: Path, page: Path) -> dict[str, Any]:
     assert completed.returncode == 0, completed.stderr[-2000:]
     match = re.search(r'<pre id="viewer-probe-result">(.*?)</pre>', completed.stdout, re.DOTALL)
     assert match is not None, completed.stdout[-2000:]
-    observation: dict[str, Any] = json.loads(html.unescape(match.group(1)))
+    observation: BrowserObservation = json.loads(html.unescape(match.group(1)))
     assert observation["canvas"] and observation["focusable"]
     assert observation["initial"].startswith("Fitted;")
     assert observation["top"].startswith("top view;")

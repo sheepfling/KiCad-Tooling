@@ -9,7 +9,6 @@ from typing import TypeAlias
 import kicad_tooling.hwrepo.electrical_analysis_contract_models as electrical_contracts
 from kicad_tooling.hwrepo import pcb_test_access_models
 
-from ..validate import hashes
 from .can_termination_contract import can_termination_checks
 from .command_evidence_models import CommandEvidence
 from .component_power_ratings import component_power_rating_checks
@@ -38,6 +37,7 @@ from .project_models import (
     ProjectConfig,
     ProjectKind,
 )
+from .project_source_hashes import hash_project_sources as hashes
 from .rs485_heuristics import rs485_checks
 from .serial_heuristics import serial_peer_checks
 from .spi_contract import spi_checks

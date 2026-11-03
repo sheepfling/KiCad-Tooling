@@ -26,8 +26,8 @@ from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.two_pin_components import two_pin_components_on_same_net
-from .validate import read_netlist
 
 
 def two_pin_component_fixture_lane(

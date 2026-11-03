@@ -27,6 +27,7 @@ from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.usb_c_models import (
     UsbCAnalysis,
     UsbCcLineRequirement,
@@ -38,7 +39,6 @@ from .hwrepo.usb_c_models import (
 )
 from .hwrepo.usb_c_ports import UsbCPortRosterContext
 from .hwrepo.usb_c_vbus import usb_c_vbus_capacitance_check
-from .validate import read_netlist
 
 UsbCPortFixtureCase: TypeAlias = Literal[
     "connector",

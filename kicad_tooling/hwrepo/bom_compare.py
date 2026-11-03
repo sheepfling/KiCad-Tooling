@@ -6,13 +6,13 @@ from html import escape
 from pathlib import Path
 from uuid import uuid4
 
+from .bom_change import change_state
 from .bom_compare_models import (
     BomComparisonReport,
     BomQuantityDifference,
     BomQuantityState,
     BomReferenceDifference,
     BomReferenceState,
-    Change,
 )
 from .contract_coach import receipt_directory
 from .contracts import write_model
@@ -77,18 +77,6 @@ def _quantities(plan: PurchasingPlan) -> dict[tuple[str, str], BomQuantityState]
     return result
 
 
-def _change(before: object | None, after: object | None) -> Change:
-    return (
-        "ADDED"
-        if before is None
-        else "REMOVED"
-        if after is None
-        else "UNCHANGED"
-        if before == after
-        else "CHANGED"
-    )
-
-
 def _compare(
     before: PurchasingPlan,
     after: PurchasingPlan,
@@ -97,7 +85,7 @@ def _compare(
     references = tuple(
         BomReferenceDifference(
             reference=name,
-            change=_change(old_refs.get(name), new_refs.get(name)),
+            change=change_state(old_refs.get(name), new_refs.get(name)),
             before=old_refs.get(name),
             after=new_refs.get(name),
         )
@@ -108,7 +96,7 @@ def _compare(
         BomQuantityDifference(
             part_id=key[0],
             revision=key[1],
-            change=_change(old_lines.get(key), new_lines.get(key)),
+            change=change_state(old_lines.get(key), new_lines.get(key)),
             before=old_lines.get(key),
             after=new_lines.get(key),
         )

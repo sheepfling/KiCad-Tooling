@@ -30,10 +30,9 @@ CONSUMER_IMPORTS = MappingProxyType(
     {
         "electrical.py": frozenset(
             {
-                "FrequencyAnalysis",
                 "HighFrequencyAnalysis",
                 "PowerAnalysis",
-                "TransientAnalysis",
+                "SimulationCase",
             }
         ),
         "spice.py": frozenset({"TransientAnalysis"}),

@@ -11,6 +11,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from kicad_tooling.check_all import check_all
+from kicad_tooling.hwrepo import native_project_validation as native_validation
 from kicad_tooling.hwrepo.discovery import load_config
 from kicad_tooling.hwrepo.models import (
     CommandEvidence,
@@ -62,8 +63,6 @@ class ValidationTests(unittest.TestCase):
         ):
             shutil.copytree(ROOT / directory, self.root / directory)
         initialize_git(self.root)
-
-    ####
 
     def test_erc_clean(self) -> None:
         data: JsonObject = {"kicad_version": "10.0.0", "sheets": [{"violations": []}]}
@@ -210,10 +209,10 @@ class ValidationTests(unittest.TestCase):
 
         output = self.root / "native-review"
         with (
-            patch("kicad_tooling.validate.load_config", return_value=config),
-            patch("kicad_tooling.validate.cli_executable", return_value="fake-kicad-cli"),
-            patch("kicad_tooling.validate.execute", side_effect=run_kicad),
-            patch("kicad_tooling.validate.check_netlist"),
+            patch.object(native_validation, "load_config", return_value=config),
+            patch.object(native_validation, "cli_executable", return_value="fake-kicad-cli"),
+            patch.object(native_validation, "execute", side_effect=run_kicad),
+            patch.object(native_validation, "check_netlist"),
             patch(
                 "kicad_tooling.hwrepo.product.check_project_netlist",
                 return_value=NetlistIdentityReport(status="PASS"),
@@ -285,8 +284,8 @@ class ValidationTests(unittest.TestCase):
             )
 
         with (
-            patch("kicad_tooling.validate.cli_executable", return_value="fake-kicad-cli"),
-            patch("kicad_tooling.validate.execute", side_effect=run_kicad),
+            patch.object(native_validation, "cli_executable", return_value="fake-kicad-cli"),
+            patch.object(native_validation, "execute", side_effect=run_kicad),
         ):
             result = validate(
                 self.root,
@@ -437,9 +436,9 @@ class ValidationTests(unittest.TestCase):
             )
 
         with (
-            patch("kicad_tooling.validate.load_config", return_value=config),
-            patch("kicad_tooling.validate.cli_executable", return_value="fake-kicad-cli"),
-            patch("kicad_tooling.validate.execute", side_effect=run_kicad),
+            patch.object(native_validation, "load_config", return_value=config),
+            patch.object(native_validation, "cli_executable", return_value="fake-kicad-cli"),
+            patch.object(native_validation, "execute", side_effect=run_kicad),
         ):
             result = validate(
                 self.root,

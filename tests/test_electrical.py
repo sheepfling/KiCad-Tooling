@@ -474,9 +474,12 @@ class ElectricalTests(unittest.TestCase):
         )
         with (
             VerifyTests.runner_environment("10.0.0"),
-            patch("kicad_tooling.verify.check_all", return_value=native_summary()),
             patch(
-                "kicad_tooling.hwrepo.electrical_runner.analyze", return_value=failed
+                "kicad_tooling.hwrepo.project_verification.run_native_project_check",
+                return_value=native_summary(),
+            ),
+            patch(
+                "kicad_tooling.hwrepo.electrical_runner.analyze_request", return_value=failed
             ) as simulation,
         ):
             result = verify(
@@ -484,7 +487,9 @@ class ElectricalTests(unittest.TestCase):
             )
         self.assertEqual(result.status, "FAIL")
         self.assertEqual(result.electrical, failed)
-        self.assertEqual(simulation.call_args.args[-1], "approved-ngspice")
+        request = simulation.call_args.args[1]
+        self.assertEqual(request.ngspice, "approved-ngspice")
+        self.assertEqual(request.runner_mode, "local")
         self.assertIn("electrical", result.next_actions[0])
 
 

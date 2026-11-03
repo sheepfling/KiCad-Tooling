@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Literal
 from uuid import uuid4
 
-from ..validate import hashes
 from .artifact_access import read_regular_bytes
 from .contract_coach import receipt_directory
 from .contracts import model_json_bytes, parse_model_text, repo_path, write_model
@@ -25,6 +24,7 @@ from .product_visual_models import (
     ProductVisualRelation,
     ProductVisualReport,
 )
+from .project_source_hashes import hash_project_sources as hashes
 
 
 def _endpoint(
@@ -93,7 +93,7 @@ def _relationships(
     return tuple(result)
 
 
-def _instances(
+def project_instances(
     product: ProductRecord, variant: Variant, parts: set[str]
 ) -> tuple[ProductVisualInstance, ...]:
     expanded = occurrences(product)
@@ -212,6 +212,11 @@ def build_product_visual(
         entry.path,
     )
     source_hashes = {name: digest(repo_path(root, name)) for name in baseline}
+    parts_path = registry.catalogs.parts
+    parts_bytes, _ = read_regular_bytes(repo_path(root, parts_path), maximum=8 * 1024 * 1024)
+    parts_sha256 = hashlib.sha256(parts_bytes).hexdigest()
+    if parts_sha256 != source_hashes[parts_path]:
+        raise ValueError("Parts catalog changed while building the product view")
     adapter = repo_path(root, CONFIG_NAME)
     if adapter.is_file():
         source_hashes[CONFIG_NAME] = digest(adapter)
@@ -222,7 +227,7 @@ def build_product_visual(
     )
     issues = [f"{issue.code} at {issue.location}: {issue.message}" for issue in policy_issues]
     try:
-        instances = _instances(product, variant, set(repository.parts))
+        instances = project_instances(product, variant, set(repository.parts))
     except ValueError as exc:
         instances = ()
         issues.append(f"Assembly hierarchy cannot be expanded: {exc}")
@@ -259,6 +264,7 @@ def build_product_visual(
     directory = receipt_directory(root, product_id, target)
     (directory / "product.json").write_bytes(product_bytes)
     (directory / "product-index.json").write_bytes(index_bytes)
+    (directory / "parts-catalog.json").write_bytes(parts_bytes)
     if system_bytes is not None:
         (directory / "system.json").write_bytes(system_bytes)
     if schedule_bytes is not None:
@@ -271,6 +277,8 @@ def build_product_visual(
         status="CURRENT" if projection_available else "REVIEW",
         product_path=entry.path,
         product_sha256=hashlib.sha256(product_bytes).hexdigest(),
+        parts_catalog_path=parts_path,
+        parts_catalog_sha256=parts_sha256,
         source_hashes=source_hashes,
         projects=projects,
         instances=instances,

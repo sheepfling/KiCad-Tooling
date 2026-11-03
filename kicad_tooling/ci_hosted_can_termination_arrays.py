@@ -21,7 +21,7 @@ from .hwrepo.electrical import selected_config
 from .hwrepo.electrical_analysis_contract_models import ElectricalAnalysisContract
 from .hwrepo.evidence import digest
 from .hwrepo.models import ElectricalCheck, NetlistContract
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 FIXTURE_HASHES: Mapping[str, str] = MappingProxyType(
     {

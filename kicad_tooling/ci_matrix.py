@@ -7,10 +7,10 @@ import sys
 from pathlib import Path
 
 from .hwrepo.discovery import load_config, load_registry
+from .hwrepo.governance_lint import lint
 from .hwrepo.layout import default_project_root
 from .hwrepo.models import CiMatrix, MatrixEntry
 from .hwrepo.selection import ProjectSelector, resolve_project_ids
-from .lint_registry import lint
 
 
 def build_matrix(root: Path, selected: tuple[str, ...] | None = None) -> CiMatrix:

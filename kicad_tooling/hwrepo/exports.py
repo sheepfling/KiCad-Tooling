@@ -6,7 +6,6 @@ import csv
 import zipfile
 from pathlib import Path
 
-from ..validate import execute
 from .contracts import (
     kicad_variant_names,
     read_model,
@@ -24,6 +23,7 @@ from .models import (
     ReleaseExportReport,
     SourceState,
 )
+from .native_command import execute
 from .part_catalog_models import PartsCatalog
 from .project_models import (
     ProjectManifest,

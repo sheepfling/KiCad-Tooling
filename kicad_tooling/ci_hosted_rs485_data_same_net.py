@@ -20,7 +20,7 @@ from .hwrepo.contracts import read_kicad_erc_report, write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 RS485_DATA_SAME_NET_TOOLCHAINS = KICAD_10_NATIVE_TOOLCHAINS
 _RULE_ID = "bus.rs485_data_input_output_same_net"

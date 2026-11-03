@@ -18,23 +18,27 @@ from .hwrepo.cli_output import summary
 from .hwrepo.contracts import read_model, repo_path, write_model
 from .hwrepo.documentation import check as documentation_check
 from .hwrepo.evidence import source_state
-from .hwrepo.generation import check_generation
+from .hwrepo.governance_lint import lint
 from .hwrepo.layout import default_project_root
 from .hwrepo.models import (
     CommandEvidence,
-    GenerationReport,
-    ProjectStaticPipelineReport,
-    ProjectTestsReport,
     ReleaseManifest,
     StaticPipelineReport,
 )
 from .hwrepo.pipeline_journal import PipelineJournal
 from .hwrepo.product import check as product_check
-from .hwrepo.project_tests import run_tests
+from .hwrepo.project_static_pipeline import (
+    checked_project_tests,
+    generation_report,
+    run_project_static_pipeline,
+)
+from .hwrepo.project_static_pipeline_models import (
+    ProjectStaticPipelineReport,
+    ProjectStaticPipelineRequest,
+)
 from .hwrepo.repository import check_repository
 from .hwrepo.selection import ProjectSelector, resolve_project_ids
 from .hwrepo.sharding import shard_projects
-from .lint_registry import lint
 from .metrics import format_metrics
 
 _Result = TypeVar("_Result", bound=BaseModel)
@@ -71,43 +75,17 @@ def run_command(root: Path, *argv: str) -> CommandEvidence:
         )
 
 
-def generation_report(root: Path, selected: tuple[str, ...] | None = None) -> GenerationReport:
-    try:
-        errors = check_generation(root, selected)
-        return GenerationReport(status="FAIL" if errors else "PASS", issues=errors)
-    except (OSError, ValueError) as exc:
-        return GenerationReport(status="FAIL", issues=(str(exc),))
-
-
 def project_static_pipeline(
     root: Path,
     selected: tuple[str, ...],
     workers: int = 1,
     journal: PipelineJournal | None = None,
 ) -> ProjectStaticPipelineReport:
-    """Run the fast local policy lane for selected projects and dependent products."""
-    registry = phase(journal, "registry", lambda: lint(root, list(selected)))
-    repository = phase(journal, "repository", lambda: check_repository(root, selected))
-    product = phase(journal, "product", lambda: product_check(root, selected_project_ids=selected))
-    generation = phase(journal, "generation", lambda: generation_report(root, selected))
-    project_tests = phase(
-        journal, "project-tests", lambda: checked_project_tests(root, selected, workers)
-    )
-    passed = (
-        registry.status == "PASS"
-        and repository.status == "PASS"
-        and product.status == "PASS"
-        and generation.status == "PASS"
-        and project_tests.status == "PASS"
-    )
-    return ProjectStaticPipelineReport(
-        status="PASS" if passed else "FAIL",
-        projects=selected,
-        registry=registry,
-        repository=repository,
-        product=product,
-        generation=generation,
-        project_tests=project_tests,
+    """Compatibility adapter for the typed selected-project service."""
+    return run_project_static_pipeline(
+        root,
+        ProjectStaticPipelineRequest(project_ids=selected, workers=workers),
+        journal,
     )
 
 
@@ -119,7 +97,11 @@ def static_pipeline(
 ) -> StaticPipelineReport | ProjectStaticPipelineReport:
     """Run all project policy checks or the fast lane for selected projects."""
     if selected is not None:
-        return project_static_pipeline(root, tuple(selected), workers, journal)
+        return run_project_static_pipeline(
+            root,
+            ProjectStaticPipelineRequest(project_ids=tuple(selected), workers=workers),
+            journal,
+        )
     before = phase(journal, "source-before", lambda: source_state(root))
     registry = phase(journal, "registry", lambda: lint(root))
     repository = phase(journal, "repository", lambda: check_repository(root))
@@ -171,26 +153,6 @@ def static_pipeline(
         tooling_version=package_version(),
         project_tests=project_tests,
     )
-
-
-def checked_project_tests(
-    root: Path, selected: tuple[str, ...] | None = None, workers: int = 1
-) -> ProjectTestsReport:
-    """Keep malformed discovery records as a typed failure in the portable report."""
-    try:
-        return run_tests(root, selected, max_workers=workers)
-    except (OSError, ValueError) as exc:
-        return ProjectTestsReport(
-            status="FAIL",
-            commands={
-                "discovery": CommandEvidence(
-                    argv=("project-test-discovery",),
-                    started_utc=datetime.now(UTC).isoformat(),
-                    returncode=1,
-                    error=str(exc),
-                ),
-            },
-        )
 
 
 def positive_worker_count(value: str) -> int:
@@ -322,13 +284,16 @@ def main() -> int:
     if args.kicad:
         if args.output is None:
             parser.error("--kicad requires a new --output directory")
-        from .check_all import check_all
+        from .hwrepo.native_project_check import run_native_project_check
+        from .hwrepo.native_project_check_models import NativeProjectCheckRequest
 
-        kicad = check_all(
+        kicad = run_native_project_check(
             root,
-            args.output.resolve(),
-            args.cli,
-            None if selected is None else list(selected),
+            NativeProjectCheckRequest(
+                output=args.output.resolve(),
+                cli=args.cli,
+                project_ids=selected,
+            ),
         )
         print(
             summary("Native KiCad check", kicad) + f"\nOutput: {args.output.resolve()}"

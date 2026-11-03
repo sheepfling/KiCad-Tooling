@@ -30,7 +30,7 @@ from .hwrepo.models import (
     InterfacesCatalog,
     NetlistContract,
 )
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 MIXED_INTERFACE_RETURN_TOOLCHAINS = KICAD_10_NATIVE_TOOLCHAINS
 _RULE_ID = "connector.repeated_pin_function"

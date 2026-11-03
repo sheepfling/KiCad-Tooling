@@ -11,8 +11,9 @@ from pathlib import Path, PurePosixPath
 
 from .contracts import read_model, repo_path, repo_path_is_within, write_model
 from .evidence import digest, git
-from .models import ReleaseManifest, ReleasePackageIndex, ReleasePackageReport
+from .models import ReleaseManifest, ReleasePackageIndex
 from .release import check
+from .release_report_models import ReleasePackageReport
 from .releasing import retained_paths
 
 

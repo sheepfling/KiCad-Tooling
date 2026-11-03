@@ -9,19 +9,21 @@ from io import StringIO
 from unittest.mock import patch
 
 from kicad_tooling.hwrepo.cli_output import issue_text, summary
+from kicad_tooling.hwrepo.documentation_models import DocumentationIssue
+from kicad_tooling.hwrepo.governance_lint_models import GovernanceLintReport
 from kicad_tooling.hwrepo.models import (
     CheckAllSummary,
-    DocumentationIssue,
     EnvironmentCheck,
-    GenerationReport,
-    GovernanceLintReport,
-    ProductPolicyReport,
     ProjectCheckSummary,
-    ProjectStaticPipelineReport,
-    ProjectTestsReport,
-    RepositoryPolicyReport,
     TemplateDoctorReport,
 )
+from kicad_tooling.hwrepo.product_models import ProductPolicyReport
+from kicad_tooling.hwrepo.project_static_pipeline_models import (
+    GenerationReport,
+    ProjectStaticPipelineReport,
+    ProjectTestsReport,
+)
+from kicad_tooling.hwrepo.repository_policy_models import RepositoryPolicyReport
 from kicad_tooling.template import main as template_main
 
 

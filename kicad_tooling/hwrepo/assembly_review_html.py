@@ -5,8 +5,19 @@ from __future__ import annotations
 import base64
 import json
 from html import escape
+from typing import Literal, Required, TypedDict
 
 from .assembly_review_models import AssemblyReviewReport
+from .model_primitives import FiniteMeasure
+
+
+class AssemblyViewerConfig(TypedDict, total=False):
+    """Exact JSON fields consumed by the assembly viewer script."""
+
+    board_unit: Required[Literal["mm", "m"]]
+    enclosure_unit: Literal["mm", "m"]
+    translation_mm: tuple[FiniteMeasure, FiniteMeasure, FiniteMeasure]
+    rotation_xyzw: tuple[FiniteMeasure, FiniteMeasure, FiniteMeasure, FiniteMeasure]
 
 
 def render_assembly_review(
@@ -14,7 +25,7 @@ def render_assembly_review(
 ) -> str:
     """Embed verified model bytes so local file viewing needs no server."""
     ready = report.status != "INCOMPLETE" and enclosure is not None and report.placement is not None
-    config: dict[str, object] = {"board_unit": report.board_unit}
+    config: AssemblyViewerConfig = {"board_unit": report.board_unit}
     if ready and report.placement is not None:
         config.update(
             enclosure_unit=report.enclosure_unit,

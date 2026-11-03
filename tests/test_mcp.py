@@ -89,7 +89,13 @@ class McpTests(McpTestCase):
             with self.subTest(options=options):
                 async with Client(create_server(self.root, **options), mode="legacy") as client:
                     listing = await client.list_tools()
-                    self.assertEqual({tool.name for tool in listing.tools}, DEFAULT_TOOLS | enabled)
+                    actual = {tool.name for tool in listing.tools}
+                    expected = DEFAULT_TOOLS | enabled
+                    self.assertEqual(
+                        actual,
+                        expected,
+                        f"missing={sorted(expected - actual)}; unexpected={sorted(actual - expected)}",
+                    )
 
     async def test_project_report_preserves_manifest_and_independent_contract(self) -> None:
         async with Client(create_server(self.root), mode="legacy") as client:

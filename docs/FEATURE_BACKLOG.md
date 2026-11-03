@@ -11,27 +11,29 @@ any engineering decision. Priorities and scope can change with user feedback.
 `P1` is the next useful product increment, `P2` builds on those workflows, and
 `P3` needs additional inputs or a narrower user case. `Proposed` means the
 listed increment is not implemented. `Partial` means the named foundation exists
-but the remaining work is not complete. This inventory reflects the working
+but the remaining work is not complete. `Done` means the documented first slice
+and done criteria have focused coverage; later enhancements can still be added.
+This inventory reflects the working
 checkout on 2026-10-30, including uncommitted work; it does not claim a release.
 
 ## Ordered opportunities
 
 | ID   | Priority | Status   | Capability                                | First user outcome                                                     |
 | ---- | -------- | -------- | ----------------------------------------- | ---------------------------------------------------------------------- |
-| F-01 | P1       | Partial  | Project review overview                   | Find relevant evidence and see what is missing or stale.               |
-| F-02 | P1       | Partial  | Schematic and PCB findings explorer       | Locate more findings on the correct drawing and sheet.                 |
-| F-03 | P1       | Partial  | Measured time-series import and plots     | Inspect a retained measurement alongside its units and provenance.     |
-| F-04 | P1       | Partial  | BOM-to-design cross-probing               | Select a component and find its supported schematic or board location. |
-| F-05 | P2       | Partial  | BOM, variant, and revision comparison     | Explain added, removed, changed, and unresolved parts.                 |
-| F-06 | P2       | Partial  | Interactive 3D board review               | Rotate and inspect a retained board model offline.                     |
-| F-07 | P2       | Partial  | Mechanical assembly review                | Compare explicitly positioned board and enclosure models.              |
-| F-08 | P2       | Partial  | Power, grounding, and connectivity views  | Explore authored relationships and observed nets together.             |
-| F-09 | P2       | Partial  | Product and harness views                 | Explore assemblies, interfaces, and variant-specific connections.      |
-| F-10 | P2       | Partial  | Verification and release history          | Compare evidence and readiness across revisions.                       |
-| F-11 | P2       | Partial  | Import and onboarding review              | Resolve dependencies and missing metadata before adoption.             |
-| F-12 | P3       | Partial  | Thermal, signal, and physical-test review | Review explicit measurements or models against authored limits.        |
-| F-13 | P3       | Partial  | Review notes and handoff                  | Carry source-bound review observations between collaborators.          |
-| F-14 | P3       | Partial  | Supplier and cost analysis                | Compare dated, explicitly sourced offers and quantities.               |
+| F-01 | P1       | Done     | Project review overview                   | Find relevant evidence and see what is missing or stale.               |
+| F-02 | P1       | Done     | Schematic and PCB findings explorer       | Locate more findings on the correct drawing and sheet.                 |
+| F-03 | P1       | Done     | Measured time-series import and plots     | Inspect a retained measurement alongside its units and provenance.     |
+| F-04 | P1       | Done     | BOM-to-design cross-probing               | Select a component and find its supported schematic or board location. |
+| F-05 | P2       | Done     | BOM, variant, and revision comparison     | Explain added, removed, changed, and unresolved parts.                 |
+| F-06 | P2       | Done     | Interactive 3D board review               | Rotate and inspect a retained board model offline.                     |
+| F-07 | P2       | Done     | Mechanical assembly review                | Compare explicitly positioned board and enclosure models.              |
+| F-08 | P2       | Done     | Power, grounding, and connectivity views  | Explore authored relationships and observed nets together.             |
+| F-09 | P2       | Done     | Product and harness views                 | Explore assemblies, interfaces, and variant-specific connections.      |
+| F-10 | P2       | Done     | Verification and release history          | Compare evidence and readiness across revisions.                       |
+| F-11 | P2       | Done     | Import and onboarding review              | Resolve dependencies and missing metadata before adoption.             |
+| F-12 | P3       | Done     | Thermal, signal, and physical-test review | Review explicit measurements or models against authored limits.        |
+| F-13 | P3       | Done     | Review notes and handoff                  | Carry source-bound review observations between collaborators.          |
+| F-14 | P3       | Done     | Supplier and cost analysis                | Compare dated, explicitly sourced offers and quantities.               |
 
 ## P1 — Connect evidence to the work
 
@@ -86,7 +88,8 @@ saved-receipt and CLI/MCP tests retain unmapped wrong-sheet findings. Versions
 ### F-03 — Measured time-series import and plots
 
 **Foundation:** [Waveform charts](WAVEFORM_CHARTS.md) render retained ngspice
-transient and AC data. They do not import generic measurements.
+transient and AC data with offline trace selection, linked cursors, zoom, and
+an explicit two-run AC comparison. They do not import generic measurements.
 
 **First slice:** Import a bounded local CSV with an explicitly selected time
 column, channel columns, units, and source identity; produce an offline plot
@@ -120,6 +123,11 @@ reversible front-board and verified sheet-instance markers. It retains exact sou
 coordinates for multi-unit and hierarchical symbols and keeps duplicate, DNP,
 excluded, unplaced, unsupported, and back-side cases visible. The selected
 receipts have no common variant identity, so variant parity remains unknown.
+When a findings view includes complete named variant evidence, the cross-probe
+can also select an authored variant and show retained schematic and PCB
+population beside the parts plan. It suppresses board markers for references
+not fitted in that selected variant, reports population differences, and lists
+PCB-only references. The parts receipt still has no variant identity.
 Exact KiCad 10.0.6 sheet bindings support reused child drawings; missing or
 ambiguous bindings retain source coordinates without a marker.
 
@@ -153,8 +161,17 @@ variant identity, so that scope remains labeled unknown. The same guide now
 documents a separate comparison of two authored variants in one indexed product
 revision. It retains their product visual reviews, compares included, omitted,
 and unresolved instance paths, and uses the canonical product BOM rows for
-grouped quantity differences. Cross-revision product snapshots and observed
-board-variant population remain future work.
+grouped quantity differences. An explicit
+[product revision comparison](PRODUCT_REVISION_BOM.md) now reads two saved product
+views with retained product and catalog bytes, compares instance paths and
+canonical grouped quantities across source revisions, and labels each side
+against the live checkout. Legacy views without a retained catalog keep
+instance differences but have no quantity projection. An explicit
+[native board-variant comparison](BOARD_VARIANT_COMPARISON.md) also compares
+two named populations captured from one source-bound design-lint receipt,
+including reference state and fitted per-board quantity changes. It keeps
+unresolved fitted references separate and does not invent catalog revisions.
+F-04 can inspect either selected variant against a parts plan and drawings.
 
 ### F-06 — Interactive 3D board review
 
@@ -219,7 +236,10 @@ undeclared pins are separated. [Power-tree view](POWER_TREE_VIEW.md) now places
 one authored source-group → rail → load map beside exact observed pin membership
 and optional authored current-budget checks. It marks the saved analysis source
 as current, stale, unknown, or unavailable against the selected checkout.
-Broader connectivity tracing, observed current, and PCB copper paths remain.
+An exact [connectivity view](CONNECTIVITY_VIEW.md) adds one bounded component
+hop around a selected net, retaining ambiguous pins, unconnected terminals,
+and other observed net labels without inferring a conductive path. Observed
+current and PCB copper paths remain open.
 
 ### F-09 — Product, assembly, and harness views
 
@@ -252,7 +272,11 @@ capture-time freshness. A missing findings receipt cannot create a false
 resolved finding. New verification receipts carry checkout input and stage-file
 hashes for the overview; historical receipts without those hashes remain
 unknown. History rechecks a captured verification manifest and its outputs
-before showing stage deltas. Release readiness trends remain open.
+before showing stage deltas. A new saved
+[release readiness view](RELEASE_READINESS_VIEW.md) captures computed policy
+issues with manifest, checkout, and declared-file hashes. History can compare
+two explicitly selected readiness receipts and mark changed inputs stale.
+Broader release lifecycle visualization remains open.
 
 **First slice:** Compare two explicitly chosen revision snapshots and show
 changes in checks, findings, source, and available release artifacts. Keep
@@ -334,6 +358,25 @@ shown. Reuse existing parts and sourcing records.
 **Done when:** Tests cover stale offers, mixed currencies, packaging minimums,
 missing prices, and unresolved part identities. No live availability, order,
 substitution, or purchasing approval is implied.
+
+## Follow-on visualization backlog
+
+The `Done` rows above cover their documented first slices. These follow-on
+increments need their own source contract and tests before their views can
+claim coverage. V-01 now has a review implementation; exact native acceptance
+for a representative project remains open.
+
+| ID   | Priority | Depends on | Next review outcome                                                                                 | Evidence needed to finish                                                                                                                        |
+| ---- | -------- | ---------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| V-01 | P1       | F-04/F-05  | [Named variant parts review](VARIANT_PARTS_REVIEW.md) reconciles one variant BOM and drawing navigation. | Exact native representative-project acceptance remains; synthetic controls cover different variants, quantity identity, unmatched references, stale evidence, and CLI/MCP parity. |
+| V-02 | P1       | F-07       | See known board/enclosure interference and measured clearance for an authored placement.            | Representative native models, declared units and tolerance, known interference and clear controls, and explicit unassessed geometry.             |
+| V-03 | P1       | F-02       | Place ERC markers for the other supported KiCad 10 versions where coordinates can be calibrated.    | Exact 10.0.0 and 10.0.5 SVG/report fault and control exports, including repeated child sheets and unsupported cases.                             |
+| V-04 | P2       | F-03/F-12  | Compare measured runs against an authored limit and matching conditions.                            | Project-owned measurement conditions, alignment and interpolation rules, limit units, and valid/failing controls.                                |
+| V-05 | P2       | F-08       | Trace a selected power or return relationship through observed board copper.                        | Source-bound native copper connectivity, layer/zone/via identity, explicit authored intent, and open/connected controls.                         |
+| V-06 | P2       | F-09       | Follow one system interface from product harness to observed board endpoints.                       | Cross-project endpoint and net identity, variant-specific harness records, ambiguity handling, and broken-reference controls.                    |
+| V-07 | P2       | F-10       | Inspect a release timeline with evidence changes and readiness transitions.                         | Explicit retained revision and release receipts, source ancestry, missing-stage handling, and no inferred approval.                              |
+| V-08 | P3       | F-12       | Review a thermal or signal-integrity result against authored limits.                                | Representative measured or modeled input, units and conditions, a review decision contract, and failing/control cases.                           |
+| V-09 | P3       | F-14       | Compare dated supplier offers across more than two snapshots.                                       | Saved offer history with quantity and currency scopes, age limits, unavailable values, and no implied live stock.                                |
 
 ## Shared delivery criteria
 

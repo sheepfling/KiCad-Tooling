@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal
 
 from pydantic import Field, model_validator
 
-from .contracts import read_model, repo_path, write_model
+from .artifact_access import read_regular_bytes
+from .contracts import parse_model_text, repo_path, write_model
 from .evidence import digest
 from .model_primitives import Digest, RepositoryPath, StrictModel
 from .repository import checkout_input_hashes
@@ -56,16 +58,25 @@ def save_verification_output_manifest(
     return manifest
 
 
-def read_verification_output_manifest(
+def read_verification_output_manifest_with_digest(
     directory: Path, report_sha256: str
-) -> VerificationOutputManifest | None:
+) -> tuple[VerificationOutputManifest, str] | None:
     """Legacy summaries may have no manifest; a present one must bind the report."""
     path = directory / "verification-artifacts.json"
     if path.is_symlink():
         raise ValueError("Verification artifact manifest must be a regular local file")
     if not path.exists():
         return None
-    manifest = read_model(repo_path(directory, path.name), VerificationOutputManifest)
+    content, _ = read_regular_bytes(repo_path(directory, path.name), maximum=16 * 1024 * 1024)
+    manifest = parse_model_text(content.decode("utf-8"), VerificationOutputManifest)
     if manifest.report_sha256 != report_sha256:
         raise ValueError("Verification artifact manifest does not bind the selected report")
-    return manifest
+    return manifest, hashlib.sha256(content).hexdigest()
+
+
+def read_verification_output_manifest(
+    directory: Path, report_sha256: str
+) -> VerificationOutputManifest | None:
+    """Read a saved manifest when its checksum is not needed by the caller."""
+    result = read_verification_output_manifest_with_digest(directory, report_sha256)
+    return result[0] if result is not None else None

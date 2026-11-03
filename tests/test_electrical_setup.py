@@ -114,7 +114,7 @@ class ElectricalSetupTests(unittest.TestCase):
         self.assertIn("digital_peer_voltages", pending_summary)
         with (
             patch("kicad_tooling.hwrepo.electrical_runner.capture") as native,
-            patch("kicad_tooling.hwrepo.electrical_runner.run_case") as spice,
+            patch("kicad_tooling.hwrepo.electrical_simulation_evaluation.run_case") as spice,
         ):
             result = analyze(self.root, PROJECT)
         native.assert_not_called()
@@ -294,7 +294,7 @@ class ElectricalSetupTests(unittest.TestCase):
         with (
             test_verify.VerifyTests.runner_environment("10.0.0"),
             patch("kicad_tooling.hwrepo.electrical_doctor.run_command", return_value=evidence),
-            patch("kicad_tooling.verify.check_all") as native,
+            patch("kicad_tooling.hwrepo.project_verification.run_native_project_check") as native,
         ):
             report = verify(
                 self.root, PROJECT, depth="electrical", runner="local", ngspice="missing"
@@ -359,7 +359,7 @@ class ElectricalSetupTests(unittest.TestCase):
         self.assertIn("measure-6", format_report(report, "full"))
         self.assertEqual(len(json.loads(suite.model_dump_json())["projects"][0]["checks"]), 7)
         with (
-            patch("kicad_tooling.electrical.analyze", return_value=report),
+            patch("kicad_tooling.electrical.analyze_request", return_value=report),
             patch.object(
                 sys,
                 "argv",

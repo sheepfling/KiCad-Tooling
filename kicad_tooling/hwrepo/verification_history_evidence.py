@@ -6,12 +6,12 @@ import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..validate import hashes
 from .artifact_access import read_regular_bytes
 from .contracts import parse_model_text, repo_path
 from .evidence import digest
 from .findings_view_models import FindingsViewReport
 from .models import ProjectVerificationReport, ReleaseManifest, ValidationSummary
+from .project_source_hashes import hash_project_sources as hashes
 from .review_overview_evidence import read_receipt, recorded_directory, selected_receipt
 from .review_overview_models import OverviewItem, ReviewOverviewReport
 from .schematic_geometry_source import source_tree_sha256

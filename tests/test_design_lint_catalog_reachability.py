@@ -40,12 +40,6 @@ import tests.design_lint_fixtures.usb_c_superspeed_lanes as _usb_c_superspeed_la
 import tests.external_protection_support as _external_protection_support
 import tests.rs485_peer_reference_support as _rs485_peer_reference_support
 import tests.test_can_excess_termination as _tests_test_can_excess_termination
-import tests.test_connector_mapped_interface_other_named_rail as _tests_test_mapped_other_rail
-import tests.test_connector_mapped_interface_other_unassigned as _tests_test_mapped_other_contact
-import tests.test_connector_mapped_interface_power_contact_unassigned as _tests_test_mapped_power_contact
-import tests.test_connector_mapped_interface_shield_on_return_net as _tests_test_mapped_shield_return
-import tests.test_connector_mapped_interface_shield_on_supply_rail as _tests_test_mapped_shield_supply
-import tests.test_connector_mapped_interface_signal_on_named_rail as _tests_test_mapped_signal_rail
 import tests.test_connector_peer_comparison_scope_singleton as _tests_test_scope_singleton
 import tests.test_connector_return_distribution as _tests_test_connector_return_distribution
 import tests.test_crystal_networks as _tests_test_crystal_networks
@@ -74,6 +68,7 @@ from kicad_tooling.hwrepo.stm32_pin_map_models import Stm32PinMapCoverageReport
 from kicad_tooling.hwrepo.usb_c_ports import UsbCPortRosterContext
 from tests.design_lint_fixtures.catalog_reachability import (
     catalog_reachability_rule_ids,
+    mapped_connector_rule_ids,
     protocol_peer_candidate_rule_ids,
 )
 from tests.design_lint_fixtures.catalog_reachability_pcb import pcb_rule_ids
@@ -281,28 +276,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         )
     )
     emitted.update(pcb_rule_ids())
-    mapped_power_report, _ = _tests_test_mapped_power_contact._report(
-        _tests_test_mapped_power_contact._source(), role="supply"
-    )
-    emitted.update(item.rule_id for item in mapped_power_report.findings)
-    mapped_other_report, _ = _tests_test_mapped_other_contact._report()
-    emitted.update(item.rule_id for item in mapped_other_report.findings)
-    mapped_other_rail_report, _ = _tests_test_mapped_other_rail._report(
-        _tests_test_mapped_other_rail._netlist()
-    )
-    emitted.update(item.rule_id for item in mapped_other_rail_report.findings)
-    mapped_signal_rail_report, _ = _tests_test_mapped_signal_rail._report(
-        _tests_test_mapped_signal_rail.mapped_named_rail_netlist(target_net="GND")
-    )
-    emitted.update(item.rule_id for item in mapped_signal_rail_report.findings)
-    mapped_shield_return_report, _ = _tests_test_mapped_shield_return._report(
-        _tests_test_mapped_shield_return.mapped_named_rail_netlist(target_net="RET")
-    )
-    emitted.update(item.rule_id for item in mapped_shield_return_report.findings)
-    mapped_shield_supply_report, _ = _tests_test_mapped_shield_supply._report(
-        _tests_test_mapped_shield_supply.mapped_named_rail_netlist(target_net="+5V")
-    )
-    emitted.update(item.rule_id for item in mapped_shield_supply_report.findings)
+    emitted.update(mapped_connector_rule_ids())
     scoped_returns, scoped_coverage = _tests_test_scope_singleton.two_usb_one_serial_return_case(
         common_return=True,
         return_comparison_groups={

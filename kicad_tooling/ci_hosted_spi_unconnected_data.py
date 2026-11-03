@@ -20,7 +20,7 @@ from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
 from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 _SOURCE_HASHES = MappingProxyType(
     {

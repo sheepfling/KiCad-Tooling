@@ -17,6 +17,7 @@ from kicad_tooling.hwrepo.models import (
     CommandEvidence,
     ValidationSummary,
 )
+from kicad_tooling.hwrepo.native_project_check_models import NativeProjectCheckRequest
 from kicad_tooling.validate import hashes
 from kicad_tooling.verify import verify
 from tests.verify_support import create_reference_project, native_summary, runner_environment
@@ -89,15 +90,29 @@ def synthetic_connector_validation(
 
 
 def verify_with_synthetic_connector_evidence(root: Path):
+    def run_native(_root: Path, request: NativeProjectCheckRequest) -> CheckAllSummary:
+        return synthetic_connector_native(
+            _root,
+            request.output,
+            request.cli,
+            request.project_ids or (),
+        )
+
     with (
         runner_environment("10.0.0"),
-        patch("kicad_tooling.verify.check_all", side_effect=synthetic_connector_native),
+        patch(
+            "kicad_tooling.hwrepo.project_verification.run_native_project_check",
+            side_effect=run_native,
+        ),
     ):
         return verify(root, "controller", depth="native", runner="local")
 
 
 def check_ci_with_synthetic_connector_evidence(root: Path, output_name: str):
-    with patch("kicad_tooling.check_all.validate", side_effect=synthetic_connector_validation):
+    with patch(
+        "kicad_tooling.hwrepo.native_project_check.validate",
+        side_effect=synthetic_connector_validation,
+    ):
         return check_all(
             root,
             root / "build" / output_name,

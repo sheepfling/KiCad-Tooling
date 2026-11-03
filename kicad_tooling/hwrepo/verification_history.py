@@ -29,10 +29,12 @@ from .verification_history_models import (
     HistoryEvidence,
     HistoryEvidenceChange,
     HistoryFindingChange,
+    HistoryReadinessChange,
     HistoryRelease,
     HistorySourceChange,
     VerificationHistoryReport,
 )
+from .verification_history_readiness import load_readiness
 from .verification_history_stages import stage_changes
 
 
@@ -244,6 +246,8 @@ def compare_verification_history(
     *,
     baseline_release: Path | None = None,
     candidate_release: Path | None = None,
+    baseline_readiness: Path | None = None,
+    candidate_readiness: Path | None = None,
     output: Path | None = None,
 ) -> VerificationHistoryReport:
     """Retain two explicitly chosen history anchors and their check/finding deltas."""
@@ -253,6 +257,8 @@ def compare_verification_history(
     new = load_snapshot(root, project_id, candidate, current_hashes, current_manifest)
     old_release = load_release(root, baseline_release, old, project_id)
     new_release = load_release(root, candidate_release, new, project_id)
+    old_readiness = load_readiness(root, baseline_readiness, old, old_release)
+    new_readiness = load_readiness(root, candidate_readiness, new, new_release)
 
     def verify_inputs() -> None:
         if current_source(root, project_id) != (current_hashes, current_manifest):
@@ -268,6 +274,13 @@ def compare_verification_history(
             or load_release(root, candidate_release, new, project_id) != new_release
         ):
             raise ValueError("Selected release manifest or artifact changed during history export")
+        if (
+            load_readiness(root, baseline_readiness, old, old_release) != old_readiness
+            or load_readiness(root, candidate_readiness, new, new_release) != new_readiness
+        ):
+            raise ValueError(
+                "Selected release readiness receipt or input changed during history export"
+            )
 
     verify_inputs()
     target = output or Path("build/verification-history") / f"{project_id}-{uuid4().hex[:12]}"
@@ -284,6 +297,25 @@ def compare_verification_history(
         stage_changes=stage_changes(old, new),
         finding_changes=_finding_changes(old, new),
         artifact_changes=_artifact_changes(old_release, new_release),
+        readiness_change=HistoryReadinessChange(
+            change=_change(
+                (old_readiness.status, old_readiness.issue_codes, old_readiness.integrity),
+                (new_readiness.status, new_readiness.issue_codes, new_readiness.integrity),
+            ),
+            before=old_readiness,
+            after=new_readiness,
+            comparison_available=old_readiness.integrity == new_readiness.integrity == "CURRENT",
+            added_issue_codes=tuple(
+                sorted(set(new_readiness.issue_codes) - set(old_readiness.issue_codes))
+            )
+            if old_readiness.integrity == new_readiness.integrity == "CURRENT"
+            else (),
+            removed_issue_codes=tuple(
+                sorted(set(old_readiness.issue_codes) - set(new_readiness.issue_codes))
+            )
+            if old_readiness.integrity == new_readiness.integrity == "CURRENT"
+            else (),
+        ),
         output_directory=str(directory),
     )
     (directory / "index.html").write_text(

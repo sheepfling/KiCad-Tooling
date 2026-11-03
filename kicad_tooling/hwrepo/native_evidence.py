@@ -9,7 +9,6 @@ import kicad_tooling.hwrepo.electrical_analysis_contract_models as electrical_co
 import kicad_tooling.hwrepo.models as model_contracts
 from kicad_tooling.hwrepo import pcb_test_access_models
 
-from ..validate import check_netlist, check_report, read_netlist, svg_files
 from .can_termination_contract import can_termination_checks
 from .command_evidence_models import CommandEvidence
 from .contracts import read_model, repo_path
@@ -23,6 +22,8 @@ from .models import (
     SourceState,
     ValidationSummary,
 )
+from .native_command import svg_files
+from .native_report_parsing import check_netlist, check_report, read_netlist
 from .power_connectivity import power_connectivity_checks
 from .product import check_project_netlist
 from .project_models import ProjectKind

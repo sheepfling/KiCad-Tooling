@@ -243,9 +243,9 @@ class GovernanceLintTests(unittest.TestCase):
             executable = Path(temporary) / "kicad-cli"
             executable.write_text("fixture", encoding="utf-8")
             with (
-                patch("kicad_tooling.check_toolchain.sys.platform", "darwin"),
-                patch("kicad_tooling.check_toolchain.shutil.which", return_value=None),
-                patch("kicad_tooling.check_toolchain.MACOS_KICAD_CLI", executable),
+                patch("kicad_tooling.hwrepo.native_toolchain.sys.platform", "darwin"),
+                patch("kicad_tooling.hwrepo.native_toolchain.shutil.which", return_value=None),
+                patch("kicad_tooling.hwrepo.native_toolchain.MACOS_KICAD_CLI", executable),
             ):
                 self.assertEqual(cli_executable("kicad-cli"), str(executable))
 

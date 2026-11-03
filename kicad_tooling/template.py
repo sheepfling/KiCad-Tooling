@@ -9,7 +9,11 @@ from pathlib import Path
 from .hwrepo.adoption import adopt
 from .hwrepo.cli_output import summary
 from .hwrepo.diagnostic_journal import DiagnosticJournal
-from .hwrepo.diagnostics import diagnose_import, diagnose_project, format_text
+from .hwrepo.diagnostic_operation_models import (
+    ImportDiagnosticRequest,
+    ProjectDiagnosticRequest,
+)
+from .hwrepo.diagnostics import diagnose_import_request, diagnose_project_request, format_text
 from .hwrepo.doctor import doctor
 from .hwrepo.foreign_pcb import convert_pcb
 from .hwrepo.foreign_pcb import render_text as render_foreign_pcb
@@ -269,12 +273,24 @@ def main() -> int:
         try:
             if args.source is not None:
                 assert args.toolchain is not None
-                result = diagnose_import(
-                    args.root, args.source, args.project_id, args.toolchain, journal
+                result = diagnose_import_request(
+                    args.root,
+                    ImportDiagnosticRequest(
+                        source=args.source,
+                        project_id=args.project_id,
+                        toolchain_id=args.toolchain,
+                    ),
+                    journal,
                 )
             else:
-                result = diagnose_project(
-                    args.root, args.project_id, args.native_report, args.bom, journal
+                result = diagnose_project_request(
+                    args.root,
+                    ProjectDiagnosticRequest(
+                        project_id=args.project_id,
+                        native_report=args.native_report,
+                        bom=args.bom,
+                    ),
+                    journal,
                 )
             result = result.model_copy(update={"run_directory": str(journal.directory)})
             human_text = format_text(result, args.detail or "brief")

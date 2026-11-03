@@ -16,14 +16,17 @@ from .contract_coach import receipt_directory
 from .contracts import read_model, repo_path, write_model
 from .electrical import simulation_cases
 from .electrical_analysis_contract_models import ElectricalAnalysisContract
+from .electrical_chart_interactive import case_traces, render_chart_index, render_interactive_chart
+from .electrical_chart_models import (
+    ElectricalChartCase,
+    ElectricalChartsReport,
+    ElectricalChartsSuiteReport,
+)
 from .electrical_plot import render_case
 from .evidence import digest
 from .models import (
     ContractCoachReport,
     ElectricalAnalysisReport,
-    ElectricalChartCase,
-    ElectricalChartsReport,
-    ElectricalChartsSuiteReport,
     ElectricalSuiteReport,
 )
 from .waveform_data import WaveformData, read_waveform
@@ -192,11 +195,36 @@ def build_charts(root: Path, receipt: Path, output: Path | None = None) -> Elect
         try:
             raw = checked_artifact(source, report, raw_name)
             data = read_waveform(raw, "time" if case.analysis == "tran" else "frequency")
-            csv_name, png_name, svg_name = (
-                f"{case.id}.{extension}" for extension in ("csv", "png", "svg")
+            csv_name, png_name, svg_name, html_name = (
+                f"{case.id}.{extension}" for extension in ("csv", "png", "svg", "html")
             )
             waveform_csv(directory / csv_name, data)
             render_case(data, case, directory / png_name, directory / svg_name)
+            traces = case_traces(data, case)
+            (directory / html_name).write_text(
+                render_interactive_chart(
+                    f"{case.id} · {report.project_id}",
+                    "time" if case.analysis == "tran" else "frequency",
+                    traces,
+                    (
+                        ("Analysis status", report.status),
+                        ("Analysis receipt SHA-256", report_hash),
+                        ("Waveform SHA-256", digest(raw)),
+                        ("Case basis", case.basis),
+                        (
+                            "Display samples",
+                            ", ".join(f"{t.label}: {len(t.x)} of {len(data.axis)}" for t in traces),
+                        ),
+                    ),
+                    (
+                        ("Full CSV", csv_name),
+                        ("Static PNG", png_name),
+                        ("Static SVG", svg_name),
+                        ("Chart index", "index.html"),
+                    ),
+                ),
+                encoding="utf-8",
+            )
             results.append(
                 ElectricalChartCase(
                     id=case.id,
@@ -206,6 +234,7 @@ def build_charts(root: Path, receipt: Path, output: Path | None = None) -> Elect
                     csv=csv_name,
                     png=png_name,
                     svg=svg_name,
+                    html=html_name,
                     detail="Chart and full precision series exported from the retained waveform.",
                 )
             )
@@ -227,6 +256,9 @@ def build_charts(root: Path, receipt: Path, output: Path | None = None) -> Elect
     for item in results:
         if item.status == "PASS":
             checked_artifact(source, report, f"{item.id}/waveforms.raw")
+    (directory / "index.html").write_text(
+        render_chart_index(report.project_id, report_hash, tuple(results)), encoding="utf-8"
+    )
     output_report = ElectricalChartsReport(
         project_id=report.project_id,
         status=status,
@@ -235,6 +267,7 @@ def build_charts(root: Path, receipt: Path, output: Path | None = None) -> Elect
         source_report_sha256=report_hash,
         run_directory=str(directory),
         cases=tuple(results),
+        viewer_index="index.html",
         grounding_csv=ground,
         power_csv=power,
         artifacts_sha256={

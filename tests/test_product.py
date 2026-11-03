@@ -677,7 +677,7 @@ class ProductTests(unittest.TestCase):
         (root / "examples/products/status-indicator-system/product.json").write_text(
             json.dumps(self.data), encoding="utf-8"
         )
-        with patch("kicad_tooling.validate.execute") as execute:
+        with patch("kicad_tooling.hwrepo.native_project_validation.execute") as execute:
             result = validate(
                 root,
                 root / "output",

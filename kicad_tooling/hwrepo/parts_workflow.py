@@ -6,13 +6,22 @@ import tempfile
 from collections import Counter
 from pathlib import Path
 
-from .contract_coach import NetlistRunner, capture, inspect_summary, project_context
+from .contract_coach import (
+    AutoNetlistRunner,
+    ContainerNetlistRunner,
+    LocalNetlistRunner,
+    NetlistRunner,
+    capture,
+    inspect_summary,
+    project_context,
+)
 from .contracts import read_model, repo_path, write_model
 from .discovery import load_registry
 from .evidence import digest
 from .layout import CONFIG_NAME, layout
 from .models import PurchasingReport
 from .part_catalog_models import PartsCatalog
+from .parts_operation_models import PartsPreparationRequest
 from .parts_receipts import PartsOutputManifest
 from .parts_view import render_html
 from .project_models import (
@@ -332,3 +341,30 @@ def save_report(output: Path, report: PurchasingReport) -> None:
             artifacts_sha256={name: digest(repo_path(output, name)) for name in names},
         ),
     )
+
+
+def _selected_netlist_runner(request: PartsPreparationRequest) -> NetlistRunner:
+    if request.runner_mode == "local":
+        return LocalNetlistRunner(request.cli)
+    if request.runner_mode == "container":
+        return ContainerNetlistRunner()
+    return AutoNetlistRunner(request.cli)
+
+
+def prepare_request(root: Path, request: PartsPreparationRequest) -> PurchasingReport:
+    """Prepare and retain one source-bound purchasing review from a typed request."""
+    root = root.resolve()
+    output = local_path(root, request.output)
+    report = prepare(
+        root,
+        request.project_id,
+        output,
+        _selected_netlist_runner(request),
+        request.native_summary,
+        request.requested_preferences,
+        request.boards,
+        request.spare_percent,
+        request.spare_minimum,
+    )
+    save_report(output, report)
+    return report

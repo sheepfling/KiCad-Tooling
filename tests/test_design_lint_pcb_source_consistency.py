@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TypeAlias, TypedDict, cast
+
 import pytest
 
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
@@ -20,6 +22,32 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.evidence_lint, pytest.mark.pc
 _BOARD_A = "a" * 64
 _BOARD_B = "b" * 64
 
+PcbCoverageReport: TypeAlias = (
+    PcbComponentInventoryCoverageReport
+    | PcbDecouplingCoverageReport
+    | PcbKeepoutCoverageReport
+    | PcbProtectionPathCoverageReport
+    | PcbReferencePlaneCoverageReport
+    | PcbRfModuleAntennaCoverageReport
+    | PcbSwitchingLoopCoverageReport
+    | PcbTouchPadClearanceCoverageReport
+    | PcbTrackWidthCoverageReport
+)
+
+
+class PcbCoverageOverrides(TypedDict, total=False):
+    """Known coverage fields accepted by the report-construction fixture."""
+
+    pcb_component_inventory: PcbComponentInventoryCoverageReport
+    pcb_decoupling: PcbDecouplingCoverageReport
+    pcb_keepout_coverage: PcbKeepoutCoverageReport
+    pcb_protection_path: PcbProtectionPathCoverageReport
+    pcb_reference_plane: PcbReferencePlaneCoverageReport
+    pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport
+    pcb_switching_loop: PcbSwitchingLoopCoverageReport
+    pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport
+    pcb_track_width: PcbTrackWidthCoverageReport
+
 
 def _pcb_reports(
     *,
@@ -29,7 +57,7 @@ def _pcb_reports(
     version_b: str = "10.0.5",
     image_a: str = "sha256:image-a",
     image_b: str = "sha256:image-a",
-) -> dict[str, object]:
+) -> PcbCoverageOverrides:
     return {
         "pcb_decoupling": PcbDecouplingCoverageReport(
             status="BLOCKED",
@@ -49,15 +77,15 @@ def _pcb_reports(
 
 
 def _report(
-    pcb_reports: dict[str, object], *, netlist_sha256: str | None = None
+    pcb_reports: PcbCoverageOverrides,
+    *,
+    netlist_sha256: str | None = None,
 ) -> DesignLintReport:
-    return DesignLintReport.model_validate(
-        {
-            "status": "BLOCKED",
-            "project_id": "synthetic-pcb-source-consistency",
-            "netlist_sha256": netlist_sha256,
-            **pcb_reports,
-        }
+    return DesignLintReport(
+        status="BLOCKED",
+        project_id="synthetic-pcb-source-consistency",
+        netlist_sha256=netlist_sha256,
+        **pcb_reports,
     )
 
 
@@ -144,10 +172,13 @@ def test_report_accepts_pcb_evidence_from_one_board_and_toolchain() -> None:
     ),
 )
 def test_report_rejects_pcb_coverage_from_a_different_netlist(
-    field_name: str, coverage: object
+    field_name: str, coverage: PcbCoverageReport
 ) -> None:
     with pytest.raises(ValueError, match="coverage must use this report's native netlist"):
-        _report({field_name: coverage}, netlist_sha256=_BOARD_A)
+        _report(
+            cast(PcbCoverageOverrides, {field_name: coverage}),
+            netlist_sha256=_BOARD_A,
+        )
 
 
 def test_report_accepts_pcb_netlist_coverage_bound_to_its_current_netlist() -> None:

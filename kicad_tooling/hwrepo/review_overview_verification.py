@@ -5,7 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from .contracts import repo_path
-from .evidence import digest
 from .models import ProjectVerificationReport
 from .repository import checkout_input_hashes
 from .review_overview_evidence import (
@@ -17,7 +16,7 @@ from .review_overview_evidence import (
 )
 from .review_overview_models import OverviewItem, OverviewLink
 from .review_overview_result import receipt_result
-from .verification_receipts import read_verification_output_manifest
+from .verification_receipts import read_verification_output_manifest_with_digest
 
 
 def inspect_verification(context: ReviewContext, path: Path) -> OverviewItem:
@@ -31,13 +30,14 @@ def inspect_verification(context: ReviewContext, path: Path) -> OverviewItem:
     links: list[OverviewLink] = []
     source_hashes: dict[str, str] = {}
     try:
-        manifest = read_verification_output_manifest(path.parent, checksum)
+        loaded = read_verification_output_manifest_with_digest(path.parent, checksum)
     except (OSError, ValueError):
-        manifest = None
+        loaded = None
         stale.append("Verification artifact manifest is invalid or does not bind the report.")
-    if manifest is None and not stale:
+    if loaded is None and not stale:
         unknown.append("Verification summary has no standalone source hash inventory.")
-    if manifest is not None:
+    if loaded is not None:
+        manifest, manifest_hash = loaded
         source_hashes = dict(manifest.source_hashes)
         if not manifest.source_stable:
             stale.append("Repository source changed during verification.")
@@ -62,9 +62,7 @@ def inspect_verification(context: ReviewContext, path: Path) -> OverviewItem:
                 if link is not None:
                     links.append(link)
         manifest_path = repo_path(path.parent, "verification-artifacts.json")
-        link = checked_link(
-            context, manifest_path, "Verification hash manifest", digest(manifest_path)
-        )
+        link = checked_link(context, manifest_path, "Verification hash manifest", manifest_hash)
         if link is not None:
             links.append(link.model_copy(update={"receipt_bound": False}))
     return receipt_result(

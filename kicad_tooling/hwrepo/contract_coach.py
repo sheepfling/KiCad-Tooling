@@ -31,8 +31,6 @@ from kicad_tooling.hwrepo.project_models import (
     SystemWiringValidationContract,
 )
 
-from ..check_toolchain import cli_executable
-from ..validate import hashes, read_netlist
 from .connector_identity import similar_connector_pin_groups
 from .contracts import read_model, repo_path, write_model
 from .discovery import load_config
@@ -43,7 +41,10 @@ from .native_netlist_evidence import (
     native_netlist_evidence_matches,
     validate_native_netlist_export,
 )
+from .native_report_parsing import read_netlist
 from .native_summary_binding import validate_native_summary_binding
+from .native_toolchain import cli_executable
+from .project_source_hashes import hash_project_sources as hashes
 from .return_nets import return_net_groups
 from .selection import resolve_project
 

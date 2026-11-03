@@ -21,7 +21,7 @@ from .hwrepo.control_input_inventory import (
 from .hwrepo.control_input_models import ControlInputsAnalysis
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 
 def native_control_input_demo_lane(

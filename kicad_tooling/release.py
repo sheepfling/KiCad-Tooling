@@ -8,9 +8,11 @@ import zipfile
 from pathlib import Path
 
 from kicad_tooling.hwrepo.models import (
-    ReleaseClass,
     ReleaseExportReport,
     ReleaseManifest,
+)
+from kicad_tooling.hwrepo.release_model_types import ReleaseClass
+from kicad_tooling.hwrepo.release_report_models import (
     ReleasePackageReport,
     ReleaseReadinessReport,
 )

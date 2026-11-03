@@ -12,18 +12,17 @@ from typing import Protocol
 from kicad_tooling.hwrepo.analysis_state_models import AnalysisNotApplicable, AnalysisPending
 from kicad_tooling.hwrepo.electrical_analysis_contract_models import ElectricalAnalysisContract
 from kicad_tooling.hwrepo.electrical_simulation_models import (
-    FrequencyAnalysis,
     HighFrequencyAnalysis,
     PowerAnalysis,
-    TransientAnalysis,
+    SimulationCase,
 )
 from kicad_tooling.hwrepo.grounding_models import GroundingAnalysis
 from kicad_tooling.hwrepo.pcb_test_access_models import PcbAccessAnalysis, TestAccessAnalysis
 from kicad_tooling.hwrepo.pin_connectivity_models import PinConnectivityAnalysis
 
-from ..validate import hashes
 from .contracts import parse_model_text, read_model, repo_path
 from .discovery import load_config
+from .model_primitives import Digest, RepositoryPath
 from .models import (
     ElectricalCheck,
     NetlistContract,
@@ -33,10 +32,9 @@ from .project_models import (
     ProjectKind,
     ProjectManifest,
 )
+from .project_source_hashes import hash_project_sources as hashes
 from .return_nets import return_net_groups
 from .selection import resolve_project
-
-SimulationCase = TransientAnalysis | FrequencyAnalysis
 
 
 class _ModeledAnalysisSection(Protocol):
@@ -107,7 +105,7 @@ def load_analysis(root: Path, config: ProjectConfig) -> ElectricalAnalysisContra
 
 def bound_inputs(
     root: Path, config: ProjectConfig, contract: ElectricalAnalysisContract
-) -> dict[str, str]:
+) -> dict[RepositoryPath, Digest]:
     """Check reviewed model/design hashes and inventory every input used by this run."""
     root = root.resolve()
     source = hashes(root, config.source_roots)
@@ -117,7 +115,7 @@ def bound_inputs(
     manifest_path = repo_path(root, project.config)
     manifest = read_model(manifest_path, ProjectManifest)
     checks_path = repo_path(manifest_path.parent, manifest.checks)
-    inputs = dict(source)
+    inputs: dict[RepositoryPath, Digest] = dict(source)
     for path in (manifest_path, checks_path, repo_path(root, config.electrical or "")):
         inputs[path.relative_to(root).as_posix()] = model_digest(path)
     for case in simulation_cases(contract):
@@ -142,10 +140,10 @@ def bind_electrical_inputs(
     root: Path,
     config: ProjectConfig,
     contract: ElectricalAnalysisContract,
-    expected: Mapping[str, str] | None = None,
+    expected: Mapping[RepositoryPath, Digest] | None = None,
     *,
     mismatch_message: str = "Electrical inputs changed during analysis",
-) -> dict[str, str]:
+) -> dict[RepositoryPath, Digest]:
     """Bind the parsed records to current inputs and recheck an existing binding."""
     actual = bound_inputs(root, config, contract)
     if (

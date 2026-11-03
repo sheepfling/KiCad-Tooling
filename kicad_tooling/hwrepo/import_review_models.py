@@ -7,8 +7,8 @@ from typing import Literal
 
 from pydantic import Field
 
+from .diagnostics_models import DiagnosticReport
 from .model_primitives import Digest, Identifier, RepositoryPath, StrictModel
-from .models import DiagnosticReport
 from .project_models import ProjectImportReport, ProjectKind, ToolchainRecord
 
 

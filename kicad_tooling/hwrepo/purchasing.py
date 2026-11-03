@@ -368,7 +368,7 @@ def _safe_cell(value: str) -> str:
     return value
 
 
-def _csv_text(rows: tuple[tuple[str, ...], ...]) -> str:
+def review_csv_text(rows: tuple[tuple[str, ...], ...]) -> str:
     stream = io.StringIO(newline="")
     writer = csv.writer(stream, lineterminator="\n")
     for row in rows:
@@ -446,14 +446,14 @@ def write_csvs(output_dir: Path, purchase_plan: PurchasingPlan) -> tuple[str, ..
                 issue_codes,
             )
         )
-    contents = {"bom.csv": _csv_text(tuple(review_rows))}
+    contents = {"bom.csv": review_csv_text(tuple(review_rows))}
     if purchase_plan.status == "READY_FOR_ORDER_REVIEW":
         if purchase_plan.findings or not purchase_plan.lines:
             raise ValueError("Ready purchasing plan cannot have findings or no order lines")
         order_rows = (("Part Number", "Quantity", "Customer Reference"),) + tuple(
             (line.order_number, str(line.quantity), line.part_id) for line in purchase_plan.lines
         )
-        contents["digikey.csv"] = _csv_text(order_rows)
+        contents["digikey.csv"] = review_csv_text(order_rows)
     output_dir.mkdir(parents=True, exist_ok=True)
     for name in contents:
         if (output_dir / name).exists() or (output_dir / name).is_symlink():

@@ -135,6 +135,7 @@ class NewWorkflowParityTests(unittest.IsolatedAsyncioTestCase):
                         item.csv,
                         item.png,
                         item.svg,
+                        item.html,
                     )
                     for item in cli.cases
                 ],
@@ -147,17 +148,24 @@ class NewWorkflowParityTests(unittest.IsolatedAsyncioTestCase):
                         item.csv,
                         item.png,
                         item.svg,
+                        item.html,
                     )
                     for item in mcp.cases
                 ],
             )
             self.assertEqual(cli.source_report_sha256, mcp.source_report_sha256)
+            self.assertEqual(cli.viewer_index, mcp.viewer_index)
             self.assertEqual(cli.status, mcp.status)
             for case in cli.cases:
                 assert case.csv is not None
                 self.assertEqual(
                     (Path(cli.run_directory) / case.csv).read_bytes(),
                     (Path(mcp.run_directory) / case.csv).read_bytes(),
+                )
+                assert case.html is not None
+                self.assertEqual(
+                    (Path(cli.run_directory) / case.html).read_bytes(),
+                    (Path(mcp.run_directory) / case.html).read_bytes(),
                 )
             suite_path = root / "build/electrical-suite.json"
             write_model(suite_path, ElectricalSuiteReport(status="PASS", projects=(analysis,)))

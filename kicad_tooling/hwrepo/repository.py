@@ -15,7 +15,7 @@ from ..git import run_git_text
 from .contracts import lexical_absolute_path, repo_path, repo_path_is_within
 from .discovery import load_config, load_registry, settings
 from .evidence import digest
-from .models import RepositoryPolicyReport
+from .repository_policy_models import RepositoryPolicyReport
 
 LOCAL_STATE_NAMES = frozenset(
     {

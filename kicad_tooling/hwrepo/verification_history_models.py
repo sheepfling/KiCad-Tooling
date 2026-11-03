@@ -115,6 +115,28 @@ class HistoryArtifactChange(StrictModel):
     after: HistoryArtifact | None = None
 
 
+class HistoryReadiness(StrictModel):
+    receipt: RepositoryPath | None = None
+    receipt_sha256: Digest | None = None
+    release_id: Identifier | None = None
+    checked_on: str | None = None
+    status: Literal["PASS", "FAIL", "NOT_SELECTED", "MISSING", "STALE", "UNAVAILABLE"] = (
+        "NOT_SELECTED"
+    )
+    integrity: EvidenceState = "NOT_SELECTED"
+    issue_codes: tuple[str, ...] = ()
+    issues: tuple[str, ...] = ()
+
+
+class HistoryReadinessChange(StrictModel):
+    change: Change
+    before: HistoryReadiness
+    after: HistoryReadiness
+    comparison_available: bool = False
+    added_issue_codes: tuple[str, ...] = ()
+    removed_issue_codes: tuple[str, ...] = ()
+
+
 class VerificationHistoryReport(StrictModel):
     schema_version: Literal["1"] = "1"
     lane: Literal["VERIFICATION_HISTORY"] = "VERIFICATION_HISTORY"
@@ -130,5 +152,6 @@ class VerificationHistoryReport(StrictModel):
     stage_changes: tuple[HistoryStageChange, ...] = ()
     finding_changes: tuple[HistoryFindingChange, ...]
     artifact_changes: tuple[HistoryArtifactChange, ...]
+    readiness_change: HistoryReadinessChange
     output_directory: str
     artifacts_sha256: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)

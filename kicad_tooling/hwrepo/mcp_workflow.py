@@ -5,7 +5,6 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from ..check_toolchain import cli_executable
 from ..ci import static_pipeline
 from ..verify import run_command
 from . import (
@@ -21,9 +20,16 @@ from . import mcp_3d_workflow as _mcp_3d_workflow
 from . import mcp_workflow_paths as _mcp_workflow_paths
 from . import model_population as _model_population
 from .contracts import read_model, repo_path, write_model
+from .design_lint_inspection_models import DesignLintInspectionRequest
 from .design_lint_reconciliation import reconcile_design_lint_reports
 from .design_lint_reconciliation_models import DesignLintReconciliationReport
 from .design_lint_report_models import DesignLintReport
+from .diagnostic_operation_models import (
+    ImportDiagnosticRequest,
+    ProjectDiagnosticRequest,
+    ProjectRescueRequest,
+)
+from .diagnostics_models import DiagnosticReport, LocalRescueReport
 from .discovery import load_config
 from .doctor import NativeRunner, doctor
 from .evidence import source_state
@@ -32,20 +38,18 @@ from .exports import require_declared_variant, verify_exports
 from .mcp_workflow_journal import journal
 from .models import (
     ContractCoachReport,
-    DiagnosticReport,
-    LocalRescueReport,
     McpGenerationReport,
     McpScopeReport,
-    ReleaseClass,
     ReleaseExportReport,
     ReleaseManifest,
-    ReleasePackageReport,
-    ReleaseReadinessReport,
     ReleaseStatus,
 )
+from .native_toolchain import cli_executable
 from .portable_evidence import verify_release_portable
 from .project_models import ProjectManifest
 from .release import check as release_check
+from .release_model_types import ReleaseClass
+from .release_report_models import ReleasePackageReport, ReleaseReadinessReport
 from .selection import ProjectSelector, resolve_project_ids
 from .sharding import shard_projects
 
@@ -71,7 +75,15 @@ def diagnose_import(
 ) -> DiagnosticReport:
     """Diagnose an already-authorized import source and retain the preview receipt."""
     with journal(root, project_id) as receipt:
-        result = diagnostics.diagnose_import(root, source, project_id, toolchain_id, receipt)
+        result = diagnostics.diagnose_import_request(
+            root,
+            ImportDiagnosticRequest(
+                source=source,
+                project_id=project_id,
+                toolchain_id=toolchain_id,
+            ),
+            receipt,
+        )
         result = result.model_copy(update={"run_directory": str(receipt.directory)})
         receipt.finish(result, diagnostics.format_text(result, "full"), result.status)
         return result
@@ -89,7 +101,15 @@ def diagnose_project(
     native = None if native_report is None else native_summary_path(root, native_report)
     bom_path = None if bom is None else artifact_file(root, bom)
     with journal(root, project_id) as receipt:
-        result = diagnostics.diagnose_project(root, project_id, native, bom_path, receipt)
+        result = diagnostics.diagnose_project_request(
+            root,
+            ProjectDiagnosticRequest(
+                project_id=project_id,
+                native_report=native,
+                bom=bom_path,
+            ),
+            receipt,
+        )
         result = result.model_copy(update={"run_directory": str(receipt.directory)})
         receipt.finish(result, diagnostics.format_text(result, "full"), result.status)
         return result
@@ -98,7 +118,9 @@ def diagnose_project(
 def rescue_project(root: Path, project_id: str) -> LocalRescueReport:
     """Retain a local repair view without converting UNVERIFIED_GLOBAL into a pass."""
     with journal(root, project_id) as receipt:
-        result = rescue.rescue_project(root, project_id, receipt)
+        result = rescue.rescue_project_request(
+            root, ProjectRescueRequest(project_id=project_id), receipt
+        )
         receipt.finish(result, rescue.format_rescue(result, "full"), result.status)
         return result
 
@@ -153,7 +175,13 @@ def inspect_contract(root: Path, project_id: str, native_summary: str) -> Contra
 
 def inspect_design_lint(root: Path, project_id: str, native_summary: str) -> DesignLintReport:
     """Review source-bound heuristic findings through the same typed CLI service."""
-    return design_lint.inspect_summary(root, project_id, native_summary_path(root, native_summary))
+    return design_lint.inspect_request(
+        root,
+        DesignLintInspectionRequest(
+            project_id=project_id,
+            native_summary=native_summary_path(root, native_summary),
+        ),
+    )
 
 
 def reconcile_design_lint(
@@ -166,8 +194,12 @@ def reconcile_design_lint(
     if len(baseline_report_json.encode("utf-8")) > 10 * 1024 * 1024:
         raise ValueError("Baseline design-lint report exceeds the 10 MiB input limit")
     baseline = DesignLintReport.model_validate_json(baseline_report_json)
-    current = design_lint.inspect_summary(
-        root, project_id, native_summary_path(root, native_summary)
+    current = design_lint.inspect_request(
+        root,
+        DesignLintInspectionRequest(
+            project_id=project_id,
+            native_summary=native_summary_path(root, native_summary),
+        ),
     )
     return reconcile_design_lint_reports(baseline, current)
 

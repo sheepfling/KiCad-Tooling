@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..validate import hashes
 from .contract_coach import pinned_image
 from .contracts import repo_path
 from .design_lint_pcb_coverage_common import PcbGeometrySourceEvidence
@@ -19,6 +18,7 @@ from .pcb_return_path_capture import (
 )
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceRequestSet
 from .project_models import ProjectKind
+from .project_source_hashes import hash_project_sources as hashes
 
 
 def capture_pcb_geometry_source(

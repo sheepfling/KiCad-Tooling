@@ -24,8 +24,8 @@ from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.power_decoupling import ic_power_rails_without_fitted_capacitors
-from .validate import read_netlist
 
 
 def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:

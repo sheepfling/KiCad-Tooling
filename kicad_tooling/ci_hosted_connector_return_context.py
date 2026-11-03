@@ -32,8 +32,8 @@ from .hwrepo.models import (
     DesignLintPolicy,
     NetlistContract,
 )
+from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.project_models import ProjectConfig
-from .validate import read_netlist
 
 
 class ConnectorReturnLog(Protocol):

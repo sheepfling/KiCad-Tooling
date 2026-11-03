@@ -9,7 +9,6 @@ from collections.abc import Mapping
 from pathlib import Path, PureWindowsPath
 from typing import Literal
 
-from ..validate import check_report
 from .artifact_access import read_regular_bytes
 from .command_evidence_models import CommandEvidence
 from .contracts import parse_model_text, read_kicad_drc_findings, read_kicad_erc_report, repo_path
@@ -22,6 +21,7 @@ from .findings_view_mapping import (
 from .findings_view_models import ReviewDrawing, ReviewFinding
 from .findings_view_svg import prepare_drawing
 from .models import ValidationSummary
+from .native_report_parsing import check_report
 from .project_models import (
     ProjectConfig,
     ProjectKind,

@@ -12,7 +12,6 @@ import re
 from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
 
-from ..validate import hashes
 from .auto_cad import _Edit, _receipt, _write_edits  # pyright: ignore[reportPrivateUsage]
 from .cad_assets import _model_signature, _pads  # pyright: ignore[reportPrivateUsage]
 from .cad_source_models import CadBundleCheck, CadImportPlan, CadImportReport, CadSourceBundle
@@ -38,6 +37,7 @@ from .part_cad import (
 from .part_picker import _snapshot, _verify_snapshot  # pyright: ignore[reportPrivateUsage]
 from .parts_workflow import local_path, selected_project
 from .project_models import ProjectManifest
+from .project_source_hashes import hash_project_sources as hashes
 
 _MAX_FILE = 32 * 1024 * 1024
 _MAX_TOTAL = 96 * 1024 * 1024

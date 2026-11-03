@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Literal
 from uuid import uuid4
 
-from ..validate import hashes
 from .artifact_access import artifact_file, artifact_path, read_regular_bytes
 from .contract_coach import receipt_directory
 from .contracts import parse_model_text, read_model, repo_path, write_model
@@ -22,6 +21,7 @@ from .findings_view_sheets import bind_schematic_drawings
 from .models import ValidationSummary
 from .native_summary_binding import validate_native_summary_binding
 from .project_models import ProjectManifest
+from .project_source_hashes import hash_project_sources as hashes
 from .schematic_geometry_source import schematic_root, schematic_scalar, schematic_sheet_references
 from .selection import resolve_project
 

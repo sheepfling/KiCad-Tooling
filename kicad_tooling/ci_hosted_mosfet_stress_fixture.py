@@ -19,7 +19,7 @@ from .hwrepo.mosfet_stress_models import (
     MosfetStressRequirement,
     MosfetVoltageInterval,
 )
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 
 def verify_mosfet_stress_fixture(context: ComponentRatingFixtureContext, log: HostedLog) -> None:

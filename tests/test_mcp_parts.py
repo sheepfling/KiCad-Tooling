@@ -324,7 +324,7 @@ class McpPartsTests(unittest.IsolatedAsyncioTestCase):
                     if selection == "container":
                         runner.selected_runner = "container"
                     with patch(
-                        f"kicad_tooling.hwrepo.mcp_parts.contract_coach.{constructor}",
+                        f"kicad_tooling.hwrepo.parts_workflow.{constructor}",
                         return_value=runner,
                     ) as factory:
                         report = self.structured(

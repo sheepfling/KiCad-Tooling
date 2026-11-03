@@ -8,13 +8,11 @@ from typing import Literal
 
 from .contracts import read_model, repo_path
 from .diagnostic_journal import DiagnosticJournal
+from .diagnostic_operation_models import ProjectRescueRequest
 from .diagnostics import finding, quote_argument, repository_guidance
+from .diagnostics_models import DiagnosticFinding, LocalRescueReport
 from .discovery import load_config, manifest_paths
 from .layout import layout, within_roots, workflow_guide
-from .models import (
-    DiagnosticFinding,
-    LocalRescueReport,
-)
 from .project_models import ProjectManifest
 from .repository import cad_dependencies
 
@@ -156,7 +154,7 @@ def selected_findings(
         return findings
 
     try:
-        from ..validate import hashes
+        from .project_source_hashes import hash_project_sources as hashes
 
         observed = set(hashes(root, config.source_roots))
         expected = set(config.required_inputs)
@@ -235,8 +233,12 @@ def selected_findings(
     return findings
 
 
-def rescue_project(root: Path, project_id: str, journal: DiagnosticJournal) -> LocalRescueReport:
+def rescue_project_request(
+    root: Path, request: ProjectRescueRequest, journal: DiagnosticJournal
+) -> LocalRescueReport:
     """Return a partial repair report; never call the authoritative CI/release gates."""
+    project_id = request.project_id
+    journal.require_scope(root, project_id)
     root = root.resolve()
     manifest: Path | None = None
     try:
@@ -277,6 +279,11 @@ def rescue_project(root: Path, project_id: str, journal: DiagnosticJournal) -> L
         next_command=command,
         run_directory=str(journal.directory),
     )
+
+
+def rescue_project(root: Path, project_id: str, journal: DiagnosticJournal) -> LocalRescueReport:
+    """Compatibility adapter for the former positional rescue API."""
+    return rescue_project_request(root, ProjectRescueRequest(project_id=project_id), journal)
 
 
 def format_rescue(

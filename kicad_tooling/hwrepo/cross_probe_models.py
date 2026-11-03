@@ -25,10 +25,16 @@ class CrossProbeLocation(StrictModel):
 
 class CrossProbeEntry(StrictModel):
     reference: Identifier
+    origin: Literal["PARTS_PLAN", "VARIANT_NATIVE"] = "PARTS_PLAN"
     part_id: str | None = None
     value: str
     footprint: str
     population: Literal["FITTED", "DNP", "EXCLUDED", "DUPLICATE"]
+    variant_schematic: Literal["FITTED", "DNP", "ABSENT", "NOT_RECORDED"] = "NOT_RECORDED"
+    variant_board: Literal["FITTED", "DNP", "ABSENT", "NOT_RECORDED"] = "NOT_RECORDED"
+    variant_part_id: str | None = None
+    variant_value: str | None = None
+    variant_footprint: str | None = None
     board: tuple[CrossProbeLocation, ...] = ()
     schematic: tuple[CrossProbeLocation, ...] = ()
     issues: tuple[str, ...] = ()
@@ -47,7 +53,12 @@ class CrossProbeReport(StrictModel):
     findings_view: RepositoryPath
     findings_view_sha256: Digest
     source_hashes: Mapping[RepositoryPath, Digest]
-    variant_scope: Literal["NOT_RECORDED"] = "NOT_RECORDED"
+    variant_scope: Literal["NOT_RECORDED", "NAMED_OBSERVED"] = "NOT_RECORDED"
+    assembly_variant: str | None = None
+    variant_lint_report: RepositoryPath | None = None
+    variant_lint_report_sha256: Digest | None = None
+    variant_evidence_sha256: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
+    variant_board_only: tuple[Identifier, ...] = ()
     entries: tuple[CrossProbeEntry, ...]
     drawings: tuple[ReviewDrawing, ...] = ()
     issues: tuple[str, ...] = ()

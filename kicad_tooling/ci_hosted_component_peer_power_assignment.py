@@ -17,7 +17,7 @@ from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 
 def component_peer_power_assignment_fixture_lane(

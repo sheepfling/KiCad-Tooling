@@ -16,12 +16,18 @@ def main() -> int:
     parser.add_argument("--project", required=True)
     parser.add_argument("--parts-report", type=Path, required=True)
     parser.add_argument("--findings-view", type=Path, required=True)
+    parser.add_argument("--assembly-variant", help="Named variant in saved design-lint evidence")
     parser.add_argument("--output", type=Path, help="Fresh directory under ignored build/")
     parser.add_argument("--format", choices=("text", "json"), default="text")
     args = parser.parse_args()
     try:
         report = build_cross_probe(
-            args.root, args.project, args.parts_report, args.findings_view, args.output
+            args.root,
+            args.project,
+            args.parts_report,
+            args.findings_view,
+            args.output,
+            args.assembly_variant,
         )
     except (OSError, ValueError) as exc:
         print(f"BOM cross-probe could not finish: {exc}", file=sys.stderr)

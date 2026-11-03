@@ -22,10 +22,8 @@ from .models import (
     LibrariesCatalog,
     ReleaseArtifactKind,
     ReleaseAssurancePolicy,
-    ReleaseClass,
     ReleaseManifest,
     ReleasePoliciesCatalog,
-    ReleaseReadinessReport,
     ReleaseStatus,
     ReleaseVariant,
     TeamPolicy,
@@ -40,6 +38,8 @@ from .product_models import (
     ProductRecord,
 )
 from .project_models import ProjectKind, ProjectRecord, ToolchainsCatalog
+from .release_model_types import ReleaseClass
+from .release_report_models import ReleaseReadinessReport
 
 MATURITY_ORDER: Mapping[str, int] = MappingProxyType(
     {

@@ -14,21 +14,19 @@ from typing import Literal
 from ..platforms import is_windows_host
 from .contracts import read_model, repo_path
 from .diagnostic_journal import DiagnosticJournal
+from .diagnostic_operation_models import ImportDiagnosticRequest, ProjectDiagnosticRequest
+from .diagnostics_models import DiagnosticFinding, DiagnosticReport
 from .discovery import load_config, load_registry, settings
 from .importing import import_project
 from .layout import workflow_guide
 from .model_inventory import inspect_models
-from .models import (
-    DiagnosticFinding,
-    DiagnosticReport,
-    ProjectStaticPipelineReport,
-    ValidationSummary,
-)
+from .models import ValidationSummary
 from .part_catalog_models import (
     PartsCatalog,
     PartStatus,
 )
 from .project_models import ProjectKind, ProjectManifest, ToolchainsCatalog
+from .project_static_pipeline_models import ProjectStaticPipelineReport
 from .repository import cad_dependencies, import_source_roots
 from .selection import ProjectSelector, resolve_project_ids
 
@@ -131,14 +129,17 @@ def import_guidance(message: str) -> str:
     return "Repair the named source or project selection, then rerun the dry-run import."
 
 
-def diagnose_import(
+def diagnose_import_request(
     root: Path,
-    source: Path,
-    project_id: str,
-    toolchain_id: str,
+    request: ImportDiagnosticRequest,
     journal: DiagnosticJournal | None = None,
 ) -> DiagnosticReport:
     """Preview an import and group omissions without copying the candidate project."""
+    source = request.source
+    project_id = request.project_id
+    toolchain_id = request.toolchain_id
+    if journal is not None:
+        journal.require_scope(root, project_id)
     root = root.resolve()
     with journal.stage("import-preview") if journal is not None else nullcontext():
         preview = import_project(root, source, project_id, toolchain_id, dry_run=True)
@@ -228,6 +229,21 @@ def diagnose_import(
         + f"--toolchain {quote_argument(toolchain_id)}"
     )
     return report(project_id, "import", findings, command, root=root)
+
+
+def diagnose_import(
+    root: Path,
+    source: Path,
+    project_id: str,
+    toolchain_id: str,
+    journal: DiagnosticJournal | None = None,
+) -> DiagnosticReport:
+    """Compatibility adapter for the former positional import-diagnosis API."""
+    return diagnose_import_request(
+        root,
+        ImportDiagnosticRequest(source=source, project_id=project_id, toolchain_id=toolchain_id),
+        journal,
+    )
 
 
 def repository_guidance(issue: str, kicad_major: str | None = None) -> DiagnosticFinding:
@@ -573,7 +589,7 @@ def native_findings(
                 )
             )
         else:
-            from ..validate import hashes
+            from .project_source_hashes import hash_project_sources as hashes
 
             try:
                 registry = load_registry(root)
@@ -609,7 +625,7 @@ def native_findings(
             continue
         observed = check.error or f"{name} status is {check.status}"
         if name in {"erc", "drc"}:
-            from ..validate import native_report_examples
+            from .native_report_parsing import native_report_examples
 
             examples = native_report_examples(summary_path.parent / f"{name}.json", name)
             if examples:
@@ -780,8 +796,9 @@ def bom_binding_findings(
         ]
     summary_path = native_report / "summary.json" if native_report.is_dir() else native_report
     try:
-        from ..validate import hashes, read_netlist
         from .evidence import digest
+        from .native_report_parsing import read_netlist
+        from .project_source_hashes import hash_project_sources as hashes
 
         summary = read_model(summary_path, ValidationSummary)
         if summary.project_id != project_id:
@@ -860,15 +877,18 @@ def bom_binding_findings(
     return []
 
 
-def diagnose_project(
+def diagnose_project_request(
     root: Path,
-    project_id: str,
-    native_report: Path | None = None,
-    bom: Path | None = None,
+    request: ProjectDiagnosticRequest,
     journal: DiagnosticJournal | None = None,
-    portable_report: ProjectStaticPipelineReport | None = None,
 ) -> DiagnosticReport:
     """Give one project a portable check and optional native/BOM follow-up."""
+    project_id = request.project_id
+    native_report = request.native_report
+    bom = request.bom
+    portable_report = request.portable_report
+    if journal is not None:
+        journal.require_scope(root, project_id)
     root = root.resolve()
     try:
         with journal.stage("project-selection") if journal is not None else nullcontext():
@@ -926,6 +946,24 @@ def diagnose_project(
             f"--project {quote_argument(project_id)}"
         )
     return report(project_id, "project", findings, next_command, follow_up_command, root=root)
+
+
+def diagnose_project(
+    root: Path,
+    project_id: str,
+    native_report: Path | None = None,
+    bom: Path | None = None,
+    journal: DiagnosticJournal | None = None,
+    portable_report: ProjectStaticPipelineReport | None = None,
+) -> DiagnosticReport:
+    """Compatibility adapter for the former positional project-diagnosis API."""
+    request = ProjectDiagnosticRequest(
+        project_id=project_id,
+        native_report=native_report,
+        bom=bom,
+        portable_report=portable_report,
+    )
+    return diagnose_project_request(root, request, journal)
 
 
 def format_text(result: DiagnosticReport, detail: Literal["brief", "full"] = "brief") -> str:

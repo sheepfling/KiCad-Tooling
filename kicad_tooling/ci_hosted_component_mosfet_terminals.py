@@ -18,7 +18,7 @@ from .hwrepo.design_lint_finding_models import DesignLintFinding, DesignLintRule
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 RULE_ID = "component.mosfet_drain_source_same_net"
 FIXTURE_CASES = MappingProxyType(

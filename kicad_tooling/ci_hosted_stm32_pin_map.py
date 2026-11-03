@@ -19,12 +19,12 @@ from .hwrepo.design_lint_stm32_coverage import scan_stm32_pin_maps
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.stm32_pin_map_models import (
     Stm32CubeMxPinMap,
     Stm32PinExclusion,
     Stm32PinRequirement,
 )
-from .validate import read_netlist
 
 
 def stm32_pin_map_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:

@@ -11,11 +11,11 @@ from pathlib import Path
 from typing import Literal
 
 from kicad_tooling import package_version
-from kicad_tooling.check_toolchain import assessment, observed_version, toolchain
 
 from .discovery import load_config, load_registry
 from .kicad_compatibility import require_cli_profile
 from .models import EnvironmentCheck, TemplateDoctorReport
+from .native_toolchain import assessment, observed_version, toolchain
 from .template import preflight
 
 MINIMUM_PYTHON = (3, 11)

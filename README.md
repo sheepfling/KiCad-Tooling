@@ -90,6 +90,12 @@ same [BOM comparison guide](docs/BOM_COMPARISON.md) explains both scopes.
 To navigate from a source-matched parts receipt to saved schematic and PCB
 drawings, use `kicad-team cross-probe` or MCP `export_bom_cross_probe`; see
 [BOM cross-probing](docs/CROSS_PROBE.md).
+To compare two observed named KiCad populations, use
+`kicad-team board-variant-compare` or MCP `compare_board_variants`; see
+[board-variant comparison](docs/BOARD_VARIANT_COMPARISON.md).
+To prepare a review BOM for one observed named board variant, use
+`kicad-team variant-parts-review` or MCP `export_variant_parts_review`; see
+[named variant parts review](docs/VARIANT_PARTS_REVIEW.md).
 To inspect one authored return net against saved netlist evidence, use
 `kicad-team grounding-view` or MCP `export_grounding_view`; see
 [grounding view](docs/GROUNDING_VIEW.md).
@@ -113,6 +119,11 @@ To plot retained simulation waveforms, install the `charts` extra and run
 `kicad-team electrical-charts --receipt build/<electrical-run>/electrical.json`
 from the project checkout. This exports PNG, SVG, and full-precision CSV from
 the saved, hash-checked transient and AC data without rerunning the simulation.
+The receipt also has offline interactive case pages with trace selection,
+linked cursors, zoom, and AC phase in degrees. To overlay one matching AC
+measurement from two saved runs, use `kicad-team electrical-ac-comparison` or
+MCP `compare_electrical_ac_runs`; the comparison keeps both native frequency
+grids and full CSVs without interpolation.
 MCP exposes the same operation as `export_electrical_charts` when exports are
 enabled. These charts cover declared simulation cases. Project-owned CSV
 measurements use `kicad-team measured-series` or MCP `import_measured_time_series`

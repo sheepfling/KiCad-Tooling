@@ -14,6 +14,19 @@
       ]
     },
     {
+      "module": "kicad_tooling.board_variant_compare",
+      "commands": [],
+      "options": [
+        "--after-variant",
+        "--before-variant",
+        "--findings-view",
+        "--format",
+        "--output",
+        "--project",
+        "--root"
+      ]
+    },
+    {
       "module": "kicad_tooling.bom_compare",
       "commands": [],
       "options": [
@@ -129,6 +142,17 @@
       ]
     },
     {
+      "module": "kicad_tooling.connectivity_view",
+      "commands": [],
+      "options": [
+        "--format",
+        "--net",
+        "--output",
+        "--receipt",
+        "--root"
+      ]
+    },
+    {
       "module": "kicad_tooling.contract_coach",
       "commands": [],
       "options": [
@@ -147,6 +171,7 @@
       "module": "kicad_tooling.cross_probe",
       "commands": [],
       "options": [
+        "--assembly-variant",
         "--findings-view",
         "--format",
         "--output",
@@ -197,6 +222,20 @@
         "--project",
         "--root",
         "--runner"
+      ]
+    },
+    {
+      "module": "kicad_tooling.electrical_ac_comparison",
+      "commands": [],
+      "options": [
+        "--baseline",
+        "--candidate",
+        "--case",
+        "--format",
+        "--measure",
+        "--output",
+        "--project",
+        "--root"
       ]
     },
     {
@@ -433,6 +472,17 @@
       ]
     },
     {
+      "module": "kicad_tooling.product_revision_bom",
+      "commands": [],
+      "options": [
+        "--baseline",
+        "--candidate",
+        "--format",
+        "--output",
+        "--root"
+      ]
+    },
+    {
       "module": "kicad_tooling.product_visual",
       "commands": [],
       "options": [
@@ -481,6 +531,16 @@
         "--release-id",
         "--root",
         "--variant"
+      ]
+    },
+    {
+      "module": "kicad_tooling.release_readiness_view",
+      "commands": [],
+      "options": [
+        "--format",
+        "--manifest",
+        "--output",
+        "--root"
       ]
     },
     {
@@ -603,10 +663,25 @@
       "options": [
         "--baseline",
         "--baseline-release",
+        "--baseline-readiness",
         "--candidate",
         "--candidate-release",
+        "--candidate-readiness",
         "--format",
         "--output",
+        "--project",
+        "--root"
+      ]
+    },
+    {
+      "module": "kicad_tooling.variant_parts_review",
+      "commands": [],
+      "options": [
+        "--assembly-variant",
+        "--findings-view",
+        "--format",
+        "--output",
+        "--parts-report",
         "--project",
         "--root"
       ]
@@ -771,6 +846,27 @@
       ]
     },
     {
+      "name": "compare_board_variants",
+      "parameters": [
+        "after_variant",
+        "before_variant",
+        "findings_view",
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "compare_electrical_ac_runs",
+      "parameters": [
+        "baseline",
+        "candidate",
+        "case_id",
+        "measure_id",
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
       "name": "compare_measured_runs",
       "parameters": [
         "alignment",
@@ -787,6 +883,14 @@
         "after",
         "before",
         "project_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "compare_product_revision_bom",
+      "parameters": [
+        "baseline",
+        "candidate",
         "view_id"
       ]
     },
@@ -869,9 +973,18 @@
     {
       "name": "export_bom_cross_probe",
       "parameters": [
+        "assembly_variant",
         "findings_view",
         "parts_report",
         "project_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "export_connectivity_view",
+      "parameters": [
+        "net",
+        "receipt",
         "view_id"
       ]
     },
@@ -951,6 +1064,13 @@
       ]
     },
     {
+      "name": "export_release_readiness_view",
+      "parameters": [
+        "manifest",
+        "view_id"
+      ]
+    },
+    {
       "name": "export_review_handoff_packet",
       "parameters": [
         "baseline",
@@ -979,8 +1099,20 @@
       "parameters": [
         "baseline",
         "baseline_release",
+        "baseline_readiness",
         "candidate",
         "candidate_release",
+        "candidate_readiness",
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "export_variant_parts_review",
+      "parameters": [
+        "assembly_variant",
+        "findings_view",
+        "parts_report",
         "project_id",
         "view_id"
       ]
@@ -1347,6 +1479,26 @@
       ]
     },
     {
+      "id": "product-revision-bom-comparison",
+      "cli": [
+        "kicad_tooling.product_revision_bom"
+      ],
+      "mcp": [
+        "compare_product_revision_bom"
+      ],
+      "alignment": "aligned",
+      "reason": "Both compare two explicit saved product visual receipts with captured product and parts catalog bytes, retaining historical source identity.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id. Older views without a retained parts catalog show instance changes with canonical BOM unavailable.",
+        "Historical source remains labeled and neither surface infers observed board population or purchasing approval."
+      ],
+      "parity_tests": [
+        "tests.test_product_revision_bom.test_cli_mcp_product_revision_bom_parity"
+      ]
+    },
+    {
       "id": "product-variant-bom-comparison",
       "cli": [
         "kicad_tooling.product_variant_bom"
@@ -1386,6 +1538,26 @@
       ]
     },
     {
+      "id": "native-board-variant-comparison",
+      "cli": [
+        "kicad_tooling.board_variant_compare"
+      ],
+      "mcp": [
+        "compare_board_variants"
+      ],
+      "alignment": "aligned",
+      "reason": "Both compare two explicitly selected native schematic and PCB variant populations from one source-bound findings and design-lint receipt, with reference and fitted quantity changes.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id. Both named variants must have complete saved native population evidence for the same source and pinned image.",
+        "Grouped quantities omit unresolved fitted references and do not claim a controlled part revision, purchasing approval, or assembly readiness."
+      ],
+      "parity_tests": [
+        "tests.test_board_variant_compare.test_cli_mcp_board_variant_comparison_parity"
+      ]
+    },
+    {
       "id": "bom-design-cross-probe",
       "cli": [
         "kicad_tooling.cross_probe"
@@ -1394,15 +1566,36 @@
         "export_bom_cross_probe"
       ],
       "alignment": "aligned",
-      "reason": "Both join explicit source-matched parts and findings-drawing receipts, locate exact fitted references in saved PCB and schematic sources, and create a local reversible marker view without rerunning native tools.",
+      "reason": "Both join explicit source-matched parts and findings-drawing receipts, locate exact fitted references in saved PCB and schematic sources, optionally inspect one named native variant population, and create a local reversible marker view without rerunning native tools.",
       "scope": "core",
       "gaps": [],
       "constraints": [
         "MCP requires exports and a fresh view_id. Duplicate, DNP, excluded, unplaced, back-side and unsupported locations remain visible without implying a valid matched placement.",
-        "Hierarchical symbols retain source coordinates and sheet-instance paths; only a uniquely mapped root schematic drawing gets markers. Variant identity is not recorded by the selected receipts."
+        "Hierarchical symbols retain source coordinates and sheet-instance paths; only a uniquely mapped root schematic drawing gets markers. Named variant population requires complete saved design-lint native exports; the parts receipt still has no variant identity."
       ],
       "parity_tests": [
-        "tests.test_cross_probe.test_cli_mcp_cross_probe_parity"
+        "tests.test_cross_probe.test_cli_mcp_cross_probe_parity",
+        "tests.test_cross_probe_variant.test_named_variant_cli_mcp_parity"
+      ]
+    },
+    {
+      "id": "named-variant-parts-review",
+      "cli": [
+        "kicad_tooling.variant_parts_review"
+      ],
+      "mcp": [
+        "export_variant_parts_review"
+      ],
+      "alignment": "aligned",
+      "reason": "Both reconcile one named native schematic netlist and fitted PCB positions into a source-bound parts review and linked drawing navigation.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id. The selected variant needs complete saved native design-lint population evidence for the same project source and pinned tool image.",
+        "Unmatched fitted references are excluded from quantities and block supplier CSV. A review BOM never authorizes purchase or build."
+      ],
+      "parity_tests": [
+        "tests.test_variant_parts_review.test_variant_parts_cli_mcp_parity"
       ]
     },
     {
@@ -2424,7 +2617,7 @@
         "export_electrical_chart_suite"
       ],
       "alignment": "aligned",
-      "reason": "Both export charts and full precision CSV from retained, hashed individual or suite electrical analysis receipts.",
+      "reason": "Both export offline interactive and static charts plus full precision CSV from retained, hashed individual or suite electrical analysis receipts.",
       "scope": "core",
       "gaps": [],
       "constraints": [
@@ -2432,6 +2625,25 @@
       ],
       "parity_tests": [
         "tests.test_new_workflow_parity.NewWorkflowParityTests.test_saved_electrical_charts_and_suite_match_cli"
+      ]
+    },
+    {
+      "id": "electrical-ac-comparison",
+      "cli": [
+        "kicad_tooling.electrical_ac_comparison"
+      ],
+      "mcp": [
+        "compare_electrical_ac_runs"
+      ],
+      "alignment": "aligned",
+      "reason": "Both compare one compatible AC measurement in two saved analysis receipts using the same source-bound typed service.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "Both selected electrical receipts must belong to one project and retain their exact requirements and waveform hashes. The overlay uses native frequency grids without interpolation or acceptance inference."
+      ],
+      "parity_tests": [
+        "tests.test_electrical_ac_comparison.test_cli_mcp_ac_comparison_parity"
       ]
     },
     {
@@ -2494,6 +2706,25 @@
       ]
     },
     {
+      "id": "release-readiness-view",
+      "cli": [
+        "kicad_tooling.release_readiness_view"
+      ],
+      "mcp": [
+        "export_release_readiness_view"
+      ],
+      "alignment": "aligned",
+      "reason": "Both save the same computed release check with selected manifest, checkout input, and declared artifact hashes.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id. A saved check is historical evidence and never authorizes a build or approval."
+      ],
+      "parity_tests": [
+        "tests.test_release_readiness_view.test_cli_mcp_release_readiness_view_parity"
+      ]
+    },
+    {
       "id": "verification-history",
       "cli": [
         "kicad_tooling.verification_history"
@@ -2502,16 +2733,36 @@
         "export_verification_history"
       ],
       "alignment": "aligned",
-      "reason": "Both compare two explicitly selected saved overview receipts and optional release manifests through the same typed history service.",
+      "reason": "Both compare two explicitly selected saved overview receipts, optional release manifests, and saved readiness checks through the same typed history service.",
       "scope": "core",
       "gaps": [],
       "constraints": [
         "MCP requires exports and a fresh view_id; neither surface chooses a revision or reruns a check.",
         "Saved overview freshness is capture-time state; every snapshot is separately labeled against the live source at comparison time.",
-        "Release manifest status and artifact presence are separate from packaging and approval."
+        "Release manifest status, computed readiness, and artifact presence are separate from packaging and approval."
       ],
       "parity_tests": [
-        "tests.test_verification_history.test_cli_mcp_verification_history_parity"
+        "tests.test_verification_history.test_cli_mcp_verification_history_parity",
+        "tests.test_release_readiness_view.test_cli_mcp_history_readiness_parity"
+      ]
+    },
+    {
+      "id": "connectivity-view",
+      "cli": [
+        "kicad_tooling.connectivity_view"
+      ],
+      "mcp": [
+        "export_connectivity_view"
+      ],
+      "alignment": "aligned",
+      "reason": "Both render the same exact selected net membership and one observed component hop from a retained electrical receipt.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id. Neighboring nets share a component, but no internal conductive path or PCB copper continuity is inferred."
+      ],
+      "parity_tests": [
+        "tests.test_connectivity_view.test_cli_mcp_connectivity_view_parity"
       ]
     },
     {

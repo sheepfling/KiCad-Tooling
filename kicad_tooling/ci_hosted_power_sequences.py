@@ -17,6 +17,7 @@ from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract
+from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.power_sequence_models import (
     PowerSequenceDependencyRequirement,
     PowerSequenceEndpointRequirement,
@@ -29,7 +30,6 @@ from .hwrepo.power_sequences import (
     power_sequence_mismatches,
     power_sequence_observed_enable_cycles,
 )
-from .validate import read_netlist
 
 
 def power_sequence_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:

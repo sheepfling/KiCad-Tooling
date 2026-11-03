@@ -20,6 +20,7 @@ from .hwrepo.models import (
     DesignLintPolicy,
     NetlistContract,
 )
+from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.pcb_component_inventory import evaluate_native_component_inventory_coverage
 from .hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .hwrepo.pcb_required_fitted_reference_models import (
@@ -27,7 +28,6 @@ from .hwrepo.pcb_required_fitted_reference_models import (
     PcbRequiredFittedReferenceMap,
 )
 from .hwrepo.project_models import ProjectKind
-from .validate import read_netlist
 
 
 def pcb_population_mismatch_fixture_lane(

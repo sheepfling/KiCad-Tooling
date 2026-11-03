@@ -19,7 +19,6 @@ from .evidence import digest, evidence_path, verify_source
 from .models import (
     ElectricalAnalysisReport,
     EvidenceFile,
-    ReleaseClass,
     SourceState,
 )
 from .native_netlist_evidence import native_netlist_evidence_matches
@@ -27,6 +26,7 @@ from .project_models import (
     ProjectKind,
     ProjectRecord,
 )
+from .release_model_types import ReleaseClass
 from .spice import measured_checks, observed_versions, simulation_deck, waveform_checks
 
 

@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from kicad_tooling.hwrepo import file_access_models, models
+from tests.json_types import JsonObject
 
 pytestmark = pytest.mark.architecture
 
@@ -64,7 +65,7 @@ def test_legacy_export_is_the_owner_and_json_schema_is_stable(name: str) -> None
         ),
     ),
 )
-def test_legacy_json_round_trips_through_owner(name: str, payload: dict[str, object]) -> None:
+def test_legacy_json_round_trips_through_owner(name: str, payload: JsonObject) -> None:
     legacy = getattr(models, name).model_validate(payload)
     restored = getattr(file_access_models, name).model_validate_json(legacy.model_dump_json())
     assert restored == legacy

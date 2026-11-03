@@ -5,12 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 from uuid import uuid4
 
-from ..validate import hashes
 from .contract_coach import receipt_directory
 from .contracts import read_model, repo_path, write_model
 from .discovery import load_config
 from .evidence import digest
 from .project_models import ProjectManifest
+from .project_source_hashes import hash_project_sources as hashes
 from .review_overview_evidence import ReviewContext, selected_receipt
 from .review_overview_html import render_review_overview
 from .review_overview_models import OverviewItem, OverviewKind, ReviewOverviewReport

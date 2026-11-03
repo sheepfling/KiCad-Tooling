@@ -9,10 +9,21 @@ kicad-team cross-probe --project <project-id> \
   --findings-view build/findings-view/<run>/review.json
 ```
 
+When the findings view includes a design-lint receipt with complete named
+variant population evidence, select one authored KiCad variant:
+
+```sh
+kicad-team cross-probe --project <project-id> \
+  --parts-report build/parts/<run>/report.json \
+  --findings-view build/findings-view/<run>/review.json \
+  --assembly-variant <variant-name>
+```
+
 The command writes a fresh ignored `build/cross-probe/` receipt with
 `index.html` and `cross-probe.json`. The MCP `export_bom_cross_probe` tool uses
 the same service with `project_id`, `parts_report`, `findings_view`, and a fresh
-`view_id`; it requires exports to be enabled. Both surfaces read saved evidence
+`view_id`; it accepts the optional `assembly_variant` and requires exports to be
+enabled. Both surfaces read saved evidence
 and run no native KiCad command.
 
 The page lists every parts-plan component. A unique fitted reference can link
@@ -40,7 +51,18 @@ sheet instances keep separate drawings and markers. A footprint identity
 mismatch is shown as a warning beside the navigation point; the location does
 not approve the footprint.
 
-Parts and findings receipts do not record a common assembly variant identity.
-The cross-probe report labels variant parity `NOT_RECORDED`; do not use it to
-claim that two different variant states match. The output is a navigation aid,
+Without a selected native variant, the report labels variant scope
+`NOT_RECORDED`. With a complete selected variant, it verifies the design-lint
+receipt, exact project source and toolchain, and retained named schematic
+netlist and PCB position exports. The page shows each reference's observed
+schematic and PCB population and variant part identity, value, and footprint
+beside the parts-plan values. A reference
+absent from fitted PCB positions gets no board marker. A reference fitted in
+the selected PCB variant but excluded by the parts plan remains visible with
+an explicit difference and can navigate to a uniquely supported location.
+PCB references absent from the parts plan are listed separately.
+
+The parts receipt does not identify an assembly variant. `NAMED_OBSERVED`
+therefore means the chosen native population was inspected, not that the parts
+plan independently attests the same variant. The output is a navigation aid,
 not approval of parts, electrical design, physical placement, or release.

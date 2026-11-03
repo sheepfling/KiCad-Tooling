@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kicad_tooling.hwrepo.contracts import read_model, write_model
+from kicad_tooling.hwrepo.contracts import read_model, repo_path, write_model
 from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.electrical_runner import analyze
 from kicad_tooling.hwrepo.evidence import digest, source_state
@@ -30,8 +30,8 @@ from kicad_tooling.hwrepo.models import (
 from kicad_tooling.hwrepo.models import (
     TestAccessProbeEnvelope as AccessProbeEnvelope,
 )
+from kicad_tooling.hwrepo.project_source_hashes import hash_project_sources as hashes
 from kicad_tooling.hwrepo.releasing import reference
-from kicad_tooling.validate import hashes, repo_path
 from tests.electrical_evidence_support import (
     ElectricalEvidenceWorkspace,
 )

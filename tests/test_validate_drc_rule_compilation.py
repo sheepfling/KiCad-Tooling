@@ -10,6 +10,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from kicad_tooling.hwrepo import native_project_validation as native_validation
 from kicad_tooling.hwrepo.models import (
     CommandEvidence,
     ComponentIdentity,
@@ -163,11 +164,11 @@ def test_project_validation_requires_compilation_proof_when_rules_file_exists(
             )
         return command
 
-    monkeypatch.setattr("kicad_tooling.validate.load_config", lambda *_args: config)
-    monkeypatch.setattr("kicad_tooling.validate.cli_executable", lambda _cli: "fake-kicad-cli")
-    monkeypatch.setattr("kicad_tooling.validate.execute", execute)
-    monkeypatch.setattr("kicad_tooling.validate.hashes", lambda *_args: source_hashes)
-    monkeypatch.setattr("kicad_tooling.validate.check_netlist", lambda *_args: None)
+    monkeypatch.setattr(native_validation, "load_config", lambda *_args: config)
+    monkeypatch.setattr(native_validation, "cli_executable", lambda _cli: "fake-kicad-cli")
+    monkeypatch.setattr(native_validation, "execute", execute)
+    monkeypatch.setattr(native_validation, "hash_project_sources", lambda *_args: source_hashes)
+    monkeypatch.setattr(native_validation, "check_netlist", lambda *_args: None)
     monkeypatch.setattr(
         "kicad_tooling.hwrepo.product.check_project_netlist",
         lambda *_args: NetlistIdentityReport(status="PASS"),
@@ -181,10 +182,11 @@ def test_project_validation_requires_compilation_proof_when_rules_file_exists(
         lambda *_args: SimpleNamespace(status="PASS", issues=()),
     )
     monkeypatch.setattr(
-        "kicad_tooling.lint_registry.lint", lambda *_args: SimpleNamespace(status="PASS", issues=())
+        "kicad_tooling.hwrepo.governance_lint.lint",
+        lambda *_args: SimpleNamespace(status="PASS", issues=()),
     )
-    monkeypatch.setattr("kicad_tooling.validate.toolchain", lambda *_args: config)
-    monkeypatch.setattr("kicad_tooling.validate.require_cli_profile", lambda *_args: None)
+    monkeypatch.setattr(native_validation, "toolchain", lambda *_args: config)
+    monkeypatch.setattr(native_validation, "require_cli_profile", lambda *_args: None)
 
     result = validate(
         root,

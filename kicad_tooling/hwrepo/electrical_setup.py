@@ -7,7 +7,6 @@ import tempfile
 from pathlib import Path
 from uuid import uuid4
 
-from ..validate import hashes
 from .analysis_state_models import AnalysisPending
 from .contract_coach import receipt_directory
 from .contracts import read_model, repo_path, write_model
@@ -28,6 +27,7 @@ from .project_models import (
     ProjectManifest,
     ProjectTestContract,
 )
+from .project_source_hashes import hash_project_sources as hashes
 from .selection import resolve_project
 
 GUIDE = "docs/workflow/ELECTRICAL_ANALYSIS.md"

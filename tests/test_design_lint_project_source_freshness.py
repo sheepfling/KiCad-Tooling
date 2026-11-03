@@ -9,7 +9,6 @@ import pytest
 
 from kicad_tooling.hwrepo import contract_coach, design_lint_project_inspection
 from kicad_tooling.hwrepo.contracts import read_model, write_model
-from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.design_lint_connectivity_snapshot_models import (
     DesignLintConnectivitySnapshot,
 )
@@ -73,7 +72,7 @@ def test_source_change_after_evaluation_blocks_project_inspection(
             path.write_text(path.read_text(encoding="utf-8") + "\n", encoding="utf-8")
 
     _change_after_capture(monkeypatch, change_source)
-    report = inspect_design_lint_summary(root, "controller", native, evaluate)
+    report = inspect_design_lint_summary(root, "controller", native)
     assert report.status == "BLOCKED"
     expected = (
         "Project manifest or lint policy changed during inspection"
@@ -101,7 +100,7 @@ def test_native_evidence_change_during_lint_blocks_report(
             artifact.write_bytes(artifact.read_bytes() + b" ")
 
     _change_after_capture(monkeypatch, change_artifact)
-    report = inspect_design_lint_summary(root, "controller", native, evaluate)
+    report = inspect_design_lint_summary(root, "controller", native)
     assert report.status == "BLOCKED"
     assert "Native netlist evidence changed during design-lint inspection" in report.issues
     assert report.connectivity_snapshot is None
@@ -165,7 +164,7 @@ def test_toolchain_change_during_inspection_is_blocked(
         )
     else:
         _change_after_capture(monkeypatch, change_toolchain)
-    report = inspect_design_lint_summary(root, "controller", native, evaluate)
+    report = inspect_design_lint_summary(root, "controller", native)
     assert report.status == "BLOCKED"
     assert any("toolchain" in issue.lower() for issue in report.issues)
     assert report.connectivity_snapshot is None
@@ -175,6 +174,6 @@ def test_unchanged_source_keeps_project_inspection_available(tmp_path: Path) -> 
     root, native = synthetic_design_lint_project(
         tmp_path, parity_design_lint_policy(DesignLintPolicy())
     )
-    report = inspect_design_lint_summary(root, "controller", native, evaluate)
+    report = inspect_design_lint_summary(root, "controller", native)
     assert report.status != "BLOCKED", report.issues
     assert report.connectivity_snapshot is not None

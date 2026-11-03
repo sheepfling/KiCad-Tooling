@@ -23,7 +23,6 @@ from .models import (
     LibrariesCatalog,
     ReleaseArtifact,
     ReleaseArtifactKind,
-    ReleaseClass,
     ReleaseEvidence,
     ReleaseExportReport,
     ReleaseInterface,
@@ -52,6 +51,7 @@ from .release import (
     selected_project_records,
     verify_board_population,
 )
+from .release_model_types import ReleaseClass
 
 
 def reference(root: Path, path: Path) -> EvidenceFile:
@@ -75,9 +75,17 @@ def run_native(
             if exported.status != "PASS":
                 raise ValueError(f"Release exports failed for {project.id}; see {output}")
         else:
-            from ..validate import validate
+            from .native_project_validation import validate_project
+            from .native_project_validation_models import NativeProjectValidationRequest
 
-            native = validate(root, output, cli, Path(project.config))
+            native = validate_project(
+                root,
+                NativeProjectValidationRequest(
+                    output=output,
+                    cli=cli,
+                    config_path=Path(project.config),
+                ),
+            )
             if native.status != "PASS":
                 raise ValueError(f"Native checks failed for {project.id}; see {output}")
         return
@@ -298,11 +306,20 @@ def prepare(
         run_native(root, project, native_output, cli, dependencies)
         native[project.id] = reference(root, native_output / "summary.json")
         if project.id in electrical_ids:
-            from .electrical_runner import analyze
+            from .electrical_operation_models import ElectricalAnalysisRequest
+            from .electrical_runner import analyze_request
 
             electrical_output = output / "electrical" / project.id
-            analysis = analyze(
-                root, project.id, electrical_output, native_output / "summary.json", ngspice=ngspice
+            analysis = analyze_request(
+                root,
+                ElectricalAnalysisRequest(
+                    project_id=project.id,
+                    output=electrical_output,
+                    native_summary=native_output / "summary.json",
+                    cli=cli or "kicad-cli",
+                    ngspice=ngspice,
+                    runner_mode="container" if cli is None else "local",
+                ),
             )
             if analysis.status != "PASS":
                 raise ValueError(

@@ -14,17 +14,18 @@ from pathlib import Path
 
 from pydantic import JsonValue
 
-from ..validate import hashes, read_netlist
 from .command_evidence_models import CommandEvidence
 from .contract_coach import pinned_image, run_command
 from .contracts import kicad_variant_names, repo_path, write_model
 from .evidence import digest
+from .native_report_parsing import read_netlist
 from .pcb_component_inventory_models import (
     PcbVariantPopulationCoverage,
     PcbVariantPopulationEvidence,
 )
 from .pcb_component_population import PcbVariantPopulationSource
 from .project_models import ProjectConfig
+from .project_source_hashes import hash_project_sources as hashes
 
 
 @dataclass(frozen=True, slots=True)
@@ -265,7 +266,7 @@ def capture_variant_population(
             board_references, board_values = _position_records(all_positions_path)
             if not supports_named_variant_pcb_values(kicad_version):
                 board_values = None
-            fitted_references = _position_references(fitted_positions_path)
+            fitted_references = position_references(fitted_positions_path)
             netlist_relative = netlist_path.relative_to(root).as_posix()
             all_relative = all_positions_path.relative_to(root).as_posix()
             fitted_relative = fitted_positions_path.relative_to(root).as_posix()
@@ -406,8 +407,12 @@ def _require_export(
         raise ValueError(f"KiCad {label} export for {variant!r} failed: {detail[:300]}")
 
 
-def _position_references(path: Path) -> tuple[str, ...]:
+def position_references(path: Path) -> tuple[str, ...]:
+    """Read unique native PCB position references for review consumers."""
     return _position_records(path)[0]
+
+
+_position_references = position_references
 
 
 def _position_records(path: Path) -> tuple[tuple[str, ...], dict[str, str] | None]:

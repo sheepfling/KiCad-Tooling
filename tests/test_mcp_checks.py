@@ -6,9 +6,11 @@ from unittest.mock import patch
 
 import pytest
 from mcp import Client
+from pydantic import JsonValue
 
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import ProjectVerificationReport
+from kicad_tooling.hwrepo.project_verification_models import ProjectVerificationRequest
 from tests.mcp_test_support import (
     CHECK_TOOLS,
     DEFAULT_TOOLS,
@@ -35,7 +37,9 @@ class McpTests(McpTestCase):
             next_actions=("Repair the failed project test before reviewing this board.",),
         )
         async with Client(create_server(self.root, allow_checks=True), mode="legacy") as client:
-            with patch("kicad_tooling.hwrepo.mcp_server.verify", return_value=failed) as verify:
+            with patch(
+                "kicad_tooling.hwrepo.mcp_server.verify_request", return_value=failed
+            ) as verify:
                 data = self.structured(
                     await client.call_tool(
                         "check_project",
@@ -48,9 +52,16 @@ class McpTests(McpTestCase):
                 )
             self.assertEqual(data, failed.model_dump(mode="json"))
             verify.assert_called_once_with(
-                self.root, "controller", depth="native", runner="container"
+                self.root,
+                ProjectVerificationRequest(
+                    project_id="controller",
+                    depth="native",
+                    runner="container",
+                ),
             )
-            with patch("kicad_tooling.hwrepo.mcp_server.verify", return_value=failed) as verify:
+            with patch(
+                "kicad_tooling.hwrepo.mcp_server.verify_request", return_value=failed
+            ) as verify:
                 rejected = await client.call_tool(
                     "check_project",
                     {
@@ -66,7 +77,7 @@ class McpTests(McpTestCase):
             for runner in ("local", "container"):
                 for options in ({}, {"depth": "portable"}):
                     with self.subTest(runner=runner, options=options):
-                        with patch("kicad_tooling.hwrepo.mcp_server.verify") as verify:
+                        with patch("kicad_tooling.hwrepo.mcp_server.verify_request") as verify:
                             rejected = await client.call_tool(
                                 "check_project",
                                 {
@@ -95,7 +106,7 @@ class McpTests(McpTestCase):
                         create_server(self.root, allow_checks=True),
                         mode="legacy",
                     ) as client:
-                        with patch("kicad_tooling.hwrepo.mcp_server.verify") as verify:
+                        with patch("kicad_tooling.hwrepo.mcp_server.verify_request") as verify:
                             result = await client.call_tool(
                                 "check_project",
                                 {
@@ -109,7 +120,7 @@ class McpTests(McpTestCase):
                     link.unlink()
 
     async def test_full_surface_annotations_and_disabled_calls_match_authority(self) -> None:
-        arguments = {
+        arguments: dict[str, dict[str, JsonValue]] = {
             "apply_project_edit": {
                 "project_id": "controller",
                 "path": "README.md",
@@ -152,6 +163,12 @@ class McpTests(McpTestCase):
             mode="legacy",
         ) as client:
             tools = {tool.name: tool for tool in (await client.list_tools()).tools}
+
+            def annotations_for(name: str):
+                annotations = tools[name].annotations
+                assert annotations is not None
+                return annotations
+
             self.assertEqual(
                 set(tools),
                 DEFAULT_TOOLS
@@ -163,7 +180,7 @@ class McpTests(McpTestCase):
             )
             self.assertEqual(len((await client.list_resources()).resources), len(DOCUMENTS))
             for name in CHECK_TOOLS | NATIVE_EXPORT_TOOLS | EDIT_TOOLS:
-                self.assertFalse(tools[name].annotations.read_only_hint, name)
+                self.assertFalse(annotations_for(name).read_only_hint, name)
             for name in (
                 "read_artifact",
                 "preview_project_edit",
@@ -171,11 +188,11 @@ class McpTests(McpTestCase):
                 "inspect_contract",
                 "inspect_3d_models",
             ):
-                self.assertTrue(tools[name].annotations.read_only_hint, name)
-            self.assertFalse(tools["diagnose_import"].annotations.read_only_hint)
-            self.assertFalse(tools["rescue_project"].annotations.read_only_hint)
-            self.assertFalse(tools["preview_model_population"].annotations.read_only_hint)
-            self.assertFalse(tools["preview_model_population"].annotations.destructive_hint)
+                self.assertTrue(annotations_for(name).read_only_hint, name)
+            self.assertFalse(annotations_for("diagnose_import").read_only_hint)
+            self.assertFalse(annotations_for("rescue_project").read_only_hint)
+            self.assertFalse(annotations_for("preview_model_population").read_only_hint)
+            self.assertFalse(annotations_for("preview_model_population").destructive_hint)
 
     async def test_scope_and_generated_product_bom_remain_inspectable(self) -> None:
         async with Client(

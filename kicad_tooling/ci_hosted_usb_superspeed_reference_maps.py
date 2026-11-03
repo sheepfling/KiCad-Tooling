@@ -11,10 +11,10 @@ from .ci_hosted_support import HostedLog
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.usb_data_path_models import UsbDataPathMap
 from .hwrepo.usb_reference_pin_models import UsbReferencePinRequirement
 from .hwrepo.usb_superspeed_reference_models import UsbSuperspeedReferencePathRequirement
-from .validate import read_netlist
 
 _SignalFamily = Literal["USB SuperSpeed TX", "USB SuperSpeed RX"]
 

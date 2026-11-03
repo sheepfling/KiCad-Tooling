@@ -160,12 +160,12 @@ class ToolchainCompatibilityTest(unittest.TestCase):
 
     def test_unspecified_toolchain_is_selected_only_when_unambiguous(self) -> None:
         with (
-            patch("kicad_tooling.check_toolchain.settings"),
+            patch("kicad_tooling.hwrepo.native_toolchain.settings"),
             patch(
-                "kicad_tooling.check_toolchain.repo_path",
+                "kicad_tooling.hwrepo.native_toolchain.repo_path",
                 return_value=Path("catalog.json"),
             ),
-            patch("kicad_tooling.check_toolchain.read_model") as read,
+            patch("kicad_tooling.hwrepo.native_toolchain.read_model") as read,
         ):
             read.return_value = ToolchainsCatalog(schema_version="1", toolchains=(record(),))
             self.assertEqual("approved", toolchain(Path.cwd(), None).id)

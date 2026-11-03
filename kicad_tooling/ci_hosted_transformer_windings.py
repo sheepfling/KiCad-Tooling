@@ -18,7 +18,7 @@ from .hwrepo.design_lint import evaluate
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 RULE_ID = "component.transformer_winding_same_net"
 GROUP_BRIDGE_RULE_ID = "component.transformer_winding_groups_share_net"

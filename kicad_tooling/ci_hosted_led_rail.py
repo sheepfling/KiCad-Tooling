@@ -26,13 +26,13 @@ from .hwrepo.led_heuristics import (
     leds_directly_driven_without_visible_series_resistor,
 )
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.power_path_models import (
     PowerPathElementRequirement,
     PowerPathEndpointRequirement,
     PowerPathMap,
     PowerPathRequirement,
 )
-from .validate import read_netlist
 
 
 def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:

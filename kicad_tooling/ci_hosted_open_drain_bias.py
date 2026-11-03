@@ -18,7 +18,7 @@ from .hwrepo.design_lint_finding_models import DesignLintFinding
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 
 def open_drain_bias_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:

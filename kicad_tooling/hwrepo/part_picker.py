@@ -11,7 +11,6 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal
 
-from ..validate import hashes
 from .contract_coach import NetlistRunner, capture, inspect_summary, project_context
 from .contracts import read_model, repo_path, update_project_manifest_parts
 from .discovery import load_config, load_registry
@@ -39,6 +38,7 @@ from .part_catalog_models import (
 )
 from .parts_workflow import local_path, preferences_path, selected_project
 from .project_models import ProjectKind, ProjectManifest
+from .project_source_hashes import hash_project_sources as hashes
 from .purchasing import (
     _PLACEHOLDER,  # pyright: ignore[reportPrivateUsage]
     _safe_cell,  # pyright: ignore[reportPrivateUsage]

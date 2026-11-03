@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Callable
 from pathlib import Path
 from typing import Literal
 
-from ..validate import hashes
 from .contract_coach import inspect_summary as inspect_contract_summary
 from .contracts import read_model, repo_path
 from .design_lint_connectivity_snapshot import capture_connectivity_snapshot
@@ -15,6 +13,8 @@ from .design_lint_connector_coverage import (
     connector_coverage_from_project,
     external_protection_coverage_from_project,
 )
+from .design_lint_evaluator import evaluate
+from .design_lint_inspection_models import DesignLintInspectionRequest
 from .design_lint_pcb_geometry_scan import scan_pcb_geometry
 from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_project_contexts import (
@@ -62,6 +62,7 @@ from .pcb_dru_rule_review import (
 )
 from .pcb_mechanical_edge_clearance import mechanical_edge_rule_coverage_candidates
 from .project_models import ProjectManifest
+from .project_source_hashes import hash_project_sources as hashes
 from .selection import resolve_project
 
 
@@ -69,9 +70,22 @@ def inspect_design_lint_summary(
     root: Path,
     project_id: str,
     native_summary: Path,
-    evaluate_report: Callable[..., DesignLintReport],
 ) -> DesignLintReport:
     """Read the exact native source and the current project-owned lint decisions."""
+    request = DesignLintInspectionRequest(
+        project_id=project_id,
+        native_summary=native_summary,
+    )
+    return inspect_design_lint_request(root, request)
+
+
+def inspect_design_lint_request(
+    root: Path,
+    request: DesignLintInspectionRequest,
+) -> DesignLintReport:
+    """Run source-bound lint from one typed request through the canonical evaluator."""
+    project_id = request.project_id
+    native_summary = request.native_summary
     root = root.resolve()
     try:
         native_evidence = capture_native_netlist_evidence(native_summary)
@@ -88,7 +102,7 @@ def inspect_design_lint_summary(
         config = load_config(root, project.config)
         policy = config.design_lint or DesignLintPolicy()
         if coach.status != "READY_FOR_REVIEW" or coach.observed is None:
-            report = evaluate_report(project_id, coach, policy)
+            report = evaluate(project_id, coach, policy)
             if digest(manifest_path) != manifest_hash or digest(policy_path) != policy_hash:
                 raise ValueError("Project manifest or lint policy changed during inspection")
             return report.model_copy(
@@ -223,7 +237,7 @@ def inspect_design_lint_summary(
             coverage,
             coach.netlist_sha256,
         )
-        report = evaluate_report(
+        report = evaluate(
             project_id,
             coach,
             policy,

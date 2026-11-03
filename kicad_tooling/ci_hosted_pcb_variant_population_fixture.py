@@ -24,7 +24,7 @@ from .hwrepo.pcb_required_fitted_reference_models import (
 from .hwrepo.pcb_variant_population_capture import (
     capture_variant_population,
 )
-from .validate import hashes
+from .hwrepo.project_source_hashes import hash_project_sources as hashes
 
 VARIANT = "Synthetic Assembly A"
 

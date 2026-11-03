@@ -109,7 +109,9 @@ class McpWorkflowTests(unittest.TestCase):
         self.assertTrue((Path(report.run_directory) / "diagnosis.json").is_file())
 
     def test_receipt_parent_links_and_artifact_scope_fail_before_execution(self) -> None:
-        with patch("kicad_tooling.hwrepo.mcp_workflow.diagnostics.diagnose_project") as execute:
+        with patch(
+            "kicad_tooling.hwrepo.mcp_workflow.diagnostics.diagnose_project_request"
+        ) as execute:
             for path in ("README.md", "../outside.json", str(self.root / "README.md")):
                 with self.subTest(path=path), self.assertRaises(ValueError):
                     workflow.diagnose_project(self.root, "controller", path)
@@ -130,7 +132,7 @@ class McpWorkflowTests(unittest.TestCase):
     def test_diagnostic_crash_is_recorded_and_propagated(self) -> None:
         with (
             patch(
-                "kicad_tooling.hwrepo.mcp_workflow.diagnostics.diagnose_project",
+                "kicad_tooling.hwrepo.mcp_workflow.diagnostics.diagnose_project_request",
                 side_effect=RuntimeError("Synthetic crash"),
             ),
             self.assertRaisesRegex(RuntimeError, "Synthetic crash"),

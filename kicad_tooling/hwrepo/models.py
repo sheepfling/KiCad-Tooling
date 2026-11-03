@@ -34,8 +34,10 @@ from . import design_lint_mapped_topology_models as _design_lint_mapped_topology
 from . import design_lint_policy_models as _design_lint_policy_models
 from . import design_lint_rule_models as _design_lint_rule_models
 from . import design_lint_rule_types as _design_lint_rule_types
+from . import diagnostics_models as _diagnostics_models
 from . import digital_peer_voltage_models as _digital_peer_voltage_models
 from . import electrical_analysis_contract_models as _electrical_analysis_contract_models
+from . import electrical_chart_models as _electrical_chart_models
 from . import electrical_simulation_models as _electrical_simulation_models
 from . import external_protection_models as _external_protection_models
 from . import file_access_models as _file_access_models
@@ -69,6 +71,8 @@ from . import purchasing_preference_models as _purchasing_preference_models
 from . import rc_filter_models as _rc_filter_models
 from . import reference_bond_models as _reference_bond_models
 from . import regulator_feedback_models as _regulator_feedback_models
+from . import release_model_types as _release_model_types
+from . import release_report_models as _release_report_models
 from . import return_net_models as _return_net_models
 from . import rs485_models as _rs485_models
 from . import schematic_geometry_models as _schematic_geometry_models
@@ -85,6 +89,14 @@ from . import usb_data_path_models as _usb_data_path_models
 from . import usb_peer_reference_models as _usb_peer_reference_models
 from . import usb_reference_pin_models as _usb_reference_pin_models
 from .command_evidence_models import CommandEvidence
+from .diagnostics_models import DiagnosticFinding, DiagnosticReport
+from .documentation_models import (
+    DocumentationException,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    DocumentationIssue,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    DocumentationPolicy,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    DocumentationPolicyReport,
+)
+from .governance_lint_models import GovernanceLintReport
 from .model_primitives import (
     Digest,
     ElectricalPositive,  # noqa: F401  # pyright: ignore[reportUnusedImport]
@@ -106,6 +118,12 @@ from .model_primitives import (
     TemplateVersion,
 )
 from .netlist_contract_inputs import NetlistRawValue, normalize_native_unconnected_nets
+from .project_static_pipeline_models import (
+    GenerationReport,
+    ProjectStaticPipelineReport,
+    ProjectTestsReport,
+)
+from .repository_policy_models import RepositoryPolicyReport
 
 ToolchainRecord = _project_models.ToolchainRecord
 ToolchainsCatalog = _project_models.ToolchainsCatalog
@@ -585,6 +603,9 @@ class LibrarySbom(StrictModel):
 
 
 PolicyIssue = _policy_issue_models.PolicyIssue
+LocalRescueReport = _diagnostics_models.LocalRescueReport
+ReleasePackageReport = _release_report_models.ReleasePackageReport
+ReleaseReadinessReport = _release_report_models.ReleaseReadinessReport
 SupplierOffer = _sourcing_models.SupplierOffer
 SourcingSnapshot = _sourcing_models.SourcingSnapshot
 SourcingSnapshotReport = _sourcing_models.SourcingSnapshotReport
@@ -619,11 +640,7 @@ class SnapshotVerification(StrictModel):
     scope: Literal["artifact_integrity_only_not_authenticity_or_source_reconstruction"]
 
 
-class ReleaseClass(str, Enum):
-    ENGINEERING_REVIEW = "engineering_review"
-    PROTOTYPE = "prototype"
-    PILOT = "pilot"
-    PRODUCTION = "production"
+ReleaseClass = _release_model_types.ReleaseClass
 
 
 class ReleaseAssurancePolicy(StrictModel):
@@ -743,27 +760,6 @@ class ReleaseManifest(StrictModel):
     approval: ReleaseApproval | None = None
 
 
-class ReleaseReadinessReport(StrictModel):
-    schema_version: Literal["1"] = "1"
-    lane: Literal["RELEASE_READINESS"] = "RELEASE_READINESS"
-    build_authorized: Literal[False] = False
-    release_id: Identifier
-    release_class: ReleaseClass
-    status: Literal["PASS", "FAIL"]
-    issues: tuple[PolicyIssue, ...]
-
-
-class RepositoryPolicyReport(StrictModel):
-    lane: Literal["REPOSITORY_POLICY"] = "REPOSITORY_POLICY"
-    status: Literal["PASS", "FAIL"]
-    issues: tuple[NonEmptyText, ...]
-
-
-class GenerationReport(StrictModel):
-    status: Literal["PASS", "FAIL"]
-    issues: tuple[NonEmptyText, ...]
-
-
 class GovernanceRecord(StrictModel):
     schema_version: Literal["1"] = "1"
     branch: NonEmptyText
@@ -812,14 +808,6 @@ class HostedGovernanceReport(StrictModel):
     status: Literal["PASS", "NEEDS_SETUP", "UNKNOWN"]
     checks: tuple[HostedGovernanceCheck, ...]
     next_actions: tuple[NonEmptyText, ...] = ()
-
-
-class GovernanceLintReport(StrictModel):
-    schema_version: Literal["1"] = "1"
-    lane: Literal["STATIC_GOVERNANCE_LINT"] = "STATIC_GOVERNANCE_LINT"
-    projects: tuple[Identifier, ...]
-    issues: tuple[NonEmptyText, ...]
-    status: Literal["PASS", "FAIL"]
 
 
 class ToolchainAssessment(StrictModel):
@@ -872,50 +860,6 @@ class ReleasePackageIndex(StrictModel):
     source_commit: GitCommit
     manifest: RepositoryPath
     files_sha256: Mapping[RepositoryPath, Digest]
-
-
-class ReleasePackageReport(StrictModel):
-    status: Literal["PASS", "FAIL"]
-    source_commit: GitCommit
-    package: str
-    package_sha256: Digest
-    manifest: RepositoryPath
-    build_authorized: Literal[False] = False
-
-
-class DocumentationException(StrictModel):
-    """A reviewed, path-scoped and time-bounded documentation-policy waiver."""
-
-    id: Identifier
-    code: Identifier
-    path: RepositoryPath
-    reason: NonEmptyText
-    expires: date
-
-
-class DocumentationPolicy(StrictModel):
-    """Repository-owned Markdown graph roots and narrow policy exceptions."""
-
-    schema_version: Literal["1"] = "1"
-    roots: tuple[RepositoryPath, ...]
-    documentation_namespaces: tuple[RepositoryPath, ...] = ()
-    exceptions: tuple[DocumentationException, ...] = ()
-
-
-class DocumentationIssue(StrictModel):
-    code: Identifier
-    path: RepositoryPath
-    line: PositiveCount
-    message: NonEmptyText
-
-
-class DocumentationPolicyReport(StrictModel):
-    schema_version: Literal["1"] = "1"
-    lane: Literal["MARKDOWN_REPOSITORY_POLICY"] = "MARKDOWN_REPOSITORY_POLICY"
-    roots: tuple[RepositoryPath, ...]
-    documents: NonNegativeCount
-    issues: tuple[DocumentationIssue, ...]
-    status: Literal["PASS", "FAIL"]
 
 
 class TemplateContract(StrictModel):
@@ -993,50 +937,6 @@ class TemplateDoctorReport(StrictModel):
     checks: tuple[EnvironmentCheck, ...]
     status: Literal["PASS", "FAIL"]
     next_actions: tuple[NonEmptyText, ...] = ()
-
-
-class DiagnosticFinding(StrictModel):
-    """One observed failure or review task with a concrete repair path."""
-
-    severity: Literal["BLOCKING", "REVIEW"]
-    code: NonEmptyText
-    location: NonEmptyText
-    observed: NonEmptyText
-    action: NonEmptyText
-    guide: RepositoryPath
-
-
-class DiagnosticReport(StrictModel):
-    """A local coaching view; success never constitutes engineering approval."""
-
-    schema_version: Literal["1"] = "1"
-    lane: Literal["PROJECT_DIAGNOSTICS"] = "PROJECT_DIAGNOSTICS"
-    build_authorized: Literal[False] = False
-    project_id: NonEmptyText
-    scope: Literal["import", "project"]
-    status: Literal["PASS", "NEEDS_WORK"]
-    findings: tuple[DiagnosticFinding, ...]
-    next_command: NonEmptyText
-    follow_up_command: NonEmptyText | None = None
-    run_directory: str | None = None
-
-
-class LocalRescueReport(StrictModel):
-    """Partial, read-only island inspection that cannot satisfy repository gates."""
-
-    schema_version: Literal["1"] = "1"
-    lane: Literal["LOCAL_PROJECT_RESCUE"] = "LOCAL_PROJECT_RESCUE"
-    status: Literal["UNVERIFIED_GLOBAL"] = "UNVERIFIED_GLOBAL"
-    build_authorized: Literal[False] = False
-    ci_eligible: Literal[False] = False
-    release_eligible: Literal[False] = False
-    project_id: NonEmptyText
-    selected_manifest: RepositoryPath | None = None
-    local_inspection: Literal["CLEAR", "NEEDS_REPAIR"]
-    findings: tuple[DiagnosticFinding, ...] = ()
-    omitted_checks: tuple[NonEmptyText, ...]
-    next_command: NonEmptyText
-    run_directory: NonEmptyText
 
 
 class TemplatePreflightReport(StrictModel):
@@ -1192,11 +1092,6 @@ class FailedCheck(StrictModel):
     error: NonEmptyText
 
 
-class ProjectTestsReport(StrictModel):
-    status: Literal["PASS", "FAIL"]
-    commands: Mapping[Identifier, CommandEvidence]
-
-
 class StaticPipelineReport(StrictModel):
     status: Literal["PASS", "FAIL"]
     source: SourceState | None = None
@@ -1226,20 +1121,6 @@ class StaticPipelineReport(StrictModel):
                 "Project repository reports must identify the installed tooling version"
             )
         return self
-
-
-class ProjectStaticPipelineReport(StrictModel):
-    """Fast local policy result for explicitly selected design projects."""
-
-    status: Literal["PASS", "FAIL"]
-    scope: Literal["project_static"] = "project_static"
-    build_authorized: Literal[False] = False
-    projects: tuple[Identifier, ...]
-    registry: GovernanceLintReport
-    repository: RepositoryPolicyReport
-    product: ProductPolicyReport
-    generation: GenerationReport
-    project_tests: ProjectTestsReport
 
 
 class ProjectVerificationReport(StrictModel):
@@ -1935,44 +1816,9 @@ class ForeignPcbReport(StrictModel):
         return self
 
 
-class ElectricalChartCase(StrictModel):
-    """One chart and numeric export derived from a retained simulation case."""
-
-    id: Identifier
-    status: Literal["PASS", "SKIPPED", "FAIL"]
-    samples: Annotated[int, Field(ge=0)] = 0
-    waveform_sha256: Digest | None = None
-    csv: RepositoryPath | None = None
-    png: RepositoryPath | None = None
-    svg: RepositoryPath | None = None
-    detail: NonEmptyText
-
-
-class ElectricalChartsReport(StrictModel):
-    """Chart output remains secondary evidence bound to an analysis receipt."""
-
-    schema_version: Literal["1"] = "1"
-    lane: Literal["ELECTRICAL_CHARTS"] = "ELECTRICAL_CHARTS"
-    build_authorized: Literal[False] = False
-    project_id: Identifier
-    status: Literal["PASS", "PARTIAL", "FAIL"]
-    source_analysis_status: Literal["PASS", "FAIL", "NOT_CONFIGURED"]
-    source_receipt: NonEmptyText
-    source_report_sha256: Digest
-    run_directory: NonEmptyText
-    cases: tuple[ElectricalChartCase, ...]
-    grounding_csv: RepositoryPath | None = None
-    power_csv: RepositoryPath | None = None
-    artifacts_sha256: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
-    next_actions: tuple[NonEmptyText, ...] = ()
-
-
-class ElectricalChartsSuiteReport(StrictModel):
-    schema_version: Literal["1"] = "1"
-    lane: Literal["ELECTRICAL_CHARTS_SUITE"] = "ELECTRICAL_CHARTS_SUITE"
-    status: Literal["PASS", "PARTIAL", "FAIL"]
-    run_directory: NonEmptyText
-    reports: tuple[ElectricalChartsReport, ...]
+ElectricalChartCase = _electrical_chart_models.ElectricalChartCase
+ElectricalChartsReport = _electrical_chart_models.ElectricalChartsReport
+ElectricalChartsSuiteReport = _electrical_chart_models.ElectricalChartsSuiteReport
 
 
 CadProviderIdentity = _cad_source_models.CadProviderIdentity

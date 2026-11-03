@@ -9,12 +9,14 @@ import tempfile
 import tomllib
 import unittest
 from datetime import UTC, datetime
+from functools import partial
 from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 
 from kicad_tooling.ci import main, project_static_pipeline, run_command, static_pipeline
 from kicad_tooling.ci_hosted import gate_result
+from kicad_tooling.hwrepo import project_static_pipeline as project_static_service
 from kicad_tooling.hwrepo.documentation import check as documentation_check
 from kicad_tooling.hwrepo.models import (
     CommandEvidence,
@@ -23,6 +25,7 @@ from kicad_tooling.hwrepo.models import (
 )
 from tests.support import SOURCE_ROOT
 
+patch_static = partial(patch.object, project_static_service)
 ROOT = Path()
 
 
@@ -163,7 +166,7 @@ class CiDriverTests(unittest.TestCase):
                     "text",
                 ],
             ),
-            patch("kicad_tooling.ci.check_generation", return_value=("Outdated BOM view",)),
+            patch_static("check_generation", return_value=("Outdated BOM view",)),
             patch("sys.stdout", new_callable=StringIO) as output,
         ):
             self.assertEqual(main(), 1)
@@ -191,13 +194,10 @@ class CiDriverTests(unittest.TestCase):
                         str(output),
                     ],
                 ),
-                patch(
-                    "kicad_tooling.ci.check_repository",
-                    side_effect=RuntimeError("unexpected failure"),
-                ),
+                patch_static("check_repository", side_effect=RuntimeError),
                 patch("sys.stdout", new_callable=StringIO),
                 patch("sys.stderr", new_callable=StringIO),
-                self.assertRaisesRegex(RuntimeError, "unexpected failure"),
+                self.assertRaises(RuntimeError),
             ):
                 main()
             self.assertEqual(json.loads((output / "run.json").read_text())["status"], "ERROR")

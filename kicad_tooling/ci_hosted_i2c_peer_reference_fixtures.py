@@ -21,7 +21,7 @@ from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.i2c_peer_reference_scan import scan_i2c_peer_references
 from .hwrepo.models import NetlistContract
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 
 def i2c_peer_reference_native_fixture_lane(

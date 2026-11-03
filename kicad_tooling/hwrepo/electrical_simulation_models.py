@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Annotated, Literal
+from typing import Annotated, Literal, TypeAlias
 
 from pydantic import Field, StringConstraints, model_validator
 
@@ -163,3 +163,9 @@ class HighFrequencyAnalysis(StrictModel):
             if case.stop_s < 2 / self.frequency_hz:
                 raise ValueError("Waveform run must cover at least two nominal cycles")
         return self
+
+
+SimulationCase: TypeAlias = Annotated[
+    TransientAnalysis | FrequencyAnalysis,
+    Field(discriminator="analysis"),
+]

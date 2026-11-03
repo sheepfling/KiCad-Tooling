@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from hashlib import sha256
+from typing import Required, TypedDict
 
 import pytest
 
@@ -27,6 +28,29 @@ pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.pcb_lint,
 ]
+
+
+class PcbSnapshotInput(TypedDict, total=False):
+    """Typed native-snapshot fields assembled for schema-version regressions."""
+
+    schema_version: Required[str]
+    board_sha256: Required[str]
+    kicad_version: Required[str]
+    image: Required[str]
+    probe_sha256: Required[str]
+    zones_refilled: Required[bool]
+    pads: Required[tuple[()]]
+    net_ties: Required[tuple[()]]
+    zones: Required[tuple[()]]
+    vias: Required[tuple[()]]
+    access_probe_observations: Required[tuple[()]]
+    access_probe_requests_sha256: Required[None]
+    tracks: Required[tuple[()]]
+    copper_layers: Required[tuple[str, ...]]
+    rule_areas: tuple[PcbRuleAreaObservation, ...]
+    footprints: tuple[()]
+    touch_pad_clearance_observations: tuple[()]
+    touch_pad_clearance_requests_sha256: None
 
 
 def area(
@@ -63,7 +87,7 @@ def area(
 def snapshot(
     areas: tuple[PcbRuleAreaObservation, ...] = (), *, schema_version: str = "11"
 ) -> PcbConnectivitySnapshot:
-    values: dict[str, object] = {
+    values: PcbSnapshotInput = {
         "schema_version": schema_version,
         "board_sha256": "a" * 64,
         "kicad_version": "10.0.5",

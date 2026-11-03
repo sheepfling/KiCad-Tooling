@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from uuid import uuid4
 
-from .bom_compare_models import Change
+from .bom_change import change_state
 from .contract_coach import receipt_directory
 from .contracts import read_model, repo_path, write_model
 from .evidence import digest
@@ -23,19 +23,7 @@ from .product_visual import build_product_visual
 from .product_visual_models import ProductVisualReport
 
 
-def _change(before: object | None, after: object | None) -> Change:
-    return (
-        "ADDED"
-        if before is None
-        else "REMOVED"
-        if after is None
-        else "UNCHANGED"
-        if before == after
-        else "CHANGED"
-    )
-
-
-def _instances(
+def instance_states(
     view: ProductVisualReport,
     product: ProductRecord,
     revisions: dict[str, str],
@@ -62,7 +50,7 @@ def _instances(
     return result
 
 
-def _part_differences(
+def part_differences(
     before: tuple[BomRow, ...], after: tuple[BomRow, ...]
 ) -> tuple[VariantBomPartDifference, ...]:
     old = {(item.part_id, item.revision): item for item in before}
@@ -73,7 +61,7 @@ def _part_differences(
         VariantBomPartDifference(
             part_id=part_id,
             revision=revision,
-            change=_change(old.get((part_id, revision)), new.get((part_id, revision))),
+            change=change_state(old.get((part_id, revision)), new.get((part_id, revision))),
             before=old.get((part_id, revision)),
             after=new.get((part_id, revision)),
         )
@@ -116,14 +104,14 @@ def compare_product_variants(
     variants = {item.id: item for item in product.variants}
     repository = load_repository(root, ())
     revisions = {name: part.revision for name, part in repository.parts.items()}
-    old_instances = _instances(before, product, revisions)
-    new_instances = _instances(after, product, revisions)
+    old_instances = instance_states(before, product, revisions)
+    new_instances = instance_states(after, product, revisions)
     if old_instances.keys() != new_instances.keys():
         raise ValueError("Variant instance scope changed during comparison")
     instances = tuple(
         VariantBomInstanceDifference(
             path=path,
-            change=_change(old_instances[path], new_instances[path]),
+            change=change_state(old_instances[path], new_instances[path]),
             before=old_instances[path],
             after=new_instances[path],
         )
@@ -135,7 +123,7 @@ def compare_product_variants(
     parts: tuple[VariantBomPartDifference, ...] = ()
     if projected:
         try:
-            parts = _part_differences(
+            parts = part_differences(
                 bom_rows(product, repository.parts, variants[before_variant]),
                 bom_rows(product, repository.parts, variants[after_variant]),
             )

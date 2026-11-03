@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from . import contract_coach, electrical_runner, electrical_setup
+from . import electrical_runner, electrical_setup
 from .doctor import NativeRunner
+from .electrical_operation_models import ElectricalAnalysisRequest
 from .mcp_workflow import fresh_output, native_summary_path, selected_project
 from .models import (
     ElectricalAnalysisReport,
@@ -48,15 +49,14 @@ def analyze_electrical(
         raise ValueError(f"Unknown native runner: {runner}")
     summary = None if native_summary is None else native_summary_path(root, native_summary)
     output = fresh_output(root, "electrical", view_id)
-    native_runner = (
-        contract_coach.LocalNetlistRunner("kicad-cli")
-        if runner == "local"
-        else contract_coach.ContainerNetlistRunner()
-        if runner == "container"
-        else contract_coach.AutoNetlistRunner("kicad-cli")
-    )
-    return electrical_runner.analyze(
-        root, project_id, output, summary, cli="kicad-cli", ngspice="ngspice", runner=native_runner
+    return electrical_runner.analyze_request(
+        root,
+        ElectricalAnalysisRequest(
+            project_id=project_id,
+            output=output,
+            native_summary=summary,
+            runner_mode=runner,
+        ),
     )
 
 

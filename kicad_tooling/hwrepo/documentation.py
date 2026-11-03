@@ -11,7 +11,7 @@ from typing import TypeAlias
 from urllib.parse import unquote
 
 from .contracts import read_model, repo_path
-from .models import (
+from .documentation_models import (
     DocumentationException,
     DocumentationIssue,
     DocumentationPolicy,

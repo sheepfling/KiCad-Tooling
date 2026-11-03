@@ -7,7 +7,6 @@ import shlex
 from pathlib import Path
 from typing import Literal
 
-from ..check_toolchain import cli_executable, toolchain
 from .command_evidence_models import CommandEvidence
 from .contract_coach import docker_prefix, pinned_image, run_command
 from .contracts import read_kicad_import_summary
@@ -19,6 +18,7 @@ from .models import (
     ForeignFormat,
     ForeignPcbReport,
 )
+from .native_toolchain import cli_executable, toolchain
 from .project_models import (
     KiCadForeignImportSummary,
     ProjectImportReport,

@@ -14,8 +14,8 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 from urllib.parse import urlsplit
 
 from .contracts import lexical_absolute_path, repo_path, repo_path_is_within
+from .diagnostics_models import DiagnosticFinding
 from .models import (
-    DiagnosticFinding,
     FootprintModels,
     InventoryStatus,
     ModelAssignment,

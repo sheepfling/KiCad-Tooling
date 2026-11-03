@@ -6,7 +6,8 @@ import argparse
 from pathlib import Path
 
 from .hwrepo.contracts import repo_path
-from .hwrepo.design_lint import inspect_summary, reconcile_design_lint_reports, rule_catalog
+from .hwrepo.design_lint import inspect_request, reconcile_design_lint_reports, rule_catalog
+from .hwrepo.design_lint_inspection_models import DesignLintInspectionRequest
 from .hwrepo.design_lint_reconciliation_text import reconciliation_text
 from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.design_lint_rule_models import DesignLintRuleCatalog
@@ -116,7 +117,10 @@ def main() -> int:
     summary = (
         args.native_summary if args.native_summary.is_absolute() else root / args.native_summary
     )
-    report = inspect_summary(root, args.project, summary)
+    report = inspect_request(
+        root,
+        DesignLintInspectionRequest(project_id=args.project, native_summary=summary),
+    )
     if args.baseline_report is not None:
         if args.baseline_report.is_absolute():
             parser.error("--baseline-report must be relative to --root")

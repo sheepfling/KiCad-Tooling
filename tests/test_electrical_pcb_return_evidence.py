@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kicad_tooling.hwrepo.contracts import write_model
+from kicad_tooling.hwrepo.contracts import repo_path, write_model
 from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.electrical_runner import analyze
 from kicad_tooling.hwrepo.evidence import digest, source_state
@@ -30,7 +30,6 @@ from kicad_tooling.hwrepo.pcb_return_path_capture import (
     native_pcb_command_matches,
     native_probe_source,
 )
-from kicad_tooling.validate import repo_path
 from tests.electrical_evidence_support import (
     ElectricalEvidenceWorkspace,
 )

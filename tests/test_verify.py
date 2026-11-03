@@ -6,7 +6,6 @@ import json
 import os
 import subprocess
 import sys
-from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import patch
@@ -24,6 +23,10 @@ from kicad_tooling.hwrepo.models import (
     ValidationSummary,
 )
 from kicad_tooling.hwrepo.native_container_context import NATIVE_CONTAINER_IMAGE_ENV
+from kicad_tooling.hwrepo.native_project_check_models import NativeProjectCheckRequest
+from kicad_tooling.hwrepo.project_static_pipeline_models import ProjectStaticPipelineRequest
+from kicad_tooling.hwrepo.project_verification import verify_request
+from kicad_tooling.hwrepo.project_verification_models import ProjectVerificationRequest
 from kicad_tooling.hwrepo.review_overview import build_review_overview
 from kicad_tooling.hwrepo.verification_receipts import read_verification_output_manifest
 from kicad_tooling.verify import container_command, format_report, run_command, verify
@@ -33,6 +36,15 @@ pytestmark = pytest.mark.template_checkout
 
 
 class VerifyTests(VerifyFixture):
+    def test_typed_operation_and_compatibility_adapter_produce_equivalent_results(self) -> None:
+        typed = verify_request(self.root, ProjectVerificationRequest(project_id="controller"))
+        compatible = verify(self.root, "controller")
+
+        self.assertEqual(typed.status, compatible.status)
+        self.assertEqual(typed.depth, compatible.depth)
+        self.assertEqual(typed.portable, compatible.portable)
+        self.assertNotEqual(typed.run_directory, compatible.run_directory)
+
     def test_portable_attempts_use_distinct_ignored_receipts_and_typed_json(self) -> None:
         first = verify(self.root, "controller")
         second = verify(self.root, "controller")
@@ -108,7 +120,10 @@ class VerifyTests(VerifyFixture):
             source.write_text(source.read_text(encoding="utf-8") + "\n", encoding="utf-8")
             return baseline
 
-        with patch("kicad_tooling.verify.project_static_pipeline", side_effect=change_source):
+        with patch(
+            "kicad_tooling.hwrepo.project_verification.run_project_static_pipeline",
+            side_effect=change_source,
+        ):
             result = verify(self.root, "controller")
         receipt = Path(result.run_directory)
         manifest = read_verification_output_manifest(receipt, digest(receipt / "verification.json"))
@@ -170,7 +185,10 @@ class VerifyTests(VerifyFixture):
             }
         )
         with (
-            patch("kicad_tooling.verify.project_static_pipeline", return_value=failed) as first_run,
+            patch(
+                "kicad_tooling.hwrepo.project_verification.run_project_static_pipeline",
+                return_value=failed,
+            ) as first_run,
             patch(
                 "kicad_tooling.ci.project_static_pipeline",
                 side_effect=AssertionError("portable rerun"),
@@ -178,7 +196,11 @@ class VerifyTests(VerifyFixture):
         ):
             result = verify(self.root, "controller")
         self.assertEqual(result.status, "FAIL", result.error)
-        first_run.assert_called_once_with(self.root, ("controller",))
+        first_run.assert_called_once()
+        self.assertEqual(
+            first_run.call_args.args[1],
+            ProjectStaticPipelineRequest(project_ids=("controller",)),
+        )
         rerun.assert_not_called()
         self.assertEqual(
             json.loads((Path(result.run_directory) / "portable.json").read_text()),
@@ -194,15 +216,20 @@ class VerifyTests(VerifyFixture):
     def test_local_runner_uses_the_selected_project_and_exact_version(self) -> None:
         with (
             self.runner_environment("10.0.0"),
-            patch("kicad_tooling.verify.check_all", return_value=native_summary()) as native,
+            patch(
+                "kicad_tooling.hwrepo.project_verification.run_native_project_check",
+                return_value=native_summary(),
+            ) as native,
         ):
             result = verify(self.root, "controller", depth="native", runner="local")
         self.assertEqual(result.status, "PASS", result.error)
         self.assertEqual(result.runner, "local")
         args = native.call_args.args
         self.assertEqual(args[0], self.root.resolve())
-        self.assertEqual(args[2:], ("kicad-cli", ["controller"]))
-        self.assertTrue(args[1].is_relative_to(self.root / "build"))
+        request = args[1]
+        self.assertEqual(request.cli, "kicad-cli")
+        self.assertEqual(request.project_ids, ("controller",))
+        self.assertTrue(request.output.is_relative_to(self.root / "build"))
 
     def test_relative_cli_path_uses_callers_cwd_with_a_different_root(self) -> None:
         caller = self.root.parent / "caller"
@@ -211,12 +238,10 @@ class VerifyTests(VerifyFixture):
         executable.write_text("fixture", encoding="utf-8")
         relative_cli = "./bin/kicad-cli"
 
-        def native(
-            _root: Path, _output: Path, cli: str, projects: Sequence[str]
-        ) -> CheckAllSummary:
-            self.assertEqual(projects, ["controller"])
-            self.assertEqual(cli, relative_cli)
-            self.assertEqual(cli_executable(cli), str(executable.resolve()))
+        def native(_root: Path, request: NativeProjectCheckRequest) -> CheckAllSummary:
+            self.assertEqual(request.project_ids, ("controller",))
+            self.assertEqual(request.cli, relative_cli)
+            self.assertEqual(cli_executable(request.cli), str(executable.resolve()))
             return native_summary()
 
         original_cwd = Path.cwd()
@@ -224,7 +249,10 @@ class VerifyTests(VerifyFixture):
             os.chdir(caller)
             with (
                 self.runner_environment("10.0.0"),
-                patch("kicad_tooling.verify.check_all", side_effect=native),
+                patch(
+                    "kicad_tooling.hwrepo.project_verification.run_native_project_check",
+                    side_effect=native,
+                ),
             ):
                 result = verify(
                     self.root, "controller", depth="native", runner="local", cli=relative_cli
@@ -234,7 +262,7 @@ class VerifyTests(VerifyFixture):
         self.assertEqual(result.status, "PASS", result.error)
 
     def test_windows_container_command_does_not_request_posix_user(self) -> None:
-        with patch("kicad_tooling.verify.sys.platform", "win32"):
+        with patch("kicad_tooling.hwrepo.project_verification.sys.platform", "win32"):
             command = container_command(
                 self.root,
                 "kicad@sha256:" + "0" * 64,
@@ -261,7 +289,7 @@ class VerifyTests(VerifyFixture):
 
         with (
             self.runner_environment("9.0.0", docker=True),
-            patch("kicad_tooling.verify.run_command", side_effect=execute),
+            patch("kicad_tooling.hwrepo.project_verification.run_command", side_effect=execute),
         ):
             result = verify(self.root, "controller", depth="native", runner="container")
         self.assertEqual(result.status, "PASS", result.error)
@@ -285,7 +313,9 @@ class VerifyTests(VerifyFixture):
         )
         with (
             self.runner_environment("9.0.0", docker=True),
-            patch("kicad_tooling.verify.run_command", return_value=failed) as command,
+            patch(
+                "kicad_tooling.hwrepo.project_verification.run_command", return_value=failed
+            ) as command,
         ):
             result = verify(self.root, "controller", depth="native", runner="container")
         self.assertEqual(result.status, "FAIL")
@@ -305,7 +335,7 @@ class VerifyTests(VerifyFixture):
         )
         with (
             self.runner_environment("9.0.0", docker=True),
-            patch("kicad_tooling.verify.run_command", return_value=success),
+            patch("kicad_tooling.hwrepo.project_verification.run_command", return_value=success),
         ):
             result = verify(self.root, "controller", depth="native", runner="container")
         self.assertEqual(result.status, "FAIL")
@@ -318,16 +348,15 @@ class VerifyTests(VerifyFixture):
             output=b"starting image",
             stderr=b"probe hung",
         )
-        with patch("kicad_tooling.verify.subprocess.run", side_effect=expired):
+        with patch("kicad_tooling.hwrepo.project_verification.subprocess.run", side_effect=expired):
             result = run_command(self.root, ("docker", "run"), 30)
         self.assertEqual(result.returncode, 124)
         self.assertEqual(result.stdout, "starting image")
         self.assertEqual(result.stderr, "probe hung")
 
     def test_native_failure_keeps_report_and_specific_repair_findings(self) -> None:
-        def failing_native(
-            root: Path, output: Path, cli: str, projects: Sequence[str]
-        ) -> CheckAllSummary:
+        def failing_native(root: Path, request: NativeProjectCheckRequest) -> CheckAllSummary:
+            output = request.output
             project_output = output / "controller"
             project_output.mkdir(parents=True)
             write_model(
@@ -351,7 +380,10 @@ class VerifyTests(VerifyFixture):
 
         with (
             self.runner_environment("10.0.0"),
-            patch("kicad_tooling.verify.check_all", side_effect=failing_native),
+            patch(
+                "kicad_tooling.hwrepo.project_verification.run_native_project_check",
+                side_effect=failing_native,
+            ),
         ):
             result = verify(self.root, "controller", depth="native", runner="local")
         self.assertEqual(result.status, "FAIL", result.error)
@@ -363,7 +395,7 @@ class VerifyTests(VerifyFixture):
     def test_unavailable_runner_is_an_actionable_failure_before_native_work(self) -> None:
         with (
             self.runner_environment("10.0.6"),
-            patch("kicad_tooling.verify.check_all") as native,
+            patch("kicad_tooling.hwrepo.project_verification.run_native_project_check") as native,
         ):
             result = verify(self.root, "controller", depth="native", runner="auto")
         self.assertEqual(result.status, "FAIL")

@@ -9,7 +9,7 @@ from pathlib import Path
 
 from kicad_tooling.hwrepo.contracts import write_model
 from kicad_tooling.hwrepo.documentation import check
-from kicad_tooling.hwrepo.models import DocumentationException, DocumentationPolicy
+from kicad_tooling.hwrepo.documentation_models import DocumentationException, DocumentationPolicy
 
 
 class DocumentationPolicyTests(unittest.TestCase):

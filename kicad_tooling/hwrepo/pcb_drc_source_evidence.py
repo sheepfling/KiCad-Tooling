@@ -10,7 +10,6 @@ from pathlib import Path, PureWindowsPath
 
 from pydantic import JsonValue
 
-from ..validate import hashes
 from .command_evidence_models import CommandEvidence
 from .contracts import read_model, repo_path
 from .evidence import digest
@@ -18,6 +17,7 @@ from .models import ValidationSummary
 from .native_summary_binding import validate_native_summary_binding
 from .pcb_drc_models import PcbDifferentialPairRuleCoverageReport, PcbSignalPathRuleCoverageReport
 from .project_models import ProjectConfig
+from .project_source_hashes import hash_project_sources as hashes
 
 
 @dataclass(frozen=True, slots=True)

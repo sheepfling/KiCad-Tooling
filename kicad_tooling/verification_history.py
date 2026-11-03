@@ -22,6 +22,8 @@ def main() -> int:
     parser.add_argument(
         "--candidate-release", type=Path, help="Explicit candidate release manifest"
     )
+    parser.add_argument("--baseline-readiness", type=Path, help="Saved baseline readiness.json")
+    parser.add_argument("--candidate-readiness", type=Path, help="Saved candidate readiness.json")
     parser.add_argument("--output", type=Path, help="Fresh ignored build/ output directory")
     parser.add_argument("--format", choices=("text", "json"), default="text")
     args = parser.parse_args()
@@ -33,6 +35,8 @@ def main() -> int:
             args.candidate,
             baseline_release=args.baseline_release,
             candidate_release=args.candidate_release,
+            baseline_readiness=args.baseline_readiness,
+            candidate_readiness=args.candidate_readiness,
             output=args.output,
         )
     except (OSError, ValueError, TypeError) as exc:

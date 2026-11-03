@@ -6,9 +6,9 @@ from collections.abc import Iterable
 from datetime import UTC, date, datetime
 from pathlib import Path
 
-from ..lint_registry import lint
 from .documentation import check as documentation_check
 from .generation import check_generation
+from .governance_lint import lint
 from .models import (
     CheckMetric,
     DeviationMetrics,

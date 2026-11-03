@@ -6,9 +6,9 @@ import argparse
 import sys
 from pathlib import Path
 
+from .hwrepo.electrical_chart_models import ElectricalChartsReport, ElectricalChartsSuiteReport
 from .hwrepo.electrical_charts import build_charts, build_suite
 from .hwrepo.layout import default_project_root
-from .hwrepo.models import ElectricalChartsReport, ElectricalChartsSuiteReport
 
 
 def format_text(report: ElectricalChartsReport | ElectricalChartsSuiteReport) -> str:
@@ -31,7 +31,7 @@ def format_text(report: ElectricalChartsReport | ElectricalChartsSuiteReport) ->
     ]
     for item in charts_report.cases:
         suffix = (
-            f" — {item.samples} samples, {item.csv}, {item.png}, {item.svg}"
+            f" — {item.samples} samples, {item.csv}, {item.png}, {item.svg}, {item.html}"
             if item.csv
             else f" — {item.detail}"
         )
@@ -40,6 +40,8 @@ def format_text(report: ElectricalChartsReport | ElectricalChartsSuiteReport) ->
         lines.append(f"Grounding: {charts_report.grounding_csv}")
     if charts_report.power_csv:
         lines.append(f"Power: {charts_report.power_csv}")
+    if charts_report.viewer_index:
+        lines.append(f"Interactive index: {charts_report.viewer_index}")
     return "\n".join(lines)
 
 

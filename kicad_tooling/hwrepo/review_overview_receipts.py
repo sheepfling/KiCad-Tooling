@@ -5,10 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from .contracts import repo_path
+from .electrical_chart_models import ElectricalChartsReport
 from .findings_view_models import FindingsViewReport
 from .models import (
     ElectricalAnalysisReport,
-    ElectricalChartsReport,
     PurchasingReport,
     ThreeDReport,
     ValidationSummary,

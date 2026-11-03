@@ -14,8 +14,8 @@ from urllib.parse import quote
 
 from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
-from ..lint_registry import reviewed_value
 from .contracts import read_model, repo_path
+from .governance_records import reviewed_value
 from .layout import layout
 from .models import GovernanceRecord, HostedGovernanceCheck, HostedGovernanceReport, TeamPolicy
 

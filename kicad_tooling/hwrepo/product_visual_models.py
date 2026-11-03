@@ -65,6 +65,8 @@ class ProductVisualReport(StrictModel):
     status: Literal["CURRENT", "REVIEW"]
     product_path: RepositoryPath
     product_sha256: Digest
+    parts_catalog_path: RepositoryPath | None = None
+    parts_catalog_sha256: Digest | None = None
     source_hashes: Mapping[RepositoryPath, Digest]
     projects: tuple[ProductProjectIdentity, ...]
     instances: tuple[ProductVisualInstance, ...]

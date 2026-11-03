@@ -9,7 +9,8 @@ from uuid import uuid4
 from .artifact_access import read_regular_bytes
 from .contract_coach import receipt_directory
 from .contracts import read_model, repo_path, write_model
-from .diagnostics import diagnose_import
+from .diagnostic_operation_models import ImportDiagnosticRequest
+from .diagnostics import diagnose_import_request
 from .discovery import settings
 from .evidence import digest
 from .import_inventory import source_kind
@@ -148,7 +149,14 @@ def _snapshot(
     root: Path, source: Path, project_id: str, toolchain_id: str, directory: Path
 ) -> ImportReviewReport:
     preview = import_project(root, source, project_id, toolchain_id, dry_run=True)
-    diagnosis = diagnose_import(root, source, project_id, toolchain_id)
+    diagnosis = diagnose_import_request(
+        root,
+        ImportDiagnosticRequest(
+            source=source,
+            project_id=project_id,
+            toolchain_id=toolchain_id,
+        ),
+    )
     catalog = settings(root).catalogs.toolchains
     records = read_model(repo_path(root, catalog), ToolchainsCatalog)
     toolchain = next((item for item in records.toolchains if item.id == toolchain_id), None)

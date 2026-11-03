@@ -30,7 +30,7 @@ from .hwrepo.models import (
     ContractCoachReport,
     DesignLintPolicy,
 )
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 _FIXTURE_CASES: tuple[FaultControlFixtureCase, ...] = ("control", "fault")
 

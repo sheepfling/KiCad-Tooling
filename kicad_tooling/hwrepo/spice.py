@@ -220,13 +220,22 @@ def observed_versions(command: CommandEvidence) -> tuple[str, ...]:
     return tuple(re.findall(r"(?i)\bngspice-([0-9][A-Za-z0-9.+_-]*)", command.stdout))
 
 
+class SimulatorVersionMismatch(ValueError):
+    """Requested simulator version was not established by the captured command."""
+
+    def __init__(self, message: str, command: CommandEvidence) -> None:
+        super().__init__(message)
+        self.command = command
+
+
 def simulator_version(output: Path, cli: str, expected: str) -> CommandEvidence:
     command = run_command(output, (cli, "--version"), timeout=30)
     write_model(output / "ngspice-version.command.json", command)
     versions = observed_versions(command)
     if command.returncode != 0 or command.error or expected not in versions:
-        raise ValueError(
-            f"Exact ngspice {expected} required; observed {versions or command.error or command.stderr}"
+        raise SimulatorVersionMismatch(
+            f"Exact ngspice {expected} required; observed {versions or command.error or command.stderr}",
+            command,
         )
     return command
 

@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from . import contract_coach, parts_workflow
+from . import parts_workflow
 from .contracts import repo_path
 from .doctor import NativeRunner
 from .mcp_workflow import artifact_file, fresh_output, native_summary_path, selected_project
 from .models import PurchasingReport
+from .parts_operation_models import PartsPreparationRequest
 from .purchasing_preferences import save_parts_preferences
 
 __all__ = ["prepare_parts", "save_parts_preferences"]
@@ -58,24 +59,15 @@ def prepare_parts(
     summary = None if native_summary is None else native_summary_path(root, native_summary)
     requested = preferences_file(root, project_id, preferences)
     output = fresh_output(root, "parts", view_id)
+    request = PartsPreparationRequest(
+        project_id=project_id,
+        output=output,
+        native_summary=summary,
+        requested_preferences=requested,
+        boards=boards,
+        spare_percent=spare_percent,
+        spare_minimum=spare_minimum,
+        runner_mode=runner,
+    )
     output.mkdir(parents=True, exist_ok=False)
-    native_runner = (
-        contract_coach.LocalNetlistRunner("kicad-cli")
-        if runner == "local"
-        else contract_coach.ContainerNetlistRunner()
-        if runner == "container"
-        else contract_coach.AutoNetlistRunner("kicad-cli")
-    )
-    report = parts_workflow.prepare(
-        root,
-        project_id,
-        output,
-        native_runner,
-        summary,
-        requested,
-        boards,
-        spare_percent,
-        spare_minimum,
-    )
-    parts_workflow.save_report(output, report)
-    return report
+    return parts_workflow.prepare_request(root, request)

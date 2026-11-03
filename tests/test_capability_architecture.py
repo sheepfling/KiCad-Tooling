@@ -20,7 +20,7 @@ _REPOSITORY_ROOT = Path(__file__).parents[1]
 @lru_cache(maxsize=1)
 def _forbidden_surface_modules() -> frozenset[str]:
     catalog = read_model(_REPOSITORY_ROOT / "kicad_tooling/tool-surfaces.json", ToolSurfacesCatalog)
-    # validate.py is both a registered CLI and the current native validation service.
+    # validate.py remains a registered CLI; its native work lives under hwrepo.
     return frozenset(
         item.module for item in catalog.cli if item.module != "kicad_tooling.validate"
     ) | {
@@ -113,7 +113,15 @@ def test_domain_imports_are_not_rejected_as_surface_dependencies() -> None:
 
 def test_stable_capability_services_do_not_depend_on_application_surfaces() -> None:
     directory = _REPOSITORY_ROOT / "kicad_tooling/hwrepo"
-    prefixes = ("electrical", "parts_", "cad_", "native_", "pcb_geometry_")
+    prefixes = (
+        "electrical",
+        "parts_",
+        "cad_",
+        "native_",
+        "pcb_geometry_",
+        "project_static_pipeline",
+        "native_project_check",
+    )
     standalone = {
         "layout",
         "selection",
@@ -129,6 +137,10 @@ def test_stable_capability_services_do_not_depend_on_application_surfaces() -> N
         "pcb_drc_source_evidence",
         "pcb_drc_source_scan",
         "project_detail",
+        "project_verification",
+        "governance_lint",
+        "governance_records",
+        "project_source_hashes",
     }
     paths = sorted(
         path
@@ -146,6 +158,77 @@ def test_stable_capability_services_do_not_depend_on_application_surfaces() -> N
         )
         violations.extend(f"{relative} imports {dependency}" for dependency in dependencies)
     assert not violations, "Capability services must not import surfaces:\n" + "\n".join(violations)
+
+
+def test_declared_source_hashing_has_one_owner_and_a_legacy_facade() -> None:
+    owner = _REPOSITORY_ROOT / "kicad_tooling/hwrepo/project_source_hashes.py"
+    facade = _REPOSITORY_ROOT / "kicad_tooling/validate.py"
+    owner_imports = _module_imports(
+        owner.read_text(encoding="utf-8"), Path("kicad_tooling/hwrepo/project_source_hashes.py")
+    )
+    facade_tree = ast.parse(facade.read_text(encoding="utf-8"))
+    legacy_export = any(
+        isinstance(node, ast.ImportFrom)
+        and node.module == "hwrepo.project_source_hashes"
+        and any(
+            alias.name == "hash_project_sources" and alias.asname == "hashes"
+            for alias in node.names
+        )
+        for node in ast.walk(facade_tree)
+    )
+    internal_uses_facade: list[str] = []
+    for path in (_REPOSITORY_ROOT / "kicad_tooling").rglob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        if any(
+            isinstance(node, ast.ImportFrom)
+            and node.module == "validate"
+            and node.level > 0
+            and any(alias.name == "hashes" for alias in node.names)
+            for node in ast.walk(tree)
+        ):
+            internal_uses_facade.append(str(path.relative_to(_REPOSITORY_ROOT)))
+
+    assert "kicad_tooling.validate" not in owner_imports
+    assert legacy_export
+    assert not internal_uses_facade
+
+
+def test_internal_modules_use_native_owners_instead_of_cli_facades() -> None:
+    violations: list[str] = []
+    package = _REPOSITORY_ROOT / "kicad_tooling"
+    for path in package.rglob("*.py"):
+        if path in {package / "validate.py", package / "check_toolchain.py"}:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        if any(
+            (
+                isinstance(node, ast.ImportFrom)
+                and (
+                    (node.level > 0 and node.module in {"validate", "check_toolchain"})
+                    or (
+                        node.level == 0
+                        and node.module
+                        in {
+                            "kicad_tooling.validate",
+                            "kicad_tooling.check_toolchain",
+                        }
+                    )
+                )
+            )
+            or (
+                isinstance(node, ast.Import)
+                and any(
+                    alias.name in {"kicad_tooling.validate", "kicad_tooling.check_toolchain"}
+                    for alias in node.names
+                )
+            )
+            for node in ast.walk(tree)
+        ):
+            violations.append(str(path.relative_to(_REPOSITORY_ROOT)))
+
+    assert not violations, "Internal modules must import native capability owners: " + ", ".join(
+        violations
+    )
 
 
 def test_project_source_operations_have_compatible_mcp_exports() -> None:
@@ -192,3 +275,72 @@ def test_project_inventory_mcp_adapters_delegate_to_shared_services() -> None:
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
     }
     assert "inventory" in inventory_calls
+
+
+def test_findings_view_mcp_adapter_uses_the_shared_typed_export() -> None:
+    server_path = _REPOSITORY_ROOT / "kicad_tooling/hwrepo/mcp_server.py"
+    server_tree = ast.parse(server_path.read_text(encoding="utf-8"))
+    server_calls = {
+        node.func.id
+        for node in ast.walk(server_tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
+    adapter_path = _REPOSITORY_ROOT / "kicad_tooling/hwrepo/mcp_visualization_exports.py"
+    adapter_tree = ast.parse(adapter_path.read_text(encoding="utf-8"))
+    handler = next(
+        node
+        for node in ast.walk(adapter_tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "export_findings_view"
+    )
+    handler_calls = {
+        node.func.id
+        for node in ast.walk(handler)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
+
+    assert "register_visualization_export_tools" in server_calls
+    assert not any(
+        isinstance(node, ast.FunctionDef) and node.name == "export_findings_view"
+        for node in ast.walk(server_tree)
+    )
+    assert "build_findings_view" in handler_calls
+
+
+def test_release_mcp_adapter_owns_registration_and_delegates_release_operations() -> None:
+    server_path = _REPOSITORY_ROOT / "kicad_tooling/hwrepo/mcp_server.py"
+    server_tree = ast.parse(server_path.read_text(encoding="utf-8"))
+    server_calls = {
+        node.func.id
+        for node in ast.walk(server_tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
+    adapter_path = _REPOSITORY_ROOT / "kicad_tooling/hwrepo/mcp_release.py"
+    adapter_tree = ast.parse(adapter_path.read_text(encoding="utf-8"))
+    handlers = {
+        node.name: node
+        for node in ast.walk(adapter_tree)
+        if isinstance(node, ast.FunctionDef)
+        and node.name in {"check_release", "verify_package", "package_release", "restore_package"}
+    }
+    delegated_operations = {
+        node.func.attr
+        for handler in handlers.values()
+        for node in ast.walk(handler)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+    }
+
+    assert "register_release_tools" in server_calls
+    assert set(handlers) == {
+        "check_release",
+        "verify_package",
+        "package_release",
+        "restore_package",
+    }
+    assert not any(
+        isinstance(node, ast.FunctionDef)
+        and node.name in {"check_release", "verify_package", "package_release", "restore_package"}
+        for node in ast.walk(server_tree)
+    )
+    assert {"check_release", "verify_package", "package_release", "restore_package"} <= (
+        delegated_operations
+    )

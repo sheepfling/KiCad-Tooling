@@ -8,12 +8,17 @@ kicad-team verification-history --project <id> \
   --baseline build/review-overview/<older>/overview.json \
   --candidate build/review-overview/<newer>/overview.json \
   --baseline-release releases/<older>.json \
-  --candidate-release releases/<newer>.json
+  --candidate-release releases/<newer>.json \
+  --baseline-readiness build/release-readiness-view/<older>/readiness.json \
+  --candidate-readiness build/release-readiness-view/<newer>/readiness.json
 ```
 
 Release manifests are optional and must be chosen explicitly. The command
 writes a fresh ignored `build/verification-history/<project>-<run>/` with an
-offline `index.html` and typed `history.json`. Use `--output` for a fresh
+offline `index.html` and typed `history.json`. Saved
+[release readiness views](RELEASE_READINESS_VIEW.md) are optional, must be
+selected explicitly, and should be paired with the manifests they checked. The command
+supports `--output` for a fresh
 `build/` directory and `--format json` for the structured result. MCP
 `export_verification_history` uses the same service when exports are enabled;
 it takes the selected paths plus a fresh `view_id`.
@@ -56,3 +61,11 @@ source commit with the snapshot's hash-verified native commit. A mismatch or
 unknown commit is explicit. The authored release status is displayed as
 source data, separate from actual packaging, approval, electrical judgment,
 or manufacturing authorization. This command performs none of those actions.
+
+When readiness receipts are selected, the view compares the computed policy
+statuses and issue codes from each saved check. It rechecks the receipt page,
+selected release manifest hash, native snapshot commit and source inventory,
+and directly declared evidence/artifact files. A missing, changed, or malformed
+input makes the receipt `MISSING`, `STALE`, or `UNAVAILABLE`; its saved policy
+status stays labeled as a historical outcome. No check is rerun during history
+export.

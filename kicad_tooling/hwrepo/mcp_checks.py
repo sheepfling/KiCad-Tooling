@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..check_all import check_all
-from ..check_toolchain import cli_executable
 from .mcp_workflow import fresh_output
 from .models import McpNativeScopeReport
+from .native_project_check import run_native_project_check
+from .native_project_check_models import NativeProjectCheckRequest
+from .native_toolchain import cli_executable
 from .selection import ProjectSelector, resolve_project_ids
 
 
@@ -28,7 +29,14 @@ def check_native_scope(
     )
     selected = list(resolve_project_ids(root, selector)) if selector.active else None
     output = fresh_output(root, "native", view_id)
-    result = check_all(root, output, cli_executable("kicad-cli") or "kicad-cli", selected)
+    result = run_native_project_check(
+        root,
+        NativeProjectCheckRequest(
+            output=output,
+            cli=cli_executable("kicad-cli") or "kicad-cli",
+            project_ids=None if selected is None else tuple(selected),
+        ),
+    )
     return McpNativeScopeReport(
         status=result.status,
         report=result,

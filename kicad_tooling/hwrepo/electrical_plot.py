@@ -26,7 +26,7 @@ from .waveform_data import WaveformData, WaveformSeries
 
 
 @dataclass(frozen=True, slots=True)
-class _ChartPanel:
+class ChartPanel:
     measure: SimulationMeasure
     values: tuple[float, ...]
     label: str
@@ -116,9 +116,9 @@ def _is_real(value: complex) -> bool:
     return abs(value.imag) <= 1e-12 * max(1.0, abs(value.real))
 
 
-def _panels(
+def plot_panels(
     data: WaveformData, case: TransientAnalysis | FrequencyAnalysis
-) -> tuple[_ChartPanel, ...]:
+) -> tuple[ChartPanel, ...]:
     expected = "time" if isinstance(case, TransientAnalysis) else "frequency"
     if data.axis_name != expected or len(data.axis) < 2:
         raise ValueError(f"Expected at least two {expected} samples for {case.id}.")
@@ -129,7 +129,7 @@ def _panels(
     if isinstance(case, FrequencyAnalysis) and data.axis[0] <= 0:
         raise ValueError("Frequency chart requires positive frequencies.")
 
-    panels: list[_ChartPanel] = []
+    panels: list[ChartPanel] = []
     for index, measure in enumerate(case.measures):
         series = _indexed_trace(data, index)
         if len(series.values) != len(data.axis):
@@ -168,7 +168,7 @@ def _panels(
             )
         if complex_trace:
             panels.append(
-                _ChartPanel(
+                ChartPanel(
                     measure=measure,
                     values=tuple(abs(value) for value in series.values),
                     label=f"Derived magnitude of {series.name}",
@@ -185,7 +185,7 @@ def _panels(
                 else None
             )
             panels.append(
-                _ChartPanel(
+                ChartPanel(
                     measure=measure,
                     values=tuple(value.real for value in series.values),
                     label=f"{series.name}: {measure.expression}",
@@ -196,6 +196,9 @@ def _panels(
                 )
             )
     return tuple(panels)
+
+
+_panels = plot_panels
 
 
 def render_case(
@@ -211,7 +214,7 @@ def render_case(
     Complex values show derived magnitude and phase; their scalar acceptance
     limits are not drawn on a quantity whose equivalence is unknown.
     """
-    panels = _panels(data, case)
+    panels = plot_panels(data, case)
     try:
         from matplotlib import rc_context  # pyright: ignore[reportUnknownVariableType]
         from matplotlib.backends.backend_agg import FigureCanvasAgg

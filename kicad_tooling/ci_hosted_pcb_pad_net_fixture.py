@@ -21,9 +21,9 @@ from .hwrepo.models import (
     ContractCoachReport,
     DesignLintPolicy,
 )
+from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.pcb_component_inventory import evaluate_native_component_inventory_coverage
 from .hwrepo.project_models import ProjectKind
-from .validate import read_netlist
 
 _FIXTURE_HASHES = MappingProxyType(
     {

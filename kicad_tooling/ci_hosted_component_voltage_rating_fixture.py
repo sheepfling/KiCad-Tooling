@@ -17,7 +17,7 @@ from .hwrepo.evidence import digest
 from .hwrepo.models import (
     NetlistContract,
 )
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 
 def verify_component_voltage_rating_fixture(

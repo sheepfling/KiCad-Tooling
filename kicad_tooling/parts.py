@@ -22,13 +22,13 @@ from .hwrepo.layout import default_project_root
 from .hwrepo.models import SupplierHandoffPlan
 from .hwrepo.part_picker import create_picker, resume_selection, selection
 from .hwrepo.part_picker_view import picker_text, save_picker, save_selection, selection_text
+from .hwrepo.parts_operation_models import PartsPreparationRequest
 from .hwrepo.parts_workflow import (
     init_preferences,
     load_preferences,
     local_path,
     new_receipt,
-    prepare,
-    save_report,
+    prepare_request,
     text_report,
 )
 from .hwrepo.purchasing_preferences import save_parts_preferences
@@ -507,14 +507,14 @@ def main() -> int:
                 )
             return 0
         output = new_receipt(root, args.project, args.output)
-        runner = (
-            LocalNetlistRunner(args.cli)
-            if args.runner == "local"
-            else ContainerNetlistRunner()
-            if args.runner == "container"
-            else AutoNetlistRunner(args.cli)
-        )
         if args.picker:
+            runner = (
+                LocalNetlistRunner(args.cli)
+                if args.runner == "local"
+                else ContainerNetlistRunner()
+                if args.runner == "container"
+                else AutoNetlistRunner(args.cli)
+            )
             picker = create_picker(root, args.project, output, runner, args.native_summary)
             save_picker(output, picker)
             print(
@@ -534,18 +534,20 @@ def main() -> int:
                 else selection_text(result)
             )
             return 1 if result.status == "BLOCKED" else 0
-        report = prepare(
+        report = prepare_request(
             root,
-            args.project,
-            output,
-            runner,
-            args.native_summary,
-            args.preferences,
-            args.boards,
-            args.spare_percent,
-            args.spare_minimum,
+            PartsPreparationRequest(
+                project_id=args.project,
+                output=output,
+                native_summary=args.native_summary,
+                requested_preferences=args.preferences,
+                boards=args.boards,
+                spare_percent=args.spare_percent,
+                spare_minimum=args.spare_minimum,
+                cli=args.cli,
+                runner_mode=args.runner,
+            ),
         )
-        save_report(output, report)
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
     print(report.model_dump_json(indent=2) if args.format == "json" else text_report(report))

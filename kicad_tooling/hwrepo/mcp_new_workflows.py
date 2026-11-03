@@ -11,13 +11,10 @@ from pydantic import TypeAdapter
 from . import cad_library, cad_source, cad_step, electrical_charts
 from .cad_source_models import CadImportReport, CadSourceReport, CadSourcingReview, CadStepReport
 from .contracts import repo_path, write_model
+from .electrical_chart_models import ElectricalChartsReport, ElectricalChartsSuiteReport
 from .mcp_files import artifact_path, read_regular_bytes
 from .mcp_workflow import artifact_file, fresh_output, selected_project
-from .models import (
-    Digest,
-    ElectricalChartsReport,
-    ElectricalChartsSuiteReport,
-)
+from .models import Digest
 
 _DIGEST: TypeAdapter[str] = TypeAdapter(Digest)
 

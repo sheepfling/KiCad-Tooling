@@ -14,8 +14,9 @@ from .git import run_git_text
 from .hwrepo.contracts import read_kicad_drc_parity, write_model
 from .hwrepo.layout import default_project_root
 from .hwrepo.models import FaultProbeCase, FaultProbeReport
+from .hwrepo.native_project_validation import validate_project
+from .hwrepo.native_project_validation_models import NativeProjectValidationRequest
 from .hwrepo.repository import ephemeral
-from .validate import validate
 
 
 def probe(root: Path, output: Path) -> FaultProbeReport:
@@ -93,7 +94,10 @@ def probe(root: Path, output: Path) -> FaultProbeReport:
                 (copy / "examples/projects/controller/kicad/ghost.kicad_pcb").write_text(
                     "undeclared board\n"
                 )
-            report = validate(copy, output / name, cli)
+            report = validate_project(
+                copy,
+                NativeProjectValidationRequest(output=output / name, cli=cli),
+            )
             observed = report.checks.get(expected)
             passed = report.status == "FAIL" and observed is not None and observed.status == "FAIL"
             if name in {"erc_open_pin", "drc_unrouted", "parity_value"}:

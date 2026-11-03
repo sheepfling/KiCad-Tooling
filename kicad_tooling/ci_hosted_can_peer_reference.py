@@ -21,7 +21,7 @@ from .hwrepo.design_lint_can_candidates import can_peer_reference_candidates
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import NetlistContract
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 
 def can_peer_reference_native_fixture_lane(

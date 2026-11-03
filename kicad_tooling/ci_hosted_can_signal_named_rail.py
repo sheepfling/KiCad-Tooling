@@ -20,7 +20,7 @@ from .hwrepo.contracts import read_kicad_erc_report, write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-from .validate import read_netlist
+from .hwrepo.native_report_parsing import read_netlist
 
 CAN_SIGNAL_NAMED_RAIL_TOOLCHAINS = CAN_TX_RX_NATIVE_TOOLCHAINS
 _SIGNAL_RULE_ID = "bus.can_signal_on_named_rail"
