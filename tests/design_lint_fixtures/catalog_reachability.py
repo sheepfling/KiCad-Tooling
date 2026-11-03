@@ -114,18 +114,6 @@ from tests.test_regulator_required_passives import catalog_reachable_rule_ids
 TESTS = Path(__file__).resolve().parents[1]
 
 
-def connector_peer_scope_rule_ids() -> set[str]:
-    """Reach both scoped and unscoped connector-alias assignment rules."""
-    observed = peer_netlist(assignments=(("PORT_A", "PORT_B"), ("DATA_A", "DATA_B")))
-    coverages = (
-        reviewed_coverage(observed, (None, None)),
-        reviewed_coverage(observed, (PEER_GROUP, PEER_GROUP)),
-    )
-    return {
-        item.rule_id for coverage in coverages for item in lint_report(observed, coverage).findings
-    }
-
-
 def catalog_reachability_rule_ids() -> set[str]:
     cases = (
         (
@@ -300,6 +288,16 @@ def catalog_reachability_rule_ids() -> set[str]:
     result.update(
         item.rule_id
         for item in candidates(ethernet_management_netlist(labels=("ETH_MDIO", "ETH_MDC")))
+    )
+    peer_assignments = peer_netlist(assignments=(("PORT_A", "PORT_B"), ("DATA_A", "DATA_B")))
+    peer_coverages = (
+        reviewed_coverage(peer_assignments, (None, None)),
+        reviewed_coverage(peer_assignments, (PEER_GROUP, PEER_GROUP)),
+    )
+    result.update(
+        item.rule_id
+        for coverage in peer_coverages
+        for item in lint_report(peer_assignments, coverage).findings
     )
     return result
 
