@@ -25,31 +25,28 @@ def mixed_open_generic_component_peer_pin_candidates(
         shared_assignment = next(iter(assigned_nets))
         if len(shared_assignment) != 1:
             continue
-        (
-            subject_identity,
-            identity_text,
-            independent_net_text,
-            identity_evidence,
-        ) = component_peer_pin_identity_context(group)
+        identity = component_peer_pin_identity_context(group)
         function = group.pin_function or ""
         candidates.append(
             Candidate(
                 rule_id="component.generic_peer_pin_mixed_open",
                 subject=(
-                    f"{subject_identity} pin {group.pin_number} "
+                    f"{identity.subject_identity} pin {group.pin_number} "
                     f"({function or 'generic'}): some fitted peers leave it open"
                 ),
                 message=(
-                    f"Among fitted non-connector peers with {identity_text}, at least two "
+                    "Among fitted non-connector peers with "
+                    f"{identity.identity_description}, at least two "
                     f"matching generic pins share exact net {shared_assignment[0]!r} while "
                     f"{len(open_pins)} peer pin(s) are unassigned. Another pin shares an exact "
                     "single-net anchor across the group. Review whether the open assignments "
                     "are intentional or a connection is missing; peer identity and assignment "
-                    f"consensus do not establish that the pins must connect, and {independent_net_text}."
+                    "consensus do not establish that the pins must connect, and "
+                    f"{identity.independent_net_note}."
                 ),
                 evidence={
                     **group.assignments,
-                    **identity_evidence,
+                    **identity.evidence,
                     "pin_number": (group.pin_number,),
                     "pin_function": (function,),
                     "pin_electrical_type": (group.electrical_type,),

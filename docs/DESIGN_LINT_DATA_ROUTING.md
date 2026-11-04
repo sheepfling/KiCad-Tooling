@@ -243,6 +243,14 @@ report JSON and fingerprint. This is the first typed evidence projection; the
 remaining per-rule evidence fields still use the established string-keyed
 map and need their own staged migration by theme.
 
+The component-peer identity helper now returns a named
+`ComponentPeerPinIdentityContext` instead of a positional tuple containing an
+unstructured evidence map. Its typed identity and message fields are the
+authoritative internal record; the `evidence` property projects the established
+`peer_group_*` and exact-symbol fields into the unchanged finding payload.
+Part-ID and exact-symbol cases are covered separately so their authority and
+serialized fields remain distinct.
+
 Component-peer assignment checks now enter through
 `ComponentPeerCandidateInputs` and return a `ComponentPeerCandidateResult`.
 Its `ComponentPeerPinFindingCounts` summary is consumed by the component-peer

@@ -267,28 +267,23 @@ def _component_peer_candidate_items(
 
     for group in peer_pin_scans.power_output.outliers:
         open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
-        (
-            subject_identity,
-            identity_text,
-            independent_net_text,
-            identity_evidence,
-        ) = component_peer_pin_identity_context(group)
+        identity = component_peer_pin_identity_context(group)
         found.append(
             Candidate(
                 rule_id="component.peer_power_output_unconnected",
                 subject=(
-                    f"{subject_identity} pin {group.pin_number}: fitted peer power-output assignment "
+                    f"{identity.subject_identity} pin {group.pin_number}: fitted peer power-output assignment "
                     "is missing"
                 ),
                 message=(
-                    f"Fitted components with {identity_text} have an unassigned pin that "
+                    f"Fitted components with {identity.identity_description} have an unassigned pin that "
                     "KiCad classifies as power_out, while at least one fitted peer's matching pin "
                     "has a net assignment. Review whether the open output is intentionally unused "
-                    f"or its connection is missing; {independent_net_text}."
+                    f"or its connection is missing; {identity.independent_net_note}."
                 ),
                 evidence={
                     **group.assignments,
-                    **identity_evidence,
+                    **identity.evidence,
                     "pin_number": (group.pin_number,),
                     "pin_electrical_type": ("power_out",),
                     "pin_function": (group.pin_function or "",),
@@ -299,28 +294,23 @@ def _component_peer_candidate_items(
 
     for group in peer_pin_scans.signal_output.outliers:
         open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
-        (
-            subject_identity,
-            identity_text,
-            independent_net_text,
-            identity_evidence,
-        ) = component_peer_pin_identity_context(group)
+        identity = component_peer_pin_identity_context(group)
         found.append(
             Candidate(
                 rule_id="component.peer_signal_output_unconnected",
                 subject=(
-                    f"{subject_identity} pin {group.pin_number}: fitted peer signal-output assignment "
+                    f"{identity.subject_identity} pin {group.pin_number}: fitted peer signal-output assignment "
                     "is missing"
                 ),
                 message=(
-                    f"Fitted components with {identity_text} have an unassigned pin that "
+                    f"Fitted components with {identity.identity_description} have an unassigned pin that "
                     "KiCad classifies as output, while at least one fitted peer's matching pin "
                     "has a net assignment. Review whether the open output is intentionally unused "
-                    f"or its connection is missing; {independent_net_text}."
+                    f"or its connection is missing; {identity.independent_net_note}."
                 ),
                 evidence={
                     **group.assignments,
-                    **identity_evidence,
+                    **identity.evidence,
                     "pin_number": (group.pin_number,),
                     "pin_electrical_type": (group.electrical_type,),
                     "pin_function": (group.pin_function or "",),
@@ -334,29 +324,24 @@ def _component_peer_candidate_items(
         if any(pin.casefold() in control_pin_keys for pin in open_pins):
             # Keep recognized reset, enable, and boot inputs with their specific rule.
             continue
-        (
-            subject_identity,
-            identity_text,
-            independent_net_text,
-            identity_evidence,
-        ) = component_peer_pin_identity_context(group)
+        identity = component_peer_pin_identity_context(group)
         found.append(
             Candidate(
                 rule_id="component.peer_signal_input_unconnected",
                 subject=(
-                    f"{subject_identity} pin {group.pin_number}: fitted peer signal-input assignment "
+                    f"{identity.subject_identity} pin {group.pin_number}: fitted peer signal-input assignment "
                     "is missing"
                 ),
                 message=(
-                    f"Fitted components with {identity_text} have an unassigned pin that "
+                    f"Fitted components with {identity.identity_description} have an unassigned pin that "
                     f"KiCad classifies as {group.electrical_type}, while at least one fitted "
                     "peer's matching pin has a net assignment. Review whether the open input is "
                     f"intentionally unused or its signal connection is missing; "
-                    f"{independent_net_text}."
+                    f"{identity.independent_net_note}."
                 ),
                 evidence={
                     **group.assignments,
-                    **identity_evidence,
+                    **identity.evidence,
                     "pin_number": (group.pin_number,),
                     "pin_electrical_type": (group.electrical_type,),
                     "pin_function": (group.pin_function or "",),
@@ -367,28 +352,23 @@ def _component_peer_candidate_items(
 
     for group in peer_pin_scans.bidirectional.outliers:
         open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
-        (
-            subject_identity,
-            identity_text,
-            independent_net_text,
-            identity_evidence,
-        ) = component_peer_pin_identity_context(group)
+        identity = component_peer_pin_identity_context(group)
         found.append(
             Candidate(
                 rule_id="component.peer_bidirectional_pin_unconnected",
                 subject=(
-                    f"{subject_identity} pin {group.pin_number}: fitted peer bidirectional-pin "
+                    f"{identity.subject_identity} pin {group.pin_number}: fitted peer bidirectional-pin "
                     "assignment is missing"
                 ),
                 message=(
-                    f"Fitted components with {identity_text} have an unassigned pin that "
+                    f"Fitted components with {identity.identity_description} have an unassigned pin that "
                     "KiCad classifies as bidirectional, while at least one fitted peer's matching "
                     "pin has a net assignment. Review whether the open pin is intentionally "
-                    f"unused or its connection is missing; {independent_net_text}."
+                    f"unused or its connection is missing; {identity.independent_net_note}."
                 ),
                 evidence={
                     **group.assignments,
-                    **identity_evidence,
+                    **identity.evidence,
                     "pin_number": (group.pin_number,),
                     "pin_electrical_type": (group.electrical_type,),
                     "pin_function": (group.pin_function or "",),
@@ -397,29 +377,24 @@ def _component_peer_candidate_items(
             )
         )
     for group in peer_pin_scans.generic_assignment_outlier.outliers:
-        (
-            subject_identity,
-            identity_text,
-            independent_net_text,
-            identity_evidence,
-        ) = component_peer_pin_identity_context(group)
+        identity = component_peer_pin_identity_context(group)
         found.append(
             Candidate(
                 rule_id="component.generic_peer_pin_assignment_outlier",
                 subject=(
-                    f"{subject_identity} pin {group.pin_number}: generic peer assignment "
+                    f"{identity.subject_identity} pin {group.pin_number}: generic peer assignment "
                     "differs from its strict majority"
                 ),
                 message=(
-                    f"Fitted components with {identity_text} share another exact-net anchor, "
+                    f"Fitted components with {identity.identity_description} share another exact-net anchor, "
                     f"but this generic {group.electrical_type} pin has a strict majority "
                     "assignment and one or more different peer assignments. Review whether "
                     "the outlier is intentional; the shared anchor and repeated identity are "
-                    f"comparison clues only, and {independent_net_text}."
+                    f"comparison clues only, and {identity.independent_net_note}."
                 ),
                 evidence={
                     **group.assignments,
-                    **identity_evidence,
+                    **identity.evidence,
                     "pin_number": (group.pin_number,),
                     "pin_function": (group.pin_function or "",),
                     "pin_electrical_type": (group.electrical_type,),

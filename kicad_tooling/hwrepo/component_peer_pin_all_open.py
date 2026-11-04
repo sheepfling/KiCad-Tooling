@@ -18,20 +18,20 @@ def all_open_generic_component_peer_pin_candidates(
         open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
         if len(open_pins) < 2 or len(open_pins) != len(group.assignments):
             continue
-        identity, identity_description, _, identity_evidence = component_peer_pin_identity_context(
-            group
-        )
+        identity = component_peer_pin_identity_context(group)
         function = group.pin_function or ""
         candidates.append(
             Candidate(
                 rule_id="component.generic_peer_pin_all_open",
                 subject=(
-                    f"{identity} pin {group.pin_number} ({function or 'generic'}): "
+                    f"{identity.subject_identity} pin {group.pin_number} "
+                    f"({function or 'generic'}): "
                     "all fitted peers leave this pin open"
                 ),
                 message=(
                     f"A generic {group.electrical_type} pin is unassigned on every fitted "
-                    f"non-connector peer with {identity_description}, while another pin has "
+                    "non-connector peer with "
+                    f"{identity.identity_description}, while another pin has "
                     "the same exact net assignment across the group. Review the approved part "
                     "requirements for an intentionally unused pin or a missing connection. "
                     "Matching symbol or part identity and shared peer wiring do not establish "
@@ -39,7 +39,7 @@ def all_open_generic_component_peer_pin_candidates(
                 ),
                 evidence={
                     **group.assignments,
-                    **identity_evidence,
+                    **identity.evidence,
                     "pin_number": (group.pin_number,),
                     "pin_function": (function,),
                     "pin_electrical_type": (group.electrical_type,),

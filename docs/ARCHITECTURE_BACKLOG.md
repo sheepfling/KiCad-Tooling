@@ -466,6 +466,10 @@ and the pin keys used for peer deduplication. The scanner rejects mixed control
 and bus observations; the existing tuple-returning control function remains a
 compatibility adapter. Fault, valid-control, and unconnected cases compare
 candidate fingerprints and complete report JSON across the central routes.
+Component-peer identity wording and source identity now travel as a named
+`ComponentPeerPinIdentityContext`; its compatibility projection emits the
+existing evidence fields without carrying identity as an opaque four-value
+tuple.
 The PCB candidate group now has a PCB-owned input record. The central scanner
 passes it intact to typed measurement and requirement entry points, retaining
 the keyword-based translators as compatibility functions. Differential-pair
