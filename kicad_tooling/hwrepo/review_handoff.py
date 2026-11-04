@@ -26,6 +26,7 @@ from .review_handoff_models import (
     SnapshotRole,
 )
 from .review_overview_evidence import recorded_directory, selected_receipt
+from .source_state_models import SourceHashInventory
 from .verification_history_evidence import SavedSnapshot, current_source, load_snapshot
 
 
@@ -37,7 +38,7 @@ class _Input:
     notes_sha256: str
     notes_bytes: bytes
     notes: ReviewerNotesFile
-    current_source: tuple[dict[str, str], str]
+    current_source: tuple[SourceHashInventory, str]
 
 
 def _read_input(

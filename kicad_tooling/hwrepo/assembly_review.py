@@ -17,6 +17,7 @@ from .models import ThreeDReport
 from .project_source_hashes import hash_project_sources as hashes
 from .review_overview_evidence import read_receipt, recorded_directory, selected_receipt
 from .selection import resolve_project
+from .source_state_models import SourceHashInventory
 from .three_d_glb import inspect_glb
 
 _MAX_GLB = 64 * 1024 * 1024
@@ -41,7 +42,7 @@ def selected_assembly_contract(
 
 
 def _verified_board(
-    root: Path, receipt_path: Path, receipt: ThreeDReport, current: dict[str, str]
+    root: Path, receipt_path: Path, receipt: ThreeDReport, current: SourceHashInventory
 ) -> tuple[Path, bytes, str]:
     if (
         receipt.mode != "generate"

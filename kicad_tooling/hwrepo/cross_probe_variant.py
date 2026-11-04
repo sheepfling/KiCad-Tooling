@@ -15,6 +15,7 @@ from .native_report_parsing import read_netlist
 from .pcb_variant_population_capture import position_references
 from .project_models import ComponentContract, ProjectConfig
 from .review_overview_evidence import read_receipt, selected_receipt
+from .source_state_models import SourceHashInventory
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,7 +98,7 @@ def _verified_command(
 def read_variant_observation(
     root: Path,
     config: ProjectConfig,
-    current: dict[str, str],
+    current: SourceHashInventory,
     findings: FindingsViewReport,
     requested: str,
     native_netlist_sha256: str | None,

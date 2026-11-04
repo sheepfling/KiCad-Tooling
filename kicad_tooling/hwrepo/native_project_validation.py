@@ -23,6 +23,7 @@ from .native_toolchain import cli_executable, toolchain
 from .pcb_dru_compilation import run_pcb_dru_compilation_probe
 from .project_models import ProjectConfig, ProjectKind
 from .project_source_hashes import hash_project_sources
+from .source_state_models import SourceHashInventory
 
 ValidationContract: TypeAlias = (
     hwrepo_models.PcbValidationContract
@@ -42,7 +43,7 @@ def validate_project(root: Path, request: NativeProjectValidationRequest) -> Val
     root = root.resolve()
     source_before = source_state(root)
     checks: dict[str, CheckEvidence] = {}
-    before: dict[str, str] = {}
+    before: SourceHashInventory = {}
     source_roots: tuple[str, ...] = ("projects",)
     config: ProjectConfig | None = None
     profile: Literal["training", "development", "production"] | None = None

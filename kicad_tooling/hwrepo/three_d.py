@@ -31,6 +31,7 @@ from .models import (
 from .native_toolchain import cli_executable
 from .project_models import ProjectConfig, ProjectKind
 from .project_source_hashes import hash_project_sources as hashes
+from .source_state_models import SourceHashInventory
 from .three_d_gallery import finalize_gallery
 from .three_d_gallery import valid_artifact as _valid_artifact
 
@@ -166,7 +167,7 @@ def _selected(root: Path, project_id: str) -> tuple[ProjectConfig, str]:
     return config, board.relative_to(root).as_posix()
 
 
-def _source_hashes(root: Path, config: ProjectConfig) -> dict[str, str]:
+def _source_hashes(root: Path, config: ProjectConfig) -> SourceHashInventory:
     actual = hashes(root, config.source_roots)
     expected = set(config.required_inputs)
     if set(actual) != expected:
@@ -341,7 +342,7 @@ def generate(
     config: ProjectConfig | None = None
     board: str | None = None
     inventory: ModelInventoryReport | None = None
-    source: dict[str, str] = {}
+    source: SourceHashInventory = {}
     commands: dict[str, CommandEvidence] = {}
     artifacts: dict[str, str] = {}
     actions: tuple[str, ...] = ()

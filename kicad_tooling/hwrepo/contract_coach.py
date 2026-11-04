@@ -47,6 +47,7 @@ from .native_toolchain import cli_executable
 from .project_source_hashes import hash_project_sources as hashes
 from .return_nets import return_net_groups
 from .selection import resolve_project
+from .source_state_models import SourceHashInventory
 
 Item = TypeVar("Item")
 
@@ -240,7 +241,7 @@ class AutoNetlistRunner:
 
 def project_context(
     root: Path, project_id: str
-) -> tuple[ProjectConfig, NetlistContract, dict[str, str]]:
+) -> tuple[ProjectConfig, NetlistContract, SourceHashInventory]:
     """Resolve only a schematic-backed island and its complete declared inputs."""
     project = resolve_project(root, project_id)
     if project.kind is ProjectKind.PCB_ONLY:
