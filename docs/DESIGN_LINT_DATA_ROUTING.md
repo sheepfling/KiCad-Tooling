@@ -505,3 +505,14 @@ returns `NamedDifferentialPair` records. `SignalPairCandidate` retains either
 source, and `project_signal_pair_evidence` owns their existing report fields,
 including reviewed alias basis and digest. The scan predicates and their
 review-only meaning remain unchanged.
+
+## Generic component peer-pin outlier route
+
+`scan_generic_component_peer_pin_assignment_outliers` returns a
+`PeerPinAssignmentOutlier` with peer identity, per-reference assignments, the
+strict-majority net, outlier pins, and a shared exact-net anchor. The source
+record copies and freezes its assignment map. `GenericPeerPinCandidate`
+retains that record, and `project_generic_peer_pin_evidence` owns the existing
+report fields; the candidate builder continues to own selection and wording.
+Repeated symbol or part identity and a shared anchor remain comparison clues,
+not evidence that peer pins must connect.

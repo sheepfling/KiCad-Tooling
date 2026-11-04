@@ -12,6 +12,7 @@ from .component_peer_pin_findings import component_peer_power_pin_assignment_div
 from .component_peer_pin_identity import component_peer_pin_identity_context
 from .component_peer_pin_mixed_open import mixed_open_generic_component_peer_pin_candidates
 from .component_peer_pin_scan import ComponentPeerPinAssignmentScans
+from .design_lint_component_peer_candidate_evidence import GenericPeerPinCandidate
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 
@@ -379,8 +380,8 @@ def _component_peer_candidate_items(
     for group in peer_pin_scans.generic_assignment_outlier.outliers:
         identity = component_peer_pin_identity_context(group)
         found.append(
-            Candidate(
-                rule_id="component.generic_peer_pin_assignment_outlier",
+            GenericPeerPinCandidate.from_source_evidence(
+                group,
                 subject=(
                     f"{identity.subject_identity} pin {group.pin_number}: generic peer assignment "
                     "differs from its strict majority"
@@ -392,16 +393,6 @@ def _component_peer_candidate_items(
                     "the outlier is intentional; the shared anchor and repeated identity are "
                     f"comparison clues only, and {identity.independent_net_note}."
                 ),
-                evidence={
-                    **group.assignments,
-                    **identity.evidence,
-                    "pin_number": (group.pin_number,),
-                    "pin_function": (group.pin_function or "",),
-                    "pin_electrical_type": (group.electrical_type,),
-                    "majority_net": (group.majority_net or "",),
-                    "outlier_pins": group.outlier_pins,
-                    "shared_anchor_contacts": group.shared_anchor_contacts,
-                },
             )
         )
     found.extend(

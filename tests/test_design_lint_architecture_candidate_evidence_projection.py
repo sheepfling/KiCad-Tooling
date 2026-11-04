@@ -9,6 +9,8 @@ import pytest
 from kicad_tooling.hwrepo import (
     design_lint_can_candidates,
     design_lint_can_peer_candidate_evidence,
+    design_lint_component_peer_candidate_evidence,
+    design_lint_component_peer_candidates,
     design_lint_signal_pair_candidate_evidence,
     design_lint_signal_pair_candidates,
     design_lint_unconnected_interface_candidate_evidence,
@@ -20,6 +22,7 @@ from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, li
 pytestmark = [
     pytest.mark.architecture,
     pytest.mark.design_lint,
+    pytest.mark.component_lint,
     pytest.mark.interface_lint,
 ]
 
@@ -32,6 +35,7 @@ _THEME_OWNERS = (
     "design_lint_usb_data_path_candidate_evidence.py",
     "design_lint_unconnected_interface_candidate_evidence.py",
     "design_lint_signal_pair_candidate_evidence.py",
+    "design_lint_component_peer_candidate_evidence.py",
 )
 
 
@@ -178,4 +182,44 @@ def test_signal_pair_candidates_use_their_typed_evidence_owner() -> None:
     assert any(
         isinstance(node, ast.FunctionDef) and node.name == "project_signal_pair_evidence"
         for node in owner_tree.body
+    )
+
+
+def test_generic_component_peer_candidate_uses_its_typed_evidence_owner() -> None:
+    owner_path = HWREPO / "design_lint_component_peer_candidate_evidence.py"
+    service_path = HWREPO / "design_lint_component_peer_candidates.py"
+    owner_tree = ast.parse(owner_path.read_text(encoding="utf-8"))
+    service_tree = ast.parse(service_path.read_text(encoding="utf-8"))
+    candidate_builder = next(
+        node
+        for node in service_tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "_component_peer_candidate_items"
+    )
+    outlier_loop = next(
+        node
+        for node in ast.walk(candidate_builder)
+        if isinstance(node, ast.For)
+        and isinstance(node.iter, ast.Attribute)
+        and node.iter.attr == "outliers"
+        and isinstance(node.iter.value, ast.Attribute)
+        and node.iter.value.attr == "generic_assignment_outlier"
+    )
+
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert (
+        design_lint_component_peer_candidates.GenericPeerPinCandidate
+        is design_lint_component_peer_candidate_evidence.GenericPeerPinCandidate
+    )
+    assert any(
+        isinstance(node, ast.FunctionDef) and node.name == "project_generic_peer_pin_evidence"
+        for node in owner_tree.body
+    )
+    assert any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "from_source_evidence"
+        for node in ast.walk(outlier_loop)
+    )
+    assert not any(
+        isinstance(node, ast.keyword) and node.arg == "evidence" for node in ast.walk(outlier_loop)
     )

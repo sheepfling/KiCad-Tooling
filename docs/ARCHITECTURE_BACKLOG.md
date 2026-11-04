@@ -178,6 +178,14 @@ Signal-pair findings now retain `ComplementaryLineGap` or
 complementary scan record's positive/negative pin and net views are immutable
 and use a bounded side-key type; named accessors guide internal callers while
 the previous mapping attributes remain compatibility views.
+The generic component peer-pin outlier now retains its `PeerPinAssignmentOutlier`
+record through a theme-owned projection, and its peer assignments are copied
+into a read-only map. This keeps the identity, majority, outlier pins, and
+shared-anchor context attached to the finding while preserving its public
+evidence fields and fingerprint. The component peer-pin slice passed 80
+synthetic and architecture tests with four native-lane tests deselected, plus
+Ruff, focused Pyright, Markdown checks, and `git diff --check`; it does not
+claim native-tool coverage.
 
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify

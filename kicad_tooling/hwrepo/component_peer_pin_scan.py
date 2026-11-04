@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Literal
 
 from .connector_identity import (
@@ -29,10 +30,17 @@ GENERIC_COMPONENT_MIXED_PIN_TYPES = frozenset(
     {"passive", "tri_state", "open_collector", "open_emitter"}
 )
 AssignmentOutlierSelector = Callable[
-    [dict[str, tuple[str, ...]], tuple[str, ...]],
+    [Mapping[str, tuple[str, ...]], tuple[str, ...]],
     tuple[str, tuple[str, ...]] | None,
 ]
 PeerPinFunctionSelector = Callable[[tuple[str | None, ...]], bool]
+
+
+def _freeze_assignments(
+    assignments: Mapping[str, tuple[str, ...]],
+) -> Mapping[str, tuple[str, ...]]:
+    """Copy peer assignments into a read-only source record."""
+    return MappingProxyType({pin: tuple(nets) for pin, nets in assignments.items()})
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,10 +49,13 @@ class PeerPowerPinAssignmentDivergence:
     pin_number: str
     function: str
     role: str
-    assignments: dict[str, tuple[str, ...]]
+    assignments: Mapping[str, tuple[str, ...]]
     peer_identity_basis: Literal["exact_symbol", "part_id"] = "exact_symbol"
     peer_identity: str = ""
     peer_symbols: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "assignments", _freeze_assignments(self.assignments))
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,7 +63,7 @@ class PeerPinAssignmentOutlier:
     symbol: str
     pin_number: str
     electrical_type: str
-    assignments: dict[str, tuple[str, ...]]
+    assignments: Mapping[str, tuple[str, ...]]
     pin_function: str | None = None
     peer_identity_basis: Literal["exact_symbol", "part_id"] = "exact_symbol"
     peer_identity: str = ""
@@ -60,6 +71,9 @@ class PeerPinAssignmentOutlier:
     shared_anchor_contacts: tuple[str, ...] = ()
     majority_net: str | None = None
     outlier_pins: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "assignments", _freeze_assignments(self.assignments))
 
 
 @dataclass(frozen=True, slots=True)
