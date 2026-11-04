@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 from uuid import uuid4
 
-from .bom_change import change_state
+from .comparison_change import change_state
 from .contract_coach import receipt_directory
 from .contracts import read_model, repo_path, write_model
 from .evidence import digest
@@ -40,7 +41,7 @@ class SavedProductView:
 
 
 def _source_relation(
-    root: Path, hashes: dict[str, str]
+    root: Path, hashes: Mapping[str, str]
 ) -> Literal["CURRENT", "HISTORICAL", "UNAVAILABLE"]:
     try:
         return (

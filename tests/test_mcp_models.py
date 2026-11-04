@@ -89,7 +89,10 @@ class McpTests(McpTestCase):
             self.assertEqual(report["models"]["status"], "REVIEW")
             self.assertFalse(report["build_authorized"])
             self.assertEqual(report["run_directory"], str(self.root / "build/3d/review-one"))
-            self.assertEqual(set(report["artifacts_sha256"]), set(payloads))
+            self.assertEqual(
+                set(report["artifacts_sha256"]),
+                set(payloads) | {"index.html", "viewer.html", "viewer.js", "viewer-license.txt"},
+            )
             saved = self.structured(
                 await client.call_tool(
                     "read_artifact",

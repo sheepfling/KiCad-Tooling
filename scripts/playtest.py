@@ -78,7 +78,7 @@ class Playtest:
         self.hooks = self.caller / "empty-hooks"
         self.hooks.mkdir()
 
-    def save(self, name: str, document: object) -> None:
+    def save(self, name: str, document: JsonValue) -> None:
         (self.output / name).write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
 
     def record(self, name: str, passed: bool, **details: JsonValue) -> None:

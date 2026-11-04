@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import PurePosixPath
 from typing import Annotated, Literal
 
@@ -37,7 +38,7 @@ class DesignLintRuleMetadata(StrictModel):
     @field_validator("field_validation_evidence")
     @classmethod
     def evidence_paths_are_repository_relative(
-        cls, value: dict[RepositoryPath, Digest]
+        cls, value: Mapping[RepositoryPath, Digest]
     ) -> dict[RepositoryPath, Digest]:
         for path in value:
             parsed = PurePosixPath(path)
@@ -51,7 +52,7 @@ class DesignLintRuleMetadata(StrictModel):
                 raise ValueError(
                     "Field-validation evidence paths must be normalized repository-relative paths"
                 )
-        return value
+        return dict(value)
 
     @model_validator(mode="after")
     def active_rule_has_regressions(self) -> DesignLintRuleMetadata:

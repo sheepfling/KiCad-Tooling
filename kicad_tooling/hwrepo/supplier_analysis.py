@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 from datetime import UTC, date
 from pathlib import Path
@@ -138,7 +140,7 @@ def _quantities(plan: PurchasingPlan) -> tuple[dict[str, int], set[str], tuple[s
 
 
 def _cost(
-    offer: SupplierOffer, quantities: dict[str, int], ambiguous: set[str]
+    offer: SupplierOffer, quantities: Mapping[str, int], ambiguous: AbstractSet[str]
 ) -> SupplierOfferCost:
     requested = quantities.get(offer.part_id)
     minimum, multiple = offer.minimum_order_quantity, offer.package_multiple
@@ -185,8 +187,8 @@ def _cost(
 def _offers(
     before: SourcingSnapshot,
     after: SourcingSnapshot,
-    quantities: dict[str, int],
-    ambiguous: set[str],
+    quantities: Mapping[str, int],
+    ambiguous: AbstractSet[str],
 ) -> tuple[SupplierOfferDifference, ...]:
     def keyed(snapshot: SourcingSnapshot) -> dict[tuple[str, str, str, int], SupplierOfferCost]:
         result: dict[tuple[str, str, str, int], SupplierOfferCost] = {}

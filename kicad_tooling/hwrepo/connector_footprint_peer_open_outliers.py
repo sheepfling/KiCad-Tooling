@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from .connector_footprint_peer_pin_types import ConnectorFootprintPeerPinOpenOutlier
 
 
@@ -12,7 +14,7 @@ def connector_footprint_peer_open_outlier(
     pin_number: str,
     pin_function: str,
     pin_electrical_type: str,
-    assignments: dict[str, tuple[str, ...]],
+    assignments: Mapping[str, tuple[str, ...]],
     symbols: tuple[str, ...],
     common_anchor_pin_numbers: tuple[str, ...],
     peer_assignment_group: str | None,
@@ -25,7 +27,7 @@ def connector_footprint_peer_open_outlier(
         pin_number=pin_number,
         pin_function=pin_function,
         pin_electrical_type=pin_electrical_type,
-        assignments=assignments,
+        assignments=dict(assignments),
         open_pins=tuple(pin for pin, nets in assignments.items() if not nets),
         symbols=symbols,
         common_anchor_pin_numbers=common_anchor_pin_numbers,

@@ -18,6 +18,7 @@ from kicad_tooling.hwrepo.models import (
     ValidationSummary,
 )
 from kicad_tooling.hwrepo.native_project_check_models import NativeProjectCheckRequest
+from kicad_tooling.hwrepo.native_project_validation_models import NativeProjectValidationRequest
 from kicad_tooling.validate import hashes
 from kicad_tooling.verify import verify
 from tests.verify_support import create_reference_project, native_summary, runner_environment
@@ -81,12 +82,11 @@ def synthetic_connector_native(
 
 
 def synthetic_connector_validation(
-    root: Path, output: Path, cli: str, config_path: Path
+    root: Path, request: NativeProjectValidationRequest
 ) -> ValidationSummary:
     """Provide the synthetic native summary through the validation adapter."""
-    _ = config_path
-    synthetic_connector_native(root, output.parent, cli, ["controller"])
-    return read_model(output / "summary.json", ValidationSummary)
+    synthetic_connector_native(root, request.output.parent, request.cli, ["controller"])
+    return read_model(request.output / "summary.json", ValidationSummary)
 
 
 def verify_with_synthetic_connector_evidence(root: Path):
@@ -110,7 +110,7 @@ def verify_with_synthetic_connector_evidence(root: Path):
 
 def check_ci_with_synthetic_connector_evidence(root: Path, output_name: str):
     with patch(
-        "kicad_tooling.hwrepo.native_project_check.validate",
+        "kicad_tooling.hwrepo.native_project_check.validate_project",
         side_effect=synthetic_connector_validation,
     ):
         return check_all(

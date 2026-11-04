@@ -154,7 +154,7 @@ def _gh(root: Path, *args: str) -> JsonValue:
         raise ApiError(endpoint, f"invalid JSON: {exc}") from exc
 
 
-def _model(value: object, kind: type[TApiModel], source: str) -> TApiModel:
+def _model(value: JsonValue, kind: type[TApiModel], source: str) -> TApiModel:
     try:
         return kind.model_validate(value, strict=True)
     except ValidationError as exc:

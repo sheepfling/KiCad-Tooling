@@ -25,7 +25,11 @@ from .part_catalog_models import (
     PartStatus,
 )
 from .project_models import ProjectKind, ProjectManifest, ToolchainsCatalog
-from .project_static_pipeline_models import ProjectStaticPipelineReport
+from .project_static_pipeline import run_project_static_pipeline
+from .project_static_pipeline_models import (
+    ProjectStaticPipelineReport,
+    ProjectStaticPipelineRequest,
+)
 from .repository import cad_dependencies, import_source_roots
 from .selection import ProjectSelector, resolve_project_ids
 
@@ -353,9 +357,10 @@ def portable_findings(
 ) -> list[DiagnosticFinding]:
     """Explain captured portable evidence, or run a fresh lane for standalone diagnosis."""
     if portable_report is None:
-        from ..ci import project_static_pipeline
-
-        result = project_static_pipeline(root, (project_id,))
+        result = run_project_static_pipeline(
+            root,
+            ProjectStaticPipelineRequest(project_ids=(project_id,)),
+        )
         if journal is not None:
             journal.save_model("portable", result)
     else:

@@ -38,6 +38,7 @@ def test_value_mismatch_source_mutations_and_matching_control_are_deterministic(
                 "reference": "R1",
                 "schematic_value": schematic_value,
                 "board_value": board_value,
+                "variant": None,
             }
         ]
         assert [item["rule_id"] for item in report["findings"]] == [

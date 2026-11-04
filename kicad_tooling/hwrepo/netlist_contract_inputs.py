@@ -34,23 +34,25 @@ def _has_string_keys(value: NetlistRawObject) -> bool:
     return True
 
 
-def normalize_native_unconnected_nets(value: NetlistRawValue, info: ValidationInfo) -> object:
+def normalize_native_unconnected_nets(
+    value: NetlistRawValue, info: ValidationInfo
+) -> NetlistRawValue:
     """Move KiCad's per-pin unconnected sentinels out of electrical nets."""
     if not isinstance(value, Mapping):
         return value
     raw_source: NetlistRawObject = cast(NetlistRawObject, value)
     if not _has_string_keys(raw_source):
-        return cast(object, value)
+        return value
     source: NetlistInputObject = cast(NetlistInputObject, raw_source)
     nets: NetlistInputValue = source.get("nets", None)
     empty_object: NetlistInputValue = {}
     existing_unconnected: NetlistInputValue = source.get("unconnected_nets", empty_object)
     if not isinstance(nets, Mapping) or not isinstance(existing_unconnected, Mapping):
-        return cast(object, value)
+        return value
     raw_nets: NetlistRawObject = cast(NetlistRawObject, nets)
     raw_unconnected: NetlistRawObject = cast(NetlistRawObject, existing_unconnected)
     if not _has_string_keys(raw_nets) or not _has_string_keys(raw_unconnected):
-        return cast(object, value)
+        return value
     net_mapping: NetlistInputObject = cast(NetlistInputObject, raw_nets)
     unconnected_mapping: NetlistInputObject = cast(NetlistInputObject, raw_unconnected)
 
@@ -88,7 +90,7 @@ def normalize_native_unconnected_nets(value: NetlistRawValue, info: ValidationIn
             unconnected[name] = pins
 
     if not moved and info.mode != "json":
-        return cast(object, value)
+        return value
     normalized: dict[str, NetlistInputValue] = dict(source.items())
     if moved:
         normalized["nets"] = assigned

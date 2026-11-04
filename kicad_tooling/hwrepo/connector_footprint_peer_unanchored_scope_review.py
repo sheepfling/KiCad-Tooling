@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Mapping, Sequence
 
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import (
@@ -83,8 +84,8 @@ def unreviewed_unanchored_connector_alias_scope(
 
 def _all_references_have_current_unscoped_maps(
     references: tuple[str, ...],
-    entries_by_reference: dict[str, list[ConnectorCoverageEntry]],
-    current_pin_evidence: dict[str, ConnectorMappedPinEvidence],
+    entries_by_reference: Mapping[str, Sequence[ConnectorCoverageEntry]],
+    current_pin_evidence: Mapping[str, ConnectorMappedPinEvidence],
 ) -> bool:
     for reference in references:
         matches = entries_by_reference.get(reference.casefold(), ())
@@ -105,9 +106,9 @@ def _all_references_have_current_unscoped_maps(
 
 
 def _candidate(
-    divergences: list[ConnectorFootprintPeerPinDivergence],
+    divergences: Sequence[ConnectorFootprintPeerPinDivergence],
     coverage: ConnectorCoverageReport,
-    entries_by_reference: dict[str, list[ConnectorCoverageEntry]],
+    entries_by_reference: Mapping[str, Sequence[ConnectorCoverageEntry]],
 ) -> Candidate:
     first = divergences[0]
     references = tuple(

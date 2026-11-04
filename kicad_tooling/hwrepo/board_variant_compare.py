@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Mapping
 from pathlib import Path
 from uuid import uuid4
 
@@ -15,7 +16,7 @@ from .board_variant_compare_models import (
     BoardVariantSide,
     BoardVariantState,
 )
-from .bom_change import change_state
+from .comparison_change import change_state
 from .contract_coach import receipt_directory
 from .contracts import parse_model_text, write_model
 from .cross_probe_variant import VariantObservation, read_variant_observation
@@ -62,7 +63,7 @@ def _states(observed: VariantObservation) -> dict[str, tuple[str, BoardVariantSt
 
 
 def _quantities(
-    states: dict[str, tuple[str, BoardVariantState]],
+    states: Mapping[str, tuple[str, BoardVariantState]],
 ) -> tuple[dict[tuple[str, str, str], tuple[str, ...]], tuple[str, ...]]:
     groups: dict[tuple[str, str, str], list[str]] = defaultdict(list)
     unresolved: list[str] = []

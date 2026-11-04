@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from html import escape
 from pathlib import Path
@@ -146,7 +146,7 @@ def finalize_gallery(
     project_id: str,
     status: Literal["PASS", "FAIL", "ERROR"],
     model_status: str,
-    artifacts: dict[str, str],
+    artifacts: MutableMapping[str, str],
     actions: tuple[str, ...],
     assembly_variant: str | None = None,
     source_sha256: Mapping[str, str] | None = None,

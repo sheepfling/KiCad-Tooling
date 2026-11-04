@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import Field
 
-from .bom_compare_models import Change
+from .comparison_change_models import Change
 from .model_primitives import Digest, Identifier, RepositoryPath, StrictModel
 from .product_models import BomRow
 

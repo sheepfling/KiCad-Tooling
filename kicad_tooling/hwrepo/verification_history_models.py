@@ -7,6 +7,7 @@ from typing import Literal
 
 from pydantic import Field
 
+from .comparison_change_models import Change
 from .model_primitives import Digest, Identifier, RepositoryPath, StrictModel
 from .review_overview_models import Freshness, OverviewKind
 
@@ -25,9 +26,6 @@ StageState = Literal[
     "STALE",
     "UNAVAILABLE",
 ]
-Change = Literal["ADDED", "REMOVED", "CHANGED", "UNCHANGED"]
-
-
 class HistorySnapshot(StrictModel):
     overview: RepositoryPath
     overview_sha256: Digest

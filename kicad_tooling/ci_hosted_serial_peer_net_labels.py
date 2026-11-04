@@ -8,7 +8,9 @@ import os
 import shutil
 import sys
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Literal
 
 from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.contract_coach import pinned_image, run_command
@@ -17,8 +19,10 @@ from .hwrepo.contracts import read_model, write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
 from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.design_lint_rule_types import DesignLintRuleId
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
+from .hwrepo.model_primitives import Digest
 from .hwrepo.models import DesignLintPolicy
 from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.netlist_contract_models import NetlistContract
@@ -197,7 +201,18 @@ def serial_peer_net_label_fixture_lane(
             )
         first, repeated = repeated_reports
 
-        def report_signature(report: DesignLintReport) -> tuple[tuple[object, ...], ...]:
+        def report_signature(
+            report: DesignLintReport,
+        ) -> tuple[
+            tuple[
+                Digest,
+                DesignLintRuleId,
+                Literal["review", "block", "off"],
+                Literal["OPEN", "IGNORED", "RULE_OFF"],
+                Mapping[str, tuple[str, ...]],
+            ],
+            ...,
+        ]:
             return tuple(
                 (item.fingerprint, item.rule_id, item.mode, item.disposition, item.evidence)
                 for item in report.findings

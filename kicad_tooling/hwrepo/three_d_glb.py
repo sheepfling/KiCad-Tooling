@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import math
 import struct
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -174,7 +175,7 @@ def _document_and_binary(path: Path) -> tuple[dict[str, JsonValue], bytes]:
 
 
 def _accessor_span(
-    document: dict[str, JsonValue],
+    document: Mapping[str, JsonValue],
     binary: bytes,
     index: int,
     *,
@@ -230,7 +231,7 @@ def _matrix_product(left: Matrix4, right: Matrix4) -> Matrix4:
     )
 
 
-def _node_matrix(node: dict[str, JsonValue]) -> Matrix4:
+def _node_matrix(node: Mapping[str, JsonValue]) -> Matrix4:
     if "matrix" in node:
         if any(key in node for key in ("translation", "rotation", "scale")):
             raise ValueError("GLB node mixes matrix and TRS transforms")

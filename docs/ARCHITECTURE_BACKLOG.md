@@ -171,6 +171,17 @@ export. Single-project native validation now belongs to
 `native_toolchain.py` owns catalog selection and executable resolution.
 `validate.py` keeps the registered CLI and old positional Python adapter;
 `check_toolchain.py` likewise keeps its CLI and compatibility exports.
+Standalone diagnostics and release preparation now call the selected-project
+portable lane with `ProjectStaticPipelineRequest`; the services no longer
+import its compatibility adapter from `ci.py`.
+Release preparation now calls the typed native dependency owner directly;
+`native_deps.py` remains the registered CLI and positional compatibility
+adapter, and `native_dependency_models.py` owns its strict request contract.
+Saved history receipts now admit only the native summary, findings view, or
+project-verification report models their owner parses. Shared before/after
+states now have one neutral model and service owner across BOM, board/product
+variant, and history comparisons; `bom_change.py` keeps the compatibility
+export.
 
 **Done when:** a contributor can place a proposed feature without guessing;
 one intentionally wrong import and one wrong catalog owner fail focused tests;
@@ -750,6 +761,14 @@ The contract-owner architecture gate now requires production references to
 `ValidationSummary`, `ContractCoachReport`, and `ContractDifference` to import
 from their domain owner; separate assertions keep the legacy public exports
 identity-compatible.
+Prerelease area tags that declare both explicit `Test-Path` entries and
+`Native-Fixture` switches are checked against the selected tests' pytest
+markers. Each declared switch must guard a selected `native_kicad` test with a
+matching `skipif` condition, preventing the scoped gate from claiming a native
+lane its test paths do not collect. The packaging guide includes the preflight
+contract and a PCB DRC example; focused tests cover module-, class-, and
+function-level markers plus missing, mismatched, and inverted environment
+guards.
 
 **Done when:** the checked-in gate plan and installed Alphus revision agree;
 representative bad dependencies and rule registrations fail; existing valid

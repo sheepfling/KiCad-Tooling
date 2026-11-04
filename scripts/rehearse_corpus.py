@@ -22,6 +22,8 @@ from datetime import UTC, datetime
 from itertools import repeat
 from pathlib import Path, PurePosixPath
 
+from pydantic import JsonValue
+
 import kicad_tooling
 from kicad_tooling.git import git_output, run_git_text
 from kicad_tooling.hwrepo.contracts import repo_path as inside
@@ -49,7 +51,7 @@ NOT_EXERCISED = (
 )
 
 
-def save(path: Path, value: object) -> None:
+def save(path: Path, value: JsonValue) -> None:
     path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
@@ -107,7 +109,7 @@ def write_report(output: Path, summary: RehearsalSummary) -> None:
     (output / "REPORT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def signature(value: object) -> str:
+def signature(value: JsonValue) -> str:
     return hashlib.sha256(
         json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
     ).hexdigest()

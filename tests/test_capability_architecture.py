@@ -138,6 +138,8 @@ def test_stable_capability_services_do_not_depend_on_application_surfaces() -> N
         "pcb_drc_source_scan",
         "project_detail",
         "project_verification",
+        "diagnostics",
+        "releasing",
         "governance_lint",
         "governance_records",
         "project_source_hashes",

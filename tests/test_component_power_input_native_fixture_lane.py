@@ -76,7 +76,10 @@ def test_component_power_input_lane_exports_only_its_faults_and_controls(
         case = path.name.split(".", 1)[0]
         return observed[case]
 
-    monkeypatch.setattr("kicad_tooling.hwrepo.electrical.selected_config", lambda *_args: config)
+    monkeypatch.setattr(
+        "kicad_tooling.ci_hosted_connector_return_context.selected_config",
+        lambda *_args: config,
+    )
     monkeypatch.setattr("kicad_tooling.hwrepo.contract_coach.run_command", fake_run_command)
     monkeypatch.setattr("kicad_tooling.validate.read_netlist", fake_read_netlist)
 

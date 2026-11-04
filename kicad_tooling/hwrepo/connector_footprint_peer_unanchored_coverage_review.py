@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 
 from .connector_coverage_models import ConnectorCoverageEntry, ConnectorCoverageReport
@@ -86,7 +87,9 @@ def uncovered_unanchored_connector_alias_scope(
 
 def _cohort_for(
     item: ConnectorFootprintPeerPinDivergence | ConnectorFootprintPeerPinOpenOutlier,
-    cohorts: dict[tuple[str, str, tuple[str, ...], tuple[str, ...]], _UnanchoredAliasCohort],
+    cohorts: MutableMapping[
+        tuple[str, str, tuple[str, ...], tuple[str, ...]], _UnanchoredAliasCohort
+    ],
 ) -> _UnanchoredAliasCohort:
     references = _references_for(item)
     key = (
@@ -112,7 +115,7 @@ def _references_for(
 def _coverage_needs_review(
     references: tuple[str, ...],
     coverage: ConnectorCoverageReport | None,
-    entries_by_reference: dict[str, list[ConnectorCoverageEntry]],
+    entries_by_reference: Mapping[str, Sequence[ConnectorCoverageEntry]],
 ) -> bool:
     if coverage is None:
         return True
@@ -133,7 +136,7 @@ def _coverage_needs_review(
 def _candidate(
     cohort: _UnanchoredAliasCohort,
     coverage: ConnectorCoverageReport | None,
-    entries_by_reference: dict[str, list[ConnectorCoverageEntry]],
+    entries_by_reference: Mapping[str, Sequence[ConnectorCoverageEntry]],
 ) -> Candidate:
     evidence_items = (*cohort.divergences, *cohort.partial_opens)
     first = evidence_items[0]

@@ -13,7 +13,12 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from kicad_tooling import package_version
-from kicad_tooling.native_deps import copy_runtime, prepare, runtime_metadata
+from kicad_tooling.hwrepo.native_dependency_models import NativeDependencyPreparationRequest
+from kicad_tooling.native_deps import (
+    copy_runtime,
+    prepare,
+    runtime_metadata,
+)
 
 
 class NativeDependencyTests(unittest.TestCase):
@@ -24,7 +29,7 @@ class NativeDependencyTests(unittest.TestCase):
         self.image = "example.invalid/kicad@sha256:" + "a" * 64
 
     def test_installs_linux_wheels_for_the_observed_container_abi(self) -> None:
-        with patch("kicad_tooling.native_deps.subprocess.run") as run:
+        with patch("kicad_tooling.hwrepo.native_dependencies.subprocess.run") as run:
             run.side_effect = [
                 subprocess.CompletedProcess([], 0, stdout="3.13\n"),
                 subprocess.CompletedProcess(
@@ -66,9 +71,12 @@ class NativeDependencyTests(unittest.TestCase):
         )
 
         with (
-            patch("kicad_tooling.native_deps.distributions", return_value=(source, installed)),
             patch(
-                "kicad_tooling.native_deps.distribution",
+                "kicad_tooling.hwrepo.native_dependencies.distributions",
+                return_value=(source, installed),
+            ),
+            patch(
+                "kicad_tooling.hwrepo.native_dependencies.distribution",
                 side_effect=AssertionError("legacy metadata should not win"),
             ),
         ):
@@ -97,12 +105,12 @@ class NativeDependencyTests(unittest.TestCase):
 
     def test_missing_package_identity_stops_before_container_or_dependency_download(self) -> None:
         with (
-            patch("kicad_tooling.native_deps.distributions", return_value=()),
+            patch("kicad_tooling.hwrepo.native_dependencies.distributions", return_value=()),
             patch(
-                "kicad_tooling.native_deps.distribution",
+                "kicad_tooling.hwrepo.native_dependencies.distribution",
                 side_effect=PackageNotFoundError("kicad-team-tooling"),
             ),
-            patch("kicad_tooling.native_deps.subprocess.run") as run,
+            patch("kicad_tooling.hwrepo.native_dependencies.subprocess.run") as run,
             self.assertRaisesRegex(ValueError, "Install kicad-team-tooling"),
         ):
             prepare(self.root, self.image, Path("build/deps"))
@@ -110,7 +118,7 @@ class NativeDependencyTests(unittest.TestCase):
         self.assertFalse((self.root / "build/deps").exists())
 
     def test_unsupported_container_python_stops_before_dependency_installation(self) -> None:
-        with patch("kicad_tooling.native_deps.subprocess.run") as run:
+        with patch("kicad_tooling.hwrepo.native_dependencies.subprocess.run") as run:
             run.return_value = subprocess.CompletedProcess([], 0, stdout="3.10\n")
             with self.assertRaisesRegex(ValueError, "requires Python >=3.11"):
                 prepare(self.root, self.image, Path("build/deps"))
@@ -118,7 +126,7 @@ class NativeDependencyTests(unittest.TestCase):
         self.assertFalse((self.root / "build/deps").exists())
 
     def test_rejects_unknown_runtime_and_never_reuses_output(self) -> None:
-        with patch("kicad_tooling.native_deps.subprocess.run") as run:
+        with patch("kicad_tooling.hwrepo.native_dependencies.subprocess.run") as run:
             run.return_value = subprocess.CompletedProcess([], 0, stdout="unexpected\n")
             with self.assertRaisesRegex(ValueError, "Unexpected container"):
                 prepare(self.root, self.image, Path("build/deps"))
@@ -130,7 +138,7 @@ class NativeDependencyTests(unittest.TestCase):
             prepare(self.root, self.image, Path("projects/deps"))
 
     def test_missing_wheels_fail_the_setup_instead_of_running_an_incomplete_lane(self) -> None:
-        with patch("kicad_tooling.native_deps.subprocess.run") as run:
+        with patch("kicad_tooling.hwrepo.native_dependencies.subprocess.run") as run:
             run.side_effect = [
                 subprocess.CompletedProcess([], 0, stdout="3.13\n"),
                 subprocess.CompletedProcess(
@@ -140,6 +148,18 @@ class NativeDependencyTests(unittest.TestCase):
             ]
             with self.assertRaises(subprocess.CalledProcessError):
                 prepare(self.root, self.image, Path("build/deps"))
+
+    def test_cli_facade_and_typed_owner_share_the_same_operation(self) -> None:
+        request = NativeDependencyPreparationRequest(
+            root=self.root,
+            image=self.image,
+            output=Path("build/deps"),
+        )
+        with patch(
+            "kicad_tooling.native_deps._native_dependencies.prepare_native_dependencies"
+        ) as prepare_owner:
+            prepare(self.root, self.image, Path("build/deps"))
+        prepare_owner.assert_called_once_with(request)
 
 
 if __name__ == "__main__":

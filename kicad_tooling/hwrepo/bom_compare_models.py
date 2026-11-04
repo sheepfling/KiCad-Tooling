@@ -7,9 +7,9 @@ from typing import Literal
 
 from pydantic import Field
 
+from .comparison_change_models import Change
 from .model_primitives import Digest, Identifier, RepositoryPath, StrictModel
 
-Change = Literal["ADDED", "REMOVED", "CHANGED", "UNCHANGED"]
 Population = Literal["FITTED", "DNP", "EXCLUDED", "UNRESOLVED"]
 
 

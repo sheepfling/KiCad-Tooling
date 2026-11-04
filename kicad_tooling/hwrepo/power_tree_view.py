@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal
 from uuid import uuid4
@@ -78,8 +79,8 @@ def _budget(spec: PowerAnalysis | None, rail: PowerRail | None) -> PowerTreeBudg
 
 def _endpoint(
     requirement: PowerPinEndpointRequirement,
-    pins: dict[str, PinMembership],
-    identities: dict[str, ObservedIdentity],
+    pins: Mapping[str, PinMembership],
+    identities: Mapping[str, ObservedIdentity],
     observation_available: bool,
 ) -> PowerTreeEndpoint:
     identity = identities.get(requirement.reference.casefold())
@@ -112,9 +113,9 @@ def _endpoint(
 def _source_group(
     group: PowerSourceGroupRequirement,
     rail_id: str,
-    checks: dict[str, tuple[RelationshipStatus, str]],
-    pins: dict[str, PinMembership],
-    identities: dict[str, ObservedIdentity],
+    checks: Mapping[str, tuple[RelationshipStatus, str]],
+    pins: Mapping[str, PinMembership],
+    identities: Mapping[str, ObservedIdentity],
     observation_available: bool,
 ) -> PowerTreeRelationship:
     status, detail = checks.get(
@@ -138,10 +139,10 @@ def _source_group(
 def _load(
     requirement: PowerLoadConnectivityRequirement,
     rail_id: str,
-    checks: dict[str, tuple[RelationshipStatus, str]],
-    pins: dict[str, PinMembership],
+    checks: Mapping[str, tuple[RelationshipStatus, str]],
+    pins: Mapping[str, PinMembership],
     budget_rail: PowerRail | None,
-    identities: dict[str, ObservedIdentity],
+    identities: Mapping[str, ObservedIdentity],
     observation_available: bool,
 ) -> PowerTreeRelationship:
     status, detail = checks.get(

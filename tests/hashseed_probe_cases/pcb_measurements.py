@@ -81,11 +81,15 @@ def protection_path_report(*, fault: bool) -> JsonObject:
     coverage = protection_coverage(requirement, evidence).model_copy(
         update={"netlist_sha256": netlist_sha256}
     )
+    assert evidence.board_sha256 is not None
     native = ContractCoachReport(
         status="READY_FOR_REVIEW",
         project_id="synthetic-protection-path",
         observed=observed,
         netlist_sha256=netlist_sha256,
+        source_hashes={
+            "projects/synthetic/project.kicad_pcb": evidence.board_sha256,
+        },
     )
     result = evaluate(
         "synthetic-protection-path",

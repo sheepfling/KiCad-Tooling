@@ -122,6 +122,7 @@ from .governance_lint_models import (
 from .model_primitives import (
     Digest,
     ElectricalPositive,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    FiniteMeasure,  # noqa: F401  # pyright: ignore[reportUnusedImport]
     GitCommit,
     Identifier,
     NativePcbUuid,  # noqa: F401  # pyright: ignore[reportUnusedImport]

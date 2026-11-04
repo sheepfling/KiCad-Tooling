@@ -15,6 +15,7 @@ from .connectivity_view_models import (
 )
 from .contract_coach import receipt_directory
 from .contracts import write_model
+from .electrical_analysis_contract_models import ElectricalAnalysisContract
 from .electrical_view_evidence import load_electrical_view_evidence
 from .evidence import digest
 from .grounding_models import GroundingAnalysis
@@ -27,12 +28,10 @@ MAX_COMPONENTS = 150
 MAX_NEIGHBOR_PINS = 1000
 
 
-def _authored(contract: object, net: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
+def _authored(
+    contract: ElectricalAnalysisContract, net: str
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
     """Collect only exact, explicit ground and power membership for this net."""
-    from .electrical_analysis_contract_models import ElectricalAnalysisContract
-
-    if not isinstance(contract, ElectricalAnalysisContract):
-        raise TypeError("Expected an electrical analysis contract")
     roles: list[str] = []
     pins: list[str] = []
     if isinstance(contract.grounding, GroundingAnalysis):

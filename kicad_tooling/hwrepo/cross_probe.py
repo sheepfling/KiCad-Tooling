@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from collections import Counter
+from collections.abc import Mapping
 from pathlib import Path
 from uuid import uuid4
 
@@ -52,10 +53,10 @@ def _entry(
     *,
     duplicate: bool,
     board_path: str,
-    board_anchors: dict[str, tuple[BoardFootprintAnchor, ...]],
-    schematic_anchors: dict[str, tuple[SchematicSymbolAnchor, ...]],
+    board_anchors: Mapping[str, tuple[BoardFootprintAnchor, ...]],
+    schematic_anchors: Mapping[str, tuple[SchematicSymbolAnchor, ...]],
     board_drawing: ReviewDrawing | None,
-    schematic_drawings: dict[str, ReviewDrawing],
+    schematic_drawings: Mapping[str, ReviewDrawing],
 ) -> CrossProbeEntry:
     excluded = component.dnp or component.exclude_from_bom
     population = (

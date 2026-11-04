@@ -16,6 +16,8 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 
+from pydantic import JsonValue
+
 from kicad_tooling.hwrepo.contracts import repo_path_is_within
 from kicad_tooling.package_build import build_distributions
 from kicad_tooling.platforms import is_windows_host
@@ -110,7 +112,7 @@ def adapted_project_fixture(project: Path, destination: Path) -> Path:
                 return current + value[len(previous) :]
         return value
 
-    def save(path: Path, document: object) -> None:
+    def save(path: Path, document: JsonValue) -> None:
         path = fixture_path(path.relative_to(destination).as_posix())
         path.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
 

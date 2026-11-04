@@ -8,7 +8,9 @@ import os
 import shutil
 import sys
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Literal
 
 from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.contract_coach import pinned_image, run_command
@@ -16,8 +18,10 @@ from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.contracts import read_kicad_erc_report, write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_finding_models import DesignLintFinding
+from .hwrepo.design_lint_rule_types import DesignLintRuleId
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
+from .hwrepo.model_primitives import Digest
 from .hwrepo.models import DesignLintPolicy
 from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.netlist_contract_models import NetlistContract
@@ -362,7 +366,14 @@ def open_drain_bias_fixture_lane(root: Path, *, project: str, image: str, log: H
             DesignLintPolicy(),
         )
 
-        def finding_key(finding: DesignLintFinding) -> tuple[object, ...]:
+        def finding_key(
+            finding: DesignLintFinding,
+        ) -> tuple[
+            Digest,
+            DesignLintRuleId,
+            Literal["review", "block", "off"],
+            Mapping[str, tuple[str, ...]],
+        ]:
             return finding.fingerprint, finding.rule_id, finding.mode, finding.evidence
 
         if tuple(map(finding_key, report.findings)) != tuple(map(finding_key, repeated.findings)):

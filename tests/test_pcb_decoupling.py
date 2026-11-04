@@ -114,8 +114,10 @@ def test_pad_inventory_order_preserves_distance_finding_and_boundary_repair_clea
             )
         }
     )
-    measured = coverage_report(spec, evidence)
-    reordered_measured = coverage_report(spec, reordered_evidence)
+    measured = coverage_report(spec, evidence, netlist_sha256="f" * 64)
+    reordered_measured = coverage_report(
+        spec, reordered_evidence, netlist_sha256="f" * 64
+    )
     assert measured.entries == reordered_measured.entries
     assert measured.map_sha256 == reordered_measured.map_sha256
     assert measured.snapshot_sha256 != reordered_measured.snapshot_sha256
@@ -139,7 +141,9 @@ def test_pad_inventory_order_preserves_distance_finding_and_boundary_repair_clea
         reordered_finding.evidence,
     )
     repaired_evidence = snapshot(distances_nm={"C1": 100000, "C2": 110000})
-    repaired_measured = coverage_report(spec, repaired_evidence)
+    repaired_measured = coverage_report(
+        spec, repaired_evidence, netlist_sha256="f" * 64
+    )
     repaired = evaluate(
         "synthetic-decoupling", native, policy, pcb_decoupling_coverage=repaired_measured
     )
@@ -160,7 +164,7 @@ def test_distant_capacitor_exceeds_authored_center_distance_limit() -> None:
 def test_no_threshold_emits_reviewable_measurement_and_honors_override_and_ignore() -> None:
     mapped = mapping(requirement(maximum_um=None))
     evidence = snapshot(distances_nm={"C1": 42500})
-    measured = coverage_report(mapped, evidence)
+    measured = coverage_report(mapped, evidence, netlist_sha256="f" * 64)
     native = ContractCoachReport(
         status="READY_FOR_REVIEW",
         project_id="synthetic-decoupling",

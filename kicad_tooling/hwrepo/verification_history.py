@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from uuid import uuid4
 
+from .comparison_change import change_state
 from .contract_coach import receipt_directory
 from .contracts import write_model
 from .evidence import digest
@@ -21,7 +22,6 @@ from .verification_history_evidence import (
 )
 from .verification_history_html import render_verification_history
 from .verification_history_models import (
-    Change,
     CheckState,
     HistoryArtifact,
     HistoryArtifactChange,
@@ -36,18 +36,6 @@ from .verification_history_models import (
 )
 from .verification_history_readiness import load_readiness
 from .verification_history_stages import stage_changes
-
-
-def _change(before: object | None, after: object | None) -> Change:
-    return (
-        "ADDED"
-        if before is None
-        else "REMOVED"
-        if after is None
-        else "UNCHANGED"
-        if before == after
-        else "CHANGED"
-    )
 
 
 def _evidence(snapshot: SavedSnapshot, kind: OverviewKind) -> HistoryEvidence:
@@ -73,7 +61,7 @@ def _evidence_changes(
     return tuple(
         HistoryEvidenceChange(
             kind=kind,
-            change=_change(_evidence(before, kind), _evidence(after, kind)),
+            change=change_state(_evidence(before, kind), _evidence(after, kind)),
             before=_evidence(before, kind),
             after=_evidence(after, kind),
         )
@@ -86,7 +74,7 @@ def _source_changes(before: SavedSnapshot, after: SavedSnapshot) -> tuple[Histor
     return tuple(
         HistorySourceChange(
             path=path,
-            change=_change(old.get(path), new.get(path)),
+            change=change_state(old.get(path), new.get(path)),
             before_sha256=old.get(path),
             after_sha256=new.get(path),
         )
@@ -230,7 +218,7 @@ def _artifact_changes(
     return tuple(
         HistoryArtifactChange(
             id=name,
-            change=_change(old.get(name), new.get(name)),
+            change=change_state(old.get(name), new.get(name)),
             before=old.get(name),
             after=new.get(name),
         )
@@ -298,7 +286,7 @@ def compare_verification_history(
         finding_changes=_finding_changes(old, new),
         artifact_changes=_artifact_changes(old_release, new_release),
         readiness_change=HistoryReadinessChange(
-            change=_change(
+            change=change_state(
                 (old_readiness.status, old_readiness.issue_codes, old_readiness.integrity),
                 (new_readiness.status, new_readiness.issue_codes, new_readiness.integrity),
             ),

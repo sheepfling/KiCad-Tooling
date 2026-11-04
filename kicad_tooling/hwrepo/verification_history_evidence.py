@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TypeAlias
 
 from .artifact_access import read_regular_bytes
 from .contracts import parse_model_text, repo_path
@@ -26,6 +27,8 @@ from .verification_history_models import (
 )
 from .verification_history_verification import recheck_verification
 
+HistoryReceiptModel: TypeAlias = ValidationSummary | FindingsViewReport | ProjectVerificationReport
+
 
 @dataclass(frozen=True, slots=True)
 class SavedSnapshot:
@@ -45,7 +48,7 @@ def _relative(root: Path, requested: Path) -> str:
     return relative.as_posix()
 
 
-def _item(root: Path, item: OverviewItem) -> tuple[HistoryEvidence, object | None]:
+def _item(root: Path, item: OverviewItem) -> tuple[HistoryEvidence, HistoryReceiptModel | None]:
     if item.selected_path is None:
         return (
             HistoryEvidence(
@@ -59,7 +62,7 @@ def _item(root: Path, item: OverviewItem) -> tuple[HistoryEvidence, object | Non
     path = selected_receipt(root, Path(item.selected_path), Path(item.selected_path).name)
     state = "MISSING" if not path.is_file() else "CURRENT"
     issues: list[str] = list(item.issues)
-    parsed: object | None = None
+    parsed: HistoryReceiptModel | None = None
     if state == "CURRENT":
         try:
             if item.report_sha256 is None or digest(path) != item.report_sha256:

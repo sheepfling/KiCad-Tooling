@@ -6,7 +6,6 @@ from html import escape
 from pathlib import Path
 from uuid import uuid4
 
-from .bom_change import change_state
 from .bom_compare_models import (
     BomComparisonReport,
     BomQuantityDifference,
@@ -14,6 +13,7 @@ from .bom_compare_models import (
     BomReferenceDifference,
     BomReferenceState,
 )
+from .comparison_change import change_state
 from .contract_coach import receipt_directory
 from .contracts import write_model
 from .evidence import digest

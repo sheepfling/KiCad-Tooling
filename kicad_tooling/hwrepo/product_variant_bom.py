@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 from uuid import uuid4
 
-from .bom_change import change_state
+from .comparison_change import change_state
 from .contract_coach import receipt_directory
 from .contracts import read_model, repo_path, write_model
 from .evidence import digest
@@ -26,7 +27,7 @@ from .product_visual_models import ProductVisualReport
 def instance_states(
     view: ProductVisualReport,
     product: ProductRecord,
-    revisions: dict[str, str],
+    revisions: Mapping[str, str],
 ) -> dict[str, VariantBomInstanceState]:
     assemblies = {item.id: item for item in product.assemblies}
     result: dict[str, VariantBomInstanceState] = {}

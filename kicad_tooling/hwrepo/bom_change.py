@@ -1,17 +1,8 @@
-"""Shared added, removed, and changed states for BOM comparisons."""
+"""Compatibility export for the shared before/after comparison operation."""
 
 from __future__ import annotations
 
-from .bom_compare_models import Change
+from .comparison_change import change_state
+from .comparison_change_models import Change
 
-
-def change_state(before: object | None, after: object | None) -> Change:
-    return (
-        "ADDED"
-        if before is None
-        else "REMOVED"
-        if after is None
-        else "UNCHANGED"
-        if before == after
-        else "CHANGED"
-    )
+__all__ = ["Change", "change_state"]

@@ -23,6 +23,8 @@ from .models import (
     ReleaseExportReport,
     ScopedReleasePortableReport,
 )
+from .native_dependencies import prepare_native_dependencies
+from .native_dependency_models import NativeDependencyPreparationRequest
 from .native_project_validation_models import ValidationSummary
 from .policy_issue_models import PolicyIssue
 from .portable_evidence import verify_release_portable
@@ -34,6 +36,8 @@ from .project_models import (
     ProjectManifest,
     ProjectRecord,
 )
+from .project_static_pipeline import run_project_static_pipeline
+from .project_static_pipeline_models import ProjectStaticPipelineRequest
 from .release import (
     configured_toolchains,
     load_release_repository,
@@ -245,8 +249,6 @@ def prepare(
     ngspice: str = "ngspice",
 ) -> ReleaseManifest:
     """Commit source first; reports and the candidate are then written under build/."""
-    from ..ci import project_static_pipeline
-
     root = root.resolve()
     source = source_state(root)
     if not source.clean or source.commit is None:
@@ -279,7 +281,10 @@ def prepare(
     selected_ids = tuple(project.id for project in projects)
     if portable is None:
         portable = output / "portable.json"
-        checks = project_static_pipeline(root, selected_ids)
+        checks = run_project_static_pipeline(
+            root,
+            ProjectStaticPipelineRequest(project_ids=selected_ids),
+        )
         if source_state(root) != source:
             raise ValueError("Source changed while running selected portable checks")
         write_model(
@@ -296,10 +301,14 @@ def prepare(
     verify_release_portable(root, portable_reference, source, selected_ids)
     dependencies: Path | None = None
     if cli is None:
-        from ..native_deps import prepare as prepare_dependencies
-
         dependencies = Path(f"build/release-deps/{release_id}")
-        prepare_dependencies(root, load_config(root, projects[0].config).image, dependencies)
+        prepare_native_dependencies(
+            NativeDependencyPreparationRequest(
+                root=root,
+                image=load_config(root, projects[0].config).image,
+                output=dependencies,
+            )
+        )
     native: dict[str, EvidenceFile] = {}
     exports: dict[str, EvidenceFile] = {}
     electrical: dict[str, EvidenceFile] = {}

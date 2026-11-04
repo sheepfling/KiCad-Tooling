@@ -17,6 +17,10 @@ from scripts.lint_gate_scope import (
 
 pytestmark = pytest.mark.architecture
 
+_PROBE_FIXTURE = "KICAD_RUN_" + "NATIVE_PROBE_FIXTURES"
+_OTHER_FIXTURE = "KICAD_RUN_" + "NATIVE_OTHER"
+_RS485_FIXTURE = "KICAD_RUN_" + "NATIVE_RS485_DATA_LABEL_MISMATCH_FIXTURES"
+
 
 def _git(repository: Path, *arguments: str) -> None:
     subprocess.run(("git", *arguments), cwd=repository, check=True, capture_output=True)
@@ -32,12 +36,12 @@ def _native_fixture_message(repository: Path) -> str:
     )
     workflow = repository / ".github/workflows/tooling.yml"
     workflow.parent.mkdir(parents=True, exist_ok=True)
-    workflow.write_text("KICAD_RUN_NATIVE_PROBE_FIXTURES: '1'\n", encoding="utf-8")
+    workflow.write_text(f"{_PROBE_FIXTURE}: '1'\n", encoding="utf-8")
     test_module = repository / "tests/test_native_probe.py"
     test_module.parent.mkdir(parents=True, exist_ok=True)
     return (
         "Lint-Area: architecture\n"
-        "Native-Fixture: KICAD_RUN_NATIVE_PROBE_FIXTURES\n"
+        f"Native-Fixture: {_PROBE_FIXTURE}\n"
         "Test-Path: tests/test_native_probe.py\n"
     )
 
@@ -52,7 +56,7 @@ def test_explicit_test_paths_must_select_a_native_test_guarded_by_each_fixture(
         "import pytest\n"
         "@pytest.mark.native_kicad\n"
         "@pytest.mark.skipif(\n"
-        "    os.environ.get('KICAD_RUN_NATIVE_PROBE_FIXTURES') != '1',\n"
+        f"    os.environ.get('{_PROBE_FIXTURE}') != '1',\n"
         "    reason='requires the declared fixture lane',\n"
         ")\n"
         "def test_native_probe():\n"
@@ -62,7 +66,7 @@ def test_explicit_test_paths_must_select_a_native_test_guarded_by_each_fixture(
 
     scope = read_message_scope(message, repository)
 
-    assert scope.native_fixtures == ("KICAD_RUN_NATIVE_PROBE_FIXTURES",)
+    assert scope.native_fixtures == (_PROBE_FIXTURE,)
     assert scope.test_paths == ("tests/test_native_probe.py",)
 
 
@@ -71,28 +75,28 @@ def test_explicit_test_paths_must_select_a_native_test_guarded_by_each_fixture(
     (
         (
             "import os, pytest\n"
-            "pytestmark = [pytest.mark.native_kicad, "
-            "pytest.mark.skipif(os.environ.get('KICAD_RUN_NATIVE_PROBE_FIXTURES') != '1')]\n"
+            f"pytestmark = [pytest.mark.native_kicad, pytest.mark.skipif("
+            f"os.environ.get('{_PROBE_FIXTURE}') != '1')]\n"
             "def test_native_probe(): pass\n"
         ),
         (
             "import os, pytest\n"
             "@pytest.mark.native_kicad\n"
-            "@pytest.mark.skipif(os.environ.get('KICAD_RUN_NATIVE_PROBE_FIXTURES') != '1')\n"
+            f"@pytest.mark.skipif(os.environ.get('{_PROBE_FIXTURE}') != '1')\n"
             "class TestNativeProbe:\n"
             "    def test_export(self): pass\n"
         ),
         (
             "import os, pytest\n"
             "@pytest.mark.native_kicad\n"
-            "@pytest.mark.skipif(os.environ.get('KICAD_RUN_NATIVE_PROBE_FIXTURES') != '1')\n"
+            f"@pytest.mark.skipif(os.environ.get('{_PROBE_FIXTURE}') != '1')\n"
             "class NativeProbeTests:\n"
             "    def test_export(self): pass\n"
         ),
         (
             "import os, pytest\n"
             "@pytest.mark.native_kicad\n"
-            "@pytest.mark.skipif(os.environ.get('KICAD_RUN_NATIVE_PROBE_FIXTURES') != '1')\n"
+            f"@pytest.mark.skipif(os.environ.get('{_PROBE_FIXTURE}') != '1')\n"
             "class NativeProbeTest:\n"
             "    def test_export(self): pass\n"
         ),
@@ -107,7 +111,7 @@ def test_explicit_test_paths_accept_module_and_class_level_native_fixture_marker
 
     scope = read_message_scope(message, repository)
 
-    assert scope.native_fixtures == ("KICAD_RUN_NATIVE_PROBE_FIXTURES",)
+    assert scope.native_fixtures == (_PROBE_FIXTURE,)
 
 
 @pytest.mark.parametrize(
@@ -115,19 +119,19 @@ def test_explicit_test_paths_accept_module_and_class_level_native_fixture_marker
     (
         (
             "import os, pytest\n"
-            "@pytest.mark.skipif(os.environ.get('KICAD_RUN_NATIVE_PROBE_FIXTURES') != '1')\n"
+            f"@pytest.mark.skipif(os.environ.get('{_PROBE_FIXTURE}') != '1')\n"
             "def test_native_probe(): pass\n"
         ),
         (
             "import os, pytest\n"
             "@pytest.mark.native_kicad\n"
-            "@pytest.mark.skipif(os.environ.get('KICAD_RUN_NATIVE_OTHER') != '1')\n"
+            f"@pytest.mark.skipif(os.environ.get('{_OTHER_FIXTURE}') != '1')\n"
             "def test_native_probe(): pass\n"
         ),
         (
             "import os, pytest\n"
             "@pytest.mark.native_kicad\n"
-            "@pytest.mark.skipif(os.environ.get('KICAD_RUN_NATIVE_PROBE_FIXTURES') == '1')\n"
+            f"@pytest.mark.skipif(os.environ.get('{_PROBE_FIXTURE}') == '1')\n"
             "def test_native_probe(): pass\n"
         ),
         ("import pytest\n@pytest.mark.native_kicad\ndef test_native_probe(): pass\n"),
@@ -258,7 +262,7 @@ def test_message_file_preflight_validates_rule_scope_without_writing_github_outp
     message = tmp_path / "lint-tag-message.txt"
     message.write_text(
         "Lint-Rule: bus.rs485_data_direction_label_mismatch\n"
-        "Native-Fixture: KICAD_RUN_NATIVE_RS485_DATA_LABEL_MISMATCH_FIXTURES\n",
+        f"Native-Fixture: {_RS485_FIXTURE}\n",
         encoding="utf-8",
     )
     github_output = tmp_path / "github-output"
@@ -270,7 +274,7 @@ def test_message_file_preflight_validates_rule_scope_without_writing_github_outp
 
     assert capsys.readouterr().out.splitlines() == [
         'markexpr=design_lint and (design_lint_rule(rule_id="bus.rs485_data_direction_label_mismatch") or rule_gate_integrity)',
-        "KICAD_RUN_NATIVE_RS485_DATA_LABEL_MISMATCH_FIXTURES=1",
+        f"{_RS485_FIXTURE}=1",
     ]
     assert not github_output.exists()
     assert not github_environment.exists()

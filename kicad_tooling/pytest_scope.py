@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import tomllib
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping
+from datetime import date, datetime, time
 from fnmatch import fnmatchcase
 from pathlib import Path, PurePosixPath
-from typing import cast
+from typing import TypeAlias, cast
+
+TomlScalar: TypeAlias = str | int | float | bool | date | datetime | time
+TomlValue: TypeAlias = TomlScalar | list["TomlValue"] | dict[str, "TomlValue"]
 
 _INVALID_PORTABLE_PATH_CHARACTERS = frozenset('<>:"\\|?*')
 
@@ -56,7 +60,10 @@ def pytest_collection_patterns(
     if not config_path.is_file():
         return ("test_*.py",), ("Test*",), ("test*",)
     try:
-        config = tomllib.loads(config_path.read_text(encoding="utf-8"))
+        config = cast(
+            dict[str, TomlValue],
+            tomllib.loads(config_path.read_text(encoding="utf-8")),
+        )
     except (OSError, tomllib.TOMLDecodeError) as error:
         raise ValueError(f"pytest naming configuration is unreadable: {config_path}") from error
     tool = _mapping(config.get("tool", {}), "tool")
@@ -74,17 +81,20 @@ def pytest_name_matches(name: str, patterns: tuple[str, ...]) -> bool:
     return any(fnmatchcase(name, pattern) for pattern in patterns)
 
 
-def _pattern_values(value: object) -> tuple[str, ...]:
+def _pattern_values(value: TomlValue | tuple[str, ...]) -> tuple[str, ...]:
     if isinstance(value, str):
         return tuple(value.split())
-    if isinstance(value, (list, tuple)) and all(
-        isinstance(pattern, str) for pattern in cast(Sequence[object], value)
-    ):
-        return tuple(cast(str, pattern) for pattern in cast(Sequence[object], value))
-    raise ValueError("pytest naming patterns must be strings or arrays of strings")
+    if isinstance(value, (list, tuple)):
+        patterns: list[str] = []
+        for pattern in value:
+            if not isinstance(pattern, str):
+                raise TypeError("pytest naming patterns must be strings or arrays of strings")
+            patterns.append(pattern)
+        return tuple(patterns)
+    raise TypeError("pytest naming patterns must be strings or arrays of strings")
 
 
-def _mapping(value: object, name: str) -> Mapping[str, object]:
-    if not isinstance(value, Mapping):
+def _mapping(value: TomlValue, name: str) -> Mapping[str, TomlValue]:
+    if not isinstance(value, dict):
         raise TypeError(f"pytest configuration {name} must be a table")
-    return cast(Mapping[str, object], value)
+    return cast(Mapping[str, TomlValue], value)

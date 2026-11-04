@@ -1,0 +1,175 @@
+"""Prepare pinned native-tool dependencies using the container's Python ABI."""
+
+from __future__ import annotations
+
+import os
+import re
+import shutil
+import subprocess
+import sys
+from importlib.metadata import PackageNotFoundError, distribution, distributions
+from pathlib import Path, PurePosixPath
+
+from .contracts import repo_path
+from .native_dependency_models import NativeDependencyPreparationRequest
+
+
+def runtime_metadata() -> Path:
+    """Locate the installed identity that package_version reports.
+
+    Editable checkouts can expose both source ``.egg-info`` and installed
+    ``.dist-info`` metadata. Prefer ``.dist-info`` so copied runtimes report
+    the same immutable version as ``kicad_tooling.package_version``.
+    """
+    for installed in distributions(name="kicad-team-tooling"):
+        entries = installed.files or ()
+        metadata = tuple(
+            Path(str(installed.locate_file(entry))).parent.resolve()
+            for entry in entries
+            if entry.name == "METADATA" and entry.parent.name.endswith(".dist-info")
+        )
+        if metadata:
+            if len(metadata) != 1 or not metadata[0].is_dir():
+                raise ValueError("Installed kicad-team-tooling distribution metadata is incomplete")
+            return metadata[0]
+
+    try:
+        installed = distribution("kicad-team-tooling")
+    except PackageNotFoundError as exc:
+        raise ValueError("Install kicad-team-tooling before preparing its native runtime") from exc
+    metadata = tuple(
+        Path(str(installed.locate_file(entry))).parent.resolve()
+        for entry in installed.files or ()
+        if (entry.name == "METADATA" and entry.parent.name.endswith(".dist-info"))
+        or (entry.name == "PKG-INFO" and entry.parent.name.endswith(".egg-info"))
+    )
+    if len(metadata) != 1 or not metadata[0].is_dir():
+        raise ValueError("Installed kicad-team-tooling distribution metadata is incomplete")
+    return metadata[0]
+
+
+def copy_runtime(destination: Path, metadata: Path | None = None) -> None:
+    """Copy exact executing package bytes, assets/profiles, and installed identity.
+
+    The destination is the native virtual environment's actual site-packages.
+    No consuming-project source directory is added to Python's import path.
+    """
+    metadata = runtime_metadata() if metadata is None else metadata
+    shutil.copytree(
+        Path(__file__).resolve().parents[1],
+        destination / "kicad_tooling",
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+    )
+    shutil.copytree(metadata, destination / metadata.name)
+
+
+def prepare_native_dependencies(request: NativeDependencyPreparationRequest) -> None:
+    """Resolve wheels for the image ABI and copy this installed runtime."""
+    root = request.root.resolve()
+    output = request.output
+    destination = repo_path(root, output.as_posix())
+    if len(output.parts) < 2 or output.parts[0] != "build":
+        raise ValueError("Native dependencies belong in an ignored build/ directory")
+    if destination.exists():
+        raise ValueError(f"Dependency destination already exists: {output}")
+    if re.fullmatch(r"[^@\s]+@sha256:[0-9a-f]{64}", request.image) is None:
+        raise ValueError("Native image must be digest-pinned")
+    metadata = runtime_metadata()
+    probe = subprocess.run(
+        (
+            "docker",
+            "run",
+            "--rm",
+            "--platform",
+            "linux/amd64",
+            "--entrypoint",
+            "python3",
+            request.image,
+            "-c",
+            "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')",
+        ),
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    version = probe.stdout.strip()
+    parts = version.split(".")
+    if len(parts) != 2 or not all(part.isdigit() for part in parts) or parts[0] != "3":
+        raise ValueError(f"Unexpected container Python version: {version!r}")
+    if int(parts[1]) < 11:
+        raise ValueError(f"Native tooling requires Python >=3.11; image provides {version}")
+    # The image has no pip, but stdlib venv supplies normal interpreter-owned
+    # import paths. Inherit only the digest-pinned image's KiCad Python bindings.
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    user: tuple[str, ...] = ()
+    if sys.platform != "win32":
+        user = ("--user", f"{os.getuid()}:{os.getgid()}")
+    environment_path = PurePosixPath("/work") / output.as_posix()
+    create = subprocess.run(
+        (
+            "docker",
+            "run",
+            "--rm",
+            "--platform",
+            "linux/amd64",
+            *user,
+            "--entrypoint",
+            "python3",
+            "--mount",
+            f"type=bind,source={root},target=/work",
+            request.image,
+            "-I",
+            "-c",
+            (
+                "import subprocess,sys,venv; "
+                "venv.EnvBuilder(with_pip=False, system_site_packages=True).create(sys.argv[1]); "
+                "subprocess.run([sys.argv[1] + '/bin/python', '-I', '-c', "
+                "\"import sysconfig; print(sysconfig.get_path('purelib'))\"], check=True)"
+            ),
+            str(environment_path),
+        ),
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    native_site = PurePosixPath(create.stdout.strip())
+    if (
+        not native_site.is_absolute()
+        or ".." in native_site.parts
+        or not native_site.is_relative_to(environment_path)
+        or native_site == environment_path
+    ):
+        raise ValueError(
+            f"Native environment returned an invalid site-packages path: {native_site}"
+        )
+    site_packages = destination / native_site.relative_to(environment_path).as_posix()
+    subprocess.run(
+        (
+            sys.executable,
+            "-I",
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--target",
+            str(site_packages),
+            "--platform",
+            "manylinux2014_x86_64",
+            "--implementation",
+            "cp",
+            "--python-version",
+            version,
+            "--abi",
+            "cp" + "".join(parts),
+            "--only-binary=:all:",
+            "pydantic==2.13.5",
+            "snakemd==2.4.1",
+        ),
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
+    copy_runtime(site_packages, metadata)

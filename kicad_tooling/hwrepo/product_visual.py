@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 from pathlib import Path
 from typing import Literal
 from uuid import uuid4
@@ -30,8 +32,8 @@ from .project_source_hashes import hash_project_sources as hashes
 
 def _endpoint(
     terminal_id: str,
-    terminals: dict[str, Terminal],
-    known_paths: set[str],
+    terminals: Mapping[str, Terminal],
+    known_paths: AbstractSet[str],
     variant: Variant,
 ) -> ProductVisualEndpoint:
     terminal = terminals.get(terminal_id)
@@ -55,7 +57,7 @@ def _endpoint(
 
 
 def _relationships(
-    product: ProductRecord, variant: Variant, known_paths: set[str]
+    product: ProductRecord, variant: Variant, known_paths: AbstractSet[str]
 ) -> tuple[ProductVisualRelation, ...]:
     terminals = {terminal.id: terminal for terminal in product.terminals}
     harnesses = {harness.id: harness for harness in product.harnesses}
@@ -95,7 +97,7 @@ def _relationships(
 
 
 def project_instances(
-    product: ProductRecord, variant: Variant, parts: set[str]
+    product: ProductRecord, variant: Variant, parts: AbstractSet[str]
 ) -> tuple[ProductVisualInstance, ...]:
     expanded = occurrences(product)
     assemblies = {assembly.id: assembly for assembly in product.assemblies}
@@ -127,7 +129,7 @@ def project_instances(
 
 def _project_identities(
     root: Path,
-    ids: set[str],
+    ids: AbstractSet[str],
     source_hashes: dict[RepositoryPath, Digest],
 ) -> tuple[ProductProjectIdentity, ...]:
     projects = {item.id: item for item in load_registry(root).projects}

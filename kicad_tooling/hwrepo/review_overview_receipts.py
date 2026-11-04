@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 
 from .contracts import repo_path
@@ -31,7 +32,7 @@ from .source_state_models import SourceHashInventory
 
 
 def _integrity(
-    context: ReviewContext, path: Path, recorded: dict[str, str]
+    context: ReviewContext, path: Path, recorded: Mapping[str, str]
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
     if not recorded:
         return (), ("Receipt has no artifact hash inventory.",)
