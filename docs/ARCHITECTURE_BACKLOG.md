@@ -827,9 +827,10 @@ Power-sequence mismatch and cycle findings now retain distinct typed source
 records and share the canonical authored-map digest owner with mapped-coverage
 preparation. All mapped-coverage candidate branches now enter through
 theme-owned typed evidence projectors; their report fields, fingerprints, and
-rule-specific absence states remain stable. The next data-routing audit can
-move to remaining component, connector, and protocol candidates that still
-construct opaque evidence mappings directly.
+rule-specific absence states remain stable. At that checkpoint, the AST
+inventory contained 10 direct candidate evidence mappings across three
+modules: eight schematic geometry routes and two power routes. Subsequent
+schematic pin/wire, wire-topology, and label routes reduced that count.
 STM32/CubeMX findings now keep either a typed pin mismatch or an unmapped
 device observation with its coverage report. The source records verify the
 report's netlist, map, and IOC identities, while one interface-owned projector
@@ -1335,3 +1336,22 @@ For each finished tranche, report what changed for a caller, what contracts
 were preserved or versioned, the relevant test/CI evidence, and remaining
 risks. A reduction in line count is useful only when it makes those boundaries
 clearer.
+
+The three native-unconnected pin/wire findings retain their exact
+`SchematicGeometryScan` observation through `SchematicPinGeometryCandidate`.
+The unmarked crossing and T-junction findings retain their scan observations
+through `SchematicWireTopologyCandidate`. Their typed projections own source
+identity, sheet occurrence, relevant pin or wire identity, coordinates, and
+KiCad version. Existing rule IDs, ordering, messages, report evidence, and
+fingerprints remain stable. The near-wire label rule now retains its
+`LabelNearWireEndpoint` observation through `SchematicLabelEndpointCandidate`,
+including nearby endpoints and their measured distances. The current AST
+inventory has seven direct candidate evidence mappings across three modules:
+five schematic text and symbol-body routes and two power routes. Continue with
+cohesive source behaviors without splitting by a line-count target.
+
+The schematic pin, wire-topology, and near-wire label evidence selection passed
+73 tests, including CLI/MCP parity, against clean public `KiCAD-Test` revision
+`ed89536f0dbbcb013145af2994fef41b2250143e`. Focused Pyright reported zero
+diagnostics; Ruff, format, and `git diff --check` passed. No exact native KiCad
+lane was run.

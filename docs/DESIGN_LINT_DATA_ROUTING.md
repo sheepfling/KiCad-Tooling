@@ -914,3 +914,24 @@ coverage report, with matching map, IOC, and native-netlist identities.
 observation and its incomplete coverage report. Their shared projector keeps
 the existing report fields, while source completeness and rule disposition
 remain with coverage and evaluation.
+
+## Schematic pin, wire, and topology candidate evidence
+
+The three native-unconnected pin/wire rules now retain one exact finding from
+their `SchematicGeometryScan` in `SchematicPinGeometryCandidate`. The typed
+source variants are `WireEndOnPinLineSource`,
+`PinTipOnWireInteriorSource`, and `WireEndpointNearPinTipSource`; construction
+checks that each record is the same observation held by its scan. One
+schematic-owned projector supplies the established source path/hash, sheet
+occurrence, pin and wire identities, geometry, measured distances, and KiCad
+version fields. Candidate construction rejects a report projection that
+drifts from its typed source. Unmarked orthogonal crossings and T-junctions
+retain their exact `UnmarkedWireCrossing` or `UnmarkedTJunction` scan record in
+`SchematicWireTopologyCandidate`; their source projection preserves crossing
+or junction coordinates and wire UUIDs. The common source path and sheet
+binding projection is shared by the typed owner and remaining adapter routes.
+The near-wire label rule retains its `LabelNearWireEndpoint` observation
+through `SchematicLabelEndpointCandidate`, including every nearby endpoint and
+measured distance. Candidate order and existing report fields remain stable.
+Five schematic text and symbol-body routes still use direct report mappings
+and can move through their own typed owners in later tranches.

@@ -56,6 +56,10 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_mcp_parity_schematic_connectivity.py",
                 "tests/test_design_lint_mcp_parity_schematic_geometry.py",
                 "tests/test_design_lint_mcp_parity_schematic_hierarchy.py",
+                "tests/test_design_lint_architecture_schematic_candidate_evidence.py",
+                "tests/test_schematic_pin_candidate_evidence.py",
+                "tests/test_schematic_wire_topology_candidate_evidence.py",
+                "tests/test_schematic_label_candidate_evidence.py",
             }
         ),
         "component_lint": COMPONENT_LINT_TEST_MODULES,
@@ -186,6 +190,10 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_transformer_candidate_evidence.py",
                 "tests/test_connector_supply_domain_net_sharing.py",
                 "tests/test_design_lint_architecture_connector_supply_domain_candidate_evidence.py",
+                "tests/test_design_lint_architecture_schematic_candidate_evidence.py",
+                "tests/test_schematic_pin_candidate_evidence.py",
+                "tests/test_schematic_wire_topology_candidate_evidence.py",
+                "tests/test_schematic_label_candidate_evidence.py",
             }
         ),
         "pcb_lint": PCB_LINT_TEST_MODULES,
