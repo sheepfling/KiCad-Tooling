@@ -9,7 +9,11 @@ from types import MappingProxyType
 
 import pytest
 
-from kicad_tooling.hwrepo import model_primitives, stm32_pin_map_models
+from kicad_tooling.hwrepo import (
+    design_lint_stm32_candidate_evidence,
+    model_primitives,
+    stm32_pin_map_models,
+)
 from kicad_tooling.hwrepo import models as shared_models
 from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, line_count
 
@@ -46,6 +50,13 @@ MODEL_CONSUMERS = MappingProxyType(
             }
         ),
         HWREPO / "design_lint_stm32_candidates.py": frozenset({"Stm32PinMapCoverageReport"}),
+        HWREPO / "design_lint_stm32_candidate_evidence.py": frozenset(
+            {
+                "Stm32PinMapCoverageReport",
+                "Stm32PinMapMismatch",
+                "Stm32UnmappedDevice",
+            }
+        ),
         HWREPO / "design_lint_evaluation_types.py": frozenset({"Stm32PinMapCoverageReport"}),
         HWREPO / "design_lint_evaluator.py": frozenset({"Stm32PinMapCoverageReport"}),
         HWREPO / "design_lint_missing_evidence.py": frozenset({"Stm32PinMapCoverageReport"}),
@@ -90,6 +101,29 @@ def test_stm32_models_have_a_theme_owner_and_compatibility_exports() -> None:
         assert getattr(shared_models, name) is getattr(stm32_pin_map_models, name)
     assert shared_models.Stm32PortPin is model_primitives.Stm32PortPin
     assert shared_models.Stm32SymbolPin is model_primitives.Stm32SymbolPin
+
+
+@pytest.mark.evidence_lint
+def test_stm32_candidate_evidence_has_a_bounded_theme_owner() -> None:
+    evidence_owner = HWREPO / "design_lint_stm32_candidate_evidence.py"
+    candidates = HWREPO / "design_lint_stm32_candidates.py"
+    assert line_count(evidence_owner) < IMPLEMENTATION_MAX_LINES
+    evidence_tree = ast.parse(evidence_owner.read_text(encoding="utf-8"))
+    candidate_tree = ast.parse(candidates.read_text(encoding="utf-8"))
+    assert {node.name for node in evidence_tree.body if isinstance(node, ast.ClassDef)} >= {
+        "Stm32UnmappedDeviceFindingEvidence",
+        "Stm32PinMapMismatchFindingEvidence",
+        "Stm32PinMapCandidate",
+    }
+    assert all(
+        keyword.arg != "evidence"
+        for node in ast.walk(candidate_tree)
+        if isinstance(node, ast.Call)
+        for keyword in node.keywords
+    )
+    assert design_lint_stm32_candidate_evidence.Stm32PinMapCandidate.__module__ == (
+        design_lint_stm32_candidate_evidence.__name__
+    )
 
 
 def test_stm32_regressions_are_plain_pytest_functions() -> None:

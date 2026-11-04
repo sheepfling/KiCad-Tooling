@@ -2,11 +2,20 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 
 SIGNAL_ELECTRICAL_TYPES = frozenset(
     {"input", "output", "bidirectional", "tri_state", "open_collector", "open_emitter"}
 )
+
+
+def _freeze_assignments(
+    assignments: Mapping[str, tuple[str, ...]],
+) -> Mapping[str, tuple[str, ...]]:
+    """Copy a peer assignment snapshot so frozen records stay immutable."""
+    return MappingProxyType({pin: tuple(nets) for pin, nets in assignments.items()})
 
 
 @dataclass(frozen=True, slots=True)
@@ -17,11 +26,14 @@ class ConnectorFootprintPeerPinDivergence:
     value: str
     pin_number: str
     pin_function: str
-    assignments: dict[str, tuple[str, ...]]
+    assignments: Mapping[str, tuple[str, ...]]
     symbols: tuple[str, ...]
     common_anchor_pin_numbers: tuple[str, ...]
     peer_assignment_group: str | None = None
     peer_assignment_basis: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "assignments", _freeze_assignments(self.assignments))
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,11 +45,14 @@ class ConnectorFootprintPeerPinNamedDivergence:
     pin_number: str
     pin_function: str
     pin_electrical_type: str
-    assignments: dict[str, tuple[str, ...]]
+    assignments: Mapping[str, tuple[str, ...]]
     symbols: tuple[str, ...]
     common_anchor_pin_numbers: tuple[str, ...]
     peer_assignment_group: str | None = None
     peer_assignment_basis: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "assignments", _freeze_assignments(self.assignments))
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,12 +64,15 @@ class ConnectorFootprintPeerPinOpenOutlier:
     pin_number: str
     pin_function: str
     pin_electrical_type: str
-    assignments: dict[str, tuple[str, ...]]
+    assignments: Mapping[str, tuple[str, ...]]
     open_pins: tuple[str, ...]
     symbols: tuple[str, ...]
     common_anchor_pin_numbers: tuple[str, ...]
     peer_assignment_group: str | None = None
     peer_assignment_basis: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "assignments", _freeze_assignments(self.assignments))
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,11 +83,14 @@ class ConnectorFootprintPeerPinAllOpen:
     value: str
     pin_number: str
     pin_function: str
-    assignments: dict[str, tuple[str, ...]]
+    assignments: Mapping[str, tuple[str, ...]]
     symbols: tuple[str, ...]
     common_anchor_pin_numbers: tuple[str, ...]
     peer_assignment_group: str | None = None
     peer_assignment_basis: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "assignments", _freeze_assignments(self.assignments))
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,11 +102,14 @@ class ConnectorFootprintPeerPinNamedAllOpen:
     pin_number: str
     pin_function: str
     pin_electrical_type: str
-    assignments: dict[str, tuple[str, ...]]
+    assignments: Mapping[str, tuple[str, ...]]
     symbols: tuple[str, ...]
     common_anchor_pin_numbers: tuple[str, ...]
     peer_assignment_group: str | None = None
     peer_assignment_basis: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "assignments", _freeze_assignments(self.assignments))
 
 
 @dataclass(frozen=True, slots=True)

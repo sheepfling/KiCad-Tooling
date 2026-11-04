@@ -71,6 +71,9 @@ from .connector_footprint_signal_output import (
     footprint_named_signal_output_open_outlier_candidates,
 )
 from .connector_identity import pin_function_is_generic
+from .design_lint_connector_footprint_candidate_evidence import (
+    ConnectorFootprintPeerPinCandidate,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 
@@ -110,8 +113,8 @@ def connector_footprint_peer_pin_candidates(
         peer_assignment_groups,
     )
     divergence_candidates = tuple(
-        Candidate(
-            rule_id="connector.footprint_peer_pin_assignment_divergence",
+        ConnectorFootprintPeerPinCandidate.from_source_evidence(
+            item,
             subject=f"{item.value} [{item.footprint}] pin {item.pin_number}",
             message=(
                 "Fitted connector instances with distinct native symbols share the same value, "
@@ -125,25 +128,6 @@ def connector_footprint_peer_pin_candidates(
                     else ""
                 )
             ),
-            evidence={
-                "value": (item.value,),
-                "footprint": (item.footprint,),
-                "pin_number": (item.pin_number,),
-                "pin_function": (item.pin_function,),
-                "assignments": tuple(
-                    f"{pin}={','.join(nets)}" for pin, nets in item.assignments.items()
-                ),
-                "symbols": item.symbols,
-                "common_anchor_pin_numbers": item.common_anchor_pin_numbers,
-                **(
-                    {}
-                    if item.peer_assignment_group is None
-                    else {
-                        "peer_assignment_group": (item.peer_assignment_group,),
-                        "peer_assignment_basis": item.peer_assignment_basis,
-                    }
-                ),
-            },
         )
         for item in scan.divergences
     )
@@ -189,8 +173,8 @@ def _footprint_peer_pin_open_candidates(
 ) -> tuple[Candidate, ...]:
     """Review generic pin contacts left open on a subset of footprint peers."""
     return tuple(
-        Candidate(
-            rule_id="connector.footprint_peer_pin_open_outlier",
+        ConnectorFootprintPeerPinCandidate.from_source_evidence(
+            item,
             subject=f"{item.value} [{item.footprint}] pin {item.pin_number}",
             message=(
                 "Fitted connector instances with distinct native symbols share the same value, "
@@ -205,27 +189,6 @@ def _footprint_peer_pin_open_candidates(
                     else ""
                 )
             ),
-            evidence={
-                "value": (item.value,),
-                "footprint": (item.footprint,),
-                "pin_number": (item.pin_number,),
-                "pin_function": (item.pin_function,),
-                "assignments": tuple(
-                    f"{pin}={','.join(nets) if nets else '<unassigned>'}"
-                    for pin, nets in item.assignments.items()
-                ),
-                "open_pins": item.open_pins,
-                "symbols": item.symbols,
-                "common_anchor_pin_numbers": item.common_anchor_pin_numbers,
-                **(
-                    {}
-                    if item.peer_assignment_group is None
-                    else {
-                        "peer_assignment_group": (item.peer_assignment_group,),
-                        "peer_assignment_basis": item.peer_assignment_basis,
-                    }
-                ),
-            },
         )
         for item in scan.open_outliers
         if pin_function_is_generic(item.pin_function)
@@ -237,8 +200,8 @@ def _footprint_peer_pin_all_open_candidates(
 ) -> tuple[Candidate, ...]:
     """Create opt-in review prompts for generic contacts open on every alias peer."""
     return tuple(
-        Candidate(
-            rule_id="connector.footprint_peer_pin_all_open",
+        ConnectorFootprintPeerPinCandidate.from_source_evidence(
+            item,
             subject=f"{item.value} [{item.footprint}] pin {item.pin_number}",
             message=(
                 "Fitted connector instances with distinct native symbols share the same value, "
@@ -253,27 +216,6 @@ def _footprint_peer_pin_all_open_candidates(
                     else ""
                 )
             ),
-            evidence={
-                "value": (item.value,),
-                "footprint": (item.footprint,),
-                "pin_number": (item.pin_number,),
-                "pin_function": (item.pin_function,),
-                "assignments": tuple(
-                    f"{pin}={','.join(nets) if nets else '<unassigned>'}"
-                    for pin, nets in item.assignments.items()
-                ),
-                "open_pins": tuple(item.assignments),
-                "symbols": item.symbols,
-                "common_anchor_pin_numbers": item.common_anchor_pin_numbers,
-                **(
-                    {}
-                    if item.peer_assignment_group is None
-                    else {
-                        "peer_assignment_group": (item.peer_assignment_group,),
-                        "peer_assignment_basis": item.peer_assignment_basis,
-                    }
-                ),
-            },
         )
         for item in scan.all_open
     )

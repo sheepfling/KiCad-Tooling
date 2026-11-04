@@ -608,6 +608,25 @@ The component-peer candidate adapter no longer constructs evidence mappings;
 selection and wording remain with the theme service, and projection remains
 with its theme-owned evidence module.
 
+## Connector footprint-peer evidence route
+
+The generic footprint-alias divergence, partially open, and all-open findings
+now retain their `ConnectorFootprintPeerPinDivergence`,
+`ConnectorFootprintPeerPinOpenOutlier`, or `ConnectorFootprintPeerPinAllOpen`
+scan record on `ConnectorFootprintPeerPinCandidate`. The typed records copy
+and freeze per-peer assignment maps; the connector-owned projector validates
+the assignment state and preserves the existing evidence fields. Candidate
+selection and review wording remain in the connector theme service, and the
+public report shape is unchanged.
+
+The scan consumes the `NetlistContract` supplied by its caller. Full evaluation
+carries native netlist identity on `DesignLintReport` and
+`ConnectorPeerPinHeuristicCoverage`; report validation requires those digests
+to match and checks the coverage finding counts. The per-finding source record
+does not duplicate that digest, and direct scanner calls do not independently
+establish byte identity. These findings remain heuristic similarity reviews
+and do not establish that matching connector contacts should be connected.
+
 ## BJT and MOSFET terminal-tie route
 
 The six supported BJT collector/emitter, base/emitter, base/collector and

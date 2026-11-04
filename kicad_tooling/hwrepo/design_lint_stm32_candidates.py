@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from .design_lint_stm32_candidate_evidence import (
+    Stm32PinMapCandidate,
+    Stm32PinMapMismatchFindingEvidence,
+    Stm32UnmappedDeviceFindingEvidence,
+)
 from .design_lint_types import Candidate
 from .stm32_pin_map_models import Stm32PinMapCoverageReport
 
@@ -13,9 +18,13 @@ def stm32_candidates(
     found: list[Candidate] = []
     if stm32_pin_map_coverage is not None:
         for device in stm32_pin_map_coverage.unmapped_devices:
+            source_evidence = Stm32UnmappedDeviceFindingEvidence(
+                report=stm32_pin_map_coverage,
+                device=device,
+            )
             found.append(
-                Candidate(
-                    rule_id="mcu.stm32_cubemx_pin_map",
+                Stm32PinMapCandidate.from_source_evidence(
+                    source_evidence,
                     subject=f"{device.reference}: STM32 CubeMX pin-map coverage is missing",
                     message=(
                         "This fitted component is identified as an STM32 device, but the project "
@@ -24,26 +33,16 @@ def stm32_candidates(
                         "or record a reasoned exclusion. This name-based discovery prompt does "
                         "not establish that the device is configured by CubeMX."
                     ),
-                    evidence={
-                        "reference": (device.reference,),
-                        "part": (device.observed_part,),
-                        "symbol": (device.observed_symbol or "<unknown>",),
-                        "native_netlist_sha256": (device.netlist_sha256,),
-                    },
                 )
             )
         for mismatch in stm32_pin_map_coverage.mismatches:
-            expected_labels = (
-                ("<not checked>",)
-                if mismatch.accepted_ioc_gpio_labels is None
-                else tuple(
-                    "<absent>" if item is None else item
-                    for item in mismatch.accepted_ioc_gpio_labels
-                )
+            source_evidence = Stm32PinMapMismatchFindingEvidence(
+                report=stm32_pin_map_coverage,
+                mismatch=mismatch,
             )
             found.append(
-                Candidate(
-                    rule_id="mcu.stm32_cubemx_pin_map",
+                Stm32PinMapCandidate.from_source_evidence(
+                    source_evidence,
                     subject=(
                         f"{mismatch.reference}.{mismatch.port_pin}: "
                         "CubeMX and KiCad pin map differs from the project contract"
@@ -53,23 +52,6 @@ def stm32_candidates(
                         "CubeMX/KiCad pin-map contract. Review the MCU pinout, schematic net, "
                         "and firmware configuration. " + "; ".join(mismatch.issues)
                     ),
-                    evidence={
-                        "mcu_reference": (mismatch.reference,),
-                        "package_pin": (mismatch.port_pin,),
-                        "symbol_pin": (f"{mismatch.reference}.{mismatch.symbol_pin}",),
-                        "expected_net": (mismatch.expected_net,),
-                        "observed_net": mismatch.observed_nets or ("<unconnected>",),
-                        "accepted_ioc_signal": mismatch.accepted_ioc_signals,
-                        "observed_ioc_signal": (mismatch.observed_ioc_signal or "<missing>",),
-                        "accepted_ioc_gpio_label": expected_labels,
-                        "observed_ioc_gpio_label": (
-                            mismatch.observed_ioc_gpio_label or "<absent>",
-                        ),
-                        "ioc_path": (mismatch.ioc_path,),
-                        "ioc_sha256": (mismatch.ioc_sha256,),
-                        "map_sha256": (mismatch.map_sha256,),
-                        "native_netlist_sha256": (mismatch.netlist_sha256,),
-                    },
                 )
             )
     return tuple(found)

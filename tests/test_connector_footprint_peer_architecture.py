@@ -8,7 +8,12 @@ import pytest
 
 from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, line_count
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.architecture]
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.connector_lint,
+    pytest.mark.evidence_lint,
+    pytest.mark.architecture,
+]
 
 PEER_MODULES = (
     "connector_footprint_peer_groups.py",
@@ -54,3 +59,43 @@ def test_connector_alias_scans_share_candidate_and_inventory_owners() -> None:
         assert expected_helpers <= imports, (
             f"{filename} duplicated alias grouping or inventory logic"
         )
+
+
+def test_connector_footprint_peer_candidates_use_typed_projection_owner() -> None:
+    owner_path = HWREPO / "design_lint_connector_footprint_candidate_evidence.py"
+    service_path = HWREPO / "design_lint_connector_footprint_candidates.py"
+    owner_tree = ast.parse(owner_path.read_text(encoding="utf-8"), filename=owner_path.name)
+    service_tree = ast.parse(service_path.read_text(encoding="utf-8"), filename=service_path.name)
+
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert line_count(service_path) < IMPLEMENTATION_MAX_LINES
+    assert any(
+        isinstance(node, ast.FunctionDef)
+        and node.name == "project_connector_footprint_peer_pin_evidence"
+        for node in owner_tree.body
+    )
+    assert any(
+        isinstance(node, ast.ClassDef) and node.name == "ConnectorFootprintPeerPinCandidate"
+        for node in owner_tree.body
+    )
+    assert any(
+        isinstance(node, ast.ImportFrom)
+        and node.module == "design_lint_connector_footprint_candidate_evidence"
+        and "ConnectorFootprintPeerPinCandidate" in {alias.name for alias in node.names}
+        for node in service_tree.body
+    )
+    assert any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "from_source_evidence"
+        for node in ast.walk(service_tree)
+    )
+    assert not any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "Candidate"
+        for node in ast.walk(service_tree)
+    )
+    assert not any(
+        isinstance(node, ast.keyword) and node.arg == "evidence" for node in ast.walk(service_tree)
+    )

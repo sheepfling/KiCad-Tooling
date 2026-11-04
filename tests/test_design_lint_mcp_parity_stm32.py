@@ -177,5 +177,6 @@ class _DesignLintMcpParityStm32Cases(McpParityHarness):
             self.assertEqual(finding.evidence["ioc_sha256"], (mismatch.ioc_sha256,))
 
 
+@pytest.mark.evidence_lint
 def test_stm32_cube_mx_pin_map_parity() -> None:
     run_mcp_parity(_DesignLintMcpParityStm32Cases, "_case_test_stm32_cube_mx_pin_map_parity")

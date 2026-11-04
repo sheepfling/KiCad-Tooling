@@ -4,13 +4,17 @@ from __future__ import annotations
 
 import hashlib
 import tempfile
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-from kicad_tooling.hwrepo.design_lint import evaluate
+from kicad_tooling.hwrepo.design_lint import evaluate, fingerprint
+from kicad_tooling.hwrepo.design_lint_stm32_candidate_evidence import Stm32PinMapCandidate
+from kicad_tooling.hwrepo.design_lint_stm32_candidates import stm32_candidates
 from kicad_tooling.hwrepo.design_lint_stm32_coverage import scan_stm32_pin_maps
+from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     ContractCoachReport,
@@ -432,3 +436,50 @@ def test_unmapped_fitted_stm32_is_reviewed_and_dnp_is_controlled() -> None:
     )
     assert dnp_report.status == "PASS"
     assert dnp_report.stm32_pin_map_coverage.status == "NOT_REQUESTED"
+
+
+@pytest.mark.evidence_lint
+def test_stm32_candidates_retain_typed_source_reports_and_projected_evidence() -> None:
+    content = _IOC_FIXTURE.read_bytes().replace(b"PA0.Signal=GPIO_Input", b"PA0.Signal=GPIO_Output")
+    pin_map = sample_map("firmware/controller.ioc")
+    policy = DesignLintPolicy(stm32_pin_maps=(pin_map,))
+    with tempfile.TemporaryDirectory(prefix="stm32-candidate-evidence-") as temporary:
+        root = Path(temporary)
+        source = root / pin_map.ioc_path
+        source.parent.mkdir()
+        source.write_bytes(content)
+        mapped_report = scan_stm32_pin_maps(root, policy, sample_netlist(), _NETLIST_SHA256)
+
+    mapped_candidate = stm32_candidates(mapped_report)[0]
+    assert isinstance(mapped_candidate, Stm32PinMapCandidate)
+    assert mapped_candidate.source_evidence.report is mapped_report
+    assert mapped_candidate.source_evidence.mismatch is mapped_report.mismatches[0]
+    assert mapped_candidate.evidence["accepted_ioc_gpio_label"] == ("BUTTON",)
+    assert mapped_candidate.evidence["ioc_sha256"] == (
+        mapped_report.ioc_source_hashes["firmware/controller.ioc"],
+    )
+    legacy_mapped_projection = Candidate(
+        rule_id=mapped_candidate.rule_id,
+        subject=mapped_candidate.subject,
+        message=mapped_candidate.message,
+        evidence=mapped_candidate.evidence,
+    )
+    assert fingerprint(mapped_candidate) == fingerprint(legacy_mapped_projection)
+    with pytest.raises(ValueError, match="must match its source projection"):
+        replace(mapped_candidate, evidence={"expected_net": ("FORGED",)})
+
+    unmapped_report = evaluate(
+        "synthetic-stm32-map", coach(sample_netlist()), DesignLintPolicy()
+    ).stm32_pin_map_coverage
+    unmapped_candidate = stm32_candidates(unmapped_report)[0]
+    assert isinstance(unmapped_candidate, Stm32PinMapCandidate)
+    assert unmapped_candidate.source_evidence.report is unmapped_report
+    assert unmapped_candidate.source_evidence.device is unmapped_report.unmapped_devices[0]
+    assert unmapped_candidate.evidence["native_netlist_sha256"] == (_NETLIST_SHA256,)
+    legacy_unmapped_projection = Candidate(
+        rule_id=unmapped_candidate.rule_id,
+        subject=unmapped_candidate.subject,
+        message=unmapped_candidate.message,
+        evidence=unmapped_candidate.evidence,
+    )
+    assert fingerprint(unmapped_candidate) == fingerprint(legacy_unmapped_projection)

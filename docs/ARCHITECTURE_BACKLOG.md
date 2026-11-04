@@ -269,6 +269,12 @@ fingerprints remain stable, and complete controls stay quiet. The focused
 measurement evidence, architecture, and rule regression selection passed 29
 tests with `design_lint and pcb_lint`; the marker, collection, and theme
 architecture selection passed 15 tests with `design_lint and architecture`.
+Generic connector footprint-peer divergence and open findings now retain their
+typed scan records through a connector-owned projector. The source assignment
+maps are immutable and the existing public evidence fields remain stable.
+Full evaluation retains native netlist identity on `DesignLintReport` and
+`ConnectorPeerPinHeuristicCoverage`, where report validation checks digest
+equality and finding counts; the internal candidate does not duplicate it.
 
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify
@@ -672,6 +678,16 @@ report's netlist, map, and IOC identities, while one interface-owned projector
 preserves the established public evidence. The combined mapped-theme and
 STM32 evidence regression selection passed 165 tests; focused Pyright, Ruff,
 format, Rumdl, mdrepo, and `git diff --check` passed.
+The follow-up typed-evidence checkpoint also moves generic connector
+footprint-peer divergence and open candidates through a connector-owned
+projector, preserving their frozen assignment snapshots and existing report
+fields. Against the separate public `KiCAD-Test` checkout, the current
+connector/interface selection passed 35 tests and the combined evidence
+selection passed 11 tests (24 deselected); pytest marker, collection, and rule
+selector architecture checks passed 110 tests. Project-aware Pyright, Ruff,
+format, Rumdl, and `git diff --check` passed. Existing generic peer assignment,
+open-state, inventory, and CLI/MCP parity regressions passed 24 tests; the
+all-open CLI/MCP parity case passed separately. No native KiCad lane was run.
 CAN missing and excess termination candidates now retain their named scan
 records and use that same projection contract.
 The bus theme now returns its findings with those peer keys in a
