@@ -760,6 +760,16 @@ entry and configured report, including the source netlist identity. Their
 theme-owned projectors preserve existing evidence keys and fingerprints;
 source freshness and policy disposition remain in evaluation.
 
+## Digital-peer voltage candidate evidence route
+
+The SPI and serial peer-voltage findings now share `DigitalPeerVoltageCandidate`
+and `project_digital_peer_voltage_evidence`. The retained source combines the
+grouped native peer review with its `DigitalPeerVoltageLintContext`; the owner
+preserves each rule's distinct signal-assignment key, parsed label formatting,
+authored-map state, and optional contract path and digest. Candidate order,
+rule IDs, subjects, messages, and report fingerprints remain with the existing
+theme adapters and evaluation path.
+
 The six schematic power and supply findings in `design_lint_power_candidates`
 now retain their typed scan records through `PowerCandidate`. Its projector
 owns the existing same-voltage pin map, capacitor-gap fields, conditional
@@ -777,6 +787,56 @@ retains the exact incomplete or stale mapped entry and report. Separate
 projectors preserve the existing connector, signal, observed-net, device, and
 issue fields for both rule IDs. Coverage binding and blocked-state policy stay
 in evaluation preparation.
+
+## Return-domain candidate evidence route
+
+Connector return-role gaps and the numbered or unroled return-net hints now
+retain explicit source variants through `ReturnDomainCandidate`. The connector
+variant carries its connected-pin coverage and optional return-like net-label
+clues; the two net-group variants distinguish numbered siblings from labels
+whose pins lack native return roles. Their projector preserves the current
+conditional clue field and map-shaped report evidence. Connector pin maps and
+typed return-net maps are copied and frozen at their source owners.
+
+The authored connector return-distribution candidate retains its exact
+`ConnectorReturnDistributionEntry` together with the enclosing
+`ConnectorReturnDistributionCoverageReport`, including its netlist and
+interface-catalog identities. Its projector preserves the established
+role-count, pin-assignment, ratio, basis, and issue fields. All six role maps
+are copied and frozen, with explicit serializers preserving ordinary mapping
+output. Only `COMPLETE` or `INCOMPLETE` coverage and `OUT_OF_RANGE` or
+`INCOMPLETE` entries can produce a finding; blocked and not-requested evidence
+remain coverage states.
+
+## SPI chip-select bias candidate evidence route
+
+SPI chip-select bias findings now retain the exact `SpiChipSelectBiasGap`
+returned by the heuristic scan through `SpiBiasCandidate`. Its projection
+preserves the existing net, active-low pin, recognized rail, and empty visible
+pull-up path fields. Resistance-band and authored array-path interpretation
+remain in the SPI scan; the candidate adapter keeps the existing review
+wording and order.
+
+SPI shared-clock reference findings retain their exact bus review and parent
+scan through `SpiPeerReferenceCandidate`. The SPI projector combines the
+canonical clock identity with endpoint, pin, and reference assignments, adding
+incomplete-reference clues only when present. The candidate remains a
+`PeerReferenceCandidate` subtype, so coverage reconciliation keeps using the
+existing typed clock key.
+
+I²C shared-bus reference findings likewise retain their review and parent scan
+through `I2cPeerReferenceCandidate`, while keeping the canonical SDA/SCL
+identity used by coverage reconciliation. Its projector preserves participant,
+signal-pin, and reference-assignment ordering and emits incomplete-reference
+clues only when the scan found them.
+
+Serial-peer coverage and reference-domain findings now retain their typed
+source variants through `SerialPeerCandidate`. Unmapped endpoints preserve the
+discovered endpoint and its authored roster scope; reference reviews preserve
+the exact review and containing scan, and reject a review detached from that
+scan. The projection keeps the existing conditional native-link, label-link,
+discovery-basis, and contract identity fields. Candidate wording and order
+remain in the serial adapter.
 
 Power-sequence mismatch findings retain the exact mismatch and authored map;
 cycle findings retain the map's declared-cycle state and observed cycles.

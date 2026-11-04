@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import MutableMapping
 from operator import setitem
+from typing import cast
 
 import pytest
 
@@ -159,7 +161,7 @@ def test_same_voltage_source_copies_and_freezes_its_pin_mapping() -> None:
 
     assert source.pins == {"U1.1": ("3V3",)}
     with pytest.raises(TypeError):
-        setitem(source.pins, "U1.2", ("5V",))
+        setitem(cast(MutableMapping[str, tuple[str, ...]], source.pins), "U1.2", ("5V",))
 
 
 def test_repeated_supply_source_copies_and_freezes_its_pin_mapping() -> None:
@@ -174,7 +176,7 @@ def test_repeated_supply_source_copies_and_freezes_its_pin_mapping() -> None:
 
     assert source.pins == {"U1.1": ("3V3",)}
     with pytest.raises(TypeError):
-        setitem(source.pins, "U1.2", ("5V",))
+        setitem(cast(MutableMapping[str, tuple[str, ...]], source.pins), "U1.2", ("5V",))
 
 
 def test_numbered_rail_source_copies_and_freezes_its_net_mapping() -> None:
@@ -183,5 +185,6 @@ def test_numbered_rail_source_copies_and_freezes_its_net_mapping() -> None:
     input_map["5V_1"] = ("J2.1",)
 
     assert source.nets == {"5V_1": ("J1.1",)}
+    assert source.model_dump_json() == '{"stem":"5V","nets":{"5V_1":["J1.1"]}}'
     with pytest.raises(TypeError):
-        setitem(source.nets, "5V_2", ("J2.1",))
+        setitem(cast(MutableMapping[str, tuple[str, ...]], source.nets), "5V_2", ("J2.1",))

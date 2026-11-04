@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Annotated, Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_serializer, field_validator, model_validator
 
 from .model_primitives import (
     Digest,
@@ -64,6 +65,37 @@ class ConnectorReturnDistributionEntry(StrictModel):
     maximum_signal_to_return_ratio: ElectricalPositive
     basis: NonEmptyText
     issues: tuple[NonEmptyText, ...] = ()
+
+    @field_validator(
+        "signal_pin_map",
+        "return_pin_map",
+        "supply_pin_map",
+        "shield_pin_map",
+        "other_pin_map",
+        "unclassified_pin_map",
+    )
+    @classmethod
+    def freeze_pin_map(
+        cls,
+        pin_map: Mapping[NonEmptyText, Reference],
+    ) -> Mapping[NonEmptyText, Reference]:
+        """Copy and freeze each source pin assignment map."""
+        return MappingProxyType(dict(pin_map))
+
+    @field_serializer(
+        "signal_pin_map",
+        "return_pin_map",
+        "supply_pin_map",
+        "shield_pin_map",
+        "other_pin_map",
+        "unclassified_pin_map",
+    )
+    def serialize_pin_map(
+        self,
+        pin_map: Mapping[NonEmptyText, Reference],
+    ) -> dict[NonEmptyText, Reference]:
+        """Preserve ordinary mappings in Python and JSON model output."""
+        return dict(pin_map)
 
 
 class ConnectorReturnDistributionCoverageReport(StrictModel):

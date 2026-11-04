@@ -8,6 +8,10 @@ from .design_lint_i2c_address_candidate_evidence import (
     I2cAddressMismatchEvidence,
     I2cUnmappedResponderEvidence,
 )
+from .design_lint_i2c_peer_candidate_evidence import (
+    I2cPeerReferenceCandidate,
+    I2cPeerReferenceFindingEvidence,
+)
 from .design_lint_types import Candidate
 from .i2c_address_inputs import I2cAddressCandidateInput
 from .i2c_address_models import (
@@ -20,7 +24,6 @@ from .i2c_peer_reference_scan import I2cPeerReferenceScan, scan_i2c_peer_referen
 from .i2c_pullup_inputs import I2cPullupSnifferInput
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .netlist_contract_models import NetlistContract
-from .peer_reference_candidate_keys import I2cPeerBusKey, PeerReferenceCandidate
 
 
 def i2c_pullup_candidates(
@@ -172,28 +175,9 @@ def i2c_peer_reference_candidates(
             continue
 
         references = tuple(item.reference for item in bus.endpoints)
-        assignments = tuple(
-            f"{item.reference}: {item.sda_pin} on {item.sda_net}; "
-            f"{item.scl_pin} on {item.scl_net}; "
-            + (
-                f"{', '.join(pin.pin for pin in item.reference_pins)} on {item.reference_net}"
-                if item.reference_net is not None
-                else "reference assignment incomplete"
-            )
-            for item in bus.endpoints
-        )
-        evidence = {
-            "participants": references,
-            "signal_pins": tuple(
-                pin for item in bus.endpoints for pin in (item.sda_pin, item.scl_pin)
-            ),
-            "reference_assignments": assignments,
-        }
-        if bus.incomplete_references:
-            evidence["incomplete_reference_evidence"] = bus.incomplete_references
         found.append(
-            PeerReferenceCandidate.from_identity(
-                identity=I2cPeerBusKey(bus.sda_net, bus.scl_net),
+            I2cPeerReferenceCandidate.from_source_evidence(
+                I2cPeerReferenceFindingEvidence(reference_scan, bus),
                 subject=f"SDA {bus.sda_net} / SCL {bus.scl_net}: {', '.join(references)}",
                 message=(
                     "Fitted ICs share the same native I2C SDA and SCL nets, and at least two "
@@ -201,7 +185,6 @@ def i2c_peer_reference_candidates(
                     "policy; this heuristic does not require common grounding or prove a "
                     "physical return path."
                 ),
-                evidence=evidence,
             )
         )
     return tuple(found)

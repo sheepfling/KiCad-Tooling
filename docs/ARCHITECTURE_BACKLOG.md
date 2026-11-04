@@ -300,6 +300,80 @@ fingerprints are preserved. Focused rule, source-projection, architecture,
 marker, and CLI/MCP parity checks passed 144 tests using public template
 revision `ed89536`; no native KiCad lane was run.
 
+The three return-domain candidate maps now retain typed connector-return or
+return-net-group variants behind a return-owned projector. The source variants
+distinguish numbered returns from return-like labels without explicit pin
+roles; existing optional label clues, messages, and report fields are
+preserved. Connector and net source maps are copied and frozen. Focused rule,
+projection, architecture, marker, and CLI/MCP parity checks passed 91 tests
+against public template revision `ed89536`. Ruff, macOS and Windows Pyright,
+and the focused source checks passed; no native KiCad lane was run.
+
+SPI and serial peer-voltage findings now share one bus-owned evidence
+projection. Each candidate retains the exact `DigitalPeerVoltageReview` and
+its authored-map scope, while the projection preserves protocol-specific
+assignment keys and optional source identity. Existing heuristics and
+coverage state handling remain in the scan/evaluation owners. The combined
+voltage, serial, determinism, architecture, marker, and CLI/MCP parity
+selection passed 79 tests; macOS and Windows Pyright and Ruff passed. No native
+KiCad lane was run.
+
+The authored connector return-distribution finding now retains its exact entry
+and source-bound coverage report behind a connector-owned projector. Its six
+role maps are immutable internally and serialize as regular mappings; report
+fields, status selection, and policy behavior are preserved. The focused
+distribution, source-projection, architecture, marker, and CLI/MCP parity
+selection passed 52 tests. Ruff and macOS and Windows Pyright passed. No native
+KiCad lane was run.
+
+The combined local synthetic, rule, and architecture retest across power,
+return-domain, return-distribution, and digital-peer-voltage evidence owners
+passed 295 tests. Ruff, formatting, Pyright on changed production and test modules,
+Markdown checks across 273 files, and mdrepo passed. This local selection did
+not run the public-template CLI/MCP parity modules or exact native KiCad.
+
+Serial roster and reference-domain candidates now retain their typed endpoint
+or exact review-and-scan source records. The serial source, behavior,
+determinism, and architecture selection passed 49 tests; CLI/MCP parity passed
+6 tests and 6 subtests against public template revision `ed89536`. Marker and
+collection architecture checks passed 14 tests, with focused Pyright and Ruff
+clean. SPI bias and shared-clock reference candidates now retain their exact
+heuristic gap or review-and-scan source while the shared clock identity remains
+available for coverage reconciliation. The SPI source, rule, and architecture
+slice passed 46 tests, CLI/MCP parity passed 3 tests, and marker/collection
+checks passed 14 tests. SPI bias report parity passed one additional test.
+Pyright and Ruff passed for both routes. No exact native KiCad lane was run.
+I²C reference findings now use the same source-bound pattern, retaining the
+review and scan plus canonical SDA/SCL identity. Its rule, source, and
+architecture selection passed 27 tests; CLI/MCP parity passed 3 tests.
+Marker and collection checks passed 14 tests. Focused Pyright and Ruff passed;
+no exact native KiCad lane was run.
+
+A fresh direct-constructor AST inventory after these routes finds five inline
+`Candidate(evidence=...)` constructions across five adapters: one two-pin
+component route, one unmapped SPI participant route, one I3C unconnected-pin
+route, one USB-C port review, and one USB peer-reference review. A separate
+call-site audit found two more maps passed through the generic
+`PeerReferenceCandidate.from_identity` helper in the CAN and RS-485 adapters;
+those remain to be routed. SPI and I²C shared-bus reviews now keep their exact
+scan and bus records through typed candidate subtypes while preserving their
+generic peer-identity coverage keys. Treat the remaining maps as
+source-to-report routing tasks, not module split triggers. Keep the shared
+candidate shape stable and group migrations by the typed scan or coverage
+record that owns the data.
+
+The combined source-projection, rule, architecture, size, marker, and CLI/MCP
+parity selection passed 237 tests against the clean public `KiCAD-Test`
+checkout at `ed89536f0dbbcb013145af2994fef41b2250143e`. Pyright reported zero
+errors; Ruff, format, the changed Markdown checks, and mdrepo passed. No exact
+native KiCad lane was run.
+
+After adding the I²C peer-source route, the expanded focused selection passed
+313 tests against the same clean public template revision. It includes the
+generic peer-identity coverage checks and I²C CLI/MCP parity. Pyright reported
+zero errors; Ruff, formatting, Markdown, mdrepo, and both SPI/I²C marker
+selectors passed. No exact native KiCad lane was run.
+
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify
 the right producer for a new datum; no module split is needed to express the

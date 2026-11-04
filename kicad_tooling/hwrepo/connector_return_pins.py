@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Literal, TypeAlias
 
 from .connector_coverage_models import ConnectorMappedPinEvidence
@@ -26,7 +27,14 @@ class ConnectorReturnCoverage:
     reference: str
     symbol: str
     connected_pin_count: int
-    pins: dict[str, tuple[str, ...]]
+    pins: Mapping[str, tuple[str, ...]]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "pins",
+            MappingProxyType({pin: tuple(nets) for pin, nets in self.pins.items()}),
+        )
 
 
 @dataclass(frozen=True, slots=True)

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from types import MappingProxyType
 
-from pydantic import field_validator
+from pydantic import field_serializer, field_validator
 
 from .model_primitives import NetName, NonEmptyText, Reference, StrictModel
 
@@ -24,3 +24,11 @@ class NumberedPowerRailGroup(StrictModel):
     ) -> Mapping[NetName, tuple[Reference, ...]]:
         """Keep the nested map immutable with the frozen source record."""
         return MappingProxyType({name: tuple(references) for name, references in nets.items()})
+
+    @field_serializer("nets")
+    def serialize_nets(
+        self,
+        nets: Mapping[NetName, tuple[Reference, ...]],
+    ) -> dict[NetName, tuple[Reference, ...]]:
+        """Restore the regular mapping shape expected by model serialization."""
+        return dict(nets)

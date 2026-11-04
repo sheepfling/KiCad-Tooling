@@ -10,6 +10,12 @@ from .connector_return_pins import (
     unconnected_named_connector_pins,
 )
 from .connector_return_supply import return_pin_positive_rail_candidates
+from .design_lint_return_candidate_evidence import (
+    ConnectorNoReturnEvidence,
+    NumberedReturnEvidence,
+    ReturnDomainCandidate,
+    UnroledReturnLabelsEvidence,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 from .return_nets import (
@@ -69,43 +75,39 @@ def return_domain_candidates(
             "pinout to determine whether one contact is a signal return or the interface is "
             "intentionally isolated."
         )
-        evidence = dict(group.pins)
         if return_named_candidates:
             message += (
                 " Some assigned net labels look return-related; their spelling does not "
                 "identify the connector pin role."
             )
-            evidence["return_named_net_candidates"] = return_named_candidates
         found.append(
-            Candidate(
-                rule_id="connector.no_connected_return",
+            ReturnDomainCandidate.from_source_evidence(
+                ConnectorNoReturnEvidence(group, return_named_candidates),
                 subject=(
                     f"{group.reference}: return pin role not identified"
                     if return_named_candidates
                     else f"{group.reference}: no connected return"
                 ),
                 message=message,
-                evidence=evidence,
             )
         )
 
     for group in return_net_groups(observed):
         found.append(
-            Candidate(
-                rule_id="net.numbered_returns",
+            ReturnDomainCandidate.from_source_evidence(
+                NumberedReturnEvidence(group),
                 subject=group.stem,
                 message=(
                     "Separately numbered return nets may be intended as one return domain. "
                     "Review whether they are common, bonded, or intentionally isolated."
                 ),
-                evidence=dict(group.nets),
             )
         )
 
     for group in return_label_groups_without_pin_roles(observed):
         found.append(
-            Candidate(
-                rule_id="net.return_labels_without_pin_roles",
+            ReturnDomainCandidate.from_source_evidence(
+                UnroledReturnLabelsEvidence(group),
                 subject=group.stem,
                 message=(
                     "Multiple return-like net labels are assigned to pins whose exported symbol "
@@ -113,7 +115,6 @@ def return_domain_candidates(
                     "whether these domains are common, bonded, or intentionally isolated; labels "
                     "alone do not establish that they should be joined."
                 ),
-                evidence=dict(group.nets),
             )
         )
 

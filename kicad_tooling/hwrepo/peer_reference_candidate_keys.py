@@ -47,7 +47,10 @@ class PeerReferenceIdentityProjection:
         object.__setattr__(self, "evidence", MappingProxyType(dict(self.evidence)))
 
 
-def _identity_projection(identity: PeerReferenceKey) -> PeerReferenceIdentityProjection:
+def project_peer_reference_identity(
+    identity: PeerReferenceKey,
+) -> PeerReferenceIdentityProjection:
+    """Return the canonical rule and report fields owned by one peer identity."""
     if isinstance(identity, I2cPeerBusKey):
         return PeerReferenceIdentityProjection(
             rule_id="bus.i2c_peer_reference_review",
@@ -89,7 +92,7 @@ class PeerReferenceCandidate(Candidate):
         evidence: Mapping[str, tuple[str, ...]],
     ) -> PeerReferenceCandidate:
         """Serialize identity-owned fields from the typed key into legacy evidence."""
-        projection = _identity_projection(identity)
+        projection = project_peer_reference_identity(identity)
         duplicated = projection.evidence.keys() & evidence.keys()
         if duplicated:
             names = ", ".join(sorted(duplicated))
@@ -104,7 +107,7 @@ class PeerReferenceCandidate(Candidate):
 
     def validate_identity_contract(self) -> None:
         """Check identity-owned evidence against its source-derived projection."""
-        projection = _identity_projection(self.identity)
+        projection = project_peer_reference_identity(self.identity)
         if self.rule_id != projection.rule_id:
             raise ValueError(
                 f"{self.rule_id} does not match peer identity for {projection.rule_id}"

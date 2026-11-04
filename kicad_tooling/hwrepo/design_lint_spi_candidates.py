@@ -2,9 +2,16 @@
 
 from __future__ import annotations
 
+from .design_lint_spi_bias_candidate_evidence import (
+    SpiBiasCandidate,
+    SpiBiasFindingEvidence,
+)
+from .design_lint_spi_peer_candidate_evidence import (
+    SpiPeerReferenceCandidate,
+    SpiPeerReferenceFindingEvidence,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
-from .peer_reference_candidate_keys import PeerReferenceCandidate, SpiPeerClockKey
 from .spi_bias_heuristics import spi_active_low_chip_selects_without_pullups
 from .spi_participants import SpiRosterContext
 from .spi_peer_reference_scan import SpiPeerReferenceScan, scan_spi_peer_references
@@ -19,8 +26,8 @@ def spi_bias_candidates(
     analysis = roster.analysis if roster is not None and roster.state == "required" else None
     for gap in spi_active_low_chip_selects_without_pullups(observed, analysis):
         found.append(
-            Candidate(
-                rule_id="bus.spi_active_low_chip_select_without_pullup",
+            SpiBiasCandidate.from_source_evidence(
+                SpiBiasFindingEvidence(gap),
                 subject=f"{gap.net}: active-low SPI chip-select bias",
                 message=(
                     "This assigned active-low chip-select input has no visible 1 kΩ–100 kΩ "
@@ -28,12 +35,6 @@ def spi_bias_candidates(
                     "state and any internal or off-board bias; the pin name alone does not "
                     "establish that an external pull-up is required."
                 ),
-                evidence={
-                    "net": (gap.net,),
-                    "active_low_chip_select_pins": gap.pins,
-                    "recognized_positive_rails": gap.positive_rails,
-                    "visible_pullup_paths": (),
-                },
             )
         )
     return tuple(found)
@@ -74,25 +75,9 @@ def spi_peer_reference_candidates(
             continue
 
         references = tuple(item.reference for item in bus.endpoints)
-        assignments = tuple(
-            f"{item.reference}: {item.clock_pin} on {item.clock_net}; "
-            + (
-                f"{', '.join(pin.pin for pin in item.reference_pins)} on {item.reference_net}"
-                if item.reference_net is not None
-                else "reference assignment incomplete"
-            )
-            for item in bus.endpoints
-        )
-        evidence = {
-            "participants": references,
-            "clock_pins": tuple(item.clock_pin for item in bus.endpoints),
-            "reference_assignments": assignments,
-        }
-        if bus.incomplete_references:
-            evidence["incomplete_reference_evidence"] = bus.incomplete_references
         found.append(
-            PeerReferenceCandidate.from_identity(
-                identity=SpiPeerClockKey(bus.clock_net),
+            SpiPeerReferenceCandidate.from_source_evidence(
+                SpiPeerReferenceFindingEvidence(reference_scan, bus),
                 subject=f"SCK {bus.clock_net}: {', '.join(references)}",
                 message=(
                     "Fitted ICs share the same native SPI clock net, and at least two peers "
@@ -100,7 +85,6 @@ def spi_peer_reference_candidates(
                     "reference, isolation, or bond policy; this heuristic does not require "
                     "a common return or prove a physical return path."
                 ),
-                evidence=evidence,
             )
         )
     return tuple(found)
