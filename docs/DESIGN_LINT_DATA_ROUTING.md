@@ -571,7 +571,11 @@ owners. Per-reference value mismatches retain a
 shape when the whole inventory is blocked and the full receipt shape when only
 the value comparison is blocked. These projectors preserve report fingerprints.
 
-Footprint records apply only to findings from completed comparisons; a
-top-level blocked inventory result retains its existing coverage path. These
-records do not infer package equivalence, assembly intent, electrical
-behavior, physical placement correctness, or actual component population.
+Top-level blocked inventory coverage now uses one
+`PcbBlockedComponentInventoryEvidence` source record for both the footprint-
+inventory and DNP findings. Its constructor accepts only a `BLOCKED` report;
+separate projectors preserve each rule's prior sparse evidence fields, including
+the DNP finding's optional snapshot digest. Completed per-reference footprint
+and population records remain limited to completed comparisons. None of these
+records infer package equivalence, assembly intent, electrical behavior,
+physical placement correctness, or actual component population.

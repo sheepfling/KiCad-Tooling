@@ -38,16 +38,7 @@ def pcb_component_inventory_candidates(
     """Translate source-bound PCB inventory, population, and value reports."""
     if report is None or report.status in {"NOT_APPLICABLE", "DISABLED"}:
         return ()
-    source_receipt = PcbComponentInventorySourceReceipt(
-        netlist_sha256=report.netlist_sha256,
-        board_path=report.board_path,
-        board_sha256=report.board_sha256,
-        snapshot_sha256=report.snapshot_sha256,
-        snapshot_schema=report.snapshot_schema,
-        kicad_version=report.kicad_version,
-        image=report.image,
-        probe_sha256=report.probe_sha256,
-    )
+    source_receipt = PcbComponentInventorySourceReceipt.from_coverage_report(report)
     if report.status == "BLOCKED":
         blocked_evidence = PcbBlockedComponentInventoryEvidence(report)
         candidates = [

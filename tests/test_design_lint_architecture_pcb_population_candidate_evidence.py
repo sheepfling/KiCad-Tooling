@@ -54,11 +54,13 @@ def test_population_findings_use_typed_source_owners_for_each_evidence_state() -
         for node in ast.walk(translator_function)
         if (owner := _source_evidence_owner(node)) is not None
     ]
-    assert len(source_owners) == 5
+    assert len(source_owners) == 7
     assert set(source_owners) == {
         "PcbInventoryCandidate",
         "PcbPopulationCandidate",
         "PcbBlockedVariantPopulationCandidate",
+        "PcbBlockedComponentInventoryCandidate",
+        "PcbBlockedPopulationCandidate",
         "PcbValueMismatchCandidate",
     }
     assert any(

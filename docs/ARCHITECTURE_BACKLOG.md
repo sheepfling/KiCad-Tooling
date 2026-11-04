@@ -202,11 +202,12 @@ retains an explicit blocked source record. PCB-owned projectors preserve the
 existing report evidence and fingerprints. Value mismatches and blocked value
 comparisons now retain typed sources as well; their projector preserves the
 distinct evidence shapes for complete and blocked inventory states. Top-level
-blocked inventory still retains its existing coverage path. Focused source-
-route, inventory, population, value, catalog-boundary, architecture, and
-CLI/MCP parity regressions passed 58 tests with native KiCad tests deselected.
-Ruff, focused Pyright, Markdown checks, and `git diff --check` passed. This
-advances SA-01 without a line-count-driven split or public report change.
+blocked inventory coverage now retains a `PcbBlockedComponentInventoryEvidence`
+record shared by the footprint and DNP findings, with separate projectors
+preserving their existing sparse wire fields. The combined focused source-route,
+inventory, population, value, catalog-boundary, architecture, and CLI/MCP parity
+run passed 62 tests under `design_lint and not native_kicad`. This advances SA-01
+without a line-count-driven split or public report change.
 
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify

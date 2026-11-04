@@ -39,6 +39,23 @@ class PcbComponentInventorySourceReceipt(StrictModel):
     image: NonEmptyText | None = None
     probe_sha256: Digest | None = None
 
+    @classmethod
+    def from_coverage_report(
+        cls,
+        report: PcbComponentInventoryCoverageReport,
+    ) -> PcbComponentInventorySourceReceipt:
+        """Copy the exact native identity shared by report-level comparisons."""
+        return cls(
+            netlist_sha256=report.netlist_sha256,
+            board_path=report.board_path,
+            board_sha256=report.board_sha256,
+            snapshot_sha256=report.snapshot_sha256,
+            snapshot_schema=report.snapshot_schema,
+            kicad_version=report.kicad_version,
+            image=report.image,
+            probe_sha256=report.probe_sha256,
+        )
+
 
 class PcbPopulationMismatch(StrictModel):
     """Schematic and placed PCB footprint disagree on DNP population state."""
