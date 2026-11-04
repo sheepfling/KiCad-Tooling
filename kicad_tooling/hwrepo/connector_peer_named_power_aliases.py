@@ -78,23 +78,3 @@ def connector_named_power_alias_peers(
             ),
         )
     )
-
-
-def connector_named_power_alias_evidence(
-    peer: ConnectorNamedPowerAliasPeer,
-) -> dict[str, tuple[str, ...]]:
-    """Build stable evidence shared by named connector power-pin rules."""
-    group = peer.group
-    evidence: dict[str, tuple[str, ...]] = {
-        **group.assignments,
-        "peer_identity_basis": ("part_id",),
-        "peer_identity": (group.part_id,),
-        "peer_symbols": peer.symbols,
-        "pin_number": (group.pin_number,),
-        "pin_function": (peer.function,),
-        "pin_electrical_type": (group.pin_electrical_type,),
-    }
-    if group.peer_assignment_group is not None:
-        evidence["peer_assignment_group"] = (group.peer_assignment_group,)
-        evidence["peer_assignment_basis"] = group.peer_assignment_basis
-    return evidence

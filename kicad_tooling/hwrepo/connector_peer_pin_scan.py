@@ -61,10 +61,17 @@ class ConnectorPartIdPeerPinGroup:
     pin_number: str
     pin_function: str
     pin_electrical_type: str
-    assignments: dict[str, tuple[str, ...]]
+    assignments: Mapping[str, tuple[str, ...]]
     symbols: tuple[str, ...]
     peer_assignment_group: str | None = None
     peer_assignment_basis: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "assignments",
+            MappingProxyType({pin: tuple(nets) for pin, nets in self.assignments.items()}),
+        )
 
 
 @dataclass(frozen=True, slots=True)

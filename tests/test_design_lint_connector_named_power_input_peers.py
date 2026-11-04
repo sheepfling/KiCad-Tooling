@@ -16,7 +16,12 @@ from tests.design_lint_fixtures.connector_named_power_aliases import (
     named_connector_power_alias_netlist as _connector_alias_netlist,
 )
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.power_lint]
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.connector_lint,
+    pytest.mark.power_lint,
+    pytest.mark.evidence_lint,
+]
 
 RULE_ID = "connector.peer_power_input_open_assignment"
 ALL_OPEN_RULE_ID = "connector.peer_power_input_named_all_open"

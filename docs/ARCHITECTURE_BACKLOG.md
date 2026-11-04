@@ -1350,9 +1350,9 @@ formatters have one owner. Existing rule IDs, messages, report evidence, and
 fingerprints remain stable.
 
 A repository-wide AST inventory of direct `Candidate(evidence=...)` calls
-finds 181 constructions across 145 Python modules: 109 in production code
-across 99 modules and 72 in tests across 46 modules. The evidence argument is
-a dictionary literal in 89 production calls and 24 test calls; other calls
+finds 173 constructions across 142 Python modules: 101 in production code
+across 96 modules and 72 in tests across 46 modules. The evidence argument is
+a dictionary literal in 87 production calls and 24 test calls; other calls
 reuse a named, attributed, or computed mapping. This is a triage inventory,
 not a claim that every construction is an opaque source route: test-only
 candidate builders and already-owned report projections need separate
@@ -1363,15 +1363,22 @@ two open-contact rules retain their pre-existing coverage semantics; the other
 seven still require complete interface coverage. The global PCB DRC severity
 route carries source-bound settings and typed check/category findings while
 retaining its exact path, digest, project kind, KiCad version, configured
-severity, and version gates. The custom PCB DRC rule route now carries ignored
+severity, and version gates. The custom PCB DRC rule route carries ignored
 and excluded declarations as canonical parser records, and text-variable
-findings retain distinct project and board source identities. It preserves
-source inventory checks, linked-path rejection, byte rechecks, existing
-report fields, and the exact supported-version boundary. The largest remaining
-production concentrations tie at three each in `connector_peer_power_input.py`
-and `connector_peer_power_output.py`; inspect these separately as input and
-output peer rule families before selecting the next route. Call counts alone
-do not determine whether their evidence should share an owner.
+findings retain distinct project and board source identities with source
+inventory checks, linked-path rejection, byte rechecks, and existing report
+fields. The six named connector power-alias routes now retain their guarded
+PART_ID peer source, tie rule and finding kind to the pin electrical type, and
+validate the exact supplemental pin assignments. The shared peer assignment
+record is immutable. Mapped shield/signal and signal/return routes retain
+complete coverage, the current netlist, and exact source-matched pin-role
+evidence; their typed source owner verifies that both roles remain assigned to
+the same native net. The largest remaining production concentrations tie at
+two each in `bus_ethernet_pair_labels.py`, `component_repeated_signal_pins.py`,
+`connector_peer_pin_all_open.py`, `connector_stateful_contacts.py`, and
+`mosfet_gate_connectivity.py`. Review these source records and rule families
+before selecting another shared owner.
+Call counts alone do not determine whether their evidence should share an owner.
 
 The schematic geometry tranche passed 75 synthetic and architecture tests and
 4 CLI/MCP parity tests against the separate public `KiCAD-Test` checkout.
@@ -1385,3 +1392,13 @@ so their counts are reported separately. The combined selector passed 175
 tests, running those shared checks once. Ruff, format, targeted Pyright, the
 repository Markdown check, mdrepo, and `git diff --check` passed. The tests use
 synthetic projects; no exact native KiCad lane was run.
+
+The connector candidate-evidence tranche passed 100 focused source,
+architecture, marker/selector, determinism, and CLI/MCP parity tests. Ruff,
+format, targeted Pyright, Markdown checks, mdrepo, and `git diff --check` passed.
+No exact native KiCad lane was run.
+
+The mapped connector contact-sharing tranche passed 47 source, architecture,
+marker/collection, selector, and CLI/MCP parity tests. Ruff, format, targeted
+Pyright, Markdown checks, mdrepo, and `git diff --check` passed. No exact native
+KiCad lane was run.

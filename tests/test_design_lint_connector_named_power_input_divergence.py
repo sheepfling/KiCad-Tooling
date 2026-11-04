@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import evaluate
@@ -16,9 +18,26 @@ from tests.design_lint_fixtures.connector_named_power_aliases import (
     named_connector_power_alias_netlist,
 )
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.power_lint]
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.connector_lint,
+    pytest.mark.power_lint,
+    pytest.mark.evidence_lint,
+]
 
 RULE_ID = "connector.peer_power_input_named_assignment_divergence"
+
+
+class NamedPowerAliasChanges(TypedDict, total=False):
+    assignments: tuple[str | None, str | None]
+    symbols: tuple[str, str]
+    part_ids: tuple[str | None, str | None]
+    values: tuple[str, str]
+    footprints: tuple[str, str]
+    inventories: tuple[tuple[str, ...], tuple[str, ...]]
+    target_functions: tuple[str, str]
+    target_types: tuple[str, str]
+    dnp: tuple[str, ...]
 
 
 def _report(source: NetlistContract, policy: DesignLintPolicy | None = None):
@@ -92,7 +111,7 @@ def test_named_power_input_divergence_ignores_common_open_mixed_and_ambiguous_gr
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_named_power_input_divergence_requires_guarded_alias_identity_and_metadata() -> None:
-    controls = (
+    controls: tuple[NamedPowerAliasChanges, ...] = (
         {"symbols": ("Synthetic:PortA", "Synthetic:PortA")},
         {"part_ids": ("SYNTHETIC-A", "SYNTHETIC-B")},
         {"part_ids": (None, None)},
@@ -107,13 +126,14 @@ def test_named_power_input_divergence_requires_guarded_alias_identity_and_metada
         {"dnp": ("J2",)},
     )
     for changes in controls:
-        arguments = {
+        arguments: NamedPowerAliasChanges = {
             "assignments": ("SYNTHETIC_RAIL_A", "SYNTHETIC_RAIL_B"),
             "part_ids": ("SYNTHETIC-NAMED-INPUT-001", "SYNTHETIC-NAMED-INPUT-001"),
             "target_functions": ("BIAS_IN", "BIAS_IN"),
             "target_types": ("power_in", "power_in"),
         }
-        source = named_connector_power_alias_netlist(**(arguments | changes))
+        arguments.update(changes)
+        source = named_connector_power_alias_netlist(**arguments)
         assert RULE_ID not in {item.rule_id for item in _report(source).findings}
 
 

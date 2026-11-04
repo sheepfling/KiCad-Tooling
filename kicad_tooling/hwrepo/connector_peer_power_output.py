@@ -5,16 +5,20 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from .connector_peer_named_power_aliases import (
-    connector_named_power_alias_evidence,
     connector_named_power_alias_peers,
 )
-from .design_lint_rule_types import DesignLintRuleId
+from .design_lint_connector_named_power_alias_candidate_evidence import (
+    ConnectorNamedPowerAliasRuleId,
+    connector_named_power_alias_candidate,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 
-RULE_ID: DesignLintRuleId = "connector.peer_power_output_open_assignment"
-ALL_OPEN_RULE_ID: DesignLintRuleId = "connector.peer_power_output_named_all_open"
-DIVERGENCE_RULE_ID: DesignLintRuleId = "connector.peer_power_output_named_assignment_divergence"
+RULE_ID: ConnectorNamedPowerAliasRuleId = "connector.peer_power_output_open_assignment"
+ALL_OPEN_RULE_ID: ConnectorNamedPowerAliasRuleId = "connector.peer_power_output_named_all_open"
+DIVERGENCE_RULE_ID: ConnectorNamedPowerAliasRuleId = (
+    "connector.peer_power_output_named_assignment_divergence"
+)
 
 
 def connector_named_power_output_open_assignments(
@@ -46,12 +50,10 @@ def connector_named_power_output_open_assignments(
         if not assigned_pins or not open_pins:
             continue
 
-        evidence = connector_named_power_alias_evidence(peer)
-        evidence["assigned_peer_pins"] = assigned_pins
-        evidence["open_peer_pins"] = open_pins
         found.append(
-            Candidate(
-                rule_id=RULE_ID,
+            connector_named_power_alias_candidate(
+                peer,
+                RULE_ID,
                 subject=(
                     f"PART_ID {group.part_id} pin {group.pin_number} ({peer.function}): "
                     "named connector power-output peer assignment is open"
@@ -64,7 +66,6 @@ def connector_named_power_output_open_assignments(
                     "identity and pin metadata do not establish that the contacts should share "
                     "a net."
                 ),
-                evidence=evidence,
             )
         )
 
@@ -97,11 +98,10 @@ def connector_named_power_output_all_open(
         if any(group.assignments.values()):
             continue
 
-        evidence = connector_named_power_alias_evidence(peer)
-        evidence["open_peer_pins"] = tuple(group.assignments)
         found.append(
-            Candidate(
-                rule_id=ALL_OPEN_RULE_ID,
+            connector_named_power_alias_candidate(
+                peer,
+                ALL_OPEN_RULE_ID,
                 subject=(
                     f"PART_ID {group.part_id} pin {group.pin_number} ({peer.function}): "
                     "named connector power-output peer pin is open everywhere"
@@ -113,7 +113,6 @@ def connector_named_power_output_all_open(
                     "connection; matching part identity and pin metadata do not establish that "
                     "an output contact is required or that the aliases should share a net."
                 ),
-                evidence=evidence,
             )
         )
 
@@ -149,13 +148,10 @@ def connector_named_power_output_assignment_divergence(
         if len(assigned_nets) < 2:
             continue
 
-        evidence = connector_named_power_alias_evidence(peer)
-        evidence["distinct_net_assignments"] = tuple(
-            f"{pin}={nets[0]}" for pin, nets in sorted(group.assignments.items())
-        )
         found.append(
-            Candidate(
-                rule_id=DIVERGENCE_RULE_ID,
+            connector_named_power_alias_candidate(
+                peer,
+                DIVERGENCE_RULE_ID,
                 subject=(
                     f"PART_ID {group.part_id} pin {group.pin_number} ({peer.function}): "
                     "named connector power-output peer assignments diverge"
@@ -168,7 +164,6 @@ def connector_named_power_output_assignment_divergence(
                     "mismatch; matching part identity and pin metadata do not establish that the "
                     "nets should be joined."
                 ),
-                evidence=evidence,
             )
         )
 

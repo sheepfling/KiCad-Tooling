@@ -987,11 +987,47 @@ messages, and fingerprints are preserved. The text-variable finding still
 means only that the audit does not evaluate KiCad substitutions; it does not
 claim the resolved rule is faulty or valid.
 
-The broader AST inventory now finds 109 direct `Candidate(evidence=...)`
-constructions in production modules across 99 files and 72 in tests across 46
-files. Of those, 89 production evidence values and 24 test values are literal
+## Named connector power-alias candidate evidence
+
+All six named power-input and power-output alias findings now retain their
+`ConnectorNamedPowerAliasPeer` through
+`ConnectorNamedPowerAliasFindingEvidence` and
+`ConnectorNamedPowerAliasCandidate`. The evidence record ties the catalog rule
+to the native electrical type and finding kind, then validates its exact
+assigned/open or distinct-net pin list against the peer assignments. The shared
+PART_ID peer scan freezes its assignment mapping, so the retained source cannot
+drift after candidate construction. The projector preserves the existing pin
+assignment keys, identity basis, PART_ID, peer symbols, pin metadata, optional
+peer assignment group, and each finding's supplemental pin list. The six
+predicate owners keep their existing selection conditions, rule IDs, subjects,
+messages, and ordering.
+
+The broader AST inventory now finds 101 direct `Candidate(evidence=...)`
+constructions in production modules across 96 files and 72 in tests across 46
+files. Of those, 87 production evidence values and 24 test values are literal
 dictionaries. This is a route-triage queue, not a count of confirmed opaque
-boundaries. The largest remaining production concentrations tie at three
-calls each in `connector_peer_power_input.py` and
-`connector_peer_power_output.py`; the next review should inspect those input
-and output peer rule families as separate source owners.
+boundaries. The largest remaining production concentrations tie at two calls
+each in `bus_ethernet_pair_labels.py`, `component_repeated_signal_pins.py`,
+`connector_peer_pin_all_open.py`, `connector_stateful_contacts.py`, and
+`mosfet_gate_connectivity.py`. Review their source records and rule families
+before selecting another shared owner.
+
+## Mapped connector contact-sharing candidate evidence
+
+The mapped shield/signal and signal/return findings retain
+`MappedConnectorContactSharingFindingEvidence` through
+`MappedConnectorContactSharingCandidate`. The source record binds the current
+netlist, complete connector coverage, the catalog digest, the selected role
+pair, and its mapped pin records. Construction verifies each pin against
+current source-matched coverage, rejects unpopulated references and open or
+ambiguous pins, and confirms both roles share the recorded native net. The
+projector preserves the existing report fields, rule IDs, subjects, messages,
+and ordering; predicate selection is unchanged.
+
+The shared source route now leaves 101 direct `Candidate(evidence=...)`
+constructions in production modules across 96 files and 72 in tests across 46
+files. Literal dictionaries account for 87 production calls and 24 test calls.
+The largest remaining production concentrations tie at two calls each in
+`bus_ethernet_pair_labels.py`, `component_repeated_signal_pins.py`,
+`connector_peer_pin_all_open.py`, `connector_stateful_contacts.py`, and
+`mosfet_gate_connectivity.py`.

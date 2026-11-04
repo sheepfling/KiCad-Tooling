@@ -22,7 +22,12 @@ from tests.design_lint_fixtures.connector_mapped_signal_sharing import (
     signal_sharing_report,
 )
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.interface_lint]
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.connector_lint,
+    pytest.mark.interface_lint,
+    pytest.mark.evidence_lint,
+]
 
 RULE_ID = "connector.mapped_shield_signal_share_net"
 

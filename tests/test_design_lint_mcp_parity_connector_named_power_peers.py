@@ -16,6 +16,7 @@ pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.connector_lint,
     pytest.mark.power_lint,
+    pytest.mark.evidence_lint,
 ]
 
 from kicad_tooling.hwrepo.contracts import read_model, write_model
