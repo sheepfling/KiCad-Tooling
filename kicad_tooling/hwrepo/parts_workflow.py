@@ -19,7 +19,6 @@ from .contracts import read_model, repo_path, write_model
 from .discovery import load_registry
 from .evidence import digest
 from .layout import CONFIG_NAME, layout
-from .models import PurchasingReport
 from .part_catalog_models import PartsCatalog
 from .parts_operation_models import PartsPreparationRequest
 from .parts_receipts import PartsOutputManifest
@@ -29,6 +28,7 @@ from .project_models import (
     ProjectRecord,
 )
 from .purchasing import plan, read_components, write_csvs
+from .purchasing_models import PurchasingReport
 from .purchasing_preference_models import PurchasingPreferences
 
 

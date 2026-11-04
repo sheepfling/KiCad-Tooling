@@ -13,8 +13,11 @@ from .contract_coach import receipt_directory
 from .contracts import write_model
 from .discovery import load_config
 from .evidence import digest
-from .models import PurchasingPlan, PurchasingReport
 from .parts_receipts import read_parts_receipt
+from .purchasing_models import (
+    PurchasingPlan,
+    PurchasingReport,
+)
 from .review_overview_evidence import ReviewContext, read_receipt, source_mismatch
 from .selection import resolve_project
 from .sourcing import check as check_sourcing

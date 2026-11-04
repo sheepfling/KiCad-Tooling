@@ -12,16 +12,16 @@ from collections.abc import Set as AbstractSet
 from pathlib import Path
 from urllib.parse import quote
 
-from .models import (
-    PurchasingComponent,
-    PurchasingFinding,
-    PurchasingLine,
-    PurchasingPlan,
-)
 from .part_catalog_models import (
     PartRecord,
     PartsCatalog,
     PartStatus,
+)
+from .purchasing_models import (
+    PurchasingComponent,
+    PurchasingFinding,
+    PurchasingLine,
+    PurchasingPlan,
 )
 from .purchasing_preference_models import PurchasingPreferences
 

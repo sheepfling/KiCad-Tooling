@@ -13,12 +13,14 @@ import time
 from urllib.parse import urlencode
 
 from .contracts import parse_model
-from .models import (
+from .digikey_handoff_models import (
     DigiKeyHandoffPart,
     DigiKeyHandoffPayload,
     DigiKeyHandoffQuantity,
     DigiKeyHandoffReply,
     DigiKeyHandoffUrl,
+)
+from .purchasing_models import (
     PurchasingPlan,
 )
 

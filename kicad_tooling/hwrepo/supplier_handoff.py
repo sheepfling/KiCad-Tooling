@@ -19,19 +19,19 @@ from . import digikey_handoff
 from .artifact_access import artifact_file, read_regular_bytes
 from .contract_coach import project_context
 from .contracts import parse_model_text, read_model, repo_path, write_model
+from .digikey_handoff_models import DigiKeyHandoffPayload
 from .discovery import load_registry
 from .evidence import digest
-from .models import (
-    Digest,
-    DigiKeyHandoffPayload,
-    PurchasingReport,
-    SupplierHandoffPlan,
-    SupplierHandoffReport,
-)
+from .model_primitives import Digest
 from .part_catalog_models import PartsCatalog
 from .parts_workflow import input_hashes, preferences_path, selected_project
 from .purchasing import plan as purchasing_plan
 from .purchasing import read_components
+from .purchasing_models import PurchasingReport
+from .supplier_handoff_models import (
+    SupplierHandoffPlan,
+    SupplierHandoffReport,
+)
 
 _DIGEST: TypeAdapter[str] = TypeAdapter(Digest)
 _MAX_DOCUMENT = 2 * 1024 * 1024

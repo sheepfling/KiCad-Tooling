@@ -23,12 +23,12 @@ from .discovery import load_config
 from .evidence import digest
 from .findings_view_evidence import verified_findings_drawing
 from .findings_view_models import FindingsViewReport, ReviewDrawing
-from .models import PurchasingComponent
 from .native_project_validation_models import ValidationSummary
 from .native_summary_binding import validate_native_summary_binding
 from .parts_receipts import read_parts_receipt
 from .project_source_hashes import hash_project_sources as hashes
 from .purchasing import read_components
+from .purchasing_models import PurchasingComponent
 from .review_overview_evidence import (
     ReviewContext,
     read_receipt,

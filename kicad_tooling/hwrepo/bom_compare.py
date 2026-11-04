@@ -17,8 +17,8 @@ from .bom_compare_models import (
 from .contract_coach import receipt_directory
 from .contracts import write_model
 from .evidence import digest
-from .models import PurchasingPlan
 from .parts_receipts import read_parts_receipt
+from .purchasing_models import PurchasingPlan
 from .selection import resolve_project
 
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .cross_probe_variant import VariantObservation
-from .models import PurchasingComponent
+from .purchasing_models import PurchasingComponent
 from .variant_parts_review_models import VariantPopulationIssue
 
 

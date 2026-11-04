@@ -13,13 +13,13 @@ from .cross_probe_variant import read_variant_observation
 from .discovery import load_config, load_registry
 from .evidence import digest
 from .findings_view_models import FindingsViewReport
-from .models import PurchasingFinding
 from .native_project_validation_models import ValidationSummary
 from .native_summary_binding import validate_native_summary_binding
 from .part_catalog_models import PartsCatalog
 from .parts_receipts import read_parts_receipt
 from .project_source_hashes import hash_project_sources as hashes
 from .purchasing import plan, read_components, review_csv_text, write_csvs
+from .purchasing_models import PurchasingFinding
 from .review_overview_evidence import (
     ReviewContext,
     read_receipt,

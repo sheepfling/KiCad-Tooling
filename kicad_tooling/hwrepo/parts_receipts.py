@@ -13,7 +13,7 @@ from .artifact_access import artifact_path, read_regular_bytes
 from .contracts import parse_model_text, read_model, repo_path
 from .evidence import digest
 from .model_primitives import Digest, RepositoryPath, StrictModel
-from .models import PurchasingReport
+from .purchasing_models import PurchasingReport
 
 
 class PartsOutputManifest(StrictModel):

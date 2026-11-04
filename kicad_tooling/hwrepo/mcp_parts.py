@@ -8,8 +8,8 @@ from . import parts_workflow
 from .contracts import repo_path
 from .doctor import NativeRunner
 from .mcp_workflow import artifact_file, fresh_output, native_summary_path, selected_project
-from .models import PurchasingReport
 from .parts_operation_models import PartsPreparationRequest
+from .purchasing_models import PurchasingReport
 from .purchasing_preferences import save_parts_preferences
 
 __all__ = ["prepare_parts", "save_parts_preferences"]

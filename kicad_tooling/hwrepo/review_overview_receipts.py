@@ -8,14 +8,12 @@ from .contracts import repo_path
 from .electrical_chart_models import ElectricalChartsReport
 from .electrical_report_models import ElectricalAnalysisReport
 from .findings_view_models import FindingsViewReport
-from .models import (
-    PurchasingReport,
-    ThreeDReport,
-)
+from .models import ThreeDReport
 from .native_project_validation_models import ValidationSummary
 from .native_summary_binding import validate_native_toolchain
 from .parts_receipts import read_parts_output_manifest
 from .project_models import ProjectKind
+from .purchasing_models import PurchasingReport
 from .review_overview_evidence import (
     ReviewContext,
     artifact_issues,

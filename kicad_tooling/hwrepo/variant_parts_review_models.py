@@ -8,7 +8,7 @@ from typing import Literal
 from pydantic import Field
 
 from .model_primitives import Digest, Identifier, NonEmptyText, RepositoryPath, StrictModel
-from .models import PurchasingPlan
+from .purchasing_models import PurchasingPlan
 
 
 class VariantPopulationIssue(StrictModel):

@@ -6,7 +6,7 @@ from collections import Counter
 from html import escape
 from pathlib import PurePosixPath
 
-from .models import PurchasingReport
+from .purchasing_models import PurchasingReport
 
 STYLE = """
 :root{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#203047;

@@ -7,9 +7,7 @@ from collections.abc import Mapping
 from typing import Annotated, Literal
 
 from pydantic import (
-    ConfigDict,
     Field,
-    RootModel,
     StringConstraints,
     model_validator,
 )
@@ -32,6 +30,7 @@ from . import design_lint_policy_models as _design_lint_policy_models
 from . import design_lint_rule_models as _design_lint_rule_models
 from . import design_lint_rule_types as _design_lint_rule_types
 from . import diagnostics_models as _diagnostics_models
+from . import digikey_handoff_models as _digikey_handoff_models
 from . import digital_peer_voltage_models as _digital_peer_voltage_models
 from . import electrical_analysis_contract_models as _electrical_analysis_contract_models
 from . import electrical_chart_models as _electrical_chart_models
@@ -65,6 +64,7 @@ from . import power_sequence_models as _power_sequence_models
 from . import product_models as _product_models
 from . import project_inventory_models as _project_inventory_models
 from . import project_models as _project_models
+from . import purchasing_models as _purchasing_models
 from . import purchasing_preference_models as _purchasing_preference_models
 from . import rc_filter_models as _rc_filter_models
 from . import reference_bond_models as _reference_bond_models
@@ -81,6 +81,7 @@ from . import signal_pair_models as _signal_pair_models
 from . import sourcing_models as _sourcing_models
 from . import spi_models as _spi_models
 from . import stm32_pin_map_models as _stm32_pin_map_models
+from . import supplier_handoff_models as _supplier_handoff_models
 from . import surface_models as _surface_models
 from . import usb_c_models as _usb_c_models
 from . import usb_data_path_models as _usb_data_path_models
@@ -1157,111 +1158,19 @@ class ModelPopulationReport(StrictModel):
 
 PurchasingSchemaModel = _purchasing_preference_models.PurchasingSchemaModel
 PurchasingPreferences = _purchasing_preference_models.PurchasingPreferences
-
-
-class PurchasingComponent(StrictModel):
-    reference: Identifier
-    value: str
-    footprint: str
-    part_id: str | None = None
-    dnp: bool = False
-    exclude_from_bom: bool = False
-
-
-class PurchasingLine(StrictModel):
-    part_id: Identifier
-    revision: Identifier
-    manufacturer: NonEmptyText
-    mpn: NonEmptyText
-    footprint: NonEmptyText
-    references: tuple[Identifier, ...]
-    per_board: PositiveCount
-    required: PositiveCount
-    spares: NonNegativeCount
-    quantity: PositiveCount
-    order_number: NonEmptyText
-    order_number_kind: Literal["MPN", "DigiKey"]
-    search_url: NonEmptyText
-
-
-class PurchasingFinding(StrictModel):
-    code: Identifier
-    references: tuple[Identifier, ...] = ()
-    message: NonEmptyText
-    action: NonEmptyText
-
-
-class PurchasingPlan(PurchasingSchemaModel):
-    """Metadata readiness for human ordering review, never electrical approval."""
-
-    schema_version: Literal["1"] = "1"
-    status: Literal["NEEDS_PARTS", "READY_FOR_ORDER_REVIEW"]
-    preferences: PurchasingPreferences
-    components: tuple[PurchasingComponent, ...]
-    lines: tuple[PurchasingLine, ...]
-    findings: tuple[PurchasingFinding, ...]
-    excluded_references: tuple[Identifier, ...] = ()
-    purchase_authorized: Literal[False] = False
-    build_authorized: Literal[False] = False
-
-
-class DigiKeyHandoffQuantity(StrictModel):
-    quantity: PositiveCount
-
-
-class DigiKeyHandoffPart(StrictModel):
-    requested_part_number: Annotated[NonEmptyText, Field(alias="requestedPartNumber")]
-    quantities: Annotated[tuple[DigiKeyHandoffQuantity, ...], Field(min_length=1)]
-    customer_reference: Annotated[str, Field(alias="customerReference")]
-    notes: str
-
-
-class DigiKeyHandoffPayload(RootModel[tuple[DigiKeyHandoffPart, ...]]):
-    """DigiKey's third-party API accepts a root array of order lines."""
-
-    model_config = ConfigDict(strict=True, frozen=True)
-
-
-class DigiKeyHandoffUrl(RootModel[str]):
-    """DigiKey returns a JSON string, validated as an allowed URL by the adapter."""
-
-    model_config = ConfigDict(strict=True, frozen=True)
-
-
-class DigiKeyHandoffReply(StrictModel):
-    single_use_url: Annotated[
-        str,
-        StringConstraints(pattern=r"^https://www\.digikey\.com/short/[a-z0-9]{7,8}$"),
-    ]
-
-
-class DigiKeyHandoffResult(StrictModel):
-    status: Literal["READY", "BLOCKED", "ERROR"]
-    single_use_url: str | None = None
-    issues: tuple[NonEmptyText, ...] = ()
-    purchase_authorized: Literal[False] = False
-
-
-class PurchasingReport(PurchasingSchemaModel):
-    """Source-bound local parts assistant receipt."""
-
-    schema_version: Literal["1"] = "1"
-    lane: Literal["PARTS_TO_ORDER"] = "PARTS_TO_ORDER"
-    project_id: Identifier
-    status: Literal["BLOCKED", "NEEDS_PARTS", "READY_FOR_ORDER_REVIEW"]
-    purchase_authorized: Literal[False] = False
-    build_authorized: Literal[False] = False
-    plan: PurchasingPlan | None = None
-    source_hashes: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
-    input_hashes: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
-    netlist_sha256: Digest | None = None
-    native_status: Literal["PASS", "FAIL"] | None = None
-    selected_runner: Literal["local", "container"] | None = None
-    issues: tuple[NonEmptyText, ...] = ()
-    next_actions: tuple[NonEmptyText, ...] = ()
-    receipt_dir: str
-    artifacts: tuple[str, ...] = ()
-    evidence: ContractCoachReport | None = None
+PurchasingComponent = _purchasing_models.PurchasingComponent
+PurchasingLine = _purchasing_models.PurchasingLine
+PurchasingFinding = _purchasing_models.PurchasingFinding
+PurchasingPlan = _purchasing_models.PurchasingPlan
+PurchasingReport = _purchasing_models.PurchasingReport
+DigiKeyHandoffQuantity = _digikey_handoff_models.DigiKeyHandoffQuantity
+DigiKeyHandoffPart = _digikey_handoff_models.DigiKeyHandoffPart
+DigiKeyHandoffPayload = _digikey_handoff_models.DigiKeyHandoffPayload
+DigiKeyHandoffUrl = _digikey_handoff_models.DigiKeyHandoffUrl
+DigiKeyHandoffReply = _digikey_handoff_models.DigiKeyHandoffReply
+DigiKeyHandoffResult = _digikey_handoff_models.DigiKeyHandoffResult
+SupplierHandoffPlan = _supplier_handoff_models.SupplierHandoffPlan
+SupplierHandoffReport = _supplier_handoff_models.SupplierHandoffReport
 
 
 McpPurchasingPreferencesResult = _purchasing_preference_models.McpPurchasingPreferencesResult
@@ -1403,43 +1312,6 @@ class AutoCadReport(StrictModel):
     plan_path: str | None = None
     receipt_directory: str
     diff: str = ""
-    build_authorized: Literal[False] = False
-
-
-class SupplierHandoffPlan(StrictModel):
-    """Reviewed, source-bound BOM payload for one explicit supplier submission."""
-
-    schema_version: Literal["1"] = "1"
-    supplier: Literal["digikey"] = "digikey"
-    project_id: Identifier
-    parts_report: RepositoryPath
-    report_sha256: Digest
-    payload: DigiKeyHandoffPayload
-    payload_sha256: Digest
-    source_hashes: Mapping[RepositoryPath, Digest]
-    preconditions: Mapping[RepositoryPath, Digest | None]
-    purchase_authorized: Literal[False] = False
-    build_authorized: Literal[False] = False
-
-
-class SupplierHandoffReport(StrictModel):
-    schema_version: Literal["1"] = "1"
-    status: Literal["PREPARED", "SENT", "UNCERTAIN", "BLOCKED"]
-    project_id: Identifier
-    supplier: Literal["digikey"] = "digikey"
-    handoff: RepositoryPath
-    handoff_sha256: Digest
-    payload_sha256: Digest
-    attempt_receipt: RepositoryPath | None = None
-    single_use_url: (
-        Annotated[
-            str,
-            StringConstraints(pattern=r"^https://www\.digikey\.com/short/[a-z0-9]{7,8}$"),
-        ]
-        | None
-    ) = None
-    issues: tuple[NonEmptyText, ...] = ()
-    purchase_authorized: Literal[False] = False
     build_authorized: Literal[False] = False
 
 

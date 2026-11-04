@@ -18,14 +18,13 @@ from urllib.parse import parse_qsl
 from .cad_source_models import CadImportReport, CadSourceReport, CadSourcingReview, CadStepReport
 from .contract_coach import AutoNetlistRunner, NetlistRunner, project_context
 from .contracts import repo_path
+from .digikey_handoff_models import DigiKeyHandoffResult
 from .evidence import digest
+from .model_primitives import StrictModel
 from .models import (
-    DigiKeyHandoffResult,
     PartPickerReport,
     PartSelectionAssignment,
     PartSelectionMap,
-    PurchasingReport,
-    StrictModel,
 )
 from .part_picker import create_picker, selection
 from .part_picker_view import save_picker, save_selection
@@ -36,6 +35,9 @@ from .parts_workflow import (
     prepare,
     save_report,
     selected_project,
+)
+from .purchasing_models import (
+    PurchasingReport,
 )
 from .purchasing_preference_models import PurchasingPreferences
 

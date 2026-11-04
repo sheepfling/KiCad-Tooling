@@ -14,15 +14,15 @@ from .contracts import read_model, write_model
 from .doctor import NativeRunner
 from .mcp_files import read_regular_bytes
 from .mcp_workflow import artifact_file, fresh_output, native_summary_path, selected_project
+from .model_primitives import Digest
 from .models import (
     AutoCadReport,
-    Digest,
     PartPickerReport,
     PartSelectionAssignment,
     PartSelectionMap,
     PartSelectionReport,
-    SupplierHandoffReport,
 )
+from .supplier_handoff_models import SupplierHandoffReport
 
 _DIGEST: TypeAdapter[str] = TypeAdapter(Digest)
 

@@ -19,7 +19,6 @@ from .hwrepo.contract_coach import (
 )
 from .hwrepo.contracts import read_model
 from .hwrepo.layout import default_project_root
-from .hwrepo.models import SupplierHandoffPlan
 from .hwrepo.part_picker import create_picker, resume_selection, selection
 from .hwrepo.part_picker_view import picker_text, save_picker, save_selection, selection_text
 from .hwrepo.parts_operation_models import PartsPreparationRequest
@@ -33,6 +32,7 @@ from .hwrepo.parts_workflow import (
 )
 from .hwrepo.purchasing_preferences import save_parts_preferences
 from .hwrepo.supplier_handoff import prepare_supplier_handoff, submit_supplier_handoff
+from .hwrepo.supplier_handoff_models import SupplierHandoffPlan
 
 
 def count(value: str) -> int:

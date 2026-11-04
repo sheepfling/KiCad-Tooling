@@ -705,6 +705,15 @@ adoption, generation, and metrics services import the owner directly;
 `models.py` preserves identity-compatible exports. The capability map records
 the lifecycle owner, and the architecture regression guards its primitive and
 policy dependencies plus JSON round trips and non-authorizing report defaults.
+Purchasing preferences remain in `purchasing_preference_models.py`; typed
+order-review plans and source-bound parts reports now belong to
+`purchasing_models.py`. The DigiKey request/response DTOs belong to
+`digikey_handoff_models.py`; the source-bound supplier submission plan and
+receipt belong to `supplier_handoff_models.py`. Parts, BOM, CLI, MCP, and review
+services import these contracts from their domain owners; `models.py` keeps
+identity-compatible exports. The architecture regression guards owner
+dependencies and direct production imports. Existing order, receipt, handoff,
+and API tests cover serialized behavior and explicit non-authorization.
 
 **Done when:** a new feature's record is placed with its domain, the selected
 legacy imports shrink, old supported imports resolve, and serialized reports
