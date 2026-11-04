@@ -34,6 +34,9 @@ COVERAGE_RULE_ID = "connector.footprint_peer_unanchored_scope_coverage_missing"
 NATIVE_FAULT_CASE = "footprint-alias-unanchored-fault"
 NATIVE_CONTROL_CASE = "footprint-alias-control"
 NATIVE_CASES = (NATIVE_FAULT_CASE, NATIVE_CONTROL_CASE)
+COVERAGE_NATIVE_FAULT_CASE = "footprint-alias-unanchored-partial-open-fault"
+COVERAGE_NATIVE_CONTROL_CASE = "footprint-alias-open-fault"
+COVERAGE_NATIVE_CASES = (COVERAGE_NATIVE_FAULT_CASE, COVERAGE_NATIVE_CONTROL_CASE)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -234,19 +237,23 @@ def test_native_unanchored_alias_fault_and_common_control_repeat(
     expected_hashes = {
         NATIVE_FAULT_CASE: "2d8fbf390f3b154d77c0bbc603a7260ddc0ff27cf3b9b2e74ab19242dfc4aa40",
         NATIVE_CONTROL_CASE: "d5c77a1b8de808ab82c9f98f0172af7f6f933ce43536dabe00c6fbf83e048e28",
+        COVERAGE_NATIVE_FAULT_CASE: "fb4fc447ef05fc97699b84bf5a21b7d106ed32e56e31059196982fa76d98e124",
+        COVERAGE_NATIVE_CONTROL_CASE: "ba6fd627b7a8e994ca554dbb9f3a1d67197f8a48d5302c5ee6c78318be424605",
     }
     fixture_root = Path(__file__).resolve().parent / "fixtures/design_lint"
     fixture_sources = connector_return_fixture_sources(fixture_root)
     assert {
-        case: CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES[case] for case in NATIVE_CASES
+        case: CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES[case]
+        for case in (*NATIVE_CASES, *COVERAGE_NATIVE_CASES)
     } == expected_hashes
-    assert {
-        NATIVE_FAULT_CASE: fixture_sources[NATIVE_FAULT_CASE],
-        NATIVE_CONTROL_CASE: fixture_sources[NATIVE_CONTROL_CASE],
-    } == {
+    assert {case: fixture_sources[case] for case in (*NATIVE_CASES, *COVERAGE_NATIVE_CASES)} == {
         NATIVE_FAULT_CASE: fixture_root
         / "connector-footprint-alias-native/unanchored-fault.kicad_sch",
         NATIVE_CONTROL_CASE: fixture_root / "connector-footprint-alias-native/control.kicad_sch",
+        COVERAGE_NATIVE_FAULT_CASE: fixture_root
+        / "connector-footprint-alias-native/unanchored-partial-open-fault.kicad_sch",
+        COVERAGE_NATIVE_CONTROL_CASE: fixture_root
+        / "connector-footprint-alias-native/open-fault.kicad_sch",
     }
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
@@ -265,7 +272,7 @@ def test_native_unanchored_alias_fault_and_common_control_repeat(
         project,
         image=config.image,
         log=log,
-        case_names=NATIVE_CASES,
+        case_names=(*NATIVE_CASES, *COVERAGE_NATIVE_CASES),
         stage_prefix="unanchored-footprint-peer-fixture",
     )
     assert context.source_hashes == expected_hashes
@@ -352,7 +359,34 @@ def test_native_unanchored_alias_fault_and_common_control_repeat(
     assert control_coverage_reports[1].model_dump(mode="json") == (
         control_coverage_reports[0].model_dump(mode="json")
     )
-    for case in NATIVE_CASES:
+    partial_open_fault_reports = tuple(
+        lint_report(context.observed_contracts[COVERAGE_NATIVE_FAULT_CASE, run])
+        for run in ("first", "repeat")
+    )
+    partial_open_control_reports = tuple(
+        lint_report(context.observed_contracts[COVERAGE_NATIVE_CONTROL_CASE, run])
+        for run in ("first", "repeat")
+    )
+    partial_open_findings = tuple(
+        item for item in partial_open_fault_reports[0].findings if item.rule_id == COVERAGE_RULE_ID
+    )
+    assert len(partial_open_findings) == 1
+    assert partial_open_findings[0].evidence["unanchored_partial_open_pin_numbers"] == ("2",)
+    assert partial_open_findings[0].evidence["pin_assignments"] == (
+        "pin 2: J1.2=SYNTHETIC_NET_2; J2.2=<unassigned>",
+    )
+    assert partial_open_fault_reports[1].model_dump(mode="json") == (
+        partial_open_fault_reports[0].model_dump(mode="json")
+    )
+    assert not any(
+        item.rule_id == COVERAGE_RULE_ID
+        for report in partial_open_control_reports
+        for item in report.findings
+    )
+    assert partial_open_control_reports[1].model_dump(mode="json") == (
+        partial_open_control_reports[0].model_dump(mode="json")
+    )
+    for case in (*NATIVE_CASES, *COVERAGE_NATIVE_CASES):
         assert (
             context.normalized_netlist_hashes[case, "first"]
             == context.normalized_netlist_hashes[case, "repeat"]

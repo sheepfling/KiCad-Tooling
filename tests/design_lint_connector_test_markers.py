@@ -94,6 +94,7 @@ CONNECTOR_LINT_TEST_MODULES = frozenset(
         "tests/test_connector_peer_unanchored_assignments.py",
         "tests/test_connector_peer_unanchored_scope.py",
         "tests/test_connector_peer_unanchored_coverage.py",
+        "tests/test_connector_peer_unanchored_coverage_parity.py",
         "tests/test_connector_peer_scope.py",
         "tests/test_connector_return_scope.py",
         "tests/test_connector_supply_scope.py",

@@ -121,3 +121,4 @@ class ConnectorFootprintPeerPinScan:
     open_outliers: tuple[ConnectorFootprintPeerPinOpenOutlier, ...]
     all_open: tuple[ConnectorFootprintPeerPinAllOpen, ...]
     named_all_open: tuple[ConnectorFootprintPeerPinNamedAllOpen, ...]
+    unanchored_open_outliers: tuple[ConnectorFootprintPeerPinOpenOutlier, ...] = ()

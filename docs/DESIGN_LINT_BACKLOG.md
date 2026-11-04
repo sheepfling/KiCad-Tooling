@@ -713,10 +713,13 @@ standalone parity work when it closes a demonstrated feature regression.
   baseline peer split and missing-scope rules both stayed quiet when connector
   coverage was absent or incomplete. The new default-REVIEW candidate uses only
   exact native alias and pin assignments to ask for pinout and peer-scope
-  review; it does not assert that contacts should be tied. Synthetic fault,
-  explicit-not-applicable, common-assignment, policy, ignore, and ordering cases
-  pass locally. CLI/MCP parity passes, and the digest-pinned native
-  fault/control lane passed with KiCad 10.0.0 and 10.0.5. Public-board
+  review. It now also prompts for partial-open generic contacts when at least
+  one alias is assigned, another is open, all assigned aliases share one net,
+  and no common-net anchor exists. It does not assert that contacts should be
+  tied. Synthetic fault/control, explicit-not-applicable, common-assignment,
+  policy, ignore, and ordering cases pass locally; CLI/MCP parity passes. The
+  exact native lane is selected for the prerelease gate, but could not run in
+  this local environment because Docker socket access was denied. Public-board
   applicability and independent reviewer-value measurement remain open.
 
 **Earlier peer-scope work:**
@@ -14174,32 +14177,38 @@ control are documented in the
   unanchored generic split emitted neither LINT-272 nor LINT-273. LINT-272 needs
   an authored peer group, and LINT-273 needs a complete current connector
   inventory and pin maps. LINT-274 now emits one cohort-level review prompt
-  from the exact native alias and assignment evidence.
+  from the exact native alias and assignment evidence. It also covers a
+  partial-open generic contact when at least one alias has an assignment, at
+  least one is open, all assigned aliases share one net, and no other pin in
+  the cohort provides a common-net anchor.
 - **Predicate:** Reuse the bounded footprint-alias scan. Require distinct
   fitted native connector symbols with no PART_ID, matching nonempty value and
   footprint, complete identical pin inventories, matching nonempty native pin
-  function and electrical-type metadata, and one exact different net per
-  generic contact in an unanchored cohort. Emit one candidate for that cohort
-  when connector coverage is absent, unassessed, incomplete, undeclared, or has
-  an unreviewed inventory scope.
+  function and electrical-type metadata. In an unanchored cohort, report either
+  generic contacts with one exact but different net per alias, or partial-open
+  generic contacts with one assigned net shared by all assigned aliases. Emit
+  one candidate for that cohort when connector coverage is absent, unassessed,
+  incomplete, undeclared, or has an unreviewed inventory scope.
 - **Boundary:** Similarity is only a review clue. The finding asks for pinout
   and peer-scope review; it does not say the ports are peers, require common
   nets, or direct the user to tie pins. Explicitly `NOT_APPLICABLE` and stale
   aliases suppress the cohort. Complete coverage remains with LINT-273. The
   rule does not establish connector role, PCB copper continuity, or off-board
   wiring.
-- **Evidence:** Synthetic fault/control cases use the existing tooling-owned
-  `connector-peer-unanchored-scope` fixture and small generated `NetlistContract`
-  inputs; no project design is stored. Controls cover a common assignment,
-  explicit not-applicable review, complete peer scope, `review`/`block`/`off`,
-  exact ignore, and mapping-order stability. CLI/MCP and exact KiCad 10.0.0 /
-  10.0.5 acceptance passed on the existing source-hashed connector fixture
-  lane. The focused peer-scope selection passed 38 tests with two native cases
-  skipped in the non-native invocation; the separately enabled native lane
-  passed both pinned-version fault/control cases. Catalog reachability and
-  architecture checks passed (29 tests). This is synthetic and native-export
-  compatibility evidence, not public-board applicability or reviewer-value
-  evidence.
+- **Evidence:** Synthetic fault/control cases use tooling-owned
+  `connector-peer-unanchored-scope` and
+  `connector-footprint-alias-native` fixtures plus small generated
+  `NetlistContract` inputs; no project design is stored. Controls cover an
+  anchored partial open, a common assignment, explicit not-applicable review,
+  complete peer scope, `review`/`block`/`off`, exact ignore, stale coverage,
+  and mapping-order stability. The focused synthetic connector selection
+  passed 29 tests, including CLI/MCP parity. Catalog reachability and
+  architecture checks passed (11 tests). The current exact-version native lane
+  is selected by the rule-scoped prerelease gate but could not run locally
+  because access to the Docker socket was denied; hosted acceptance remains
+  pending. The earlier split-only implementation passed exact KiCad 10.0.0 /
+  10.0.5 acceptance. This remains synthetic and native-export compatibility
+  evidence, not public-board applicability or reviewer-value evidence.
 - **Coverage output:** The source-bound alias summary reports
   `uncovered_peer_assignment_scope_finding_count` alongside the existing
   reviewed and unreviewed-scope counts. CLI and MCP use the same typed report

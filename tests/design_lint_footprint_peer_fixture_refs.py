@@ -4,6 +4,16 @@ from types import MappingProxyType
 
 FOOTPRINT_PEER_PARITY_FIXTURES = MappingProxyType(
     {
+        "connector.footprint_peer_unanchored_scope_coverage_missing": MappingProxyType(
+            {
+                "fault_fixtures": (
+                    "tests.test_connector_peer_unanchored_coverage_parity.test_unanchored_partial_open_connector_coverage_matches_cli_and_mcp",
+                ),
+                "valid_control_fixtures": (
+                    "tests.test_connector_peer_unanchored_coverage_parity.test_unanchored_partial_open_connector_coverage_matches_cli_and_mcp",
+                ),
+            }
+        ),
         "connector.footprint_named_passive_assignment_divergence": MappingProxyType(
             {
                 "fault_fixtures": (

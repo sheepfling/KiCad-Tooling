@@ -222,6 +222,24 @@ class _UnanchoredScopeParityCases(DesignLintMcpParityReportHarness):
             1,
         )
 
+        partial_open_fixture = fixture.with_name("partial-open-netlist.xml")
+        netlist.write_text(partial_open_fixture.read_text(encoding="utf-8"), encoding="utf-8")
+        self.rehash_native_netlist(native)
+        async with Client(create_server(self.root), mode="legacy") as client:
+            partial_open_report = await self.compare_lint_report(client, native, "REVIEW", 1)
+        partial_open_findings = [
+            item
+            for item in partial_open_report.findings
+            if item.rule_id == "connector.footprint_peer_unanchored_scope_coverage_missing"
+        ]
+        self.assertEqual(len(partial_open_findings), 1)
+        self.assertEqual(
+            partial_open_findings[0].evidence["unanchored_partial_open_pin_numbers"], ("1",)
+        )
+
+        netlist.write_text(fixture.read_text(encoding="utf-8"), encoding="utf-8")
+        self.rehash_native_netlist(native)
+
         interface_id = "synthetic-unanchored-peer-scope"
         interface = InterfaceRecord(
             id=interface_id,

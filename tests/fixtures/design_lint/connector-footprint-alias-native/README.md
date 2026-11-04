@@ -16,12 +16,21 @@ anchor.
 | `numeric-fault.kicad_sch`      | `1` / `7`           | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_3` | `REVIEW` for `connector.footprint_peer_pin_assignment_divergence` |
 | `numeric-control.kicad_sch`    | `1` / `7`           | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_2` | No footprint-alias divergence                                     |
 | `numeric-open-fault.kicad_sch` | `1` / `7`           | `SYNTHETIC_NET_2` | unassigned        | `REVIEW` for `connector.footprint_peer_pin_open_outlier`          |
+| `unanchored-partial-open-fault.kicad_sch` | `Pin_1` / `Pin_2` | `SYNTHETIC_NET_2` | unassigned | `REVIEW` for `connector.footprint_peer_unanchored_scope_coverage_missing` when coverage is missing |
 
 `unanchored-fault.kicad_sch` assigns both generic pins to different nets on
 J1 and J2, leaving no shared-net anchor. It is evaluated only when a current
 source-matched connector map explicitly scopes both instances into one
 reviewed peer group, and emits a REVIEW prompt for each differing contact.
 That scope asks for review; it does not assert that either pair must be joined.
+
+`unanchored-partial-open-fault.kicad_sch` leaves pin 1 open on both aliases
+and assigns only J1 pin 2, leaving J2 pin 2 open. With no shared-net anchor
+and no complete connector coverage, LINT-274 emits one cohort-level REVIEW
+prompt with the assigned and open contacts in its evidence. The existing
+`open-fault.kicad_sch` is a valid anchor control: pin 1 is shared, so LINT-274
+stays quiet while the anchored open-contact rule remains applicable. Neither
+case declares whether the open contact is required.
 
 The mixed-open case is a review prompt: J1 and J2 have one exact common anchor
 on pin 1, and J2 pin 2 is open while J1 pin 2 is assigned. Neither case asserts
@@ -61,3 +70,4 @@ SHA-256 source digests:
 - `numeric-control.kicad_sch`: `c8140e9cf9030ccb646121631d186cef97b7d9c76b0d994c2cb3648aaae28a27`
 - `numeric-open-fault.kicad_sch`: `1a011151f612ba45769e859e0ada0cf67da46dea50d062e0559e4591f537d270`
 - `unanchored-fault.kicad_sch`: `2d8fbf390f3b154d77c0bbc603a7260ddc0ff27cf3b9b2e74ab19242dfc4aa40`
+- `unanchored-partial-open-fault.kicad_sch`: `fb4fc447ef05fc97699b84bf5a21b7d106ed32e56e31059196982fa76d98e124`

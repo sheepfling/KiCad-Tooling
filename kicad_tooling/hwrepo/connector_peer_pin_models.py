@@ -160,8 +160,11 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
             raise ValueError("Unreviewed peer-scope findings must identify unanchored differences")
         if self.uncovered_peer_assignment_scope_finding_count > (
             self.unanchored_different_assignment_pin_group_count
+            + self.unanchored_open_peer_pin_group_count
         ):
-            raise ValueError("Uncovered peer-scope findings must identify unanchored differences")
+            raise ValueError(
+                "Uncovered peer-scope findings must identify unanchored splits or partial assignments"
+            )
         if self.divergence_finding_count + self.unanchored_different_assignment_pin_group_count != (
             self.generic_different_assignment_pin_group_count
         ):

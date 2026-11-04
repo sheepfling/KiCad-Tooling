@@ -75,6 +75,42 @@ def test_unanchored_alias_split_prompts_when_coverage_is_missing(
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_unanchored_alias_partial_open_prompts_when_coverage_is_missing() -> None:
+    observed = peer_netlist(assignments=(("PORT_A", None), (None, None)))
+
+    report = lint_report(observed)
+    findings = [item for item in report.findings if item.rule_id == RULE_ID]
+
+    assert len(findings) == 1
+    finding = findings[0]
+    assert report.status == "REVIEW"
+    assert finding.mode == "review"
+    assert finding.evidence["references"] == ("J1", "J2")
+    assert finding.evidence["unanchored_generic_pin_numbers"] == ("1",)
+    assert finding.evidence["unanchored_partial_open_pin_numbers"] == ("1",)
+    assert finding.evidence["pin_assignments"] == ("pin 1: J1.1=PORT_A; J2.1=<unassigned>",)
+    assert "required connection" in finding.message
+    coverage = report.connector_peer_pin_coverage
+    assert coverage is not None
+    alias_coverage = coverage.footprint_alias_coverage
+    assert alias_coverage.unanchored_open_peer_pin_group_count == 1
+    assert alias_coverage.uncovered_peer_assignment_scope_finding_count == 1
+    assert not any(item.rule_id == SCOPE_RULE_ID for item in report.findings)
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_anchored_partial_open_is_left_to_the_anchored_open_review() -> None:
+    observed = peer_netlist(assignments=(("PORT_A", None), ("COMMON", "COMMON")))
+
+    report = lint_report(observed)
+
+    assert not any(item.rule_id == RULE_ID for item in report.findings)
+    assert any(
+        item.rule_id == "connector.footprint_peer_pin_open_outlier" for item in report.findings
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_complete_peer_map_is_handled_by_scope_prompt_and_not_coverage_prompt() -> None:
     observed = peer_netlist(assignments=(("PORT_A", "PORT_B"), ("DATA_A", "DATA_B")))
     report = lint_report(observed, reviewed_coverage(observed, (None, None)))
@@ -127,6 +163,11 @@ def test_stale_connector_alias_suppresses_the_uncovered_scope_prompt() -> None:
     )
 
     assert not any(item.rule_id == RULE_ID for item in lint_report(split, stale_coverage).findings)
+
+    partial_open = peer_netlist(assignments=(("PORT_A", None), (None, None)))
+    assert not any(
+        item.rule_id == RULE_ID for item in lint_report(partial_open, stale_coverage).findings
+    )
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

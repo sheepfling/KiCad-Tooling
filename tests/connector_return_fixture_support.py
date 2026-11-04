@@ -9,6 +9,10 @@ from tests.component_peer_power_input_support import (
     named_peer_power_input_netlist,
 )
 from tests.connector_return_named_peer_cases import named_connector_peer_fixture_contracts
+from tests.design_lint_fixtures.connector_footprint_peer_scope_cases import (
+    connector_footprint_peer_scope_cases,
+    connector_same_voltage_power_input_cases,
+)
 from tests.design_lint_fixtures.connector_named_power_peer_cases import (
     named_connector_power_peer_cases,
 )
@@ -32,6 +36,7 @@ from tests.design_lint_fixtures.repeated_signal_pin_functions import (
     repeated_signal_pin_component,
     repeated_signal_pin_with_unassigned_member,
 )
+from tests.design_lint_fixtures.same_voltage_power_inputs import same_voltage_power_input_netlist
 
 
 def connector_return_fixture_contracts() -> dict[str, NetlistContract]:
@@ -42,6 +47,8 @@ def connector_return_fixture_contracts() -> dict[str, NetlistContract]:
     observed.update(ret_return_label_case_contracts())
     observed.update(return_positive_rail_case_contracts())
     observed.update(peer_pin_case_contracts())
+    observed.update(connector_footprint_peer_scope_cases())
+    observed.update(connector_same_voltage_power_input_cases())
     observed.update(named_connector_peer_fixture_contracts())
     observed.update(named_connector_power_peer_cases())
     observed.update(connector_power_case_contracts())
@@ -61,6 +68,14 @@ def connector_return_fixture_contracts() -> dict[str, NetlistContract]:
         }
     )
     observed.update(generic_component_power_input_cases())
+    observed.update(
+        {
+            "same-voltage-power-input-split-fault": same_voltage_power_input_netlist(),
+            "same-voltage-power-input-common-control": same_voltage_power_input_netlist(
+                nets={"+3V3": ("U1.1", "U1.2")}
+            ),
+        }
+    )
     observed.update(
         {
             "peer-generic-power-input-fault": generic_peer_power_input_netlist(),
