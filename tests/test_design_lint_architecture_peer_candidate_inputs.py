@@ -142,5 +142,5 @@ def test_candidate_aggregation_forwards_one_complete_peer_request(
     assert request.peer.extension_marker == "new peer evidence"
     assert request.reviewed_connector_references == reviewed
     assert request.spi_roster is spi_roster
-    assert request.usb_data_path_map is inputs.usb_data_path.authored_map
-    assert request.usb_data_map_sha256 is not None
+    assert request.usb_data_path is inputs.usb_data_path
+    assert request.usb_data_path.map_sha256 is not None

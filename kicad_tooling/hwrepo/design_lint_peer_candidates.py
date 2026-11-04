@@ -11,6 +11,7 @@ from .design_lint_serial_peer_candidates import (
 from .design_lint_spi_peer_candidates import spi_participant_candidates
 from .design_lint_types import Candidate
 from .design_lint_usb_c_candidates import usb_c_port_candidates
+from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
 from .design_lint_usb_peer_candidates import usb_peer_reference_candidates
 from .digital_peer_voltage_scan import scan_digital_peer_voltage_reviews
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
@@ -40,8 +41,10 @@ def peer_candidates(
             peer=inputs,
             reviewed_connector_references=reviewed_connector_references,
             spi_roster=spi_roster,
-            usb_data_path_map=usb_data_path_map,
-            usb_data_map_sha256=usb_data_map_sha256,
+            usb_data_path=UsbDataPathCandidateInputs(
+                authored_map=usb_data_path_map,
+                map_sha256=usb_data_map_sha256,
+            ),
         )
     )
 
@@ -52,8 +55,8 @@ def scan_peer_candidates(inputs: PeerCandidateScanInputs) -> tuple[Candidate, ..
     peer_inputs = inputs.peer
     reviewed_connector_references = inputs.reviewed_connector_references
     spi_roster = inputs.spi_roster
-    usb_data_path_map = inputs.usb_data_path_map
-    usb_data_map_sha256 = inputs.usb_data_map_sha256
+    usb_data_path = inputs.usb_data_path
+    usb_data_path_map = usb_data_path.authored_map
     serial_scope = peer_inputs.serial_roster or SerialPeerRosterContext(state="not_configured")
     serial_reference_scan = peer_inputs.serial_reference_scan or scan_serial_peer_reference_reviews(
         observed,
@@ -82,7 +85,7 @@ def scan_peer_candidates(inputs: PeerCandidateScanInputs) -> tuple[Candidate, ..
             usb_data_path_map,
             reviewed_connector_references,
         ),
-        *usb_peer_reference_candidates(usb_scan, usb_data_path_map, usb_data_map_sha256),
+        *usb_peer_reference_candidates(usb_scan, usb_data_path),
         *spi_participant_candidates(observed, spi_scope),
         *digital_peer_voltage_candidates(peer_voltage_scope, peer_voltage_scan),
         *usb_c_port_candidates(observed, usb_c_scope, reviewed_connector_references),

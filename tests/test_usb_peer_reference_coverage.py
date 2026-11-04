@@ -14,6 +14,7 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
     UsbPeerReferenceCoverageReport,
 )
+from kicad_tooling.hwrepo.usb_data_path_models import usb_data_path_map_sha256
 from kicad_tooling.hwrepo.usb_peer_endpoint_analysis import pin_net_index
 from kicad_tooling.hwrepo.usb_peer_reference_review import (
     scan_usb_peer_reference_reviews,
@@ -78,13 +79,14 @@ def test_coverage_binds_common_split_and_mapped_peer_paths() -> None:
         == common_coverage.path_entries[0].phy_reference_net
     )
 
-    mapped = lint_report(
-        usb_peer_netlist(), path_map=usb_data_map(reference_policy="separate_nets")
-    )
+    path_map = usb_data_map(reference_policy="separate_nets")
+    mapped = lint_report(usb_peer_netlist(), path_map=path_map)
     mapped_coverage = mapped.usb_peer_reference_coverage
+    expected_map_digest = usb_data_path_map_sha256(path_map)
     assert (mapped_coverage) is not None
     assert mapped_coverage is not None
-    assert (mapped_coverage.usb_data_path_map_sha256) is not None
+    assert expected_map_digest is not None
+    assert mapped_coverage.usb_data_path_map_sha256 == expected_map_digest
     assert (mapped_coverage.mapped_separate_reference_path_count) == (1)
     assert (mapped_coverage.candidate_group_count) == (0)
     assert mapped_coverage.path_entries[0].reference_disposition == "MAP_COVERED_SEPARATE_REFERENCE"

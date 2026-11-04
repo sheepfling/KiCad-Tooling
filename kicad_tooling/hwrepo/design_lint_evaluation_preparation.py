@@ -19,7 +19,6 @@ from .design_lint_candidate_inputs import (
     ConnectorCandidateInputs,
     DesignLintCandidateInputs,
     MappedCandidateInputs,
-    UsbDataPathCandidateInputs,
 )
 from .design_lint_catalog import rule_catalog
 from .design_lint_component_coverage import (
@@ -52,6 +51,7 @@ from .design_lint_schematic_coverage import (
     schematic_geometry_coverage,
 )
 from .design_lint_stm32_coverage import resolve_stm32_pin_map_coverage
+from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
 from .external_protection import (
     ExternalProtectionCoverageRequest,
     resolve_external_protection_coverage,

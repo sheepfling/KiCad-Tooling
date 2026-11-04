@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
+from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
 from .netlist_contract_models import NetlistContract
-from .usb_data_path_models import UsbDataPathMap
 from .usb_data_paths import usb_data_path_mismatches
 
 
 def usb_data_path_candidates(
     observed: NetlistContract,
-    usb_data_path_map: UsbDataPathMap | None,
-    usb_data_map_sha256: str | None,
+    usb_data_path: UsbDataPathCandidateInputs,
 ) -> tuple[Candidate, ...]:
     found: list[Candidate] = []
+    usb_data_path_map = usb_data_path.authored_map
+    usb_data_map_sha256 = usb_data_path.map_sha256
     if usb_data_path_map is not None:
         map_sha256 = usb_data_map_sha256 or ""
         for mismatch in usb_data_path_mismatches(usb_data_path_map, observed):

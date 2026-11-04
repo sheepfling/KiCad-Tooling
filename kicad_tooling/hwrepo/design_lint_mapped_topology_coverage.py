@@ -16,7 +16,7 @@ from .design_lint_rule_types import DesignLintRuleId
 from .oscillator_output_path_models import OscillatorOutputPathMap
 from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
-from .usb_data_path_models import UsbDataPathMap
+from .usb_data_path_models import UsbDataPathMap, usb_data_path_map_sha256
 
 
 def _mapped_check_run(
@@ -76,9 +76,7 @@ def mapped_topology_coverage_runs(
     return (
         _mapped_check_run(
             usb_rule_id,
-            None
-            if usb_map is None
-            else hashlib.sha256(usb_map.model_dump_json().encode("utf-8")).hexdigest(),
+            usb_data_path_map_sha256(usb_map),
             0 if usb_map is None else len(usb_map.interfaces) + len(usb_map.superspeed_interfaces),
             netlist_sha256,
             finding_counts.usb_data_path_mismatch,

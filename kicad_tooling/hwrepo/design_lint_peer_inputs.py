@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
 from .netlist_contract_models import NetlistContract
 from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_types import SerialPeerReferenceScan
 from .spi_participants import SpiRosterContext
 from .usb_c_ports import UsbCPortRosterContext
-from .usb_data_path_models import UsbDataPathMap
 from .usb_peer_reference_types import UsbPeerReferenceScan
 
 
@@ -34,5 +34,4 @@ class PeerCandidateScanInputs:
     peer: PeerCandidateInputs
     reviewed_connector_references: tuple[str, ...]
     spi_roster: SpiRosterContext | None
-    usb_data_path_map: UsbDataPathMap | None
-    usb_data_map_sha256: str | None
+    usb_data_path: UsbDataPathCandidateInputs

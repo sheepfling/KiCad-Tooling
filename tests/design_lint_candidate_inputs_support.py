@@ -9,12 +9,12 @@ from kicad_tooling.hwrepo.design_lint_candidate_inputs import (
     DesignLintCandidateInputs,
     MappedCandidateInputs,
     PcbCandidateInputs,
-    UsbDataPathCandidateInputs,
 )
 from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
 from kicad_tooling.hwrepo.design_lint_control_inputs import ControlCandidateInputs
 from kicad_tooling.hwrepo.design_lint_peer_inputs import PeerCandidateInputs
 from kicad_tooling.hwrepo.design_lint_power_inputs import PowerCandidateInputs
+from kicad_tooling.hwrepo.design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
 from kicad_tooling.hwrepo.i2c_address_inputs import I2cAddressCandidateInput
 from kicad_tooling.hwrepo.i2c_pullup_inputs import I2cPullupSnifferInput
 from kicad_tooling.hwrepo.models import NetlistContract

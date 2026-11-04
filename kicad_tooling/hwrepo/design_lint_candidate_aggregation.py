@@ -27,7 +27,6 @@ from .design_lint_candidate_inputs import (
     ConnectorCandidateInputs,
     DesignLintCandidateInputs,
     MappedCandidateInputs,
-    UsbDataPathCandidateInputs,
 )
 from .design_lint_candidate_results import DesignLintCandidateScanResult
 from .design_lint_catalog import rule_catalog
@@ -64,7 +63,7 @@ from .design_lint_rule_models import DesignLintRuleCatalog
 from .design_lint_schematic_geometry import schematic_geometry_candidates
 from .design_lint_stm32_candidates import stm32_candidates
 from .design_lint_types import Candidate
-from .design_lint_usb_peer_candidates import usb_data_path_map_sha256
+from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
 from .external_protection_models import ExternalProtectionCoverageReport
 from .i2c_address_inputs import I2cAddressCandidateInput
@@ -289,10 +288,9 @@ def scan_candidate_result(
     power_sequence_map = inputs.power.power_sequence_map
     pcb_component_inventory_coverage = inputs.pcb.component_inventory
     stm32_pin_map_coverage = inputs.pcb.stm32_pin_map
-    usb_data_path_map = inputs.usb_data_path.authored_map
+    usb_data_path = inputs.usb_data_path
     spi_roster = inputs.bus.spi_roster
     found: list[Candidate] = []
-    usb_data_map_sha256 = usb_data_path_map_sha256(usb_data_path_map)
     peer_pin_scans = peer_pin_assignment_scans or component_peer_pin_assignment_scans(
         observed,
         reviewed_connector_references,
@@ -363,8 +361,7 @@ def scan_candidate_result(
                 peer=inputs.peer,
                 reviewed_connector_references=reviewed_connector_references,
                 spi_roster=spi_roster,
-                usb_data_path_map=usb_data_path_map,
-                usb_data_map_sha256=usb_data_map_sha256,
+                usb_data_path=usb_data_path,
             )
         )
     )
@@ -372,8 +369,7 @@ def scan_candidate_result(
         MappedCoverageCandidateInputs(
             observed=observed,
             coverage=inputs.mapped,
-            usb_data_path_map=usb_data_path_map,
-            usb_data_map_sha256=usb_data_map_sha256,
+            usb_data_path=usb_data_path,
             power_path_map=power_path_map,
             power_sequence_map=power_sequence_map,
         )

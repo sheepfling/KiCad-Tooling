@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
-import hashlib
-
 from .design_lint_types import Candidate
+from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
 from .usb_data_path_models import UsbDataPathMap
+from .usb_data_path_models import usb_data_path_map_sha256 as _usb_data_path_map_sha256
 from .usb_peer_reference_types import (
     UsbPeerReferenceComponentObservation,
     UsbPeerReferenceScan,
 )
+
+# Keep the historical helper import path while the map model owns its implementation.
+usb_data_path_map_sha256 = _usb_data_path_map_sha256
 
 
 def _reference_component_observation(
@@ -54,19 +57,13 @@ def _reference_policy_state(
     return "configured_but_not_matching_observation"
 
 
-def usb_data_path_map_sha256(usb_data_path_map: UsbDataPathMap | None) -> str | None:
-    """Return the stable evidence fingerprint used by USB review candidates."""
-    if usb_data_path_map is None:
-        return None
-    return hashlib.sha256(usb_data_path_map.model_dump_json().encode("utf-8")).hexdigest()
-
-
 def usb_peer_reference_candidates(
     usb_scan: UsbPeerReferenceScan,
-    usb_data_path_map: UsbDataPathMap | None,
-    usb_data_map_sha256: str | None,
+    usb_data_path: UsbDataPathCandidateInputs,
 ) -> tuple[Candidate, ...]:
     """Build bounded USB connector-to-PHY reference-domain review prompts."""
+    usb_data_path_map = usb_data_path.authored_map
+    usb_data_map_sha256 = usb_data_path.map_sha256
     found: list[Candidate] = []
     for peer in usb_scan.reviews:
         is_superspeed = peer.data_link.connector_signal_family.startswith("USB SuperSpeed ")

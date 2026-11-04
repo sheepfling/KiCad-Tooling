@@ -15,12 +15,12 @@ from .design_lint_pcb_inputs import PcbCandidateInputs
 from .design_lint_peer_inputs import PeerCandidateInputs
 from .design_lint_power_inputs import PowerCandidateInputs
 from .design_lint_rule_models import DesignLintRuleCatalog
+from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
 from .external_protection_models import ExternalProtectionCoverageReport
 from .netlist_contract_models import NetlistContract
 from .rc_filter_models import RcFilterCoverageReport
 from .regulator_feedback_models import RegulatorFeedbackCoverageReport
 from .schematic_geometry import SchematicGeometryScan
-from .usb_data_path_models import UsbDataPathMap
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,13 +49,6 @@ class MappedCandidateInputs:
     crystal_network: CrystalNetworkCoverageReport | None
     regulator_feedback: RegulatorFeedbackCoverageReport | None
     rc_filter: RcFilterCoverageReport | None
-
-
-@dataclass(frozen=True, slots=True)
-class UsbDataPathCandidateInputs:
-    """Authored USB topology shared by peer and mapped-path rules."""
-
-    authored_map: UsbDataPathMap | None
 
 
 @dataclass(frozen=True, slots=True)

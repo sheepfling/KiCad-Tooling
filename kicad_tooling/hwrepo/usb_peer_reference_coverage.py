@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Mapping
 from typing import Literal
 
 from .design_lint_finding_models import DesignLintRuleOverride
 from .design_lint_rule_types import DesignLintRuleId
-from .usb_data_path_models import UsbDataPathMap
+from .usb_data_path_models import UsbDataPathMap, usb_data_path_map_sha256
 from .usb_peer_reference_models import (
     UsbPeerDataInlineComponentCoverage,
     UsbPeerDataLineCoverage,
@@ -212,11 +211,7 @@ def usb_peer_reference_coverage(
         if item.supported_data_path_count == 0
         else "EVALUATED"
     )
-    map_sha256 = (
-        hashlib.sha256(usb_data_path_map.model_dump_json().encode("utf-8")).hexdigest()
-        if usb_data_path_map is not None
-        else None
-    )
+    map_sha256 = usb_data_path_map_sha256(usb_data_path_map)
     return UsbPeerReferenceCoverageReport(
         rule_id=rule_id,
         status=status,

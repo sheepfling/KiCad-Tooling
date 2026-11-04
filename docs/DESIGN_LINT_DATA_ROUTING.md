@@ -137,10 +137,14 @@ the typed scanner and the bus coordinator. The shared observed netlist and
 reviewed connector scope must still agree at the scanner boundary.
 The peer coordinator receives one `PeerCandidateScanInputs` record. It combines
 the typed peer group with the shared observed netlist, SPI roster, reviewed
-connector scope, and USB map plus the map's digest. Candidate aggregation
-builds this request from the existing capability groups and computes the map
-digest once through the canonical helper. The coordinator consumes that record
-directly; its older multi-argument function remains a compatibility adapter.
+connector scope, and `UsbDataPathCandidateInputs`. That USB-owned immutable
+record pairs the authored map with its canonical digest; peer and mapped-path
+candidate services receive the same instance. Candidate aggregation computes
+the digest through `usb_data_path_models.usb_data_path_map_sha256`, which USB
+peer coverage and mapped-topology coverage also use. Candidate and coverage
+evidence therefore identify the same serialized map content. The coordinator
+consumes the request directly; its older multi-argument function remains a
+compatibility adapter.
 The record and peer evidence group are owned by `design_lint_peer_inputs.py`,
 while the older candidate-bundle import remains an identity-compatible
 re-export.
@@ -289,6 +293,13 @@ retains its own authored state and source provenance. An absent context remains
 distinct states. The observed netlist, netlist digest, connector scope, and
 USB data-path map remain explicit coordinator inputs, and the resulting scans
 flow into the prepared peer and bus candidate groups.
+
+Candidate assembly is a separate route: it passes
+`PeerCandidateScanInputs` to the peer candidate coordinator. That record keeps
+the observed netlist, prepared peer scans, reviewed connector references, SPI
+roster, and `UsbDataPathCandidateInputs` together. The USB-owned record binds
+the authored map to its canonical digest; peer and mapped-path candidates
+consume the same instance.
 
 The serial reference scanner builds its native pin, component, symbol,
 footprint, pin-number, and DNP indexes as one `SerialPeerPinIndex` derived from

@@ -13,6 +13,7 @@ from .design_lint_rc_filter_candidates import rc_filter_candidates
 from .design_lint_regulator_candidates import regulator_feedback_candidates
 from .design_lint_types import Candidate
 from .design_lint_usb_data_path_candidates import usb_data_path_candidates
+from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
 from .netlist_contract_models import NetlistContract
 from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
@@ -25,8 +26,7 @@ class MappedCoverageCandidateInputs:
 
     observed: NetlistContract
     coverage: MappedCandidateInputs
-    usb_data_path_map: UsbDataPathMap | None
-    usb_data_map_sha256: str | None
+    usb_data_path: UsbDataPathCandidateInputs
     power_path_map: PowerPathMap | None
     power_sequence_map: PowerSequenceMap | None
 
@@ -66,8 +66,10 @@ def mapped_coverage_candidates(
         MappedCoverageCandidateInputs(
             observed=observed,
             coverage=inputs,
-            usb_data_path_map=usb_data_path_map,
-            usb_data_map_sha256=usb_data_map_sha256,
+            usb_data_path=UsbDataPathCandidateInputs(
+                authored_map=usb_data_path_map,
+                map_sha256=usb_data_map_sha256,
+            ),
             power_path_map=power_path_map,
             power_sequence_map=power_sequence_map,
         )
@@ -86,8 +88,7 @@ def scan_mapped_coverage_candidates(
             *rc_filter_candidates(inputs.coverage.rc_filter),
             *usb_data_path_candidates(
                 inputs.observed,
-                inputs.usb_data_path_map,
-                inputs.usb_data_map_sha256,
+                inputs.usb_data_path,
             ),
             *power_path_candidates(inputs.observed, inputs.power_path_map),
             *power_sequence_candidates(inputs.observed, inputs.power_sequence_map),

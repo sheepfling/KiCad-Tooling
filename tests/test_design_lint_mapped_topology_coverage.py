@@ -11,6 +11,8 @@ from kicad_tooling.hwrepo.design_lint_mapped_topology_results import (
     MappedTopologyFindingCounts,
 )
 from kicad_tooling.hwrepo.models import DesignLintPolicy
+from kicad_tooling.hwrepo.usb_data_path_models import usb_data_path_map_sha256
+from tests.usb_data_path_support import usb_data_map
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -48,3 +50,18 @@ def test_unconfigured_mapped_rules_retain_zero_finding_counts() -> None:
 
     assert {run.status for run in runs} == {"NOT_CONFIGURED"}
     assert all(run.finding_count == 0 for run in runs)
+
+
+def test_usb_map_coverage_uses_canonical_map_digest() -> None:
+    usb_map = usb_data_map()
+    policy = DesignLintPolicy(usb_data_path_map=usb_map)
+    runs = mapped_topology_coverage_runs(
+        policy,
+        _RULE_MODES,
+        MappedTopologyFindingCounts(),
+        "a" * 64,
+    )
+
+    usb_run = next(run for run in runs if run.rule_id == "bus.usb_data_path_mismatch")
+
+    assert usb_run.map_sha256 == usb_data_path_map_sha256(usb_map)

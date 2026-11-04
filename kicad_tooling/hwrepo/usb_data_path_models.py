@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
@@ -483,3 +484,10 @@ class UsbDataPathMap(StrictModel):
         if set(protection_shunt_references) & endpoint_references:
             raise ValueError("USB protection shunts cannot also be mapped endpoints")
         return self
+
+
+def usb_data_path_map_sha256(usb_data_path_map: UsbDataPathMap | None) -> str | None:
+    """Return the canonical content digest for authored USB data-path policy."""
+    if usb_data_path_map is None:
+        return None
+    return hashlib.sha256(usb_data_path_map.model_dump_json().encode("utf-8")).hexdigest()
