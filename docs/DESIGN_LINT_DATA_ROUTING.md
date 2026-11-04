@@ -639,6 +639,18 @@ wire fields. It preserves project-interface role provenance and omits absent
 native pin functions. Connector translation still owns suppression,
 deduplication, and wording.
 
+## Repeated and generic connector peer-pin routes
+
+Repeated-function comparisons retain their `SimilarConnectorPinGroup` together
+with the observed netlist and reviewed pin-role context used to create the
+finding. Generic peer outlier and divergence candidates retain their typed
+`ConnectorPeerPinAssignmentOutlier` or
+`ConnectorPeerPinAssignmentDivergence` record. Their per-reference assignment
+maps are copied and frozen at scan time. The connector evidence owner preserves
+the existing role-source, peer-identity, outlier, missing-function, and
+reviewed-scope fields; grouping and suppression remain in the connector
+translator.
+
 ## Connector footprint-peer evidence route
 
 The generic footprint-alias divergence, partially open, and all-open findings

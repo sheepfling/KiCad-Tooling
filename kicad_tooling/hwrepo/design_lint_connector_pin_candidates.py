@@ -28,7 +28,9 @@ from .connector_mapped_shield_signal_sharing import (
 from .connector_mapped_signal_sharing import mapped_distinct_signal_contacts_sharing_net
 from .connector_mapped_signal_split_nets import mapped_repeated_signal_contacts_split_nets
 from .connector_peer_candidate_evidence import (
-    connector_group_evidence,
+    ConnectorPeerPinAssignmentCandidate,
+    RepeatedConnectorPinCandidate,
+    RepeatedConnectorPinFindingEvidence,
     connector_group_message,
 )
 from .connector_peer_pin_all_open import all_open_generic_connector_peer_pin_candidates
@@ -166,18 +168,14 @@ def connector_pin_candidates(
             # The native power-output type provides the more specific open-pin finding.
             continue
         found.append(
-            Candidate(
-                rule_id="connector.repeated_pin_function",
+            RepeatedConnectorPinCandidate.from_source_evidence(
+                RepeatedConnectorPinFindingEvidence(
+                    group=group,
+                    observed=observed,
+                    reviewed_connector_pins=reviewed_connector_pins,
+                ),
                 subject=f"{group.symbol}: {group.function}",
                 message=connector_group_message(group),
-                evidence={
-                    **dict(group.pins),
-                    **connector_group_evidence(
-                        group,
-                        observed,
-                        reviewed_connector_pins,
-                    ),
-                },
             )
         )
         repeated_pin_evidence.update(group.pins)
@@ -203,19 +201,6 @@ def connector_pin_candidates(
             # A source-matched role finding already gives the same peers' exact
             # per-pin net assignments and a more useful classification.
             continue
-        evidence = dict(group.assignments)
-        evidence["symbol"] = (
-            group.peer_symbols if group.peer_identity_basis == "part_id" else (group.symbol,)
-        )
-        evidence["pin_number"] = (group.pin_number,)
-        evidence["outlier_pins"] = group.outlier_pins
-        if group.peer_identity_basis == "part_id":
-            evidence["peer_identity_basis"] = ("part_id",)
-            evidence["peer_identity"] = (group.peer_identity,)
-            evidence["peer_symbols"] = group.peer_symbols
-        if group.peer_assignment_group is not None:
-            evidence["peer_assignment_group"] = (group.peer_assignment_group,)
-            evidence["peer_assignment_basis"] = group.peer_assignment_basis
         if group.peer_identity_basis == "part_id":
             subject = f"PART_ID {group.peer_identity} pin {group.pin_number}"
             message = (
@@ -235,8 +220,8 @@ def connector_pin_candidates(
                 "their nets must be common."
             )
         found.append(
-            Candidate(
-                rule_id="connector.peer_pin_assignment_outlier",
+            ConnectorPeerPinAssignmentCandidate.from_source_evidence(
+                group,
                 subject=subject,
                 message=(
                     message
@@ -246,7 +231,6 @@ def connector_pin_candidates(
                         else ""
                     )
                 ),
-                evidence=evidence,
             )
         )
 
@@ -271,12 +255,6 @@ def connector_pin_candidates(
                 "these assignments should match or are intentionally independent; matching part "
                 "identity does not establish a required connection."
             )
-            symbols = group.peer_symbols
-            identity_evidence = {
-                "peer_identity_basis": ("part_id",),
-                "peer_identity": (group.peer_identity,),
-                "peer_symbols": group.peer_symbols,
-            }
         else:
             subject = f"{group.symbol} pin {group.pin_number}"
             message = (
@@ -287,19 +265,9 @@ def connector_pin_candidates(
                 "or are intentionally independent; symbol identity alone does not establish "
                 "a required connection."
             )
-            symbols = (group.symbol,)
-            identity_evidence = {}
-        scoped_evidence = (
-            {}
-            if group.peer_assignment_group is None
-            else {
-                "peer_assignment_group": (group.peer_assignment_group,),
-                "peer_assignment_basis": group.peer_assignment_basis,
-            }
-        )
         found.append(
-            Candidate(
-                rule_id="connector.peer_pin_assignment_divergence",
+            ConnectorPeerPinAssignmentCandidate.from_source_evidence(
+                group,
                 subject=subject,
                 message=(
                     message
@@ -309,14 +277,6 @@ def connector_pin_candidates(
                         else ""
                     )
                 ),
-                evidence={
-                    **group.assignments,
-                    "symbol": symbols,
-                    "pin_number": (group.pin_number,),
-                    "missing_pin_function_pins": group.missing_function_pins,
-                    **identity_evidence,
-                    **scoped_evidence,
-                },
             )
         )
 

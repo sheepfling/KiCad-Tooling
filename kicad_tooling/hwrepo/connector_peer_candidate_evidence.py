@@ -3,10 +3,18 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass, field
+from types import MappingProxyType
+from typing import TypeAlias
 
 from .connector_coverage_models import ConnectorMappedPinEvidence
 from .connector_identity import power_function_key
 from .connector_peer_pin_models import SimilarConnectorPinGroup
+from .connector_peer_pin_scan import (
+    ConnectorPeerPinAssignmentDivergence,
+    ConnectorPeerPinAssignmentOutlier,
+)
+from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .netlist_contract_models import NetlistContract
 
 
@@ -124,3 +132,140 @@ def _connector_group_role_source_evidence(
     if not has_catalog_role:
         return {}
     return {"role_classification_sources": tuple(sources)}
+
+
+@dataclass(frozen=True, slots=True)
+class RepeatedConnectorPinFindingEvidence:
+    """A repeated-function scan record with its native and reviewed role context."""
+
+    group: SimilarConnectorPinGroup
+    observed: NetlistContract
+    reviewed_connector_pins: Mapping[str, ConnectorMappedPinEvidence]
+    pin_assignments: Mapping[str, tuple[str, ...]] = field(init=False)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "reviewed_connector_pins",
+            MappingProxyType(dict(self.reviewed_connector_pins)),
+        )
+        object.__setattr__(
+            self,
+            "pin_assignments",
+            MappingProxyType({pin: tuple(nets) for pin, nets in self.group.pins.items()}),
+        )
+
+
+def project_repeated_connector_pin_evidence(
+    source: RepeatedConnectorPinFindingEvidence,
+) -> CandidateEvidenceProjection:
+    """Project a repeated-function record and its role context to stable wire fields."""
+    if dict(source.group.pins) != dict(source.pin_assignments):
+        raise ValueError("Repeated connector pin assignments changed after source capture")
+    evidence = dict(source.pin_assignments)
+    evidence.update(
+        connector_group_evidence(source.group, source.observed, source.reviewed_connector_pins)
+    )
+    return CandidateEvidenceProjection(
+        rule_id="connector.repeated_pin_function",
+        evidence=evidence,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class RepeatedConnectorPinCandidate(Candidate):
+    """Internal repeated-function finding retaining its scan and role context."""
+
+    source_evidence: RepeatedConnectorPinFindingEvidence
+
+    @classmethod
+    def from_source_evidence(
+        cls,
+        source_evidence: RepeatedConnectorPinFindingEvidence,
+        *,
+        subject: str,
+        message: str,
+    ) -> RepeatedConnectorPinCandidate:
+        projection = project_repeated_connector_pin_evidence(source_evidence)
+        return cls(
+            rule_id=projection.rule_id,
+            subject=subject,
+            message=message,
+            evidence=projection.evidence,
+            source_evidence=source_evidence,
+        )
+
+    def __post_init__(self) -> None:
+        Candidate.__post_init__(self)
+        projection = project_repeated_connector_pin_evidence(self.source_evidence)
+        if self.rule_id != projection.rule_id:
+            raise ValueError("Repeated connector pin rule must match its source evidence")
+        if self.evidence != projection.evidence:
+            raise ValueError("Repeated connector pin evidence must match its source projection")
+
+
+ConnectorPeerPinAssignmentSource: TypeAlias = (
+    ConnectorPeerPinAssignmentOutlier | ConnectorPeerPinAssignmentDivergence
+)
+
+
+def project_connector_peer_pin_assignment_evidence(
+    source: ConnectorPeerPinAssignmentSource,
+) -> CandidateEvidenceProjection:
+    """Project a typed outlier or divergence record without losing peer identity."""
+    evidence = dict(source.assignments)
+    if isinstance(source, ConnectorPeerPinAssignmentOutlier):
+        rule_id = "connector.peer_pin_assignment_outlier"
+        evidence["symbol"] = (
+            source.peer_symbols if source.peer_identity_basis == "part_id" else (source.symbol,)
+        )
+        evidence["pin_number"] = (source.pin_number,)
+        evidence["outlier_pins"] = source.outlier_pins
+    else:
+        rule_id = "connector.peer_pin_assignment_divergence"
+        evidence["symbol"] = (
+            source.peer_symbols if source.peer_identity_basis == "part_id" else (source.symbol,)
+        )
+        evidence["pin_number"] = (source.pin_number,)
+        evidence["missing_pin_function_pins"] = source.missing_function_pins
+
+    if source.peer_identity_basis == "part_id":
+        evidence["peer_identity_basis"] = ("part_id",)
+        evidence["peer_identity"] = (source.peer_identity,)
+        evidence["peer_symbols"] = source.peer_symbols
+    if source.peer_assignment_group is not None:
+        evidence["peer_assignment_group"] = (source.peer_assignment_group,)
+        evidence["peer_assignment_basis"] = source.peer_assignment_basis
+    return CandidateEvidenceProjection(rule_id=rule_id, evidence=evidence)
+
+
+@dataclass(frozen=True, slots=True)
+class ConnectorPeerPinAssignmentCandidate(Candidate):
+    """Internal generic connector peer finding retaining its typed scan record."""
+
+    source_evidence: ConnectorPeerPinAssignmentSource
+
+    @classmethod
+    def from_source_evidence(
+        cls,
+        source_evidence: ConnectorPeerPinAssignmentSource,
+        *,
+        subject: str,
+        message: str,
+    ) -> ConnectorPeerPinAssignmentCandidate:
+        projection = project_connector_peer_pin_assignment_evidence(source_evidence)
+        return cls(
+            rule_id=projection.rule_id,
+            subject=subject,
+            message=message,
+            evidence=projection.evidence,
+            source_evidence=source_evidence,
+        )
+
+    def __post_init__(self) -> None:
+        Candidate.__post_init__(self)
+        projection = project_connector_peer_pin_assignment_evidence(self.source_evidence)
+        if self.rule_id != projection.rule_id:
+            raise ValueError("Connector peer pin rule must match its source evidence")
+        if self.evidence != projection.evidence:
+            raise ValueError("Connector peer pin evidence must match its source projection")

@@ -7,6 +7,8 @@ CONNECTOR_LINT_TEST_MODULES = frozenset(
         "tests/test_connector_unconnected_power_output.py",
         "tests/test_connector_unconnected_pin_candidate_evidence.py",
         "tests/test_design_lint_architecture_connector_unconnected_pin_candidate_evidence.py",
+        "tests/test_connector_peer_candidate_evidence.py",
+        "tests/test_design_lint_architecture_connector_peer_candidate_evidence.py",
         "tests/test_contract_coach_numbered_return_report.py",
         "tests/test_design_lint_connector_power_pins.py",
         "tests/test_design_lint_connector_named_power_input_peers.py",

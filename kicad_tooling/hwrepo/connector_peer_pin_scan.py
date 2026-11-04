@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Literal
 
 from .connector_identity import (
@@ -18,7 +19,7 @@ from .netlist_contract_models import NetlistContract
 class ConnectorPeerPinAssignmentOutlier:
     symbol: str
     pin_number: str
-    assignments: dict[str, tuple[str, ...]]
+    assignments: Mapping[str, tuple[str, ...]]
     outlier_pins: tuple[str, ...]
     peer_assignment_group: str | None = None
     peer_assignment_basis: tuple[str, ...] = ()
@@ -26,18 +27,32 @@ class ConnectorPeerPinAssignmentOutlier:
     peer_identity: str = ""
     peer_symbols: tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "assignments",
+            MappingProxyType({pin: tuple(nets) for pin, nets in self.assignments.items()}),
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class ConnectorPeerPinAssignmentDivergence:
     symbol: str
     pin_number: str
-    assignments: dict[str, tuple[str, ...]]
+    assignments: Mapping[str, tuple[str, ...]]
     missing_function_pins: tuple[str, ...]
     peer_assignment_group: str | None = None
     peer_assignment_basis: tuple[str, ...] = ()
     peer_identity_basis: Literal["exact_symbol", "part_id"] = "exact_symbol"
     peer_identity: str = ""
     peer_symbols: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "assignments",
+            MappingProxyType({pin: tuple(nets) for pin, nets in self.assignments.items()}),
+        )
 
 
 @dataclass(frozen=True, slots=True)

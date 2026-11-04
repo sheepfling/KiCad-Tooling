@@ -800,6 +800,18 @@ connector-owned evidence projector. The scanner records use closed role and
 source literals; project-interface provenance and optional native pin
 functions remain present in the public report projection. Selection,
 suppression, and wording stay in the connector translator.
+Repeated-function, generic peer-outlier, and generic peer-divergence candidates
+in that translator now use the same typed-source boundary. Peer assignment
+records freeze their per-reference maps; the repeated-function source retains
+its pin group, observed netlist, and reviewed role context. Their existing
+deduplication and message choices remain with the translator, and the
+connector-owned projection preserves the existing role, identity, assignment,
+and scope fields.
+On 2026-11-04, the focused 11-module connector peer source, scope, role,
+CLI/MCP, and pytest-architecture selection passed 65 tests using the clean
+public template at `ed89536`. Full Ruff and format checks, Pyright for macOS
+and Windows, Rumdl, mdrepo, and diff checks passed. No exact native KiCad lane
+was run.
 The combined connector, LED, component-pin, CLI/MCP parity, and focused
 architecture selection passed 107 tests with 3 deselected by the marker
 expression; architecture and collection guards passed 24 tests. It used the
@@ -809,6 +821,13 @@ KiCad lane was run.
 The dedicated direct-rail LED CLI/MCP parity case and the current marker
 registry selection then passed 10 tests after the parity case moved into its
 focused test module.
+The connector pin evidence route now also covers repeated-function,
+generic-peer outlier, and generic-peer divergence findings. Their combined
+connector, LED, component-pin, and CLI/MCP selection passed 238 tests with 5
+deselected; the current architecture, marker, collection, and lint-suite gates
+passed 33 tests. Full Ruff, format, Linux and Windows Pyright, Rumdl, mdrepo,
+and diff checks passed. The public template remained clean at `ed89536`; no
+exact native KiCad lane was run.
 
 **Done when:** the pilot yields equivalent findings and report meaning; adding
 a second rule in that theme needs no new parameter on the 49- or 33-parameter
