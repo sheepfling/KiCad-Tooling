@@ -560,12 +560,18 @@ receipt and, when present, the paired named-variant export identities. A
 blocked named-variant comparison uses a separate
 `PcbBlockedVariantPopulationEvidence` record whose constructor requires
 `BLOCKED` coverage. `project_named_variant_population_evidence` is also used
-for textual value findings that refer to a named variant, keeping the export
-identity mapping in one owner. These projectors preserve the established
-evidence fields and report fingerprints.
+by typed value findings that refer to a named variant. Its source owner is
+`design_lint_pcb_variant_population_evidence.py`; it returns a
+`CandidateEvidenceProjection` for either rule without coupling the two finding
+owners. Per-reference value mismatches retain a
+`PcbValueMismatchEvidence` record and use
+`project_pcb_value_mismatch_evidence`. Blocked value comparisons retain
+`PcbBlockedValueComparisonEvidence`, including the inventory state and explicit
+`BLOCKED` comparison state. Its projector preserves the prior sparse evidence
+shape when the whole inventory is blocked and the full receipt shape when only
+the value comparison is blocked. These projectors preserve report fingerprints.
 
 Footprint records apply only to findings from completed comparisons; a
-top-level blocked inventory result retains its existing coverage path. Textual
-value comparisons also keep their existing path. These records do not infer
-package equivalence, assembly intent, electrical behavior, physical placement
-correctness, or actual component population.
+top-level blocked inventory result retains its existing coverage path. These
+records do not infer package equivalence, assembly intent, electrical
+behavior, physical placement correctness, or actual component population.

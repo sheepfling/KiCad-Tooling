@@ -15,6 +15,12 @@ from kicad_tooling.hwrepo.design_lint_candidate_aggregation import fingerprint
 from kicad_tooling.hwrepo.design_lint_pcb_component_inventory_candidates import (
     pcb_component_inventory_candidates,
 )
+from kicad_tooling.hwrepo.design_lint_pcb_value_candidate_evidence import (
+    PcbBlockedValueComparisonCandidate,
+    PcbValueMismatchCandidate,
+    project_blocked_value_comparison_evidence,
+    project_pcb_value_mismatch_evidence,
+)
 from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import (
     CommandEvidence,
@@ -67,6 +73,13 @@ def test_value_difference_is_reviewable_configurable_and_source_bound() -> None:
 
     (candidate,) = tuple(
         item for item in pcb_component_inventory_candidates(coverage) if item.rule_id == RULE_ID
+    )
+    assert isinstance(candidate, PcbValueMismatchCandidate)
+    assert candidate.source_evidence.observation.reference == "R1"
+    assert candidate.source_evidence.receipt.snapshot_schema == "13"
+    assert (
+        candidate.evidence
+        == project_pcb_value_mismatch_evidence(candidate.source_evidence).evidence
     )
     assert candidate.subject == "R1: schematic and PCB value fields differ"
     assert candidate.evidence["schematic_value"] == ("10k",)
@@ -274,6 +287,12 @@ def test_named_variant_values_compare_same_name_fitted_sources_and_localize_find
     (candidate,) = tuple(
         item for item in pcb_component_inventory_candidates(report) if item.rule_id == RULE_ID
     )
+    assert isinstance(candidate, PcbValueMismatchCandidate)
+    assert candidate.source_evidence.observation.variant == "Assembly A"
+    assert (
+        candidate.evidence
+        == project_pcb_value_mismatch_evidence(candidate.source_evidence).evidence
+    )
     assert candidate.subject == "R1: schematic and PCB value fields differ in Assembly A"
     assert candidate.evidence["variant"] == ("Assembly A",)
     assert candidate.evidence["variant_project_sha256"] == ("d" * 64,)
@@ -320,6 +339,12 @@ def test_schema_12_remains_supported_for_inventory_but_blocks_value_comparison()
     assert coverage.value_comparison_status == "BLOCKED"
     (candidate,) = tuple(
         item for item in pcb_component_inventory_candidates(coverage) if item.rule_id == RULE_ID
+    )
+    assert isinstance(candidate, PcbBlockedValueComparisonCandidate)
+    assert candidate.source_evidence.coverage_status == "BLOCKED"
+    assert (
+        candidate.evidence
+        == project_blocked_value_comparison_evidence(candidate.source_evidence).evidence
     )
     assert candidate.evidence["snapshot_schema"] == ("12",)
     assert "schema 13" in candidate.evidence["coverage_issue"][0]

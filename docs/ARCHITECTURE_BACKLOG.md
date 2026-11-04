@@ -199,10 +199,12 @@ per-reference comparisons with their netlist, board, snapshot, schema, KiCad
 image/version, and probe identities. DNP mismatches also retain their typed
 comparison and paired named-variant exports; blocked named-variant coverage
 retains an explicit blocked source record. PCB-owned projectors preserve the
-existing report evidence and fingerprints. Top-level blocked inventory and
-textual value paths retain their separate status and evidence handling.
-Focused source-route, inventory, population, value, catalog-boundary, and
-CLI/MCP parity regressions passed 43 tests with native KiCad tests deselected.
+existing report evidence and fingerprints. Value mismatches and blocked value
+comparisons now retain typed sources as well; their projector preserves the
+distinct evidence shapes for complete and blocked inventory states. Top-level
+blocked inventory still retains its existing coverage path. Focused source-
+route, inventory, population, value, catalog-boundary, architecture, and
+CLI/MCP parity regressions passed 58 tests with native KiCad tests deselected.
 Ruff, focused Pyright, Markdown checks, and `git diff --check` passed. This
 advances SA-01 without a line-count-driven split or public report change.
 

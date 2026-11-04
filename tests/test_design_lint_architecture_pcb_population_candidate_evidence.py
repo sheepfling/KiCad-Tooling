@@ -21,6 +21,8 @@ pytestmark = [pytest.mark.architecture, pytest.mark.design_lint, pytest.mark.pcb
 def test_population_findings_use_typed_source_owners_for_each_evidence_state() -> None:
     owner_path = HWREPO / "design_lint_pcb_population_candidate_evidence.py"
     owner_tree = ast.parse(owner_path.read_text(encoding="utf-8"))
+    variant_owner_path = HWREPO / "design_lint_pcb_variant_population_evidence.py"
+    variant_owner_tree = ast.parse(variant_owner_path.read_text(encoding="utf-8"))
     translator_path = HWREPO / "design_lint_pcb_component_inventory_candidates.py"
     translator_tree = ast.parse(translator_path.read_text(encoding="utf-8"))
 
@@ -32,6 +34,7 @@ def test_population_findings_use_typed_source_owners_for_each_evidence_state() -
         "kicad_tooling.hwrepo.pcb_component_inventory_models"
     )
     assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert line_count(variant_owner_path) < IMPLEMENTATION_MAX_LINES
     assert line_count(translator_path) < IMPLEMENTATION_MAX_LINES
     for name in (
         "project_pcb_population_evidence",
@@ -51,17 +54,23 @@ def test_population_findings_use_typed_source_owners_for_each_evidence_state() -
         for node in ast.walk(translator_function)
         if (owner := _source_evidence_owner(node)) is not None
     ]
-    assert len(source_owners) == 4
+    assert len(source_owners) == 5
     assert set(source_owners) == {
         "PcbInventoryCandidate",
         "PcbPopulationCandidate",
         "PcbBlockedVariantPopulationCandidate",
+        "PcbValueMismatchCandidate",
     }
+    assert any(
+        isinstance(node, ast.FunctionDef)
+        and node.name == "project_named_variant_population_evidence"
+        for node in variant_owner_tree.body
+    )
     assert any(
         isinstance(node, ast.Call)
         and isinstance(node.func, ast.Name)
         and node.func.id == "project_named_variant_population_evidence"
-        for node in ast.walk(translator_function)
+        for node in ast.walk(owner_tree)
     )
 
 
