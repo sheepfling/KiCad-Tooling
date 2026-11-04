@@ -1377,3 +1377,11 @@ The schematic geometry tranche passed 75 synthetic and architecture tests and
 4 CLI/MCP parity tests against the separate public `KiCAD-Test` checkout.
 Ruff, format, Pyright, Markdown checks, mdrepo, and `git diff --check` passed.
 No exact native KiCad lane was run.
+
+The global-severity evidence selection passed 142 focused source, architecture,
+marker/selector, and CLI/MCP parity tests; the custom-rule evidence selection
+passed 73. These selections overlap in shared architecture and marker checks,
+so their counts are reported separately. The combined selector passed 175
+tests, running those shared checks once. Ruff, format, targeted Pyright, the
+repository Markdown check, mdrepo, and `git diff --check` passed. The tests use
+synthetic projects; no exact native KiCad lane was run.
