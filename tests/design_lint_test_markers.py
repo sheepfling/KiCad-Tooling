@@ -125,6 +125,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_power_sequences.py",
                 "tests/test_regulator_feedback.py",
                 "tests/test_regulator_feedback_native_fixture.py",
+                "tests/test_design_lint_architecture_mapped_candidate_evidence.py",
                 "tests/test_two_pin_fuses.py",
                 "tests/test_two_pin_switches.py",
             }
@@ -145,6 +146,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_electrical_test_access_parity.py",
                 "tests/test_design_lint_architecture_pcb_measurement_candidate_evidence.py",
                 "tests/test_pcb_measurement_candidate_evidence.py",
+                "tests/test_design_lint_architecture_mapped_candidate_evidence.py",
             }
         ),
         "pcb_lint": PCB_LINT_TEST_MODULES,

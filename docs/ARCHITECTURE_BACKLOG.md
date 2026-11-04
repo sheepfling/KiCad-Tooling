@@ -625,6 +625,16 @@ become findings and complete-but-below-threshold measurements remain visible
 where the rule requires review. Continue migrating bounded theme routes whose
 source records fully explain their findings; keep policy normalization and
 source freshness in evaluation preparation rather than the evidence projectors.
+Regulator-feedback and crystal-network findings now follow that contract too.
+Their source records retain the configured coverage report and exact entry;
+projectors preserve the established numeric, pin, and issue fields. The
+`OUT_OF_RANGE` state remains reviewable even when the enclosing coverage report
+is `COMPLETE`. Continue with other bounded mapped themes after checking their
+absence states and current source-bound report contracts. The focused crystal,
+regulator, evidence-owner, and architecture selection passed 39 tests; marker
+and collection architecture checks passed 14 more. The tag's narrower
+`design_lint and evidence_lint` selection passed 7 tests, with 32 deselected.
+Ruff, format, and project-aware Pyright passed.
 CAN missing and excess termination candidates now retain their named scan
 records and use that same projection contract.
 The bus theme now returns its findings with those peer keys in a

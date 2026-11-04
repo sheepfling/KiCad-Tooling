@@ -13,8 +13,10 @@ from kicad_tooling.hwrepo.crystal_network_models import (
     CrystalNetworkMap,
     CrystalNetworkRequirement,
 )
-from kicad_tooling.hwrepo.design_lint import evaluate, text_report
+from kicad_tooling.hwrepo.design_lint import evaluate, fingerprint, text_report
+from kicad_tooling.hwrepo.design_lint_crystal_candidate_evidence import CrystalNetworkCandidate
 from kicad_tooling.hwrepo.design_lint_crystal_candidates import crystal_network_candidates
+from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     ContractCoachReport,
@@ -209,6 +211,45 @@ def test_coverage_state_matches_rows_and_blocked_rows_do_not_emit_candidates() -
     assert crystal_network_candidates(mismatch)
     blocked = mismatch.model_copy(update={"status": "BLOCKED", "issue": "stale netlist"})
     assert not crystal_network_candidates(blocked)
+
+
+@pytest.mark.evidence_lint
+@pytest.mark.parametrize(
+    "out_of_range",
+    (False, True),
+)
+def test_candidate_retains_source_report_and_existing_fingerprint(
+    out_of_range: bool,
+) -> None:
+    expected_status = "OUT_OF_RANGE" if out_of_range else "INCOMPLETE"
+    observed = (
+        crystal_netlist(c1_value="47pF", c2_value="47pF")
+        if out_of_range
+        else crystal_netlist(fault="wrong-capacitor-node")
+    )
+    result = report(observed, crystal_map())
+    coverage = result.crystal_network_coverage
+    candidate = crystal_network_candidates(coverage)[0]
+    finding = next(
+        item
+        for item in result.findings
+        if item.rule_id == "oscillator.crystal_load_network_mismatch"
+    )
+
+    assert isinstance(candidate, CrystalNetworkCandidate)
+    assert candidate.source_evidence.report is coverage
+    assert candidate.source_evidence.entry is coverage.entries[0]
+    assert candidate.source_evidence.entry.status == expected_status
+    assert candidate.evidence == finding.evidence
+    assert candidate.subject == finding.subject
+    assert candidate.message == finding.message
+    legacy_projection = Candidate(
+        rule_id=candidate.rule_id,
+        subject=candidate.subject,
+        message=candidate.message,
+        evidence=candidate.evidence,
+    )
+    assert fingerprint(candidate) == fingerprint(legacy_projection) == finding.fingerprint
 
 
 def test_wrong_node_assignment_is_reported() -> None:

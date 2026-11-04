@@ -7,10 +7,14 @@ import hashlib
 import pytest
 from pydantic import ValidationError
 
-from kicad_tooling.hwrepo.design_lint import evaluate, text_report
+from kicad_tooling.hwrepo.design_lint import evaluate, fingerprint, text_report
+from kicad_tooling.hwrepo.design_lint_regulator_candidate_evidence import (
+    RegulatorFeedbackCandidate,
+)
 from kicad_tooling.hwrepo.design_lint_regulator_candidates import (
     regulator_feedback_candidates,
 )
+from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     ContractCoachReport,
@@ -282,6 +286,38 @@ def test_coverage_state_matches_rows_and_blocked_rows_do_not_emit_candidates() -
     assert regulator_feedback_candidates(mismatch)
     blocked = mismatch.model_copy(update={"status": "BLOCKED", "issue": "stale netlist"})
     assert not regulator_feedback_candidates(blocked)
+
+
+@pytest.mark.evidence_lint
+@pytest.mark.parametrize(
+    ("fault", "entry_status"),
+    (("wrong-output-net", "INCOMPLETE"), ("upper-resistor-outside-range", "OUT_OF_RANGE")),
+)
+def test_candidate_retains_source_report_and_existing_fingerprint(
+    fault: str,
+    entry_status: str,
+) -> None:
+    result = report(regulator_netlist(fault=fault), regulator_feedback_map())
+    coverage = result.regulator_feedback_coverage
+    candidate = regulator_feedback_candidates(coverage)[0]
+    finding = next(
+        item for item in result.findings if item.rule_id == "power.regulator_feedback_mismatch"
+    )
+
+    assert isinstance(candidate, RegulatorFeedbackCandidate)
+    assert candidate.source_evidence.report is coverage
+    assert candidate.source_evidence.entry is coverage.entries[0]
+    assert candidate.source_evidence.entry.status == entry_status
+    assert candidate.evidence == finding.evidence
+    assert candidate.subject == finding.subject
+    assert candidate.message == finding.message
+    legacy_projection = Candidate(
+        rule_id=candidate.rule_id,
+        subject=candidate.subject,
+        message=candidate.message,
+        evidence=candidate.evidence,
+    )
+    assert fingerprint(candidate) == fingerprint(legacy_projection) == finding.fingerprint
 
 
 def test_non_finite_calculation_is_incomplete_instead_of_crashing() -> None:

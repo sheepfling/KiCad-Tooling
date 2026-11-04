@@ -656,3 +656,14 @@ variant source coverage when applicable. Blocked requirement checks preserve
 their enclosing report so the requirement gap and inventory state remain
 available together. Both routes use theme-owned projectors for the existing
 report fields and fingerprints.
+
+## Regulator feedback and crystal candidate evidence routes
+
+`RegulatorFeedbackFindingEvidence` and `CrystalNetworkFindingEvidence` retain
+the exact non-complete coverage entry and its configured report, including the
+observed netlist digest. Their theme-owned projectors preserve the existing
+field names, sorted pin/value measurements, formatted numeric ranges, issues,
+and candidate fingerprints. `INCOMPLETE` and `OUT_OF_RANGE` entries remain
+review findings; complete entries are filtered before evidence construction,
+and blocked or not-requested reports remain ineligible. Evaluation continues
+to own policy disposition and source matching.

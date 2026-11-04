@@ -43,6 +43,7 @@ COMPONENT_LINT_TEST_MODULES = frozenset(
         "tests/test_electrical_control_input_parity.py",
         "tests/test_electrical_rs485_parity.py",
         "tests/test_crystal_networks.py",
+        "tests/test_design_lint_architecture_mapped_candidate_evidence.py",
         "tests/test_oscillator_output_paths.py",
         "tests/test_design_lint_mcp_parity_oscillator_output_paths.py",
         "tests/test_design_lint_determinism_analog.py",
