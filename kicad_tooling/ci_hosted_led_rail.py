@@ -150,6 +150,7 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
         "custom-series-return-control": set(),
         "current-sink-output": set(),
         "current-sink-two-channel": set(),
+        "current-sink-two-channel-partial-map": set(),
     }
     expected_output_findings: dict[str, set[str]] = {
         "direct-rails": set(),
