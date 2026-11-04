@@ -470,6 +470,34 @@ projects the existing basis, uncovered constraints, issues, and bundle path
 IDs. Path and bundle subjects remain selected by the translator; finding order,
 report evidence, and fingerprints stay stable.
 
+Switching-loop candidates retain the measured loop entry and complete coverage
+report in `PcbSwitchingLoopFindingEvidence`; the projector owns the existing
+area, route-edge, return-plane, and measurement-boundary fields. A fully
+measured loop still produces a finding when no maximum area was authored, so
+the source record preserves both that case and incomplete measurements.
+`PcbKeepoutFindingEvidence` and `PcbRfAntennaFindingEvidence` retain their
+incomplete named-area or module entry with its complete board-bound report.
+Their projectors preserve the existing geometry, layer/restriction, module,
+feed, and antenna-clearance fields. Each candidate remains a review prompt for
+its owning comparison; map freshness and blocked/disabled handling remain in
+coverage policy and evaluation preparation.
+
+Touch-pad clearance findings retain their measured or incomplete entry and
+full coverage report in `PcbTouchPadClearanceFindingEvidence`; blocked map
+coverage uses a separate `PcbBlockedTouchPadClearanceFindingEvidence` record.
+The compatibility service delegates to this typed owner, which preserves the
+prior measurement and source-receipt fields and public fingerprint.
+
+Touch-pad clearance candidate construction now belongs to
+`design_lint_pcb_touch_pad_clearance_candidate_evidence`. Blocked coverage
+retains a separate report-level source record; each incomplete or below-minimum
+finding retains its exact entry and complete source report, including board,
+snapshot, probe, request, and tool identities. The evidence projections keep
+the established sparse blocked fields and per-pad receipt fields. The existing
+`pcb_touch_pad_clearance.touch_pad_clearance_violations` function remains a
+compatibility adapter, while the PCB requirement translator imports the typed
+owner directly.
+
 ## Schematic geometry source route
 
 The geometry scanner receives one schematic's bytes, repository path, exact

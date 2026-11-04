@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from hashlib import sha256
+from typing import Literal
 
 from kicad_tooling.hwrepo.contracts import model_json_bytes
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
@@ -14,6 +15,7 @@ from kicad_tooling.hwrepo.pcb_connectivity_observations import (
 )
 from kicad_tooling.hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from kicad_tooling.hwrepo.pcb_touch_pad_clearance_models import (
+    PcbTouchPadClearanceCoverageEntry,
     PcbTouchPadClearanceCoverageReport,
     PcbTouchPadClearanceMap,
     PcbTouchPadClearanceObservation,
@@ -78,7 +80,15 @@ def snapshot(
     *,
     distance_nm: int = 500_000,
     board_pad_net: str | None = "SIGNAL",
-    status: str = "MEASURED",
+    status: Literal[
+        "MEASURED",
+        "PAD_MISSING",
+        "PAD_AMBIGUOUS",
+        "PAD_LAYER_ABSENT",
+        "UNSUPPORTED_LAYER",
+        "NO_REFERENCE_ZONE",
+        "NO_FILLED_REFERENCE_COPPER",
+    ] = "MEASURED",
     minimum_clearance_nm: int = 500_000,
 ) -> PcbConnectivitySnapshot:
     """Return a minimal coherent schema-14 snapshot with one reference zone."""
@@ -162,8 +172,8 @@ def snapshot(
 def coverage_report(
     *,
     authored: PcbTouchPadClearanceMap,
-    entry,
-    status: str | None = None,
+    entry: PcbTouchPadClearanceCoverageEntry,
+    status: Literal["NOT_REQUESTED", "DISABLED", "COMPLETE", "INCOMPLETE", "BLOCKED"] | None = None,
 ) -> PcbTouchPadClearanceCoverageReport:
     """Build source-bound-looking coverage for candidate and report lifecycle tests."""
     from kicad_tooling.hwrepo.design_lint_pcb_coverage_common import map_sha256

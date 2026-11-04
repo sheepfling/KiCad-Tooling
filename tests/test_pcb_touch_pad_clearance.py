@@ -5,7 +5,16 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from kicad_tooling.hwrepo.design_lint_candidate_aggregation import fingerprint
 from kicad_tooling.hwrepo.design_lint_pcb_coverage_common import map_sha256
+from kicad_tooling.hwrepo.design_lint_pcb_touch_pad_clearance_candidate_evidence import (
+    PcbBlockedTouchPadClearanceCandidate,
+    PcbTouchPadClearanceCandidate,
+)
+from kicad_tooling.hwrepo.design_lint_pcb_touch_pad_clearance_candidate_evidence import (
+    touch_pad_clearance_violations as typed_touch_pad_clearance_violations,
+)
+from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.pcb_touch_pad_clearance import (
     touch_pad_clearance_entries,
     touch_pad_clearance_violations,
@@ -45,8 +54,37 @@ def test_below_project_minimum_emits_source_bound_review_candidate() -> None:
     assert entry.violates_minimum_clearance
     assert report.map_sha256 == map_sha256(authored)
     assert candidate.rule_id == "pcb.touch_pad_reference_clearance"
+    assert isinstance(candidate, PcbTouchPadClearanceCandidate)
+    assert candidate.source_evidence.report == report
+    assert candidate.source_evidence.entry == entry
     assert candidate.evidence["minimum_clearance_nm"] == ("800000",)
     assert candidate.evidence["measured_clearance_nm"] == ("500000",)
+    public_candidate = Candidate(
+        rule_id=candidate.rule_id,
+        subject=candidate.subject,
+        message=candidate.message,
+        evidence=candidate.evidence,
+    )
+    assert fingerprint(candidate) == fingerprint(public_candidate)
+
+
+def test_blocked_touch_pad_candidate_retains_explicit_report() -> None:
+    report = PcbTouchPadClearanceCoverageReport(
+        status="BLOCKED",
+        map_sha256="a" * 64,
+        issue="Synthetic native snapshot is unavailable",
+    )
+
+    (compatibility_candidate,) = touch_pad_clearance_violations(report)
+    (typed_candidate,) = typed_touch_pad_clearance_violations(report)
+
+    assert isinstance(typed_candidate, PcbBlockedTouchPadClearanceCandidate)
+    assert typed_candidate.source_evidence.report == report
+    assert compatibility_candidate == typed_candidate
+    assert typed_candidate.evidence == {
+        "map_sha256": ("a" * 64,),
+        "issue": ("Synthetic native snapshot is unavailable",),
+    }
 
 
 def test_measurement_at_the_project_minimum_is_a_valid_control() -> None:

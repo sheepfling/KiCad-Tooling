@@ -95,85 +95,9 @@ def touch_pad_clearance_entries(
 def touch_pad_clearance_violations(
     coverage: PcbTouchPadClearanceCoverageReport,
 ) -> tuple[Candidate, ...]:
-    """Emit review candidates for incomplete evidence or measured subminimum gaps."""
-    found: list[Candidate] = []
-    if coverage.status == "BLOCKED":
-        found.append(
-            Candidate(
-                rule_id="pcb.touch_pad_reference_clearance",
-                subject="touch-pad clearance evidence",
-                message=(
-                    "The configured touch-pad clearance could not be measured against the "
-                    "source-bound native PCB snapshot. Review the probe evidence and exact "
-                    "project-authored clearance requirement."
-                ),
-                evidence={
-                    "map_sha256": () if coverage.map_sha256 is None else (coverage.map_sha256,),
-                    "issue": () if coverage.issue is None else (coverage.issue,),
-                },
-            )
-        )
-    for entry in coverage.entries:
-        if entry.status == "COMPLETE" and not entry.violates_minimum_clearance:
-            continue
-        measured = (
-            "unavailable"
-            if entry.measured_clearance_nm is None
-            else str(entry.measured_clearance_nm)
-        )
-        found.append(
-            Candidate(
-                rule_id="pcb.touch_pad_reference_clearance",
-                subject=f"{entry.pad} to {entry.reference_net} on {entry.layer}",
-                message=(
-                    "Review the exact touch-pad clearance requirement and filled-copper "
-                    "measurement. The measured gap must meet the project's independently "
-                    "approved minimum."
-                    if entry.status == "COMPLETE"
-                    else "The mapped touch-pad clearance is incomplete; resolve its evidence "
-                    "gaps before relying on the measurement."
-                ),
-                evidence={
-                    "basis": (entry.basis,),
-                    "pad": (entry.pad,),
-                    "expected_pad_net": (entry.expected_pad_net,),
-                    "schematic_pad_net": (
-                        () if entry.schematic_pad_net is None else (entry.schematic_pad_net,)
-                    ),
-                    "observed_pad_net": (
-                        () if entry.observed_pad_net is None else (entry.observed_pad_net,)
-                    ),
-                    "reference_net": (entry.reference_net,),
-                    "layer": (entry.layer,),
-                    "minimum_clearance_nm": (str(entry.minimum_clearance_nm),),
-                    "measured_clearance_nm": (measured,),
-                    "closest_zone_uuid": (
-                        () if entry.closest_zone_uuid is None else (entry.closest_zone_uuid,)
-                    ),
-                    "violates_minimum_clearance": (str(entry.violates_minimum_clearance).lower(),),
-                    "coverage_status": (entry.status,),
-                    "issues": entry.issues,
-                    "board_path": (() if coverage.board_path is None else (coverage.board_path,)),
-                    "board_sha256": (
-                        () if coverage.board_sha256 is None else (coverage.board_sha256,)
-                    ),
-                    "snapshot_path": (
-                        () if coverage.snapshot_path is None else (coverage.snapshot_path,)
-                    ),
-                    "snapshot_sha256": (
-                        () if coverage.snapshot_sha256 is None else (coverage.snapshot_sha256,)
-                    ),
-                    "probe_sha256": (
-                        () if coverage.probe_sha256 is None else (coverage.probe_sha256,)
-                    ),
-                    "request_sha256": (
-                        () if coverage.request_sha256 is None else (coverage.request_sha256,)
-                    ),
-                    "kicad_version": (
-                        () if coverage.kicad_version is None else (coverage.kicad_version,)
-                    ),
-                    "image": () if coverage.image is None else (coverage.image,),
-                },
-            )
-        )
-    return tuple(found)
+    """Compatibility adapter for the typed touch-pad candidate owner."""
+    from .design_lint_pcb_touch_pad_clearance_candidate_evidence import (
+        touch_pad_clearance_violations as project_touch_pad_findings,
+    )
+
+    return project_touch_pad_findings(coverage)

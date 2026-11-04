@@ -233,6 +233,23 @@ signal-path selection passed 98 tests, with 20 deselected by the tag's
 `design_lint and pcb_lint` expression. Parity used the public template at
 `ed89536f0dbbcb013145af2994fef41b2250143e`; Ruff, format, and project-aware
 Pyright passed.
+Switching-loop, named keepout, RF antenna, and touch-pad clearance candidates
+now retain their exact coverage entries and source-bound reports behind
+separate PCB owners. Their projectors preserve area/route/return-plane,
+geometry/layer/restriction, module/feed/antenna, and measured-clearance fields.
+The combined DRC, signal-path, switching-loop, keepout, RF, touch-pad,
+catalog, scanner, and MCP parity selection passed 193 tests, with 20 deselected
+by the tag's `design_lint and pcb_lint` expression. Parity used the public template at
+`ed89536f0dbbcb013145af2994fef41b2250143e`; Ruff, format, and project-aware
+Pyright passed. The switching-loop fixture's project identity now matches its
+evaluation request, enabling its source-bound coverage assertions to run
+instead of cross-project rejection.
+Touch-pad blocked and per-entry findings now retain distinct typed source
+records in a candidate-evidence owner separate from the geometry measurement
+service. The old service function delegates as a compatibility adapter, and
+the internal PCB translator uses the owner directly. Focused touch-pad,
+architecture, determinism, catalog, scanner, and MCP-parity checks passed 36
+tests under `design_lint and not native_kicad`.
 
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify

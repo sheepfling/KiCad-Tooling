@@ -52,7 +52,7 @@ def design_lint_report(*, ambiguous_route: bool):
     specification = routed_mapping()
     observed = routed_snapshot(branch=ambiguous_route)
     return evaluate(
-        "synthetic-switching-loop-route-ambiguity",
+        "synthetic-loop",
         coach(),
         DesignLintPolicy(pcb_switching_loop_map=specification),
         pcb_switching_loop_coverage=coverage(specification, observed),

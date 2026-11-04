@@ -7,9 +7,24 @@ from .design_lint_pcb_differential_pair_coverage_evidence import (
     PcbDifferentialPairCoverageFindingEvidence,
 )
 from .design_lint_pcb_inputs import PcbCandidateInputs
+from .design_lint_pcb_keepout_candidate_evidence import (
+    PcbKeepoutCandidate,
+    PcbKeepoutFindingEvidence,
+)
+from .design_lint_pcb_rf_antenna_candidate_evidence import (
+    PcbRfAntennaCandidate,
+    PcbRfAntennaFindingEvidence,
+)
 from .design_lint_pcb_signal_path_coverage_evidence import (
     PcbSignalPathCoverageCandidate,
     PcbSignalPathCoverageFindingEvidence,
+)
+from .design_lint_pcb_switching_loop_candidate_evidence import (
+    PcbSwitchingLoopCandidate,
+    PcbSwitchingLoopFindingEvidence,
+)
+from .design_lint_pcb_touch_pad_clearance_candidate_evidence import (
+    touch_pad_clearance_violations,
 )
 from .design_lint_types import Candidate
 from .pcb_drc_models import (
@@ -23,7 +38,6 @@ from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,
 )
-from .pcb_touch_pad_clearance import touch_pad_clearance_violations
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 
 
@@ -54,14 +68,12 @@ def pcb_requirement_coverage_candidates(
         for entry in pcb_switching_loop_coverage.entries:
             if entry.status == "COMPLETE" and entry.maximum_area_um2 is not None:
                 continue
-            area = (
-                "unavailable"
-                if entry.loop_area_twice_nm2 is None
-                else f"{entry.loop_area_twice_nm2 / 2_000_000_000_000:.6f} mm^2"
-            )
             found.append(
-                Candidate(
-                    rule_id="pcb.switching_loop_geometry",
+                PcbSwitchingLoopCandidate.from_source_evidence(
+                    PcbSwitchingLoopFindingEvidence(
+                        report=pcb_switching_loop_coverage,
+                        entry=entry,
+                    ),
                     subject=f"{entry.id}: return net {entry.return_net}",
                     message=(
                         "Review the mapped switching-current loop, measured trace chains, and "
@@ -70,61 +82,6 @@ def pcb_requirement_coverage_candidates(
                         "the full current path or estimates parasitics, emissions, stability, or "
                         "electrical performance."
                     ),
-                    evidence={
-                        "loop_pad_order": entry.loop_pads,
-                        "pad_center_polygon_area": (area,),
-                        "trace_route_status": (entry.route_status,),
-                        "trace_route_edges": tuple(
-                            f"{item.edge_index}: {item.from_pad} to {item.to_pad}; "
-                            f"{item.status}; length "
-                            f"{item.length_nm if item.length_nm is not None else 'unavailable'} nm; "
-                            f"tracks {', '.join(item.track_uuids) or 'none'}"
-                            + (
-                                f"; filled zone {item.plane_zone_uuid}, island "
-                                f"{item.plane_island_index}; contour doubled area "
-                                f"{item.plane_island_area_twice_nm2} nm^2"
-                                if item.plane_zone_uuid is not None
-                                else ""
-                            )
-                            + ("; " + item.issue if item.issue is not None else "")
-                            for item in entry.route_edges
-                        ),
-                        "maximum_area_um2": (
-                            "not configured"
-                            if entry.maximum_area_um2 is None
-                            else str(entry.maximum_area_um2),
-                        ),
-                        "area_exceeds_limit": (
-                            "not evaluated"
-                            if entry.area_exceeds_limit is None
-                            else str(entry.area_exceeds_limit).lower(),
-                        ),
-                        "return_net": (entry.return_net,),
-                        "return_plane_layer": (entry.return_plane_layer,),
-                        "return_plane_pads": entry.return_plane_pads,
-                        "return_plane_status": (entry.return_plane_status,),
-                        "return_zone_uuid": (
-                            () if entry.return_zone_uuid is None else (entry.return_zone_uuid,)
-                        ),
-                        "return_island_index": (
-                            ()
-                            if entry.return_island_index is None
-                            else (str(entry.return_island_index),)
-                        ),
-                        "coverage_status": (entry.status,),
-                        "basis": (entry.basis,),
-                        "issues": entry.issues,
-                        "metric": (
-                            "Absolute shoelace area of project-ordered native pad centers; "
-                            + "trace lengths follow uniquely resolved native track chains; "
-                            + "plane edges identify one shared filled island and can report its "
-                            + "native contour area",
-                        ),
-                        "validation_boundary": (
-                            "component internals, current distribution, parasitics, hardware, "
-                            + "and simulation remain outside this measurement",
-                        ),
-                    },
                 )
             )
     if pcb_differential_pair_coverage is not None:
@@ -172,39 +129,18 @@ def pcb_requirement_coverage_candidates(
         for entry in pcb_keepout_coverage.entries:
             if entry.status != "INCOMPLETE":
                 continue
-            observed_restrictions = tuple(
-                f"{name}={value}"
-                for name, value in (
-                    ("tracks", entry.observed_forbids_tracks),
-                    ("vias", entry.observed_forbids_vias),
-                    ("pads", entry.observed_forbids_pads),
-                    ("zone_fills", entry.observed_forbids_zone_fills),
-                    ("footprints", entry.observed_forbids_footprints),
-                )
-                if value is not None
-            )
             found.append(
-                Candidate(
-                    rule_id="pcb.keepout_intent_coverage",
+                PcbKeepoutCandidate.from_source_evidence(
+                    PcbKeepoutFindingEvidence(
+                        report=pcb_keepout_coverage,
+                        entry=entry,
+                    ),
                     subject=f"{entry.id}: named keepout {entry.name}",
                     message=(
                         "This named PCB keepout differs from its project-reviewed geometry, "
                         "copper-layer, or restriction signature. Review the independent source "
                         "requirement and the native rule area before updating either record."
                     ),
-                    evidence={
-                        "basis": (entry.basis,),
-                        "expected_geometry_sha256": (entry.expected_geometry_sha256,),
-                        "observed_geometry_sha256": (
-                            ()
-                            if entry.observed_geometry_sha256 is None
-                            else (entry.observed_geometry_sha256,)
-                        ),
-                        "expected_layers": entry.expected_layers,
-                        "observed_layers": entry.observed_layers,
-                        "observed_restrictions": observed_restrictions,
-                        "issues": entry.issues,
-                    },
                 )
             )
     if pcb_rf_module_antenna_coverage is not None:
@@ -212,67 +148,17 @@ def pcb_requirement_coverage_candidates(
             if entry.status != "INCOMPLETE":
                 continue
             found.append(
-                Candidate(
-                    rule_id="pcb.rf_module_antenna_keepout_coverage",
+                PcbRfAntennaCandidate.from_source_evidence(
+                    PcbRfAntennaFindingEvidence(
+                        report=pcb_rf_module_antenna_coverage,
+                        entry=entry,
+                    ),
                     subject=f"{entry.reference}: {entry.disposition} antenna requirement",
                     message=(
                         "This RF module does not match the project-authored schematic and PCB "
                         "identity, fitted state, feed net, or placement-relative antenna keepout. "
                         "Review the independent module documentation and native source evidence."
                     ),
-                    evidence={
-                        "basis": (entry.basis,),
-                        "disposition": (entry.disposition,),
-                        "expected_symbol": (entry.expected_symbol,),
-                        "observed_symbol": (
-                            () if entry.observed_symbol is None else (entry.observed_symbol,)
-                        ),
-                        "expected_footprint": (entry.expected_footprint,),
-                        "observed_schematic_footprint": (
-                            ()
-                            if entry.observed_schematic_footprint is None
-                            else (entry.observed_schematic_footprint,)
-                        ),
-                        "observed_board_footprint": (
-                            ()
-                            if entry.observed_board_footprint is None
-                            else (entry.observed_board_footprint,)
-                        ),
-                        "expected_part_id": (
-                            () if entry.expected_part_id is None else (entry.expected_part_id,)
-                        ),
-                        "observed_part_id": (
-                            () if entry.observed_part_id is None else (entry.observed_part_id,)
-                        ),
-                        "rf_feed_pad": (() if entry.rf_feed_pad is None else (entry.rf_feed_pad,)),
-                        "expected_rf_feed_net": (
-                            ()
-                            if entry.expected_rf_feed_net is None
-                            else (entry.expected_rf_feed_net,)
-                        ),
-                        "observed_schematic_rf_feed_nets": (entry.observed_schematic_rf_feed_nets),
-                        "observed_board_rf_feed_net": (
-                            ()
-                            if entry.observed_board_rf_feed_net is None
-                            else (entry.observed_board_rf_feed_net,)
-                        ),
-                        "expected_keepout_name": (
-                            ()
-                            if entry.expected_keepout_name is None
-                            else (entry.expected_keepout_name,)
-                        ),
-                        "expected_geometry_sha256": (
-                            ()
-                            if entry.expected_geometry_sha256 is None
-                            else (entry.expected_geometry_sha256,)
-                        ),
-                        "observed_geometry_sha256": (
-                            ()
-                            if entry.observed_geometry_sha256 is None
-                            else (entry.observed_geometry_sha256,)
-                        ),
-                        "issues": entry.issues,
-                    },
                 )
             )
     if pcb_touch_pad_clearance_coverage is not None:
