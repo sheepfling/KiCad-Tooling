@@ -529,3 +529,14 @@ retains that record, and `project_generic_peer_pin_evidence` owns the existing
 report fields; the candidate builder continues to own selection and wording.
 Repeated symbol or part identity and a shared anchor remain comparison clues,
 not evidence that peer pins must connect.
+
+## BJT and MOSFET terminal-tie route
+
+The six supported BJT collector/emitter, base/emitter, base/collector and
+MOSFET drain/source, gate/source, gate/drain predicates now retain a
+`ComponentTerminalSameNetEvidence` record on each internal
+`ComponentTerminalCandidate`. The source owner validates the rule-to-device
+pair and both native net assignments; `project_component_terminal_evidence`
+maps the typed pair to the established role-specific pin/net keys and the
+existing BJT family or MOSFET channel field. Predicate qualification, message
+wording, finding order, report JSON, and fingerprints remain unchanged.

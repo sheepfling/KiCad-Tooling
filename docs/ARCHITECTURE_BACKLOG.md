@@ -186,6 +186,13 @@ evidence fields and fingerprint. The component peer-pin slice passed 80
 synthetic and architecture tests with four native-lane tests deselected, plus
 Ruff, focused Pyright, Markdown checks, and `git diff --check`; it does not
 claim native-tool coverage.
+The six BJT/MOSFET terminal-tie rules now retain one typed terminal-pair source
+record and use a component-owned projection for their existing role-specific
+report fields. Their predicate functions and catalog owners remain in place.
+The focused route, six rule suites, and their architecture guards passed 51
+tests, with two additional MCP/report parity tests passing. Ruff, focused
+Pyright, Markdown checks, and `git diff --check` passed. Native fixtures were
+excluded from these runs.
 
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify

@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 from .component_mosfet_symbols import mosfet_channel_type, mosfet_terminal_role_numbers
-from .design_lint_types import Candidate
+from .design_lint_component_terminal_candidate_evidence import (
+    ComponentTerminalCandidate,
+    ComponentTerminalSameNetEvidence,
+)
 from .netlist_contract_models import NetlistContract
 
 RULE_ID = "component.mosfet_drain_source_same_net"
@@ -13,7 +16,7 @@ GATE_DRAIN_RULE_ID = "component.mosfet_gate_drain_same_net"
 
 def mosfets_with_drain_source_on_same_net(
     observed: NetlistContract,
-) -> tuple[Candidate, ...]:
+) -> tuple[ComponentTerminalCandidate, ...]:
     """Review fitted, supported MOSFETs with drain and source on one native net."""
     fitted = {reference.casefold() for reference in observed.components}
     dnp = {reference.casefold() for reference in observed.dnp_components}
@@ -26,7 +29,7 @@ def mosfets_with_drain_source_on_same_net(
         for pin in pins:
             nets_by_pin.setdefault(pin.casefold(), []).append(net)
 
-    findings: list[Candidate] = []
+    findings: list[ComponentTerminalCandidate] = []
     for reference, symbol in sorted(
         observed.component_symbols.items(), key=lambda item: (item[0].casefold(), item[0])
     ):
@@ -54,8 +57,18 @@ def mosfets_with_drain_source_on_same_net(
             continue
 
         findings.append(
-            Candidate(
-                rule_id=RULE_ID,
+            ComponentTerminalCandidate.from_source_evidence(
+                ComponentTerminalSameNetEvidence(
+                    rule_id=RULE_ID,
+                    component_kind="mosfet",
+                    reference=reference,
+                    symbol=symbol,
+                    device_type=channel_type,
+                    first_pin=drain_pin,
+                    first_net=drain_net,
+                    second_pin=source_pin,
+                    second_net=source_net,
+                ),
                 subject=f"{reference}: MOSFET drain and source share one schematic net",
                 message=(
                     "The native schematic assigns this supported MOSFET's drain and source to "
@@ -63,15 +76,6 @@ def mosfets_with_drain_source_on_same_net(
                     "Review whether the assignment is intentional. This prompt does not prove "
                     "a defect or establish PCB copper continuity or physical behavior."
                 ),
-                evidence={
-                    "component": (reference,),
-                    "symbol": (symbol,),
-                    "channel_type": (channel_type,),
-                    "drain_pin": (drain_pin,),
-                    "drain_net": (drain_net,),
-                    "source_pin": (source_pin,),
-                    "source_net": (source_net,),
-                },
             )
         )
     return tuple(findings)
@@ -79,7 +83,7 @@ def mosfets_with_drain_source_on_same_net(
 
 def mosfets_with_gate_source_on_same_net(
     observed: NetlistContract,
-) -> tuple[Candidate, ...]:
+) -> tuple[ComponentTerminalCandidate, ...]:
     """Review fitted, supported MOSFETs whose gate and source share one net."""
     fitted = {reference.casefold() for reference in observed.components}
     dnp = {reference.casefold() for reference in observed.dnp_components}
@@ -92,7 +96,7 @@ def mosfets_with_gate_source_on_same_net(
         for pin in pins:
             nets_by_pin.setdefault(pin.casefold(), []).append(net)
 
-    findings: list[Candidate] = []
+    findings: list[ComponentTerminalCandidate] = []
     for reference, symbol in sorted(
         observed.component_symbols.items(), key=lambda item: (item[0].casefold(), item[0])
     ):
@@ -120,8 +124,18 @@ def mosfets_with_gate_source_on_same_net(
             continue
 
         findings.append(
-            Candidate(
-                rule_id=GATE_SOURCE_RULE_ID,
+            ComponentTerminalCandidate.from_source_evidence(
+                ComponentTerminalSameNetEvidence(
+                    rule_id=GATE_SOURCE_RULE_ID,
+                    component_kind="mosfet",
+                    reference=reference,
+                    symbol=symbol,
+                    device_type=channel_type,
+                    first_pin=gate_pin,
+                    first_net=gate_net,
+                    second_pin=source_pin,
+                    second_net=source_net,
+                ),
                 subject=f"{reference}: MOSFET gate and source share one schematic net",
                 message=(
                     "The native schematic assigns this supported MOSFET's gate and source to "
@@ -130,15 +144,6 @@ def mosfets_with_gate_source_on_same_net(
                     "whether a gate-control connection is missing. This prompt does not prove "
                     "a defect, board copper continuity, or physical behavior."
                 ),
-                evidence={
-                    "component": (reference,),
-                    "symbol": (symbol,),
-                    "channel_type": (channel_type,),
-                    "gate_pin": (gate_pin,),
-                    "gate_net": (gate_net,),
-                    "source_pin": (source_pin,),
-                    "source_net": (source_net,),
-                },
             )
         )
     return tuple(findings)
@@ -146,7 +151,7 @@ def mosfets_with_gate_source_on_same_net(
 
 def mosfets_with_gate_drain_on_same_net(
     observed: NetlistContract,
-) -> tuple[Candidate, ...]:
+) -> tuple[ComponentTerminalCandidate, ...]:
     """Review fitted, supported MOSFETs whose gate and drain share one net."""
     fitted = {reference.casefold() for reference in observed.components}
     dnp = {reference.casefold() for reference in observed.dnp_components}
@@ -159,7 +164,7 @@ def mosfets_with_gate_drain_on_same_net(
         for pin in pins:
             nets_by_pin.setdefault(pin.casefold(), []).append(net)
 
-    findings: list[Candidate] = []
+    findings: list[ComponentTerminalCandidate] = []
     for reference, symbol in sorted(
         observed.component_symbols.items(), key=lambda item: (item[0].casefold(), item[0])
     ):
@@ -187,8 +192,18 @@ def mosfets_with_gate_drain_on_same_net(
             continue
 
         findings.append(
-            Candidate(
-                rule_id=GATE_DRAIN_RULE_ID,
+            ComponentTerminalCandidate.from_source_evidence(
+                ComponentTerminalSameNetEvidence(
+                    rule_id=GATE_DRAIN_RULE_ID,
+                    component_kind="mosfet",
+                    reference=reference,
+                    symbol=symbol,
+                    device_type=channel_type,
+                    first_pin=gate_pin,
+                    first_net=gate_net,
+                    second_pin=drain_pin,
+                    second_net=drain_net,
+                ),
                 subject=f"{reference}: MOSFET gate and drain share one schematic net",
                 message=(
                     "The native schematic assigns this supported MOSFET's gate and drain to "
@@ -197,15 +212,6 @@ def mosfets_with_gate_drain_on_same_net(
                     "does not prove a defect, device behavior, PCB copper continuity, or "
                     "physical behavior."
                 ),
-                evidence={
-                    "component": (reference,),
-                    "symbol": (symbol,),
-                    "channel_type": (channel_type,),
-                    "gate_pin": (gate_pin,),
-                    "gate_net": (gate_net,),
-                    "drain_pin": (drain_pin,),
-                    "drain_net": (drain_net,),
-                },
             )
         )
     return tuple(findings)

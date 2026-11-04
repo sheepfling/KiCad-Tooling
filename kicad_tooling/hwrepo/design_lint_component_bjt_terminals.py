@@ -5,7 +5,10 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping
 
 from .component_bjt_symbols import basic_bjt_role_numbers
-from .design_lint_types import Candidate
+from .design_lint_component_terminal_candidate_evidence import (
+    ComponentTerminalCandidate,
+    ComponentTerminalSameNetEvidence,
+)
 from .netlist_contract_models import NetlistContract
 
 COLLECTOR_EMITTER_RULE_ID = "component.bjt_collector_emitter_same_net"
@@ -50,9 +53,9 @@ def _fitted_bjt_role_mappings(
 
 def bjts_with_collector_emitter_on_same_net(
     observed: NetlistContract,
-) -> tuple[Candidate, ...]:
+) -> tuple[ComponentTerminalCandidate, ...]:
     """Review fitted, supported basic BJTs with collector and emitter on one net."""
-    findings: list[Candidate] = []
+    findings: list[ComponentTerminalCandidate] = []
     for reference, symbol, roles, nets_by_pin in _fitted_bjt_role_mappings(observed):
         collector_pin = f"{reference}.{roles['collector']}"
         emitter_pin = f"{reference}.{roles['emitter']}"
@@ -66,8 +69,18 @@ def bjts_with_collector_emitter_on_same_net(
 
         family = symbol.casefold().rsplit(":", 1)[-1].removeprefix("q_").split("_", 1)[0]
         findings.append(
-            Candidate(
-                rule_id=COLLECTOR_EMITTER_RULE_ID,
+            ComponentTerminalCandidate.from_source_evidence(
+                ComponentTerminalSameNetEvidence(
+                    rule_id=COLLECTOR_EMITTER_RULE_ID,
+                    component_kind="bjt",
+                    reference=reference,
+                    symbol=symbol,
+                    device_type=family,
+                    first_pin=collector_pin,
+                    first_net=collector_net,
+                    second_pin=emitter_pin,
+                    second_net=emitter_net,
+                ),
                 subject=f"{reference}: BJT collector and emitter share one schematic net",
                 message=(
                     "The native schematic assigns this supported BJT's collector and emitter to "
@@ -75,15 +88,6 @@ def bjts_with_collector_emitter_on_same_net(
                     "Review whether the assignment is intentional. This prompt does not prove "
                     "a defect or establish PCB copper continuity or physical behavior."
                 ),
-                evidence={
-                    "component": (reference,),
-                    "symbol": (symbol,),
-                    "transistor_family": (family,),
-                    "collector_pin": (collector_pin,),
-                    "collector_net": (collector_net,),
-                    "emitter_pin": (emitter_pin,),
-                    "emitter_net": (emitter_net,),
-                },
             )
         )
     return tuple(findings)
@@ -91,9 +95,9 @@ def bjts_with_collector_emitter_on_same_net(
 
 def bjts_with_base_emitter_on_same_net(
     observed: NetlistContract,
-) -> tuple[Candidate, ...]:
+) -> tuple[ComponentTerminalCandidate, ...]:
     """Review fitted, supported basic BJTs with base and emitter on one net."""
-    findings: list[Candidate] = []
+    findings: list[ComponentTerminalCandidate] = []
     for reference, symbol, roles, nets_by_pin in _fitted_bjt_role_mappings(observed):
         base_pin = f"{reference}.{roles['base']}"
         emitter_pin = f"{reference}.{roles['emitter']}"
@@ -107,8 +111,18 @@ def bjts_with_base_emitter_on_same_net(
 
         family = symbol.casefold().rsplit(":", 1)[-1].removeprefix("q_").split("_", 1)[0]
         findings.append(
-            Candidate(
-                rule_id=BASE_EMITTER_RULE_ID,
+            ComponentTerminalCandidate.from_source_evidence(
+                ComponentTerminalSameNetEvidence(
+                    rule_id=BASE_EMITTER_RULE_ID,
+                    component_kind="bjt",
+                    reference=reference,
+                    symbol=symbol,
+                    device_type=family,
+                    first_pin=base_pin,
+                    first_net=base_net,
+                    second_pin=emitter_pin,
+                    second_net=emitter_net,
+                ),
                 subject=f"{reference}: BJT base and emitter share one schematic net",
                 message=(
                     "The native schematic assigns this supported BJT's base and emitter to "
@@ -116,15 +130,6 @@ def bjts_with_base_emitter_on_same_net(
                     "Review whether the assignment is intentional. This prompt does not "
                     "prove a defect or establish PCB copper continuity or physical behavior."
                 ),
-                evidence={
-                    "component": (reference,),
-                    "symbol": (symbol,),
-                    "transistor_family": (family,),
-                    "base_pin": (base_pin,),
-                    "base_net": (base_net,),
-                    "emitter_pin": (emitter_pin,),
-                    "emitter_net": (emitter_net,),
-                },
             )
         )
     return tuple(findings)
@@ -132,9 +137,9 @@ def bjts_with_base_emitter_on_same_net(
 
 def bjts_with_base_collector_on_same_net(
     observed: NetlistContract,
-) -> tuple[Candidate, ...]:
+) -> tuple[ComponentTerminalCandidate, ...]:
     """Review fitted, supported basic BJTs with base and collector on one net."""
-    findings: list[Candidate] = []
+    findings: list[ComponentTerminalCandidate] = []
     for reference, symbol, roles, nets_by_pin in _fitted_bjt_role_mappings(observed):
         base_pin = f"{reference}.{roles['base']}"
         collector_pin = f"{reference}.{roles['collector']}"
@@ -148,8 +153,18 @@ def bjts_with_base_collector_on_same_net(
 
         family = symbol.casefold().rsplit(":", 1)[-1].removeprefix("q_").split("_", 1)[0]
         findings.append(
-            Candidate(
-                rule_id=BASE_COLLECTOR_RULE_ID,
+            ComponentTerminalCandidate.from_source_evidence(
+                ComponentTerminalSameNetEvidence(
+                    rule_id=BASE_COLLECTOR_RULE_ID,
+                    component_kind="bjt",
+                    reference=reference,
+                    symbol=symbol,
+                    device_type=family,
+                    first_pin=base_pin,
+                    first_net=base_net,
+                    second_pin=collector_pin,
+                    second_net=collector_net,
+                ),
                 subject=f"{reference}: BJT base and collector share one schematic net",
                 message=(
                     "The native schematic assigns this supported BJT's base and collector to "
@@ -157,15 +172,6 @@ def bjts_with_base_collector_on_same_net(
                     "review whether it matches the intended design. The prompt does not prove "
                     "a defect or establish PCB copper continuity or physical behavior."
                 ),
-                evidence={
-                    "component": (reference,),
-                    "symbol": (symbol,),
-                    "transistor_family": (family,),
-                    "base_pin": (base_pin,),
-                    "base_net": (base_net,),
-                    "collector_pin": (collector_pin,),
-                    "collector_net": (collector_net,),
-                },
             )
         )
     return tuple(findings)
