@@ -76,6 +76,23 @@ def prepare_evaluation(
     coach = request.coach
     policy = request.policy
     catalog = rule_catalog()
+    coach_has_source_identity = bool(coach.source_hashes) or coach.native_summary is not None
+    if coach_has_source_identity and coach.project_id != request.project_id:
+        issue = (
+            f"Contract coach evidence belongs to project {coach.project_id!r}, "
+            f"not requested project {request.project_id!r}"
+        )
+        return DesignLintEvaluationPreparationResult(
+            report=DesignLintReport(
+                status="BLOCKED",
+                project_id=request.project_id,
+                rule_catalog=catalog,
+                issues=(issue,),
+                next_actions=(
+                    "Capture contract-coach evidence for the requested project and rerun design lint.",
+                ),
+            )
+        )
     input_pcb_coverage = normalize_pcb_input_coverage_policy(
         policy,
         source_hashes=coach.source_hashes,

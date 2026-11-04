@@ -250,6 +250,11 @@ Both netlist and DRC consumers validate the summary's project, exact toolchain,
 and completed source-scope hashes through the same native-summary boundary.
 A completed DRC with violations can still provide evidence; it is not treated
 as a clean DRC result.
+Design-lint preparation checks source-bound contract-coach evidence against
+the requested project ID before preparing candidates. A cross-project
+mismatch returns `BLOCKED` without attaching the other project's source hashes
+or netlist digest to the selected project's report. Unbound synthetic inputs
+remain usable through the lower-level evaluator compatibility route.
 Differential-pair evaluation now checks both the authored map and the current
 coach source inventory before accepting scanned DRC coverage. Project, board,
 and rules identities must also agree with that inventory; stale coverage is
