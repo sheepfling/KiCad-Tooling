@@ -43,6 +43,8 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.parts_assistant import Assistant, Form, create_server, render_html
 from kicad_tooling.hwrepo.parts_workflow import input_hashes
+from kicad_tooling.hwrepo.purchasing import write_csvs
+from kicad_tooling.hwrepo.purchasing_models import PurchasingComponent
 from tests.support import reference_root
 
 
@@ -793,6 +795,14 @@ class AssistantHttpTests(unittest.TestCase):
                     "preferences": PurchasingPreferences(
                         boards=boards, spare_percent=spare_percent, spare_minimum=spare_minimum
                     ),
+                    "components": (
+                        PurchasingComponent(
+                            reference="R1",
+                            value="1k",
+                            footprint="Device:R",
+                            part_id="RES-1",
+                        ),
+                    ),
                     "lines": (
                         plan.lines[0].model_copy(
                             update={"required": boards * 2, "spares": 0, "quantity": boards * 2}
@@ -800,6 +810,7 @@ class AssistantHttpTests(unittest.TestCase):
                     ),
                 }
             )
+            write_csvs(output, updated)
             return template.model_copy(update={"receipt_dir": str(output), "plan": updated})
 
         with patch("kicad_tooling.hwrepo.parts_assistant.prepare", side_effect=projected):
