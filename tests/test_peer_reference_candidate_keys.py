@@ -183,9 +183,22 @@ def test_internal_peer_identity_does_not_change_public_fingerprint() -> None:
     assert fingerprint(typed) == fingerprint(public_candidate)
 
 
-def test_mutated_public_evidence_cannot_disagree_with_typed_coverage() -> None:
-    candidate = _candidates()[0]
-    candidate.evidence["SDA"] = ("OTHER_NET",)
+def test_candidate_evidence_is_copied_and_immutable() -> None:
+    original = {"SDA": ("SDA_A",), "SCL": ("SCL_A",), "peers": ("J1",)}
+    candidate = PeerReferenceCandidate(
+        rule_id="bus.i2c_peer_reference_review",
+        subject="J1/J2",
+        message="Review I2C peers",
+        evidence=original,
+        identity=I2cPeerBusKey(sda_net="SDA_A", scl_net="SCL_A"),
+    )
+    expected_fingerprint = fingerprint(candidate)
 
-    with pytest.raises(ValueError, match="needs one SDA value"):
-        PeerReferenceCandidateKeys.from_candidates((candidate,))
+    original["SDA"] = ("OTHER_NET",)
+    assert candidate.evidence["SDA"] == ("SDA_A",)
+    assert fingerprint(candidate) == expected_fingerprint
+    with pytest.raises(TypeError):
+        candidate.evidence["SDA"] = ("OTHER_NET",)  # type: ignore[index]
+    assert PeerReferenceCandidateKeys.from_candidates((candidate,)).i2c_buses == frozenset(
+        {("sda_a", "scl_a")}
+    )

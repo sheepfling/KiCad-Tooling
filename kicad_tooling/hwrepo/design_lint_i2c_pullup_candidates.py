@@ -59,19 +59,23 @@ def i2c_pullup_theme_candidates(
                 subject=f"SDA {bus.sda_net} / SCL {bus.scl_net}",
                 message=(
                     "Recognized fitted pull-ups in parallel have nominal effective resistance "
-                    f"below 1 kΩ on {', '.join(bus.lines)}. Review the approved bus range, rail, "
+                    "below 1 kΩ on "
+                    f"{', '.join(item.line for item in bus.lines)}. Review the approved bus range, rail, "
                     "and sink-current limits; capacitance and timing are not modeled."
                 ),
                 evidence={
                     "SDA": (bus.sda_net,),
                     "SCL": (bus.scl_net,),
-                    "lines": bus.lines,
-                    "pins": (*bus.pins["SDA"], *bus.pins["SCL"]),
+                    "lines": tuple(item.line for item in bus.lines),
+                    "pins": (*bus.sda_pins, *bus.scl_pins),
                     "equivalent_ohms": tuple(
-                        f"{line}={bus.equivalent_ohms[line]}Ω" for line in bus.lines
+                        f"{item.line}={item.equivalent_resistance_ohms:.6g}Ω" for item in bus.lines
                     ),
                     "pullup_resistors": tuple(
-                        item for line in bus.lines for item in bus.resistors[line]
+                        f"{' + '.join(path.references)}={path.resistance_ohms:.6g}Ω to "
+                        f"{path.rail_net}"
+                        for line in bus.lines
+                        for path in line.pullup_paths
                     ),
                 },
             )

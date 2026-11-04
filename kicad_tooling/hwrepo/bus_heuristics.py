@@ -66,16 +66,14 @@ from .can_termination_heuristics import (
     can_buses_with_excessive_local_termination,
     can_buses_without_local_termination,
 )
-from .i2c_pullup_contract import (
-    i2c_pullup_checks,
-)
-from .i2c_pullup_heuristics import (
+from .i2c_pullup_compatibility import (
     I2cLowEquivalentResistance,
     I2cMultiplePullupRailFamilies,
     I2cPullupGap,
     i2c_buses_with_low_equivalent_pullup_resistance,
     i2c_buses_with_multiple_pullup_rail_families,
     i2c_buses_without_local_pullups,
+    i2c_pullup_checks,
     i2c_pullup_heuristic_coverage,
 )
 from .resistor_paths import (

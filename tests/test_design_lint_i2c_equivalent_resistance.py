@@ -4,10 +4,19 @@ from __future__ import annotations
 
 import pytest
 
+from kicad_tooling.hwrepo.bus_heuristics import (
+    I2cLowEquivalentResistance as LegacyI2cLowEquivalentResistance,
+)
+from kicad_tooling.hwrepo.bus_heuristics import (
+    i2c_buses_with_low_equivalent_pullup_resistance as compatibility_low_resistance_scan,
+)
 from kicad_tooling.hwrepo.design_lint import (
     candidates,
     evaluate,
     fingerprint,
+)
+from kicad_tooling.hwrepo.i2c_pullup_heuristics import (
+    i2c_buses_with_low_equivalent_pullup_resistance,
 )
 from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
@@ -77,6 +86,28 @@ def test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance() ->
         ),
     )
     assert blocked.status == "FAIL"
+
+
+def test_i2c_low_resistance_scan_returns_named_line_observations() -> None:
+    (scan,) = i2c_buses_with_low_equivalent_pullup_resistance(i2c_netlist_with_parallel_sda())
+
+    assert (scan.sda_net, scan.scl_net) == ("SDA_BUS", "SCL_BUS")
+    assert (scan.sda_pins, scan.scl_pins) == (("U1.1",), ("U1.2",))
+    assert len(scan.lines) == 1
+    (line,) = scan.lines
+    assert line.line == "SDA"
+    assert line.equivalent_resistance_ohms == 500.0
+    assert tuple(path.references for path in line.pullup_paths) == (("R1",), ("R3",))
+
+
+def test_bus_heuristics_facade_preserves_legacy_low_resistance_record() -> None:
+    (scan,) = compatibility_low_resistance_scan(i2c_netlist_with_parallel_sda())
+
+    assert isinstance(scan, LegacyI2cLowEquivalentResistance)
+    assert scan.lines == ("SDA",)
+    assert scan.pins == {"SDA": ("U1.1",), "SCL": ("U1.2",)}
+    assert scan.equivalent_ohms == {"SDA": "500"}
+    assert scan.resistors == {"SDA": ("R1=1000Ω to +3V3", "R3=1000Ω to +3V3")}
 
 
 def test_i2c_low_equivalent_includes_series_pullup_paths() -> None:

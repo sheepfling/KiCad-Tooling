@@ -304,7 +304,9 @@ def test_incomplete_coverage_emits_a_configurable_review_finding() -> None:
     from kicad_tooling.hwrepo.design_lint import evaluate
     from tests.design_lint_fixtures import coach, observed
 
-    source_coach = coach(observed()).model_copy(update={"source_hashes": pair_source_hashes()})
+    source_coach = coach(observed(), project_id="synthetic-pair").model_copy(
+        update={"source_hashes": pair_source_hashes()}
+    )
 
     report = evaluate(
         "synthetic-pair",

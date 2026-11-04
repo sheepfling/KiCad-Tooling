@@ -256,7 +256,7 @@ def pcb_rule_ids() -> set[str]:
     )
     decoupling_result = evaluate(
         "synthetic-decoupling",
-        empty_coach,
+        empty_coach.model_copy(update={"project_id": "synthetic-decoupling"}),
         DesignLintPolicy(pcb_decoupling_map=decoupling_map),
         pcb_decoupling_coverage=_pcb_decoupling_support.coverage_report(
             decoupling_map,
@@ -269,7 +269,7 @@ def pcb_rule_ids() -> set[str]:
     protection_map = protection_path_mapping()
     protection_result = evaluate(
         "synthetic-protection-path",
-        empty_coach,
+        empty_coach.model_copy(update={"project_id": "synthetic-protection-path"}),
         DesignLintPolicy(pcb_protection_path_map=protection_map),
         pcb_protection_path_coverage=protection_path_coverage(
             protection_map,
@@ -281,7 +281,7 @@ def pcb_rule_ids() -> set[str]:
     track_map = track_width_mapping(track_width_requirement(minimum_um=251))
     track_result = evaluate(
         "synthetic-track-width",
-        empty_coach,
+        empty_coach.model_copy(update={"project_id": "synthetic-track-width"}),
         DesignLintPolicy(pcb_track_width_map=track_map),
         pcb_track_width_coverage=track_width_coverage(
             track_map,
@@ -299,7 +299,7 @@ def pcb_rule_ids() -> set[str]:
     reference_map = _pcb_reference_plane_fixtures.mapping()
     reference_result = evaluate(
         "synthetic-reference-plane",
-        empty_coach,
+        empty_coach.model_copy(update={"project_id": "synthetic-reference-plane"}),
         DesignLintPolicy(pcb_reference_plane_map=reference_map),
         pcb_reference_plane_coverage=_pcb_reference_plane_fixtures.report(
             reference_map,
@@ -334,7 +334,12 @@ def pcb_rule_ids() -> set[str]:
 
     pair_result = evaluate(
         "synthetic-differential-pair",
-        empty_coach.model_copy(update={"source_hashes": pair_source_hashes()}),
+        empty_coach.model_copy(
+            update={
+                "project_id": "synthetic-differential-pair",
+                "source_hashes": pair_source_hashes(),
+            }
+        ),
         DesignLintPolicy(pcb_differential_pair_rule_map=pair_map()),
         pcb_differential_pair_coverage=incomplete_pair_report(),
     )
@@ -353,6 +358,7 @@ def pcb_rule_ids() -> set[str]:
         "synthetic-keepout",
         empty_coach.model_copy(
             update={
+                "project_id": "synthetic-keepout",
                 "netlist_sha256": keepout_coverage.netlist_sha256,
                 "source_hashes": {keepout_coverage.board_path: keepout_coverage.board_sha256},
             }

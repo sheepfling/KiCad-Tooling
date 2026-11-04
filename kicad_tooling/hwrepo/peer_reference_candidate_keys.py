@@ -76,6 +76,7 @@ class PeerReferenceCandidate(Candidate):
     identity: PeerReferenceKey
 
     def __post_init__(self) -> None:
+        Candidate.__post_init__(self)
         self.validate_identity_contract()
 
     @classmethod
@@ -102,7 +103,7 @@ class PeerReferenceCandidate(Candidate):
         )
 
     def validate_identity_contract(self) -> None:
-        """Catch mutable evidence drifting from the source-derived identity."""
+        """Check identity-owned evidence against its source-derived projection."""
         projection = _identity_projection(self.identity)
         if self.rule_id != projection.rule_id:
             raise ValueError(
@@ -141,7 +142,6 @@ class PeerReferenceCandidateKeys:
                 continue
             if not isinstance(item, PeerReferenceCandidate):
                 raise TypeError(f"{item.rule_id} candidate needs a typed peer identity")
-            item.validate_identity_contract()
             identity = item.identity
             if isinstance(identity, I2cPeerBusKey):
                 i2c.add((identity.sda_net.casefold(), identity.scl_net.casefold()))

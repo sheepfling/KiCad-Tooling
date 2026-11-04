@@ -374,10 +374,15 @@ def with_control_resistor(
     )
 
 
-def coach(netlist: NetlistContract, netlist_sha256: str = "a" * 64) -> ContractCoachReport:
+def coach(
+    netlist: NetlistContract,
+    netlist_sha256: str = "a" * 64,
+    *,
+    project_id: str = "synthetic-ports",
+) -> ContractCoachReport:
     return ContractCoachReport(
         status="READY_FOR_REVIEW",
-        project_id="synthetic-ports",
+        project_id=project_id,
         observed=netlist,
         netlist_sha256=netlist_sha256,
     )

@@ -148,6 +148,14 @@ IC decoupling review now returns named requirement and capacitor-value records
 from the authored map and observed netlist. The candidate boundary continues to
 emit the established evidence fields and requirement digest.
 
+The I²C low-equivalent-resistance scan now returns named per-line observations
+with typed resistor paths and numeric effective resistance, alongside explicit
+SDA and SCL pin assignments. Candidate formatting owns the legacy evidence
+projection, so the scan no longer hands three correlated line-keyed maps to
+the candidate layer. Internal design-lint services call the owning module;
+the `bus_heuristics.py` compatibility facade preserves its former map-shaped
+return record for existing Python callers.
+
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify
 the right producer for a new datum; no module split is needed to express the
@@ -475,7 +483,11 @@ its typed owner and wire projection are explicit.
 The identity-to-report route is represented by a named
 `PeerReferenceIdentityProjection`, which pairs the rule ID with a read-only
 view of its reserved wire fields. The candidate adapter still emits the
-existing mutable evidence mapping for report serialization.
+established evidence mapping for report serialization. Candidate construction
+copies and freezes that mapping so later internal consumers cannot change the
+fingerprint or disagree with typed coverage identity. This protects the
+current wire contract; per-theme typed finding evidence remains a separate
+schema and fingerprint migration decision.
 The bus theme now returns its findings with those peer keys in a
 BusCandidateResult. Prepared evaluation consumes the typed result directly;
 the flattened scan_candidates() remains an adapter for existing callers.

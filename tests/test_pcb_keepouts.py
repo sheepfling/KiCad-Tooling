@@ -177,7 +177,7 @@ def design_lint_report(*, fault: bool):
     )
     coach = ContractCoachReport(
         status="READY_FOR_REVIEW",
-        project_id="synthetic-keepout",
+        project_id=("synthetic-keepout-fault" if fault else "synthetic-keepout-control"),
         source_hashes={"kicad/synthetic.kicad_pcb": "a" * 64},
         netlist_sha256=netlist_sha256,
         observed=observed_netlist,
@@ -349,7 +349,7 @@ def test_keepout_lint_finding_supports_review_block_off_and_exact_ignore() -> No
     coverage = incomplete_report(mapping).model_copy(update={"netlist_sha256": observed_hash})
     report = evaluate(
         "synthetic-keepout",
-        coach(observed, observed_hash).model_copy(
+        coach(observed, observed_hash, project_id="synthetic-keepout").model_copy(
             update={"source_hashes": {"kicad/synthetic.kicad_pcb": "a" * 64}}
         ),
         DesignLintPolicy(pcb_keepout_map=mapping),
@@ -363,7 +363,7 @@ def test_keepout_lint_finding_supports_review_block_off_and_exact_ignore() -> No
 
     blocked = evaluate(
         "synthetic-keepout",
-        coach(observed, observed_hash).model_copy(
+        coach(observed, observed_hash, project_id="synthetic-keepout").model_copy(
             update={"source_hashes": {"kicad/synthetic.kicad_pcb": "a" * 64}}
         ),
         DesignLintPolicy(
@@ -382,7 +382,7 @@ def test_keepout_lint_finding_supports_review_block_off_and_exact_ignore() -> No
 
     disabled = evaluate(
         "synthetic-keepout",
-        coach(observed, observed_hash).model_copy(
+        coach(observed, observed_hash, project_id="synthetic-keepout").model_copy(
             update={"source_hashes": {"kicad/synthetic.kicad_pcb": "a" * 64}}
         ),
         DesignLintPolicy(
@@ -402,7 +402,7 @@ def test_keepout_lint_finding_supports_review_block_off_and_exact_ignore() -> No
 
     ignored = evaluate(
         "synthetic-keepout",
-        coach(observed, observed_hash).model_copy(
+        coach(observed, observed_hash, project_id="synthetic-keepout").model_copy(
             update={"source_hashes": {"kicad/synthetic.kicad_pcb": "a" * 64}}
         ),
         DesignLintPolicy(
@@ -438,7 +438,9 @@ def test_scanned_keepout_coverage_requires_current_board_and_map(binding: str) -
 
     report = evaluate(
         "synthetic-keepout",
-        coach(observed, observed_hash).model_copy(update={"source_hashes": source_hashes}),
+        coach(observed, observed_hash, project_id="synthetic-keepout").model_copy(
+            update={"source_hashes": source_hashes}
+        ),
         policy,
         pcb_keepout_coverage=coverage,
     )
@@ -454,7 +456,7 @@ def test_explicitly_disabled_keepout_without_map_stays_disabled() -> None:
     observed_hash = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
     report = evaluate(
         "synthetic-keepout",
-        coach(observed, observed_hash),
+        coach(observed, observed_hash, project_id="synthetic-keepout"),
         DesignLintPolicy(
             rules=(
                 DesignLintRuleOverride(

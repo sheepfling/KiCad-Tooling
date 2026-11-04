@@ -83,6 +83,14 @@ signature.
 - The I²C rule remains a review heuristic when no reviewed requirement covers
   it. A project-authored, source-matched requirement may supply coverage; it
   does not turn an inferred net name into a requirement.
+- The low-equivalent-resistance scan returns one named observation per
+  affected line, with its typed resistor paths and numeric effective
+  resistance, plus explicit SDA and SCL pin tuples. Candidate formatting
+  projects those records into the unchanged string-keyed evidence fields,
+  preserving line order, pins, formatted values, and fingerprints without
+  passing correlated line-keyed maps between stages. Internal candidate scans
+  import this typed owner directly; `bus_heuristics.py` re-exports a small
+  compatibility adapter for the established map-shaped return record.
 - Fingerprints currently hash `Candidate.evidence`, a mapping of named string
   tuples. Keep that public evidence shape and its normalization unchanged in
   this routing pilot. A future typed finding-evidence variant needs its own
@@ -234,15 +242,15 @@ new extension paths appended outside the compatibility aggregator from
 reaching disposition with an unknown rule ID.
 
 Peer-reference coverage has a related boundary. Four protocol rule owners now
-attach typed bus, clock, or pair identities to their internal candidates. Each
+attach typed bus, clock, or pair identities to their internal candidates. A
 candidate checks that its typed identity and serialized evidence agree at
-construction and before coverage assembly, since the evidence dictionary can
-be mutated after construction. `PeerReferenceCandidateKeys` collects typed
-identities for coverage; a candidate with the right rule ID but no typed
-identity fails before disposition. The public finding evidence
-and fingerprint stay the same. The broader extension path should formalize
-typed theme results rather than adding metadata fields to the shared candidate
-type for each new rule.
+construction. The shared candidate copies and freezes the established evidence
+mapping, so later mutation cannot change either its coverage identity or
+fingerprint. `PeerReferenceCandidateKeys` collects typed identities for
+coverage; a candidate with the right rule ID but no typed identity fails before
+disposition. The public finding evidence and fingerprint stay the same. The
+broader extension path should formalize typed theme results rather than adding
+metadata fields to the shared candidate type for each new rule.
 
 The four peer rule owners now use `PeerReferenceCandidate.from_identity()` to
 derive their identity-owned public evidence fields (`SDA`/`SCL`, `SCK`,
@@ -253,8 +261,9 @@ report JSON and fingerprint. This is the first typed evidence projection; the
 remaining per-rule evidence fields still use the established string-keyed
 map and need their own staged migration by theme. The projection itself is a
 named `PeerReferenceIdentityProjection` with a read-only mapping of its
-identity-owned wire fields; the candidate adapter creates the established
-mutable evidence map only at the serialization boundary.
+identity-owned wire fields; the candidate adapter projects them into the
+established evidence mapping, which `Candidate` copies and freezes before
+report serialization.
 
 The component-peer identity helper now returns a named
 `ComponentPeerPinIdentityContext` instead of a positional tuple containing an
