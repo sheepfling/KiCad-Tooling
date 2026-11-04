@@ -27,7 +27,6 @@ from .design_lint_candidate_inputs import (
     ConnectorCandidateInputs,
     DesignLintCandidateInputs,
     MappedCandidateInputs,
-    PeerCandidateInputs,
     UsbDataPathCandidateInputs,
 )
 from .design_lint_candidate_results import DesignLintCandidateScanResult
@@ -56,7 +55,8 @@ from .design_lint_pcb_required_fitted_reference_candidates import (
     pcb_required_fitted_reference_candidates,
 )
 from .design_lint_pcb_requirement_candidates import scan_pcb_requirement_candidates
-from .design_lint_peer_candidates import peer_candidates
+from .design_lint_peer_candidates import scan_peer_candidates
+from .design_lint_peer_inputs import PeerCandidateInputs, PeerCandidateScanInputs
 from .design_lint_power_candidates import scan_power_candidates
 from .design_lint_power_inputs import PowerCandidateInputs
 from .design_lint_return_distribution_candidates import return_distribution_candidates
@@ -357,13 +357,15 @@ def scan_candidate_result(
     if schematic_geometry is not None:
         found.extend(schematic_geometry_candidates(schematic_geometry))
     found.extend(
-        peer_candidates(
-            observed,
-            inputs.peer,
-            reviewed_connector_references=reviewed_connector_references,
-            spi_roster=spi_roster,
-            usb_data_path_map=usb_data_path_map,
-            usb_data_map_sha256=usb_data_map_sha256,
+        scan_peer_candidates(
+            PeerCandidateScanInputs(
+                observed=observed,
+                peer=inputs.peer,
+                reviewed_connector_references=reviewed_connector_references,
+                spi_roster=spi_roster,
+                usb_data_path_map=usb_data_path_map,
+                usb_data_map_sha256=usb_data_map_sha256,
+            )
         )
     )
     mapped_coverage_result = scan_mapped_coverage_candidates(

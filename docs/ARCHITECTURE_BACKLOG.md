@@ -553,6 +553,15 @@ observed netlist with the source-bound heuristic coverage. The bundle and
 scanner now import that record from its owner; the former service and bundle
 imports remain identity-compatible.
 
+The protocol peer scanner now accepts one `PeerCandidateScanInputs` record
+containing the observed netlist, peer evidence, reviewed connector references,
+SPI roster, and USB map with its digest. Candidate aggregation builds that
+record from the existing capability groups and routes it through the typed
+scanner; the legacy multi-argument peer coordinator remains an adapter.
+`PeerCandidateInputs` and the scan request live in
+`design_lint_peer_inputs.py`; internal consumers import from that owner, while
+the older bundle path remains an identity-compatible re-export.
+
 **Done when:** the pilot yields equivalent findings and report meaning; adding
 a second rule in that theme needs no new parameter on the 49- or 33-parameter
 central functions; no opaque mapping substitutes for typed inputs; focused

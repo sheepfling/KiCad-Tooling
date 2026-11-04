@@ -135,9 +135,15 @@ findings computed during that scan. It does not reconstruct the record from a
 fixed list of fields, so newly added bus evidence is not silently lost between
 the typed scanner and the bus coordinator. The shared observed netlist and
 reviewed connector scope must still agree at the scanner boundary.
-The peer coordinator likewise receives its typed peer group directly. The
-scanner supplies the shared observed netlist, SPI roster, connector scope, and
-USB map separately because other themes consume those same inputs.
+The peer coordinator receives one `PeerCandidateScanInputs` record. It combines
+the typed peer group with the shared observed netlist, SPI roster, reviewed
+connector scope, and USB map plus the map's digest. Candidate aggregation
+builds this request from the existing capability groups and computes the map
+digest once through the canonical helper. The coordinator consumes that record
+directly; its older multi-argument function remains a compatibility adapter.
+The record and peer evidence group are owned by `design_lint_peer_inputs.py`,
+while the older candidate-bundle import remains an identity-compatible
+re-export.
 Mapped electrical coverage is passed as its own typed group to its coordinator;
 the USB and power maps remain explicit shared inputs. Adding a field to either
 group does not require rebuilding that group in the central scanner.

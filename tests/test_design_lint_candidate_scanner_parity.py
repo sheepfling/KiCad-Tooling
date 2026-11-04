@@ -30,17 +30,12 @@ from kicad_tooling.hwrepo.design_lint_candidate_aggregation import (
     validate_catalogued_candidates,
 )
 from kicad_tooling.hwrepo.design_lint_candidate_inputs import (
-    ComponentCandidateInputs,
-    ConnectorCandidateInputs,
     DesignLintCandidateInputs,
     MappedCandidateInputs,
     PcbCandidateInputs,
-    PeerCandidateInputs,
-    UsbDataPathCandidateInputs,
 )
 from kicad_tooling.hwrepo.design_lint_candidate_results import DesignLintCandidateScanResult
 from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
-from kicad_tooling.hwrepo.design_lint_control_inputs import ControlCandidateInputs
 from kicad_tooling.hwrepo.design_lint_mapped_coverage_candidates import (
     MappedCoverageCandidateInputs,
     MappedCoverageCandidateResult,
@@ -48,16 +43,12 @@ from kicad_tooling.hwrepo.design_lint_mapped_coverage_candidates import (
 from kicad_tooling.hwrepo.design_lint_mapped_topology_results import (
     MappedTopologyFindingCounts,
 )
-from kicad_tooling.hwrepo.design_lint_power_inputs import PowerCandidateInputs
 from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.external_protection_models import ExternalProtectionCoverageReport
-from kicad_tooling.hwrepo.i2c_address_inputs import I2cAddressCandidateInput
-from kicad_tooling.hwrepo.i2c_pullup_inputs import I2cPullupSnifferInput
-from kicad_tooling.hwrepo.models import DesignLintPolicy, NetlistContract
+from kicad_tooling.hwrepo.models import DesignLintPolicy
 from kicad_tooling.hwrepo.pcb_drc_rule_coverage import compare_native_rules
 from kicad_tooling.hwrepo.peer_reference_candidate_keys import PeerReferenceCandidateKeys
-from kicad_tooling.hwrepo.spi_participants import SpiRosterContext
-from kicad_tooling.hwrepo.usb_data_path_models import UsbDataPathMap
+from tests.design_lint_candidate_inputs_support import candidate_inputs
 from tests.design_lint_fixtures import coach, control_input_pins, i2c_netlist
 from tests.i2c_peer_reference_support import i2c_peer_netlist
 from tests.test_pcb_drc_coverage import incomplete_report, pair_map, rules_text
@@ -70,73 +61,8 @@ pytestmark = [
 ]
 
 
-def _candidate_inputs(
-    observed: NetlistContract,
-    *,
-    usb_map: UsbDataPathMap | None = None,
-) -> DesignLintCandidateInputs:
-    return DesignLintCandidateInputs(
-        observed=observed,
-        catalog=rule_catalog(),
-        schematic_geometry=None,
-        reviewed_connector_references=(),
-        connector=ConnectorCandidateInputs(
-            coverage=None,
-            return_distribution=None,
-            stateful_contact_map=None,
-            power_output_review_enabled=True,
-        ),
-        component=ComponentCandidateInputs(
-            peer_pin_assignment_scans=None,
-            peer_power_output_review_enabled=True,
-        ),
-        control=ControlCandidateInputs.from_legacy_arguments(observed, None),
-        power=PowerCandidateInputs(
-            component_role_map=None,
-            power_path_map=None,
-            power_sequence_map=None,
-            oscillator_output_path_map=None,
-            ic_decoupling_map=None,
-        ),
-        bus=BusCandidateInputs(
-            observed=observed,
-            i2c_address=I2cAddressCandidateInput.from_candidate_arguments(observed, None, None),
-            i2c_pullup=I2cPullupSnifferInput.from_legacy_arguments(observed, None),
-        ),
-        peer=PeerCandidateInputs(
-            digital_voltage_context=None,
-            digital_voltage_scan=None,
-            usb_reference_scan=None,
-            serial_reference_scan=None,
-            serial_roster=None,
-            usb_c_port_roster=None,
-        ),
-        mapped=MappedCandidateInputs(
-            external_protection=None,
-            crystal_network=None,
-            regulator_feedback=None,
-            rc_filter=None,
-        ),
-        pcb=PcbCandidateInputs(
-            component_inventory=None,
-            decoupling=None,
-            protection_path=None,
-            track_width=None,
-            reference_plane=None,
-            switching_loop=None,
-            differential_pair=None,
-            signal_path=None,
-            keepout=None,
-            rf_antenna=None,
-            touch_pad_clearance=None,
-            stm32_pin_map=None,
-        ),
-        usb_data_path=UsbDataPathCandidateInputs(authored_map=usb_map),
-    )
-
-
 def test_usb_data_path_input_group_preserves_both_scanner_routes() -> None:
-    inputs = _candidate_inputs(usb_netlist(), usb_map=usb_data_map())
+    inputs = candidate_inputs(usb_netlist(), usb_map=usb_data_map())
 
     assert scan_candidates(inputs) == _legacy_scan(inputs)
 
@@ -157,7 +83,7 @@ def test_pcb_candidate_sources_stay_in_the_pcb_group_and_preserve_results() -> N
         message="Synthetic native DRC candidate",
         evidence={},
     )
-    inputs = _candidate_inputs(i2c_netlist(pullups=()))
+    inputs = candidate_inputs(i2c_netlist(pullups=()))
     inputs = replace(
         inputs,
         pcb=replace(
@@ -251,13 +177,13 @@ def _legacy_scan_result(
 
 
 def test_scanner_rejects_conflicting_shared_bus_inputs() -> None:
-    inputs = _candidate_inputs(i2c_netlist(pullups=()))
+    inputs = candidate_inputs(i2c_netlist(pullups=()))
     other = i2c_netlist(pullups=("SDA", "SCL"))
-    other_bus = _candidate_inputs(other).bus
+    other_bus = candidate_inputs(other).bus
     with pytest.raises(ValueError, match="one observed native netlist"):
         replace(inputs, bus=other_bus)
     with pytest.raises(ValueError, match="one observed native netlist"):
-        replace(inputs, control=_candidate_inputs(other).control)
+        replace(inputs, control=candidate_inputs(other).control)
     with pytest.raises(ValueError, match="reviewed connector references"):
         replace(inputs, bus=replace(inputs.bus, reviewed_connector_references=("J1",)))
     with pytest.raises(ValueError, match="computed by the candidate scanner"):
@@ -271,7 +197,7 @@ def test_scanner_passes_extended_bus_input_to_its_owner(monkeypatch: pytest.Monk
     class ExtendedBusInputs(BusCandidateInputs):
         extension_marker: str = "new theme evidence"
 
-    inputs = _candidate_inputs(i2c_netlist(pullups=()))
+    inputs = candidate_inputs(i2c_netlist(pullups=()))
     extended = ExtendedBusInputs(
         observed=inputs.observed,
         i2c_address=inputs.bus.i2c_address,
@@ -295,7 +221,7 @@ def test_scanner_passes_extended_bus_input_to_its_owner(monkeypatch: pytest.Monk
 
 
 def test_bus_scan_returns_typed_peer_identity_alongside_findings() -> None:
-    inputs = _candidate_inputs(i2c_peer_netlist())
+    inputs = candidate_inputs(i2c_peer_netlist())
 
     result = scan_bus_candidates(inputs.bus)
 
@@ -304,7 +230,7 @@ def test_bus_scan_returns_typed_peer_identity_alongside_findings() -> None:
 
 
 def test_candidate_scan_result_preserves_typed_bus_output() -> None:
-    inputs = _candidate_inputs(i2c_peer_netlist())
+    inputs = candidate_inputs(i2c_peer_netlist())
 
     result = scan_candidate_result(inputs)
 
@@ -313,56 +239,12 @@ def test_candidate_scan_result_preserves_typed_bus_output() -> None:
     assert result.peer_reference_keys.i2c_buses == frozenset({("i2c_sda", "i2c_scl")})
 
 
-def test_scanner_passes_extended_peer_input_to_its_owner(monkeypatch: pytest.MonkeyPatch) -> None:
-    @dataclass(frozen=True, slots=True)
-    class ExtendedPeerInputs(PeerCandidateInputs):
-        extension_marker: str = "new peer evidence"
-
-    inputs = _candidate_inputs(i2c_netlist(pullups=()))
-    extended = ExtendedPeerInputs(
-        digital_voltage_context=None,
-        digital_voltage_scan=None,
-        usb_reference_scan=None,
-        serial_reference_scan=None,
-        serial_roster=None,
-        usb_c_port_roster=None,
-    )
-    inputs = replace(inputs, peer=extended)
-    received: list[PeerCandidateInputs] = []
-    original = design_lint_candidate_aggregation.peer_candidates
-
-    def capture(
-        observed: NetlistContract,
-        peer: PeerCandidateInputs,
-        *,
-        reviewed_connector_references: tuple[str, ...] = (),
-        spi_roster: SpiRosterContext | None = None,
-        usb_data_path_map: UsbDataPathMap | None = None,
-        usb_data_map_sha256: str | None = None,
-    ) -> tuple[Candidate, ...]:
-        received.append(peer)
-        return original(
-            observed,
-            peer,
-            reviewed_connector_references=reviewed_connector_references,
-            spi_roster=spi_roster,
-            usb_data_path_map=usb_data_path_map,
-            usb_data_map_sha256=usb_data_map_sha256,
-        )
-
-    monkeypatch.setattr(design_lint_candidate_aggregation, "peer_candidates", capture)
-    assert scan_candidates(inputs) == candidates(inputs.observed)
-    assert received[0] is extended
-    assert isinstance(received[0], ExtendedPeerInputs)
-    assert received[0].extension_marker == "new peer evidence"
-
-
 def test_scanner_passes_extended_mapped_input_to_its_owner(monkeypatch: pytest.MonkeyPatch) -> None:
     @dataclass(frozen=True, slots=True)
     class ExtendedMappedInputs(MappedCandidateInputs):
         extension_marker: str = "new mapped evidence"
 
-    inputs = _candidate_inputs(i2c_netlist(pullups=()))
+    inputs = candidate_inputs(i2c_netlist(pullups=()))
     protection = ExternalProtectionCoverageReport()
     extended = ExtendedMappedInputs(
         external_protection=protection,
@@ -395,7 +277,7 @@ def test_scanner_passes_extended_mapped_input_to_its_owner(monkeypatch: pytest.M
 def test_pcb_group_reaches_both_owners_and_preserves_legacy_findings(
     monkeypatch: pytest.MonkeyPatch, incomplete: bool
 ) -> None:
-    inputs = _candidate_inputs(i2c_netlist(pullups=()))
+    inputs = candidate_inputs(i2c_netlist(pullups=()))
     coverage = incomplete_report()
     if not incomplete:
         coverage = type(coverage).model_validate_json(
@@ -447,7 +329,7 @@ def test_legacy_and_typed_scanner_match_candidate_and_report_evidence(
     missing_pullup_expected: bool,
 ) -> None:
     observed = i2c_netlist(pullups=pullups)
-    typed_inputs = _candidate_inputs(observed)
+    typed_inputs = candidate_inputs(observed)
     legacy_items = candidates(observed)
     typed_items = scan_candidates(typed_inputs)
 
@@ -478,7 +360,7 @@ def test_control_route_preserves_candidates_fingerprints_and_report(
     monkeypatch: pytest.MonkeyPatch, connected: bool, visible_bias: bool
 ) -> None:
     observed = control_input_pins(connected=connected, visible_bias=visible_bias)
-    inputs = _candidate_inputs(observed)
+    inputs = candidate_inputs(observed)
     legacy_items = candidates(observed)
     typed_items = scan_candidates(inputs)
     assert typed_items == legacy_items

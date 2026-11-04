@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from .design_lint_candidate_inputs import PeerCandidateInputs
 from .design_lint_digital_peer_voltage_candidates import digital_peer_voltage_candidates
+from .design_lint_peer_inputs import PeerCandidateInputs, PeerCandidateScanInputs
 from .design_lint_serial_peer_candidates import (
     serial_reference_candidates,
     serial_unmapped_peer_candidates,
@@ -33,27 +33,47 @@ def peer_candidates(
     usb_data_path_map: UsbDataPathMap | None = None,
     usb_data_map_sha256: str | None = None,
 ) -> tuple[Candidate, ...]:
-    """Coordinate peer scans and translate results in stable protocol order."""
-    serial_scope = inputs.serial_roster or SerialPeerRosterContext(state="not_configured")
-    serial_reference_scan = inputs.serial_reference_scan or scan_serial_peer_reference_reviews(
+    """Compatibility adapter for callers using separate peer-scan arguments."""
+    return scan_peer_candidates(
+        PeerCandidateScanInputs(
+            observed=observed,
+            peer=inputs,
+            reviewed_connector_references=reviewed_connector_references,
+            spi_roster=spi_roster,
+            usb_data_path_map=usb_data_path_map,
+            usb_data_map_sha256=usb_data_map_sha256,
+        )
+    )
+
+
+def scan_peer_candidates(inputs: PeerCandidateScanInputs) -> tuple[Candidate, ...]:
+    """Coordinate peer scans from one typed, prepared peer request."""
+    observed = inputs.observed
+    peer_inputs = inputs.peer
+    reviewed_connector_references = inputs.reviewed_connector_references
+    spi_roster = inputs.spi_roster
+    usb_data_path_map = inputs.usb_data_path_map
+    usb_data_map_sha256 = inputs.usb_data_map_sha256
+    serial_scope = peer_inputs.serial_roster or SerialPeerRosterContext(state="not_configured")
+    serial_reference_scan = peer_inputs.serial_reference_scan or scan_serial_peer_reference_reviews(
         observed,
         serial_scope.analysis,
         reviewed_connector_references,
     )
-    usb_scan = inputs.usb_reference_scan or scan_usb_peer_reference_reviews(
+    usb_scan = peer_inputs.usb_reference_scan or scan_usb_peer_reference_reviews(
         observed,
         usb_data_path_map,
         reviewed_connector_references,
     )
     spi_scope = spi_roster or SpiRosterContext(state="not_configured")
-    peer_voltage_scope = inputs.digital_voltage_context or DigitalPeerVoltageLintContext(
+    peer_voltage_scope = peer_inputs.digital_voltage_context or DigitalPeerVoltageLintContext(
         state="not_configured"
     )
-    peer_voltage_scan = inputs.digital_voltage_scan or scan_digital_peer_voltage_reviews(
+    peer_voltage_scan = peer_inputs.digital_voltage_scan or scan_digital_peer_voltage_reviews(
         observed,
         peer_voltage_scope.analysis,
     )
-    usb_c_scope = inputs.usb_c_port_roster or UsbCPortRosterContext(state="not_configured")
+    usb_c_scope = peer_inputs.usb_c_port_roster or UsbCPortRosterContext(state="not_configured")
     return (
         *serial_unmapped_peer_candidates(observed, serial_scope),
         *serial_reference_candidates(serial_reference_scan, serial_scope),

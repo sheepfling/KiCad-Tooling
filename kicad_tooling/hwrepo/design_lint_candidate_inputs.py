@@ -12,19 +12,15 @@ from .crystal_network_models import CrystalNetworkCoverageReport
 from .design_lint_bus_inputs import BusCandidateInputs
 from .design_lint_control_inputs import ControlCandidateInputs
 from .design_lint_pcb_inputs import PcbCandidateInputs
+from .design_lint_peer_inputs import PeerCandidateInputs
 from .design_lint_power_inputs import PowerCandidateInputs
 from .design_lint_rule_models import DesignLintRuleCatalog
-from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
 from .external_protection_models import ExternalProtectionCoverageReport
 from .netlist_contract_models import NetlistContract
 from .rc_filter_models import RcFilterCoverageReport
 from .regulator_feedback_models import RegulatorFeedbackCoverageReport
 from .schematic_geometry import SchematicGeometryScan
-from .serial_participants import SerialPeerRosterContext
-from .serial_peer_reference_types import SerialPeerReferenceScan
-from .usb_c_ports import UsbCPortRosterContext
 from .usb_data_path_models import UsbDataPathMap
-from .usb_peer_reference_types import UsbPeerReferenceScan
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,18 +39,6 @@ class ComponentCandidateInputs:
 
     peer_pin_assignment_scans: ComponentPeerPinAssignmentScans | None
     peer_power_output_review_enabled: bool
-
-
-@dataclass(frozen=True, slots=True)
-class PeerCandidateInputs:
-    """Protocol and digital-peer scans resolved for one candidate pass."""
-
-    digital_voltage_context: DigitalPeerVoltageLintContext | None
-    digital_voltage_scan: DigitalPeerVoltageScan | None
-    usb_reference_scan: UsbPeerReferenceScan | None
-    serial_reference_scan: SerialPeerReferenceScan | None
-    serial_roster: SerialPeerRosterContext | None
-    usb_c_port_roster: UsbCPortRosterContext | None
 
 
 @dataclass(frozen=True, slots=True)

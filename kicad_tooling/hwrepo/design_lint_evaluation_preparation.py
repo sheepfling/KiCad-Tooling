@@ -19,7 +19,6 @@ from .design_lint_candidate_inputs import (
     ConnectorCandidateInputs,
     DesignLintCandidateInputs,
     MappedCandidateInputs,
-    PeerCandidateInputs,
     UsbDataPathCandidateInputs,
 )
 from .design_lint_catalog import rule_catalog
@@ -44,6 +43,7 @@ from .design_lint_pcb_coverage_policy import (
 from .design_lint_pcb_geometry_coverage_policy import normalize_pcb_input_coverage_policy
 from .design_lint_pcb_inputs import PcbCandidateInputs
 from .design_lint_peer_evaluation import scan_peer_design_lint_evidence
+from .design_lint_peer_inputs import PeerCandidateInputs
 from .design_lint_power_inputs import PowerCandidateInputs
 from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_types import DesignLintRuleId
