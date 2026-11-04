@@ -608,6 +608,37 @@ The component-peer candidate adapter no longer constructs evidence mappings;
 selection and wording remain with the theme service, and projection remains
 with its theme-owned evidence module.
 
+## Unconnected component power-pin route
+
+The component pin scanner returns `UnconnectedNamedComponentPin` with the
+native pin, function, and closed `supply`/`return` category. Generic power
+input and output scans return distinct records with literal `power_in` and
+`power_out` roles. `UnconnectedComponentPinCandidate` retains any of these
+records, and `project_unconnected_component_pin_evidence` derives the existing
+rule ID and report fields, including the optional native pin function. The
+component and power translators still own selection and wording; report fields
+and fingerprints are unchanged.
+
+## LED topology evidence route
+
+The direct rail-bridge scanner and output-driven LED scanner return distinct
+typed records. `LedTopologyCandidate` retains either record, while
+`project_led_candidate_evidence` owns both established report projections.
+Output-driven findings preserve the reviewed LED role binding and validate its
+digest before exposing the existing role fields. Component translation still
+owns candidate selection and wording; the report fields and fingerprints remain
+unchanged.
+
+## Unconnected connector-pin route
+
+The connector pin scanner returns distinct source records for native or
+project-mapped named supply/return pins and generic native `power_in` and
+`power_out` pins. `UnconnectedConnectorPinCandidate` retains those records;
+`project_unconnected_connector_pin_evidence` owns the existing rule IDs and
+wire fields. It preserves project-interface role provenance and omits absent
+native pin functions. Connector translation still owns suppression,
+deduplication, and wording.
+
 ## Connector footprint-peer evidence route
 
 The generic footprint-alias divergence, partially open, and all-open findings

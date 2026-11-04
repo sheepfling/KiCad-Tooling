@@ -275,6 +275,21 @@ maps are immutable and the existing public evidence fields remain stable.
 Full evaluation retains native netlist identity on `DesignLintReport` and
 `ConnectorPeerPinHeuristicCoverage`, where report validation checks digest
 equality and finding counts; the internal candidate does not duplicate it.
+The four unconnected component power-pin rules now retain their typed scanner
+record through one component-owned projection. Named pins use a closed
+`supply`/`return` category; generic pins distinguish literal `power_in` and
+`power_out` roles and preserve optional native pin-function evidence. Existing
+rule selection, wording, and serialized fields remain in their theme owners.
+The combined component unconnected-pin, connector footprint-peer, architecture,
+rule-registry, LED topology, and CLI/MCP parity selection passed 190 tests with
+3 skipped (193 collected) using the separate public template at `ed89536`.
+The LED topology findings now flow through one component-owned projector. Its
+candidate retains either direct-bridge or output-driven scanner records;
+custom role-map evidence is emitted only after its retained digest is validated.
+Existing LED wording and report fields remain owned by their current services.
+Changed Python files passed Ruff check and format validation. Project-aware
+Pyright on macOS and Windows, Rumdl, mdrepo, and diff checks passed. No exact
+native KiCad lane was run.
 
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify
@@ -779,6 +794,21 @@ and its canonical digest travel together in `design_lint_usb_data_path_inputs.py
 Peer and mapped-path scans receive the same record, and map identity is
 computed by `usb_data_path_models.usb_data_path_map_sha256`, shared with
 source-bound and mapped-topology coverage.
+The connector unconnected supply, return, generic power-input, and generic
+power-output findings now retain their scanner records through one
+connector-owned evidence projector. The scanner records use closed role and
+source literals; project-interface provenance and optional native pin
+functions remain present in the public report projection. Selection,
+suppression, and wording stay in the connector translator.
+The combined connector, LED, component-pin, CLI/MCP parity, and focused
+architecture selection passed 107 tests with 3 deselected by the marker
+expression; architecture and collection guards passed 24 tests. It used the
+clean public `KiCAD-Test` checkout at `ed89536`. Ruff, format, Linux and Windows
+Pyright, Rumdl, mdrepo, and staged/unstaged diff checks passed. No exact native
+KiCad lane was run.
+The dedicated direct-rail LED CLI/MCP parity case and the current marker
+registry selection then passed 10 tests after the parity case moved into its
+focused test module.
 
 **Done when:** the pilot yields equivalent findings and report meaning; adding
 a second rule in that theme needs no new parameter on the 49- or 33-parameter

@@ -51,7 +51,9 @@ from .connector_return_pins import (
     unconnected_generic_power_output_connector_pins,
     unconnected_named_connector_pins,
 )
-from .design_lint_rule_types import DesignLintRuleId
+from .design_lint_connector_unconnected_pin_candidate_evidence import (
+    UnconnectedConnectorPinCandidate,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 
@@ -104,16 +106,9 @@ def connector_pin_candidates(
     )
 
     for pin in unconnected_power_input_pins:
-        evidence = {
-            "symbol": (pin.symbol,),
-            "pin_electrical_type": (pin.electrical_type,),
-            pin.pin: (),
-        }
-        if pin.function is not None:
-            evidence["native_pin_function"] = (pin.function,)
         found.append(
-            Candidate(
-                rule_id="connector.unconnected_power_input",
+            UnconnectedConnectorPinCandidate.from_source_evidence(
+                pin,
                 subject=f"{pin.pin}: generic native power-input pin is unassigned",
                 message=(
                     "KiCad's native symbol metadata classifies this generic connector pin as "
@@ -122,7 +117,6 @@ def connector_pin_candidates(
                     "power or reference connection is missing. The electrical type does not "
                     "identify the contact's specific role or require it to be connected."
                 ),
-                evidence=evidence,
             )
         )
 
@@ -135,16 +129,9 @@ def connector_pin_candidates(
         item.pin.casefold() for item in unconnected_power_output_pins
     )
     for pin in unconnected_power_output_pins:
-        evidence = {
-            "symbol": (pin.symbol,),
-            "pin_electrical_type": (pin.electrical_type,),
-            pin.pin: (),
-        }
-        if pin.function is not None:
-            evidence["native_pin_function"] = (pin.function,)
         found.append(
-            Candidate(
-                rule_id="connector.unconnected_power_output",
+            UnconnectedConnectorPinCandidate.from_source_evidence(
+                pin,
                 subject=f"{pin.pin}: generic native power-output pin is unassigned",
                 message=(
                     "KiCad's native symbol metadata classifies this generic connector pin as "
@@ -153,7 +140,6 @@ def connector_pin_candidates(
                     "or whether a power-output connection is missing. The electrical type does "
                     "not identify the contact's specific role or require it to be connected."
                 ),
-                evidence=evidence,
             )
         )
 
@@ -339,18 +325,16 @@ def connector_pin_candidates(
         if pin.pin in repeated_pin_evidence:
             continue
         if pin.category == "supply":
-            rule_id: DesignLintRuleId = "connector.unconnected_supply_pin"
             description = "supply"
             review = "whether it is intentionally unused or a power connection is missing"
         else:
-            rule_id = "connector.unconnected_return_pin"
             description = "return"
             review = (
                 "whether it is intentionally unused or isolated, or a return connection is missing"
             )
         found.append(
-            Candidate(
-                rule_id=rule_id,
+            UnconnectedConnectorPinCandidate.from_source_evidence(
+                pin,
                 subject=f"{pin.pin}: {pin.function}",
                 message=(
                     f"This source-matched project interface maps the connector contact as {description}, "
@@ -359,14 +343,6 @@ def connector_pin_candidates(
                     else f"This named connector {description} pin has no net assignment. "
                     f"Review {review}."
                 ),
-                evidence={
-                    pin.pin: (),
-                    **(
-                        {"role_source": ("project interface catalog",)}
-                        if pin.role_source == "project_interface"
-                        else {}
-                    ),
-                },
             )
         )
 

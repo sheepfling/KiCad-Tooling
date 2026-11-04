@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Literal
 
 from .connector_identity import (
     connector_candidate_references,
@@ -13,13 +14,16 @@ from .connector_identity import (
 )
 from .netlist_contract_models import NetlistContract
 
+UnconnectedNamedComponentPinCategory = Literal["supply", "return"]
+GenericComponentPowerElectricalType = Literal["power_in", "power_out"]
+
 
 @dataclass(frozen=True, slots=True)
 class UnconnectedGenericPowerInputComponentPin:
     pin: str
     symbol: str
     function: str | None
-    electrical_type: str
+    electrical_type: Literal["power_in"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,7 +31,7 @@ class UnconnectedGenericPowerOutputComponentPin:
     pin: str
     symbol: str
     function: str | None
-    electrical_type: str
+    electrical_type: Literal["power_out"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,14 +39,14 @@ class _UnconnectedGenericPowerComponentPin:
     pin: str
     symbol: str
     function: str | None
-    electrical_type: str
+    electrical_type: GenericComponentPowerElectricalType
 
 
 def _unconnected_generic_power_component_pins(
     observed: NetlistContract,
     declared_connector_references: tuple[str, ...],
     *,
-    expected_electrical_type: str,
+    expected_electrical_type: GenericComponentPowerElectricalType,
 ) -> tuple[_UnconnectedGenericPowerComponentPin, ...]:
     """Find unassigned generic native power pins on fitted non-connectors."""
     connector_references = {
@@ -94,7 +98,7 @@ def unconnected_generic_power_input_component_pins(
             pin=item.pin,
             symbol=item.symbol,
             function=item.function,
-            electrical_type=item.electrical_type,
+            electrical_type="power_in",
         )
         for item in _unconnected_generic_power_component_pins(
             observed,
@@ -114,7 +118,7 @@ def unconnected_generic_power_output_component_pins(
             pin=item.pin,
             symbol=item.symbol,
             function=item.function,
-            electrical_type=item.electrical_type,
+            electrical_type="power_out",
         )
         for item in _unconnected_generic_power_component_pins(
             observed,
@@ -128,7 +132,7 @@ def unconnected_generic_power_output_component_pins(
 class UnconnectedNamedComponentPin:
     pin: str
     function: str
-    category: str
+    category: UnconnectedNamedComponentPinCategory
 
 
 def unconnected_named_component_pins(
@@ -150,7 +154,9 @@ def unconnected_named_component_pins(
             or pin in connected
         ):
             continue
-        category = "return" if is_return_function(function) else None
+        category: UnconnectedNamedComponentPinCategory | None = (
+            "return" if is_return_function(function) else None
+        )
         if category is None and is_named_supply_function(function):
             category = "supply"
         if category is not None:

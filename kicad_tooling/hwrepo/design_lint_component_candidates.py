@@ -10,7 +10,11 @@ from .component_bjt_terminal_order import bjts_with_unusual_collector_emitter_ra
 from .component_diode_rail_orientation import diodes_with_anode_below_cathode_on_named_rails
 from .component_mosfet_gate_drive import mosfets_with_direct_output_gate_drive
 from .component_mosfet_terminal_order import mosfets_with_unusual_drain_source_rail_order
-from .component_pin_patterns import UnconnectedNamedComponentPin, unconnected_named_component_pins
+from .component_pin_patterns import (
+    UnconnectedNamedComponentPin,
+    UnconnectedNamedComponentPinCategory,
+    unconnected_named_component_pins,
+)
 from .component_polarized_capacitor_orientation import polarized_capacitors_on_reversed_named_rails
 from .component_repeated_signal_pins import (
     component_repeated_signal_pin_unassigned,
@@ -33,6 +37,10 @@ from .design_lint_component_transformers import (
     transformer_winding_groups_share_net_candidates,
     transformer_winding_same_net_candidates,
 )
+from .design_lint_component_unconnected_pin_candidate_evidence import (
+    UnconnectedComponentPinCandidate,
+)
+from .design_lint_led_candidate_evidence import LedTopologyCandidate
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .led_heuristics import (
@@ -84,17 +92,17 @@ class ComponentCandidateScanResult:
 def _unconnected_named_pin_candidate(
     pin: UnconnectedNamedComponentPin,
     *,
-    rule_id: DesignLintRuleId,
-    description: str,
+    description: UnconnectedNamedComponentPinCategory,
 ) -> Candidate:
-    return Candidate(
-        rule_id=rule_id,
+    if pin.category != description:
+        raise ValueError("Named component pin description must match its scanner category")
+    return UnconnectedComponentPinCandidate.from_source_evidence(
+        pin,
         subject=f"{pin.pin}: {pin.function}",
         message=(
             f"This component's named {description} pin has no net assignment. "
             "Review whether the pin is intentionally unused or a connection is missing."
         ),
-        evidence={pin.pin: ()},
     )
 
 
@@ -147,8 +155,8 @@ def scan_component_candidates(
     found.extend(component_repeated_signal_pin_unassigned(observed, reviewed_connector_references))
     for bridge in leds_directly_between_positive_and_return_nets(observed):
         found.append(
-            Candidate(
-                rule_id="component.led_directly_across_supply_and_return",
+            LedTopologyCandidate.from_source_evidence(
+                bridge,
                 subject=f"{bridge.reference}: LED directly spans supply and return",
                 message=(
                     "Both pins of this supported two-pin LED symbol are assigned directly to a "
@@ -157,24 +165,15 @@ def scan_component_candidates(
                     "device polarity and source behavior. Netlist topology alone does not "
                     "establish operating current, off-board limiting, or physical board paths."
                 ),
-                evidence={
-                    "symbol": (bridge.symbol,),
-                    "led_pins": bridge.pins,
-                    "positive_net": (bridge.positive_net,),
-                    "return_net": (bridge.return_net,),
-                },
             )
         )
 
     for led in leds_directly_driven_without_visible_series_resistor(
         observed, component_role_map, power_path_map
     ):
-        role_evidence = (
-            {} if led.role_binding is None else component_role_binding_evidence(led.role_binding)
-        )
         found.append(
-            Candidate(
-                rule_id="component.led_directly_driven_from_output",
+            LedTopologyCandidate.from_source_evidence(
+                led,
                 subject=f"{led.reference}: LED directly shares an output net and a rail",
                 message=(
                     "A native output-capable pin shares one LED terminal net, and the other LED "
@@ -183,16 +182,6 @@ def scan_component_candidates(
                     "series element is missing. This prompt does not infer LED polarity, allowed "
                     "current, output limits, or off-board behavior."
                 ),
-                evidence={
-                    "symbol": (led.symbol,),
-                    "led_pins": led.led_pins,
-                    "output_pins": led.output_pins,
-                    "output_pin_types": led.output_pin_types,
-                    "driven_net": (led.driven_net,),
-                    "opposite_net": (led.opposite_net,),
-                    "opposite_net_role": (led.opposite_net_role,),
-                    **role_evidence,
-                },
             )
         )
 
@@ -304,7 +293,6 @@ def scan_component_candidates(
             found.append(
                 _unconnected_named_pin_candidate(
                     pin,
-                    rule_id="component.unconnected_supply_pin",
                     description="supply",
                 )
             )
@@ -312,7 +300,6 @@ def scan_component_candidates(
         found.append(
             _unconnected_named_pin_candidate(
                 pin,
-                rule_id="component.unconnected_return_pin",
                 description="return",
             )
         )

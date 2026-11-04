@@ -75,6 +75,12 @@ def test_connector_footprint_peer_candidates_use_typed_projection_owner() -> Non
         for node in owner_tree.body
     )
     assert any(
+        isinstance(node, ast.ImportFrom)
+        and node.module == "design_lint_types"
+        and "CandidateEvidenceProjection" in {alias.name for alias in node.names}
+        for node in owner_tree.body
+    )
+    assert any(
         isinstance(node, ast.ClassDef) and node.name == "ConnectorFootprintPeerPinCandidate"
         for node in owner_tree.body
     )

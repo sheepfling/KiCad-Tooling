@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
+from typing import Literal, TypeAlias
 
 from .casefold_mapping_lookup import lookup_unique_casefold
 from .component_pin_types import is_output_capable_pin_type
@@ -26,6 +27,7 @@ _SUPPORTED_LED_SYMBOLS = frozenset({"device:led"})
 _CANONICAL_RETURN_NET_NAMES = frozenset(
     {"0v", "gnd", "agnd", "dgnd", "pgnd", "vss", "vssa", "vssd", "vssp", "rtn", "return"}
 )
+LedRailRole: TypeAlias = Literal["positive", "return"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,7 +50,7 @@ class LedOutputWithoutVisibleSeriesResistor:
     output_pin_types: tuple[str, ...]
     driven_net: str
     opposite_net: str
-    opposite_net_role: str
+    opposite_net_role: LedRailRole
     role_binding: ComponentRoleBinding | None = None
     role_binding_sha256: str | None = None
 
@@ -101,7 +103,7 @@ def _net_roles(
 
 def _exclusive_rail_role(
     net: str, assignments: LedNetAssignmentIndex, observed: NetlistContract
-) -> str | None:
+) -> LedRailRole | None:
     is_positive, is_return = _net_roles(net, assignments, observed)
     if is_positive == is_return:
         return None

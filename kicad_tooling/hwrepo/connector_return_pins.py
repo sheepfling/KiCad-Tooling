@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import Literal, TypeAlias
 
 from .connector_coverage_models import ConnectorMappedPinEvidence
 from .connector_identity import (
@@ -14,6 +15,10 @@ from .connector_identity import (
     pin_function_is_generic,
 )
 from .netlist_contract_models import NetlistContract
+
+UnconnectedConnectorPinCategory: TypeAlias = Literal["supply", "return"]
+UnconnectedConnectorPinRoleSource: TypeAlias = Literal["native_symbol", "project_interface"]
+GenericConnectorPowerType: TypeAlias = Literal["power_in", "power_out"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,8 +33,8 @@ class ConnectorReturnCoverage:
 class UnconnectedNamedConnectorPin:
     pin: str
     function: str
-    category: str
-    role_source: str = "native_symbol"
+    category: UnconnectedConnectorPinCategory
+    role_source: UnconnectedConnectorPinRoleSource = "native_symbol"
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,7 +42,7 @@ class UnconnectedGenericPowerInputConnectorPin:
     pin: str
     symbol: str
     function: str | None
-    electrical_type: str
+    electrical_type: Literal["power_in"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,7 +50,7 @@ class UnconnectedGenericPowerOutputConnectorPin:
     pin: str
     symbol: str
     function: str | None
-    electrical_type: str
+    electrical_type: Literal["power_out"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,22 +85,23 @@ def unconnected_named_connector_pins(
             or pin in connected
         ):
             continue
-        category = "return" if is_return_function(function) else None
+        category: UnconnectedConnectorPinCategory | None = (
+            "return" if is_return_function(function) else None
+        )
         if category is None and is_named_supply_function(function):
             category = "supply"
         role_source = "native_symbol"
         mapped = reviewed_connector_pins.get(pin)
         if mapped is not None and mapped.unconnected_reason is not None:
             continue
-        if (
-            category is None
-            and mapped is not None
-            and mapped.role in {"return", "supply"}
-            and pin_function_is_generic(function)
-        ):
-            category = mapped.role
-            function = mapped.interface_signal
-            role_source = "project_interface"
+        if category is None and mapped is not None and pin_function_is_generic(function):
+            if mapped.role == "return":
+                category = "return"
+            elif mapped.role == "supply":
+                category = "supply"
+            if category is not None:
+                function = mapped.interface_signal
+                role_source = "project_interface"
         if category is not None:
             results.append(
                 UnconnectedNamedConnectorPin(
@@ -112,7 +118,7 @@ def _unconnected_generic_power_connector_pins(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
     *,
-    expected_electrical_type: str,
+    expected_electrical_type: GenericConnectorPowerType,
     excluded_pins: frozenset[str] = frozenset(),
 ) -> tuple[_UnconnectedGenericPowerConnectorPin, ...]:
     """Find unassigned generic connector pins with one native power type."""
@@ -168,7 +174,7 @@ def unconnected_generic_power_input_connector_pins(
             pin=item.pin,
             symbol=item.symbol,
             function=item.function,
-            electrical_type=item.electrical_type,
+            electrical_type="power_in",
         )
         for item in _unconnected_generic_power_connector_pins(
             observed,
@@ -191,7 +197,7 @@ def unconnected_generic_power_output_connector_pins(
             pin=item.pin,
             symbol=item.symbol,
             function=item.function,
-            electrical_type=item.electrical_type,
+            electrical_type="power_out",
         )
         for item in _unconnected_generic_power_connector_pins(
             observed,

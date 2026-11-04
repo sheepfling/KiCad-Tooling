@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from .component_pin_patterns import unconnected_generic_power_output_component_pins
+from .design_lint_component_unconnected_pin_candidate_evidence import (
+    UnconnectedComponentPinCandidate,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 
@@ -21,16 +24,9 @@ def unconnected_power_output_candidates(
     ):
         if pin.pin.casefold() in peer_open_pins:
             continue
-        evidence = {
-            "symbol": (pin.symbol,),
-            "pin_electrical_type": (pin.electrical_type,),
-            pin.pin: (),
-        }
-        if pin.function is not None:
-            evidence["native_pin_function"] = (pin.function,)
         findings.append(
-            Candidate(
-                rule_id="component.unconnected_power_output",
+            UnconnectedComponentPinCandidate.from_source_evidence(
+                pin,
                 subject=f"{pin.pin}: generic native power-output pin is unassigned",
                 message=(
                     "KiCad's native symbol metadata classifies this generic component pin as "
@@ -39,7 +35,6 @@ def unconnected_power_output_candidates(
                     "The electrical type does not identify the pin's specific role or require "
                     "it to be connected."
                 ),
-                evidence=evidence,
             )
         )
     return tuple(findings)
