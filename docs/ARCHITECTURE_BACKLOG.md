@@ -291,6 +291,15 @@ Changed Python files passed Ruff check and format validation. Project-aware
 Pyright on macOS and Windows, Rumdl, mdrepo, and diff checks passed. No exact
 native KiCad lane was run.
 
+The six direct evidence maps in the schematic power candidate adapter now use
+one typed power-owned projector and retain their source records. This includes
+the source-path heuristic's conditional anchor state, derived from its typed
+source-net list, plus immutable same-voltage, repeated-supply, and numbered-
+rail source maps. Existing rule order, wording, evidence fields, and
+fingerprints are preserved. Focused rule, source-projection, architecture,
+marker, and CLI/MCP parity checks passed 144 tests using public template
+revision `ed89536`; no native KiCad lane was run.
+
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify
 the right producer for a new datum; no module split is needed to express the

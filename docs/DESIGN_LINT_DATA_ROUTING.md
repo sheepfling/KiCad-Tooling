@@ -760,6 +760,15 @@ entry and configured report, including the source netlist identity. Their
 theme-owned projectors preserve existing evidence keys and fingerprints;
 source freshness and policy disposition remain in evaluation.
 
+The six schematic power and supply findings in `design_lint_power_candidates`
+now retain their typed scan records through `PowerCandidate`. Its projector
+owns the existing same-voltage pin map, capacitor-gap fields, conditional
+source-anchor state, connector/capacitor fields, repeated-supply pin map, and
+numbered-rail map. The adapter still owns rule ordering and finding wording;
+the serialized evidence keys and fingerprints stay unchanged. Pin and rail
+source maps are copied and frozen so retained records cannot drift from their
+report projection after candidate construction.
+
 ## External-protection candidate evidence route
 
 `UnreviewedProtectionFindingEvidence` retains an undeclared connector pin and

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from .connector_identity import power_function_key
 from .netlist_contract_models import NetlistContract
@@ -17,7 +19,14 @@ class SplitPowerInputDomains:
     reference: str
     symbol: str
     nominal_voltage: str
-    pins: dict[str, tuple[str, ...]]
+    pins: Mapping[str, tuple[str, ...]]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "pins",
+            MappingProxyType({pin: tuple(nets) for pin, nets in self.pins.items()}),
+        )
 
 
 def same_voltage_power_inputs_on_different_nets(

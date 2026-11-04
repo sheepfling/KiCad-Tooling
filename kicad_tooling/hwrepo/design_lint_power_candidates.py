@@ -13,6 +13,7 @@ from .component_roles import resolve_component_role_map
 from .design_lint_component_unconnected_pin_candidate_evidence import (
     UnconnectedComponentPinCandidate,
 )
+from .design_lint_power_candidate_evidence import PowerCandidate
 from .design_lint_power_decoupling import ic_decoupling_candidates
 from .design_lint_power_inputs import PowerCandidateInputs
 from .design_lint_power_regulator_passives import regulator_required_passive_candidates
@@ -75,8 +76,8 @@ def scan_power_candidates(
     )
     for split in same_voltage_power_inputs_on_different_nets(observed):
         found.append(
-            Candidate(
-                rule_id="component.same_voltage_power_inputs_split",
+            PowerCandidate.from_source_evidence(
+                split,
                 subject=(
                     f"{split.reference} ({split.symbol}): distinct supply inputs on "
                     f"separate {split.nominal_voltage} V-labeled nets"
@@ -88,7 +89,6 @@ def scan_power_candidates(
                     "supply domain. The labels do not establish actual voltage or require the "
                     "nets to be joined."
                 ),
-                evidence=split.pins,
             )
         )
     found.extend(ic_decoupling_candidates(observed, ic_decoupling_map))
@@ -105,8 +105,8 @@ def scan_power_candidates(
         observed, reviewed_connector_references, mapped_capacitor_references
     ):
         found.append(
-            Candidate(
-                rule_id="power.ic_rail_without_fitted_capacitor",
+            PowerCandidate.from_source_evidence(
+                gap,
                 subject=f"{gap.net}: IC supply decoupling review",
                 message=(
                     "This recognized positive rail has IC power-input pins but no fitted "
@@ -114,11 +114,6 @@ def scan_power_candidates(
                     "device datasheets and intended placement; net presence alone does not "
                     "establish local placement, value, or a physical return path."
                 ),
-                evidence={
-                    "net": (gap.net,),
-                    "power_input_pins": gap.input_pins,
-                    "component_references": gap.component_references,
-                },
             )
         )
 
@@ -140,7 +135,6 @@ def scan_power_candidates(
                 "power_out pin. Review the intended source and any switching, isolation, or "
                 "external supply path."
             )
-            source_anchor_state = "recognized"
         else:
             source_path_message = (
                 "A fitted power-input pin shares a net with a fitted capacitor to a return, "
@@ -149,10 +143,9 @@ def scan_power_candidates(
                 "supplies, or an intentionally isolated domain; a project-authored power-path "
                 "map can record the required relationship."
             )
-            source_anchor_state = "not_recognized"
         found.append(
-            Candidate(
-                rule_id="power.input_without_supported_source_path",
+            PowerCandidate.from_source_evidence(
+                gap,
                 subject=f"{gap.net}: power-input source-path review",
                 message=(
                     source_path_message
@@ -160,20 +153,13 @@ def scan_power_candidates(
                     "low-resistance resistors, inductors, ferrite beads, fuses, and polyfuses; "
                     "it does not prove that a connection is required or that a path conducts."
                 ),
-                evidence={
-                    "net": (gap.net,),
-                    "power_input_pins": gap.input_pins,
-                    "fitted_capacitors_to_return": gap.capacitor_references,
-                    "recognized_source_nets": gap.source_nets,
-                    "source_anchor_state": (source_anchor_state,),
-                },
             )
         )
 
     for net in connector_capacitor_only_nets(observed, reviewed_connector_references):
         found.append(
-            Candidate(
-                rule_id="net.connector_capacitor_only_no_dc_anchor",
+            PowerCandidate.from_source_evidence(
+                net,
                 subject=f"{net.net}: connector/capacitor-only net",
                 message=(
                     "Every fitted pin assigned to this net belongs to a supported connector or "
@@ -184,26 +170,19 @@ def scan_power_candidates(
                     "identify an analog function, or prove that the circuit is missing a required "
                     "bias."
                 ),
-                evidence={
-                    "net": (net.net,),
-                    "connector_pins": net.connector_pins,
-                    "capacitor_pins": net.capacitor_pins,
-                    "component_symbols": net.component_symbols,
-                },
             )
         )
 
     for group in component_supply_pins_on_different_nets(observed, reviewed_connector_references):
         found.append(
-            Candidate(
-                rule_id="component.repeated_supply_pin_function",
+            PowerCandidate.from_source_evidence(
+                group,
                 subject=f"{group.reference} ({group.symbol}): {group.function} supply pins",
                 message=(
                     "Pins on this component with a matching supply function use different or "
                     "ambiguous nets. Review the component pinout for an intended split, filter, "
                     "or missing connection."
                 ),
-                evidence=dict(group.pins),
             )
         )
 
@@ -234,15 +213,14 @@ def scan_power_candidates(
 
     for group in numbered_power_rail_groups(observed):
         found.append(
-            Candidate(
-                rule_id="net.numbered_power_rails",
+            PowerCandidate.from_source_evidence(
+                group,
                 subject=group.stem,
                 message=(
                     "Separately numbered positive supply nets may be intended as one rail. "
                     "Review whether they are common, intentionally isolated, or represent "
                     "independent supplies; similar names do not establish a required connection."
                 ),
-                evidence=dict(group.nets),
             )
         )
 

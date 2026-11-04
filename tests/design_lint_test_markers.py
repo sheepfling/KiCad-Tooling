@@ -126,6 +126,10 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_regulator_feedback.py",
                 "tests/test_regulator_feedback_native_fixture.py",
                 "tests/test_design_lint_architecture_mapped_candidate_evidence.py",
+                "tests/test_design_lint_architecture_power_candidate_evidence.py",
+                "tests/test_power_candidate_evidence.py",
+                "tests/test_design_lint_architecture_return_candidate_evidence.py",
+                "tests/test_return_candidate_evidence.py",
                 "tests/test_two_pin_fuses.py",
                 "tests/test_two_pin_switches.py",
             }
@@ -147,6 +151,8 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_architecture_pcb_measurement_candidate_evidence.py",
                 "tests/test_pcb_measurement_candidate_evidence.py",
                 "tests/test_design_lint_architecture_mapped_candidate_evidence.py",
+                "tests/test_design_lint_architecture_power_candidate_evidence.py",
+                "tests/test_power_candidate_evidence.py",
                 "tests/test_design_lint_architecture_external_protection_models.py",
             }
         ),

@@ -10,6 +10,8 @@ COMPONENT_LINT_TEST_MODULES = frozenset(
         "tests/test_design_lint_mcp_parity_same_voltage_power_input.py",
         "tests/test_design_lint_architecture_same_voltage_power_inputs.py",
         "tests/test_design_lint_architecture_component_unconnected_pin_candidate_evidence.py",
+        "tests/test_design_lint_architecture_power_candidate_evidence.py",
+        "tests/test_power_candidate_evidence.py",
         "tests/test_design_lint_architecture_led_candidate_evidence.py",
         "tests/test_component_power_fixture_lane.py",
         "tests/test_component_power_input_native_fixture_lane.py",

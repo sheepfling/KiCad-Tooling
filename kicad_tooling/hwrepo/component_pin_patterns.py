@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Literal
 
 from .connector_identity import (
@@ -175,7 +177,14 @@ class RepeatedComponentSupplyPins:
     reference: str
     symbol: str
     function: str
-    pins: dict[str, tuple[str, ...]]
+    pins: Mapping[str, tuple[str, ...]]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "pins",
+            MappingProxyType({pin: tuple(nets) for pin, nets in self.pins.items()}),
+        )
 
 
 def component_supply_pins_on_different_nets(
