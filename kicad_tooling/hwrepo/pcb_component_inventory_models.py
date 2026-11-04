@@ -27,6 +27,19 @@ class PcbFootprintIdentityMismatch(StrictModel):
     placed_footprint: NonEmptyText
 
 
+class PcbComponentInventorySourceReceipt(StrictModel):
+    """Optional native source identity shared by per-reference PCB comparisons."""
+
+    netlist_sha256: Digest | None = None
+    board_path: RepositoryPath | None = None
+    board_sha256: Digest | None = None
+    snapshot_sha256: Digest | None = None
+    snapshot_schema: Literal["12", "13", "14", "15"] | None = None
+    kicad_version: NonEmptyText | None = None
+    image: NonEmptyText | None = None
+    probe_sha256: Digest | None = None
+
+
 class PcbPopulationMismatch(StrictModel):
     """Schematic and placed PCB footprint disagree on DNP population state."""
 

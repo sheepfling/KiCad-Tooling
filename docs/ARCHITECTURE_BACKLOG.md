@@ -194,6 +194,18 @@ tests, with two additional MCP/report parity tests passing. Ruff, focused
 Pyright, Markdown checks, and `git diff --check` passed. Native fixtures were
 excluded from these runs.
 
+PCB fitted-footprint absence and identity-mismatch findings now retain typed
+per-reference comparisons with their netlist, board, snapshot, schema, KiCad
+image/version, and probe identities. DNP mismatches also retain their typed
+comparison and paired named-variant exports; blocked named-variant coverage
+retains an explicit blocked source record. PCB-owned projectors preserve the
+existing report evidence and fingerprints. Top-level blocked inventory and
+textual value paths retain their separate status and evidence handling.
+Focused source-route, inventory, population, value, catalog-boundary, and
+CLI/MCP parity regressions passed 43 tests with native KiCad tests deselected.
+Ruff, focused Pyright, Markdown checks, and `git diff --check` passed. This
+advances SA-01 without a line-count-driven split or public report change.
+
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify
 the right producer for a new datum; no module split is needed to express the

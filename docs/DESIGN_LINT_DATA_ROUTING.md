@@ -540,3 +540,32 @@ pair and both native net assignments; `project_component_terminal_evidence`
 maps the typed pair to the established role-specific pin/net keys and the
 existing BJT family or MOSFET channel field. Predicate qualification, message
 wording, finding order, report JSON, and fingerprints remain unchanged.
+
+## PCB footprint inventory and population candidate routes
+
+The two per-reference `pcb.schematic_component_inventory` findings now retain
+a `PcbInventorySourceEvidence` record containing either the typed missing
+placement or footprint-identity comparison and a shared
+`PcbComponentInventorySourceReceipt`. The receipt owns the source netlist
+digest, board path and digest, native snapshot digest and schema, KiCad
+image/version, and probe digest for related PCB comparisons.
+`project_pcb_inventory_evidence` owns the existing string-keyed report
+projection. The candidate translator still owns finding selection and
+wording; rule IDs, evidence fields, report JSON, and fingerprints remain
+unchanged.
+
+Per-reference schematic/PCB DNP mismatches use `PcbPopulationMismatchEvidence`
+and `project_pcb_population_evidence`. The record includes the same native
+receipt and, when present, the paired named-variant export identities. A
+blocked named-variant comparison uses a separate
+`PcbBlockedVariantPopulationEvidence` record whose constructor requires
+`BLOCKED` coverage. `project_named_variant_population_evidence` is also used
+for textual value findings that refer to a named variant, keeping the export
+identity mapping in one owner. These projectors preserve the established
+evidence fields and report fingerprints.
+
+Footprint records apply only to findings from completed comparisons; a
+top-level blocked inventory result retains its existing coverage path. Textual
+value comparisons also keep their existing path. These records do not infer
+package equivalence, assembly intent, electrical behavior, physical placement
+correctness, or actual component population.
