@@ -97,6 +97,7 @@ COMPONENT_LINT_TEST_MODULES = frozenset(
         "tests/test_design_lint_mcp_parity_transformer.py",
         "tests/test_transformer_winding_native_fixture_lane.py",
         "tests/test_component_return_pin_domains.py",
+        "tests/test_design_lint_architecture_component_repeated_signal_candidate_evidence.py",
         "tests/test_component_repeated_signal_pins.py",
         "tests/test_component_repeated_signal_pin_unassigned.py",
         "tests/test_design_lint_mcp_parity_two_pin_varistors.py",

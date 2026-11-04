@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+from dataclasses import replace
 from pathlib import Path
 from types import MappingProxyType
 
@@ -21,6 +22,12 @@ from kicad_tooling.hwrepo.connector_stateful_contacts import (
 )
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.design_lint_candidate_aggregation import candidates
+from kicad_tooling.hwrepo.design_lint_connector_stateful_contact_candidate_evidence import (
+    StatefulConnectorContactCandidate,
+    StatefulContactMapMismatchEvidence,
+    StatefulContactTopologyEvidence,
+    project_stateful_contact_evidence,
+)
 from kicad_tooling.hwrepo.design_lint_finding_models import DesignLintRuleOverride
 from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
 from kicad_tooling.hwrepo.design_lint_types import Candidate
@@ -37,6 +44,7 @@ pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.connector_lint,
     pytest.mark.interface_lint,
+    pytest.mark.evidence_lint,
 ]
 
 
@@ -113,10 +121,15 @@ def _findings(observed: NetlistContract) -> tuple[Candidate, ...]:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_hardwired_stateful_contacts_are_reviewed() -> None:
-    findings = _findings(_observed(tip_pair_same_net=True))
+    observed = _observed(tip_pair_same_net=True)
+    findings = _findings(observed)
 
     assert len(findings) == 1
     finding = findings[0]
+    assert isinstance(finding, StatefulConnectorContactCandidate)
+    assert isinstance(finding.source_evidence, StatefulContactTopologyEvidence)
+    assert finding.source_evidence.observed is observed
+    assert finding.evidence == project_stateful_contact_evidence(finding.source_evidence).evidence
     assert finding.subject == "J1: mapped switch contacts tip-normal-contact permanently_bypassed"
     assert finding.evidence["first_pin"] == ("J1.1",)
     assert finding.evidence["second_pin"] == ("J1.2",)
@@ -152,14 +165,35 @@ def test_dnp_connector_is_not_treated_as_a_fitted_contact_fault() -> None:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_exact_part_identity_mismatch_is_visible_as_stale_map_evidence() -> None:
-    findings = _findings(_observed(part_id="SYNTH-AUDIO-JACK-002"))
+    observed = _observed(part_id="SYNTH-AUDIO-JACK-002")
+    findings = _findings(observed)
 
     assert len(findings) == 1
+    assert isinstance(findings[0], StatefulConnectorContactCandidate)
+    assert isinstance(findings[0].source_evidence, StatefulContactMapMismatchEvidence)
+    assert findings[0].source_evidence.observed is observed
+    assert (
+        findings[0].evidence
+        == project_stateful_contact_evidence(findings[0].source_evidence).evidence
+    )
     assert "source" in findings[0].subject
     assert (
         "PART_ID is SYNTH-AUDIO-JACK-002; expected SYNTH-AUDIO-JACK-001"
         in (findings[0].evidence["identity_issues"])
     )
+    with pytest.raises(ValueError, match="current netlist"):
+        replace(findings[0].source_evidence, identity_issues=())
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_stateful_contact_evidence_rejects_changed_source_assignments() -> None:
+    observed = _observed(tip_pair_same_net=True)
+    (candidate,) = _findings(observed)
+    assert isinstance(candidate, StatefulConnectorContactCandidate)
+    assert isinstance(candidate.source_evidence, StatefulContactTopologyEvidence)
+
+    with pytest.raises(ValueError, match="current netlist"):
+        replace(candidate.source_evidence, first_nets=("SYNTHETIC_OTHER_NET",))
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

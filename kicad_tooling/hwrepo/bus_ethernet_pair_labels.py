@@ -2,56 +2,28 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from types import MappingProxyType
-
 from .bus_signal_pairs import (
-    complementary_pin_function_key,
     ethernet_data_pair_function_role,
     ethernet_management_function_role,
+)
+from .design_lint_bus_ethernet_label_candidate_evidence import (
+    ETHERNET_DATA_LABEL_RULE_ID as _RULE_ID,
+)
+from .design_lint_bus_ethernet_label_candidate_evidence import (
+    ETHERNET_MANAGEMENT_LABEL_RULE_ID as _MANAGEMENT_RULE_ID,
+)
+from .design_lint_bus_ethernet_label_candidate_evidence import (
+    EthernetDataLabelMismatchEvidence,
+    EthernetLabelMismatchCandidate,
+    EthernetManagementLabelMismatchEvidence,
+    ethernet_data_net_label_role,
+    ethernet_management_net_label_role,
 )
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 
-RULE_ID = "bus.ethernet_data_label_mismatch"
-MANAGEMENT_RULE_ID = "bus.ethernet_management_label_mismatch"
-
-_ETHERNET_NET_LABEL_ROLES: Mapping[str, tuple[str, str]] = MappingProxyType(
-    {
-        "td+": ("TX", "positive"),
-        "td-": ("TX", "negative"),
-        "tdp": ("TX", "positive"),
-        "tdn": ("TX", "negative"),
-        "tx+": ("TX", "positive"),
-        "tx-": ("TX", "negative"),
-        "txp": ("TX", "positive"),
-        "txn": ("TX", "negative"),
-        "rd+": ("RX", "positive"),
-        "rd-": ("RX", "negative"),
-        "rdp": ("RX", "positive"),
-        "rdn": ("RX", "negative"),
-        "rx+": ("RX", "positive"),
-        "rx-": ("RX", "negative"),
-        "rxp": ("RX", "positive"),
-        "rxn": ("RX", "negative"),
-    }
-)
-_ETHERNET_NET_LABEL_PREFIXES = ("ethernet", "eth", "mdi")
-_ETHERNET_MANAGEMENT_NET_LABEL_PREFIXES = ("ethernet", "eth", "smi")
-
-
-def _ethernet_net_label_key(net: str, prefixes: tuple[str, ...]) -> str:
-    key = complementary_pin_function_key(net)
-    for prefix in prefixes:
-        if key.startswith(prefix):
-            key = key.removeprefix(prefix)
-            break
-    return key
-
-
-def _ethernet_net_label_role(net: str) -> tuple[str, str] | None:
-    key = _ethernet_net_label_key(net, _ETHERNET_NET_LABEL_PREFIXES)
-    return _ETHERNET_NET_LABEL_ROLES.get(key)
+RULE_ID = _RULE_ID
+MANAGEMENT_RULE_ID = _MANAGEMENT_RULE_ID
 
 
 def ethernet_data_label_mismatch_candidates(
@@ -80,7 +52,7 @@ def ethernet_data_label_mismatch_candidates(
         if len(assigned_nets) != 1:
             continue
         net = next(iter(assigned_nets))
-        net_role = _ethernet_net_label_role(net)
+        net_role = ethernet_data_net_label_role(net)
         pin_role = roles[pin]
         if net_role is None or net_role == pin_role:
             continue
@@ -98,8 +70,15 @@ def ethernet_data_label_mismatch_candidates(
 
         function = observed.pin_functions[pin]
         findings.append(
-            Candidate(
-                rule_id=RULE_ID,
+            EthernetLabelMismatchCandidate.from_source_evidence(
+                EthernetDataLabelMismatchEvidence(
+                    observed=observed,
+                    pin=pin,
+                    function=function,
+                    pin_role=pin_role,
+                    net=net,
+                    net_role=net_role,
+                ),
                 subject=f"{pin}: {function} on {net}",
                 message=(
                     f"Native Ethernet pin function is {pin_role[0]} {pin_role[1]}, but the "
@@ -107,23 +86,9 @@ def ethernet_data_label_mismatch_candidates(
                     "pair labels and endpoint pin map; names alone do not establish intent "
                     "or physical connectivity."
                 ),
-                evidence={
-                    "pin": (pin,),
-                    "pin_function": (function,),
-                    "pin_direction": (pin_role[0],),
-                    "pin_side": (pin_role[1],),
-                    "net": (net,),
-                    "net_direction": (net_role[0],),
-                    "net_side": (net_role[1],),
-                },
             )
         )
     return tuple(findings)
-
-
-def _ethernet_management_net_label_role(net: str) -> str | None:
-    key = _ethernet_net_label_key(net, _ETHERNET_MANAGEMENT_NET_LABEL_PREFIXES)
-    return {"mdc": "clock", "mdio": "data"}.get(key)
 
 
 def ethernet_management_label_mismatch_candidates(
@@ -153,7 +118,7 @@ def ethernet_management_label_mismatch_candidates(
         if len(assigned_nets) != 1:
             continue
         net = next(iter(assigned_nets))
-        net_role = _ethernet_management_net_label_role(net)
+        net_role = ethernet_management_net_label_role(net)
         if net_role is None or net_role == pin_role:
             continue
 
@@ -170,21 +135,21 @@ def ethernet_management_label_mismatch_candidates(
         role_name = "management clock" if pin_role == "clock" else "management data"
         label_name = "management clock" if net_role == "clock" else "management data"
         findings.append(
-            Candidate(
-                rule_id=MANAGEMENT_RULE_ID,
+            EthernetLabelMismatchCandidate.from_source_evidence(
+                EthernetManagementLabelMismatchEvidence(
+                    observed=observed,
+                    pin=pin,
+                    function=function,
+                    pin_role=pin_role,
+                    net=net,
+                    net_role=net_role,
+                ),
                 subject=f"{pin}: {function} on {net}",
                 message=(
                     f"Native Ethernet pin function identifies the {role_name}, but the assigned "
                     f"net label identifies the {label_name}. Review the MDC/MDIO pin map; "
                     "names alone do not establish intent or physical connectivity."
                 ),
-                evidence={
-                    "pin": (pin,),
-                    "pin_function": (function,),
-                    "pin_role": (pin_role,),
-                    "net": (net,),
-                    "net_role": (net_role,),
-                },
             )
         )
     return tuple(findings)

@@ -1031,3 +1031,57 @@ The largest remaining production concentrations tie at two calls each in
 `bus_ethernet_pair_labels.py`, `component_repeated_signal_pins.py`,
 `connector_peer_pin_all_open.py`, `connector_stateful_contacts.py`, and
 `mosfet_gate_connectivity.py`.
+
+## Repeated component signal-pin candidate evidence
+
+The divergent-net and unassigned-member findings now retain
+`RepeatedSignalPinFindingEvidence` through `RepeatedSignalPinCandidate`. It
+binds the current `NetlistContract` to the exact repeated pin group, including
+the native function, electrical type, and each pin's net assignments. The
+unassigned-member variant also validates its assigned and open pin lists
+against that group. The projector preserves the existing evidence keys and
+values, rule IDs, subjects, messages, and candidate order.
+
+This route leaves 99 direct `Candidate(evidence=...)` constructions in
+production modules across 95 files and 72 in tests across 46 files. Literal
+dictionaries account for 87 production calls and 24 test calls. The largest
+remaining production concentrations tie at two calls each in
+`bus_ethernet_pair_labels.py`, `connector_peer_pin_all_open.py`,
+`connector_stateful_contacts.py`, and `mosfet_gate_connectivity.py`.
+
+## Stateful connector contact candidate evidence
+
+Stateful contact-map identity findings retain
+`StatefulContactMapMismatchEvidence`; mapped topology findings retain
+`StatefulContactTopologyEvidence`. Both retain the project-authored contact
+map and exact requirement. Identity findings verify their mismatch details
+against the current native component, symbol, value, footprint, PART_ID, and
+pin inventory. Topology findings retain the exact contact pair and both pin
+net assignments, then verify the derived unassigned, ambiguous, or permanently
+bypassed state. The candidate projector preserves the current rule ID, report
+fields, subjects, messages, and ordering.
+
+This route leaves 97 direct `Candidate(evidence=...)` constructions in
+production modules across 94 files and 72 in tests across 46 files. Literal
+dictionaries account for 85 production calls and 24 test calls. The largest
+remaining production concentrations tie at two calls each in
+`bus_ethernet_pair_labels.py`, `connector_peer_pin_all_open.py`, and
+`mosfet_gate_connectivity.py`.
+
+## Ethernet pin-label candidate evidence
+
+The data-pair and management-label findings retain either
+`EthernetDataLabelMismatchEvidence` or
+`EthernetManagementLabelMismatchEvidence` through
+`EthernetLabelMismatchCandidate`. Each source binds the current netlist, exact
+pin function and role, assigned native net, and recognized label role. The
+shared projector preserves the two existing evidence shapes, rule IDs,
+subjects, messages, and predicate ordering. Pair-short suppression remains in
+the respective predicate, and the rule catalog now names the evidence and
+label-role owners in `implementation_refs`.
+
+This route leaves 95 direct `Candidate(evidence=...)` constructions in
+production modules across 93 files and 72 in tests across 46 files. Literal
+dictionaries account for 83 production calls and 24 test calls. The largest
+remaining production concentrations tie at two calls each in
+`connector_peer_pin_all_open.py` and `mosfet_gate_connectivity.py`.

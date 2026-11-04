@@ -152,6 +152,11 @@ _LINT_AREA_MODULES = MappingProxyType(
         "evidence_lint": frozenset(
             {
                 "tests/test_connector_fixture_lane_evidence.py",
+                "tests/test_ethernet_data_labels.py",
+                "tests/test_ethernet_management_labels.py",
+                "tests/test_design_lint_architecture_ethernet.py",
+                "tests/test_connector_stateful_contacts.py",
+                "tests/test_connector_stateful_contact_architecture.py",
                 "tests/test_design_lint_connectivity_reconciliation.py",
                 "tests/test_design_lint_connectivity_snapshot_inspection.py",
                 "tests/test_design_lint_mcp_parity_reconciliation.py",
@@ -166,6 +171,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_architecture_pcb_measurement_candidate_evidence.py",
                 "tests/test_pcb_measurement_candidate_evidence.py",
                 "tests/test_design_lint_architecture_mapped_candidate_evidence.py",
+                "tests/test_design_lint_architecture_component_repeated_signal_candidate_evidence.py",
                 "tests/test_design_lint_architecture_power_candidate_evidence.py",
                 "tests/test_power_candidate_evidence.py",
                 "tests/test_design_lint_architecture_external_protection_models.py",

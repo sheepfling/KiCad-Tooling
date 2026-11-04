@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from typing import Literal
 
 import pytest
 
@@ -57,7 +58,7 @@ def _report(
     )
 
 
-def _review_policy(mode: str = "review") -> DesignLintPolicy:
+def _review_policy(mode: Literal["review", "block", "off"] = "review") -> DesignLintPolicy:
     return DesignLintPolicy(
         rules=(DesignLintRuleOverride(rule_id=RULE_ID, mode=mode, reason="test policy"),)
     )

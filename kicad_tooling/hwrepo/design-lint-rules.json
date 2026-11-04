@@ -6544,6 +6544,8 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/bus_ethernet_pair_labels.py#ethernet_data_label_mismatch_candidates",
+        "kicad_tooling/hwrepo/design_lint_bus_ethernet_label_candidate_evidence.py#project_ethernet_label_mismatch_evidence",
+        "kicad_tooling/hwrepo/design_lint_bus_ethernet_label_candidate_evidence.py#ethernet_data_net_label_role",
         "kicad_tooling/hwrepo/bus_signal_pairs.py#ethernet_data_pair_function_role",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
       ],
@@ -6585,7 +6587,8 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/bus_ethernet_pair_labels.py#ethernet_management_label_mismatch_candidates",
-        "kicad_tooling/hwrepo/bus_ethernet_pair_labels.py#_ethernet_management_net_label_role",
+        "kicad_tooling/hwrepo/design_lint_bus_ethernet_label_candidate_evidence.py#project_ethernet_label_mismatch_evidence",
+        "kicad_tooling/hwrepo/design_lint_bus_ethernet_label_candidate_evidence.py#ethernet_management_net_label_role",
         "kicad_tooling/hwrepo/bus_signal_pairs.py#complementary_pin_function_key",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
         "kicad_tooling/hwrepo/bus_signal_pairs.py#ethernet_management_function_role"

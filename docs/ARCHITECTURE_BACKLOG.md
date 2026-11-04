@@ -1350,9 +1350,9 @@ formatters have one owner. Existing rule IDs, messages, report evidence, and
 fingerprints remain stable.
 
 A repository-wide AST inventory of direct `Candidate(evidence=...)` calls
-finds 173 constructions across 142 Python modules: 101 in production code
-across 96 modules and 72 in tests across 46 modules. The evidence argument is
-a dictionary literal in 87 production calls and 24 test calls; other calls
+finds 167 constructions across 139 Python modules: 95 in production code
+across 93 modules and 72 in tests across 46 modules. The evidence argument is
+a dictionary literal in 83 production calls and 24 test calls; other calls
 reuse a named, attributed, or computed mapping. This is a triage inventory,
 not a claim that every construction is an opaque source route: test-only
 candidate builders and already-owned report projections need separate
@@ -1373,11 +1373,21 @@ validate the exact supplemental pin assignments. The shared peer assignment
 record is immutable. Mapped shield/signal and signal/return routes retain
 complete coverage, the current netlist, and exact source-matched pin-role
 evidence; their typed source owner verifies that both roles remain assigned to
-the same native net. The largest remaining production concentrations tie at
-two each in `bus_ethernet_pair_labels.py`, `component_repeated_signal_pins.py`,
-`connector_peer_pin_all_open.py`, `connector_stateful_contacts.py`, and
-`mosfet_gate_connectivity.py`. Review these source records and rule families
-before selecting another shared owner.
+the same native net. The two repeated-signal component findings now retain
+their exact typed pin group and current `NetlistContract` through one source
+record and projector. The unassigned-pin variant validates its assigned and
+open pin lists against that group; both variants verify pin functions,
+electrical types, and exact net assignments before projecting the existing
+report fields. Stateful contact-map identity and topology findings now retain
+the authored contact map, exact requirement, and current native identity or
+pin-net assignments. Their projector validates source mismatch details and
+topology state while preserving the existing fields. The largest remaining
+production concentrations tie at two each in `connector_peer_pin_all_open.py`
+and `mosfet_gate_connectivity.py`. Ethernet data-pair and management-label
+findings now retain the current native pin function and role, assigned label,
+and recognized label role through typed source variants. Their shared
+projector preserves each rule's distinct report fields. Review the remaining
+peer-open and MOSFET source families before selecting another shared owner.
 Call counts alone do not determine whether their evidence should share an owner.
 
 The schematic geometry tranche passed 75 synthetic and architecture tests and
@@ -1402,3 +1412,23 @@ The mapped connector contact-sharing tranche passed 47 source, architecture,
 marker/collection, selector, and CLI/MCP parity tests. Ruff, format, targeted
 Pyright, Markdown checks, mdrepo, and `git diff --check` passed. No exact native
 KiCad lane was run.
+
+The repeated-signal candidate tranche passed 80 source, architecture,
+marker/collection, and selector tests; four exact-native tests were skipped for
+the digest-pinned package acceptance lane.
+Ruff, format, targeted Pyright, Markdown checks, mdrepo, and `git diff --check`
+passed. No exact native KiCad lane was run.
+
+The stateful-contact evidence tranche passed 59 source, architecture,
+marker/collection, and selector tests; two exact-native tests were skipped for
+the digest-pinned package acceptance lane.
+Ruff, format, targeted Pyright, Markdown checks, mdrepo, and `git diff --check`
+passed. No exact native KiCad lane was run.
+
+The combined repeated-signal and stateful-contact selector passed 94 tests;
+the six digest-pinned native cases were skipped for package acceptance, and
+shared architecture and marker checks ran once.
+
+The Ethernet label evidence tranche passed 176 source, architecture, catalog,
+marker, and selector tests. Ruff, format, targeted Pyright, Markdown checks,
+mdrepo, and `git diff --check` passed. No exact native KiCad lane was run.

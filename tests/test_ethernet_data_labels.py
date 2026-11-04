@@ -17,7 +17,7 @@ from tests.design_lint_fixtures.ethernet_data_labels import (
 )
 
 RULE_ID = "bus.ethernet_data_label_mismatch"
-pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
+pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint, pytest.mark.evidence_lint]
 
 
 def _findings(netlist: NetlistContract):

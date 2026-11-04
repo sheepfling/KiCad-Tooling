@@ -24,6 +24,7 @@ CONNECTOR_LINT_TEST_MODULES = frozenset(
         "tests/test_design_lint_mcp_parity_connector_power_output.py",
         "tests/test_connector_contact_ratings.py",
         "tests/test_connector_stateful_contacts.py",
+        "tests/test_connector_stateful_contact_architecture.py",
         "tests/test_electrical_connector_evidence.py",
         "tests/test_electrical_connector_rating_parity.py",
         "tests/test_electrical_connector_pin_relationship_parity.py",

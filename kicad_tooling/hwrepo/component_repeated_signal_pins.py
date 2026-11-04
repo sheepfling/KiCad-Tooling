@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from .connector_identity import (
     connector_candidate_references,
     is_named_supply_function,
     is_return_function,
     is_shield_function,
     pin_function_is_generic,
+)
+from .design_lint_component_repeated_signal_candidate_evidence import (
+    RepeatedSignalPin,
+    RepeatedSignalPinCandidate,
+    RepeatedSignalPinFindingEvidence,
+    RepeatedSignalPinGroup,
 )
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
@@ -22,26 +26,10 @@ _SIGNAL_ELECTRICAL_TYPES = frozenset(
 )
 
 
-@dataclass(frozen=True, slots=True)
-class _SignalPin:
-    pin: str
-    function: str
-    assignments: tuple[str, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class _RepeatedSignalPinGroup:
-    reference: str
-    symbol: str
-    function: str
-    electrical_type: str
-    pins: tuple[_SignalPin, ...]
-
-
 def _repeated_signal_pin_groups(
     observed: NetlistContract,
     declared_connector_references: tuple[str, ...] = (),
-) -> tuple[_RepeatedSignalPinGroup, ...]:
+) -> tuple[RepeatedSignalPinGroup, ...]:
     """Group exact repeated signal functions with complete native pin evidence."""
     connector_references = {
         reference.casefold()
@@ -71,7 +59,7 @@ def _repeated_signal_pin_groups(
         for pin in pins:
             nets_by_pin.setdefault(pin.casefold(), set()).add(net)
 
-    groups: list[_RepeatedSignalPinGroup] = []
+    groups: list[RepeatedSignalPinGroup] = []
     for reference_key, pin_functions in functions_by_component.items():
         if (
             reference_key not in fitted_references
@@ -85,7 +73,7 @@ def _repeated_signal_pin_groups(
         if inventory is None or len(pin_functions) != len(inventory) or pin_numbers != inventory:
             continue
 
-        grouped: dict[tuple[str, str], list[_SignalPin]] = {}
+        grouped: dict[tuple[str, str], list[RepeatedSignalPin]] = {}
         for number, function in pin_functions:
             if (
                 pin_function_is_generic(function)
@@ -108,7 +96,7 @@ def _repeated_signal_pin_groups(
                 )
             )
             grouped.setdefault((normalized_function, normalized_type), []).append(
-                _SignalPin(pin=pin, function=function, assignments=assignments)
+                RepeatedSignalPin(pin=pin, function=function, assignments=assignments)
             )
 
         for (_, normalized_type), entries in grouped.items():
@@ -116,7 +104,7 @@ def _repeated_signal_pin_groups(
                 continue
             pins = tuple(sorted(entries, key=lambda item: (item.pin.casefold(), item.pin)))
             groups.append(
-                _RepeatedSignalPinGroup(
+                RepeatedSignalPinGroup(
                     reference=pins[0].pin.rsplit(".", 1)[0],
                     symbol=symbols[reference_key],
                     function=pins[0].function,
@@ -134,14 +122,6 @@ def _repeated_signal_pin_groups(
             ),
         )
     )
-
-
-def _group_evidence(group: _RepeatedSignalPinGroup) -> dict[str, tuple[str, ...]]:
-    evidence = {pin.pin: pin.assignments for pin in group.pins}
-    evidence["component_symbol"] = (group.symbol,)
-    evidence["pin_function"] = (group.function,)
-    evidence["electrical_type"] = (group.electrical_type,)
-    return evidence
 
 
 def component_signal_pin_net_divergences(
@@ -162,8 +142,12 @@ def component_signal_pin_net_divergences(
         if len({pin.assignments[0].casefold() for pin in group.pins}) < 2:
             continue
         candidates.append(
-            Candidate(
-                rule_id=RULE_ID,
+            RepeatedSignalPinCandidate.from_source_evidence(
+                RepeatedSignalPinFindingEvidence(
+                    observed=observed,
+                    group=group,
+                    finding_kind="divergent",
+                ),
                 subject=(
                     f"{group.reference} ({group.symbol}): repeated {group.function} signal pins "
                     "use separate nets"
@@ -174,7 +158,6 @@ def component_signal_pin_net_divergences(
                     "Review whether these are separate channels or whether a connection was "
                     "missed. This prompt does not require the pins to be tied."
                 ),
-                evidence=_group_evidence(group),
             )
         )
     return tuple(sorted(candidates, key=lambda item: (item.subject.casefold(), item.subject)))
@@ -193,12 +176,15 @@ def component_repeated_signal_pin_unassigned(
         unassigned = tuple(pin.pin for pin in group.pins if not pin.assignments)
         if not assigned or not unassigned:
             continue
-        evidence = _group_evidence(group)
-        evidence["assigned_signal_pins"] = assigned
-        evidence["unassigned_signal_pins"] = unassigned
         candidates.append(
-            Candidate(
-                rule_id=UNASSIGNED_RULE_ID,
+            RepeatedSignalPinCandidate.from_source_evidence(
+                RepeatedSignalPinFindingEvidence(
+                    observed=observed,
+                    group=group,
+                    finding_kind="unassigned",
+                    assigned_signal_pins=assigned,
+                    unassigned_signal_pins=unassigned,
+                ),
                 subject=(
                     f"{group.reference} ({group.symbol}): repeated {group.function} signal pins "
                     "include an unassigned pin"
@@ -209,7 +195,6 @@ def component_repeated_signal_pin_unassigned(
                     "is assigned. Review whether the open member is intentionally unused or a "
                     "connection was missed. This prompt does not require the pins to be tied."
                 ),
-                evidence=evidence,
             )
         )
     return tuple(sorted(candidates, key=lambda item: (item.subject.casefold(), item.subject)))

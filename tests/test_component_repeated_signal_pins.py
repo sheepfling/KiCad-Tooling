@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Literal
 
 import pytest
 
@@ -56,7 +57,7 @@ def _report(
     )
 
 
-def _review_policy(mode: str = "review") -> DesignLintPolicy:
+def _review_policy(mode: Literal["review", "block", "off"] = "review") -> DesignLintPolicy:
     return DesignLintPolicy(
         rules=(DesignLintRuleOverride(rule_id=RULE_ID, mode=mode, reason="test policy"),)
     )
@@ -271,7 +272,10 @@ def test_native_fixture_lane_enables_only_the_split_fault_and_checks_its_control
     def fake_read_netlist(path: Path) -> NetlistContract:
         return observed[path.name.split(".", 1)[0]]
 
-    monkeypatch.setattr(connector_return_context, "selected_config", lambda *_args: config)
+    def fake_selected_config(*_args: object, **_kwargs: object) -> SimpleNamespace:
+        return config
+
+    monkeypatch.setattr(connector_return_context, "selected_config", fake_selected_config)
     monkeypatch.setattr(connector_return_context, "run_command", fake_run_command)
     monkeypatch.setattr(connector_return_context, "read_netlist", fake_read_netlist)
 
