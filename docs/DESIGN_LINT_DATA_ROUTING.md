@@ -234,6 +234,15 @@ and fingerprint stay the same. The broader extension path should formalize
 typed theme results rather than adding metadata fields to the shared candidate
 type for each new rule.
 
+The four peer rule owners now use `PeerReferenceCandidate.from_identity()` to
+derive their identity-owned public evidence fields (`SDA`/`SCL`, `SCK`,
+`CANH`/`CANL`, or `bus`/`pair`) from the typed identity. Supplemental evidence
+is merged only after those fields are reserved, so a producer cannot supply a
+conflicting duplicate. The resulting evidence map preserves the existing
+report JSON and fingerprint. This is the first typed evidence projection; the
+remaining per-rule evidence fields still use the established string-keyed
+map and need their own staged migration by theme.
+
 Component-peer assignment checks now enter through
 `ComponentPeerCandidateInputs` and return a `ComponentPeerCandidateResult`.
 Its `ComponentPeerPinFindingCounts` summary is consumed by the component-peer

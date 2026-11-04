@@ -81,6 +81,34 @@ def test_peer_candidate_keys_merge_theme_results() -> None:
     assert first.merge(second) == PeerReferenceCandidateKeys.from_candidates(items)
 
 
+def test_typed_peer_identity_projects_the_same_public_evidence_and_fingerprints() -> None:
+    legacy = _candidates()
+    projected = tuple(
+        PeerReferenceCandidate.from_identity(
+            identity=item.identity,
+            subject=item.subject,
+            message=item.message,
+            evidence={},
+        )
+        for item in legacy
+    )
+
+    assert projected == legacy
+    assert tuple(fingerprint(item) for item in projected) == tuple(
+        fingerprint(item) for item in legacy
+    )
+
+
+def test_peer_identity_fields_cannot_be_overridden_by_supplemental_evidence() -> None:
+    with pytest.raises(ValueError, match="supplied by identity: SDA"):
+        PeerReferenceCandidate.from_identity(
+            identity=I2cPeerBusKey("I2C_SDA", "I2C_SCL"),
+            subject="I2C bus",
+            message="Review",
+            evidence={"SDA": ("OTHER_NET",)},
+        )
+
+
 def test_typed_scan_results_reject_unmatched_peer_keys() -> None:
     items = _candidates()
     empty = PeerReferenceCandidateKeys.from_candidates(())

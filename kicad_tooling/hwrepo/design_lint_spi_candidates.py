@@ -84,7 +84,6 @@ def spi_peer_reference_candidates(
             for item in bus.endpoints
         )
         evidence = {
-            "SCK": (bus.clock_net,),
             "participants": references,
             "clock_pins": tuple(item.clock_pin for item in bus.endpoints),
             "reference_assignments": assignments,
@@ -92,8 +91,7 @@ def spi_peer_reference_candidates(
         if bus.incomplete_references:
             evidence["incomplete_reference_evidence"] = bus.incomplete_references
         found.append(
-            PeerReferenceCandidate(
-                rule_id="bus.spi_peer_reference_review",
+            PeerReferenceCandidate.from_identity(
                 identity=SpiPeerClockKey(bus.clock_net),
                 subject=f"SCK {bus.clock_net}: {', '.join(references)}",
                 message=(

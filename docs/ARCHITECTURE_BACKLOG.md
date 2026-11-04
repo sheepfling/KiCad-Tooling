@@ -434,6 +434,11 @@ I²C, SPI, CAN, and RS-485 peer rule owners now attach typed identities to their
 internal candidates. Construction and coverage assembly check that each
 identity matches the public evidence fields; coverage uses the typed identities.
 The report and fingerprint continue to use the existing serialized evidence.
+Those four owners now derive the identity-owned public evidence keys from the
+typed identity through a compatibility projection. Supplemental evidence
+cannot override the projected keys, while report JSON and fingerprints remain
+unchanged. Continue this pattern for other rule-specific evidence only after
+its typed owner and wire projection are explicit.
 The bus theme now returns its findings with those peer keys in a
 BusCandidateResult. Prepared evaluation consumes the typed result directly;
 the flattened scan_candidates() remains an adapter for existing callers.

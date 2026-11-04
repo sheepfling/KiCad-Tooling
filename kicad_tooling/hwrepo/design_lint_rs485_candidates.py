@@ -76,8 +76,6 @@ def rs485_peer_reference_candidates(
             for item in pair.endpoints
         )
         evidence = {
-            "bus": (pair.bus_id,),
-            "pair": (pair.pair_id,),
             "line_1": (pair.line_1_net,),
             "line_2": (pair.line_2_net,),
             "participants": participants,
@@ -92,8 +90,7 @@ def rs485_peer_reference_candidates(
         if pair.incomplete_references:
             evidence["incomplete_reference_evidence"] = pair.incomplete_references
         found.append(
-            PeerReferenceCandidate(
-                rule_id="bus.rs485_peer_reference_review",
+            PeerReferenceCandidate.from_identity(
                 identity=Rs485PeerPairKey(pair.bus_id, pair.pair_id),
                 subject=(
                     f"RS-485 bus {pair.bus_id} pair {pair.pair_id}: {', '.join(participants)}"

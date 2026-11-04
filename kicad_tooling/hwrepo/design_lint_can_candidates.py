@@ -156,8 +156,6 @@ def can_peer_reference_candidates(
             for item in bus.endpoints
         )
         evidence = {
-            "CANH": (bus.canh_net,),
-            "CANL": (bus.canl_net,),
             "participants": participants,
             "line_assignments": line_assignments,
             "reference_assignments": reference_assignments,
@@ -165,8 +163,7 @@ def can_peer_reference_candidates(
         if bus.incomplete_references:
             evidence["incomplete_reference_evidence"] = bus.incomplete_references
         found.append(
-            PeerReferenceCandidate(
-                rule_id="bus.can_peer_reference_review",
+            PeerReferenceCandidate.from_identity(
                 identity=CanPeerBusKey(bus.canh_net, bus.canl_net),
                 subject=f"CANH {bus.canh_net} / CANL {bus.canl_net}: {', '.join(participants)}",
                 message=(

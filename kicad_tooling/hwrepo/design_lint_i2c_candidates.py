@@ -217,8 +217,6 @@ def i2c_peer_reference_candidates(
             for item in bus.endpoints
         )
         evidence = {
-            "SDA": (bus.sda_net,),
-            "SCL": (bus.scl_net,),
             "participants": references,
             "signal_pins": tuple(
                 pin for item in bus.endpoints for pin in (item.sda_pin, item.scl_pin)
@@ -228,8 +226,7 @@ def i2c_peer_reference_candidates(
         if bus.incomplete_references:
             evidence["incomplete_reference_evidence"] = bus.incomplete_references
         found.append(
-            PeerReferenceCandidate(
-                rule_id="bus.i2c_peer_reference_review",
+            PeerReferenceCandidate.from_identity(
                 identity=I2cPeerBusKey(bus.sda_net, bus.scl_net),
                 subject=f"SDA {bus.sda_net} / SCL {bus.scl_net}: {', '.join(references)}",
                 message=(

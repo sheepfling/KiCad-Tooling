@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
+from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 
 
@@ -34,7 +35,9 @@ class Rs485PeerPairKey:
 PeerReferenceKey = I2cPeerBusKey | SpiPeerClockKey | CanPeerBusKey | Rs485PeerPairKey
 
 
-def _identity_contract(identity: PeerReferenceKey) -> tuple[str, dict[str, tuple[str, ...]]]:
+def _identity_contract(
+    identity: PeerReferenceKey,
+) -> tuple[DesignLintRuleId, dict[str, tuple[str, ...]]]:
     if isinstance(identity, I2cPeerBusKey):
         return "bus.i2c_peer_reference_review", {
             "SDA": (identity.sda_net,),
@@ -61,6 +64,29 @@ class PeerReferenceCandidate(Candidate):
 
     def __post_init__(self) -> None:
         self.validate_identity_contract()
+
+    @classmethod
+    def from_identity(
+        cls,
+        *,
+        identity: PeerReferenceKey,
+        subject: str,
+        message: str,
+        evidence: Mapping[str, tuple[str, ...]],
+    ) -> PeerReferenceCandidate:
+        """Serialize identity-owned fields from the typed key into legacy evidence."""
+        rule_id, identity_evidence = _identity_contract(identity)
+        duplicated = identity_evidence.keys() & evidence.keys()
+        if duplicated:
+            names = ", ".join(sorted(duplicated))
+            raise ValueError(f"Peer evidence fields are supplied by identity: {names}")
+        return cls(
+            rule_id=rule_id,
+            subject=subject,
+            message=message,
+            evidence={**identity_evidence, **evidence},
+            identity=identity,
+        )
 
     def validate_identity_contract(self) -> None:
         """Catch mutable evidence drifting from the source-derived identity."""
