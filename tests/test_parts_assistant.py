@@ -17,7 +17,7 @@ from urllib.parse import urlencode
 
 import pytest
 
-from kicad_tooling.hwrepo.contract_coach import NetlistRunner, project_context
+from kicad_tooling.hwrepo.contract_coach import project_context
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import (
     AutoCadItem,
@@ -43,8 +43,7 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.parts_assistant import Assistant, Form, create_server, render_html
 from kicad_tooling.hwrepo.parts_workflow import input_hashes
-from kicad_tooling.hwrepo.purchasing import write_csvs
-from kicad_tooling.hwrepo.purchasing_models import PurchasingComponent
+from tests.parts_assistant_fixtures import projected_order_preparation
 from tests.support import reference_root
 
 
@@ -778,40 +777,7 @@ class AssistantHttpTests(unittest.TestCase):
     def test_new_preparation_rejects_other_tabs_old_review_before_send_or_cache(self) -> None:
         template = self.ready_order()
         assert template.plan is not None
-        plan = template.plan
-
-        def projected(
-            root: Path,
-            project_id: str,
-            output: Path,
-            runner: NetlistRunner,
-            *,
-            boards: int,
-            spare_percent: int,
-            spare_minimum: int,
-        ) -> PurchasingReport:
-            updated = plan.model_copy(
-                update={
-                    "preferences": PurchasingPreferences(
-                        boards=boards, spare_percent=spare_percent, spare_minimum=spare_minimum
-                    ),
-                    "components": (
-                        PurchasingComponent(
-                            reference="R1",
-                            value="1k",
-                            footprint="Device:R",
-                            part_id="RES-1",
-                        ),
-                    ),
-                    "lines": (
-                        plan.lines[0].model_copy(
-                            update={"required": boards * 2, "spares": 0, "quantity": boards * 2}
-                        ),
-                    ),
-                }
-            )
-            write_csvs(output, updated)
-            return template.model_copy(update={"receipt_dir": str(output), "plan": updated})
+        projected = projected_order_preparation(template, template.plan)
 
         with patch("kicad_tooling.hwrepo.parts_assistant.prepare", side_effect=projected):
             first = json.loads(
