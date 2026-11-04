@@ -43,11 +43,11 @@ def test_schematic_geometry_parsers_return_named_records_and_issues() -> None:
 
 def test_schematic_geometry_records_retain_unsupported_parse_reasons() -> None:
     document = schematic_root(
-        b'''(kicad_sch
+        b"""(kicad_sch
   (wire (pts (xy 0 0) (xy 1 1)))
   (junction)
   (label "UNANCHORED" (uuid "b0000000-0000-4000-8000-000000000001"))
-)'''
+)"""
     )
 
     wires = wire_geometry(document.text, document.root)

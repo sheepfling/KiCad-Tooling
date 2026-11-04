@@ -45,9 +45,7 @@ class SchematicLabelAnchorResult:
     unsupported_reasons: tuple[str, ...]
 
 
-def wire_geometry(
-    source: str, root: _Span
-) -> SchematicWireGeometryResult:
+def wire_geometry(source: str, root: _Span) -> SchematicWireGeometryResult:
     ends: list[WireEnd] = []
     segments: list[WireSegment] = []
     unsupported: list[str] = []
@@ -101,9 +99,7 @@ def no_connect_points(source: str, root: _Span) -> tuple[tuple[float, float], ..
     return tuple(points)
 
 
-def junction_points(
-    source: str, root: _Span
-) -> SchematicJunctionGeometryResult:
+def junction_points(source: str, root: _Span) -> SchematicJunctionGeometryResult:
     points: list[tuple[float, float]] = []
     unsupported: list[str] = []
     for node in schematic_nodes(source, root, "junction"):
