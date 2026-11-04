@@ -21,7 +21,11 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
 )
 from tests.connector_footprint_peer_support import peer_netlist
-from tests.connector_peer_unanchored_scope_support import lint_report, reviewed_coverage
+from tests.connector_peer_unanchored_scope_support import (
+    four_peer_alias_netlist,
+    lint_report,
+    reviewed_coverage,
+)
 
 RULE_ID = "connector.footprint_peer_unanchored_scope_coverage_missing"
 SCOPE_RULE_ID = "connector.footprint_peer_unanchored_scope_unreviewed"
@@ -127,6 +131,20 @@ def test_common_anchor_suppresses_three_peer_partial_open_prompt() -> None:
     )
 
     assert not any(item.rule_id == RULE_ID for item in lint_report(observed).findings)
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_four_unanchored_connector_aliases_prompt_and_common_net_anchor_is_quiet() -> None:
+    split = four_peer_alias_netlist(common_net_anchor=False)
+    split_report = lint_report(split)
+    findings = [item for item in split_report.findings if item.rule_id == RULE_ID]
+
+    assert len(findings) == 1
+    assert findings[0].evidence["references"] == ("J1", "J2", "J3", "J4")
+    assert findings[0].evidence["unanchored_generic_pin_numbers"] == ("1", "2")
+
+    common_net_anchor = four_peer_alias_netlist(common_net_anchor=True)
+    assert not any(item.rule_id == RULE_ID for item in lint_report(common_net_anchor).findings)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

@@ -724,6 +724,9 @@ standalone parity work when it closes a demonstrated feature regression.
   installed-wheel external-project checks. The earlier `v0.5.3rc360` run
   reached both native cases but exposed an unrelated test-module size limit;
   the follow-up split the prepared-order helper out of that oversized suite.
+  A synthetic four-alias regression now checks a fully split generic-pin group
+  against a common-net-anchor control, extending beyond the two- and three-alias
+  cases.
   Public-board applicability and independent reviewer-value measurement
   remain open.
 
@@ -14211,6 +14214,8 @@ control are documented in the
   complete peer scope, `review`/`block`/`off`, exact ignore, stale coverage,
   mapping-order stability, and a three-alias case with two distinct assigned
   nets plus one open alias. A three-alias common-anchor control stays quiet.
+  A synthetic four-alias case assigns both generic pin groups to separate nets
+  and prompts once; its common-net-anchor control stays quiet.
   These cases pass through CLI and MCP with equal reports. A source-hashed
   KiCad schematic fault/control pair now covers the same three-alias state on
   exact native export. The focused synthetic selection passed locally. The

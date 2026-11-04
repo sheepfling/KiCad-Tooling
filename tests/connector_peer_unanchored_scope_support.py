@@ -13,8 +13,8 @@ from kicad_tooling.hwrepo.models import (
     DesignLintReport,
     InterfacePin,
     InterfaceRecord,
-    NetlistContract,
 )
+from kicad_tooling.hwrepo.netlist_contract_models import ComponentContract, NetlistContract
 from tests.connector_footprint_peer_support import NETLIST_SHA256
 
 PEER_GROUP = "synthetic-peer-connectors"
@@ -89,4 +89,49 @@ def lint_report(
         coach,
         policy or DesignLintPolicy(),
         connector_coverage=coverage,
+    )
+
+
+def four_peer_alias_netlist(*, common_net_anchor: bool) -> NetlistContract:
+    """Build a synthetic four-connector alias split or common-net control."""
+    references = ("J1", "J2", "J3", "J4")
+    components = {
+        reference: ComponentContract(
+            value="Synthetic two-contact port", footprint="Synthetic:Port_2x1"
+        )
+        for reference in references
+    }
+    component_symbols = {
+        reference: f"Synthetic:GenericPortAlias{index}"
+        for index, reference in enumerate(references, start=1)
+    }
+    component_pin_numbers = {reference: ("1", "2") for reference in references}
+    pin_functions = {
+        f"{reference}.{number}": f"Pin_{number}"
+        for reference in references
+        for number in ("1", "2")
+    }
+    pin_electrical_types = {pin: "passive" for pin in pin_functions}
+    if common_net_anchor:
+        nets: dict[str, tuple[str, ...]] = {
+            "SYNTHETIC_COMMON": tuple(f"{reference}.1" for reference in references)
+        }
+    else:
+        nets = {
+            f"SYNTHETIC_NET_{index}": (f"{reference}.1",)
+            for index, reference in enumerate(references, start=1)
+        }
+    nets.update(
+        {
+            f"SYNTHETIC_DATA_{index}": (f"{reference}.2",)
+            for index, reference in enumerate(references, start=1)
+        }
+    )
+    return NetlistContract(
+        components=components,
+        nets=nets,
+        component_symbols=component_symbols,
+        component_pin_numbers=component_pin_numbers,
+        pin_functions=pin_functions,
+        pin_electrical_types=pin_electrical_types,
     )
