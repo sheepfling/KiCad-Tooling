@@ -530,7 +530,13 @@ contexts to the same explicit `not_configured` states while retaining pending,
 not-applicable, and source-bound records unchanged for their owning scans.
 Serial reference scanning now builds one named `SerialPeerPinIndex` from its
 observed netlist and routes its related indexes by field through domain and
-map-matching checks.
+map-matching checks. Digital-peer voltage analysis likewise returns one named,
+read-only `DigitalPeerPinAssignmentIndex` for pin-to-net, canonical-reference,
+and symbol lookups; the scanner passes that record through supply and authored
+link matching instead of unpacking a positional tuple of maps. The USB peer
+route now uses a similarly named `UsbPeerPinNetIndex` for its paired
+pin-to-net and net-to-pin views across endpoint, crossing, path, and shunt
+analysis.
 
 **Done when:** the pilot yields equivalent findings and report meaning; adding
 a second rule in that theme needs no new parameter on the 49- or 33-parameter

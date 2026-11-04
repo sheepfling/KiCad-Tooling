@@ -105,7 +105,7 @@ def _direct_shunt_path(
     observed: NetlistContract,
     interface: UsbDataInterfaceRequirement,
 ) -> UsbPeerDataLink | None:
-    _pin_nets, net_members = pin_net_index(observed)
+    assignments = pin_net_index(observed)
     reference_nets = {connector.reference_net.casefold(), phy.reference_net.casefold()}
     branch_groups: list[tuple[UsbPeerDataShuntBranch, ...]] = []
     for line, connector_pins, phy_pins, net in (
@@ -117,7 +117,7 @@ def _direct_shunt_path(
             *(pin.casefold() for pin in phy_pins),
             *_mapped_data_pins(interface, line),
         }
-        members = net_members.get(net.casefold(), set())
+        members = assignments.pin_keys_by_net_key.get(net.casefold(), frozenset())
         if not expected <= members:
             return None
         branches = d_designated_shunt_branches(

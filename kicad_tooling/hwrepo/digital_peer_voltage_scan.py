@@ -47,7 +47,7 @@ def scan_digital_peer_voltage_reviews(
     pin-type inventories, ambiguous supplies, unconnected supplies, unsupported
     signal functions, open-drain electrical types, and fully mapped peer links.
     """
-    pin_nets, references, symbols = pin_assignment_index(observed)
+    assignments = pin_assignment_index(observed)
     dnp = {reference.casefold() for reference in observed.dnp_components}
     by_net: dict[
         str,
@@ -70,7 +70,7 @@ def scan_digital_peer_voltage_reviews(
     for pin, raw_function in observed.pin_functions.items():
         reference, separator, _number = pin.rpartition(".")
         reference_key = reference.casefold()
-        canonical_reference = references.get(reference_key)
+        canonical_reference = assignments.canonical_references_by_key.get(reference_key)
         if (
             not separator
             or canonical_reference is None
@@ -97,7 +97,7 @@ def scan_digital_peer_voltage_reviews(
             OUTPUT_TYPES | INPUT_TYPES
         ):
             continue
-        assigned = pin_nets.get(pin.casefold(), set())
+        assigned = assignments.net_names_by_pin_key.get(pin.casefold(), frozenset())
         if len(assigned) != 1:
             continue
         counts[interface]["assigned_endpoint_count"] += 1
@@ -185,11 +185,11 @@ def scan_digital_peer_voltage_reviews(
             counts[interface]["direct_peer_link_count"] += 1
             if link.output_reference not in rails:
                 rails[link.output_reference] = unambiguous_voltage_named_supply(
-                    link.output_reference, observed, pin_nets
+                    link.output_reference, observed, assignments
                 )
             if link.input_reference not in rails:
                 rails[link.input_reference] = unambiguous_voltage_named_supply(
-                    link.input_reference, observed, pin_nets
+                    link.input_reference, observed, assignments
                 )
             output_rail = rails[link.output_reference]
             input_rail = rails[link.input_reference]
@@ -200,7 +200,7 @@ def scan_digital_peer_voltage_reviews(
                 counts[interface]["same_voltage_link_count"] += 1
                 continue
             counts[interface]["different_voltage_link_count"] += 1
-            if fully_mapped_link(link, analysis, observed, pin_nets, references, symbols):
+            if fully_mapped_link(link, analysis, observed, assignments):
                 counts[interface]["mapped_mismatch_link_count"] += 1
                 continue
             key = (
@@ -222,10 +222,14 @@ def scan_digital_peer_voltage_reviews(
         DigitalPeerVoltageReview(
             interface=group.interface,
             output_reference=next(
-                endpoint for endpoint in references.values() if endpoint.casefold() == key[1]
+                endpoint
+                for endpoint in assignments.canonical_references_by_key.values()
+                if endpoint.casefold() == key[1]
             ),
             input_reference=next(
-                endpoint for endpoint in references.values() if endpoint.casefold() == key[2]
+                endpoint
+                for endpoint in assignments.canonical_references_by_key.values()
+                if endpoint.casefold() == key[2]
             ),
             output_rail=group.output_rail,
             input_rail=group.input_rail,

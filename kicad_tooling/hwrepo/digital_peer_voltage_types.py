@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
+from types import MappingProxyType
 from typing import Literal
 
 from .digital_peer_voltage_models import DigitalPeerVoltageAnalysis
@@ -17,6 +19,34 @@ class DigitalPeerVoltageLintContext:
     analysis: DigitalPeerVoltageAnalysis | None = None
     source_path: str | None = None
     source_sha256: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class DigitalPeerPinAssignmentIndex:
+    """Named native pin, component-reference, and symbol indexes for one netlist."""
+
+    net_names_by_pin_key: Mapping[str, frozenset[str]]
+    canonical_references_by_key: Mapping[str, str]
+    symbols_by_reference_key: Mapping[str, str]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "net_names_by_pin_key",
+            MappingProxyType(
+                {key: frozenset(names) for key, names in self.net_names_by_pin_key.items()}
+            ),
+        )
+        object.__setattr__(
+            self,
+            "canonical_references_by_key",
+            MappingProxyType(dict(self.canonical_references_by_key)),
+        )
+        object.__setattr__(
+            self,
+            "symbols_by_reference_key",
+            MappingProxyType(dict(self.symbols_by_reference_key)),
+        )
 
 
 @dataclass(frozen=True, slots=True)

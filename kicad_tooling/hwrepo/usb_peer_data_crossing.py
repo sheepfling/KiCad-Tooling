@@ -73,7 +73,7 @@ def usb_peer_data_pair_crossing_candidates(
     USB pin/net-name rule, and authored interface maps remain with their exact
     path-contract check.
     """
-    pin_nets, net_members = pin_net_index(observed)
+    assignments = pin_net_index(observed)
     connector_references = connector_candidate_references(
         observed,
         declared_connector_references,
@@ -87,13 +87,13 @@ def usb_peer_data_pair_crossing_candidates(
     connectors = usb_endpoints(
         connector_references,
         observed,
-        pin_nets,
+        assignments,
         connector=True,
     )
     phys = usb_endpoints(
         phy_references,
         observed,
-        pin_nets,
+        assignments,
         connector=False,
     )
     symbols = casefold_mapping(observed.component_symbols)
@@ -134,14 +134,14 @@ def usb_peer_data_pair_crossing_candidates(
                 phy.negative_pins,
                 connector.positive_net,
                 reference_nets,
-                net_members,
+                assignments.pin_keys_by_net_key,
                 observed,
             ) or not _crossed_net_shunts(
                 connector.negative_pins,
                 phy.positive_pins,
                 connector.negative_net,
                 reference_nets,
-                net_members,
+                assignments.pin_keys_by_net_key,
                 observed,
             ):
                 continue

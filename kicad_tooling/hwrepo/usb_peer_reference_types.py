@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Literal
 
 UsbPeerSignalFamily = Literal[
@@ -10,6 +12,28 @@ UsbPeerSignalFamily = Literal[
     "USB SuperSpeed TX",
     "USB SuperSpeed RX",
 ]
+
+
+@dataclass(frozen=True, slots=True)
+class UsbPeerPinNetIndex:
+    """Named, read-only pin-to-net and net-to-pin indexes for one netlist."""
+
+    nets_by_pin_key: Mapping[str, frozenset[str]]
+    pin_keys_by_net_key: Mapping[str, frozenset[str]]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "nets_by_pin_key",
+            MappingProxyType({key: frozenset(nets) for key, nets in self.nets_by_pin_key.items()}),
+        )
+        object.__setattr__(
+            self,
+            "pin_keys_by_net_key",
+            MappingProxyType(
+                {key: frozenset(pins) for key, pins in self.pin_keys_by_net_key.items()}
+            ),
+        )
 
 
 @dataclass(frozen=True, slots=True)

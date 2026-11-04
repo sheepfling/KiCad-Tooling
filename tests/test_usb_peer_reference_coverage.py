@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import MutableMapping
+from typing import cast
+
 import pytest
 from pydantic import ValidationError
 
@@ -11,6 +14,7 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
     UsbPeerReferenceCoverageReport,
 )
+from kicad_tooling.hwrepo.usb_peer_endpoint_analysis import pin_net_index
 from kicad_tooling.hwrepo.usb_peer_reference_review import (
     scan_usb_peer_reference_reviews,
     usb_peer_reference_reviews,
@@ -84,6 +88,15 @@ def test_coverage_binds_common_split_and_mapped_peer_paths() -> None:
     assert (mapped_coverage.mapped_separate_reference_path_count) == (1)
     assert (mapped_coverage.candidate_group_count) == (0)
     assert mapped_coverage.path_entries[0].reference_disposition == "MAP_COVERED_SEPARATE_REFERENCE"
+
+
+def test_usb_pin_net_indexes_have_named_immutable_fields() -> None:
+    assignments = pin_net_index(usb_peer_netlist())
+
+    assert assignments.nets_by_pin_key["j1.1"] == frozenset({"USB_DP"})
+    assert assignments.pin_keys_by_net_key["usb_dp"] == frozenset({"j1.1", "u1.1"})
+    with pytest.raises(TypeError):
+        cast(MutableMapping[str, frozenset[str]], assignments.nets_by_pin_key)["j1.1"] = frozenset()
 
 
 def test_coverage_marks_missing_usb_endpoints_and_incomplete_groups() -> None:

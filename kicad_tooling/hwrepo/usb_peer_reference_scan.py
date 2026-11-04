@@ -55,7 +55,7 @@ def scan_usb_peer_reference_reviews(
     unexplained signal-net peers, multi-hop topologies, and mixed reference domains
     remain outside this bounded topology check.
     """
-    pin_nets, net_members = pin_net_index(observed)
+    assignments = pin_net_index(observed)
     connector_candidates = connector_candidate_references(observed, declared_connector_references)
     connector_references = {item.casefold() for item in connector_candidates}
     mapped_path_component_references: set[str] = (
@@ -74,13 +74,13 @@ def scan_usb_peer_reference_reviews(
         *usb_endpoints(
             connector_candidates,
             observed,
-            pin_nets,
+            assignments,
             connector=True,
         ),
         *usb_superspeed_endpoints(
             connector_candidates,
             observed,
-            pin_nets,
+            assignments,
             connector=True,
         ),
     )
@@ -95,13 +95,13 @@ def scan_usb_peer_reference_reviews(
         *usb_endpoints(
             phy_references,
             observed,
-            pin_nets,
+            assignments,
             connector=False,
         ),
         *usb_superspeed_endpoints(
             phy_references,
             observed,
-            pin_nets,
+            assignments,
             connector=False,
         ),
     )
@@ -192,12 +192,12 @@ def scan_usb_peer_reference_reviews(
     for connector in connectors:
         for phy in phy_endpoints:
             if connector.signal_family == phy.signal_family == "USB 2.0 data":
-                data_link = usb_data_link(connector, phy, net_members, observed)
+                data_link = usb_data_link(connector, phy, assignments.pin_keys_by_net_key, observed)
                 if data_link is None:
                     data_link = mapped_inline_usb_data_link(
                         connector,
                         phy,
-                        net_members,
+                        assignments.pin_keys_by_net_key,
                         observed,
                         path_map,
                     )
@@ -211,7 +211,9 @@ def scan_usb_peer_reference_reviews(
             elif connector.signal_family.startswith(
                 "USB SuperSpeed "
             ) and phy.signal_family.startswith("USB SuperSpeed "):
-                data_link = usb_superspeed_direct_data_link(connector, phy, net_members)
+                data_link = usb_superspeed_direct_data_link(
+                    connector, phy, assignments.pin_keys_by_net_key
+                )
             else:
                 data_link = None
             if data_link is None:
@@ -220,7 +222,7 @@ def scan_usb_peer_reference_reviews(
                         connector,
                         phy,
                         observed,
-                        net_members,
+                        assignments.pin_keys_by_net_key,
                         mapped_path_component_references,
                     )
                 )

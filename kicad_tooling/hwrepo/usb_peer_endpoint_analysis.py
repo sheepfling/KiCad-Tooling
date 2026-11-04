@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable, Mapping
-from collections.abc import Set as AbstractSet
 from typing import TypeVar
 
 from .bus_signal_pairs import usb_data_function_identity, usb_superspeed_function_identity
@@ -12,6 +11,7 @@ from .netlist_contract_models import NetlistContract
 from .peer_reference_assignments import peer_reference_assignments
 from .usb_peer_reference_types import (
     UsbEndpoint,
+    UsbPeerPinNetIndex,
     UsbPeerSignalFamily,
     UsbReferencePinAssignment,
 )
@@ -26,7 +26,7 @@ def casefold_mapping(items: Mapping[str, ValueT]) -> dict[str, ValueT]:
     return {key.casefold(): value for key, value in items.items()}
 
 
-def pin_net_index(observed: NetlistContract) -> tuple[dict[str, set[str]], dict[str, set[str]]]:
+def pin_net_index(observed: NetlistContract) -> UsbPeerPinNetIndex:
     by_pin: dict[str, set[str]] = {}
     by_net: dict[str, set[str]] = {}
     for net, pins in observed.nets.items():
@@ -35,19 +35,22 @@ def pin_net_index(observed: NetlistContract) -> tuple[dict[str, set[str]], dict[
             pin_key = pin.casefold()
             by_pin.setdefault(pin_key, set()).add(net)
             by_net.setdefault(net_key, set()).add(pin_key)
-    return by_pin, by_net
+    return UsbPeerPinNetIndex(
+        nets_by_pin_key={pin: frozenset(nets) for pin, nets in by_pin.items()},
+        pin_keys_by_net_key={net: frozenset(pins) for net, pins in by_net.items()},
+    )
 
 
 def usb_endpoint_reference_pins(
     observed: NetlistContract, reference: str
 ) -> tuple[UsbReferencePinAssignment, ...] | None:
     """Return complete, uniquely assigned explicit signal-reference pins for one endpoint."""
-    pin_nets, _ = pin_net_index(observed)
+    assignments = pin_net_index(observed)
     pin_inventories = casefold_mapping(observed.component_pin_numbers)
     numbers = pin_inventories.get(reference.casefold())
     if not numbers:
         return None
-    evidence = peer_reference_assignments(reference, observed, pin_nets, numbers)
+    evidence = peer_reference_assignments(reference, observed, assignments.nets_by_pin_key, numbers)
     if evidence.net is None:
         return None
     return tuple(
@@ -66,7 +69,7 @@ def usb_endpoint(
     observed: NetlistContract,
     *,
     connector: bool,
-    pin_nets: Mapping[str, AbstractSet[str]],
+    assignments: UsbPeerPinNetIndex,
 ) -> tuple[UsbEndpoint, ...]:
     reference_key = reference.casefold()
     if reference_key in {item.casefold() for item in observed.dnp_components}:
@@ -98,7 +101,7 @@ def usb_endpoint(
         if identity is not None:
             port_group, side = identity
             group = roles.setdefault(port_group, {"positive": [], "negative": []})
-            nets = pin_nets.get(pin_key, set())
+            nets = assignments.nets_by_pin_key.get(pin_key, frozenset())
             if len(nets) != 1:
                 invalid_groups.add(port_group)
                 continue
@@ -164,13 +167,15 @@ def usb_endpoint(
 def usb_endpoints(
     references: Iterable[str],
     observed: NetlistContract,
-    pin_nets: Mapping[str, AbstractSet[str]],
+    assignments: UsbPeerPinNetIndex,
     *,
     connector: bool,
 ) -> tuple[UsbEndpoint, ...]:
     endpoints: list[UsbEndpoint] = []
     for reference in references:
-        endpoints.extend(usb_endpoint(reference, observed, connector=connector, pin_nets=pin_nets))
+        endpoints.extend(
+            usb_endpoint(reference, observed, connector=connector, assignments=assignments)
+        )
     return tuple(endpoints)
 
 
@@ -221,7 +226,7 @@ def recognized_usb_superspeed_groups(
 def usb_superspeed_endpoints(
     references: Iterable[str],
     observed: NetlistContract,
-    pin_nets: Mapping[str, AbstractSet[str]],
+    assignments: UsbPeerPinNetIndex,
     *,
     connector: bool,
 ) -> tuple[UsbEndpoint, ...]:
@@ -276,8 +281,12 @@ def usb_superspeed_endpoints(
             )
             if len(positive_pins) != 1 or len(negative_pins) != 1:
                 continue
-            positive_nets = pin_nets.get(positive_pins[0].casefold(), set())
-            negative_nets = pin_nets.get(negative_pins[0].casefold(), set())
+            positive_nets = assignments.nets_by_pin_key.get(
+                positive_pins[0].casefold(), frozenset()
+            )
+            negative_nets = assignments.nets_by_pin_key.get(
+                negative_pins[0].casefold(), frozenset()
+            )
             if len(positive_nets) != 1 or len(negative_nets) != 1:
                 continue
             positive_net = next(iter(positive_nets))

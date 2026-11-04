@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import MutableMapping
+from typing import cast
+
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import (
@@ -11,6 +14,7 @@ from kicad_tooling.hwrepo.design_lint import (
     text_report,
 )
 from kicad_tooling.hwrepo.design_lint_peer_candidates import DigitalPeerVoltageLintContext
+from kicad_tooling.hwrepo.digital_peer_voltage_analysis import pin_assignment_index
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     DesignLintIgnore,
@@ -77,6 +81,20 @@ def test_gpio_to_regulator_enable_is_outside_protocol_peer_voltage_rules() -> No
     for item in coverage.values():
         assert item.status == "NO_SUPPORTED_ENDPOINTS"
         assert item.recognized_endpoint_count == 0
+
+
+def test_peer_pin_assignment_indexes_have_named_immutable_fields() -> None:
+    observed = spi_peer_voltage_netlist()
+
+    assignments = pin_assignment_index(observed)
+
+    assert assignments.net_names_by_pin_key["u1.2"] == frozenset({"SPI_MOSI"})
+    assert assignments.canonical_references_by_key["u1"] == "U1"
+    assert assignments.symbols_by_reference_key["u1"] == "Synthetic:Controller"
+    with pytest.raises(TypeError):
+        cast(MutableMapping[str, frozenset[str]], assignments.net_names_by_pin_key)["u1.2"] = (
+            frozenset()
+        )
 
 
 def test_spi_peer_voltage_prompt_requires_unambiguous_native_evidence() -> None:

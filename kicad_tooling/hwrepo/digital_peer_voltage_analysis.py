@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
-from collections.abc import Set as AbstractSet
 from decimal import Decimal
 from typing import Literal
 
 from .digital_peer_voltage_models import DigitalPeerPinRequirement, DigitalPeerVoltageAnalysis
-from .digital_peer_voltage_types import DigitalPeerLink, VoltageNamedRail
+from .digital_peer_voltage_types import (
+    DigitalPeerLink,
+    DigitalPeerPinAssignmentIndex,
+    VoltageNamedRail,
+)
 from .netlist_contract_models import NetlistContract
 from .return_nets import is_return_like_net_name
 from .serial_participants import serial_function_role_and_channel
@@ -73,7 +75,7 @@ def nominal_voltage_from_net_name(name: str) -> Decimal | None:
 
 def pin_assignment_index(
     observed: NetlistContract,
-) -> tuple[dict[str, set[str]], dict[str, str], dict[str, str]]:
+) -> DigitalPeerPinAssignmentIndex:
     pin_nets: dict[str, set[str]] = {}
     for net, pins in observed.nets.items():
         for pin in pins:
@@ -82,7 +84,13 @@ def pin_assignment_index(
     symbols = {
         reference.casefold(): symbol for reference, symbol in observed.component_symbols.items()
     }
-    return pin_nets, references, symbols
+    return DigitalPeerPinAssignmentIndex(
+        net_names_by_pin_key={
+            pin_key: frozenset(net_names) for pin_key, net_names in pin_nets.items()
+        },
+        canonical_references_by_key=references,
+        symbols_by_reference_key=symbols,
+    )
 
 
 def is_return_assignment(net: str, function: str) -> bool:
@@ -95,7 +103,7 @@ def is_return_assignment(net: str, function: str) -> bool:
 def unambiguous_voltage_named_supply(
     reference: str,
     observed: NetlistContract,
-    pin_nets: Mapping[str, AbstractSet[str]],
+    assignments: DigitalPeerPinAssignmentIndex,
 ) -> VoltageNamedRail | None:
     """Require complete native pin types and exactly one assigned positive rail."""
     reference_key = reference.casefold()
@@ -125,7 +133,7 @@ def unambiguous_voltage_named_supply(
         if types.get(pin.casefold()) != "power_in":
             continue
         found_power_input = True
-        nets = pin_nets.get(pin.casefold(), set())
+        nets = assignments.net_names_by_pin_key.get(pin.casefold(), frozenset())
         if len(nets) != 1:
             return None
         net = next(iter(nets))
@@ -145,13 +153,11 @@ def unambiguous_voltage_named_supply(
 def endpoint_matches_native(
     endpoint: DigitalPeerPinRequirement,
     observed: NetlistContract,
-    pin_nets: Mapping[str, AbstractSet[str]],
-    references: Mapping[str, str],
-    symbols: Mapping[str, str],
+    assignments: DigitalPeerPinAssignmentIndex,
 ) -> bool:
     reference = endpoint.reference
     reference_key = reference.casefold()
-    canonical_reference = references.get(reference_key)
+    canonical_reference = assignments.canonical_references_by_key.get(reference_key)
     if canonical_reference is None or canonical_reference.casefold() in {
         item.casefold() for item in observed.dnp_components
     }:
@@ -166,22 +172,20 @@ def endpoint_matches_native(
     )
     if (
         component is None
-        or symbols.get(reference_key) != endpoint.symbol
+        or assignments.symbols_by_reference_key.get(reference_key) != endpoint.symbol
         or component.footprint != endpoint.footprint
     ):
         return False
     pin = endpoint.pin
     net = endpoint.net
-    return pin_nets.get(pin.casefold(), set()) == {net}
+    return assignments.net_names_by_pin_key.get(pin.casefold(), frozenset()) == frozenset({net})
 
 
 def fully_mapped_link(
     link: DigitalPeerLink,
     analysis: DigitalPeerVoltageAnalysis | None,
     observed: NetlistContract,
-    pin_nets: Mapping[str, AbstractSet[str]],
-    references: Mapping[str, str],
-    symbols: Mapping[str, str],
+    assignments: DigitalPeerPinAssignmentIndex,
 ) -> bool:
     if analysis is None:
         return False
@@ -201,8 +205,8 @@ def fully_mapped_link(
             or receiver.net != link.net
         ):
             continue
-        if endpoint_matches_native(
-            driver, observed, pin_nets, references, symbols
-        ) and endpoint_matches_native(receiver, observed, pin_nets, references, symbols):
+        if endpoint_matches_native(driver, observed, assignments) and endpoint_matches_native(
+            receiver, observed, assignments
+        ):
             return True
     return False

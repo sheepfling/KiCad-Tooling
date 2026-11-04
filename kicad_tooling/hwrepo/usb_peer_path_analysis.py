@@ -35,7 +35,7 @@ def d_designated_shunt_branches(
     inventories = casefold_mapping(observed.component_pin_numbers)
     electrical_types = casefold_mapping(observed.pin_electrical_types)
     component_references = {reference.casefold(): reference for reference in observed.components}
-    pin_nets, _net_members = pin_net_index(observed)
+    assignment_index = pin_net_index(observed)
     dnp = {reference.casefold() for reference in observed.dnp_components}
     extras_by_reference: dict[str, set[str]] = {}
     display_references: dict[str, str] = {}
@@ -70,7 +70,7 @@ def d_designated_shunt_branches(
             pin_key = pin.casefold()
             if electrical_types.get(pin_key, "").casefold() != "passive":
                 return None
-            nets = pin_nets.get(pin_key, set())
+            nets = assignment_index.nets_by_pin_key.get(pin_key, frozenset())
             if len(nets) != 1:
                 return None
             actual_net = next(iter(nets))
@@ -116,7 +116,7 @@ def _series_resistor_between_nets(
     symbols = casefold_mapping(observed.component_symbols)
     electrical_types = casefold_mapping(observed.pin_electrical_types)
     display_references = {reference.casefold(): reference for reference in observed.components}
-    pin_nets, _net_members = pin_net_index(observed)
+    assignment_index = pin_net_index(observed)
     dnp = {reference.casefold() for reference in observed.dnp_components}
     wanted_nets = {connector_net.casefold(), phy_net.casefold()}
     candidates: list[UsbPeerDataSeriesResistor] = []
@@ -133,24 +133,31 @@ def _series_resistor_between_nets(
         reference = display_references.get(reference_key)
         if reference is None:
             continue
-        assignments: list[tuple[str, str]] = []
+        resistor_pin_assignments: list[tuple[str, str]] = []
         for number in numbers:
             pin = f"{reference}.{number}"
             pin_key = pin.casefold()
             if electrical_types.get(pin_key, "").casefold() != "passive":
                 break
-            nets = pin_nets.get(pin_key, set())
+            nets = assignment_index.nets_by_pin_key.get(pin_key, frozenset())
             if len(nets) != 1:
                 break
-            assignments.append((pin, next(iter(nets))))
-        if len(assignments) != 2 or {net.casefold() for _pin, net in assignments} != wanted_nets:
+            resistor_pin_assignments.append((pin, next(iter(nets))))
+        if (
+            len(resistor_pin_assignments) != 2
+            or {net.casefold() for _pin, net in resistor_pin_assignments} != wanted_nets
+        ):
             continue
         component = components[reference_key]
         connector_pin, actual_connector_net = next(
-            (pin, net) for pin, net in assignments if net.casefold() == connector_net.casefold()
+            (pin, net)
+            for pin, net in resistor_pin_assignments
+            if net.casefold() == connector_net.casefold()
         )
         phy_pin, actual_phy_net = next(
-            (pin, net) for pin, net in assignments if net.casefold() == phy_net.casefold()
+            (pin, net)
+            for pin, net in resistor_pin_assignments
+            if net.casefold() == phy_net.casefold()
         )
         candidates.append(
             UsbPeerDataSeriesResistor(
