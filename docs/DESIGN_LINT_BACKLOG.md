@@ -726,7 +726,9 @@ standalone parity work when it closes a demonstrated feature regression.
   the follow-up split the prepared-order helper out of that oversized suite.
   A synthetic four-alias regression now checks a fully split generic-pin group
   against a common-net-anchor control, extending beyond the two- and three-alias
-  cases.
+  cases. Hosted acceptance `v0.5.3rc362` passed in run `41797871842`, including
+  the four-alias regression, the existing exact-version native pair, and the
+  installed-wheel external-project checks.
   Public-board applicability and independent reviewer-value measurement
   remain open.
 
@@ -14218,13 +14220,13 @@ control are documented in the
   and prompts once; its common-net-anchor control stays quiet.
   These cases pass through CLI and MCP with equal reports. A source-hashed
   KiCad schematic fault/control pair now covers the same three-alias state on
-  exact native export. The focused synthetic selection passed locally. The
-  exact-version native lane could not run locally because access to the Docker
-  socket was denied; hosted `v0.5.3rc361` acceptance passed in run
-  `41795228921`, exercising the three-alias fault/control pair on KiCad 10.0.0
-  and 10.0.5 and passing the installed-wheel external-project checks. These
-  checks establish synthetic and native-export compatibility, not public-board
-  applicability or reviewer-value evidence.
+  exact native export. The focused synthetic selection, including the new
+  four-alias fault/control, passed locally. The exact-version native lane could
+  not run locally because access to the Docker socket was denied; hosted
+  `v0.5.3rc362` acceptance passed in run `41797871842`, exercising the native
+  fault/control pair on KiCad 10.0.0 and 10.0.5 and passing the installed-wheel
+  external-project checks. These checks establish synthetic and native-export
+  compatibility, not public-board applicability or reviewer-value evidence.
 - **Coverage output:** The source-bound alias summary reports
   `uncovered_peer_assignment_scope_finding_count` alongside the existing
   reviewed and unreviewed-scope counts. CLI and MCP use the same typed report
