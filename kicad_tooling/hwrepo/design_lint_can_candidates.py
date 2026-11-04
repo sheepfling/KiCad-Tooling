@@ -18,10 +18,13 @@ from .can_tx_output_sharing import can_tx_output_sharing_candidates
 from .can_tx_rx_label_mismatch import can_tx_rx_label_mismatch_candidates
 from .can_tx_rx_same_net import can_tx_rx_same_net_candidates
 from .design_lint_can_peer_candidate_evidence import CanPeerCandidate
+from .design_lint_can_peer_reference_candidate_evidence import (
+    CanPeerReferenceCandidate,
+    CanPeerReferenceFindingEvidence,
+)
 from .design_lint_can_termination_candidate_evidence import CanTerminationCandidate
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
-from .peer_reference_candidate_keys import CanPeerBusKey, PeerReferenceCandidate
 
 
 def can_candidates(
@@ -121,30 +124,9 @@ def can_peer_reference_candidates(
         ):
             continue
         participants = tuple(item.reference for item in bus.endpoints)
-        line_assignments = tuple(
-            f"{item.reference}: {item.canh_pin} on {item.canh_net}; "
-            f"{item.canl_pin} on {item.canl_net}"
-            for item in bus.endpoints
-        )
-        reference_assignments = tuple(
-            f"{item.reference}: "
-            + (
-                f"{', '.join(pin.pin for pin in item.reference_pins)} on {item.reference_net}"
-                if item.reference_net is not None
-                else "reference assignment incomplete"
-            )
-            for item in bus.endpoints
-        )
-        evidence = {
-            "participants": participants,
-            "line_assignments": line_assignments,
-            "reference_assignments": reference_assignments,
-        }
-        if bus.incomplete_references:
-            evidence["incomplete_reference_evidence"] = bus.incomplete_references
         found.append(
-            PeerReferenceCandidate.from_identity(
-                identity=CanPeerBusKey(bus.canh_net, bus.canl_net),
+            CanPeerReferenceCandidate.from_source_evidence(
+                CanPeerReferenceFindingEvidence(reference_scan, bus),
                 subject=f"CANH {bus.canh_net} / CANL {bus.canl_net}: {', '.join(participants)}",
                 message=(
                     "Fitted CAN peers share the same native CANH/CANL net pair, and at least "
@@ -152,7 +134,6 @@ def can_peer_reference_candidates(
                     "approved common, bonded, or isolated reference policy; this heuristic "
                     "does not require a common return or prove physical continuity."
                 ),
-                evidence=evidence,
             )
         )
     return tuple(found)

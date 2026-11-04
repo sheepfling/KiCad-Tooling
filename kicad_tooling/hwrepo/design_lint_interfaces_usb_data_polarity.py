@@ -4,9 +4,15 @@ from __future__ import annotations
 
 from .bus_signal_pairs import usb_data_function_identity
 from .design_lint_types import Candidate
+from .design_lint_usb_data_polarity_candidate_evidence import (
+    USB_DATA_POLARITY_RULE_ID,
+    UsbDataPolarityCandidate,
+    UsbDataPolarityFindingEvidence,
+    usb_data_polarity_side,
+)
 from .netlist_contract_models import NetlistContract
 
-RULE_ID = "bus.usb_data_polarity_label_mismatch"
+RULE_ID = USB_DATA_POLARITY_RULE_ID
 
 
 def usb_data_polarity_label_candidates(observed: NetlistContract) -> tuple[Candidate, ...]:
@@ -52,23 +58,24 @@ def usb_data_polarity_label_candidates(observed: NetlistContract) -> tuple[Candi
             continue
 
         function = observed.pin_functions[pin]
+        source_evidence = UsbDataPolarityFindingEvidence(
+            observed=observed,
+            pin=pin,
+            function=function,
+            pin_side=usb_data_polarity_side(pin_identity[1]),
+            net=net,
+            net_side=usb_data_polarity_side(net_identity[1]),
+            port_group=pin_identity[0],
+        )
         findings.append(
-            Candidate(
-                rule_id=RULE_ID,
+            UsbDataPolarityCandidate.from_source_evidence(
+                source_evidence,
                 subject=f"{pin}: {function} on {net}",
                 message=(
                     f"Native USB data pin function is {pin_identity[1]}, but the assigned net name "
                     f"{net!r} identifies {net_identity[1]}. Review the endpoint pin map and net "
                     "labels; names alone do not prove physical polarity or routing."
                 ),
-                evidence={
-                    "pin": (pin,),
-                    "pin_function": (function,),
-                    "pin_side": (pin_identity[1],),
-                    "net": (net,),
-                    "net_side": (net_identity[1],),
-                    "port_group": (pin_identity[0] or "unindexed",),
-                },
             )
         )
     return tuple(findings)

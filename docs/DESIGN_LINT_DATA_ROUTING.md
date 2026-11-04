@@ -279,19 +279,18 @@ disposition. The public finding evidence and fingerprint stay the same. The
 broader extension path should formalize typed theme results rather than adding
 metadata fields to the shared candidate type for each new rule.
 
-The four peer rule owners now use `PeerReferenceCandidate.from_identity()` to
-derive their identity-owned public evidence fields (`SDA`/`SCL`, `SCK`,
-`CANH`/`CANL`, or `bus`/`pair`) from the typed identity. Supplemental evidence
-is merged only after those fields are reserved, so a producer cannot supply a
-conflicting duplicate. The resulting evidence map preserves the existing
-report JSON and fingerprint. The source-owning I²C and USB routes now use the
-shared `CandidateEvidenceProjection`; remaining per-rule evidence fields still
-use the established string-keyed map and need their own staged migration by
-theme. The peer projection itself is a
-named `PeerReferenceIdentityProjection` with a read-only mapping of its
-identity-owned wire fields; the candidate adapter projects them into the
-established evidence mapping, which `Candidate` copies and freezes before
-report serialization.
+The I²C, SPI, CAN, and RS-485 peer-reference adapters now use typed candidate
+subtypes that retain their scan and bus/pair review while deriving
+identity-owned wire fields through `project_peer_reference_identity()`.
+`PeerReferenceCandidate.from_identity()` remains a compatibility constructor,
+but no active peer-reference adapter relies on it. Supplemental evidence is
+merged only after identity fields are reserved, so a producer cannot supply
+conflicting values. The named `PeerReferenceIdentityProjection` keeps those
+fields read-only; the candidate adapter projects them into the established
+evidence mapping, which `Candidate` copies and freezes before report
+serialization. The source-owning I²C and USB routes also use the shared
+`CandidateEvidenceProjection`; remaining per-rule evidence fields still use
+the established string-keyed map and need their own staged migration by theme.
 
 The component-peer identity helper now returns a named
 `ComponentPeerPinIdentityContext` instead of a positional tuple containing an
@@ -817,6 +816,31 @@ pull-up path fields. Resistance-band and authored array-path interpretation
 remain in the SPI scan; the candidate adapter keeps the existing review
 wording and order.
 
+Unmapped SPI roster prompts retain the discovered participant and exact
+`SpiRosterContext` through `UnmappedSpiParticipantCandidate`. Its projection
+preserves the five endpoint fields, roster state, and optional authored
+contract path and digest. Candidate wording and state selection remain in the
+adapter.
+
+USB-C port coverage prompts retain their exact `UnmappedUsbCPort` and
+`UsbCPortRosterContext` through `UsbCPortCandidate`. The projector preserves
+the CC pin and assignment fields, roster state, and optional authored contract
+path and digest. Connector discovery and review wording remain in the adapter.
+
+USB peer-reference prompts retain the exact `UsbPeerReferenceReview`, its
+parent `UsbPeerReferenceScan`, and the authored `UsbDataPathCandidateInputs`
+through `UsbPeerReferenceCandidate`. Construction rejects a review detached
+from its scan. The projector preserves the bounded data topology, endpoint
+reference assignments, policy state, component observations, and optional map
+digest. Candidate wording remains in the adapter.
+
+USB pin-versus-net polarity prompts retain the exact normalized
+`NetlistContract` and the conflicting pin, function, and net through
+`UsbDataPolarityCandidate`. Construction checks those values against the
+source netlist and rejects a projection that disagrees with the source record.
+The existing alias predicate still decides applicability and the adapter still
+owns review wording.
+
 SPI shared-clock reference findings retain their exact bus review and parent
 scan through `SpiPeerReferenceCandidate`. The SPI projector combines the
 canonical clock identity with endpoint, pin, and reference assignments, adding
@@ -829,6 +853,29 @@ through `I2cPeerReferenceCandidate`, while keeping the canonical SDA/SCL
 identity used by coverage reconciliation. Its projector preserves participant,
 signal-pin, and reference-assignment ordering and emits incomplete-reference
 clues only when the scan found them.
+
+CAN shared-pair reference findings retain the exact bus and scan through
+`CanPeerReferenceCandidate`, along with the canonical CANH/CANL identity. Its
+projection preserves participant, line-assignment, and reference-assignment
+ordering and keeps incomplete-reference clues conditional.
+
+Mapped RS-485 reference findings retain the authored-map-bound scan, exact
+pair, and canonical bus/pair identity through `Rs485PeerReferenceCandidate`.
+The projector preserves the current line, participant, reference-assignment,
+and sorted reference-net fields; map provenance remains attached to the typed
+source record, and incomplete-reference clues remain conditional.
+
+The one-sided-open I3C finding retains its exact `UnconnectedI3cSignalPin`
+through `I3cUnconnectedCandidate`. The projection preserves the pin-keyed empty
+assignment, role, channel fallback, and paired pin/function/net fields. Scan
+selection and review wording remain in the existing translator.
+
+Same-net findings for supported two-pin components retain the exact
+`TwoPinComponentOnSameNet` record through `TwoPinSameNetCandidate`. The
+component-kind projector preserves the existing rule ID, passive or component
+kind field, net, pin assignments, and any reviewed custom-role evidence. It
+rejects kinds owned by separate candidate routes, keeping source ownership
+aligned with the component scan.
 
 Serial-peer coverage and reference-domain findings now retain their typed
 source variants through `SerialPeerCandidate`. Unmapped endpoints preserve the

@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
+from .design_lint_usb_c_port_candidate_evidence import (
+    UsbCPortCandidate,
+    UsbCPortFindingEvidence,
+)
 from .netlist_contract_models import NetlistContract
 from .usb_c_ports import UsbCPortRosterContext, unmapped_usb_c_ports
 
@@ -26,19 +30,10 @@ def usb_c_port_candidates(
         usb_c_scope_text = "has no configured project USB-C port role map"
 
     for port in unmapped_usb_c_ports(observed, usb_c_scope, reviewed_connector_references):
-        evidence = {
-            "CC1_pins": port.cc1_pins,
-            "CC2_pins": port.cc2_pins,
-            "CC_assignments": port.signal_assignments,
-            "USB_C_roster_state": (usb_c_scope.state,),
-        }
-        if usb_c_scope.source_path is not None:
-            evidence["electrical_contract_path"] = (usb_c_scope.source_path,)
-        if usb_c_scope.source_sha256 is not None:
-            evidence["electrical_contract_sha256"] = (usb_c_scope.source_sha256,)
+        source_evidence = UsbCPortFindingEvidence(port=port, roster=usb_c_scope)
         found.append(
-            Candidate(
-                rule_id="bus.usb_c_unreviewed_port",
+            UsbCPortCandidate.from_source_evidence(
+                source_evidence,
                 subject=f"{port.reference}: USB-C role-map coverage",
                 message=(
                     f"{port.reference} exports connector pin functions CC1 and CC2 and "
@@ -47,7 +42,6 @@ def usb_c_port_candidates(
                     "do not establish port role, Rp/Rd, controller behavior, VBUS path, or "
                     "protection requirements."
                 ),
-                evidence=evidence,
             )
         )
     return tuple(found)

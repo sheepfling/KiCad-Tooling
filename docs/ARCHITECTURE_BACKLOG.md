@@ -349,18 +349,37 @@ architecture selection passed 27 tests; CLI/MCP parity passed 3 tests.
 Marker and collection checks passed 14 tests. Focused Pyright and Ruff passed;
 no exact native KiCad lane was run.
 
-A fresh direct-constructor AST inventory after these routes finds five inline
-`Candidate(evidence=...)` constructions across five adapters: one two-pin
-component route, one unmapped SPI participant route, one I3C unconnected-pin
-route, one USB-C port review, and one USB peer-reference review. A separate
-call-site audit found two more maps passed through the generic
-`PeerReferenceCandidate.from_identity` helper in the CAN and RS-485 adapters;
-those remain to be routed. SPI and I²C shared-bus reviews now keep their exact
-scan and bus records through typed candidate subtypes while preserving their
-generic peer-identity coverage keys. Treat the remaining maps as
-source-to-report routing tasks, not module split triggers. Keep the shared
-candidate shape stable and group migrations by the typed scan or coverage
-record that owns the data.
+A fresh AST inventory at this checkpoint finds no direct
+`Candidate(evidence=...)` constructions in candidate adapters and no
+`PeerReferenceCandidate.from_identity(evidence=...)` calls. The broad scan
+before this route found 17 direct candidate constructions across six theme
+owners, including USB data polarity. That route now retains its exact
+`NetlistContract` through `UsbDataPolarityCandidate`; source construction checks
+the pin function, net assignment, and polarity identities. A refreshed scan
+leaves 16 direct constructions across five theme owners: two
+component-transformer routes, one connector supply-domain route, one
+power-decoupling route, one regulator-passive route, and eleven
+schematic-geometry routes. I3C one-sided-open, unmapped SPI, two-pin same-net,
+USB-C port, and USB peer-reference findings retain their exact typed source
+records. SPI, I²C, CAN, and RS-485 reference candidates retain their scan and
+bus/pair records through protocol-owned subtypes while preserving the common
+identity used for coverage reconciliation. This inventory is limited to
+direct candidate construction; it does not claim that every dictionary in
+scanners, coverage records, or application services has become typed. Continue
+by tracing each remaining producer, provenance, absence state, and consumer
+before changing module boundaries.
+
+The USB-C port route passed its source and behavior selection (13 tests), CLI/MCP
+parity (1 test), and marker/collection architecture checks (14 tests). The USB
+peer-reference source and behavior selection passed 89 tests, with CLI/MCP
+parity passing 4 tests. Focused Pyright, Ruff, and format checks passed for the
+new owner and adapter. No exact native KiCad lane was run.
+
+USB data-polarity candidates now retain their source netlist and validate their
+serialized evidence against the typed conflict. The source, behavior, and
+architecture selection passed 11 tests; marker and collection architecture
+checks passed 14 tests. Focused Pyright and Ruff passed. No exact native KiCad
+lane was run.
 
 The combined source-projection, rule, architecture, size, marker, and CLI/MCP
 parity selection passed 237 tests against the clean public `KiCAD-Test`
@@ -373,6 +392,28 @@ After adding the I²C peer-source route, the expanded focused selection passed
 generic peer-identity coverage checks and I²C CLI/MCP parity. Pyright reported
 zero errors; Ruff, formatting, Markdown, mdrepo, and both SPI/I²C marker
 selectors passed. No exact native KiCad lane was run.
+
+The next source-projection slice adds CAN and RS-485 peer references, I3C
+one-sided-open pins, same-net two-pin components, unmapped SPI participants,
+and USB-C port coverage. Its focused source, rule, architecture, size, marker,
+and CLI/MCP parity selection passed 227 tests, with one hosted USB-C native
+fixture test skipped because it belongs to the digest-pinned acceptance lane.
+The run used public `KiCAD-Test` revision `ed89536f0dbbcb013145af2994fef41b2250143e`.
+Separate selectors passed 17 CAN/RS-485/I3C interface tests, 12 return-path
+tests, and 16 two-pin component/evidence tests; the SPI/USB-C interface
+selector passed 26 tests with the same one native-fixture skip. Pyright
+reported zero errors; Ruff, formatting, Rumdl on the changed docs, and mdrepo
+passed. No exact native KiCad lane was run.
+
+Adding the source-bound USB peer-reference projector expanded that focused
+selection to 308 passed and one skipped, against the same public template
+revision. The USB peer slice passed 69 interface-selector tests and 68
+return-path-selector tests, including CLI/MCP parity. Adding the USB
+data-polarity source route expanded the full focused selection to 320 passed
+and one skipped; its interface selector passed 12 tests. Pyright reported
+zero errors; Ruff, formatting, Rumdl, and mdrepo passed. The sole skip is the
+USB-C native fixture reserved for digest-pinned acceptance. No exact native
+KiCad lane was run.
 
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify

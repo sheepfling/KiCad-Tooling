@@ -22,7 +22,6 @@ from .component_repeated_signal_pins import (
 )
 from .component_return_pins import unconnected_component_return_pins
 from .component_role_models import ComponentRoleMap
-from .component_roles import component_role_binding_evidence
 from .design_lint_component_bjt_terminals import (
     bjts_with_base_collector_on_same_net,
     bjts_with_base_emitter_on_same_net,
@@ -41,7 +40,10 @@ from .design_lint_component_unconnected_pin_candidate_evidence import (
     UnconnectedComponentPinCandidate,
 )
 from .design_lint_led_candidate_evidence import LedTopologyCandidate
-from .design_lint_rule_types import DesignLintRuleId
+from .design_lint_two_pin_candidate_evidence import (
+    TwoPinComponentFindingEvidence,
+    TwoPinSameNetCandidate,
+)
 from .design_lint_types import Candidate
 from .led_heuristics import (
     leds_directly_between_positive_and_return_nets,
@@ -206,84 +208,56 @@ def scan_component_candidates(
             "thermocouple",
         }:
             continue
-        pin_assignments = tuple(
-            f"{component.reference}.{number} -> {component.net}" for number in component.pin_numbers
-        )
         if component.kind == "diode":
-            rule_id: DesignLintRuleId = "component.two_pin_diode_same_net"
             message = (
                 "Both pins of this supported fitted two-pin diode are assigned to the same "
                 "schematic net, bypassing the device in that netlist. Review the intended "
                 "topology, population state, and footprint pin mapping. This finding does not "
                 "establish that the topology is wrong."
             )
-            kind_evidence = {"component_kind": (component.kind,)}
         elif component.kind == "crystal":
-            rule_id = "component.two_pin_crystal_same_net"
             message = (
                 "Both pins of this supported fitted two-pin crystal are assigned to the same "
                 "schematic net, shorting its two terminals in that netlist. Review whether the "
                 "crystal is intentionally bypassed or a resonator path is missing. This finding "
                 "does not establish that the topology is wrong."
             )
-            kind_evidence = {"component_kind": (component.kind,)}
         elif component.kind in {"fuse", "polyfuse"}:
-            rule_id = "component.two_pin_fuse_same_net"
             message = (
                 "Both pins of this supported fitted two-pin fuse are assigned to the same "
                 "schematic net, bypassing the protection element in that netlist. Review "
                 "whether the fuse is intentionally bypassed or a series protection path is "
                 "missing. This finding does not establish that the topology is wrong."
             )
-            kind_evidence = {"component_kind": (component.kind,)}
         elif component.kind == "ferrite_bead":
-            rule_id = "component.two_pin_ferrite_same_net"
             message = (
                 "Both pins of this supported fitted two-pin ferrite bead are assigned to the same "
                 "schematic net, bypassing the filter element in that netlist. Review whether the "
                 "bead is intentionally bypassed or a series filter path is missing. This finding "
                 "does not establish that the topology is wrong."
             )
-            kind_evidence = {"component_kind": (component.kind,)}
         elif component.kind == "switch":
-            rule_id = "component.two_pin_switch_same_net"
             message = (
                 "Both pins of this supported fitted two-pin SPST switch are assigned to the same "
                 "schematic net, so the switch cannot separate those nets in this netlist. Review "
                 "whether the bypass is intentional. This finding does not establish that the "
                 "topology is wrong."
             )
-            kind_evidence = {"component_kind": (component.kind,)}
         else:
-            rule_id = "component.two_pin_passive_same_net"
             message = (
                 "Both pins of this supported fitted two-pin passive are assigned to the "
                 "same schematic net, so the part is bypassed by that net assignment. "
                 "Review the intended topology and whether the same-net assignment is "
                 "deliberate. This finding does not establish that the topology is wrong."
             )
-            kind_evidence = {"passive_kind": (component.kind,)}
-        role_evidence = (
-            {}
-            if component.role_binding is None
-            else component_role_binding_evidence(component.role_binding)
-        )
         found.append(
-            Candidate(
-                rule_id=rule_id,
+            TwoPinSameNetCandidate.from_source_evidence(
+                TwoPinComponentFindingEvidence(component),
                 subject=(
                     f"{component.reference} ({component.value} {component.kind}) "
                     "has both pins on one net"
                 ),
                 message=message,
-                evidence={
-                    "symbol": (component.symbol,),
-                    "value": (component.value,),
-                    **kind_evidence,
-                    "net": (component.net,),
-                    "pin_assignments": pin_assignments,
-                    **role_evidence,
-                },
             )
         )
 

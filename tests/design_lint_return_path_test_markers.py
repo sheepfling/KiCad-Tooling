@@ -5,6 +5,8 @@ from __future__ import annotations
 RETURN_PATH_LINT_TEST_MODULES = frozenset(
     {
         "tests/test_can_peer_reference_review.py",
+        "tests/test_can_peer_reference_candidate_evidence.py",
+        "tests/test_design_lint_architecture_can_peer_reference_candidate_evidence.py",
         "tests/test_ci_hosted_connector_returns.py",
         "tests/test_ci_hosted_digital_peer_serial.py",
         "tests/test_ci_hosted_pcb_fixture_schedule.py",
@@ -81,6 +83,8 @@ RETURN_PATH_LINT_TEST_MODULES = frozenset(
         "tests/test_return_net_lint.py",
         "tests/test_rs485_peer_reference_native_fixture_lane.py",
         "tests/test_rs485_peer_reference_review.py",
+        "tests/test_rs485_peer_candidate_evidence.py",
+        "tests/test_design_lint_architecture_rs485_peer_candidate_evidence.py",
         "tests/test_serial_peer_reference_boundaries.py",
         "tests/test_serial_peer_reference_coverage.py",
         "tests/test_serial_peer_reference_maps.py",
@@ -99,6 +103,8 @@ RETURN_PATH_LINT_TEST_MODULES = frozenset(
         "tests/test_usb_peer_reference_maps.py",
         "tests/test_usb_peer_reference_paths.py",
         "tests/test_usb_peer_reference_superspeed.py",
+        "tests/test_usb_peer_candidate_evidence.py",
+        "tests/test_design_lint_architecture_usb_peer_candidate_evidence.py",
         "tests/test_usb_superspeed_peer_reference_native_fixture_lane.py",
     }
 )
