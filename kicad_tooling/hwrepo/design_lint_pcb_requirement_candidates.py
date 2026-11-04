@@ -2,7 +2,15 @@
 
 from __future__ import annotations
 
+from .design_lint_pcb_differential_pair_coverage_evidence import (
+    PcbDifferentialPairCoverageCandidate,
+    PcbDifferentialPairCoverageFindingEvidence,
+)
 from .design_lint_pcb_inputs import PcbCandidateInputs
+from .design_lint_pcb_signal_path_coverage_evidence import (
+    PcbSignalPathCoverageCandidate,
+    PcbSignalPathCoverageFindingEvidence,
+)
 from .design_lint_types import Candidate
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
@@ -123,29 +131,18 @@ def pcb_requirement_coverage_candidates(
         for entry in pcb_differential_pair_coverage.entries:
             if entry.status != "INCOMPLETE":
                 continue
-            constraint_evidence = tuple(
-                f"{item.constraint}: {item.status}"
-                + ("" if item.issue is None else f" ({item.issue})")
-                for item in entry.constraints
-                if item.status != "COVERED"
-            )
             found.append(
-                Candidate(
-                    rule_id="pcb.differential_pair_rule_coverage",
+                PcbDifferentialPairCoverageCandidate.from_source_evidence(
+                    PcbDifferentialPairCoverageFindingEvidence(
+                        report=pcb_differential_pair_coverage,
+                        entry=entry,
+                    ),
                     subject=f"{entry.id}: {entry.positive_net} / {entry.negative_net}",
                     message=(
                         "This project-authored differential-pair requirement is missing an exact, "
                         "active native DRC rule or supported pair identity. Review the pair map, "
                         "KiCad rule file, and ignored-check settings."
                     ),
-                    evidence={
-                        "positive_net": (entry.positive_net,),
-                        "negative_net": (entry.negative_net,),
-                        "pair_selector": (entry.pair_selector,),
-                        "basis": (entry.basis,),
-                        "constraints": constraint_evidence,
-                        "issues": entry.issues,
-                    },
                 )
             )
     if pcb_signal_path_coverage is not None:
@@ -157,27 +154,18 @@ def pcb_requirement_coverage_candidates(
                 if entry.kind == "path"
                 else f"{entry.id}: {entry.from_pad_pattern} to {entry.to_pad_pattern} bundle"
             )
-            constraint_evidence = tuple(
-                f"{item.constraint}: {item.status}"
-                + ("" if item.issue is None else f" ({item.issue})")
-                for item in entry.constraints
-                if item.status != "COVERED"
-            )
             found.append(
-                Candidate(
-                    rule_id="pcb.signal_path_rule_coverage",
+                PcbSignalPathCoverageCandidate.from_source_evidence(
+                    PcbSignalPathCoverageFindingEvidence(
+                        report=pcb_signal_path_coverage,
+                        entry=entry,
+                    ),
                     subject=subject,
                     message=(
                         "This mapped PCB signal-path requirement lacks exact active native DRC "
                         "coverage or its mapped pads do not match source-bound board evidence. "
                         "Review the path map, native rule, and endpoint connectivity."
                     ),
-                    evidence={
-                        "basis": (entry.basis,),
-                        "constraints": constraint_evidence,
-                        "issues": entry.issues,
-                        "path_ids": entry.path_ids,
-                    },
                 )
             )
     if pcb_keepout_coverage is not None:

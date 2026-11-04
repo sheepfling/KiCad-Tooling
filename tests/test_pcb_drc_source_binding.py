@@ -46,7 +46,7 @@ def test_pair_coverage_requires_current_sources(complete: bool, change: str) -> 
     coverage = PcbDifferentialPairRuleCoverageReport.model_validate_json(coverage.model_dump_json())
     result = evaluate(
         "synthetic-pair",
-        coach(observed()).model_copy(update={"source_hashes": hashes}),
+        coach(observed(), project_id="synthetic-pair").model_copy(update={"source_hashes": hashes}),
         DesignLintPolicy(pcb_differential_pair_rule_map=pair_map()),
         pcb_differential_pair_coverage=coverage,
     )
@@ -83,7 +83,9 @@ def test_disabled_pair_rule_does_not_require_current_source_evidence() -> None:
 def test_configured_pair_map_without_a_scan_is_blocked() -> None:
     result = evaluate(
         "synthetic-pair",
-        coach(observed()).model_copy(update={"source_hashes": pair_source_hashes()}),
+        coach(observed(), project_id="synthetic-pair").model_copy(
+            update={"source_hashes": pair_source_hashes()}
+        ),
         DesignLintPolicy(pcb_differential_pair_rule_map=pair_map()),
     )
 

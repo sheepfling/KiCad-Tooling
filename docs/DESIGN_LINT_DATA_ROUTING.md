@@ -454,6 +454,22 @@ path/hash match the current authored map and coach source inventory. A scanned
 report without its map is blocked; explicit `off` overrides disable the route
 even when no map is present.
 
+An incomplete differential-pair requirement finding retains both its typed
+entry and the complete source-bound DRC coverage report in
+`PcbDifferentialPairCoverageFindingEvidence`. Its constructor requires an
+`INCOMPLETE` entry contained in an `INCOMPLETE` report. The PCB-owned projector
+preserves the established positive/negative nets, selector, basis, uncovered
+constraints, and issues; the candidate's report fields and fingerprint remain
+unchanged. This retains the map and native source identities behind the
+finding without moving freshness checks out of prepared evaluation.
+
+An incomplete signal-path or skew-bundle finding follows the same source route
+through `PcbSignalPathCoverageFindingEvidence`, retaining the exact entry and
+complete source-bound report. The typed owner validates report membership and
+projects the existing basis, uncovered constraints, issues, and bundle path
+IDs. Path and bundle subjects remain selected by the translator; finding order,
+report evidence, and fingerprints stay stable.
+
 ## Schematic geometry source route
 
 The geometry scanner receives one schematic's bytes, repository path, exact

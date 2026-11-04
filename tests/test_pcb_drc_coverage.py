@@ -8,6 +8,14 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.hwrepo.design_lint_pcb_differential_pair_coverage_evidence import (
+    PcbDifferentialPairCoverageCandidate,
+    project_pcb_differential_pair_coverage_evidence,
+)
+from kicad_tooling.hwrepo.design_lint_pcb_requirement_candidates import (
+    pcb_requirement_coverage_candidates,
+)
+from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.models import (
     DesignLintIgnore,
     DesignLintPolicy,
@@ -302,7 +310,25 @@ def test_plus_minus_pair_names_and_mil_bounds_are_supported() -> None:
 
 def test_incomplete_coverage_emits_a_configurable_review_finding() -> None:
     from kicad_tooling.hwrepo.design_lint import evaluate
+    from kicad_tooling.hwrepo.design_lint_candidate_aggregation import fingerprint
     from tests.design_lint_fixtures import coach, observed
+
+    coverage = incomplete_report()
+    (candidate,) = pcb_requirement_coverage_candidates(pcb_differential_pair_coverage=coverage)
+    assert isinstance(candidate, PcbDifferentialPairCoverageCandidate)
+    assert candidate.source_evidence.report == coverage
+    assert candidate.source_evidence.entry == coverage.entries[0]
+    assert (
+        candidate.evidence
+        == project_pcb_differential_pair_coverage_evidence(candidate.source_evidence).evidence
+    )
+    public_candidate = Candidate(
+        rule_id=candidate.rule_id,
+        subject=candidate.subject,
+        message=candidate.message,
+        evidence=candidate.evidence,
+    )
+    assert fingerprint(candidate) == fingerprint(public_candidate)
 
     source_coach = coach(observed(), project_id="synthetic-pair").model_copy(
         update={"source_hashes": pair_source_hashes()}
@@ -312,7 +338,7 @@ def test_incomplete_coverage_emits_a_configurable_review_finding() -> None:
         "synthetic-pair",
         source_coach,
         DesignLintPolicy(pcb_differential_pair_rule_map=pair_map()),
-        pcb_differential_pair_coverage=incomplete_report(),
+        pcb_differential_pair_coverage=coverage,
     )
     finding = next(
         item for item in report.findings if item.rule_id == "pcb.differential_pair_rule_coverage"
@@ -333,7 +359,7 @@ def test_incomplete_coverage_emits_a_configurable_review_finding() -> None:
                 ),
             ),
         ),
-        pcb_differential_pair_coverage=incomplete_report(),
+        pcb_differential_pair_coverage=coverage,
     )
     assert blocked.status == "FAIL"
 
@@ -350,7 +376,7 @@ def test_incomplete_coverage_emits_a_configurable_review_finding() -> None:
                 ),
             ),
         ),
-        pcb_differential_pair_coverage=incomplete_report(),
+        pcb_differential_pair_coverage=coverage,
     )
     assert disabled.status == report.status
     assert disabled.pcb_differential_pair_rules.status == "DISABLED"

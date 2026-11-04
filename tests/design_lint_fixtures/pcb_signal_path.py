@@ -238,7 +238,7 @@ def design_lint_report(*, fault: bool):
         observed=observed_netlist,
     )
     return evaluate(
-        "synthetic-path-coverage-fault" if fault else "synthetic-path-coverage-control",
+        "synthetic-paths",
         coach,
         DesignLintPolicy(pcb_signal_path_rule_map=requirements),
         pcb_signal_path_coverage=coverage,

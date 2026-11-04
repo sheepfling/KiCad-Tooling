@@ -218,6 +218,21 @@ enclosing report and coverage context. The combined pad-net, board-only,
 required-reference, catalog, inventory, and parity slice passed 55 tests with
 8 tests deselected by the tag's focused marker expression; Ruff, format, and
 project-aware Pyright passed.
+Differential-pair DRC findings now retain the incomplete entry and its complete
+source-bound report in a PCB-owned typed evidence record. Its projector keeps
+the existing evidence fields and fingerprint, while evaluation remains the
+owner of map and source freshness checks. The source-binding fixtures now
+identify the same synthetic project as the evaluation request, so they exercise
+current source checks rather than the cross-project rejection path.
+Signal-path and skew-bundle DRC findings now also retain their incomplete
+entry and full source-bound report behind a PCB-owned projector. Path and
+bundle messages, finding order, evidence fields, and fingerprints are
+preserved. Corrected fixture project IDs exercise the same-project source-
+freshness path rather than cross-project rejection. The combined DRC and
+signal-path selection passed 98 tests, with 20 deselected by the tag's
+`design_lint and pcb_lint` expression. Parity used the public template at
+`ed89536f0dbbcb013145af2994fef41b2250143e`; Ruff, format, and project-aware
+Pyright passed.
 
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify

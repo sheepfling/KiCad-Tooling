@@ -28,7 +28,9 @@ def test_complete_signal_path_coverage_cannot_cross_source_inventories() -> None
     changed_sources["hardware/synthetic-paths.kicad_pcb"] = "1" * 64
     result = evaluate(
         "synthetic-path",
-        coach(observed()).model_copy(update={"source_hashes": changed_sources}),
+        coach(observed(), project_id="synthetic-path").model_copy(
+            update={"source_hashes": changed_sources}
+        ),
         DesignLintPolicy(pcb_signal_path_rule_map=requirements),
         pcb_signal_path_coverage=original.pcb_signal_path_rules,
     )
@@ -59,7 +61,7 @@ def test_signal_path_requires_current_sources(change: str) -> None:
     coverage = PcbSignalPathRuleCoverageReport.model_validate_json(coverage.model_dump_json())
     result = evaluate(
         "synthetic-path",
-        coach(observed()).model_copy(update={"source_hashes": hashes}),
+        coach(observed(), project_id="synthetic-path").model_copy(update={"source_hashes": hashes}),
         DesignLintPolicy(pcb_signal_path_rule_map=path_map()),
         pcb_signal_path_coverage=coverage,
     )
@@ -87,7 +89,9 @@ def test_signal_path_rejects_unbound_coverage(state: str) -> None:
         policy = DesignLintPolicy()
     result = evaluate(
         "synthetic-path",
-        coach(observed()).model_copy(update={"source_hashes": signal_source_hashes()}),
+        coach(observed(), project_id="synthetic-path").model_copy(
+            update={"source_hashes": signal_source_hashes()}
+        ),
         policy,
         pcb_signal_path_coverage=coverage,
     )
