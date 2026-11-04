@@ -464,9 +464,22 @@ predicate solely for the architecture migration.
 The evaluation path now validates the complete candidate set after theme,
 native, and rule-specific additions, before applying project modes or ignores.
 This keeps new extension paths under the same active-catalog check. The next
-internal API step is to pass prepared, source-bound theme records directly
-without widening the public compatibility signature or introducing a global
-optional context.
+internal API seam now accepts one complete `DesignLintEvaluationRequest`.
+Project inspection passes that request to `evaluate_request` instead of
+unpacking it into the 33-parameter compatibility function. The old
+`evaluate(...)` route builds the same request and delegates; parity covers
+source-bound, cross-project-blocked, and unbound synthetic evidence. Keep the
+public signature compatible while remaining internal callers move to the
+typed request. A source-derived architecture guard now confines imports of
+legacy `evaluate` to the public `design_lint.py` facade.
+The source-freshness, evaluator-parity, project-inspection, and MCP report
+regressions passed (34 tests), followed by 30 evaluator-signature, capability
+coverage, peer-coverage, and catalog architecture tests. Ruff, focused Pyright,
+Markdown checks, and `git diff --check` passed. The integration run used the
+documented public template checkout and excluded native KiCad tests.
+The capability dependency gate also passed 20 tests; a final evaluator and
+inspection-architecture rerun passed 15 tests after adding the adapter-import
+guard.
 
 The architecture regression suite now caps the established public candidate
 and evaluator compatibility signatures at 49 and 33 parameters. New evidence

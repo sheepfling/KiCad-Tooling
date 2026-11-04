@@ -100,7 +100,10 @@ tests, and adapter exceptions.
 
 These entries describe current routes and their typed request boundaries. The
 legacy design-lint `inspect_summary` function maps its arguments into the typed
-inspection request; project inspection owns evaluation and source freshness.
+inspection request; project inspection owns source freshness and constructs a
+`DesignLintEvaluationRequest`, while `evaluate_request` owns policy and finding
+evaluation. The public `evaluate(...)` function remains a compatibility
+adapter over that typed route.
 The electrical `analyze` function remains a compatibility adapter; application
 surfaces use `ElectricalAnalysisRequest`. Authored component contracts and
 observed netlists are owned by `netlist_contract_models.py`; `models.py` and

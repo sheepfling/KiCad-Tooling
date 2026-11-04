@@ -10,6 +10,7 @@ from kicad_tooling.hwrepo.contract_coach_models import ContractCoachReport
 from kicad_tooling.hwrepo.design_lint_component_coverage import ComponentMapCoverageInputs
 from kicad_tooling.hwrepo.design_lint_evaluation_preparation import prepare_evaluation
 from kicad_tooling.hwrepo.design_lint_evaluation_types import DesignLintEvaluationRequest
+from kicad_tooling.hwrepo.design_lint_evaluator import evaluate, evaluate_request
 from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
 from kicad_tooling.hwrepo.netlist_contract_models import NetlistContract
 
@@ -99,3 +100,29 @@ def test_unbound_synthetic_coach_still_reaches_lower_level_preparation() -> None
 
     assert result.report is None
     assert result.prepared is not None
+
+
+@pytest.mark.parametrize(
+    ("project_id", "coach_project_id", "source_hashes"),
+    [
+        ("selected-project", "selected-project", {"kicad/main.kicad_sch": "b" * 64}),
+        ("selected-project", "other-project", {"kicad/main.kicad_sch": "b" * 64}),
+        ("selected-project", "synthetic-project", {}),
+    ],
+    ids=["source-bound", "cross-project-blocked", "unbound-synthetic"],
+)
+def test_typed_evaluator_and_legacy_adapter_return_the_same_report(
+    project_id: str,
+    coach_project_id: str,
+    source_hashes: Mapping[str, str],
+) -> None:
+    request = _request(
+        project_id=project_id,
+        coach_project_id=coach_project_id,
+        source_hashes=source_hashes,
+    )
+
+    typed_report = evaluate_request(request)
+    adapter_report = evaluate(project_id, request.coach, request.policy)
+
+    assert typed_report.model_dump(mode="json") == adapter_report.model_dump(mode="json")

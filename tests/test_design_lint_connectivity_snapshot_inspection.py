@@ -32,7 +32,7 @@ def test_ready_inspection_without_netlist_digest_blocks_snapshot_capture(
     def unexpected_evaluation(*_args: object, **_kwargs: object) -> DesignLintReport:
         raise AssertionError("A missing netlist digest must block before lint evaluation")
 
-    monkeypatch.setattr(design_lint_project_inspection, "evaluate", unexpected_evaluation)
+    monkeypatch.setattr(design_lint_project_inspection, "evaluate_request", unexpected_evaluation)
     report = design_lint_project_inspection.inspect_design_lint_summary(
         coach_workspace.root,
         coach_workspace.project_id,

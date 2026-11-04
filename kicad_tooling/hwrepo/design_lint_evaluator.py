@@ -134,6 +134,12 @@ def evaluate(
         pcb_dru_rule_candidates=pcb_dru_rule_candidates,
         pcb_native_drc_candidates=pcb_native_drc_candidates,
     )
+
+    return evaluate_request(request)
+
+
+def evaluate_request(request: DesignLintEvaluationRequest) -> DesignLintReport:
+    """Evaluate one prepared request without unpacking it into a legacy API."""
     result = prepare_evaluation(request)
     if result.report is not None:
         return result.report

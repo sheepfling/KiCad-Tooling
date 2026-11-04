@@ -8,14 +8,19 @@ from typing import Literal
 
 from .contract_coach import inspect_summary as inspect_contract_summary
 from .contracts import read_model, repo_path
+from .design_lint_component_coverage import ComponentMapCoverageInputs
 from .design_lint_connectivity_snapshot import capture_connectivity_snapshot
 from .design_lint_connector_coverage import (
     connector_coverage_from_project,
     external_protection_coverage_from_project,
 )
-from .design_lint_evaluator import evaluate
+from .design_lint_evaluation_types import DesignLintEvaluationRequest
+from .design_lint_evaluator import evaluate_request
 from .design_lint_inspection_models import DesignLintInspectionRequest
+from .design_lint_pcb_coverage_policy import PcbMappedCoverageInputs
+from .design_lint_pcb_geometry_coverage_policy import PcbInputCoverageInputs
 from .design_lint_pcb_geometry_scan import scan_pcb_geometry
+from .design_lint_peer_evaluation import PeerDesignLintScanInputs
 from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_project_contexts import (
     control_input_bias_coverage_from_project,
@@ -102,7 +107,14 @@ def inspect_design_lint_request(
         config = load_config(root, project.config)
         policy = config.design_lint or DesignLintPolicy()
         if coach.status != "READY_FOR_REVIEW" or coach.observed is None:
-            report = evaluate(project_id, coach, policy)
+            report = evaluate_request(
+                DesignLintEvaluationRequest(
+                    project_id=project_id,
+                    coach=coach,
+                    policy=policy,
+                    component_map_coverage=ComponentMapCoverageInputs(),
+                )
+            )
             if digest(manifest_path) != manifest_hash or digest(policy_path) != policy_hash:
                 raise ValueError("Project manifest or lint policy changed during inspection")
             return report.model_copy(
@@ -237,35 +249,45 @@ def inspect_design_lint_request(
             coverage,
             coach.netlist_sha256,
         )
-        report = evaluate(
-            project_id,
-            coach,
-            policy,
-            connector_coverage=coverage,
-            schematic_geometry=geometry_scan,
-            geometry_coverage=geometry_coverage,
-            external_protection_coverage=protection_coverage,
-            pcb_decoupling_coverage=pcb_decoupling_coverage,
-            pcb_component_inventory_coverage=pcb_component_inventory_coverage,
-            pcb_protection_path_coverage=pcb_protection_path_coverage,
-            pcb_track_width_coverage=pcb_track_width_coverage,
-            pcb_reference_plane_coverage=pcb_reference_plane_coverage,
-            pcb_switching_loop_coverage=pcb_switching_loop_coverage,
-            pcb_differential_pair_coverage=pair_rule_coverage,
-            pcb_signal_path_coverage=pcb_signal_path_coverage,
-            pcb_keepout_coverage=pcb_keepout_coverage,
-            pcb_rf_module_antenna_coverage=pcb_rf_module_antenna_coverage,
-            pcb_touch_pad_clearance_coverage=pcb_touch_pad_clearance_coverage,
-            stm32_pin_map_coverage=stm32_pin_map_coverage,
-            spi_roster=spi_roster,
-            serial_peer_roster=serial_peer_roster,
-            rs485_peer_reference_context=rs485_peer_context,
-            usb_c_port_roster=usb_c_port_roster,
-            control_input_bias_coverage=control_bias_coverage,
-            i2c_pullup_heuristic_coverage=i2c_pullup_coverage,
-            digital_peer_voltage_context=digital_peer_voltage_context,
-            pcb_dru_rule_candidates=pcb_dru_rule_candidates,
-            pcb_native_drc_candidates=pcb_native_drc_candidates,
+        report = evaluate_request(
+            DesignLintEvaluationRequest(
+                project_id=project_id,
+                coach=coach,
+                policy=policy,
+                component_map_coverage=ComponentMapCoverageInputs(
+                    connector_coverage=coverage,
+                ),
+                schematic_geometry=geometry_scan,
+                geometry_coverage=geometry_coverage,
+                external_protection_coverage=protection_coverage,
+                pcb_decoupling_coverage=pcb_decoupling_coverage,
+                pcb_component_inventory_coverage=pcb_component_inventory_coverage,
+                pcb_track_width_coverage=pcb_track_width_coverage,
+                stm32_pin_map_coverage=stm32_pin_map_coverage,
+                spi_roster=spi_roster,
+                usb_c_port_roster=usb_c_port_roster,
+                control_input_bias_coverage=control_bias_coverage,
+                i2c_pullup_heuristic_coverage=i2c_pullup_coverage,
+                peer_scan_inputs=PeerDesignLintScanInputs(
+                    digital_peer_voltage_context=digital_peer_voltage_context,
+                    serial_peer_roster=serial_peer_roster,
+                    rs485_peer_reference_context=rs485_peer_context,
+                ),
+                pcb_input_coverage=PcbInputCoverageInputs(
+                    signal_path=pcb_signal_path_coverage,
+                    keepout=pcb_keepout_coverage,
+                    rf_antenna=pcb_rf_module_antenna_coverage,
+                    touch_pad_clearance=pcb_touch_pad_clearance_coverage,
+                ),
+                pcb_mapped_coverage=PcbMappedCoverageInputs(
+                    differential_pair=pair_rule_coverage,
+                    switching_loop=pcb_switching_loop_coverage,
+                    reference_plane=pcb_reference_plane_coverage,
+                    protection_path=pcb_protection_path_coverage,
+                ),
+                pcb_dru_rule_candidates=pcb_dru_rule_candidates,
+                pcb_native_drc_candidates=pcb_native_drc_candidates,
+            )
         )
         connectivity_snapshot = capture_connectivity_snapshot(
             project_id=project_id,

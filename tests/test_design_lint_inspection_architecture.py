@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from kicad_tooling.hwrepo import design_lint
 from kicad_tooling.hwrepo.design_lint_inspection_models import DesignLintInspectionRequest
 
-pytestmark = pytest.mark.architecture
+pytestmark = [pytest.mark.architecture, pytest.mark.design_lint]
 
 REPOSITORY_ROOT = Path(__file__).parents[1]
 PACKAGE = REPOSITORY_ROOT / "kicad_tooling"
@@ -38,7 +38,7 @@ def test_inspection_request_has_a_bounded_owner_and_explicit_fields() -> None:
         DesignLintInspectionRequest(
             project_id="controller",
             native_summary=Path("summary.json"),
-            evaluator="custom",
+            evaluator="custom",  # type: ignore[call-arg]
         )
 
 
@@ -90,7 +90,68 @@ def test_inspection_service_owns_evaluation_without_surface_dependencies() -> No
     }
 
     assert "design_lint_evaluator" in imported
+    assert "design_lint_evaluation_types" in imported
     assert "design_lint_inspection_models" in imported
+    assert any(
+        isinstance(node, ast.ImportFrom)
+        and node.module == "design_lint_evaluator"
+        and "evaluate_request" in {alias.name for alias in node.names}
+        for node in ast.walk(tree)
+    )
+    assert not any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "evaluate"
+        for node in ast.walk(tree)
+    )
+    assert (
+        sum(
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "evaluate_request"
+            for node in ast.walk(tree)
+        )
+        == 2
+    )
     assert not any(
         module.endswith((".cli", ".mcp_server", ".ci")) or ".mcp_" in module for module in imported
     )
+
+
+def test_project_inspection_passes_external_protection_into_typed_evaluation() -> None:
+    path = PACKAGE / "hwrepo/design_lint_project_inspection.py"
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
+    request = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "DesignLintEvaluationRequest"
+        and any(keyword.arg == "pcb_input_coverage" for keyword in node.keywords)
+    )
+    external_protection = next(
+        keyword for keyword in request.keywords if keyword.arg == "external_protection_coverage"
+    )
+
+    assert isinstance(external_protection.value, ast.Name)
+    assert external_protection.value.id == "protection_coverage"
+
+
+def test_public_evaluator_adapter_is_not_imported_by_internal_services() -> None:
+    facade = PACKAGE / "hwrepo/design_lint.py"
+    legacy_importers: list[str] = []
+
+    for path in (PACKAGE / "hwrepo").rglob("*.py"):
+        if path == facade:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
+        if any(
+            isinstance(node, ast.ImportFrom)
+            and node.module is not None
+            and node.module.endswith("design_lint_evaluator")
+            and "evaluate" in {alias.name for alias in node.names}
+            for node in ast.walk(tree)
+        ):
+            legacy_importers.append(path.relative_to(PACKAGE).as_posix())
+
+    assert legacy_importers == []

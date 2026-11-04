@@ -144,6 +144,19 @@ peer, mapped-coverage, and PCB groups. Continue moving direct callers to the
 smallest stable theme records their predicates need; do not replace the group
 boundary with a global context of optional scans.
 
+## Evaluation request route
+
+Source-bound project inspection now constructs one `DesignLintEvaluationRequest`
+and calls `design_lint_evaluator.evaluate_request`. The public
+`evaluate(...)` compatibility function packs its established arguments into
+the same request and delegates to that operation. Coverage that belongs to a
+shared family travels in `ComponentMapCoverageInputs`, `PeerDesignLintScanInputs`,
+`PcbInputCoverageInputs`, or `PcbMappedCoverageInputs`; candidate preparation,
+catalog validation, disposition, and report assembly then use the same path.
+This migration leaves the report contract and the legacy callable signature
+unchanged. The inspection architecture test keeps the old adapter confined to
+the public `design_lint.py` facade so new internal callers use the typed route.
+
 The scanner forwards the bus record to its owner, adding only component-peer
 findings computed during that scan. It does not reconstruct the record from a
 fixed list of fields, so newly added bus evidence is not silently lost between
