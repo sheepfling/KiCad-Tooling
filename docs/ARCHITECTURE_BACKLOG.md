@@ -1350,9 +1350,9 @@ formatters have one owner. Existing rule IDs, messages, report evidence, and
 fingerprints remain stable.
 
 A repository-wide AST inventory of direct `Candidate(evidence=...)` calls
-finds 190 constructions across 147 Python modules: 118 in production code
-across 101 modules and 72 in tests across 46 modules. The evidence argument is
-a dictionary literal in 98 production calls and 24 test calls; other calls
+finds 184 constructions across 146 Python modules: 112 in production code
+across 100 modules and 72 in tests across 46 modules. The evidence argument is
+a dictionary literal in 92 production calls and 24 test calls; other calls
 reuse a named, attributed, or computed mapping. This is a triage inventory,
 not a claim that every construction is an opaque source route: test-only
 candidate builders and already-owned report projections need separate
@@ -1360,12 +1360,16 @@ classification. The mapped connector-interface route now carries all nine
 findings through a typed source record and a projector that verifies the
 current netlist, coverage, mapped pin, role, connectivity, and any rail-label
 clue. Its two open-contact rules retain their pre-existing coverage semantics;
-the other seven still require complete interface coverage. The largest
-remaining production concentrations are `pcb_drc_global_severity_review.py`
-(6), `pcb_dru_rule_review.py`, `connector_peer_power_input.py`, and
-`connector_peer_power_output.py` (3 each). Continue the route audit with the
-global DRC severity review and trace its source records and rule families
-before choosing a typed projection boundary.
+the other seven still require complete interface coverage. The global PCB DRC
+severity route now carries a source-bound settings record and typed
+check/category findings, retaining its exact path, digest, project kind, KiCad
+version, and configured severity. Its parser still verifies source bytes both
+before and after reading, and its established KiCad version gates and report
+fields remain in force. The largest remaining production concentrations tie
+at three each in `pcb_dru_rule_review.py`, `connector_peer_power_input.py`,
+and `connector_peer_power_output.py`. Inspect their source ownership and rule
+families before choosing the next route; call counts alone do not determine
+whether their evidence should share an owner.
 
 The schematic geometry tranche passed 75 synthetic and architecture tests and
 4 CLI/MCP parity tests against the separate public `KiCAD-Test` checkout.

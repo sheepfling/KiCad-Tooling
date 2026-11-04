@@ -6,10 +6,18 @@ from collections.abc import Callable
 from pathlib import Path
 
 from .contracts import repo_path
-from .design_lint_rule_types import DesignLintRuleId
+from .design_lint_pcb_drc_global_severity_candidate_evidence import (
+    WARNING_DEFAULT_DRC_SUPPORTED_VERSIONS,
+    PcbDrcSeverityCandidate,
+    PcbDrcSeverityCategory,
+    PcbDrcSeverityFindingEvidence,
+    PcbDrcSeverityRuleId,
+    SourceBoundPcbDrcSettings,
+)
 from .design_lint_types import Candidate
 from .evidence import digest
 from .pcb_drc_project_settings import (
+    PcbDrcCheckSeverity,
     configured_core_drc_check_severities,
     configured_dfm_drc_check_severities,
     configured_electrical_drc_check_severities,
@@ -23,10 +31,6 @@ from .project_models import (
 )
 from .source_state_models import SourceHashInventory
 
-WARNING_DEFAULT_DRC_SUPPORTED_VERSIONS = frozenset(
-    {"10.0.0", "10.0.3", "10.0.4", "10.0.5", "10.0.6", "10.0.7"}
-)
-
 
 def _source_bound_drc_settings(
     root: Path,
@@ -34,10 +38,10 @@ def _source_bound_drc_settings(
     source_hashes: SourceHashInventory,
     *,
     supported_version_prefix: str = "10.",
-    parse_severities: Callable[[str], tuple[tuple[str, str], ...]] = (
+    parse_severities: Callable[[str], tuple[PcbDrcCheckSeverity, ...]] = (
         configured_core_drc_check_severities
     ),
-) -> tuple[str, str, tuple[tuple[str, str], ...]] | None:
+) -> SourceBoundPcbDrcSettings | None:
     if config.kind not in {ProjectKind.PCB, ProjectKind.PCB_ONLY}:
         return None
     if not config.kicad_version.startswith(supported_version_prefix):
@@ -67,7 +71,35 @@ def _source_bound_drc_settings(
         ) from exc
     if digest(settings_file) != expected_hash:
         raise ValueError("KiCad project settings changed during design-lint inspection")
-    return relative, expected_hash, severities
+    return SourceBoundPcbDrcSettings(
+        project_path=relative,
+        source_sha256=expected_hash,
+        project_kind=config.kind,
+        kicad_version=config.kicad_version,
+        configured_severities=severities,
+    )
+
+
+def _severity_candidate(
+    settings: SourceBoundPcbDrcSettings,
+    configured_check: PcbDrcCheckSeverity,
+    *,
+    category: PcbDrcSeverityCategory,
+    rule_id: PcbDrcSeverityRuleId,
+    subject: str,
+    message: str,
+) -> PcbDrcSeverityCandidate:
+    source = PcbDrcSeverityFindingEvidence(
+        settings=settings,
+        configured_check=configured_check,
+        category=category,
+        rule_id=rule_id,
+    )
+    return PcbDrcSeverityCandidate.from_source_evidence(
+        source,
+        subject=subject,
+        message=message,
+    )
 
 
 def ignored_core_native_drc_check_candidates(
@@ -79,26 +111,23 @@ def ignored_core_native_drc_check_candidates(
     settings = _source_bound_drc_settings(root, config, source_hashes)
     if settings is None:
         return ()
-    relative, expected_hash, severities = settings
 
     return tuple(
-        Candidate(
+        _severity_candidate(
+            settings,
+            check,
+            category="core",
             rule_id="pcb.core_drc_check_ignored",
-            subject=f"{relative}#board/design_settings/rule_severities/{check_id}",
+            subject=(
+                f"{settings.project_path}#board/design_settings/rule_severities/{check.check_id}"
+            ),
             message=(
-                f"Core native DRC check {check_id!r} is configured as Ignore; "
+                f"Core native DRC check {check.check_id!r} is configured as Ignore; "
                 "confirm that suppressing this check is intentional."
             ),
-            evidence={
-                "source_path": (relative,),
-                "source_sha256": (expected_hash,),
-                "kicad_version": (config.kicad_version,),
-                "check_id": (check_id,),
-                "configured_severity": ("ignore",),
-            },
         )
-        for check_id, severity in severities
-        if severity == "ignore"
+        for check in settings.configured_severities
+        if check.configured_severity == "ignore"
     )
 
 
@@ -117,25 +146,23 @@ def ignored_dfm_native_drc_check_candidates(
     )
     if settings is None:
         return ()
-    relative, expected_hash, severities = settings
     return tuple(
-        Candidate(
+        _severity_candidate(
+            settings,
+            check,
+            category="dfm",
             rule_id="pcb.dfm_drc_check_ignored",
-            subject=f"{relative}#board/design_settings/rule_severities/{check_id}",
+            subject=(
+                f"{settings.project_path}#board/design_settings/rule_severities/{check.check_id}"
+            ),
             message=(
-                f"Documented Error-default DFM DRC check {check_id!r} is configured as Ignore; "
+                f"Documented Error-default DFM DRC check {check.check_id!r} is configured "
+                "as Ignore; "
                 "confirm that suppressing this check is intentional."
             ),
-            evidence={
-                "source_path": (relative,),
-                "source_sha256": (expected_hash,),
-                "kicad_version": (config.kicad_version,),
-                "check_id": (check_id,),
-                "configured_severity": (severity,),
-            },
         )
-        for check_id, severity in severities
-        if severity == "ignore"
+        for check in settings.configured_severities
+        if check.configured_severity == "ignore"
     )
 
 
@@ -148,25 +175,22 @@ def warning_core_native_drc_check_candidates(
     settings = _source_bound_drc_settings(root, config, source_hashes)
     if settings is None:
         return ()
-    relative, expected_hash, severities = settings
     return tuple(
-        Candidate(
+        _severity_candidate(
+            settings,
+            check,
+            category="core",
             rule_id="pcb.core_drc_check_warning",
-            subject=f"{relative}#board/design_settings/rule_severities/{check_id}",
+            subject=(
+                f"{settings.project_path}#board/design_settings/rule_severities/{check.check_id}"
+            ),
             message=(
-                f"Error-default core DRC check {check_id!r} is configured as Warning; "
+                f"Error-default core DRC check {check.check_id!r} is configured as Warning; "
                 "confirm that lowering its severity is intentional."
             ),
-            evidence={
-                "source_path": (relative,),
-                "source_sha256": (expected_hash,),
-                "kicad_version": (config.kicad_version,),
-                "check_id": (check_id,),
-                "configured_severity": (severity,),
-            },
         )
-        for check_id, severity in severities
-        if severity == "warning"
+        for check in settings.configured_severities
+        if check.configured_severity == "warning"
     )
 
 
@@ -185,25 +209,23 @@ def warning_dfm_native_drc_check_candidates(
     )
     if settings is None:
         return ()
-    relative, expected_hash, severities = settings
     return tuple(
-        Candidate(
+        _severity_candidate(
+            settings,
+            check,
+            category="dfm",
             rule_id="pcb.dfm_drc_check_warning",
-            subject=f"{relative}#board/design_settings/rule_severities/{check_id}",
+            subject=(
+                f"{settings.project_path}#board/design_settings/rule_severities/{check.check_id}"
+            ),
             message=(
-                f"Documented Error-default DFM DRC check {check_id!r} is configured as Warning; "
+                f"Documented Error-default DFM DRC check {check.check_id!r} is configured "
+                "as Warning; "
                 "confirm that lowering its severity is intentional."
             ),
-            evidence={
-                "source_path": (relative,),
-                "source_sha256": (expected_hash,),
-                "kicad_version": (config.kicad_version,),
-                "check_id": (check_id,),
-                "configured_severity": (severity,),
-            },
         )
-        for check_id, severity in severities
-        if severity == "warning"
+        for check in settings.configured_severities
+        if check.configured_severity == "warning"
     )
 
 
@@ -218,7 +240,7 @@ def downgraded_signal_integrity_drc_check_candidates(
         config,
         source_hashes,
         rule_id="pcb.signal_integrity_drc_check_downgraded",
-        category="signal-integrity",
+        category="signal_integrity",
         parse_severities=configured_signal_integrity_drc_check_severities,
     )
 
@@ -272,25 +294,22 @@ def ignored_warning_default_native_drc_check_candidates(
     )
     if settings is None:
         return ()
-    relative, expected_hash, severities = settings
     return tuple(
-        Candidate(
+        _severity_candidate(
+            settings,
+            check,
+            category="warning_default",
             rule_id="pcb.warning_default_drc_check_ignored",
-            subject=f"{relative}#board/design_settings/rule_severities/{check_id}",
+            subject=(
+                f"{settings.project_path}#board/design_settings/rule_severities/{check.check_id}"
+            ),
             message=(
-                f"Warning-default native DRC check {check_id!r} is configured as Ignore; "
+                f"Warning-default native DRC check {check.check_id!r} is configured as Ignore; "
                 "confirm that disabling this check is intentional."
             ),
-            evidence={
-                "source_path": (relative,),
-                "source_sha256": (expected_hash,),
-                "kicad_version": (config.kicad_version,),
-                "check_id": (check_id,),
-                "configured_severity": (severity,),
-            },
         )
-        for check_id, severity in severities
-        if severity == "ignore"
+        for check in settings.configured_severities
+        if check.configured_severity == "ignore"
     )
 
 
@@ -299,9 +318,9 @@ def _downgraded_native_drc_check_candidates(
     config: ProjectConfig,
     source_hashes: SourceHashInventory,
     *,
-    rule_id: DesignLintRuleId,
-    category: str,
-    parse_severities: Callable[[str], tuple[tuple[str, str], ...]],
+    rule_id: PcbDrcSeverityRuleId,
+    category: PcbDrcSeverityCategory,
+    parse_severities: Callable[[str], tuple[PcbDrcCheckSeverity, ...]],
 ) -> tuple[Candidate, ...]:
     settings = _source_bound_drc_settings(
         root,
@@ -312,23 +331,21 @@ def _downgraded_native_drc_check_candidates(
     )
     if settings is None:
         return ()
-    relative, expected_hash, severities = settings
     return tuple(
-        Candidate(
+        _severity_candidate(
+            settings,
+            check,
+            category=category,
             rule_id=rule_id,
-            subject=f"{relative}#board/design_settings/rule_severities/{check_id}",
-            message=(
-                f"Error-default {category} DRC check {check_id!r} is configured as "
-                f"{severity.title()}; confirm lowering its severity is intentional."
+            subject=(
+                f"{settings.project_path}#board/design_settings/rule_severities/{check.check_id}"
             ),
-            evidence={
-                "source_path": (relative,),
-                "source_sha256": (expected_hash,),
-                "kicad_version": (config.kicad_version,),
-                "check_id": (check_id,),
-                "configured_severity": (severity,),
-            },
+            message=(
+                f"Error-default {category.replace('_', '-')} DRC check {check.check_id!r} "
+                f"is configured as {check.configured_severity.title()}; confirm lowering its "
+                "severity is intentional."
+            ),
         )
-        for check_id, severity in severities
-        if severity in {"ignore", "warning"}
+        for check in settings.configured_severities
+        if check.configured_severity in {"ignore", "warning"}
     )

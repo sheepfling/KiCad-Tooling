@@ -948,11 +948,30 @@ still source-matches; the other seven findings continue to require complete
 coverage. The typed projector preserves the established rule IDs, messages,
 subjects, evidence fields, and fingerprints.
 
-The broader AST inventory finds 118 direct `Candidate(evidence=...)` calls in
+## PCB DRC severity candidate evidence
+
+The global severity route now replaces its `(path, digest, severities)` tuple
+with `SourceBoundPcbDrcSettings`, which retains the project path, matched source
+digest, project kind, KiCad version, and sorted explicit check severities. The
+source reader constructs it only after checking the project bytes against the
+source inventory both before and after parsing. The settings parser itself
+returns `PcbDrcCheckSeverity` records rather than anonymous check/severity
+pairs. Each finding carries one typed severity record, its category, and its
+catalogued rule ID through
+`PcbDrcSeverityFindingEvidence` and `PcbDrcSeverityCandidate`. Validation ties
+the check ID to the canonical category inventory and the rule to the configured
+severity. The existing KiCad version boundaries remain explicit: core checks
+accept the supported `10.*` family, specialized categories require `10.0.*`,
+and warning-default checks retain their exact supported-version set. Projection
+preserves the established source path, digest, version, check ID, configured
+severity, subjects, messages, and fingerprints; the route has no direct
+`Candidate(evidence=...)` maps.
+
+The broader AST inventory finds 112 direct `Candidate(evidence=...)` calls in
 production modules and 72 in tests. This count includes explicit test builders
 and mappings that are already named, so it is a route-triage queue rather than
-a count of confirmed opaque boundaries. The largest production concentrations
-are `pcb_drc_global_severity_review.py` (6), `pcb_dru_rule_review.py`,
-`connector_peer_power_input.py`, and `connector_peer_power_output.py` (3 each).
-The next route audit starts in the global DRC severity review and traces its
-source records and rule families before choosing a typed projection boundary.
+a count of confirmed opaque boundaries. The largest remaining production
+concentrations tie at three each in `pcb_dru_rule_review.py`,
+`connector_peer_power_input.py`, and `connector_peer_power_output.py`. Inspect
+those source records and rule families before selecting the next projection
+boundary.

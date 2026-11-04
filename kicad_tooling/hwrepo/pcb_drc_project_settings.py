@@ -88,6 +88,14 @@ WARNING_DEFAULT_DRC_CHECK_IDS = frozenset(
 SUPPORTED_DRC_EXCLUSION_SCHEMA_VERSION = 2
 
 
+@dataclass(frozen=True, slots=True)
+class PcbDrcCheckSeverity:
+    """One explicit KiCad check severity parsed from project settings."""
+
+    check_id: str
+    configured_severity: str
+
+
 class _PcbDesignSettingsMeta(BaseModel):
     model_config = ConfigDict(extra="ignore", strict=True)
 
@@ -116,50 +124,52 @@ class _PcbProjectSettings(BaseModel):
 
 def _configured_drc_check_severities(
     document: str, check_ids: frozenset[str]
-) -> tuple[tuple[str, str], ...]:
+) -> tuple[PcbDrcCheckSeverity, ...]:
     project = parse_model_text(document, _PcbProjectSettings)
     if project.board is None or project.board.design_settings is None:
         return ()
     severities = project.board.design_settings.rule_severities or {}
     return tuple(
-        (check_id, severity)
+        PcbDrcCheckSeverity(check_id, severity)
         for check_id in sorted(check_ids)
         if (severity := severities.get(check_id)) is not None
     )
 
 
-def configured_core_drc_check_severities(document: str) -> tuple[tuple[str, str], ...]:
+def configured_core_drc_check_severities(document: str) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return explicit severities for the bounded core electrical DRC checks."""
     return _configured_drc_check_severities(document, CORE_DRC_CHECK_IDS)
 
 
-def configured_dfm_drc_check_severities(document: str) -> tuple[tuple[str, str], ...]:
+def configured_dfm_drc_check_severities(document: str) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return explicit severities for documented Error-default DFM checks."""
     return _configured_drc_check_severities(document, DFM_ERROR_DEFAULT_DRC_CHECK_IDS)
 
 
 def configured_signal_integrity_drc_check_severities(
     document: str,
-) -> tuple[tuple[str, str], ...]:
+) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return explicit severities for documented Error-default signal-integrity checks."""
     return _configured_drc_check_severities(document, SIGNAL_INTEGRITY_ERROR_DEFAULT_DRC_CHECK_IDS)
 
 
-def configured_electrical_drc_check_severities(document: str) -> tuple[tuple[str, str], ...]:
+def configured_electrical_drc_check_severities(
+    document: str,
+) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return explicit severities for bounded Error-default electrical DRC checks."""
     return _configured_drc_check_severities(document, ELECTRICAL_ERROR_DEFAULT_DRC_CHECK_IDS)
 
 
 def configured_miscellaneous_drc_check_severities(
     document: str,
-) -> tuple[tuple[str, str], ...]:
+) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return severities for bounded Error-default miscellaneous DRC checks."""
     return _configured_drc_check_severities(document, MISCELLANEOUS_ERROR_DEFAULT_DRC_CHECK_IDS)
 
 
 def configured_warning_default_drc_check_severities(
     document: str,
-) -> tuple[tuple[str, str], ...]:
+) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return explicit severities for reviewed KiCad 10.0 Warning-default checks."""
     return _configured_drc_check_severities(document, WARNING_DEFAULT_DRC_CHECK_IDS)
 
@@ -167,9 +177,9 @@ def configured_warning_default_drc_check_severities(
 def ignored_core_drc_check_ids(document: str) -> tuple[str, ...]:
     """Return supported core DRC checks explicitly set to ``ignore``."""
     return tuple(
-        check_id
-        for check_id, severity in configured_core_drc_check_severities(document)
-        if severity == "ignore"
+        check.check_id
+        for check in configured_core_drc_check_severities(document)
+        if check.configured_severity == "ignore"
     )
 
 

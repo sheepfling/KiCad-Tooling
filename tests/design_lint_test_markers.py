@@ -196,6 +196,8 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_architecture_connector_supply_domain_candidate_evidence.py",
                 "tests/test_connector_mapped_interface_candidate_evidence.py",
                 "tests/test_design_lint_architecture_connector_mapped_interface_candidate_evidence.py",
+                "tests/test_design_lint_architecture_pcb_drc_global_severity_candidate_evidence.py",
+                "tests/test_pcb_drc_global_severity_review.py",
                 "tests/test_design_lint_architecture_schematic_candidate_evidence.py",
                 "tests/test_schematic_pin_candidate_evidence.py",
                 "tests/test_schematic_wire_topology_candidate_evidence.py",

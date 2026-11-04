@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
@@ -14,6 +15,9 @@ from kicad_tooling.hwrepo.design_lint_finding_models import (
     DesignLintIgnore,
     DesignLintRuleOverride,
 )
+from kicad_tooling.hwrepo.design_lint_pcb_drc_global_severity_candidate_evidence import (
+    PcbDrcSeverityCandidate,
+)
 from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import NetlistContract, ProjectConfig, ProjectKind
@@ -22,7 +26,7 @@ from kicad_tooling.hwrepo.pcb_drc_global_severity_review import (
 )
 from tests.design_lint_fixtures import coach
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint]
+pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint, pytest.mark.evidence_lint]
 
 FIXTURES = Path(__file__).parent / "fixtures/design_lint/pcb-core-drc-disabled"
 RULE_ID = "pcb.core_drc_check_ignored"
@@ -72,7 +76,13 @@ def test_ignored_unconnected_check_creates_a_source_bound_review_candidate(
 
     assert len(candidates) == 1
     candidate = candidates[0]
+    assert isinstance(candidate, PcbDrcSeverityCandidate)
     assert candidate.rule_id == RULE_ID
+    assert candidate.source_evidence.settings.project_path == PROJECT_RELATIVE
+    assert candidate.source_evidence.settings.source_sha256 == digest(project)
+    assert candidate.source_evidence.settings.kicad_version == kicad_version
+    assert candidate.source_evidence.configured_check.check_id == "unconnected_items"
+    assert candidate.source_evidence.category == "core"
     assert (
         candidate.subject
         == f"{PROJECT_RELATIVE}#board/design_settings/rule_severities/unconnected_items"
@@ -85,6 +95,36 @@ def test_ignored_unconnected_check_creates_a_source_bound_review_candidate(
         "check_id": ("unconnected_items",),
         "configured_severity": ("ignore",),
     }
+
+
+def test_source_evidence_rejects_mismatched_check_category_rule_and_severity(
+    tmp_path: Path,
+) -> None:
+    root, _, config, source_hashes = _project(tmp_path)
+    (candidate,) = _scan(root, config, source_hashes)
+    source = candidate.source_evidence
+
+    with pytest.raises(ValueError, match="belong to its declared review category"):
+        replace(source, category="dfm")
+    with pytest.raises(ValueError, match="rule must match its category and severity"):
+        replace(source, rule_id="pcb.dfm_drc_check_ignored")
+    with pytest.raises(ValueError, match="must belong to the source-bound settings"):
+        replace(
+            source,
+            configured_check=replace(source.configured_check, configured_severity="warning"),
+        )
+
+
+def test_candidate_rejects_evidence_that_differs_from_its_source_projection(
+    tmp_path: Path,
+) -> None:
+    root, _, config, source_hashes = _project(tmp_path)
+    (candidate,) = _scan(root, config, source_hashes)
+    changed_evidence = dict(candidate.evidence)
+    changed_evidence["configured_severity"] = ("warning",)
+
+    with pytest.raises(ValueError, match="source-bound projection"):
+        replace(candidate, evidence=changed_evidence)
 
 
 def test_active_core_checks_and_documented_default_ignores_are_valid_controls(
@@ -125,9 +165,18 @@ def test_json_key_order_does_not_change_detected_check_ids() -> None:
         '{"unconnected_items":"ignore","tracks_crossing":"ignore"}}}}'
     )
 
-    from kicad_tooling.hwrepo.pcb_drc_project_settings import ignored_core_drc_check_ids
+    from kicad_tooling.hwrepo.pcb_drc_project_settings import (
+        PcbDrcCheckSeverity,
+        configured_core_drc_check_severities,
+        ignored_core_drc_check_ids,
+    )
 
     assert ignored_core_drc_check_ids(first) == ignored_core_drc_check_ids(second)
+    parsed = configured_core_drc_check_severities(first)
+    assert parsed == (
+        PcbDrcCheckSeverity("tracks_crossing", "ignore"),
+        PcbDrcCheckSeverity("unconnected_items", "ignore"),
+    )
 
 
 def test_warning_severity_is_visible_and_does_not_trigger_ignore_review(
