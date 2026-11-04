@@ -208,6 +208,16 @@ preserving their existing sparse wire fields. The combined focused source-route,
 inventory, population, value, catalog-boundary, architecture, and CLI/MCP parity
 run passed 62 tests under `design_lint and not native_kicad`. This advances SA-01
 without a line-count-driven split or public report change.
+Schematic-to-PCB pad-net findings now retain their typed mismatch and shared
+native receipt; blocked findings preserve both inventory and comparison
+states. The source receipt's report constructor is reused by the inventory and
+pad-net translators. Opt-in board-only and project-required fitted-reference
+candidates retain their typed comparisons, native receipts, authored
+requirement coverage, and named-variant evidence. Their blocked states keep the
+enclosing report and coverage context. The combined pad-net, board-only,
+required-reference, catalog, inventory, and parity slice passed 55 tests with
+8 tests deselected by the tag's focused marker expression; Ruff, format, and
+project-aware Pyright passed.
 
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify
@@ -738,6 +748,10 @@ same typed request. The former service functions remain compatibility
 adapters. The portable pipeline report still comes from the compatibility
 registry boundary; `StaticPipelineReport` is now owned by
 `static_pipeline_models.py`, and pipeline consumers import that owner directly.
+The typed diagnosis/import/rescue operation tranche was revalidated against the
+separate clean public template checkout with `KICAD_TEMPLATE_ROOT` configured:
+60 tests and 18 subtests passed. Targeted Ruff and project-aware Pyright passed;
+native KiCad execution was not part of this route suite.
 
 The dependency guard now includes electrical, parts, CAD, layout, selection,
 product, supplier handoff, artifact, project-source, and purchasing-preference

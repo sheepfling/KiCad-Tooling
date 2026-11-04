@@ -9,10 +9,17 @@ import pytest
 
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.design_lint_candidate_aggregation import fingerprint
+from kicad_tooling.hwrepo.design_lint_pcb_board_only_candidate_evidence import (
+    PcbBlockedBoardOnlyFootprintCandidate,
+    PcbBoardOnlyFootprintCandidate,
+    project_blocked_pcb_board_only_evidence,
+    project_pcb_board_only_footprint_evidence,
+)
 from kicad_tooling.hwrepo.design_lint_pcb_board_only_candidates import (
     pcb_board_only_footprint_candidates,
 )
 from kicad_tooling.hwrepo.design_lint_pcb_report import pcb_coverage_report_lines
+from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.models import (
     DesignLintIgnore,
     DesignLintPolicy,
@@ -86,6 +93,19 @@ def test_extra_board_reference_is_reported_without_classifying_its_intent() -> N
     )
     assert candidates[1].evidence["footprint"] == ("Connector:DB9",)
     assert candidates[1].evidence["board_sha256"] == (BOARD_SHA256,)
+    assert isinstance(candidates[1], PcbBoardOnlyFootprintCandidate)
+    assert candidates[1].source_evidence.observation == findings[1]
+    assert (
+        candidates[1].evidence
+        == project_pcb_board_only_footprint_evidence(candidates[1].source_evidence).evidence
+    )
+    public_candidate = Candidate(
+        rule_id=candidates[1].rule_id,
+        subject=candidates[1].subject,
+        message=candidates[1].message,
+        evidence=candidates[1].evidence,
+    )
+    assert fingerprint(candidates[1]) == fingerprint(public_candidate)
     assert "may be an intentional" in candidates[1].message
 
     report = evaluate(
@@ -209,6 +229,12 @@ def test_missing_or_unsupported_native_evidence_blocks_board_only_coverage() -> 
     )
     (blocked_candidate,) = pcb_board_only_footprint_candidates(unavailable)
     assert unavailable.status == "BLOCKED"
+    assert isinstance(blocked_candidate, PcbBlockedBoardOnlyFootprintCandidate)
+    assert blocked_candidate.source_evidence.report == unavailable
+    assert (
+        blocked_candidate.evidence
+        == project_blocked_pcb_board_only_evidence(blocked_candidate.source_evidence).evidence
+    )
     assert blocked_candidate.rule_id == RULE
     assert "No conclusion" in blocked_candidate.message
 

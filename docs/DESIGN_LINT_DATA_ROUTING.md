@@ -579,3 +579,22 @@ the DNP finding's optional snapshot digest. Completed per-reference footprint
 and population records remain limited to completed comparisons. None of these
 records infer package equivalence, assembly intent, electrical behavior,
 physical placement correctness, or actual component population.
+
+Schematic-to-PCB pad-net findings retain a
+`PcbPadNetMismatchEvidence` record with the exact typed mismatch and shared
+`PcbComponentInventorySourceReceipt`. A blocked comparison uses a separate
+`PcbBlockedPadNetComparisonEvidence` record, preserving both the inventory
+status and the pad-net comparison's `BLOCKED` state. Their projectors retain the
+existing missing-source fallbacks, unconnected/unassigned labels, and public
+evidence fields. The receipt's `from_coverage_report` constructor is shared by
+the inventory and pad-net translators so optional native identity fields are
+copied consistently.
+
+Opt-in board-only footprint findings retain the typed footprint observation
+with that same receipt; blocked board-only coverage retains the enclosing
+inventory report. Project-required fitted-reference findings retain the exact
+authored mismatch, requirement coverage and digest, native receipt, and named-
+variant source coverage when applicable. Blocked requirement checks preserve
+their enclosing report so the requirement gap and inventory state remain
+available together. Both routes use theme-owned projectors for the existing
+report fields and fingerprints.

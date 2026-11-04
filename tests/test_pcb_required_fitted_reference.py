@@ -12,9 +12,16 @@ from kicad_tooling.hwrepo.design_lint_candidate_aggregation import fingerprint
 from kicad_tooling.hwrepo.design_lint_pcb_component_inventory_scan import (
     resolve_pcb_component_inventory_modes,
 )
+from kicad_tooling.hwrepo.design_lint_pcb_required_fitted_candidate_evidence import (
+    PcbBlockedRequiredFittedReferenceCandidate,
+    PcbRequiredFittedReferenceCandidate,
+    project_blocked_required_fitted_reference_evidence,
+    project_pcb_required_fitted_reference_evidence,
+)
 from kicad_tooling.hwrepo.design_lint_pcb_required_fitted_reference_candidates import (
     pcb_required_fitted_reference_candidates,
 )
+from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.models import (
     DesignLintIgnore,
     DesignLintPolicy,
@@ -89,6 +96,20 @@ def test_explicit_requirement_catches_both_sources_marked_dnp() -> None:
 
     coverage = _coverage(observed, board, requirements)
     (candidate,) = pcb_required_fitted_reference_candidates(coverage)
+    assert isinstance(candidate, PcbRequiredFittedReferenceCandidate)
+    assert candidate.source_evidence.observation == mismatch
+    assert candidate.source_evidence.receipt.snapshot_sha256 == SNAPSHOT_SHA256
+    assert (
+        candidate.evidence
+        == project_pcb_required_fitted_reference_evidence(candidate.source_evidence).evidence
+    )
+    public_candidate = Candidate(
+        rule_id=candidate.rule_id,
+        subject=candidate.subject,
+        message=candidate.message,
+        evidence=candidate.evidence,
+    )
+    assert fingerprint(candidate) == fingerprint(public_candidate)
     assert candidate.subject == "U1: required fitted component does not match source"
     assert "variant" not in candidate.evidence
     assert "variant_evidence" not in candidate.evidence
@@ -257,6 +278,12 @@ def test_enabled_rule_without_a_map_blocks_instead_of_passing() -> None:
     assert coverage.status == "COMPLETE"
     assert coverage.required_fitted_reference_coverage.status == "BLOCKED"
     (candidate,) = pcb_required_fitted_reference_candidates(coverage)
+    assert isinstance(candidate, PcbBlockedRequiredFittedReferenceCandidate)
+    assert candidate.source_evidence.report == coverage
+    assert (
+        candidate.evidence
+        == project_blocked_required_fitted_reference_evidence(candidate.source_evidence).evidence
+    )
     assert "no project-authored fitted-reference map" in candidate.evidence["coverage_issue"][0]
     report = evaluate(
         "synthetic-required-fitted-reference",
