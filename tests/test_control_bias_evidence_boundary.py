@@ -57,6 +57,7 @@ def test_unbound_or_stale_control_coverage_blocks_before_suppression() -> None:
         )
         assert report.status == "BLOCKED"
         assert report.control_input_bias_coverage.status == "BLOCKED"
+        assert report.control_input_bias_coverage.netlist_sha256 == supplied.netlist_sha256
         assert "different or unavailable native netlist hash" in report.issues[0]
         assert not report.findings
 

@@ -6,6 +6,9 @@ from dataclasses import replace
 
 import pytest
 
+from kicad_tooling.hwrepo.component_peer_pin_candidate_types import (
+    ComponentPeerPinFindingCounts,
+)
 from kicad_tooling.hwrepo.connector_peer_pin_candidate_results import (
     ConnectorPeerPinFindingCounts,
 )
@@ -86,6 +89,7 @@ def test_typed_scan_results_reject_unmatched_peer_keys() -> None:
             candidates=items,
             peer_reference_keys=empty,
             connector_peer_pin_finding_counts=ConnectorPeerPinFindingCounts(),
+            component_peer_pin_finding_counts=ComponentPeerPinFindingCounts(),
         )
 
 
@@ -99,6 +103,7 @@ def test_aggregate_scan_result_rejects_connector_counts_that_disagree_with_findi
             connector_peer_pin_finding_counts=ConnectorPeerPinFindingCounts(
                 peer_pin_outlier_finding_count=1
             ),
+            component_peer_pin_finding_counts=ComponentPeerPinFindingCounts(),
         )
 
 

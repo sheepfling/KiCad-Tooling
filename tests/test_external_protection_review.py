@@ -156,7 +156,9 @@ def test_missing_applicability_is_a_review_candidate_and_policy_can_block_it() -
 @pytest.mark.evidence_lint
 def test_stale_external_protection_coverage_blocks_before_its_rows_become_findings() -> None:
     observed = observed_netlist()
-    stale = evaluate(None, observed, connector_coverage(), "b" * 64)
+    stale = evaluate(None, observed, connector_coverage(), "b" * 64).model_copy(
+        update={"scope": "synthetic reviewed connector scope"}
+    )
     assert stale.status == "UNDECLARED"
     assert stale.entries
 
@@ -176,6 +178,7 @@ def test_stale_external_protection_coverage_blocks_before_its_rows_become_findin
     assert report.status == "BLOCKED"
     assert report.external_protection_coverage.status == "BLOCKED"
     assert report.external_protection_coverage.netlist_sha256 == "b" * 64
+    assert report.external_protection_coverage.scope == stale.scope
     assert report.external_protection_coverage.entries == ()
     assert any("different or unavailable native netlist hash" in issue for issue in report.issues)
     assert not any(finding.rule_id.startswith("protection.") for finding in report.findings)

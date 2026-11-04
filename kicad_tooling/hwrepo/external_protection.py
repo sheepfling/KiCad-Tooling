@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
+from dataclasses import dataclass
 
 from .connector_coverage_models import ConnectorCoverageReport
 from .external_protection_models import (
@@ -11,9 +12,53 @@ from .external_protection_models import (
     ExternalProtectionCoverageReport,
     ExternalProtectionDeviceRequirement,
     ExternalProtectionMap,
+    external_protection_netlist_binding_issue,
 )
-from .models import NetlistContract
+from .models import Digest, NetlistContract
 from .project_models import ComponentContract
+
+
+@dataclass(frozen=True, slots=True)
+class ExternalProtectionCoverageRequest:
+    """Supplied coverage and the current netlist identity for admission."""
+
+    coverage: ExternalProtectionCoverageReport | None
+    current_netlist_sha256: Digest | None
+
+
+@dataclass(frozen=True, slots=True)
+class ExternalProtectionCoverageResolution:
+    """Admitted coverage and any source-binding issue for report disposition."""
+
+    coverage: ExternalProtectionCoverageReport
+    binding_issue: str | None
+
+
+def resolve_external_protection_coverage(
+    request: ExternalProtectionCoverageRequest,
+) -> ExternalProtectionCoverageResolution:
+    """Block stale positive coverage before its entries can become candidates."""
+    coverage = request.coverage
+    if coverage is None:
+        coverage = ExternalProtectionCoverageReport()
+    issue = external_protection_netlist_binding_issue(
+        coverage,
+        request.current_netlist_sha256,
+    )
+    if issue is None:
+        return ExternalProtectionCoverageResolution(coverage=coverage, binding_issue=None)
+    blocked_coverage = ExternalProtectionCoverageReport(
+        status="BLOCKED",
+        scope=coverage.scope,
+        netlist_sha256=coverage.netlist_sha256,
+        electrical_contract_path=coverage.electrical_contract_path,
+        electrical_contract_sha256=coverage.electrical_contract_sha256,
+        issue=issue,
+    )
+    return ExternalProtectionCoverageResolution(
+        coverage=blocked_coverage,
+        binding_issue=issue,
+    )
 
 
 def _device_issues(

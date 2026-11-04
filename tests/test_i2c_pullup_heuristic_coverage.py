@@ -276,6 +276,7 @@ def test_stale_native_netlist_hash_blocks_coverage_instead_of_suppressing() -> N
     )
     assert report.status == "BLOCKED"
     assert report.i2c_pullup_heuristic_coverage.status == "BLOCKED"
+    assert report.i2c_pullup_heuristic_coverage.netlist_sha256 == stale.netlist_sha256
     assert report.i2c_pullup_heuristic_coverage.entries == ()
     assert "different or unavailable native netlist hash" in report.issues[0]
 
@@ -312,6 +313,7 @@ def test_empty_complete_coverage_retains_native_identity_and_rejects_stale_input
         )
         assert blocked.status == "BLOCKED"
         assert blocked.i2c_pullup_heuristic_coverage.status == "BLOCKED"
+        assert blocked.i2c_pullup_heuristic_coverage.netlist_sha256 == stale.netlist_sha256
         assert "different or unavailable native netlist hash" in blocked.issues[0]
 
 

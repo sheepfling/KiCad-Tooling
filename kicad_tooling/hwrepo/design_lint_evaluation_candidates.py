@@ -106,8 +106,8 @@ def scan_evaluation_candidates(
             peer_evidence.peer_pin_assignment_scans,
             prepared.default_modes,
             prepared.overrides,
-            items,
-            coach.netlist_sha256,
+            finding_counts=scan_result.component_peer_pin_finding_counts,
+            netlist_sha256=coach.netlist_sha256,
         )
     )
     return DesignLintEvaluationCandidates(

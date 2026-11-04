@@ -2,28 +2,29 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from typing import Literal
 
+from .component_peer_pin_candidate_types import ComponentPeerPinFindingCounts
 from .component_peer_pin_models import (
     POWER_INPUT_DIVERGENCE_RULE_IDS,
     ComponentPeerPinRuleCoverage,
+    ComponentPeerPinRuleId,
 )
 from .component_peer_pin_scan import ComponentPeerPinAssignmentScans, PeerPinAssignmentScan
 from .design_lint_finding_models import DesignLintRuleOverride
 from .design_lint_rule_types import DesignLintRuleId
-from .design_lint_types import Candidate
 
 
 def component_peer_pin_rule_coverage(
     scans: ComponentPeerPinAssignmentScans,
     default_modes: Mapping[DesignLintRuleId, Literal["review", "block", "off"]],
     overrides: Mapping[str, DesignLintRuleOverride],
-    candidate_items: Sequence[Candidate],
+    finding_counts: ComponentPeerPinFindingCounts,
     netlist_sha256: str,
 ) -> tuple[ComponentPeerPinRuleCoverage, ...]:
     """Bind component-peer pin applicability and findings to one native netlist."""
-    rule_scans: tuple[tuple[DesignLintRuleId, PeerPinAssignmentScan], ...] = (
+    rule_scans: tuple[tuple[ComponentPeerPinRuleId, PeerPinAssignmentScan], ...] = (
         ("component.peer_power_output_unconnected", scans.power_output),
         ("component.peer_signal_output_unconnected", scans.signal_output),
         ("component.peer_signal_input_unconnected", scans.signal_input),
@@ -85,7 +86,7 @@ def component_peer_pin_rule_coverage(
         else:
             status = "EVALUATED"
         override = overrides.get(rule_id)
-        finding_count = sum(item.rule_id == rule_id for item in candidate_items)
+        finding_count = finding_counts.for_rule(rule_id)
         candidate_count = len(scan.outliers)
         result.append(
             ComponentPeerPinRuleCoverage(

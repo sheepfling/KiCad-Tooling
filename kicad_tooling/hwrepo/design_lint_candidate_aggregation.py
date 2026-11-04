@@ -11,6 +11,7 @@ from .bus_signal_pairs import (
     ComplementaryPinFunctionAliasResolution,
 )
 from .can_peer_reference_scan import CanPeerReferenceScan
+from .component_peer_pin_candidate_types import ComponentPeerCandidateInputs
 from .component_peer_pin_evaluation import component_peer_pin_assignment_scans
 from .component_peer_pin_scan import ComponentPeerPinAssignmentScans
 from .component_role_models import ComponentRoleMap
@@ -34,7 +35,7 @@ from .design_lint_candidate_inputs import (
 from .design_lint_candidate_results import DesignLintCandidateScanResult
 from .design_lint_catalog import rule_catalog
 from .design_lint_component_candidates import component_candidates
-from .design_lint_component_peer_candidates import component_peer_candidates
+from .design_lint_component_peer_candidates import scan_component_peer_candidates
 from .design_lint_connector_candidates import scan_connector_candidates
 from .design_lint_control_candidates import scan_control_candidates
 from .design_lint_mapped_coverage_candidates import mapped_coverage_candidates
@@ -335,12 +336,15 @@ def scan_candidate_result(
             ic_decoupling_map=ic_decoupling_map,
         )
     )
-    component_peer_findings = component_peer_candidates(
-        observed,
-        peer_pin_scans=peer_pin_scans,
-        reviewed_connector_references=reviewed_connector_references,
-        control_pin_keys=control_result.unconnected_pin_keys,
+    component_peer_result = scan_component_peer_candidates(
+        ComponentPeerCandidateInputs(
+            observed=observed,
+            peer_pin_scans=peer_pin_scans,
+            reviewed_connector_references=reviewed_connector_references,
+            control_pin_keys=control_result.unconnected_pin_keys,
+        )
     )
+    component_peer_findings = component_peer_result.candidates
     found.extend(component_peer_findings)
     bus_result = scan_bus_candidates(
         replace(inputs.bus, component_peer_findings=component_peer_findings)
@@ -382,6 +386,7 @@ def scan_candidate_result(
         candidates=items,
         peer_reference_keys=bus_result.peer_reference_keys.merge(pcb_peer_keys),
         connector_peer_pin_finding_counts=connector_result.peer_pin_finding_counts,
+        component_peer_pin_finding_counts=component_peer_result.finding_counts,
     )
 
 

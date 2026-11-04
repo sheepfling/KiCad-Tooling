@@ -17,10 +17,11 @@ does not add a rule or change an engineering conclusion.
    netlist. It records contract path/hash when present, netlist hash, coverage
    status, and per-bus entries. It distinguishes an absent, pending, reviewed,
    or not-applicable electrical requirement.
-3. `design_lint_evaluation_preparation.py` compares source-bound I²C coverage,
-   including an empty `COMPLETE` result, with the coach's netlist hash. A
-   mismatch blocks the evaluation before candidate scanning. It then builds
-   the complete `DesignLintCandidateInputs` bundle from normalized coverage,
+3. `design_lint_evaluation_preparation.py` passes source-bound I²C coverage,
+   including an empty `COMPLETE` result, and the coach's netlist hash to
+   `resolve_i2c_pullup_coverage` in one typed request. A mismatch blocks the
+   evaluation before candidate scanning. It then builds the complete
+   `DesignLintCandidateInputs` bundle from normalized coverage,
    policy, and one `PeerDesignLintEvidence` scan, retaining both as typed
    records on `DesignLintEvaluationPreparation`.
 4. `design_lint_evaluation_candidates.py` passes the prepared bundle directly
@@ -233,6 +234,22 @@ and fingerprint stay the same. The broader extension path should formalize
 typed theme results rather than adding metadata fields to the shared candidate
 type for each new rule.
 
+Component-peer assignment checks now enter through
+`ComponentPeerCandidateInputs` and return a `ComponentPeerCandidateResult`.
+Its `ComponentPeerPinFindingCounts` summary is consumed by the component-peer
+coverage owner directly; coverage no longer counts component findings by
+scanning the full flattened candidate list. The aggregate scan verifies that
+the component-owned counts still match the combined findings, and report
+validation independently reconciles those findings with published coverage.
+The keyword-based component-peer candidate function remains an adapter for
+direct callers.
+
+Mapped-topology execution records still obtain their USB data-path,
+power-path, power-sequence, and oscillator finding counts by scanning the
+aggregate candidate list. A follow-up should move those counts onto the bus,
+mapped-power, and component result contracts; the report validator should
+continue checking the final counts against its complete finding list.
+
 ## Peer scan context route
 
 The peer evidence coordinator receives digital-voltage, serial-peer, and
@@ -244,13 +261,36 @@ distinct states. The observed netlist, netlist digest, connector scope, and
 USB data-path map remain explicit coordinator inputs, and the resulting scans
 flow into the prepared peer and bus candidate groups.
 
+## External-protection source admission
+
+Evaluation sends the supplied `ExternalProtectionCoverageReport` and the
+coach's current netlist digest to `resolve_external_protection_coverage` as
+one `ExternalProtectionCoverageRequest`. The owner checks source binding only
+for positive scan states. A stale or unavailable digest produces `BLOCKED`
+coverage, retains the report's scope, recorded digest, and electrical-contract
+identity, and withholds rows from candidate generation. An absent report
+remains `NOT_REQUESTED`; an already blocked report retains its existing issue.
+The resolver returns the blocked report and binding issue together so report
+assembly and early-blocked dispositions use the same result.
+
+## Control-input and I²C pull-up source admission
+
+Control-input bias and I²C pull-up coverage each enter their theme owner with
+the coach's current netlist digest in a typed request. Their resolvers preserve
+`None` as absent coverage, retain a supplied report unchanged when it is
+admissible, and return a blocked report with the original contract and netlist
+identity when binding fails. Blocked reports omit candidate-resolution rows;
+the caller then creates the existing early blocked evaluation report. The two
+owners keep their different validity rules for `COMPLETE`, `OPEN`, pending,
+not-applicable, and not-configured coverage.
+
 ## Control-input candidate route
 
-| Input or output   | Owner                                      | Meaning at the theme boundary                                                                                                                                                    |
-| ----------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Observed topology | Native coach's `NetlistContract`           | Required; the shared scanner rejects a different observation from the bus or control group.                                                                                      |
-| Bias coverage     | Project context and evaluation preparation | The project electrical contract can cover a bias hint. Missing legacy input becomes `NOT_CONFIGURED`; stale, unbound, or blocked coverage stops full evaluation before scanning. |
-| Control result    | `design_lint_control_candidates`           | `ControlCandidateResult` carries findings and normalized unconnected pin keys. The component-peer service uses the keys only to avoid duplicate prompts.                         |
+| Input or output   | Owner                                                     | Meaning at the theme boundary                                                                                                                                          |
+| ----------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Observed topology | Native coach's `NetlistContract`                          | Required; the shared scanner rejects a different observation from the bus or control group.                                                                            |
+| Bias coverage     | Project context and `resolve_control_input_bias_coverage` | The project electrical contract can cover a bias hint. Missing legacy input remains absent; stale, unbound, or blocked coverage stops full evaluation before scanning. |
+| Control result    | `design_lint_control_candidates`                          | `ControlCandidateResult` carries findings and normalized unconnected pin keys. The component-peer service uses the keys only to avoid duplicate prompts.               |
 
 The scanner passes `ControlCandidateInputs` directly to the theme and consumes
 the named result. The older `control_candidates()` tuple interface remains an

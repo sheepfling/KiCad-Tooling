@@ -287,6 +287,7 @@ def test_stale_voltage_only_coverage_blocks_evaluation() -> None:
 
     assert report.status == "BLOCKED"
     assert report.i2c_pullup_heuristic_coverage.status == "BLOCKED"
+    assert report.i2c_pullup_heuristic_coverage.netlist_sha256 == stale.netlist_sha256
     assert report.i2c_pullup_heuristic_coverage.entries == ()
     assert report.i2c_pullup_heuristic_coverage.voltage_entries == ()
     assert "different or unavailable native netlist hash" in report.issues[0]

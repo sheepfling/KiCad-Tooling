@@ -3,12 +3,19 @@
 from __future__ import annotations
 
 import ast
+from dataclasses import fields
 from types import MappingProxyType
+from typing import get_type_hints
 
 import pytest
 
 from kicad_tooling.hwrepo import external_protection_models
 from kicad_tooling.hwrepo import models as shared_models
+from kicad_tooling.hwrepo.external_protection import (
+    ExternalProtectionCoverageRequest,
+    ExternalProtectionCoverageResolution,
+    resolve_external_protection_coverage,
+)
 from tests.lint_architecture_support import IMPLEMENTATION_MAX_LINES, REPO_ROOT, line_count
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint, pytest.mark.architecture]
@@ -26,7 +33,6 @@ EXPECTED_OWNER_IMPORTS = MappingProxyType(
     {
         "design_lint_candidate_aggregation.py": frozenset({"ExternalProtectionCoverageReport"}),
         "design_lint_connector_coverage.py": frozenset({"ExternalProtectionCoverageReport"}),
-        "design_lint_evaluation_preparation.py": frozenset({"ExternalProtectionCoverageReport"}),
         "design_lint_evaluation_types.py": frozenset({"ExternalProtectionCoverageReport"}),
         "design_lint_evaluator.py": frozenset({"ExternalProtectionCoverageReport"}),
         "design_lint_protection_candidates.py": frozenset({"ExternalProtectionCoverageReport"}),
@@ -99,3 +105,47 @@ def test_internal_external_protection_services_import_models_from_owner() -> Non
         "Internal external-protection services must not import these models from the "
         f"compatibility registry: {legacy_imports}"
     )
+
+
+def test_evaluation_admits_coverage_through_the_theme_owned_source_request() -> None:
+    assert {item.name for item in fields(ExternalProtectionCoverageRequest)} == {
+        "coverage",
+        "current_netlist_sha256",
+    }
+    assert {item.name for item in fields(ExternalProtectionCoverageResolution)} == {
+        "coverage",
+        "binding_issue",
+    }
+    assert get_type_hints(resolve_external_protection_coverage)["request"] is (
+        ExternalProtectionCoverageRequest
+    )
+    assert get_type_hints(resolve_external_protection_coverage)["return"] is (
+        ExternalProtectionCoverageResolution
+    )
+
+    preparation_path = REPO_ROOT / "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py"
+    preparation_tree = ast.parse(preparation_path.read_text(encoding="utf-8"))
+    request_calls = [
+        node
+        for node in ast.walk(preparation_tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "ExternalProtectionCoverageRequest"
+    ]
+    resolution_calls = [
+        node
+        for node in ast.walk(preparation_tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "resolve_external_protection_coverage"
+    ]
+    assert len(request_calls) == len(resolution_calls) == 1
+    request_arguments = {
+        keyword.arg: ast.unparse(keyword.value) for keyword in request_calls[0].keywords
+    }
+    assert request_arguments == {
+        "coverage": "request.external_protection_coverage",
+        "current_netlist_sha256": "coach.netlist_sha256",
+    }
+    assert len(resolution_calls[0].args) == 1
+    assert resolution_calls[0].args[0] is request_calls[0]

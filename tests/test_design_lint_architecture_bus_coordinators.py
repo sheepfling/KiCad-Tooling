@@ -345,6 +345,7 @@ def test_legacy_and_prepared_candidate_paths_share_required_scanner_inputs() -> 
         "candidates",
         "peer_reference_keys",
         "connector_peer_pin_finding_counts",
+        "component_peer_pin_finding_counts",
     }
 
     connector_result_owner = HWREPO / "connector_peer_pin_candidate_results.py"
@@ -369,6 +370,7 @@ def test_legacy_and_prepared_candidate_paths_share_required_scanner_inputs() -> 
     }
     assert "def scan_connector_candidates(" in connector_coordinator.read_text(encoding="utf-8")
     assert "finding_counts=scan_result.connector_peer_pin_finding_counts" in evaluation_source
+    assert "finding_counts=scan_result.component_peer_pin_finding_counts" in evaluation_source
     assert "connector.footprint_named_power_input_all_open" not in evaluation_source
 
 

@@ -9,8 +9,10 @@ from .bus_signal_pairs import (
     resolve_complementary_pin_function_aliases,
 )
 from .component_roles import resolve_component_role_map
-from .control_input_bias import control_input_bias_coverage_issue
-from .control_input_models import ControlInputBiasHeuristicCoverage
+from .control_input_bias import (
+    ControlInputBiasCoverageRequest,
+    resolve_control_input_bias_coverage,
+)
 from .design_lint_bus_inputs import BusCandidateInputs
 from .design_lint_candidate_inputs import (
     ComponentCandidateInputs,
@@ -50,14 +52,13 @@ from .design_lint_schematic_coverage import (
     schematic_geometry_coverage,
 )
 from .design_lint_stm32_coverage import resolve_stm32_pin_map_coverage
-from .external_protection_models import (
-    ExternalProtectionCoverageReport,
-    external_protection_netlist_binding_issue,
+from .external_protection import (
+    ExternalProtectionCoverageRequest,
+    resolve_external_protection_coverage,
 )
 from .i2c_address_inputs import I2cAddressCandidateInput
-from .i2c_pullup_heuristics import i2c_pullup_coverage_issue
+from .i2c_pullup_heuristics import I2cPullupCoverageRequest, resolve_i2c_pullup_coverage
 from .i2c_pullup_inputs import I2cPullupSnifferInput
-from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import PcbDifferentialPairRuleCoverageReport
@@ -80,84 +81,80 @@ def prepare_evaluation(
         source_hashes=coach.source_hashes,
         inputs=request.pcb_input_coverage,
     )
-    external_protection_coverage = (
-        request.external_protection_coverage or ExternalProtectionCoverageReport()
-    )
-    protection_issue = external_protection_netlist_binding_issue(
-        external_protection_coverage, coach.netlist_sha256
-    )
-    if protection_issue is not None:
-        external_protection_coverage = ExternalProtectionCoverageReport(
-            status="BLOCKED",
-            netlist_sha256=external_protection_coverage.netlist_sha256,
-            electrical_contract_path=external_protection_coverage.electrical_contract_path,
-            electrical_contract_sha256=external_protection_coverage.electrical_contract_sha256,
-            issue=protection_issue,
+    protection_resolution = resolve_external_protection_coverage(
+        ExternalProtectionCoverageRequest(
+            coverage=request.external_protection_coverage,
+            current_netlist_sha256=coach.netlist_sha256,
         )
-    if request.control_input_bias_coverage is not None:
-        control_coverage = request.control_input_bias_coverage
-        control_issue = control_input_bias_coverage_issue(control_coverage, coach.netlist_sha256)
-        if control_issue is not None:
-            blocked_control = ControlInputBiasHeuristicCoverage(
+    )
+    external_protection_coverage = protection_resolution.coverage
+    protection_issue = protection_resolution.binding_issue
+    control_resolution = resolve_control_input_bias_coverage(
+        ControlInputBiasCoverageRequest(
+            coverage=request.control_input_bias_coverage,
+            current_netlist_sha256=coach.netlist_sha256,
+        )
+    )
+    control_coverage = control_resolution.coverage
+    control_issue = control_resolution.binding_issue
+    if control_issue is not None:
+        if control_coverage is None:
+            raise RuntimeError(
+                "Control-input coverage binding issue requires its blocked coverage report."
+            )
+        return DesignLintEvaluationPreparationResult(
+            report=DesignLintReport(
                 status="BLOCKED",
-                source_path=control_coverage.source_path,
-                source_sha256=control_coverage.source_sha256,
-                issue=control_issue,
+                project_id=request.project_id,
+                source_hashes=coach.source_hashes,
+                netlist_sha256=coach.netlist_sha256,
+                native_summary=coach.native_summary,
+                native_status=coach.native_status,
+                rule_catalog=catalog,
+                control_input_bias_coverage=control_coverage,
+                external_protection_coverage=external_protection_coverage,
+                pcb_signal_path_rules=input_pcb_coverage.signal_path,
+                pcb_keepout_coverage=input_pcb_coverage.keepout,
+                pcb_rf_module_antenna_coverage=input_pcb_coverage.rf_antenna,
+                pcb_touch_pad_clearance_coverage=input_pcb_coverage.touch_pad_clearance,
+                issues=(control_issue,) + (() if protection_issue is None else (protection_issue,)),
+                next_actions=(
+                    "Recreate control-input bias coverage from the current native netlist and contract.",
+                ),
             )
-            return DesignLintEvaluationPreparationResult(
-                report=DesignLintReport(
-                    status="BLOCKED",
-                    project_id=request.project_id,
-                    source_hashes=coach.source_hashes,
-                    netlist_sha256=coach.netlist_sha256,
-                    native_summary=coach.native_summary,
-                    native_status=coach.native_status,
-                    rule_catalog=catalog,
-                    control_input_bias_coverage=blocked_control,
-                    external_protection_coverage=external_protection_coverage,
-                    pcb_signal_path_rules=input_pcb_coverage.signal_path,
-                    pcb_keepout_coverage=input_pcb_coverage.keepout,
-                    pcb_rf_module_antenna_coverage=input_pcb_coverage.rf_antenna,
-                    pcb_touch_pad_clearance_coverage=input_pcb_coverage.touch_pad_clearance,
-                    issues=(control_issue,)
-                    + (() if protection_issue is None else (protection_issue,)),
-                    next_actions=(
-                        "Recreate control-input bias coverage from the current native netlist and contract.",
-                    ),
-                )
-            )
-    if request.i2c_pullup_heuristic_coverage is not None:
-        i2c_coverage = request.i2c_pullup_heuristic_coverage
-        coverage_issue = i2c_pullup_coverage_issue(i2c_coverage, coach.netlist_sha256)
-        if coverage_issue is not None:
-            blocked_coverage = I2cPullupHeuristicCoverage(
+        )
+    i2c_resolution = resolve_i2c_pullup_coverage(
+        I2cPullupCoverageRequest(
+            coverage=request.i2c_pullup_heuristic_coverage,
+            current_netlist_sha256=coach.netlist_sha256,
+        )
+    )
+    i2c_coverage = i2c_resolution.coverage
+    i2c_issue = i2c_resolution.binding_issue
+    if i2c_issue is not None:
+        if i2c_coverage is None:
+            raise RuntimeError("I2C pull-up binding issue requires its blocked coverage report.")
+        return DesignLintEvaluationPreparationResult(
+            report=DesignLintReport(
                 status="BLOCKED",
-                source_path=i2c_coverage.source_path,
-                source_sha256=i2c_coverage.source_sha256,
-                issue=coverage_issue,
+                project_id=request.project_id,
+                source_hashes=coach.source_hashes,
+                netlist_sha256=coach.netlist_sha256,
+                native_summary=coach.native_summary,
+                native_status=coach.native_status,
+                rule_catalog=catalog,
+                i2c_pullup_heuristic_coverage=i2c_coverage,
+                external_protection_coverage=external_protection_coverage,
+                pcb_signal_path_rules=input_pcb_coverage.signal_path,
+                pcb_keepout_coverage=input_pcb_coverage.keepout,
+                pcb_rf_module_antenna_coverage=input_pcb_coverage.rf_antenna,
+                pcb_touch_pad_clearance_coverage=input_pcb_coverage.touch_pad_clearance,
+                issues=(i2c_issue,) + (() if protection_issue is None else (protection_issue,)),
+                next_actions=(
+                    "Recreate I2C pull-up coverage from the current native netlist and contract.",
+                ),
             )
-            return DesignLintEvaluationPreparationResult(
-                report=DesignLintReport(
-                    status="BLOCKED",
-                    project_id=request.project_id,
-                    source_hashes=coach.source_hashes,
-                    netlist_sha256=coach.netlist_sha256,
-                    native_summary=coach.native_summary,
-                    native_status=coach.native_status,
-                    rule_catalog=catalog,
-                    i2c_pullup_heuristic_coverage=blocked_coverage,
-                    external_protection_coverage=external_protection_coverage,
-                    pcb_signal_path_rules=input_pcb_coverage.signal_path,
-                    pcb_keepout_coverage=input_pcb_coverage.keepout,
-                    pcb_rf_module_antenna_coverage=input_pcb_coverage.rf_antenna,
-                    pcb_touch_pad_clearance_coverage=(input_pcb_coverage.touch_pad_clearance),
-                    issues=(coverage_issue,)
-                    + (() if protection_issue is None else (protection_issue,)),
-                    next_actions=(
-                        "Recreate I2C pull-up coverage from the current native netlist and contract.",
-                    ),
-                )
-            )
+        )
 
     stm32_pin_map_coverage, source_hashes = resolve_stm32_pin_map_coverage(
         coach,
@@ -297,8 +294,8 @@ def prepare_evaluation(
         pcb_rf_module_antenna=input_pcb_coverage.rf_antenna,
         pcb_touch_pad_clearance=input_pcb_coverage.touch_pad_clearance,
         stm32_pin_map=stm32_pin_map_coverage,
-        control_input_bias=request.control_input_bias_coverage,
-        i2c_pullup_heuristic=request.i2c_pullup_heuristic_coverage,
+        control_input_bias=control_coverage,
+        i2c_pullup_heuristic=i2c_coverage,
     )
     pcb_candidate_inputs = PcbCandidateInputs(
         component_inventory=coverage.pcb_component_inventory,

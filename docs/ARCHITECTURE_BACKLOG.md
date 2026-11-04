@@ -257,15 +257,17 @@ native owner; it rechecks that evidence after electrical evaluation.
 Release native verification also rechecks the retained summary, its artifact
 inventory, and the repository source state after replaying the native checks.
 
-Control-input bias coverage follows the same boundary: a completed scan keeps
-the observed netlist hash even when it finds no candidate nets. Evaluation
-blocks stale or unbound completed coverage and coverage containing entries
-before those entries can suppress a prompt. Legacy unbound records remain
-readable; they cannot authorize evaluation against a current netlist.
-External-protection coverage now follows that source boundary. Evaluation
-checks its retained netlist digest before candidate scanning; stale or
-unbound positive coverage becomes `BLOCKED`, preserves its recorded digest
-and contract identity, and withholds the rows from candidate generation. The
+Control-input bias coverage now enters `resolve_control_input_bias_coverage`
+with the coach's netlist identity. A completed scan keeps the observed digest
+even when it finds no candidate nets. Stale, unbound, contradictory, or
+previously blocked coverage is resolved by that theme owner before entries can
+suppress a prompt; a blocked result retains the recorded contract and netlist
+identity while withholding entries. Legacy unbound records remain readable,
+but they cannot authorize evaluation against a current netlist.
+External-protection coverage now follows that source boundary through a
+theme-owned `ExternalProtectionCoverageRequest` and resolver. Stale or unbound
+positive coverage becomes `BLOCKED`, preserves its scope, recorded digest,
+and contract identity, and withholds rows from candidate generation. The
 published report independently checks the coverage digest against its own
 native netlist identity.
 Crystal-network, regulator-feedback, and RC-filter scans now require positive
@@ -289,6 +291,12 @@ bytes itself because the evaluator has no project root.
 Evaluation also rejects covered control-input or I²C decisions carried by
 `NOT_CONFIGURED`, `PENDING`, or `NOT_APPLICABLE` coverage. `OPEN` coverage may
 still resolve some entries while leaving others reviewable.
+I²C pull-up and input-voltage coverage now follows its own
+`resolve_i2c_pullup_coverage` request, preserving the empty-`COMPLETE` scan
+identity and returning stale or unbound coverage as `BLOCKED` with its original
+contract and netlist identity. Both heuristic owners return named resolutions
+so preparation uses the same evidence result for early-blocked reports and the
+normal candidate route.
 
 Electrical simulation now has a typed request and result lifecycle. The
 request checks every case's reviewed source-hash map against the current
@@ -425,6 +433,16 @@ typed counts against its candidates, while published-report validation still
 reconciles counts with findings. Apply the same result contract to other
 themes when their findings carry secondary coverage or deduplication data,
 without widening the public candidate API.
+Component-peer assignment evaluation now follows that route: its typed result
+returns per-rule finding counts to source-bound coverage, and the aggregate
+scan checks those counts against combined findings. Coverage assembly no
+longer derives component-peer counts from the globally flattened candidate
+list. The old keyword-based function remains a compatibility adapter.
+Mapped-topology execution remains the next result-routing gap: it currently
+counts four USB, power-path, sequence, and oscillator findings by scanning
+the aggregate candidate list. Its next slice should carry those counts from
+their owning bus, mapped-power, and component theme results while preserving
+the report's final cross-check against published findings.
 
 The control-input theme now receives its observed netlist and explicit bias
 coverage as one typed input, and returns a named result containing candidates

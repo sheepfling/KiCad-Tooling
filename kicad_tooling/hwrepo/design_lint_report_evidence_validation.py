@@ -165,6 +165,7 @@ def validate_source_bound_evidence(
         control_input_bias_coverage.netlist_sha256,
         netlist_sha256,
         required_statuses=frozenset({"COMPLETE", "OPEN"}),
+        allow_blocked_source_identity=True,
     )
     _validate_component_coverage_netlist_hash(
         "I2C pull-up",
@@ -172,6 +173,7 @@ def validate_source_bound_evidence(
         i2c_pullup_heuristic_coverage.netlist_sha256,
         netlist_sha256,
         required_statuses=frozenset({"COMPLETE", "OPEN"}),
+        allow_blocked_source_identity=True,
     )
     _validate_component_coverage_netlist_hash(
         "RF module antenna",

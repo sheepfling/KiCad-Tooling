@@ -14,7 +14,7 @@ from .i2c_pullup_models import (
     I2cPullupLineRequirement,
 )
 from .i2c_pullup_voltage_coverage import i2c_pullup_voltage_coverage
-from .models import NetlistContract
+from .models import Digest, NetlistContract
 from .resistor_paths import (
     positive_power_net_families,
     visible_resistor_pullups,
@@ -38,6 +38,22 @@ class I2cLowEquivalentResistance:
     pins: dict[str, tuple[str, ...]]
     resistors: dict[str, tuple[str, ...]]
     equivalent_ohms: dict[str, str]
+
+
+@dataclass(frozen=True, slots=True)
+class I2cPullupCoverageRequest:
+    """Supplied pull-up coverage and the current netlist identity."""
+
+    coverage: I2cPullupHeuristicCoverage | None
+    current_netlist_sha256: Digest | None
+
+
+@dataclass(frozen=True, slots=True)
+class I2cPullupCoverageResolution:
+    """Coverage admitted for this netlist, with any binding issue retained."""
+
+    coverage: I2cPullupHeuristicCoverage | None
+    binding_issue: str | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -286,6 +302,29 @@ def i2c_pullup_coverage_issue(
     ):
         return "I2C pull-up coverage uses a different or unavailable native netlist hash."
     return None
+
+
+def resolve_i2c_pullup_coverage(
+    request: I2cPullupCoverageRequest,
+) -> I2cPullupCoverageResolution:
+    """Withhold covered pull-up and voltage rows when source binding fails."""
+    coverage = request.coverage
+    if coverage is None:
+        return I2cPullupCoverageResolution(coverage=None, binding_issue=None)
+    issue = i2c_pullup_coverage_issue(coverage, request.current_netlist_sha256)
+    if issue is None:
+        return I2cPullupCoverageResolution(coverage=coverage, binding_issue=None)
+    blocked_coverage = I2cPullupHeuristicCoverage(
+        status="BLOCKED",
+        source_path=coverage.source_path,
+        source_sha256=coverage.source_sha256,
+        netlist_sha256=coverage.netlist_sha256,
+        issue=issue,
+    )
+    return I2cPullupCoverageResolution(
+        coverage=blocked_coverage,
+        binding_issue=issue,
+    )
 
 
 def i2c_buses_with_low_equivalent_pullup_resistance(

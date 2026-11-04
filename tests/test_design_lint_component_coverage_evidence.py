@@ -44,6 +44,16 @@ _INTERFACE_CATALOG_HASH = "c" * 64
             "i2c_address_coverage",
             I2cAddressCoverageReport(status="COMPLETE", netlist_sha256=_STALE_NETLIST_HASH),
         ),
+        (
+            "control_input_bias_coverage",
+            ControlInputBiasHeuristicCoverage(
+                status="COMPLETE", netlist_sha256=_STALE_NETLIST_HASH
+            ),
+        ),
+        (
+            "i2c_pullup_heuristic_coverage",
+            I2cPullupHeuristicCoverage(status="COMPLETE", netlist_sha256=_STALE_NETLIST_HASH),
+        ),
         *(
             (
                 "external_protection_coverage",
@@ -234,3 +244,24 @@ def test_blocked_component_coverage_retains_its_original_netlist_identity() -> N
 
     assert report.i2c_address_coverage.status == "BLOCKED"
     assert report.i2c_address_coverage.netlist_sha256 == _STALE_NETLIST_HASH
+
+
+def test_blocked_heuristic_coverage_retains_stale_netlist_identity() -> None:
+    issue = "Coverage was produced from an earlier native netlist"
+    report = DesignLintReport.model_validate(
+        {
+            "status": "BLOCKED",
+            "project_id": "synthetic-source-evidence",
+            "netlist_sha256": _REPORT_NETLIST_HASH,
+            "control_input_bias_coverage": ControlInputBiasHeuristicCoverage(
+                status="BLOCKED", netlist_sha256=_STALE_NETLIST_HASH, issue=issue
+            ),
+            "i2c_pullup_heuristic_coverage": I2cPullupHeuristicCoverage(
+                status="BLOCKED", netlist_sha256=_STALE_NETLIST_HASH, issue=issue
+            ),
+            "issues": (issue,),
+        }
+    )
+
+    assert report.control_input_bias_coverage.netlist_sha256 == _STALE_NETLIST_HASH
+    assert report.i2c_pullup_heuristic_coverage.netlist_sha256 == _STALE_NETLIST_HASH

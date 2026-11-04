@@ -61,6 +61,7 @@ I2C_PEER_REFERENCE_MODELS = frozenset(
     }
 )
 PEER_COVERAGE_SERVICES = (
+    "component_peer_pin_candidate_types.py",
     "component_peer_pin_coverage.py",
     "component_power_input_peer_scan.py",
     "digital_peer_voltage_coverage.py",
@@ -74,15 +75,33 @@ PEER_COVERAGE_SERVICES = (
 
 def test_internal_interface_coverage_services_import_theme_owners() -> None:
     expected_by_service = {
+        "component_peer_pin_candidate_types.py": {
+            "component_peer_pin_models": {"ComponentPeerPinRuleId"},
+        },
+        "component_peer_pin_coverage.py": {
+            "component_peer_pin_candidate_types": {"ComponentPeerPinFindingCounts"},
+            "component_peer_pin_models": {"ComponentPeerPinRuleCoverage"},
+        },
+        "design_lint_component_peer_candidates.py": {
+            "component_peer_pin_candidate_types": {
+                "ComponentPeerCandidateInputs",
+                "ComponentPeerCandidateResult",
+                "ComponentPeerPinFindingCounts",
+            },
+        },
+        "design_lint_candidate_aggregation.py": {
+            "component_peer_pin_candidate_types": {"ComponentPeerCandidateInputs"},
+            "design_lint_component_peer_candidates": {"scan_component_peer_candidates"},
+        },
+        "design_lint_candidate_results.py": {
+            "component_peer_pin_candidate_types": {"ComponentPeerPinFindingCounts"},
+        },
         "connector_peer_pin_coverage.py": {
             "connector_part_id_peer_models": {"ConnectorPartIdPeerPinCoverage"},
             "connector_peer_pin_models": {"ConnectorPeerPinHeuristicCoverage"},
         },
         "connector_footprint_peer_coverage.py": {
             "connector_peer_pin_models": {"ConnectorFootprintPeerPinCoverage"},
-        },
-        "component_peer_pin_coverage.py": {
-            "component_peer_pin_models": {"ComponentPeerPinRuleCoverage"},
         },
         "digital_peer_voltage_coverage.py": {
             "digital_peer_voltage_models": {"DigitalPeerVoltageRuleCoverage"},
@@ -132,7 +151,13 @@ def test_internal_interface_coverage_services_import_theme_owners() -> None:
     model_names = (
         {name for names in INTERFACE_COVERAGE_MODEL_OWNERS.values() for name in names}
         | I2C_PEER_REFERENCE_MODELS
-        | {"UsbPeerUnsupportedMultiPinPathCoverage"}
+        | {
+            "ComponentPeerPinRuleId",
+            "ComponentPeerPinFindingCounts",
+            "ComponentPeerCandidateInputs",
+            "ComponentPeerCandidateResult",
+            "UsbPeerUnsupportedMultiPinPathCoverage",
+        }
     )
     legacy_imports: list[str] = []
     for filename, expected_imports in expected_by_service.items():

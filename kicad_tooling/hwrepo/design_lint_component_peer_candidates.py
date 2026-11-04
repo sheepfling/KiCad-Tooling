@@ -3,6 +3,11 @@
 from __future__ import annotations
 
 from .component_peer_pin_all_open import all_open_generic_component_peer_pin_candidates
+from .component_peer_pin_candidate_types import (
+    ComponentPeerCandidateInputs,
+    ComponentPeerCandidateResult,
+    ComponentPeerPinFindingCounts,
+)
 from .component_peer_pin_findings import component_peer_power_pin_assignment_divergences
 from .component_peer_pin_identity import component_peer_pin_identity_context
 from .component_peer_pin_mixed_open import mixed_open_generic_component_peer_pin_candidates
@@ -18,7 +23,36 @@ def component_peer_candidates(
     reviewed_connector_references: tuple[str, ...] = (),
     control_pin_keys: frozenset[str] = frozenset(),
 ) -> tuple[Candidate, ...]:
+    """Preserve the keyword-based candidate interface for direct callers."""
+    return scan_component_peer_candidates(
+        ComponentPeerCandidateInputs(
+            observed=observed,
+            peer_pin_scans=peer_pin_scans,
+            reviewed_connector_references=reviewed_connector_references,
+            control_pin_keys=control_pin_keys,
+        )
+    ).candidates
+
+
+def scan_component_peer_candidates(
+    inputs: ComponentPeerCandidateInputs,
+) -> ComponentPeerCandidateResult:
+    """Build findings and typed counts from the component-peer theme inputs."""
+    candidates = _component_peer_candidate_items(inputs)
+    return ComponentPeerCandidateResult(
+        candidates=candidates,
+        finding_counts=ComponentPeerPinFindingCounts.from_candidates(candidates),
+    )
+
+
+def _component_peer_candidate_items(
+    inputs: ComponentPeerCandidateInputs,
+) -> tuple[Candidate, ...]:
     """Build review prompts for comparable components with divergent peer pins."""
+    observed = inputs.observed
+    peer_pin_scans = inputs.peer_pin_scans
+    reviewed_connector_references = inputs.reviewed_connector_references
+    control_pin_keys = inputs.control_pin_keys
     found: list[Candidate] = []
     functions_by_pin = {
         pin.casefold(): function for pin, function in observed.pin_functions.items()

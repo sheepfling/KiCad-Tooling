@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Literal
 
 from .control_input_checks import control_input_checks
@@ -11,7 +12,23 @@ from .control_input_models import (
     ControlInputBiasHeuristicEntry,
     ControlInputsAnalysis,
 )
-from .models import NetlistContract
+from .models import Digest, NetlistContract
+
+
+@dataclass(frozen=True, slots=True)
+class ControlInputBiasCoverageRequest:
+    """Supplied control-bias coverage and the current netlist identity."""
+
+    coverage: ControlInputBiasHeuristicCoverage | None
+    current_netlist_sha256: Digest | None
+
+
+@dataclass(frozen=True, slots=True)
+class ControlInputBiasCoverageResolution:
+    """Coverage admitted for this netlist, with any binding issue retained."""
+
+    coverage: ControlInputBiasHeuristicCoverage | None
+    binding_issue: str | None
 
 
 def control_input_bias_heuristic_coverage(
@@ -158,3 +175,26 @@ def control_input_bias_coverage_issue(
     ):
         return "Control-input bias coverage uses a different or unavailable native netlist hash."
     return None
+
+
+def resolve_control_input_bias_coverage(
+    request: ControlInputBiasCoverageRequest,
+) -> ControlInputBiasCoverageResolution:
+    """Withhold covered rows when their contract or native netlist is stale."""
+    coverage = request.coverage
+    if coverage is None:
+        return ControlInputBiasCoverageResolution(coverage=None, binding_issue=None)
+    issue = control_input_bias_coverage_issue(coverage, request.current_netlist_sha256)
+    if issue is None:
+        return ControlInputBiasCoverageResolution(coverage=coverage, binding_issue=None)
+    blocked_coverage = ControlInputBiasHeuristicCoverage(
+        status="BLOCKED",
+        source_path=coverage.source_path,
+        source_sha256=coverage.source_sha256,
+        netlist_sha256=coverage.netlist_sha256,
+        issue=issue,
+    )
+    return ControlInputBiasCoverageResolution(
+        coverage=blocked_coverage,
+        binding_issue=issue,
+    )

@@ -10,6 +10,9 @@ from kicad_tooling.hwrepo import (
     design_lint_candidate_aggregation,
     design_lint_evaluation_candidates,
 )
+from kicad_tooling.hwrepo.component_peer_pin_candidate_types import (
+    ComponentPeerPinFindingCounts,
+)
 from kicad_tooling.hwrepo.connector_peer_pin_candidate_results import (
     ConnectorPeerPinFindingCounts,
 )
@@ -237,6 +240,7 @@ def _legacy_scan_result(
         candidates=items,
         peer_reference_keys=PeerReferenceCandidateKeys.from_candidates(items),
         connector_peer_pin_finding_counts=ConnectorPeerPinFindingCounts.from_candidates(items),
+        component_peer_pin_finding_counts=ComponentPeerPinFindingCounts.from_candidates(items),
     )
 
 
