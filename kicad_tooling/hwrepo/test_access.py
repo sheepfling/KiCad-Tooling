@@ -6,12 +6,13 @@ from dataclasses import dataclass
 from math import ceil
 from pathlib import Path
 
+from .electrical_report_models import ElectricalCheck
 from .model_inventory import (  # pyright: ignore[reportPrivateUsage]
     _atoms,  # pyright: ignore[reportPrivateUsage]
     _children,  # pyright: ignore[reportPrivateUsage]
     _Span,  # pyright: ignore[reportPrivateUsage]
 )
-from .models import ElectricalCheck, NetlistContract
+from .models import NetlistContract
 from .pcb_connectivity_observations import PcbAccessProbeObservation
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_test_access_models import (

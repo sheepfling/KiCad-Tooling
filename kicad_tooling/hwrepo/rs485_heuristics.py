@@ -17,7 +17,8 @@ from kicad_tooling.hwrepo.rs485_models import (
     Rs485TerminationResistorRequirement,
 )
 
-from .models import ElectricalCheck, NetlistContract
+from .electrical_report_models import ElectricalCheck
+from .models import NetlistContract
 from .resistor_paths import (
     DirectResistor,
     direct_resistors,

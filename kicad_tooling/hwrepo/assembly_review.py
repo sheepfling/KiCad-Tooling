@@ -22,18 +22,20 @@ from .three_d_glb import inspect_glb
 _MAX_GLB = 64 * 1024 * 1024
 
 
-def _selected_contract(root: Path, project_directory: Path, selected: Path) -> tuple[Path, bytes]:
+def selected_assembly_contract(
+    root: Path, project_directory: Path, selected: Path, *, label: str = "Placement"
+) -> tuple[Path, bytes]:
     try:
         relative = selected.relative_to(root) if selected.is_absolute() else selected
     except ValueError as exc:
-        raise ValueError("Select a project-owned placement contract") from exc
+        raise ValueError(f"Select a project-owned {label.lower()} contract") from exc
     path = repo_path(root, relative.as_posix())
     if (
         not path.is_relative_to(project_directory)
         or "build" in path.relative_to(project_directory).parts
         or path.suffix != ".json"
     ):
-        raise ValueError("Placement contract must be JSON inside the selected project")
+        raise ValueError(f"{label} contract must be JSON inside the selected project")
     content, _ = read_regular_bytes(path, maximum=1024 * 1024)
     return path, content
 
@@ -87,7 +89,9 @@ def build_assembly_review(
         raise ValueError("Board 3D receipt identifies another project, board or toolchain")
     board_path, board_bytes, board_sha = _verified_board(root, receipt_path, receipt, current)
     project_directory = repo_path(root, project.config).parent
-    contract_path, contract_bytes = _selected_contract(root, project_directory, placement_contract)
+    contract_path, contract_bytes = selected_assembly_contract(
+        root, project_directory, placement_contract
+    )
     contract = parse_model_text(contract_bytes.decode("utf-8"), AssemblyPlacementContract)
     if contract.project_id != project_id or contract.board_glb_sha256 != board_sha:
         raise ValueError("Placement contract does not bind the selected board GLB")

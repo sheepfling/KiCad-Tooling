@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
@@ -17,6 +16,7 @@ from .pcb_drc_source_evidence import drc_coverage_matches_sources
 from .pcb_protection_path_models import PcbProtectionPathCoverageReport, PcbProtectionPathMap
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport, PcbReferencePlaneMap
 from .pcb_switching_loop_models import PcbSwitchingLoopCoverageReport, PcbSwitchingLoopMap
+from .source_state_models import SourceHashInventory
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,7 +37,7 @@ class PcbMappedCoveragePolicyState:
 def normalize_pcb_mapped_coverage_policy(
     policy: DesignLintPolicy,
     *,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
     pcb_differential_pair_coverage: PcbDifferentialPairRuleCoverageReport | None,
     pcb_switching_loop_coverage: PcbSwitchingLoopCoverageReport | None,
     pcb_reference_plane_coverage: PcbReferencePlaneCoverageReport | None,

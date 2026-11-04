@@ -35,8 +35,10 @@ from kicad_tooling.hwrepo.design_lint_candidate_inputs import (
     PcbCandidateInputs,
     PeerCandidateInputs,
     PowerCandidateInputs,
+    UsbDataPathCandidateInputs,
 )
 from kicad_tooling.hwrepo.design_lint_candidate_results import DesignLintCandidateScanResult
+from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
 from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.external_protection_models import ExternalProtectionCoverageReport
 from kicad_tooling.hwrepo.i2c_address_inputs import I2cAddressCandidateInput
@@ -51,6 +53,7 @@ from kicad_tooling.hwrepo.usb_data_path_models import UsbDataPathMap
 from tests.design_lint_fixtures import coach, control_input_pins, i2c_netlist
 from tests.i2c_peer_reference_support import i2c_peer_netlist
 from tests.test_pcb_drc_coverage import incomplete_report, pair_map, rules_text
+from tests.usb_data_path_support import usb_data_map, usb_netlist
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -59,7 +62,11 @@ pytestmark = [
 ]
 
 
-def _candidate_inputs(observed: NetlistContract) -> DesignLintCandidateInputs:
+def _candidate_inputs(
+    observed: NetlistContract,
+    *,
+    usb_map: UsbDataPathMap | None = None,
+) -> DesignLintCandidateInputs:
     return DesignLintCandidateInputs(
         observed=observed,
         catalog=None,
@@ -116,8 +123,47 @@ def _candidate_inputs(observed: NetlistContract) -> DesignLintCandidateInputs:
             touch_pad_clearance=None,
             stm32_pin_map=None,
         ),
-        usb_data_path_map=None,
+        usb_data_path=UsbDataPathCandidateInputs(authored_map=usb_map),
     )
+
+
+def test_usb_data_path_input_group_preserves_both_scanner_routes() -> None:
+    inputs = _candidate_inputs(usb_netlist(), usb_map=usb_data_map())
+
+    assert scan_candidates(inputs) == _legacy_scan(inputs)
+
+
+def test_pcb_candidate_sources_stay_in_the_pcb_group_and_preserve_results() -> None:
+    rule = next(
+        item for item in rule_catalog().rules if item.status == "active" and item.theme == "pcb"
+    )
+    dru_candidate = Candidate(
+        rule_id=rule.rule_id,
+        subject="custom rule",
+        message="Synthetic authored PCB rule candidate",
+        evidence={},
+    )
+    native_candidate = Candidate(
+        rule_id=rule.rule_id,
+        subject="native check",
+        message="Synthetic native DRC candidate",
+        evidence={},
+    )
+    inputs = _candidate_inputs(i2c_netlist(pullups=()))
+    inputs = replace(
+        inputs,
+        pcb=replace(
+            inputs.pcb,
+            dru_rule_candidates=(dru_candidate,),
+            native_drc_candidates=(native_candidate,),
+        ),
+    )
+
+    assert scan_candidate_result(inputs) == _legacy_scan_result(inputs)
+    assert {item.subject for item in scan_candidate_result(inputs).candidates} >= {
+        "custom rule",
+        "native check",
+    }
 
 
 def _legacy_scan(inputs: DesignLintCandidateInputs) -> tuple[Candidate, ...]:
@@ -139,7 +185,7 @@ def _legacy_scan(inputs: DesignLintCandidateInputs) -> tuple[Candidate, ...]:
         pcb_differential_pair_coverage=inputs.pcb.differential_pair,
         pcb_differential_pair_rule_map=inputs.bus.pcb_differential_pair_rule_map,
         i2c_address_map=inputs.bus.i2c_address.address_map,
-        usb_data_path_map=inputs.usb_data_path_map,
+        usb_data_path_map=inputs.usb_data_path.authored_map,
         stm32_pin_map_coverage=inputs.pcb.stm32_pin_map,
         spi_roster=inputs.bus.spi_roster,
         usb_c_port_roster=inputs.peer.usb_c_port_roster,
@@ -175,7 +221,7 @@ def _legacy_scan(inputs: DesignLintCandidateInputs) -> tuple[Candidate, ...]:
     )
     all_items = tuple(
         sorted(
-            (*items, *inputs.additional_candidates),
+            (*items, *inputs.pcb.dru_rule_candidates, *inputs.pcb.native_drc_candidates),
             key=lambda item: (item.rule_id, item.subject),
         )
     )

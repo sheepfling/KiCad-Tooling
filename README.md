@@ -69,6 +69,10 @@ the CLI or MCP. A verified self-contained GLB also gets an offline interactive
 viewer with rotate, pan, zoom, and orientation controls in the same receipt.
 For an explicitly positioned enclosure GLB, use `kicad-team assembly-review`
 or MCP `export_assembly_review`; see [mechanical assembly review](docs/ASSEMBLY_REVIEW.md).
+To measure board margin to a project-authored free-space box and the retained
+board/enclosure mesh surface gap, use
+`kicad-team assembly-clearance` or MCP `export_assembly_clearance`; see
+[authored box clearance review](docs/ASSEMBLY_CLEARANCE.md).
 
 For a BOM and parts review, run `kicad-team parts --project <id>` from the
 project checkout. The text report lists the purchasing groups and their build

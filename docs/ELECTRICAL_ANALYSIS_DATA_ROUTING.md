@@ -61,7 +61,9 @@ boundaries while improving internal handoffs.
    path-to-digest maps and command-ID-to-command map are homogeneous indexes
    with defined value types; they are not opaque object dictionaries. Use the
    existing `RepositoryPath`, `Digest`, and `Identifier` primitives in
-   internal annotations too. A new record is justified when it adds a domain
+   internal annotations too. `SourceHashInventory` in
+   `source_state_models.py` names the common `RepositoryPath`-to-`Digest`
+   map used by source-bound checks. A new record is justified when it adds a domain
    invariant or groups one producer's evidence, not merely to wrap a map.
 6. **Keep orchestration distinct from predicates.** The operation owns project
    selection, evidence planning/capture, freshness rechecks, and receipt

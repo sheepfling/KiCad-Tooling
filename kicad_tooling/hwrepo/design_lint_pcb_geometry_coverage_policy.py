@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
@@ -14,6 +13,7 @@ from .pcb_drc_source_evidence import drc_coverage_matches_sources
 from .pcb_keepout_models import PcbKeepoutCoverageReport
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
+from .source_state_models import SourceHashInventory
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,7 +29,7 @@ class PcbInputCoveragePolicyState:
 def normalize_pcb_input_coverage_policy(
     policy: DesignLintPolicy,
     *,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
     pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None,
     pcb_keepout_coverage: PcbKeepoutCoverageReport | None,
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None,

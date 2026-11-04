@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .contract_coach import pinned_image
-from .models import ElectricalCheck
+from .electrical_report_models import ElectricalCheck
 from .pcb_connectivity_observations import (
     PcbNetTieObservation,
     PcbPadConnectivityObservation,

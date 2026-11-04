@@ -18,6 +18,7 @@ from unittest.mock import patch
 
 from kicad_tooling.ci import static_pipeline
 from kicad_tooling.hwrepo import native_evidence
+from kicad_tooling.hwrepo.command_evidence_models import CommandEvidence
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.discovery import load_config
 from kicad_tooling.hwrepo.documentation import check as check_docs
@@ -30,12 +31,8 @@ from kicad_tooling.hwrepo.evidence import (
 )
 from kicad_tooling.hwrepo.models import (
     CheckEvidence,
-    CommandEvidence,
     DeviationStatus,
-    GenerationReport,
     ProjectConfig,
-    ProjectStaticPipelineReport,
-    ProjectTestsReport,
     ReleaseArtifact,
     ReleaseArtifactKind,
     ReleaseClass,
@@ -44,14 +41,19 @@ from kicad_tooling.hwrepo.models import (
     ReleaseManifest,
     ReleaseStatus,
     ScopedReleasePortableReport,
-    StaticPipelineReport,
     ValidationSummary,
 )
 from kicad_tooling.hwrepo.packaging import package, restore, verify
 from kicad_tooling.hwrepo.product import check as check_product
+from kicad_tooling.hwrepo.project_static_pipeline_models import (
+    GenerationReport,
+    ProjectStaticPipelineReport,
+    ProjectTestsReport,
+)
 from kicad_tooling.hwrepo.release import check
 from kicad_tooling.hwrepo.releasing import prepare, reference
 from kicad_tooling.hwrepo.repository import check_repository
+from kicad_tooling.hwrepo.static_pipeline_models import StaticPipelineReport
 from kicad_tooling.lint_registry import lint
 from tests.support import initialize_git, reference_root
 

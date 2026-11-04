@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path, PureWindowsPath
 
@@ -18,6 +17,7 @@ from .native_summary_binding import validate_native_summary_binding
 from .pcb_drc_models import PcbDifferentialPairRuleCoverageReport, PcbSignalPathRuleCoverageReport
 from .project_models import ProjectConfig
 from .project_source_hashes import hash_project_sources as hashes
+from .source_state_models import SourceHashInventory
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,7 +46,7 @@ class BoundDrcEvidence:
 def source_bound_drc_evidence(
     root: Path,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
     native_summary: Path,
 ) -> BoundDrcEvidence:
     root = root.resolve()
@@ -171,7 +171,7 @@ def source_bound_drc_evidence(
     return evidence
 
 
-def source_inventory_sha256(source_hashes: Mapping[str, str]) -> str:
+def source_inventory_sha256(source_hashes: SourceHashInventory) -> str:
     return hashlib.sha256(
         "\n".join(f"{name}\0{value}" for name, value in sorted(source_hashes.items())).encode(
             "utf-8"
@@ -181,7 +181,7 @@ def source_inventory_sha256(source_hashes: Mapping[str, str]) -> str:
 
 def drc_coverage_matches_sources(
     report: PcbDifferentialPairRuleCoverageReport | PcbSignalPathRuleCoverageReport,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> bool:
     """Check a scanned DRC coverage report against the current source inventory."""
     return bool(
@@ -201,7 +201,7 @@ def drc_coverage_matches_sources(
 def verify_source_bound_drc_unchanged(
     root: Path,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
     evidence: BoundDrcEvidence,
 ) -> None:
     if hashes(root, config.source_roots) != source_hashes:

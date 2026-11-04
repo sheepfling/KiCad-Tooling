@@ -16,16 +16,9 @@ from .evidence import digest as file_digest
 from .evidence import source_state
 from .layout import layout
 from .models import (
-    DeviationStatus,
     GovernanceRecord,
     InterfacesCatalog,
     LibrariesCatalog,
-    ReleaseArtifactKind,
-    ReleaseAssurancePolicy,
-    ReleaseManifest,
-    ReleasePoliciesCatalog,
-    ReleaseStatus,
-    ReleaseVariant,
     TeamPolicy,
 )
 from .native_evidence import verify_native
@@ -38,6 +31,15 @@ from .product_models import (
     ProductRecord,
 )
 from .project_models import ProjectKind, ProjectRecord, ToolchainsCatalog
+from .release_contract_models import (
+    DeviationStatus,
+    ReleaseArtifactKind,
+    ReleaseAssurancePolicy,
+    ReleaseManifest,
+    ReleasePoliciesCatalog,
+    ReleaseStatus,
+    ReleaseVariant,
+)
 from .release_model_types import ReleaseClass
 from .release_report_models import ReleaseReadinessReport
 

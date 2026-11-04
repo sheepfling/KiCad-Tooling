@@ -14,13 +14,13 @@ from .layout import layout
 from .models import (
     InterfacesCatalog,
     LibrariesCatalog,
-    ReleasePoliciesCatalog,
     TeamPolicy,
 )
 from .part_catalog_models import PartsCatalog, PartStatus
 from .product_models import ProductRecord
 from .project_models import ProjectKind, ProjectManifest, ToolchainsCatalog
 from .project_source_hashes import hash_project_sources as hashes
+from .release_contract_models import ReleasePoliciesCatalog
 from .release_model_types import ReleaseClass
 
 

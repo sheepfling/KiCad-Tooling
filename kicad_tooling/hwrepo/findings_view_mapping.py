@@ -10,10 +10,12 @@ from .design_lint_finding_models import DesignLintFinding
 from .findings_view_models import FindingMarker, ReviewDrawing, ReviewFinding
 from .native_drc_findings import NativeDrcFinding
 from .native_erc_report import KiCadErcReport, KiCadErcViolation
+from .source_state_models import SourceHashInventory
 
 DRC_MAPPING_VERSIONS = frozenset({"10.0.0", "10.0.5", "10.0.6"})
 SCHEMATIC_MAPPING_VERSIONS = frozenset({"10.0.5", "10.0.6"})
-ERC_MAPPING_VERSIONS = frozenset({"10.0.6"})
+SCHEMATIC_SVG_FRAME_VERSIONS = frozenset({"10.0.0", "10.0.5", "10.0.6"})
+ERC_MAPPING_VERSIONS = frozenset({"10.0.0", "10.0.5", "10.0.6"})
 _SCHEMATIC_POINT = {
     "schematic.wire_end_on_pin_line": "wire_endpoint_mm",
     "schematic.pin_tip_on_wire_interior": "pin_tip_mm",
@@ -49,7 +51,7 @@ def _inside(drawing: ReviewDrawing, x: float, y: float) -> bool:
 def design_lint_finding(
     finding: DesignLintFinding,
     drawings: Mapping[str, ReviewDrawing],
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
     version: str,
 ) -> ReviewFinding:
     """Use the exact bound sheet occurrence; never infer a coordinate from a subject."""
@@ -154,9 +156,9 @@ def erc_finding(
     report: KiCadErcReport,
     primary_source: str,
     drawings: Mapping[str, ReviewDrawing],
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> ReviewFinding:
-    """Place exact KiCad 10.0.6 ERC items on their UUID-bound sheet drawing."""
+    """Place calibrated KiCad 10 ERC items on their UUID-bound sheet drawing."""
     drawing = drawings.get(finding.sheet_uuid_path)
     display_path = (
         "/" + "/".join(drawing.sheet_path) + "/" if drawing and drawing.sheet_path else "/"
@@ -178,7 +180,7 @@ def erc_finding(
     for item in finding.items:
         if not supported or drawing is None or item.x is None or item.y is None:
             continue
-        # Exact KiCad 10.0.6 native fault/control exports show ERC pos fields at
+        # Exact KiCad 10.0.0, 10.0.5 and 10.0.6 fault/control exports show ERC pos fields at
         # 1/100 of source and SVG millimetres despite coordinate_units="mm".
         try:
             x_mm, y_mm = float(item.x) * 100, float(item.y) * 100
@@ -198,7 +200,7 @@ def erc_finding(
     reason = None
     if len(markers) < max(1, len(finding.items)):
         reason = (
-            "ERC location needs an exact KiCad 10.0.6 UUID sheet, supported SVG frame, "
+            "ERC location needs a calibrated KiCad 10 UUID sheet, supported SVG frame, "
             "millimetre report, and in-bounds item position."
         )
     return ReviewFinding(
@@ -219,7 +221,9 @@ def erc_finding(
                 for item in finding.items
             ),
             "coordinate_units": (report.coordinate_units,) if report.coordinate_units else (),
-            "coordinate_conversion": ("KiCad 10.0.6 ERC position ×100 to schematic mm",)
+            "coordinate_conversion": (
+                f"KiCad {report.kicad_version} ERC position ×100 to schematic mm",
+            )
             if markers
             else (),
         },

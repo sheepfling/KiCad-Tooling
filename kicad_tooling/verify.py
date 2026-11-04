@@ -8,7 +8,6 @@ from pathlib import Path
 
 from .hwrepo.doctor import NativeRunner
 from .hwrepo.layout import default_project_root
-from .hwrepo.models import ProjectVerificationReport
 from .hwrepo.project_verification import (
     SelectionFailure,
     container_command,
@@ -23,6 +22,7 @@ from .hwrepo.project_verification_models import (
 from .hwrepo.project_verification_models import (
     VerificationDepth as Depth,
 )
+from .hwrepo.project_verification_report_models import ProjectVerificationReport
 
 __all__ = [
     "Depth",

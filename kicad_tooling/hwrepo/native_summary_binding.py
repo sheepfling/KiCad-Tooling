@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
 from .models import ValidationSummary
 from .project_models import ProjectConfig
+from .source_state_models import SourceHashInventory
 
 
 def validate_native_toolchain(summary: ValidationSummary, config: ProjectConfig) -> None:
@@ -25,7 +24,7 @@ def validate_native_toolchain(summary: ValidationSummary, config: ProjectConfig)
 
 
 def validate_native_summary_binding(
-    summary: ValidationSummary, config: ProjectConfig, source_hashes: Mapping[str, str]
+    summary: ValidationSummary, config: ProjectConfig, source_hashes: SourceHashInventory
 ) -> None:
     """Check the project, exact toolchain, and completed source-scope receipts."""
     if summary.project_id != config.project_id or summary.project_kind is not config.kind:

@@ -14,6 +14,7 @@ from .discovery import load_config, load_registry
 from .evidence import digest
 from .generation import harness_schedule, system_view
 from .layout import CONFIG_NAME, layout, within_roots
+from .model_primitives import Digest, RepositoryPath
 from .product import excluded, load_repository, occurrences, validate_product
 from .product_models import AssemblyKind, ProductIndex, ProductRecord, Terminal, Variant
 from .product_visual_html import render_product_visual
@@ -127,7 +128,7 @@ def project_instances(
 def _project_identities(
     root: Path,
     ids: set[str],
-    source_hashes: dict[str, str],
+    source_hashes: dict[RepositoryPath, Digest],
 ) -> tuple[ProductProjectIdentity, ...]:
     projects = {item.id: item for item in load_registry(root).projects}
     result: list[ProductProjectIdentity] = []
@@ -211,7 +212,9 @@ def build_product_visual(
         registry.catalogs.interfaces,
         entry.path,
     )
-    source_hashes = {name: digest(repo_path(root, name)) for name in baseline}
+    source_hashes: dict[RepositoryPath, Digest] = {
+        name: digest(repo_path(root, name)) for name in baseline
+    }
     parts_path = registry.catalogs.parts
     parts_bytes, _ = read_regular_bytes(repo_path(root, parts_path), maximum=8 * 1024 * 1024)
     parts_sha256 = hashlib.sha256(parts_bytes).hexdigest()
@@ -252,7 +255,9 @@ def build_product_visual(
     schedule_bytes = model_json_bytes(schedule) if schedule is not None else None
 
     def verify_inputs() -> None:
-        observed = {name: digest(repo_path(root, name)) for name in baseline}
+        observed: dict[RepositoryPath, Digest] = {
+            name: digest(repo_path(root, name)) for name in baseline
+        }
         if adapter.is_file():
             observed[CONFIG_NAME] = digest(adapter)
         refreshed_projects = _project_identities(root, project_ids, observed)

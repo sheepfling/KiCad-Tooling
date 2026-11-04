@@ -17,6 +17,7 @@ from .contracts import parse_model_text, repo_path
 from .evidence import digest
 from .project_models import ProjectConfig
 from .review_overview_models import OverviewLink
+from .source_state_models import SourceHashInventory
 
 Model = TypeVar("Model", bound=BaseModel)
 
@@ -26,7 +27,7 @@ class ReviewContext:
     root: Path
     project_id: str
     config: ProjectConfig
-    source_hashes: Mapping[str, str]
+    source_hashes: SourceHashInventory
 
 
 def selected_receipt(root: Path, requested: Path, filename: str) -> Path:
@@ -57,7 +58,7 @@ def recorded_directory(root: Path, value: str, expected: Path) -> bool:
 
 
 def source_mismatch(
-    context: ReviewContext, expected: Mapping[str, str], *, exact_scope: bool
+    context: ReviewContext, expected: SourceHashInventory, *, exact_scope: bool
 ) -> str | None:
     """Return a concrete mismatch, or None when every declared byte still matches."""
     if exact_scope and dict(expected) != dict(context.source_hashes):

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .contracts import repo_path
-from .models import ProjectVerificationReport
+from .project_verification_report_models import ProjectVerificationReport
 from .repository import checkout_input_hashes
 from .review_overview_evidence import (
     ReviewContext,
@@ -16,6 +16,7 @@ from .review_overview_evidence import (
 )
 from .review_overview_models import OverviewItem, OverviewLink
 from .review_overview_result import receipt_result
+from .source_state_models import SourceHashInventory
 from .verification_receipts import read_verification_output_manifest_with_digest
 
 
@@ -28,7 +29,7 @@ def inspect_verification(context: ReviewContext, path: Path) -> OverviewItem:
     stale: list[str] = []
     unknown: list[str] = []
     links: list[OverviewLink] = []
-    source_hashes: dict[str, str] = {}
+    source_hashes: SourceHashInventory = {}
     try:
         loaded = read_verification_output_manifest_with_digest(path.parent, checksum)
     except (OSError, ValueError):

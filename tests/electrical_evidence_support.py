@@ -17,10 +17,10 @@ from kicad_tooling.hwrepo.models import (
     ElectricalAnalysisContract,
     ElectricalAnalysisReport,
     EvidenceFile,
-    SourceState,
     ValidationSummary,
 )
 from kicad_tooling.hwrepo.releasing import reference
+from kicad_tooling.hwrepo.source_state_models import SourceState
 from tests.contract_coach_support import (
     ContractCoachWorkspace,
     create_contract_coach_workspace,

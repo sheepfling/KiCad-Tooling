@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .design_lint_types import Candidate
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import PcbDifferentialPairRuleCoverageReport, PcbSignalPathRuleCoverageReport
@@ -33,3 +34,5 @@ class PcbCandidateInputs:
     rf_antenna: PcbRfModuleAntennaCoverageReport | None
     touch_pad_clearance: PcbTouchPadClearanceCoverageReport | None
     stm32_pin_map: Stm32PinMapCoverageReport | None
+    dru_rule_candidates: tuple[Candidate, ...] = ()
+    native_drc_candidates: tuple[Candidate, ...] = ()

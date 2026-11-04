@@ -8,7 +8,7 @@ from pathlib import Path
 from .ci_hosted_support import HostedLog
 from .hwrepo.contracts import read_model
 from .hwrepo.electrical import load_analysis, policy_issues, selected_config, simulation_cases
-from .hwrepo.models import ElectricalAnalysisReport
+from .hwrepo.electrical_report_models import ElectricalAnalysisReport
 from .hwrepo.simulator_setup import ensure
 
 

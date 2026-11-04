@@ -18,7 +18,7 @@ from .command_evidence_models import CommandEvidence
 from .contract_coach import run_command
 from .contracts import repo_path, write_model
 from .electrical import regular_input_bytes
-from .models import ElectricalCheck
+from .electrical_report_models import ElectricalCheck
 from .waveform_data import read_waveform
 
 # Analysis/control directives are generated here, never inherited from a model file.

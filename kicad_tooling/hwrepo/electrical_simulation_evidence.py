@@ -7,9 +7,9 @@ from typing import Annotated, Literal, TypeAlias
 from pydantic import Field, model_validator
 
 from .command_evidence_models import CommandEvidence
+from .electrical_report_models import ElectricalCheck
 from .electrical_simulation_models import SimulationCase
 from .model_primitives import Identifier, NonEmptyText, StrictModel
-from .models import ElectricalCheck
 
 
 class SimulationVersionNotRequested(StrictModel):

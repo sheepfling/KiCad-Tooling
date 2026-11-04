@@ -10,9 +10,11 @@ from .contracts import read_model
 from .electrical import selected_config
 from .electrical_analysis_contract_models import ElectricalAnalysisContract
 from .electrical_charts import checked_artifact, source_receipt
+from .electrical_report_models import ElectricalAnalysisReport
 from .evidence import digest
-from .models import ContractCoachReport, ElectricalAnalysisReport, NetlistContract
+from .models import ContractCoachReport, NetlistContract
 from .project_source_hashes import hash_project_sources as hashes
+from .source_state_models import SourceHashInventory
 
 
 @dataclass(frozen=True)
@@ -29,7 +31,7 @@ class ElectricalViewEvidence:
     observed_sha256: str | None
     native_sha256: str | None
     source_status: Literal["CURRENT", "STALE", "UNKNOWN", "UNAVAILABLE"]
-    current_source_sha256: dict[str, str] | None
+    current_source_sha256: SourceHashInventory | None
 
     def verify(self) -> None:
         """Reject changes between input selection and receipt publication."""
@@ -64,11 +66,11 @@ def load_electrical_view_evidence(root: Path, receipt: Path) -> ElectricalViewEv
     contract = read_model(requirements, ElectricalAnalysisContract)
     if contract.project_id != analysis.project_id:
         raise ValueError("Analysis and requirements project IDs differ")
-    recorded_source: dict[str, str] = (
+    recorded_source: SourceHashInventory = (
         dict(analysis.source.files_sha256) if analysis.source is not None else {}
     )
     source_status: Literal["CURRENT", "STALE", "UNKNOWN", "UNAVAILABLE"] = "UNKNOWN"
-    current_source_hashes: dict[str, str] | None = None
+    current_source_hashes: SourceHashInventory | None = None
     if recorded_source:
         try:
             current_source = hashes(root, selected_config(root, analysis.project_id).source_roots)

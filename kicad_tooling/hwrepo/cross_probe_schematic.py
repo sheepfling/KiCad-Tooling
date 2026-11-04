@@ -19,6 +19,7 @@ from .schematic_geometry_source import (
     schematic_sheet_references,
 )
 from .schematic_geometry_types import MAX_SHEET_OCCURRENCES
+from .source_state_models import SourceHashInventory
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,7 +35,7 @@ class SchematicSymbolAnchor:
 
 def schematic_drawing_bindings(
     drawings: tuple[ReviewDrawing, ...],
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
     *,
     root_source: str,
     legacy_root_instance: str | None,

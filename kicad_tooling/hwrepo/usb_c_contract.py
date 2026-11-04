@@ -11,10 +11,8 @@ from kicad_tooling.hwrepo.usb_c_models import (
     UsbCVbusCapacitanceRequirement,
 )
 
-from .models import (
-    ElectricalCheck,
-    NetlistContract,
-)
+from .electrical_report_models import ElectricalCheck
+from .models import NetlistContract
 from .resistor_paths import direct_resistors
 from .usb_c_vbus import (
     usb_c_vbus_capacitance_check,

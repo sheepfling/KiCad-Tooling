@@ -49,13 +49,14 @@ fresh `build/findings-view/<view_id>` directory.
   lint source-tree bindings match that instance. Each matched sheet has its own
   drawing and marker overlay. Missing or duplicate SVG sheet identities stay
   unmapped; hierarchical mapping for other KiCad versions remains unverified.
-- KiCad 10.0.6 ERC item positions can be marked on uniquely UUID-bound sheets
-  when the native report names the exact schematic, declares millimetres, and
-  every position converts into the verified SVG frame. Exact native fault and
-  control exports establish that this version reports ERC `pos` fields at
-  1/100 of the schematic and SVG millimetre coordinates. Missing sheet UUIDs,
-  ambiguous drawings, unsupported units, partial positions, and other KiCad
-  versions keep their ERC findings visible without guessed placement.
+- KiCad 10.0.0 and 10.0.5 ERC positions can be marked on a uniquely verified
+  single root-sheet SVG. KiCad 10.0.6 also supports UUID-bound repeated child
+  sheets. The native report must name the exact schematic, declare millimetres,
+  and place each item inside the verified SVG frame. Exact fault and control
+  exports for all three versions establish that ERC `pos` fields are at 1/100
+  of the schematic and SVG millimetre coordinates. Repeated child sheets on
+  10.0.0 and 10.0.5, missing UUIDs, ambiguous drawings, unsupported units,
+  partial positions, and other versions remain listed without guessed markers.
 - Design-lint rules without an explicit supported geometry location are
   listed without a marker. Missing checks, unavailable drawings, partial
   locations, and unsupported SVG coordinate frames are reported on the page.

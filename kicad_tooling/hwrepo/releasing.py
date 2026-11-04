@@ -12,24 +12,15 @@ from .command_evidence_models import CommandEvidence
 from .container_git import git_metadata_mounts
 from .contracts import read_model, repo_path, write_model
 from .discovery import load_config, load_registry
+from .electrical_report_models import ElectricalAnalysisReport
 from .evidence import digest, evidence_path, source_state
 from .generation import expected_outputs
 from .layout import layout
 from .markdown import release_review, write_markdown
 from .models import (
-    ElectricalAnalysisReport,
-    EvidenceFile,
     InterfacesCatalog,
     LibrariesCatalog,
-    ReleaseArtifact,
-    ReleaseArtifactKind,
-    ReleaseEvidence,
     ReleaseExportReport,
-    ReleaseInterface,
-    ReleaseLibrary,
-    ReleaseManifest,
-    ReleaseStatus,
-    ReleaseVariant,
     ScopedReleasePortableReport,
     ValidationSummary,
 )
@@ -50,6 +41,17 @@ from .release import (
     selected_products,
     selected_project_records,
     verify_board_population,
+)
+from .release_contract_models import (
+    EvidenceFile,
+    ReleaseArtifact,
+    ReleaseArtifactKind,
+    ReleaseEvidence,
+    ReleaseInterface,
+    ReleaseLibrary,
+    ReleaseManifest,
+    ReleaseStatus,
+    ReleaseVariant,
 )
 from .release_model_types import ReleaseClass
 

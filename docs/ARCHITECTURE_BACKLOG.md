@@ -202,6 +202,24 @@ again before returning. These are freshness checks, not filesystem locks.
 The shared PCB DRC evidence service likewise rechecks the native summary, DRC
 report, and DRC command after parsing and after coverage evaluation; the
 reported DRC hash remains the one bound by the summary.
+The path-to-SHA inventory now has a shared `SourceHashInventory` type whose
+key and value are `RepositoryPath` and `Digest`. PCB board matching, mapped DRC
+coverage normalization, native DRC capture, DRC rule review, native-summary
+binding, native netlist evidence, and hierarchical schematic source readers use
+that type end to end; serialized report maps are unchanged. Byte-content maps
+remain separate. Keep maps keyed by references, rule IDs, or artifact IDs
+under their own domain types.
+Saved findings-view source binding now uses `SourceHashInventory` through
+snapshot admission, native ERC mapping, and schematic drawing association;
+the serialized findings report remains unchanged. The project overview now
+uses the same contract from both project and full-checkout inventory producers
+through freshness checks and receipt assembly. Artifact-path-to-digest maps
+remain separate. Product visualization aggregation, PCB variant-capture input,
+and STM32 IOC coverage now preserve typed repository paths and digests.
+Read-only handoffs use `SourceHashInventory`; mutable accumulators use
+`dict[RepositoryPath, Digest]` where source discovery adds entries.
+Electrical-view freshness and verification history now use the shared
+inventory type for their saved-source comparisons.
 Both netlist and DRC consumers validate the summary's project, exact toolchain,
 and completed source-scope hashes through the same native-summary boundary.
 A completed DRC with violations can still provide evidence; it is not treated
@@ -342,6 +360,16 @@ at the scanner boundary. Continue migrating direct candidate consumers by capabi
 group; remove a legacy argument only after its callers have moved and the
 fault/control outputs remain unchanged.
 
+The authored USB data-path map now enters the scanner in
+`UsbDataPathCandidateInputs` and is shared by the USB peer and mapped-path
+candidate owners. It no longer sits as a loose optional field beside the
+capability groups. Keep its single map digest and candidate ordering stable
+while the internal theme consumers migrate.
+The scanner also has no catch-all `additional_candidates` input now. Project
+DRU review and native DRC findings enter through separate fields on
+`PcbCandidateInputs`, keeping their route within the PCB capability group and
+the scanner's shared catalog validation.
+
 I²C, SPI, CAN, and RS-485 peer rule owners now attach typed identities to their
 internal candidates. Construction and coverage assembly check that each
 identity matches the public evidence fields; coverage uses the typed identities.
@@ -448,7 +476,8 @@ CLI, MCP, import review, and project verification now route through these
 request operations. The rescue CLI uses its positional adapter to build the
 same typed request. The former service functions remain compatibility
 adapters. The portable pipeline report still comes from the compatibility
-registry and remains an explicit SA-07 contract-owner migration item.
+registry boundary; `StaticPipelineReport` is now owned by
+`static_pipeline_models.py`, and pipeline consumers import that owner directly.
 
 The dependency guard now includes electrical, parts, CAD, layout, selection,
 product, supplier handoff, artifact, project-source, and purchasing-preference
@@ -555,6 +584,31 @@ belong to `documentation_models.py`. The documentation checker imports them
 directly, and the central registry preserves the former public names. The
 architecture suite guards the primitive-only dependency boundary, direct
 service import, export identity, and serialized policy/report round trips.
+Runner readiness contracts now belong to `doctor_models.py`; the all-project
+native summary and its per-project rows belong to `native_project_check_models.py`
+alongside the native-check request. The doctor, electrical doctor, native
+check, project-verification, and MCP services import those models from their
+owners. `models.py` preserves identity-compatible exports.
+Observed source identity now belongs to `source_state_models.py`, and the
+repository-wide static gate report belongs to `static_pipeline_models.py`.
+Evidence, native, electrical, release, and CI services import these owners
+directly; registry exports and the static gate's `scope` validation remain
+unchanged. Electrical check, analysis, suite, setup, and input-inventory
+contracts now belong to `electrical_report_models.py`; all 44 production
+consumers import those records from the owner, while `models.py` retains
+identity-compatible exports and the serialized report shape. The focused
+architecture test guards dependency direction and JSON round trips. The late
+`DesignLintReport` registration/rebuild cycle is removed; the report now
+imports its typed owner directly and is re-exported by `models.py`. The project
+verification result now belongs to `project_verification_report_models.py`,
+with its production consumers importing that owner directly. Its architecture
+test guards dependency direction, registry identity, and nested JSON round
+trips. Authored release policies, manifests, artifacts, approvals, deviations,
+and evidence references now belong to `release_contract_models.py`. Release,
+generation, evidence, packaging, metrics, CLI, and MCP consumers import the
+owner directly; the compatibility registry preserves the old exports. The
+focused architecture test guards the dependency boundary, direct imports,
+identity, and serialized manifest/policy contracts.
 
 **Done when:** a new feature's record is placed with its domain, the selected
 legacy imports shrink, old supported imports resolve, and serialized reports

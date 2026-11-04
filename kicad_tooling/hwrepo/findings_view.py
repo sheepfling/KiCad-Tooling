@@ -24,6 +24,7 @@ from .project_models import ProjectManifest
 from .project_source_hashes import hash_project_sources as hashes
 from .schematic_geometry_source import schematic_root, schematic_scalar, schematic_sheet_references
 from .selection import resolve_project
+from .source_state_models import SourceHashInventory
 
 
 def _artifact(root: Path, requested: Path) -> Path:
@@ -42,7 +43,7 @@ def _lint_snapshot(
     summary: ValidationSummary,
     manifest_path: Path,
     policy_path: Path,
-    source_hashes: dict[str, str],
+    source_hashes: SourceHashInventory,
 ) -> tuple[DesignLintReport, str]:
     selected = _artifact(root, path)
     if not selected.is_file():

@@ -14,8 +14,8 @@ from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_model, write_model
 from .hwrepo.electrical import selected_config
+from .hwrepo.electrical_report_models import ElectricalCheck
 from .hwrepo.evidence import digest
-from .hwrepo.models import ElectricalCheck
 from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.serial_heuristics import serial_peer_checks
 from .hwrepo.serial_peer_models import SerialPeerAnalysis

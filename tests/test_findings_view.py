@@ -60,7 +60,7 @@ def test_source_bound_view_maps_supported_board_and_schematic_findings(
     assert report.lint_status == "REVIEW"
     assert [item.origin for item in report.findings] == ["ERC", "DRC", "DRC", "DESIGN_LINT"]
     erc, drc, parity, lint_finding = report.findings
-    assert not erc.markers and "exact KiCad 10.0.6 UUID sheet" in (erc.unmapped_reason or "")
+    assert not erc.markers and "calibrated KiCad 10 UUID sheet" in (erc.unmapped_reason or "")
     assert [(point.x_mm, point.y_mm) for point in drc.markers] == [(100.0, 100.0), (100.0, 110.0)]
     assert not parity.markers and parity.unmapped_reason
     assert [(point.x_mm, point.y_mm) for point in lint_finding.markers] == [(50.0, 40.0)]

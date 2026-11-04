@@ -298,7 +298,7 @@ def test_native_erc_positions_match_fault_svg_and_control(tmp_path: Path) -> Non
         ]
         assert any(float(item.attrib["x"]) == pytest.approx(marker.x_mm) for item in label_text)
         for changed in (
-            replace(report, kicad_version="10.0.5"),
+            replace(report, kicad_version="9.0.0"),
             replace(report, coordinate_units="unknown"),
         ):
             unmapped = erc_finding(

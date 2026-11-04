@@ -9,10 +9,12 @@ from typing import Literal
 from .contracts import repo_path
 from .design_lint_policy_models import DesignLintPolicy
 from .evidence import digest
+from .model_primitives import Digest, RepositoryPath
 from .models import (
     ContractCoachReport,
     NetlistContract,
 )
+from .source_state_models import SourceHashInventory
 from .stm32_pin_map import (
     CubeMxDocument,
     parse_cubemx_ioc,
@@ -30,7 +32,7 @@ def resolve_stm32_pin_map_coverage(
     coach: ContractCoachReport,
     policy: DesignLintPolicy,
     coverage: Stm32PinMapCoverageReport | None,
-) -> tuple[Stm32PinMapCoverageReport, dict[str, str]]:
+) -> tuple[Stm32PinMapCoverageReport, SourceHashInventory]:
     """Apply the authored STM32 lint mode and bind IOC source hashes."""
     override = next(
         (item for item in policy.rules if item.rule_id == "mcu.stm32_cubemx_pin_map"),
@@ -66,7 +68,7 @@ def resolve_stm32_pin_map_coverage(
         else:
             coverage = Stm32PinMapCoverageReport()
 
-    source_hashes = dict(coach.source_hashes)
+    source_hashes: dict[RepositoryPath, Digest] = dict(coach.source_hashes)
     for source_path, source_sha256 in coverage.ioc_source_hashes.items():
         previous_sha256 = source_hashes.get(source_path)
         if previous_sha256 is not None and previous_sha256 != source_sha256:
@@ -113,7 +115,7 @@ def scan_stm32_pin_maps(
             unmapped_devices=unmapped,
         )
 
-    source_hashes: dict[str, str] = {}
+    source_hashes: dict[RepositoryPath, Digest] = {}
     documents: dict[str, CubeMxDocument] = {}
     mismatches: list[Stm32PinMapMismatch] = []
     try:

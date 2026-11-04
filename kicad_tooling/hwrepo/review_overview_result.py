@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .review_overview_evidence import ReviewContext, checked_link
 from .review_overview_models import OverviewItem, OverviewKind, OverviewLink
+from .source_state_models import SourceHashInventory
 
 
 def receipt_result(
@@ -15,7 +16,7 @@ def receipt_result(
     report_hash: str,
     status: str,
     *,
-    source_hashes: dict[str, str] | None = None,
+    source_hashes: SourceHashInventory | None = None,
     source_commit: str | None = None,
     links: tuple[OverviewLink, ...] = (),
     stale: tuple[str, ...] = (),

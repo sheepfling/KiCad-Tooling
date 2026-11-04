@@ -19,7 +19,6 @@ from kicad_tooling.hwrepo.models import (
     ProjectDiscovery,
     ProjectVerificationReport,
     PurchasingReport,
-    SourceState,
     ThreeDReport,
     ValidationSummary,
 )
@@ -31,6 +30,7 @@ from kicad_tooling.hwrepo.review_overview_models import (
     OverviewLink,
     ReviewOverviewReport,
 )
+from kicad_tooling.hwrepo.source_state_models import SourceState
 from kicad_tooling.validate import hashes
 from tests.findings_view_support import add_native_review, select_schematic_geometry_toolchain
 from tests.mcp_parity_support import parity_native_evidence, parity_workspace

@@ -21,19 +21,16 @@ from .diagnostics import diagnose_project_request
 from .diagnostics_models import DiagnosticReport
 from .discovery import load_config, load_registry
 from .doctor import doctor
-from .models import (
-    CheckAllSummary,
-    ProjectVerificationReport,
-)
 from .native_container_context import NATIVE_CONTAINER_IMAGE_ENV
 from .native_project_check import run_native_project_check
-from .native_project_check_models import NativeProjectCheckRequest
+from .native_project_check_models import CheckAllSummary, NativeProjectCheckRequest
 from .project_static_pipeline import run_project_static_pipeline
 from .project_static_pipeline_models import (
     ProjectStaticPipelineReport,
     ProjectStaticPipelineRequest,
 )
 from .project_verification_models import ProjectVerificationRequest
+from .project_verification_report_models import ProjectVerificationReport
 from .repository import checkout_input_hashes
 from .selection import ProjectSelector, resolve_project_ids
 from .verification_receipts import save_verification_output_manifest

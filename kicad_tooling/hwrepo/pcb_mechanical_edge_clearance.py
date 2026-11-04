@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping
 from pathlib import Path
 
 from .design_lint_policy_models import DesignLintPolicy
@@ -22,6 +21,7 @@ from .project_models import (
     ProjectConfig,
     ProjectKind,
 )
+from .source_state_models import SourceHashInventory
 
 RULE_ID = "pcb.mechanical_edge_clearance_rule_coverage"
 _EDGE_CONDITION = "B.Layer == 'Edge.Cuts'"
@@ -121,7 +121,7 @@ def mechanical_edge_rule_coverage_candidates(
     root: Path,
     config: ProjectConfig,
     policy: DesignLintPolicy,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
     native_summary: Path,
 ) -> tuple[Candidate, ...]:
     """Emit REVIEW candidates when exact courtyard-to-board-edge DRC rules are absent."""

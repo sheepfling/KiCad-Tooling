@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal
 
@@ -26,6 +25,7 @@ from .pcb_drc_source_evidence import (
 )
 from .pcb_geometry_receipts import verify_pcb_geometry_receipts
 from .project_models import ProjectConfig
+from .source_state_models import SourceHashInventory
 
 
 def scan_source_bound_rule_map(
@@ -33,7 +33,7 @@ def scan_source_bound_rule_map(
     config: ProjectConfig,
     requirements: PcbDifferentialPairRuleMap,
     observed: NetlistContract,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
     native_summary: Path,
     mode: Literal["review", "block", "off"],
 ) -> PcbDifferentialPairRuleCoverageReport:
@@ -87,7 +87,7 @@ def scan_source_bound_signal_path_map(
     config: ProjectConfig,
     requirements: PcbSignalPathRuleMap,
     observed: NetlistContract,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
     native_summary: Path,
     snapshot: PcbConnectivitySnapshot,
     snapshot_path: Path,

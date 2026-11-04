@@ -41,13 +41,15 @@ from .models import (
     ContractCoachReport,
     McpScopeReport,
     ReleaseExportReport,
-    ReleaseManifest,
-    ReleaseStatus,
 )
 from .native_toolchain import cli_executable
 from .portable_evidence import verify_release_portable
 from .project_models import ProjectManifest
 from .release import check as release_check
+from .release_contract_models import (
+    ReleaseManifest,
+    ReleaseStatus,
+)
 from .release_model_types import ReleaseClass
 from .release_report_models import ReleasePackageReport, ReleaseReadinessReport
 from .selection import ProjectSelector, resolve_project_ids

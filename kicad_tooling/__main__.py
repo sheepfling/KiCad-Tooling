@@ -9,6 +9,7 @@ from importlib.metadata import PackageNotFoundError
 from kicad_tooling import package_version
 
 COMMANDS = (
+    "assembly_clearance",
     "assembly_review",
     "board_variant_compare",
     "bom_compare",

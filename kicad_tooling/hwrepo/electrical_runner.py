@@ -56,6 +56,11 @@ from .electrical_pcb_evidence import (
     PcbEvidenceObserved,
     admit_pcb_evidence,
 )
+from .electrical_report_models import (
+    ElectricalAnalysisReport,
+    ElectricalCheck,
+    ElectricalSuiteReport,
+)
 from .electrical_simulation_evaluation import (
     ElectricalSimulationEvaluationRequest,
     evaluate_electrical_simulations,
@@ -63,12 +68,7 @@ from .electrical_simulation_evaluation import (
 from .electrical_simulation_evidence import SimulationVersionObserved
 from .evidence import digest, source_state
 from .model_primitives import Digest, RepositoryPath
-from .models import (
-    ElectricalAnalysisReport,
-    ElectricalCheck,
-    ElectricalSuiteReport,
-    NetlistContract,
-)
+from .models import NetlistContract
 from .mosfet_stress import mosfet_stress_checks
 from .pcb_return_path_capture import capture_native_pcb_connectivity, expected_probe_sha256
 from .power_connectivity import power_connectivity_checks

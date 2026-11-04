@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import math
 import posixpath
-from collections.abc import Mapping
 from pathlib import PurePosixPath
 
 from .contracts import repo_path_is_within
@@ -15,9 +14,10 @@ from .model_inventory import (  # pyright: ignore[reportPrivateUsage]
     _Span,  # pyright: ignore[reportPrivateUsage]
 )
 from .schematic_geometry_types import SchematicSheetReference
+from .source_state_models import SourceHashInventory
 
 
-def source_tree_sha256(source_hashes: Mapping[str, str]) -> str:
+def source_tree_sha256(source_hashes: SourceHashInventory) -> str:
     """Hash a canonical path/hash inventory for one or more source files."""
     tree_hasher = hashlib.sha256()
     for path, source_sha256 in sorted(source_hashes.items()):

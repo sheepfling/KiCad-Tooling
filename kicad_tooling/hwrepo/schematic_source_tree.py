@@ -16,13 +16,14 @@ from .schematic_geometry_source import (
     schematic_sheet_references,
 )
 from .schematic_geometry_types import MAX_SHEET_OCCURRENCES
+from .source_state_models import SourceHashInventory
 
 
 def verified_schematic_sources(
     root: Path,
     root_path: str,
     project_directory: str,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> dict[str, bytes]:
     """Read each project-local sheet source once against the exact saved inventory."""
     source_files: dict[str, bytes] = {}

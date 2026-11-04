@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from pathlib import Path
 
 from .contracts import repo_path
@@ -21,6 +21,7 @@ from .project_models import (
     ProjectConfig,
     ProjectKind,
 )
+from .source_state_models import SourceHashInventory
 
 WARNING_DEFAULT_DRC_SUPPORTED_VERSIONS = frozenset(
     {"10.0.0", "10.0.3", "10.0.4", "10.0.5", "10.0.6", "10.0.7"}
@@ -30,7 +31,7 @@ WARNING_DEFAULT_DRC_SUPPORTED_VERSIONS = frozenset(
 def _source_bound_drc_settings(
     root: Path,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
     *,
     supported_version_prefix: str = "10.",
     parse_severities: Callable[[str], tuple[tuple[str, str], ...]] = (
@@ -72,7 +73,7 @@ def _source_bound_drc_settings(
 def ignored_core_native_drc_check_candidates(
     root: Path,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> tuple[Candidate, ...]:
     """Prompt when source-bound KiCad 10 settings suppress a core PCB DRC check."""
     settings = _source_bound_drc_settings(root, config, source_hashes)
@@ -104,7 +105,7 @@ def ignored_core_native_drc_check_candidates(
 def ignored_dfm_native_drc_check_candidates(
     root: Path,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> tuple[Candidate, ...]:
     """Review KiCad 10.0 DFM checks documented with Error defaults but set to Ignore."""
     settings = _source_bound_drc_settings(
@@ -141,7 +142,7 @@ def ignored_dfm_native_drc_check_candidates(
 def warning_core_native_drc_check_candidates(
     root: Path,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> tuple[Candidate, ...]:
     """Review Error-default core PCB checks explicitly downgraded to Warning."""
     settings = _source_bound_drc_settings(root, config, source_hashes)
@@ -172,7 +173,7 @@ def warning_core_native_drc_check_candidates(
 def warning_dfm_native_drc_check_candidates(
     root: Path,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> tuple[Candidate, ...]:
     """Review KiCad 10.0 DFM checks documented with Error defaults but set to Warning."""
     settings = _source_bound_drc_settings(
@@ -209,7 +210,7 @@ def warning_dfm_native_drc_check_candidates(
 def downgraded_signal_integrity_drc_check_candidates(
     root: Path,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> tuple[Candidate, ...]:
     """Review Error-default KiCad 10.0 signal-integrity checks set below Error."""
     return _downgraded_native_drc_check_candidates(
@@ -225,7 +226,7 @@ def downgraded_signal_integrity_drc_check_candidates(
 def downgraded_electrical_drc_check_candidates(
     root: Path,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> tuple[Candidate, ...]:
     """Review Error-default KiCad 10.0 electrical checks set below Error."""
     return _downgraded_native_drc_check_candidates(
@@ -241,7 +242,7 @@ def downgraded_electrical_drc_check_candidates(
 def downgraded_miscellaneous_drc_check_candidates(
     root: Path,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> tuple[Candidate, ...]:
     """Review Error-default KiCad 10.0 miscellaneous checks set below Error."""
     return _downgraded_native_drc_check_candidates(
@@ -257,7 +258,7 @@ def downgraded_miscellaneous_drc_check_candidates(
 def ignored_warning_default_native_drc_check_candidates(
     root: Path,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> tuple[Candidate, ...]:
     """Review Warning-default KiCad DRC checks explicitly disabled as Ignore."""
     if config.kicad_version not in WARNING_DEFAULT_DRC_SUPPORTED_VERSIONS:
@@ -296,7 +297,7 @@ def ignored_warning_default_native_drc_check_candidates(
 def _downgraded_native_drc_check_candidates(
     root: Path,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
     *,
     rule_id: DesignLintRuleId,
     category: str,

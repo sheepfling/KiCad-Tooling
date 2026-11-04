@@ -16,6 +16,7 @@ from .contracts import lexical_absolute_path, repo_path, repo_path_is_within
 from .discovery import load_config, load_registry, settings
 from .evidence import digest
 from .repository_policy_models import RepositoryPolicyReport
+from .source_state_models import SourceHashInventory
 
 LOCAL_STATE_NAMES = frozenset(
     {
@@ -188,7 +189,7 @@ def generated_artifact(name: str) -> bool:
     ) or path.suffix.casefold() in {".gbr", ".gbrjob", ".ger", ".drl", ".pos", ".net"}
 
 
-def checkout_input_hashes(root: Path) -> dict[str, str]:
+def checkout_input_hashes(root: Path) -> SourceHashInventory:
     """Inventory non-ephemeral checkout bytes, including untracked inputs."""
     root = root.resolve()
     if not root.is_dir():

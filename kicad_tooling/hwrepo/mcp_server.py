@@ -33,7 +33,14 @@ from .design_lint_rule_types import DesignLintTheme
 from .diagnostics_models import DiagnosticReport, LocalRescueReport
 from .doctor import NativeRunner
 from .doctor import doctor as inspect_environment
+from .doctor_models import TemplateDoctorReport
 from .electrical_chart_models import ElectricalChartsReport, ElectricalChartsSuiteReport
+from .electrical_report_models import (
+    ElectricalAnalysisReport,
+    ElectricalInputInventory,
+    ElectricalSetupReport,
+    ElectricalSuiteReport,
+)
 from .file_access_models import McpEditPreview, McpEditResult, McpFileContent
 from .import_inventory import scan_imports as scan_designs
 from .import_review import apply_reviewed_import
@@ -47,10 +54,6 @@ from .mcp_workflow_documents import DOCUMENTS, DocumentName
 from .models import (
     AutoCadReport,
     ContractCoachReport,
-    ElectricalAnalysisReport,
-    ElectricalInputInventory,
-    ElectricalSetupReport,
-    ElectricalSuiteReport,
     ForeignFormat,
     ForeignPcbReport,
     ImpactPlan,
@@ -65,12 +68,9 @@ from .models import (
     PartPickerReport,
     PartSelectionAssignment,
     PartSelectionReport,
-    ProjectVerificationReport,
     PurchasingReport,
     ReleaseExportReport,
-    ReleaseManifest,
     SupplierHandoffReport,
-    TemplateDoctorReport,
     ThreeDReport,
     ThreeDView,
 )
@@ -83,7 +83,9 @@ from .project_models import (
 from .project_verification import verify_request
 from .project_verification_models import ProjectVerificationRequest
 from .project_verification_models import VerificationDepth as Depth
+from .project_verification_report_models import ProjectVerificationReport
 from .purchasing_preference_models import McpPurchasingPreferencesResult, PurchasingPreferences
+from .release_contract_models import ReleaseManifest
 from .review_overview import build_review_overview
 from .review_overview_models import ReviewOverviewReport
 from .scaffold import new_project as scaffold_project

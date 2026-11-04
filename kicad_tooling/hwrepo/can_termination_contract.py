@@ -7,7 +7,8 @@ from .can_termination_models import (
     CanTerminationMidpointCapacitorRequirement,
 )
 from .capacitance_values import parse_capacitance_pf
-from .models import ElectricalCheck, NetlistContract
+from .electrical_report_models import ElectricalCheck
+from .models import NetlistContract
 from .resistor_array_paths import (
     ResistorArrayNetlistEvidence,
     resistor_array_channel_issue,

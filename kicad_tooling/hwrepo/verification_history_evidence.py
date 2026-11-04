@@ -10,11 +10,14 @@ from .artifact_access import read_regular_bytes
 from .contracts import parse_model_text, repo_path
 from .evidence import digest
 from .findings_view_models import FindingsViewReport
-from .models import ProjectVerificationReport, ReleaseManifest, ValidationSummary
+from .models import ValidationSummary
 from .project_source_hashes import hash_project_sources as hashes
+from .project_verification_report_models import ProjectVerificationReport
+from .release_contract_models import ReleaseManifest
 from .review_overview_evidence import read_receipt, recorded_directory, selected_receipt
 from .review_overview_models import OverviewItem, ReviewOverviewReport
 from .schematic_geometry_source import source_tree_sha256
+from .source_state_models import SourceHashInventory
 from .verification_history_models import (
     HistoryArtifact,
     HistoryEvidence,
@@ -92,7 +95,7 @@ def load_snapshot(
     root: Path,
     project_id: str,
     requested: Path,
-    current_source_hashes: dict[str, str],
+    current_source_hashes: SourceHashInventory,
     current_manifest_sha256: str,
 ) -> SavedSnapshot:
     path = selected_receipt(root, requested, "overview.json")
@@ -270,7 +273,7 @@ def load_release(
     )
 
 
-def current_source(root: Path, project_id: str) -> tuple[dict[str, str], str]:
+def current_source(root: Path, project_id: str) -> tuple[SourceHashInventory, str]:
     """Read current configured source for historical-versus-current labels."""
     from .discovery import load_config
     from .selection import resolve_project

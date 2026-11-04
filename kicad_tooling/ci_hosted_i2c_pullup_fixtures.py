@@ -15,16 +15,12 @@ from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_model, write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.electrical import selected_config
+from .hwrepo.electrical_report_models import ElectricalCheck
 from .hwrepo.evidence import digest
 from .hwrepo.i2c_pullup_contract import i2c_pullup_checks
 from .hwrepo.i2c_pullup_heuristics import i2c_pullup_heuristic_coverage
 from .hwrepo.i2c_pullup_models import I2cPullupAnalysis
-from .hwrepo.models import (
-    ContractCoachReport,
-    DesignLintPolicy,
-    ElectricalCheck,
-    NetlistContract,
-)
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract
 from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.resistor_paths import visible_resistor_pullups
 

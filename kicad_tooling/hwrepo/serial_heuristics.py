@@ -13,7 +13,8 @@ from kicad_tooling.hwrepo.serial_peer_models import (
     SerialShiftedPeerRequirement,
 )
 
-from .models import ElectricalCheck, NetlistContract
+from .electrical_report_models import ElectricalCheck
+from .models import NetlistContract
 from .reference_bonds import reference_bond_issues
 from .serial_logic_models import SerialLogicInputLimits, SerialLogicOutputLimits
 

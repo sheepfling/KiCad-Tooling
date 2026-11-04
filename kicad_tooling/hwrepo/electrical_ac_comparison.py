@@ -15,9 +15,9 @@ from .electrical_chart_interactive import interactive_trace, render_interactive_
 from .electrical_chart_models import AcComparisonReport, AcComparisonRun
 from .electrical_charts import checked_artifact, source_receipt, waveform_csv
 from .electrical_plot import ChartPanel, plot_panels
+from .electrical_report_models import ElectricalAnalysisReport
 from .electrical_simulation_models import FrequencyAnalysis, SimulationMeasure
 from .evidence import digest
-from .models import ElectricalAnalysisReport
 from .waveform_data import WaveformData, read_waveform
 
 

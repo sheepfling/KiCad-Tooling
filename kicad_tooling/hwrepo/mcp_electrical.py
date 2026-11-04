@@ -7,13 +7,13 @@ from pathlib import Path
 from . import electrical_runner, electrical_setup
 from .doctor import NativeRunner
 from .electrical_operation_models import ElectricalAnalysisRequest
-from .mcp_workflow import fresh_output, native_summary_path, selected_project
-from .models import (
+from .electrical_report_models import (
     ElectricalAnalysisReport,
     ElectricalInputInventory,
     ElectricalSetupReport,
     ElectricalSuiteReport,
 )
+from .mcp_workflow import fresh_output, native_summary_path, selected_project
 from .selection import ProjectSelector
 
 

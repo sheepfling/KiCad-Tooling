@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from .model_primitives import Digest, RepositoryPath
+from .source_state_models import SourceHashInventory
 
 
 def pcb_board_source_matches(
-    board_path: str | None,
-    board_sha256: str | None,
-    source_hashes: Mapping[str, str],
+    board_path: RepositoryPath | None,
+    board_sha256: Digest | None,
+    source_hashes: SourceHashInventory,
 ) -> bool:
     """Return whether a report names the board at its current source hash."""
     return bool(

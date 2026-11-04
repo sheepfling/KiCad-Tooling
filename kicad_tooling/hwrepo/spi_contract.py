@@ -13,7 +13,8 @@ from kicad_tooling.hwrepo.spi_models import (
     SpiPinUnconnectedRequirement,
 )
 
-from .models import ElectricalCheck, NetlistContract
+from .electrical_report_models import ElectricalCheck
+from .models import NetlistContract
 from .spi_bias_array_paths import spi_bias_array_checks
 
 

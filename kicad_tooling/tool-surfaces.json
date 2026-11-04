@@ -2,6 +2,19 @@
   "schema_version": "2",
   "cli": [
     {
+      "module": "kicad_tooling.assembly_clearance",
+      "commands": [],
+      "options": [
+        "--board-receipt",
+        "--clearance-contract",
+        "--format",
+        "--output",
+        "--placement-contract",
+        "--project",
+        "--root"
+      ]
+    },
+    {
       "module": "kicad_tooling.assembly_review",
       "commands": [],
       "options": [
@@ -962,6 +975,16 @@
       ]
     },
     {
+      "name": "export_assembly_clearance",
+      "parameters": [
+        "board_receipt",
+        "clearance_contract",
+        "placement_contract",
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
       "name": "export_assembly_review",
       "parameters": [
         "board_receipt",
@@ -1438,6 +1461,26 @@
     }
   ],
   "capabilities": [
+    {
+      "id": "mechanical-box-clearance-review",
+      "cli": [
+        "kicad_tooling.assembly_clearance"
+      ],
+      "mcp": [
+        "export_assembly_clearance"
+      ],
+      "alignment": "aligned",
+      "reason": "Both measure a verified static board GLB against a project-authored rectangular free-space box, compare retained board and enclosure mesh surfaces, and retain the same nested 3D assembly viewer.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and a fresh view_id. The clearance contract is project-owned and binds the exact placement contract.",
+        "Margins apply only to the authored box. Surface gap and intersection do not prove solid containment, interior clearance, or fit."
+      ],
+      "parity_tests": [
+        "tests.test_assembly_clearance.test_cli_mcp_assembly_clearance_parity"
+      ]
+    },
     {
       "id": "mechanical-assembly-review",
       "cli": [

@@ -6,8 +6,11 @@ from pathlib import Path
 
 from .contracts import read_model
 from .evidence import evidence_path, verify_portable, verify_source
-from .models import EvidenceFile, ScopedReleasePortableReport, SourceState, StaticPipelineReport
+from .models import ScopedReleasePortableReport
 from .product import load_repository
+from .release_contract_models import EvidenceFile
+from .source_state_models import SourceState
+from .static_pipeline_models import StaticPipelineReport
 
 
 def verify_release_portable(

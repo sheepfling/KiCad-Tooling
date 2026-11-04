@@ -12,11 +12,13 @@ from .governance_lint import lint
 from .models import (
     CheckMetric,
     DeviationMetrics,
-    DeviationStatus,
-    ReleaseDeviation,
     TemplateMetricsReport,
 )
 from .product import check as product_check
+from .release_contract_models import (
+    DeviationStatus,
+    ReleaseDeviation,
+)
 from .repository import check_repository
 
 

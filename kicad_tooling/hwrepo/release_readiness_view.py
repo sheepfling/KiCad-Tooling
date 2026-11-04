@@ -13,14 +13,14 @@ from ..git import git_output
 from .artifact_access import read_regular_bytes
 from .contract_coach import receipt_directory
 from .contracts import parse_model_text, read_model, relative_path_from, repo_path, write_model
+from .electrical_report_models import ElectricalAnalysisReport
 from .evidence import digest
 from .models import (
-    ElectricalAnalysisReport,
     ReleaseExportReport,
-    ReleaseManifest,
     ValidationSummary,
 )
 from .release import check
+from .release_contract_models import ReleaseManifest
 from .release_readiness_view_models import ReleaseReadinessViewReport
 from .repository import checkout_input_hashes
 

@@ -6,13 +6,9 @@ from pathlib import Path
 
 from .contracts import repo_path
 from .electrical_chart_models import ElectricalChartsReport
+from .electrical_report_models import ElectricalAnalysisReport
 from .findings_view_models import FindingsViewReport
-from .models import (
-    ElectricalAnalysisReport,
-    PurchasingReport,
-    ThreeDReport,
-    ValidationSummary,
-)
+from .models import PurchasingReport, ThreeDReport, ValidationSummary
 from .native_summary_binding import validate_native_toolchain
 from .parts_receipts import read_parts_output_manifest
 from .project_models import ProjectKind
@@ -29,6 +25,7 @@ from .review_overview_evidence import (
 from .review_overview_models import OverviewItem, OverviewKind, OverviewLink
 from .review_overview_result import receipt_result as _result
 from .review_overview_verification import inspect_verification
+from .source_state_models import SourceHashInventory
 
 
 def _integrity(
@@ -303,7 +300,7 @@ def _simulation(context: ReviewContext, path: Path) -> OverviewItem:
         raise ValueError("Charts receipt has a different project or output directory")
     stale: list[str] = []
     unknown: list[str] = []
-    source_hashes: dict[str, str] = {}
+    source_hashes: SourceHashInventory = {}
     commit: str | None = None
     try:
         selected = selected_receipt(context.root, Path(report.source_receipt), "electrical.json")

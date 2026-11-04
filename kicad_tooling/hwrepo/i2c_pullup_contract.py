@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 
 from .connector_identity import power_function_key
+from .electrical_report_models import ElectricalCheck
 from .i2c_pullup_capacitance import i2c_pullup_capacitance_check
 from .i2c_pullup_contract_paths import i2c_series_path_check
 from .i2c_pullup_models import (
@@ -12,10 +13,7 @@ from .i2c_pullup_models import (
     I2cPullupLineRequirement,
     I2cPullupVoltageCompatibilityRequirement,
 )
-from .models import (
-    ElectricalCheck,
-    NetlistContract,
-)
+from .models import NetlistContract
 from .resistor_array_paths import (
     ResistorArrayNetlistEvidence,
     resistor_array_channel_issue,

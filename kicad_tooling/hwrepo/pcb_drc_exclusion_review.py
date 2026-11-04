@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import re
-from collections.abc import Mapping
 from pathlib import Path
 
 from .contracts import repo_path
@@ -15,6 +14,7 @@ from .project_models import (
     ProjectConfig,
     ProjectKind,
 )
+from .source_state_models import SourceHashInventory
 
 _SUPPORTED_KICAD_VERSION = re.compile(r"10\.0\.\d+\Z")
 
@@ -22,7 +22,7 @@ _SUPPORTED_KICAD_VERSION = re.compile(r"10\.0\.\d+\Z")
 def source_bound_pcb_drc_exclusion_candidates(
     root: Path,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> tuple[Candidate, ...]:
     """Prompt to recheck each saved per-violation DRC exclusion in KiCad 10.0."""
     if config.kind not in {ProjectKind.PCB, ProjectKind.PCB_ONLY}:

@@ -72,6 +72,9 @@ render is a review aid, not physical-fit or manufacturing approval.
 
 For a project-owned adjacent enclosure GLB and explicit coordinate placement,
 see [mechanical assembly review](ASSEMBLY_REVIEW.md).
+For signed margins to a project-authored free-space box and a retained mesh
+surface comparison, see
+[authored box clearance review](ASSEMBLY_CLEARANCE.md).
 
 The offline renderer is bundled from Three.js `0.181.0` and esbuild `0.25.12`.
 Its editable source is `kicad_tooling/hwrepo/assets/three_d_viewer.src.js`; the

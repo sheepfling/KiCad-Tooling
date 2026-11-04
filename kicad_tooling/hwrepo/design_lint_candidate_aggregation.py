@@ -29,6 +29,7 @@ from .design_lint_candidate_inputs import (
     MappedCandidateInputs,
     PeerCandidateInputs,
     PowerCandidateInputs,
+    UsbDataPathCandidateInputs,
 )
 from .design_lint_candidate_results import DesignLintCandidateScanResult
 from .design_lint_catalog import rule_catalog
@@ -256,7 +257,7 @@ def candidates(
                 touch_pad_clearance=pcb_touch_pad_clearance_coverage,
                 stm32_pin_map=stm32_pin_map_coverage,
             ),
-            usb_data_path_map=usb_data_path_map,
+            usb_data_path=UsbDataPathCandidateInputs(authored_map=usb_data_path_map),
         )
     )
 
@@ -282,7 +283,7 @@ def scan_candidate_result(
     power_sequence_map = inputs.power.power_sequence_map
     pcb_component_inventory_coverage = inputs.pcb.component_inventory
     stm32_pin_map_coverage = inputs.pcb.stm32_pin_map
-    usb_data_path_map = inputs.usb_data_path_map
+    usb_data_path_map = inputs.usb_data_path.authored_map
     spi_roster = inputs.bus.spi_roster
     found: list[Candidate] = []
     usb_data_map_sha256 = usb_data_path_map_sha256(usb_data_path_map)
@@ -370,13 +371,16 @@ def scan_candidate_result(
     found.extend(scan_pcb_measurement_candidates(inputs.pcb))
     found.extend(scan_pcb_requirement_candidates(inputs.pcb))
     found.extend(stm32_candidates(stm32_pin_map_coverage))
-    found.extend(inputs.additional_candidates)
+    found.extend(inputs.pcb.dru_rule_candidates)
+    found.extend(inputs.pcb.native_drc_candidates)
     items = tuple(sorted(found, key=lambda item: (item.rule_id, item.subject)))
     validate_catalogued_candidates(items, catalog)
-    additional_peer_keys = PeerReferenceCandidateKeys.from_candidates(inputs.additional_candidates)
+    pcb_peer_keys = PeerReferenceCandidateKeys.from_candidates(
+        (*inputs.pcb.dru_rule_candidates, *inputs.pcb.native_drc_candidates)
+    )
     return DesignLintCandidateScanResult(
         candidates=items,
-        peer_reference_keys=bus_result.peer_reference_keys.merge(additional_peer_keys),
+        peer_reference_keys=bus_result.peer_reference_keys.merge(pcb_peer_keys),
         connector_peer_pin_finding_counts=connector_result.peer_pin_finding_counts,
     )
 

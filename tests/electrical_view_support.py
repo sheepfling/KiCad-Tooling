@@ -12,8 +12,8 @@ from kicad_tooling.hwrepo.models import (
     ContractCoachReport,
     ElectricalAnalysisReport,
     NetlistContract,
-    SourceState,
 )
+from kicad_tooling.hwrepo.source_state_models import SourceState
 from kicad_tooling.validate import hashes
 from tests.electrical_parity_support import contract_netlist_xml
 

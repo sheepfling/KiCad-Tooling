@@ -9,7 +9,8 @@ from pathlib import Path
 from .hwrepo.contracts import read_model, repo_path
 from .hwrepo.layout import default_project_root
 from .hwrepo.metrics import collect
-from .hwrepo.models import ReleaseManifest, TemplateMetricsReport
+from .hwrepo.models import TemplateMetricsReport
+from .hwrepo.release_contract_models import ReleaseManifest
 
 
 def format_metrics(report: TemplateMetricsReport) -> str:

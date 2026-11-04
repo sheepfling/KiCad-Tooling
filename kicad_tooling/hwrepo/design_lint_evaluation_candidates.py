@@ -24,6 +24,7 @@ from .design_lint_candidate_inputs import (
     MappedCandidateInputs,
     PeerCandidateInputs,
     PowerCandidateInputs,
+    UsbDataPathCandidateInputs,
 )
 from .design_lint_evaluation_types import (
     DesignLintEvaluationCandidates,
@@ -145,12 +146,10 @@ def scan_evaluation_candidates(
                 rf_antenna=coverage.pcb_rf_module_antenna,
                 touch_pad_clearance=coverage.pcb_touch_pad_clearance,
                 stm32_pin_map=coverage.stm32_pin_map,
+                dru_rule_candidates=request.pcb_dru_rule_candidates,
+                native_drc_candidates=request.pcb_native_drc_candidates,
             ),
-            usb_data_path_map=policy.usb_data_path_map,
-            additional_candidates=(
-                *request.pcb_dru_rule_candidates,
-                *request.pcb_native_drc_candidates,
-            ),
+            usb_data_path=UsbDataPathCandidateInputs(authored_map=policy.usb_data_path_map),
         )
     )
     items = scan_result.candidates

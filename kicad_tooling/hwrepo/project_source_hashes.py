@@ -8,6 +8,7 @@ from pathlib import Path
 from .contracts import repo_path
 from .evidence import digest
 from .model_primitives import Digest, RepositoryPath
+from .source_state_models import SourceHashInventory
 
 
 def is_local_kicad_state(path: Path) -> bool:
@@ -16,7 +17,7 @@ def is_local_kicad_state(path: Path) -> bool:
 
 def hash_project_sources(
     root: Path, source_roots: Sequence[RepositoryPath] | None = None
-) -> dict[RepositoryPath, Digest]:
+) -> SourceHashInventory:
     """Return exact SHA-256 evidence for declared roots, rejecting unsafe scope."""
     root = root.resolve()
     roots = ("projects",) if source_roots is None else tuple(source_roots)

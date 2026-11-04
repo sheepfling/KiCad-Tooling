@@ -20,11 +20,7 @@ from .hwrepo.documentation import check as documentation_check
 from .hwrepo.evidence import source_state
 from .hwrepo.governance_lint import lint
 from .hwrepo.layout import default_project_root
-from .hwrepo.models import (
-    CommandEvidence,
-    ReleaseManifest,
-    StaticPipelineReport,
-)
+from .hwrepo.models import CommandEvidence
 from .hwrepo.pipeline_journal import PipelineJournal
 from .hwrepo.product import check as product_check
 from .hwrepo.project_static_pipeline import (
@@ -36,9 +32,11 @@ from .hwrepo.project_static_pipeline_models import (
     ProjectStaticPipelineReport,
     ProjectStaticPipelineRequest,
 )
+from .hwrepo.release_contract_models import ReleaseManifest
 from .hwrepo.repository import check_repository
 from .hwrepo.selection import ProjectSelector, resolve_project_ids
 from .hwrepo.sharding import shard_projects
+from .hwrepo.static_pipeline_models import StaticPipelineReport
 from .metrics import format_metrics
 
 _Result = TypeVar("_Result", bound=BaseModel)

@@ -17,18 +17,16 @@ from .discovery import load_config
 from .electrical import grounding_checks, load_analysis
 from .evidence import digest, evidence_path, source_state, verify_source
 from .i2c_pullup_contract import i2c_pullup_checks
-from .models import (
-    EvidenceFile,
-    SourceState,
-    ValidationSummary,
-)
+from .models import ValidationSummary
 from .native_command import svg_files
 from .native_report_parsing import check_netlist, check_report, read_netlist
 from .power_connectivity import power_connectivity_checks
 from .product import check_project_netlist
 from .project_models import ProjectKind
+from .release_contract_models import EvidenceFile
 from .rs485_heuristics import rs485_checks
 from .selection import resolve_project
+from .source_state_models import SourceState
 from .test_access import evaluate_test_access_checks, pcb_accessibility_checks
 
 ElectricalAnalysisState: TypeAlias = (

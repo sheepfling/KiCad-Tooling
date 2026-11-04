@@ -18,17 +18,15 @@ from .discovery import load_config, load_registry
 from .evidence import digest, evidence_path, source_state, verify_source
 from .generation import csv_cell
 from .kicad_compatibility import require_cli_profile
-from .models import (
-    EvidenceFile,
-    ReleaseExportReport,
-    SourceState,
-)
+from .models import ReleaseExportReport
 from .native_command import execute
 from .part_catalog_models import PartsCatalog
 from .project_models import (
     ProjectManifest,
     ReleaseExportSettings,
 )
+from .release_contract_models import EvidenceFile
+from .source_state_models import SourceState
 
 
 def command_arguments(

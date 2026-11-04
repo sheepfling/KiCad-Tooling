@@ -8,12 +8,11 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from .hwrepo.layout import default_project_root
-from .hwrepo.models import CheckAllSummary
 from .hwrepo.native_project_check import (
     run_native_project_check,
     selected_projects,
 )
-from .hwrepo.native_project_check_models import NativeProjectCheckRequest
+from .hwrepo.native_project_check_models import CheckAllSummary, NativeProjectCheckRequest
 from .hwrepo.selection import ProjectSelector, resolve_project_ids
 
 __all__ = ["check_all", "main", "run_native_project_check", "selected_projects"]

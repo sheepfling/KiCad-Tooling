@@ -20,9 +20,9 @@ from .electrical_pcb_evidence import (
     PcbEvidenceObserved,
     PcbEvidenceUnavailable,
 )
+from .electrical_report_models import ElectricalCheck
 from .evidence import digest
 from .model_primitives import Digest, Identifier, StrictModel
-from .models import ElectricalCheck
 from .pcb_return_path_checks import pcb_return_path_checks
 from .pcb_return_path_models import PcbReturnPathsAnalysis
 from .pcb_test_access_models import TestAccessAnalysis

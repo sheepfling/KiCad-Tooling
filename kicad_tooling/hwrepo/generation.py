@@ -23,8 +23,6 @@ from .layout import CONFIG_NAME, layout
 from .models import (
     LibrariesCatalog,
     LibrarySbom,
-    ReleaseManifest,
-    ReleasePoliciesCatalog,
     SnapshotManifest,
     SnapshotVerification,
     TemplateAdoptionRecord,
@@ -50,6 +48,10 @@ from .product_models import (
 from .project_models import (
     ProjectManifest,
     ProjectTestContract,
+)
+from .release_contract_models import (
+    ReleaseManifest,
+    ReleasePoliciesCatalog,
 )
 from .repository import ephemeral
 from .sourcing_models import SourcingSnapshot

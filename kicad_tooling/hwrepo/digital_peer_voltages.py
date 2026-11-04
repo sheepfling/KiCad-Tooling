@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from .digital_peer_voltage_models import DigitalPeerPinRequirement, DigitalPeerVoltageAnalysis
-from .models import ElectricalCheck, NetlistContract
+from .electrical_report_models import ElectricalCheck
+from .models import NetlistContract
 from .serial_heuristics import logic_direction_check
 
 

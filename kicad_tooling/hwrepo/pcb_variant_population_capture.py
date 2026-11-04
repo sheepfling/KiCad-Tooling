@@ -8,7 +8,6 @@ import json
 import os
 import shutil
 import sys
-from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -18,6 +17,7 @@ from .command_evidence_models import CommandEvidence
 from .contract_coach import pinned_image, run_command
 from .contracts import kicad_variant_names, repo_path, write_model
 from .evidence import digest
+from .model_primitives import Digest, RepositoryPath
 from .native_report_parsing import read_netlist
 from .pcb_component_inventory_models import (
     PcbVariantPopulationCoverage,
@@ -26,6 +26,7 @@ from .pcb_component_inventory_models import (
 from .pcb_component_population import PcbVariantPopulationSource
 from .project_models import ProjectConfig
 from .project_source_hashes import hash_project_sources as hashes
+from .source_state_models import SourceHashInventory
 
 
 @dataclass(frozen=True, slots=True)
@@ -59,7 +60,7 @@ def capture_variant_population(
     config: ProjectConfig,
     output: Path,
     *,
-    expected_source_hashes: Mapping[str, str],
+    expected_source_hashes: SourceHashInventory,
     kicad_version: str,
 ) -> PcbVariantPopulationCapture:
     """Export each project-declared variant from the same pinned KiCad image."""
@@ -79,7 +80,7 @@ def capture_variant_population(
     project_relative = project.relative_to(root).as_posix()
     schematic_relative = schematic.relative_to(root).as_posix()
     board_relative = board.relative_to(root).as_posix()
-    source_identity: dict[str, str] = {}
+    source_identity: dict[RepositoryPath, Digest] = {}
     evidence: list[PcbVariantPopulationEvidence] = []
     probe_paths: dict[str, str] = {}
 

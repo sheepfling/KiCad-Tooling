@@ -8,8 +8,8 @@ from collections.abc import Mapping
 
 from .ci_hosted_connector_return_context import ConnectorReturnFixtureContext
 from .hwrepo.electrical import grounding_checks, pin_relationship_checks
+from .hwrepo.electrical_report_models import ElectricalCheck
 from .hwrepo.grounding_models import GroundDomain, GroundingAnalysis
-from .hwrepo.models import ElectricalCheck
 from .hwrepo.pin_connectivity_models import PinConnectivityAnalysis, PinRelationshipRule
 
 

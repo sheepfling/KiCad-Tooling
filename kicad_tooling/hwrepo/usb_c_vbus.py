@@ -5,10 +5,8 @@ from __future__ import annotations
 from decimal import Decimal
 
 from .capacitance_values import parse_capacitance_pf
-from .models import (
-    ElectricalCheck,
-    NetlistContract,
-)
+from .electrical_report_models import ElectricalCheck
+from .models import NetlistContract
 from .project_models import ComponentContract
 from .usb_c_models import (
     UsbCVbusCapacitanceRequirement,

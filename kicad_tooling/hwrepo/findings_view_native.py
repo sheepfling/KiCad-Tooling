@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import tempfile
 from collections import Counter
-from collections.abc import Mapping
 from pathlib import Path, PureWindowsPath
 from typing import Literal
 
@@ -14,7 +13,7 @@ from .command_evidence_models import CommandEvidence
 from .contracts import parse_model_text, read_kicad_drc_findings, read_kicad_erc_report, repo_path
 from .findings_view_mapping import (
     DRC_MAPPING_VERSIONS,
-    SCHEMATIC_MAPPING_VERSIONS,
+    SCHEMATIC_SVG_FRAME_VERSIONS,
     drc_finding,
     erc_finding,
 )
@@ -26,6 +25,7 @@ from .project_models import (
     ProjectConfig,
     ProjectKind,
 )
+from .source_state_models import SourceHashInventory
 
 _MAX_ARTIFACT = 32 * 1024 * 1024
 
@@ -147,7 +147,7 @@ def drawings(
                         mapping_supported=parsed.can_map_mm
                         and config.kicad_version
                         in (
-                            SCHEMATIC_MAPPING_VERSIONS
+                            SCHEMATIC_SVG_FRAME_VERSIONS
                             if kind == "schematic"
                             else DRC_MAPPING_VERSIONS
                         ),
@@ -163,7 +163,7 @@ def native_findings(
     config: ProjectConfig,
     board: ReviewDrawing | None,
     schematic: tuple[ReviewDrawing, ...],
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> tuple[tuple[ReviewFinding, ...], tuple[str, ...]]:
     findings: list[ReviewFinding] = []
     issues: list[str] = []

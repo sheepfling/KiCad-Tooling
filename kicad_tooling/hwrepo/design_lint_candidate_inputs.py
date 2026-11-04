@@ -14,7 +14,6 @@ from .design_lint_bus_inputs import BusCandidateInputs
 from .design_lint_control_candidates import ControlCandidateInputs
 from .design_lint_pcb_inputs import PcbCandidateInputs
 from .design_lint_rule_models import DesignLintRuleCatalog
-from .design_lint_types import Candidate
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
 from .external_protection_models import ExternalProtectionCoverageReport
 from .ic_decoupling_models import IcDecouplingMap
@@ -84,6 +83,13 @@ class MappedCandidateInputs:
 
 
 @dataclass(frozen=True, slots=True)
+class UsbDataPathCandidateInputs:
+    """Authored USB topology shared by peer and mapped-path rules."""
+
+    authored_map: UsbDataPathMap | None
+
+
+@dataclass(frozen=True, slots=True)
 class DesignLintCandidateInputs:
     """All required theme groups for shared legacy and prepared scans."""
 
@@ -99,8 +105,7 @@ class DesignLintCandidateInputs:
     peer: PeerCandidateInputs
     mapped: MappedCandidateInputs
     pcb: PcbCandidateInputs
-    usb_data_path_map: UsbDataPathMap | None
-    additional_candidates: tuple[Candidate, ...] = ()
+    usb_data_path: UsbDataPathCandidateInputs
 
     def __post_init__(self) -> None:
         if self.bus.observed is not self.observed and self.bus.observed != self.observed:

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from pydantic import model_validator
 
+from .electrical_report_models import ElectricalCheck
 from .electrical_simulation_evidence import (
     ElectricalSimulationEvaluation,
     SimulationCaseResult,
@@ -16,7 +17,6 @@ from .electrical_simulation_evidence import (
 )
 from .electrical_simulation_models import SimulationCase
 from .model_primitives import Digest, Identifier, NonEmptyText, RepositoryPath, StrictModel
-from .models import ElectricalCheck
 from .spice import (
     SimulatorVersionMismatch,
     executable_path,

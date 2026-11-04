@@ -23,12 +23,9 @@ from .electrical_chart_models import (
     ElectricalChartsSuiteReport,
 )
 from .electrical_plot import render_case
+from .electrical_report_models import ElectricalAnalysisReport, ElectricalSuiteReport
 from .evidence import digest
-from .models import (
-    ContractCoachReport,
-    ElectricalAnalysisReport,
-    ElectricalSuiteReport,
-)
+from .models import ContractCoachReport
 from .waveform_data import WaveformData, read_waveform
 
 

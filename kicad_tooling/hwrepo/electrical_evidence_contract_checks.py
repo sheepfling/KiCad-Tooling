@@ -19,13 +19,9 @@ from .control_input_checks import control_input_checks
 from .digital_peer_voltages import digital_peer_voltage_checks
 from .electrical import grounding_checks, pin_relationship_checks, power_budget_checks
 from .electrical_analysis_contract_models import ElectricalAnalysisContract
+from .electrical_report_models import ElectricalAnalysisReport, ElectricalCheck
 from .evidence import digest
 from .i2c_pullup_contract import i2c_pullup_checks
-from .models import (
-    ElectricalAnalysisReport,
-    ElectricalCheck,
-    EvidenceFile,
-)
 from .mosfet_stress import mosfet_stress_checks
 from .native_netlist_evidence import NativeNetlistEvidenceIdentity, read_bound_native_netlist
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
@@ -38,6 +34,7 @@ from .project_models import (
     ProjectKind,
 )
 from .project_source_hashes import hash_project_sources as hashes
+from .release_contract_models import EvidenceFile
 from .rs485_heuristics import rs485_checks
 from .serial_heuristics import serial_peer_checks
 from .spi_contract import spi_checks

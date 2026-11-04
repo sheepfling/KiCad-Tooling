@@ -19,8 +19,9 @@ from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_model, write_model
 from .hwrepo.electrical import selected_config
 from .hwrepo.electrical_analysis_contract_models import ElectricalAnalysisContract
+from .hwrepo.electrical_report_models import ElectricalCheck
 from .hwrepo.evidence import digest
-from .hwrepo.models import ElectricalCheck, NetlistContract
+from .hwrepo.models import NetlistContract
 from .hwrepo.native_report_parsing import read_netlist
 
 FIXTURE_HASHES: Mapping[str, str] = MappingProxyType(

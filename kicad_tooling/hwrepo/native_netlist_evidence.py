@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -10,13 +9,14 @@ from .command_evidence_models import CommandEvidence
 from .contracts import read_model
 from .evidence import digest, evidence_path
 from .models import (
-    EvidenceFile,
     NetlistContract,
     ValidationSummary,
 )
 from .native_report_parsing import read_netlist
 from .native_summary_binding import validate_native_summary_binding
 from .project_models import ProjectConfig
+from .release_contract_models import EvidenceFile
+from .source_state_models import SourceHashInventory
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,7 +70,7 @@ def read_bound_native_netlist(
     root: Path,
     reference: EvidenceFile,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> tuple[NetlistContract, NativeNetlistEvidenceIdentity]:
     """Read a netlist only when its summary, command and source identity agree."""
     summary_path = evidence_path(root, reference)

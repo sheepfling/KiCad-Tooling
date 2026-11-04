@@ -22,11 +22,9 @@ from kicad_tooling.hwrepo.pin_connectivity_models import PinConnectivityAnalysis
 
 from .contracts import parse_model_text, read_model, repo_path
 from .discovery import load_config
+from .electrical_report_models import ElectricalCheck
 from .model_primitives import Digest, RepositoryPath
-from .models import (
-    ElectricalCheck,
-    NetlistContract,
-)
+from .models import NetlistContract
 from .project_models import (
     ProjectConfig,
     ProjectKind,

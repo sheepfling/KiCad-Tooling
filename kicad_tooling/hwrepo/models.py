@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
-from datetime import date
-from enum import Enum
 from typing import Annotated, Literal
 
 from pydantic import (
@@ -89,18 +87,36 @@ from . import usb_data_path_models as _usb_data_path_models
 from . import usb_peer_reference_models as _usb_peer_reference_models
 from . import usb_reference_pin_models as _usb_reference_pin_models
 from .command_evidence_models import CommandEvidence
-from .diagnostics_models import DiagnosticFinding, DiagnosticReport
+from .design_lint_report_models import (
+    DesignLintReport,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+)
+from .diagnostics_models import (
+    DiagnosticFinding,  # pyright: ignore[reportUnusedImport]
+    DiagnosticReport,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+)
+from .doctor_models import (
+    EnvironmentCheck,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    TemplateDoctorReport,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+)
 from .documentation_models import (
     DocumentationException,  # noqa: F401  # pyright: ignore[reportUnusedImport]
     DocumentationIssue,  # noqa: F401  # pyright: ignore[reportUnusedImport]
     DocumentationPolicy,  # noqa: F401  # pyright: ignore[reportUnusedImport]
-    DocumentationPolicyReport,
+    DocumentationPolicyReport,  # noqa: F401  # pyright: ignore[reportUnusedImport]
 )
-from .governance_lint_models import GovernanceLintReport
+from .electrical_report_models import (
+    ElectricalAnalysisReport,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    ElectricalCheck,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    ElectricalInputInventory,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    ElectricalSetupReport,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    ElectricalSuiteReport,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+)
+from .governance_lint_models import (
+    GovernanceLintReport,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+)
 from .model_primitives import (
     Digest,
     ElectricalPositive,  # noqa: F401  # pyright: ignore[reportUnusedImport]
-    FiniteMeasure,
     GitCommit,
     Identifier,
     NativePcbUuid,  # noqa: F401  # pyright: ignore[reportUnusedImport]
@@ -117,13 +133,40 @@ from .model_primitives import (
     StrictModel,
     TemplateVersion,
 )
+from .native_project_check_models import (
+    CheckAllSummary,
+    ProjectCheckSummary,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+)
 from .netlist_contract_inputs import NetlistRawValue, normalize_native_unconnected_nets
 from .project_static_pipeline_models import (
-    GenerationReport,
+    GenerationReport,  # noqa: F401  # pyright: ignore[reportUnusedImport]
     ProjectStaticPipelineReport,
-    ProjectTestsReport,
+    ProjectTestsReport,  # noqa: F401  # pyright: ignore[reportUnusedImport]
 )
-from .repository_policy_models import RepositoryPolicyReport
+from .project_verification_report_models import (
+    ProjectVerificationReport,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+)
+from .release_contract_models import (
+    DeviationStatus,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    EvidenceFile,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    ReleaseApproval,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    ReleaseArtifact,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    ReleaseArtifactKind,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    ReleaseAssurancePolicy,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    ReleaseDeviation,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    ReleaseEvidence,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    ReleaseInterface,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    ReleaseLibrary,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    ReleaseManifest,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    ReleasePoliciesCatalog,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    ReleaseStatus,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    ReleaseVariant,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+)
+from .repository_policy_models import (
+    RepositoryPolicyReport,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+)
+from .source_state_models import SourceState
+from .static_pipeline_models import StaticPipelineReport
 
 ToolchainRecord = _project_models.ToolchainRecord
 ToolchainsCatalog = _project_models.ToolchainsCatalog
@@ -643,123 +686,6 @@ class SnapshotVerification(StrictModel):
 ReleaseClass = _release_model_types.ReleaseClass
 
 
-class ReleaseAssurancePolicy(StrictModel):
-    release_class: ReleaseClass
-    minimum_assurance: Assurance
-
-
-class ReleasePoliciesCatalog(StrictModel):
-    schema_version: Literal["1"] = "1"
-    policies: tuple[ReleaseAssurancePolicy, ...]
-
-
-class ReleaseStatus(str, Enum):
-    CANDIDATE = "candidate"
-    APPROVED = "approved"
-
-
-class DeviationStatus(str, Enum):
-    OPEN = "open"
-    APPROVED = "approved"
-    CLOSED = "closed"
-
-
-class ReleaseVariant(StrictModel):
-    product: Identifier
-    product_revision: Identifier
-    variant: Identifier
-    variant_revision: Identifier
-
-
-class ReleaseLibrary(StrictModel):
-    id: Identifier
-    version: NonEmptyText
-    provenance_sha256: Digest
-    licensing_sha256: Digest
-
-
-class ReleaseInterface(StrictModel):
-    id: Identifier
-    revision: NonEmptyText
-
-
-class ReleaseArtifactKind(str, Enum):
-    REVIEW_RECORD = "review_record"
-    BOM = "bom"
-    SCHEMATIC_EXPORT = "schematic_export"
-    PCB_EXPORT = "pcb_export"
-    HARNESS_EXPORT = "harness_export"
-    VALIDATION_REPORT = "validation_report"
-    FABRICATION_PACKAGE = "fabrication_package"
-    ASSEMBLY_PACKAGE = "assembly_package"
-
-
-class ReleaseArtifact(StrictModel):
-    id: Identifier
-    kind: ReleaseArtifactKind
-    path: RepositoryPath
-    sha256: Digest
-    intended_use: NonEmptyText
-
-
-class ReleaseDeviation(StrictModel):
-    id: Identifier
-    scope: tuple[Identifier, ...]
-    owner: NonEmptyText
-    reason: NonEmptyText
-    status: DeviationStatus
-    expires: date
-    evidence: tuple[Identifier, ...]
-
-
-class ReleaseApproval(StrictModel):
-    electrical_reviewer: NonEmptyText
-    mechanical_reviewer: NonEmptyText | None = None
-    integrator: NonEmptyText
-    release_authority: NonEmptyText | None = None
-    approved_at: date
-    evidence: tuple[Identifier, ...]
-
-
-class SourceState(StrictModel):
-    """Observed Git identity and source bytes, never a caller-supplied assertion."""
-
-    commit: GitCommit | None = None
-    clean: bool = False
-    files_sha256: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
-
-
-class EvidenceFile(StrictModel):
-    path: RepositoryPath
-    sha256: Digest
-
-
-class ReleaseEvidence(StrictModel):
-    portable: EvidenceFile
-    native: Mapping[Identifier, EvidenceFile]
-    exports: Mapping[Identifier, EvidenceFile] = Field(default_factory=dict)
-    electrical: Mapping[Identifier, EvidenceFile] = Field(default_factory=dict)
-
-
-class ReleaseManifest(StrictModel):
-    schema_version: Literal["1"] = "1"
-    release_id: Identifier
-    release_class: ReleaseClass
-    status: ReleaseStatus
-    source_commit: GitCommit
-    source_tag: NonEmptyText | None = None
-    toolchain_id: Identifier
-    projects: tuple[Identifier, ...] = ()
-    variants: tuple[ReleaseVariant, ...] = ()
-    libraries: tuple[ReleaseLibrary, ...]
-    interfaces: tuple[ReleaseInterface, ...]
-    checks: Mapping[Identifier, Literal["PASS", "NOT_APPLICABLE"]] = Field(default_factory=dict)
-    evidence: ReleaseEvidence | None = None
-    artifacts: tuple[ReleaseArtifact, ...]
-    deviations: tuple[ReleaseDeviation, ...] = ()
-    approval: ReleaseApproval | None = None
-
-
 class GovernanceRecord(StrictModel):
     schema_version: Literal["1"] = "1"
     branch: NonEmptyText
@@ -917,28 +843,6 @@ class TemplateAdoptReport(StrictModel):
     next_actions: tuple[NonEmptyText, ...] = ()
 
 
-class EnvironmentCheck(StrictModel):
-    id: Identifier
-    required: bool
-    status: Literal["PASS", "FAIL", "OPTIONAL"]
-    expected: NonEmptyText
-    observed: NonEmptyText | None = None
-    next_action: NonEmptyText
-
-
-class TemplateDoctorReport(StrictModel):
-    """Local prerequisites and native-runner readiness without changing the repository."""
-
-    schema_version: Literal["1"] = "1"
-    lane: Literal["TEMPLATE_DOCTOR"] = "TEMPLATE_DOCTOR"
-    build_authorized: Literal[False] = False
-    native_requested: bool
-    electrical_requested: bool = False
-    checks: tuple[EnvironmentCheck, ...]
-    status: Literal["PASS", "FAIL"]
-    next_actions: tuple[NonEmptyText, ...] = ()
-
-
 class TemplatePreflightReport(StrictModel):
     schema_version: Literal["1"] = "1"
     lane: Literal["TEMPLATE_PREFLIGHT"] = "TEMPLATE_PREFLIGHT"
@@ -1046,22 +950,6 @@ class ValidationSummary(StrictModel):
     artifacts_sha256: Mapping[RepositoryPath, Digest]
 
 
-class ProjectCheckSummary(StrictModel):
-    id: Identifier
-    status: Literal["PASS", "FAIL"]
-    summary: RepositoryPath
-
-
-class CheckAllSummary(StrictModel):
-    schema_version: Literal["1"] = "1"
-    lane: Literal["KICAD_CLI_ALL_PROJECTS"] = "KICAD_CLI_ALL_PROJECTS"
-    governance: GovernanceLintReport
-    repository: RepositoryPolicyReport
-    product_policy: ProductPolicyReport
-    projects: tuple[ProjectCheckSummary, ...]
-    status: Literal["PASS", "FAIL"]
-
-
 class FaultProbeCase(StrictModel):
     id: Identifier
     status: Literal["PASS", "FAIL"]
@@ -1090,60 +978,6 @@ class SkippedCheck(StrictModel):
 class FailedCheck(StrictModel):
     status: Literal["FAIL"] = "FAIL"
     error: NonEmptyText
-
-
-class StaticPipelineReport(StrictModel):
-    status: Literal["PASS", "FAIL"]
-    source: SourceState | None = None
-    scope: Literal["static_only", "repository_static"] = "static_only"
-    tooling_version: NonEmptyText | None = None
-    build_authorized: Literal[False] = False
-    registry: GovernanceLintReport
-    repository: RepositoryPolicyReport
-    documentation: DocumentationPolicyReport
-    rumdl: CommandEvidence
-    mdrepo: CommandEvidence
-    product: ProductPolicyReport
-    generation: GenerationReport
-    ruff: CommandEvidence | None = None
-    pyright: CommandEvidence | None = None
-    unit_tests: CommandEvidence | None = None
-    project_tests: ProjectTestsReport
-
-    @model_validator(mode="after")
-    def explicit_tooling_boundary(self) -> StaticPipelineReport:
-        if self.scope == "static_only" and any(
-            command is None for command in (self.ruff, self.pyright, self.unit_tests)
-        ):
-            raise ValueError("Legacy full reports require all tooling quality commands")
-        if self.scope == "repository_static" and self.tooling_version is None:
-            raise ValueError(
-                "Project repository reports must identify the installed tooling version"
-            )
-        return self
-
-
-class ProjectVerificationReport(StrictModel):
-    """One local project attempt with retained portable and optional native evidence."""
-
-    schema_version: Literal["1"] = "1"
-    lane: Literal["PROJECT_VERIFY"] = "PROJECT_VERIFY"
-    build_authorized: Literal[False] = False
-    project_id: Identifier
-    depth: Literal["portable", "native", "electrical"]
-    runner: Literal["none", "local", "container"] = "none"
-    run_directory: NonEmptyText
-    portable: ProjectStaticPipelineReport | None = None
-    doctor: TemplateDoctorReport | None = None
-    dependency_command: CommandEvidence | None = None
-    native_command: CommandEvidence | None = None
-    native: CheckAllSummary | None = None
-    design_lint: DesignLintReport | None = None
-    electrical: ElectricalAnalysisReport | None = None
-    diagnosis: DiagnosticReport | None = None
-    status: Literal["PASS", "FAIL", "ERROR"]
-    next_actions: tuple[NonEmptyText, ...] = ()
-    error: str | None = None
 
 
 class ScopedReleasePortableReport(StrictModel):
@@ -1523,101 +1357,6 @@ class McpNativeScopeReport(StrictModel):
     report: CheckAllSummary
 
 
-class ElectricalCheck(StrictModel):
-    id: NonEmptyText
-    status: Literal["PASS", "FAIL", "NOT_RUN", "NOT_APPLICABLE", "NOT_CONFIGURED"]
-    detail: NonEmptyText
-    observed: FiniteMeasure | None = None
-    unit: str | None = None
-
-
-class ElectricalAnalysisReport(StrictModel):
-    schema_version: Literal["1"] = "1"
-    lane: Literal["ELECTRICAL_ANALYSIS"] = "ELECTRICAL_ANALYSIS"
-    build_authorized: Literal[False] = False
-    project_id: Identifier
-    source: SourceState | None = None
-    status: Literal["PASS", "FAIL", "NOT_CONFIGURED"]
-    run_directory: str = ""
-    input_sha256: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
-    artifacts_sha256: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
-    commands: Mapping[str, CommandEvidence] = Field(default_factory=dict)
-    checks: tuple[ElectricalCheck, ...]
-    limits: tuple[str, ...] = (
-        "Grounding covers declared schematic pins; copper return paths and physical bonds need review.",
-        "PCB return paths report native pad/zone connectivity and declared net ties; they do not prove manufactured continuity or first-article acceptance.",
-        "Pin relationships compare schematic nets; net ties and physical continuity need separate review.",
-        (
-            "I2C pull-up ranges compare direct resistors, exact mapped series chains, and mapped array channels; "
-            "optional authored rail-to-input voltage checks compare declared limits and exact pin identity, "
-            "but do not verify source values, transients, array internals, or off-board networks."
-        ),
-        (
-            "Optional I2C resistor-window checks use project-authored rail, low-level, sink-current, "
-            "bus-capacitance and rise-time inputs with an ideal 30%-to-70% RC model; they do not include "
-            "component tolerances, nonlinear or active pull-ups, off-board loading, or measured waveforms."
-        ),
-        (
-            "CAN checks compare declared bus pins, local direct/split paths, DNP options, and any mapped "
-            "split midpoint capacitor's nominal value and pins; external hardware, physical bus-end placement, "
-            "and capacitor placement, derating, impedance, and EMC need separate evidence."
-        ),
-        (
-            "USB-C checks compare declared CC/VBUS/GND pin assignments, fitted Rp/Rd resistors, exact "
-            "controller/protection identity, any authored VBUS component/net map, and an explicitly mapped "
-            "nominal port-side VBUS capacitance range; it does not verify capacitor derating, tolerance, "
-            "dynamic behavior, device conduction, or PCB/contact continuity, while controller behavior, "
-            "PD and protection performance need separate evidence."
-        ),
-        (
-            "Direct serial voltage checks compare authored guaranteed output ranges with receiver thresholds "
-            "and absolute limits; cited sources, operating conditions, transients, and device behavior are "
-            "not independently validated."
-        ),
-        (
-            "Component voltage-rating checks compare exact mapped part identity and pin/net assignments, "
-            "a project-authored maximum stress envelope, a datasheet working rating, and a project-selected "
-            "utilization limit; the sources and stress derivation are not independently validated."
-        ),
-        "Simulation results apply only to the reviewed models, cases, timestep and frequency grid.",
-        "Power budgets use simultaneous worst-case loads and engineer-supplied derated path ratings.",
-        "Physical startup, thermal behavior, RF/EMC and manufacturing acceptance remain unverified.",
-        (
-            "Test-access contracts check exact schematic pins and separately check PCB footprint/pad, "
-            "net and outer-mask declarations; probe clearance, nearby obstructions, covers and "
-            "manufacturing test coverage remain unverified."
-        ),
-    )
-
-
-class ElectricalSuiteReport(StrictModel):
-    schema_version: Literal["1"] = "1"
-    build_authorized: Literal[False] = False
-    status: Literal["PASS", "FAIL"]
-    projects: tuple[ElectricalAnalysisReport, ...]
-
-
-class ElectricalSetupReport(StrictModel):
-    schema_version: Literal["1"] = "1"
-    build_authorized: Literal[False] = False
-    status: Literal["CREATED"] = "CREATED"
-    project_id: Identifier
-    contract: RepositoryPath
-    changed: tuple[RepositoryPath, ...]
-    next_actions: tuple[NonEmptyText, ...]
-
-
-class ElectricalInputInventory(StrictModel):
-    schema_version: Literal["1"] = "1"
-    status: Literal["UNREVIEWED"] = "UNREVIEWED"
-    build_authorized: Literal[False] = False
-    project_id: Identifier
-    run_directory: NonEmptyText
-    source_sha256: Mapping[RepositoryPath, Digest]
-    model_sha256: Mapping[RepositoryPath, Digest]
-    next_actions: tuple[NonEmptyText, ...]
-
-
 class PartCadComponent(StrictModel):
     reference: Identifier
     symbol_id: str
@@ -1830,18 +1569,3 @@ CadBundleCheck = _cad_source_models.CadBundleCheck
 CadImportPlan = _cad_source_models.CadImportPlan
 CadImportReport = _cad_source_models.CadImportReport
 CadSourcingReview = _cad_source_models.CadSourcingReview
-
-
-def register_design_lint_report(report_type: type[StrictModel]) -> None:
-    """Re-export the moved report and resolve the forward model reference."""
-    globals()["DesignLintReport"] = report_type
-    ProjectVerificationReport.model_rebuild(_types_namespace={"DesignLintReport": report_type})
-
-
-import sys as _sys
-
-_report_module = _sys.modules.get(f"{__package__}.design_lint_report_models")
-if _report_module is None or hasattr(_report_module, "DesignLintReport"):
-    from .design_lint_report_models import DesignLintReport
-
-    register_design_lint_report(DesignLintReport)

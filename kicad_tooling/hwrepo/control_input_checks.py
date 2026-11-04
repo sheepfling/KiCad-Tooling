@@ -9,10 +9,8 @@ from .control_input_models import (
     ControlInputsAnalysis,
     ControlPinRequirement,
 )
-from .models import (
-    ElectricalCheck,
-    NetlistContract,
-)
+from .electrical_report_models import ElectricalCheck
+from .models import NetlistContract
 from .resistor_array_paths import (
     ResistorArrayNetlistEvidence,
     resistor_array_channel_issue,

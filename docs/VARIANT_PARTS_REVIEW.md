@@ -35,7 +35,17 @@ and blocks the supplier CSV. Catalog identity and part approval checks still
 run through the normal purchasing planner. No receipt authorizes purchase,
 assembly, electrical approval, or release.
 
-The current regression controls cover two distinct named populations, a
-PCB-only fitted reference, a native-only schematic reference, stale evidence,
-and CLI/MCP parity. Exact KiCad exports for a representative user project
-remain an acceptance step for this backlog item.
+The regression controls cover two distinct named populations, a PCB-only
+fitted reference, a native-only schematic reference, stale evidence, and
+CLI/MCP parity. The opt-in native lane uses the digest-pinned KiCad 10.0.5 image
+to export a named variant from an isolated public-project fixture, then checks
+both fitted and PCB-DNP cases through this parts review. Its native variant
+exports are exact; the surrounding validation and lint receipts are constructed
+for the test. A user's own design still needs its separate source and parts
+review before any build decision.
+
+```sh
+KICAD_TEMPLATE_ROOT=/path/to/public-template \
+  KICAD_RUN_NATIVE_PCB_FIXTURES=1 \
+  python -I -m pytest tests/test_variant_parts_review_native.py -q
+```

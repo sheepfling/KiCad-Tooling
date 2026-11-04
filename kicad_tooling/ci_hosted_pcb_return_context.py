@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Protocol, TypeAlias
 
 from .hwrepo.electrical import selected_config
-from .hwrepo.models import ElectricalCheck
+from .hwrepo.electrical_report_models import ElectricalCheck
 from .hwrepo.pcb_connectivity_observations import PcbPadConnectivityObservation
 from .hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .hwrepo.project_models import ProjectConfig

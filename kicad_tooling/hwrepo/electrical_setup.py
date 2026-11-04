@@ -18,10 +18,7 @@ from .electrical import (
     simulation_cases,
 )
 from .electrical_analysis_contract_models import ElectricalAnalysisContract
-from .models import (
-    ElectricalInputInventory,
-    ElectricalSetupReport,
-)
+from .electrical_report_models import ElectricalInputInventory, ElectricalSetupReport
 from .project_models import (
     ProjectKind,
     ProjectManifest,

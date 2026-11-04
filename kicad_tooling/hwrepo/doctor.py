@@ -13,8 +13,8 @@ from typing import Literal
 from kicad_tooling import package_version
 
 from .discovery import load_config, load_registry
+from .doctor_models import EnvironmentCheck, TemplateDoctorReport
 from .kicad_compatibility import require_cli_profile
-from .models import EnvironmentCheck, TemplateDoctorReport
 from .native_toolchain import assessment, observed_version, toolchain
 from .template import preflight
 

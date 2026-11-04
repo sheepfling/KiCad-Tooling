@@ -11,6 +11,8 @@ from typing import Literal
 from mcp.server import MCPServer
 from mcp.types import ToolAnnotations
 
+from .assembly_clearance import build_assembly_clearance
+from .assembly_clearance_models import AssemblyClearanceReport
 from .assembly_review import build_assembly_review
 from .assembly_review_models import AssemblyReviewReport
 from .board_variant_compare import compare_board_variants as compare_native_board_variants
@@ -65,6 +67,26 @@ def register_visualization_export_tools(
     permitted_sources: tuple[Path, ...],
 ) -> None:
     """Bind fresh, ignored visualization receipts to the shared typed services."""
+
+    def export_assembly_clearance(
+        project_id: str,
+        view_id: str,
+        board_receipt: str,
+        placement_contract: str,
+        clearance_contract: str,
+    ) -> AssemblyClearanceReport:
+        """Measure retained board geometry to an authored rectangular free space."""
+        with service_operation(operation):
+            return build_assembly_clearance(
+                root,
+                project_id,
+                Path(board_receipt),
+                Path(placement_contract),
+                Path(clearance_contract),
+                fresh_output(root, "assembly-clearance", view_id),
+            )
+
+    server.tool(annotations=create_only)(export_assembly_clearance)
 
     def export_assembly_review(
         project_id: str, view_id: str, board_receipt: str, placement_contract: str

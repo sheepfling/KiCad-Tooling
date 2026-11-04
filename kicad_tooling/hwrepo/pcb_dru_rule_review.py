@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
 from pathlib import Path
 
 from .contracts import repo_path
@@ -14,6 +13,7 @@ from .project_models import (
     ProjectConfig,
     ProjectKind,
 )
+from .source_state_models import SourceHashInventory
 
 _SUPPORTED_KICAD_VERSION = re.compile(r"10\.\d+\.\d+\Z")
 _TEXT_VARIABLE = re.compile(r"\$\{([^{}]+)\}")
@@ -22,7 +22,7 @@ _TEXT_VARIABLE = re.compile(r"\$\{([^{}]+)\}")
 def _source_bound_rule_file(
     root: Path,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> tuple[str, Path, str] | None:
     if config.kind not in {ProjectKind.PCB, ProjectKind.PCB_ONLY}:
         return None
@@ -47,7 +47,7 @@ def _source_bound_rule_file(
 def ignored_custom_drc_rule_candidates(
     root: Path,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> tuple[Candidate, ...]:
     """Prompt for review of each source-bound rule declaring `(severity ignore)`.
 
@@ -85,7 +85,7 @@ def ignored_custom_drc_rule_candidates(
 def excluded_custom_drc_rule_candidates(
     root: Path,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> tuple[Candidate, ...]:
     """Prompt for review of each source-bound rule declaring `(severity exclusion)`."""
     if config.kind not in {ProjectKind.PCB, ProjectKind.PCB_ONLY}:
@@ -124,7 +124,7 @@ def excluded_custom_drc_rule_candidates(
 def text_variable_custom_drc_rule_candidates(
     root: Path,
     config: ProjectConfig,
-    source_hashes: Mapping[str, str],
+    source_hashes: SourceHashInventory,
 ) -> tuple[Candidate, ...]:
     """Request review when source contains a KiCad substitution not evaluated here."""
     if _SUPPORTED_KICAD_VERSION.fullmatch(config.kicad_version) is None:

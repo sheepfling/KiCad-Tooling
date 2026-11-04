@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from .models import (
-    ElectricalCheck,
-    NetlistContract,
-)
+from .electrical_report_models import ElectricalCheck
+from .models import NetlistContract
 from .mosfet_stress_models import (
     MosfetOperatingState,
     MosfetStressAnalysis,

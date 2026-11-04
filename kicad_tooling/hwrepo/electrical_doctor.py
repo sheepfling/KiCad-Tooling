@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from .contract_coach import run_command
+from .doctor_models import EnvironmentCheck
 from .electrical import load_analysis, policy_issues, selected_config, simulation_cases
-from .models import EnvironmentCheck
 from .spice import executable_path, observed_versions
 
 
