@@ -49,9 +49,9 @@ def test_direct_rail_and_output_driven_led_faults_with_series_controls(
         "parallel-output-resistor": "1c37d1e6c7a70f460f4525f25c1d0ebe89dd8db0cbe8e17b415a15827a9422a0",
         "custom-direct-output": "2e2d6909d49c5815c5254aea14125ac6243fba0d45307d875c2563d657bc4f7b",
         "custom-series-return-control": "c5a254ead0887da399cd2ace46db4fde8231711abdb602304eac7e1be68ff047",
-        "current-sink-output": "642cba6e1236cc953b470d2244d72d7298d4724b26440bfa4f87ba0cae3a3184",
-        "current-sink-two-channel": "e8640c8799542a499b7b7b1792e03512f114cabc8cd8a1a600059cd593f718c4",
-        "current-sink-two-channel-partial-map": "e8640c8799542a499b7b7b1792e03512f114cabc8cd8a1a600059cd593f718c4",
+        "current-sink-output": "86affad528ccdb8019d7f88b0c89abc1583be353f6834e6ff01c0beb2d5f3d17",
+        "current-sink-two-channel": "43531d103ffc0b8c905626b879e065ee12fb5a2078aca8fa2cfa67fbe7677f77",
+        "current-sink-two-channel-partial-map": "43531d103ffc0b8c905626b879e065ee12fb5a2078aca8fa2cfa67fbe7677f77",
     }
     expected_findings: dict[str, set[str]] = {
         "direct-rails": {"D1: LED directly spans supply and return"},

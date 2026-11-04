@@ -9,6 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+from .ci_hosted_led_current_sink import require_current_sink_led_topology
 from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.component_role_models import (
     ComponentRoleBinding,
@@ -327,6 +328,15 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
                 or observed.pin_electrical_types.get("D2.2") != "passive"
             ):
                 raise ValueError("Native second current-sink LED channel changed its pin signature")
+            if case in {
+                "current-sink-output",
+                "current-sink-two-channel",
+                "current-sink-two-channel-partial-map",
+            }:
+                require_current_sink_led_topology(
+                    observed,
+                    channels=1 if case == "current-sink-output" else 2,
+                )
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
                 sort_keys=True,

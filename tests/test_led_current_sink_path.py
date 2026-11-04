@@ -7,6 +7,7 @@ import hashlib
 import pytest
 from pydantic import ValidationError
 
+from kicad_tooling.ci_hosted_led_current_sink import require_current_sink_led_topology
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract
 from kicad_tooling.hwrepo.power_path_models import (
@@ -86,6 +87,21 @@ def test_multichannel_map_only_suppresses_its_exact_led_paths() -> None:
         2,
         0,
     )
+
+
+@pytest.mark.parametrize("channels", (1, 2))
+def test_native_current_sink_fixture_topology_has_separate_output_paths(channels: int) -> None:
+    observed = current_sink_netlist(two_channels=channels == 2)
+
+    require_current_sink_led_topology(observed, channels=channels)
+
+
+def test_native_current_sink_fixture_topology_rejects_short_led_terminals() -> None:
+    source = current_sink_netlist()
+    shorted = source.model_copy(update={"nets": {"+5V": ("U2.1", "D1.1", "D1.2", "U1.1")}})
+
+    with pytest.raises(ValueError, match="shorts distinct rail/output paths"):
+        require_current_sink_led_topology(shorted, channels=1)
 
 
 @pytest.mark.parametrize(

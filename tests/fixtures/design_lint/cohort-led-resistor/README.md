@@ -177,8 +177,8 @@ Fixture SHA-256:
 
 | Fixture                                      | SHA-256                                                            |
 | -------------------------------------------- | ------------------------------------------------------------------ |
-| `control-current-sink-output.kicad_sch`      | `642cba6e1236cc953b470d2244d72d7298d4724b26440bfa4f87ba0cae3a3184` |
-| `control-current-sink-two-channel.kicad_sch` | `e8640c8799542a499b7b7b1792e03512f114cabc8cd8a1a600059cd593f718c4` |
+| `control-current-sink-output.kicad_sch`      | `86affad528ccdb8019d7f88b0c89abc1583be353f6834e6ff01c0beb2d5f3d17` |
+| `control-current-sink-two-channel.kicad_sch` | `43531d103ffc0b8c905626b879e065ee12fb5a2078aca8fa2cfa67fbe7677f77` |
 
 The synthetic map tests explicit project metadata and native connectivity; it
 does not establish current regulation, safe operating limits, brightness,
