@@ -9,6 +9,7 @@ import pytest
 from kicad_tooling.hwrepo import (
     control_input_models,
     design_lint_candidate_inputs,
+    design_lint_control_candidate_evidence,
     design_lint_control_candidates,
     design_lint_control_inputs,
 )
@@ -116,4 +117,37 @@ def test_control_candidate_input_has_a_theme_owned_contract_module() -> None:
     assert (
         design_lint_control_candidates.ControlCandidateInputs
         is design_lint_control_inputs.ControlCandidateInputs
+    )
+
+
+def test_control_candidate_evidence_has_a_theme_owned_projection_module() -> None:
+    evidence_path = REPO_ROOT / "kicad_tooling/hwrepo/design_lint_control_candidate_evidence.py"
+    service_path = REPO_ROOT / "kicad_tooling/hwrepo/design_lint_control_candidates.py"
+    evidence_tree = ast.parse(evidence_path.read_text(encoding="utf-8"))
+    service_tree = ast.parse(service_path.read_text(encoding="utf-8"))
+
+    assert line_count(evidence_path) < IMPLEMENTATION_MAX_LINES
+    assert "ControlCandidate" in _top_level_definitions(evidence_tree)
+    assert any(
+        isinstance(node, ast.FunctionDef) and node.name == "project_control_candidate_evidence"
+        for node in evidence_tree.body
+    )
+    assert any(
+        isinstance(node, ast.ImportFrom)
+        and node.module == "design_lint_control_candidate_evidence"
+        and "ControlCandidate" in {alias.name for alias in node.names}
+        for node in service_tree.body
+    )
+    assert (
+        design_lint_control_candidates.ControlCandidate
+        is design_lint_control_candidate_evidence.ControlCandidate
+    )
+    assert not any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id in {"Candidate", "ControlCandidate"}
+        for node in ast.walk(service_tree)
+    )
+    assert not any(
+        isinstance(node, ast.keyword) and node.arg == "evidence" for node in ast.walk(service_tree)
     )

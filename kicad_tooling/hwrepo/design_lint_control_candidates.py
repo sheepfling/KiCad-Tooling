@@ -9,6 +9,10 @@ from .control_input_inventory import (
     unconnected_control_inputs,
 )
 from .control_input_models import ControlInputBiasHeuristicCoverage
+from .design_lint_control_candidate_evidence import (
+    ControlCandidate,
+    open_output_expected_bias_description,
+)
 from .design_lint_control_inputs import ControlCandidateInputs
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
@@ -45,20 +49,14 @@ def scan_control_candidates(inputs: ControlCandidateInputs) -> ControlCandidateR
 
     for pin in unconnected_controls:
         found.append(
-            Candidate(
-                rule_id="control.unconnected_control_input",
+            ControlCandidate.from_source_evidence(
+                source_evidence=pin,
                 subject=f"{pin.pin}: {pin.function}",
                 message=(
                     f"This recognized {pin.family} input pin has no net assignment. Review "
                     "whether it is intentionally unused, handled by internal/off-board "
                     "circuitry, or missing a connection."
                 ),
-                evidence={
-                    pin.pin: (),
-                    "function": (pin.function,),
-                    "family": (pin.family,),
-                    "electrical_type": (pin.electrical_type,),
-                },
             )
         )
 
@@ -71,13 +69,9 @@ def scan_control_candidates(inputs: ControlCandidateInputs) -> ControlCandidateR
     for gap in connected_control_inputs_without_visible_rail_resistor(observed):
         if gap.net.casefold() in covered_control_nets:
             continue
-        controls = tuple(
-            f"{control.pin}: {control.function} ({control.family}, {control.electrical_type})"
-            for control in gap.controls
-        )
         found.append(
-            Candidate(
-                rule_id="control.connected_control_input_without_visible_bias",
+            ControlCandidate.from_source_evidence(
+                source_evidence=gap,
                 subject=f"{gap.net}: connected control input has no visible rail resistor path",
                 message=(
                     "This assigned net contains a recognized reset, enable, or boot/strap input, "
@@ -87,28 +81,15 @@ def scan_control_candidates(inputs: ControlCandidateInputs) -> ControlCandidateR
                     "topology establishes the intended state, and whether a local path is "
                     "required. This finding does not establish that a resistor is required."
                 ),
-                evidence={
-                    "net": (gap.net,),
-                    "control_inputs": controls,
-                    "output_capable_peers": gap.output_capable_peers,
-                },
             )
         )
 
     for gap in open_output_bias_gaps(observed):
-        bias_description = (
-            "pull-up to a recognized positive rail"
-            if gap.bias == "pull_up"
-            else "pull-down to a recognized return"
-        )
         output_kind = "open-collector" if gap.bias == "pull_up" else "open-emitter"
+        bias_description = open_output_expected_bias_description(gap)
         found.append(
-            Candidate(
-                rule_id=(
-                    "signal.open_collector_input_without_visible_bias"
-                    if gap.bias == "pull_up"
-                    else "signal.open_emitter_input_without_visible_bias"
-                ),
+            ControlCandidate.from_source_evidence(
+                source_evidence=gap,
                 subject=f"{gap.net}: {output_kind} signal has no visible local bias resistor",
                 message=(
                     f"This assigned net joins a native {output_kind} output pin and a native input, "
@@ -118,13 +99,6 @@ def scan_control_candidates(inputs: ControlCandidateInputs) -> ControlCandidateR
                     "not establish that a resistor is required or that any visible resistor has a "
                     "suitable value."
                 ),
-                evidence={
-                    "net": (gap.net,),
-                    "expected_bias": (bias_description,),
-                    "open_output_pins": gap.output_pins,
-                    "input_pins": gap.input_pins,
-                    "visible_resistors_on_signal_net": gap.visible_resistors,
-                },
             )
         )
     return ControlCandidateResult(tuple(found), frozenset(control_pin_keys))

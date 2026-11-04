@@ -366,7 +366,7 @@ not-applicable, and not-configured coverage.
 | ----------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Observed topology | Native coach's `NetlistContract`                          | Required; the shared scanner rejects a different observation from the bus or control group.                                                                            |
 | Bias coverage     | Project context and `resolve_control_input_bias_coverage` | The project electrical contract can cover a bias hint. Missing legacy input remains absent; stale, unbound, or blocked coverage stops full evaluation before scanning. |
-| Control result    | `design_lint_control_candidates`                          | `ControlCandidateResult` carries findings and normalized unconnected pin keys. The component-peer service uses the keys only to avoid duplicate prompts.               |
+| Control result    | `design_lint_control_candidates`                          | `ControlCandidateResult` returns findings and normalized unconnected pin keys. Candidates retain their typed source records.                                           |
 
 The scanner passes `ControlCandidateInputs` directly to the theme and consumes
 the named result. The older `control_candidates()` tuple interface remains an
@@ -374,6 +374,12 @@ adapter, as do the central compatibility signatures. Full evaluation validates
 coverage identity before the theme sees it; a direct caller of either candidate
 API must establish source identity itself. Candidate order, evidence,
 fingerprints, and serialized reports remain unchanged by this routing change.
+The candidate builder keeps `UnconnectedControlInput`, `ControlInputBiasGap`,
+and `OpenOutputBiasGap` records on their candidates. The theme-owned
+`design_lint_control_candidate_evidence` module projects these sources into the
+existing evidence fields and checks that the rule ID and fields stay aligned.
+This preserves useful typed scan data internally without changing report
+serialization.
 
 ## IC decoupling candidate route
 

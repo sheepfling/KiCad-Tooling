@@ -17,6 +17,7 @@ pytestmark = [
 
 _THEME_OWNERS = (
     "design_lint_can_termination_candidate_evidence.py",
+    "design_lint_control_candidate_evidence.py",
     "design_lint_i2c_pullup_candidate_evidence.py",
     "design_lint_i2c_address_candidate_evidence.py",
     "design_lint_usb_data_path_candidate_evidence.py",

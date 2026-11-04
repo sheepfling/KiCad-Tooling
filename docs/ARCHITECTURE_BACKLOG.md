@@ -156,6 +156,13 @@ the candidate layer. Internal design-lint services call the owning module;
 the `bus_heuristics.py` compatibility facade preserves its former map-shaped
 return record for existing Python callers.
 
+Control-input and open-output candidates now retain their typed inventory or
+heuristic source records. The theme-owned evidence projector produces the
+existing report fields and rejects mismatches between a source record and its
+serialized rule/evidence pair. Focused regressions cover all three source
+families and the compatibility report shape; the candidate scanner remains
+responsible for selection and message wording.
+
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify
 the right producer for a new datum; no module split is needed to express the
