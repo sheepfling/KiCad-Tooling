@@ -83,4 +83,4 @@ SHA-256 source digests:
 - `unanchored-split-open-fault.kicad_sch`:
   `4f808c6119974d3ab31d5948c187f7d20406fb80a75864087d80c630b96c8b42`
 - `unanchored-split-open-anchor-control.kicad_sch`:
-  `34936e4c2ee0eacddd27fa204eeb6b285d8ec4ece22e13209e10f9503262a5f0`
+  `ce3cdb9c0e3437df94f97903be3fc21f47836782bcc39a522882d7cf9c4be6a1`

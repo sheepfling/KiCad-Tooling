@@ -303,7 +303,7 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = MappingProxyType(
         "footprint-alias-unanchored-fault": "2d8fbf390f3b154d77c0bbc603a7260ddc0ff27cf3b9b2e74ab19242dfc4aa40",
         "footprint-alias-unanchored-partial-open-fault": "fb4fc447ef05fc97699b84bf5a21b7d106ed32e56e31059196982fa76d98e124",
         "footprint-alias-unanchored-split-open-fault": "4f808c6119974d3ab31d5948c187f7d20406fb80a75864087d80c630b96c8b42",
-        "footprint-alias-unanchored-split-open-anchor-control": "34936e4c2ee0eacddd27fa204eeb6b285d8ec4ece22e13209e10f9503262a5f0",
+        "footprint-alias-unanchored-split-open-anchor-control": "ce3cdb9c0e3437df94f97903be3fc21f47836782bcc39a522882d7cf9c4be6a1",
         "footprint-alias-open-fault": "ba6fd627b7a8e994ca554dbb9f3a1d67197f8a48d5302c5ee6c78318be424605",
         "footprint-alias-all-open-fault": "798d07bb64d60bbeab73b7203e052ce557e50b6da6453044ec4ccef686f78c27",
         "footprint-alias-numeric-fault": "505a7b2d1eaa74c54d476c5cab9cfcc41649ed51a64f2da4ebd9f5beb6a74f94",

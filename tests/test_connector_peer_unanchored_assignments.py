@@ -247,7 +247,7 @@ def test_native_unanchored_alias_fault_and_common_control_repeat(
         COVERAGE_NATIVE_FAULT_CASE: "fb4fc447ef05fc97699b84bf5a21b7d106ed32e56e31059196982fa76d98e124",
         COVERAGE_NATIVE_CONTROL_CASE: "ba6fd627b7a8e994ca554dbb9f3a1d67197f8a48d5302c5ee6c78318be424605",
         COVERAGE_NATIVE_SPLIT_OPEN_FAULT_CASE: "4f808c6119974d3ab31d5948c187f7d20406fb80a75864087d80c630b96c8b42",
-        COVERAGE_NATIVE_SPLIT_OPEN_CONTROL_CASE: "34936e4c2ee0eacddd27fa204eeb6b285d8ec4ece22e13209e10f9503262a5f0",
+        COVERAGE_NATIVE_SPLIT_OPEN_CONTROL_CASE: "ce3cdb9c0e3437df94f97903be3fc21f47836782bcc39a522882d7cf9c4be6a1",
     }
     fixture_root = Path(__file__).resolve().parent / "fixtures/design_lint"
     fixture_sources = connector_return_fixture_sources(fixture_root)
