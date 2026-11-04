@@ -162,6 +162,16 @@ existing report fields and rejects mismatches between a source record and its
 serialized rule/evidence pair. Focused regressions cover all three source
 families and the compatibility report shape; the candidate scanner remains
 responsible for selection and message wording.
+CAN peer-assignment candidates now follow the same boundary in a CAN peer
+evidence owner kept separate from termination evidence. The typed divergence
+record remains available internally while the report fields and fingerprint
+inputs stay stable.
+
+Unconnected I²C, CAN direction, generic SPI/USB-C/CAN pin, USB data, SPI data,
+SPI clock, and serial findings now retain their protocol-specific source
+records behind one report projector. Predicate owners keep their own partial-
+assignment rules; the scanner keeps ordering and wording. RS-485 and USB-C SBU
+remain specialized translators with their own owners.
 
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify

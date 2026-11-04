@@ -473,3 +473,24 @@ than proof of component conduction or PCB continuity.
 through the shared `CandidateEvidenceProjection`. The message and evidence
 remain a schematic review prompt: visible resistor count does not identify
 physical bus endpoints or prove external termination.
+
+## CAN peer-assignment finding route
+
+`can_peer_assignment_divergences` returns `CanPeerAssignmentDivergence`
+records for complete native CANH/CANL pairs. `CanPeerCandidate` retains each
+record, and `project_can_peer_evidence` maps it to the existing report fields.
+The candidate builder owns message wording and finding order. Candidate
+selection still describes a review prompt: shared pin roles and native net
+names do not prove that devices are on one physical bus.
+
+## Unconnected protocol-pin finding route
+
+The I²C, CAN direction, generic SPI/USB-C/CAN pin, USB 2.0 data, SPI data,
+SPI clock, and serial scanners each own their protocol qualification and return
+a typed source record. `design_lint_unconnected_interface_candidates` keeps
+the existing scan order and message wording, while
+`UnconnectedInterfaceCandidate` retains each record and
+`project_unconnected_interface_evidence` maps it to the stable rule ID and
+report fields. The RS-485 and USB-C SBU translators remain specialized owners.
+Full evaluation admits one shared native netlist before these scanners run;
+the candidate projection itself does not claim protocol use or PCB routing.

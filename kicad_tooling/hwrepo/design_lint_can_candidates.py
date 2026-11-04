@@ -17,6 +17,7 @@ from .can_termination_heuristics import (
 from .can_tx_output_sharing import can_tx_output_sharing_candidates
 from .can_tx_rx_label_mismatch import can_tx_rx_label_mismatch_candidates
 from .can_tx_rx_same_net import can_tx_rx_same_net_candidates
+from .design_lint_can_peer_candidate_evidence import CanPeerCandidate
 from .design_lint_can_termination_candidate_evidence import CanTerminationCandidate
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
@@ -62,8 +63,8 @@ def can_candidates(
     found.extend(can_tx_output_sharing_candidates(observed))
     for divergence in can_peer_assignment_divergences(observed):
         found.append(
-            Candidate(
-                rule_id="bus.can_peer_assignment_divergence",
+            CanPeerCandidate.from_source_evidence(
+                source_evidence=divergence,
                 subject=(
                     f"{divergence.shared_role} {divergence.shared_net}: "
                     "peer pair assignments diverge"
@@ -75,13 +76,6 @@ def can_candidates(
                     "Review whether the separate pair assignments are intentional; pin names "
                     "do not establish common-bus intent or physical connectivity."
                 ),
-                evidence={
-                    "shared_role": (divergence.shared_role,),
-                    "shared_net": (divergence.shared_net,),
-                    "complementary_role": (divergence.complementary_role,),
-                    "complementary_nets": divergence.complementary_nets,
-                    "participants": divergence.participants,
-                },
             )
         )
     found.extend(
