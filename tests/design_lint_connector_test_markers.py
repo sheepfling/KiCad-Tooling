@@ -104,6 +104,7 @@ CONNECTOR_LINT_TEST_MODULES = frozenset(
         "tests/test_verify_design_lint.py",
         "tests/test_external_protection_contract.py",
         "tests/test_external_protection_review.py",
+        "tests/test_design_lint_architecture_mapped_candidate_evidence.py",
         "tests/test_connector_fixture_lane.py",
         "tests/test_return_contract_fixture_lane.py",
         "tests/test_native_db9_return_contracts.py",

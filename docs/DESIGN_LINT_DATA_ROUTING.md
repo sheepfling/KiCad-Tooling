@@ -657,7 +657,7 @@ their enclosing report so the requirement gap and inventory state remain
 available together. Both routes use theme-owned projectors for the existing
 report fields and fingerprints.
 
-## Regulator feedback and crystal candidate evidence routes
+## Mapped network and protection candidate evidence routes
 
 `RegulatorFeedbackFindingEvidence` and `CrystalNetworkFindingEvidence` retain
 the exact non-complete coverage entry and its configured report, including the
@@ -667,3 +667,38 @@ and candidate fingerprints. `INCOMPLETE` and `OUT_OF_RANGE` entries remain
 review findings; complete entries are filtered before evidence construction,
 and blocked or not-requested reports remain ineligible. Evaluation continues
 to own policy disposition and source matching.
+
+## Power-path and RC-filter candidate evidence routes
+
+`PowerPathFindingEvidence` retains the named `PowerPathMismatch` and the
+canonical authored-map digest. `power_path_map_sha256` owns that digest in the
+power-path domain and is shared by candidate projection and mapped-topology
+coverage preparation. `RcFilterFindingEvidence` retains the exact coverage
+entry and configured report, including the source netlist identity. Their
+theme-owned projectors preserve existing evidence keys and fingerprints;
+source freshness and policy disposition remain in evaluation.
+
+## External-protection candidate evidence route
+
+`UnreviewedProtectionFindingEvidence` retains an undeclared connector pin and
+its coverage report as an applicability prompt. `ProtectionMismatchFindingEvidence`
+retains the exact incomplete or stale mapped entry and report. Separate
+projectors preserve the existing connector, signal, observed-net, device, and
+issue fields for both rule IDs. Coverage binding and blocked-state policy stay
+in evaluation preparation.
+
+Power-sequence mismatch findings retain the exact mismatch and authored map;
+cycle findings retain the map's declared-cycle state and observed cycles.
+`power_sequence_map_sha256` owns the canonical map digest and is shared by
+candidate projection and mapped-coverage preparation. Separate projectors
+preserve the existing mismatch and cycle evidence fields. Both rule branches
+remain eligible only under their existing source and coverage states.
+
+## STM32 CubeMX candidate evidence route
+
+`Stm32PinMapMismatchFindingEvidence` retains the exact pin mismatch and its
+coverage report, with matching map, IOC, and native-netlist identities.
+`Stm32UnmappedDeviceFindingEvidence` retains the name-based discovery
+observation and its incomplete coverage report. Their shared projector keeps
+the existing report fields, while source completeness and rule disposition
+remain with coverage and evaluation.

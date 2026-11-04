@@ -49,6 +49,7 @@ INTERFACE_LINT_TEST_MODULES = frozenset(
         "tests/test_electrical_control_input_parity.py",
         "tests/test_external_protection_contract.py",
         "tests/test_external_protection_review.py",
+        "tests/test_design_lint_architecture_mapped_candidate_evidence.py",
         "tests/test_design_lint_i2c_parity.py",
         "tests/test_i2c_coverage_source_boundary.py",
         "tests/test_electrical_bus_contract_parity.py",

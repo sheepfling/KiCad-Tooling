@@ -5,6 +5,13 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from kicad_tooling.hwrepo.design_lint import fingerprint
+from kicad_tooling.hwrepo.design_lint_power_sequence_candidate_evidence import (
+    PowerSequenceCandidate,
+    PowerSequenceMismatchFindingEvidence,
+)
+from kicad_tooling.hwrepo.design_lint_power_sequence_candidates import power_sequence_candidates
+from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.models import ComponentContract, DesignLintIgnore, DesignLintRuleOverride
 from kicad_tooling.hwrepo.power_sequence_models import PowerSequenceMap
 from kicad_tooling.hwrepo.power_sequences import (
@@ -73,6 +80,30 @@ def test_missing_net_identity_inventory_part_and_dnp_faults_are_reported(
         assert "enable: U2.1 on GOOD_A" in finding.evidence["expected_endpoints"]
     assert finding.evidence["dependencies"] == ("rail-a-before-rail-b: rail-a → rail-b on GOOD_A",)
     assert finding.evidence["map_sha256"]
+
+
+@pytest.mark.evidence_lint
+def test_mismatch_candidate_retains_map_source_and_existing_fingerprint() -> None:
+    observed = power_sequence_netlist(fault="open-enable")
+    sequence_map = power_sequence_map()
+    report = lint_report(observed, sequence_map)
+    candidate = power_sequence_candidates(observed, sequence_map)[0]
+    finding = next(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert isinstance(candidate, PowerSequenceCandidate)
+    assert isinstance(candidate.source_evidence, PowerSequenceMismatchFindingEvidence)
+    assert candidate.source_evidence.sequence_map is sequence_map
+    assert candidate.source_evidence.mismatch.stage_id == "rail-b"
+    assert candidate.evidence == finding.evidence
+    assert candidate.subject == finding.subject
+    assert candidate.message == finding.message
+    legacy_projection = Candidate(
+        rule_id=candidate.rule_id,
+        subject=candidate.subject,
+        message=candidate.message,
+        evidence=candidate.evidence,
+    )
+    assert fingerprint(candidate) == fingerprint(legacy_projection) == finding.fingerprint
 
 
 def test_unconfigured_map_does_not_infer_requirements_from_pin_names() -> None:

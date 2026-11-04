@@ -7,8 +7,10 @@ import hashlib
 import pytest
 from pydantic import ValidationError
 
-from kicad_tooling.hwrepo.design_lint import evaluate, text_report
+from kicad_tooling.hwrepo.design_lint import evaluate, fingerprint, text_report
+from kicad_tooling.hwrepo.design_lint_rc_filter_candidate_evidence import RcFilterCandidate
 from kicad_tooling.hwrepo.design_lint_rc_filter_candidates import rc_filter_candidates
+from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     ContractCoachReport,
@@ -173,6 +175,28 @@ def test_coverage_state_matches_rows_and_blocked_rows_do_not_emit_candidates() -
     assert rc_filter_candidates(mismatch)
     blocked = mismatch.model_copy(update={"status": "BLOCKED", "issue": "stale netlist"})
     assert not rc_filter_candidates(blocked)
+
+
+@pytest.mark.evidence_lint
+def test_candidate_retains_source_report_and_existing_fingerprint() -> None:
+    result = report(rc_filter_netlist(fault="wrong-capacitor-net"), rc_filter_map())
+    coverage = result.rc_filter_coverage
+    candidate = rc_filter_candidates(coverage)[0]
+    finding = next(item for item in result.findings if item.rule_id == "filter.rc_corner_mismatch")
+
+    assert isinstance(candidate, RcFilterCandidate)
+    assert candidate.source_evidence.report is coverage
+    assert candidate.source_evidence.entry is coverage.entries[0]
+    assert candidate.evidence == finding.evidence
+    assert candidate.subject == finding.subject
+    assert candidate.message == finding.message
+    legacy_projection = Candidate(
+        rule_id=candidate.rule_id,
+        subject=candidate.subject,
+        message=candidate.message,
+        evidence=candidate.evidence,
+    )
+    assert fingerprint(candidate) == fingerprint(legacy_projection) == finding.fingerprint
 
 
 @pytest.mark.parametrize(

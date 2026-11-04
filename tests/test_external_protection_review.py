@@ -6,8 +6,14 @@ from typing import Literal
 
 import pytest
 
-from kicad_tooling.hwrepo.design_lint import candidates
+from kicad_tooling.hwrepo.design_lint import candidates, fingerprint
 from kicad_tooling.hwrepo.design_lint import evaluate as evaluate_design_lint
+from kicad_tooling.hwrepo.design_lint_protection_candidate_evidence import (
+    ProtectionMismatchCandidate,
+    UnreviewedProtectionCandidate,
+)
+from kicad_tooling.hwrepo.design_lint_protection_candidates import protection_candidates
+from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.external_protection import evaluate
 from kicad_tooling.hwrepo.external_protection_models import (
     ExternalProtectionCoverageEntry,
@@ -151,6 +157,55 @@ def test_missing_applicability_is_a_review_candidate_and_policy_can_block_it() -
         external_protection_coverage=coverage,
     )
     assert blocked.status == "FAIL"
+
+
+@pytest.mark.evidence_lint
+def test_unreviewed_candidate_retains_coverage_and_stable_fingerprint() -> None:
+    _, report = protection_lint_report(None, observed_netlist())
+    coverage = report.external_protection_coverage
+    candidate = protection_candidates(coverage)[0]
+    finding = next(
+        item for item in report.findings if item.rule_id == "protection.unreviewed_interface_pin"
+    )
+
+    assert isinstance(candidate, UnreviewedProtectionCandidate)
+    assert candidate.source_evidence.report is coverage
+    assert candidate.source_evidence.entry is coverage.entries[0]
+    assert candidate.evidence == finding.evidence
+    legacy_projection = Candidate(
+        rule_id=candidate.rule_id,
+        subject=candidate.subject,
+        message=candidate.message,
+        evidence=candidate.evidence,
+    )
+    assert fingerprint(candidate) == fingerprint(legacy_projection) == finding.fingerprint
+
+
+@pytest.mark.evidence_lint
+def test_mapped_mismatch_candidate_retains_coverage_and_stable_fingerprint() -> None:
+    observed = observed_netlist(fault="protector-wrong-net")
+    _, report = protection_lint_report(protection_map(), observed)
+    coverage = report.external_protection_coverage
+    candidate = next(
+        item
+        for item in protection_candidates(coverage)
+        if item.rule_id == "protection.mapped_device_mismatch"
+    )
+    finding = next(
+        item for item in report.findings if item.rule_id == "protection.mapped_device_mismatch"
+    )
+
+    assert isinstance(candidate, ProtectionMismatchCandidate)
+    assert candidate.source_evidence.report is coverage
+    assert candidate.source_evidence.entry is coverage.entries[0]
+    assert candidate.evidence == finding.evidence
+    legacy_projection = Candidate(
+        rule_id=candidate.rule_id,
+        subject=candidate.subject,
+        message=candidate.message,
+        evidence=candidate.evidence,
+    )
+    assert fingerprint(candidate) == fingerprint(legacy_projection) == finding.fingerprint
 
 
 @pytest.mark.evidence_lint

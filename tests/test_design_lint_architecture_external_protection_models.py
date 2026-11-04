@@ -18,7 +18,12 @@ from kicad_tooling.hwrepo.external_protection import (
 )
 from tests.lint_architecture_support import IMPLEMENTATION_MAX_LINES, REPO_ROOT, line_count
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint, pytest.mark.architecture]
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.interface_lint,
+    pytest.mark.architecture,
+    pytest.mark.evidence_lint,
+]
 
 EXTERNAL_PROTECTION_MODEL_NAMES = (
     "ExternalProtectionChannelRequirement",
@@ -36,6 +41,9 @@ EXPECTED_OWNER_IMPORTS = MappingProxyType(
         "design_lint_evaluation_types.py": frozenset({"ExternalProtectionCoverageReport"}),
         "design_lint_evaluator.py": frozenset({"ExternalProtectionCoverageReport"}),
         "design_lint_protection_candidates.py": frozenset({"ExternalProtectionCoverageReport"}),
+        "design_lint_protection_candidate_evidence.py": frozenset(
+            {"ExternalProtectionCoverageEntry", "ExternalProtectionCoverageReport"}
+        ),
         "external_protection.py": frozenset(
             {
                 "ExternalProtectionCoverageEntry",

@@ -7,7 +7,10 @@ import hashlib
 import pytest
 from pydantic import ValidationError
 
-from kicad_tooling.hwrepo.design_lint import evaluate, text_report
+from kicad_tooling.hwrepo.design_lint import evaluate, fingerprint, text_report
+from kicad_tooling.hwrepo.design_lint_power_path_candidate_evidence import PowerPathCandidate
+from kicad_tooling.hwrepo.design_lint_power_path_candidates import power_path_candidates
+from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     ContractCoachReport,
@@ -21,6 +24,7 @@ from kicad_tooling.hwrepo.power_path_models import (
     PowerPathEndpointRequirement,
     PowerPathMap,
     PowerPathRequirement,
+    power_path_map_sha256,
 )
 from kicad_tooling.hwrepo.power_paths import power_path_mismatches
 
@@ -217,6 +221,31 @@ def test_missing_endpoint_element_dnp_identity_and_bypass_faults_are_reported(
     assert finding.evidence["start_endpoint"] == ("J1.1 on VIN",)
     assert finding.evidence["end_endpoint"] == ("U1.3 on VLOAD",)
     assert "does not establish component conduction" in finding.message
+
+
+@pytest.mark.evidence_lint
+def test_candidate_retains_named_mismatch_map_identity_and_existing_fingerprint() -> None:
+    observed = power_path_netlist(fault="open-element")
+    path_map = power_path_map()
+    result = lint_report(observed, path_map)
+    candidate = power_path_candidates(observed, path_map)[0]
+    finding = next(item for item in result.findings if item.rule_id == RULE_ID)
+    expected_map_sha256 = hashlib.sha256(path_map.model_dump_json().encode("utf-8")).hexdigest()
+
+    assert isinstance(candidate, PowerPathCandidate)
+    assert candidate.source_evidence.mismatch == power_path_mismatches(path_map, observed)[0]
+    assert power_path_map_sha256(path_map) == expected_map_sha256
+    assert candidate.source_evidence.map_sha256 == expected_map_sha256
+    assert candidate.evidence == finding.evidence
+    assert candidate.subject == finding.subject
+    assert candidate.message == finding.message
+    legacy_projection = Candidate(
+        rule_id=candidate.rule_id,
+        subject=candidate.subject,
+        message=candidate.message,
+        evidence=candidate.evidence,
+    )
+    assert fingerprint(candidate) == fingerprint(legacy_projection) == finding.fingerprint
 
 
 @pytest.mark.parametrize(

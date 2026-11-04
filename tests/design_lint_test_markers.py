@@ -147,6 +147,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_architecture_pcb_measurement_candidate_evidence.py",
                 "tests/test_pcb_measurement_candidate_evidence.py",
                 "tests/test_design_lint_architecture_mapped_candidate_evidence.py",
+                "tests/test_design_lint_architecture_external_protection_models.py",
             }
         ),
         "pcb_lint": PCB_LINT_TEST_MODULES,

@@ -4,6 +4,13 @@ from __future__ import annotations
 
 import pytest
 
+from kicad_tooling.hwrepo.design_lint import fingerprint
+from kicad_tooling.hwrepo.design_lint_power_sequence_candidate_evidence import (
+    PowerSequenceCandidate,
+    PowerSequenceCycleFindingEvidence,
+)
+from kicad_tooling.hwrepo.design_lint_power_sequence_candidates import power_sequence_candidates
+from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.power_sequences import (
     power_sequence_graph_has_cycle,
     power_sequence_mismatches,
@@ -28,6 +35,38 @@ def test_cycle_in_explicit_requirement_is_reported() -> None:
 
     assert any("graph is cyclic" in issue for issue in finding.evidence["issues"])
     assert power_sequence_graph_has_cycle(sequence_map)
+
+
+@pytest.mark.evidence_lint
+@pytest.mark.parametrize("observed_only", (False, True))
+def test_cycle_candidate_retains_map_source_and_existing_fingerprint(observed_only: bool) -> None:
+    if observed_only:
+        sequence_map = power_sequence_output_cycle_map(cycle=True)
+        observed = power_sequence_output_cycle_netlist(cycle=True)
+    else:
+        sequence_map = power_sequence_map(cycle=True)
+        observed = power_sequence_netlist(cycle=True)
+    report = lint_report(observed, sequence_map)
+    candidate = next(
+        item
+        for item in power_sequence_candidates(observed, sequence_map)
+        if isinstance(item, PowerSequenceCandidate)
+        and isinstance(item.source_evidence, PowerSequenceCycleFindingEvidence)
+    )
+    finding = next(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert candidate.source_evidence.sequence_map is sequence_map
+    assert candidate.evidence == finding.evidence
+    assert candidate.subject == finding.subject
+    assert candidate.message == finding.message
+    assert candidate.source_evidence.declared_dependency_cycle is (not observed_only)
+    legacy_projection = Candidate(
+        rule_id=candidate.rule_id,
+        subject=candidate.subject,
+        message=candidate.message,
+        evidence=candidate.evidence,
+    )
+    assert fingerprint(candidate) == fingerprint(legacy_projection) == finding.fingerprint
 
 
 def test_mapped_output_to_enable_cycle_is_detected_with_acyclic_requirement_graph() -> None:

@@ -635,6 +635,31 @@ regulator, evidence-owner, and architecture selection passed 39 tests; marker
 and collection architecture checks passed 14 more. The tag's narrower
 `design_lint and evidence_lint` selection passed 7 tests, with 32 deselected.
 Ruff, format, and project-aware Pyright passed.
+Mapped power-path findings now retain their exact mismatch and the canonical
+project-map digest; one theme-owned digest function is shared by candidate and
+coverage preparation. RC-filter findings retain their exact coverage entry
+and configured report. External-protection findings retain either an
+unreviewed applicability entry or a mapped-device mismatch with the enclosing
+coverage report. Their projectors preserve the previous report fields and
+fingerprints, while map/source normalization remains in evaluation. The
+power-path, RC-filter, external-protection, and power-sequence area selection
+passed 76 tests; the narrower `design_lint and evidence_lint` selection passed
+23 tests, with 53 deselected. Marker and collection architecture checks passed
+14 more. Ruff, format, project-aware Pyright, documentation checks, and
+`git diff --check` passed.
+Power-sequence mismatch and cycle findings now retain distinct typed source
+records and share the canonical authored-map digest owner with mapped-coverage
+preparation. All mapped-coverage candidate branches now enter through
+theme-owned typed evidence projectors; their report fields, fingerprints, and
+rule-specific absence states remain stable. The next data-routing audit can
+move to remaining component, connector, and protocol candidates that still
+construct opaque evidence mappings directly.
+STM32/CubeMX findings now keep either a typed pin mismatch or an unmapped
+device observation with its coverage report. The source records verify the
+report's netlist, map, and IOC identities, while one interface-owned projector
+preserves the established public evidence. The combined mapped-theme and
+STM32 evidence regression selection passed 165 tests; focused Pyright, Ruff,
+format, Rumdl, mdrepo, and `git diff --check` passed.
 CAN missing and excess termination candidates now retain their named scan
 records and use that same projection contract.
 The bus theme now returns its findings with those peer keys in a

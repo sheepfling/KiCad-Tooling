@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
 from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
 
-from .model_primitives import Identifier, NetName, NonEmptyText, Reference, StrictModel
+from .model_primitives import Digest, Identifier, NetName, NonEmptyText, Reference, StrictModel
 
 
 class PowerPathEndpointRequirement(StrictModel):
@@ -141,3 +142,8 @@ class PowerPathMap(StrictModel):
         if len({item.id.casefold() for item in self.paths}) != len(self.paths):
             raise ValueError("Power-path IDs must be unique")
         return self
+
+
+def power_path_map_sha256(power_path_map: PowerPathMap) -> Digest:
+    """Return the canonical digest used to bind power-path reports and findings."""
+    return hashlib.sha256(power_path_map.model_dump_json().encode("utf-8")).hexdigest()

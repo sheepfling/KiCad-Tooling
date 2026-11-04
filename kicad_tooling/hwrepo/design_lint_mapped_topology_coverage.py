@@ -14,8 +14,8 @@ from .design_lint_mapped_topology_results import MappedTopologyFindingCounts
 from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_rule_types import DesignLintRuleId
 from .oscillator_output_path_models import OscillatorOutputPathMap
-from .power_path_models import PowerPathMap
-from .power_sequence_models import PowerSequenceMap
+from .power_path_models import PowerPathMap, power_path_map_sha256
+from .power_sequence_models import PowerSequenceMap, power_sequence_map_sha256
 from .usb_data_path_models import UsbDataPathMap, usb_data_path_map_sha256
 
 
@@ -86,9 +86,7 @@ def mapped_topology_coverage_runs(
         ),
         _mapped_check_run(
             power_path_rule_id,
-            None
-            if power_path_map is None
-            else hashlib.sha256(power_path_map.model_dump_json().encode("utf-8")).hexdigest(),
+            None if power_path_map is None else power_path_map_sha256(power_path_map),
             0 if power_path_map is None else len(power_path_map.paths),
             netlist_sha256,
             finding_counts.power_series_path_mismatch,
@@ -98,9 +96,7 @@ def mapped_topology_coverage_runs(
         ),
         _mapped_check_run(
             power_sequence_rule_id,
-            None
-            if power_sequence_map is None
-            else hashlib.sha256(power_sequence_map.model_dump_json().encode("utf-8")).hexdigest(),
+            None if power_sequence_map is None else power_sequence_map_sha256(power_sequence_map),
             0
             if power_sequence_map is None
             else len(power_sequence_map.stages) + len(power_sequence_map.dependencies),

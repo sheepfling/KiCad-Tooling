@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
 from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
 
-from .model_primitives import Identifier, NetName, NonEmptyText, Reference, StrictModel
+from .model_primitives import Digest, Identifier, NetName, NonEmptyText, Reference, StrictModel
 
 
 class PowerSequenceEndpointRequirement(StrictModel):
@@ -122,3 +123,8 @@ class PowerSequenceMap(StrictModel):
             if successor.enable.net != item.signal_net:
                 raise ValueError("Power-sequence dependency net must match its enable endpoint")
         return self
+
+
+def power_sequence_map_sha256(sequence_map: PowerSequenceMap) -> Digest:
+    """Return the canonical digest used to bind power-sequence findings and reports."""
+    return hashlib.sha256(sequence_map.model_dump_json().encode("utf-8")).hexdigest()
