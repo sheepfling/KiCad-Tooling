@@ -10,7 +10,7 @@ from .artifact_access import read_regular_bytes
 from .contracts import parse_model_text, repo_path
 from .evidence import digest
 from .findings_view_models import FindingsViewReport
-from .models import ValidationSummary
+from .native_project_validation_models import ValidationSummary
 from .project_source_hashes import hash_project_sources as hashes
 from .project_verification_report_models import ProjectVerificationReport
 from .release_contract_models import ReleaseManifest

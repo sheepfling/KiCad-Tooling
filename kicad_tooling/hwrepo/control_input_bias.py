@@ -12,7 +12,8 @@ from .control_input_models import (
     ControlInputBiasHeuristicEntry,
     ControlInputsAnalysis,
 )
-from .models import Digest, NetlistContract
+from .models import Digest
+from .netlist_contract_models import NetlistContract
 
 
 @dataclass(frozen=True, slots=True)

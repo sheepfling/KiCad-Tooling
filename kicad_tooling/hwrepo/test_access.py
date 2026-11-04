@@ -12,7 +12,7 @@ from .model_inventory import (  # pyright: ignore[reportPrivateUsage]
     _children,  # pyright: ignore[reportPrivateUsage]
     _Span,  # pyright: ignore[reportPrivateUsage]
 )
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .pcb_connectivity_observations import PcbAccessProbeObservation
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_test_access_models import (

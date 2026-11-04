@@ -15,7 +15,7 @@ from .i2c_address_models import (
     I2cResponderAddressCoverageEntry,
     I2cResponderAddressRequirement,
 )
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 _I2C_ADDRESS_DEVICE_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)
 _I2C_ADDRESS_PIN_ROLES = MappingProxyType(

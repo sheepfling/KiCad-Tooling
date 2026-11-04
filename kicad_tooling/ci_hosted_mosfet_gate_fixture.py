@@ -13,6 +13,7 @@ from types import MappingProxyType
 from .ci_hosted_support import HostedLog, normalized_erc_report_bytes, tooling_checkout_root
 from .hwrepo.component_mosfet_gate_drive import RULE_ID as DIRECT_DRIVE_RULE_ID
 from .hwrepo.contract_coach import pinned_image, run_command
+from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.contracts import read_kicad_erc_report, write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_component_mosfet_terminals import (
@@ -25,7 +26,7 @@ from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
 from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
-from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.models import DesignLintPolicy
 from .hwrepo.mosfet_gate_connectivity import RULE_ID, SOURCE_BIAS_RULE_ID
 from .hwrepo.native_report_parsing import read_netlist
 

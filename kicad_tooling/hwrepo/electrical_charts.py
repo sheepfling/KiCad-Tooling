@@ -13,6 +13,7 @@ from kicad_tooling.hwrepo.electrical_simulation_models import PowerAnalysis
 from kicad_tooling.hwrepo.grounding_models import GroundingAnalysis
 
 from .contract_coach import receipt_directory
+from .contract_coach_models import ContractCoachReport
 from .contracts import read_model, repo_path, write_model
 from .electrical import simulation_cases
 from .electrical_analysis_contract_models import ElectricalAnalysisContract
@@ -25,7 +26,6 @@ from .electrical_chart_models import (
 from .electrical_plot import render_case
 from .electrical_report_models import ElectricalAnalysisReport, ElectricalSuiteReport
 from .evidence import digest
-from .models import ContractCoachReport
 from .waveform_data import WaveformData, read_waveform
 
 

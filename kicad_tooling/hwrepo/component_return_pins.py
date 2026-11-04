@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .component_pin_patterns import UnconnectedNamedComponentPin, unconnected_named_component_pins
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def unconnected_component_return_pins(

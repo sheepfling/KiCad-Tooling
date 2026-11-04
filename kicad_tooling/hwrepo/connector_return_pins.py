@@ -13,7 +13,7 @@ from .connector_identity import (
     is_shield_function,
     pin_function_is_generic,
 )
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 @dataclass(frozen=True, slots=True)

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .bus_signal_roles import is_active_low_chip_select_function
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .resistor_paths import (
     VISIBLE_PULLUP_MAX_OHMS,
     VISIBLE_PULLUP_MIN_OHMS,

@@ -8,7 +8,7 @@ from types import MappingProxyType
 
 from .connector_coverage_models import ConnectorMappedPinEvidence
 from .connector_peer_pin_models import SimilarConnectorPinGroup
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 _CONNECTOR_REFERENCE = re.compile(r"^(?:J|P|X|CN)[0-9]+$", re.IGNORECASE)
 

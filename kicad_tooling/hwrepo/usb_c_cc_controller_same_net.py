@@ -7,7 +7,7 @@ import re
 from .bus_signal_roles import usb_c_cc_role
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .netlist_pin_assignments import netlist_pin_net_index
 
 RULE_ID: DesignLintRuleId = "bus.usb_c_cc_controller_same_net"

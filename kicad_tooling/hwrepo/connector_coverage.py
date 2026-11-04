@@ -18,9 +18,9 @@ from .connector_identity import connector_candidate_references
 from .models import (
     InterfacePin,
     InterfaceRecord,
-    NetlistContract,
     RepositoryPath,
 )
+from .netlist_contract_models import NetlistContract
 
 _SCOPE = (
     "Symbol-backed references matching J, P, X, or CN followed by digits, plus symbols from "

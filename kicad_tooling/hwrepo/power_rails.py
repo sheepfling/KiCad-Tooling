@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 from types import MappingProxyType
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .power_rail_models import NumberedPowerRailGroup
 
 _NUMBERED_RAIL = re.compile(r"^(?P<stem>.+?)[\s_./-]+(?P<index>\d+)$")

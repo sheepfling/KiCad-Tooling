@@ -9,7 +9,7 @@ from .i2c_signal_named_rail import i2c_signal_on_named_rail_candidates
 from .i3c_same_net import i3c_sda_scl_same_net_candidates
 from .i3c_signal_named_rail import i3c_signal_on_named_rail_candidates
 from .i3c_unconnected_pins import unconnected_i3c_signal_pins
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def two_wire_signal_candidates(observed: NetlistContract) -> tuple[Candidate, ...]:

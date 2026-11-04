@@ -72,7 +72,7 @@ from .connector_footprint_signal_output import (
 )
 from .connector_identity import pin_function_is_generic
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def connector_footprint_peer_pin_candidates(

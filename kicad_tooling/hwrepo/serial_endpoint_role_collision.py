@@ -7,7 +7,7 @@ from types import MappingProxyType
 from .connector_identity import connector_candidate_references
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .netlist_pin_assignments import netlist_pin_net_index
 from .serial_participants import is_serial_ic_reference, serial_function_role_and_channel
 

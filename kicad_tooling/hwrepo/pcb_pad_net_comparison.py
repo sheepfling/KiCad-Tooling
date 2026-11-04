@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
 

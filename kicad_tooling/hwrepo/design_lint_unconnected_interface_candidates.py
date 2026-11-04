@@ -7,7 +7,7 @@ from .can_unconnected_direction_pins import unconnected_can_direction_pins
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .i2c_unconnected_pins import unconnected_i2c_signal_pins
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .rs485_unconnected_line_pin import rs485_unconnected_line_pin_candidates
 from .serial_unconnected_pins import unconnected_serial_function_pins
 from .spi_unconnected_clock_pin import unconnected_spi_clock_function_pins

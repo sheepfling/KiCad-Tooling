@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .casefold_mapping_lookup import lookup_unique_casefold
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .regulator_passive_models import (
     RegulatorPassiveComponentRequirement,
     RegulatorPassiveTopologyMap,

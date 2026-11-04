@@ -6,8 +6,8 @@ from types import MappingProxyType
 
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import NetlistContract
 from .named_rail_pin_evidence import assigned_named_rail_ic_pins
+from .netlist_contract_models import NetlistContract
 from .spi_participants import spi_signal_role_and_channel
 
 RULE_ID: DesignLintRuleId = "bus.spi_signal_on_named_rail"

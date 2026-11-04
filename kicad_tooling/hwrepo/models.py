@@ -11,7 +11,6 @@ from pydantic import (
     Field,
     RootModel,
     StringConstraints,
-    ValidationInfo,
     model_validator,
 )
 
@@ -43,6 +42,7 @@ from . import grounding_models as _grounding_models
 from . import i2c_address_models as _i2c_address_models
 from . import i2c_pullup_models as _i2c_pullup_models
 from . import mosfet_stress_models as _mosfet_stress_models
+from . import netlist_contract_models as _netlist_contract_models
 from . import part_catalog_models as _part_catalog_models
 from . import pcb_connectivity_observations as _pcb_connectivity_observations
 from . import pcb_connectivity_snapshot as _pcb_connectivity_snapshot
@@ -87,6 +87,10 @@ from . import usb_data_path_models as _usb_data_path_models
 from . import usb_peer_reference_models as _usb_peer_reference_models
 from . import usb_reference_pin_models as _usb_reference_pin_models
 from .command_evidence_models import CommandEvidence
+from .contract_coach_models import (
+    ContractCoachReport,
+    ContractDifference,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+)
 from .design_lint_report_models import (
     DesignLintReport,  # noqa: F401  # pyright: ignore[reportUnusedImport]
 )
@@ -120,13 +124,13 @@ from .model_primitives import (
     GitCommit,
     Identifier,
     NativePcbUuid,  # noqa: F401  # pyright: ignore[reportUnusedImport]
-    NetName,
+    NetName,  # noqa: F401  # pyright: ignore[reportUnusedImport]
     NonEmptyText,
     NonNegativeCount,
     NonNegativeMeasure,  # noqa: F401  # pyright: ignore[reportUnusedImport]
     PositiveCount,
     PositiveMeasure,  # noqa: F401  # pyright: ignore[reportUnusedImport]
-    Reference,
+    Reference,  # noqa: F401  # pyright: ignore[reportUnusedImport]
     RepositoryPath,
     Stm32PortPin,  # noqa: F401  # pyright: ignore[reportUnusedImport]
     Stm32SymbolPin,  # noqa: F401  # pyright: ignore[reportUnusedImport]
@@ -137,7 +141,10 @@ from .native_project_check_models import (
     CheckAllSummary,
     ProjectCheckSummary,  # noqa: F401  # pyright: ignore[reportUnusedImport]
 )
-from .netlist_contract_inputs import NetlistRawValue, normalize_native_unconnected_nets
+from .native_project_validation_models import (
+    CheckEvidence,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    ValidationSummary,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+)
 from .project_static_pipeline_models import (
     GenerationReport,  # noqa: F401  # pyright: ignore[reportUnusedImport]
     ProjectStaticPipelineReport,
@@ -175,7 +182,8 @@ ProjectKind = _project_models.ProjectKind
 ProjectRecord = _project_models.ProjectRecord
 CatalogPaths = _project_models.CatalogPaths
 ProjectRegistry = _project_models.ProjectRegistry
-ComponentContract = _project_models.ComponentContract
+ComponentContract = _netlist_contract_models.ComponentContract
+NetlistContract = _netlist_contract_models.NetlistContract
 IgnoredChecks = _project_models.IgnoredChecks
 PcbValidationContract = _project_models.PcbValidationContract
 PcbOnlyValidationContract = _project_models.PcbOnlyValidationContract
@@ -897,57 +905,8 @@ class TemplateMetricsReport(StrictModel):
     deviations: DeviationMetrics
 
 
-class CheckEvidence(StrictModel):
-    status: Literal["PASS", "FAIL", "NOT_RUN"]
-    returncode: int | None = None
-    error: NonEmptyText | None = None
-    findings: int | None = None
-    expected_ignored_checks: tuple[Identifier, ...] = ()
-    files: tuple[RepositoryPath, ...] = ()
-    source_hashes: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
-    identity_status: Literal["PASS", "NOT_APPLICABLE"] | None = None
-    observed_version: NonEmptyText | None = None
-    image: NonEmptyText | None = None
-
-
-class NetlistContract(StrictModel):
-    components: Mapping[Identifier, ComponentContract]
-    nets: Mapping[NetName, tuple[Reference, ...]]
-    unconnected_nets: Mapping[NetName, tuple[Reference, ...]] = Field(default_factory=dict)
-    dnp_components: tuple[Identifier, ...] = ()
-    component_symbols: Mapping[Identifier, NonEmptyText] = Field(default_factory=dict)
-    pin_functions: Mapping[Reference, NonEmptyText] = Field(default_factory=dict)
-    pin_electrical_types: Mapping[Reference, NonEmptyText] = Field(default_factory=dict)
-    component_pin_numbers: Mapping[Identifier, tuple[NonEmptyText, ...]] = Field(
-        default_factory=dict
-    )
-
-    @model_validator(mode="before")
-    @classmethod
-    def separate_native_unconnected_nets(
-        cls, value: NetlistRawValue, info: ValidationInfo
-    ) -> object:
-        return normalize_native_unconnected_nets(value, info)
-
-
 ReturnNetGroup = _return_net_models.ReturnNetGroup
 NumberedPowerRailGroup = _power_rail_models.NumberedPowerRailGroup
-
-
-class ValidationSummary(StrictModel):
-    schema_version: Literal["1"] = "1"
-    lane: Literal["KICAD_CLI"] = "KICAD_CLI"
-    timestamp_utc: NonEmptyText
-    checked_commit: NonEmptyText
-    source: SourceState | None = None
-    project_id: Identifier | None = None
-    pr_head_commit: str | None = None
-    assurance_profile: Literal["training", "development", "production"] | None = None
-    not_for_manufacture: bool | None = None
-    project_kind: ProjectKind | None = None
-    checks: Mapping[Identifier, CheckEvidence]
-    status: Literal["PASS", "FAIL"]
-    artifacts_sha256: Mapping[RepositoryPath, Digest]
 
 
 class FaultProbeCase(StrictModel):
@@ -992,39 +951,6 @@ class ScopedReleasePortableReport(StrictModel):
     source: SourceState
     projects: tuple[Identifier, ...]
     checks: ProjectStaticPipelineReport
-
-
-class ContractDifference(StrictModel):
-    kind: Literal["component", "net"]
-    identifier: NonEmptyText
-    difference: Literal["observed_only", "authored_only", "different"]
-
-
-class ContractCoachReport(StrictModel):
-    """Observed netlist inventory for human contract review, never an approval."""
-
-    schema_version: Literal["1"] = "1"
-    lane: Literal["CONTRACT_COACH"] = "CONTRACT_COACH"
-    status: Literal["READY_FOR_REVIEW", "BLOCKED"]
-    project_id: Identifier
-    project_kind: ProjectKind | None = None
-    review_state: Literal["UNREVIEWED"] = "UNREVIEWED"
-    electrical_coverage: Literal[False] = False
-    build_authorized: Literal[False] = False
-    selected_runner: Literal["local", "container"] | None = None
-    source_hashes: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
-    netlist_sha256: Digest | None = None
-    native_summary: str | None = None
-    native_status: Literal["PASS", "FAIL"] | None = None
-    observed: NetlistContract | None = None
-    authored: NetlistContract | None = None
-    differences: tuple[ContractDifference, ...] = ()
-    return_net_groups: tuple[ReturnNetGroup, ...] = ()
-    similar_connector_pin_groups: tuple[SimilarConnectorPinGroup, ...] = ()
-    issues: tuple[NonEmptyText, ...] = ()
-    next_actions: tuple[NonEmptyText, ...] = ()
-    commands: Mapping[Identifier, CommandEvidence] = Field(default_factory=dict)
-    receipt_dir: str | None = None
 
 
 ConnectorMappedPinEvidence = _connector_coverage_models.ConnectorMappedPinEvidence

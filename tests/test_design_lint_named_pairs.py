@@ -252,7 +252,9 @@ def test_named_pair_hint_is_stable_and_reviewed_map_suppresses_only_the_hint() -
     assert rule_id not in {item.rule_id for item in reviewed.findings}
     assert reviewed_coverage.status == "BLOCKED"
     assert reviewed_coverage.map_sha256 == expected_map_hash
-    assert "native DRC rule evidence was not supplied" in (reviewed_coverage.issue or "")
+    assert reviewed_coverage.issue == (
+        "Source-bound native DRC evidence was not supplied for the differential-pair map"
+    )
 
     reordered_source_hash, reordered_reviewed = lint(reordered_source, reordered_map)
     reordered_map_hash = hashlib.sha256(reordered_map.model_dump_json().encode("utf-8")).hexdigest()

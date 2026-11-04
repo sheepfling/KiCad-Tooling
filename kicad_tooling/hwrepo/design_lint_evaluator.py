@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_return_distribution_models import ConnectorReturnDistributionCoverageReport
+from .contract_coach_models import ContractCoachReport
 from .control_input_models import ControlInputBiasHeuristicCoverage
 from .crystal_network_models import CrystalNetworkCoverageReport
 from .design_lint_component_coverage import ComponentMapCoverageInputs
@@ -26,7 +27,6 @@ from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
 from .external_protection_models import ExternalProtectionCoverageReport
 from .i2c_address_models import I2cAddressCoverageReport
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
-from .models import ContractCoachReport
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import (

@@ -7,8 +7,8 @@ from .connector_coverage_models import ConnectorCoverageReport
 from .connector_identity import pin_function_is_generic
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import NetlistContract
 from .named_rail_roles import named_rail_role_clue
+from .netlist_contract_models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "connector.mapped_interface_signal_unassigned"
 SHIELD_RULE_ID: DesignLintRuleId = "connector.mapped_interface_shield_unassigned"

@@ -7,7 +7,7 @@ from .connector_stateful_contact_models import (
     ConnectorStatefulContactRequirement,
 )
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .netlist_pin_assignments import netlist_pin_net_index
 
 RULE_ID = "connector.stateful_contact_topology_mismatch"

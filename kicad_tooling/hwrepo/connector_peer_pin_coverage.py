@@ -38,7 +38,7 @@ from .connector_peer_pin_models import ConnectorPeerPinHeuristicCoverage
 from .connector_peer_pin_scan import (
     scan_connector_part_id_peer_pins,
 )
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def connector_peer_pin_heuristic_coverage(

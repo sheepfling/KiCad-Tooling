@@ -8,12 +8,10 @@ from pathlib import Path
 from .command_evidence_models import CommandEvidence
 from .contracts import read_model
 from .evidence import digest, evidence_path
-from .models import (
-    NetlistContract,
-    ValidationSummary,
-)
+from .native_project_validation_models import ValidationSummary
 from .native_report_parsing import read_netlist
 from .native_summary_binding import validate_native_summary_binding
+from .netlist_contract_models import NetlistContract
 from .project_models import ProjectConfig
 from .release_contract_models import EvidenceFile
 from .source_state_models import SourceHashInventory

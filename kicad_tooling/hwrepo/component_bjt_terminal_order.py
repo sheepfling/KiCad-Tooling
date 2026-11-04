@@ -5,7 +5,7 @@ from __future__ import annotations
 from .component_bjt_symbols import basic_bjt_role_numbers
 from .component_rail_potentials import named_net_potential, potential_is_lower
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID = "component.bjt_terminal_order_on_named_rails"
 

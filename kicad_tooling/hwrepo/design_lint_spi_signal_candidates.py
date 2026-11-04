@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .spi_clock_data_same_net import spi_clock_control_data_same_net_candidates
 from .spi_clock_select_label_mismatch import spi_clock_select_label_mismatch_candidates
 from .spi_control_same_net import spi_clock_chip_select_same_net_candidates

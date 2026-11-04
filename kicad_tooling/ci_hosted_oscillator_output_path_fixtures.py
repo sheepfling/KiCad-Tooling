@@ -14,11 +14,11 @@ from types import MappingProxyType
 
 from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.contract_coach import pinned_image, run_command
+from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.contracts import read_model, write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
-from .hwrepo.models import ContractCoachReport
 from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.project_models import ProjectTestContract
 

@@ -12,7 +12,7 @@ from typing import TypeVar
 
 from .capacitor_symbols import is_capacitor_symbol
 from .connector_identity import connector_candidate_references, power_function_key
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .resistor_paths import (
     resistance_ohms,
 )

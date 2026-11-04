@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Literal, cast
 
 from .model_primitives import Digest, RepositoryPath
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .pcb_board_only_footprint_models import PcbBoardOnlyFootprintCoverage
 from .pcb_board_only_footprints import board_only_pcb_footprints
 from .pcb_component_inventory_models import (

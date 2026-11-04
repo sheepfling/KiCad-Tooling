@@ -6,7 +6,7 @@ import re
 from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .peer_reference_assignments import peer_reference_assignments
 from .serial_participants import serial_function_role_and_channel
 from .serial_peer_reference_types import (

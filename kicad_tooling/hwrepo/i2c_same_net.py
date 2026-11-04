@@ -6,7 +6,7 @@ import re
 
 from .design_lint_types import Candidate
 from .i2c_addressing import i2c_signal_role
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID = "bus.i2c_sda_scl_same_net"
 _IC_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)

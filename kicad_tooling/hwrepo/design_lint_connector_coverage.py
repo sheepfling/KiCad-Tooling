@@ -16,8 +16,8 @@ from .external_protection_models import ExternalProtectionCoverageReport
 from .models import (
     InterfaceRecord,
     InterfacesCatalog,
-    NetlistContract,
 )
+from .netlist_contract_models import NetlistContract
 from .usb_c_models import (
     UsbCAnalysis,
 )

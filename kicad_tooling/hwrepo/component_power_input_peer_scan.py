@@ -15,7 +15,7 @@ from .connector_identity import (
     is_return_function,
     pin_function_is_generic,
 )
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def scan_component_peer_power_input_assignments(

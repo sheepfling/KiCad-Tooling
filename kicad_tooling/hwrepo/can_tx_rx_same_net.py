@@ -5,7 +5,7 @@ from __future__ import annotations
 from .can_signal_functions import can_signal_role_and_channel
 from .component_references import is_integrated_circuit_reference
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID = "bus.can_tx_rx_same_net"
 

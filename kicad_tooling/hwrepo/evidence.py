@@ -8,10 +8,8 @@ from pathlib import Path
 
 from ..git import git_output, run_git_bytes, run_git_text
 from .contracts import read_model, repo_path
-from .models import (
-    ScopedReleasePortableReport,
-    ValidationSummary,
-)
+from .models import ScopedReleasePortableReport
+from .native_project_validation_models import ValidationSummary
 from .release_contract_models import EvidenceFile
 from .source_state_models import SourceState
 from .static_pipeline_models import StaticPipelineReport

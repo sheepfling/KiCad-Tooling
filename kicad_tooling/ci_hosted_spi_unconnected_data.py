@@ -14,13 +14,15 @@ from types import MappingProxyType
 from .ci_hosted_spi_native import SPI_NATIVE_TOOLCHAINS
 from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.contract_coach import pinned_image, run_command
+from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.contracts import write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
 from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.evidence import digest
-from .hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract
+from .hwrepo.models import DesignLintPolicy
 from .hwrepo.native_report_parsing import read_netlist
+from .hwrepo.netlist_contract_models import NetlistContract
 
 _SOURCE_HASHES = MappingProxyType(
     {

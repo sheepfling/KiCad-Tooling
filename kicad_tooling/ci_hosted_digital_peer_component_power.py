@@ -8,13 +8,11 @@ from .ci_hosted_digital_peer_models import (
     DigitalPeerFixtureCase,
 )
 from .ci_hosted_native_fixture_models import NativeRun, NativeRunPair
+from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
 from .hwrepo.design_lint_report_models import DesignLintReport
-from .hwrepo.models import (
-    ContractCoachReport,
-    DesignLintPolicy,
-)
+from .hwrepo.models import DesignLintPolicy
 
 
 def verify_component_peer_power_cases(ctx: DigitalPeerFixtureContext):

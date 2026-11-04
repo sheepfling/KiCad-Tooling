@@ -9,9 +9,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import TypeVar
 
-from .models import (
-    NetlistContract,
-)
+from .netlist_contract_models import NetlistContract
 from .stm32_pin_map_models import (
     Stm32CubeMxPinMap,
     Stm32PinMapMismatch,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .hwrepo.models import NetlistContract
+from .hwrepo.netlist_contract_models import NetlistContract
 
 
 def require_current_sink_led_topology(observed: NetlistContract, *, channels: int) -> None:

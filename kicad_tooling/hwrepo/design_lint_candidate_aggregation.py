@@ -76,7 +76,7 @@ from .i2c_peer_reference_scan import I2cPeerReferenceScan
 from .i2c_pullup_inputs import I2cPullupSnifferInput
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .ic_decoupling_models import IcDecouplingMap
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .oscillator_output_path_models import OscillatorOutputPathMap
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport

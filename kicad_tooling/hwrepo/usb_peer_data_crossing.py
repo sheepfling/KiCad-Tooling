@@ -8,7 +8,7 @@ from collections.abc import Set as AbstractSet
 from .bus_signal_pairs import usb_data_function_identity
 from .connector_identity import connector_candidate_references
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .usb_data_path_models import UsbDataPathMap
 from .usb_peer_endpoint_analysis import (
     IC_REFERENCE,

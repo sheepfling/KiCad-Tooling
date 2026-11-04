@@ -7,8 +7,9 @@ from typing import Annotated, Literal, TypeAlias
 
 from pydantic import Field, model_validator
 
+from .contract_coach_models import ContractCoachReport
 from .model_primitives import Digest, Identifier, NonEmptyText, RepositoryPath, StrictModel
-from .models import ContractCoachReport, NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 class NetlistEvidenceNotRequested(StrictModel):

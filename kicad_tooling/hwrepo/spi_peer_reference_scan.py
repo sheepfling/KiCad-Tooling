@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from .digital_peer_voltage_analysis import INPUT_TYPES, OUTPUT_TYPES, canonical_spi_function
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .peer_reference_assignments import (
     PeerReferencePinAssignment as SpiReferencePinAssignment,
 )

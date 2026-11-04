@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from .component_pin_patterns import unconnected_generic_power_output_component_pins
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def unconnected_power_output_candidates(

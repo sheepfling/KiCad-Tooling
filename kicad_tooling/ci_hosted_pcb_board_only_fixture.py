@@ -11,6 +11,7 @@ from .ci_hosted_pcb_fixture_support import (
 )
 from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.contract_coach import ContainerNetlistRunner
+from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.contracts import write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
@@ -18,12 +19,9 @@ from .hwrepo.design_lint_pcb_board_only_candidates import (
     pcb_board_only_footprint_candidates,
 )
 from .hwrepo.evidence import digest
-from .hwrepo.models import (
-    ContractCoachReport,
-    DesignLintPolicy,
-    NetlistContract,
-)
+from .hwrepo.models import DesignLintPolicy
 from .hwrepo.native_report_parsing import read_netlist
+from .hwrepo.netlist_contract_models import NetlistContract
 from .hwrepo.pcb_component_inventory import evaluate_native_component_inventory_coverage
 from .hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .hwrepo.project_models import ProjectKind

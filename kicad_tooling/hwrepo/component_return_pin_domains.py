@@ -5,7 +5,7 @@ from __future__ import annotations
 from .connector_identity import connector_candidate_references, is_return_function
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "component.repeated_return_pin_function"
 

@@ -8,7 +8,7 @@ from .bus_ethernet_management_named_rail import (
 from .bus_ethernet_signal_named_rail import ethernet_signal_on_named_rail_candidates
 from .bus_usb_signal_named_rail import usb_signal_on_named_rail_candidates
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .usb_c_cc_named_rail import usb_c_cc_signal_on_named_rail_candidates
 from .usb_c_sbu_named_rail import usb_c_sbu_signal_on_named_rail_candidates
 

@@ -11,7 +11,7 @@ from .connector_identity import (
     pin_function_is_generic,
 )
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .resistor_paths import positive_power_nets
 
 

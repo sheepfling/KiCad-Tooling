@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .bus_signal_pairs import usb_data_function_identity
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 @dataclass(frozen=True, slots=True)

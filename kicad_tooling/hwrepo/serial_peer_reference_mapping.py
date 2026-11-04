@@ -13,7 +13,7 @@ from kicad_tooling.hwrepo.serial_peer_models import (
     SerialShiftedPeerRequirement,
 )
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .reference_bonds import reference_bond_issues
 from .serial_participants import SerialNativePeerLink
 from .serial_peer_reference_types import (

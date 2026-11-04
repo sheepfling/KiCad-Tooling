@@ -8,13 +8,11 @@ from .ci_hosted_digital_peer_models import (
     DigitalPeerFixtureCase,
 )
 from .ci_hosted_native_fixture_models import NativeRun, NativeRunPair
+from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.contracts import read_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_report_models import DesignLintReport
-from .hwrepo.models import (
-    ContractCoachReport,
-    DesignLintPolicy,
-)
+from .hwrepo.models import DesignLintPolicy
 from .hwrepo.serial_logic_models import SerialLabelFixtureExpectedNets
 
 

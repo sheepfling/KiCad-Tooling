@@ -12,7 +12,7 @@ from .crystal_network_models import (
     CrystalNetworkMap,
     CrystalNetworkRequirement,
 )
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .netlist_pin_assignments import netlist_pin_inventory_contains
 
 

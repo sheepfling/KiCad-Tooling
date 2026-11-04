@@ -2,9 +2,17 @@
 
 from pathlib import Path
 
+import pytest
+
 from kicad_tooling.hwrepo.contracts import parse_model_text
 from kicad_tooling.hwrepo.models import ContractCoachReport
 from kicad_tooling.validate import read_netlist
+
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.evidence_lint,
+    pytest.mark.rule_gate_integrity,
+]
 
 
 def test_read_netlist_retains_unconnected_and_unnamed_symbol_pin_numbers(

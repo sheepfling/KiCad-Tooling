@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .return_net_models import ReturnNetGroup
 
 _RETURN_WORDS = r"0V|GND[A-Z]?|AGND|DGND|PGND|VSS|RTN|RETURN|GROUND|RET"

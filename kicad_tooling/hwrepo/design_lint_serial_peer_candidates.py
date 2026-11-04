@@ -5,7 +5,7 @@ from __future__ import annotations
 from .design_lint_types import Candidate
 from .digital_peer_voltage_scan import format_nominal_voltage
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .serial_participants import SerialPeerRosterContext, unmapped_serial_peers
 from .serial_peer_reference_types import SerialPeerReferenceScan
 

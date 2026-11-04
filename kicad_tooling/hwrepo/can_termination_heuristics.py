@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .bus_signal_roles import can_function_role
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .resistor_paths import DirectResistor, direct_resistors
 
 CAN_TERMINATION_MIN_OHMS = 108.0

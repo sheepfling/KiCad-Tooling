@@ -9,7 +9,7 @@ from .connector_coverage_models import ConnectorCoverageReport
 from .connector_peer_pin_models import ConnectorPinRole
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 SHIELD_SIGNAL_RULE_ID: DesignLintRuleId = "connector.mapped_shield_signal_share_net"
 SIGNAL_RETURN_RULE_ID: DesignLintRuleId = "connector.mapped_signal_return_share_net"

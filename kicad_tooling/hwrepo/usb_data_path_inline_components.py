@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .usb_data_path_component_checks import check_usb_component_pin_map
 from .usb_data_path_models import UsbDataPathInlineComponentRequirement
 

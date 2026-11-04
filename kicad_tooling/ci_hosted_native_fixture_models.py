@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Generic, Literal, TypeAlias, TypeVar
 
-from .hwrepo.models import NetlistContract
+from .hwrepo.netlist_contract_models import NetlistContract
 
 NativeRun: TypeAlias = Literal["first", "repeat"]
 FaultControlFixtureCase: TypeAlias = Literal["control", "fault"]

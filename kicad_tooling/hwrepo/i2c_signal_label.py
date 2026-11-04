@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from .bus_signal_roles import i2c_signal_role
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID = "bus.i2c_signal_label_role_mismatch"
 

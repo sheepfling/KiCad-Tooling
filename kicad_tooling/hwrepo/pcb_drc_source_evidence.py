@@ -12,7 +12,7 @@ from pydantic import JsonValue
 from .command_evidence_models import CommandEvidence
 from .contracts import read_model, repo_path
 from .evidence import digest
-from .models import ValidationSummary
+from .native_project_validation_models import ValidationSummary
 from .native_summary_binding import validate_native_summary_binding
 from .pcb_drc_models import PcbDifferentialPairRuleCoverageReport, PcbSignalPathRuleCoverageReport
 from .project_models import ProjectConfig

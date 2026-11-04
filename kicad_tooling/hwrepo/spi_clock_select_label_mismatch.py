@@ -5,7 +5,7 @@ from __future__ import annotations
 from types import MappingProxyType
 
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .spi_participants import spi_signal_role_and_channel
 from .spi_role_assignments import spi_role_assignment_groups
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from .component_rating_models import ComponentVoltageRatingAnalysis
 from .electrical_report_models import ElectricalCheck
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def component_voltage_rating_checks(

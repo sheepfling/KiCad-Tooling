@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from .electrical_report_models import ElectricalCheck
-from .models import NetlistContract
 from .mosfet_stress_models import (
     MosfetOperatingState,
     MosfetStressAnalysis,
     MosfetStressRequirement,
     MosfetVoltageInterval,
 )
+from .netlist_contract_models import NetlistContract
 
 
 def _maximum_absolute_difference(

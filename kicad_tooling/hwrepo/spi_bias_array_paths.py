@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .resistor_array_paths import (
     ResistorArrayNetlistEvidence,
     resistor_array_channel_issue,

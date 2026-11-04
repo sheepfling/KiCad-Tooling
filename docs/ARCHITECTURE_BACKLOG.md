@@ -658,11 +658,27 @@ belong to `documentation_models.py`. The documentation checker imports them
 directly, and the central registry preserves the former public names. The
 architecture suite guards the primitive-only dependency boundary, direct
 service import, export identity, and serialized policy/report round trips.
+Authored `ComponentContract` and observed `NetlistContract` now belong to
+`netlist_contract_models.py`; the old registry and `project_models` import
+paths preserve class identity. All production consumers under `kicad_tooling/`
+and `scripts/` import the owner directly; tests retain registry imports where
+they verify compatibility. The architecture suite guards the owner boundary,
+field contract, registry identity, input normalization, and production import
+ownership.
 Runner readiness contracts now belong to `doctor_models.py`; the all-project
 native summary and its per-project rows belong to `native_project_check_models.py`
 alongside the native-check request. The doctor, electrical doctor, native
 check, project-verification, and MCP services import those models from their
 owners. `models.py` preserves identity-compatible exports.
+Per-project `CheckEvidence` and `ValidationSummary` now join
+`NativeProjectValidationRequest` in `native_project_validation_models.py`.
+Native validation and its evidence, release, review, and CLI consumers import
+that owner; the registry keeps identity-compatible exports and the serialized
+report round-trips unchanged.
+The non-authorizing `ContractCoachReport` and its nested difference records
+now belong to `contract_coach_models.py`. All production consumers import that
+owner directly; compatibility identity and the existing source-identity
+admission route remain guarded.
 Observed source identity now belongs to `source_state_models.py`, and the
 repository-wide static gate report belongs to `static_pipeline_models.py`.
 Evidence, native, electrical, release, and CI services import these owners
@@ -720,6 +736,11 @@ available on demand while its broader output is reviewed. See
 The source-derived raw-JSON boundary now recognizes aliased `json.load(s)`
 imports and classifies native KiCad report and bounded GLB parsing as explicit
 adapters; it no longer exempts `validate.py` after parsing moved to its owner.
+The contract-owner architecture gate now requires production references to
+`ComponentContract`, `NetlistContract`, `CheckEvidence`, and
+`ValidationSummary`, `ContractCoachReport`, and `ContractDifference` to import
+from their domain owner; separate assertions keep the legacy public exports
+identity-compatible.
 
 **Done when:** the checked-in gate plan and installed Alphus revision agree;
 representative bad dependencies and rule registrations fail; existing valid

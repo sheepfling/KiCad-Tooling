@@ -33,11 +33,11 @@ from .design_lint_schematic_coverage import scan_schematic_geometry
 from .design_lint_stm32_coverage import scan_stm32_pin_maps
 from .discovery import load_config
 from .evidence import digest
-from .models import ValidationSummary
 from .native_netlist_evidence import (
     capture_native_netlist_evidence,
     native_netlist_evidence_matches,
 )
+from .native_project_validation_models import ValidationSummary
 from .native_summary_binding import validate_native_toolchain
 from .pcb_drc_exclusion_review import source_bound_pcb_drc_exclusion_candidates
 from .pcb_drc_global_severity_review import (

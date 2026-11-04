@@ -17,6 +17,7 @@ from .hwrepo.component_role_models import (
     ComponentRolePin,
 )
 from .hwrepo.contract_coach import pinned_image, run_command
+from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.contracts import write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_report_models import DesignLintReport
@@ -26,7 +27,7 @@ from .hwrepo.led_heuristics import (
     leds_directly_between_positive_and_return_nets,
     leds_directly_driven_without_visible_series_resistor,
 )
-from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.models import DesignLintPolicy
 from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.power_path_models import (
     PowerPathElementRequirement,

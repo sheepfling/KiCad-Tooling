@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from .connector_coverage_models import ConnectorMappedPinEvidence
 from .connector_identity import power_function_key
 from .connector_peer_pin_models import SimilarConnectorPinGroup
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def connector_group_message(group: SimilarConnectorPinGroup) -> str:

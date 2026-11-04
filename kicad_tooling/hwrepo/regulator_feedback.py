@@ -7,9 +7,7 @@ from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
 
 from .casefold_mapping_lookup import lookup_unique_casefold as _lookup
-from .models import (
-    NetlistContract,
-)
+from .netlist_contract_models import NetlistContract
 from .netlist_pin_assignments import netlist_pin_inventory_contains, netlist_pin_net_index
 from .regulator_feedback_models import (
     RegulatorFeedbackCoverageEntry,

@@ -14,8 +14,8 @@ from .external_protection_models import (
     ExternalProtectionMap,
     external_protection_netlist_binding_issue,
 )
-from .models import Digest, NetlistContract
-from .project_models import ComponentContract
+from .models import Digest
+from .netlist_contract_models import ComponentContract, NetlistContract
 
 
 @dataclass(frozen=True, slots=True)

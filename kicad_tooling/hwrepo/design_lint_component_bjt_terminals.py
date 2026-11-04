@@ -6,7 +6,7 @@ from collections.abc import Iterator, Mapping
 
 from .component_bjt_symbols import basic_bjt_role_numbers
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 COLLECTOR_EMITTER_RULE_ID = "component.bjt_collector_emitter_same_net"
 BASE_EMITTER_RULE_ID = "component.bjt_base_emitter_same_net"

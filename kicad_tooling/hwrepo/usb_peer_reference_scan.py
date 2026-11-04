@@ -7,7 +7,7 @@ from collections.abc import Set as AbstractSet
 from typing import Literal
 
 from .connector_identity import connector_candidate_references
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .usb_data_path_models import UsbDataPathMap
 from .usb_peer_endpoint_analysis import (
     IC_REFERENCE,

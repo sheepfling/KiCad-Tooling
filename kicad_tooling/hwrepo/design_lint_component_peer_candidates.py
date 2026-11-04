@@ -13,7 +13,7 @@ from .component_peer_pin_identity import component_peer_pin_identity_context
 from .component_peer_pin_mixed_open import mixed_open_generic_component_peer_pin_candidates
 from .component_peer_pin_scan import ComponentPeerPinAssignmentScans
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def component_peer_candidates(

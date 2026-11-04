@@ -11,7 +11,7 @@ from .contract_coach import receipt_directory
 from .contracts import write_model
 from .evidence import digest
 from .findings_view_models import ReviewFinding, finding_fingerprint
-from .models import CheckEvidence
+from .native_project_validation_models import CheckEvidence
 from .review_overview_models import OverviewKind
 from .verification_history_evidence import (
     SavedSnapshot,

@@ -12,7 +12,7 @@ from .connector_identity import (
     is_return_function,
     pin_function_is_generic,
 )
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 GENERIC_COMPONENT_PIN_TYPES = frozenset(
     {

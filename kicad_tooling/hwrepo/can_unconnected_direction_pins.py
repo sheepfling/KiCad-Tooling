@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .can_signal_functions import can_signal_role_and_channel
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 @dataclass(frozen=True, slots=True)

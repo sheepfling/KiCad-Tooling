@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .models import ValidationSummary
+from .native_project_validation_models import ValidationSummary
 from .project_models import ProjectConfig
 from .source_state_models import SourceHashInventory
 

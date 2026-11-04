@@ -19,8 +19,8 @@ from .hwrepo.contracts import write_model
 from .hwrepo.design_lint_spi_candidates import spi_peer_reference_candidates
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
-from .hwrepo.models import NetlistContract
 from .hwrepo.native_report_parsing import read_netlist
+from .hwrepo.netlist_contract_models import NetlistContract
 from .hwrepo.spi_peer_reference_scan import scan_spi_peer_references
 
 

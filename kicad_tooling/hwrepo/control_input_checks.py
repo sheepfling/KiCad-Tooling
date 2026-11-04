@@ -10,7 +10,7 @@ from .control_input_models import (
     ControlPinRequirement,
 )
 from .electrical_report_models import ElectricalCheck
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .resistor_array_paths import (
     ResistorArrayNetlistEvidence,
     resistor_array_channel_issue,

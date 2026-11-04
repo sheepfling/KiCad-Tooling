@@ -10,7 +10,7 @@ from .component_peer_pin_scan import (
     PeerPinAssignmentScan,
     scan_component_peer_pin_assignments,
 )
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def _strict_majority_assignment_outlier(

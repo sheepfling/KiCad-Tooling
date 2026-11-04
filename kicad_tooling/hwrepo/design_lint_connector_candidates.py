@@ -20,7 +20,7 @@ from .design_lint_connectors_supply_domains import (
 )
 from .design_lint_return_domain_candidates import return_domain_candidates
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def connector_candidates(

@@ -17,7 +17,7 @@ from .component_power_input_peer_scan import (
     scan_component_peer_power_input_assignments,
     scan_component_peer_power_input_open_assignments,
 )
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def component_peer_pin_assignment_scans(

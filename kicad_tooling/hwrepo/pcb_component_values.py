@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .pcb_component_inventory_models import PcbComponentValueMismatch
 from .pcb_component_population import PcbVariantPopulationSource
 from .pcb_connectivity_observations import PcbFootprintPlacementObservation

@@ -22,7 +22,7 @@ from .cross_probe_variant import VariantObservation, read_variant_observation
 from .discovery import load_config
 from .evidence import digest
 from .findings_view_models import FindingsViewReport
-from .models import ValidationSummary
+from .native_project_validation_models import ValidationSummary
 from .native_summary_binding import validate_native_summary_binding
 from .project_source_hashes import hash_project_sources as hashes
 from .review_overview_evidence import read_receipt, recorded_directory, selected_receipt

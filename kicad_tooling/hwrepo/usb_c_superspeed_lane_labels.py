@@ -9,7 +9,7 @@ from .bus_signal_pairs import (
     usb_c_superspeed_lane_function_role,
 )
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID = "bus.usb_c_superspeed_lane_label_mismatch"
 _SUPER_SPEED_LABEL = re.compile(r"(?:usb(?:3)?(?:ss)?|ss)(tx|rx)([12])([pn+\-])")

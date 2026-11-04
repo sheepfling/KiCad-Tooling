@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .peer_reference_candidate_keys import PeerReferenceCandidate, SpiPeerClockKey
 from .spi_bias_heuristics import spi_active_low_chip_selects_without_pullups
 from .spi_participants import SpiRosterContext

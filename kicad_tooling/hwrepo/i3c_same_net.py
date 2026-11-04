@@ -6,7 +6,7 @@ import re
 
 from .bus_signal_roles import i3c_signal_identity
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID = "bus.i3c_sda_scl_same_net"
 _IC_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)

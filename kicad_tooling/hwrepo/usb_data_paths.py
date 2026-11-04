@@ -6,9 +6,7 @@ from .bus_signal_pairs import (
     usb_data_function_identity,
 )
 from .casefold_mapping_lookup import lookup_unique_casefold as _lookup
-from .models import (
-    NetlistContract,
-)
+from .netlist_contract_models import NetlistContract
 from .reference_bonds import reference_bond_issues
 from .resistor_paths import (
     direct_resistors,

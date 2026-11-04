@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from .i2c_addressing import i2c_signal_role
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .peer_reference_assignments import (
     PeerReferencePinAssignment as I2cReferencePinAssignment,
 )

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from .capacitor_symbols import is_capacitor_symbol
 from .connector_identity import connector_candidate_references, power_function_key
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .return_nets import is_return_like_net_name
 
 

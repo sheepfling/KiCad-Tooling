@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .regulator_passive_checks import regulator_passive_topology_issues
 from .regulator_passive_models import RegulatorPassiveTopologyMap
 

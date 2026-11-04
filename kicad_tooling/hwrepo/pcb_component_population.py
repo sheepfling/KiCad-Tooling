@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .pcb_component_inventory_models import PcbPopulationMismatch
 from .pcb_connectivity_observations import PcbFootprintPlacementObservation
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot

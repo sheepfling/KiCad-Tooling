@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from .bus_signal_roles import usb_c_sbu_role
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .netlist_pin_assignments import netlist_pin_net_index
 
 

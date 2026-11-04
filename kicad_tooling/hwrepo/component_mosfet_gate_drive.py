@@ -5,7 +5,7 @@ from __future__ import annotations
 from .component_mosfet_symbols import SUPPORTED_THREE_TERMINAL_MOSFET_SYMBOLS
 from .component_pin_types import fitted_output_pins_on_net
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID = "component.mosfet_gate_direct_drive"
 _GATE_FUNCTIONS = frozenset({"g", "gate"})

@@ -8,7 +8,7 @@ from types import MappingProxyType
 from typing import Literal
 
 from .casefold_mapping_lookup import lookup_unique_casefold
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 _EXPLICIT_RS485_IDENTITY = re.compile(
     r"(?:rs[^a-z0-9]*485|(?:max|adm)[-_ ]?[a-z0-9]*48[0-9]{1,2}|sp[-_ ]?3485|sn65hvd485[a-z0-9]*|thvd[a-z0-9]*)",

@@ -17,7 +17,7 @@ from .connector_footprint_peer_pin_types import (
 from .connector_identity import pin_function_is_generic
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "connector.footprint_peer_unanchored_scope_unreviewed"
 

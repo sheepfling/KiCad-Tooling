@@ -11,7 +11,7 @@ from .bus_signal_roles import (
 )
 from .connector_identity import power_function_key
 from .control_input_inventory import control_input_family
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .resistor_paths import (
     DirectResistor,
     direct_resistors,

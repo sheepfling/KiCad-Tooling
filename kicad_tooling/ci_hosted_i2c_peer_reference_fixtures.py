@@ -20,8 +20,8 @@ from .hwrepo.design_lint_i2c_candidates import i2c_peer_reference_candidates
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.i2c_peer_reference_scan import scan_i2c_peer_references
-from .hwrepo.models import NetlistContract
 from .hwrepo.native_report_parsing import read_netlist
+from .hwrepo.netlist_contract_models import NetlistContract
 
 
 def i2c_peer_reference_native_fixture_lane(

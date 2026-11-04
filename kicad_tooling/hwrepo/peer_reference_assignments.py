@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .return_nets import is_return_like_net_name
 
 _NON_SIGNAL_REFERENCE = re.compile(

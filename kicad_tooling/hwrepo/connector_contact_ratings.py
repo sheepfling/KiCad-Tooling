@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from .connector_contact_rating_models import ConnectorContactRatingAnalysis
 from .electrical_report_models import ElectricalCheck
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .netlist_pin_assignments import netlist_pin_net_index
 
 

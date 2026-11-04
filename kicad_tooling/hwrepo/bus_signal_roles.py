@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Literal
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 _I2C_FUNCTIONS: Mapping[str, str] = MappingProxyType(
     {

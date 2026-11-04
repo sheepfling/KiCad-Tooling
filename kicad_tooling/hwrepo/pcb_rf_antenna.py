@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from decimal import ROUND_HALF_UP, Decimal, localcontext
 from typing import TypeVar
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .pcb_connectivity_observations import (
     PcbFootprintPlacementObservation,
     PcbRuleAreaPolygonObservation,

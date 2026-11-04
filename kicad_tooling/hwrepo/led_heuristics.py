@@ -13,7 +13,7 @@ from .component_roles import (
     resolve_component_role_map,
 )
 from .connector_identity import power_function_key
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .power_path_models import PowerPathMap
 from .power_paths import power_path_mismatches
 from .resistor_paths import (

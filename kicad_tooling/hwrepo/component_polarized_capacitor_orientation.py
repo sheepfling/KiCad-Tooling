@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from .component_rail_potentials import named_net_potential, potential_is_lower
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID = "component.polarized_capacitor_reversed_on_named_rails"
 _SUPPORTED_SYMBOLS = frozenset(

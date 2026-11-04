@@ -20,17 +20,17 @@ from .hwrepo.connector_coverage_models import (
     ConnectorReviewsDocument,
 )
 from .hwrepo.contract_coach import pinned_image, run_command
+from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.contracts import read_kicad_erc_report, read_model, write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.evidence import digest
 from .hwrepo.models import (
-    ContractCoachReport,
     DesignLintPolicy,
     InterfacesCatalog,
-    NetlistContract,
 )
 from .hwrepo.native_report_parsing import read_netlist
+from .hwrepo.netlist_contract_models import NetlistContract
 
 MIXED_INTERFACE_RETURN_TOOLCHAINS = KICAD_10_NATIVE_TOOLCHAINS
 _RULE_ID = "connector.repeated_pin_function"

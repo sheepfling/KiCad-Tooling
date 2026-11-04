@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
 from typing import TypeVar
 
-from .models import NetlistContract
+from .netlist_contract_models import ComponentContract, NetlistContract
 from .pcb_component_population import PcbVariantPopulationSource
 from .pcb_connectivity_observations import PcbFootprintPlacementObservation
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
@@ -19,7 +19,6 @@ from .pcb_required_fitted_reference_models import (
     PcbRequiredFittedReferenceVariant,
     PcbRequiredFittedReferenceViolation,
 )
-from .project_models import ComponentContract
 
 ValueT = TypeVar("ValueT")
 

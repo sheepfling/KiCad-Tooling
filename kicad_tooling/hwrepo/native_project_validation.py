@@ -15,9 +15,12 @@ from .discovery import load_config
 from .evidence import digest as file_digest
 from .evidence import source_state
 from .kicad_compatibility import require_cli_profile
-from .models import CheckEvidence, ValidationSummary
 from .native_command import execute, svg_files, write_native_bom
-from .native_project_validation_models import NativeProjectValidationRequest
+from .native_project_validation_models import (
+    CheckEvidence,
+    NativeProjectValidationRequest,
+    ValidationSummary,
+)
 from .native_report_parsing import check_netlist, check_report, read_netlist
 from .native_toolchain import cli_executable, toolchain
 from .pcb_dru_compilation import run_pcb_dru_compilation_probe

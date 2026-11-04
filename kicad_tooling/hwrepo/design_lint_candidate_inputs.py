@@ -17,7 +17,7 @@ from .design_lint_rule_models import DesignLintRuleCatalog
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
 from .external_protection_models import ExternalProtectionCoverageReport
 from .ic_decoupling_models import IcDecouplingMap
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .oscillator_output_path_models import OscillatorOutputPathMap
 from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap

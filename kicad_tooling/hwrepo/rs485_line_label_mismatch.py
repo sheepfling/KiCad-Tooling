@@ -6,7 +6,7 @@ import re
 
 from .component_references import is_integrated_circuit_reference
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .rs485_data_functions import explicit_rs485_transceiver_identity
 from .rs485_line_functions import rs485_bus_line_role
 

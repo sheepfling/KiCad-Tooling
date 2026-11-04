@@ -14,10 +14,8 @@ from .hwrepo.component_rating_models import (
 from .hwrepo.component_voltage_ratings import component_voltage_rating_checks
 from .hwrepo.contracts import read_kicad_erc_report
 from .hwrepo.evidence import digest
-from .hwrepo.models import (
-    NetlistContract,
-)
 from .hwrepo.native_report_parsing import read_netlist
+from .hwrepo.netlist_contract_models import NetlistContract
 
 
 def verify_component_voltage_rating_fixture(

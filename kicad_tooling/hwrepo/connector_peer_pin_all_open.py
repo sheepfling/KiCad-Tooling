@@ -15,7 +15,7 @@ from .connector_peer_pin_scan import (
     scan_connector_part_id_peer_pins,
 )
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 _GENERIC_PEER_PIN_TYPES = frozenset(
     {

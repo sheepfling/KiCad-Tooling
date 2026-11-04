@@ -15,7 +15,7 @@ from .connector_peer_pin_scan import (
     scan_connector_part_id_peer_pins,
     unique_peer_pin_majority,
 )
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def connector_peer_pin_assignment_outliers(

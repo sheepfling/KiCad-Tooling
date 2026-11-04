@@ -11,7 +11,7 @@ from .capacitance_values import parse_capacitance_pf
 from .casefold_mapping_lookup import lookup_unique_casefold
 from .design_lint_types import Candidate
 from .ic_decoupling_models import IcDecouplingMap, IcDecouplingRequirement
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .netlist_pin_assignments import netlist_pin_net_index
 
 

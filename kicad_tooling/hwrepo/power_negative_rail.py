@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from .connector_identity import power_function_key
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .power_rails import negative_voltage_rail_key
 
 

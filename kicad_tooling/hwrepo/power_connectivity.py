@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .electrical_report_models import ElectricalCheck
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .power_connectivity_models import (
     PowerConnectivityAnalysis,
     PowerPinEndpointRequirement,

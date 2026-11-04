@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .reference_bonds import reference_bond_issues
 from .usb_data_path_models import UsbDataPathMap
 from .usb_data_path_types import UsbDataPathMismatch

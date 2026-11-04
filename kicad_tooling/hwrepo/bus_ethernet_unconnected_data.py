@@ -6,7 +6,7 @@ from .bus_signal_pairs import ethernet_data_pair_function_role
 from .casefold_mapping_lookup import lookup_unique_casefold
 from .component_references import is_integrated_circuit_reference
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID = "bus.ethernet_data_unconnected_pin"
 

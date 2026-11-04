@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from .hwrepo.models import NetlistContract
+from .hwrepo.netlist_contract_models import NetlistContract
 
 
 def native_peer_metadata_mismatches(

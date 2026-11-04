@@ -11,7 +11,7 @@ from .bus_signal_pairs import (
     ethernet_management_function_role,
 )
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID = "bus.ethernet_data_label_mismatch"
 MANAGEMENT_RULE_ID = "bus.ethernet_management_label_mismatch"

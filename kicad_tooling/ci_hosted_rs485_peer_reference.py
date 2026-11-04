@@ -16,8 +16,8 @@ from .hwrepo.contracts import read_kicad_erc_report, write_model
 from .hwrepo.design_lint_rs485_candidates import rs485_peer_reference_candidates
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
-from .hwrepo.models import NetlistContract
 from .hwrepo.native_report_parsing import read_netlist
+from .hwrepo.netlist_contract_models import NetlistContract
 from .hwrepo.rs485_models import Rs485Analysis
 from .hwrepo.rs485_peer_reference_scan import scan_rs485_peer_references
 from .hwrepo.rs485_peer_reference_types import Rs485PeerReferenceContext

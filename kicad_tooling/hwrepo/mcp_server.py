@@ -25,6 +25,7 @@ from . import mcp_planning as planning
 from . import mcp_workflow as workflow
 from . import mcp_workflow_design_lint as design_lint_workflow
 from .cad_source_models import CadImportReport, CadSourcingReview, CadStepReport
+from .contract_coach_models import ContractCoachReport
 from .contracts import repo_path
 from .design_lint_reconciliation_models import DesignLintReconciliationReport
 from .design_lint_report_models import DesignLintReport
@@ -53,7 +54,6 @@ from .mcp_visualization_exports import register_visualization_export_tools
 from .mcp_workflow_documents import DOCUMENTS, DocumentName
 from .models import (
     AutoCadReport,
-    ContractCoachReport,
     ForeignFormat,
     ForeignPcbReport,
     ImpactPlan,

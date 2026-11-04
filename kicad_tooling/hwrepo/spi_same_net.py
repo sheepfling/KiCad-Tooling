@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .spi_participants import is_spi_ic_reference, spi_data_function_role_and_channel
 
 RULE_ID = "bus.spi_data_input_output_same_net"

@@ -9,9 +9,6 @@ from .ci_hosted_component_rating_context import ComponentRatingFixtureContext
 from .ci_hosted_support import HostedLog
 from .hwrepo.contracts import read_kicad_erc_report
 from .hwrepo.evidence import digest
-from .hwrepo.models import (
-    NetlistContract,
-)
 from .hwrepo.mosfet_stress import mosfet_stress_checks
 from .hwrepo.mosfet_stress_models import (
     MosfetOperatingState,
@@ -20,6 +17,7 @@ from .hwrepo.mosfet_stress_models import (
     MosfetVoltageInterval,
 )
 from .hwrepo.native_report_parsing import read_netlist
+from .hwrepo.netlist_contract_models import NetlistContract
 
 
 def verify_mosfet_stress_fixture(context: ComponentRatingFixtureContext, log: HostedLog) -> None:

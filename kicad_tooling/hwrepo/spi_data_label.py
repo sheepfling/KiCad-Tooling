@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID = "bus.spi_data_polarity_label_mismatch"
 

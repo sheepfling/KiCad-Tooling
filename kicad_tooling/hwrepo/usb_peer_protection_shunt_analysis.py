@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .usb_data_path_models import UsbDataInterfaceRequirement, UsbDataPathMap
 from .usb_data_paths import usb_data_path_mismatches
 from .usb_peer_endpoint_analysis import pin_net_index

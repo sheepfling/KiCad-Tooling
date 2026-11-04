@@ -7,10 +7,12 @@ import sys
 from pathlib import Path
 
 from .hwrepo.layout import default_project_root
-from .hwrepo.models import ValidationSummary
 from .hwrepo.native_command import execute, svg_files, write_native_bom
 from .hwrepo.native_project_validation import ValidationContract, validate_project
-from .hwrepo.native_project_validation_models import NativeProjectValidationRequest
+from .hwrepo.native_project_validation_models import (
+    NativeProjectValidationRequest,
+    ValidationSummary,
+)
 from .hwrepo.native_report_parsing import (
     check_netlist,
     check_report,

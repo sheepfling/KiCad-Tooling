@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from .connector_identity import power_function_key
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .resistor_paths import visible_resistor_paths
 from .return_nets import is_return_like_net_name
 

@@ -10,7 +10,7 @@ from typing import assert_never
 from .component_peer_pin_models import ComponentPeerPinRuleId
 from .component_peer_pin_scan import ComponentPeerPinAssignmentScans
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 @dataclass(frozen=True, slots=True)

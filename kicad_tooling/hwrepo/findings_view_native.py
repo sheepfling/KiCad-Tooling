@@ -19,7 +19,7 @@ from .findings_view_mapping import (
 )
 from .findings_view_models import ReviewDrawing, ReviewFinding
 from .findings_view_svg import prepare_drawing
-from .models import ValidationSummary
+from .native_project_validation_models import ValidationSummary
 from .native_report_parsing import check_report
 from .project_models import (
     ProjectConfig,

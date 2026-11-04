@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .serial_participants import is_serial_ic_reference, serial_function_role_and_channel
 from .signal_pair_tx_output_sharing import tx_output_sharing_groups
 

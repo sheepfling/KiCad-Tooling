@@ -5,11 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 
 from .contract_coach import pinned_image
+from .contract_coach_models import ContractCoachReport
 from .contracts import repo_path
 from .design_lint_pcb_coverage_common import PcbGeometrySourceEvidence
 from .discovery import ProjectConfig
 from .evidence import digest
-from .models import ContractCoachReport
 from .pcb_geometry_receipts import verify_pcb_geometry_receipts, write_pcb_geometry_snapshot
 from .pcb_return_path_capture import (
     capture_native_pcb_connectivity,

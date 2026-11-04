@@ -5,7 +5,7 @@ from __future__ import annotations
 from .component_bjt_symbols import basic_bjt_role_numbers
 from .component_pin_types import fitted_output_pins_on_net
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID = "component.bjt_base_direct_drive"
 

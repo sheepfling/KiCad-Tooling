@@ -11,7 +11,7 @@ from .connector_identity import (
     native_pin_metadata_is_missing,
     partition_peer_assignments,
 )
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 @dataclass(frozen=True, slots=True)

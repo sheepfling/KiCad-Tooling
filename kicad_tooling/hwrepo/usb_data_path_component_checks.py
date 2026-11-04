@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Protocol, TypeVar
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 _Value = TypeVar("_Value")
 

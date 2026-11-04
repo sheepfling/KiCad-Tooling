@@ -8,7 +8,7 @@ from .bus_signal_pairs import (
 )
 from .design_lint_types import Candidate
 from .differential_pair_names import named_differential_pairs
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .pcb_drc_models import PcbDifferentialPairRuleMap
 
 

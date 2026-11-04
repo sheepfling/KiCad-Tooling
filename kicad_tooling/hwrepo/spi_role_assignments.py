@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .spi_participants import is_spi_ic_reference, spi_signal_role_and_channel
 
 

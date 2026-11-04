@@ -5,7 +5,7 @@ from __future__ import annotations
 from .can_signal_functions import can_signal_role_and_channel
 from .component_references import is_integrated_circuit_reference
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .signal_pair_tx_output_sharing import tx_output_sharing_groups
 
 RULE_ID = "bus.can_tx_outputs_share_net"

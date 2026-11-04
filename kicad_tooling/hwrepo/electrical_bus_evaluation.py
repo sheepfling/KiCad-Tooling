@@ -19,7 +19,7 @@ from .electrical_report_models import ElectricalCheck
 from .i2c_pullup_contract import i2c_pullup_checks
 from .i2c_pullup_models import I2cPullupAnalysis
 from .model_primitives import Identifier, StrictModel
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .spi_contract import spi_checks
 from .spi_models import SpiAnalysis
 from .usb_c_contract import usb_c_checks

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from .component_mosfet_symbols import mosfet_channel_type, mosfet_terminal_role_numbers
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID = "component.mosfet_drain_source_same_net"
 GATE_SOURCE_RULE_ID = "component.mosfet_gate_source_same_net"

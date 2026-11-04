@@ -15,8 +15,8 @@ from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
-from .hwrepo.models import NetlistContract
 from .hwrepo.native_report_parsing import read_netlist
+from .hwrepo.netlist_contract_models import NetlistContract
 
 
 def empty_netlist_evidence_fixture_lane(

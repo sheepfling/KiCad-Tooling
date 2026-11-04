@@ -9,7 +9,11 @@ import pytest
 
 from kicad_tooling.hwrepo import models, project_models
 
-pytestmark = pytest.mark.architecture
+pytestmark = [
+    pytest.mark.architecture,
+    pytest.mark.design_lint,
+    pytest.mark.rule_gate_integrity,
+]
 
 _REPOSITORY_ROOT = Path(__file__).parents[1]
 _PROJECT_MODEL_NAMES = frozenset(
@@ -64,6 +68,7 @@ def test_project_models_are_bounded_and_depend_on_contract_owners() -> None:
         "connector_coverage_models",
         "design_lint_policy_models",
         "model_primitives",
+        "netlist_contract_models",
     }
 
 

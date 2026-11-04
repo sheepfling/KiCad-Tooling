@@ -6,8 +6,8 @@ from dataclasses import dataclass
 
 from .casefold_mapping_lookup import lookup_unique_casefold
 from .component_references import is_integrated_circuit_reference
-from .models import NetlistContract
 from .named_rail_roles import named_rail_role_clue
+from .netlist_contract_models import NetlistContract
 
 
 @dataclass(frozen=True, slots=True)

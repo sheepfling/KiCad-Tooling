@@ -13,7 +13,8 @@ from .cross_probe_variant import read_variant_observation
 from .discovery import load_config, load_registry
 from .evidence import digest
 from .findings_view_models import FindingsViewReport
-from .models import PurchasingFinding, ValidationSummary
+from .models import PurchasingFinding
+from .native_project_validation_models import ValidationSummary
 from .native_summary_binding import validate_native_summary_binding
 from .part_catalog_models import PartsCatalog
 from .parts_receipts import read_parts_receipt

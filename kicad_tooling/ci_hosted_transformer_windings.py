@@ -13,11 +13,12 @@ from types import MappingProxyType
 
 from .ci_hosted_support import HostedLog, normalized_erc_report_bytes, tooling_checkout_root
 from .hwrepo.contract_coach import pinned_image, run_command
+from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.contracts import read_kicad_erc_report, write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
-from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.models import DesignLintPolicy
 from .hwrepo.native_report_parsing import read_netlist
 
 RULE_ID = "component.transformer_winding_same_net"

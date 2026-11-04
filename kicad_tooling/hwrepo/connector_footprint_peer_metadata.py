@@ -14,7 +14,7 @@ from .connector_footprint_peer_groups import (
 from .connector_identity import native_pin_metadata_is_missing, partition_peer_assignments
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "connector.footprint_peer_pin_metadata_assignment_divergence"
 

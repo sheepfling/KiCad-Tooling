@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .serial_endpoint_role_collision import serial_endpoint_role_collision_candidates
 from .serial_same_net import serial_tx_rx_same_net_candidates
 from .serial_signal_named_rail import serial_signal_on_named_rail_candidates

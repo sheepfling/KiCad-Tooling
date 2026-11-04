@@ -5,8 +5,8 @@ from __future__ import annotations
 from .bus_signal_roles import i2c_signal_role
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import NetlistContract
 from .named_rail_pin_evidence import assigned_named_rail_ic_pins
+from .netlist_contract_models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "bus.i2c_signal_on_named_rail"
 

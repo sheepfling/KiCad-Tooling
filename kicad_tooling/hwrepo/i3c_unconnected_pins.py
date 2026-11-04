@@ -6,7 +6,7 @@ import re
 from dataclasses import dataclass
 
 from .bus_signal_roles import i3c_signal_identity
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 @dataclass(frozen=True, slots=True)

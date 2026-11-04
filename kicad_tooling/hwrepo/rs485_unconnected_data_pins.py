@@ -5,7 +5,7 @@ from __future__ import annotations
 from .casefold_mapping_lookup import lookup_unique_casefold
 from .component_references import is_integrated_circuit_reference
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .rs485_data_functions import explicit_rs485_transceiver_identity, rs485_data_pin_role
 
 RULE_ID = "bus.rs485_unconnected_data_pin"

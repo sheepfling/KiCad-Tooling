@@ -25,7 +25,7 @@ from .digital_peer_voltage_types import (
     DigitalPeerVoltageScan,
     VoltageNamedRail,
 )
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .return_nets import is_return_like_net_name
 
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .usb_peer_endpoint_analysis import casefold_mapping
 from .usb_peer_reference_types import (
     UsbPeerReferenceComponentObservation,

@@ -16,8 +16,8 @@ from .hwrepo.contracts import write_model
 from .hwrepo.design_lint_can_candidates import can_candidates
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
-from .hwrepo.models import NetlistContract
 from .hwrepo.native_report_parsing import read_netlist
+from .hwrepo.netlist_contract_models import NetlistContract
 
 
 def can_excess_termination_native_fixture_lane(

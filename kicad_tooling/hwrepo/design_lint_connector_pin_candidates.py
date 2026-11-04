@@ -53,7 +53,7 @@ from .connector_return_pins import (
 )
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def connector_pin_candidates(

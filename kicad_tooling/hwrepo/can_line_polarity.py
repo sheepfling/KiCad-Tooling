@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from .bus_signal_roles import can_function_role
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID = "bus.can_line_polarity_label_mismatch"
 

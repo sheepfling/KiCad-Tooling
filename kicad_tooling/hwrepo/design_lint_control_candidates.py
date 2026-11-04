@@ -10,7 +10,7 @@ from .control_input_inventory import (
 )
 from .control_input_models import ControlInputBiasHeuristicCoverage
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .open_drain_heuristics import open_output_bias_gaps
 
 

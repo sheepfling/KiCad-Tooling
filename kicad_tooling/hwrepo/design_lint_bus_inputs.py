@@ -10,7 +10,7 @@ from .design_lint_types import Candidate
 from .i2c_address_inputs import I2cAddressCandidateInput
 from .i2c_peer_reference_scan import I2cPeerReferenceScan
 from .i2c_pullup_inputs import I2cPullupSnifferInput
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .pcb_drc_models import PcbDifferentialPairRuleMap
 from .rs485_peer_reference_types import Rs485PeerReferenceScan
 from .spi_participants import SpiRosterContext

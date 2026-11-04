@@ -12,7 +12,7 @@ from pathlib import Path
 from .command_evidence_models import CommandEvidence
 from .contracts import write_model
 from .generation import csv_cell
-from .project_models import ComponentContract
+from .netlist_contract_models import ComponentContract
 
 
 def svg_files(output: Path, name: str) -> list[Path]:

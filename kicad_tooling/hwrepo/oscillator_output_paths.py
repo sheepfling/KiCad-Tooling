@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .casefold_mapping_lookup import lookup_unique_casefold as _lookup
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .oscillator_output_path_models import (
     OscillatorOutputPathMap,
     OscillatorOutputPathRequirement,

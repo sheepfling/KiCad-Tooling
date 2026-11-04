@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 PinStatus = Literal[
     "MATCH", "DIFFERENT", "MISSING", "UNCONNECTED", "AMBIGUOUS", "UNDECLARED", "UNREVIEWED"

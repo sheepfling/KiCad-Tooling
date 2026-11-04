@@ -6,8 +6,7 @@ from decimal import Decimal
 
 from .capacitance_values import parse_capacitance_pf
 from .electrical_report_models import ElectricalCheck
-from .models import NetlistContract
-from .project_models import ComponentContract
+from .netlist_contract_models import ComponentContract, NetlistContract
 from .usb_c_models import (
     UsbCVbusCapacitanceRequirement,
     UsbCVbusPathRequirement,

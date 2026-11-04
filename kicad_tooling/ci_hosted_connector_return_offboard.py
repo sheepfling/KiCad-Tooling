@@ -7,10 +7,10 @@ import json
 from .ci_hosted_connector_return_context import ConnectorReturnFixtureContext
 from .hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
 from .hwrepo.connector_coverage_models import ConnectorInterfaceReview, ConnectorInventoryReview
+from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.design_lint import evaluate
 from .hwrepo.evidence import digest
 from .hwrepo.models import (
-    ContractCoachReport,
     DesignLintPolicy,
     InterfacePin,
     InterfaceRecord,

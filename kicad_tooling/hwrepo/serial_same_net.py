@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .serial_participants import serial_function_role_and_channel
 
 RULE_ID = "bus.serial_tx_rx_same_net"

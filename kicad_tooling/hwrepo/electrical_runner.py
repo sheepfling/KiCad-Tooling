@@ -68,8 +68,8 @@ from .electrical_simulation_evaluation import (
 from .electrical_simulation_evidence import SimulationVersionObserved
 from .evidence import digest, source_state
 from .model_primitives import Digest, RepositoryPath
-from .models import NetlistContract
 from .mosfet_stress import mosfet_stress_checks
+from .netlist_contract_models import NetlistContract
 from .pcb_return_path_capture import capture_native_pcb_connectivity, expected_probe_sha256
 from .power_connectivity import power_connectivity_checks
 from .project_models import ProjectKind

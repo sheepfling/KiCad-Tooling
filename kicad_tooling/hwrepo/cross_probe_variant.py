@@ -12,8 +12,9 @@ from .contracts import kicad_variant_names, parse_model_text, repo_path
 from .design_lint_report_models import DesignLintReport
 from .findings_view_models import FindingsViewReport
 from .native_report_parsing import read_netlist
+from .netlist_contract_models import ComponentContract
 from .pcb_variant_population_capture import position_references
-from .project_models import ComponentContract, ProjectConfig
+from .project_models import ProjectConfig
 from .review_overview_evidence import read_receipt, selected_receipt
 from .source_state_models import SourceHashInventory
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .pcb_board_only_footprint_models import PcbBoardOnlyFootprint
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 

@@ -13,7 +13,7 @@ from .connector_identity import (
 )
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "component.repeated_signal_pin_assignment_divergence"
 UNASSIGNED_RULE_ID: DesignLintRuleId = "component.repeated_signal_pin_unassigned"

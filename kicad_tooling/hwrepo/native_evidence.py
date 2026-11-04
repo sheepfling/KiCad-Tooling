@@ -17,8 +17,8 @@ from .discovery import load_config
 from .electrical import grounding_checks, load_analysis
 from .evidence import digest, evidence_path, source_state, verify_source
 from .i2c_pullup_contract import i2c_pullup_checks
-from .models import ValidationSummary
 from .native_command import svg_files
+from .native_project_validation_models import ValidationSummary
 from .native_report_parsing import check_netlist, check_report, read_netlist
 from .power_connectivity import power_connectivity_checks
 from .product import check_project_netlist

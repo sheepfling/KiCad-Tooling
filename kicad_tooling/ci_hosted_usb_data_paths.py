@@ -17,12 +17,13 @@ from .ci_hosted_usb_multiport_validation import validate_usb_multiport_peer_refe
 from .ci_hosted_usb_protection_shunts import validate_usb_protection_shunt_fixture_reports
 from .ci_hosted_usb_requirements import usb_data_path_requirements
 from .hwrepo.contract_coach import pinned_image, run_command
+from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.contracts import write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
-from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.models import DesignLintPolicy
 from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.usb_data_paths import usb_data_path_mismatches
 

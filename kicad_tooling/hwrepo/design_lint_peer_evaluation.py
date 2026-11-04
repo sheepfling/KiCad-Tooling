@@ -21,10 +21,8 @@ from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPe
 from .i2c_peer_reference_coverage import i2c_peer_reference_coverage
 from .i2c_peer_reference_models import I2cPeerReferenceCoverageReport
 from .i2c_peer_reference_scan import I2cPeerReferenceScan, scan_i2c_peer_references
-from .models import (
-    Digest,
-    NetlistContract,
-)
+from .models import Digest
+from .netlist_contract_models import NetlistContract
 from .rs485_peer_reference_scan import scan_rs485_peer_references
 from .rs485_peer_reference_types import Rs485PeerReferenceContext, Rs485PeerReferenceScan
 from .serial_participants import SerialPeerRosterContext

@@ -20,6 +20,7 @@ from .ci_hosted_connector_return_fixture_sources import (
 from .ci_hosted_support import tooling_checkout_root
 from .hwrepo.connector_stateful_contact_models import ConnectorStatefulContactMap
 from .hwrepo.contract_coach import pinned_image, run_command
+from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.contracts import write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
@@ -27,12 +28,9 @@ from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.design_lint_rule_types import DesignLintRuleId
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
-from .hwrepo.models import (
-    ContractCoachReport,
-    DesignLintPolicy,
-    NetlistContract,
-)
+from .hwrepo.models import DesignLintPolicy
 from .hwrepo.native_report_parsing import read_netlist
+from .hwrepo.netlist_contract_models import NetlistContract
 from .hwrepo.project_models import ProjectConfig
 
 

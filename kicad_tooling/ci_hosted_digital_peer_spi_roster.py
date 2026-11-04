@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from .ci_hosted_digital_peer_context import DigitalPeerFixtureContext
+from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_report_models import DesignLintReport
-from .hwrepo.models import (
-    ContractCoachReport,
-    DesignLintPolicy,
-)
+from .hwrepo.models import DesignLintPolicy
 from .hwrepo.spi_models import (
     SpiAnalysis,
     SpiBusRequirement,

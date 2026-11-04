@@ -6,14 +6,12 @@ import hashlib
 from pathlib import Path
 from typing import Literal
 
+from .contract_coach_models import ContractCoachReport
 from .contracts import repo_path
 from .design_lint_policy_models import DesignLintPolicy
 from .evidence import digest
 from .model_primitives import Digest, RepositoryPath
-from .models import (
-    ContractCoachReport,
-    NetlistContract,
-)
+from .netlist_contract_models import NetlistContract
 from .source_state_models import SourceHashInventory
 from .stm32_pin_map import (
     CubeMxDocument,

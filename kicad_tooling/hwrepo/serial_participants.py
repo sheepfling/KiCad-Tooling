@@ -12,7 +12,7 @@ from kicad_tooling.hwrepo.serial_peer_models import (
 
 from .component_references import is_integrated_circuit_reference
 from .connector_identity import connector_candidate_references
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .return_nets import is_return_like_net_name
 
 SerialPeerRosterState = Literal["not_configured", "pending", "not_applicable", "required"]

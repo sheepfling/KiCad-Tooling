@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .peer_reference_candidate_keys import PeerReferenceCandidate, Rs485PeerPairKey
 from .rs485_ab_same_net import rs485_ab_same_net_candidates
 from .rs485_data_label_mismatch import rs485_data_direction_label_candidates

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from .bus_signal_roles import can_function_role
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 @dataclass(frozen=True, slots=True)

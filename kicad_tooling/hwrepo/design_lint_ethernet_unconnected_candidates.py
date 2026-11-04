@@ -5,7 +5,7 @@ from __future__ import annotations
 from .bus_ethernet_unconnected_data import ethernet_data_unconnected_pin_candidates
 from .bus_ethernet_unconnected_management import ethernet_management_unconnected_pin_candidates
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def ethernet_unconnected_pin_candidates(observed: NetlistContract) -> tuple[Candidate, ...]:

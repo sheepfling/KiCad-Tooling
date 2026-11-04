@@ -11,7 +11,7 @@ from .connector_return_pins import (
 )
 from .connector_return_supply import return_pin_positive_rail_candidates
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .return_nets import (
     is_return_like_net_name,
     return_label_groups_without_pin_roles,

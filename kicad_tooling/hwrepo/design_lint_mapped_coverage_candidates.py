@@ -13,9 +13,7 @@ from .design_lint_rc_filter_candidates import rc_filter_candidates
 from .design_lint_regulator_candidates import regulator_feedback_candidates
 from .design_lint_types import Candidate
 from .design_lint_usb_data_path_candidates import usb_data_path_candidates
-from .models import (
-    NetlistContract,
-)
+from .netlist_contract_models import NetlistContract
 from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
 from .usb_data_path_models import UsbDataPathMap

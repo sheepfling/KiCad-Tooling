@@ -6,7 +6,7 @@ import hashlib
 from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .rs485_models import (
     Rs485EndpointPinRequirement,
     Rs485EndpointRequirement,

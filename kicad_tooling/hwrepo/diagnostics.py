@@ -19,7 +19,7 @@ from .discovery import load_config, load_registry, settings
 from .importing import import_project
 from .layout import workflow_guide
 from .model_inventory import inspect_models
-from .models import ValidationSummary
+from .native_project_validation_models import ValidationSummary
 from .part_catalog_models import (
     PartsCatalog,
     PartStatus,

@@ -14,7 +14,8 @@ from .i2c_pullup_models import (
     I2cPullupLineRequirement,
 )
 from .i2c_pullup_voltage_coverage import i2c_pullup_voltage_coverage
-from .models import Digest, NetlistContract
+from .models import Digest
+from .netlist_contract_models import NetlistContract
 from .resistor_paths import (
     positive_power_net_families,
     visible_resistor_pullups,

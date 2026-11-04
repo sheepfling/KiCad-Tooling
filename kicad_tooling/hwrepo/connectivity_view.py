@@ -18,7 +18,7 @@ from .contracts import write_model
 from .electrical_view_evidence import load_electrical_view_evidence
 from .evidence import digest
 from .grounding_models import GroundingAnalysis
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .netlist_membership import net_pin_membership
 from .power_connectivity_models import PowerConnectivityAnalysis
 

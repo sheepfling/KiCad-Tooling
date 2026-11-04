@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import NetlistContract
 from .named_rail_pin_evidence import assigned_named_rail_ic_pins
+from .netlist_contract_models import NetlistContract
 from .serial_participants import serial_function_role_and_channel
 
 RULE_ID: DesignLintRuleId = "bus.serial_signal_on_named_rail"

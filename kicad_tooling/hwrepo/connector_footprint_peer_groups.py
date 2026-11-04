@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from .connector_identity import connector_candidate_references
 from .model_primitives import NonEmptyText, Reference
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 @dataclass(frozen=True, slots=True)

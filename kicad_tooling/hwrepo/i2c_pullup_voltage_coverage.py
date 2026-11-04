@@ -10,7 +10,7 @@ from .electrical_report_models import ElectricalCheck
 from .i2c_addressing import unmapped_i2c_responders
 from .i2c_pullup_models import I2cPullupAnalysis
 from .i2c_pullup_voltage_models import I2cPullupVoltageCoverageEntry
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .resistor_array_paths import (
     ResistorArrayNetlistEvidence,
     resistor_array_channel_issue,

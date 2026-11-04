@@ -7,7 +7,7 @@ from collections import defaultdict
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageReport
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def mapped_supply_domains_shared_net_candidates(

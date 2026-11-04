@@ -14,7 +14,7 @@ from .design_lint_usb_c_candidates import usb_c_port_candidates
 from .design_lint_usb_peer_candidates import usb_peer_reference_candidates
 from .digital_peer_voltage_scan import scan_digital_peer_voltage_reviews
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_scan import scan_serial_peer_reference_reviews
 from .spi_participants import SpiRosterContext

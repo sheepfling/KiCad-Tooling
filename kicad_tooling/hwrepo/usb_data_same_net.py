@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from .bus_signal_pairs import usb_data_function_identity
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .netlist_pin_assignments import netlist_pin_net_index
 from .usb_peer_endpoint_analysis import IC_REFERENCE
 

@@ -18,7 +18,7 @@ from .i2c_pullup_heuristics import (
     i2c_pullup_heuristic_coverage as resolve_i2c_pullup_heuristic_coverage,
 )
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .rs485_peer_reference_types import Rs485PeerReferenceContext
 from .serial_participants import SerialPeerRosterContext
 from .spi_participants import SpiRosterContext

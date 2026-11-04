@@ -7,7 +7,7 @@ from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 
 from .connector_identity import power_function_key
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RESISTOR_REFERENCE_PATTERN = re.compile(r"^R[A-Z]*[0-9]+$", re.IGNORECASE)
 VISIBLE_PULLUP_MIN_OHMS = 1_000.0

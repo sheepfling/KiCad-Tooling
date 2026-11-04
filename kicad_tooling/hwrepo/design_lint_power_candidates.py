@@ -13,8 +13,8 @@ from .component_roles import resolve_component_role_map
 from .design_lint_power_decoupling import ic_decoupling_candidates
 from .design_lint_types import Candidate
 from .ic_decoupling_models import IcDecouplingMap
-from .models import NetlistContract
 from .net_dc_reference import connector_capacitor_only_nets
+from .netlist_contract_models import NetlistContract
 from .power_decoupling import ic_power_rails_without_fitted_capacitors
 from .power_negative_rail import positive_supply_pins_on_negative_rails
 from .power_path_models import PowerPathMap

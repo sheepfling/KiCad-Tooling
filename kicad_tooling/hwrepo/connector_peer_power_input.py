@@ -10,7 +10,7 @@ from .connector_peer_named_power_aliases import (
 )
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "connector.peer_power_input_open_assignment"
 ALL_OPEN_RULE_ID: DesignLintRuleId = "connector.peer_power_input_named_all_open"

@@ -15,12 +15,12 @@ from pathlib import Path
 from typing import Literal, Protocol, TypeVar
 
 from kicad_tooling.hwrepo.command_evidence_models import CommandEvidence
-from kicad_tooling.hwrepo.models import (
+from kicad_tooling.hwrepo.contract_coach_models import (
     ContractCoachReport,
     ContractDifference,
-    NetlistContract,
-    ValidationSummary,
 )
+from kicad_tooling.hwrepo.native_project_validation_models import ValidationSummary
+from kicad_tooling.hwrepo.netlist_contract_models import NetlistContract
 from kicad_tooling.hwrepo.project_models import (
     HarnessInterfaceValidationContract,
     PcbOnlyValidationContract,

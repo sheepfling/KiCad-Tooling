@@ -13,7 +13,7 @@ from .design_lint_connectivity_snapshot_models import (
     NetlistPinConnectivityState,
 )
 from .model_primitives import Digest, Identifier, RepositoryPath
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def capture_connectivity_snapshot(

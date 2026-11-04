@@ -8,8 +8,10 @@ from types import MappingProxyType
 from .ci_hosted_digital_peer_context import DigitalPeerFixtureContext
 from .ci_hosted_digital_peer_models import DigitalPeerFixtureCase
 from .ci_hosted_native_fixture_models import NativeRun, NativeRunPair
+from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.design_lint import evaluate
-from .hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract
+from .hwrepo.models import DesignLintPolicy
+from .hwrepo.netlist_contract_models import NetlistContract
 
 _CASE: DigitalPeerFixtureCase = "serial-optical-isolation-control"
 _RULE_ID = "bus.serial_peer_reference_review"

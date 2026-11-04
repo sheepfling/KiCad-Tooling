@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from .component_mosfet_symbols import SUPPORTED_THREE_TERMINAL_MOSFET_SYMBOLS
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .resistor_paths import direct_resistors
 
 RULE_ID = "component.mosfet_gate_without_peer"

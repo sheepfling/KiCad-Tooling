@@ -12,7 +12,7 @@ from .electrical import power_budget_checks
 from .electrical_simulation_models import PowerAnalysis, PowerRail
 from .electrical_view_evidence import load_electrical_view_evidence
 from .evidence import digest
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .netlist_membership import PinMembership, net_pin_membership
 from .power_connectivity import power_connectivity_checks
 from .power_connectivity_models import (

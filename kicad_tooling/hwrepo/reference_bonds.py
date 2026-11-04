@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TypeVar
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .reference_bond_models import ReferenceBondRequirement
 
 _Value = TypeVar("_Value")

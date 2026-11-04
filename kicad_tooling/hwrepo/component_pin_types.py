@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 _OUTPUT_CAPABLE_PIN_TYPES = frozenset(
     {

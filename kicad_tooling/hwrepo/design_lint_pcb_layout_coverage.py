@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
+from .contract_coach_models import ContractCoachReport
 from .design_lint_pcb_coverage_common import (
     PcbGeometrySourceEvidence,
     PcbRuleMode,
@@ -12,10 +13,7 @@ from .design_lint_pcb_coverage_common import (
     map_sha256,
 )
 from .discovery import ProjectConfig
-from .models import (
-    ContractCoachReport,
-    Digest,
-)
+from .models import Digest
 from .pcb_drc_models import (
     PcbSignalPathRuleCoverageReport,
     PcbSignalPathRuleMap,

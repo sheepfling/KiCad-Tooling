@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .spi_role_assignments import spi_channel_label, spi_role_assignment_groups
 
 RULE_ID = "bus.spi_clock_chip_select_same_net"

@@ -12,9 +12,8 @@ from pydantic import JsonValue
 
 from .connector_pins import similar_connector_pin_groups
 from .kicad_compatibility import require_cli_profile
-from .models import NetlistContract
+from .netlist_contract_models import ComponentContract, NetlistContract
 from .project_models import (
-    ComponentContract,
     PcbValidationContract,
     ProjectConfig,
     ProjectKind,

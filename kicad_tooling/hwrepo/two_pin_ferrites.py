@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .two_pin_components import TwoPinComponentOnSameNet, two_pin_components_on_same_net
 
 

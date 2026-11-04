@@ -8,7 +8,11 @@ import pytest
 
 from tests.lint_architecture_support import IMPLEMENTATION_MAX_LINES, REPO_ROOT, line_count
 
-pytestmark = pytest.mark.architecture
+pytestmark = [
+    pytest.mark.architecture,
+    pytest.mark.design_lint,
+    pytest.mark.rule_gate_integrity,
+]
 
 
 def test_netlist_input_owner_is_small_and_independent_of_model_registry() -> None:
@@ -28,11 +32,13 @@ def test_netlist_input_owner_is_small_and_independent_of_model_registry() -> Non
     )
 
 
-def test_model_registry_delegates_netlist_input_normalization() -> None:
-    registry = ast.parse((REPO_ROOT / "kicad_tooling/hwrepo/models.py").read_text(encoding="utf-8"))
+def test_model_owner_delegates_netlist_input_normalization() -> None:
+    owner = ast.parse(
+        (REPO_ROOT / "kicad_tooling/hwrepo/netlist_contract_models.py").read_text(encoding="utf-8")
+    )
     netlist = next(
         node
-        for node in registry.body
+        for node in owner.body
         if isinstance(node, ast.ClassDef) and node.name == "NetlistContract"
     )
     validator = next(
@@ -44,7 +50,7 @@ def test_model_registry_delegates_netlist_input_normalization() -> None:
         isinstance(node, ast.ImportFrom)
         and node.module == "netlist_contract_inputs"
         and any(alias.name == "normalize_native_unconnected_nets" for alias in node.names)
-        for node in registry.body
+        for node in owner.body
     )
     assert any(
         isinstance(node, ast.Call)

@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from kicad_tooling.hwrepo.contract_coach_models import ContractCoachReport
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.ic_decoupling_models import (
     IcDecouplingCapacitorRequirement,
     IcDecouplingMap,
     IcDecouplingRequirement,
 )
-from kicad_tooling.hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract
+from kicad_tooling.hwrepo.models import DesignLintPolicy
+from kicad_tooling.hwrepo.netlist_contract_models import NetlistContract
 
 RULE_ID = "power.ic_decoupling_below_project_minimum"
 

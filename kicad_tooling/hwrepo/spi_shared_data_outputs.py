@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .return_nets import is_return_like_net_name
 from .spi_participants import is_spi_data_output_function, is_spi_ic_reference
 

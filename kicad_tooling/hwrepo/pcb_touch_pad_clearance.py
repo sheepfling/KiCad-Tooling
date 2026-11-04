@@ -6,7 +6,7 @@ import hashlib
 
 from .contracts import model_json_bytes
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_pad_net_comparison import schematic_pad_net_assignments
 from .pcb_touch_pad_clearance_models import (

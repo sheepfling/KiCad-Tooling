@@ -16,7 +16,7 @@ from .ci_hosted_native_fixture_models import (
     NativeNetlistRunEvidence,
     NativeRunPair,
 )
-from .hwrepo.models import NetlistContract
+from .hwrepo.netlist_contract_models import NetlistContract
 from .hwrepo.project_models import ProjectConfig
 
 DigitalPeerFixtureCase: TypeAlias = Literal[

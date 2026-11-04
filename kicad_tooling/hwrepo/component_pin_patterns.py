@@ -11,7 +11,7 @@ from .connector_identity import (
     pin_function_is_generic,
     power_function_key,
 )
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 @dataclass(frozen=True, slots=True)

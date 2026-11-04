@@ -8,7 +8,7 @@ from collections.abc import Set as AbstractSet
 from typing import TypeVar
 
 from .bus_signal_pairs import usb_data_function_identity, usb_superspeed_function_identity
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .peer_reference_assignments import peer_reference_assignments
 from .usb_peer_reference_types import (
     UsbEndpoint,

@@ -19,6 +19,7 @@ from .model_primitives import (
     RepositoryPath,
     StrictModel,
 )
+from .netlist_contract_models import ComponentContract
 
 
 class ToolchainRecord(StrictModel):
@@ -104,12 +105,6 @@ class ProjectRegistry(StrictModel):
     schema_version: NonEmptyText
     catalogs: CatalogPaths
     projects: tuple[ProjectRecord, ...]
-
-
-class ComponentContract(StrictModel):
-    value: NonEmptyText
-    footprint: str
-    part_id: Identifier | None = None
 
 
 class IgnoredChecks(StrictModel):

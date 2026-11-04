@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from .electrical_report_models import ElectricalCheck
 from .i2c_pullup_models import I2cPullupSeriesPathRequirement
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .resistor_paths import DirectResistor
 
 

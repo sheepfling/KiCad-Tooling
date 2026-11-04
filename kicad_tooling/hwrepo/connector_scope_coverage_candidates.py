@@ -12,7 +12,7 @@ from .connector_coverage import (
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_identity import similar_connector_pin_groups
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 RULE_ID = "connector.return_supply_scope_singleton"
 

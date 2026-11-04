@@ -9,6 +9,7 @@ from .ci_hosted_digital_peer_models import (
 )
 from .ci_hosted_native_fixture_models import NativeRun, NativeRunPair
 from .ci_hosted_support import tooling_checkout_root
+from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_connectivity_snapshot import capture_connectivity_snapshot
 from .hwrepo.design_lint_connectivity_snapshot_models import (
@@ -16,10 +17,7 @@ from .hwrepo.design_lint_connectivity_snapshot_models import (
     NativePinMetadata,
 )
 from .hwrepo.design_lint_report_models import DesignLintReport
-from .hwrepo.models import (
-    ContractCoachReport,
-    DesignLintPolicy,
-)
+from .hwrepo.models import DesignLintPolicy
 
 
 def _connectivity_snapshot(

@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .oscillator_output_path_models import OscillatorOutputPathMap
 from .oscillator_output_paths import oscillator_output_path_mismatches
 

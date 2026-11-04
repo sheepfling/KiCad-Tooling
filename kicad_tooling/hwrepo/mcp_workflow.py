@@ -19,6 +19,7 @@ from . import mcp_3d_workflow as _mcp_3d_workflow
 from . import mcp_generation_workflow as _mcp_generation_workflow
 from . import mcp_workflow_paths as _mcp_workflow_paths
 from . import model_population as _model_population
+from .contract_coach_models import ContractCoachReport
 from .contracts import read_model, repo_path, write_model
 from .design_lint_inspection_models import DesignLintInspectionRequest
 from .design_lint_reconciliation import reconcile_design_lint_reports
@@ -38,7 +39,6 @@ from .exports import export as generate_exports
 from .exports import require_declared_variant, verify_exports
 from .mcp_workflow_journal import journal
 from .models import (
-    ContractCoachReport,
     McpScopeReport,
     ReleaseExportReport,
 )

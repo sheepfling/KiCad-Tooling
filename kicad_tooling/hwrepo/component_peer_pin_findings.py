@@ -14,7 +14,7 @@ from .connector_identity import (
     is_return_function,
     power_function_key,
 )
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 def _component_peer_pin_assignment_outliers(

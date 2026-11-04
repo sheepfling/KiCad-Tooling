@@ -6,7 +6,7 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .spi_models import SpiAnalysis
 
 _SPI_DEVICE_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)

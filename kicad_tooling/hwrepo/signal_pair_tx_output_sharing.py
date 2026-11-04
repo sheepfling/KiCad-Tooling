@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .return_nets import is_return_like_net_name
 
 _SUPPORTED_PIN_TYPES = frozenset({"output", "tri_state", "bidirectional", "passive"})

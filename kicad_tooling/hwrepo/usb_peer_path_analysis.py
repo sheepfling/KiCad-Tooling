@@ -6,7 +6,7 @@ import re
 from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .usb_peer_endpoint_analysis import casefold_mapping, pin_net_index
 from .usb_peer_reference_types import (
     UsbEndpoint,

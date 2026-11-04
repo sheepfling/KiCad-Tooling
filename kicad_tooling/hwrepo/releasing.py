@@ -22,8 +22,8 @@ from .models import (
     LibrariesCatalog,
     ReleaseExportReport,
     ScopedReleasePortableReport,
-    ValidationSummary,
 )
+from .native_project_validation_models import ValidationSummary
 from .policy_issue_models import PolicyIssue
 from .portable_evidence import verify_release_portable
 from .product_models import (

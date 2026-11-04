@@ -15,7 +15,7 @@ from .connector_peer_pin_scan import (
     ConnectorPartIdPeerPinGroup,
     scan_connector_part_id_peer_pins,
 )
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 ConnectorPowerElectricalType = Literal["power_in", "power_out"]
 

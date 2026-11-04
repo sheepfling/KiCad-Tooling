@@ -18,10 +18,8 @@ from .i2c_address_models import (
     I2cAddressMap,
 )
 from .i2c_addressing import scan_i2c_address_map
-from .models import (
-    Digest,
-    NetlistContract,
-)
+from .models import Digest
+from .netlist_contract_models import NetlistContract
 from .rc_filter_models import RcFilterCoverageReport, RcFilterMap
 from .rc_filters import scan_rc_filter_map
 from .regulator_feedback import scan_regulator_feedback_map

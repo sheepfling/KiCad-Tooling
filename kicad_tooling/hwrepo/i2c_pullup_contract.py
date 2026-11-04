@@ -13,7 +13,7 @@ from .i2c_pullup_models import (
     I2cPullupLineRequirement,
     I2cPullupVoltageCompatibilityRequirement,
 )
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .resistor_array_paths import (
     ResistorArrayNetlistEvidence,
     resistor_array_channel_issue,

@@ -18,7 +18,7 @@ from .findings_view_mapping import design_lint_finding
 from .findings_view_models import FindingsViewReport, ReviewDrawing
 from .findings_view_native import NativeArtifacts, drawings, native_findings
 from .findings_view_sheets import bind_schematic_drawings
-from .models import ValidationSummary
+from .native_project_validation_models import ValidationSummary
 from .native_summary_binding import validate_native_summary_binding
 from .project_models import ProjectManifest
 from .project_source_hashes import hash_project_sources as hashes

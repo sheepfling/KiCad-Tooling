@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from uuid import uuid4
 
+from .contract_coach_models import ContractCoachReport
 from .design_lint_pcb_component_inventory_scan import (
     resolve_pcb_component_inventory_modes,
     scan_pcb_component_inventory,
@@ -18,7 +19,6 @@ from .design_lint_pcb_layout_coverage import layout_coverage_reports
 from .design_lint_pcb_measurement_coverage import measurement_coverage_reports
 from .design_lint_policy_models import DesignLintPolicy
 from .discovery import ProjectConfig
-from .models import ContractCoachReport
 from .pcb_board_only_footprint_models import PcbBoardOnlyFootprintCoverage
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport, PcbDecouplingMap

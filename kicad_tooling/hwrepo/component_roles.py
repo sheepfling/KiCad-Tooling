@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from .component_role_models import ComponentRoleBinding, ComponentRoleMap
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 
 @dataclass(frozen=True, slots=True)

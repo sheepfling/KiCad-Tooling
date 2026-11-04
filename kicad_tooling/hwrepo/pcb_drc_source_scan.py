@@ -8,7 +8,7 @@ from typing import Literal
 
 from .command_evidence_models import CommandEvidence
 from .evidence import digest
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageEntry,

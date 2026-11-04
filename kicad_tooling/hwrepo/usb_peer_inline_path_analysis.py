@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
 
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .usb_data_path_models import (
     UsbDataInterfaceRequirement,
     UsbDataPathLineRequirement,

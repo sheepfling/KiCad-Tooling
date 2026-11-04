@@ -15,7 +15,7 @@ from .i2c_addressing import format_i2c_address, unmapped_i2c_responders
 from .i2c_peer_reference_scan import I2cPeerReferenceScan, scan_i2c_peer_references
 from .i2c_pullup_inputs import I2cPullupSnifferInput
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .peer_reference_candidate_keys import I2cPeerBusKey, PeerReferenceCandidate
 
 

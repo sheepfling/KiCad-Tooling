@@ -18,7 +18,7 @@ from .can_tx_output_sharing import can_tx_output_sharing_candidates
 from .can_tx_rx_label_mismatch import can_tx_rx_label_mismatch_candidates
 from .can_tx_rx_same_net import can_tx_rx_same_net_candidates
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .peer_reference_candidate_keys import CanPeerBusKey, PeerReferenceCandidate
 
 

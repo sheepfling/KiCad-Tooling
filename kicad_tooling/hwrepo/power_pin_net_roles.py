@@ -10,7 +10,7 @@ from .connector_identity import (
     power_function_key,
 )
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .return_nets import is_return_like_net_name
 
 

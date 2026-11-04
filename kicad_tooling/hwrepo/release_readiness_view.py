@@ -15,10 +15,8 @@ from .contract_coach import receipt_directory
 from .contracts import parse_model_text, read_model, relative_path_from, repo_path, write_model
 from .electrical_report_models import ElectricalAnalysisReport
 from .evidence import digest
-from .models import (
-    ReleaseExportReport,
-    ValidationSummary,
-)
+from .models import ReleaseExportReport
+from .native_project_validation_models import ValidationSummary
 from .release import check
 from .release_contract_models import ReleaseManifest
 from .release_readiness_view_models import ReleaseReadinessViewReport

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from .design_lint_types import Candidate
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 
 _WindingGroup = tuple[str, tuple[str, str]]
 _SUPPORTED_WINDINGS = MappingProxyType(

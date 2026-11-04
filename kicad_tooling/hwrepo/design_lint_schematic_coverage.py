@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal
 
-from .contract_coach import ContractCoachReport
+from .contract_coach_models import ContractCoachReport
 from .contracts import repo_path
 from .design_lint_policy_models import DesignLintPolicy
 from .discovery import ProjectConfig

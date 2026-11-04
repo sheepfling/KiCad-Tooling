@@ -6,7 +6,7 @@ import re
 from dataclasses import dataclass
 
 from .connector_identity import power_function_key
-from .models import NetlistContract
+from .netlist_contract_models import NetlistContract
 from .power_rails import explicit_voltage_rail_value
 
 _IC_REFERENCE = re.compile(r"^(?:U|IC)\d+$", re.IGNORECASE)

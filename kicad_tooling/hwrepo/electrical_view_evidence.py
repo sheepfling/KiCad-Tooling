@@ -6,13 +6,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+from .contract_coach_models import ContractCoachReport
 from .contracts import read_model
 from .electrical import selected_config
 from .electrical_analysis_contract_models import ElectricalAnalysisContract
 from .electrical_charts import checked_artifact, source_receipt
 from .electrical_report_models import ElectricalAnalysisReport
 from .evidence import digest
-from .models import ContractCoachReport, NetlistContract
+from .netlist_contract_models import NetlistContract
 from .project_source_hashes import hash_project_sources as hashes
 from .source_state_models import SourceHashInventory
 
