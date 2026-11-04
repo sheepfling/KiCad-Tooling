@@ -1350,26 +1350,28 @@ formatters have one owner. Existing rule IDs, messages, report evidence, and
 fingerprints remain stable.
 
 A repository-wide AST inventory of direct `Candidate(evidence=...)` calls
-finds 184 constructions across 146 Python modules: 112 in production code
-across 100 modules and 72 in tests across 46 modules. The evidence argument is
-a dictionary literal in 92 production calls and 24 test calls; other calls
+finds 181 constructions across 145 Python modules: 109 in production code
+across 99 modules and 72 in tests across 46 modules. The evidence argument is
+a dictionary literal in 89 production calls and 24 test calls; other calls
 reuse a named, attributed, or computed mapping. This is a triage inventory,
 not a claim that every construction is an opaque source route: test-only
 candidate builders and already-owned report projections need separate
-classification. The mapped connector-interface route now carries all nine
-findings through a typed source record and a projector that verifies the
-current netlist, coverage, mapped pin, role, connectivity, and any rail-label
-clue. Its two open-contact rules retain their pre-existing coverage semantics;
-the other seven still require complete interface coverage. The global PCB DRC
-severity route now carries a source-bound settings record and typed
-check/category findings, retaining its exact path, digest, project kind, KiCad
-version, and configured severity. Its parser still verifies source bytes both
-before and after reading, and its established KiCad version gates and report
-fields remain in force. The largest remaining production concentrations tie
-at three each in `pcb_dru_rule_review.py`, `connector_peer_power_input.py`,
-and `connector_peer_power_output.py`. Inspect their source ownership and rule
-families before choosing the next route; call counts alone do not determine
-whether their evidence should share an owner.
+classification. The mapped connector-interface route carries all nine
+findings through a typed source record and projector that verifies the current
+netlist, coverage, mapped pin, role, connectivity, and any rail-label clue. Its
+two open-contact rules retain their pre-existing coverage semantics; the other
+seven still require complete interface coverage. The global PCB DRC severity
+route carries source-bound settings and typed check/category findings while
+retaining its exact path, digest, project kind, KiCad version, configured
+severity, and version gates. The custom PCB DRC rule route now carries ignored
+and excluded declarations as canonical parser records, and text-variable
+findings retain distinct project and board source identities. It preserves
+source inventory checks, linked-path rejection, byte rechecks, existing
+report fields, and the exact supported-version boundary. The largest remaining
+production concentrations tie at three each in `connector_peer_power_input.py`
+and `connector_peer_power_output.py`; inspect these separately as input and
+output peer rule families before selecting the next route. Call counts alone
+do not determine whether their evidence should share an owner.
 
 The schematic geometry tranche passed 75 synthetic and architecture tests and
 4 CLI/MCP parity tests against the separate public `KiCAD-Test` checkout.

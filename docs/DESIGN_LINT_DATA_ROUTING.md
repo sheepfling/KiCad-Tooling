@@ -967,11 +967,31 @@ preserves the established source path, digest, version, check ID, configured
 severity, subjects, messages, and fingerprints; the route has no direct
 `Candidate(evidence=...)` maps.
 
-The broader AST inventory finds 112 direct `Candidate(evidence=...)` calls in
-production modules and 72 in tests. This count includes explicit test builders
-and mappings that are already named, so it is a route-triage queue rather than
-a count of confirmed opaque boundaries. The largest remaining production
-concentrations tie at three each in `pcb_dru_rule_review.py`,
-`connector_peer_power_input.py`, and `connector_peer_power_output.py`. Inspect
-those source records and rule families before selecting the next projection
-boundary.
+## Custom PCB DRC rule candidate evidence
+
+The ignored-rule, excluded-rule, and unresolved text-variable findings now
+retain their source through `PcbDruRuleCandidate` or
+`PcbDruTextVariableCandidate`. `SourceBoundPcbDruRuleFile` carries the
+repository-relative path, verified digest, project kind, KiCad version, and
+resolved local read path. The resolved path is used only to read and recheck
+the source; projections contain only the existing repository-relative source
+identity. Ignored and excluded rule findings retain the canonical parser
+record, rule severity, and source file. Text-variable findings retain distinct
+project and board source identities and sorted variable names rather than a
+dynamically assembled context dictionary.
+
+The source inventory checks, linked-path rejection, byte rechecks, supported
+KiCad version boundary for exclusion and variable review, and parser-owned rule
+records remain in force. Report field names and ordering, candidate subjects,
+messages, and fingerprints are preserved. The text-variable finding still
+means only that the audit does not evaluate KiCad substitutions; it does not
+claim the resolved rule is faulty or valid.
+
+The broader AST inventory now finds 109 direct `Candidate(evidence=...)`
+constructions in production modules across 99 files and 72 in tests across 46
+files. Of those, 89 production evidence values and 24 test values are literal
+dictionaries. This is a route-triage queue, not a count of confirmed opaque
+boundaries. The largest remaining production concentrations tie at three
+calls each in `connector_peer_power_input.py` and
+`connector_peer_power_output.py`; the next review should inspect those input
+and output peer rule families as separate source owners.

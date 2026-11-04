@@ -13,13 +13,14 @@ from kicad_tooling.hwrepo.design_lint_finding_models import (
     DesignLintIgnore,
     DesignLintRuleOverride,
 )
+from kicad_tooling.hwrepo.design_lint_pcb_dru_rule_candidate_evidence import PcbDruRuleCandidate
 from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import NetlistContract, ProjectConfig, ProjectKind
 from kicad_tooling.hwrepo.pcb_dru_rule_review import ignored_custom_drc_rule_candidates
 from tests.design_lint_fixtures import coach
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint]
+pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint, pytest.mark.evidence_lint]
 
 FIXTURES = Path(__file__).parent / "fixtures/design_lint/pcb-dru-ignored-rules"
 RULE_ID = "pcb.custom_drc_rule_ignored"
@@ -55,6 +56,10 @@ def test_explicit_ignore_rule_creates_a_source_bound_review_candidate(tmp_path: 
 
     assert len(candidates) == 1
     candidate = candidates[0]
+    assert isinstance(candidate, PcbDruRuleCandidate)
+    assert candidate.source_evidence.source_file.source_path == RULES_RELATIVE
+    assert candidate.source_evidence.rule.name == "SyntheticSuppressedWidth"
+    assert candidate.source_evidence.severity == "ignore"
     assert candidate.rule_id == RULE_ID
     assert candidate.subject == f"{RULES_RELATIVE}#rule[1] SyntheticSuppressedWidth"
     assert "confirm that suppressing this rule is intentional" in candidate.message

@@ -18,6 +18,7 @@ from tests.synthetic_design_lint_project import run_design_lint_cli, synthetic_d
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.pcb_lint,
+    pytest.mark.evidence_lint,
     pytest.mark.parity_lint,
     pytest.mark.slow,
 ]

@@ -10,6 +10,9 @@ import pytest
 
 from kicad_tooling.hwrepo.design_lint import evaluate, fingerprint
 from kicad_tooling.hwrepo.design_lint_finding_models import DesignLintIgnore, DesignLintRuleOverride
+from kicad_tooling.hwrepo.design_lint_pcb_dru_rule_candidate_evidence import (
+    PcbDruTextVariableCandidate,
+)
 from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import NetlistContract, ProjectConfig, ProjectKind
@@ -20,7 +23,7 @@ from kicad_tooling.hwrepo.pcb_dru_rule_review import (
 )
 from tests.design_lint_fixtures import coach
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint]
+pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint, pytest.mark.evidence_lint]
 RULE_ID = "pcb.custom_drc_text_variable_review"
 RELATIVE = "projects/controller.kicad_dru"
 PROJECT = "projects/controller.kicad_pro"
@@ -56,6 +59,10 @@ def _scan(root: Path, rules: Path, config: ProjectConfig):
 def test_variable_severity_is_reviewed_without_an_authored_map(tmp_path: Path) -> None:
     root, rules, config = _project(tmp_path)
     (candidate,) = _scan(root, rules, config)
+    assert isinstance(candidate, PcbDruTextVariableCandidate)
+    assert candidate.source_evidence.project_source.role == "project"
+    assert candidate.source_evidence.board_source.role == "board"
+    assert candidate.source_evidence.variable_names == ("MODE",)
     assert candidate.rule_id == RULE_ID
     assert candidate.evidence == {
         "source_path": (RELATIVE,),
