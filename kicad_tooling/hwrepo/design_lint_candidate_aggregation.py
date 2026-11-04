@@ -34,11 +34,18 @@ from .design_lint_candidate_inputs import (
 )
 from .design_lint_candidate_results import DesignLintCandidateScanResult
 from .design_lint_catalog import rule_catalog
-from .design_lint_component_candidates import component_candidates
+from .design_lint_component_candidates import (
+    ComponentTopologyCandidateInputs,
+    scan_component_candidates,
+)
 from .design_lint_component_peer_candidates import scan_component_peer_candidates
 from .design_lint_connector_candidates import scan_connector_candidates
 from .design_lint_control_candidates import scan_control_candidates
-from .design_lint_mapped_coverage_candidates import mapped_coverage_candidates
+from .design_lint_mapped_coverage_candidates import (
+    MappedCoverageCandidateInputs,
+    scan_mapped_coverage_candidates,
+)
+from .design_lint_mapped_topology_results import MappedTopologyFindingCounts
 from .design_lint_pcb_board_only_candidates import pcb_board_only_footprint_candidates
 from .design_lint_pcb_component_inventory_candidates import (
     pcb_component_inventory_candidates,
@@ -317,15 +324,16 @@ def scan_candidate_result(
     found.extend(pcb_pad_net_candidates(pcb_component_inventory_coverage))
     control_result = scan_control_candidates(inputs.control)
     found.extend(control_result.candidates)
-    found.extend(
-        component_candidates(
-            observed,
+    component_result = scan_component_candidates(
+        ComponentTopologyCandidateInputs(
+            observed=observed,
             component_role_map=component_role_map,
             power_path_map=power_path_map,
             oscillator_output_path_map=oscillator_output_path_map,
             reviewed_connector_references=reviewed_connector_references,
         )
     )
+    found.extend(component_result.candidates)
     found.extend(
         power_candidates(
             observed,
@@ -362,16 +370,17 @@ def scan_candidate_result(
             usb_data_map_sha256=usb_data_map_sha256,
         )
     )
-    found.extend(
-        mapped_coverage_candidates(
-            observed,
-            inputs.mapped,
+    mapped_coverage_result = scan_mapped_coverage_candidates(
+        MappedCoverageCandidateInputs(
+            observed=observed,
+            coverage=inputs.mapped,
             usb_data_path_map=usb_data_path_map,
             usb_data_map_sha256=usb_data_map_sha256,
             power_path_map=power_path_map,
             power_sequence_map=power_sequence_map,
         )
     )
+    found.extend(mapped_coverage_result.candidates)
     found.extend(scan_pcb_measurement_candidates(inputs.pcb))
     found.extend(scan_pcb_requirement_candidates(inputs.pcb))
     found.extend(stm32_candidates(stm32_pin_map_coverage))
@@ -387,6 +396,12 @@ def scan_candidate_result(
         peer_reference_keys=bus_result.peer_reference_keys.merge(pcb_peer_keys),
         connector_peer_pin_finding_counts=connector_result.peer_pin_finding_counts,
         component_peer_pin_finding_counts=component_peer_result.finding_counts,
+        mapped_topology_finding_counts=MappedTopologyFindingCounts(
+            usb_data_path_mismatch=mapped_coverage_result.usb_data_path_finding_count,
+            power_series_path_mismatch=mapped_coverage_result.power_path_finding_count,
+            power_sequence_dependency_mismatch=mapped_coverage_result.power_sequence_finding_count,
+            oscillator_output_path_mismatch=component_result.oscillator_output_path_finding_count,
+        ),
     )
 
 

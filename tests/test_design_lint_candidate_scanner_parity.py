@@ -42,6 +42,13 @@ from kicad_tooling.hwrepo.design_lint_candidate_inputs import (
 )
 from kicad_tooling.hwrepo.design_lint_candidate_results import DesignLintCandidateScanResult
 from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
+from kicad_tooling.hwrepo.design_lint_mapped_coverage_candidates import (
+    MappedCoverageCandidateInputs,
+    MappedCoverageCandidateResult,
+)
+from kicad_tooling.hwrepo.design_lint_mapped_topology_results import (
+    MappedTopologyFindingCounts,
+)
 from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.external_protection_models import ExternalProtectionCoverageReport
 from kicad_tooling.hwrepo.i2c_address_inputs import I2cAddressCandidateInput
@@ -49,8 +56,6 @@ from kicad_tooling.hwrepo.i2c_pullup_inputs import I2cPullupSnifferInput
 from kicad_tooling.hwrepo.models import DesignLintPolicy, NetlistContract
 from kicad_tooling.hwrepo.pcb_drc_rule_coverage import compare_native_rules
 from kicad_tooling.hwrepo.peer_reference_candidate_keys import PeerReferenceCandidateKeys
-from kicad_tooling.hwrepo.power_path_models import PowerPathMap
-from kicad_tooling.hwrepo.power_sequence_models import PowerSequenceMap
 from kicad_tooling.hwrepo.spi_participants import SpiRosterContext
 from kicad_tooling.hwrepo.usb_data_path_models import UsbDataPathMap
 from tests.design_lint_fixtures import coach, control_input_pins, i2c_netlist
@@ -241,6 +246,7 @@ def _legacy_scan_result(
         peer_reference_keys=PeerReferenceCandidateKeys.from_candidates(items),
         connector_peer_pin_finding_counts=ConnectorPeerPinFindingCounts.from_candidates(items),
         component_peer_pin_finding_counts=ComponentPeerPinFindingCounts.from_candidates(items),
+        mapped_topology_finding_counts=MappedTopologyFindingCounts.from_candidates(items),
     )
 
 
@@ -365,36 +371,23 @@ def test_scanner_passes_extended_mapped_input_to_its_owner(monkeypatch: pytest.M
         rc_filter=None,
     )
     inputs = replace(inputs, mapped=extended)
-    received: list[MappedCandidateInputs] = []
-    original = design_lint_candidate_aggregation.mapped_coverage_candidates
+    received: list[MappedCoverageCandidateInputs] = []
+    original = design_lint_candidate_aggregation.scan_mapped_coverage_candidates
 
-    def capture(
-        observed: NetlistContract,
-        mapped: MappedCandidateInputs,
-        *,
-        usb_data_path_map: UsbDataPathMap | None = None,
-        usb_data_map_sha256: str | None = None,
-        power_path_map: PowerPathMap | None = None,
-        power_sequence_map: PowerSequenceMap | None = None,
-    ) -> tuple[Candidate, ...]:
-        received.append(mapped)
-        return original(
-            observed,
-            mapped,
-            usb_data_path_map=usb_data_path_map,
-            usb_data_map_sha256=usb_data_map_sha256,
-            power_path_map=power_path_map,
-            power_sequence_map=power_sequence_map,
-        )
+    def capture(request: MappedCoverageCandidateInputs) -> MappedCoverageCandidateResult:
+        received.append(request)
+        return original(request)
 
-    monkeypatch.setattr(design_lint_candidate_aggregation, "mapped_coverage_candidates", capture)
+    monkeypatch.setattr(
+        design_lint_candidate_aggregation, "scan_mapped_coverage_candidates", capture
+    )
     assert scan_candidates(inputs) == candidates(
         inputs.observed, external_protection_coverage=protection
     )
-    assert received[0] is extended
-    assert received[0].external_protection is protection
-    assert isinstance(received[0], ExtendedMappedInputs)
-    assert received[0].extension_marker == "new mapped evidence"
+    assert received[0].coverage is extended
+    assert received[0].coverage.external_protection is protection
+    assert isinstance(received[0].coverage, ExtendedMappedInputs)
+    assert received[0].coverage.extension_marker == "new mapped evidence"
 
 
 @pytest.mark.pcb_lint

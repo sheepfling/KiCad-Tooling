@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from .component_bjt_base_bias import bjts_without_visible_emitter_bias
 from .component_bjt_base_drive import bjts_with_direct_output_base_drive
 from .component_bjt_terminal_order import bjts_with_unusual_collector_emitter_rail_order
@@ -55,6 +57,30 @@ from .two_pin_speakers import two_pin_speaker_same_net_candidates
 from .two_pin_thermocouples import two_pin_thermocouple_same_net_candidates
 
 
+@dataclass(frozen=True, slots=True)
+class ComponentTopologyCandidateInputs:
+    """Native observation and authored component maps for component checks."""
+
+    observed: NetlistContract
+    component_role_map: ComponentRoleMap | None
+    power_path_map: PowerPathMap | None
+    oscillator_output_path_map: OscillatorOutputPathMap | None
+    reviewed_connector_references: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ComponentCandidateScanResult:
+    """Component findings with their oscillator-map finding count."""
+
+    candidates: tuple[Candidate, ...]
+
+    @property
+    def oscillator_output_path_finding_count(self) -> int:
+        return sum(
+            item.rule_id == "oscillator.output_load_path_mismatch" for item in self.candidates
+        )
+
+
 def _unconnected_named_pin_candidate(
     pin: UnconnectedNamedComponentPin,
     *,
@@ -80,7 +106,27 @@ def component_candidates(
     oscillator_output_path_map: OscillatorOutputPathMap | None = None,
     reviewed_connector_references: tuple[str, ...] = (),
 ) -> tuple[Candidate, ...]:
-    """Build review prompts for component polarity, role, and same-net patterns."""
+    """Preserve the keyword-based component candidate interface."""
+    return scan_component_candidates(
+        ComponentTopologyCandidateInputs(
+            observed=observed,
+            component_role_map=component_role_map,
+            power_path_map=power_path_map,
+            oscillator_output_path_map=oscillator_output_path_map,
+            reviewed_connector_references=reviewed_connector_references,
+        )
+    ).candidates
+
+
+def scan_component_candidates(
+    inputs: ComponentTopologyCandidateInputs,
+) -> ComponentCandidateScanResult:
+    """Build component findings from one typed theme request."""
+    observed = inputs.observed
+    component_role_map = inputs.component_role_map
+    power_path_map = inputs.power_path_map
+    oscillator_output_path_map = inputs.oscillator_output_path_map
+    reviewed_connector_references = inputs.reviewed_connector_references
     found: list[Candidate] = []
     found.extend(mosfet_gates_without_peer(observed))
     found.extend(mosfet_gates_without_visible_source_bias(observed))
@@ -271,4 +317,4 @@ def component_candidates(
             )
         )
     found.extend(oscillator_output_path_candidates(observed, oscillator_output_path_map))
-    return tuple(found)
+    return ComponentCandidateScanResult(tuple(found))

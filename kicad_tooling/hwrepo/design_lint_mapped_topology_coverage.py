@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 
 from .design_lint_mapped_topology_models import (
     DesignLintMappedCheckRun,
     MappedTopologyRuleId,
     MappedTopologyRuleMode,
 )
+from .design_lint_mapped_topology_results import MappedTopologyFindingCounts
 from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_rule_types import DesignLintRuleId
-from .design_lint_types import Candidate
 from .oscillator_output_path_models import OscillatorOutputPathMap
 from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
@@ -24,11 +24,12 @@ def _mapped_check_run(
     map_sha256: str | None,
     requirement_count: int,
     netlist_sha256: str | None,
-    candidates: Sequence[Candidate],
+    finding_count: int,
     mode: MappedTopologyRuleMode,
 ) -> DesignLintMappedCheckRun:
-    finding_count = sum(item.rule_id == rule_id for item in candidates)
     if map_sha256 is None:
+        if finding_count != 0:
+            raise ValueError("Mapped findings require a project-authored map")
         return DesignLintMappedCheckRun(
             rule_id=rule_id,
             status="NOT_CONFIGURED",
@@ -60,7 +61,7 @@ def _mapped_check_run(
 def mapped_topology_coverage_runs(
     policy: DesignLintPolicy,
     default_modes: Mapping[DesignLintRuleId, MappedTopologyRuleMode],
-    candidates: Sequence[Candidate],
+    finding_counts: MappedTopologyFindingCounts,
     netlist_sha256: str | None,
 ) -> tuple[DesignLintMappedCheckRun, ...]:
     """Summarize the evaluation state of exact USB, power-path, and sequence maps."""
@@ -80,7 +81,7 @@ def mapped_topology_coverage_runs(
             else hashlib.sha256(usb_map.model_dump_json().encode("utf-8")).hexdigest(),
             0 if usb_map is None else len(usb_map.interfaces) + len(usb_map.superspeed_interfaces),
             netlist_sha256,
-            candidates,
+            finding_counts.usb_data_path_mismatch,
             default_modes[usb_rule_id]
             if usb_rule_id not in overrides
             else overrides[usb_rule_id].mode,
@@ -92,7 +93,7 @@ def mapped_topology_coverage_runs(
             else hashlib.sha256(power_path_map.model_dump_json().encode("utf-8")).hexdigest(),
             0 if power_path_map is None else len(power_path_map.paths),
             netlist_sha256,
-            candidates,
+            finding_counts.power_series_path_mismatch,
             default_modes[power_path_rule_id]
             if power_path_rule_id not in overrides
             else overrides[power_path_rule_id].mode,
@@ -106,7 +107,7 @@ def mapped_topology_coverage_runs(
             if power_sequence_map is None
             else len(power_sequence_map.stages) + len(power_sequence_map.dependencies),
             netlist_sha256,
-            candidates,
+            finding_counts.power_sequence_dependency_mismatch,
             default_modes[power_sequence_rule_id]
             if power_sequence_rule_id not in overrides
             else overrides[power_sequence_rule_id].mode,
@@ -118,7 +119,7 @@ def mapped_topology_coverage_runs(
             else hashlib.sha256(oscillator_path_map.model_dump_json().encode("utf-8")).hexdigest(),
             0 if oscillator_path_map is None else len(oscillator_path_map.paths),
             netlist_sha256,
-            candidates,
+            finding_counts.oscillator_output_path_mismatch,
             default_modes["oscillator.output_load_path_mismatch"]
             if "oscillator.output_load_path_mismatch" not in overrides
             else overrides["oscillator.output_load_path_mismatch"].mode,

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+from typing import get_type_hints
 
 import pytest
 
@@ -15,6 +16,22 @@ from kicad_tooling.hwrepo import (
 )
 from kicad_tooling.hwrepo.design_lint_bus_inputs import BusCandidateInputs
 from kicad_tooling.hwrepo.design_lint_candidate_inputs import DesignLintCandidateInputs
+from kicad_tooling.hwrepo.design_lint_component_candidates import (
+    ComponentCandidateScanResult,
+    ComponentTopologyCandidateInputs,
+    scan_component_candidates,
+)
+from kicad_tooling.hwrepo.design_lint_mapped_coverage_candidates import (
+    MappedCoverageCandidateInputs,
+    MappedCoverageCandidateResult,
+    scan_mapped_coverage_candidates,
+)
+from kicad_tooling.hwrepo.design_lint_mapped_topology_coverage import (
+    mapped_topology_coverage_runs,
+)
+from kicad_tooling.hwrepo.design_lint_mapped_topology_results import (
+    MappedTopologyFindingCounts,
+)
 from tests.lint_architecture_support import (
     FACADE_MAX_LINES,
     HWREPO,
@@ -346,6 +363,7 @@ def test_legacy_and_prepared_candidate_paths_share_required_scanner_inputs() -> 
         "peer_reference_keys",
         "connector_peer_pin_finding_counts",
         "component_peer_pin_finding_counts",
+        "mapped_topology_finding_counts",
     }
 
     connector_result_owner = HWREPO / "connector_peer_pin_candidate_results.py"
@@ -371,6 +389,7 @@ def test_legacy_and_prepared_candidate_paths_share_required_scanner_inputs() -> 
     assert "def scan_connector_candidates(" in connector_coordinator.read_text(encoding="utf-8")
     assert "finding_counts=scan_result.connector_peer_pin_finding_counts" in evaluation_source
     assert "finding_counts=scan_result.component_peer_pin_finding_counts" in evaluation_source
+    assert "scan_result.mapped_topology_finding_counts" in evaluation_source
     assert "connector.footprint_named_power_input_all_open" not in evaluation_source
 
 
@@ -388,3 +407,45 @@ def test_public_lint_compatibility_signatures_do_not_grow() -> None:
         "Route new lint evidence through prepared typed inputs instead of widening "
         "the evaluator compatibility API."
     )
+
+
+@pytest.mark.rule_gate_integrity
+def test_mapped_topology_coverage_consumes_owner_result_counts() -> None:
+    coverage_parameters = inspect.signature(mapped_topology_coverage_runs).parameters
+    coverage_types = get_type_hints(mapped_topology_coverage_runs)
+    owners = (
+        "design_lint_component_candidates.py",
+        "design_lint_mapped_coverage_candidates.py",
+        "design_lint_mapped_topology_coverage.py",
+        "design_lint_mapped_topology_results.py",
+    )
+
+    assert "finding_counts" in coverage_parameters
+    assert "candidates" not in coverage_parameters
+    assert coverage_types["finding_counts"] is MappedTopologyFindingCounts
+    assert all(line_count(HWREPO / name) < IMPLEMENTATION_MAX_LINES for name in owners)
+    assert "def scan_component_candidates(" in (HWREPO / owners[0]).read_text(encoding="utf-8")
+    mapped_source = (HWREPO / owners[1]).read_text(encoding="utf-8")
+    assert "def scan_mapped_coverage_candidates(" in mapped_source
+    assert "def mapped_coverage_candidates(" in mapped_source
+    assert get_type_hints(scan_component_candidates) == {
+        "inputs": ComponentTopologyCandidateInputs,
+        "return": ComponentCandidateScanResult,
+    }
+    assert get_type_hints(scan_mapped_coverage_candidates) == {
+        "inputs": MappedCoverageCandidateInputs,
+        "return": MappedCoverageCandidateResult,
+    }
+    for filename in (
+        "design_lint_candidate_aggregation.py",
+        "design_lint_candidate_results.py",
+        "design_lint_mapped_topology_coverage.py",
+    ):
+        tree = ast.parse((HWREPO / filename).read_text(encoding="utf-8"))
+        assert any(
+            isinstance(node, ast.ImportFrom)
+            and node.level == 1
+            and node.module == "design_lint_mapped_topology_results"
+            and any(alias.name == "MappedTopologyFindingCounts" for alias in node.names)
+            for node in ast.walk(tree)
+        )

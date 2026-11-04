@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from .component_peer_pin_candidate_types import ComponentPeerPinFindingCounts
 from .connector_peer_pin_candidate_results import ConnectorPeerPinFindingCounts
+from .design_lint_mapped_topology_results import MappedTopologyFindingCounts
 from .design_lint_types import Candidate
 from .peer_reference_candidate_keys import PeerReferenceCandidateKeys
 
@@ -18,6 +19,7 @@ class DesignLintCandidateScanResult:
     peer_reference_keys: PeerReferenceCandidateKeys
     connector_peer_pin_finding_counts: ConnectorPeerPinFindingCounts
     component_peer_pin_finding_counts: ComponentPeerPinFindingCounts
+    mapped_topology_finding_counts: MappedTopologyFindingCounts
 
     def __post_init__(self) -> None:
         expected = PeerReferenceCandidateKeys.from_candidates(self.candidates)
@@ -29,3 +31,6 @@ class DesignLintCandidateScanResult:
         component_peer_counts = ComponentPeerPinFindingCounts.from_candidates(self.candidates)
         if self.component_peer_pin_finding_counts != component_peer_counts:
             raise ValueError("Candidate scan component-peer counts must match typed candidates")
+        mapped_counts = MappedTopologyFindingCounts.from_candidates(self.candidates)
+        if self.mapped_topology_finding_counts != mapped_counts:
+            raise ValueError("Candidate scan mapped-topology counts must match typed candidates")

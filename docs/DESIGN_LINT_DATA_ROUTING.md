@@ -244,11 +244,14 @@ validation independently reconciles those findings with published coverage.
 The keyword-based component-peer candidate function remains an adapter for
 direct callers.
 
-Mapped-topology execution records still obtain their USB data-path,
-power-path, power-sequence, and oscillator finding counts by scanning the
-aggregate candidate list. A follow-up should move those counts onto the bus,
-mapped-power, and component result contracts; the report validator should
-continue checking the final counts against its complete finding list.
+Mapped-coverage scanning receives `MappedCoverageCandidateInputs` and returns
+`MappedCoverageCandidateResult`, which provides USB data-path, power-path, and
+power-sequence finding counts. Component scanning receives
+`ComponentTopologyCandidateInputs` and returns `ComponentCandidateScanResult`
+with the oscillator-path count. Candidate aggregation combines those named
+counts as `MappedTopologyFindingCounts`; the aggregate scan checks them against
+its combined candidates. The report validator separately checks mapped-check
+counts against its complete finding list.
 
 ## Peer scan context route
 

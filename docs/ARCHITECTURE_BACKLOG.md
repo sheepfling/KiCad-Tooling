@@ -438,11 +438,11 @@ returns per-rule finding counts to source-bound coverage, and the aggregate
 scan checks those counts against combined findings. Coverage assembly no
 longer derives component-peer counts from the globally flattened candidate
 list. The old keyword-based function remains a compatibility adapter.
-Mapped-topology execution remains the next result-routing gap: it currently
-counts four USB, power-path, sequence, and oscillator findings by scanning
-the aggregate candidate list. Its next slice should carry those counts from
-their owning bus, mapped-power, and component theme results while preserving
-the report's final cross-check against published findings.
+Mapped topology now uses typed `MappedCoverageCandidateInputs` and
+`ComponentTopologyCandidateInputs`; their results provide USB, mapped power,
+sequence, and oscillator finding counts to `MappedTopologyFindingCounts`.
+The aggregate scan verifies those counts against its complete candidate list;
+published-report validation still reconciles them with final findings.
 
 The control-input theme now receives its observed netlist and explicit bias
 coverage as one typed input, and returns a named result containing candidates

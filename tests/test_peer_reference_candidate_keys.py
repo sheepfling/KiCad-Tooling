@@ -15,6 +15,9 @@ from kicad_tooling.hwrepo.connector_peer_pin_candidate_results import (
 from kicad_tooling.hwrepo.design_lint_bus_candidates import BusCandidateResult
 from kicad_tooling.hwrepo.design_lint_candidate_aggregation import fingerprint
 from kicad_tooling.hwrepo.design_lint_candidate_results import DesignLintCandidateScanResult
+from kicad_tooling.hwrepo.design_lint_mapped_topology_results import (
+    MappedTopologyFindingCounts,
+)
 from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.peer_reference_candidate_keys import (
     CanPeerBusKey,
@@ -90,6 +93,7 @@ def test_typed_scan_results_reject_unmatched_peer_keys() -> None:
             peer_reference_keys=empty,
             connector_peer_pin_finding_counts=ConnectorPeerPinFindingCounts(),
             component_peer_pin_finding_counts=ComponentPeerPinFindingCounts(),
+            mapped_topology_finding_counts=MappedTopologyFindingCounts(),
         )
 
 
@@ -104,6 +108,7 @@ def test_aggregate_scan_result_rejects_connector_counts_that_disagree_with_findi
                 peer_pin_outlier_finding_count=1
             ),
             component_peer_pin_finding_counts=ComponentPeerPinFindingCounts(),
+            mapped_topology_finding_counts=MappedTopologyFindingCounts(),
         )
 
 

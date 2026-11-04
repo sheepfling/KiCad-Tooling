@@ -122,6 +122,9 @@ def scan_evaluation_candidates(
         can_peer_reference_coverage=can_peer_coverage,
         rs485_peer_reference_coverage=rs485_peer_coverage,
         mapped_check_runs=mapped_topology_coverage_runs(
-            policy, prepared.default_modes, items, coach.netlist_sha256
+            policy,
+            prepared.default_modes,
+            scan_result.mapped_topology_finding_counts,
+            coach.netlist_sha256,
         ),
     )
