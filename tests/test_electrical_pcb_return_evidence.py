@@ -26,6 +26,7 @@ from kicad_tooling.hwrepo.models import (
     PcbZoneObservation,
 )
 from kicad_tooling.hwrepo.pcb_return_path_capture import (
+    NativePcbConnectivityCapture,
     capture_native_pcb_connectivity,
     native_pcb_command_matches,
     native_probe_source,
@@ -161,50 +162,53 @@ def test_native_pcb_return_receipt_replays_exact_pad_zone_and_probe_evidence(
             layer=zone.layer,
             island_index=0,
         )
-        return command, PcbConnectivitySnapshot(
-            board_sha256=digest(board_path),
-            kicad_version=selected.kicad_version,
-            image=selected.image,
-            probe_sha256=digest(probe_copy),
-            zones_refilled=True,
-            pads=(
-                PcbPadConnectivityObservation(
-                    pad="J1.1",
-                    net="RETURN",
-                    footprint="Synthetic:TestPad",
-                    dnp=False,
-                    connected_pads=("J1.1", "J2.1"),
-                    connected_zones=(zone,),
-                    connected_islands=(island,),
-                    connected_vias=(),
+        return NativePcbConnectivityCapture(
+            command=command,
+            snapshot=PcbConnectivitySnapshot(
+                board_sha256=digest(board_path),
+                kicad_version=selected.kicad_version,
+                image=selected.image,
+                probe_sha256=digest(probe_copy),
+                zones_refilled=True,
+                pads=(
+                    PcbPadConnectivityObservation(
+                        pad="J1.1",
+                        net="RETURN",
+                        footprint="Synthetic:TestPad",
+                        dnp=False,
+                        connected_pads=("J1.1", "J2.1"),
+                        connected_zones=(zone,),
+                        connected_islands=(island,),
+                        connected_vias=(),
+                    ),
+                    PcbPadConnectivityObservation(
+                        pad="J2.1",
+                        net="RETURN",
+                        footprint="Synthetic:TestPad",
+                        dnp=False,
+                        connected_pads=("J1.1", "J2.1"),
+                        connected_zones=(zone,),
+                        connected_islands=(island,),
+                        connected_vias=(),
+                    ),
                 ),
-                PcbPadConnectivityObservation(
-                    pad="J2.1",
-                    net="RETURN",
-                    footprint="Synthetic:TestPad",
-                    dnp=False,
-                    connected_pads=("J1.1", "J2.1"),
-                    connected_zones=(zone,),
-                    connected_islands=(island,),
-                    connected_vias=(),
+                net_ties=(),
+                zones=(
+                    PcbZoneObservation(
+                        uuid=zone.uuid,
+                        layer=zone.layer,
+                        name="",
+                        net="RETURN",
+                        filled_island_count=1,
+                        unanchored_pad_island_indexes=(),
+                    ),
                 ),
+                vias=(),
             ),
-            net_ties=(),
-            zones=(
-                PcbZoneObservation(
-                    uuid=zone.uuid,
-                    layer=zone.layer,
-                    name="",
-                    net="RETURN",
-                    filled_island_count=1,
-                    unanchored_pad_island_indexes=(),
-                ),
-            ),
-            vias=(),
         )
 
     with patch(
-        "kicad_tooling.hwrepo.electrical_runner.capture_native_pcb_connectivity",
+        "kicad_tooling.hwrepo.electrical_runner.capture_native_pcb_connectivity_result",
         side_effect=capture,
     ):
         report = analyze(workspace.root, PROJECT, workspace.output, ngspice="missing-simulator")

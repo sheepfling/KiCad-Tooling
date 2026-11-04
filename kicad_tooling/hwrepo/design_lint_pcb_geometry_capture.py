@@ -12,7 +12,7 @@ from .discovery import ProjectConfig
 from .evidence import digest
 from .pcb_geometry_receipts import verify_pcb_geometry_receipts, write_pcb_geometry_snapshot
 from .pcb_return_path_capture import (
-    capture_native_pcb_connectivity,
+    capture_native_pcb_connectivity_result,
     expected_probe_sha256,
     native_pcb_command_matches,
 )
@@ -39,12 +39,14 @@ def capture_pcb_geometry_source(
     board_hash = digest(board_path)
     if coach.source_hashes.get(board_relative) != board_hash:
         raise ValueError("Authoritative PCB is absent from, or differs from, native source hashes")
-    command, snapshot = capture_native_pcb_connectivity(
+    capture = capture_native_pcb_connectivity_result(
         root,
         config,
         output,
         touch_pad_clearance_requests=touch_pad_clearance_requests,
     )
+    command = capture.command
+    snapshot = capture.snapshot
     if snapshot is None:
         raise ValueError(
             "Native PCB geometry probe failed; inspect a native.command.json receipt under "

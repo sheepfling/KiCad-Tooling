@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from .connector_identity import connector_candidate_references
 from .model_primitives import NonEmptyText, Reference
@@ -20,6 +21,25 @@ class ConnectorFootprintPeerGroup:
     value: str
     references: tuple[str, ...]
     part_id: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ConnectorFootprintPeerPinInventory:
+    """A complete shared pin set and each peer's native display numbers."""
+
+    pin_numbers: tuple[str, ...]
+    displayed_numbers_by_reference: Mapping[str, Mapping[str, str]]
+
+    def __post_init__(self) -> None:
+        by_reference = {
+            reference: MappingProxyType(dict(numbers))
+            for reference, numbers in self.displayed_numbers_by_reference.items()
+        }
+        object.__setattr__(
+            self,
+            "displayed_numbers_by_reference",
+            MappingProxyType(by_reference),
+        )
 
 
 def connector_footprint_peer_candidate_groups(
@@ -114,7 +134,7 @@ def observed_connector_pin_numbers(observed: NetlistContract) -> dict[str, set[s
 def complete_connector_footprint_peer_pin_inventory(
     observed: NetlistContract,
     references: tuple[str, ...],
-) -> tuple[tuple[str, ...], dict[str, dict[str, str]]] | None:
+) -> ConnectorFootprintPeerPinInventory | None:
     """Return matching complete pin inventories and their native display numbers."""
     wanted = {reference.casefold() for reference in references}
     inventories: dict[str, tuple[str, ...]] = {}
@@ -159,4 +179,7 @@ def complete_connector_footprint_peer_pin_inventory(
         displayed_numbers[references[0].casefold()][number]
         for number in sorted(valid_numbers, key=lambda item: (item.casefold(), item))
     )
-    return pin_numbers, displayed_numbers
+    return ConnectorFootprintPeerPinInventory(
+        pin_numbers=pin_numbers,
+        displayed_numbers_by_reference=displayed_numbers,
+    )

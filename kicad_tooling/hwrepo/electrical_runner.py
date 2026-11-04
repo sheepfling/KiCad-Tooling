@@ -54,7 +54,7 @@ from .electrical_pcb_evidence import (
     ElectricalPcbEvidence,
     PcbEvidenceNotRequested,
     PcbEvidenceObserved,
-    admit_pcb_evidence,
+    admit_pcb_connectivity_capture,
 )
 from .electrical_report_models import (
     ElectricalAnalysisReport,
@@ -70,7 +70,10 @@ from .evidence import digest, source_state
 from .model_primitives import Digest, RepositoryPath
 from .mosfet_stress import mosfet_stress_checks
 from .netlist_contract_models import NetlistContract
-from .pcb_return_path_capture import capture_native_pcb_connectivity, expected_probe_sha256
+from .pcb_return_path_capture import (
+    capture_native_pcb_connectivity_result,
+    expected_probe_sha256,
+)
 from .power_connectivity import power_connectivity_checks
 from .project_models import ProjectKind
 from .rs485_heuristics import rs485_checks
@@ -295,9 +298,8 @@ def _analyze(
             )
             if needs_pcb_probe:
                 if config.kind is not ProjectKind.PCB:
-                    pcb_evidence = admit_pcb_evidence(
+                    pcb_evidence = admit_pcb_connectivity_capture(
                         project_id,
-                        None,
                         None,
                         reason="PCB native evidence requires an authoritative PCB project.",
                         access_probe_requests=access_probe_requests,
@@ -305,40 +307,35 @@ def _analyze(
                 else:
                     try:
                         if access_probe_requests is None:
-                            command, pcb_snapshot = capture_native_pcb_connectivity(
+                            pcb_capture = capture_native_pcb_connectivity_result(
                                 root, config, output / "pcb-connectivity"
                             )
                         else:
-                            command, pcb_snapshot = capture_native_pcb_connectivity(
+                            pcb_capture = capture_native_pcb_connectivity_result(
                                 root,
                                 config,
                                 output / "pcb-connectivity",
                                 access_probe_requests=access_probe_requests,
                             )
+                        command = pcb_capture.command
+                        pcb_snapshot = pcb_capture.snapshot
                         commands["pcb-connectivity"] = command
-                        if pcb_snapshot is None:
-                            pcb_evidence = admit_pcb_evidence(
-                                project_id,
-                                command,
-                                None,
-                                reason=(
-                                    "KiCad native PCB probing did not produce evidence; inspect "
-                                    "pcb-connectivity/native.command.json."
-                                ),
-                                access_probe_requests=access_probe_requests,
-                            )
-                        else:
+                        if pcb_snapshot is not None:
                             write_model(output / "pcb-connectivity/snapshot.json", pcb_snapshot)
-                            pcb_evidence = admit_pcb_evidence(
-                                project_id,
-                                command,
-                                pcb_snapshot,
-                                access_probe_requests=access_probe_requests,
-                            )
-                    except (OSError, ValueError) as exc:
-                        pcb_evidence = admit_pcb_evidence(
+                        pcb_evidence = admit_pcb_connectivity_capture(
                             project_id,
-                            None,
+                            pcb_capture,
+                            reason=(
+                                "KiCad native PCB probing did not produce evidence; inspect "
+                                "pcb-connectivity/native.command.json."
+                                if pcb_snapshot is None
+                                else None
+                            ),
+                            access_probe_requests=access_probe_requests,
+                        )
+                    except (OSError, ValueError) as exc:
+                        pcb_evidence = admit_pcb_connectivity_capture(
+                            project_id,
                             None,
                             reason=str(exc) or "KiCad native PCB probing did not produce evidence.",
                             access_probe_requests=access_probe_requests,

@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 from .command_evidence_models import CommandEvidence
@@ -30,6 +31,14 @@ NATIVE_PROBE_SOURCE_PARTS = (
 )
 
 
+@dataclass(frozen=True, slots=True)
+class NativePcbConnectivityCapture:
+    """Native command and optional parsed snapshot returned by one PCB probe."""
+
+    command: CommandEvidence
+    snapshot: PcbConnectivitySnapshot | None
+
+
 def native_probe_source() -> str:
     """Assemble the standalone script used inside the exact KiCad image."""
     source_directory = Path(__file__).parent
@@ -42,13 +51,13 @@ def native_probe_source() -> str:
     )
 
 
-def capture_native_pcb_connectivity(
+def capture_native_pcb_connectivity_result(
     root: Path,
     config: ProjectConfig,
     output: Path,
     access_probe_requests: PcbAccessProbeRequestSet | None = None,
     touch_pad_clearance_requests: PcbTouchPadClearanceRequestSet | None = None,
-) -> tuple[CommandEvidence, PcbConnectivitySnapshot | None]:
+) -> NativePcbConnectivityCapture:
     """Run the read-only KiCad 10 pcbnew probe in the project's digest-pinned image."""
     if not config.kicad_version.startswith("10."):
         raise ValueError("PCB return-path evidence currently supports the KiCad 10 Python API only")
@@ -154,7 +163,7 @@ def capture_native_pcb_connectivity(
     command = run_command(root, argv, timeout=600)
     write_model(output / "native.command.json", command)
     if command.returncode != 0 or command.error is not None or not snapshot_path.is_file():
-        return command, None
+        return NativePcbConnectivityCapture(command=command, snapshot=None)
     if digest(board) != source_hash:
         raise ValueError("PCB source changed while native connectivity evidence was captured")
     if request_path is not None and digest(request_path) != request_hash:
@@ -174,7 +183,25 @@ def capture_native_pcb_connectivity(
     snapshot = PcbConnectivitySnapshot.model_validate_json(
         json.dumps(observed, ensure_ascii=False, sort_keys=True), strict=True
     )
-    return command, snapshot
+    return NativePcbConnectivityCapture(command=command, snapshot=snapshot)
+
+
+def capture_native_pcb_connectivity(
+    root: Path,
+    config: ProjectConfig,
+    output: Path,
+    access_probe_requests: PcbAccessProbeRequestSet | None = None,
+    touch_pad_clearance_requests: PcbTouchPadClearanceRequestSet | None = None,
+) -> tuple[CommandEvidence, PcbConnectivitySnapshot | None]:
+    """Compatibility adapter returning the original native command/snapshot pair."""
+    result = capture_native_pcb_connectivity_result(
+        root,
+        config,
+        output,
+        access_probe_requests=access_probe_requests,
+        touch_pad_clearance_requests=touch_pad_clearance_requests,
+    )
+    return result.command, result.snapshot
 
 
 def expected_probe_sha256() -> str:

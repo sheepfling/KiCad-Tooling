@@ -45,7 +45,8 @@ def connector_footprint_peer_pin_missing_metadata_open_outliers(
         inventory = complete_connector_footprint_peer_pin_inventory(observed, group.references)
         if inventory is None:
             continue
-        pin_numbers, displayed_numbers = inventory
+        pin_numbers = inventory.pin_numbers
+        displayed_numbers = inventory.displayed_numbers_by_reference
 
         for pin_number in pin_numbers:
             assignments_by_pin: dict[str, tuple[str, ...]] = {}

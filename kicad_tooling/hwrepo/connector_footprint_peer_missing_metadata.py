@@ -41,7 +41,8 @@ def connector_footprint_peer_pin_missing_metadata_assignment_divergences(
         inventory = complete_connector_footprint_peer_pin_inventory(observed, group.references)
         if inventory is None:
             continue
-        pin_numbers, displayed_numbers = inventory
+        pin_numbers = inventory.pin_numbers
+        displayed_numbers = inventory.displayed_numbers_by_reference
         for pin_number in pin_numbers:
             missing_by_reference: dict[str, tuple[str, ...]] = {}
             metadata_by_reference: dict[str, tuple[str, str, str]] = {}

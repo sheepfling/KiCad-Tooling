@@ -32,6 +32,7 @@ from kicad_tooling.hwrepo.pcb_component_inventory_models import (
 )
 from kicad_tooling.hwrepo.pcb_component_population import PcbVariantPopulationSource
 from kicad_tooling.hwrepo.pcb_component_values import compare_schematic_pcb_values
+from kicad_tooling.hwrepo.pcb_return_path_capture import NativePcbConnectivityCapture
 from kicad_tooling.hwrepo.pcb_variant_population_capture import PcbVariantPopulationCapture
 from kicad_tooling.validate import hashes
 from tests.design_lint_fixtures.pcb_component_inventory import (
@@ -382,7 +383,7 @@ def test_value_only_policy_captures_and_compares_native_footprint_values(
     def capture_snapshot(_root, _config, output, _access_probe_requests=None, **_kwargs):
         output.mkdir(parents=True)
         write_model(output / "native.command.json", command)
-        return command, native_snapshot
+        return NativePcbConnectivityCapture(command=command, snapshot=native_snapshot)
 
     original_layout = design_lint_pcb_geometry_scan.layout_coverage_reports
 
@@ -399,7 +400,7 @@ def test_value_only_policy_captures_and_compares_native_footprint_values(
 
     monkeypatch.setattr(
         design_lint_pcb_geometry_capture,
-        "capture_native_pcb_connectivity",
+        "capture_native_pcb_connectivity_result",
         capture_snapshot,
     )
     monkeypatch.setattr(

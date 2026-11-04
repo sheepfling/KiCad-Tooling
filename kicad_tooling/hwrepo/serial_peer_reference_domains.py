@@ -5,12 +5,14 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
+from types import MappingProxyType
 
 from .netlist_contract_models import NetlistContract
 from .peer_reference_assignments import peer_reference_assignments
 from .serial_participants import serial_function_role_and_channel
 from .serial_peer_reference_types import (
     SerialLabelPeerLink,
+    SerialPeerPinIndex,
     SerialReferenceDomain,
     SerialReferencePinAssignment,
 )
@@ -32,14 +34,7 @@ def _serial_channel_label_role_and_channel(value: str) -> tuple[str, str] | None
 
 def pin_index(
     observed: NetlistContract,
-) -> tuple[
-    dict[str, set[str]],
-    dict[str, str],
-    dict[str, str],
-    dict[str, str],
-    dict[str, tuple[str, ...]],
-    set[str],
-]:
+) -> SerialPeerPinIndex:
     pin_nets: dict[str, set[str]] = {}
     for net, pins in observed.nets.items():
         for pin in pins:
@@ -57,13 +52,13 @@ def pin_index(
         for reference, numbers in observed.component_pin_numbers.items()
     }
     dnp = {reference.casefold() for reference in observed.dnp_components}
-    return (
-        pin_nets,
-        references,
-        symbols,
-        footprints,
-        pin_numbers,
-        dnp,
+    return SerialPeerPinIndex(
+        pin_nets=MappingProxyType({key: frozenset(nets) for key, nets in pin_nets.items()}),
+        references=MappingProxyType(references),
+        symbols=MappingProxyType(symbols),
+        footprints=MappingProxyType(footprints),
+        pin_numbers=MappingProxyType(pin_numbers),
+        dnp_references=frozenset(dnp),
     )
 
 

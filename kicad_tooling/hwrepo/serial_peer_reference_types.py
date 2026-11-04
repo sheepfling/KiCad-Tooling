@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Literal, Protocol
 
@@ -52,6 +53,18 @@ class SerialReferencePinAssignment:
 class SerialReferenceDomain:
     net: str
     pins: tuple[SerialReferencePinAssignment, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class SerialPeerPinIndex:
+    """Named indexes derived together from one observed netlist."""
+
+    pin_nets: Mapping[str, frozenset[str]]
+    references: Mapping[str, str]
+    symbols: Mapping[str, str]
+    footprints: Mapping[str, str]
+    pin_numbers: Mapping[str, tuple[str, ...]]
+    dnp_references: frozenset[str]
 
 
 @dataclass(frozen=True, slots=True)

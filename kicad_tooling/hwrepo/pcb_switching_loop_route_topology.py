@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import deque
 from collections.abc import Mapping
+from dataclasses import dataclass
 from math import isqrt
 from typing import Literal
 
@@ -43,18 +44,33 @@ def _endpoint_node(track_uuid: str, side: str) -> str:
     return f"track:{track_uuid.casefold()}:{side}"
 
 
+@dataclass(frozen=True, slots=True)
+class _TrackEndpointObservation:
+    side: Literal["start", "end"]
+    point_nm: tuple[int, int]
+    pad_references: tuple[str, ...]
+    via_ids: tuple[str, ...]
+    connected_track_ids: tuple[str, ...]
+
+
 def _endpoint_records(
     track: PcbTrackObservation,
-) -> tuple[tuple[str, tuple[int, int], tuple[str, ...], tuple[str, ...], tuple[str, ...]], ...]:
+) -> tuple[_TrackEndpointObservation, ...]:
     return (
-        (
-            "start",
-            track.start_nm,
-            track.start_pads,
-            track.start_vias,
-            track.start_tracks,
+        _TrackEndpointObservation(
+            side="start",
+            point_nm=track.start_nm,
+            pad_references=track.start_pads,
+            via_ids=track.start_vias,
+            connected_track_ids=track.start_tracks,
         ),
-        ("end", track.end_nm, track.end_pads, track.end_vias, track.end_tracks),
+        _TrackEndpointObservation(
+            side="end",
+            point_nm=track.end_nm,
+            pad_references=track.end_pads,
+            via_ids=track.end_vias,
+            connected_track_ids=track.end_tracks,
+        ),
     )
 
 
@@ -142,17 +158,17 @@ def resolve_switching_loop_trace_edge(
     union = _RouteUnion()
     pads_by_node: dict[str, set[str]] = {}
     for track in candidates.values():
-        for side, point, endpoint_pads, endpoint_vias, endpoint_tracks in _endpoint_records(track):
-            node = _endpoint_node(track.uuid, side)
+        for endpoint in _endpoint_records(track):
+            node = _endpoint_node(track.uuid, endpoint.side)
             union.add(node)
-            for reference in endpoint_pads:
+            for reference in endpoint.pad_references:
                 pad_node = f"pad:{reference.casefold()}"
                 union.join(node, pad_node)
                 pads_by_node.setdefault(pad_node, set()).add(reference)
-            for via_id in endpoint_vias:
+            for via_id in endpoint.via_ids:
                 via_node = f"via:{via_id}"
                 union.join(node, via_node)
-            for neighbor_id in endpoint_tracks:
+            for neighbor_id in endpoint.connected_track_ids:
                 neighbor = tracks_by_id.get(neighbor_id.casefold())
                 if neighbor is None:
                     return incomplete_route_edge(
@@ -169,12 +185,11 @@ def resolve_switching_loop_trace_edge(
                         "A native track connected at this endpoint lies outside the declared net/layer scope",
                     )
                 matches = tuple(
-                    (neighbor_side, neighbor_point, _endpoint_node(neighbor.uuid, neighbor_side))
-                    for neighbor_side, neighbor_point, _pads, _vias, neighbor_tracks in _endpoint_records(
-                        neighbor
-                    )
-                    if neighbor_point == point
-                    and track.uuid.casefold() in {value.casefold() for value in neighbor_tracks}
+                    neighbor_endpoint
+                    for neighbor_endpoint in _endpoint_records(neighbor)
+                    if neighbor_endpoint.point_nm == endpoint.point_nm
+                    and track.uuid.casefold()
+                    in {value.casefold() for value in neighbor_endpoint.connected_track_ids}
                 )
                 if len(matches) != 1:
                     return incomplete_route_edge(
@@ -182,14 +197,12 @@ def resolve_switching_loop_trace_edge(
                         edge,
                         "Native connected-track evidence does not resolve to one matching endpoint vertex",
                     )
-                union.join(node, matches[0][2])
+                union.join(node, _endpoint_node(neighbor.uuid, matches[0].side))
 
     vias_by_id = {item.id: item for item in snapshot.vias}
     for track in candidates.values():
-        for _side, _point, _endpoint_pads, endpoint_vias, _endpoint_tracks in _endpoint_records(
-            track
-        ):
-            for via_id in endpoint_vias:
+        for endpoint in _endpoint_records(track):
+            for via_id in endpoint.via_ids:
                 via = vias_by_id.get(via_id)
                 if via is None:
                     return incomplete_route_edge(

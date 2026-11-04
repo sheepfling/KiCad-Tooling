@@ -12,9 +12,11 @@ from kicad_tooling.hwrepo.electrical_pcb_evidence import (
     PcbEvidenceNotRequested,
     PcbEvidenceObserved,
     PcbEvidenceUnavailable,
+    admit_pcb_connectivity_capture,
     admit_pcb_evidence,
 )
 from kicad_tooling.hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
+from kicad_tooling.hwrepo.pcb_return_path_capture import NativePcbConnectivityCapture
 from kicad_tooling.hwrepo.pcb_test_access_models import (
     PcbAccessProbeRequest,
     PcbAccessProbeRequestSet,
@@ -51,7 +53,8 @@ def _snapshot(*, access_request_sha256: str | None = None) -> PcbConnectivitySna
 
 def test_pcb_capture_admission_preserves_requested_and_observed_states() -> None:
     not_requested = PcbEvidenceNotRequested(project_id="controller")
-    observed = admit_pcb_evidence("controller", _command(), _snapshot())
+    capture = NativePcbConnectivityCapture(command=_command(), snapshot=_snapshot())
+    observed = admit_pcb_connectivity_capture("controller", capture)
 
     assert not_requested.state == "NOT_REQUESTED"
     assert isinstance(observed, PcbEvidenceObserved)
@@ -63,10 +66,9 @@ def test_pcb_capture_admission_preserves_requested_and_observed_states() -> None
 def test_failed_pcb_capture_retains_command_and_reason() -> None:
     command = _command(returncode=1)
 
-    unavailable = admit_pcb_evidence(
+    unavailable = admit_pcb_connectivity_capture(
         "controller",
-        command,
-        None,
+        NativePcbConnectivityCapture(command=command, snapshot=None),
         reason="Native probe exited with status 1",
         access_probe_requests=PcbAccessProbeRequestSet(
             requests=(PcbAccessProbeRequest(endpoint="TP1.1", net="3V3", side="front"),)
@@ -97,6 +99,8 @@ def test_runner_delegates_pcb_predicates_to_typed_evaluation_owners() -> None:
     assert len(evidence.splitlines()) < 500
     assert "ElectricalPcbReturnEvaluationRequest" in runner
     assert "ElectricalTestAccessEvaluationRequest" in runner
+    assert "admit_pcb_connectivity_capture" in runner
+    assert "admit_pcb_evidence" not in runner
     for predicate in (
         "pcb_return_path_checks",
         "pcb_accessibility_checks",

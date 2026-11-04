@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
@@ -35,25 +36,37 @@ class Rs485PeerPairKey:
 PeerReferenceKey = I2cPeerBusKey | SpiPeerClockKey | CanPeerBusKey | Rs485PeerPairKey
 
 
-def _identity_contract(
-    identity: PeerReferenceKey,
-) -> tuple[DesignLintRuleId, dict[str, tuple[str, ...]]]:
+@dataclass(frozen=True, slots=True)
+class PeerReferenceIdentityProjection:
+    """Project a typed peer identity into its stable finding rule and wire fields."""
+
+    rule_id: DesignLintRuleId
+    evidence: Mapping[str, tuple[str, ...]]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "evidence", MappingProxyType(dict(self.evidence)))
+
+
+def _identity_projection(identity: PeerReferenceKey) -> PeerReferenceIdentityProjection:
     if isinstance(identity, I2cPeerBusKey):
-        return "bus.i2c_peer_reference_review", {
-            "SDA": (identity.sda_net,),
-            "SCL": (identity.scl_net,),
-        }
+        return PeerReferenceIdentityProjection(
+            rule_id="bus.i2c_peer_reference_review",
+            evidence={"SDA": (identity.sda_net,), "SCL": (identity.scl_net,)},
+        )
     if isinstance(identity, SpiPeerClockKey):
-        return "bus.spi_peer_reference_review", {"SCK": (identity.clock_net,)}
+        return PeerReferenceIdentityProjection(
+            rule_id="bus.spi_peer_reference_review",
+            evidence={"SCK": (identity.clock_net,)},
+        )
     if isinstance(identity, CanPeerBusKey):
-        return "bus.can_peer_reference_review", {
-            "CANH": (identity.canh_net,),
-            "CANL": (identity.canl_net,),
-        }
-    return "bus.rs485_peer_reference_review", {
-        "bus": (identity.bus_id,),
-        "pair": (identity.pair_id,),
-    }
+        return PeerReferenceIdentityProjection(
+            rule_id="bus.can_peer_reference_review",
+            evidence={"CANH": (identity.canh_net,), "CANL": (identity.canl_net,)},
+        )
+    return PeerReferenceIdentityProjection(
+        rule_id="bus.rs485_peer_reference_review",
+        evidence={"bus": (identity.bus_id,), "pair": (identity.pair_id,)},
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,25 +88,27 @@ class PeerReferenceCandidate(Candidate):
         evidence: Mapping[str, tuple[str, ...]],
     ) -> PeerReferenceCandidate:
         """Serialize identity-owned fields from the typed key into legacy evidence."""
-        rule_id, identity_evidence = _identity_contract(identity)
-        duplicated = identity_evidence.keys() & evidence.keys()
+        projection = _identity_projection(identity)
+        duplicated = projection.evidence.keys() & evidence.keys()
         if duplicated:
             names = ", ".join(sorted(duplicated))
             raise ValueError(f"Peer evidence fields are supplied by identity: {names}")
         return cls(
-            rule_id=rule_id,
+            rule_id=projection.rule_id,
             subject=subject,
             message=message,
-            evidence={**identity_evidence, **evidence},
+            evidence={**projection.evidence, **evidence},
             identity=identity,
         )
 
     def validate_identity_contract(self) -> None:
         """Catch mutable evidence drifting from the source-derived identity."""
-        rule_id, expected = _identity_contract(self.identity)
-        if self.rule_id != rule_id:
-            raise ValueError(f"{self.rule_id} does not match peer identity for {rule_id}")
-        for field, values in expected.items():
+        projection = _identity_projection(self.identity)
+        if self.rule_id != projection.rule_id:
+            raise ValueError(
+                f"{self.rule_id} does not match peer identity for {projection.rule_id}"
+            )
+        for field, values in projection.evidence.items():
             if not values[0] or self.evidence.get(field) != values:
                 raise ValueError(
                     f"{self.rule_id} candidate for {self.subject!r} needs one {field} value"

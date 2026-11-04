@@ -37,7 +37,7 @@ def scan_serial_peer_reference_reviews(
     serial map with current identity, signal pins, and reference-pin assignments
     records reviewed intent and suppresses the prompt.
     """
-    pin_nets, references, symbols, footprints, pin_numbers, dnp = pin_index(observed)
+    pin_index_result = pin_index(observed)
     connector_references = {
         reference.casefold()
         for reference in connector_candidate_references(observed, declared_connector_references)
@@ -53,10 +53,20 @@ def scan_serial_peer_reference_reviews(
 
     for link in native_links:
         output_domain = reference_domain(
-            link.output_reference, observed, pin_nets, pin_numbers, dnp, connector_references
+            link.output_reference,
+            observed,
+            pin_index_result.pin_nets,
+            pin_index_result.pin_numbers,
+            pin_index_result.dnp_references,
+            connector_references,
         )
         input_domain = reference_domain(
-            link.input_reference, observed, pin_nets, pin_numbers, dnp, connector_references
+            link.input_reference,
+            observed,
+            pin_index_result.pin_nets,
+            pin_index_result.pin_numbers,
+            pin_index_result.dnp_references,
+            connector_references,
         )
         if output_domain is None or input_domain is None:
             incomplete_count += 1
@@ -79,11 +89,11 @@ def scan_serial_peer_reference_reviews(
                     observed,
                     output_domain,
                     input_domain,
-                    pin_nets,
-                    references,
-                    symbols,
-                    footprints,
-                    dnp,
+                    pin_index_result.pin_nets,
+                    pin_index_result.references,
+                    pin_index_result.symbols,
+                    pin_index_result.footprints,
+                    pin_index_result.dnp_references,
                 )
                 if mapped:
                     mapped_separate_count += 1
@@ -104,10 +114,20 @@ def scan_serial_peer_reference_reviews(
 
     for link in label_links:
         first_domain = reference_domain(
-            link.first_reference, observed, pin_nets, pin_numbers, dnp, connector_references
+            link.first_reference,
+            observed,
+            pin_index_result.pin_nets,
+            pin_index_result.pin_numbers,
+            pin_index_result.dnp_references,
+            connector_references,
         )
         second_domain = reference_domain(
-            link.second_reference, observed, pin_nets, pin_numbers, dnp, connector_references
+            link.second_reference,
+            observed,
+            pin_index_result.pin_nets,
+            pin_index_result.pin_numbers,
+            pin_index_result.dnp_references,
+            connector_references,
         )
         if first_domain is None or second_domain is None:
             incomplete_count += 1
@@ -125,11 +145,11 @@ def scan_serial_peer_reference_reviews(
                     observed,
                     first_domain,
                     second_domain,
-                    pin_nets,
-                    references,
-                    symbols,
-                    footprints,
-                    dnp,
+                    pin_index_result.pin_nets,
+                    pin_index_result.references,
+                    pin_index_result.symbols,
+                    pin_index_result.footprints,
+                    pin_index_result.dnp_references,
                 )
                 if mapped:
                     mapped_separate_count += 1
@@ -156,10 +176,20 @@ def scan_serial_peer_reference_reviews(
     groups: dict[tuple[str, str, str, str], ReviewGroup] = {}
     for link in native_links:
         output_domain = reference_domain(
-            link.output_reference, observed, pin_nets, pin_numbers, dnp, connector_references
+            link.output_reference,
+            observed,
+            pin_index_result.pin_nets,
+            pin_index_result.pin_numbers,
+            pin_index_result.dnp_references,
+            connector_references,
         )
         input_domain = reference_domain(
-            link.input_reference, observed, pin_nets, pin_numbers, dnp, connector_references
+            link.input_reference,
+            observed,
+            pin_index_result.pin_nets,
+            pin_index_result.pin_numbers,
+            pin_index_result.dnp_references,
+            connector_references,
         )
         if (
             output_domain is None
@@ -171,11 +201,11 @@ def scan_serial_peer_reference_reviews(
                 observed,
                 output_domain,
                 input_domain,
-                pin_nets,
-                references,
-                symbols,
-                footprints,
-                dnp,
+                pin_index_result.pin_nets,
+                pin_index_result.references,
+                pin_index_result.symbols,
+                pin_index_result.footprints,
+                pin_index_result.dnp_references,
             )
         ):
             continue
@@ -208,10 +238,20 @@ def scan_serial_peer_reference_reviews(
 
     for link in label_links:
         first_domain = reference_domain(
-            link.first_reference, observed, pin_nets, pin_numbers, dnp, connector_references
+            link.first_reference,
+            observed,
+            pin_index_result.pin_nets,
+            pin_index_result.pin_numbers,
+            pin_index_result.dnp_references,
+            connector_references,
         )
         second_domain = reference_domain(
-            link.second_reference, observed, pin_nets, pin_numbers, dnp, connector_references
+            link.second_reference,
+            observed,
+            pin_index_result.pin_nets,
+            pin_index_result.pin_numbers,
+            pin_index_result.dnp_references,
+            connector_references,
         )
         if (
             first_domain is None
@@ -223,11 +263,11 @@ def scan_serial_peer_reference_reviews(
                 observed,
                 first_domain,
                 second_domain,
-                pin_nets,
-                references,
-                symbols,
-                footprints,
-                dnp,
+                pin_index_result.pin_nets,
+                pin_index_result.references,
+                pin_index_result.symbols,
+                pin_index_result.footprints,
+                pin_index_result.dnp_references,
             )
         ):
             continue

@@ -49,7 +49,8 @@ def connector_footprint_peer_pin_metadata_assignment_divergences(
         )
         if inventory is None:
             continue
-        pin_numbers, displayed_numbers = inventory
+        pin_numbers = inventory.pin_numbers
+        displayed_numbers = inventory.displayed_numbers_by_reference
         for pin_number in pin_numbers:
             pin_metadata: dict[str, tuple[str, str, str]] = {}
             for reference in group.references:

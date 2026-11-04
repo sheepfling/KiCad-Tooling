@@ -122,12 +122,20 @@ def test_pcb_return_paths_stay_split_between_checks_and_native_capture() -> None
 
 def test_pcb_return_path_facade_reexports_the_thematic_owners() -> None:
     assert (
+        pcb_return_paths.NativePcbConnectivityCapture
+        is pcb_return_path_capture.NativePcbConnectivityCapture
+    )
+    assert (
         pcb_return_paths.NATIVE_PROBE_SOURCE_PARTS
         == pcb_return_path_capture.NATIVE_PROBE_SOURCE_PARTS
     )
     assert (
         pcb_return_paths.capture_native_pcb_connectivity
         is pcb_return_path_capture.capture_native_pcb_connectivity
+    )
+    assert (
+        pcb_return_paths.capture_native_pcb_connectivity_result
+        is pcb_return_path_capture.capture_native_pcb_connectivity_result
     )
     assert (
         pcb_return_paths.native_pcb_command_matches

@@ -24,6 +24,7 @@ from kicad_tooling.hwrepo.pcb_component_inventory import (
     evaluate_native_component_inventory_coverage,
 )
 from kicad_tooling.hwrepo.pcb_pad_net_comparison import compare_schematic_pcb_pad_nets
+from kicad_tooling.hwrepo.pcb_return_path_capture import NativePcbConnectivityCapture
 from kicad_tooling.validate import hashes
 from tests.design_lint_fixtures.pcb_component_inventory import (
     BOARD_SHA256,
@@ -336,11 +337,11 @@ def test_pad_net_only_policy_captures_and_compares_native_pad_assignments(
     def capture_snapshot(_root, _config, output, _access_probe_requests=None, **_kwargs):
         output.mkdir(parents=True)
         write_model(output / "native.command.json", command)
-        return command, native_snapshot
+        return NativePcbConnectivityCapture(command=command, snapshot=native_snapshot)
 
     monkeypatch.setattr(
         design_lint_pcb_geometry_capture,
-        "capture_native_pcb_connectivity",
+        "capture_native_pcb_connectivity_result",
         capture_snapshot,
     )
     monkeypatch.setattr(

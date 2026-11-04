@@ -241,7 +241,10 @@ is merged only after those fields are reserved, so a producer cannot supply a
 conflicting duplicate. The resulting evidence map preserves the existing
 report JSON and fingerprint. This is the first typed evidence projection; the
 remaining per-rule evidence fields still use the established string-keyed
-map and need their own staged migration by theme.
+map and need their own staged migration by theme. The projection itself is a
+named `PeerReferenceIdentityProjection` with a read-only mapping of its
+identity-owned wire fields; the candidate adapter creates the established
+mutable evidence map only at the serialization boundary.
 
 The component-peer identity helper now returns a named
 `ComponentPeerPinIdentityContext` instead of a positional tuple containing an
@@ -281,6 +284,18 @@ distinct states. The observed netlist, netlist digest, connector scope, and
 USB data-path map remain explicit coordinator inputs, and the resulting scans
 flow into the prepared peer and bus candidate groups.
 
+The serial reference scanner builds its native pin, component, symbol,
+footprint, pin-number, and DNP indexes as one `SerialPeerPinIndex` derived from
+the supplied `NetlistContract`. The scanner passes named index fields to its
+reference-domain and map-matching owners instead of destructuring a six-item
+tuple, keeping those correlated observations together for the scan.
+
+Connector alias scans share `complete_connector_footprint_peer_pin_inventory`
+and now receive a `ConnectorFootprintPeerPinInventory` with common pin numbers
+and each reference's native display-number map. Both mapping levels are
+read-only; incomplete or ambiguous inventories still return `None` and cannot
+be promoted to a complete comparison.
+
 ## External-protection source admission
 
 Evaluation sends the supplied `ExternalProtectionCoverageReport` and the
@@ -318,6 +333,29 @@ adapter, as do the central compatibility signatures. Full evaluation validates
 coverage identity before the theme sees it; a direct caller of either candidate
 API must establish source identity itself. Candidate order, evidence,
 fingerprints, and serialized reports remain unchanged by this routing change.
+
+## IC decoupling candidate route
+
+- **Project-authored intent:** `DesignLintPolicy.ic_decoupling_map` carries an
+  `IcDecouplingMap` with exact IC identity, power pin and nets, mapped
+  capacitors, and minimum nominal capacitance. Those fields are not inferred
+  from net names.
+- **Observed electrical data:** the native coach's `NetlistContract` supplies
+  component identity, pin inventory and type, net assignment, DNP state, and
+  capacitor values for comparison.
+- **Requirement review:**
+  `design_lint_power_decoupling._review_requirement` returns named mapping
+  issues and per-capacitor values. Unknown capacitance remains explicit as
+  `None`.
+- **Candidate:** `ic_decoupling_candidates` retains the existing evidence keys
+  and requirement digest. The result reports nominal comparisons and does not
+  claim physical adequacy.
+
+The private review result is `_IcDecouplingRequirementReview`, containing
+`_IcDecouplingCapacitorValue` records. It replaces a nested tuple whose
+positions combined mapping faults with capacitor measurements. Candidate
+evidence still projects to the established JSON mapping, so this internal
+route does not change the report schema or fingerprint.
 
 ## PCB measurement and requirement candidate route
 

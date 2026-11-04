@@ -137,6 +137,16 @@ access, PCB pad access, and probe-envelope evaluation in their existing order.
 Focused source-bound receipt and CLI/MCP parity tests continue to cover those
 stages; architecture checks now prevent the runner from calling their
 predicates directly.
+Connector peer assignment routing now returns a named, read-only
+`PeerAssignmentPartition` containing the peer-group identity, scoped observed
+assignments, and reviewed basis. Missing or incomplete authored scope stays
+unscoped as a whole; partial scope is not treated as reviewed coverage.
+Connector alias checks now consume a named `ConnectorFootprintPeerPinInventory`
+with a read-only per-reference display-number map; missing or ambiguous pin
+inventories remain unavailable to the comparison.
+IC decoupling review now returns named requirement and capacitor-value records
+from the authored map and observed netlist. The candidate boundary continues to
+emit the established evidence fields and requirement digest.
 
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify
@@ -253,6 +263,15 @@ PCB geometry capture now retains explicit null observations required by its
 versioned snapshot schema, verifies the typed snapshot and command against
 their receipt bytes, and checks them again after coverage evaluation. Signal
 path coverage applies the same checks when called independently.
+Native PCB capture now returns a named `NativePcbConnectivityCapture` to
+internal operations, keeping `CommandEvidence` beside the optional snapshot
+until the evidence admission service assigns its explicit state. The original
+tuple-returning function remains as a compatibility adapter. The electrical
+runner now passes that record intact to evidence admission; the old separate
+command/snapshot admission function remains a compatibility adapter too.
+PCB switching-loop route topology now projects native track ends into named
+`_TrackEndpointObservation` records before resolving pad, via, and neighboring
+track connectivity, replacing a positional five-field tuple at that boundary.
 The manifest, lint policy, and consulted project-owned requirements are also
 rechecked after capture; a changed input blocks the assembled report.
 Electrical analysis separately checks that its selected configuration and
@@ -439,6 +458,10 @@ typed identity through a compatibility projection. Supplemental evidence
 cannot override the projected keys, while report JSON and fingerprints remain
 unchanged. Continue this pattern for other rule-specific evidence only after
 its typed owner and wire projection are explicit.
+The identity-to-report route is represented by a named
+`PeerReferenceIdentityProjection`, which pairs the rule ID with a read-only
+view of its reserved wire fields. The candidate adapter still emits the
+existing mutable evidence mapping for report serialization.
 The bus theme now returns its findings with those peer keys in a
 BusCandidateResult. Prepared evaluation consumes the typed result directly;
 the flattened scan_candidates() remains an adapter for existing callers.
@@ -491,6 +514,9 @@ The peer evidence coordinator now receives its digital-voltage, serial-peer,
 and RS-485 project contexts as `PeerDesignLintScanInputs`. It resolves absent
 contexts to the same explicit `not_configured` states while retaining pending,
 not-applicable, and source-bound records unchanged for their owning scans.
+Serial reference scanning now builds one named `SerialPeerPinIndex` from its
+observed netlist and routes its related indexes by field through domain and
+map-matching checks.
 
 **Done when:** the pilot yields equivalent findings and report meaning; adding
 a second rule in that theme needs no new parameter on the 49- or 33-parameter

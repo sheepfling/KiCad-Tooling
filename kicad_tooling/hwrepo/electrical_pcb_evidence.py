@@ -11,6 +11,7 @@ from .command_evidence_models import CommandEvidence
 from .contracts import model_json_bytes
 from .model_primitives import Digest, Identifier, NonEmptyText, StrictModel
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
+from .pcb_return_path_capture import NativePcbConnectivityCapture
 from .pcb_test_access_models import PcbAccessProbeRequestSet
 
 
@@ -55,15 +56,16 @@ ElectricalPcbEvidence: TypeAlias = Annotated[
 ]
 
 
-def admit_pcb_evidence(
+def admit_pcb_connectivity_capture(
     project_id: str,
-    command: CommandEvidence | None,
-    snapshot: PcbConnectivitySnapshot | None,
+    capture: NativePcbConnectivityCapture | None,
     *,
     reason: str | None = None,
     access_probe_requests: PcbAccessProbeRequestSet | None = None,
 ) -> PcbEvidenceUnavailable | PcbEvidenceObserved:
     """Retain failed capture context or admit the returned native observation."""
+    command = None if capture is None else capture.command
+    snapshot = None if capture is None else capture.snapshot
     request_digest = (
         hashlib.sha256(model_json_bytes(access_probe_requests)).hexdigest()
         if access_probe_requests is not None
@@ -86,4 +88,26 @@ def admit_pcb_evidence(
         command=command,
         reason=reason or "KiCad native PCB probing did not produce evidence.",
         access_probe_requests_sha256=request_digest,
+    )
+
+
+def admit_pcb_evidence(
+    project_id: str,
+    command: CommandEvidence | None,
+    snapshot: PcbConnectivitySnapshot | None,
+    *,
+    reason: str | None = None,
+    access_probe_requests: PcbAccessProbeRequestSet | None = None,
+) -> PcbEvidenceUnavailable | PcbEvidenceObserved:
+    """Compatibility adapter for callers that still pass command and snapshot separately."""
+    capture = (
+        None
+        if command is None
+        else NativePcbConnectivityCapture(command=command, snapshot=snapshot)
+    )
+    return admit_pcb_connectivity_capture(
+        project_id,
+        capture,
+        reason=reason,
+        access_probe_requests=access_probe_requests,
     )

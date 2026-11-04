@@ -101,7 +101,8 @@ def scan_connector_footprint_peer_pin_assignments(
         if inventory is None:
             incomplete_inventory_count += 1
             continue
-        pin_numbers, display_pin_numbers = inventory
+        pin_numbers = inventory.pin_numbers
+        display_pin_numbers = inventory.displayed_numbers_by_reference
         metadata_values_by_field = tuple(
             tuple(
                 metadata.get(

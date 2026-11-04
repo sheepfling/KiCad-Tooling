@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
+from dataclasses import dataclass
 from decimal import Decimal
 
 from .capacitance_values import parse_capacitance_pf
@@ -13,6 +14,18 @@ from .design_lint_types import Candidate
 from .ic_decoupling_models import IcDecouplingMap, IcDecouplingRequirement
 from .netlist_contract_models import NetlistContract
 from .netlist_pin_assignments import netlist_pin_net_index
+
+
+@dataclass(frozen=True, slots=True)
+class _IcDecouplingCapacitorValue:
+    reference: str
+    capacitance_pf: Decimal | None
+
+
+@dataclass(frozen=True, slots=True)
+class _IcDecouplingRequirementReview:
+    issues: tuple[str, ...]
+    capacitor_values: tuple[_IcDecouplingCapacitorValue, ...]
 
 
 def _component_identity_issues(
@@ -75,11 +88,11 @@ def _pin_type_issue(observed: NetlistContract, pin: str, expected: str) -> str |
     return None
 
 
-def _requirement_issues(
+def _review_requirement(
     observed: NetlistContract,
     requirement: IcDecouplingRequirement,
     pin_nets: Mapping[str, AbstractSet[str]],
-) -> tuple[tuple[str, ...], tuple[tuple[str, Decimal | None], ...]]:
+) -> _IcDecouplingRequirementReview:
     issues = _component_identity_issues(
         observed,
         requirement.ic_reference,
@@ -107,7 +120,7 @@ def _requirement_issues(
         issues.append(
             f"{requirement.ic_reference} is DNP and the mapped decoupling requirement does not apply"
         )
-    cap_values: list[tuple[str, Decimal | None]] = []
+    cap_values: list[_IcDecouplingCapacitorValue] = []
     for capacitor in sorted(requirement.capacitors, key=lambda item: item.reference.casefold()):
         cap_issues = _component_identity_issues(
             observed,
@@ -157,9 +170,17 @@ def _requirement_issues(
             if assignment_issue is not None:
                 cap_issues.append(assignment_issue)
         issues.extend(cap_issues)
-        cap_values.append((capacitor.reference, parsed_value))
+        cap_values.append(
+            _IcDecouplingCapacitorValue(
+                reference=capacitor.reference,
+                capacitance_pf=parsed_value,
+            )
+        )
 
-    return tuple(issues), tuple(cap_values)
+    return _IcDecouplingRequirementReview(
+        issues=tuple(issues),
+        capacitor_values=tuple(cap_values),
+    )
 
 
 def ic_decoupling_candidates(
@@ -173,15 +194,23 @@ def ic_decoupling_candidates(
     map_sha256 = hashlib.sha256(requirements.model_dump_json().encode("utf-8")).hexdigest()
     found: list[Candidate] = []
     for requirement in sorted(requirements.requirements, key=lambda item: item.id.casefold()):
-        issues, capacitor_values = _requirement_issues(observed, requirement, pin_nets)
+        review = _review_requirement(observed, requirement, pin_nets)
         total_pf = (
-            sum((value for _, value in capacitor_values if value is not None), Decimal(0))
-            if not issues and all(value is not None for _, value in capacitor_values)
+            sum(
+                (
+                    item.capacitance_pf
+                    for item in review.capacitor_values
+                    if item.capacitance_pf is not None
+                ),
+                Decimal(0),
+            )
+            if not review.issues
+            and all(item.capacitance_pf is not None for item in review.capacitor_values)
             else None
         )
         minimum_pf = Decimal(str(requirement.minimum_total_capacitance_pf))
         below_minimum = total_pf is not None and total_pf < minimum_pf
-        if not issues and not below_minimum:
+        if not review.issues and not below_minimum:
             continue
         if below_minimum:
             message = (
@@ -193,7 +222,7 @@ def ic_decoupling_candidates(
         else:
             message = (
                 "The source-bound netlist does not match the project-authored IC decoupling map: "
-                + "; ".join(issues)
+                + "; ".join(review.issues)
                 + ". Review the exact identities, fitted state, pin inventory, and pin-to-net "
                 "assignments before relying on the capacitance comparison."
             )
@@ -206,13 +235,14 @@ def ic_decoupling_candidates(
             "return_net": (requirement.return_net,),
             "capacitor_references": tuple(item.reference for item in requirement.capacitors),
             "capacitor_values_pf": tuple(
-                f"{reference}={value if value is not None else 'unsupported'}"
-                for reference, value in capacitor_values
+                f"{item.reference}="
+                f"{item.capacitance_pf if item.capacitance_pf is not None else 'unsupported'}"
+                for item in review.capacitor_values
             ),
             "minimum_total_capacitance_pf": (str(minimum_pf),),
             "observed_total_capacitance_pf": () if total_pf is None else (str(total_pf),),
             "requirement_sha256": (map_sha256,),
-            "mapping_issues": tuple(issues),
+            "mapping_issues": review.issues,
         }
         found.append(
             Candidate(
