@@ -719,11 +719,11 @@ standalone parity work when it closes a demonstrated feature regression.
   common-net anchor exists. It does not assert that contacts should be tied.
   Synthetic fault/control, explicit-not-applicable, common-assignment, policy,
   ignore, ordering, and CLI/MCP parity cases pass locally. Hosted acceptance
-  `v0.5.3rc344` passed in run `41763939346`, including the exact-version native
-  connector lane and installed-wheel check; the preceding `v0.5.3rc343` run
-  stopped only on Markdown formatting, fixed in `rc344`. The new three-alias
-  split/open case now also has a source-hashed KiCad fault/control pair for the
-  pinned native lane. Its new native exports are pending the next hosted gate.
+  `v0.5.3rc361` passed in run `41795228921`, including the source-hashed
+  three-alias fault/control pair on both pinned native versions and the
+  installed-wheel external-project checks. The earlier `v0.5.3rc360` run
+  reached both native cases but exposed an unrelated test-module size limit;
+  the follow-up split the prepared-order helper out of that oversized suite.
   Public-board applicability and independent reviewer-value measurement
   remain open.
 
@@ -14213,13 +14213,12 @@ control are documented in the
   nets plus one open alias. A three-alias common-anchor control stays quiet.
   These cases pass through CLI and MCP with equal reports. A source-hashed
   KiCad schematic fault/control pair now covers the same three-alias state on
-  exact native export. The focused 16-test synthetic selection passed locally.
-  The exact-version native lane could not run locally because access to the
-  Docker socket was denied; hosted
-  `v0.5.3rc344` acceptance passed in run `41763939346`, including the existing
-  KiCad 10.0.0 / 10.0.5 native fault/control lane and installed-wheel check.
-  The new fixture pair is queued for the next prerelease gate. These checks
-  establish synthetic and native-export compatibility, not public-board
+  exact native export. The focused synthetic selection passed locally. The
+  exact-version native lane could not run locally because access to the Docker
+  socket was denied; hosted `v0.5.3rc361` acceptance passed in run
+  `41795228921`, exercising the three-alias fault/control pair on KiCad 10.0.0
+  and 10.0.5 and passing the installed-wheel external-project checks. These
+  checks establish synthetic and native-export compatibility, not public-board
   applicability or reviewer-value evidence.
 - **Coverage output:** The source-bound alias summary reports
   `uncovered_peer_assignment_scope_finding_count` alongside the existing
