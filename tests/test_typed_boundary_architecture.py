@@ -29,31 +29,26 @@ def _return_annotation(relative: str, name: str) -> str:
     raise AssertionError(f"Function {name} is missing from {relative}")
 
 
-def _contains_any_annotation(node: ast.AST) -> bool:
+def _imported_type_names(tree: ast.Module, names: set[str]) -> set[str]:
+    result = set(names)
+    typing_modules = {"typing", "typing_extensions", "collections.abc"}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module in typing_modules:
+            for imported in node.names:
+                if imported.name in names:
+                    result.add(imported.asname or imported.name)
+    return result
+
+
+def _contains_any_annotation(node: ast.AST, any_names: set[str]) -> bool:
     return any(
-        (isinstance(child, ast.Name) and child.id == "Any")
+        (isinstance(child, ast.Name) and child.id in any_names)
         or (isinstance(child, ast.Attribute) and child.attr == "Any")
         for child in ast.walk(node)
     )
 
 
-def _contains_opaque_collection(node: ast.AST) -> bool:
-    collection_names = {
-        "dict",
-        "Dict",
-        "Mapping",
-        "MutableMapping",
-        "Sequence",
-        "MutableSequence",
-        "list",
-        "List",
-        "tuple",
-        "Tuple",
-        "set",
-        "Set",
-        "frozenset",
-        "FrozenSet",
-    }
+def _contains_opaque_collection(node: ast.AST, collection_names: set[str]) -> bool:
     opaque_names = {"Any", "object"}
 
     def has_opaque_value(value: ast.AST) -> bool:
@@ -77,6 +72,37 @@ def _contains_opaque_collection(node: ast.AST) -> bool:
             if base in collection_names and has_opaque_value(child.slice):
                 return True
     return False
+
+
+def _canonical_collection_names() -> set[str]:
+    return {
+        "dict",
+        "Dict",
+        "Mapping",
+        "MutableMapping",
+        "DefaultDict",
+        "OrderedDict",
+        "Counter",
+        "Collection",
+        "Iterable",
+        "Iterator",
+        "Generator",
+        "Deque",
+        "KeysView",
+        "ValuesView",
+        "ItemsView",
+        "Sequence",
+        "MutableSequence",
+        "list",
+        "List",
+        "tuple",
+        "Tuple",
+        "set",
+        "Set",
+        "MutableSet",
+        "frozenset",
+        "FrozenSet",
+    }
 
 
 def _annotations(tree: ast.Module) -> tuple[ast.AST, ...]:
@@ -112,7 +138,20 @@ def test_opaque_annotation_check_distinguishes_raw_parser_values() -> None:
         tree = ast.parse(f"value: {source}")
         annotation = tree.body[0]
         assert isinstance(annotation, ast.AnnAssign)
-        assert _contains_opaque_collection(annotation.annotation) is expected
+        collection_names = _imported_type_names(tree, _canonical_collection_names())
+        assert _contains_opaque_collection(annotation.annotation, collection_names) is expected
+
+    aliased = ast.parse("from typing import Mapping as Fields\nvalue: Fields[str, object]")
+    annotation = aliased.body[1]
+    assert isinstance(annotation, ast.AnnAssign)
+    collection_names = _imported_type_names(aliased, _canonical_collection_names())
+    assert _contains_opaque_collection(annotation.annotation, collection_names)
+
+    aliased_any = ast.parse("from typing import Any as Unknown\nvalue: list[Unknown]")
+    annotation = aliased_any.body[1]
+    assert isinstance(annotation, ast.AnnAssign)
+    any_names = _imported_type_names(aliased_any, {"Any"})
+    assert _contains_any_annotation(annotation.annotation, any_names)
 
 
 def test_connectivity_view_uses_the_authored_contract_owner() -> None:
@@ -149,10 +188,12 @@ def test_package_and_script_annotations_do_not_use_any_or_opaque_collections() -
         for path in sorted(root.rglob("*.py")):
             relative = path.relative_to(SOURCE_ROOT).as_posix()
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=relative)
+            collection_names = _imported_type_names(tree, _canonical_collection_names())
+            any_names = _imported_type_names(tree, {"Any"})
             for annotation in _annotations(tree):
                 rendered = ast.unparse(annotation)
-                if _contains_any_annotation(annotation):
+                if _contains_any_annotation(annotation, any_names):
                     violations.append(f"{relative}: Any in {rendered}")
-                elif _contains_opaque_collection(annotation):
+                elif _contains_opaque_collection(annotation, collection_names):
                     violations.append(f"{relative}: opaque collection in {rendered}")
     assert not violations, "\n".join(violations)
