@@ -14,10 +14,6 @@ from kicad_tooling.hwrepo.hosted_governance import (  # pyright: ignore[reportPr
     _gh,
     _model,
 )
-from kicad_tooling.hwrepo.netlist_contract_inputs import (
-    NetlistRawValue,
-    normalize_native_unconnected_nets,
-)
 from kicad_tooling.playtest_mcp import PlaytestHost
 from tests.support import SOURCE_ROOT
 
@@ -44,8 +40,11 @@ def test_external_json_adapters_keep_the_closed_json_value_type() -> None:
     assert get_type_hints(_model, include_extras=True)["value"] == JsonValue
     assert get_type_hints(PlaytestHost.save, include_extras=True)["document"] == JsonValue
     assert (
-        get_type_hints(normalize_native_unconnected_nets, include_extras=True)["return"]
-        == NetlistRawValue
+        _return_annotation(
+            "kicad_tooling/hwrepo/netlist_contract_inputs.py",
+            "normalize_native_unconnected_nets",
+        )
+        == "NetlistRawValue"
     )
 
 
