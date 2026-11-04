@@ -16,6 +16,9 @@ from .design_lint_evaluation_report_inputs import (
 )
 from .design_lint_evaluation_types import DesignLintEvaluationRequest
 from .design_lint_finding_disposition import resolve_finding_dispositions
+from .design_lint_pcb_coverage_policy import PcbMappedCoverageInputs
+from .design_lint_pcb_geometry_coverage_policy import PcbInputCoverageInputs
+from .design_lint_peer_evaluation import PeerDesignLintScanInputs
 from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_report_models import DesignLintReport
 from .design_lint_types import Candidate
@@ -104,23 +107,29 @@ def evaluate(
         geometry_coverage=geometry_coverage,
         external_protection_coverage=external_protection_coverage,
         pcb_decoupling_coverage=pcb_decoupling_coverage,
-        pcb_protection_path_coverage=pcb_protection_path_coverage,
         pcb_track_width_coverage=pcb_track_width_coverage,
-        pcb_switching_loop_coverage=pcb_switching_loop_coverage,
-        pcb_differential_pair_coverage=pcb_differential_pair_coverage,
         stm32_pin_map_coverage=stm32_pin_map_coverage,
         spi_roster=spi_roster,
         usb_c_port_roster=usb_c_port_roster,
-        pcb_reference_plane_coverage=pcb_reference_plane_coverage,
         control_input_bias_coverage=control_input_bias_coverage,
         i2c_pullup_heuristic_coverage=i2c_pullup_heuristic_coverage,
-        digital_peer_voltage_context=digital_peer_voltage_context,
-        serial_peer_roster=serial_peer_roster,
-        rs485_peer_reference_context=rs485_peer_reference_context,
-        pcb_signal_path_coverage=pcb_signal_path_coverage,
-        pcb_keepout_coverage=pcb_keepout_coverage,
-        pcb_rf_module_antenna_coverage=pcb_rf_module_antenna_coverage,
-        pcb_touch_pad_clearance_coverage=pcb_touch_pad_clearance_coverage,
+        peer_scan_inputs=PeerDesignLintScanInputs(
+            digital_peer_voltage_context=digital_peer_voltage_context,
+            serial_peer_roster=serial_peer_roster,
+            rs485_peer_reference_context=rs485_peer_reference_context,
+        ),
+        pcb_input_coverage=PcbInputCoverageInputs(
+            signal_path=pcb_signal_path_coverage,
+            keepout=pcb_keepout_coverage,
+            rf_antenna=pcb_rf_module_antenna_coverage,
+            touch_pad_clearance=pcb_touch_pad_clearance_coverage,
+        ),
+        pcb_mapped_coverage=PcbMappedCoverageInputs(
+            differential_pair=pcb_differential_pair_coverage,
+            switching_loop=pcb_switching_loop_coverage,
+            reference_plane=pcb_reference_plane_coverage,
+            protection_path=pcb_protection_path_coverage,
+        ),
         pcb_component_inventory_coverage=pcb_component_inventory_coverage,
         pcb_dru_rule_candidates=pcb_dru_rule_candidates,
         pcb_native_drc_candidates=pcb_native_drc_candidates,

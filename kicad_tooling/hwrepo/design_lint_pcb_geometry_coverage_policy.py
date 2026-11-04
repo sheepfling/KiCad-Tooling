@@ -17,6 +17,16 @@ from .source_state_models import SourceHashInventory
 
 
 @dataclass(frozen=True, slots=True)
+class PcbInputCoverageInputs:
+    """Optional geometry reports before policy and source binding are applied."""
+
+    signal_path: PcbSignalPathRuleCoverageReport | None = None
+    keepout: PcbKeepoutCoverageReport | None = None
+    rf_antenna: PcbRfModuleAntennaCoverageReport | None = None
+    touch_pad_clearance: PcbTouchPadClearanceCoverageReport | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class PcbInputCoveragePolicyState:
     """Coverage reports for source-bound signal, keepout, and antenna maps."""
 
@@ -30,12 +40,13 @@ def normalize_pcb_input_coverage_policy(
     policy: DesignLintPolicy,
     *,
     source_hashes: SourceHashInventory,
-    pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None,
-    pcb_keepout_coverage: PcbKeepoutCoverageReport | None,
-    pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None,
-    pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport | None,
+    inputs: PcbInputCoverageInputs,
 ) -> PcbInputCoveragePolicyState:
     """Apply modes and map identity to signal-path, keepout, and antenna coverage."""
+    pcb_signal_path_coverage = inputs.signal_path
+    pcb_keepout_coverage = inputs.keepout
+    pcb_rf_module_antenna_coverage = inputs.rf_antenna
+    pcb_touch_pad_clearance_coverage = inputs.touch_pad_clearance
     signal_path_map = policy.pcb_signal_path_rule_map
 
     signal_path_override = next(

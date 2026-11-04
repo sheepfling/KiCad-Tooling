@@ -20,6 +20,16 @@ from .source_state_models import SourceHashInventory
 
 
 @dataclass(frozen=True, slots=True)
+class PcbMappedCoverageInputs:
+    """Optional source-bound reports for authored mapped PCB checks."""
+
+    differential_pair: PcbDifferentialPairRuleCoverageReport | None = None
+    switching_loop: PcbSwitchingLoopCoverageReport | None = None
+    reference_plane: PcbReferencePlaneCoverageReport | None = None
+    protection_path: PcbProtectionPathCoverageReport | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class PcbMappedCoveragePolicyState:
     """Coverage reports and selected modes for mapped PCB checks."""
 
@@ -38,12 +48,13 @@ def normalize_pcb_mapped_coverage_policy(
     policy: DesignLintPolicy,
     *,
     source_hashes: SourceHashInventory,
-    pcb_differential_pair_coverage: PcbDifferentialPairRuleCoverageReport | None,
-    pcb_switching_loop_coverage: PcbSwitchingLoopCoverageReport | None,
-    pcb_reference_plane_coverage: PcbReferencePlaneCoverageReport | None,
-    pcb_protection_path_coverage: PcbProtectionPathCoverageReport | None,
+    inputs: PcbMappedCoverageInputs,
 ) -> PcbMappedCoveragePolicyState:
     """Apply modes and map identity to the remaining PCB coverage reports."""
+    pcb_differential_pair_coverage = inputs.differential_pair
+    pcb_switching_loop_coverage = inputs.switching_loop
+    pcb_reference_plane_coverage = inputs.reference_plane
+    pcb_protection_path_coverage = inputs.protection_path
     pair_override = next(
         (item for item in policy.rules if item.rule_id == "pcb.differential_pair_rule_coverage"),
         None,

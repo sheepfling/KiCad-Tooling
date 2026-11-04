@@ -438,6 +438,21 @@ the keyword-based translators as compatibility functions. Differential-pair
 fault and valid-control cases compare candidate order and fingerprints across
 the old and typed routes; the route and absence states are documented in the
 data-routing decision.
+Evaluation now also groups signal-path, keepout, RF-antenna, and touch-pad
+coverage into `PcbInputCoverageInputs`, owned by the geometry-coverage policy
+service. The public evaluator packs its legacy parameters into that record;
+preparation passes the record intact to the owner that applies authored-map
+modes and board/source identity checks. An absent report remains distinct from
+an explicit `NOT_REQUESTED` or `DISABLED` report, so configured-map gaps still
+become blocked coverage and mapless inputs retain their existing disposition.
+Differential-pair, switching-loop, reference-plane, and protection-path
+reports enter their separate mapped-coverage policy as `PcbMappedCoverageInputs`.
+That policy remains the owner of each map-mode and board/source binding check;
+the group does not collapse their individual statuses or map identities.
+The peer evidence coordinator now receives its digital-voltage, serial-peer,
+and RS-485 project contexts as `PeerDesignLintScanInputs`. It resolves absent
+contexts to the same explicit `not_configured` states while retaining pending,
+not-applicable, and source-bound records unchanged for their owning scans.
 
 **Done when:** the pilot yields equivalent findings and report meaning; adding
 a second rule in that theme needs no new parameter on the 49- or 33-parameter

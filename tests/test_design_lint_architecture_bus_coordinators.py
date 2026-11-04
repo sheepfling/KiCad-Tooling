@@ -299,9 +299,34 @@ def test_legacy_and_prepared_candidate_paths_share_required_scanner_inputs() -> 
         and node.func.id == "scan_candidate_result"
     ]
     assert len(prepared_calls) == 1
-    assert isinstance(prepared_calls[0].args[0], ast.Call)
-    assert isinstance(prepared_calls[0].args[0].func, ast.Name)
-    assert prepared_calls[0].args[0].func.id == "DesignLintCandidateInputs"
+    assert isinstance(prepared_calls[0].args[0], ast.Name)
+    assert prepared_calls[0].args[0].id == "candidate_inputs"
+    candidate_input_assignments = [
+        node
+        for node in ast.walk(evaluation_tree)
+        if isinstance(node, ast.Assign)
+        and any(
+            isinstance(target, ast.Name) and target.id == "candidate_inputs"
+            for target in node.targets
+        )
+    ]
+    assert len(candidate_input_assignments) == 1
+    assignment_value = candidate_input_assignments[0].value
+    assert isinstance(assignment_value, ast.Attribute)
+    assert assignment_value.attr == "candidate_inputs"
+    assert isinstance(assignment_value.value, ast.Name)
+    assert assignment_value.value.id == "prepared"
+
+    preparation = HWREPO / "design_lint_evaluation_preparation.py"
+    preparation_tree = ast.parse(preparation.read_text(encoding="utf-8"))
+    prepared_input_constructions = [
+        node
+        for node in ast.walk(preparation_tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "DesignLintCandidateInputs"
+    ]
+    assert len(prepared_input_constructions) == 1
 
     candidate_results = HWREPO / "design_lint_candidate_results.py"
     assert line_count(candidate_results) < IMPLEMENTATION_MAX_LINES

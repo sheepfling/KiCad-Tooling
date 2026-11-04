@@ -41,6 +41,15 @@ from .usb_peer_reference_types import UsbPeerReferenceScan
 
 
 @dataclass(frozen=True, slots=True)
+class PeerDesignLintScanInputs:
+    """Project-scoped contracts consumed by the peer evidence coordinator."""
+
+    digital_peer_voltage_context: DigitalPeerVoltageLintContext | None = None
+    serial_peer_roster: SerialPeerRosterContext | None = None
+    rs485_peer_reference_context: Rs485PeerReferenceContext | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class PeerDesignLintEvidence:
     """Source-bound peer scans and their current policy coverage summaries."""
 
@@ -65,15 +74,13 @@ def scan_peer_design_lint_evidence(
     observed: NetlistContract,
     netlist_sha256: Digest | None,
     connector_coverage: ConnectorCoverageReport | None,
-    digital_peer_voltage_context: DigitalPeerVoltageLintContext | None,
-    serial_peer_roster: SerialPeerRosterContext | None,
-    rs485_peer_reference_context: Rs485PeerReferenceContext | None,
+    inputs: PeerDesignLintScanInputs,
     usb_data_path_map: UsbDataPathMap | None,
     default_modes: Mapping[DesignLintRuleId, Literal["review", "block", "off"]],
     overrides: Mapping[str, DesignLintRuleOverride],
 ) -> PeerDesignLintEvidence:
     """Scan the peer interface families once and bind their applicability evidence."""
-    peer_voltage_scope = digital_peer_voltage_context or DigitalPeerVoltageLintContext(
+    peer_voltage_scope = inputs.digital_peer_voltage_context or DigitalPeerVoltageLintContext(
         state="not_configured"
     )
     digital_scan = scan_digital_peer_voltage_reviews(observed, peer_voltage_scope.analysis)
@@ -114,7 +121,7 @@ def scan_peer_design_lint_evidence(
             usb_data_path_map,
         )
     )
-    serial_scope = serial_peer_roster or SerialPeerRosterContext(state="not_configured")
+    serial_scope = inputs.serial_peer_roster or SerialPeerRosterContext(state="not_configured")
     serial_scan = scan_serial_peer_reference_reviews(
         observed,
         serial_scope.analysis,
@@ -134,7 +141,9 @@ def scan_peer_design_lint_evidence(
     i2c_scan = scan_i2c_peer_references(observed)
     spi_scan = scan_spi_peer_references(observed)
     can_scan = scan_can_peer_references(observed)
-    rs485_scope = rs485_peer_reference_context or Rs485PeerReferenceContext(state="not_configured")
+    rs485_scope = inputs.rs485_peer_reference_context or Rs485PeerReferenceContext(
+        state="not_configured"
+    )
     rs485_scan = scan_rs485_peer_references(rs485_scope, observed)
     i2c_coverage = (
         None

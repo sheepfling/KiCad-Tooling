@@ -78,10 +78,7 @@ def prepare_evaluation(
     input_pcb_coverage = normalize_pcb_input_coverage_policy(
         policy,
         source_hashes=coach.source_hashes,
-        pcb_signal_path_coverage=request.pcb_signal_path_coverage,
-        pcb_keepout_coverage=request.pcb_keepout_coverage,
-        pcb_rf_module_antenna_coverage=request.pcb_rf_module_antenna_coverage,
-        pcb_touch_pad_clearance_coverage=request.pcb_touch_pad_clearance_coverage,
+        inputs=request.pcb_input_coverage,
     )
     external_protection_coverage = (
         request.external_protection_coverage or ExternalProtectionCoverageReport()
@@ -170,10 +167,7 @@ def prepare_evaluation(
     mapped_pcb_coverage = normalize_pcb_mapped_coverage_policy(
         policy,
         source_hashes=coach.source_hashes,
-        pcb_differential_pair_coverage=request.pcb_differential_pair_coverage,
-        pcb_switching_loop_coverage=request.pcb_switching_loop_coverage,
-        pcb_reference_plane_coverage=request.pcb_reference_plane_coverage,
-        pcb_protection_path_coverage=request.pcb_protection_path_coverage,
+        inputs=request.pcb_mapped_coverage,
     )
     if coach.status != "READY_FOR_REVIEW" or coach.observed is None:
         return DesignLintEvaluationPreparationResult(
@@ -326,9 +320,7 @@ def prepare_evaluation(
         observed=coach.observed,
         netlist_sha256=coach.netlist_sha256,
         connector_coverage=request.component_map_coverage.connector_coverage,
-        digital_peer_voltage_context=request.digital_peer_voltage_context,
-        serial_peer_roster=request.serial_peer_roster,
-        rs485_peer_reference_context=request.rs485_peer_reference_context,
+        inputs=request.peer_scan_inputs,
         usb_data_path_map=policy.usb_data_path_map,
         default_modes=default_modes,
         overrides=overrides,
@@ -389,11 +381,11 @@ def prepare_evaluation(
             reviewed_connector_references=peer_evidence.reviewed_connector_references,
         ),
         peer=PeerCandidateInputs(
-            digital_voltage_context=request.digital_peer_voltage_context,
+            digital_voltage_context=request.peer_scan_inputs.digital_peer_voltage_context,
             digital_voltage_scan=peer_evidence.digital_peer_voltage_scan,
             usb_reference_scan=peer_evidence.usb_peer_reference_scan,
             serial_reference_scan=peer_evidence.serial_peer_reference_scan,
-            serial_roster=request.serial_peer_roster,
+            serial_roster=request.peer_scan_inputs.serial_peer_roster,
             usb_c_port_roster=request.usb_c_port_roster,
         ),
         mapped=MappedCandidateInputs(

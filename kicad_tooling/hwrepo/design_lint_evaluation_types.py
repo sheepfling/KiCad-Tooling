@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal
 
 from .bus_signal_pairs import (
@@ -26,17 +26,20 @@ from .design_lint_finding_models import (
 )
 from .design_lint_mapped_topology_models import DesignLintMappedCheckRun
 from .design_lint_pcb_coverage_policy import (
+    PcbMappedCoverageInputs,
     PcbMappedCoveragePolicyState,
 )
-from .design_lint_pcb_geometry_coverage_policy import PcbInputCoveragePolicyState
-from .design_lint_peer_evaluation import PeerDesignLintEvidence
+from .design_lint_pcb_geometry_coverage_policy import (
+    PcbInputCoverageInputs,
+    PcbInputCoveragePolicyState,
+)
+from .design_lint_peer_evaluation import PeerDesignLintEvidence, PeerDesignLintScanInputs
 from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
-from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
 from .external_protection_models import ExternalProtectionCoverageReport
 from .i2c_address_models import I2cAddressCoverageReport
 from .i2c_peer_reference_models import I2cPeerReferenceCoverageReport
@@ -66,10 +69,8 @@ from .pcb_track_width_models import PcbTrackWidthCoverageReport
 from .rc_filter_models import RcFilterCoverageReport
 from .regulator_feedback_models import RegulatorFeedbackCoverageReport
 from .rs485_peer_reference_models import Rs485PeerReferenceCoverageReport
-from .rs485_peer_reference_types import Rs485PeerReferenceContext
 from .schematic_geometry import SchematicGeometryScan
 from .schematic_geometry_models import SchematicGeometryCoverage
-from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_models import SerialPeerReferenceCoverageReport
 from .spi_participants import SpiRosterContext
 from .spi_peer_reference_models import SpiPeerReferenceCoverageReport
@@ -91,23 +92,15 @@ class DesignLintEvaluationRequest:
     external_protection_coverage: ExternalProtectionCoverageReport | None = None
     pcb_decoupling_coverage: PcbDecouplingCoverageReport | None = None
     pcb_component_inventory_coverage: PcbComponentInventoryCoverageReport | None = None
-    pcb_protection_path_coverage: PcbProtectionPathCoverageReport | None = None
     pcb_track_width_coverage: PcbTrackWidthCoverageReport | None = None
-    pcb_switching_loop_coverage: PcbSwitchingLoopCoverageReport | None = None
-    pcb_differential_pair_coverage: PcbDifferentialPairRuleCoverageReport | None = None
     stm32_pin_map_coverage: Stm32PinMapCoverageReport | None = None
     spi_roster: SpiRosterContext | None = None
     usb_c_port_roster: UsbCPortRosterContext | None = None
-    pcb_reference_plane_coverage: PcbReferencePlaneCoverageReport | None = None
     control_input_bias_coverage: ControlInputBiasHeuristicCoverage | None = None
     i2c_pullup_heuristic_coverage: I2cPullupHeuristicCoverage | None = None
-    digital_peer_voltage_context: DigitalPeerVoltageLintContext | None = None
-    serial_peer_roster: SerialPeerRosterContext | None = None
-    rs485_peer_reference_context: Rs485PeerReferenceContext | None = None
-    pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None = None
-    pcb_keepout_coverage: PcbKeepoutCoverageReport | None = None
-    pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None = None
-    pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport | None = None
+    peer_scan_inputs: PeerDesignLintScanInputs = field(default_factory=PeerDesignLintScanInputs)
+    pcb_input_coverage: PcbInputCoverageInputs = field(default_factory=PcbInputCoverageInputs)
+    pcb_mapped_coverage: PcbMappedCoverageInputs = field(default_factory=PcbMappedCoverageInputs)
     pcb_dru_rule_candidates: tuple[Candidate, ...] = ()
     pcb_native_drc_candidates: tuple[Candidate, ...] = ()
 

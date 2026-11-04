@@ -3,10 +3,17 @@
 from __future__ import annotations
 
 import ast
+from dataclasses import fields
 from types import MappingProxyType
+from typing import get_type_hints
 
 import pytest
 
+from kicad_tooling.hwrepo.design_lint_evaluation_types import DesignLintEvaluationRequest
+from kicad_tooling.hwrepo.design_lint_peer_evaluation import (
+    PeerDesignLintScanInputs,
+    scan_peer_design_lint_evidence,
+)
 from tests.lint_architecture_support import (
     HWREPO,
     IMPLEMENTATION_MAX_LINES,
@@ -107,6 +114,10 @@ def test_internal_interface_coverage_services_import_theme_owners() -> None:
             "serial_peer_reference_models": {"SerialPeerReferenceCoverageReport"},
             "usb_peer_reference_models": {"UsbPeerReferenceCoverageReport"},
             "i2c_peer_reference_models": {"I2cPeerReferenceCoverageReport"},
+            "design_lint_peer_evaluation": {
+                "PeerDesignLintEvidence",
+                "PeerDesignLintScanInputs",
+            },
         },
         "design_lint_peer_evaluation.py": {
             "digital_peer_voltage_models": {"DigitalPeerVoltageRuleCoverage"},
@@ -167,3 +178,20 @@ def test_peer_coverage_adapters_stay_in_theme_owned_modules() -> None:
     assert all((HWREPO / name).is_file() for name in PEER_COVERAGE_SERVICES)
     assert not (HWREPO / "design_lint_peer_coverage.py").exists()
     assert not oversized, f"Peer coverage must remain split by theme: {oversized}"
+
+
+def test_peer_scan_contexts_enter_through_the_typed_coordinator_input() -> None:
+    expected_fields = {
+        "digital_peer_voltage_context",
+        "serial_peer_roster",
+        "rs485_peer_reference_context",
+    }
+    assert {item.name for item in fields(PeerDesignLintScanInputs)} == expected_fields
+    assert get_type_hints(DesignLintEvaluationRequest)["peer_scan_inputs"] is (
+        PeerDesignLintScanInputs
+    )
+    scan_inputs = get_type_hints(PeerDesignLintScanInputs)
+    coordinator_inputs = get_type_hints(scan_peer_design_lint_evidence)
+    assert set(scan_inputs) == expected_fields
+    assert coordinator_inputs["inputs"] is PeerDesignLintScanInputs
+    assert not expected_fields.intersection(coordinator_inputs)

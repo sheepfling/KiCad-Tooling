@@ -141,6 +141,32 @@ Mapped electrical coverage is passed as its own typed group to its coordinator;
 the USB and power maps remain explicit shared inputs. Adding a field to either
 group does not require rebuilding that group in the central scanner.
 
+## PCB input-geometry coverage route
+
+Signal-path, keepout, RF-antenna, and touch-pad clearance reports now enter
+evaluation together as `PcbInputCoverageInputs`, owned by
+`design_lint_pcb_geometry_coverage_policy`. The public evaluator remains a
+compatibility adapter and packs its existing parameters into this record.
+Preparation passes it intact to the policy owner, which binds positive reports
+to the current authored map and native board/source identity before the records
+reach candidate scanning and report assembly.
+
+At this boundary, `None` means no supplied scan report. The policy owner
+resolves that against the authored map: a configured map without a report is
+`BLOCKED`, while no map and no report remains `NOT_REQUESTED`. An explicit
+`NOT_REQUESTED` or `DISABLED` report cannot stand in for missing configured-map
+evidence. This preserves the existing source and absence semantics while
+removing four separate optional fields from the central evaluation request.
+
+The mapped checks use a second group, `PcbMappedCoverageInputs`, owned by
+`design_lint_pcb_coverage_policy`. It carries differential-pair,
+switching-loop, reference-plane, and protection-path reports. Each report
+retains its own authored-map digest and coverage status; the policy owner
+checks that identity and the retained board/source identity before positive
+coverage can reach candidate generation. Missing inputs remain optional at
+this boundary so the owner can resolve absence against each check's own map
+and mode.
+
 ## I²C address candidate route
 
 The other I²C sniffers share the native netlist but have different authority
@@ -206,6 +232,17 @@ identity fails before disposition. The public finding evidence
 and fingerprint stay the same. The broader extension path should formalize
 typed theme results rather than adding metadata fields to the shared candidate
 type for each new rule.
+
+## Peer scan context route
+
+The peer evidence coordinator receives digital-voltage, serial-peer, and
+RS-485 project contexts together as `PeerDesignLintScanInputs`. Each context
+retains its own authored state and source provenance. An absent context remains
+`None` in the request and is normalized by the owner to its existing
+`not_configured` context; pending and not-applicable records retain their
+distinct states. The observed netlist, netlist digest, connector scope, and
+USB data-path map remain explicit coordinator inputs, and the resulting scans
+flow into the prepared peer and bus candidate groups.
 
 ## Control-input candidate route
 
