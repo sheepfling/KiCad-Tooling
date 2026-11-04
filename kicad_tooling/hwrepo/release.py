@@ -15,21 +15,12 @@ from .discovery import load_config, load_registry
 from .evidence import digest as file_digest
 from .evidence import source_state
 from .layout import layout
-from .models import (
-    GovernanceRecord,
-    InterfacesCatalog,
-    LibrariesCatalog,
-    TeamPolicy,
-)
+from .models import GovernanceRecord, InterfacesCatalog, LibrariesCatalog, TeamPolicy
 from .native_evidence import verify_native
 from .policy_issue_models import PolicyIssue
 from .portable_evidence import verify_release_portable
 from .product import ProductRepository, excluded, load_repository, occurrences
-from .product_models import (
-    Assurance,
-    ProductIndex,
-    ProductRecord,
-)
+from .product_models import Assurance, ProductIndex, ProductRecord
 from .project_models import ProjectKind, ProjectRecord, ToolchainsCatalog
 from .release_contract_models import (
     DeviationStatus,
