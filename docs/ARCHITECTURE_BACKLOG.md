@@ -369,6 +369,12 @@ The scanner also has no catch-all `additional_candidates` input now. Project
 DRU review and native DRC findings enter through separate fields on
 `PcbCandidateInputs`, keeping their route within the PCB capability group and
 the scanner's shared catalog validation.
+Evaluation preparation now assembles the complete required
+`DesignLintCandidateInputs` bundle, including normalized coverage, policy
+maps, peer scans, and PCB candidate sources. Candidate scanning passes that
+prepared bundle through intact instead of rebuilding theme records from the
+flat public request at the last moment. The public candidate adapter continues
+to build the same bundle from its legacy arguments.
 
 I²C, SPI, CAN, and RS-485 peer rule owners now attach typed identities to their
 internal candidates. Construction and coverage assembly check that each
@@ -609,6 +615,12 @@ generation, evidence, packaging, metrics, CLI, and MCP consumers import the
 owner directly; the compatibility registry preserves the old exports. The
 focused architecture test guards the dependency boundary, direct imports,
 identity, and serialized manifest/policy contracts.
+Template contracts, adoption and upgrade records, lifecycle reports, and
+template metrics now belong to `template_models.py`. Template, initialization,
+adoption, generation, and metrics services import the owner directly;
+`models.py` preserves identity-compatible exports. The capability map records
+the lifecycle owner, and the architecture regression guards its primitive and
+policy dependencies plus JSON round trips and non-authorizing report defaults.
 
 **Done when:** a new feature's record is placed with its domain, the selected
 legacy imports shrink, old supported imports resolve, and serialized reports

@@ -19,11 +19,14 @@ does not add a rule or change an engineering conclusion.
    or not-applicable electrical requirement.
 3. `design_lint_evaluation_preparation.py` compares source-bound I²C coverage,
    including an empty `COMPLETE` result, with the coach's netlist hash. A
-   mismatch blocks the evaluation before candidate scanning.
-4. `design_lint_evaluation_candidates.py` constructs required capability-group
-   inputs directly from prepared, source-bound evidence. The public
-   `candidates()` compatibility adapter constructs those same records from its
-   legacy arguments. Both call `scan_candidates()`.
+   mismatch blocks the evaluation before candidate scanning. It then builds
+   the complete `DesignLintCandidateInputs` bundle from normalized coverage,
+   policy, and one `PeerDesignLintEvidence` scan, retaining both as typed
+   records on `DesignLintEvaluationPreparation`.
+4. `design_lint_evaluation_candidates.py` passes the prepared bundle directly
+   to `scan_candidate_result()`. The public `candidates()` compatibility
+   adapter constructs the same capability groups from its legacy arguments;
+   both routes reach the shared scanner.
 5. The I²C predicate emits `Candidate` records. Catalog validation, project
    modes, exact ignores, fingerprints, and report assembly occur after scanning.
    The report and reconciliation retain source identity and review state.

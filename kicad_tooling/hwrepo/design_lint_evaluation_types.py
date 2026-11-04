@@ -17,6 +17,7 @@ from .connector_peer_pin_models import ConnectorPeerPinHeuristicCoverage
 from .connector_return_distribution_models import ConnectorReturnDistributionCoverageReport
 from .control_input_models import ControlInputBiasHeuristicCoverage
 from .crystal_network_models import CrystalNetworkCoverageReport
+from .design_lint_candidate_inputs import DesignLintCandidateInputs
 from .design_lint_finding_models import (
     DesignLintFinding,
     DesignLintIgnore,
@@ -27,6 +28,7 @@ from .design_lint_pcb_coverage_policy import (
     PcbMappedCoveragePolicyState,
 )
 from .design_lint_pcb_geometry_coverage_policy import PcbInputCoveragePolicyState
+from .design_lint_peer_evaluation import PeerDesignLintEvidence
 from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
@@ -151,6 +153,8 @@ class DesignLintEvaluationPreparation:
     input_pcb_coverage: PcbInputCoveragePolicyState
     mapped_pcb_coverage: PcbMappedCoveragePolicyState
     coverage: DesignLintResolvedCoverage
+    candidate_inputs: DesignLintCandidateInputs
+    peer_evidence: PeerDesignLintEvidence
     component_role_resolution: ComponentRoleResolution
     complementary_alias_resolution: ComplementaryPinFunctionAliasResolution
     overrides: Mapping[str, DesignLintRuleOverride]

@@ -11,6 +11,17 @@ from .bus_signal_pairs import (
 from .component_roles import resolve_component_role_map
 from .control_input_bias import control_input_bias_coverage_issue
 from .control_input_models import ControlInputBiasHeuristicCoverage
+from .design_lint_bus_inputs import BusCandidateInputs
+from .design_lint_candidate_inputs import (
+    ComponentCandidateInputs,
+    ConnectorCandidateInputs,
+    ControlCandidateInputs,
+    DesignLintCandidateInputs,
+    MappedCandidateInputs,
+    PeerCandidateInputs,
+    PowerCandidateInputs,
+    UsbDataPathCandidateInputs,
+)
 from .design_lint_catalog import rule_catalog
 from .design_lint_component_coverage import resolve_component_map_coverage
 from .design_lint_evaluation_types import (
@@ -27,6 +38,8 @@ from .design_lint_pcb_coverage_policy import (
     normalize_pcb_mapped_coverage_policy,
 )
 from .design_lint_pcb_geometry_coverage_policy import normalize_pcb_input_coverage_policy
+from .design_lint_pcb_inputs import PcbCandidateInputs
+from .design_lint_peer_evaluation import scan_peer_design_lint_evidence
 from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_schematic_coverage import (
@@ -35,7 +48,9 @@ from .design_lint_schematic_coverage import (
 )
 from .design_lint_stm32_coverage import resolve_stm32_pin_map_coverage
 from .external_protection_models import ExternalProtectionCoverageReport
+from .i2c_address_inputs import I2cAddressCandidateInput
 from .i2c_pullup_heuristics import i2c_pullup_coverage_issue
+from .i2c_pullup_inputs import I2cPullupSnifferInput
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
@@ -249,35 +264,137 @@ def prepare_evaluation(
     default_modes: dict[DesignLintRuleId, Literal["review", "block", "off"]] = {
         item.rule_id: item.default_mode for item in catalog.rules
     }
+    coverage = DesignLintResolvedCoverage(
+        geometry=geometry_coverage,
+        i2c_address=component_map_coverage.i2c_address,
+        external_protection=external_protection_coverage,
+        crystal_network=component_map_coverage.crystal_network,
+        regulator_feedback=component_map_coverage.regulator_feedback,
+        rc_filter=component_map_coverage.rc_filter,
+        connector_return_distribution=component_map_coverage.connector_return_distribution,
+        pcb_decoupling=pcb_decoupling_coverage,
+        pcb_component_inventory=pcb_component_inventory_coverage,
+        pcb_protection_path=mapped_pcb_coverage.protection_path,
+        pcb_track_width=pcb_track_width_coverage,
+        pcb_reference_plane=mapped_pcb_coverage.reference_plane,
+        pcb_switching_loop=pcb_switching_loop_coverage,
+        pcb_differential_pair=pcb_differential_pair_coverage,
+        pcb_signal_path=input_pcb_coverage.signal_path,
+        pcb_keepout=input_pcb_coverage.keepout,
+        pcb_rf_module_antenna=input_pcb_coverage.rf_antenna,
+        pcb_touch_pad_clearance=input_pcb_coverage.touch_pad_clearance,
+        stm32_pin_map=stm32_pin_map_coverage,
+        control_input_bias=request.control_input_bias_coverage,
+        i2c_pullup_heuristic=request.i2c_pullup_heuristic_coverage,
+    )
+    pcb_candidate_inputs = PcbCandidateInputs(
+        component_inventory=coverage.pcb_component_inventory,
+        decoupling=coverage.pcb_decoupling,
+        protection_path=coverage.pcb_protection_path,
+        track_width=coverage.pcb_track_width,
+        reference_plane=coverage.pcb_reference_plane,
+        switching_loop=coverage.pcb_switching_loop,
+        differential_pair=coverage.pcb_differential_pair,
+        signal_path=coverage.pcb_signal_path,
+        keepout=coverage.pcb_keepout,
+        rf_antenna=coverage.pcb_rf_module_antenna,
+        touch_pad_clearance=coverage.pcb_touch_pad_clearance,
+        stm32_pin_map=coverage.stm32_pin_map,
+        dru_rule_candidates=request.pcb_dru_rule_candidates,
+        native_drc_candidates=request.pcb_native_drc_candidates,
+    )
+    peer_evidence = scan_peer_design_lint_evidence(
+        observed=coach.observed,
+        netlist_sha256=coach.netlist_sha256,
+        connector_coverage=request.connector_coverage,
+        digital_peer_voltage_context=request.digital_peer_voltage_context,
+        serial_peer_roster=request.serial_peer_roster,
+        rs485_peer_reference_context=request.rs485_peer_reference_context,
+        usb_data_path_map=policy.usb_data_path_map,
+        default_modes=default_modes,
+        overrides=overrides,
+    )
+    peer_power_output_override = overrides.get("component.peer_power_output_unconnected")
+    peer_power_output_mode = (
+        peer_power_output_override.mode
+        if peer_power_output_override is not None
+        else default_modes["component.peer_power_output_unconnected"]
+    )
+    connector_power_output_override = overrides.get("connector.unconnected_power_output")
+    connector_power_output_mode = (
+        connector_power_output_override.mode
+        if connector_power_output_override is not None
+        else default_modes["connector.unconnected_power_output"]
+    )
+    candidate_inputs = DesignLintCandidateInputs(
+        observed=coach.observed,
+        catalog=catalog,
+        schematic_geometry=request.schematic_geometry,
+        reviewed_connector_references=peer_evidence.reviewed_connector_references,
+        connector=ConnectorCandidateInputs(
+            coverage=request.connector_coverage,
+            return_distribution=coverage.connector_return_distribution,
+            stateful_contact_map=policy.connector_stateful_contact_map,
+            power_output_review_enabled=connector_power_output_mode != "off",
+        ),
+        component=ComponentCandidateInputs(
+            peer_pin_assignment_scans=peer_evidence.peer_pin_assignment_scans,
+            peer_power_output_review_enabled=peer_power_output_mode != "off",
+        ),
+        control=ControlCandidateInputs.from_legacy_arguments(
+            coach.observed,
+            coverage.control_input_bias,
+        ),
+        power=PowerCandidateInputs(
+            component_role_map=policy.component_role_map,
+            power_path_map=policy.power_path_map,
+            power_sequence_map=policy.power_sequence_map,
+            oscillator_output_path_map=policy.oscillator_output_path_map,
+            ic_decoupling_map=policy.ic_decoupling_map,
+        ),
+        bus=BusCandidateInputs(
+            observed=coach.observed,
+            i2c_address=I2cAddressCandidateInput.from_candidate_arguments(
+                coach.observed, policy.i2c_address_map, coverage.i2c_address
+            ),
+            i2c_pullup=I2cPullupSnifferInput.from_legacy_arguments(
+                coach.observed, coverage.i2c_pullup_heuristic
+            ),
+            complementary_alias_resolution=complementary_alias_resolution,
+            i2c_peer_reference_scan=peer_evidence.i2c_peer_reference_scan,
+            spi_roster=request.spi_roster,
+            spi_peer_reference_scan=peer_evidence.spi_peer_reference_scan,
+            can_peer_reference_scan=peer_evidence.can_peer_reference_scan,
+            rs485_peer_reference_scan=peer_evidence.rs485_peer_reference_scan,
+            pcb_differential_pair_rule_map=policy.pcb_differential_pair_rule_map,
+            reviewed_connector_references=peer_evidence.reviewed_connector_references,
+        ),
+        peer=PeerCandidateInputs(
+            digital_voltage_context=request.digital_peer_voltage_context,
+            digital_voltage_scan=peer_evidence.digital_peer_voltage_scan,
+            usb_reference_scan=peer_evidence.usb_peer_reference_scan,
+            serial_reference_scan=peer_evidence.serial_peer_reference_scan,
+            serial_roster=request.serial_peer_roster,
+            usb_c_port_roster=request.usb_c_port_roster,
+        ),
+        mapped=MappedCandidateInputs(
+            external_protection=coverage.external_protection,
+            crystal_network=coverage.crystal_network,
+            regulator_feedback=coverage.regulator_feedback,
+            rc_filter=coverage.rc_filter,
+        ),
+        pcb=pcb_candidate_inputs,
+        usb_data_path=UsbDataPathCandidateInputs(authored_map=policy.usb_data_path_map),
+    )
     prepared = DesignLintEvaluationPreparation(
         request=request,
         catalog=catalog,
         source_hashes=source_hashes,
         input_pcb_coverage=input_pcb_coverage,
         mapped_pcb_coverage=mapped_pcb_coverage,
-        coverage=DesignLintResolvedCoverage(
-            geometry=geometry_coverage,
-            i2c_address=component_map_coverage.i2c_address,
-            external_protection=external_protection_coverage,
-            crystal_network=component_map_coverage.crystal_network,
-            regulator_feedback=component_map_coverage.regulator_feedback,
-            rc_filter=component_map_coverage.rc_filter,
-            connector_return_distribution=component_map_coverage.connector_return_distribution,
-            pcb_decoupling=pcb_decoupling_coverage,
-            pcb_component_inventory=pcb_component_inventory_coverage,
-            pcb_protection_path=mapped_pcb_coverage.protection_path,
-            pcb_track_width=pcb_track_width_coverage,
-            pcb_reference_plane=mapped_pcb_coverage.reference_plane,
-            pcb_switching_loop=pcb_switching_loop_coverage,
-            pcb_differential_pair=pcb_differential_pair_coverage,
-            pcb_signal_path=input_pcb_coverage.signal_path,
-            pcb_keepout=input_pcb_coverage.keepout,
-            pcb_rf_module_antenna=input_pcb_coverage.rf_antenna,
-            pcb_touch_pad_clearance=input_pcb_coverage.touch_pad_clearance,
-            stm32_pin_map=stm32_pin_map_coverage,
-            control_input_bias=request.control_input_bias_coverage,
-            i2c_pullup_heuristic=request.i2c_pullup_heuristic_coverage,
-        ),
+        coverage=coverage,
+        candidate_inputs=candidate_inputs,
+        peer_evidence=peer_evidence,
         component_role_resolution=component_role_resolution,
         complementary_alias_resolution=complementary_alias_resolution,
         overrides=overrides,
