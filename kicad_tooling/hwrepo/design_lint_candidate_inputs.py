@@ -23,6 +23,7 @@ from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
 from .rc_filter_models import RcFilterCoverageReport
 from .regulator_feedback_models import RegulatorFeedbackCoverageReport
+from .regulator_passive_models import RegulatorPassiveTopologyMap
 from .schematic_geometry import SchematicGeometryScan
 from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_types import SerialPeerReferenceScan
@@ -58,6 +59,7 @@ class PowerCandidateInputs:
     power_sequence_map: PowerSequenceMap | None
     oscillator_output_path_map: OscillatorOutputPathMap | None
     ic_decoupling_map: IcDecouplingMap | None
+    regulator_passive_topology_map: RegulatorPassiveTopologyMap | None = None
 
 
 @dataclass(frozen=True, slots=True)

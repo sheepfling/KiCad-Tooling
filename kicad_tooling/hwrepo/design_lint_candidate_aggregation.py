@@ -58,7 +58,7 @@ from .design_lint_pcb_required_fitted_reference_candidates import (
 )
 from .design_lint_pcb_requirement_candidates import scan_pcb_requirement_candidates
 from .design_lint_peer_candidates import peer_candidates
-from .design_lint_power_candidates import power_candidates
+from .design_lint_power_candidates import scan_power_candidates
 from .design_lint_return_distribution_candidates import return_distribution_candidates
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .design_lint_schematic_geometry import schematic_geometry_candidates
@@ -284,7 +284,6 @@ def scan_candidate_result(
     component_role_map = inputs.power.component_role_map
     power_path_map = inputs.power.power_path_map
     oscillator_output_path_map = inputs.power.oscillator_output_path_map
-    ic_decoupling_map = inputs.power.ic_decoupling_map
     peer_pin_assignment_scans = inputs.component.peer_pin_assignment_scans
     peer_power_output_review_enabled = inputs.component.peer_power_output_review_enabled
     power_sequence_map = inputs.power.power_sequence_map
@@ -334,13 +333,11 @@ def scan_candidate_result(
     )
     found.extend(component_result.candidates)
     found.extend(
-        power_candidates(
+        scan_power_candidates(
             observed,
-            component_role_map=component_role_map,
-            power_path_map=power_path_map,
+            inputs.power,
             reviewed_connector_references=reviewed_connector_references,
             peer_unconnected_power_output_pins=peer_unconnected_power_output_pins,
-            ic_decoupling_map=ic_decoupling_map,
         )
     )
     component_peer_result = scan_component_peer_candidates(

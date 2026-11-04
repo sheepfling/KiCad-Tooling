@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+import ast
+from pathlib import Path
+
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import evaluate
+from kicad_tooling.hwrepo.design_lint_candidate_inputs import PowerCandidateInputs
+from kicad_tooling.hwrepo.design_lint_power_candidates import scan_power_candidates
 from kicad_tooling.hwrepo.design_lint_power_regulator_passives import (
     regulator_required_passive_candidates,
 )
@@ -127,6 +132,46 @@ def catalog_reachable_rule_ids() -> set[str]:
         item.rule_id
         for item in regulator_required_passive_candidates(regulator_netlist(), topology_map())
     }
+
+
+@pytest.mark.architecture
+def test_regulator_passive_rule_is_routed_through_power_candidate_group() -> None:
+    power_inputs = PowerCandidateInputs(
+        component_role_map=None,
+        power_path_map=None,
+        power_sequence_map=None,
+        oscillator_output_path_map=None,
+        ic_decoupling_map=None,
+        regulator_passive_topology_map=topology_map(),
+    )
+    findings = scan_power_candidates(regulator_netlist(), power_inputs)
+    assert any(item.rule_id == RULE_ID for item in findings)
+
+    root = Path(__file__).parents[1] / "kicad_tooling" / "hwrepo"
+    evaluation_tree = ast.parse(
+        (root / "design_lint_evaluation_candidates.py").read_text(encoding="utf-8")
+    )
+    assert not any(
+        isinstance(node, ast.Name) and node.id == "regulator_required_passive_candidates"
+        for node in ast.walk(evaluation_tree)
+    )
+
+    aggregation_tree = ast.parse(
+        (root / "design_lint_candidate_aggregation.py").read_text(encoding="utf-8")
+    )
+    power_scan_call = next(
+        node
+        for node in ast.walk(aggregation_tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "scan_power_candidates"
+    )
+    assert len(power_scan_call.args) >= 2
+    power_argument = power_scan_call.args[1]
+    assert isinstance(power_argument, ast.Attribute)
+    assert isinstance(power_argument.value, ast.Name)
+    assert power_argument.value.id == "inputs"
+    assert power_argument.attr == "power"
 
 
 def with_alternate_passive(source):

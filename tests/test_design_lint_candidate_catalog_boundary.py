@@ -7,7 +7,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from kicad_tooling.hwrepo import design_lint_evaluation_candidates
+from kicad_tooling.hwrepo import design_lint_power_candidates
 from kicad_tooling.hwrepo.design_lint import candidates, evaluate, fingerprint, text_report
 from kicad_tooling.hwrepo.design_lint_pcb_component_inventory_candidates import (
     pcb_component_inventory_candidates,
@@ -44,7 +44,7 @@ def test_appended_candidate_sources_require_an_active_catalog_rule(
     native_candidates = ()
     if source == "theme":
         monkeypatch.setattr(
-            design_lint_evaluation_candidates,
+            design_lint_power_candidates,
             "regulator_required_passive_candidates",
             lambda _observed, _map: (unknown,),
         )

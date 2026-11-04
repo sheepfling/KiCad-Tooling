@@ -65,6 +65,8 @@ class SerialPeerPinIndex:
     footprints: Mapping[str, str]
     pin_numbers: Mapping[str, tuple[str, ...]]
     dnp_references: frozenset[str]
+    functions_by_pin_key: Mapping[str, str]
+    electrical_types_by_pin_key: Mapping[str, str]
 
 
 @dataclass(frozen=True, slots=True)

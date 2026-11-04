@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from .casefold_mapping_lookup import lookup_unique_casefold
 from .component_pin_types import is_output_capable_pin_type
@@ -52,22 +53,43 @@ class LedOutputWithoutVisibleSeriesResistor:
     role_binding_sha256: str | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class LedNetAssignmentIndex:
+    """Named, read-only pin-to-net and net-to-pin views for one netlist."""
+
+    nets_by_pin_key: Mapping[str, frozenset[str]]
+    pins_by_net: Mapping[str, tuple[str, ...]]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "nets_by_pin_key",
+            MappingProxyType({key: frozenset(nets) for key, nets in self.nets_by_pin_key.items()}),
+        )
+        object.__setattr__(self, "pins_by_net", MappingProxyType(dict(self.pins_by_net)))
+
+
 def _net_assignments(
     observed: NetlistContract,
-) -> tuple[dict[str, set[str]], dict[str, tuple[str, ...]]]:
+) -> LedNetAssignmentIndex:
     pin_nets: dict[str, set[str]] = {}
     net_pins: dict[str, tuple[str, ...]] = {}
     for net, pins in observed.nets.items():
         net_pins[net] = tuple(pins)
         for pin in pins:
             pin_nets.setdefault(pin.casefold(), set()).add(net)
-    return pin_nets, net_pins
+    return LedNetAssignmentIndex(
+        nets_by_pin_key={pin: frozenset(nets) for pin, nets in pin_nets.items()},
+        pins_by_net=net_pins,
+    )
 
 
 def _net_roles(
-    net: str, net_pins: Mapping[str, tuple[str, ...]], observed: NetlistContract
+    net: str, assignments: LedNetAssignmentIndex, observed: NetlistContract
 ) -> tuple[bool, bool]:
-    functions = tuple(observed.pin_functions.get(pin, "") for pin in net_pins.get(net, ()))
+    functions = tuple(
+        observed.pin_functions.get(pin, "") for pin in assignments.pins_by_net.get(net, ())
+    )
     is_positive = power_function_key(net) is not None or any(
         power_function_key(function) is not None for function in functions
     )
@@ -78,9 +100,9 @@ def _net_roles(
 
 
 def _exclusive_rail_role(
-    net: str, net_pins: Mapping[str, tuple[str, ...]], observed: NetlistContract
+    net: str, assignments: LedNetAssignmentIndex, observed: NetlistContract
 ) -> str | None:
-    is_positive, is_return = _net_roles(net, net_pins, observed)
+    is_positive, is_return = _net_roles(net, assignments, observed)
     if is_positive == is_return:
         return None
     return "positive" if is_positive else "return"
@@ -131,7 +153,7 @@ def leds_directly_between_positive_and_return_nets(
 ) -> tuple[DirectLedRailBridge, ...]:
     """Find supported two-pin LEDs whose native pin nets directly span rails."""
     dnp = {reference.casefold() for reference in observed.dnp_components}
-    pin_nets, net_pins = _net_assignments(observed)
+    assignments = _net_assignments(observed)
 
     results: list[DirectLedRailBridge] = []
     for reference, symbol in sorted(observed.component_symbols.items()):
@@ -141,7 +163,9 @@ def leds_directly_between_positive_and_return_nets(
         if len(pin_numbers) != 2:
             continue
         pins = (f"{reference}.{pin_numbers[0]}", f"{reference}.{pin_numbers[1]}")
-        assigned = tuple(pin_nets.get(pin.casefold(), set()) for pin in pins)
+        assigned = tuple(
+            assignments.nets_by_pin_key.get(pin.casefold(), frozenset()) for pin in pins
+        )
         if any(len(nets) != 1 for nets in assigned):
             continue
         first_net = next(iter(assigned[0]))
@@ -149,8 +173,8 @@ def leds_directly_between_positive_and_return_nets(
         if first_net == second_net:
             continue
 
-        first_positive, first_return = _net_roles(first_net, net_pins, observed)
-        second_positive, second_return = _net_roles(second_net, net_pins, observed)
+        first_positive, first_return = _net_roles(first_net, assignments, observed)
+        second_positive, second_return = _net_roles(second_net, assignments, observed)
         if first_positive and not first_return and second_return and not second_positive:
             positive_net, return_net = first_net, second_net
         elif second_positive and not second_return and first_return and not first_positive:
@@ -183,7 +207,7 @@ def leds_directly_driven_without_visible_series_resistor(
     dnp = {reference.casefold() for reference in observed.dnp_components}
     roles = resolve_component_role_map(observed, component_role_map).by_reference
     mapped_current_sink_paths = _mapped_current_sink_led_paths(observed, power_path_map)
-    pin_nets, net_pins = _net_assignments(observed)
+    assignments = _net_assignments(observed)
     resistors_by_net: dict[str, list[str]] = {}
     for resistor in direct_resistors(observed):
         resistors_by_net.setdefault(resistor.first_net, []).append(resistor.second_net)
@@ -195,7 +219,7 @@ def leds_directly_driven_without_visible_series_resistor(
         if (
             reference.casefold() not in dnp
             and is_output_capable_pin_type(pin_type)
-            and (assigned := pin_nets.get(pin.casefold())) is not None
+            and (assigned := assignments.nets_by_pin_key.get(pin.casefold())) is not None
             and len(assigned) == 1
         ):
             net = next(iter(assigned))
@@ -224,7 +248,9 @@ def leds_directly_driven_without_visible_series_resistor(
         if len(ordered_numbers) != 2 or len({item.casefold() for item in ordered_numbers}) != 2:
             continue
         led_pins = tuple(f"{reference}.{number}" for number in ordered_numbers)
-        assigned_nets = tuple(pin_nets.get(pin.casefold(), set()) for pin in led_pins)
+        assigned_nets = tuple(
+            assignments.nets_by_pin_key.get(pin.casefold(), frozenset()) for pin in led_pins
+        )
         if any(len(assigned) != 1 for assigned in assigned_nets):
             continue
         led_nets = tuple(next(iter(assigned)) for assigned in assigned_nets)
@@ -243,18 +269,19 @@ def leds_directly_driven_without_visible_series_resistor(
             if not output_pins:
                 continue
 
-            opposite_role = _exclusive_rail_role(opposite_net, net_pins, observed)
+            opposite_role = _exclusive_rail_role(opposite_net, assignments, observed)
             if opposite_role is None:
                 continue
             opposite_functions = tuple(
-                observed.pin_functions.get(pin, "") for pin in net_pins.get(opposite_net, ())
+                observed.pin_functions.get(pin, "")
+                for pin in assignments.pins_by_net.get(opposite_net, ())
             )
             if (
                 opposite_role == "return"
                 and not _canonical_return_net_name(opposite_net)
                 and not any(is_return_like_net_name(function) for function in opposite_functions)
                 and any(
-                    _exclusive_rail_role(far_net, net_pins, observed) == "return"
+                    _exclusive_rail_role(far_net, assignments, observed) == "return"
                     for far_net in resistors_by_net.get(opposite_net, ())
                 )
             ):

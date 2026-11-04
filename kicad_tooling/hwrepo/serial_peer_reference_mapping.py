@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from collections.abc import Set as AbstractSet
 from typing import cast
 
 from kicad_tooling.hwrepo.serial_peer_models import (
@@ -22,6 +20,7 @@ from .serial_peer_reference_types import (
     SerialAnalysisView,
     SerialEndpointView,
     SerialLabelPeerLink,
+    SerialPeerPinIndex,
     SerialReferenceDomain,
 )
 
@@ -36,23 +35,22 @@ def _reference_policy_matches_native(link: PeerLinkView, observed: NetlistContra
 
 def _endpoint_matches_native(
     endpoint: SerialEndpointView,
-    pin_nets: Mapping[str, AbstractSet[str]],
-    references: Mapping[str, str],
-    symbols: Mapping[str, str],
-    footprints: Mapping[str, str],
-    dnp: AbstractSet[str],
+    index: SerialPeerPinIndex,
 ) -> bool:
     reference = endpoint.reference
     reference_key = reference.casefold()
     if (
-        reference_key not in references
-        or reference_key in dnp
-        or symbols.get(reference_key) != endpoint.symbol
-        or footprints.get(reference_key) != endpoint.footprint
+        reference_key not in index.references
+        or reference_key in index.dnp_references
+        or index.symbols.get(reference_key) != endpoint.symbol
+        or index.footprints.get(reference_key) != endpoint.footprint
     ):
         return False
     assignments = (endpoint.tx, endpoint.rx, *endpoint.reference_pins)
-    return all(pin_nets.get(item.pin.casefold(), set()) == {item.net} for item in assignments)
+    return all(
+        index.pin_nets.get(item.pin.casefold(), frozenset()) == frozenset({item.net})
+        for item in assignments
+    )
 
 
 def fully_mapped_direct_link(
@@ -61,11 +59,7 @@ def fully_mapped_direct_link(
     observed: NetlistContract,
     output_domain: SerialReferenceDomain,
     input_domain: SerialReferenceDomain,
-    pin_nets: Mapping[str, AbstractSet[str]],
-    references: Mapping[str, str],
-    symbols: Mapping[str, str],
-    footprints: Mapping[str, str],
-    dnp: AbstractSet[str],
+    index: SerialPeerPinIndex,
 ) -> bool:
     if analysis is None:
         return False
@@ -106,10 +100,8 @@ def fully_mapped_direct_link(
                 (assignment.pin.casefold(), assignment.net) for assignment in input_domain.pins
             }:
                 continue
-            if _endpoint_matches_native(
-                output_endpoint, pin_nets, references, symbols, footprints, dnp
-            ) and _endpoint_matches_native(
-                input_endpoint, pin_nets, references, symbols, footprints, dnp
+            if _endpoint_matches_native(output_endpoint, index) and _endpoint_matches_native(
+                input_endpoint, index
             ):
                 return True
     return False
@@ -121,11 +113,7 @@ def fully_mapped_label_link(
     observed: NetlistContract,
     first_domain: SerialReferenceDomain,
     second_domain: SerialReferenceDomain,
-    pin_nets: Mapping[str, AbstractSet[str]],
-    references: Mapping[str, str],
-    symbols: Mapping[str, str],
-    footprints: Mapping[str, str],
-    dnp: AbstractSet[str],
+    index: SerialPeerPinIndex,
 ) -> bool:
     """Suppress only when an exact direct map covers the labeled signal pair and returns."""
     if analysis is None:
@@ -180,10 +168,8 @@ def fully_mapped_label_link(
                 (assignment.pin.casefold(), assignment.net) for assignment in second_domain.pins
             }:
                 continue
-            if _endpoint_matches_native(
-                first_endpoint, pin_nets, references, symbols, footprints, dnp
-            ) and _endpoint_matches_native(
-                second_endpoint, pin_nets, references, symbols, footprints, dnp
+            if _endpoint_matches_native(first_endpoint, index) and _endpoint_matches_native(
+                second_endpoint, index
             ):
                 return True
     return False

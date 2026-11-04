@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import MutableMapping
+from typing import cast
 
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import (
     evaluate,
 )
+from kicad_tooling.hwrepo.led_heuristics import LedNetAssignmentIndex, _net_assignments
 from kicad_tooling.hwrepo.models import (
     DesignLintIgnore,
     DesignLintPolicy,
@@ -26,6 +29,16 @@ pytestmark = [
     pytest.mark.component_lint,
     pytest.mark.power_lint,
 ]
+
+
+def test_led_pin_net_indexes_have_named_immutable_fields() -> None:
+    assignments = _net_assignments(led_rail_bridge_netlist())
+
+    assert isinstance(assignments, LedNetAssignmentIndex)
+    assert assignments.nets_by_pin_key["d1.1"] == frozenset({"+3V3"})
+    assert assignments.pins_by_net["+3V3"] == ("D1.1",)
+    with pytest.raises(TypeError):
+        cast(MutableMapping[str, frozenset[str]], assignments.nets_by_pin_key)["d1.1"] = frozenset()
 
 
 def test_two_pin_led_directly_bridging_supply_and_return_is_configurable() -> None:

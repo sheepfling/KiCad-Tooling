@@ -13,14 +13,12 @@ from .connector_coverage import (
 from .connector_peer_pin_coverage import connector_peer_pin_heuristic_coverage
 from .design_lint_candidate_aggregation import (
     scan_candidate_result,
-    validate_catalogued_candidates,
 )
 from .design_lint_evaluation_types import (
     DesignLintEvaluationCandidates,
     DesignLintEvaluationPreparation,
 )
 from .design_lint_mapped_topology_coverage import mapped_topology_coverage_runs
-from .design_lint_power_regulator_passives import regulator_required_passive_candidates
 from .i2c_peer_reference_coverage import i2c_peer_reference_coverage
 from .rs485_peer_reference_coverage import rs485_peer_reference_coverage
 from .spi_peer_reference_coverage import spi_peer_reference_coverage
@@ -38,17 +36,6 @@ def scan_evaluation_candidates(
     observed = candidate_inputs.observed
     scan_result = scan_candidate_result(candidate_inputs)
     items = scan_result.candidates
-    items = (
-        *items,
-        *regulator_required_passive_candidates(observed, policy.regulator_passive_topology_map),
-    )
-    items = tuple(
-        sorted(
-            items,
-            key=lambda item: (item.rule_id, item.subject),
-        )
-    )
-    validate_catalogued_candidates(items, prepared.catalog)
     i2c_peer_coverage = None
     spi_peer_coverage = None
     can_peer_coverage = None

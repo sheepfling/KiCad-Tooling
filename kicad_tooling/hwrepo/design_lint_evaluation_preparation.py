@@ -376,6 +376,7 @@ def prepare_evaluation(
             power_sequence_map=policy.power_sequence_map,
             oscillator_output_path_map=policy.oscillator_output_path_map,
             ic_decoupling_map=policy.ic_decoupling_map,
+            regulator_passive_topology_map=policy.regulator_passive_topology_map,
         ),
         bus=BusCandidateInputs(
             observed=coach.observed,

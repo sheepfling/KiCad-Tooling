@@ -23,5 +23,9 @@ def test_pin_index_keeps_all_native_indexes_in_one_named_record() -> None:
     assert index.footprints["u1"] == "Package:UART-TX"
     assert index.pin_numbers["u1"] == ("1", "2", "8", "9")
     assert index.dnp_references == frozenset({"u2"})
+    assert index.functions_by_pin_key["u1.1"] == "UART1_TX"
+    assert index.electrical_types_by_pin_key["u1.1"] == "output"
     with pytest.raises(TypeError):
         index.references["u1"] = "U99"  # type: ignore[index]
+    with pytest.raises(TypeError):
+        index.functions_by_pin_key["u1.1"] = "UART1_RX"  # type: ignore[index]

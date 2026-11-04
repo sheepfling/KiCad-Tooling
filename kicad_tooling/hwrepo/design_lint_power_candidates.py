@@ -10,7 +10,9 @@ from .component_power_input_domains import same_voltage_power_inputs_on_differen
 from .component_power_output_candidates import unconnected_power_output_candidates
 from .component_role_models import ComponentRoleMap
 from .component_roles import resolve_component_role_map
+from .design_lint_candidate_inputs import PowerCandidateInputs
 from .design_lint_power_decoupling import ic_decoupling_candidates
+from .design_lint_power_regulator_passives import regulator_required_passive_candidates
 from .design_lint_types import Candidate
 from .ic_decoupling_models import IcDecouplingMap
 from .net_dc_reference import connector_capacitor_only_nets
@@ -32,8 +34,36 @@ def power_candidates(
     peer_unconnected_power_output_pins: frozenset[str] = frozenset(),
     ic_decoupling_map: IcDecouplingMap | None = None,
 ) -> tuple[Candidate, ...]:
-    """Build review prompts for rails, fitted supplies, and visible source paths."""
+    """Compatibility adapter for the named power candidate input group."""
+    return scan_power_candidates(
+        observed,
+        PowerCandidateInputs(
+            component_role_map=component_role_map,
+            power_path_map=power_path_map,
+            power_sequence_map=None,
+            oscillator_output_path_map=None,
+            ic_decoupling_map=ic_decoupling_map,
+        ),
+        reviewed_connector_references=reviewed_connector_references,
+        peer_unconnected_power_output_pins=peer_unconnected_power_output_pins,
+    )
+
+
+def scan_power_candidates(
+    observed: NetlistContract,
+    inputs: PowerCandidateInputs,
+    *,
+    reviewed_connector_references: tuple[str, ...] = (),
+    peer_unconnected_power_output_pins: frozenset[str] = frozenset(),
+) -> tuple[Candidate, ...]:
+    """Build power findings from the prepared power requirements as one group."""
     found: list[Candidate] = []
+    component_role_map = inputs.component_role_map
+    power_path_map = inputs.power_path_map
+    ic_decoupling_map = inputs.ic_decoupling_map
+    found.extend(
+        regulator_required_passive_candidates(observed, inputs.regulator_passive_topology_map)
+    )
     found.extend(
         named_power_pin_net_role_conflicts(
             observed,
