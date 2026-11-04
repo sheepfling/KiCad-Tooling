@@ -186,6 +186,18 @@ evidence fields and fingerprint. The component peer-pin slice passed 80
 synthetic and architecture tests with four native-lane tests deselected, plus
 Ruff, focused Pyright, Markdown checks, and `git diff --check`; it does not
 claim native-tool coverage.
+The generic split, named split, partially open, and all-open component power-
+input findings now retain separate typed variants of their peer scan records.
+The generic split carries the peer function observations used in its report;
+their projector preserves existing fields and conditional PART_ID identity.
+Recognized supply/return divergence and open power-output, signal-output,
+signal-input, and bidirectional findings now retain their role-specific scan
+records too. The component-peer candidate adapter has no inline evidence-map
+construction. The complete typed-routing, projection, marker, architecture,
+determinism, scanner parity, and CLI/MCP selection passed 170 tests with 3
+skips. The focused evidence selector passed 10 tests, with 9 deselected. No
+exact native KiCad fixture lane was run in this checkpoint. Ruff, format,
+project-aware Pyright, Rumdl, and `git diff --check` passed.
 The six BJT/MOSFET terminal-tie rules now retain one typed terminal-pair source
 record and use a component-owned projection for their existing role-specific
 report fields. Their predicate functions and catalog owners remain in place.

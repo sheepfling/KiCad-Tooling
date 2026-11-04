@@ -588,6 +588,26 @@ report fields; the candidate builder continues to own selection and wording.
 Repeated symbol or part identity and a shared anchor remain comparison clues,
 not evidence that peer pins must connect.
 
+## Component peer-pin evidence routes
+
+The generic split, named split, partially open, and all-open power-input
+findings retain distinct typed variants of their `PeerPinAssignmentOutlier`
+scan record. The generic split also retains the exact per-peer native pin
+functions used in its evidence. Constructors require the matching electrical
+role and assignment state; one component-peer projector preserves the existing
+rule-specific fields, including conditional PART_ID identity and open-peer
+lists. Peer grouping remains a review heuristic and does not assert that
+domains must be connected.
+
+Recognized supply/return divergence retains its `PeerPowerPinAssignmentDivergence`
+record. Open power-output, signal-output, signal-input, and bidirectional
+findings retain their `PeerPinAssignmentOutlier` plus an explicit native-role
+variant; the input rule still filters control pins before candidate creation.
+Their projectors preserve the role-specific report fields and peer identity.
+The component-peer candidate adapter no longer constructs evidence mappings;
+selection and wording remain with the theme service, and projection remains
+with its theme-owned evidence module.
+
 ## BJT and MOSFET terminal-tie route
 
 The six supported BJT collector/emitter, base/emitter, base/collector and

@@ -12,7 +12,19 @@ from .component_peer_pin_findings import component_peer_power_pin_assignment_div
 from .component_peer_pin_identity import component_peer_pin_identity_context
 from .component_peer_pin_mixed_open import mixed_open_generic_component_peer_pin_candidates
 from .component_peer_pin_scan import ComponentPeerPinAssignmentScans
-from .design_lint_component_peer_candidate_evidence import GenericPeerPinCandidate
+from .design_lint_component_peer_candidate_evidence import (
+    GenericPeerPinCandidate,
+    GenericPowerInputDivergenceEvidence,
+    NamedPowerInputAllOpenEvidence,
+    NamedPowerInputDivergenceEvidence,
+    NamedPowerInputOpenEvidence,
+    PeerPinFunctionEvidence,
+    PeerPowerPinDivergenceCandidate,
+    PeerPowerPinDivergenceEvidence,
+    PeerUnconnectedPinEvidence,
+    PowerInputPeerCandidate,
+    UnconnectedPeerPinCandidate,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 
@@ -59,9 +71,19 @@ def _component_peer_candidate_items(
         pin.casefold(): function for pin, function in observed.pin_functions.items()
     }
     for group in peer_pin_scans.power_input_assignment_divergence.outliers:
+        source_evidence = GenericPowerInputDivergenceEvidence(
+            outlier=group,
+            pin_functions=tuple(
+                PeerPinFunctionEvidence(
+                    pin=pin,
+                    function=functions_by_pin.get(pin.casefold()) or "",
+                )
+                for pin in group.assignments
+            ),
+        )
         found.append(
-            Candidate(
-                rule_id="component.peer_power_input_assignment_divergence",
+            PowerInputPeerCandidate.from_source_evidence(
+                source_evidence,
                 subject=(
                     f"{group.symbol} pin {group.pin_number}: generic peer power-input "
                     "assignments differ"
@@ -72,16 +94,6 @@ def _component_peer_candidate_items(
                     "domains are intentionally separate or a connection is missing; matching "
                     "symbol identity and electrical type do not prove that the rails must be common."
                 ),
-                evidence={
-                    **group.assignments,
-                    "symbol": (group.symbol,),
-                    "pin_number": (group.pin_number,),
-                    "pin_electrical_type": ("power_in",),
-                    "pin_functions": tuple(
-                        f"{pin}={functions_by_pin.get(pin.casefold()) or ''}"
-                        for pin in group.assignments
-                    ),
-                },
             )
         )
 
@@ -89,18 +101,10 @@ def _component_peer_candidate_items(
         peer_identity = (
             group.peer_identity if group.peer_identity_basis == "part_id" else group.symbol
         )
-        identity_evidence = (
-            {
-                "peer_identity_basis": (group.peer_identity_basis,),
-                "peer_identity": (group.peer_identity,),
-                "peer_symbols": group.peer_symbols,
-            }
-            if group.peer_identity_basis == "part_id"
-            else {}
-        )
+        source_evidence = NamedPowerInputDivergenceEvidence(outlier=group)
         found.append(
-            Candidate(
-                rule_id="component.peer_power_input_named_assignment_divergence",
+            PowerInputPeerCandidate.from_source_evidence(
+                source_evidence,
                 subject=(
                     f"{peer_identity} pin {group.pin_number} ({group.pin_function}): "
                     "named power-input peer assignments differ"
@@ -112,14 +116,6 @@ def _component_peer_candidate_items(
                     "missing; matching peer metadata does not establish that the nets must be "
                     "common."
                 ),
-                evidence={
-                    **group.assignments,
-                    **identity_evidence,
-                    "symbol": (group.symbol,),
-                    "pin_number": (group.pin_number,),
-                    "pin_function": (group.pin_function or "",),
-                    "pin_electrical_type": ("power_in",),
-                },
             )
         )
 
@@ -127,18 +123,10 @@ def _component_peer_candidate_items(
         peer_identity = (
             group.peer_identity if group.peer_identity_basis == "part_id" else group.symbol
         )
-        identity_evidence = (
-            {
-                "peer_identity_basis": (group.peer_identity_basis,),
-                "peer_identity": (group.peer_identity,),
-                "peer_symbols": group.peer_symbols,
-            }
-            if group.peer_identity_basis == "part_id"
-            else {}
-        )
+        source_evidence = NamedPowerInputOpenEvidence(outlier=group)
         found.append(
-            Candidate(
-                rule_id="component.peer_power_input_open_assignment",
+            PowerInputPeerCandidate.from_source_evidence(
+                source_evidence,
                 subject=(
                     f"{peer_identity} pin {group.pin_number} ({group.pin_function}): "
                     "power-input peer assignment is open"
@@ -150,17 +138,6 @@ def _component_peer_candidate_items(
                     "missing; matching part metadata is a review clue and does not establish that "
                     "peer pins must share a net."
                 ),
-                evidence={
-                    **group.assignments,
-                    **identity_evidence,
-                    "symbol": (group.symbol,),
-                    "pin_number": (group.pin_number,),
-                    "pin_function": (group.pin_function or "",),
-                    "pin_electrical_type": ("power_in",),
-                    "open_peer_pins": tuple(
-                        pin for pin, nets in group.assignments.items() if not nets
-                    ),
-                },
             )
         )
 
@@ -168,19 +145,10 @@ def _component_peer_candidate_items(
         peer_identity = (
             group.peer_identity if group.peer_identity_basis == "part_id" else group.symbol
         )
-        identity_evidence = (
-            {
-                "peer_identity_basis": (group.peer_identity_basis,),
-                "peer_identity": (group.peer_identity,),
-                "peer_symbols": group.peer_symbols,
-            }
-            if group.peer_identity_basis == "part_id"
-            else {}
-        )
-        open_peer_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
+        source_evidence = NamedPowerInputAllOpenEvidence(outlier=group)
         found.append(
-            Candidate(
-                rule_id="component.peer_power_input_named_all_open",
+            PowerInputPeerCandidate.from_source_evidence(
+                source_evidence,
                 subject=(
                     f"{peer_identity} pin {group.pin_number} ({group.pin_function}): "
                     "named power-input peer pin is open on every fitted peer"
@@ -192,15 +160,6 @@ def _component_peer_candidate_items(
                     "pin or a missing connection; matching peer metadata does not establish "
                     "that the pin must be connected."
                 ),
-                evidence={
-                    **group.assignments,
-                    **identity_evidence,
-                    "symbol": (group.symbol,),
-                    "pin_number": (group.pin_number,),
-                    "pin_function": (group.pin_function or "",),
-                    "pin_electrical_type": ("power_in",),
-                    "open_peer_pins": open_peer_pins,
-                },
             )
         )
 
@@ -235,43 +194,27 @@ def _component_peer_candidate_items(
                 "intentional or a supply connection is missing; matching symbol pins do not prove "
                 "the nets should be common."
             )
-        identity_evidence = (
-            {
-                "peer_identity_basis": (group.peer_identity_basis,),
-                "peer_identity": (group.peer_identity,),
-                "peer_symbols": group.peer_symbols,
-            }
-            if group.peer_identity_basis == "part_id"
-            else {}
-        )
         subject_identity = (
             group.peer_identity if group.peer_identity_basis == "part_id" else group.symbol
         )
+        source_evidence = PeerPowerPinDivergenceEvidence(divergence=group)
         found.append(
-            Candidate(
-                rule_id="component.peer_power_pin_assignment_divergence",
+            PeerPowerPinDivergenceCandidate.from_source_evidence(
+                source_evidence,
                 subject=(
                     f"{subject_identity} pin {group.pin_number} ({group.function}): "
                     "peer power assignments differ"
                 ),
                 message=message,
-                evidence={
-                    **group.assignments,
-                    **identity_evidence,
-                    "symbol": (group.symbol,),
-                    "pin_number": (group.pin_number,),
-                    "pin_function": (group.function,),
-                    "peer_role": (group.role,),
-                },
             )
         )
 
     for group in peer_pin_scans.power_output.outliers:
-        open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
+        source_evidence = PeerUnconnectedPinEvidence(kind="power_output", outlier=group)
         identity = component_peer_pin_identity_context(group)
         found.append(
-            Candidate(
-                rule_id="component.peer_power_output_unconnected",
+            UnconnectedPeerPinCandidate.from_source_evidence(
+                source_evidence,
                 subject=(
                     f"{identity.subject_identity} pin {group.pin_number}: fitted peer power-output assignment "
                     "is missing"
@@ -282,23 +225,15 @@ def _component_peer_candidate_items(
                     "has a net assignment. Review whether the open output is intentionally unused "
                     f"or its connection is missing; {identity.independent_net_note}."
                 ),
-                evidence={
-                    **group.assignments,
-                    **identity.evidence,
-                    "pin_number": (group.pin_number,),
-                    "pin_electrical_type": ("power_out",),
-                    "pin_function": (group.pin_function or "",),
-                    "unassigned_pins": open_pins,
-                },
             )
         )
 
     for group in peer_pin_scans.signal_output.outliers:
-        open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
+        source_evidence = PeerUnconnectedPinEvidence(kind="signal_output", outlier=group)
         identity = component_peer_pin_identity_context(group)
         found.append(
-            Candidate(
-                rule_id="component.peer_signal_output_unconnected",
+            UnconnectedPeerPinCandidate.from_source_evidence(
+                source_evidence,
                 subject=(
                     f"{identity.subject_identity} pin {group.pin_number}: fitted peer signal-output assignment "
                     "is missing"
@@ -309,26 +244,22 @@ def _component_peer_candidate_items(
                     "has a net assignment. Review whether the open output is intentionally unused "
                     f"or its connection is missing; {identity.independent_net_note}."
                 ),
-                evidence={
-                    **group.assignments,
-                    **identity.evidence,
-                    "pin_number": (group.pin_number,),
-                    "pin_electrical_type": (group.electrical_type,),
-                    "pin_function": (group.pin_function or "",),
-                    "unassigned_pins": open_pins,
-                },
             )
         )
 
     for group in peer_pin_scans.signal_input.outliers:
-        open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
-        if any(pin.casefold() in control_pin_keys for pin in open_pins):
+        source_evidence = PeerUnconnectedPinEvidence(kind="signal_input", outlier=group)
+        identity = component_peer_pin_identity_context(group)
+        if any(
+            pin.casefold() in control_pin_keys
+            for pin, nets in group.assignments.items()
+            if not nets
+        ):
             # Keep recognized reset, enable, and boot inputs with their specific rule.
             continue
-        identity = component_peer_pin_identity_context(group)
         found.append(
-            Candidate(
-                rule_id="component.peer_signal_input_unconnected",
+            UnconnectedPeerPinCandidate.from_source_evidence(
+                source_evidence,
                 subject=(
                     f"{identity.subject_identity} pin {group.pin_number}: fitted peer signal-input assignment "
                     "is missing"
@@ -340,23 +271,15 @@ def _component_peer_candidate_items(
                     f"intentionally unused or its signal connection is missing; "
                     f"{identity.independent_net_note}."
                 ),
-                evidence={
-                    **group.assignments,
-                    **identity.evidence,
-                    "pin_number": (group.pin_number,),
-                    "pin_electrical_type": (group.electrical_type,),
-                    "pin_function": (group.pin_function or "",),
-                    "unassigned_pins": open_pins,
-                },
             )
         )
 
     for group in peer_pin_scans.bidirectional.outliers:
-        open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
+        source_evidence = PeerUnconnectedPinEvidence(kind="bidirectional", outlier=group)
         identity = component_peer_pin_identity_context(group)
         found.append(
-            Candidate(
-                rule_id="component.peer_bidirectional_pin_unconnected",
+            UnconnectedPeerPinCandidate.from_source_evidence(
+                source_evidence,
                 subject=(
                     f"{identity.subject_identity} pin {group.pin_number}: fitted peer bidirectional-pin "
                     "assignment is missing"
@@ -367,14 +290,6 @@ def _component_peer_candidate_items(
                     "pin has a net assignment. Review whether the open pin is intentionally "
                     f"unused or its connection is missing; {identity.independent_net_note}."
                 ),
-                evidence={
-                    **group.assignments,
-                    **identity.evidence,
-                    "pin_number": (group.pin_number,),
-                    "pin_electrical_type": (group.electrical_type,),
-                    "pin_function": (group.pin_function or "",),
-                    "unassigned_pins": open_pins,
-                },
             )
         )
     for group in peer_pin_scans.generic_assignment_outlier.outliers:

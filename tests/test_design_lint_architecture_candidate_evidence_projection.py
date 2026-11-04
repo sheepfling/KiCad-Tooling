@@ -223,3 +223,74 @@ def test_generic_component_peer_candidate_uses_its_typed_evidence_owner() -> Non
     assert not any(
         isinstance(node, ast.keyword) and node.arg == "evidence" for node in ast.walk(outlier_loop)
     )
+
+
+@pytest.mark.power_lint
+@pytest.mark.evidence_lint
+def test_component_peer_power_input_candidates_keep_typed_sources() -> None:
+    owner_path = HWREPO / "design_lint_component_peer_candidate_evidence.py"
+    service_path = HWREPO / "design_lint_component_peer_candidates.py"
+    owner_tree = ast.parse(owner_path.read_text(encoding="utf-8"))
+    service_tree = ast.parse(service_path.read_text(encoding="utf-8"))
+    candidate_builder = next(
+        node
+        for node in service_tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "_component_peer_candidate_items"
+    )
+
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert (
+        design_lint_component_peer_candidates.PowerInputPeerCandidate
+        is design_lint_component_peer_candidate_evidence.PowerInputPeerCandidate
+    )
+    assert any(
+        isinstance(node, ast.FunctionDef) and node.name == "project_power_input_peer_evidence"
+        for node in owner_tree.body
+    )
+    assert (
+        design_lint_component_peer_candidates.UnconnectedPeerPinCandidate
+        is design_lint_component_peer_candidate_evidence.UnconnectedPeerPinCandidate
+    )
+    assert (
+        design_lint_component_peer_candidates.PeerPowerPinDivergenceCandidate
+        is design_lint_component_peer_candidate_evidence.PeerPowerPinDivergenceCandidate
+    )
+    assert any(
+        isinstance(node, ast.FunctionDef) and node.name == "project_peer_unconnected_pin_evidence"
+        for node in owner_tree.body
+    )
+    assert any(
+        isinstance(node, ast.FunctionDef) and node.name == "project_peer_power_pin_divergence"
+        for node in owner_tree.body
+    )
+    for scan_name in (
+        "power_input_assignment_divergence",
+        "named_power_input_assignment_divergence",
+        "power_input_open_assignment",
+        "named_power_input_all_open",
+    ):
+        loop = next(
+            node
+            for node in ast.walk(candidate_builder)
+            if isinstance(node, ast.For)
+            and ast.unparse(node.iter) == f"peer_pin_scans.{scan_name}.outliers"
+        )
+        assert any(
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "from_source_evidence"
+            for node in ast.walk(loop)
+        ), scan_name
+        assert not any(
+            isinstance(node, ast.keyword) and node.arg == "evidence" for node in ast.walk(loop)
+        ), scan_name
+    assert not any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "Candidate"
+        for node in ast.walk(candidate_builder)
+    )
+    assert not any(
+        isinstance(node, ast.keyword) and node.arg == "evidence"
+        for node in ast.walk(candidate_builder)
+    )
