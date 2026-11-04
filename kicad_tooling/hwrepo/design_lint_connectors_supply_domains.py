@@ -6,6 +6,12 @@ from collections import defaultdict
 
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageReport
+from .design_lint_connector_supply_domain_candidate_evidence import (
+    MappedSupplyDomainAssignment,
+    MappedSupplyDomainsCandidate,
+    MappedSupplyDomainsFindingEvidence,
+    MappedSupplyDomainsSharedNet,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 
@@ -25,7 +31,7 @@ def mapped_supply_domains_shared_net_candidates(
 
     mapped_pins = source_matched_connector_pin_evidence(observed, coverage)
     unpopulated = {reference.casefold() for reference in observed.dnp_components}
-    domains_by_net: dict[str, dict[str, list[str]]] = defaultdict(lambda: defaultdict(list))
+    assignments_by_net: dict[str, list[MappedSupplyDomainAssignment]] = defaultdict(list)
     for pin, mapped in sorted(mapped_pins.items()):
         reference = pin.rsplit(".", 1)[0]
         if (
@@ -36,39 +42,36 @@ def mapped_supply_domains_shared_net_candidates(
             or len(mapped.nets) != 1
         ):
             continue
-        domains_by_net[mapped.nets[0]][str(mapped.voltage_domain)].append(pin)
+        assignments_by_net[mapped.nets[0]].append(
+            MappedSupplyDomainAssignment(
+                pin=pin,
+                native_net=mapped.nets[0],
+                voltage_domain=str(mapped.voltage_domain),
+                mapped_pin=mapped,
+            )
+        )
 
     candidates: list[Candidate] = []
-    for net, domains in sorted(domains_by_net.items()):
-        if len(domains) < 2:
+    for net, assignments in sorted(assignments_by_net.items()):
+        ordered_assignments = tuple(
+            sorted(assignments, key=lambda item: (item.voltage_domain, item.pin))
+        )
+        ordered_domains = tuple(sorted({item.voltage_domain for item in ordered_assignments}))
+        if len(ordered_domains) < 2:
             continue
-        ordered_domains = tuple(sorted(domains))
-        ordered_pins = tuple((domain, tuple(sorted(domains[domain]))) for domain in ordered_domains)
-        evidence: dict[str, tuple[str, ...]] = {
-            "native_shared_net": (net,),
-            "reviewed_voltage_domains": ordered_domains,
-            "mapped_supply_assignments": tuple(
-                f"{pin}={net}; voltage_domain={domain}"
-                for domain, pins in ordered_pins
-                for pin in pins
-            ),
-            "role_classification_sources": tuple(
-                (
-                    f"{pin}: source-matched project interface role=supply; "
-                    f"voltage_domain={domain}; signal={mapped_pins[pin].interface_signal}; "
-                    f"native function={mapped_pins[pin].symbol_function or '<unnamed>'}"
-                )
-                for domain, pins in ordered_pins
-                for pin in pins
-            ),
-            "interface_catalog_sha256": (str(coverage.interface_catalog_sha256),),
-        }
-        if coverage.interface_catalog_path is not None:
-            evidence["interface_catalog_path"] = (str(coverage.interface_catalog_path),)
-        evidence.update({pin: (net,) for _, pins in ordered_pins for pin in pins})
+        shared_net = MappedSupplyDomainsSharedNet(
+            native_net=net,
+            voltage_domains=ordered_domains,
+            assignments=ordered_assignments,
+        )
+        source_evidence = MappedSupplyDomainsFindingEvidence(
+            observed=observed,
+            coverage=coverage,
+            shared_net=shared_net,
+        )
         candidates.append(
-            Candidate(
-                rule_id="connector.mapped_supply_domains_share_net",
+            MappedSupplyDomainsCandidate.from_source_evidence(
+                source_evidence,
                 subject=f"{net}: mapped connector supply domains share one native net",
                 message=(
                     "Complete, source-matched project interface entries classify these connector "
@@ -78,7 +81,6 @@ def mapped_supply_domains_shared_net_candidates(
                     "different nominal voltages or electrical incompatibility, and this heuristic "
                     "does not prove a physical board fault."
                 ),
-                evidence=evidence,
             )
         )
     return tuple(candidates)

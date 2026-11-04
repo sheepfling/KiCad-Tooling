@@ -182,6 +182,10 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_usb_peer_candidate_evidence.py",
                 "tests/test_design_lint_architecture_usb_data_polarity_candidate_evidence.py",
                 "tests/test_usb_data_polarity_candidate_evidence.py",
+                "tests/test_design_lint_architecture_transformer_candidate_evidence.py",
+                "tests/test_transformer_candidate_evidence.py",
+                "tests/test_connector_supply_domain_net_sharing.py",
+                "tests/test_design_lint_architecture_connector_supply_domain_candidate_evidence.py",
             }
         ),
         "pcb_lint": PCB_LINT_TEST_MODULES,
@@ -218,6 +222,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_mcp_parity_usb_reference.py",
                 "tests/test_design_lint_mcp_parity_usb_c_sbu_unconnected.py",
                 "tests/test_design_lint_mcp_parity_i3c_unconnected.py",
+                "tests/test_design_lint_mcp_parity_transformer.py",
                 "tests/test_pcb_component_inventory_mcp_parity.py",
                 "tests/test_pcb_keepouts_mcp_parity.py",
                 "tests/test_pcb_rf_antenna_mcp_parity.py",

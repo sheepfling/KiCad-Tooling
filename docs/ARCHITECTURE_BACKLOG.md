@@ -356,18 +356,21 @@ before this route found 17 direct candidate constructions across six theme
 owners, including USB data polarity. That route now retains its exact
 `NetlistContract` through `UsbDataPolarityCandidate`; source construction checks
 the pin function, net assignment, and polarity identities. A refreshed scan
-leaves 16 direct constructions across five theme owners: two
-component-transformer routes, one connector supply-domain route, one
-power-decoupling route, one regulator-passive route, and eleven
-schematic-geometry routes. I3C one-sided-open, unmapped SPI, two-pin same-net,
-USB-C port, and USB peer-reference findings retain their exact typed source
-records. SPI, I²C, CAN, and RS-485 reference candidates retain their scan and
-bus/pair records through protocol-owned subtypes while preserving the common
-identity used for coverage reconciliation. This inventory is limited to
-direct candidate construction; it does not claim that every dictionary in
-scanners, coverage records, or application services has become typed. Continue
-by tracing each remaining producer, provenance, absence state, and consumer
-before changing module boundaries.
+leaves 13 direct constructions across three theme owners: one power-decoupling
+route, one regulator-passive route, and eleven schematic-geometry routes. The
+two transformer routes retain named winding groups, typed pin-to-net
+assignments, and their exact netlist through `TransformerCandidate`. The
+connector supply-domain route retains its exact netlist, coverage report, and
+mapped pin records through `MappedSupplyDomainsCandidate`. I3C one-sided-open,
+unmapped SPI, two-pin same-net, USB-C port, and USB peer-reference findings
+retain their exact typed source records. SPI, I²C, CAN, and RS-485 reference
+candidates retain their scan and bus/pair records through protocol-owned
+subtypes while preserving the common identity used for coverage
+reconciliation. This inventory is limited to direct candidate construction;
+it does not claim that every dictionary in scanners, coverage records, or
+application services has become typed. Continue by tracing each remaining
+producer, provenance, absence state, and consumer before changing module
+boundaries.
 
 The USB-C port route passed its source and behavior selection (13 tests), CLI/MCP
 parity (1 test), and marker/collection architecture checks (14 tests). The USB
@@ -380,6 +383,22 @@ serialized evidence against the typed conflict. The source, behavior, and
 architecture selection passed 11 tests; marker and collection architecture
 checks passed 14 tests. Focused Pyright and Ruff passed. No exact native KiCad
 lane was run.
+
+Transformer winding findings now retain the exact netlist through named
+`SupportedTransformerObservation`, `TransformerWindingPinGroup`, and
+`TransformerPinNetAssignment` records. The same-winding and cross-winding
+projectors preserve their current report fields and candidate order. The
+focused source, behavior, catalog, architecture, marker, collection, and
+CLI/MCP parity selection passed 87 tests. Pyright and Ruff passed. No exact
+native KiCad lane was run.
+
+Mapped connector supply-domain findings now retain the exact netlist, source
+coverage report, and ordered `ConnectorMappedPinEvidence` records through
+`MappedSupplyDomainsCandidate`. Construction verifies each grouped pin against
+current source-matched coverage; the report fields and fingerprint input remain
+stable. The source, behavior, and architecture selection passed 10 tests;
+marker and collection checks passed 14 tests. Pyright and Ruff passed. No exact
+native KiCad lane was run.
 
 The combined source-projection, rule, architecture, size, marker, and CLI/MCP
 parity selection passed 237 tests against the clean public `KiCAD-Test`

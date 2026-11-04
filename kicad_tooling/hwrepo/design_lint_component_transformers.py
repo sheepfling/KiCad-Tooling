@@ -2,28 +2,34 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from types import MappingProxyType
 
+from .design_lint_component_transformer_candidate_evidence import (
+    TransformerCandidate,
+    TransformerWindingGroupsShareNetEvidence,
+    TransformerWindingSameNetEvidence,
+)
+from .design_lint_component_transformer_models import (
+    SupportedTransformerObservation,
+    TransformerPinNetAssignment,
+    TransformerWindingPinGroup,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 
-_WindingGroup = tuple[str, tuple[str, str]]
 _SUPPORTED_WINDINGS = MappingProxyType(
-    {"transformer:transf1": (("winding_1", ("1", "2")), ("winding_2", ("3", "4")))}
+    {
+        "transformer:transf1": (
+            TransformerWindingPinGroup(name="winding_1", pin_numbers=("1", "2")),
+            TransformerWindingPinGroup(name="winding_2", pin_numbers=("3", "4")),
+        )
+    }
 )
 
 
-@dataclass(frozen=True, slots=True)
-class _SupportedTransformer:
-    reference: str
-    symbol: str
-    value: str
-    winding_groups: tuple[_WindingGroup, ...]
-    pin_nets: tuple[tuple[str, str], ...]
-
-
-def _supported_transformers(observed: NetlistContract) -> tuple[_SupportedTransformer, ...]:
+def _supported_transformers(
+    observed: NetlistContract,
+) -> tuple[SupportedTransformerObservation, ...]:
     """Return exact, fitted TRANSF1 records with complete unambiguous pin nets."""
     dnp = {reference.casefold() for reference in observed.dnp_components}
     component_by_reference = {
@@ -38,7 +44,7 @@ def _supported_transformers(observed: NetlistContract) -> tuple[_SupportedTransf
         for pin in pins:
             nets_by_pin.setdefault(pin.casefold(), set()).add(net)
 
-    transformers: list[_SupportedTransformer] = []
+    transformers: list[SupportedTransformerObservation] = []
     for reference, symbol in observed.component_symbols.items():
         reference_key = reference.casefold()
         winding_groups = _SUPPORTED_WINDINGS.get(symbol.casefold())
@@ -61,13 +67,18 @@ def _supported_transformers(observed: NetlistContract) -> tuple[_SupportedTransf
         if any(len(nets) != 1 for nets in assigned_nets.values()):
             continue
         transformers.append(
-            _SupportedTransformer(
+            SupportedTransformerObservation(
+                observed=observed,
                 reference=reference,
                 symbol=symbol,
                 value=component.value,
                 winding_groups=winding_groups,
-                pin_nets=tuple(
-                    (number, next(iter(assigned_nets[number]))) for number in ("1", "2", "3", "4")
+                pin_assignments=tuple(
+                    TransformerPinNetAssignment(
+                        pin_number=number,
+                        net=next(iter(assigned_nets[number])),
+                    )
+                    for number in ("1", "2", "3", "4")
                 ),
             )
         )
@@ -85,37 +96,33 @@ def transformer_winding_same_net_candidates(
     """
     found: list[Candidate] = []
     for transformer in _supported_transformers(observed):
-        pin_nets = dict(transformer.pin_nets)
-        for winding, numbers in transformer.winding_groups:
-            first_net = pin_nets[numbers[0]]
-            second_net = pin_nets[numbers[1]]
+        pin_nets = {item.pin_number: item.net for item in transformer.pin_assignments}
+        for winding in transformer.winding_groups:
+            first_net = pin_nets[winding.pin_numbers[0]]
+            second_net = pin_nets[winding.pin_numbers[1]]
             if first_net != second_net:
                 continue
+            source_evidence = TransformerWindingSameNetEvidence(
+                transformer=transformer,
+                winding=winding,
+                net=first_net,
+            )
             found.append(
-                Candidate(
-                    rule_id="component.transformer_winding_same_net",
+                TransformerCandidate.from_source_evidence(
+                    source_evidence,
                     subject=(
-                        f"{transformer.reference}: {winding.replace('_', ' ')} pins "
-                        f"{numbers[0]}/{numbers[1]} "
+                        f"{transformer.reference}: {winding.name.replace('_', ' ')} pins "
+                        f"{winding.pin_numbers[0]}/{winding.pin_numbers[1]} "
                         f"share {first_net}"
                     ),
                     message=(
-                        f"The supported TRANSF1 {winding.replace('_', ' ')} terminals are assigned to "
+                        f"The supported TRANSF1 {winding.name.replace('_', ' ')} terminals are assigned to "
                         "one native schematic net, leaving no netlist voltage across that "
                         "winding. Review whether this is intentional or a connection is missing. "
                         "This prompt does not establish transformer operation, isolation rating, "
                         "winding polarity, physical connectivity, copper continuity, or assembly "
                         "state."
                     ),
-                    evidence={
-                        "symbol": (transformer.symbol,),
-                        "value": (transformer.value,),
-                        "winding": (winding,),
-                        "net": (first_net,),
-                        "pin_assignments": tuple(
-                            f"{transformer.reference}.{number} -> {first_net}" for number in numbers
-                        ),
-                    },
                 )
             )
     return tuple(sorted(found, key=lambda item: (item.subject.casefold(), item.subject)))
@@ -129,23 +136,31 @@ def transformer_winding_groups_share_net_candidates(
     for transformer in _supported_transformers(observed):
         first_group = transformer.winding_groups[0]
         second_group = transformer.winding_groups[1]
-        pin_nets = dict(transformer.pin_nets)
-        first_nets = {pin_nets[number] for number in first_group[1]}
-        second_nets = {pin_nets[number] for number in second_group[1]}
+        assignments_by_number = {item.pin_number: item for item in transformer.pin_assignments}
+        first_nets = {assignments_by_number[number].net for number in first_group.pin_numbers}
+        second_nets = {assignments_by_number[number].net for number in second_group.pin_numbers}
         for net in sorted(first_nets & second_nets, key=str.casefold):
-            first_pins = tuple(
-                f"{transformer.reference}.{number}"
-                for number in first_group[1]
-                if pin_nets[number] == net
+            first_assignments = tuple(
+                assignments_by_number[number]
+                for number in first_group.pin_numbers
+                if assignments_by_number[number].net == net
             )
-            second_pins = tuple(
-                f"{transformer.reference}.{number}"
-                for number in second_group[1]
-                if pin_nets[number] == net
+            second_assignments = tuple(
+                assignments_by_number[number]
+                for number in second_group.pin_numbers
+                if assignments_by_number[number].net == net
+            )
+            source_evidence = TransformerWindingGroupsShareNetEvidence(
+                transformer=transformer,
+                net=net,
+                first_winding=first_group,
+                second_winding=second_group,
+                first_pin_assignments=first_assignments,
+                second_pin_assignments=second_assignments,
             )
             found.append(
-                Candidate(
-                    rule_id="component.transformer_winding_groups_share_net",
+                TransformerCandidate.from_source_evidence(
+                    source_evidence,
                     subject=(f"{transformer.reference}: winding groups share {net}"),
                     message=(
                         "Both supported TRANSF1 winding groups touch this native schematic net, "
@@ -154,13 +169,6 @@ def transformer_winding_groups_share_net_candidates(
                         "whether isolation is required or approved, or establish transformer "
                         "operation, physical connectivity, copper continuity, or assembly state."
                     ),
-                    evidence={
-                        "symbol": (transformer.symbol,),
-                        "value": (transformer.value,),
-                        "shared_net": (net,),
-                        "first_winding_pins": first_pins,
-                        "second_winding_pins": second_pins,
-                    },
                 )
             )
     return tuple(sorted(found, key=lambda item: (item.subject.casefold(), item.subject)))

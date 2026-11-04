@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import replace
 
 import pytest
 
@@ -13,6 +14,13 @@ from kicad_tooling.hwrepo.connector_coverage_models import (
     ConnectorInventoryReview,
 )
 from kicad_tooling.hwrepo.design_lint import evaluate as evaluate_design_lint
+from kicad_tooling.hwrepo.design_lint_connector_supply_domain_candidate_evidence import (
+    MappedSupplyDomainsCandidate,
+    project_mapped_supply_domains_evidence,
+)
+from kicad_tooling.hwrepo.design_lint_connectors_supply_domains import (
+    mapped_supply_domains_shared_net_candidates,
+)
 from kicad_tooling.hwrepo.design_lint_finding_models import DesignLintFinding
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.models import (
@@ -35,6 +43,7 @@ _INTERFACE_CATALOG_PATH = "catalog/interfaces.json"
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.connector_lint,
+    pytest.mark.evidence_lint,
     pytest.mark.design_lint_rule(rule_id=RULE_ID),
 ]
 
@@ -107,6 +116,40 @@ def test_distinct_mapped_supply_domains_on_one_net_prompt_review() -> None:
     assert finding.evidence["interface_catalog_sha256"] == ("d" * 64,)
     assert finding.evidence["interface_catalog_path"] == (_INTERFACE_CATALOG_PATH,)
     assert "do not establish different nominal voltages" in finding.message
+
+
+def test_supply_domain_candidate_retains_exact_netlist_and_coverage_records() -> None:
+    observed = connector_supply_role_netlist(common_supply=True)
+    coverage = _coverage(observed)
+
+    candidate = mapped_supply_domains_shared_net_candidates(observed, coverage)[0]
+    source = candidate.source_evidence
+
+    assert isinstance(candidate, MappedSupplyDomainsCandidate)
+    assert source.observed is observed
+    assert source.coverage is coverage
+    assert tuple(item.pin for item in source.shared_net.assignments) == ("J1.2", "J2.5")
+    assert project_mapped_supply_domains_evidence(source).evidence == candidate.evidence
+
+
+def test_supply_domain_source_and_candidate_reject_stale_projection() -> None:
+    observed = connector_supply_role_netlist(common_supply=True)
+    coverage = _coverage(observed)
+    candidate = mapped_supply_domains_shared_net_candidates(observed, coverage)[0]
+    source = candidate.source_evidence
+    stale_observed = observed.model_copy(
+        update={
+            "nets": {
+                **observed.nets,
+                "SHARED_SUPPLY": ("J1.2",),
+            }
+        }
+    )
+
+    with pytest.raises(ValueError, match="current source netlist"):
+        replace(source, observed=stale_observed)
+    with pytest.raises(ValueError, match="typed source projection"):
+        replace(candidate, evidence={"native_shared_net": ("WRONG",)})
 
 
 def test_intentional_same_domain_and_distinct_net_controls_are_quiet() -> None:

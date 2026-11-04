@@ -661,6 +661,13 @@ the assignment state and preserves the existing evidence fields. Candidate
 selection and review wording remain in the connector theme service, and the
 public report shape is unchanged.
 
+Mapped supply-domain findings retain the exact `NetlistContract`,
+`ConnectorCoverageReport`, and ordered `ConnectorMappedPinEvidence` records
+through `MappedSupplyDomainsCandidate`. Construction rechecks grouped pins
+against current source-matched coverage and preserves the interface-catalog
+path and digest. Domain names remain authored classifications; they do not
+imply voltage incompatibility.
+
 The scan consumes the `NetlistContract` supplied by its caller. Full evaluation
 carries native netlist identity on `DesignLintReport` and
 `ConnectorPeerPinHeuristicCoverage`; report validation requires those digests
@@ -876,6 +883,13 @@ component-kind projector preserves the existing rule ID, passive or component
 kind field, net, pin assignments, and any reviewed custom-role evidence. It
 rejects kinds owned by separate candidate routes, keeping source ownership
 aligned with the component scan.
+
+Transformer winding findings retain the exact normalized `NetlistContract`
+through `SupportedTransformerObservation`. Named `TransformerWindingPinGroup`
+and `TransformerPinNetAssignment` records replace positional group and
+pin-to-net tuples. `TransformerCandidate` validates its report projection
+against either the same-winding or cross-winding source record; the existing
+predicate owners retain candidate selection and review wording.
 
 Serial-peer coverage and reference-domain findings now retain their typed
 source variants through `SerialPeerCandidate`. Unmapped endpoints preserve the
