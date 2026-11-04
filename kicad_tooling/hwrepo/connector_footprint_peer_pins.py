@@ -8,6 +8,7 @@ from .connector_footprint_peer_groups import (
     complete_connector_footprint_peer_pin_inventory,
     connector_footprint_peer_candidate_groups,
 )
+from .connector_footprint_peer_open_outliers import connector_footprint_peer_open_outlier
 from .connector_footprint_peer_pin_types import (
     SIGNAL_ELECTRICAL_TYPES,
     ConnectorFootprintPeerPinAllOpen,
@@ -159,6 +160,7 @@ def scan_connector_footprint_peer_pin_assignments(
             generic_differences: list[tuple[str, dict[str, tuple[str, ...]]]] = []
             named_differences: list[tuple[str, dict[str, tuple[str, ...]]]] = []
             generic_open_assignments: list[tuple[str, dict[str, tuple[str, ...]]]] = []
+            generic_open_divergent_assignments: list[tuple[str, dict[str, tuple[str, ...]]]] = []
             named_open_assignments: list[tuple[str, dict[str, tuple[str, ...]]]] = []
             generic_all_open_assignments: list[tuple[str, dict[str, tuple[str, ...]]]] = []
             named_all_open_assignments: list[tuple[str, dict[str, tuple[str, ...]]]] = []
@@ -202,14 +204,18 @@ def scan_connector_footprint_peer_pin_assignments(
                         and not is_return_function(function)
                     ):
                         named_all_open_assignments.append((pin_number, assignments))
-                    elif assigned_signatures and len(set(assigned_signatures)) == 1:
+                    elif assigned_signatures:
                         target_pin = f"{scope_references[0]}.{pin_number}"
                         pin_type = electrical_types[target_pin.casefold()].strip().casefold()
                         if pin_function_is_generic(function):
-                            open_peer_pin_group_count += 1
-                            generic_open_assignments.append((pin_number, assignments))
+                            if len(set(assigned_signatures)) == 1:
+                                open_peer_pin_group_count += 1
+                                generic_open_assignments.append((pin_number, assignments))
+                            else:
+                                generic_open_divergent_assignments.append((pin_number, assignments))
                         elif (
-                            pin_type
+                            len(set(assigned_signatures)) == 1
+                            and pin_type
                             in {"passive", "power_in", "power_out"} | SIGNAL_ELECTRICAL_TYPES
                             and not is_named_supply_function(function)
                             and not is_return_function(function)
@@ -273,37 +279,16 @@ def scan_connector_footprint_peer_pin_assignments(
                             peer_assignment_basis=basis,
                         )
                     )
-                for pin_number, assignments in named_open_assignments:
-                    named_power_input_open_outlier = ConnectorFootprintPeerPinOpenOutlier(
-                        footprint=footprint_display,
-                        value=value_display,
-                        pin_number=pin_number,
-                        pin_function=functions[f"{scope_references[0]}.{pin_number}".casefold()],
-                        pin_electrical_type=electrical_types[
-                            f"{scope_references[0]}.{pin_number}".casefold()
-                        ],
-                        assignments=dict(sorted(assignments.items())),
-                        open_pins=tuple(pin for pin, nets in assignments.items() if not nets),
-                        symbols=peer_symbols,
-                        common_anchor_pin_numbers=tuple(sorted(anchors)),
-                        peer_assignment_group=peer_group,
-                        peer_assignment_basis=basis,
-                    )
-                    open_outliers.append(named_power_input_open_outlier)
-                for pin_number, assignments in generic_open_assignments:
+                for pin_number, assignments in (*named_open_assignments, *generic_open_assignments):
+                    pin_key = f"{scope_references[0]}.{pin_number}".casefold()
                     open_outliers.append(
-                        ConnectorFootprintPeerPinOpenOutlier(
+                        connector_footprint_peer_open_outlier(
                             footprint=footprint_display,
                             value=value_display,
                             pin_number=pin_number,
-                            pin_function=functions[
-                                f"{scope_references[0]}.{pin_number}".casefold()
-                            ],
-                            pin_electrical_type=electrical_types[
-                                f"{scope_references[0]}.{pin_number}".casefold()
-                            ],
+                            pin_function=functions[pin_key],
+                            pin_electrical_type=electrical_types[pin_key],
                             assignments=dict(sorted(assignments.items())),
-                            open_pins=tuple(pin for pin, nets in assignments.items() if not nets),
                             symbols=peer_symbols,
                             common_anchor_pin_numbers=tuple(sorted(anchors)),
                             peer_assignment_group=peer_group,
@@ -328,8 +313,11 @@ def scan_connector_footprint_peer_pin_assignments(
                     )
             else:
                 unanchored_different_assignment_pin_group_count += len(generic_differences)
-                unanchored_open_peer_pin_group_count += len(generic_open_assignments) + len(
-                    named_open_assignments
+                open_peer_pin_group_count += len(generic_open_divergent_assignments)
+                unanchored_open_peer_pin_group_count += (
+                    len(generic_open_assignments)
+                    + len(generic_open_divergent_assignments)
+                    + len(named_open_assignments)
                 )
                 unanchored_all_open_peer_pin_group_count += len(generic_all_open_assignments)
                 for pin_number, assignments in generic_differences:
@@ -348,27 +336,22 @@ def scan_connector_footprint_peer_pin_assignments(
                             peer_assignment_basis=basis,
                         )
                     )
-                for pin_number, assignments in generic_open_assignments:
-                    pin_type = (
-                        electrical_types[f"{scope_references[0]}.{pin_number}".casefold()]
-                        .strip()
-                        .casefold()
-                    )
+                for pin_number, assignments in (
+                    *generic_open_assignments,
+                    *generic_open_divergent_assignments,
+                ):
+                    pin_key = f"{scope_references[0]}.{pin_number}".casefold()
+                    pin_type = electrical_types[pin_key].strip().casefold()
                     if pin_type not in _GENERIC_ALL_OPEN_PIN_TYPES:
                         continue
                     unanchored_open_outliers.append(
-                        ConnectorFootprintPeerPinOpenOutlier(
+                        connector_footprint_peer_open_outlier(
                             footprint=footprint_display,
                             value=value_display,
                             pin_number=pin_number,
-                            pin_function=functions[
-                                f"{scope_references[0]}.{pin_number}".casefold()
-                            ],
-                            pin_electrical_type=electrical_types[
-                                f"{scope_references[0]}.{pin_number}".casefold()
-                            ],
+                            pin_function=functions[pin_key],
+                            pin_electrical_type=electrical_types[pin_key],
                             assignments=dict(sorted(assignments.items())),
-                            open_pins=tuple(pin for pin, nets in assignments.items() if not nets),
                             symbols=peer_symbols,
                             common_anchor_pin_numbers=(),
                             peer_assignment_group=peer_group,

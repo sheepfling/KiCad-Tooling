@@ -12,11 +12,13 @@ from kicad_tooling.hwrepo.connector_coverage_models import (
     ConnectorCoverageReport,
 )
 from kicad_tooling.hwrepo.models import (
+    ComponentContract,
     ConnectorInterfaceReview,
     ConnectorInventoryReview,
     DesignLintIgnore,
     DesignLintPolicy,
     DesignLintRuleOverride,
+    NetlistContract,
 )
 from tests.connector_footprint_peer_support import peer_netlist
 from tests.connector_peer_unanchored_scope_support import lint_report, reviewed_coverage
@@ -96,6 +98,35 @@ def test_unanchored_alias_partial_open_prompts_when_coverage_is_missing() -> Non
     assert alias_coverage.unanchored_open_peer_pin_group_count == 1
     assert alias_coverage.uncovered_peer_assignment_scope_finding_count == 1
     assert not any(item.rule_id == SCOPE_RULE_ID for item in report.findings)
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_unanchored_partial_open_with_split_assigned_peers_prompts() -> None:
+    observed = _three_peer_alias_netlist(
+        target_assignments=("PORT_A", "PORT_B", None),
+    )
+
+    report = lint_report(observed)
+    findings = [item for item in report.findings if item.rule_id == RULE_ID]
+
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.evidence["references"] == ("J1", "J2", "J3")
+    assert finding.evidence["unanchored_partial_open_pin_numbers"] == ("1",)
+    assert finding.evidence["pin_assignments"] == (
+        "pin 1: J1.1=PORT_A; J2.1=PORT_B; J3.1=<unassigned>",
+    )
+    assert "required connection" in finding.message
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_common_anchor_suppresses_three_peer_partial_open_prompt() -> None:
+    observed = _three_peer_alias_netlist(
+        target_assignments=("PORT_A", "PORT_B", None),
+        anchor_assignments=("COMMON", "COMMON", "COMMON"),
+    )
+
+    assert not any(item.rule_id == RULE_ID for item in lint_report(observed).findings)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -240,4 +271,50 @@ def test_coverage_prompt_fingerprint_is_stable_under_native_mapping_reordering()
 
     assert tuple((item.fingerprint, item.evidence) for item in left_findings) == tuple(
         (item.fingerprint, item.evidence) for item in right_findings
+    )
+
+
+def _three_peer_alias_netlist(
+    *,
+    target_assignments: tuple[str | None, str | None, str | None],
+    anchor_assignments: tuple[str | None, str | None, str | None] = (None, None, None),
+) -> NetlistContract:
+    """Build three exact footprint aliases for partial-open peer-scope cases."""
+    references = ("J1", "J2", "J3")
+    components = {
+        reference: ComponentContract(
+            value="Synthetic two-contact connector",
+            footprint="Synthetic:Connector_2x1",
+        )
+        for reference in references
+    }
+    nets: dict[str, tuple[str, ...]] = {}
+    for pin_number, assignments in zip(
+        ("1", "2"),
+        (target_assignments, anchor_assignments),
+        strict=True,
+    ):
+        for reference, net in zip(references, assignments, strict=True):
+            if net is not None:
+                pin = f"{reference}.{pin_number}"
+                nets[net] = (*nets.get(net, ()), pin)
+    return NetlistContract(
+        components=components,
+        nets=nets,
+        component_symbols={
+            "J1": "Synthetic:GenericPortA",
+            "J2": "Synthetic:GenericPortB",
+            "J3": "Synthetic:GenericPortC",
+        },
+        component_pin_numbers={reference: ("1", "2") for reference in references},
+        pin_functions={
+            f"{reference}.{pin_number}": f"Pin_{pin_number}"
+            for reference in references
+            for pin_number in ("1", "2")
+        },
+        pin_electrical_types={
+            f"{reference}.{pin_number}": "passive"
+            for reference in references
+            for pin_number in ("1", "2")
+        },
     )

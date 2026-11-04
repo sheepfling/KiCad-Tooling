@@ -68,10 +68,26 @@ def test_unanchored_partial_open_connector_coverage_matches_cli_and_mcp(
 
     fault_cli, fault_mcp = run_case("partial-open-netlist.xml")
     control_cli, control_mcp = run_case("partial-open-anchor-control-netlist.xml")
+    split_fault_cli, split_fault_mcp = run_case("partial-open-divergent-netlist.xml")
+    split_control_cli, split_control_mcp = run_case(
+        "partial-open-divergent-anchor-control-netlist.xml"
+    )
     fault_cli_findings = tuple(item for item in fault_cli.findings if item.rule_id == RULE_ID)
     fault_mcp_findings = tuple(item for item in fault_mcp.findings if item.rule_id == RULE_ID)
     control_cli_findings = tuple(item for item in control_cli.findings if item.rule_id == RULE_ID)
     control_mcp_findings = tuple(item for item in control_mcp.findings if item.rule_id == RULE_ID)
+    split_fault_cli_findings = tuple(
+        item for item in split_fault_cli.findings if item.rule_id == RULE_ID
+    )
+    split_fault_mcp_findings = tuple(
+        item for item in split_fault_mcp.findings if item.rule_id == RULE_ID
+    )
+    split_control_cli_findings = tuple(
+        item for item in split_control_cli.findings if item.rule_id == RULE_ID
+    )
+    split_control_mcp_findings = tuple(
+        item for item in split_control_mcp.findings if item.rule_id == RULE_ID
+    )
 
     assert semantic_design_lint_report(fault_cli) == semantic_design_lint_report(fault_mcp)
     assert fault_cli_findings == fault_mcp_findings
@@ -79,3 +95,14 @@ def test_unanchored_partial_open_connector_coverage_matches_cli_and_mcp(
     assert fault_cli_findings[0].evidence["unanchored_partial_open_pin_numbers"] == ("1",)
     assert semantic_design_lint_report(control_cli) == semantic_design_lint_report(control_mcp)
     assert control_cli_findings == control_mcp_findings == ()
+    assert semantic_design_lint_report(split_fault_cli) == semantic_design_lint_report(
+        split_fault_mcp
+    )
+    assert split_fault_cli_findings == split_fault_mcp_findings
+    assert len(split_fault_cli_findings) == 1
+    assert split_fault_cli_findings[0].evidence["references"] == ("J1", "J2", "J3")
+    assert split_fault_cli_findings[0].evidence["unanchored_partial_open_pin_numbers"] == ("1",)
+    assert semantic_design_lint_report(split_control_cli) == semantic_design_lint_report(
+        split_control_mcp
+    )
+    assert split_control_cli_findings == split_control_mcp_findings == ()

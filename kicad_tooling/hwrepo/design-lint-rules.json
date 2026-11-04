@@ -464,20 +464,21 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, with project connector-coverage status when available",
-      "predicate": "Among fitted connector aliases with distinct native symbols, no PART_ID, exact nonempty value and footprint matches, identical complete pin inventories, and matching nonempty native function and electrical-type metadata, find generic contacts with no common-net anchor that either have one assigned net per alias with differing assignments or are partially open with at least one assigned peer and one unassigned peer, where all assigned peers share one net. Emit one REVIEW candidate per alias cohort only when connector coverage is absent or has incomplete, undeclared, unassessed, or unreviewed-scope status. Suppress the cohort when any compared alias is explicitly NOT_APPLICABLE or STALE. Complete coverage is handled by connector.footprint_peer_unanchored_scope_unreviewed.",
+      "predicate": "Among fitted connector aliases with distinct native symbols, no PART_ID, exact nonempty value and footprint matches, identical complete pin inventories, and matching nonempty native function and electrical-type metadata, find generic contacts with no common-net anchor that either have one assigned net per alias with differing assignments or are partially open with at least one assigned peer and one unassigned peer, where each assigned peer has one exact net that may match or differ from other assigned peers. Emit one REVIEW candidate per alias cohort only when connector coverage is absent or has incomplete, undeclared, unassessed, or unreviewed-scope status. Suppress the cohort when any compared alias is explicitly NOT_APPLICABLE or STALE. Complete coverage is handled by connector.footprint_peer_unanchored_scope_unreviewed.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Matching value, footprint, native symbol metadata, and pin inventory are similarity clues; they do not establish that connector aliases are electrically equivalent or intended peers.",
         "The finding asks for connector pinout and peer-scope review. It does not require matching nets, joining contacts, or assert electrical isolation.",
-        "Only exact unanchored generic contacts with complete one-net-per-alias differences or partial assignments where at least one peer is open and all assigned peers share one net are considered. All-open, common-anchor, ambiguous, named-function, DNP, PART_ID-bearing, incomplete-inventory, and mismatched-metadata cases are excluded.",
+        "Only exact unanchored generic contacts with complete one-net-per-alias differences or partial assignments where at least one peer is open and every assigned peer has exactly one net are considered. Assigned peers may share one net or differ. All-open, common-anchor, ambiguous, named-function, DNP, PART_ID-bearing, incomplete-inventory, and mismatched-metadata cases are excluded.",
         "An explicitly NOT_APPLICABLE or STALE alias suppresses the cohort. Complete current coverage stays with connector.footprint_peer_unanchored_scope_unreviewed; the rule does not replace project-authored coverage or verify its basis.",
         "The rule uses source-bound schematic netlist evidence and does not establish connector role, PCB copper continuity, off-board wiring, or physical continuity."
       ],
       "fault_fixtures": [
         "tests.test_connector_peer_unanchored_coverage.test_unanchored_alias_split_prompts_when_coverage_is_missing",
         "tests.test_connector_peer_unanchored_coverage.test_unanchored_alias_partial_open_prompts_when_coverage_is_missing",
+        "tests.test_connector_peer_unanchored_coverage.test_unanchored_partial_open_with_split_assigned_peers_prompts",
         "tests.test_connector_peer_unanchored_coverage_parity.test_unanchored_partial_open_connector_coverage_matches_cli_and_mcp",
         "tests.test_connector_peer_unanchored_scope.test_unanchored_scope_review_cli_mcp_parity",
         "tests.test_connector_peer_unanchored_assignments.test_native_unanchored_alias_fault_and_common_control_repeat"
@@ -487,6 +488,7 @@
         "tests.test_connector_peer_unanchored_coverage.test_stale_connector_alias_suppresses_the_uncovered_scope_prompt",
         "tests.test_connector_peer_unanchored_coverage.test_complete_peer_map_is_handled_by_scope_prompt_and_not_coverage_prompt",
         "tests.test_connector_peer_unanchored_coverage.test_anchored_partial_open_is_left_to_the_anchored_open_review",
+        "tests.test_connector_peer_unanchored_coverage.test_common_anchor_suppresses_three_peer_partial_open_prompt",
         "tests.test_connector_peer_unanchored_coverage_parity.test_unanchored_partial_open_connector_coverage_matches_cli_and_mcp",
         "tests.test_connector_peer_unanchored_assignments.test_native_unanchored_alias_fault_and_common_control_repeat"
       ],

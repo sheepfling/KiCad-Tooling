@@ -714,16 +714,17 @@ standalone parity work when it closes a demonstrated feature regression.
   coverage was absent or incomplete. The new default-REVIEW candidate uses only
   exact native alias and pin assignments to ask for pinout and peer-scope
   review. It now also prompts for partial-open generic contacts when at least
-  one alias is assigned, another is open, all assigned aliases share one net,
-  and no common-net anchor exists. It does not assert that contacts should be
-  tied. Synthetic fault/control, explicit-not-applicable, common-assignment,
-  policy, ignore, and ordering cases pass locally; CLI/MCP parity passes. The
-  exact native lane is selected for the prerelease gate, but could not run in
-  this local environment because Docker socket access was denied. Hosted run
-  `v0.5.3rc343` passed its scoped test, Ruff, and Pyright stages, then stopped
-  on Markdown formatting in the new fixture table; the formatting fix is in
-  the follow-up checkpoint. Public-board applicability and independent
-  reviewer-value measurement remain open.
+  one alias is assigned, another is open, every assigned alias has one exact
+  net (which may match or differ from other assigned aliases), and no
+  common-net anchor exists. It does not assert that contacts should be tied.
+  Synthetic fault/control, explicit-not-applicable, common-assignment, policy,
+  ignore, ordering, and CLI/MCP parity cases pass locally. Hosted acceptance
+  `v0.5.3rc344` passed in run `41763939346`, including the exact-version native
+  connector lane and installed-wheel check; the preceding `v0.5.3rc343` run
+  stopped only on Markdown formatting, fixed in `rc344`. The new three-alias
+  split/open case is covered by synthetic netlist and CLI/MCP tests; its exact
+  native export is not yet a dedicated fixture. Public-board applicability and
+  independent reviewer-value measurement remain open.
 
 **Earlier peer-scope work:**
 
@@ -14182,16 +14183,19 @@ control are documented in the
   inventory and pin maps. LINT-274 now emits one cohort-level review prompt
   from the exact native alias and assignment evidence. It also covers a
   partial-open generic contact when at least one alias has an assignment, at
-  least one is open, all assigned aliases share one net, and no other pin in
-  the cohort provides a common-net anchor.
+  least one is open, every assigned alias has exactly one net, and no other
+  pin in the cohort provides a common-net anchor. Assigned aliases may share
+  one net or have different nets.
 - **Predicate:** Reuse the bounded footprint-alias scan. Require distinct
   fitted native connector symbols with no PART_ID, matching nonempty value and
   footprint, complete identical pin inventories, matching nonempty native pin
   function and electrical-type metadata. In an unanchored cohort, report either
   generic contacts with one exact but different net per alias, or partial-open
-  generic contacts with one assigned net shared by all assigned aliases. Emit
-  one candidate for that cohort when connector coverage is absent, unassessed,
-  incomplete, undeclared, or has an unreviewed inventory scope.
+  generic contacts where each assigned alias has exactly one net, whether the
+  assigned nets match or differ. Require at least one assigned and one open
+  alias and no common-net anchor. Emit one candidate for that cohort when
+  connector coverage is absent, unassessed, incomplete, undeclared, or has an
+  unreviewed inventory scope.
 - **Boundary:** Similarity is only a review clue. The finding asks for pinout
   and peer-scope review; it does not say the ports are peers, require common
   nets, or direct the user to tie pins. Explicitly `NOT_APPLICABLE` and stale
@@ -14204,17 +14208,16 @@ control are documented in the
   `NetlistContract` inputs; no project design is stored. Controls cover an
   anchored partial open, a common assignment, explicit not-applicable review,
   complete peer scope, `review`/`block`/`off`, exact ignore, stale coverage,
-  and mapping-order stability. The focused synthetic connector selection
-  passed 29 tests, including CLI/MCP parity. Catalog reachability and
-  architecture checks passed (11 tests). The current exact-version native lane
-  is selected by the rule-scoped prerelease gate but could not run locally
-  because access to the Docker socket was denied. Hosted tag
-  `v0.5.3rc343` passed the scoped unit, Ruff, and Pyright stages, including the
-  pinned native fixture lane, but failed the Markdown gate on alignment and
-  line length in the new fixture table. The table is formatted in the follow-up
-  checkpoint; hosted acceptance is pending. The earlier split-only
-  implementation passed exact KiCad 10.0.0 / 10.0.5 acceptance. This remains
-  synthetic and native-export compatibility evidence, not public-board
+  mapping-order stability, and a three-alias case with two distinct assigned
+  nets plus one open alias. A three-alias common-anchor control stays quiet.
+  These cases pass through CLI and MCP with equal reports. The focused 16-test
+  synthetic selection passed locally. The exact-version native lane could not
+  run locally because access to the Docker socket was denied; hosted
+  `v0.5.3rc344` acceptance passed in run `41763939346`, including the existing
+  KiCad 10.0.0 / 10.0.5 native fault/control lane and installed-wheel check.
+  The new divergent partial-open assignment itself currently has synthetic
+  netlist and CLI/MCP coverage, not a dedicated KiCad schematic fixture. This
+  remains synthetic and native-export compatibility evidence, not public-board
   applicability or reviewer-value evidence.
 - **Coverage output:** The source-bound alias summary reports
   `uncovered_peer_assignment_scope_finding_count` alongside the existing

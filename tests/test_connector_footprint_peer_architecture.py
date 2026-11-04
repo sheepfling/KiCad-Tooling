@@ -20,6 +20,7 @@ PEER_MODULES = (
 )
 
 ANCHOR_MODULES = ("connector_footprint_peer_anchors.py",)
+OPEN_OUTLIER_MODULES = ("connector_footprint_peer_open_outliers.py",)
 UNANCHORED_MODULES = (
     "connector_footprint_peer_unanchored_divergence.py",
     "connector_footprint_peer_unanchored_coverage_review.py",
@@ -29,7 +30,7 @@ UNANCHORED_MODULES = (
 def test_connector_footprint_peer_modules_stay_below_review_limit() -> None:
     sizes = {
         name: line_count(HWREPO / name)
-        for name in (*PEER_MODULES, *ANCHOR_MODULES, *UNANCHORED_MODULES)
+        for name in (*PEER_MODULES, *ANCHOR_MODULES, *OPEN_OUTLIER_MODULES, *UNANCHORED_MODULES)
     }
     oversized = {name: size for name, size in sizes.items() if size >= IMPLEMENTATION_MAX_LINES}
 

@@ -69,7 +69,7 @@ def uncovered_unanchored_connector_alias_scope(
             or len(assignments) < 2
             or any(len(nets) > 1 for nets in assignments.values())
             or not any(not nets for nets in assignments.values())
-            or len(assigned_nets) != 1
+            or not assigned_nets
         ):
             continue
         _cohort_for(partial_open, cohorts).partial_opens.append(partial_open)
