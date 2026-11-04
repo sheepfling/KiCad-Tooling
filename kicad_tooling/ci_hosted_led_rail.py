@@ -58,6 +58,7 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
         "custom-series-return-control": "control-custom-output-series-return-resistor.kicad_sch",
         "current-sink-output": "control-current-sink-output.kicad_sch",
         "current-sink-two-channel": "control-current-sink-two-channel.kicad_sch",
+        "current-sink-two-channel-partial-map": "control-current-sink-two-channel.kicad_sch",
     }
     source_hashes = {case: digest(fixture_root / name) for case, name in cases.items()}
     scratch = Path(tempfile.mkdtemp(prefix=f"led-rail-{project}-", dir=log.directory.resolve()))
@@ -163,12 +164,19 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
             "D1: LED directly shares an output net and a rail",
             "D2: LED directly shares an output net and a rail",
         },
+        "current-sink-two-channel-partial-map": {
+            "D1: LED directly shares an output net and a rail",
+            "D2: LED directly shares an output net and a rail",
+        },
     }
     expected_mapped_output_findings: dict[str, set[str]] = {
         "custom-direct-output": {"D1: LED directly shares an output net and a rail"},
         "custom-series-return-control": set(),
         "current-sink-output": set(),
         "current-sink-two-channel": set(),
+        "current-sink-two-channel-partial-map": {
+            "D2: LED directly shares an output net and a rail"
+        },
     }
     custom_led_role_map = ComponentRoleMap(
         entries=(
@@ -350,7 +358,7 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
                 if case.startswith("custom-")
                 else (
                     DesignLintPolicy(power_path_map=current_sink_path_map)
-                    if case == "current-sink-output"
+                    if case in {"current-sink-output", "current-sink-two-channel-partial-map"}
                     else (
                         DesignLintPolicy(power_path_map=current_sink_two_channel_path_map)
                         if case == "current-sink-two-channel"
@@ -411,7 +419,11 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
                 f"Native {case} lint result differs from its output-driven LED expectation: "
                 f"{sorted(output_findings)}"
             )
-        if case in {"current-sink-output", "current-sink-two-channel"}:
+        if case in {
+            "current-sink-output",
+            "current-sink-two-channel",
+            "current-sink-two-channel-partial-map",
+        }:
             expected_path_count = 2 if case == "current-sink-two-channel" else 1
             path_runs = [
                 item

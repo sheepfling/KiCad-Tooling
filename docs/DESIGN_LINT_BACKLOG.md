@@ -16891,7 +16891,10 @@ control are documented in the
   prompts, then requires each exact mapped driver `PART_ID`/pin signature and
   LED A-to-K path to match before those prompts are suppressed; local native
   execution remains pending the pinned CI lane. A partial map is covered by a
-  typed regression and leaves its unlisted LED channel reviewable.
+  typed regression and leaves its unlisted LED channel reviewable. The native
+  two-channel source now also runs with an exact one-channel map; the gate
+  requires the mapped D1 prompt to clear while D2 remains reviewable, alongside
+  the unmapped and fully mapped controls.
 - **Public-template applicability check (2026-10-01):** The clean public
   KiCad-Team-Workflow-Template checkout at
   `ed89536f0dbbcb013145af2994fef41b2250143e` documents its Arduino status LED

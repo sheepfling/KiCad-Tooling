@@ -168,6 +168,11 @@ covers its one mapped LED while leaving the other channel reviewable. A stale
 driver identity, changed pin signature, or reversed LED polarity leaves the
 matching review visible in the typed regression tests.
 
+The digest-pinned native lane exports the two-channel schematic with no map,
+an exact one-channel map, and a complete two-channel map. The partial-map case
+must clear D1's prompt while retaining D2's; both exact KiCad versions repeat
+the same parsed netlist evidence for each case.
+
 Fixture SHA-256:
 
 | Fixture                                      | SHA-256                                                            |
