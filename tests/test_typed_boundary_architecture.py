@@ -29,6 +29,92 @@ def _return_annotation(relative: str, name: str) -> str:
     raise AssertionError(f"Function {name} is missing from {relative}")
 
 
+def _contains_any_annotation(node: ast.AST) -> bool:
+    return any(
+        (isinstance(child, ast.Name) and child.id == "Any")
+        or (isinstance(child, ast.Attribute) and child.attr == "Any")
+        for child in ast.walk(node)
+    )
+
+
+def _contains_opaque_collection(node: ast.AST) -> bool:
+    collection_names = {
+        "dict",
+        "Dict",
+        "Mapping",
+        "MutableMapping",
+        "Sequence",
+        "MutableSequence",
+        "list",
+        "List",
+        "tuple",
+        "Tuple",
+        "set",
+        "Set",
+        "frozenset",
+        "FrozenSet",
+    }
+    opaque_names = {"Any", "object"}
+
+    def has_opaque_value(value: ast.AST) -> bool:
+        return any(
+            (isinstance(child, ast.Name) and child.id in opaque_names)
+            or (isinstance(child, ast.Attribute) and child.attr in opaque_names)
+            for child in ast.walk(value)
+        )
+
+    for child in ast.walk(node):
+        if isinstance(child, ast.Name) and child.id in collection_names:
+            # A bare collection annotation has no declared key or value type.
+            parent_is_subscript = any(
+                isinstance(parent, ast.Subscript) and parent.value is child
+                for parent in ast.walk(node)
+            )
+            if not parent_is_subscript:
+                return True
+        if isinstance(child, ast.Subscript):
+            base = ast.unparse(child.value).split(".")[-1]
+            if base in collection_names and has_opaque_value(child.slice):
+                return True
+    return False
+
+
+def _annotations(tree: ast.Module) -> tuple[ast.AST, ...]:
+    values: list[ast.AST] = []
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            values.extend(
+                argument.annotation
+                for argument in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
+                if argument.annotation is not None
+            )
+            if node.args.vararg is not None and node.args.vararg.annotation is not None:
+                values.append(node.args.vararg.annotation)
+            if node.args.kwarg is not None and node.args.kwarg.annotation is not None:
+                values.append(node.args.kwarg.annotation)
+            if node.returns is not None:
+                values.append(node.returns)
+        elif isinstance(node, ast.AnnAssign):
+            values.append(node.annotation)
+    return tuple(values)
+
+
+def test_opaque_annotation_check_distinguishes_raw_parser_values() -> None:
+    examples = {
+        "dict[str, object]": True,
+        "Mapping[str, list[object]]": True,
+        "dict": True,
+        "dict[str, JsonValue]": False,
+        "list[str]": False,
+        "object": False,
+    }
+    for source, expected in examples.items():
+        tree = ast.parse(f"value: {source}")
+        annotation = tree.body[0]
+        assert isinstance(annotation, ast.AnnAssign)
+        assert _contains_opaque_collection(annotation.annotation) is expected
+
+
 def test_connectivity_view_uses_the_authored_contract_owner() -> None:
     assert get_type_hints(_authored, include_extras=True)["contract"] is (
         ElectricalAnalysisContract
@@ -54,3 +140,19 @@ def test_fixture_repeatability_keys_use_their_finding_record_types() -> None:
         ("kicad_tooling/ci_hosted_serial_peer_net_labels.py", "report_signature"),
     ):
         assert "object" not in _return_annotation(module, function)
+
+
+def test_package_and_script_annotations_do_not_use_any_or_opaque_collections() -> None:
+    roots = (SOURCE_ROOT / "kicad_tooling", SOURCE_ROOT / "scripts")
+    violations: list[str] = []
+    for root in roots:
+        for path in sorted(root.rglob("*.py")):
+            relative = path.relative_to(SOURCE_ROOT).as_posix()
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=relative)
+            for annotation in _annotations(tree):
+                rendered = ast.unparse(annotation)
+                if _contains_any_annotation(annotation):
+                    violations.append(f"{relative}: Any in {rendered}")
+                elif _contains_opaque_collection(annotation):
+                    violations.append(f"{relative}: opaque collection in {rendered}")
+    assert not violations, "\n".join(violations)

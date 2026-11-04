@@ -261,8 +261,7 @@ def test_message_file_preflight_validates_rule_scope_without_writing_github_outp
 ) -> None:
     message = tmp_path / "lint-tag-message.txt"
     message.write_text(
-        "Lint-Rule: bus.rs485_data_direction_label_mismatch\n"
-        f"Native-Fixture: {_RS485_FIXTURE}\n",
+        f"Lint-Rule: bus.rs485_data_direction_label_mismatch\nNative-Fixture: {_RS485_FIXTURE}\n",
         encoding="utf-8",
     )
     github_output = tmp_path / "github-output"

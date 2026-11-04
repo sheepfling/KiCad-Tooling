@@ -26,6 +26,8 @@ StageState = Literal[
     "STALE",
     "UNAVAILABLE",
 ]
+
+
 class HistorySnapshot(StrictModel):
     overview: RepositoryPath
     overview_sha256: Digest

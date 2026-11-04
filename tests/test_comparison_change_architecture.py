@@ -43,6 +43,7 @@ def test_before_after_state_has_one_typed_owner_and_compatibility_export() -> No
 
 def test_history_receipt_admission_uses_only_supported_report_models() -> None:
     assert HistoryReceiptModel == ValidationSummary | FindingsViewReport | ProjectVerificationReport
-    assert get_type_hints(_item, include_extras=True)["return"] == tuple[
-        HistoryEvidence, HistoryReceiptModel | None
-    ]
+    assert (
+        get_type_hints(_item, include_extras=True)["return"]
+        == tuple[HistoryEvidence, HistoryReceiptModel | None]
+    )

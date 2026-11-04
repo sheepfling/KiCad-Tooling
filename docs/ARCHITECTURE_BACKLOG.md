@@ -756,6 +756,11 @@ available on demand while its broader output is reviewed. See
 The source-derived raw-JSON boundary now recognizes aliased `json.load(s)`
 imports and classifies native KiCad report and bounded GLB parsing as explicit
 adapters; it no longer exempts `validate.py` after parsing moved to its owner.
+The typed-boundary architecture suite now scans annotations throughout
+`kicad_tooling/` and `scripts/`, rejecting `Any` and collections whose element
+or value type falls back to `Any` or `object`. The two remaining `object`
+inputs are limited to Pydantic validators that must accept arbitrary raw input
+before validation; they are not open collection contracts.
 The contract-owner architecture gate now requires production references to
 `ComponentContract`, `NetlistContract`, `CheckEvidence`, and
 `ValidationSummary`, `ContractCoachReport`, and `ContractDifference` to import
