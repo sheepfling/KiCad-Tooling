@@ -6,7 +6,12 @@ import ast
 
 import pytest
 
-from kicad_tooling.hwrepo import control_input_models
+from kicad_tooling.hwrepo import (
+    control_input_models,
+    design_lint_candidate_inputs,
+    design_lint_control_candidates,
+    design_lint_control_inputs,
+)
 from kicad_tooling.hwrepo import models as shared_models
 from tests.lint_architecture_support import (
     IMPLEMENTATION_MAX_LINES,
@@ -83,4 +88,32 @@ def test_internal_control_input_services_import_models_from_the_owner() -> None:
 
     assert not legacy_imports, (
         f"Internal control-input services must import theme-owned models directly: {legacy_imports}"
+    )
+
+
+def test_control_candidate_input_has_a_theme_owned_contract_module() -> None:
+    owner_path = REPO_ROOT / "kicad_tooling/hwrepo/design_lint_control_inputs.py"
+    service_path = REPO_ROOT / "kicad_tooling/hwrepo/design_lint_control_candidates.py"
+    bundle_path = REPO_ROOT / "kicad_tooling/hwrepo/design_lint_candidate_inputs.py"
+    owner_tree = ast.parse(owner_path.read_text(encoding="utf-8"))
+    service_tree = ast.parse(service_path.read_text(encoding="utf-8"))
+    bundle_tree = ast.parse(bundle_path.read_text(encoding="utf-8"))
+
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert "ControlCandidateInputs" in _top_level_definitions(owner_tree)
+    assert "ControlCandidateInputs" not in _top_level_definitions(service_tree)
+    for tree in (service_tree, bundle_tree):
+        assert any(
+            isinstance(node, ast.ImportFrom)
+            and node.module == "design_lint_control_inputs"
+            and "ControlCandidateInputs" in {alias.name for alias in node.names}
+            for node in tree.body
+        )
+    assert (
+        design_lint_candidate_inputs.ControlCandidateInputs
+        is design_lint_control_inputs.ControlCandidateInputs
+    )
+    assert (
+        design_lint_control_candidates.ControlCandidateInputs
+        is design_lint_control_inputs.ControlCandidateInputs
     )

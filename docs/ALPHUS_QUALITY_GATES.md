@@ -1,6 +1,9 @@
 # Alphus quality checks
 
-The development extra pins Alphus to the revision in `pyproject.toml`.
+The optional `dev-experimental` extra pins Alphus to the revision in
+`pyproject.toml`. The standard `dev` extra does not install it. CI explicitly
+opts in because the package and prerelease jobs run its advisory checks and
+regressions.
 `quality-gates.toml` scopes runtime-types and Pydantic practices checks to Python
 production and script files. The package CI job runs each in report mode: findings are
 advisory, while an invalid policy or tool failure still fails the step.
@@ -10,10 +13,14 @@ not included in CI while its broader guidance is being reviewed.
 Run the same advisory check locally from this checkout:
 
 ```sh
+python -m pip install -e '.[dev,dev-experimental]'
 python -I -m alphus --rule runtime-types --report
 python -I -m alphus --rule pydantic-practices --report
 python -I -m alphus --rule python-style --report --json
 ```
+
+Select only the experimental regression tests with
+`python -I -m pytest -m alphus_experimental`.
 
 For a structured profile result, run `python -I -m alphus --profile
 runtime-types --json`. The profile returns a failing exit code when it finds

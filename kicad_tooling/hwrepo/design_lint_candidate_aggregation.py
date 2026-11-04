@@ -25,11 +25,9 @@ from .design_lint_bus_inputs import BusCandidateInputs
 from .design_lint_candidate_inputs import (
     ComponentCandidateInputs,
     ConnectorCandidateInputs,
-    ControlCandidateInputs,
     DesignLintCandidateInputs,
     MappedCandidateInputs,
     PeerCandidateInputs,
-    PowerCandidateInputs,
     UsbDataPathCandidateInputs,
 )
 from .design_lint_candidate_results import DesignLintCandidateScanResult
@@ -41,6 +39,7 @@ from .design_lint_component_candidates import (
 from .design_lint_component_peer_candidates import scan_component_peer_candidates
 from .design_lint_connector_candidates import scan_connector_candidates
 from .design_lint_control_candidates import scan_control_candidates
+from .design_lint_control_inputs import ControlCandidateInputs
 from .design_lint_mapped_coverage_candidates import (
     MappedCoverageCandidateInputs,
     scan_mapped_coverage_candidates,
@@ -59,6 +58,7 @@ from .design_lint_pcb_required_fitted_reference_candidates import (
 from .design_lint_pcb_requirement_candidates import scan_pcb_requirement_candidates
 from .design_lint_peer_candidates import peer_candidates
 from .design_lint_power_candidates import scan_power_candidates
+from .design_lint_power_inputs import PowerCandidateInputs
 from .design_lint_return_distribution_candidates import return_distribution_candidates
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .design_lint_schematic_geometry import schematic_geometry_candidates

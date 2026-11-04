@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import evaluate
-from kicad_tooling.hwrepo.design_lint_candidate_inputs import PowerCandidateInputs
 from kicad_tooling.hwrepo.design_lint_power_candidates import scan_power_candidates
+from kicad_tooling.hwrepo.design_lint_power_inputs import PowerCandidateInputs
 from kicad_tooling.hwrepo.design_lint_power_regulator_passives import (
     regulator_required_passive_candidates,
 )

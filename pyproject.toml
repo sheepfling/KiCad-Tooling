@@ -25,7 +25,6 @@ mcp = ["mcp==2.2.0"]
 charts = ["matplotlib==3.11.2"]
 cad = ["easyeda2kicad==1.0.1"]
 dev = [
-  "alphus @ git+https://github.com/sheepfling/alphus.git@d5dfadf83006841cf135fca1995c628bac43d9e0",
   "build>=1.2",
   "pytest==9.1.1",
   "setuptools>=80",
@@ -37,6 +36,9 @@ dev = [
   "snakemd-stubs==2.4.1.0",
   "rumdl==0.2.77",
   "mdrepo==0.0.1.post0",
+]
+dev-experimental = [
+  "alphus @ git+https://github.com/sheepfling/alphus.git@d5dfadf83006841cf135fca1995c628bac43d9e0",
 ]
 
 [project.scripts]
@@ -90,6 +92,7 @@ markers = [
   "template_checkout: integration tests that require a separate public template checkout",
   "native_kicad: source or board fixtures run against an exact native KiCad version",
   "architecture: repository module boundaries and size guardrails",
+  "alphus_experimental: opt-in tests for the experimental Alphus integration",
   "slow: cross-process, package, or broad integration checks that take longer to run",
 ]
 

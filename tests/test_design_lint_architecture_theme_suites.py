@@ -106,6 +106,10 @@ COMPONENT_POWER_DOMAIN_THEME_SUITES = (
     "test_design_lint_mcp_parity_same_voltage_power_input.py",
     "test_design_lint_architecture_same_voltage_power_inputs.py",
 )
+POWER_CANDIDATE_ARCHITECTURE_SUITES = (
+    "test_design_lint_architecture_control_input_models.py",
+    "test_design_lint_architecture_power_candidate_inputs.py",
+)
 TWO_PIN_NATIVE_THEME_SUITES = ("test_two_pin_component_native_fixture_lane.py",)
 COMPLEMENTARY_PAIR_THEME_SUITES = (
     "test_complementary_pair_native_fixture_lane.py",
@@ -167,6 +171,7 @@ def test_design_lint_theme_suites_stay_below_review_limit() -> None:
                     *COMPONENT_LED_THEME_SUITES,
                     *COMPONENT_POWER_OUTPUT_THEME_SUITES,
                     *COMPONENT_POWER_DOMAIN_THEME_SUITES,
+                    *POWER_CANDIDATE_ARCHITECTURE_SUITES,
                     *TWO_PIN_NATIVE_THEME_SUITES,
                     *COMPLEMENTARY_PAIR_THEME_SUITES,
                     *DC_REFERENCE_NATIVE_THEME_SUITES,

@@ -32,16 +32,15 @@ from kicad_tooling.hwrepo.design_lint_candidate_aggregation import (
 from kicad_tooling.hwrepo.design_lint_candidate_inputs import (
     ComponentCandidateInputs,
     ConnectorCandidateInputs,
-    ControlCandidateInputs,
     DesignLintCandidateInputs,
     MappedCandidateInputs,
     PcbCandidateInputs,
     PeerCandidateInputs,
-    PowerCandidateInputs,
     UsbDataPathCandidateInputs,
 )
 from kicad_tooling.hwrepo.design_lint_candidate_results import DesignLintCandidateScanResult
 from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
+from kicad_tooling.hwrepo.design_lint_control_inputs import ControlCandidateInputs
 from kicad_tooling.hwrepo.design_lint_mapped_coverage_candidates import (
     MappedCoverageCandidateInputs,
     MappedCoverageCandidateResult,
@@ -49,6 +48,7 @@ from kicad_tooling.hwrepo.design_lint_mapped_coverage_candidates import (
 from kicad_tooling.hwrepo.design_lint_mapped_topology_results import (
     MappedTopologyFindingCounts,
 )
+from kicad_tooling.hwrepo.design_lint_power_inputs import PowerCandidateInputs
 from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.external_protection_models import ExternalProtectionCoverageReport
 from kicad_tooling.hwrepo.i2c_address_inputs import I2cAddressCandidateInput

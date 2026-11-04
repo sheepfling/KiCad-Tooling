@@ -542,7 +542,16 @@ route now uses a similarly named `UsbPeerPinNetIndex` for its paired
 pin-to-net and net-to-pin views across endpoint, crossing, path, and shunt
 analysis. LED rail and direct-output review now carry those two views in a
 `LedNetAssignmentIndex` shared by both predicates rather than a positional map
-pair.
+pair. The authored regulator-passive map now travels in the power-owned
+`PowerCandidateInputs`, defined in `design_lint_power_inputs.py`; prepared
+evaluation passes that group to the power theme scanner. Evaluation assembly
+no longer appends this power rule outside the shared candidate scan, so active
+catalog validation remains at the candidate boundary. The public candidate
+adapter keeps its established signature. Control-bias evaluation likewise
+uses `ControlCandidateInputs` from `design_lint_control_inputs.py`, pairing its
+observed netlist with the source-bound heuristic coverage. The bundle and
+scanner now import that record from its owner; the former service and bundle
+imports remain identity-compatible.
 
 **Done when:** the pilot yields equivalent findings and report meaning; adding
 a second rule in that theme needs no new parameter on the 49- or 33-parameter
@@ -809,10 +818,11 @@ project policy in their own catalog. Open only clean, reproducible blocking
 checks; keep disputed guidance review-only and record upstream complaints
 outside this repository.
 
-The development extra now pins Alphus, and `quality-gates.toml` defines a
-reproducible runtime-types, Pydantic practices, and Python-style scopes. The
-package CI job runs the first two in advisory report mode; Python-style is
-available on demand while its broader output is reviewed. See
+The optional `dev-experimental` extra pins Alphus, and `quality-gates.toml`
+defines reproducible runtime-types, Pydantic practices, and Python-style
+scopes. CI opts in to the extra for the two advisory reports and the
+experimental policy regressions; Python-style remains available on demand
+while its broader output is reviewed. See
 `ALPHUS_QUALITY_GATES.md` for the command and enforcement boundary.
 The source-derived raw-JSON boundary now recognizes aliased `json.load(s)`
 imports and classifies native KiCad report and bounded GLB parsing as explicit

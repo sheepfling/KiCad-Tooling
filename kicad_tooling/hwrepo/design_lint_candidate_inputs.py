@@ -5,25 +5,20 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .component_peer_pin_scan import ComponentPeerPinAssignmentScans
-from .component_role_models import ComponentRoleMap
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_return_distribution_models import ConnectorReturnDistributionCoverageReport
 from .connector_stateful_contact_models import ConnectorStatefulContactMap
 from .crystal_network_models import CrystalNetworkCoverageReport
 from .design_lint_bus_inputs import BusCandidateInputs
-from .design_lint_control_candidates import ControlCandidateInputs
+from .design_lint_control_inputs import ControlCandidateInputs
 from .design_lint_pcb_inputs import PcbCandidateInputs
+from .design_lint_power_inputs import PowerCandidateInputs
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
 from .external_protection_models import ExternalProtectionCoverageReport
-from .ic_decoupling_models import IcDecouplingMap
 from .netlist_contract_models import NetlistContract
-from .oscillator_output_path_models import OscillatorOutputPathMap
-from .power_path_models import PowerPathMap
-from .power_sequence_models import PowerSequenceMap
 from .rc_filter_models import RcFilterCoverageReport
 from .regulator_feedback_models import RegulatorFeedbackCoverageReport
-from .regulator_passive_models import RegulatorPassiveTopologyMap
 from .schematic_geometry import SchematicGeometryScan
 from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_types import SerialPeerReferenceScan
@@ -48,18 +43,6 @@ class ComponentCandidateInputs:
 
     peer_pin_assignment_scans: ComponentPeerPinAssignmentScans | None
     peer_power_output_review_enabled: bool
-
-
-@dataclass(frozen=True, slots=True)
-class PowerCandidateInputs:
-    """Authored power, role, decoupling, and sequencing requirements."""
-
-    component_role_map: ComponentRoleMap | None
-    power_path_map: PowerPathMap | None
-    power_sequence_map: PowerSequenceMap | None
-    oscillator_output_path_map: OscillatorOutputPathMap | None
-    ic_decoupling_map: IcDecouplingMap | None
-    regulator_passive_topology_map: RegulatorPassiveTopologyMap | None = None
 
 
 @dataclass(frozen=True, slots=True)

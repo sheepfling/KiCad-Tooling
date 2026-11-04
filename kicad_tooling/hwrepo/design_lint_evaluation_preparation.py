@@ -17,11 +17,9 @@ from .design_lint_bus_inputs import BusCandidateInputs
 from .design_lint_candidate_inputs import (
     ComponentCandidateInputs,
     ConnectorCandidateInputs,
-    ControlCandidateInputs,
     DesignLintCandidateInputs,
     MappedCandidateInputs,
     PeerCandidateInputs,
-    PowerCandidateInputs,
     UsbDataPathCandidateInputs,
 )
 from .design_lint_catalog import rule_catalog
@@ -29,6 +27,7 @@ from .design_lint_component_coverage import (
     ComponentMapCoverageRequest,
     resolve_component_map_coverage,
 )
+from .design_lint_control_inputs import ControlCandidateInputs
 from .design_lint_evaluation_types import (
     DesignLintEvaluationPreparation,
     DesignLintEvaluationPreparationResult,
@@ -45,6 +44,7 @@ from .design_lint_pcb_coverage_policy import (
 from .design_lint_pcb_geometry_coverage_policy import normalize_pcb_input_coverage_policy
 from .design_lint_pcb_inputs import PcbCandidateInputs
 from .design_lint_peer_evaluation import scan_peer_design_lint_evidence
+from .design_lint_power_inputs import PowerCandidateInputs
 from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_schematic_coverage import (

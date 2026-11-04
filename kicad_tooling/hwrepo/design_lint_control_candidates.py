@@ -9,23 +9,10 @@ from .control_input_inventory import (
     unconnected_control_inputs,
 )
 from .control_input_models import ControlInputBiasHeuristicCoverage
+from .design_lint_control_inputs import ControlCandidateInputs
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 from .open_drain_heuristics import open_output_bias_gaps
-
-
-@dataclass(frozen=True, slots=True)
-class ControlCandidateInputs:
-    """One native observation and the resolved control-bias coverage for it."""
-
-    observed: NetlistContract
-    input_bias_coverage: ControlInputBiasHeuristicCoverage
-
-    @classmethod
-    def from_legacy_arguments(
-        cls, observed: NetlistContract, coverage: ControlInputBiasHeuristicCoverage | None
-    ) -> ControlCandidateInputs:
-        return cls(observed, coverage or ControlInputBiasHeuristicCoverage())
 
 
 @dataclass(frozen=True, slots=True)

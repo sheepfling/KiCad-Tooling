@@ -10,8 +10,8 @@ from .component_power_input_domains import same_voltage_power_inputs_on_differen
 from .component_power_output_candidates import unconnected_power_output_candidates
 from .component_role_models import ComponentRoleMap
 from .component_roles import resolve_component_role_map
-from .design_lint_candidate_inputs import PowerCandidateInputs
 from .design_lint_power_decoupling import ic_decoupling_candidates
+from .design_lint_power_inputs import PowerCandidateInputs
 from .design_lint_power_regulator_passives import regulator_required_passive_candidates
 from .design_lint_types import Candidate
 from .ic_decoupling_models import IcDecouplingMap
