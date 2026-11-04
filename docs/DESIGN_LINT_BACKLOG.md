@@ -722,9 +722,10 @@ standalone parity work when it closes a demonstrated feature regression.
   `v0.5.3rc344` passed in run `41763939346`, including the exact-version native
   connector lane and installed-wheel check; the preceding `v0.5.3rc343` run
   stopped only on Markdown formatting, fixed in `rc344`. The new three-alias
-  split/open case is covered by synthetic netlist and CLI/MCP tests; its exact
-  native export is not yet a dedicated fixture. Public-board applicability and
-  independent reviewer-value measurement remain open.
+  split/open case now also has a source-hashed KiCad fault/control pair for the
+  pinned native lane. Its new native exports are pending the next hosted gate.
+  Public-board applicability and independent reviewer-value measurement
+  remain open.
 
 **Earlier peer-scope work:**
 
@@ -14210,14 +14211,15 @@ control are documented in the
   complete peer scope, `review`/`block`/`off`, exact ignore, stale coverage,
   mapping-order stability, and a three-alias case with two distinct assigned
   nets plus one open alias. A three-alias common-anchor control stays quiet.
-  These cases pass through CLI and MCP with equal reports. The focused 16-test
-  synthetic selection passed locally. The exact-version native lane could not
-  run locally because access to the Docker socket was denied; hosted
+  These cases pass through CLI and MCP with equal reports. A source-hashed
+  KiCad schematic fault/control pair now covers the same three-alias state on
+  exact native export. The focused 16-test synthetic selection passed locally.
+  The exact-version native lane could not run locally because access to the
+  Docker socket was denied; hosted
   `v0.5.3rc344` acceptance passed in run `41763939346`, including the existing
   KiCad 10.0.0 / 10.0.5 native fault/control lane and installed-wheel check.
-  The new divergent partial-open assignment itself currently has synthetic
-  netlist and CLI/MCP coverage, not a dedicated KiCad schematic fixture. This
-  remains synthetic and native-export compatibility evidence, not public-board
+  The new fixture pair is queued for the next prerelease gate. These checks
+  establish synthetic and native-export compatibility, not public-board
   applicability or reviewer-value evidence.
 - **Coverage output:** The source-bound alias summary reports
   `uncovered_peer_assignment_scope_finding_count` alongside the existing

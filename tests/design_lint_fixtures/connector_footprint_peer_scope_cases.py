@@ -23,7 +23,7 @@ def connector_footprint_peer_scope_cases() -> dict[str, NetlistContract]:
         for number in ("1", "2")
     }
     electrical_types = {pin: "passive" for pin in functions}
-    return {
+    cases = {
         "footprint-alias-unanchored-fault": NetlistContract(
             components=components,
             nets={
@@ -46,6 +46,53 @@ def connector_footprint_peer_scope_cases() -> dict[str, NetlistContract]:
             pin_functions=functions,
             pin_electrical_types=electrical_types,
         ),
+    }
+    cases.update(_three_alias_split_open_cases())
+    return cases
+
+
+def _three_alias_split_open_cases() -> dict[str, NetlistContract]:
+    """Mirror a native fault/control pair with three exact connector aliases."""
+    references = ("J1", "J2", "J3")
+    components = {
+        reference: ComponentContract(
+            value="Synthetic two-contact connector",
+            footprint="Synthetic:Connector_2x1",
+        )
+        for reference in references
+    }
+    symbols = {
+        "J1": "Synthetic:GenericPort",
+        "J2": "Synthetic:GenericPortAlias",
+        "J3": "Synthetic:GenericPortThird",
+    }
+    pin_numbers = {reference: ("1", "2") for reference in references}
+    functions = {
+        f"{reference}.{number}": f"Pin_{number}"
+        for reference in references
+        for number in ("1", "2")
+    }
+    electrical_types = {pin: "passive" for pin in functions}
+
+    def contract(*, common_anchor: bool) -> NetlistContract:
+        nets = {"SPLIT_OPEN_A": ("J1.1",), "SPLIT_OPEN_B": ("J2.1",)}
+        unconnected = {"unconnected": ("J3.1", "J1.2", "J2.2", "J3.2")}
+        if common_anchor:
+            nets["COMMON"] = ("J1.2", "J2.2", "J3.2")
+            unconnected = {"unconnected": ("J3.1",)}
+        return NetlistContract(
+            components=components,
+            nets=nets,
+            unconnected_nets=unconnected,
+            component_symbols=symbols,
+            component_pin_numbers=pin_numbers,
+            pin_functions=functions,
+            pin_electrical_types=electrical_types,
+        )
+
+    return {
+        "footprint-alias-unanchored-split-open-fault": contract(common_anchor=False),
+        "footprint-alias-unanchored-split-open-anchor-control": contract(common_anchor=True),
     }
 
 

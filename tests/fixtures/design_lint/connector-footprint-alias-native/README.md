@@ -32,6 +32,14 @@ prompt with the assigned and open contacts in its evidence. The existing
 stays quiet while the anchored open-contact rule remains applicable. Neither
 case declares whether the open contact is required.
 
+`unanchored-split-open-fault.kicad_sch` extends this case to three distinct
+native connector symbols with matching value, footprint, complete pin
+inventory, and pin metadata. J1.1 and J2.1 have different explicit nets while
+J3.1 is open; pin 2 has no assignment on any alias. LINT-274 emits one
+cohort-level REVIEW prompt. `unanchored-split-open-anchor-control.kicad_sch`
+adds a common pin-2 anchor and must stay quiet for LINT-274. Both schematics
+are exported twice by the pinned KiCad 10.0.0 and 10.0.5 native lane.
+
 The mixed-open case is a review prompt: J1 and J2 have one exact common anchor
 on pin 1, and J2 pin 2 is open while J1 pin 2 is assigned. Neither case asserts
 that pin 2 is required or should be connected. The all-open case leaves pin 2
@@ -72,3 +80,7 @@ SHA-256 source digests:
 - `unanchored-fault.kicad_sch`: `2d8fbf390f3b154d77c0bbc603a7260ddc0ff27cf3b9b2e74ab19242dfc4aa40`
 - `unanchored-partial-open-fault.kicad_sch`:
   `fb4fc447ef05fc97699b84bf5a21b7d106ed32e56e31059196982fa76d98e124`
+- `unanchored-split-open-fault.kicad_sch`:
+  `4f808c6119974d3ab31d5948c187f7d20406fb80a75864087d80c630b96c8b42`
+- `unanchored-split-open-anchor-control.kicad_sch`:
+  `34936e4c2ee0eacddd27fa204eeb6b285d8ec4ece22e13209e10f9503262a5f0`

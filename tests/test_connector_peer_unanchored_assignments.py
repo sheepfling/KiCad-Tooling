@@ -36,7 +36,14 @@ NATIVE_CONTROL_CASE = "footprint-alias-control"
 NATIVE_CASES = (NATIVE_FAULT_CASE, NATIVE_CONTROL_CASE)
 COVERAGE_NATIVE_FAULT_CASE = "footprint-alias-unanchored-partial-open-fault"
 COVERAGE_NATIVE_CONTROL_CASE = "footprint-alias-open-fault"
-COVERAGE_NATIVE_CASES = (COVERAGE_NATIVE_FAULT_CASE, COVERAGE_NATIVE_CONTROL_CASE)
+COVERAGE_NATIVE_SPLIT_OPEN_FAULT_CASE = "footprint-alias-unanchored-split-open-fault"
+COVERAGE_NATIVE_SPLIT_OPEN_CONTROL_CASE = "footprint-alias-unanchored-split-open-anchor-control"
+COVERAGE_NATIVE_CASES = (
+    COVERAGE_NATIVE_FAULT_CASE,
+    COVERAGE_NATIVE_CONTROL_CASE,
+    COVERAGE_NATIVE_SPLIT_OPEN_FAULT_CASE,
+    COVERAGE_NATIVE_SPLIT_OPEN_CONTROL_CASE,
+)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -239,6 +246,8 @@ def test_native_unanchored_alias_fault_and_common_control_repeat(
         NATIVE_CONTROL_CASE: "d5c77a1b8de808ab82c9f98f0172af7f6f933ce43536dabe00c6fbf83e048e28",
         COVERAGE_NATIVE_FAULT_CASE: "fb4fc447ef05fc97699b84bf5a21b7d106ed32e56e31059196982fa76d98e124",
         COVERAGE_NATIVE_CONTROL_CASE: "ba6fd627b7a8e994ca554dbb9f3a1d67197f8a48d5302c5ee6c78318be424605",
+        COVERAGE_NATIVE_SPLIT_OPEN_FAULT_CASE: "4f808c6119974d3ab31d5948c187f7d20406fb80a75864087d80c630b96c8b42",
+        COVERAGE_NATIVE_SPLIT_OPEN_CONTROL_CASE: "34936e4c2ee0eacddd27fa204eeb6b285d8ec4ece22e13209e10f9503262a5f0",
     }
     fixture_root = Path(__file__).resolve().parent / "fixtures/design_lint"
     fixture_sources = connector_return_fixture_sources(fixture_root)
@@ -254,6 +263,10 @@ def test_native_unanchored_alias_fault_and_common_control_repeat(
         / "connector-footprint-alias-native/unanchored-partial-open-fault.kicad_sch",
         COVERAGE_NATIVE_CONTROL_CASE: fixture_root
         / "connector-footprint-alias-native/open-fault.kicad_sch",
+        COVERAGE_NATIVE_SPLIT_OPEN_FAULT_CASE: fixture_root
+        / "connector-footprint-alias-native/unanchored-split-open-fault.kicad_sch",
+        COVERAGE_NATIVE_SPLIT_OPEN_CONTROL_CASE: fixture_root
+        / "connector-footprint-alias-native/unanchored-split-open-anchor-control.kicad_sch",
     }
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
@@ -385,6 +398,34 @@ def test_native_unanchored_alias_fault_and_common_control_repeat(
     )
     assert partial_open_control_reports[1].model_dump(mode="json") == (
         partial_open_control_reports[0].model_dump(mode="json")
+    )
+    split_open_fault_reports = tuple(
+        lint_report(context.observed_contracts[COVERAGE_NATIVE_SPLIT_OPEN_FAULT_CASE, run])
+        for run in ("first", "repeat")
+    )
+    split_open_control_reports = tuple(
+        lint_report(context.observed_contracts[COVERAGE_NATIVE_SPLIT_OPEN_CONTROL_CASE, run])
+        for run in ("first", "repeat")
+    )
+    split_open_findings = tuple(
+        item for item in split_open_fault_reports[0].findings if item.rule_id == COVERAGE_RULE_ID
+    )
+    assert len(split_open_findings) == 1
+    assert split_open_findings[0].evidence["references"] == ("J1", "J2", "J3")
+    assert split_open_findings[0].evidence["unanchored_partial_open_pin_numbers"] == ("1",)
+    assert split_open_findings[0].evidence["pin_assignments"] == (
+        "pin 1: J1.1=SPLIT_OPEN_A; J2.1=SPLIT_OPEN_B; J3.1=<unassigned>",
+    )
+    assert split_open_fault_reports[1].model_dump(mode="json") == (
+        split_open_fault_reports[0].model_dump(mode="json")
+    )
+    assert not any(
+        item.rule_id == COVERAGE_RULE_ID
+        for report in split_open_control_reports
+        for item in report.findings
+    )
+    assert split_open_control_reports[1].model_dump(mode="json") == (
+        split_open_control_reports[0].model_dump(mode="json")
     )
     for case in (*NATIVE_CASES, *COVERAGE_NATIVE_CASES):
         assert (
