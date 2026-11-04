@@ -11,6 +11,7 @@ from .design_lint_pcb_geometry_coverage_policy import PcbInputCoveragePolicyStat
 from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
+from .external_protection_models import ExternalProtectionCoverageReport
 from .models import ContractCoachReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import PcbDifferentialPairRuleCoverageReport
@@ -37,6 +38,7 @@ class DesignLintMissingEvidenceInput:
     stm32_pin_map_coverage: Stm32PinMapCoverageReport
     pcb_input_coverage: PcbInputCoveragePolicyState
     pcb_mapped_coverage: PcbMappedCoveragePolicyState
+    external_protection_coverage: ExternalProtectionCoverageReport
 
 
 def missing_evidence_report(data: DesignLintMissingEvidenceInput) -> DesignLintReport:
@@ -117,6 +119,8 @@ def missing_evidence_report(data: DesignLintMissingEvidenceInput) -> DesignLintR
             ),
         )
     missing_evidence_issues = coach.issues or ("Source-bound netlist evidence is unavailable",)
+    if data.external_protection_coverage.issue is not None:
+        missing_evidence_issues += (data.external_protection_coverage.issue,)
     if policy.component_role_map is not None:
         missing_evidence_issues += (
             (
@@ -134,10 +138,13 @@ def missing_evidence_report(data: DesignLintMissingEvidenceInput) -> DesignLintR
     return DesignLintReport(
         status="BLOCKED",
         project_id=data.project_id,
+        source_hashes=coach.source_hashes,
+        netlist_sha256=coach.netlist_sha256,
         rule_catalog=data.catalog,
         native_summary=coach.native_summary,
         native_status=coach.native_status,
         rc_filter_coverage=rc_filter_coverage,
+        external_protection_coverage=data.external_protection_coverage,
         connector_return_distribution=connector_return_distribution_coverage,
         pcb_decoupling=pcb_decoupling_coverage,
         pcb_protection_path=pcb_mapped.protection_path,

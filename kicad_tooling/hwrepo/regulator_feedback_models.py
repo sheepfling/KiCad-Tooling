@@ -56,10 +56,21 @@ class RegulatorFeedbackCoverageReport(StrictModel):
 
     @model_validator(mode="after")
     def source_bound_when_configured(self) -> RegulatorFeedbackCoverageReport:
+        if self.status == "NOT_REQUESTED" and self.entries:
+            raise ValueError("Not-requested regulator feedback coverage cannot contain entries")
         if self.status in {"COMPLETE", "INCOMPLETE"} and self.netlist_sha256 is None:
             raise ValueError(
                 "Configured regulator feedback coverage must bind a native netlist hash"
             )
+        if self.status in {"COMPLETE", "INCOMPLETE"}:
+            has_incomplete_entry = any(entry.status == "INCOMPLETE" for entry in self.entries)
+            status_matches_entries = (
+                bool(self.entries) and not has_incomplete_entry
+                if self.status == "COMPLETE"
+                else has_incomplete_entry
+            )
+            if not status_matches_entries:
+                raise ValueError("Regulator feedback coverage status must match its entries")
         if self.status == "BLOCKED" and self.issue is None:
             raise ValueError("Blocked regulator feedback coverage must explain the evidence gap")
         return self

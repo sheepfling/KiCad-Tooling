@@ -8,6 +8,9 @@ import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.design_lint import evaluate, text_report
+from kicad_tooling.hwrepo.design_lint_regulator_candidates import (
+    regulator_feedback_candidates,
+)
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     ContractCoachReport,
@@ -26,6 +29,7 @@ from kicad_tooling.hwrepo.power_connectivity_models import (
     PowerPinEndpointRequirement,
     PowerSourceGroupRequirement,
 )
+from kicad_tooling.hwrepo.regulator_feedback_models import RegulatorFeedbackCoverageReport
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -256,6 +260,28 @@ def test_exact_network_and_reference_bounds_pass() -> None:
     assert "Regulator feedback coverage: COMPLETE" in rendered
     assert "Formula: Vref*(1+Rupper/Rlower)" in rendered
     assert "Calculated nominal output: 5.112–5.21527 V; target 5.1–5.22 V" in rendered
+
+
+@pytest.mark.evidence_lint
+def test_coverage_state_matches_rows_and_blocked_rows_do_not_emit_candidates() -> None:
+    complete = report(regulator_netlist(), regulator_feedback_map()).regulator_feedback_coverage
+    with pytest.raises(ValueError, match="status must match its entries"):
+        RegulatorFeedbackCoverageReport(status="COMPLETE", netlist_sha256="d" * 64)
+    with pytest.raises(ValueError, match="status must match its entries"):
+        RegulatorFeedbackCoverageReport(
+            status="INCOMPLETE",
+            netlist_sha256="d" * 64,
+            entries=complete.entries,
+        )
+    with pytest.raises(ValueError, match="Not-requested.*cannot contain entries"):
+        RegulatorFeedbackCoverageReport(status="NOT_REQUESTED", entries=complete.entries)
+
+    mismatch = report(
+        regulator_netlist(fault="wrong-output-net"), regulator_feedback_map()
+    ).regulator_feedback_coverage
+    assert regulator_feedback_candidates(mismatch)
+    blocked = mismatch.model_copy(update={"status": "BLOCKED", "issue": "stale netlist"})
+    assert not regulator_feedback_candidates(blocked)
 
 
 def test_non_finite_calculation_is_incomplete_instead_of_crashing() -> None:

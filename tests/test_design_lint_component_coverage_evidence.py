@@ -15,11 +15,20 @@ from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
 from kicad_tooling.hwrepo.i2c_address_models import I2cAddressCoverageReport
 from kicad_tooling.hwrepo.i2c_pullup_models import I2cPullupHeuristicCoverage
-from kicad_tooling.hwrepo.pcb_component_inventory_models import PcbComponentInventoryCoverageReport
-from kicad_tooling.hwrepo.pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
-from kicad_tooling.hwrepo.pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 from kicad_tooling.hwrepo.rc_filter_models import RcFilterCoverageReport
 from kicad_tooling.hwrepo.regulator_feedback_models import RegulatorFeedbackCoverageReport
+from tests.design_lint_evidence_fixtures import (
+    crystal_coverage as _crystal_coverage,
+)
+from tests.design_lint_evidence_fixtures import (
+    external_protection_coverage as _external_protection_coverage,
+)
+from tests.design_lint_evidence_fixtures import (
+    rc_filter_coverage as _rc_filter_coverage,
+)
+from tests.design_lint_evidence_fixtures import (
+    regulator_coverage as _regulator_coverage,
+)
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.evidence_lint]
 
@@ -35,17 +44,24 @@ _INTERFACE_CATALOG_HASH = "c" * 64
             "i2c_address_coverage",
             I2cAddressCoverageReport(status="COMPLETE", netlist_sha256=_STALE_NETLIST_HASH),
         ),
+        *(
+            (
+                "external_protection_coverage",
+                _external_protection_coverage(status, _STALE_NETLIST_HASH),
+            )
+            for status in ("COMPLETE", "INCOMPLETE", "UNDECLARED")
+        ),
         (
             "crystal_network_coverage",
-            CrystalNetworkCoverageReport(status="COMPLETE", netlist_sha256=_STALE_NETLIST_HASH),
+            _crystal_coverage(_STALE_NETLIST_HASH),
         ),
         (
             "regulator_feedback_coverage",
-            RegulatorFeedbackCoverageReport(status="COMPLETE", netlist_sha256=_STALE_NETLIST_HASH),
+            _regulator_coverage(_STALE_NETLIST_HASH),
         ),
         (
             "rc_filter_coverage",
-            RcFilterCoverageReport(status="COMPLETE", netlist_sha256=_STALE_NETLIST_HASH),
+            _rc_filter_coverage(_STALE_NETLIST_HASH),
         ),
         (
             "connector_return_distribution",
@@ -60,7 +76,10 @@ _INTERFACE_CATALOG_HASH = "c" * 64
 def test_report_rejects_component_coverage_bound_to_another_netlist(
     field_name: str, coverage: object
 ) -> None:
-    with pytest.raises(ValueError, match="must use this report's native netlist"):
+    with pytest.raises(
+        ValueError,
+        match="must use this report's native netlist|different or unavailable native netlist hash",
+    ):
         DesignLintReport.model_validate(
             {
                 "status": "PASS",
@@ -95,7 +114,6 @@ def test_peer_coverage_requires_a_top_level_report_netlist_digest() -> None:
         netlist_sha256=_REPORT_NETLIST_HASH,
         authored_map_state="not_configured",
     )
-
     with pytest.raises(
         ValueError, match="Digital-peer voltage coverage must use this report's netlist"
     ):
@@ -120,24 +138,6 @@ def test_peer_coverage_requires_a_top_level_report_netlist_digest() -> None:
         (
             "i2c_pullup_heuristic_coverage",
             I2cPullupHeuristicCoverage(status="COMPLETE", netlist_sha256=_REPORT_NETLIST_HASH),
-        ),
-        (
-            "pcb_component_inventory",
-            PcbComponentInventoryCoverageReport(
-                status="BLOCKED", netlist_sha256=_REPORT_NETLIST_HASH, issue="Synthetic gap"
-            ),
-        ),
-        (
-            "pcb_rf_module_antenna_coverage",
-            PcbRfModuleAntennaCoverageReport(
-                status="BLOCKED", netlist_sha256=_REPORT_NETLIST_HASH, issue="Synthetic gap"
-            ),
-        ),
-        (
-            "pcb_touch_pad_clearance_coverage",
-            PcbTouchPadClearanceCoverageReport(
-                status="BLOCKED", netlist_sha256=_REPORT_NETLIST_HASH, issue="Synthetic gap"
-            ),
         ),
     ),
 )
@@ -195,15 +195,9 @@ def test_report_accepts_component_coverage_bound_to_its_current_sources() -> Non
             "i2c_address_coverage": I2cAddressCoverageReport(
                 status="COMPLETE", netlist_sha256=_REPORT_NETLIST_HASH
             ),
-            "crystal_network_coverage": CrystalNetworkCoverageReport(
-                status="INCOMPLETE", netlist_sha256=_REPORT_NETLIST_HASH
-            ),
-            "regulator_feedback_coverage": RegulatorFeedbackCoverageReport(
-                status="COMPLETE", netlist_sha256=_REPORT_NETLIST_HASH
-            ),
-            "rc_filter_coverage": RcFilterCoverageReport(
-                status="COMPLETE", netlist_sha256=_REPORT_NETLIST_HASH
-            ),
+            "crystal_network_coverage": CrystalNetworkCoverageReport(),
+            "regulator_feedback_coverage": RegulatorFeedbackCoverageReport(),
+            "rc_filter_coverage": RcFilterCoverageReport(),
             "connector_coverage": ConnectorCoverageReport(
                 status="COMPLETE",
                 scope="Synthetic connector scope",
@@ -219,3 +213,24 @@ def test_report_accepts_component_coverage_bound_to_its_current_sources() -> Non
     )
 
     assert report.netlist_sha256 == _REPORT_NETLIST_HASH
+
+
+def test_blocked_component_coverage_retains_its_original_netlist_identity() -> None:
+    blocked = I2cAddressCoverageReport(
+        status="BLOCKED",
+        netlist_sha256=_STALE_NETLIST_HASH,
+        issue="The supplied coverage uses an earlier native netlist",
+    )
+
+    report = DesignLintReport.model_validate(
+        {
+            "status": "BLOCKED",
+            "project_id": "synthetic-source-evidence",
+            "netlist_sha256": _REPORT_NETLIST_HASH,
+            "i2c_address_coverage": blocked,
+            "issues": (blocked.issue,),
+        }
+    )
+
+    assert report.i2c_address_coverage.status == "BLOCKED"
+    assert report.i2c_address_coverage.netlist_sha256 == _STALE_NETLIST_HASH

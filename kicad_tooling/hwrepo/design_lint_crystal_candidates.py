@@ -10,7 +10,10 @@ def crystal_network_candidates(
     crystal_network_coverage: CrystalNetworkCoverageReport | None,
 ) -> tuple[Candidate, ...]:
     found: list[Candidate] = []
-    if crystal_network_coverage is not None:
+    if crystal_network_coverage is not None and crystal_network_coverage.status in {
+        "COMPLETE",
+        "INCOMPLETE",
+    }:
         for entry in crystal_network_coverage.entries:
             if entry.status == "COMPLETE":
                 continue

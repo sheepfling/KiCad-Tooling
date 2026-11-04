@@ -23,7 +23,10 @@ from .design_lint_candidate_inputs import (
     UsbDataPathCandidateInputs,
 )
 from .design_lint_catalog import rule_catalog
-from .design_lint_component_coverage import resolve_component_map_coverage
+from .design_lint_component_coverage import (
+    ComponentMapCoverageRequest,
+    resolve_component_map_coverage,
+)
 from .design_lint_evaluation_types import (
     DesignLintEvaluationPreparation,
     DesignLintEvaluationPreparationResult,
@@ -47,7 +50,10 @@ from .design_lint_schematic_coverage import (
     schematic_geometry_coverage,
 )
 from .design_lint_stm32_coverage import resolve_stm32_pin_map_coverage
-from .external_protection_models import ExternalProtectionCoverageReport
+from .external_protection_models import (
+    ExternalProtectionCoverageReport,
+    external_protection_netlist_binding_issue,
+)
 from .i2c_address_inputs import I2cAddressCandidateInput
 from .i2c_pullup_heuristics import i2c_pullup_coverage_issue
 from .i2c_pullup_inputs import I2cPullupSnifferInput
@@ -77,6 +83,20 @@ def prepare_evaluation(
         pcb_rf_module_antenna_coverage=request.pcb_rf_module_antenna_coverage,
         pcb_touch_pad_clearance_coverage=request.pcb_touch_pad_clearance_coverage,
     )
+    external_protection_coverage = (
+        request.external_protection_coverage or ExternalProtectionCoverageReport()
+    )
+    protection_issue = external_protection_netlist_binding_issue(
+        external_protection_coverage, coach.netlist_sha256
+    )
+    if protection_issue is not None:
+        external_protection_coverage = ExternalProtectionCoverageReport(
+            status="BLOCKED",
+            netlist_sha256=external_protection_coverage.netlist_sha256,
+            electrical_contract_path=external_protection_coverage.electrical_contract_path,
+            electrical_contract_sha256=external_protection_coverage.electrical_contract_sha256,
+            issue=protection_issue,
+        )
     if request.control_input_bias_coverage is not None:
         control_coverage = request.control_input_bias_coverage
         control_issue = control_input_bias_coverage_issue(control_coverage, coach.netlist_sha256)
@@ -97,11 +117,13 @@ def prepare_evaluation(
                     native_status=coach.native_status,
                     rule_catalog=catalog,
                     control_input_bias_coverage=blocked_control,
+                    external_protection_coverage=external_protection_coverage,
                     pcb_signal_path_rules=input_pcb_coverage.signal_path,
                     pcb_keepout_coverage=input_pcb_coverage.keepout,
                     pcb_rf_module_antenna_coverage=input_pcb_coverage.rf_antenna,
                     pcb_touch_pad_clearance_coverage=input_pcb_coverage.touch_pad_clearance,
-                    issues=(control_issue,),
+                    issues=(control_issue,)
+                    + (() if protection_issue is None else (protection_issue,)),
                     next_actions=(
                         "Recreate control-input bias coverage from the current native netlist and contract.",
                     ),
@@ -127,11 +149,13 @@ def prepare_evaluation(
                     native_status=coach.native_status,
                     rule_catalog=catalog,
                     i2c_pullup_heuristic_coverage=blocked_coverage,
+                    external_protection_coverage=external_protection_coverage,
                     pcb_signal_path_rules=input_pcb_coverage.signal_path,
                     pcb_keepout_coverage=input_pcb_coverage.keepout,
                     pcb_rf_module_antenna_coverage=input_pcb_coverage.rf_antenna,
                     pcb_touch_pad_clearance_coverage=(input_pcb_coverage.touch_pad_clearance),
-                    issues=(coverage_issue,),
+                    issues=(coverage_issue,)
+                    + (() if protection_issue is None else (protection_issue,)),
                     next_actions=(
                         "Recreate I2C pull-up coverage from the current native netlist and contract.",
                     ),
@@ -162,6 +186,7 @@ def prepare_evaluation(
                     stm32_pin_map_coverage=stm32_pin_map_coverage,
                     pcb_input_coverage=input_pcb_coverage,
                     pcb_mapped_coverage=mapped_pcb_coverage,
+                    external_protection_coverage=external_protection_coverage,
                 )
             )
         )
@@ -186,19 +211,13 @@ def prepare_evaluation(
     if geometry_coverage is None:
         geometry_coverage = SchematicGeometryCoverage()
 
-    external_protection_coverage = (
-        request.external_protection_coverage or ExternalProtectionCoverageReport()
-    )
     component_map_coverage = resolve_component_map_coverage(
-        policy=policy,
-        observed=coach.observed,
-        netlist_sha256=coach.netlist_sha256,
-        connector_coverage=request.connector_coverage,
-        i2c_address_coverage=request.i2c_address_coverage,
-        crystal_network_coverage=request.crystal_network_coverage,
-        regulator_feedback_coverage=request.regulator_feedback_coverage,
-        rc_filter_coverage=request.rc_filter_coverage,
-        connector_return_distribution_coverage=request.connector_return_distribution_coverage,
+        ComponentMapCoverageRequest(
+            policy=policy,
+            observed=coach.observed,
+            netlist_sha256=coach.netlist_sha256,
+            inputs=request.component_map_coverage,
+        )
     )
     loop_map = mapped_pcb_coverage.switching_loop_map
     loop_mode = mapped_pcb_coverage.switching_loop_mode
@@ -306,7 +325,7 @@ def prepare_evaluation(
     peer_evidence = scan_peer_design_lint_evidence(
         observed=coach.observed,
         netlist_sha256=coach.netlist_sha256,
-        connector_coverage=request.connector_coverage,
+        connector_coverage=request.component_map_coverage.connector_coverage,
         digital_peer_voltage_context=request.digital_peer_voltage_context,
         serial_peer_roster=request.serial_peer_roster,
         rs485_peer_reference_context=request.rs485_peer_reference_context,
@@ -332,7 +351,7 @@ def prepare_evaluation(
         schematic_geometry=request.schematic_geometry,
         reviewed_connector_references=peer_evidence.reviewed_connector_references,
         connector=ConnectorCandidateInputs(
-            coverage=request.connector_coverage,
+            coverage=request.component_map_coverage.connector_coverage,
             return_distribution=coverage.connector_return_distribution,
             stateful_contact_map=policy.connector_stateful_contact_map,
             power_output_review_enabled=connector_power_output_mode != "off",

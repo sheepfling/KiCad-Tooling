@@ -99,6 +99,9 @@ Snapshot at clean revision `5d9b0b41` on 2026-10-29:
 receives, who produced them, and what absence or staleness means. **Start:**
 the [design-lint data routing decision](DESIGN_LINT_DATA_ROUTING.md), which
 traces I²C pull-up hints from native capture through finding disposition, and
+the [component-map coverage routing decision](COMPONENT_MAP_COVERAGE_ROUTING.md),
+which traces authored topology maps and supplied coverage through source
+binding, candidate generation, and report reconciliation, and
 the [electrical analysis routing decision](ELECTRICAL_ANALYSIS_DATA_ROUTING.md),
 which traces authored requirements, source-bound netlist/PCB evidence, and
 simulation results through the versioned receipt.
@@ -259,6 +262,26 @@ the observed netlist hash even when it finds no candidate nets. Evaluation
 blocks stale or unbound completed coverage and coverage containing entries
 before those entries can suppress a prompt. Legacy unbound records remain
 readable; they cannot authorize evaluation against a current netlist.
+External-protection coverage now follows that source boundary. Evaluation
+checks its retained netlist digest before candidate scanning; stale or
+unbound positive coverage becomes `BLOCKED`, preserves its recorded digest
+and contract identity, and withholds the rows from candidate generation. The
+published report independently checks the coverage digest against its own
+native netlist identity.
+Crystal-network, regulator-feedback, and RC-filter scans now require positive
+aggregate states to agree with their entry rows. `COMPLETE` has nonempty rows
+without structural incompleteness; `INCOMPLETE` has at least one incomplete
+row. `OUT_OF_RANGE` remains a covered comparison state and still produces a
+review finding. Their candidate translators ignore rows from blocked reports.
+Component-map coverage now enters its owning resolver through one typed
+`ComponentMapCoverageRequest`. Supplied positive coverage with a stale or
+unavailable netlist digest is blocked, its rows are withheld from candidate
+generation, and its original digest is retained for diagnosis. Return-
+distribution coverage likewise keeps its original interface-catalog digest
+when blocked. The
+[routing decision](COMPONENT_MAP_COVERAGE_ROUTING.md) records that a missing
+supplied report requests a scan of the authored map and distinguishes this
+from an explicit `NOT_REQUESTED` result.
 Covered control-input and I²C pull-up or voltage entries also require a
 contract path and digest at evaluation. Project inspection verifies the
 contract bytes during the run; a direct evaluator caller must verify those
@@ -306,6 +329,18 @@ report retains source-bound coverage without requiring its counts to match an
 absent list; source identities are still validated. Peer-reference and mapped
 check records produced before a disposition failure remain in that blocked
 report so the evidence gap is visible to CLI and MCP consumers.
+External-protection coverage now binds positive rows to the current native
+netlist before candidate generation. Its aggregate state must agree with its
+rows: `COMPLETE` requires nonempty resolved rows, `INCOMPLETE` requires an
+incomplete row, and `UNDECLARED` requires an undeclared row without an
+incomplete row. Complete finding lists also reconcile undeclared and
+mismatched-protection rows with their catalogued findings. A stale input is
+retained by digest but blocked with its candidate rows withheld; a blocked
+report with no complete finding list keeps the source identities without a
+row-count comparison.
+Crystal-network, regulator-feedback, and RC-filter report rows likewise
+reconcile with their rule findings when the report has a complete finding
+list; an out-of-range comparison is covered and must retain its finding.
 Reconciliation does not assign finding transitions when either report is
 blocked or unbound, the project IDs differ, fingerprints are duplicated, or
 native snapshot versions are incompatible. It retains the raw findings from

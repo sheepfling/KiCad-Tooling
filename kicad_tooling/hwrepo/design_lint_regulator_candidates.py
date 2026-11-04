@@ -10,7 +10,10 @@ def regulator_feedback_candidates(
     regulator_feedback_coverage: RegulatorFeedbackCoverageReport | None,
 ) -> tuple[Candidate, ...]:
     found: list[Candidate] = []
-    if regulator_feedback_coverage is not None:
+    if regulator_feedback_coverage is not None and regulator_feedback_coverage.status in {
+        "COMPLETE",
+        "INCOMPLETE",
+    }:
         for entry in regulator_feedback_coverage.entries:
             if entry.status == "COMPLETE":
                 continue

@@ -10,7 +10,11 @@ def protection_candidates(
     external_protection_coverage: ExternalProtectionCoverageReport | None,
 ) -> tuple[Candidate, ...]:
     found: list[Candidate] = []
-    if external_protection_coverage is not None:
+    if external_protection_coverage is not None and external_protection_coverage.status in {
+        "COMPLETE",
+        "INCOMPLETE",
+        "UNDECLARED",
+    }:
         for entry in external_protection_coverage.entries:
             if entry.status == "UNDECLARED":
                 found.append(

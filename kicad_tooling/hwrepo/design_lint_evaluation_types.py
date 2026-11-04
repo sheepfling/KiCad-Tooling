@@ -18,6 +18,7 @@ from .connector_return_distribution_models import ConnectorReturnDistributionCov
 from .control_input_models import ControlInputBiasHeuristicCoverage
 from .crystal_network_models import CrystalNetworkCoverageReport
 from .design_lint_candidate_inputs import DesignLintCandidateInputs
+from .design_lint_component_coverage import ComponentMapCoverageInputs
 from .design_lint_finding_models import (
     DesignLintFinding,
     DesignLintIgnore,
@@ -84,15 +85,10 @@ class DesignLintEvaluationRequest:
     project_id: str
     coach: ContractCoachReport
     policy: DesignLintPolicy
-    connector_coverage: ConnectorCoverageReport | None = None
+    component_map_coverage: ComponentMapCoverageInputs
     schematic_geometry: SchematicGeometryScan | None = None
     geometry_coverage: SchematicGeometryCoverage | None = None
-    i2c_address_coverage: I2cAddressCoverageReport | None = None
     external_protection_coverage: ExternalProtectionCoverageReport | None = None
-    crystal_network_coverage: CrystalNetworkCoverageReport | None = None
-    regulator_feedback_coverage: RegulatorFeedbackCoverageReport | None = None
-    rc_filter_coverage: RcFilterCoverageReport | None = None
-    connector_return_distribution_coverage: ConnectorReturnDistributionCoverageReport | None = None
     pcb_decoupling_coverage: PcbDecouplingCoverageReport | None = None
     pcb_component_inventory_coverage: PcbComponentInventoryCoverageReport | None = None
     pcb_protection_path_coverage: PcbProtectionPathCoverageReport | None = None

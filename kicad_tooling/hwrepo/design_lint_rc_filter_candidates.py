@@ -10,7 +10,10 @@ def rc_filter_candidates(
     rc_filter_coverage: RcFilterCoverageReport | None,
 ) -> tuple[Candidate, ...]:
     found: list[Candidate] = []
-    if rc_filter_coverage is not None:
+    if rc_filter_coverage is not None and rc_filter_coverage.status in {
+        "COMPLETE",
+        "INCOMPLETE",
+    }:
         for entry in rc_filter_coverage.entries:
             if entry.status == "COMPLETE":
                 continue

@@ -9,10 +9,12 @@ import pytest
 
 from kicad_tooling.hwrepo.crystal_network_models import (
     CrystalLoadCapRequirement,
+    CrystalNetworkCoverageReport,
     CrystalNetworkMap,
     CrystalNetworkRequirement,
 )
 from kicad_tooling.hwrepo.design_lint import evaluate, text_report
+from kicad_tooling.hwrepo.design_lint_crystal_candidates import crystal_network_candidates
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     ContractCoachReport,
@@ -185,6 +187,28 @@ def test_exact_network_and_inclusive_target_boundaries_pass() -> None:
     assert "Crystal load-network coverage: COMPLETE" in rendered
     assert "Formula: C1*C2/(C1+C2) + Cstray" in rendered
     assert "Calculated nominal load: 10–12 pF; target 10–12 pF" in rendered
+
+
+@pytest.mark.evidence_lint
+def test_coverage_state_matches_rows_and_blocked_rows_do_not_emit_candidates() -> None:
+    complete = report(crystal_netlist(), crystal_map()).crystal_network_coverage
+    with pytest.raises(ValueError, match="status must match its entries"):
+        CrystalNetworkCoverageReport(status="COMPLETE", netlist_sha256="c" * 64)
+    with pytest.raises(ValueError, match="status must match its entries"):
+        CrystalNetworkCoverageReport(
+            status="INCOMPLETE",
+            netlist_sha256="c" * 64,
+            entries=complete.entries,
+        )
+    with pytest.raises(ValueError, match="Not-requested.*cannot contain entries"):
+        CrystalNetworkCoverageReport(status="NOT_REQUESTED", entries=complete.entries)
+
+    mismatch = report(
+        crystal_netlist(fault="wrong-capacitor-node"), crystal_map()
+    ).crystal_network_coverage
+    assert crystal_network_candidates(mismatch)
+    blocked = mismatch.model_copy(update={"status": "BLOCKED", "issue": "stale netlist"})
+    assert not crystal_network_candidates(blocked)
 
 
 def test_wrong_node_assignment_is_reported() -> None:

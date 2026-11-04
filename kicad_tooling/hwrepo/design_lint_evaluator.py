@@ -6,6 +6,7 @@ from .connector_coverage_models import ConnectorCoverageReport
 from .connector_return_distribution_models import ConnectorReturnDistributionCoverageReport
 from .control_input_models import ControlInputBiasHeuristicCoverage
 from .crystal_network_models import CrystalNetworkCoverageReport
+from .design_lint_component_coverage import ComponentMapCoverageInputs
 from .design_lint_evaluation_candidates import scan_evaluation_candidates
 from .design_lint_evaluation_preparation import prepare_evaluation
 from .design_lint_evaluation_report import assemble_design_lint_report
@@ -91,15 +92,17 @@ def evaluate(
         project_id=project_id,
         coach=coach,
         policy=policy,
-        connector_coverage=connector_coverage,
+        component_map_coverage=ComponentMapCoverageInputs(
+            connector_coverage=connector_coverage,
+            i2c_address_coverage=i2c_address_coverage,
+            crystal_network_coverage=crystal_network_coverage,
+            regulator_feedback_coverage=regulator_feedback_coverage,
+            rc_filter_coverage=rc_filter_coverage,
+            connector_return_distribution_coverage=connector_return_distribution_coverage,
+        ),
         schematic_geometry=schematic_geometry,
         geometry_coverage=geometry_coverage,
-        i2c_address_coverage=i2c_address_coverage,
         external_protection_coverage=external_protection_coverage,
-        crystal_network_coverage=crystal_network_coverage,
-        regulator_feedback_coverage=regulator_feedback_coverage,
-        rc_filter_coverage=rc_filter_coverage,
-        connector_return_distribution_coverage=connector_return_distribution_coverage,
         pcb_decoupling_coverage=pcb_decoupling_coverage,
         pcb_protection_path_coverage=pcb_protection_path_coverage,
         pcb_track_width_coverage=pcb_track_width_coverage,

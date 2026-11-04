@@ -155,6 +155,7 @@ class DesignLintReport(StrictModel):
             findings=self.findings,
             findings_complete=self.status != "BLOCKED" or bool(self.findings),
             i2c_address_coverage=self.i2c_address_coverage,
+            external_protection_coverage=self.external_protection_coverage,
             crystal_network_coverage=self.crystal_network_coverage,
             regulator_feedback_coverage=self.regulator_feedback_coverage,
             rc_filter_coverage=self.rc_filter_coverage,

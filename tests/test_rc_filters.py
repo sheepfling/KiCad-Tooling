@@ -8,6 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.design_lint import evaluate, text_report
+from kicad_tooling.hwrepo.design_lint_rc_filter_candidates import rc_filter_candidates
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     ContractCoachReport,
@@ -18,6 +19,7 @@ from kicad_tooling.hwrepo.models import (
     RcFilterMap,
     RcFilterRequirement,
 )
+from kicad_tooling.hwrepo.rc_filter_models import RcFilterCoverageReport
 
 pytestmark = [
     pytest.mark.component_lint,
@@ -149,6 +151,28 @@ def test_explicit_network_and_calculated_corner_pass() -> None:
     assert coverage.entries[0].status == "COMPLETE"
     assert coverage.entries[0].calculated_corner_hz == pytest.approx(1591.55, abs=0.02)
     assert not any(item.rule_id == "filter.rc_corner_mismatch" for item in result.findings)
+
+
+@pytest.mark.evidence_lint
+def test_coverage_state_matches_rows_and_blocked_rows_do_not_emit_candidates() -> None:
+    complete = report(rc_filter_netlist(), rc_filter_map()).rc_filter_coverage
+    with pytest.raises(ValueError, match="status must match its entries"):
+        RcFilterCoverageReport(status="COMPLETE", netlist_sha256="e" * 64)
+    with pytest.raises(ValueError, match="status must match its entries"):
+        RcFilterCoverageReport(
+            status="INCOMPLETE",
+            netlist_sha256="e" * 64,
+            entries=complete.entries,
+        )
+    with pytest.raises(ValueError, match="Not-requested.*cannot contain entries"):
+        RcFilterCoverageReport(status="NOT_REQUESTED", entries=complete.entries)
+
+    mismatch = report(
+        rc_filter_netlist(capacitor_value="220nF"), rc_filter_map()
+    ).rc_filter_coverage
+    assert rc_filter_candidates(mismatch)
+    blocked = mismatch.model_copy(update={"status": "BLOCKED", "issue": "stale netlist"})
+    assert not rc_filter_candidates(blocked)
 
 
 @pytest.mark.parametrize(

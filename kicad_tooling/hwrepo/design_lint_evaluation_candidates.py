@@ -90,8 +90,12 @@ def scan_evaluation_candidates(
             observed,
             coach.netlist_sha256,
             peer_evidence.reviewed_connector_references,
-            source_matched_connector_pin_evidence(observed, request.connector_coverage),
-            source_matched_connector_peer_assignment_groups(observed, request.connector_coverage),
+            source_matched_connector_pin_evidence(
+                observed, request.component_map_coverage.connector_coverage
+            ),
+            source_matched_connector_peer_assignment_groups(
+                observed, request.component_map_coverage.connector_coverage
+            ),
             finding_counts=scan_result.connector_peer_pin_finding_counts,
         )
     )

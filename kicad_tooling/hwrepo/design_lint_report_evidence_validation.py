@@ -11,6 +11,10 @@ from .design_lint_mapped_topology_models import DesignLintMappedCheckRun
 from .design_lint_pcb_required_fitted_reference_report import (
     validate_required_fitted_reference_findings,
 )
+from .external_protection_models import (
+    ExternalProtectionCoverageReport,
+    external_protection_netlist_binding_issue,
+)
 from .i2c_address_models import I2cAddressCoverageReport
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .model_primitives import Digest, Identifier, RepositoryPath
@@ -30,6 +34,7 @@ def validate_source_bound_evidence(
     findings: tuple[DesignLintFinding, ...],
     findings_complete: bool,
     i2c_address_coverage: I2cAddressCoverageReport,
+    external_protection_coverage: ExternalProtectionCoverageReport,
     crystal_network_coverage: CrystalNetworkCoverageReport,
     regulator_feedback_coverage: RegulatorFeedbackCoverageReport,
     rc_filter_coverage: RcFilterCoverageReport,
@@ -42,6 +47,29 @@ def validate_source_bound_evidence(
     pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport,
     mapped_check_runs: tuple[DesignLintMappedCheckRun, ...],
 ) -> None:
+    protection_issue = external_protection_netlist_binding_issue(
+        external_protection_coverage, netlist_sha256
+    )
+    if protection_issue is not None:
+        raise ValueError(protection_issue)
+    if findings_complete and external_protection_coverage.status in {
+        "COMPLETE",
+        "INCOMPLETE",
+        "UNDECLARED",
+    }:
+        expected_protection_findings = {
+            "protection.unreviewed_interface_pin": sum(
+                entry.status == "UNDECLARED" for entry in external_protection_coverage.entries
+            ),
+            "protection.mapped_device_mismatch": sum(
+                entry.status in {"INCOMPLETE", "STALE"}
+                for entry in external_protection_coverage.entries
+            ),
+        }
+        for rule_id, expected_count in expected_protection_findings.items():
+            _require_coverage_finding_count(
+                "External-protection", rule_id, expected_count, findings
+            )
     for name, coverage in (
         ("I2C address", i2c_address_coverage),
         ("Crystal network", crystal_network_coverage),
@@ -55,7 +83,25 @@ def validate_source_bound_evidence(
             coverage.netlist_sha256,
             netlist_sha256,
             required_statuses=frozenset({"COMPLETE", "INCOMPLETE"}),
+            allow_blocked_source_identity=True,
         )
+    if findings_complete:
+        for name, coverage, rule_id in (
+            (
+                "Crystal network",
+                crystal_network_coverage,
+                "oscillator.crystal_load_network_mismatch",
+            ),
+            (
+                "Regulator feedback",
+                regulator_feedback_coverage,
+                "power.regulator_feedback_mismatch",
+            ),
+            ("RC filter", rc_filter_coverage, "filter.rc_corner_mismatch"),
+        ):
+            if coverage.status in {"COMPLETE", "INCOMPLETE"}:
+                expected_count = sum(entry.status != "COMPLETE" for entry in coverage.entries)
+                _require_coverage_finding_count(name, rule_id, expected_count, findings)
     distribution = connector_return_distribution
     if distribution.status in {"COMPLETE", "INCOMPLETE"} and (
         connector_interface_catalog_sha256 is None
@@ -179,8 +225,22 @@ def _validate_component_coverage_netlist_hash(
     report_netlist_sha256: Digest | None,
     *,
     required_statuses: frozenset[str],
+    allow_blocked_source_identity: bool = False,
 ) -> None:
+    if allow_blocked_source_identity and status == "BLOCKED":
+        return
     if coverage_netlist_sha256 is None and status not in required_statuses:
         return
     if report_netlist_sha256 is None or coverage_netlist_sha256 != report_netlist_sha256:
         raise ValueError(f"{name} coverage must use this report's native netlist")
+
+
+def _require_coverage_finding_count(
+    name: str,
+    rule_id: str,
+    expected_count: int,
+    findings: tuple[DesignLintFinding, ...],
+) -> None:
+    actual_count = sum(finding.rule_id == rule_id for finding in findings)
+    if actual_count != expected_count:
+        raise ValueError(f"{name} findings must match source-bound coverage rows")

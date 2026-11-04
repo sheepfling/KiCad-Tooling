@@ -160,12 +160,40 @@ class ExternalProtectionCoverageReport(StrictModel):
 
     @model_validator(mode="after")
     def evidence_is_source_bound(self) -> ExternalProtectionCoverageReport:
+        if self.status == "NOT_REQUESTED" and self.entries:
+            raise ValueError("Not-requested external-protection coverage cannot contain entries")
         if self.status in {"COMPLETE", "INCOMPLETE", "UNDECLARED"} and (
             self.netlist_sha256 is None
         ):
             raise ValueError("Configured external-protection coverage needs a native netlist hash")
+        if self.status in {"COMPLETE", "INCOMPLETE", "UNDECLARED"}:
+            entry_statuses = {entry.status for entry in self.entries}
+            has_incomplete_entry = bool(entry_statuses & {"INCOMPLETE", "STALE"})
+            has_undeclared_entry = "UNDECLARED" in entry_statuses
+            if self.status == "COMPLETE":
+                status_matches_entries = bool(self.entries) and not (
+                    has_incomplete_entry or has_undeclared_entry
+                )
+            elif self.status == "INCOMPLETE":
+                status_matches_entries = has_incomplete_entry
+            else:
+                status_matches_entries = has_undeclared_entry and not has_incomplete_entry
+            if not status_matches_entries:
+                raise ValueError("External-protection coverage status must match its entries")
         if self.status == "BLOCKED" and self.issue is None:
             raise ValueError("Blocked external-protection coverage must explain the evidence gap")
         if (self.electrical_contract_path is None) != (self.electrical_contract_sha256 is None):
             raise ValueError("Electrical contract path and digest must be bound together")
         return self
+
+
+def external_protection_netlist_binding_issue(
+    coverage: ExternalProtectionCoverageReport,
+    current_netlist_sha256: Digest | None,
+) -> str | None:
+    """Explain when positive coverage is not bound to the current native netlist."""
+    if coverage.status not in {"COMPLETE", "INCOMPLETE", "UNDECLARED"}:
+        return None
+    if current_netlist_sha256 is None or coverage.netlist_sha256 != current_netlist_sha256:
+        return "External-protection coverage uses a different or unavailable native netlist hash."
+    return None
