@@ -17,6 +17,7 @@ from .can_termination_heuristics import (
 from .can_tx_output_sharing import can_tx_output_sharing_candidates
 from .can_tx_rx_label_mismatch import can_tx_rx_label_mismatch_candidates
 from .can_tx_rx_same_net import can_tx_rx_same_net_candidates
+from .design_lint_can_termination_candidate_evidence import CanTerminationCandidate
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 from .peer_reference_candidate_keys import CanPeerBusKey, PeerReferenceCandidate
@@ -31,41 +32,26 @@ def can_candidates(
     found: list[Candidate] = []
     for bus in can_buses_without_local_termination(observed):
         found.append(
-            Candidate(
-                rule_id="bus.can_missing_termination",
+            CanTerminationCandidate.from_source_evidence(
+                source_evidence=bus,
                 subject=f"CANH {bus.high_net} / CANL {bus.low_net}",
                 message=(
                     "No visible 108 Ω–132 Ω resistor is connected directly across these named "
                     "CAN lines. Review external or split termination and the intended bus topology."
                 ),
-                evidence={
-                    "CANH": (bus.high_net,),
-                    "CANL": (bus.low_net,),
-                    "pins": (*bus.high_pins, *bus.low_pins),
-                    "termination": (),
-                },
             )
         )
     for bus in can_buses_with_excessive_local_termination(observed):
-        terminations = tuple(
-            f"{item.reference}={item.resistance_ohms:g} Ω" for item in bus.terminations
-        )
         found.append(
-            Candidate(
-                rule_id="bus.can_excess_termination",
+            CanTerminationCandidate.from_source_evidence(
+                source_evidence=bus,
                 subject=f"CANH {bus.high_net} / CANL {bus.low_net}",
                 message=(
-                    f"{len(terminations)} fitted direct 108 Ω–132 Ω resistors span this "
+                    f"{len(bus.terminations)} fitted direct 108 Ω–132 Ω resistors span this "
                     "recognized CANH/CANL pair. Review the intended bus endpoints and any "
                     "switchable, split, or external termination; the schematic does not show "
                     "which nodes are physical bus ends."
                 ),
-                evidence={
-                    "CANH": (bus.high_net,),
-                    "CANL": (bus.low_net,),
-                    "pins": (*bus.high_pins, *bus.low_pins),
-                    "terminations": terminations,
-                },
             )
         )
     found.extend(can_line_polarity_label_candidates(observed))

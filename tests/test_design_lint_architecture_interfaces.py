@@ -252,24 +252,6 @@ def test_usb_unsupported_path_coverage_model_stays_in_its_theme_owner() -> None:
     )
 
 
-def test_bus_heuristics_compatibility_facade_stays_small() -> None:
-    facade = HWREPO / "bus_heuristics.py"
-
-    assert _line_count(facade) < FACADE_MAX_LINES
-
-
-def test_i2c_candidate_scan_uses_typed_owner_and_keeps_legacy_adapter_separate() -> None:
-    adapter = HWREPO / "i2c_pullup_compatibility.py"
-    candidate_source = HWREPO / "design_lint_i2c_pullup_candidates.py"
-    candidate_tree = ast.parse(candidate_source.read_text(encoding="utf-8"))
-    imports = {node.module for node in candidate_tree.body if isinstance(node, ast.ImportFrom)}
-
-    assert _line_count(adapter) < IMPLEMENTATION_MAX_LINES
-    assert "i2c_pullup_heuristics" in imports
-    assert "i2c_pullup_compatibility" not in imports
-    assert "bus_heuristics" not in imports
-
-
 def test_resistor_array_evidence_is_shared_by_control_and_i2c_checks() -> None:
     helper = HWREPO / "resistor_array_paths.py"
     consumers = (

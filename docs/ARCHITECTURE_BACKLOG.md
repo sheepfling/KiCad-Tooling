@@ -486,8 +486,22 @@ view of its reserved wire fields. The candidate adapter still emits the
 established evidence mapping for report serialization. Candidate construction
 copies and freezes that mapping so later internal consumers cannot change the
 fingerprint or disagree with typed coverage identity. This protects the
-current wire contract; per-theme typed finding evidence remains a separate
-schema and fingerprint migration decision.
+current wire contract. The I²C pull-up theme now carries the owning typed
+source record on each internal candidate and projects it through
+`project_i2c_pullup_evidence`; its report fields and fingerprint input remain
+stable. Extend that source-to-wire pattern across other themes before changing
+the serialized evidence schema or fingerprint normalization.
+The USB data-path finding now follows the same route: each candidate retains a
+typed `UsbDataPathMismatch` plus its authored map digest, and one USB-owned
+projection preserves the established report evidence and fingerprint. Continue
+with other bounded themes where the producing record fully explains the finding.
+The I²C address mismatch, collision, and unmapped-responder candidates now keep
+their source coverage or named scan record through a typed projection as well.
+The I²C pull-up, I²C address, and USB data-path owners now share one immutable
+`CandidateEvidenceProjection` contract, while each theme retains its own
+source-specific formatter.
+CAN missing and excess termination candidates now retain their named scan
+records and use that same projection contract.
 The bus theme now returns its findings with those peer keys in a
 BusCandidateResult. Prepared evaluation consumes the typed result directly;
 the flattened scan_candidates() remains an adapter for existing callers.

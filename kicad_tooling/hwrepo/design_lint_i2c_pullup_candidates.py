@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .design_lint_i2c_pullup_candidate_evidence import I2cPullupCandidate
 from .design_lint_types import Candidate
 from .i2c_pullup_heuristics import (
     i2c_buses_with_low_equivalent_pullup_resistance,
@@ -36,26 +37,20 @@ def i2c_pullup_theme_candidates(
         ) in covered_i2c_pullup_gaps:
             continue
         found.append(
-            Candidate(
-                rule_id="bus.i2c_missing_pullup",
+            I2cPullupCandidate.from_source_evidence(
+                source_evidence=bus,
                 subject=f"SDA {bus.sda_net} / SCL {bus.scl_net}",
                 message=(
                     "This named SDA/SCL pair has no visible 1 kΩ–100 kΩ resistor path to a "
                     "named positive rail on "
                     f"{', '.join(bus.missing_lines)}. Review internal or off-board pull-ups."
                 ),
-                evidence={
-                    "SDA": (bus.sda_net,),
-                    "SCL": (bus.scl_net,),
-                    "pins": (*bus.sda_pins, *bus.scl_pins),
-                    "missing_pullups": bus.missing_lines,
-                },
             )
         )
     for bus in i2c_buses_with_low_equivalent_pullup_resistance(observed):
         found.append(
-            Candidate(
-                rule_id="bus.i2c_low_equivalent_resistance",
+            I2cPullupCandidate.from_source_evidence(
+                source_evidence=bus,
                 subject=f"SDA {bus.sda_net} / SCL {bus.scl_net}",
                 message=(
                     "Recognized fitted pull-ups in parallel have nominal effective resistance "
@@ -63,27 +58,12 @@ def i2c_pullup_theme_candidates(
                     f"{', '.join(item.line for item in bus.lines)}. Review the approved bus range, rail, "
                     "and sink-current limits; capacitance and timing are not modeled."
                 ),
-                evidence={
-                    "SDA": (bus.sda_net,),
-                    "SCL": (bus.scl_net,),
-                    "lines": tuple(item.line for item in bus.lines),
-                    "pins": (*bus.sda_pins, *bus.scl_pins),
-                    "equivalent_ohms": tuple(
-                        f"{item.line}={item.equivalent_resistance_ohms:.6g}Ω" for item in bus.lines
-                    ),
-                    "pullup_resistors": tuple(
-                        f"{' + '.join(path.references)}={path.resistance_ohms:.6g}Ω to "
-                        f"{path.rail_net}"
-                        for line in bus.lines
-                        for path in line.pullup_paths
-                    ),
-                },
             )
         )
     for bus in i2c_buses_with_multiple_pullup_rail_families(observed):
         found.append(
-            Candidate(
-                rule_id="bus.i2c_multiple_pullup_rail_families",
+            I2cPullupCandidate.from_source_evidence(
+                source_evidence=bus,
                 subject=f"SDA {bus.sda_net} / SCL {bus.scl_net}",
                 message=(
                     "Visible fitted I2C pull-up paths use different recognized positive-rail "
@@ -91,21 +71,14 @@ def i2c_pullup_theme_candidates(
                     "pull-up rail, and any level-shifting topology; rail names alone do not "
                     "establish voltage compatibility."
                 ),
-                evidence={
-                    "SDA": (bus.sda_net,),
-                    "SCL": (bus.scl_net,),
-                    "pins": bus.pins,
-                    "rail_families": bus.rail_families,
-                    "pullup_paths": bus.pullup_paths,
-                },
             )
         )
     for entry in i2c_pullup_heuristic_coverage.voltage_entries:
         if entry.status != "OPEN":
             continue
         found.append(
-            Candidate(
-                rule_id="bus.i2c_pullup_input_limit_coverage",
+            I2cPullupCandidate.from_source_evidence(
+                source_evidence=entry,
                 subject=f"{entry.line} {entry.signal_net}: input-voltage coverage",
                 message=(
                     "A visible local pull-up reaches "
@@ -114,17 +87,6 @@ def i2c_pullup_theme_candidates(
                     "Review the maximum pull-up rail voltage against each device's approved "
                     "input limit; this prompt does not infer voltage compatibility."
                 ),
-                evidence={
-                    "SDA": (entry.sda_net,),
-                    "SCL": (entry.scl_net,),
-                    "line": (entry.line,),
-                    "signal_net": (entry.signal_net,),
-                    "pullup_rails": entry.pullup_rails,
-                    "endpoint_pins": entry.endpoint_pins,
-                    "covered_input_pins": entry.covered_input_pins,
-                    "missing_input_pins": entry.missing_input_pins,
-                    "issues": entry.issues,
-                },
             )
         )
     return tuple(found)

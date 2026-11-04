@@ -5,6 +5,16 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from kicad_tooling.hwrepo.design_lint import fingerprint
+from kicad_tooling.hwrepo.design_lint_types import Candidate
+from kicad_tooling.hwrepo.design_lint_usb_data_path_candidate_evidence import (
+    UsbDataPathCandidate,
+    UsbDataPathEvidenceProjection,
+    UsbDataPathFindingEvidence,
+    project_usb_data_path_evidence,
+)
+from kicad_tooling.hwrepo.design_lint_usb_data_path_candidates import usb_data_path_candidates
+from kicad_tooling.hwrepo.design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
 from kicad_tooling.hwrepo.usb_data_path_models import (
     UsbDataInterfaceRequirement,
 )
@@ -68,6 +78,35 @@ def test_bonded_reference_faults_report_exact_component_and_pin_evidence(
     assert finding.evidence["reference_bond_identity"] == ("Device:R; Synthetic:0603; 0R",)
     assert finding.evidence["reference_bond_side_a"] == ("R3.1 on USB_GND",)
     assert finding.evidence["reference_bond_side_b"] == ("R3.2 on BOARD_GND",)
+
+
+def test_usb_candidate_retains_mismatch_and_projects_the_bound_map_digest() -> None:
+    observed = usb_bonded_reference_netlist(fault="wrong-net")
+    path_map = usb_bonded_reference_map()
+    inputs = UsbDataPathCandidateInputs(authored_map=path_map)
+    assert inputs.map_sha256 is not None
+
+    mismatch = usb_data_path_mismatches(path_map, observed)[0]
+    candidate = usb_data_path_candidates(observed, inputs)[0]
+
+    assert isinstance(candidate, UsbDataPathCandidate)
+    assert candidate.source_evidence == UsbDataPathFindingEvidence(
+        mismatch=mismatch,
+        map_sha256=inputs.map_sha256,
+    )
+    projection = project_usb_data_path_evidence(candidate.source_evidence)
+    assert isinstance(projection, UsbDataPathEvidenceProjection)
+    assert candidate.rule_id == projection.rule_id
+    assert candidate.evidence == projection.evidence
+    assert candidate.evidence["map_sha256"] == (inputs.map_sha256,)
+    assert candidate.evidence["reference_bond_side_b"] == ("R3.2 on BOARD_GND",)
+    public_candidate = Candidate(
+        rule_id=candidate.rule_id,
+        subject=candidate.subject,
+        message=candidate.message,
+        evidence=candidate.evidence,
+    )
+    assert fingerprint(candidate) == fingerprint(public_candidate)
 
 
 def test_bonded_reference_fault_evidence_is_order_stable() -> None:

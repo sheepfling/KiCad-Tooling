@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-
+from .design_lint_i2c_address_candidate_evidence import (
+    I2cAddressCandidate,
+    I2cAddressCollisionEvidence,
+    I2cAddressMismatchEvidence,
+    I2cUnmappedResponderEvidence,
+)
 from .design_lint_types import Candidate
 from .i2c_address_inputs import I2cAddressCandidateInput
 from .i2c_address_models import (
@@ -17,36 +21,6 @@ from .i2c_pullup_inputs import I2cPullupSnifferInput
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .netlist_contract_models import NetlistContract
 from .peer_reference_candidate_keys import I2cPeerBusKey, PeerReferenceCandidate
-
-
-def _i2c_address_evidence(
-    entries: Sequence[I2cResponderAddressCoverageEntry],
-) -> dict[str, tuple[str, ...]]:
-    evidence: dict[str, tuple[str, ...]] = {}
-    for entry in entries:
-        evidence[f"{entry.reference}.symbol"] = (
-            f"expected {entry.expected_symbol}; observed {entry.observed_symbol or 'unknown'}",
-        )
-        evidence[f"{entry.reference}.SDA"] = (
-            f"{entry.sda_pin} -> {', '.join(entry.sda_nets) or 'unconnected'}",
-        )
-        evidence[f"{entry.reference}.SCL"] = (
-            f"{entry.scl_pin} -> {', '.join(entry.scl_nets) or 'unconnected'}",
-        )
-        address_evidence = (
-            f"expected {format_i2c_address(entry.expected_address)}; "
-            f"observed {format_i2c_address(entry.observed_address)}"
-        )
-        evidence[f"{entry.reference}.address"] = (address_evidence,)
-        for bit in entry.address_bits:
-            bit_evidence = (
-                f"{bit.pin} function {bit.observed_function or 'unknown'}; "
-                f"nets {', '.join(bit.nets) or 'unconnected'}; "
-                f"resolved {bit.resolved_value if bit.resolved_value is not None else 'unknown'}"
-            )
-            evidence[f"{entry.reference}.bit{bit.bit}"] = (bit_evidence,)
-        evidence[f"{entry.reference}.basis"] = (entry.basis,)
-    return evidence
 
 
 def i2c_pullup_candidates(
@@ -77,8 +51,11 @@ def i2c_address_candidates(
                 and entry.expected_address != entry.observed_address
             ):
                 found.append(
-                    Candidate(
-                        rule_id="bus.i2c_address_mismatch",
+                    I2cAddressCandidate.from_source_evidence(
+                        source_evidence=I2cAddressMismatchEvidence(
+                            coverage=i2c_address_coverage,
+                            entry=entry,
+                        ),
                         subject=(
                             f"{entry.reference} on {entry.segment_id}: "
                             f"{format_i2c_address(entry.observed_address)}"
@@ -88,10 +65,6 @@ def i2c_address_candidates(
                             "address than the project map declares. Review the strap wiring, "
                             "device profile, or approved address."
                         ),
-                        evidence={
-                            "segment": (entry.segment_id,),
-                            **_i2c_address_evidence((entry,)),
-                        },
                     )
                 )
         address_groups: dict[tuple[str, int], list[I2cResponderAddressCoverageEntry]] = {}
@@ -105,19 +78,17 @@ def i2c_address_candidates(
                 continue
             references = tuple(sorted(entry.reference for entry in entries))
             found.append(
-                Candidate(
-                    rule_id="bus.i2c_address_collision",
+                I2cAddressCandidate.from_source_evidence(
+                    source_evidence=I2cAddressCollisionEvidence(
+                        coverage=i2c_address_coverage,
+                        entries=tuple(entries),
+                    ),
                     subject=f"{segment_id}: {', '.join(references)} at {format_i2c_address(address)}",
                     message=(
                         "Multiple fitted responders on this declared I2C segment resolve to the "
                         "same static address. Review the address map or any mux isolation not "
                         "represented by the declared segment."
                     ),
-                    evidence={
-                        "segment": (segment_id,),
-                        "address": (format_i2c_address(address),),
-                        **_i2c_address_evidence(entries),
-                    },
                 )
             )
     return tuple(found)
@@ -130,28 +101,23 @@ def i2c_responder_coverage_candidates(
     """Prompt review of I2C responders absent from the project address map."""
     found: list[Candidate] = []
     for responder in unmapped_i2c_responders(observed, i2c_address_map):
-        net_pairs = tuple(f"{sda} / {scl}" for sda, scl in responder.signal_pairs)
-        has_map = i2c_address_map is not None
         found.append(
-            Candidate(
-                rule_id="bus.i2c_unmapped_responder",
+            I2cAddressCandidate.from_source_evidence(
+                source_evidence=I2cUnmappedResponderEvidence(
+                    responder=responder,
+                    address_map=i2c_address_map,
+                ),
                 subject=f"{responder.reference}: I2C address-map coverage",
                 message=(
                     f"{responder.reference} has assigned native SDA/SCL pin functions but "
                     + (
                         "is not listed as a responder in the project address map. "
-                        if has_map
+                        if i2c_address_map is not None
                         else "no project I2C address map is configured. "
                     )
                     + "Review whether it is a static or dynamic responder, or intentionally "
                     "outside address checking."
                 ),
-                evidence={
-                    "SDA_pins": responder.sda_pins,
-                    "SCL_pins": responder.scl_pins,
-                    "assigned_net_pairs": net_pairs,
-                    "address_map": (("configured",) if has_map else ("not_configured",)),
-                },
             )
         )
     return tuple(found)

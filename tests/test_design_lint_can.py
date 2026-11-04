@@ -4,9 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from kicad_tooling.hwrepo.design_lint import (
-    evaluate,
+from kicad_tooling.hwrepo.can_termination_heuristics import can_buses_without_local_termination
+from kicad_tooling.hwrepo.design_lint import evaluate, fingerprint
+from kicad_tooling.hwrepo.design_lint_can_candidates import can_candidates
+from kicad_tooling.hwrepo.design_lint_can_termination_candidate_evidence import (
+    CanTerminationCandidate,
+    project_can_termination_evidence,
 )
+from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.models import (
     DesignLintIgnore,
     DesignLintPolicy,
@@ -101,6 +106,27 @@ def test_can_termination_finding_is_order_stable_and_population_sensitive() -> N
     dnp_finding = next(item for item in dnp_report.findings if item.rule_id == rule_id)
     assert ((dnp_finding.fingerprint, dnp_finding.evidence)) == (
         (original_finding.fingerprint, original_finding.evidence)
+    )
+
+
+def test_missing_termination_candidate_retains_its_scan_record() -> None:
+    observed = can_netlist()
+    (source,) = can_buses_without_local_termination(observed)
+
+    candidate = next(
+        item for item in can_candidates(observed) if item.rule_id == "bus.can_missing_termination"
+    )
+
+    assert isinstance(candidate, CanTerminationCandidate)
+    assert candidate.source_evidence == source
+    assert candidate.evidence == project_can_termination_evidence(source).evidence
+    assert fingerprint(candidate) == fingerprint(
+        Candidate(
+            rule_id=candidate.rule_id,
+            subject=candidate.subject,
+            message=candidate.message,
+            evidence=candidate.evidence,
+        )
     )
 
 

@@ -85,16 +85,22 @@ signature.
   does not turn an inferred net name into a requirement.
 - The low-equivalent-resistance scan returns one named observation per
   affected line, with its typed resistor paths and numeric effective
-  resistance, plus explicit SDA and SCL pin tuples. Candidate formatting
-  projects those records into the unchanged string-keyed evidence fields,
-  preserving line order, pins, formatted values, and fingerprints without
-  passing correlated line-keyed maps between stages. Internal candidate scans
-  import this typed owner directly; `bus_heuristics.py` re-exports a small
-  compatibility adapter for the established map-shaped return record.
-- Fingerprints currently hash `Candidate.evidence`, a mapping of named string
-  tuples. Keep that public evidence shape and its normalization unchanged in
-  this routing pilot. A future typed finding-evidence variant needs its own
-  versioned report and fingerprint migration decision.
+  resistance, plus explicit SDA and SCL pin tuples. All four I²C pull-up
+  candidate rules retain their typed source record on `I2cPullupCandidate`.
+  `project_i2c_pullup_evidence` is the single owner of the current string-keyed
+  report projection; it preserves line order, pins, formatted values, and
+  fingerprints. Internal candidate scans import the typed owner directly;
+  `bus_heuristics.py` re-exports a small compatibility adapter for the former
+  map-shaped low-resistance result.
+- `Candidate.evidence` remains the immutable wire projection used by existing
+  report serialization and fingerprint normalization. For I²C pull-up rules,
+  the retained typed source record is authoritative and the map is derived.
+  Other themes still need this source-to-wire pattern. Changing the public
+  evidence shape or fingerprint input requires an explicit versioned migration.
+- I²C pull-up, I²C address, and USB data-path projections use the shared
+  `CandidateEvidenceProjection` from `design_lint_types.py`. Theme owners still
+  control the source-to-field mapping; the shared type freezes the rule ID and
+  report fields before they reach the generic candidate boundary.
 - An optional `None` at the compatibility API means legacy callers did not
   provide coverage. Normalize it to an explicit `NOT_CONFIGURED` coverage
   record before entering the new theme service. New theme inputs should not
@@ -227,6 +233,14 @@ different evidence and authority rules do not belong in an all-optional I²C
 context. Prepared evaluation now carries these records into the same scanner
 without expanding central compatibility signatures.
 
+Address mismatch and collision candidates now retain the source-bound coverage
+report with the exact eligible entries. Unmapped-responder candidates retain
+the named native responder scan record and the map state used for discovery.
+`project_i2c_address_evidence` owns the existing string-keyed report projection;
+the candidate constructor verifies its rule ID and fields against that typed
+source. `BLOCKED` and `NOT_REQUESTED` reports remain ineligible for mismatch
+and collision candidates.
+
 The public `candidates()` call accepts 49 arguments and remains available to
 direct predicate consumers. Full evaluation now builds the grouped scanner
 inputs from `DesignLintEvaluationPreparation`, whose coverage has already been
@@ -257,9 +271,10 @@ derive their identity-owned public evidence fields (`SDA`/`SCL`, `SCK`,
 `CANH`/`CANL`, or `bus`/`pair`) from the typed identity. Supplemental evidence
 is merged only after those fields are reserved, so a producer cannot supply a
 conflicting duplicate. The resulting evidence map preserves the existing
-report JSON and fingerprint. This is the first typed evidence projection; the
-remaining per-rule evidence fields still use the established string-keyed
-map and need their own staged migration by theme. The projection itself is a
+report JSON and fingerprint. The source-owning I²C and USB routes now use the
+shared `CandidateEvidenceProjection`; remaining per-rule evidence fields still
+use the established string-keyed map and need their own staged migration by
+theme. The peer projection itself is a
 named `PeerReferenceIdentityProjection` with a read-only mapping of its
 identity-owned wire fields; the candidate adapter projects them into the
 established evidence mapping, which `Candidate` copies and freezes before
@@ -429,3 +444,26 @@ with its parsed root span. Wire, junction, and label parsers return named
 geometry records with unsupported reasons; the scan coordinator routes those
 reasons to the owning rule IDs before assembling `COMPLETE`, `PARTIAL`, or
 `UNSUPPORTED` results. Candidate and report schemas remain unchanged.
+
+## USB data-path finding evidence route
+
+`UsbDataPathCandidateInputs` keeps the authored USB map and its canonical digest
+together. `usb_data_path_mismatches` compares that map with the admitted native
+netlist and returns `UsbDataPathMismatch` records. Each internal
+`UsbDataPathCandidate` retains one mismatch and the exact map digest in
+`UsbDataPathFindingEvidence`; `project_usb_data_path_evidence` is the only
+projection to the existing report fields. The public evidence keys, values,
+finding order, and fingerprint inputs remain stable. A missing map still emits
+no mapped-path finding, and a finding remains a schematic review prompt rather
+than proof of component conduction or PCB continuity.
+
+## CAN termination finding evidence route
+
+`can_buses_without_local_termination` and
+`can_buses_with_excessive_local_termination` return the named
+`CanTerminationGap` and `CanTerminationExcess` records. The internal
+`CanTerminationCandidate` retains that scan record; the CAN-owned
+`project_can_termination_evidence` function maps it to the established fields
+through the shared `CandidateEvidenceProjection`. The message and evidence
+remain a schematic review prompt: visible resistor count does not identify
+physical bus endpoints or prove external termination.

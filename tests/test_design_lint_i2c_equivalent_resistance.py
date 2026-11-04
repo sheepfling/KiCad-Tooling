@@ -15,6 +15,9 @@ from kicad_tooling.hwrepo.design_lint import (
     evaluate,
     fingerprint,
 )
+from kicad_tooling.hwrepo.design_lint_i2c_pullup_candidate_evidence import (
+    I2cPullupCandidate,
+)
 from kicad_tooling.hwrepo.i2c_pullup_heuristics import (
     i2c_buses_with_low_equivalent_pullup_resistance,
 )
@@ -98,6 +101,14 @@ def test_i2c_low_resistance_scan_returns_named_line_observations() -> None:
     assert line.line == "SDA"
     assert line.equivalent_resistance_ohms == 500.0
     assert tuple(path.references for path in line.pullup_paths) == (("R1",), ("R3",))
+    candidate = next(
+        item
+        for item in candidates(i2c_netlist_with_parallel_sda())
+        if item.rule_id == "bus.i2c_low_equivalent_resistance"
+    )
+    assert isinstance(candidate, I2cPullupCandidate)
+    assert candidate.source_evidence == scan
+    assert candidate.evidence["equivalent_ohms"] == ("SDA=500Ω",)
 
 
 def test_bus_heuristics_facade_preserves_legacy_low_resistance_record() -> None:

@@ -16,6 +16,7 @@ from kicad_tooling.hwrepo import (
     design_lint_mapped_topology_coverage,
     design_lint_peer_candidates,
     design_lint_peer_inputs,
+    design_lint_usb_data_path_candidate_evidence,
     design_lint_usb_data_path_candidates,
     design_lint_usb_data_path_inputs,
     design_lint_usb_peer_candidates,
@@ -106,4 +107,21 @@ def test_internal_usb_candidates_import_the_theme_owned_input() -> None:
     assert (
         design_lint_candidate_inputs.UsbDataPathCandidateInputs
         is design_lint_usb_data_path_inputs.UsbDataPathCandidateInputs
+    )
+
+
+def test_usb_candidates_retain_typed_mismatch_source_and_own_wire_projection() -> None:
+    owner_path = REPO_ROOT / "kicad_tooling/hwrepo/design_lint_usb_data_path_candidate_evidence.py"
+    source_path = REPO_ROOT / "kicad_tooling/hwrepo/design_lint_usb_data_path_candidates.py"
+    source_tree = ast.parse(source_path.read_text(encoding="utf-8"))
+    imports = {node.module for node in source_tree.body if isinstance(node, ast.ImportFrom)}
+
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert "design_lint_usb_data_path_candidate_evidence" in imports
+    assert not any(
+        isinstance(node, ast.keyword) and node.arg == "evidence" for node in ast.walk(source_tree)
+    )
+    assert hasattr(
+        design_lint_usb_data_path_candidate_evidence,
+        "project_usb_data_path_evidence",
     )

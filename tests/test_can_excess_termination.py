@@ -6,9 +6,18 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.hwrepo.design_lint import evaluate
+from kicad_tooling.hwrepo.can_termination_heuristics import (
+    can_buses_with_excessive_local_termination,
+)
+from kicad_tooling.hwrepo.design_lint import evaluate, fingerprint
+from kicad_tooling.hwrepo.design_lint_can_candidates import can_candidates
+from kicad_tooling.hwrepo.design_lint_can_termination_candidate_evidence import (
+    CanTerminationCandidate,
+    project_can_termination_evidence,
+)
 from kicad_tooling.hwrepo.design_lint_finding_models import DesignLintFinding
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
+from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
@@ -83,6 +92,19 @@ def test_three_fitted_direct_terminators_prompt_for_bus_topology_review() -> Non
         "terminations": ("R1=108 Ω", "R2=120 Ω", "R3=132 Ω"),
     }
     assert "physical bus ends" in finding.message
+    (scan_record,) = can_buses_with_excessive_local_termination(source)
+    candidate = next(item for item in can_candidates(source) if item.rule_id == RULE_ID)
+    assert isinstance(candidate, CanTerminationCandidate)
+    assert candidate.source_evidence == scan_record
+    assert candidate.evidence == project_can_termination_evidence(scan_record).evidence
+    assert fingerprint(candidate) == fingerprint(
+        Candidate(
+            rule_id=candidate.rule_id,
+            subject=candidate.subject,
+            message=candidate.message,
+            evidence=candidate.evidence,
+        )
+    )
 
     crossed_peer = source.model_copy(
         update={
