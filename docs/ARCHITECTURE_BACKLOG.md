@@ -1350,19 +1350,22 @@ formatters have one owner. Existing rule IDs, messages, report evidence, and
 fingerprints remain stable.
 
 A repository-wide AST inventory of direct `Candidate(evidence=...)` calls
-finds 199 constructions across 148 Python modules: 127 in production code
-across 102 modules and 72 in tests across 46 modules. The evidence argument is
-a dictionary literal in 107 production calls and 24 test calls; other calls
+finds 190 constructions across 147 Python modules: 118 in production code
+across 101 modules and 72 in tests across 46 modules. The evidence argument is
+a dictionary literal in 98 production calls and 24 test calls; other calls
 reuse a named, attributed, or computed mapping. This is a triage inventory,
 not a claim that every construction is an opaque source route: test-only
 candidate builders and already-owned report projections need separate
-classification. The largest production concentrations are
-`connector_mapped_interface_pins.py` (9),
-`pcb_drc_global_severity_review.py` (6), and
-`connector_peer_power_input.py`, `connector_peer_power_output.py`, and
-`pcb_dru_rule_review.py` (3 each). Start the next route audit with the
-connector mapped-interface owner and trace its input records and rule families
-before deciding what should share a projection.
+classification. The mapped connector-interface route now carries all nine
+findings through a typed source record and a projector that verifies the
+current netlist, coverage, mapped pin, role, connectivity, and any rail-label
+clue. Its two open-contact rules retain their pre-existing coverage semantics;
+the other seven still require complete interface coverage. The largest
+remaining production concentrations are `pcb_drc_global_severity_review.py`
+(6), `pcb_dru_rule_review.py`, `connector_peer_power_input.py`, and
+`connector_peer_power_output.py` (3 each). Continue the route audit with the
+global DRC severity review and trace its source records and rule families
+before choosing a typed projection boundary.
 
 The schematic geometry tranche passed 75 synthetic and architecture tests and
 4 CLI/MCP parity tests against the separate public `KiCAD-Test` checkout.
