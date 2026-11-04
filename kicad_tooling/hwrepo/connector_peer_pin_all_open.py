@@ -204,10 +204,13 @@ def all_open_generic_connector_peer_pin_candidates(
             ):
                 continue
 
-            for peer_group, scoped_assignments, peer_review in partition_peer_assignments(
+            for partition in partition_peer_assignments(
                 assignments,
                 peer_assignment_groups,
             ):
+                peer_group = partition.peer_assignment_group
+                scoped_assignments = partition.assignments_by_pin
+                peer_review = partition.peer_assignment_basis
                 scoped_references = tuple(
                     sorted(
                         {pin.rsplit(".", 1)[0] for pin in scoped_assignments},

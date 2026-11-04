@@ -251,10 +251,13 @@ def scan_connector_part_id_peer_pins(
                 )
                 for reference in peers
             }
-            for peer_group, scoped_assignments, peer_review in partition_peer_assignments(
+            for partition in partition_peer_assignments(
                 assignments,
                 peer_assignment_groups,
             ):
+                peer_group = partition.peer_assignment_group
+                scoped_assignments = partition.assignments_by_pin
+                peer_review = partition.peer_assignment_basis
                 if len(scoped_assignments) < 2:
                     continue
                 pin_groups.append(

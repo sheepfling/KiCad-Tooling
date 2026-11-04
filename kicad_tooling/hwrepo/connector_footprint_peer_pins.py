@@ -140,15 +140,18 @@ def scan_connector_footprint_peer_pin_assignments(
             for reference in peers
         }
         scopes = tuple(
-            (peer_group, scoped, basis)
-            for peer_group, scoped, basis in partition_peer_assignments(
+            partition
+            for partition in partition_peer_assignments(
                 representative_assignments,
                 peer_assignment_groups,
             )
-            if len(scoped) >= 2
+            if len(partition.assignments_by_pin) >= 2
         )
 
-        for peer_group, scoped_assignments, basis in scopes:
+        for scope in scopes:
+            peer_group = scope.peer_assignment_group
+            scoped_assignments = scope.assignments_by_pin
+            basis = scope.peer_assignment_basis
             peer_scope_group_count += 1
             scope_references = tuple(
                 sorted(

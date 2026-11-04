@@ -85,10 +85,13 @@ def connector_footprint_peer_pin_missing_metadata_open_outliers(
             if not missing_by_reference:
                 continue
 
-            for peer_group, scoped_assignments, peer_basis in partition_peer_assignments(
+            for partition in partition_peer_assignments(
                 assignments_by_pin,
                 peer_assignment_groups,
             ):
+                peer_group = partition.peer_assignment_group
+                scoped_assignments = partition.assignments_by_pin
+                peer_basis = partition.peer_assignment_basis
                 if len(scoped_assignments) < 2:
                     continue
                 scope_references = tuple(

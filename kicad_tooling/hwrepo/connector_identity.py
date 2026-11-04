@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
+from dataclasses import dataclass
 from types import MappingProxyType
 
 from .connector_coverage_models import ConnectorMappedPinEvidence
@@ -14,6 +15,15 @@ _CONNECTOR_REFERENCE = re.compile(r"^(?:J|P|X|CN)[0-9]+$", re.IGNORECASE)
 
 
 _GENERIC_PIN_FUNCTION = re.compile(r"^pin[_\s]*[0-9]+$", re.IGNORECASE)
+
+
+@dataclass(frozen=True, slots=True)
+class PeerAssignmentPartition:
+    """One source-reviewed connector scope and its exact pin assignments."""
+
+    peer_assignment_group: str | None
+    assignments_by_pin: Mapping[str, tuple[str, ...]]
+    peer_assignment_basis: tuple[str, ...]
 
 
 _RETURN_FUNCTIONS = frozenset(
@@ -261,9 +271,10 @@ def similar_connector_pin_groups(
             if is_role_group
             else peer_assignment_groups
         )
-        for peer_group, scoped, peer_review in partition_peer_assignments(
-            assignments, comparison_groups
-        ):
+        for partition in partition_peer_assignments(assignments, comparison_groups):
+            peer_group = partition.peer_assignment_group
+            scoped = partition.assignments_by_pin
+            peer_review = partition.peer_assignment_basis
             scoped_entries = [entry for entry in entries if entry[0] in scoped]
             connector_refs = {pin.rsplit(".", 1)[0] for pin, _, _, _ in scoped_entries}
             if len(scoped_entries) < 2 or (not is_role_group and len(connector_refs) < 2):
@@ -305,10 +316,16 @@ def similar_connector_pin_groups(
 def partition_peer_assignments(
     assignments: Mapping[str, tuple[str, ...]],
     peer_assignment_groups: Mapping[str, tuple[str, str]] | None,
-) -> tuple[tuple[str | None, dict[str, tuple[str, ...]], tuple[str, ...]], ...]:
+) -> tuple[PeerAssignmentPartition, ...]:
     """Scope a comparison only when every participating connector has a current group."""
     if not peer_assignment_groups:
-        return ((None, dict(assignments), ()),)
+        return (
+            PeerAssignmentPartition(
+                peer_assignment_group=None,
+                assignments_by_pin=MappingProxyType(dict(assignments)),
+                peer_assignment_basis=(),
+            ),
+        )
     groups = {
         reference.casefold(): (group, basis)
         for reference, (group, basis) in peer_assignment_groups.items()
@@ -322,7 +339,13 @@ def partition_peer_assignments(
     if not connector_references or any(
         reference.casefold() not in groups for reference in connector_references
     ):
-        return ((None, dict(assignments), ()),)
+        return (
+            PeerAssignmentPartition(
+                peer_assignment_group=None,
+                assignments_by_pin=MappingProxyType(dict(assignments)),
+                peer_assignment_basis=(),
+            ),
+        )
 
     partitions: dict[str, tuple[str, dict[str, tuple[str, ...]], set[str]]] = {}
     for pin, nets in sorted(assignments.items(), key=lambda item: (item[0].casefold(), item[0])):
@@ -335,10 +358,12 @@ def partition_peer_assignments(
         scoped_assignments[pin] = nets
         review_evidence.add(f"{reference}: {display_group}; {basis}")
     return tuple(
-        (
-            display_group,
-            scoped_assignments,
-            tuple(sorted(review_evidence, key=lambda item: (item.casefold(), item))),
+        PeerAssignmentPartition(
+            peer_assignment_group=display_group,
+            assignments_by_pin=MappingProxyType(dict(scoped_assignments)),
+            peer_assignment_basis=tuple(
+                sorted(review_evidence, key=lambda item: (item.casefold(), item))
+            ),
         )
         for _, (display_group, scoped_assignments, review_evidence) in sorted(partitions.items())
     )

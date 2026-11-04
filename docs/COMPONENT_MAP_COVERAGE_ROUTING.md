@@ -44,6 +44,16 @@ unresolved comparison. `BLOCKED` preserves the stale source identity while
 withholding rows from candidate generation. `NOT_REQUESTED` means no map or
 coverage was requested; it is not evidence of a successful scan.
 
+## Connector peer comparison partitions
+
+`partition_peer_assignments` receives observed pin-to-net assignments together
+with the optional source-reviewed connector peer-group map. It returns named
+`PeerAssignmentPartition` records containing the group ID, its scoped pin
+assignments, and the review basis. Missing or incomplete group coverage yields
+one unscoped record with the complete assignment map; it does not emit partial
+reviewed groups. Returned assignment views are read-only. These partitions
+scope comparisons and do not establish a required electrical relationship.
+
 ## Acceptance
 
 The owner accepts one frozen request instead of a wide keyword list. Tests

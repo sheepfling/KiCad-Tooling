@@ -73,10 +73,13 @@ def connector_footprint_peer_pin_metadata_assignment_divergences(
                 pin: tuple(sorted(pin_nets.get(pin.casefold(), ())))
                 for pin, _, _ in pin_metadata.values()
             }
-            for peer_group, scoped_assignments, peer_basis in partition_peer_assignments(
+            for partition in partition_peer_assignments(
                 all_assignments,
                 peer_assignment_groups,
             ):
+                peer_group = partition.peer_assignment_group
+                scoped_assignments = partition.assignments_by_pin
+                peer_basis = partition.peer_assignment_basis
                 if len(scoped_assignments) < 2 or any(
                     len(nets) != 1 for nets in scoped_assignments.values()
                 ):

@@ -156,10 +156,11 @@ def connector_peer_pin_heuristic_coverage(
                 for reference in references
                 if pin_number in pins_by_reference[reference.casefold()]
             }
-            for _, scoped_assignments, _ in partition_peer_assignments(
+            for partition in partition_peer_assignments(
                 assignments,
                 peer_assignment_groups,
             ):
+                scoped_assignments = partition.assignments_by_pin
                 if len(scoped_assignments) < 2:
                     continue
                 peer_pin_group_count += 1

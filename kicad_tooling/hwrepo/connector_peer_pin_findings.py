@@ -63,10 +63,13 @@ def connector_peer_pin_assignment_outliers(
 
     exact_results: list[ConnectorPeerPinAssignmentOutlier] = []
     for (symbol_key, pin_number), assignments in sorted(grouped.items()):
-        for peer_group, scoped_assignments, peer_review in partition_peer_assignments(
+        for partition in partition_peer_assignments(
             assignments,
             peer_assignment_groups,
         ):
+            peer_group = partition.peer_assignment_group
+            scoped_assignments = partition.assignments_by_pin
+            peer_review = partition.peer_assignment_basis
             if len(scoped_assignments) < 2 or len(set(scoped_assignments.values())) == 1:
                 continue
             # A named-function comparison is more direct and already reports these
@@ -240,10 +243,13 @@ def connector_peer_pin_assignment_divergences(
 
     results: list[ConnectorPeerPinAssignmentDivergence] = []
     for (symbol_key, pin_number_key), assignments in sorted(grouped.items()):
-        for peer_group, scoped_assignments, peer_review in partition_peer_assignments(
+        for partition in partition_peer_assignments(
             assignments,
             peer_assignment_groups,
         ):
+            peer_group = partition.peer_assignment_group
+            scoped_assignments = partition.assignments_by_pin
+            peer_review = partition.peer_assignment_basis
             if len(scoped_assignments) < 2 or any(not nets for nets in scoped_assignments.values()):
                 continue
             if len(set(scoped_assignments.values())) == 1:
