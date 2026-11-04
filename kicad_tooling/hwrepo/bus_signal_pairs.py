@@ -77,17 +77,53 @@ _COMPLEMENTARY_FUNCTIONS: Mapping[str, tuple[str, str]] = MappingProxyType(
 
 _USB_C_SUPERSPEED_LANE_FUNCTION = re.compile(r"(?:(?:stda|stdb))?ss(tx|rx)([12])([+-])")
 
+ComplementaryPairSide = Literal["positive", "negative"]
+ComplementarySideAssignments = Mapping[ComplementaryPairSide, tuple[str, ...]]
+_PAIR_SIDES: tuple[ComplementaryPairSide, ComplementaryPairSide] = ("positive", "negative")
+
+
+def _freeze_side_assignments(
+    assignments: ComplementarySideAssignments,
+) -> ComplementarySideAssignments:
+    if set(assignments) != set(_PAIR_SIDES):
+        raise ValueError("Complementary assignments must include positive and negative sides")
+    return MappingProxyType({side: tuple(assignments[side]) for side in _PAIR_SIDES})
+
 
 @dataclass(frozen=True, slots=True)
 class ComplementaryLineGap:
     reference: str
     family: str
     reason: str
-    pins: dict[str, tuple[str, ...]]
-    nets: dict[str, tuple[str, ...]]
+    pins: ComplementarySideAssignments
+    nets: ComplementarySideAssignments
     alias_symbol: str | None = None
     alias_basis: str | None = None
     alias_sha256: str | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "pins", _freeze_side_assignments(self.pins))
+        object.__setattr__(self, "nets", _freeze_side_assignments(self.nets))
+
+    @property
+    def positive_pins(self) -> tuple[str, ...]:
+        """Return positive-side pins without exposing the compatibility mapping."""
+        return self.pins["positive"]
+
+    @property
+    def negative_pins(self) -> tuple[str, ...]:
+        """Return negative-side pins without exposing the compatibility mapping."""
+        return self.pins["negative"]
+
+    @property
+    def positive_nets(self) -> tuple[str, ...]:
+        """Return positive-side nets without exposing the compatibility mapping."""
+        return self.nets["positive"]
+
+    @property
+    def negative_nets(self) -> tuple[str, ...]:
+        """Return negative-side nets without exposing the compatibility mapping."""
+        return self.nets["negative"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -265,7 +301,7 @@ def complementary_signal_gaps(
         for pin in pins:
             pin_nets.setdefault(pin, set()).add(net)
 
-    groups: dict[tuple[str, str], dict[str, list[str]]] = {}
+    groups: dict[tuple[str, str], dict[ComplementaryPairSide, list[str]]] = {}
     group_aliases: dict[tuple[str, str], ComplementaryPinFunctionAlias] = {}
     dnp_references = {reference.casefold() for reference in observed.dnp_components}
     for pin, function in observed.pin_functions.items():
@@ -294,7 +330,8 @@ def complementary_signal_gaps(
                     break
         if role is None:
             continue
-        family, side = role
+        family, role_side = role
+        side = cast(ComplementaryPairSide, role_side)
         group_key = (reference, family)
         groups.setdefault(group_key, {"positive": [], "negative": []})[side].append(pin)
         if alias_entry is not None:
@@ -302,20 +339,30 @@ def complementary_signal_gaps(
 
     findings: list[ComplementaryLineGap] = []
     for (reference, family), roles in sorted(groups.items()):
-        pins = {side: tuple(sorted(roles[side])) for side in ("positive", "negative")}
-        nets = {
-            side: tuple(net for pin in pins[side] for net in sorted(pin_nets.get(pin, ())))
-            for side in ("positive", "negative")
+        pin_side_assignments: ComplementarySideAssignments = {
+            side: tuple(sorted(roles[side])) for side in _PAIR_SIDES
         }
-        if not pins["positive"] or not pins["negative"]:
+        net_side_assignments: ComplementarySideAssignments = {
+            side: tuple(
+                net for pin in pin_side_assignments[side] for net in sorted(pin_nets.get(pin, ()))
+            )
+            for side in _PAIR_SIDES
+        }
+        if not pin_side_assignments["positive"] or not pin_side_assignments["negative"]:
             reason = "one recognized pair side is absent from the pin-function inventory"
-        elif len(pins["positive"]) != 1 or len(pins["negative"]) != 1:
+        elif (
+            len(pin_side_assignments["positive"]) != 1 or len(pin_side_assignments["negative"]) != 1
+        ):
             reason = "the component instance maps multiple pins to one pair side"
-        elif any(len(pin_nets.get(pin, ())) != 1 for side in pins.values() for pin in side):
+        elif any(
+            len(pin_nets.get(pin, ())) != 1
+            for side in pin_side_assignments.values()
+            for pin in side
+        ):
             reason = "one or both pair pins lack a unique schematic net assignment"
         else:
-            positive_net = next(iter(pin_nets[pins["positive"][0]]))
-            negative_net = next(iter(pin_nets[pins["negative"][0]]))
+            positive_net = next(iter(pin_nets[pin_side_assignments["positive"][0]]))
+            negative_net = next(iter(pin_nets[pin_side_assignments["negative"][0]]))
             if positive_net == negative_net:
                 reason = "both pair functions share one schematic net"
             else:
@@ -325,8 +372,8 @@ def complementary_signal_gaps(
                 reference=reference,
                 family=family,
                 reason=reason,
-                pins=pins,
-                nets=nets,
+                pins=pin_side_assignments,
+                nets=net_side_assignments,
                 alias_symbol=(
                     group_aliases[(reference, family)].symbol
                     if (reference, family) in group_aliases

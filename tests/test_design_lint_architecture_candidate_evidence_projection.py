@@ -9,6 +9,8 @@ import pytest
 from kicad_tooling.hwrepo import (
     design_lint_can_candidates,
     design_lint_can_peer_candidate_evidence,
+    design_lint_signal_pair_candidate_evidence,
+    design_lint_signal_pair_candidates,
     design_lint_unconnected_interface_candidate_evidence,
     design_lint_unconnected_interface_candidates,
 )
@@ -29,6 +31,7 @@ _THEME_OWNERS = (
     "design_lint_i2c_address_candidate_evidence.py",
     "design_lint_usb_data_path_candidate_evidence.py",
     "design_lint_unconnected_interface_candidate_evidence.py",
+    "design_lint_signal_pair_candidate_evidence.py",
 )
 
 
@@ -134,4 +137,45 @@ def test_unconnected_protocol_candidates_use_their_typed_evidence_owner() -> Non
     assert not any(
         isinstance(node, ast.keyword) and node.arg == "evidence"
         for node in ast.walk(candidate_builder)
+    )
+
+
+def test_signal_pair_candidates_use_their_typed_evidence_owner() -> None:
+    owner_path = HWREPO / "design_lint_signal_pair_candidate_evidence.py"
+    service_path = HWREPO / "design_lint_signal_pair_candidates.py"
+    owner_tree = ast.parse(owner_path.read_text(encoding="utf-8"))
+    service_tree = ast.parse(service_path.read_text(encoding="utf-8"))
+
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert (
+        design_lint_signal_pair_candidates.SignalPairCandidate
+        is design_lint_signal_pair_candidate_evidence.SignalPairCandidate
+    )
+    for function_name in (
+        "complementary_signal_candidates",
+        "named_differential_pair_candidates",
+    ):
+        function = next(
+            node
+            for node in service_tree.body
+            if isinstance(node, ast.FunctionDef) and node.name == function_name
+        )
+        assert any(
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "from_source_evidence"
+            for node in ast.walk(function)
+        ), function_name
+        assert not any(
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "Candidate"
+            for node in ast.walk(function)
+        ), function_name
+        assert not any(
+            isinstance(node, ast.keyword) and node.arg == "evidence" for node in ast.walk(function)
+        ), function_name
+    assert any(
+        isinstance(node, ast.FunctionDef) and node.name == "project_signal_pair_evidence"
+        for node in owner_tree.body
     )

@@ -173,6 +173,12 @@ records behind one report projector. Predicate owners keep their own partial-
 assignment rules; the scanner keeps ordering and wording. RS-485 and USB-C SBU
 remain specialized translators with their own owners.
 
+Signal-pair findings now retain `ComplementaryLineGap` or
+`NamedDifferentialPair` records through a theme-owned projection. The
+complementary scan record's positive/negative pin and net views are immutable
+and use a bounded side-key type; named accessors guide internal callers while
+the previous mapping attributes remain compatibility views.
+
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify
 the right producer for a new datum; no module split is needed to express the

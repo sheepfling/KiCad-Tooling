@@ -494,3 +494,14 @@ the existing scan order and message wording, while
 report fields. The RS-485 and USB-C SBU translators remain specialized owners.
 Full evaluation admits one shared native netlist before these scanners run;
 the candidate projection itself does not claim protocol use or PCB routing.
+
+## Signal-pair finding route
+
+The complementary-pin scanner returns `ComplementaryLineGap` records with
+positive and negative assignments. Their side maps are read-only and typed,
+with named accessors for internal consumers; the former `pins` and `nets`
+attributes remain available as compatibility mappings. Name-based pairing
+returns `NamedDifferentialPair` records. `SignalPairCandidate` retains either
+source, and `project_signal_pair_evidence` owns their existing report fields,
+including reviewed alias basis and digest. The scan predicates and their
+review-only meaning remain unchanged.

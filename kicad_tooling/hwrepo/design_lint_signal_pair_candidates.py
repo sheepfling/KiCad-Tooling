@@ -6,6 +6,7 @@ from .bus_signal_pairs import (
     ComplementaryPinFunctionAliasResolution,
     complementary_signal_gaps,
 )
+from .design_lint_signal_pair_candidate_evidence import SignalPairCandidate
 from .design_lint_types import Candidate
 from .differential_pair_names import named_differential_pairs
 from .netlist_contract_models import NetlistContract
@@ -22,39 +23,20 @@ def complementary_signal_candidates(
         if (
             gap.family == "CAN"
             and gap.alias_symbol is None
-            and gap.pins["positive"]
-            and gap.pins["negative"]
-            and (not gap.nets["positive"] or not gap.nets["negative"])
+            and gap.positive_pins
+            and gap.negative_pins
+            and (not gap.positive_nets or not gap.negative_nets)
         ):
             # The per-pin CAN rule already reports open CANH/CANL assignments.
             continue
-        evidence = {
-            "positive_pins": gap.pins["positive"],
-            "negative_pins": gap.pins["negative"],
-            "positive_nets": gap.nets["positive"],
-            "negative_nets": gap.nets["negative"],
-        }
-        if gap.alias_symbol is not None:
-            if gap.alias_basis is None or gap.alias_sha256 is None:
-                raise AssertionError(
-                    "Resolved complementary aliases must retain their basis digest"
-                )
-            evidence.update(
-                {
-                    "alias_symbol": (gap.alias_symbol,),
-                    "alias_basis": (gap.alias_basis,),
-                    "alias_sha256": (gap.alias_sha256,),
-                }
-            )
         found.append(
-            Candidate(
-                rule_id="bus.complementary_pair_assignment",
+            SignalPairCandidate.from_source_evidence(
+                source_evidence=gap,
                 subject=f"{gap.reference}: {gap.family} pair",
                 message=(
                     f"A recognized {gap.family} complementary pair has an incomplete or ambiguous "
                     f"schematic assignment: {gap.reason}. Review the interface pin map."
                 ),
-                evidence=evidence,
             )
         )
     return tuple(found)
@@ -68,8 +50,8 @@ def named_differential_pair_candidates(
     found: list[Candidate] = []
     for pair in named_differential_pairs(observed.nets, pcb_differential_pair_rule_map):
         found.append(
-            Candidate(
-                rule_id="signal.named_pair_without_reviewed_requirement",
+            SignalPairCandidate.from_source_evidence(
+                source_evidence=pair,
                 subject=f"{pair.positive_net} / {pair.negative_net}",
                 message=(
                     "These source net names match a recognized complementary-signal pattern. "
@@ -77,13 +59,6 @@ def named_differential_pair_candidates(
                     "project-owned PCB constraints. The name pattern does not establish pair "
                     "intent, routing quality, or an acceptable skew limit."
                 ),
-                evidence={
-                    "positive_net": (pair.positive_net,),
-                    "positive_references": pair.positive_references,
-                    "negative_net": (pair.negative_net,),
-                    "negative_references": pair.negative_references,
-                    "naming_pattern": (pair.naming_pattern,),
-                },
             )
         )
     return tuple(found)
