@@ -915,23 +915,29 @@ observation and its incomplete coverage report. Their shared projector keeps
 the existing report fields, while source completeness and rule disposition
 remain with coverage and evaluation.
 
-## Schematic pin, wire, and topology candidate evidence
+## Schematic geometry candidate evidence routes
 
-The three native-unconnected pin/wire rules now retain one exact finding from
-their `SchematicGeometryScan` in `SchematicPinGeometryCandidate`. The typed
-source variants are `WireEndOnPinLineSource`,
-`PinTipOnWireInteriorSource`, and `WireEndpointNearPinTipSource`; construction
-checks that each record is the same observation held by its scan. One
-schematic-owned projector supplies the established source path/hash, sheet
-occurrence, pin and wire identities, geometry, measured distances, and KiCad
-version fields. Candidate construction rejects a report projection that
-drifts from its typed source. Unmarked orthogonal crossings and T-junctions
-retain their exact `UnmarkedWireCrossing` or `UnmarkedTJunction` scan record in
-`SchematicWireTopologyCandidate`; their source projection preserves crossing
-or junction coordinates and wire UUIDs. The common source path and sheet
-binding projection is shared by the typed owner and remaining adapter routes.
-The near-wire label rule retains its `LabelNearWireEndpoint` observation
-through `SchematicLabelEndpointCandidate`, including every nearby endpoint and
-measured distance. Candidate order and existing report fields remain stable.
-Five schematic text and symbol-body routes still use direct report mappings
-and can move through their own typed owners in later tranches.
+All 11 schematic geometry routes now retain the exact source scan and finding
+in typed candidates. `SchematicPinGeometryCandidate` owns the three
+native-unconnected pin/wire proximity rules;
+`SchematicWireTopologyCandidate` owns unmarked crossings and T-junctions;
+`SchematicLabelEndpointCandidate` owns near-wire label hints;
+`SchematicTextGeometryCandidate` owns coincident anchors, text-envelope
+overlaps, and text-over-wire overlaps; and
+`SchematicSymbolBodyObstructionCandidate` owns text and wire obstructions of
+symbol bodies. Each typed source checks that its finding is the same record
+held by its `SchematicGeometryScan`. Projections preserve the established
+source path and digest, sheet occurrence, coordinates, UUIDs, measured
+distances, optional pin-endpoint matches, and KiCad version. The adapter
+preserves order while delegating construction; it has no direct
+`Candidate(evidence=...)` maps. Common source binding and numeric box/segment
+formatting have one owner. Candidate field projection validation keeps the
+serialized report fields aligned with each typed record.
+
+The broader AST inventory finds 127 direct `Candidate(evidence=...)` calls in
+production modules and 72 in tests. This count includes explicit test builders
+and mappings that are already named, so it is a route-triage queue rather than
+a count of confirmed opaque boundaries. The next audit starts in
+`connector_mapped_interface_pins.py`, where nine production findings share an
+owner, to determine which source records and projections have a coherent
+behavior boundary.

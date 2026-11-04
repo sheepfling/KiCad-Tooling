@@ -1337,21 +1337,34 @@ were preserved or versioned, the relevant test/CI evidence, and remaining
 risks. A reduction in line count is useful only when it makes those boundaries
 clearer.
 
-The three native-unconnected pin/wire findings retain their exact
-`SchematicGeometryScan` observation through `SchematicPinGeometryCandidate`.
-The unmarked crossing and T-junction findings retain their scan observations
-through `SchematicWireTopologyCandidate`. Their typed projections own source
-identity, sheet occurrence, relevant pin or wire identity, coordinates, and
-KiCad version. Existing rule IDs, ordering, messages, report evidence, and
-fingerprints remain stable. The near-wire label rule now retains its
-`LabelNearWireEndpoint` observation through `SchematicLabelEndpointCandidate`,
-including nearby endpoints and their measured distances. The current AST
-inventory has seven direct candidate evidence mappings across three modules:
-five schematic text and symbol-body routes and two power routes. Continue with
-cohesive source behaviors without splitting by a line-count target.
+All 11 schematic geometry candidate routes now retain their exact
+`SchematicGeometryScan` finding through one of three behavior owners:
+`SchematicPinGeometryCandidate` handles three pin/wire proximity rules,
+`SchematicWireTopologyCandidate` handles crossings and T-junctions,
+`SchematicLabelEndpointCandidate` handles near-wire labels,
+`SchematicTextGeometryCandidate` handles text anchors and text/wire overlaps,
+and `SchematicSymbolBodyObstructionCandidate` handles text and wire overlap
+with symbol bodies. The geometry adapter preserves scan order and contains no
+direct `Candidate(...)` construction. Shared source binding and coordinate
+formatters have one owner. Existing rule IDs, messages, report evidence, and
+fingerprints remain stable.
 
-The schematic pin, wire-topology, and near-wire label evidence selection passed
-73 tests, including CLI/MCP parity, against clean public `KiCAD-Test` revision
-`ed89536f0dbbcb013145af2994fef41b2250143e`. Focused Pyright reported zero
-diagnostics; Ruff, format, and `git diff --check` passed. No exact native KiCad
-lane was run.
+A repository-wide AST inventory of direct `Candidate(evidence=...)` calls
+finds 199 constructions across 148 Python modules: 127 in production code
+across 102 modules and 72 in tests across 46 modules. The evidence argument is
+a dictionary literal in 107 production calls and 24 test calls; other calls
+reuse a named, attributed, or computed mapping. This is a triage inventory,
+not a claim that every construction is an opaque source route: test-only
+candidate builders and already-owned report projections need separate
+classification. The largest production concentrations are
+`connector_mapped_interface_pins.py` (9),
+`pcb_drc_global_severity_review.py` (6), and
+`connector_peer_power_input.py`, `connector_peer_power_output.py`, and
+`pcb_dru_rule_review.py` (3 each). Start the next route audit with the
+connector mapped-interface owner and trace its input records and rule families
+before deciding what should share a projection.
+
+The schematic geometry tranche passed 75 synthetic and architecture tests and
+4 CLI/MCP parity tests against the separate public `KiCAD-Test` checkout.
+Ruff, format, Pyright, Markdown checks, mdrepo, and `git diff --check` passed.
+No exact native KiCad lane was run.

@@ -107,9 +107,7 @@ def schematic_mm_box(box: tuple[float, float, float, float]) -> str:
     return ",".join(f"{value:.6f}" for value in box)
 
 
-def schematic_mm_segment(
-    start: tuple[float, float], end: tuple[float, float]
-) -> str:
+def schematic_mm_segment(start: tuple[float, float], end: tuple[float, float]) -> str:
     """Format a source segment in its established four-coordinate field."""
     return ",".join(f"{value:.6f}" for value in (*start, *end))
 
