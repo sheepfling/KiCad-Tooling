@@ -393,3 +393,13 @@ reach candidate translation only when both their map digest and board
 path/hash match the current authored map and coach source inventory. A scanned
 report without its map is blocked; explicit `off` overrides disable the route
 even when no map is present.
+
+## Schematic geometry source route
+
+The geometry scanner receives one schematic's bytes, repository path, exact
+KiCad version, and native-unconnected pin identities. It binds the report to
+the source digest and uses `SchematicSourceDocument` to retain decoded text
+with its parsed root span. Wire, junction, and label parsers return named
+geometry records with unsupported reasons; the scan coordinator routes those
+reasons to the owning rule IDs before assembling `COMPLETE`, `PARTIAL`, or
+`UNSUPPORTED` results. Candidate and report schemas remain unchanged.

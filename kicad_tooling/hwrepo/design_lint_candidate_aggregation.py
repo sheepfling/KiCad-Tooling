@@ -128,12 +128,10 @@ def fingerprint(item: Candidate) -> str:
 
 def validate_catalogued_candidates(
     items: Sequence[Candidate],
-    catalog: DesignLintRuleCatalog | None = None,
+    catalog: DesignLintRuleCatalog,
 ) -> None:
     """Reject candidates from any theme that are absent from the active catalog."""
-    active_ids = {
-        item.rule_id for item in (catalog or rule_catalog()).rules if item.status == "active"
-    }
+    active_ids = {item.rule_id for item in catalog.rules if item.status == "active"}
     unknown_ids = sorted({item.rule_id for item in items} - active_ids)
     if unknown_ids:
         raise ValueError(
@@ -193,10 +191,11 @@ def candidates(
     connector_stateful_contact_map: ConnectorStatefulContactMap | None = None,
 ) -> tuple[Candidate, ...]:
     """Adapt legacy inputs to the shared typed candidate scanner."""
+    resolved_catalog = catalog if catalog is not None else rule_catalog()
     return scan_candidates(
         DesignLintCandidateInputs(
             observed=observed,
-            catalog=catalog,
+            catalog=resolved_catalog,
             schematic_geometry=schematic_geometry,
             reviewed_connector_references=reviewed_connector_references,
             connector=ConnectorCandidateInputs(

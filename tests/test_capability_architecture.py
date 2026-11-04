@@ -114,6 +114,7 @@ def test_domain_imports_are_not_rejected_as_surface_dependencies() -> None:
 def test_stable_capability_services_do_not_depend_on_application_surfaces() -> None:
     directory = _REPOSITORY_ROOT / "kicad_tooling/hwrepo"
     prefixes = (
+        "design_lint_",
         "electrical",
         "parts_",
         "cad_",
@@ -121,10 +122,13 @@ def test_stable_capability_services_do_not_depend_on_application_surfaces() -> N
         "pcb_geometry_",
         "project_static_pipeline",
         "native_project_check",
+        "schematic_geometry_",
     )
     standalone = {
+        "design_lint",
         "layout",
         "selection",
+        "schematic_geometry",
         "product",
         "artifact_access",
         "supplier_handoff",

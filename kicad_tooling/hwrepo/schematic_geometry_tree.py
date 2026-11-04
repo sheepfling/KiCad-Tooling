@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from dataclasses import replace
 from typing import Literal
 
+from .schematic_geometry_models import SchematicGeometryRuleId
 from .schematic_geometry_scan import scan_unconnected_pin_wire_geometry
 from .schematic_geometry_source import (
     resolve_schematic_sheet_path,
@@ -60,7 +61,9 @@ def scan_schematic_geometry_tree(
         source = source_files.get(source_path)
         if source is None:
             raise ValueError(f"Referenced schematic source is missing: {source_path}")
-        text, root = schematic_root(source)
+        document = schematic_root(source)
+        text = document.text
+        root = document.root
         root_uuid = schematic_scalar(text, root, "uuid")
         if not root_uuid:
             raise ValueError(f"Schematic source has an empty UUID: {source_path}")
@@ -88,7 +91,7 @@ def scan_schematic_geometry_tree(
             f"{source_path} at {sheet_instance_path}: {issue}" for issue in scan_issues
         )
         if occurrence_issues:
-            occurrence_issues_by_rule = {
+            occurrence_issues_by_rule: dict[SchematicGeometryRuleId, list[str]] = {
                 rule_id: [f"{source_path} at {sheet_instance_path}: {issue}" for issue in issues]
                 for rule_id, issues in scan.unsupported_by_rule.items()
             }
@@ -134,7 +137,9 @@ def scan_schematic_geometry_tree(
             )
 
     root_source = source_files[root_path]
-    root_text, root_node = schematic_root(root_source)
+    root_document = schematic_root(root_source)
+    root_text = root_document.text
+    root_node = root_document.root
     root_uuid = schematic_scalar(root_text, root_node, "uuid")
     root_instance_path = f"/{root_uuid}"
     visit(root_path, root_instance_path, (), ())
@@ -151,7 +156,7 @@ def scan_schematic_geometry_tree(
     )
     root_scan = occurrences[0]
     unsupported = tuple(sorted({issue for scan in occurrences for issue in scan.unsupported}))
-    unsupported_by_rule: dict[str, set[str]] = {}
+    unsupported_by_rule: dict[SchematicGeometryRuleId, set[str]] = {}
     for occurrence in occurrences:
         for rule_id, issues in occurrence.unsupported_by_rule.items():
             unsupported_by_rule.setdefault(rule_id, set()).update(issues)

@@ -7,6 +7,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Literal
 
+from .schematic_geometry_models import SchematicGeometryRuleId
+
 SUPPORTED_KICAD_VERSION = "10.0.6"
 
 
@@ -31,7 +33,7 @@ DISTANCE_COMPARISON_EPSILON_MM = 1e-9
 MAX_SHEET_OCCURRENCES = 1024
 
 
-SCHEMATIC_GEOMETRY_RULE_IDS = (
+SCHEMATIC_GEOMETRY_RULE_IDS: tuple[SchematicGeometryRuleId, ...] = (
     "schematic.wire_end_on_pin_line",
     "schematic.pin_tip_on_wire_interior",
     "schematic.wire_endpoint_near_pin_tip",
@@ -46,16 +48,16 @@ SCHEMATIC_GEOMETRY_RULE_IDS = (
 )
 
 
-PIN_GEOMETRY_RULE_IDS = SCHEMATIC_GEOMETRY_RULE_IDS[:3]
+PIN_GEOMETRY_RULE_IDS: tuple[SchematicGeometryRuleId, ...] = SCHEMATIC_GEOMETRY_RULE_IDS[:3]
 
 
-SYMBOL_BODY_RULE_IDS = (
+SYMBOL_BODY_RULE_IDS: tuple[SchematicGeometryRuleId, ...] = (
     "schematic.free_text_over_symbol_body",
     "schematic.wire_through_symbol_body",
 )
 
 
-WIRE_GEOMETRY_RULE_IDS = (
+WIRE_GEOMETRY_RULE_IDS: tuple[SchematicGeometryRuleId, ...] = (
     *PIN_GEOMETRY_RULE_IDS,
     "schematic.label_near_wire_endpoint",
     "schematic.unmarked_wire_crossing",
@@ -309,7 +311,7 @@ class SchematicSheetReference:
     file: str
 
 
-def _empty_unsupported_by_rule() -> dict[str, tuple[str, ...]]:
+def _empty_unsupported_by_rule() -> dict[SchematicGeometryRuleId, tuple[str, ...]]:
     return {}
 
 
@@ -336,7 +338,7 @@ class SchematicGeometryScan:
     source_tree_sha256: str | None = None
     source_bindings: tuple[SchematicSourceBinding, ...] = ()
     unsupported: tuple[str, ...] = ()
-    unsupported_by_rule: Mapping[str, tuple[str, ...]] = field(
+    unsupported_by_rule: Mapping[SchematicGeometryRuleId, tuple[str, ...]] = field(
         default_factory=_empty_unsupported_by_rule
     )
 
@@ -407,5 +409,7 @@ class SymbolBodyEnvelope:
     box_mm: tuple[float, float, float, float]
 
 
-def all_rules_unsupported(issues: tuple[str, ...]) -> dict[str, tuple[str, ...]]:
+def all_rules_unsupported(
+    issues: tuple[str, ...],
+) -> dict[SchematicGeometryRuleId, tuple[str, ...]]:
     return {rule_id: issues for rule_id in SCHEMATIC_GEOMETRY_RULE_IDS}

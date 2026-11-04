@@ -170,7 +170,8 @@ the shared typed service; they do not duplicate domain evaluation. Release
 checks and archive operations are registered by `mcp_release.py`.
 
 `tests/test_capability_architecture.py` guards the dependency edge for active design-lint predicate
-owners and electrical, parts, CAD, native evidence, PCB geometry, release, layout, selection,
+owners, all `design_lint_*` services and the design-lint facade, schematic-geometry services and
+facade, and electrical, parts, CAD, native evidence, PCB geometry, release, layout, selection,
 product, supplier handoff, source hashing, and artifact services. It derives top-level CLI surface
 modules from the checked-in surface registry and detects static relative and absolute imports of
 those modules and MCP adapters. `validate.py` remains a CLI and compatibility surface; capability

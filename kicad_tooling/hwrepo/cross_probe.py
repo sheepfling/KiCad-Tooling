@@ -244,7 +244,9 @@ def build_cross_probe(
     board_drawing = board_drawings[0] if len(board_drawings) == 1 else None
     root_instance = None
     if root_schematic in schematic_files:
-        text, root_node = schematic_root(schematic_files[root_schematic])
+        document = schematic_root(schematic_files[root_schematic])
+        text = document.text
+        root_node = document.root
         if not schematic_sheet_references(schematic_files[root_schematic]):
             root_instance = "/" + schematic_scalar(text, root_node, "uuid")
     schematic_by_instance, drawing_issues = schematic_drawing_bindings(

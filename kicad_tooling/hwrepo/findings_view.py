@@ -204,7 +204,9 @@ def build_findings_view(
                     )
                     if hashlib.sha256(content).hexdigest() != source_hashes[primary]:
                         raise ValueError("Schematic changed during findings review")
-                    text, source_root = schematic_root(content)
+                    document = schematic_root(content)
+                    text = document.text
+                    source_root = document.root
                     source_instance = "/" + schematic_scalar(text, source_root, "uuid")
                     single_root_sheet = (
                         not schematic_sheet_references(content)

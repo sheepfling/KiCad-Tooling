@@ -60,7 +60,9 @@ def schematic_instance_bindings(
     """Resolve reused sheet files to their distinct UUID paths and displayed names."""
     if root_path not in source_files:
         raise ValueError("Root schematic source is unavailable")
-    text, root = schematic_root(source_files[root_path])
+    document = schematic_root(source_files[root_path])
+    text = document.text
+    root = document.root
     root_uuid = schematic_scalar(text, root, "uuid")
     found: list[SchematicGeometrySourceBinding] = []
     visited: set[str] = set()

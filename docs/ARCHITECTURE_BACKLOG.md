@@ -164,9 +164,11 @@ The [capability and dependency map](ARCHITECTURE_MAP.md) and its active-rule
 dependency gate are already checked in. Extend that map for major operations:
 project discovery, native capture, design lint, electrical analysis, parts/CAD,
 product, and release. Record input/output contracts, source authority, allowed
-dependencies, and CLI/MCP/CI mapping. Extend the transport dependency check
-from active rule owners to other stable domain service families. Existing
-catalog architecture checks guard active rule owners and their theme functions.
+dependencies, and CLI/MCP/CI mapping. The transport dependency check now covers
+active rule owners, every `design_lint_*` service and facade, and the
+schematic-geometry services and facade, alongside the previously listed stable
+service families. Existing catalog architecture checks guard active rule owners
+and their theme functions.
 Audit hybrid modules that host both a CLI and reusable stage functions as
 explicit migration items. Project verification's portable and native lanes now
 call typed services under `hwrepo`; the `ci.py` and `check_all.py` functions
@@ -269,6 +271,11 @@ until the evidence admission service assigns its explicit state. The original
 tuple-returning function remains as a compatibility adapter. The electrical
 runner now passes that record intact to evidence admission; the old separate
 command/snapshot admission function remains a compatibility adapter too.
+Schematic parsing now returns a named `SchematicSourceDocument` with decoded
+text and its parsed root span. Wire, junction, and label parsing return named
+geometry records with unsupported reasons; the scan coordinator routes those
+reasons through catalogued `SchematicGeometryRuleId` keys before assembling
+the source-bound report. The serialized report shape is unchanged.
 PCB switching-loop route topology now projects native track ends into named
 `_TrackEndpointObservation` records before resolving pad, via, and neighboring
 track connectivity, replacing a positional five-field tuple at that boundary.
@@ -446,8 +453,10 @@ Evaluation preparation now assembles the complete required
 `DesignLintCandidateInputs` bundle, including normalized coverage, policy
 maps, peer scans, and PCB candidate sources. Candidate scanning passes that
 prepared bundle through intact instead of rebuilding theme records from the
-flat public request at the last moment. The public candidate adapter continues
-to build the same bundle from its legacy arguments.
+flat public request at the last moment. The bundle now requires a concrete
+catalog; the public candidate adapter resolves its optional legacy catalog
+before constructing the bundle, so catalog fallback cannot occur inside the
+scanner.
 
 I²C, SPI, CAN, and RS-485 peer rule owners now attach typed identities to their
 internal candidates. Construction and coverage assembly check that each

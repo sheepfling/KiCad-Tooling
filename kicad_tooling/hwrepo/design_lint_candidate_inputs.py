@@ -94,7 +94,7 @@ class DesignLintCandidateInputs:
     """All required theme groups for shared legacy and prepared scans."""
 
     observed: NetlistContract
-    catalog: DesignLintRuleCatalog | None
+    catalog: DesignLintRuleCatalog
     schematic_geometry: SchematicGeometryScan | None
     reviewed_connector_references: tuple[str, ...]
     connector: ConnectorCandidateInputs

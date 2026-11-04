@@ -126,8 +126,8 @@ def test_root_erc_fault_and_control_match_svg(tmp_path: Path, project: str, vers
         )
         assert not issues and len(bindings) == 1
         mapped_drawing = bound[0][0]
-        text_source, source_root = schematic_root(source.read_bytes())
-        instance = "/" + schematic_scalar(text_source, source_root, "uuid")
+        document = schematic_root(source.read_bytes())
+        instance = "/" + schematic_scalar(document.text, document.root, "uuid")
         assert mapped_drawing.sheet_instance_path == instance
         mapped = erc_finding(
             dangling[0],

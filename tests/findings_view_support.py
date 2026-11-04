@@ -108,7 +108,9 @@ def add_lint_snapshot(root: Path, native: Path, *, sheet_path: str | None = None
     sources = summary.checks["source_scope"].source_hashes
     schematic = str(Path(config.project).with_suffix(".kicad_sch"))
     if sheet_path is None:
-        source_text, source_root = schematic_root((root / schematic).read_bytes())
+        document = schematic_root((root / schematic).read_bytes())
+        source_text = document.text
+        source_root = document.root
         sheet_path = "/" + schematic_scalar(source_text, source_root, "uuid")
     netlist = summary.artifacts_sha256["netlist.xml"]
     binding = SchematicGeometrySourceBinding(

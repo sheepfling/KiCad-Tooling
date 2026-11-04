@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import math
 import posixpath
+from dataclasses import dataclass
 from pathlib import PurePosixPath
 
 from .contracts import repo_path_is_within
@@ -15,6 +16,14 @@ from .model_inventory import (  # pyright: ignore[reportPrivateUsage]
 )
 from .schematic_geometry_types import SchematicSheetReference
 from .source_state_models import SourceHashInventory
+
+
+@dataclass(frozen=True, slots=True)
+class SchematicSourceDocument:
+    """Decoded schematic text and the parsed root span for one source file."""
+
+    text: str
+    root: _Span
 
 
 def source_tree_sha256(source_hashes: SourceHashInventory) -> str:
@@ -46,7 +55,7 @@ def schematic_scalar(source: str, parent: _Span, name: str) -> str:
     return atoms[1]
 
 
-def schematic_root(source: bytes) -> tuple[str, _Span]:
+def schematic_root(source: bytes) -> SchematicSourceDocument:
     try:
         text = source.decode("utf-8")
         roots = _children(text, 0, len(text))
@@ -54,12 +63,14 @@ def schematic_root(source: bytes) -> tuple[str, _Span]:
         raise ValueError("Malformed KiCad schematic source") from exc
     if len(roots) != 1 or _atoms(text, roots[0])[:1] != ("kicad_sch",):
         raise ValueError("Expected one kicad_sch root")
-    return text, roots[0]
+    return SchematicSourceDocument(text=text, root=roots[0])
 
 
 def schematic_sheet_references(source: bytes) -> tuple[SchematicSheetReference, ...]:
     """Read child-sheet identifiers and file properties from a KiCad schematic."""
-    text, root = schematic_root(source)
+    document = schematic_root(source)
+    text = document.text
+    root = document.root
     result: list[SchematicSheetReference] = []
     seen_uuids: set[str] = set()
     seen_names: set[str] = set()

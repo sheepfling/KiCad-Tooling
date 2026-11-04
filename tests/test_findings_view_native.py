@@ -264,7 +264,9 @@ def test_native_erc_positions_match_fault_svg_and_control(tmp_path: Path) -> Non
         )
         report = read_kicad_erc_report(erc_path)
         picture = prepare_drawing((directory / f"{name}.svg").read_bytes(), "schematic")
-        text, source_root = schematic_root(source.read_bytes())
+        document = schematic_root(source.read_bytes())
+        text = document.text
+        source_root = document.root
         sheet_uuid = "/" + schematic_scalar(text, source_root, "uuid")
         assert report.coordinate_units == "mm" and report.source == source.name
         assert picture.can_map_mm

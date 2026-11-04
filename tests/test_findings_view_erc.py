@@ -52,8 +52,8 @@ def _mapped_native(root: Path, island: Path) -> Path:
     native = parity_native_evidence(root, island)
     add_native_review(root, native)
     schematic = island / "kicad/controller.kicad_sch"
-    text, node = schematic_root(schematic.read_bytes())
-    sheet_uuid = "/" + schematic_scalar(text, node, "uuid")
+    document = schematic_root(schematic.read_bytes())
+    sheet_uuid = "/" + schematic_scalar(document.text, document.root, "uuid")
     erc_path = native.parent / "erc.json"
     erc = json.loads(erc_path.read_text(encoding="utf-8"))
     erc["sheets"][0]["uuid_path"] = sheet_uuid

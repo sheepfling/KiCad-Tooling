@@ -77,7 +77,7 @@ def _candidate_inputs(
 ) -> DesignLintCandidateInputs:
     return DesignLintCandidateInputs(
         observed=observed,
-        catalog=None,
+        catalog=rule_catalog(),
         schematic_geometry=None,
         reviewed_connector_references=(),
         connector=ConnectorCandidateInputs(

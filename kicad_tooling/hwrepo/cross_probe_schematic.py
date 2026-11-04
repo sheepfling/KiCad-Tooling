@@ -98,7 +98,9 @@ def schematic_symbol_anchors(
         payload = source_files.get(source_path)
         if payload is None:
             raise ValueError(f"Schematic child source is unavailable: {source_path}")
-        text, root = schematic_root(payload)
+        document = schematic_root(payload)
+        text = document.text
+        root = document.root
         references, mapping_issues = schematic_instance_references(
             text, root, project_name, instance_path
         )
@@ -130,7 +132,9 @@ def schematic_symbol_anchors(
                 (*ancestors, source_path),
             )
 
-    text, root = schematic_root(source_files[root_path])
+    document = schematic_root(source_files[root_path])
+    text = document.text
+    root = document.root
     root_uuid = schematic_scalar(text, root, "uuid")
     visit(root_path, f"/{root_uuid}", (), ())
     return {key: tuple(values) for key, values in found.items()}, tuple(issues)

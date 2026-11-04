@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
+from dataclasses import dataclass
 from itertools import pairwise
 
 from .model_inventory import _atoms, _Span  # pyright: ignore[reportPrivateUsage]
@@ -25,9 +26,28 @@ from .schematic_geometry_types import (
 )
 
 
+@dataclass(frozen=True, slots=True)
+class SchematicWireGeometryResult:
+    wire_ends: tuple[WireEnd, ...]
+    wire_segments: tuple[WireSegment, ...]
+    unsupported_reasons: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class SchematicJunctionGeometryResult:
+    junctions: tuple[tuple[float, float], ...]
+    unsupported_reasons: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class SchematicLabelAnchorResult:
+    labels: tuple[LabelAnchor, ...]
+    unsupported_reasons: tuple[str, ...]
+
+
 def wire_geometry(
     source: str, root: _Span
-) -> tuple[tuple[WireEnd, ...], tuple[WireSegment, ...], tuple[str, ...]]:
+) -> SchematicWireGeometryResult:
     ends: list[WireEnd] = []
     segments: list[WireSegment] = []
     unsupported: list[str] = []
@@ -66,7 +86,11 @@ def wire_geometry(
         segments.extend(
             WireSegment(uuid=uuid_atoms[1], start=start, end=end) for start, end in pairwise(coords)
         )
-    return tuple(ends), tuple(segments), tuple(unsupported)
+    return SchematicWireGeometryResult(
+        wire_ends=tuple(ends),
+        wire_segments=tuple(segments),
+        unsupported_reasons=tuple(unsupported),
+    )
 
 
 def no_connect_points(source: str, root: _Span) -> tuple[tuple[float, float], ...]:
@@ -79,7 +103,7 @@ def no_connect_points(source: str, root: _Span) -> tuple[tuple[float, float], ..
 
 def junction_points(
     source: str, root: _Span
-) -> tuple[tuple[tuple[float, float], ...], tuple[str, ...]]:
+) -> SchematicJunctionGeometryResult:
     points: list[tuple[float, float]] = []
     unsupported: list[str] = []
     for node in schematic_nodes(source, root, "junction"):
@@ -91,7 +115,10 @@ def junction_points(
             unsupported.append(f"junction {identity} has invalid location: {exc}")
             continue
         points.append((x, y))
-    return tuple(points), tuple(unsupported)
+    return SchematicJunctionGeometryResult(
+        junctions=tuple(points),
+        unsupported_reasons=tuple(unsupported),
+    )
 
 
 def unmarked_orthogonal_crossings(
@@ -167,7 +194,7 @@ def unmarked_t_junctions(
     )
 
 
-def label_anchors(source: str, root: _Span) -> tuple[tuple[LabelAnchor, ...], tuple[str, ...]]:
+def label_anchors(source: str, root: _Span) -> SchematicLabelAnchorResult:
     labels: list[LabelAnchor] = []
     unsupported: list[str] = []
     for kind in LABEL_KINDS:
@@ -194,7 +221,10 @@ def label_anchors(source: str, root: _Span) -> tuple[tuple[LabelAnchor, ...], tu
                     point=(x, y),
                 )
             )
-    return tuple(labels), tuple(unsupported)
+    return SchematicLabelAnchorResult(
+        labels=tuple(labels),
+        unsupported_reasons=tuple(unsupported),
+    )
 
 
 def labels_near_wire_endpoints(

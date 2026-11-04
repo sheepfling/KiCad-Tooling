@@ -12,6 +12,7 @@ import pytest
 from kicad_tooling.hwrepo.design_lint_candidate_inputs import DesignLintCandidateInputs
 from kicad_tooling.hwrepo.design_lint_evaluation_types import DesignLintEvaluationPreparation
 from kicad_tooling.hwrepo.design_lint_pcb_inputs import PcbCandidateInputs
+from kicad_tooling.hwrepo.design_lint_rule_models import DesignLintRuleCatalog
 from kicad_tooling.hwrepo.design_lint_types import Candidate
 
 pytestmark = [pytest.mark.architecture, pytest.mark.design_lint, pytest.mark.pcb_lint]
@@ -24,6 +25,7 @@ def test_scanner_has_no_unowned_additional_candidate_collection() -> None:
     pcb_types = get_type_hints(PcbCandidateInputs)
 
     assert "additional_candidates" not in input_names
+    assert get_type_hints(DesignLintCandidateInputs)["catalog"] is DesignLintRuleCatalog
     assert pcb_types["dru_rule_candidates"] == tuple[Candidate, ...]
     assert pcb_types["native_drc_candidates"] == tuple[Candidate, ...]
     assert get_type_hints(DesignLintEvaluationPreparation)["candidate_inputs"] is (

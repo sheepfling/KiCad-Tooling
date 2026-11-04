@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from dataclasses import replace
 
 from .model_inventory import _atoms  # pyright: ignore[reportPrivateUsage]
+from .schematic_geometry_models import SchematicGeometryRuleId
 from .schematic_geometry_source import (
     schematic_library_symbols,
     schematic_nodes,
@@ -85,7 +86,9 @@ def scan_unconnected_pin_wire_geometry(
             unsupported=(issue,),
             unsupported_by_rule=all_rules_unsupported((issue,)),
         )
-    text, root = schematic_root(source)
+    document = schematic_root(source)
+    text = document.text
+    root = document.root
     versions = schematic_nodes(text, root, "version")
     if len(versions) != 1 or len(_atoms(text, versions[0])) != 2:
         raise ValueError("Expected one KiCad schematic version")
@@ -121,9 +124,12 @@ def scan_unconnected_pin_wire_geometry(
     pins: list[SchematicPin] = []
     body_envelopes: list[SymbolBodyEnvelope] = []
     unsupported: list[str] = []
-    unsupported_by_rule: dict[str, list[str]] = {}
+    unsupported_by_rule: dict[SchematicGeometryRuleId, list[str]] = {}
 
-    def record_unsupported(issues: tuple[str, ...], rule_ids: tuple[str, ...]) -> None:
+    def record_unsupported(
+        issues: tuple[str, ...],
+        rule_ids: tuple[SchematicGeometryRuleId, ...],
+    ) -> None:
         if not issues:
             return
         unsupported.extend(issues)
@@ -170,8 +176,10 @@ def scan_unconnected_pin_wire_geometry(
         if body_issue is not None:
             record_unsupported((body_issue,), SYMBOL_BODY_RULE_IDS)
 
-    wire_ends, wire_segments, wire_issues = wire_geometry(text, root)
-    record_unsupported(wire_issues, WIRE_GEOMETRY_RULE_IDS)
+    wire_geometry_result = wire_geometry(text, root)
+    wire_ends = wire_geometry_result.wire_ends
+    wire_segments = wire_geometry_result.wire_segments
+    record_unsupported(wire_geometry_result.unsupported_reasons, WIRE_GEOMETRY_RULE_IDS)
     body_wire_findings = wire_through_symbol_bodies(
         tuple(body_envelopes),
         wire_segments,
@@ -185,13 +193,13 @@ def scan_unconnected_pin_wire_geometry(
         sheet_instance_path=sheet_instance_path,
     )
     record_unsupported(text_body_issues, ("schematic.free_text_over_symbol_body",))
-    junctions, junction_issues = junction_points(text, root)
+    junction_result = junction_points(text, root)
     record_unsupported(
-        junction_issues,
+        junction_result.unsupported_reasons,
         ("schematic.unmarked_wire_crossing", "schematic.unmarked_t_junction"),
     )
-    label_items, label_issues = label_anchors(text, root)
-    record_unsupported(label_issues, ("schematic.label_near_wire_endpoint",))
+    label_result = label_anchors(text, root)
+    record_unsupported(label_result.unsupported_reasons, ("schematic.label_near_wire_endpoint",))
     text_anchor_findings, text_anchor_issues = coincident_text_anchors(text, root)
     record_unsupported(text_anchor_issues, ("schematic.coincident_text_anchors",))
     text_overlap_findings, text_overlap_issues = free_text_overlaps(text, root)
@@ -214,15 +222,27 @@ def scan_unconnected_pin_wire_geometry(
     )
     label_findings = tuple(
         replace(item, sheet_instance_path=sheet_instance_path)
-        for item in labels_near_wire_endpoints(label_items, pins, wire_ends, wire_segments)
+        for item in labels_near_wire_endpoints(
+            label_result.labels,
+            pins,
+            wire_ends,
+            wire_segments,
+        )
     )
     unmarked_crossings = tuple(
         replace(item, sheet_instance_path=sheet_instance_path)
-        for item in unmarked_orthogonal_crossings(wire_segments, junctions)
+        for item in unmarked_orthogonal_crossings(
+            wire_segments,
+            junction_result.junctions,
+        )
     )
     t_junction_findings = tuple(
         replace(item, sheet_instance_path=sheet_instance_path)
-        for item in unmarked_t_junctions(wire_ends, wire_segments, junctions)
+        for item in unmarked_t_junctions(
+            wire_ends,
+            wire_segments,
+            junction_result.junctions,
+        )
     )
     coincident_text_findings = tuple(
         replace(item, sheet_instance_path=sheet_instance_path) for item in text_anchor_findings
