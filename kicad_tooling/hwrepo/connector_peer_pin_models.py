@@ -87,6 +87,7 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
     unanchored_different_assignment_pin_group_count: NonNegativeCount
     reviewed_unanchored_divergence_finding_count: NonNegativeCount = 0
     unreviewed_peer_assignment_scope_finding_count: NonNegativeCount = 0
+    uncovered_peer_assignment_scope_finding_count: NonNegativeCount = 0
     divergence_finding_count: NonNegativeCount
     open_peer_pin_group_count: NonNegativeCount
     unanchored_open_peer_pin_group_count: NonNegativeCount
@@ -157,6 +158,10 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
             self.unanchored_different_assignment_pin_group_count
         ):
             raise ValueError("Unreviewed peer-scope findings must identify unanchored differences")
+        if self.uncovered_peer_assignment_scope_finding_count > (
+            self.unanchored_different_assignment_pin_group_count
+        ):
+            raise ValueError("Uncovered peer-scope findings must identify unanchored differences")
         if self.divergence_finding_count + self.unanchored_different_assignment_pin_group_count != (
             self.generic_different_assignment_pin_group_count
         ):

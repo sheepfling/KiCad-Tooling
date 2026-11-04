@@ -318,6 +318,7 @@ def catalog_reachability_rule_ids() -> set[str]:
     )
     peer_assignments = peer_netlist(assignments=(("PORT_A", "PORT_B"), ("DATA_A", "DATA_B")))
     peer_coverages = (
+        None,
         reviewed_coverage(peer_assignments, (None, None)),
         reviewed_coverage(peer_assignments, (PEER_GROUP, PEER_GROUP)),
     )

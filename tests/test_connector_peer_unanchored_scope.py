@@ -199,6 +199,29 @@ class _UnanchoredScopeParityCases(DesignLintMcpParityReportHarness):
         netlist.write_text(fixture.read_text(encoding="utf-8"), encoding="utf-8")
         self.rehash_native_netlist(native)
 
+        manifest_path = self.island / "project.json"
+        manifest = read_model(manifest_path, ProjectManifest)
+        write_model(
+            manifest_path,
+            manifest.model_copy(
+                update={"connector_reviews": (), "connector_inventory_review": None}
+            ),
+        )
+        async with Client(create_server(self.root), mode="legacy") as client:
+            uncovered_report = await self.compare_lint_report(client, native, "REVIEW", 1)
+        uncovered_findings = [
+            item
+            for item in uncovered_report.findings
+            if item.rule_id == "connector.footprint_peer_unanchored_scope_coverage_missing"
+        ]
+        self.assertEqual(len(uncovered_findings), 1)
+        self.assertNotIn(RULE_ID, {item.rule_id for item in uncovered_report.findings})
+        self.assertIsNotNone(uncovered_report.connector_peer_pin_coverage)
+        self.assertEqual(
+            uncovered_report.connector_peer_pin_coverage.footprint_alias_coverage.uncovered_peer_assignment_scope_finding_count,
+            1,
+        )
+
         interface_id = "synthetic-unanchored-peer-scope"
         interface = InterfaceRecord(
             id=interface_id,
@@ -223,7 +246,6 @@ class _UnanchoredScopeParityCases(DesignLintMcpParityReportHarness):
             catalog_path,
             catalog.model_copy(update={"interfaces": (*catalog.interfaces, interface)}),
         )
-        manifest_path = self.island / "project.json"
         manifest = read_model(manifest_path, ProjectManifest)
         write_model(
             manifest_path,
@@ -251,6 +273,10 @@ class _UnanchoredScopeParityCases(DesignLintMcpParityReportHarness):
             report = await self.compare_lint_report(client, native, "REVIEW", 1)
         findings = [item for item in report.findings if item.rule_id == RULE_ID]
         self.assertEqual(len(findings), 1)
+        self.assertNotIn(
+            "connector.footprint_peer_unanchored_scope_coverage_missing",
+            {item.rule_id for item in report.findings},
+        )
         self.assertEqual(findings[0].evidence["references"], ("J1", "J2"))
         self.assertIsNotNone(report.connector_peer_pin_coverage)
         self.assertEqual(
@@ -263,5 +289,6 @@ class _UnanchoredScopeParityCases(DesignLintMcpParityReportHarness):
 @pytest.mark.slow
 @pytest.mark.template_checkout
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.design_lint_rule(rule_id="connector.footprint_peer_unanchored_scope_coverage_missing")
 def test_unanchored_scope_review_cli_mcp_parity() -> None:
     run_mcp_parity(_UnanchoredScopeParityCases, "_case_unanchored_scope_review_matches_cli_and_mcp")

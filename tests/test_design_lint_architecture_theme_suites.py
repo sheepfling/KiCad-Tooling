@@ -33,6 +33,7 @@ PCB_REFERENCE_PLANE_THEME_SUITES = (
     "test_ci_hosted_pcb_reference_planes.py",
 )
 CONNECTOR_COVERAGE_THEME_SUITES = (
+    "test_connector_peer_unanchored_coverage.py",
     "test_connector_inventory_coverage.py",
     "test_connector_supply_peer_coverage.py",
     "test_connector_return_role_coverage.py",

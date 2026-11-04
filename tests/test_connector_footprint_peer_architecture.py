@@ -20,7 +20,10 @@ PEER_MODULES = (
 )
 
 ANCHOR_MODULES = ("connector_footprint_peer_anchors.py",)
-UNANCHORED_MODULES = ("connector_footprint_peer_unanchored_divergence.py",)
+UNANCHORED_MODULES = (
+    "connector_footprint_peer_unanchored_divergence.py",
+    "connector_footprint_peer_unanchored_coverage_review.py",
+)
 
 
 def test_connector_footprint_peer_modules_stay_below_review_limit() -> None:

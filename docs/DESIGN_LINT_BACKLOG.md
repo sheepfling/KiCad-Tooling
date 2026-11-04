@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 257 rules are implemented with synthetic regression coverage.
+The following 258 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 257 active rules.
+The catalog currently contains 258 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -439,6 +439,7 @@ skipped under prerelease policy.
 - `connector.peer_pin_assignment_divergence`
 - `connector.footprint_peer_pin_assignment_divergence`
 - `connector.footprint_peer_pin_unanchored_assignment_divergence`
+- `connector.footprint_peer_unanchored_scope_coverage_missing`
 - `connector.footprint_peer_unanchored_scope_unreviewed`
 - `connector.footprint_peer_pin_metadata_assignment_divergence`
 - `connector.footprint_peer_pin_metadata_open_outlier`
@@ -707,6 +708,18 @@ parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
+
+- **LINT-274 unanchored connector aliases without complete coverage:** The
+  baseline peer split and missing-scope rules both stayed quiet when connector
+  coverage was absent or incomplete. The new default-REVIEW candidate uses only
+  exact native alias and pin assignments to ask for pinout and peer-scope
+  review; it does not assert that contacts should be tied. Synthetic fault,
+  explicit-not-applicable, common-assignment, policy, ignore, and ordering cases
+  pass locally. CLI/MCP parity passes, and the digest-pinned native
+  fault/control lane passed with KiCad 10.0.0 and 10.0.5. Public-board
+  applicability and independent reviewer-value measurement remain open.
+
+**Earlier peer-scope work:**
 
 - **LINT-272 unanchored connector-alias assignments:** The existing footprint
   peer scan counted generic per-pin splits but stayed silent when every contact
@@ -3365,7 +3378,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 257 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 258 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -14151,6 +14164,46 @@ control are documented in the
   the installed-wheel checks against a separate project checkout. This
   establishes synthetic behavior and native export compatibility, not
   independently measured public-board applicability or reviewer value.
+
+#### LINT-274 — Review unanchored connector aliases without complete coverage
+
+- **Status:** Implemented as default-REVIEW
+  `connector.footprint_peer_unanchored_scope_coverage_missing`. Project policy
+  can promote it to `block`, turn it `off`, or ignore one exact fingerprint.
+- **Incremental value:** With no connector-coverage report, the synthetic
+  unanchored generic split emitted neither LINT-272 nor LINT-273. LINT-272 needs
+  an authored peer group, and LINT-273 needs a complete current connector
+  inventory and pin maps. LINT-274 now emits one cohort-level review prompt
+  from the exact native alias and assignment evidence.
+- **Predicate:** Reuse the bounded footprint-alias scan. Require distinct
+  fitted native connector symbols with no PART_ID, matching nonempty value and
+  footprint, complete identical pin inventories, matching nonempty native pin
+  function and electrical-type metadata, and one exact different net per
+  generic contact in an unanchored cohort. Emit one candidate for that cohort
+  when connector coverage is absent, unassessed, incomplete, undeclared, or has
+  an unreviewed inventory scope.
+- **Boundary:** Similarity is only a review clue. The finding asks for pinout
+  and peer-scope review; it does not say the ports are peers, require common
+  nets, or direct the user to tie pins. Explicitly `NOT_APPLICABLE` and stale
+  aliases suppress the cohort. Complete coverage remains with LINT-273. The
+  rule does not establish connector role, PCB copper continuity, or off-board
+  wiring.
+- **Evidence:** Synthetic fault/control cases use the existing tooling-owned
+  `connector-peer-unanchored-scope` fixture and small generated `NetlistContract`
+  inputs; no project design is stored. Controls cover a common assignment,
+  explicit not-applicable review, complete peer scope, `review`/`block`/`off`,
+  exact ignore, and mapping-order stability. CLI/MCP and exact KiCad 10.0.0 /
+  10.0.5 acceptance passed on the existing source-hashed connector fixture
+  lane. The focused peer-scope selection passed 38 tests with two native cases
+  skipped in the non-native invocation; the separately enabled native lane
+  passed both pinned-version fault/control cases. Catalog reachability and
+  architecture checks passed (29 tests). This is synthetic and native-export
+  compatibility evidence, not public-board applicability or reviewer-value
+  evidence.
+- **Coverage output:** The source-bound alias summary reports
+  `uncovered_peer_assignment_scope_finding_count` alongside the existing
+  reviewed and unreviewed-scope counts. CLI and MCP use the same typed report
+  assembly.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

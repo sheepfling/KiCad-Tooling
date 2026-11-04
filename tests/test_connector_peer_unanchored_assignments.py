@@ -30,6 +30,7 @@ pytestmark = [pytest.mark.connector_lint, pytest.mark.design_lint]
 
 RULE_ID = "connector.footprint_peer_pin_unanchored_assignment_divergence"
 SCOPE_RULE_ID = "connector.footprint_peer_unanchored_scope_unreviewed"
+COVERAGE_RULE_ID = "connector.footprint_peer_unanchored_scope_coverage_missing"
 NATIVE_FAULT_CASE = "footprint-alias-unanchored-fault"
 NATIVE_CONTROL_CASE = "footprint-alias-control"
 NATIVE_CASES = (NATIVE_FAULT_CASE, NATIVE_CONTROL_CASE)
@@ -200,6 +201,7 @@ def test_exact_ignore_is_limited_to_one_unanchored_pin_fingerprint() -> None:
 @pytest.mark.slow
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=SCOPE_RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=COVERAGE_RULE_ID)
 @pytest.mark.skipif(
     os.environ.get("KICAD_RUN_NATIVE_CONNECTOR_FIXTURES") != "1",
     reason="digest-pinned native connector fixtures run in package acceptance",
@@ -305,6 +307,14 @@ def test_native_unanchored_alias_fault_and_common_control_repeat(
         )
         for run in ("first", "repeat")
     )
+    fault_coverage_reports = tuple(
+        lint_report(context.observed_contracts[NATIVE_FAULT_CASE, run])
+        for run in ("first", "repeat")
+    )
+    control_coverage_reports = tuple(
+        lint_report(context.observed_contracts[NATIVE_CONTROL_CASE, run])
+        for run in ("first", "repeat")
+    )
     fault_findings = tuple(item for item in fault_reports[0].findings if item.rule_id == RULE_ID)
     assert len(fault_findings) == 2
     assert fault_reports[1].model_dump(mode="json") == fault_reports[0].model_dump(mode="json")
@@ -326,6 +336,21 @@ def test_native_unanchored_alias_fault_and_common_control_repeat(
     )
     assert control_scope_reports[1].model_dump(mode="json") == control_scope_reports[0].model_dump(
         mode="json"
+    )
+    fault_coverage_findings = tuple(
+        item for item in fault_coverage_reports[0].findings if item.rule_id == COVERAGE_RULE_ID
+    )
+    assert len(fault_coverage_findings) == 1
+    assert fault_coverage_reports[1].model_dump(mode="json") == fault_coverage_reports[
+        0
+    ].model_dump(mode="json")
+    assert not any(
+        item.rule_id == COVERAGE_RULE_ID
+        for report in control_coverage_reports
+        for item in report.findings
+    )
+    assert control_coverage_reports[1].model_dump(mode="json") == (
+        control_coverage_reports[0].model_dump(mode="json")
     )
     for case in NATIVE_CASES:
         assert (

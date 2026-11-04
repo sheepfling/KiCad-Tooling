@@ -48,6 +48,9 @@ from .connector_footprint_peer_pin_types import ConnectorFootprintPeerPinScan
 from .connector_footprint_peer_pins import (
     scan_connector_footprint_peer_pin_assignments,
 )
+from .connector_footprint_peer_unanchored_coverage_review import (
+    uncovered_unanchored_connector_alias_scope,
+)
 from .connector_footprint_peer_unanchored_divergence import (
     reviewed_unanchored_connector_alias_divergences,
 )
@@ -161,6 +164,7 @@ def connector_footprint_peer_pin_candidates(
         *divergence_candidates,
         *reviewed_unanchored_connector_alias_divergences(scan),
         *unreviewed_unanchored_connector_alias_scope(scan, observed, connector_coverage),
+        *uncovered_unanchored_connector_alias_scope(scan, connector_coverage),
         *named_signal_divergence.candidates,
         *named_power_input_divergence.candidates,
         *unanchored_same_voltage_power_input_candidates(scan),
