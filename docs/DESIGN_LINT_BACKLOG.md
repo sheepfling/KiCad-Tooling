@@ -719,8 +719,11 @@ standalone parity work when it closes a demonstrated feature regression.
   tied. Synthetic fault/control, explicit-not-applicable, common-assignment,
   policy, ignore, and ordering cases pass locally; CLI/MCP parity passes. The
   exact native lane is selected for the prerelease gate, but could not run in
-  this local environment because Docker socket access was denied. Public-board
-  applicability and independent reviewer-value measurement remain open.
+  this local environment because Docker socket access was denied. Hosted run
+  `v0.5.3rc343` passed its scoped test, Ruff, and Pyright stages, then stopped
+  on Markdown formatting in the new fixture table; the formatting fix is in
+  the follow-up checkpoint. Public-board applicability and independent
+  reviewer-value measurement remain open.
 
 **Earlier peer-scope work:**
 
@@ -14205,10 +14208,14 @@ control are documented in the
   passed 29 tests, including CLI/MCP parity. Catalog reachability and
   architecture checks passed (11 tests). The current exact-version native lane
   is selected by the rule-scoped prerelease gate but could not run locally
-  because access to the Docker socket was denied; hosted acceptance remains
-  pending. The earlier split-only implementation passed exact KiCad 10.0.0 /
-  10.0.5 acceptance. This remains synthetic and native-export compatibility
-  evidence, not public-board applicability or reviewer-value evidence.
+  because access to the Docker socket was denied. Hosted tag
+  `v0.5.3rc343` passed the scoped unit, Ruff, and Pyright stages, including the
+  pinned native fixture lane, but failed the Markdown gate on alignment and
+  line length in the new fixture table. The table is formatted in the follow-up
+  checkpoint; hosted acceptance is pending. The earlier split-only
+  implementation passed exact KiCad 10.0.0 / 10.0.5 acceptance. This remains
+  synthetic and native-export compatibility evidence, not public-board
+  applicability or reviewer-value evidence.
 - **Coverage output:** The source-bound alias summary reports
   `uncovered_peer_assignment_scope_finding_count` alongside the existing
   reviewed and unreviewed-scope counts. CLI and MCP use the same typed report
