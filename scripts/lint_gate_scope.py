@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import os
 import re
 from collections.abc import Mapping, Sequence
@@ -10,7 +11,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from kicad_tooling.git import run_git_text
-from kicad_tooling.pytest_scope import validate_test_module_files, validate_test_module_paths
+from kicad_tooling.pytest_scope import (
+    pytest_collection_patterns,
+    pytest_name_matches,
+    validate_test_module_files,
+    validate_test_module_paths,
+)
 
 LINT_AREAS = frozenset(
     {
@@ -166,7 +172,156 @@ def read_message_scope(message: str, repository: Path) -> LintGateScope:
         native_fixtures_by_rule,
     )
     validate_test_module_files(scope.test_paths, repository)
+    _validate_native_fixture_test_paths(scope, repository)
     return scope
+
+
+def _validate_native_fixture_test_paths(scope: LintGateScope, repository: Path) -> None:
+    if not scope.test_paths or not scope.native_fixtures:
+        return
+    guarded: set[str] = set()
+    _, class_patterns, function_patterns = pytest_collection_patterns(repository)
+    for relative in scope.test_paths:
+        tree = ast.parse((repository / relative).read_text(encoding="utf-8"))
+        module_markers = tuple(_pytestmark_values(tree.body))
+        for markers in _collected_test_markers(
+            tree.body, module_markers, class_patterns, function_patterns
+        ):
+            if not any(_pytest_marker_name(marker) == "native_kicad" for marker in markers):
+                continue
+            for marker in markers:
+                condition = _skipif_condition(marker)
+                if condition is not None:
+                    guarded.update(
+                        fixture
+                        for fixture in scope.native_fixtures
+                        if _skipif_enables_fixture(condition, fixture)
+                    )
+    missing = set(scope.native_fixtures) - guarded
+    if missing:
+        raise ValueError(
+            "Test-Path selection has no native_kicad test guarded by each declared "
+            f"Native-Fixture switch: {sorted(missing)}"
+        )
+
+
+def _collected_test_markers(
+    statements: Sequence[ast.stmt],
+    inherited: tuple[ast.expr, ...],
+    class_patterns: tuple[str, ...],
+    function_patterns: tuple[str, ...],
+) -> Sequence[tuple[ast.expr, ...]]:
+    markers: list[tuple[ast.expr, ...]] = []
+    for statement in statements:
+        if isinstance(statement, ast.ClassDef):
+            is_test_case = any(
+                (path := _attribute_path(base)) and path[-1] == "TestCase"
+                for base in statement.bases
+            )
+            if not pytest_name_matches(statement.name, class_patterns) and not is_test_case:
+                continue
+            class_markers = (
+                *inherited,
+                *statement.decorator_list,
+                *_pytestmark_values(statement.body),
+            )
+            markers.extend(
+                _collected_test_markers(
+                    statement.body, class_markers, class_patterns, function_patterns
+                )
+            )
+        elif isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if pytest_name_matches(statement.name, function_patterns):
+                markers.append((*inherited, *statement.decorator_list))
+    return tuple(markers)
+
+
+def _pytestmark_values(statements: Sequence[ast.stmt]) -> Sequence[ast.expr]:
+    values: list[ast.expr] = []
+    for statement in statements:
+        if isinstance(statement, ast.Assign):
+            if not any(
+                isinstance(target, ast.Name) and target.id == "pytestmark"
+                for target in statement.targets
+            ):
+                continue
+            value = statement.value
+        elif (
+            isinstance(statement, ast.AnnAssign)
+            and isinstance(statement.target, ast.Name)
+            and statement.target.id == "pytestmark"
+        ):
+            value = statement.value
+        else:
+            continue
+        if value is None:
+            continue
+        if isinstance(value, (ast.List, ast.Tuple)):
+            values.extend(value.elts)
+        else:
+            values.append(value)
+    return tuple(values)
+
+
+def _attribute_path(node: ast.expr) -> tuple[str, ...]:
+    parts: list[str] = []
+    while isinstance(node, ast.Attribute):
+        parts.append(node.attr)
+        node = node.value
+    if isinstance(node, ast.Name):
+        parts.append(node.id)
+    return tuple(reversed(parts))
+
+
+def _pytest_marker_name(marker: ast.expr) -> str | None:
+    target = marker.func if isinstance(marker, ast.Call) else marker
+    path = _attribute_path(target)
+    return path[-1] if len(path) >= 2 and path[-2] == "mark" else None
+
+
+def _skipif_condition(marker: ast.expr) -> ast.expr | None:
+    if _pytest_marker_name(marker) != "skipif" or not isinstance(marker, ast.Call):
+        return None
+    if marker.args:
+        return marker.args[0]
+    return next((keyword.value for keyword in marker.keywords if keyword.arg == "condition"), None)
+
+
+def _skipif_enables_fixture(condition: ast.expr, fixture: str) -> bool:
+    comparison = condition
+    expected_operator: type[ast.cmpop] = ast.NotEq
+    if isinstance(condition, ast.UnaryOp) and isinstance(condition.op, ast.Not):
+        comparison = condition.operand
+        expected_operator = ast.Eq
+    return (
+        isinstance(comparison, ast.Compare)
+        and len(comparison.ops) == 1
+        and isinstance(comparison.ops[0], expected_operator)
+        and len(comparison.comparators) == 1
+        and isinstance(comparison.comparators[0], ast.Constant)
+        and comparison.comparators[0].value == "1"
+        and _environment_lookup_is_fixture(comparison.left, fixture)
+    )
+
+
+def _environment_lookup_is_fixture(expression: ast.expr, fixture: str) -> bool:
+    if isinstance(expression, ast.Call):
+        path = _attribute_path(expression.func)
+        is_environment_lookup = path[-1:] == ("getenv",) or path[-2:] == ("environ", "get")
+        return (
+            is_environment_lookup
+            and bool(expression.args)
+            and isinstance(expression.args[0], ast.Constant)
+            and expression.args[0].value == fixture
+        )
+    if isinstance(expression, ast.Subscript):
+        path = _attribute_path(expression.value)
+        return (
+            path[-1:] == ("environ",)
+            and isinstance(expression.slice, ast.Constant)
+            and expression.slice.value == fixture
+        )
+    return False
 
 
 def write_github_scope(scope: LintGateScope, *, write_github_files: bool = True) -> None:

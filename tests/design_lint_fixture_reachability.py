@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import ast
-import fnmatch
-import tomllib
 from functools import lru_cache
 from pathlib import Path
 
+from kicad_tooling.pytest_scope import pytest_collection_patterns, pytest_name_matches
 from tests.lint_architecture_support import REPO_ROOT
 
 RULE_FIXTURE_FIELDS = ("fault_fixtures", "valid_control_fixtures", "metamorphic_fixtures")
@@ -59,13 +58,7 @@ def fixture_function_exists(
 @lru_cache(maxsize=1)
 def pytest_naming_options() -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
     """Read pytest's effective discovery patterns from the repository config."""
-    config = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    options = config["tool"]["pytest"]["ini_options"]
-    return (
-        tuple(options.get("python_files", ("test_*.py",))),
-        tuple(options.get("python_classes", ("Test",))),
-        tuple(options.get("python_functions", ("test",))),
-    )
+    return pytest_collection_patterns(REPO_ROOT)
 
 
 def pytest_discovers_fixture_target(
@@ -74,10 +67,7 @@ def pytest_discovers_fixture_target(
     """Check the configured pytest file, class, and function naming rules."""
     file_patterns, class_patterns, function_patterns = pytest_naming_options()
     return (
-        any(fnmatch.fnmatchcase(module_path.name, pattern) for pattern in file_patterns)
-        and all(
-            any(fnmatch.fnmatchcase(name, pattern) for pattern in class_patterns)
-            for name in owner_names
-        )
-        and any(fnmatch.fnmatchcase(function_name, pattern) for pattern in function_patterns)
+        pytest_name_matches(module_path.name, file_patterns)
+        and all(pytest_name_matches(name, class_patterns) for name in owner_names)
+        and pytest_name_matches(function_name, function_patterns)
     )

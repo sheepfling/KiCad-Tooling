@@ -7,13 +7,141 @@ from pathlib import Path
 
 import pytest
 
-from scripts.lint_gate_scope import main, parse_tag_message, read_tag_scope, write_github_scope
+from scripts.lint_gate_scope import (
+    main,
+    parse_tag_message,
+    read_message_scope,
+    read_tag_scope,
+    write_github_scope,
+)
 
 pytestmark = pytest.mark.architecture
 
 
 def _git(repository: Path, *arguments: str) -> None:
     subprocess.run(("git", *arguments), cwd=repository, check=True, capture_output=True)
+
+
+def _native_fixture_message(repository: Path) -> str:
+    repository.mkdir(parents=True, exist_ok=True)
+    (repository / "pyproject.toml").write_text(
+        "[tool.pytest.ini_options]\n"
+        'python_classes = ["Test*", "*Tests", "*Test"]\n'
+        'python_functions = ["test_*"]\n',
+        encoding="utf-8",
+    )
+    workflow = repository / ".github/workflows/tooling.yml"
+    workflow.parent.mkdir(parents=True, exist_ok=True)
+    workflow.write_text("KICAD_RUN_NATIVE_PROBE_FIXTURES: '1'\n", encoding="utf-8")
+    test_module = repository / "tests/test_native_probe.py"
+    test_module.parent.mkdir(parents=True, exist_ok=True)
+    return (
+        "Lint-Area: architecture\n"
+        "Native-Fixture: KICAD_RUN_NATIVE_PROBE_FIXTURES\n"
+        "Test-Path: tests/test_native_probe.py\n"
+    )
+
+
+def test_explicit_test_paths_must_select_a_native_test_guarded_by_each_fixture(
+    tmp_path: Path,
+) -> None:
+    repository = tmp_path / "repository"
+    message = _native_fixture_message(repository)
+    (repository / "tests/test_native_probe.py").write_text(
+        "import os\n"
+        "import pytest\n"
+        "@pytest.mark.native_kicad\n"
+        "@pytest.mark.skipif(\n"
+        "    os.environ.get('KICAD_RUN_NATIVE_PROBE_FIXTURES') != '1',\n"
+        "    reason='requires the declared fixture lane',\n"
+        ")\n"
+        "def test_native_probe():\n"
+        "    pass\n",
+        encoding="utf-8",
+    )
+
+    scope = read_message_scope(message, repository)
+
+    assert scope.native_fixtures == ("KICAD_RUN_NATIVE_PROBE_FIXTURES",)
+    assert scope.test_paths == ("tests/test_native_probe.py",)
+
+
+@pytest.mark.parametrize(
+    "source",
+    (
+        (
+            "import os, pytest\n"
+            "pytestmark = [pytest.mark.native_kicad, "
+            "pytest.mark.skipif(os.environ.get('KICAD_RUN_NATIVE_PROBE_FIXTURES') != '1')]\n"
+            "def test_native_probe(): pass\n"
+        ),
+        (
+            "import os, pytest\n"
+            "@pytest.mark.native_kicad\n"
+            "@pytest.mark.skipif(os.environ.get('KICAD_RUN_NATIVE_PROBE_FIXTURES') != '1')\n"
+            "class TestNativeProbe:\n"
+            "    def test_export(self): pass\n"
+        ),
+        (
+            "import os, pytest\n"
+            "@pytest.mark.native_kicad\n"
+            "@pytest.mark.skipif(os.environ.get('KICAD_RUN_NATIVE_PROBE_FIXTURES') != '1')\n"
+            "class NativeProbeTests:\n"
+            "    def test_export(self): pass\n"
+        ),
+        (
+            "import os, pytest\n"
+            "@pytest.mark.native_kicad\n"
+            "@pytest.mark.skipif(os.environ.get('KICAD_RUN_NATIVE_PROBE_FIXTURES') != '1')\n"
+            "class NativeProbeTest:\n"
+            "    def test_export(self): pass\n"
+        ),
+    ),
+)
+def test_explicit_test_paths_accept_module_and_class_level_native_fixture_markers(
+    tmp_path: Path, source: str
+) -> None:
+    repository = tmp_path / "repository"
+    message = _native_fixture_message(repository)
+    (repository / "tests/test_native_probe.py").write_text(source, encoding="utf-8")
+
+    scope = read_message_scope(message, repository)
+
+    assert scope.native_fixtures == ("KICAD_RUN_NATIVE_PROBE_FIXTURES",)
+
+
+@pytest.mark.parametrize(
+    "source",
+    (
+        (
+            "import os, pytest\n"
+            "@pytest.mark.skipif(os.environ.get('KICAD_RUN_NATIVE_PROBE_FIXTURES') != '1')\n"
+            "def test_native_probe(): pass\n"
+        ),
+        (
+            "import os, pytest\n"
+            "@pytest.mark.native_kicad\n"
+            "@pytest.mark.skipif(os.environ.get('KICAD_RUN_NATIVE_OTHER') != '1')\n"
+            "def test_native_probe(): pass\n"
+        ),
+        (
+            "import os, pytest\n"
+            "@pytest.mark.native_kicad\n"
+            "@pytest.mark.skipif(os.environ.get('KICAD_RUN_NATIVE_PROBE_FIXTURES') == '1')\n"
+            "def test_native_probe(): pass\n"
+        ),
+        ("import pytest\n@pytest.mark.native_kicad\ndef test_native_probe(): pass\n"),
+    ),
+)
+def test_explicit_test_paths_reject_missing_or_mismatched_native_fixture_guards(
+    tmp_path: Path, source: str
+) -> None:
+    repository = tmp_path / "repository"
+    message = _native_fixture_message(repository)
+    (repository / "tests/test_native_probe.py").write_text(source, encoding="utf-8")
+
+    with pytest.raises(ValueError, match="no native_kicad test guarded"):
+        read_message_scope(message, repository)
 
 
 def test_annotated_area_tag_resolves_existing_test_paths_and_writes_action_output(

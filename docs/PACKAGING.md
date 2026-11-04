@@ -139,10 +139,14 @@ modes print the selected pytest expression and native-fixture switches, plus
 any explicit test-module paths; the preflight does not create a tag or write
 GitHub environment files, and neither command runs the tests.
 
-An active rule may list `required_native_fixtures` in the packaged rule catalog.
-Every rule-scoped tag for that rule must declare those exact fixture switches.
-This binds its focused pytest selector to the native lane that exercises its
-catalogued native fault and control cases.
+When an area tag uses `Native-Fixture` together with explicit `Test-Path`
+entries, at least one selected test must carry `pytest.mark.native_kicad` and
+have a `pytest.mark.skipif` guard that reads each exact declared environment
+switch. This prevents a scoped gate from claiming a native lane that its test
+selection will not execute. An active rule may list `required_native_fixtures`
+in the packaged rule catalog. Every rule-scoped tag for that rule must declare
+those exact fixture switches. This binds its focused pytest selector to the
+native lane that exercises its catalogued fault and control cases.
 
 Once published, project repositories should pin an exact tested package version.
 Upgrade that pin through a pull request that runs the project's focused and full
