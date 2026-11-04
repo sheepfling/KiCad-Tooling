@@ -498,6 +498,20 @@ the established sparse blocked fields and per-pad receipt fields. The existing
 compatibility adapter, while the PCB requirement translator imports the typed
 owner directly.
 
+Decoupling, protection-path, track-width, and reference-plane candidates now
+retain their exact coverage entry and source-bound report through
+`PcbDecouplingFindingEvidence`, `PcbProtectionPathFindingEvidence`,
+`PcbTrackWidthFindingEvidence`, and `PcbReferencePlaneFindingEvidence`.
+Theme-owned projectors preserve the existing evidence fields and finding
+fingerprints. Their candidate rules keep their distinct qualification:
+unbounded complete decoupling coverage remains reviewable; protection-path
+findings require incomplete coverage; track-width findings include complete
+measurements below the authored minimum; reference-plane findings include
+tracks below threshold on every measured reference layer, plus endpoint-via
+hole context. Complete controls are filtered before constructing finding
+records. Map freshness and blocked/disabled normalization remain in prepared
+evaluation.
+
 ## Schematic geometry source route
 
 The geometry scanner receives one schematic's bytes, repository path, exact

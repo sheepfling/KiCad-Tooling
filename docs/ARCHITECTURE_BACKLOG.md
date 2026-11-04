@@ -250,6 +250,13 @@ service. The old service function delegates as a compatibility adapter, and
 the internal PCB translator uses the owner directly. Focused touch-pad,
 architecture, determinism, catalog, scanner, and MCP-parity checks passed 36
 tests under `design_lint and not native_kicad`.
+Decoupling, protection-path, track-width, and reference-plane findings now
+retain their exact measurements and source-bound coverage reports in separate
+theme-owned candidate evidence modules. Existing evidence projections and
+fingerprints remain stable, and complete controls stay quiet. The focused
+measurement evidence, architecture, and rule regression selection passed 29
+tests with `design_lint and pcb_lint`; the marker, collection, and theme
+architecture selection passed 15 tests with `design_lint and architecture`.
 
 **Done when:** existing rule families have agreed input/output tables and
 fresh, missing, stale, and not-applicable cases; the feature lane can identify
@@ -608,6 +615,16 @@ their source coverage or named scan record through a typed projection as well.
 The I²C pull-up, I²C address, and USB data-path owners now share one immutable
 `CandidateEvidenceProjection` contract, while each theme retains its own
 source-specific formatter.
+
+The PCB measurement candidate route now follows that source-to-wire contract
+for decoupling, protection-path, track-width, and reference-plane findings. Each
+finding retains its exact typed coverage entry and full source-bound report;
+theme-owned projectors preserve the established evidence and fingerprint.
+Candidate qualification remains rule-specific, so complete controls do not
+become findings and complete-but-below-threshold measurements remain visible
+where the rule requires review. Continue migrating bounded theme routes whose
+source records fully explain their findings; keep policy normalization and
+source freshness in evaluation preparation rather than the evidence projectors.
 CAN missing and excess termination candidates now retain their named scan
 records and use that same projection contract.
 The bus theme now returns its findings with those peer keys in a

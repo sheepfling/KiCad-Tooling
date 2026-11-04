@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from typing import Literal
 
 from kicad_tooling.hwrepo.models import (
     ContractCoachReport,
@@ -105,7 +106,7 @@ def track(
     layer: str = "F.Cu",
     start: tuple[int, int] = (0, 5_000_000),
     end: tuple[int, int] = (10_000_000, 5_000_000),
-    geometry: str = "segment",
+    geometry: Literal["segment", "arc"] = "segment",
     start_vias: tuple[str, ...] = (),
     end_vias: tuple[str, ...] = (),
     start_tracks: tuple[str, ...] = (),
@@ -152,7 +153,10 @@ def snapshot(
     )
 
 
-def report(specification: PcbReferencePlaneMap, observed: PcbConnectivitySnapshot):
+def report(
+    specification: PcbReferencePlaneMap,
+    observed: PcbConnectivitySnapshot,
+) -> PcbReferencePlaneCoverageReport:
     entries = pcb_reference_plane_entries(specification, observed)
     return PcbReferencePlaneCoverageReport(
         status="COMPLETE" if all(item.status == "COMPLETE" for item in entries) else "INCOMPLETE",

@@ -79,7 +79,10 @@ def snapshot(*tracks: PcbTrackObservation) -> PcbConnectivitySnapshot:
     )
 
 
-def coverage(specification: PcbTrackWidthMap, observed: PcbConnectivitySnapshot):
+def coverage(
+    specification: PcbTrackWidthMap,
+    observed: PcbConnectivitySnapshot,
+) -> PcbTrackWidthCoverageReport:
     entries = pcb_track_width_entries(specification, observed)
     return PcbTrackWidthCoverageReport(
         status="COMPLETE" if all(item.status == "COMPLETE" for item in entries) else "INCOMPLETE",
