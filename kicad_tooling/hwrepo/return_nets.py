@@ -32,7 +32,7 @@ def _indexed_return(name: str) -> tuple[str, int] | None:
     if match is None:
         return None
     stem = match.group("stem").rstrip(" _./-")
-    if not match.group("separator") and (
+    if (
         re.fullmatch(r"[A-Z][A-Z0-9]*", stem, re.IGNORECASE) is None
         or _RETURN_TOKEN.fullmatch(stem) is not None
     ):

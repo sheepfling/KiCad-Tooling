@@ -8104,19 +8104,20 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "At least two distinct net names have the same recognized return-like stem and different numeric suffixes. A recognized GND or VSS stem may use a one-letter suffix such as GNDA or VSSA before an optional numeric suffix. The bounded RET token is also recognized. For compact prefixes before a return token, any ASCII letter/digit identifier followed immediately by a numeric index is grouped, such as CPU1_GND/CPU2_GND, USB1_GND/USB2_GND, CAN1_GND/CAN2_GND, I2C1_0V/I2C2_0V, and SPI1_RET/SPI2_RET. A prefix that is itself a complete return token is not treated as an identifier.",
+      "predicate": "At least two distinct net names have the same recognized return-like stem and different numeric suffixes. A recognized GND or VSS stem may use a one-letter suffix such as GNDA or VSSA before an optional numeric suffix. The bounded RET token is also recognized. Before a return token, group an ASCII identifier (one letter followed by ASCII letters or digits) and numeric index, with or without a supported separator, such as CPU1_GND/CPU2_GND, CPU_1_GND/CPU_2_GND, USB1_GND/USB2_GND, CAN1_GND/CAN2_GND, I2C1_0V/I2C2_0V, and SPI1_RET/SPI2_RET. A prefix that is itself a complete return token is not treated as an identifier.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Suffix similarity is only a review clue; separate numbered returns can be intentional isolation domains.",
-        "Only documented return-like tokens and numeric-index patterns are recognized. A compact identifier prefix can include per-device or per-domain labels, so findings may describe intentionally separate returns and require project review. The RET token is lexical context, not proof that a net is ground or that domains should be joined."
+        "Only documented return-like tokens and ASCII letter/digit identifier prefixes are recognized; prefixes that are return tokens, contain other characters, or contain non-ASCII letters are excluded. A recognized identifier can still describe a per-device or per-domain label, so findings may describe intentionally separate returns and require project review. The RET token is lexical context, not proof that a net is ground or that domains should be joined."
       ],
       "fault_fixtures": [
         "tests.test_design_lint_component_power_pins.test_open_findings_include_missing_power_and_separate_returns",
         "tests.test_design_lint_numbered_returns.test_four_db9_separately_named_return_domains_are_reviewed",
         "tests.test_design_lint_numbered_returns.test_four_db9_numbered_pwm_return_names_are_reviewed",
         "tests.test_protocol_return_name_groups.test_generic_numbered_identifier_prefixes_are_reviewed",
+        "tests.test_protocol_return_name_groups.test_delimited_ascii_identifier_prefixes_are_reviewed",
         "tests.test_numbered_interface_returns.test_usb_and_serial_port_returns_are_grouped_by_protocol_stem",
         "tests.test_protocol_return_name_groups.test_compact_can_i2c_and_spi_return_families_are_reviewed_separately",
         "tests.test_design_lint_numbered_returns.test_project_can_block_numbered_return_review",
@@ -8133,6 +8134,7 @@
         "tests.test_numbered_interface_returns.test_common_return_net_across_usb_and_serial_ports_is_a_valid_control",
         "tests.test_protocol_return_name_groups.test_common_protocol_return_nets_are_a_valid_control",
         "tests.test_protocol_return_name_groups.test_return_token_prefix_is_not_misread_as_a_device_identifier",
+        "tests.test_protocol_return_name_groups.test_return_tokens_and_non_identifier_prefixes_stay_quiet",
         "tests.test_return_net_lint.test_explicit_return_pin_functions_suppress_letter_suffix_prompt",
         "tests.test_return_net_lint.test_common_ret_and_reset_labels_are_valid_controls",
         "tests.test_design_lint_mcp_parity_return_labels.test_ret_return_names_match_cli_and_mcp",

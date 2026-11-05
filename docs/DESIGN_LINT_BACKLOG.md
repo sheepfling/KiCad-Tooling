@@ -14457,18 +14457,20 @@ control are documented in the
   short protocol-prefix allowlist, but deliberately missed labels such as
   `CPU1_GND` and `CPU2_GND`. These compact identifiers can describe separate
   connector or device return domains whose relationship deserves review.
-- **Predicate:** For a recognized return token after a compact ASCII
-  alphanumeric identifier and numeric index, group nets with the same prefix
-  and return token when the numeric indexes differ. A prefix that is itself a
-  complete return token is not treated as an identifier.
+- **Predicate:** For a recognized return token after an ASCII identifier and
+  numeric index, group nets with the same prefix and return token when the
+  numeric indexes differ. The identifier may touch the index or use a supported
+  separator, but must start with an ASCII letter and contain only ASCII letters
+  or digits. A prefix that is itself a complete return token is excluded.
 - **Boundary:** This is a name-based review clue. It does not establish that
   two rails are electrically common, require joining them, or distinguish
   intentionally isolated channels. A common label is a quiet control. PCB
   continuity and off-board wiring remain outside the check.
-- **Evidence:** Synthetic tests cover `CPU1_GND`/`CPU2_GND`, the common
-  `CPU_GND` control, return-token prefixes, CAN/I2C/SPI groups, rule overrides,
-  and deterministic fingerprints. CLI/MCP parity covers the compact fault
-  and common control. Tooling-owned native fault/control schematics are
+- **Evidence:** Synthetic tests cover `CPU1_GND`/`CPU2_GND`, the delimited
+  `CPU_1_GND`/`CPU_2_GND` form, the common `CPU_GND` control, token-prefix and
+  malformed-prefix controls, CAN/I2C/SPI groups, rule overrides, and
+  deterministic fingerprints. CLI/MCP parity covers the compact fault and
+  common control. Tooling-owned native fault/control schematics are
   source-hashed and exported twice with digest-pinned KiCad 10.0.0 and 10.0.5.
   The ret-return lane checks exact pin membership and repeatability. Fixture
   sources and hashes are in the

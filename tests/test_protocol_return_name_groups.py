@@ -74,6 +74,28 @@ def test_generic_numbered_identifier_prefixes_are_reviewed() -> None:
     assert finding.evidence == {"CPU1_GND": ("J1.1",), "CPU2_GND": ("J2.1",)}
 
 
+def test_delimited_ascii_identifier_prefixes_are_reviewed() -> None:
+    report = _report({"CPU_1_GND": ("J1.1",), "CPU_2_GND": ("J2.1",)})
+
+    assert report.status == "REVIEW"
+    (finding,) = [item for item in report.findings if item.rule_id == RULE_ID]
+    assert finding.subject == "CPU_GND"
+    assert finding.evidence == {"CPU_1_GND": ("J1.1",), "CPU_2_GND": ("J2.1",)}
+
+
+@pytest.mark.parametrize("prefix", ("GND", "VSS", "RTN", "bad!", "Ω", "UART bus"))
+def test_return_tokens_and_non_identifier_prefixes_stay_quiet(prefix: str) -> None:
+    report = _report(
+        {
+            f"{prefix}_1_GND": ("J1.1",),
+            f"{prefix}_2_GND": ("J2.1",),
+        }
+    )
+
+    assert report.status == "PASS"
+    assert not report.findings
+
+
 def test_return_token_prefix_is_not_misread_as_a_device_identifier() -> None:
     report = _report({"GND1_GND": ("J1.1",), "GND2_GND": ("J2.1",)})
 

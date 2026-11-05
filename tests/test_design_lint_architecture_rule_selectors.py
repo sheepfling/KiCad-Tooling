@@ -100,6 +100,10 @@ RULE_NODE_CASES = (
         "tests/test_protocol_return_name_groups.py::test_generic_numbered_identifier_prefixes_are_reviewed",
     ),
     (
+        "net.numbered_returns",
+        "tests/test_protocol_return_name_groups.py::test_delimited_ascii_identifier_prefixes_are_reviewed",
+    ),
+    (
         "connector.unconnected_supply_pin",
         "tests/test_design_lint_power_pin_patterns.py::TestDesignLintPowerPinPatterns::test_unconnected_supply_and_return_pins_without_a_peer_are_reported",
     ),
