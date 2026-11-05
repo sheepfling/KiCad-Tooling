@@ -15,7 +15,10 @@ from .ci_hosted_usb_data_path_cases import usb_data_path_fixture_sources
 from .ci_hosted_usb_external_protection import validate_usb_external_protection_fixture_reports
 from .ci_hosted_usb_isolation import validate_usb_isolator_reference_boundary
 from .ci_hosted_usb_multiport_validation import validate_usb_multiport_peer_reference_reports
-from .ci_hosted_usb_protection_shunts import validate_usb_protection_shunt_fixture_reports
+from .ci_hosted_usb_protection_shunts import (
+    validate_usb_protection_shunt_fixture_mismatches,
+    validate_usb_protection_shunt_fixture_reports,
+)
 from .ci_hosted_usb_requirements import usb_data_path_requirements
 from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contract_coach_models import ContractCoachReport
@@ -176,14 +179,9 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
                     raise ValueError(
                         "Native inline bonded-reference fault omitted exact missing-bond evidence"
                     )
-            elif case == "protection-shunt-pin-fault":
-                if tuple(item.line for item in mismatches) != ("protection_shunt",) or not any(
-                    "U6.2 is on USB_DP" in issue for issue in mismatches[0].issues
-                ):
-                    raise ValueError(
-                        "Native protection-shunt pin fault omitted exact U6.2 net evidence"
-                    )
-            elif mismatches:
+            elif mismatches and not validate_usb_protection_shunt_fixture_mismatches(
+                case, mismatches
+            ):
                 raise ValueError(
                     f"Native {case} USB control mismatched the authored topology: {mismatches}"
                 )

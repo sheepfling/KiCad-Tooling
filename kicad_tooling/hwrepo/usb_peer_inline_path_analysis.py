@@ -12,6 +12,7 @@ from .usb_data_path_models import (
     UsbDataPathMap,
 )
 from .usb_data_paths import usb_data_path_mismatches
+from .usb_peer_mapped_protection_evidence import mapped_protection_shunt_evidence
 from .usb_peer_path_analysis import d_designated_shunt_branches
 from .usb_peer_reference_types import (
     UsbEndpoint,
@@ -46,8 +47,12 @@ def _mapped_net_shunts(
     inline_pin: str,
     observed: NetlistContract,
     reference_nets: AbstractSet[str],
+    mapped_protection_pins: frozenset[str],
 ) -> tuple[UsbPeerDataShuntBranch, ...] | None:
-    expected = {pin.casefold() for pin in (*endpoint_pins, inline_pin)}
+    expected = {
+        *(pin.casefold() for pin in (*endpoint_pins, inline_pin)),
+        *(pin.casefold() for pin in mapped_protection_pins),
+    }
     extras = net_members.get(net.casefold(), set()) - expected
     return d_designated_shunt_branches(observed, net, extras, reference_nets)
 
@@ -147,6 +152,15 @@ def _inline_data_link(
         pin_assignments=assignments,
     )
     reference_nets = {connector.reference_net.casefold(), phy.reference_net.casefold()}
+
+    def mapped_shunt_pins(net: str) -> frozenset[str]:
+        return frozenset(
+            item.pin
+            for shunt in interface.protection_shunts
+            for item in shunt.data_pins
+            if item.net.casefold() == net.casefold()
+        )
+
     positive_shunts = (
         _mapped_net_shunts(
             net_members,
@@ -155,6 +169,7 @@ def _inline_data_link(
             inline.positive_connector_pin,
             observed,
             reference_nets,
+            mapped_shunt_pins(interface.positive.connector_net),
         ),
         _mapped_net_shunts(
             net_members,
@@ -163,6 +178,7 @@ def _inline_data_link(
             inline.positive_phy_pin,
             observed,
             reference_nets,
+            mapped_shunt_pins(interface.positive.phy_net),
         ),
     )
     negative_shunts = (
@@ -173,6 +189,7 @@ def _inline_data_link(
             inline.negative_connector_pin,
             observed,
             reference_nets,
+            mapped_shunt_pins(interface.negative.connector_net),
         ),
         _mapped_net_shunts(
             net_members,
@@ -181,6 +198,7 @@ def _inline_data_link(
             inline.negative_phy_pin,
             observed,
             reference_nets,
+            mapped_shunt_pins(interface.negative.phy_net),
         ),
     )
     if any(item is None for item in (*positive_shunts, *negative_shunts)):
@@ -214,6 +232,7 @@ def _inline_data_link(
         negative_shunt_branches=negative_branches,
         positive_inline_component=positive_inline,
         negative_inline_component=negative_inline,
+        protection_shunts=mapped_protection_shunt_evidence(interface),
         port_group=connector.port_group or phy.port_group or interface.data_port_group,
     )
 

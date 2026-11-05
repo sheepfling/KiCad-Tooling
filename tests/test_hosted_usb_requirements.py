@@ -39,6 +39,8 @@ def test_hosted_usb_topology_maps_cover_native_fixture_cases() -> None:
         "protection-shunt-split-reference",
         "protection-shunt-common-reference",
         "protection-shunt-pin-fault",
+        "inline-protection-shunt-control",
+        "inline-protection-shunt-fault",
     }
 
     bonded = requirements["external-series-reference-bond-control"].interfaces[0]

@@ -165,14 +165,13 @@ class UsbDataInterfaceRequirement(StrictModel):
             raise ValueError("USB inline-component data paths need an exact component map")
         if self.inline_component is not None and inline_lines != (True, True):
             raise ValueError("USB inline-component maps must cover both D+ and D- paths")
-        if self.inline_component is not None and self.protection_shunts:
-            raise ValueError(
-                "USB inline-component and protection-shunt maps cannot be combined in one interface"
-            )
+        allowed_shunt_topology = (
+            "inline_component" if self.inline_component is not None else "direct"
+        )
         if self.protection_shunts and any(
-            line.topology != "direct" for line in (self.positive, self.negative)
+            line.topology != allowed_shunt_topology for line in (self.positive, self.negative)
         ):
-            raise ValueError("USB protection-shunt maps currently require direct data paths")
+            raise ValueError("USB protection-shunt maps need direct or exact inline paths")
         if any(
             any(
                 not pin.casefold().startswith(f"{self.connector_reference}.".casefold())
@@ -293,8 +292,14 @@ class UsbDataInterfaceRequirement(StrictModel):
                         )
         if self.protection_shunts:
             expected_data_nets = {
-                "D+": self.positive.connector_net.casefold(),
-                "D-": self.negative.connector_net.casefold(),
+                "D+": {
+                    self.positive.connector_net.casefold(),
+                    self.positive.phy_net.casefold(),
+                },
+                "D-": {
+                    self.negative.connector_net.casefold(),
+                    self.negative.phy_net.casefold(),
+                },
             }
             reserved_pins = {
                 pin.casefold()
@@ -345,9 +350,9 @@ class UsbDataInterfaceRequirement(StrictModel):
                         "USB protection-shunt pins must be distinct from endpoint pins"
                     )
                 for data_pin in shunt.data_pins:
-                    if data_pin.net.casefold() != expected_data_nets[data_pin.line]:
+                    if data_pin.net.casefold() not in expected_data_nets[data_pin.line]:
                         raise ValueError(
-                            "USB protection-shunt data pin nets must match direct endpoint nets"
+                            "USB protection-shunt data pins must match a mapped data-path net"
                         )
         mapped_signal_and_reference_pins = {
             item.casefold()

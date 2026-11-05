@@ -6,14 +6,9 @@ from .netlist_contract_models import NetlistContract
 from .usb_data_path_models import UsbDataInterfaceRequirement, UsbDataPathMap
 from .usb_data_paths import usb_data_path_mismatches
 from .usb_peer_endpoint_analysis import pin_net_index
+from .usb_peer_mapped_protection_evidence import mapped_protection_shunt_evidence
 from .usb_peer_path_analysis import d_designated_shunt_branches
-from .usb_peer_reference_types import (
-    UsbEndpoint,
-    UsbPeerDataLink,
-    UsbPeerDataProtectionShunt,
-    UsbPeerDataProtectionShuntPin,
-    UsbPeerDataShuntBranch,
-)
+from .usb_peer_reference_types import UsbEndpoint, UsbPeerDataLink, UsbPeerDataShuntBranch
 
 
 def _interface_matches(
@@ -57,46 +52,6 @@ def _mapped_data_pins(interface: UsbDataInterfaceRequirement, line: str) -> set[
         for item in shunt.data_pins
         if item.line == line
     }
-
-
-def _matched_protection_shunts(
-    interface: UsbDataInterfaceRequirement,
-) -> tuple[UsbPeerDataProtectionShunt, ...]:
-    return tuple(
-        sorted(
-            (
-                UsbPeerDataProtectionShunt(
-                    reference=shunt.reference,
-                    symbol=shunt.expected_symbol,
-                    footprint=shunt.expected_footprint,
-                    data_pins=tuple(
-                        UsbPeerDataProtectionShuntPin(
-                            line=item.line,
-                            pin=item.pin,
-                            net=item.net,
-                        )
-                        for item in sorted(
-                            shunt.data_pins,
-                            key=lambda item: (item.line, item.pin.casefold(), item.pin),
-                        )
-                    ),
-                    pin_assignments=tuple(
-                        sorted(
-                            (
-                                f"{item.pin}={item.net}"
-                                if item.disposition == "net"
-                                else f"{item.pin}=<unconnected>"
-                                for item in shunt.pins
-                            ),
-                            key=lambda item: (item.casefold(), item),
-                        )
-                    ),
-                )
-                for shunt in interface.protection_shunts
-            ),
-            key=lambda item: (item.reference.casefold(), item.reference),
-        )
-    )
 
 
 def _direct_shunt_path(
@@ -144,7 +99,7 @@ def _direct_shunt_path(
         phy_negative_pins=phy.negative_pins,
         positive_shunt_branches=branch_groups[0],
         negative_shunt_branches=branch_groups[1],
-        protection_shunts=_matched_protection_shunts(interface),
+        protection_shunts=mapped_protection_shunt_evidence(interface),
         port_group=connector.port_group or phy.port_group or interface.data_port_group,
     )
 

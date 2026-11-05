@@ -1743,6 +1743,17 @@ standalone parity work when it closes a demonstrated feature regression.
   reports `NO_SUPPORTED_PEER_PATHS`; this adds no supported non-finding,
   confirmed defect, or measured reviewer value.
 
+  The exact-map boundary now also supports one inline USB data-path component
+  together with separate multi-pin protection shunts attached to either mapped
+  side of D+ or D−. The shunt still needs exact identity, a D+/D− pin map, a
+  complete native pin inventory, and expected net or explicit no-connect state.
+  Synthetic controls, a wrong-side tap fault, stable-order evidence, CLI/MCP
+  parity, and digest-pinned native fixture cases exercise this composition.
+  A current exact map can establish schematic assignments for LINT-086; it does
+  not infer protection behavior, datasheet truth, or PCB continuity. Series
+  resistor plus protection-array combinations and multi-hop paths remain
+  unsupported.
+
 - **LINT-094 — Open native power output on comparable peers.** The original
   exact-symbol gate passed tagged GitHub package acceptance in `v0.5.0rc12` (run 37796753272),
   including repeatable synthetic exports on digest-pinned KiCad 10.0.0 and
