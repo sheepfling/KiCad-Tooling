@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.architecture, pytest.mark.alphus_experimental]
 ROOT = Path(__file__).parents[1]
 FIXTURES = ROOT / "tests" / "fixtures" / "alphus"
 
-pytest.importorskip("alphus", reason="install the dev-experimental extra to run Alphus checks")
+pytest.importorskip("alphus", reason="supply the external tool to run these experimental checks")
 
 
 def test_test_quality_reports_brittle_prose_and_respects_test_scope(tmp_path: Path) -> None:

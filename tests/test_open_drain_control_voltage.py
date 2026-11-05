@@ -51,6 +51,28 @@ def test_open_collector_control_pullup_to_different_supply_requests_review() -> 
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_pullup_voltage_review_adds_detection_over_existing_bias_checks() -> None:
+    existing_bias_rule_ids = {
+        "control.connected_control_input_without_visible_bias",
+        "signal.open_collector_input_without_visible_bias",
+        "power.gpio_to_control_input_voltage_review",
+    }
+    fault_candidates = candidates(open_drain_control_voltage_netlist())
+    control_candidates = candidates(
+        open_drain_control_voltage_netlist(
+            pullup_rail="+3V3", driver_rail="+3V3", receiver_rail="+3V3"
+        )
+    )
+    fault_rule_ids = {item.rule_id for item in fault_candidates}
+    control_rule_ids = {item.rule_id for item in control_candidates}
+
+    assert existing_bias_rule_ids.isdisjoint(fault_rule_ids)
+    assert RULE_ID in fault_rule_ids
+    assert existing_bias_rule_ids.isdisjoint(control_rule_ids)
+    assert RULE_ID not in control_rule_ids
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
 @pytest.mark.parametrize(
     ("pullup_rail", "driver_rail", "receiver_rail", "relation"),
     (

@@ -13,7 +13,7 @@ import pytest
 pytestmark = [pytest.mark.architecture, pytest.mark.alphus_experimental]
 ROOT = Path(__file__).parents[1]
 
-pytest.importorskip("alphus", reason="install the dev-experimental extra to run Alphus checks")
+pytest.importorskip("alphus", reason="supply the external tool to run these experimental checks")
 
 
 def test_runtime_types_policy_reports_production_and_script_findings(tmp_path: Path) -> None:

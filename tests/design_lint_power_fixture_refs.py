@@ -8,11 +8,13 @@ OPEN_DRAIN_CONTROL_PARITY_FIXTURES = MappingProxyType(
             {
                 "fault_fixtures": (
                     "tests.test_open_drain_control_voltage.test_open_collector_control_pullup_to_different_supply_requests_review",
+                    "tests.test_open_drain_control_voltage.test_pullup_voltage_review_adds_detection_over_existing_bias_checks",
                     "tests.test_open_drain_control_voltage_native_fixture_lane.test_native_open_drain_control_fault_and_control",
                     "tests.test_design_lint_mcp_parity_open_drain_control_voltage.test_open_drain_control_fault_and_control_match_cli_mcp",
                 ),
                 "valid_control_fixtures": (
                     "tests.test_open_drain_control_voltage.test_equal_or_ambiguous_cases_remain_quiet",
+                    "tests.test_open_drain_control_voltage.test_pullup_voltage_review_adds_detection_over_existing_bias_checks",
                     "tests.test_open_drain_control_voltage_native_fixture_lane.test_native_open_drain_control_fault_and_control",
                     "tests.test_design_lint_mcp_parity_open_drain_control_voltage.test_open_drain_control_fault_and_control_match_cli_mcp",
                 ),

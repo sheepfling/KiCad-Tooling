@@ -1,31 +1,32 @@
 # Alphus quality checks
 
-The optional `dev-experimental` extra pins Alphus to the `v0.0.2` tag commit
-in `pyproject.toml`. The standard `dev` extra does not install it. CI explicitly
-opts in because the package and prerelease jobs run its advisory checks and
-regressions.
+**Current status:** this is a record of an external tooling trial. This
+checkout no longer pins or installs Alphus, and CI no longer runs its advisory
+reports. The policy configuration and focused regression tests remain for a
+future trial; the tests skip unless the tool is supplied separately.
+
 `quality-gates.toml` scopes runtime-types and Pydantic practices checks to Python
-production and script files. The package CI job runs each in report mode: findings are
-advisory, while an invalid policy or tool failure still fails the step.
+production and script files. In the recorded trial, report-mode findings were
+advisory, while an invalid policy or tool failure failed the step.
 The `python-style` check uses the same scope and is available on demand; it is
 not included in CI while its broader guidance is being reviewed. The new
 `input-contracts` and `complexity-candidates` profiles are also on-demand,
 provisional review profiles and are not CI blockers. `test-quality` is a
-provisional profile scoped to `tests/**/*.py`; the package job runs that
-selector in report mode so findings do not block CI.
+provisional profile scoped to `tests/**/*.py`; the historical package job ran
+that selector in report mode so findings did not block CI.
 
-The installed package metadata and `dev-experimental` pin both resolve to
-Alphus `v0.0.2` commit `3435f81aff7abac7716a5780d26319e8f314d61d`. A fresh
+The recorded package metadata and dependency pin both resolve to Alphus
+`v0.0.2` commit `3435f81aff7abac7716a5780d26319e8f314d61d`. A fresh
 re-sniff at KiCad head `2dd91707624d23e8d83405e8df57326701dd0e1a` reports 116
 runtime-type findings, 220 Python-style findings, one Pydantic warning, 37
 source-family candidates, four input-mutation candidates, and 30 complexity
 candidates. These are consumer review findings; they are not proof of defects.
 The Python-style scan still reports zero opaque mappings.
 
-Run the same advisory check locally from this checkout:
+When the external package is supplied in the active environment, run the
+recorded advisory checks with:
 
 ```sh
-python -m pip install -e '.[dev,dev-experimental]'
 python -I -m alphus --rule runtime-types --report
 python -I -m alphus --rule pydantic-practices --report
 python -I -m alphus --rule python-style --report --json

@@ -14401,8 +14401,11 @@ control are documented in the
   rail, unsupported endpoint, missing metadata, and unparsed-label controls
   remain quiet. Policy and input-order stability are covered. A CLI/MCP parity
   fixture exercises the fault and equal-label control through the shared typed
-  service. Focused selection is `tests/test_open_drain_control_voltage.py`
-  with `design_lint`, `interface_lint`, and `power_lint` markers.
+  service. A counterfactual regression verifies the fault is missed by the
+  existing visible-bias and GPIO voltage rules but reported by LINT-278; the
+  equal-label control stays quiet for all four rules. Focused selection is
+  `tests/test_open_drain_control_voltage.py` with `design_lint`,
+  `interface_lint`, and `power_lint` markers.
 - **Hosted acceptance (2026-11-05):** Tag `v0.5.3rc430` passed GitHub Actions
   run `42020887831`. The unit stage reported 36 passed and 6,861 deselected;
   Ruff, Pyright, Rumdl, wheel/source-distribution checks, and the installed

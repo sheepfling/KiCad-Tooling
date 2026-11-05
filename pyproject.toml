@@ -37,10 +37,6 @@ dev = [
   "rumdl==0.2.77",
   "mdrepo==0.0.1.post0",
 ]
-dev-experimental = [
-  "alphus @ git+https://github.com/sheepfling/alphus.git@3435f81aff7abac7716a5780d26319e8f314d61d",
-]
-
 [project.scripts]
 kicad-team = "kicad_tooling.__main__:main"
 kicad-team-mcp = "kicad_tooling.mcp:main"

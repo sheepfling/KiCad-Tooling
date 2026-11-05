@@ -1251,11 +1251,11 @@ project policy in their own catalog. Open only clean, reproducible blocking
 checks; keep disputed guidance review-only and record upstream complaints
 outside this repository.
 
-The optional `dev-experimental` extra pins Alphus, and `quality-gates.toml`
-defines reproducible runtime-types, Pydantic practices, and Python-style
-scopes. CI opts in to the extra for the two advisory reports and the
-experimental policy regressions; Python-style remains available on demand
-while its broader output is reviewed. See
+`quality-gates.toml` defines reproducible runtime-types, Pydantic practices,
+and Python-style scopes for an external, opt-in experiment. The repository no
+longer pins that tool or invokes its reports in CI; the focused policy tests
+skip unless the tool is supplied separately. Python-style remains available
+on demand while its broader output is reviewed. See
 `ALPHUS_QUALITY_GATES.md` for the command and enforcement boundary.
 The source-derived raw-JSON boundary now recognizes aliased `json.load(s)`
 imports and classifies native KiCad report and bounded GLB parsing as explicit
