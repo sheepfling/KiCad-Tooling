@@ -1,16 +1,16 @@
 schema_version = 1
 
 [files]
-include = ["kicad_tooling/**/*.py", "scripts/**/*.py"]
+include = ["kicad_tooling/**/*.py", "scripts/**/*.py", "tests/**/*.py"]
 exclude = []
 
 [checks.runtime_types]
 extensions = [".py"]
-exclude = []
+exclude = ["tests/**/*.py"]
 
 [checks.python_style]
 extensions = [".py"]
-exclude = []
+exclude = ["tests/**/*.py"]
 opaque_boundary_paths = []
 opaque_boundary_marker_prefix = "# opaque-boundary: "
 opaque_boundary_min_reason_chars = 12
@@ -18,7 +18,7 @@ forbidden_main_imports = ["main"]
 
 [checks.pydantic_practices]
 extensions = [".py"]
-exclude = []
+exclude = ["tests/**/*.py"]
 report_dump_revalidation = true
 require_explicit_frozen = false
 report_deprecated_v1_apis = true
@@ -31,10 +31,15 @@ external_model_names = []
 
 [checks.input_contracts]
 extensions = [".py"]
-exclude = []
+exclude = ["tests/**/*.py"]
 report_mutation = true
 suggest_read_only = true
 sequence_narrowing_paths = []
+
+[checks.test_quality]
+extensions = [".py"]
+exclude = []
+test_paths = ["tests/**/*.py"]
 
 [checks.cyclomatic_complexity]
 metric = "cyclomatic"
@@ -118,3 +123,13 @@ rollout = "provisional"
 [[orchestration.profiles]]
 name = "complexity-candidates"
 steps = ["KiCad cyclomatic complexity review"]
+
+[[orchestration.steps]]
+kind = "rule"
+name = "Python test quality review"
+rule = "test-quality"
+rollout = "provisional"
+
+[[orchestration.profiles]]
+name = "test-quality"
+steps = ["Python test quality review"]

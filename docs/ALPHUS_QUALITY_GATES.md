@@ -10,7 +10,9 @@ advisory, while an invalid policy or tool failure still fails the step.
 The `python-style` check uses the same scope and is available on demand; it is
 not included in CI while its broader guidance is being reviewed. The new
 `input-contracts` and `complexity-candidates` profiles are also on-demand,
-provisional review profiles and are not CI blockers.
+provisional review profiles and are not CI blockers. `test-quality` is a
+provisional profile scoped to `tests/**/*.py`; the package job runs that
+selector in report mode so findings do not block CI.
 
 The installed package metadata and `dev-experimental` pin both resolve to
 Alphus `v0.0.2` commit `3435f81aff7abac7716a5780d26319e8f314d61d`. A fresh
@@ -29,6 +31,7 @@ python -I -m alphus --rule pydantic-practices --report
 python -I -m alphus --rule python-style --report --json
 python -I -m alphus --profile input-contracts --json
 python -I -m alphus --profile complexity-candidates --json
+python -I -m alphus --rule test-quality --report
 ```
 
 Select only the experimental regression tests with
@@ -111,3 +114,58 @@ identify the language, framework, category, and complaint; for example,
 `alphus/python/pydantic/validation/dump-revalidation`. The Python-style
 profile may exit nonzero when it reports findings. Review its JSON and exit
 status separately; a successful Pydantic profile may still contain warnings.
+
+The provisional `test-quality` rule checks large exact prose comparisons and,
+when configured, reads of declared ephemeral documents. Its synthetic
+fault/control regression confirms that it reports a prose golden, accepts a
+structured mapping comparison, ignores same-content production files outside
+the configured test paths, and produces repeatable JSON. It does not enforce
+test-file size or pytest marker coverage. The repository architecture suite
+and lint-suite ceilings own those checks.
+
+## Test-quality profile and current re-sniff (2026-11-05)
+
+The optional Alphus package is pinned and installed from tag `v0.0.2`, commit
+`3435f81aff7abac7716a5780d26319e8f314d61d`. The installed distribution's VCS
+metadata matches the dependency pin and tag. The catalog lists 62 built-in
+selectors.
+
+This re-sniff ran at KiCad head
+`dab210cbe6353022089f1329f96e090fb35bb208`, which contains the case-folded USB
+index and immutable resistor-path changes.
+
+The configured file inventory now includes `tests/**/*.py` for the test-quality
+profile. The runtime-types, Python-style, Pydantic-practices, and input-contracts
+checks explicitly exclude tests, preserving their production scope. The
+test-quality profile is provisional, selects only Python tests, and currently
+reports zero findings. CI invokes its direct selector with `--report`.
+
+The focused Alphus experimental suites passed 7 tests, including the regression
+in `tests/test_alphus_test_quality_policy.py`. Its synthetic fault produces one
+warning for a full-paragraph exact assertion; a structured mapping control stays
+quiet, a matching production file is outside the configured test scope, and two
+direct-rule report runs are byte-identical. The configured profile reports the
+same warning at the advisory warning severity and exits successfully under its
+error threshold. The test-quality selector reported no findings on the current
+repository after adding this coverage. Ruff, formatting, and targeted Pyright
+passed for the new suite.
+
+This selector does not check test-module size or pytest marker coverage. Those
+remain deterministic repository architecture checks, including the explicit
+lint-suite ceilings.
+
+The six existing profile totals remain 116 runtime-type errors, 220
+Python-style errors (including zero opaque-mapping findings), one Pydantic
+warning, 37 source-family candidates, four input-contract candidates, and 30
+complexity candidates. The two error-level profiles still exit nonzero outside
+report mode; this run is diagnostic and did not change those policies.
+
+The separately scoped 1,500-line `file-size` candidate reports no oversized
+modules in `kicad_tooling/hwrepo/`; the selector remains disabled while source
+ownership and routes are being decided. `module-roles`, `package-boundaries`,
+and `source-test-coverage` also remain deferred until their respective
+ownership, package-layer, and source-to-test maps exist.
+
+Raw profile and catalog JSON for this scan are stored in the external feedback
+bundle under
+`build/alphus-v0.0.2/sa01-typed-map-test-quality-gate-2026-11-05/`.

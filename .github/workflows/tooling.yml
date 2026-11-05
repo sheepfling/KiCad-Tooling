@@ -61,6 +61,8 @@ jobs:
         run: python -I -m alphus --rule runtime-types --report
       - name: Report Alphus Pydantic guidance (advisory)
         run: python -I -m alphus --rule pydantic-practices --report
+      - name: Report Alphus test quality guidance (provisional)
+        run: python -I -m alphus --rule test-quality --report
       - name: Check tooling and installed wheel against a separate project
         env:
           KICAD_RUN_NATIVE_PCB_FIXTURES: '1'

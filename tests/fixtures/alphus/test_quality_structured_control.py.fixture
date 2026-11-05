@@ -1,0 +1,3 @@
+def test_machine_readable_status_contract():
+    actual = {"status": "ok", "count": 1}
+    assert actual == {"status": "ok", "count": 1}

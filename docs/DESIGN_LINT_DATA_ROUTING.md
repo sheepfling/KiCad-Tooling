@@ -1765,3 +1765,24 @@ in the five route modules. The 1,500-line `hwrepo` file-size candidate and
 scoped test-quality candidate both returned zero findings. No exact native
 KiCad lane ran. Continue the SA-01 inventory with other returned maps, keeping
 local accumulation dictionaries out of the shared-route count.
+
+## Resistor-path map route (2026-11-05)
+
+`visible_resistor_pullups` and `visible_resistor_paths` now return the named
+`VisibleResistorPathsByNet` contract: an immutable mapping from exact net names
+to sorted tuples of `VisibleResistorPath` records. The import-aware audit found
+nine external calls across six production consumers; each performs lookup or
+iteration, with no mutation of the returned result.
+
+These maps remain derived resistor-path views, not source evidence. The
+underlying `NetlistContract`, discovered paths, numeric resistance, and lint
+evidence are unchanged. No serialized candidate or report fields changed.
+
+The focused resistor, I²C, SPI, open-drain, control-input, USB, and architecture
+selection passed 216 tests. Ruff and targeted Pyright passed. The fresh
+runtime-types, Python-style, Pydantic, and input-contract scans found no
+findings in the changed route modules. The architecture profile still reports
+low-confidence source-family prompts that can mention themed modules; they do
+not establish ownership or call for a split. No exact native KiCad lane ran.
+Continue SA-01 with another import-aware returned-map audit, keeping local
+accumulators out of the shared-route count.

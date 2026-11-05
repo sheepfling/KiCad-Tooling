@@ -66,12 +66,16 @@ def test_pydantic_policy_preserves_default_factory_and_reports_positional_defaul
     (tmp_path / "quality-gates.toml").write_bytes((ROOT / "quality-gates.toml").read_bytes())
     source = tmp_path / "kicad_tooling" / "probe.py"
     source.parent.mkdir()
-    source.write_text(
+    source_text = (
         "from pydantic import BaseModel, Field\n"
         "class Item(BaseModel):\n"
         "    values: dict[str, int] = Field(default_factory=dict)\n"
         "    count: int = Field(1)\n"
     )
+    source.write_text(source_text)
+    test_source = tmp_path / "tests" / "probe.py"
+    test_source.parent.mkdir()
+    test_source.write_text(source_text)
     result = subprocess.run(
         (
             sys.executable,
@@ -92,6 +96,8 @@ def test_pydantic_policy_preserves_default_factory_and_reports_positional_defaul
     )
     assert result.returncode == 0, result.stderr
     findings = json.loads(result.stdout)
+    assert len(findings) == 1
+    assert findings[0]["path"] == "kicad_tooling/probe.py"
     assert [(item["rule_id"], item["line"], item["severity"]) for item in findings] == [
         ("alphus/python/pydantic/style/field-positional-default", 4, "info")
     ]
@@ -102,11 +108,15 @@ def test_python_style_policy_exposes_opaque_mapping_category(tmp_path: Path) -> 
     (tmp_path / "quality-gates.toml").write_bytes((ROOT / "quality-gates.toml").read_bytes())
     source = tmp_path / "kicad_tooling" / "probe.py"
     source.parent.mkdir()
-    source.write_text(
+    source_text = (
         "from collections.abc import Mapping\n"
         "def opaque(value: Mapping[str, object]) -> None: pass\n"
         "def typed(value: Mapping[str, int]) -> None: pass\n"
     )
+    source.write_text(source_text)
+    test_source = tmp_path / "tests" / "probe.py"
+    test_source.parent.mkdir()
+    test_source.write_text(source_text)
     result = subprocess.run(
         (
             sys.executable,
@@ -126,7 +136,9 @@ def test_python_style_policy_exposes_opaque_mapping_category(tmp_path: Path) -> 
         timeout=30,
     )
     assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout)["kicad_tooling/probe.py"]["opaque_mappings"] == [2]
+    findings_by_path = json.loads(result.stdout)
+    assert findings_by_path["kicad_tooling/probe.py"]["opaque_mappings"] == [2]
+    assert "tests/probe.py" not in findings_by_path
     profile = subprocess.run(
         (
             sys.executable,
@@ -204,9 +216,13 @@ def test_input_contract_profile_reports_mutation_as_advisory(tmp_path: Path) -> 
     (tmp_path / "quality-gates.toml").write_bytes((ROOT / "quality-gates.toml").read_bytes())
     source = tmp_path / "kicad_tooling" / "probe.py"
     source.parent.mkdir()
-    source.write_text(
+    source_text = (
         "def normalize(values: dict[str, int]) -> None:\n    values.setdefault('count', 0)\n"
     )
+    source.write_text(source_text)
+    test_source = tmp_path / "tests" / "probe.py"
+    test_source.parent.mkdir()
+    test_source.write_text(source_text)
 
     result = subprocess.run(
         (
@@ -230,7 +246,9 @@ def test_input_contract_profile_reports_mutation_as_advisory(tmp_path: Path) -> 
     assert report["profile"] == "input-contracts"
     assert report["failure_threshold"] == "error"
     assert report["severity_counts"] == {"error": 0, "info": 0, "warning": 1}
-    finding = report["steps"][0]["findings"][0]
+    findings = report["steps"][0]["findings"]
+    assert len(findings) == 1
+    finding = findings[0]
     assert finding["rule_id"] == "alphus/python/none/correctness/argument-mutation"
     assert finding["path"] == "kicad_tooling/probe.py"
     assert finding["severity"] == "warning"

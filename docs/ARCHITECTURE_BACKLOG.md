@@ -1942,5 +1942,24 @@ The focused USB peer and case-fold selection passed 146 tests, with two cases
 deselected. Ruff and targeted Pyright passed. All six Alphus profile totals
 were unchanged, with no findings across the five production route files; the
 separate file-size and test-quality candidates found no new actionable issue.
-Continue SA-01 by auditing the resistor pull-up result and its consumers. Keep
-the source-to-report route decisions ahead of any size-driven splits.
+The fresh combined resistor-path, I²C, SPI, open-drain, control-input, USB, and
+architecture selection passed 216 tests. The six existing Alphus profile
+totals remain unchanged; the new test-quality profile reports zero findings.
+No exact native KiCad lane ran.
+
+## Resistor-path map route (2026-11-05)
+
+The shared resistor-path APIs now expose `VisibleResistorPathsByNet`, an
+immutable mapping whose values are sorted tuples. Nine external calls across
+six production consumers were audited; all consume results read-only. The
+contract preserves derived path lookup behavior without replacing or
+weakening the source `NetlistContract` or lint evidence.
+
+The focused route, dependent lint regressions, and architecture selection
+passed 216 tests. Ruff and targeted Pyright passed. The runtime-types,
+Python-style, Pydantic, and input-contract scans found no findings in the
+changed route modules. The architecture profile still reports low-confidence
+source-family prompts that can mention themed modules; they do not establish
+ownership or call for a split. Continue SA-01 with another import-aware
+returned-map audit and keep source-to-report decisions ahead of size-driven
+splits.
