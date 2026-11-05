@@ -33,6 +33,8 @@ DigitalPeerFixtureCase: TypeAlias = Literal[
     "serial-optical-isolation-control",
     "serial-label-control",
     "serial-label-fault",
+    "serial-label-connector-control",
+    "serial-label-connector-fault",
     "component-peer-control",
     "component-peer-fault",
 ]
@@ -50,6 +52,8 @@ FIXTURE_CASES: tuple[DigitalPeerFixtureCase, ...] = (
     "serial-optical-isolation-control",
     "serial-label-control",
     "serial-label-fault",
+    "serial-label-connector-control",
+    "serial-label-connector-fault",
     "component-peer-control",
     "component-peer-fault",
 )
@@ -75,6 +79,8 @@ SERIAL_CONNECTOR_REVIEW_CASES: tuple[DigitalPeerFixtureCase, ...] = (
 SERIAL_LABEL_REFERENCE_CASES: tuple[DigitalPeerFixtureCase, ...] = (
     "serial-label-control",
     "serial-label-fault",
+    "serial-label-connector-control",
+    "serial-label-connector-fault",
 )
 COMPONENT_PEER_FIXTURE_CASES: tuple[DigitalPeerFixtureCase, ...] = (
     "component-peer-control",

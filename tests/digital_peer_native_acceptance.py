@@ -48,6 +48,8 @@ _EXPECTED_STAGES = frozenset(
         "spi-participant-fixture/serial-optical-isolation-control",
         "spi-participant-fixture/serial-label-control",
         "spi-participant-fixture/serial-label-fault",
+        "spi-participant-fixture/serial-label-connector-control",
+        "spi-participant-fixture/serial-label-connector-fault",
         "component-peer-power-fixture/control",
         "component-peer-power-fixture/fault",
     }
@@ -74,6 +76,8 @@ _EXPECTED_PEER_SOURCE_HASHES = MappingProxyType(
         "spi-participant-fixture/serial-optical-isolation-control": "2d3cfb6f98d2d97114a97c8948f6fac290f4401fac58474af8c974dbf2e1da46",
         "spi-participant-fixture/serial-label-control": "a0ac8548431af625c5116c1d456e4f2c6cf1714e58cca84c6fe595165d87c561",
         "spi-participant-fixture/serial-label-fault": "2006adbfa6c6f1c99e88e3320a1ed7230f01a02f5e143c16a946abaa34f9db20",
+        "spi-participant-fixture/serial-label-connector-control": "9b9febbc2e61399ece1f33502eae3807336d7519f4c41312c3cd8d913f56a051",
+        "spi-participant-fixture/serial-label-connector-fault": "c9e6d76e9545b49e7713f5942dab34de639727d777ee67874635156bb8303cf5",
     }
 )
 

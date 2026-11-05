@@ -34,6 +34,16 @@ _FIXTURE_ROOT = (
             id="label-fault",
         ),
         pytest.param(
+            "serial-label-connector-control.kicad_sch",
+            "9b9febbc2e61399ece1f33502eae3807336d7519f4c41312c3cd8d913f56a051",
+            id="label-connector-control",
+        ),
+        pytest.param(
+            "serial-label-connector-fault.kicad_sch",
+            "c9e6d76e9545b49e7713f5942dab34de639727d777ee67874635156bb8303cf5",
+            id="label-connector-fault",
+        ),
+        pytest.param(
             "serial-optical-isolation-control.kicad_sch",
             "2d3cfb6f98d2d97114a97c8948f6fac290f4401fac58474af8c974dbf2e1da46",
             id="optical-isolation-control",
@@ -57,8 +67,12 @@ def test_serial_reference_fixture_matches_synthetic_digest(filename, expected_sh
         assert '"UART.0.RX"' in text
         assert '"B2"' in text
         assert '"ADBUS1"' in text
-        assert '(property "Reference" "U2"' in text
-        assert '(property "Reference" "J1"' not in text
+        if "serial-label-connector-" in filename:
+            assert '(property "Reference" "J1"' in text
+            assert '(property "Reference" "U2"' not in text
+        else:
+            assert '(property "Reference" "U2"' in text
+            assert '(property "Reference" "J1"' not in text
 
 
 def test_serial_connector_reference_lane_reports_split_and_common_controls(
@@ -69,6 +83,8 @@ def test_serial_connector_reference_lane_reports_split_and_common_controls(
     connector_fault = results["spi-participant-fixture/serial-connector-fault"]
     label_control = results["spi-participant-fixture/serial-label-control"]
     label_fault = results["spi-participant-fixture/serial-label-fault"]
+    connector_label_control = results["spi-participant-fixture/serial-label-connector-control"]
+    connector_label_fault = results["spi-participant-fixture/serial-label-connector-fault"]
 
     assert connector_control["peer_reference_findings"] == "none"
     assert connector_control["reference_assignments"] == "GND_A=J1.4,U1.4"
@@ -90,8 +106,25 @@ def test_serial_connector_reference_lane_reports_split_and_common_controls(
         "U1.1=output;U1.2=input;U1.3=power_in;U1.4=power_in;"
         "U2.1=input;U2.2=output;U2.3=passive;U2.4=passive"
     )
+    assert connector_label_control["peer_reference_findings"] == "none"
+    assert connector_label_control["reference_assignments"] == "GND_A=J1.4,U1.4"
+    assert connector_label_fault["peer_reference_findings"] == "bus.serial_peer_reference_review"
+    assert connector_label_fault["reference_assignments"] == "GND_A=U1.4;GND_B=J1.4"
+    assert connector_label_fault["signal_assignments"] == (
+        "UART.0.RX=J1.2,U1.2;UART.0.TX=J1.1,U1.1"
+    )
+    assert connector_label_fault["pin_functions"] == (
+        "J1.1=ADBUS0;J1.2=ADBUS1;J1.3=VDD;J1.4=GND;U1.1=B2;U1.2=B1;U1.3=VDD;U1.4=GND"
+    )
 
-    for result in (connector_control, connector_fault, label_control, label_fault):
+    for result in (
+        connector_control,
+        connector_fault,
+        label_control,
+        label_fault,
+        connector_label_control,
+        connector_label_fault,
+    ):
         assert result["repeatable"] == "true"
         assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
 

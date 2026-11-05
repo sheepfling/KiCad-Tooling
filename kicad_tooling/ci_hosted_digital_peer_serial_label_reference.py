@@ -27,6 +27,8 @@ def verify_serial_label_reference_cases(ctx: DigitalPeerFixtureContext):
         "UART.0.TX": expected_signal_data.tx,
     }
     for case in SERIAL_LABEL_REFERENCE_CASES:
+        connector_case = case.startswith("serial-label-connector-")
+        peer_reference = "J1" if connector_case else "U2"
         peer_contracts = ctx.fixture(case).netlists
         peer_observed = peer_contracts.first.contract
         if (
@@ -41,27 +43,41 @@ def verify_serial_label_reference_cases(ctx: DigitalPeerFixtureContext):
             "U1.2": "B1",
             "U1.3": "VDD",
             "U1.4": "GND",
-            "U2.1": "ADBUS0",
-            "U2.2": "ADBUS1",
-            "U2.3": "VDD",
-            "U2.4": "GND",
+            f"{peer_reference}.1": "ADBUS0",
+            f"{peer_reference}.2": "ADBUS1",
+            f"{peer_reference}.3": "VDD",
+            f"{peer_reference}.4": "GND",
         }
         expected_pin_types = {
             "U1.1": "output",
             "U1.2": "input",
             "U1.3": "power_in",
             "U1.4": "power_in",
-            "U2.1": "input",
-            "U2.2": "output",
-            "U2.3": "passive",
-            "U2.4": "passive",
+            f"{peer_reference}.1": "input",
+            f"{peer_reference}.2": "output",
+            f"{peer_reference}.3": "passive",
+            f"{peer_reference}.4": "passive",
         }
-        expected_symbols = {"U1": "Synthetic:UartController", "U2": "Synthetic:UartBridge"}
-        expected_pin_numbers = {"U1": ("1", "2", "3", "4"), "U2": ("1", "2", "3", "4")}
+        expected_symbols = {
+            "U1": "Synthetic:UartController",
+            peer_reference: "Synthetic:UartBridge",
+        }
+        expected_pin_numbers = {
+            "U1": ("1", "2", "3", "4"),
+            peer_reference: ("1", "2", "3", "4"),
+        }
+        expected_signal_nets = {
+            net: tuple(sorted(pin.replace("U2.", f"{peer_reference}.", 1) for pin in pins))
+            for net, pins in {
+                "UART.0.RX": expected_signal_data.rx,
+                "UART.0.TX": expected_signal_data.tx,
+            }.items()
+        }
+        control_case = case in {"serial-label-control", "serial-label-connector-control"}
         expected_references = (
-            {"GND_A": ("U1.4", "U2.4")}
-            if case == "serial-label-control"
-            else {"GND_A": ("U1.4",), "GND_B": ("U2.4",)}
+            {"GND_A": tuple(sorted(("U1.4", f"{peer_reference}.4")))}
+            if control_case
+            else {"GND_A": ("U1.4",), "GND_B": (f"{peer_reference}.4",)}
         )
         if (
             peer_observed.pin_functions != expected_functions
@@ -105,7 +121,7 @@ def verify_serial_label_reference_cases(ctx: DigitalPeerFixtureContext):
             (item.fingerprint, item.rule_id, item.mode, item.evidence)
             for item in reports.repeat.findings
         )
-        expected_reference_count = 0 if case == "serial-label-control" else 1
+        expected_reference_count = 0 if control_case else 1
         if (
             first_signature != repeated_signature
             or reports.first.status != "REVIEW"
@@ -115,11 +131,24 @@ def verify_serial_label_reference_cases(ctx: DigitalPeerFixtureContext):
             raise ValueError(
                 f"Native UART label {case} no longer matches its reference review case"
             )
-        if reference_findings and (
-            reference_findings[0].mode != "review"
-            or reference_findings[0].subject != "U1 / U2: serial reference-domain review"
-            or dict(reference_findings[0].evidence)
-            != {
+        if connector_case:
+            expected_subject = "J1 / U1: serial reference-domain review"
+            expected_evidence = {
+                "discovery_basis": ("net_label",),
+                "first_component": ("J1",),
+                "first_reference_net": ("GND_B",),
+                "first_reference_pin_assignments": ("J1.4 (GND, passive)=GND_B",),
+                "second_component": ("U1",),
+                "second_reference_net": ("GND_A",),
+                "second_reference_pin_assignments": ("U1.4 (GND, power_in)=GND_A",),
+                "serial_label_link_assignments": (
+                    "uart0: TX UART.0.TX (J1.1, U1.1); RX UART.0.RX (J1.2, U1.2)",
+                ),
+                "serial_peer_map_state": ("not_configured",),
+            }
+        else:
+            expected_subject = "U1 / U2: serial reference-domain review"
+            expected_evidence = {
                 "discovery_basis": ("net_label",),
                 "first_component": ("U1",),
                 "first_reference_net": ("GND_A",),
@@ -132,6 +161,10 @@ def verify_serial_label_reference_cases(ctx: DigitalPeerFixtureContext):
                 ),
                 "serial_peer_map_state": ("not_configured",),
             }
+        if reference_findings and (
+            reference_findings[0].mode != "review"
+            or reference_findings[0].subject != expected_subject
+            or dict(reference_findings[0].evidence) != expected_evidence
         ):
             raise ValueError("Native UART label reference finding lost exact pin/net evidence")
         ctx.log.event(

@@ -6257,11 +6257,13 @@ control are documented in the
   component and side-pin assignments to match the native netlist.
 - **Boundary:** This describes a directly connected label-identified signal
   segment; it does not establish that the components are the complete
-  end-to-end UART peers or that a split reference is wrong. Keep connector
-  endpoints, multi-hop paths, isolators, ambiguous or third-party signal nets,
-  DNP components, incomplete pin metadata, and unsupported labels outside v1.
-  Do not join nets or traverse an isolator from signal names alone. Project
-  requirements and physical continuity remain separate evidence.
+  end-to-end UART peers or that a split reference is wrong. The initial
+  implementation accepted IC endpoints only; LINT-275 extends this bounded
+  path to connector candidates. Multi-hop paths, isolators, ambiguous or
+  third-party signal nets, DNP components, incomplete pin metadata, and
+  unsupported labels remain outside scope. Do not join nets or traverse an
+  isolator from signal names alone. Project requirements and physical
+  continuity remain separate evidence.
 - **Verified controls:** A synthetic split-reference
   fault and same-reference control using generic signal pin functions; exact
   `common_net` and `separate_nets` map suppression; exact bonded-reference
@@ -14232,6 +14234,46 @@ control are documented in the
   reviewed and unreviewed-scope counts. CLI and MCP use the same typed report
   assembly.
 
+#### LINT-275 — Review generic UART channel labels ending at connectors
+
+- **Status:** Implemented as a narrow extension to
+  `bus.serial_peer_reference_review`, which remains default `REVIEW` and
+  configurable through the existing rule policy.
+- **Gap:** LINT-082's numbered UART/USART label path found direct generic-pin
+  IC-to-IC links but skipped a connector endpoint. Native UART pin-function
+  links already supported connectors. A board with `UART.0.TX/RX` labels from
+  an IC to a serial header could therefore have its separate reference nets
+  remain invisible to this prompt when the connector pins carry generic native
+  functions.
+- **Predicate:** For each numbered UART/USART TX/RX channel, require one exact
+  TX net and one exact RX net, each containing exactly one pin from the same
+  two fitted endpoints. An endpoint must be a fitted U/IC or a connector
+  candidate recognized by the existing bounded connector identity service or
+  an exact project interface review. Require complete pin-number, function,
+  and electrical-type metadata, exclude DNP endpoints, and reuse the existing
+  one-return-net-per-endpoint checks. If endpoint reference nets differ and no
+  exact current direct serial map covers them, emit one localized REVIEW.
+  Common reference remains quiet.
+- **Boundary:** This uses exact numbered channel labels as a direct-segment
+  clue only. It does not infer connector pinout, end-to-end peer intent,
+  direction from label text, multi-hop paths, or a requirement to join returns.
+  Arbitrary two-pin components, third-party signal nets, incomplete metadata,
+  DNP endpoints, ambiguous channel pairs, and mixed return domains remain
+  outside the rule. A split can be intentional.
+- **Faults and controls:** Synthetic typed-netlist regressions cover a generic
+  IC-to-J1 split-reference fault, an otherwise identical common-reference
+  control, exact evidence localization, and CLI/MCP parity. The digest-pinned
+  native pair is
+  `tests/fixtures/design_lint/serial-peer-connector-reference-native/serial-label-connector-fault.kicad_sch`
+  and its common-reference control. Their source hashes are
+  `c9e6d76e9545b49e7713f5942dab34de639727d777ee67874635156bb8303cf5` and
+  `9b9febbc2e61399ece1f33502eae3807336d7519f4c41312c3cd8d913f56a051`.
+  Exact native exports are required on the pinned KiCad 10.0.0 and 10.0.5
+  lane. No external or proprietary project source is used.
+- **Acceptance:** The focused synthetic, parity, and mocked-lane checks are
+  pending this feature gate. The exact-version native result will be recorded
+  from hosted acceptance; it is not inferred from mocked fixtures.
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Rule precedence:** KiCad evaluates custom rules in reverse file order, and a later matching rule
@@ -17449,8 +17491,9 @@ control are documented in the
   been measured on approved nonconfidential designs. Keep the heuristic at
   `REVIEW`; no project should infer that similar-looking reference nets must
   be joined. The Antmicro multi-UART screen under LINT-031 identifies generic
-  pin functions and channel labels outside this predicate; proposed LINT-082
-  records the narrow extension and its required controls. Do not infer a
+  pin functions and channel labels outside this predicate. LINT-082 records
+  the IC-to-IC label extension, and LINT-275 extends the same bounded rule to
+  connector candidates with native fault/control fixtures. Do not infer a
   multi-hop peer or cross an isolator from net labels alone.
 - **Bundled root-project applicability screen (2026-10-03):** The same 35
   repeat-exported KiCad 10.0.5 root projects produced no direct UART TX-to-RX

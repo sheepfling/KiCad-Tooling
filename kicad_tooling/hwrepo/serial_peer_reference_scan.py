@@ -33,9 +33,9 @@ def scan_serial_peer_reference_reviews(
     pin/function/type inventory, one unambiguous return net per endpoint, and a
     directionally clear TX-to-RX connection are considered. A bounded label
     path also recognizes TX/RX channel labels that directly join the same two
-    fitted ICs when their native pin functions are generic. An exact direct
-    serial map with current identity, signal pins, and reference-pin assignments
-    records reviewed intent and suppresses the prompt.
+    fitted ICs or connector candidates when their native pin functions are
+    generic. An exact direct serial map with current identity, signal pins, and
+    reference-pin assignments records reviewed intent and suppresses the prompt.
     """
     pin_index_result = pin_index(observed)
     connector_references = {
@@ -43,7 +43,7 @@ def scan_serial_peer_reference_reviews(
         for reference in connector_candidate_references(observed, declared_connector_references)
     }
     native_links = directly_linked_serial_peers(observed, declared_connector_references)
-    label_links = labelled_direct_peer_links(observed, pin_index_result)
+    label_links = labelled_direct_peer_links(observed, pin_index_result, connector_references)
     supported_count = 0
     incomplete_count = 0
     common_count = 0

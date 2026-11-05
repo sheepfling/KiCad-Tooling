@@ -128,6 +128,16 @@ def test_serial_label_alias_fault_and_control_by_native_version(
         "U1.1=output;U1.2=input;U1.3=power_in;U1.4=power_in;"
         "U2.1=input;U2.2=output;U2.3=passive;U2.4=passive"
     )
+    connector_control = results["spi-participant-fixture/serial-label-connector-control"]
+    connector_fault = results["spi-participant-fixture/serial-label-connector-fault"]
+    assert connector_control["peer_reference_findings"] == "none"
+    assert connector_control["reference_assignments"] == "GND_A=J1.4,U1.4"
+    assert connector_fault["peer_reference_findings"] == "bus.serial_peer_reference_review"
+    assert connector_fault["reference_assignments"] == "GND_A=U1.4;GND_B=J1.4"
+    assert connector_fault["signal_assignments"] == ("UART.0.RX=J1.2,U1.2;UART.0.TX=J1.1,U1.1")
+    assert connector_fault["pin_functions"] == (
+        "J1.1=ADBUS0;J1.2=ADBUS1;J1.3=VDD;J1.4=GND;U1.1=B2;U1.2=B1;U1.3=VDD;U1.4=GND"
+    )
 
 
 def test_serial_peer_normalized_netlists_match_across_native_versions(
@@ -141,6 +151,7 @@ def test_serial_peer_normalized_netlists_match_across_native_versions(
             "serial-optical-isolation-control",
         ),
         ("serial-label-control", "serial-label-fault"),
+        ("serial-label-connector-control", "serial-label-connector-fault"),
     )
     for prefix in stage_groups:
         stages = tuple(f"spi-participant-fixture/{item}" for item in prefix)

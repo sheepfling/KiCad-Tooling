@@ -9520,18 +9520,18 @@
     },
     {
       "rule_id": "bus.serial_peer_reference_review",
-      "title": "UART-linked peers use different explicit reference nets",
+      "title": "UART-linked endpoints use different explicit reference nets",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad native XML netlist normalized by kicad_tooling.validate.read_netlist, including complete native pin inventories, exact TX/RX-like pin functions or bounded channel labels, native electrical types, and unique net assignments",
-      "predicate": "For directionally clear native UART TX-to-RX links among fitted U/IC components and bounded or project-reviewed connector candidates, or direct fitted U/IC pairs joined by one uniquely numbered UART/USART TX and RX channel-label pair, require complete component pin/function/type inventories and explicit signal-reference pins with passive or power_in types, or unspecified type backed by an explicit return-like function. Report a REVIEW prompt when each endpoint's signal-reference pins share one unique native net and the two endpoint nets differ. Suppress only a source-current direct serial map that exactly matches both endpoint identities, signal pins/nets, and explicit reference-pin assignments under common_net or separate_nets policy.",
+      "predicate": "For directionally clear native UART TX-to-RX links among fitted U/IC components and bounded or project-reviewed connector candidates, or direct endpoint pairs joined by one uniquely numbered UART/USART TX and RX channel-label pair, require complete component pin/function/type inventories and explicit signal-reference pins with passive or power_in types, or unspecified type backed by an explicit return-like function. Label-discovered endpoints may be fitted U/IC components or bounded connector candidates. Report a REVIEW prompt when each endpoint's signal-reference pins share one unique native net and the two endpoint nets differ. Suppress only a source-current direct serial map that exactly matches both endpoint identities, signal pins/nets, and explicit reference-pin assignments under common_net or separate_nets policy.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The prompt does not decide whether the references should be common, bonded through a component, or intentionally isolated; net names and symbol pin functions provide review clues only.",
-        "The native-function path accepts supported UART/USART TX/RX pin-function spellings. The label path accepts only numbered UART/USART TX/RX labels where each net joins exactly one pin from the same two fitted U/IC components. It does not treat connector endpoints or multi-hop translated paths as direct peers. Each endpoint must have a complete native pin inventory plus uniquely assigned GND/AGND/DGND/PGND/VSS/0V/RTN/RETURN/GROUND pins of passive or power_in type, or unspecified type backed by an explicit return-like function. Functions marked SHIELD, CHASSIS, FRAME, or PE are excluded; incomplete, DNP, mixed-reference-domain, third-party, or ambiguous endpoints are skipped.",
+        "The native-function path accepts supported UART/USART TX/RX pin-function spellings. The label path accepts only numbered UART/USART TX/RX labels where each net joins exactly one pin from the same two fitted U/IC components or bounded connector candidates. It does not infer multi-hop translated paths or treat arbitrary two-pin components as connectors. Each endpoint must have a complete native pin inventory plus uniquely assigned GND/AGND/DGND/PGND/VSS/0V/RTN/RETURN/GROUND pins of passive or power_in type, or unspecified type backed by an explicit return-like function. Functions marked SHIELD, CHASSIS, FRAME, or PE are excluded; incomplete, DNP, mixed-reference-domain, third-party, or ambiguous endpoints are skipped.",
         "An exact authored direct serial map records reviewed schematic intent but cannot prove a fitted net tie, PCB copper continuity, an external bond, connector wiring, or electrical suitability. Other maps and stale or partial assignments do not suppress the prompt."
       ],
       "fault_fixtures": [
@@ -9541,10 +9541,12 @@
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_multi_uart_headers_localize_one_split_reference",
         "tests.test_serial_peer_reference_multichannel.test_three_uart_headers_localize_one_split_return_among_common_peers",
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_channel_labelled_generic_ic_pair_reviews_split_reference_domains",
+        "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_channel_labelled_generic_ic_to_connector_pair_reviews_split_references",
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_three_channel_labelled_ic_pair_groups_split_reference_review",
         "tests.test_serial_peer_reference_maps.SerialPeerReferenceMapTests.test_stale_reference_map_does_not_suppress_prompt",
         "tests.test_design_lint_serial_parity.DesignLintSerialParityTests.test_dual_uart_split_reference_localizes_one_header_on_cli_and_mcp",
         "tests.test_design_lint_serial_parity.DesignLintSerialParityTests.test_channel_labelled_generic_uart_reference_review_matches_cli_and_mcp",
+        "tests.test_design_lint_serial_parity.DesignLintSerialParityTests.test_channel_labelled_generic_uart_connector_review_matches_cli_and_mcp",
         "tests.test_design_lint_serial_parity.DesignLintSerialParityTests.test_bonded_uart_reference_map_suppresses_only_valid_bond_on_cli_and_mcp",
         "tests.test_design_lint_mcp_parity_serial.test_serial_connector_reference_lint_cli_mcp_parity",
         "tests.test_ci_hosted_digital_peer_serial.test_serial_peer_voltage_fault_and_controls_by_native_version",
@@ -9561,11 +9563,14 @@
         "tests.test_serial_peer_reference_maps.SerialPeerReferenceMapTests.test_source_matched_separate_header_reference_map_suppresses_prompt",
         "tests.test_design_lint_serial_parity.DesignLintSerialParityTests.test_dual_uart_split_reference_localizes_one_header_on_cli_and_mcp",
         "tests.test_design_lint_serial_parity.DesignLintSerialParityTests.test_channel_labelled_generic_uart_reference_review_matches_cli_and_mcp",
+        "tests.test_design_lint_serial_parity.DesignLintSerialParityTests.test_channel_labelled_generic_uart_connector_review_matches_cli_and_mcp",
         "tests.test_design_lint_serial_parity.DesignLintSerialParityTests.test_bonded_uart_reference_map_suppresses_only_valid_bond_on_cli_and_mcp",
         "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_incomplete_or_ambiguous_native_reference_evidence_is_skipped",
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_channel_labelled_generic_ic_pair_with_common_reference_is_quiet",
+        "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_channel_labelled_generic_ic_to_connector_pair_with_common_reference_is_quiet",
         "tests.test_serial_peer_reference_maps.SerialPeerReferenceMapTests.test_exact_channel_label_map_suppresses_but_stale_map_does_not",
         "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_channel_label_candidate_skips_ambiguous_or_incomplete_cases",
+        "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_connector_channel_label_candidate_skips_a_third_signal_pin",
         "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_channel_label_candidate_obeys_rule_override_and_exact_ignore",
         "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_optically_isolated_uart_pair_is_not_treated_as_direct_peers",
         "tests.test_digital_peer_serial_reference_fixture_lane.test_serial_optical_isolation_control_stays_outside_direct_peer_review",
@@ -9588,6 +9593,7 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/serial_peer_reference_domains.py#reference_domain",
+        "kicad_tooling/hwrepo/serial_peer_reference_domains.py#labelled_direct_peer_links",
         "kicad_tooling/hwrepo/peer_reference_assignments.py#peer_reference_assignments",
         "kicad_tooling/hwrepo/serial_peer_reference_mapping.py#fully_mapped_direct_link",
         "kicad_tooling/hwrepo/serial_peer_reference_scan.py#scan_serial_peer_reference_reviews",

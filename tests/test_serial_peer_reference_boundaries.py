@@ -14,6 +14,7 @@ from kicad_tooling.hwrepo.serial_peer_reference_review import (
     unmapped_serial_peer_reference_reviews,
 )
 from tests.design_lint_fixtures.digital_peer_serial import (
+    serial_label_connector_reference_netlist,
     serial_optically_isolated_uart_netlist,
 )
 from tests.serial_peer_reference_support import (
@@ -133,6 +134,24 @@ class SerialPeerReferenceBoundaryTests:
             unmapped_serial_peer_reference_reviews(reordered)
         )
         assert (report(source).findings) == (report(reordered).findings)
+
+    def test_connector_channel_label_candidate_skips_a_third_signal_pin(self) -> None:
+        source = serial_label_connector_reference_netlist(split_references=True)
+        candidate = source.model_copy(
+            update={
+                "components": {
+                    **source.components,
+                    "R3": ComponentContract(value="Synthetic third endpoint", footprint="R_0603"),
+                },
+                "nets": {
+                    **source.nets,
+                    "UART.0.TX": (*source.nets["UART.0.TX"], "R3.1"),
+                },
+            }
+        )
+
+        assert not unmapped_serial_peer_reference_reviews(candidate)
+        assert RULE_ID not in {finding.rule_id for finding in report(candidate).findings}
 
     def test_channel_label_candidate_obeys_rule_override_and_exact_ignore(self) -> None:
         source = labelled_serial_reference_netlist()

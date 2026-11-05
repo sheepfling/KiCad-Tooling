@@ -14,6 +14,9 @@ from kicad_tooling.hwrepo.models import (
     ReferenceBondRequirement,
     ValidationSummary,
 )
+from tests.design_lint_fixtures.digital_peer_serial import (
+    serial_label_connector_reference_netlist,
+)
 from tests.design_lint_fixtures.i2c_serial_parity import (
     alternate_function_serial_netlist,
     dual_uart_reference_netlist,
@@ -22,6 +25,7 @@ from tests.design_lint_fixtures.i2c_serial_parity import (
     labelled_generic_uart_reference_netlist,
 )
 from tests.design_lint_fixtures.parity_harness import I2cSerialParityHarness
+from tests.electrical_parity_support import contract_netlist_xml
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint, pytest.mark.parity_lint]
 
@@ -301,6 +305,59 @@ class DesignLintSerialParityTests(I2cSerialParityHarness):
                                 "uart0: TX Compute module/UART.0.TX (U1.1, U2.2); "
                                 + "RX Compute module/UART.0.RX (U1.2, U2.1)",
                             ),
+                        )
+                    else:
+                        self.assertEqual(findings, ())
+        await self._check_surface_registration()
+
+    async def test_channel_labelled_generic_uart_connector_review_matches_cli_and_mcp(
+        self,
+    ) -> None:
+        for split_reference in (True, False):
+            case = "split-reference-fault" if split_reference else "common-reference-control"
+            with self.subTest(case=case):
+                observed = serial_label_connector_reference_netlist(
+                    split_references=split_reference
+                )
+                self._write_native_evidence(
+                    missing_array=False,
+                    netlist_xml=contract_netlist_xml(observed),
+                )
+                base_contract = self._project_contract()
+                write_model(
+                    self.island / "tests" / "contract.json",
+                    base_contract.model_copy(
+                        update={
+                            "validation": base_contract.validation.model_copy(
+                                update={
+                                    "components": observed.components,
+                                    "nets": observed.nets,
+                                }
+                            )
+                        }
+                    ),
+                )
+                write_model(
+                    self.island / "tests" / "electrical.json",
+                    electrical_contract().model_copy(update={"serial_peers": None}),
+                )
+
+                async with Client(create_server(self.root), mode="legacy") as client:
+                    lint_report = await self._inspect_both_surfaces(client)
+                    findings = tuple(
+                        item
+                        for item in lint_report.findings
+                        if item.rule_id == "bus.serial_peer_reference_review"
+                    )
+                    if split_reference:
+                        self.assertEqual(len(findings), 1)
+                        self.assertEqual(
+                            findings[0].subject,
+                            "J1 / U1: serial reference-domain review",
+                        )
+                        self.assertEqual(
+                            findings[0].evidence["serial_label_link_assignments"],
+                            ("uart0: TX UART.0.TX (J1.1, U1.1); RX UART.0.RX (J1.2, U1.2)",),
                         )
                     else:
                         self.assertEqual(findings, ())

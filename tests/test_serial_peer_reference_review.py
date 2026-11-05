@@ -9,6 +9,9 @@ from kicad_tooling.hwrepo.models import DesignLintPolicy, DesignLintRuleOverride
 from kicad_tooling.hwrepo.serial_peer_reference_review import (
     unmapped_serial_peer_reference_reviews,
 )
+from tests.design_lint_fixtures.digital_peer_serial import (
+    serial_label_connector_reference_netlist,
+)
 from tests.reference_pin_role_support import with_unspecified_reference_pins
 from tests.serial_peer_reference_multichannel_support import (
     multi_channel_labelled_serial_reference_netlist,
@@ -242,6 +245,33 @@ class SerialPeerReferenceReviewTests:
         )
         assert (unmapped_serial_peer_reference_reviews(source)) == (())
         assert not (any(item.rule_id == RULE_ID for item in report(source).findings))
+
+    def test_channel_labelled_generic_ic_to_connector_pair_reviews_split_references(self) -> None:
+        source = serial_label_connector_reference_netlist(split_references=True)
+
+        (candidate,) = unmapped_serial_peer_reference_reviews(source)
+        assert {candidate.first_reference, candidate.second_reference} == {"J1", "U1"}
+        assert len(candidate.label_links) == 1
+        assert {candidate.first_reference_domain.net, candidate.second_reference_domain.net} == {
+            "GND_A",
+            "GND_B",
+        }
+
+        findings = [item for item in report(source).findings if item.rule_id == RULE_ID]
+        assert len(findings) == 1
+        assert findings[0].mode == "review"
+        assert findings[0].subject == "J1 / U1: serial reference-domain review"
+        assert findings[0].evidence["serial_label_link_assignments"] == (
+            "uart0: TX UART.0.TX (J1.1, U1.1); RX UART.0.RX (J1.2, U1.2)",
+        )
+
+    def test_channel_labelled_generic_ic_to_connector_pair_with_common_reference_is_quiet(
+        self,
+    ) -> None:
+        source = serial_label_connector_reference_netlist(split_references=False)
+
+        assert not unmapped_serial_peer_reference_reviews(source)
+        assert not any(item.rule_id == RULE_ID for item in report(source).findings)
 
     def test_three_channel_labelled_ic_pair_groups_split_reference_review(self) -> None:
         source = multi_channel_labelled_serial_reference_netlist()

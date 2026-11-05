@@ -1,6 +1,6 @@
 # Native UART connector-reference fixtures
 
-These five schematics are synthetic test inputs owned by KiCad-Tooling. They
+These seven schematics are synthetic test inputs owned by KiCad-Tooling. They
 contain no customer or private project data.
 
 `serial-connector-fault.kicad_sch` directly connects U1's UART TX/RX pins to
@@ -62,6 +62,21 @@ Fixture source SHA-256 values:
   `a0ac8548431af625c5116c1d456e4f2c6cf1714e58cca84c6fe595165d87c561`
 - `serial-label-fault.kicad_sch`:
   `2006adbfa6c6f1c99e88e3320a1ed7230f01a02f5e143c16a946abaa34f9db20`
+
+`serial-label-connector-fault.kicad_sch` and
+`serial-label-connector-control.kicad_sch` extend the same synthetic generic-pin
+UART label case to a direct U1-to-J1 segment. The only difference between the
+pair is whether U1.4 and J1.4 share `GND_A` or use `GND_A` and `GND_B`. Since
+the channel labels are the only peer clue, this checks that the bounded label
+path recognizes connector candidates without assuming their references must be
+common. The KiCad 10.0.0/10.0.5 lane requires one reference review on the split
+case and none on the common-return control, with repeatable normalized native
+netlists.
+
+- `serial-label-connector-control.kicad_sch`:
+  `9b9febbc2e61399ece1f33502eae3807336d7519f4c41312c3cd8d913f56a051`
+- `serial-label-connector-fault.kicad_sch`:
+  `c9e6d76e9545b49e7713f5942dab34de639727d777ee67874635156bb8303cf5`
 
 `serial-optical-isolation-control.kicad_sch` is a synthetic two-direction UART
 link with a dual-channel optical isolator. The host and target UARTs each have

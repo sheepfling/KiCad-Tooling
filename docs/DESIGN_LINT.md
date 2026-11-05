@@ -5398,10 +5398,13 @@ actual rail voltages or electrical compatibility.
 TX-to-RX link includes fitted U/IC parts or connector candidates identified by
 the bounded connector scan or a project interface review. It also recognizes a
 numbered `UART` or `USART` TX/RX label pair when both nets directly join exactly
-one pin from the same two fitted U/IC components. This second path can find
-generic pins such as `B1`, `B2`, or `ADBUS0` that native TX/RX function matching
-misses. It does not treat those labels as proof of an end-to-end peer or trace
-through other components.
+one pin from the same two fitted U/IC components or bounded connector
+candidates. This second path can find generic pins such as `B1`, `B2`, or
+`ADBUS0` that native TX/RX function matching misses. It does not treat those
+labels as proof of an end-to-end peer or trace through other components. A
+connector endpoint must be recognized by the bounded connector scan or an
+exact project interface review; an arbitrary component is not accepted as a
+connector endpoint.
 
 Both paths require complete native pin metadata and explicit signal-reference
 pins assigned to different native nets. Each endpoint must have one unambiguous
@@ -5431,7 +5434,12 @@ The source-bound report includes `serial_peer_reference_coverage` for this
 rule. Its `NO_DIRECT_PEERS`, `INCOMPLETE`, and `EVALUATED` status distinguishes
 no discovered direct links from links whose explicit reference-pin evidence is
 incomplete and links the heuristic could compare. Counts separate native
-function matches from exact numbered UART/USART label matches, then show
+function matches from exact numbered UART/USART label matches. Label matches
+require exactly two fitted endpoints on each of one TX and one RX net, each
+endpoint appearing once per net, and a matching channel number. For connector
+endpoints, the connector identity only bounds which symbol may be considered;
+the channel labels remain a review clue and do not establish that the ports
+should share a return. The report then shows
 supported common-reference and separate-reference links, exact-map-covered
 separate links, and emitted review groups. The report binds these counts to the
 native netlist hash and records the authored map state and available source and

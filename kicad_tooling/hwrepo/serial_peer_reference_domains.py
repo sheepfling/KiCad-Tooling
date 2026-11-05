@@ -118,14 +118,17 @@ def reference_domain(
 
 
 def labelled_direct_peer_links(
-    observed: NetlistContract, index: SerialPeerPinIndex
+    observed: NetlistContract,
+    index: SerialPeerPinIndex,
+    connector_references: AbstractSet[str] = frozenset(),
 ) -> tuple[SerialLabelPeerLink, ...]:
-    """Find exact UART/USART label pairs directly connecting the same two ICs.
+    """Find exact UART/USART label pairs directly connecting bounded endpoints.
 
     Labels are only a discovery clue. Each TX and RX net must contain exactly
-    one pin on each of the same two fitted U/IC components. No connector or
-    multi-hop path is inferred here.
+    one pin on each of the same two fitted U/IC components or recognized
+    connector candidates. No multi-hop path is inferred here.
     """
+    connector_keys = {reference.casefold() for reference in connector_references}
     by_channel_and_pair: dict[tuple[str, tuple[str, str]], _SerialLabelChannelAssignments] = {}
 
     for net, pins in sorted(observed.nets.items(), key=lambda item: item[0].casefold()):
@@ -148,7 +151,9 @@ def labelled_direct_peer_links(
                 not separator
                 or not number
                 or canonical_reference is None
-                or not _IC_REFERENCE.fullmatch(canonical_reference)
+                or not (
+                    _IC_REFERENCE.fullmatch(canonical_reference) or reference_key in connector_keys
+                )
                 or reference_key in index.dnp_references
                 or index.pin_nets.get(pin_key, frozenset()) != frozenset({net})
                 or function is None

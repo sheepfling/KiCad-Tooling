@@ -111,6 +111,43 @@ def serial_label_reference_netlist(*, split_references: bool) -> NetlistContract
     )
 
 
+def serial_label_connector_reference_netlist(*, split_references: bool) -> NetlistContract:
+    """Use generic channel-labeled pins between an IC and a bounded J connector."""
+    source = serial_label_reference_netlist(split_references=True)
+
+    def connector_pin(pin: str) -> str:
+        return pin.replace("U2.", "J1.", 1)
+
+    nets = {
+        net: tuple(sorted(connector_pin(pin) for pin in pins)) for net, pins in source.nets.items()
+    }
+    if not split_references:
+        nets["GND_A"] = tuple(sorted((*nets["GND_A"], *nets.pop("GND_B"))))
+
+    return source.model_copy(
+        update={
+            "components": {"U1": source.components["U1"], "J1": source.components["U2"]},
+            "nets": nets,
+            "component_symbols": {
+                "U1": source.component_symbols["U1"],
+                "J1": source.component_symbols["U2"],
+            },
+            "pin_functions": {
+                pin.replace("U2.", "J1.", 1) if pin.startswith("U2.") else pin: function
+                for pin, function in source.pin_functions.items()
+            },
+            "pin_electrical_types": {
+                pin.replace("U2.", "J1.", 1) if pin.startswith("U2.") else pin: kind
+                for pin, kind in source.pin_electrical_types.items()
+            },
+            "component_pin_numbers": {
+                "U1": source.component_pin_numbers["U1"],
+                "J1": source.component_pin_numbers["U2"],
+            },
+        }
+    )
+
+
 def serial_optically_isolated_uart_netlist() -> NetlistContract:
     """Model a two-channel optical boundary between independently grounded UARTs."""
     return NetlistContract(

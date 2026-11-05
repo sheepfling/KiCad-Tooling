@@ -118,7 +118,7 @@ class SerialPeerReferenceLinkCoverage:
 
 @dataclass(frozen=True, slots=True)
 class SerialLabelPeerLink:
-    """Direct two-IC UART segment identified by an exact TX/RX channel label pair."""
+    """Direct bounded-endpoint UART segment identified by exact TX/RX labels."""
 
     channel: str
     tx_net: str
