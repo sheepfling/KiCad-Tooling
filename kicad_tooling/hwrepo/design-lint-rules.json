@@ -9976,6 +9976,50 @@
       ]
     },
     {
+      "rule_id": "interface.signal_divider_input_range_mismatch",
+      "title": "Mapped signal divider differs from the authored receiver input range",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Project-authored receiver and two-resistor map compared with source-bound KiCad 10 native XML netlist evidence",
+      "predicate": "For an explicitly mapped positive-source, two-resistor divider feeding a named high-impedance receiver pin, report changed component identity, missing or not-fitted mapped components, wrong receiver function or electrical type, changed source/tap/reference net assignments, an additional recognized fitted direct resistor touching the input node, unsupported or out-of-authored-range nominal resistor values, or a calculated nominal input interval outside the authored target.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The rule runs only for project-authored single-ended positive-source two-resistor maps; it does not infer dividers from resistor values, reference prefixes, net names, or symbol descriptions.",
+        "The nominal calculation assumes an unloaded high-impedance input. It does not model receiver leakage, resistor tolerance, source impedance, protection leakage, transient behavior, or analog accuracy.",
+        "Only recognized direct fitted resistor branches on the mapped tap are treated as additional loading. Resistor arrays, alternate topologies, and unseen paths remain outside coverage; schematic net assignments do not prove PCB copper continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_signal_divider_contract.test_wrong_nominal_divider_value_reports_source_bound_overrange",
+        "tests.test_signal_divider_contract.test_incomplete_or_loaded_topology_is_coverage_gap",
+        "tests.test_design_lint_mcp_parity_signal_divider.test_signal_divider_map_cli_mcp_parity",
+        "tests.test_signal_divider_native_fixture_lane.test_native_signal_divider_faults_and_control_are_source_bound"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_signal_divider_contract.test_exact_project_map_reports_valid_signal_divider_control",
+        "tests.test_signal_divider_contract.test_no_authored_map_is_not_requested_or_inferred_from_two_resistors",
+        "tests.test_design_lint_mcp_parity_signal_divider.test_signal_divider_map_cli_mcp_parity",
+        "tests.test_signal_divider_native_fixture_lane.test_native_signal_divider_faults_and_control_are_source_bound"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_signal_divider_contract.test_finding_fingerprint_is_stable_under_netlist_order_changes"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/signal_dividers.py#scan_signal_divider_map",
+        "kicad_tooling/hwrepo/design_lint_signal_divider_candidates.py#signal_divider_candidates",
+        "kicad_tooling/hwrepo/design_lint_signal_divider_evidence.py#project_signal_divider_evidence",
+        "kicad_tooling/hwrepo/signal_divider_models.py#SignalDividerMap"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/signal_dividers.py#scan_signal_divider_map",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SIGNAL_DIVIDER_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "filter.rc_corner_mismatch",
       "title": "Mapped first-order RC filter differs from the authored requirement",
       "status": "active",

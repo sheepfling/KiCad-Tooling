@@ -215,6 +215,7 @@ DesignLintRuleId = Literal[
     "bus.usb_signal_on_named_rail",
     "mcu.stm32_cubemx_pin_map",
     "signal.named_pair_without_reviewed_requirement",
+    "interface.signal_divider_input_range_mismatch",
     "protection.unreviewed_interface_pin",
     "protection.mapped_device_mismatch",
     "oscillator.crystal_load_network_mismatch",

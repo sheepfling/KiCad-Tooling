@@ -67,6 +67,7 @@ def candidate_inputs(
             external_protection=None,
             crystal_network=None,
             regulator_feedback=None,
+            signal_divider=None,
             rc_filter=None,
         ),
         pcb=PcbCandidateInputs(

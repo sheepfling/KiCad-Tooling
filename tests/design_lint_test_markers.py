@@ -36,6 +36,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_architecture_rule_selectors.py",
                 "tests/test_design_lint_architecture_serial_endpoint_role_collision.py",
                 "tests/test_design_lint_architecture_named_rail_protocols.py",
+                "tests/test_design_lint_architecture_signal_divider.py",
             }
         ),
         "schematic_lint": frozenset(
@@ -185,6 +186,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_connectivity_reconciliation.py",
                 "tests/test_design_lint_connectivity_snapshot_inspection.py",
                 "tests/test_design_lint_mcp_parity_reconciliation.py",
+                "tests/test_design_lint_mcp_parity_signal_divider.py",
                 "tests/test_contract_coach_capture.py",
                 "tests/test_contract_coach_evidence.py",
                 "tests/test_empty_netlist_evidence_native_fixture_lane.py",

@@ -106,6 +106,7 @@ from .schematic_geometry import (
 )
 from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_types import SerialPeerReferenceScan
+from .signal_divider_models import SignalDividerCoverageReport
 from .spi_participants import SpiRosterContext
 from .spi_peer_reference_scan import SpiPeerReferenceScan
 from .stm32_pin_map_models import Stm32PinMapCoverageReport
@@ -146,6 +147,7 @@ def candidates(
     external_protection_coverage: ExternalProtectionCoverageReport | None = None,
     crystal_network_coverage: CrystalNetworkCoverageReport | None = None,
     regulator_feedback_coverage: RegulatorFeedbackCoverageReport | None = None,
+    signal_divider_coverage: SignalDividerCoverageReport | None = None,
     rc_filter_coverage: RcFilterCoverageReport | None = None,
     connector_return_distribution: ConnectorReturnDistributionCoverageReport | None = None,
     pcb_decoupling_coverage: PcbDecouplingCoverageReport | None = None,
@@ -247,6 +249,7 @@ def candidates(
                 external_protection=external_protection_coverage,
                 crystal_network=crystal_network_coverage,
                 regulator_feedback=regulator_feedback_coverage,
+                signal_divider=signal_divider_coverage,
                 rc_filter=rc_filter_coverage,
             ),
             pcb=PcbCandidateInputs(

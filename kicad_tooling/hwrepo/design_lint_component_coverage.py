@@ -24,6 +24,8 @@ from .rc_filter_models import RcFilterCoverageReport, RcFilterMap
 from .rc_filters import scan_rc_filter_map
 from .regulator_feedback import scan_regulator_feedback_map
 from .regulator_feedback_models import RegulatorFeedbackCoverageReport, RegulatorFeedbackMap
+from .signal_divider_models import SignalDividerCoverageReport, SignalDividerMap
+from .signal_dividers import scan_signal_divider_map
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,6 +35,7 @@ class ComponentMapCoverage:
     i2c_address: I2cAddressCoverageReport
     crystal_network: CrystalNetworkCoverageReport
     regulator_feedback: RegulatorFeedbackCoverageReport
+    signal_divider: SignalDividerCoverageReport
     rc_filter: RcFilterCoverageReport
     connector_return_distribution: ConnectorReturnDistributionCoverageReport
 
@@ -45,6 +48,7 @@ class ComponentMapCoverageInputs:
     i2c_address_coverage: I2cAddressCoverageReport | None = None
     crystal_network_coverage: CrystalNetworkCoverageReport | None = None
     regulator_feedback_coverage: RegulatorFeedbackCoverageReport | None = None
+    signal_divider_coverage: SignalDividerCoverageReport | None = None
     rc_filter_coverage: RcFilterCoverageReport | None = None
     connector_return_distribution_coverage: ConnectorReturnDistributionCoverageReport | None = None
 
@@ -69,6 +73,7 @@ def resolve_component_map_coverage(request: ComponentMapCoverageRequest) -> Comp
     i2c_address_coverage = inputs.i2c_address_coverage
     crystal_network_coverage = inputs.crystal_network_coverage
     regulator_feedback_coverage = inputs.regulator_feedback_coverage
+    signal_divider_coverage = inputs.signal_divider_coverage
     rc_filter_coverage = inputs.rc_filter_coverage
     connector_return_distribution_coverage = inputs.connector_return_distribution_coverage
 
@@ -166,6 +171,36 @@ def resolve_component_map_coverage(request: ComponentMapCoverageRequest) -> Comp
         regulator_feedback_coverage = RegulatorFeedbackCoverageReport(
             status="BLOCKED", netlist_sha256=regulator_feedback_coverage.netlist_sha256, issue=issue
         )
+    if signal_divider_coverage is None:
+        divider_map: SignalDividerMap | None = policy.signal_divider_map
+        if divider_map is None:
+            signal_divider_coverage = SignalDividerCoverageReport()
+        elif netlist_sha256 is None:
+            signal_divider_coverage = SignalDividerCoverageReport(
+                status="BLOCKED",
+                issue="Source-bound native netlist hash is unavailable for signal-divider review",
+            )
+        else:
+            try:
+                signal_divider_coverage = scan_signal_divider_map(
+                    divider_map, observed, netlist_sha256
+                )
+            except (OSError, ValueError, TypeError) as exc:
+                signal_divider_coverage = SignalDividerCoverageReport(
+                    status="BLOCKED",
+                    netlist_sha256=netlist_sha256,
+                    issue=f"Could not compare the signal-divider map with native evidence: {exc}",
+                )
+    issue = _stale_netlist_coverage_issue(
+        signal_divider_coverage.status,
+        signal_divider_coverage.netlist_sha256,
+        netlist_sha256,
+        "Signal-divider",
+    )
+    if issue is not None:
+        signal_divider_coverage = SignalDividerCoverageReport(
+            status="BLOCKED", netlist_sha256=signal_divider_coverage.netlist_sha256, issue=issue
+        )
     if rc_filter_coverage is None:
         filter_map: RcFilterMap | None = policy.rc_filter_map
         if filter_map is None:
@@ -249,6 +284,7 @@ def resolve_component_map_coverage(request: ComponentMapCoverageRequest) -> Comp
         i2c_address=i2c_address_coverage,
         crystal_network=crystal_network_coverage,
         regulator_feedback=regulator_feedback_coverage,
+        signal_divider=signal_divider_coverage,
         rc_filter=rc_filter_coverage,
         connector_return_distribution=connector_return_distribution_coverage,
     )

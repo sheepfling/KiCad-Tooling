@@ -780,7 +780,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 261 active rules.
+The catalog currently contains 262 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -2584,6 +2584,89 @@ findings, so this gate does not require the aggregate design-lint report to be
 PASS. The fixtures do not validate an actual regulator, datasheet, or analog
 performance. See the native fixture README and its case table:
 [README](../tests/fixtures/design_lint/regulator-feedback-native/README.md).
+
+## Review a mapped signal-input divider
+
+`interface.signal_divider_input_range_mismatch` evaluates only entries in the
+project's `design_lint.signal_divider_map`. Each entry names the receiver and
+its native input pin, both resistor identities and terminals, source/tap/
+reference nets, source and receiver voltage intervals, acceptable nominal
+resistor ranges, and the review basis. Without this map, the tool does not
+infer a divider from two resistors, component references, or net names.
+
+```json
+{
+  "design_lint": {
+    "signal_divider_map": {
+      "basis": "Reviewed synthetic sensor and ADC limits",
+      "dividers": [
+        {
+          "id": "battery-monitor",
+          "receiver_reference": "U1",
+          "expected_receiver_value": "SYNTH-ANALOG",
+          "expected_receiver_symbol": "Synthetic:AnalogMonitor",
+          "expected_receiver_footprint": "Synthetic:SOIC-8",
+          "receiver_pin": "U1.2",
+          "expected_receiver_pin_function": "ADC_IN",
+          "source_net": "SENSOR_OUT",
+          "input_net": "ADC_IN",
+          "reference_net": "GND",
+          "upper_resistor": {
+            "reference": "R1",
+            "expected_symbol": "Device:R",
+            "expected_footprint": "Synthetic:0603",
+            "divider_pin": "R1.2",
+            "outer_pin": "R1.1",
+            "minimum_nominal_resistance_ohms": 210000.0,
+            "maximum_nominal_resistance_ohms": 230000.0
+          },
+          "lower_resistor": {
+            "reference": "R2",
+            "expected_symbol": "Device:R",
+            "expected_footprint": "Synthetic:0603",
+            "divider_pin": "R2.1",
+            "outer_pin": "R2.2",
+            "minimum_nominal_resistance_ohms": 32000.0,
+            "maximum_nominal_resistance_ohms": 34000.0
+          },
+          "minimum_source_voltage_v": 24.0,
+          "maximum_source_voltage_v": 24.0,
+          "minimum_input_voltage_v": 3.0,
+          "maximum_input_voltage_v": 3.3,
+          "basis": "Reviewed synthetic sensor maximum and receiver input interval"
+        }
+      ]
+    }
+  }
+}
+```
+
+For each mapped divider, the checker compares exact component identities, fitted
+state, native receiver pin function/type, terminal inventory, and net
+assignments. It parses the nominal resistor values and calculates
+`Vinput = Vsource * Rlower / (Rupper + Rlower)`. A changed or unsupported
+topology becomes incomplete coverage; a nominal resistor value or calculated
+input interval outside the authored limits produces a review finding. The
+default mode is `review`; project policy can set the rule to `block`, `off`, or
+ignore an exact fingerprint. Rule-off and ignored findings remain visible in
+the report.
+
+The nominal calculation assumes a positive source and an unloaded, high-
+impedance input. It does not account for resistor tolerance, receiver leakage,
+source impedance, protection leakage, transients, analog accuracy, or PCB
+copper connectivity. An ERC-clean schematic export cannot verify the physical
+return path. The tooling-owned synthetic fault/control cases do not represent a
+product board. The native fixtures repeat with digest-pinned KiCad 10.0.0 and
+10.0.5; the CLI and MCP reports use the same typed service.
+
+```sh
+.venv/bin/python -I -m pytest -q tests/test_signal_divider_contract.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="interface.signal_divider_input_range_mismatch")'
+
+KICAD_RUN_NATIVE_SIGNAL_DIVIDER_FIXTURES=1 \
+  .venv/bin/python -I -m pytest -q tests/test_signal_divider_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="interface.signal_divider_input_range_mismatch")'
+```
 
 ## Review a mapped first-order RC filter
 

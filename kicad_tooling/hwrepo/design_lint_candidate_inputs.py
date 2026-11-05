@@ -21,6 +21,7 @@ from .netlist_contract_models import NetlistContract
 from .rc_filter_models import RcFilterCoverageReport
 from .regulator_feedback_models import RegulatorFeedbackCoverageReport
 from .schematic_geometry import SchematicGeometryScan
+from .signal_divider_models import SignalDividerCoverageReport
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +49,7 @@ class MappedCandidateInputs:
     external_protection: ExternalProtectionCoverageReport | None
     crystal_network: CrystalNetworkCoverageReport | None
     regulator_feedback: RegulatorFeedbackCoverageReport | None
+    signal_divider: SignalDividerCoverageReport | None
     rc_filter: RcFilterCoverageReport | None
 
 

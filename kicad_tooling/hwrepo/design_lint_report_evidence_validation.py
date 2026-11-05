@@ -23,6 +23,7 @@ from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 from .rc_filter_models import RcFilterCoverageReport
 from .regulator_feedback_models import RegulatorFeedbackCoverageReport
+from .signal_divider_models import SignalDividerCoverageReport
 
 
 def validate_source_bound_evidence(
@@ -46,12 +47,15 @@ def validate_source_bound_evidence(
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport,
     pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport,
     mapped_check_runs: tuple[DesignLintMappedCheckRun, ...],
+    signal_divider_coverage: SignalDividerCoverageReport | None = None,
 ) -> None:
     protection_issue = external_protection_netlist_binding_issue(
         external_protection_coverage, netlist_sha256
     )
     if protection_issue is not None:
         raise ValueError(protection_issue)
+    if signal_divider_coverage is None:
+        signal_divider_coverage = SignalDividerCoverageReport()
     if findings_complete and external_protection_coverage.status in {
         "COMPLETE",
         "INCOMPLETE",
@@ -74,6 +78,7 @@ def validate_source_bound_evidence(
         ("I2C address", i2c_address_coverage),
         ("Crystal network", crystal_network_coverage),
         ("Regulator feedback", regulator_feedback_coverage),
+        ("Signal divider", signal_divider_coverage),
         ("RC filter", rc_filter_coverage),
         ("Connector return-distribution", connector_return_distribution),
     ):
@@ -96,6 +101,11 @@ def validate_source_bound_evidence(
                 "Regulator feedback",
                 regulator_feedback_coverage,
                 "power.regulator_feedback_mismatch",
+            ),
+            (
+                "Signal divider",
+                signal_divider_coverage,
+                "interface.signal_divider_input_range_mismatch",
             ),
             ("RC filter", rc_filter_coverage, "filter.rc_corner_mismatch"),
         ):

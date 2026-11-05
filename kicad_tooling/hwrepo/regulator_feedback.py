@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
 
 from .casefold_mapping_lookup import lookup_unique_casefold as _lookup
+from .component_source_identity import component_identity_issues
 from .netlist_contract_models import NetlistContract
 from .netlist_pin_assignments import netlist_pin_inventory_contains, netlist_pin_net_index
 from .regulator_feedback_models import (
@@ -19,35 +20,7 @@ from .resistor_paths import (
     direct_resistors,
     resistance_ohms,
 )
-
-
-def _component_identity(
-    observed: NetlistContract,
-    reference: str,
-    expected_value: str | None,
-    expected_symbol: str,
-    expected_footprint: str,
-) -> tuple[bool, tuple[str, ...]]:
-    issues: list[str] = []
-    component = _lookup(observed.components, reference)
-    symbol = _lookup(observed.component_symbols, reference)
-    if component is None:
-        issues.append(f"Mapped component {reference} is missing or ambiguous in the native netlist")
-        return False, tuple(issues)
-    valid = True
-    if expected_value is not None and component.value != expected_value:
-        issues.append(f"{reference} value is {component.value}; expected {expected_value}")
-        valid = False
-    if symbol != expected_symbol:
-        issues.append(f"{reference} symbol is {symbol or '<unknown>'}; expected {expected_symbol}")
-        valid = False
-    if component.footprint != expected_footprint:
-        issues.append(
-            f"{reference} footprint is {component.footprint or '<empty>'}; "
-            f"expected {expected_footprint}"
-        )
-        valid = False
-    return valid, tuple(issues)
+from .voltage_divider_math import divider_tap_fraction
 
 
 def _entry(
@@ -57,7 +30,7 @@ def _entry(
     dnp_references: AbstractSet[str],
 ) -> RegulatorFeedbackCoverageEntry:
     issues: list[str] = []
-    identity_valid, identity_issues = _component_identity(
+    identity_issues = component_identity_issues(
         observed,
         requirement.regulator_reference,
         requirement.expected_regulator_value,
@@ -65,8 +38,9 @@ def _entry(
         requirement.expected_regulator_footprint,
     )
     issues.extend(identity_issues)
+    identity_valid = not identity_issues
     for resistor in (requirement.upper_resistor, requirement.lower_resistor):
-        resistor_valid, identity_issues = _component_identity(
+        identity_issues = component_identity_issues(
             observed,
             resistor.reference,
             None,
@@ -74,7 +48,7 @@ def _entry(
             resistor.expected_footprint,
         )
         issues.extend(identity_issues)
-        identity_valid = resistor_valid and identity_valid
+        identity_valid = not identity_issues and identity_valid
 
     mapped_references = (
         requirement.regulator_reference,
@@ -225,14 +199,14 @@ def _entry(
     calculation_valid = True
     if identity_valid and pins_valid and nets_valid and values_valid and len(nominal_values) == 2:
         try:
-            ratio = (
-                1.0
-                + nominal_values[requirement.upper_resistor.reference]
-                / nominal_values[requirement.lower_resistor.reference]
+            tap_fraction = divider_tap_fraction(
+                nominal_values[requirement.upper_resistor.reference],
+                nominal_values[requirement.lower_resistor.reference],
             )
+            ratio = 1.0 / tap_fraction
             minimum = requirement.minimum_feedback_reference_voltage_v * ratio
             maximum = requirement.maximum_feedback_reference_voltage_v * ratio
-        except OverflowError:
+        except (OverflowError, ValueError):
             calculation_valid = False
         else:
             if not math.isfinite(minimum) or not math.isfinite(maximum):

@@ -35,6 +35,7 @@ def assemble_design_lint_report(
     external_protection_coverage = context.external_protection_coverage
     crystal_network_coverage = context.crystal_network_coverage
     regulator_feedback_coverage = context.regulator_feedback_coverage
+    signal_divider_coverage = context.signal_divider_coverage
     rc_filter_coverage = context.rc_filter_coverage
     connector_return_distribution_coverage = context.connector_return_distribution_coverage
     pcb_decoupling_coverage = context.pcb_decoupling_coverage
@@ -74,6 +75,7 @@ def assemble_design_lint_report(
         or external_protection_coverage.status == "BLOCKED"
         or crystal_network_coverage.status == "BLOCKED"
         or regulator_feedback_coverage.status == "BLOCKED"
+        or signal_divider_coverage.status == "BLOCKED"
         or rc_filter_coverage.status == "BLOCKED"
         or connector_return_distribution_coverage.status == "BLOCKED"
         or pcb_decoupling_coverage.status == "BLOCKED"
@@ -99,6 +101,7 @@ def assemble_design_lint_report(
         or i2c_address_coverage.status == "INCOMPLETE"
         or crystal_network_coverage.status == "INCOMPLETE"
         or regulator_feedback_coverage.status == "INCOMPLETE"
+        or signal_divider_coverage.status == "INCOMPLETE"
         or rc_filter_coverage.status == "INCOMPLETE"
         or connector_return_distribution_coverage.status == "INCOMPLETE"
         or (connector_coverage is not None and connector_coverage.status != "COMPLETE")
@@ -137,6 +140,7 @@ def assemble_design_lint_report(
             if regulator_feedback_coverage.issue is None
             else (regulator_feedback_coverage.issue,)
         )
+        + (() if signal_divider_coverage.issue is None else (signal_divider_coverage.issue,))
         + (() if rc_filter_coverage.issue is None else (rc_filter_coverage.issue,))
         + (
             ()
@@ -236,6 +240,15 @@ def assemble_design_lint_report(
         actions += (feedback_coverage_action,)
     if regulator_feedback_coverage.status == "BLOCKED":
         actions += ("Repair source-bound regulator feedback evidence, then rerun design lint.",)
+    if signal_divider_coverage.status == "INCOMPLETE":
+        actions += (
+            (
+                "Review mapped signal-divider identities, pin assignments, fitted state, and nominal "
+                "input range against the project requirement."
+            ),
+        )
+    if signal_divider_coverage.status == "BLOCKED":
+        actions += ("Repair source-bound signal-divider evidence, then rerun design lint.",)
     if rc_filter_coverage.status == "INCOMPLETE":
         actions += (
             (
@@ -407,6 +420,7 @@ def assemble_design_lint_report(
         external_protection_coverage=external_protection_coverage,
         crystal_network_coverage=crystal_network_coverage,
         regulator_feedback_coverage=regulator_feedback_coverage,
+        signal_divider_coverage=signal_divider_coverage,
         rc_filter_coverage=rc_filter_coverage,
         connector_return_distribution=connector_return_distribution_coverage,
         pcb_decoupling=pcb_decoupling_coverage,

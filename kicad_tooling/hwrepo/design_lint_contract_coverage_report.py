@@ -245,6 +245,37 @@ def contract_coverage_report_lines(report: DesignLintReport) -> list[str]:
     if feedback_coverage.issue is not None:
         lines.append(f"  Coverage issue: {feedback_coverage.issue}")
 
+    divider_coverage = report.signal_divider_coverage
+    lines.append(f"Signal-divider coverage: {divider_coverage.status}")
+    if divider_coverage.netlist_sha256 is not None:
+        lines.append(f"  Native netlist SHA-256: {divider_coverage.netlist_sha256}")
+    lines.append(f"  Scope: {divider_coverage.scope}")
+    for entry in divider_coverage.entries:
+        lines.append(
+            f"  {entry.status} divider {entry.id} on {entry.receiver_reference}: "
+            f"{entry.source_net} -> {entry.input_net} -> {entry.reference_net}"
+        )
+        for pin, nets in sorted(entry.pin_nets.items()):
+            lines.append(f"    {pin}: {', '.join(nets) or '<unconnected>'}")
+        for reference, value in sorted(entry.nominal_resistance_ohms.items()):
+            lines.append(f"    {reference}: {value:g} Ω nominal")
+        if (
+            entry.calculated_input_minimum_v is not None
+            and entry.calculated_input_maximum_v is not None
+        ):
+            lines.append(
+                "    Calculated nominal input: "
+                f"{entry.calculated_input_minimum_v:g}–{entry.calculated_input_maximum_v:g} V; "
+                f"target {entry.target_input_minimum_v:g}–{entry.target_input_maximum_v:g} V"
+            )
+        lines.append(f"    Source range: {entry.source_minimum_v:g}–{entry.source_maximum_v:g} V")
+        lines.append(f"    Formula: {entry.formula}")
+        lines.append(f"    Basis: {entry.basis}")
+        for issue in entry.issues:
+            lines.append(f"    Issue: {issue}")
+    if divider_coverage.issue is not None:
+        lines.append(f"  Coverage issue: {divider_coverage.issue}")
+
     filter_coverage = report.rc_filter_coverage
 
     lines.append(f"RC filter coverage: {filter_coverage.status}")

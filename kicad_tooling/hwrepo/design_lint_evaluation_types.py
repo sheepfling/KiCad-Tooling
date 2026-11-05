@@ -72,6 +72,7 @@ from .rs485_peer_reference_models import Rs485PeerReferenceCoverageReport
 from .schematic_geometry import SchematicGeometryScan
 from .schematic_geometry_models import SchematicGeometryCoverage
 from .serial_peer_reference_models import SerialPeerReferenceCoverageReport
+from .signal_divider_models import SignalDividerCoverageReport
 from .spi_participants import SpiRosterContext
 from .spi_peer_reference_models import SpiPeerReferenceCoverageReport
 from .stm32_pin_map_models import Stm32PinMapCoverageReport
@@ -114,6 +115,7 @@ class DesignLintResolvedCoverage:
     external_protection: ExternalProtectionCoverageReport
     crystal_network: CrystalNetworkCoverageReport
     regulator_feedback: RegulatorFeedbackCoverageReport
+    signal_divider: SignalDividerCoverageReport
     rc_filter: RcFilterCoverageReport
     connector_return_distribution: ConnectorReturnDistributionCoverageReport
     pcb_decoupling: PcbDecouplingCoverageReport
@@ -203,6 +205,7 @@ class DesignLintEvaluationReportInput:
     external_protection_coverage: ExternalProtectionCoverageReport
     crystal_network_coverage: CrystalNetworkCoverageReport
     regulator_feedback_coverage: RegulatorFeedbackCoverageReport
+    signal_divider_coverage: SignalDividerCoverageReport
     rc_filter_coverage: RcFilterCoverageReport
     connector_return_distribution_coverage: ConnectorReturnDistributionCoverageReport
     pcb_decoupling_coverage: PcbDecouplingCoverageReport

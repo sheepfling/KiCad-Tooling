@@ -52,6 +52,7 @@ from .regulator_feedback_models import RegulatorFeedbackCoverageReport
 from .rs485_peer_reference_models import Rs485PeerReferenceCoverageReport
 from .schematic_geometry_models import SchematicGeometryCoverage
 from .serial_peer_reference_models import SerialPeerReferenceCoverageReport
+from .signal_divider_models import SignalDividerCoverageReport
 from .spi_peer_reference_models import SpiPeerReferenceCoverageReport
 from .stm32_pin_map_models import Stm32PinMapCoverageReport
 from .usb_peer_reference_models import UsbPeerReferenceCoverageReport
@@ -60,7 +61,7 @@ from .usb_peer_reference_models import UsbPeerReferenceCoverageReport
 class DesignLintReport(StrictModel):
     """Source-bound heuristic findings; neither a pinout nor electrical approval."""
 
-    schema_version: Literal["1", "2", "3", "4", "5", "6", "7"] = "7"
+    schema_version: Literal["1", "2", "3", "4", "5", "6", "7", "8"] = "8"
     lane: Literal["DESIGN_LINT"] = "DESIGN_LINT"
     status: Literal["PASS", "REVIEW", "FAIL", "BLOCKED"]
     project_id: Identifier
@@ -106,6 +107,9 @@ class DesignLintReport(StrictModel):
     )
     regulator_feedback_coverage: RegulatorFeedbackCoverageReport = Field(
         default_factory=RegulatorFeedbackCoverageReport
+    )
+    signal_divider_coverage: SignalDividerCoverageReport = Field(
+        default_factory=SignalDividerCoverageReport
     )
     rc_filter_coverage: RcFilterCoverageReport = Field(default_factory=RcFilterCoverageReport)
     connector_return_distribution: ConnectorReturnDistributionCoverageReport = Field(
@@ -158,6 +162,7 @@ class DesignLintReport(StrictModel):
             external_protection_coverage=self.external_protection_coverage,
             crystal_network_coverage=self.crystal_network_coverage,
             regulator_feedback_coverage=self.regulator_feedback_coverage,
+            signal_divider_coverage=self.signal_divider_coverage,
             rc_filter_coverage=self.rc_filter_coverage,
             connector_return_distribution=self.connector_return_distribution,
             connector_interface_catalog_sha256=(

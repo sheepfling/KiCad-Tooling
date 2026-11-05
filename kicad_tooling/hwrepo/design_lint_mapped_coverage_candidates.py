@@ -11,6 +11,7 @@ from .design_lint_power_sequence_candidates import power_sequence_candidates
 from .design_lint_protection_candidates import protection_candidates
 from .design_lint_rc_filter_candidates import rc_filter_candidates
 from .design_lint_regulator_candidates import regulator_feedback_candidates
+from .design_lint_signal_divider_candidates import signal_divider_candidates
 from .design_lint_types import Candidate
 from .design_lint_usb_data_path_candidates import usb_data_path_candidates
 from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
@@ -85,6 +86,7 @@ def scan_mapped_coverage_candidates(
             *protection_candidates(inputs.coverage.external_protection),
             *crystal_network_candidates(inputs.coverage.crystal_network),
             *regulator_feedback_candidates(inputs.coverage.regulator_feedback),
+            *signal_divider_candidates(inputs.coverage.signal_divider),
             *rc_filter_candidates(inputs.coverage.rc_filter),
             *usb_data_path_candidates(
                 inputs.observed,

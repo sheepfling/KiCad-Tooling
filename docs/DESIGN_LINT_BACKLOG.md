@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 261 rules are implemented with synthetic regression coverage.
+The following 262 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 261 active rules.
+The catalog currently contains 262 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -657,6 +657,7 @@ skipped under prerelease policy.
 - `oscillator.crystal_load_network_mismatch`
 - `power.regulator_feedback_mismatch`
 - `power.regulator_required_passive_topology_mismatch`
+- `interface.signal_divider_input_range_mismatch`
 - `filter.rc_corner_mismatch`
 - `pcb.decoupling_proximity`
 - `pcb.protection_entry_path`
@@ -3462,7 +3463,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 261 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 262 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -14587,6 +14588,34 @@ control are documented in the
   including source-bound Docker fixtures on exact KiCad 10.0.0 and 10.0.5
   images; the public template checkout matched pinned commit
   `5ca79bedf665a9b6577d96b1d47f13ccd518c968`.
+
+#### LINT-281 — Compare mapped signal-divider input range
+
+- **Status:** Implemented as `interface.signal_divider_input_range_mismatch`,
+  default `review`. Projects can select `block`, `off`, or an exact-fingerprint
+  ignore.
+- **Gap:** A schematic can contain the expected two-resistor pattern yet use
+  the wrong nominal values, split the receiver tap, omit a fitted return leg,
+  or connect the wrong receiver pin. The existing regulator-feedback map only
+  covers adjustable regulator setpoints; it does not encode independent
+  sensor-to-ADC input limits.
+- **Predicate:** For each project-authored positive-source, single-ended
+  two-resistor map, compare receiver and resistor identities, pin inventory,
+  receiver input function/type, fitted state, exact source/tap/reference net
+  assignments, extra recognized direct resistors on the tap, nominal resistor
+  ranges, and the calculated nominal input interval.
+- **Boundary:** The map is the independently authored requirement; absent maps
+  remain `NOT_REQUESTED` and the tool does not infer dividers by naming or
+  resistor values. The estimate assumes a high-impedance input and does not
+  model tolerance, source impedance, receiver/protection leakage, transients,
+  analog accuracy, or PCB connectivity. It cannot determine whether two
+  observed grounds or signals should be joined.
+- **Evidence:** Tooling-owned synthetic tests cover an in-range control,
+  out-of-range value, split tap, DNP leg, identity/pin-type errors, extra load,
+  configuration overrides and ignores, stable fingerprints, and no-map
+  behavior. Source-hashed KiCad 10.0.0/10.0.5 fixtures cover control, value
+  fault, and split tap; a focused CLI/MCP parity test checks report equality.
+  The fixtures contain no product project data.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
