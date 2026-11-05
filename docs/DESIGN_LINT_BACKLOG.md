@@ -14403,6 +14403,12 @@ control are documented in the
   fixture exercises the fault and equal-label control through the shared typed
   service. Focused selection is `tests/test_open_drain_control_voltage.py`
   with `design_lint`, `interface_lint`, and `power_lint` markers.
+- **Hosted acceptance (2026-11-05):** Tag `v0.5.3rc430` passed GitHub Actions
+  run `42020887831`. The unit stage reported 36 passed and 6,861 deselected;
+  Ruff, Pyright, Rumdl, wheel/source-distribution checks, and the installed
+  wheel's external-template playtest passed. Package-release and preview jobs
+  were skipped under prerelease policy. This scoped run did not execute a
+  native KiCad export for LINT-278.
 - **Remaining:** Exact-version native schematic export and normalized-netlist
   evidence are not yet recorded for this rule. The rule remains default
   `review` and synthetic-validated until that lane is added.
