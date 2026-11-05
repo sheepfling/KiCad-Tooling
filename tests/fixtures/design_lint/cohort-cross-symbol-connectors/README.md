@@ -3,12 +3,12 @@
 These five tooling-owned schematics exercise connector role comparison after
 KiCad exports distinct library symbols into a native netlist.
 
-| Fixture                                   | USB-style and serial-style return pins                       | Same-function supply pins | Shield pin             | Expected lint result                                       |
-| ----------------------------------------- | ------------------------------------------------------------ | ------------------------- | ---------------------- | ---------------------------------------------------------- |
-| `cross-symbol-fault.kicad_sch`            | Separate named nets                                          | Separate named nets       | Separate `CHASSIS` net | `REVIEW` for return and supply groups                      |
-| `cross-symbol-open.kicad_sch`             | Serial return contact is unassigned                          | Shared named net          | Separate `CHASSIS` net | `REVIEW` for the return group, with the open pin localized |
-| `cross-symbol-control.kicad_sch`          | Shared named net                                             | Shared named net          | Separate `CHASSIS` net | `PASS`; the shield remains distinct                        |
-| `cross-symbol-compound-fault.kicad_sch`   | Separate named nets; functions `USB_GND` and `SERIAL_RETURN` | Separate `USB_VBUS` and `SERIAL_VBUS` nets | Separate `CHASSIS` net | `REVIEW` for return and compound supply groups             |
+| Fixture                                   | USB-style and serial-style return pins                       | Same-function supply pins                    | Shield pin             | Expected lint result                                       |
+| ----------------------------------------- | ------------------------------------------------------------ | -------------------------------------------- | ---------------------- | ---------------------------------------------------------- |
+| `cross-symbol-fault.kicad_sch`            | Separate named nets                                          | Separate named nets                          | Separate `CHASSIS` net | `REVIEW` for return and supply groups                      |
+| `cross-symbol-open.kicad_sch`             | Serial return contact is unassigned                          | Shared named net                             | Separate `CHASSIS` net | `REVIEW` for the return group, with the open pin localized |
+| `cross-symbol-control.kicad_sch`          | Shared named net                                             | Shared named net                             | Separate `CHASSIS` net | `PASS`; the shield remains distinct                        |
+| `cross-symbol-compound-fault.kicad_sch`   | Separate named nets; functions `USB_GND` and `SERIAL_RETURN` | Separate `USB_VBUS` and `SERIAL_VBUS` nets   | Separate `CHASSIS` net | `REVIEW` for return and compound supply groups             |
 | `cross-symbol-compound-control.kicad_sch` | Shared named net; functions `USB_GND` and `SERIAL_RETURN`    | Shared `USB_VBUS` and `SERIAL_VBUS` contacts | Separate `CHASSIS` net | `PASS`; compound shield roles stay distinct                |
 
 The symbols are deliberately different (`Synthetic:UsbPort`,
