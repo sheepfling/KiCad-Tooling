@@ -5447,8 +5447,12 @@ Synthetic fault, control, policy, boundary, and ordering cases are in
 [`tests/test_open_drain_control_voltage.py`](../tests/test_open_drain_control_voltage.py).
 CLI/MCP parity is in
 [`tests/test_design_lint_mcp_parity_open_drain_control_voltage.py`](../tests/test_design_lint_mcp_parity_open_drain_control_voltage.py).
-The digest-pinned KiCad 10.0.0/10.0.5 fault and control exports are in the
-[native fixture notes](../tests/fixtures/design_lint/gpio-control-voltage-native/README.md).
+The digest-pinned KiCad 10.0.0/10.0.5 fault and control exports for this rule
+are in the [open-collector native fixture notes][lint278-native-fixture].
+The related push-pull GPIO fixtures are described in the
+[GPIO native fixture notes](../tests/fixtures/design_lint/gpio-control-voltage-native/README.md).
+
+[lint278-native-fixture]: ../tests/fixtures/design_lint/open-drain-control-voltage-native/README.md
 
 ## Review direct UART peers with separate reference pins
 

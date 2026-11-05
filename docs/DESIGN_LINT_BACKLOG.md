@@ -14419,9 +14419,14 @@ control are documented in the
   executed both fault/control pairs on KiCad 10.0.0 and 10.0.5; those native
   checks passed. The overall run failed afterward because the catalog fixture
   registry had grown to 505 lines. Its power-rule references are now split
-  into a theme-owned registry, and the focused gate is queued for retry under
-  `v0.5.3rc432`. Keep maturity at `synthetic_validated` until the full gate
-  passes; the default mode remains `review`.
+  into a theme-owned registry.
+- **Hosted acceptance (2026-11-05, second attempt):** Tag `v0.5.3rc432`
+  passed the focused unit stage with the native fixture lane enabled, Ruff,
+  Pyright, Windows typing, and Rumdl. The full gate stopped at `mdrepo`: the
+  new fixture README was unreachable from the documentation graph. The design
+  lint rule reference now points to that README; the complete gate is queued
+  for retry under `v0.5.3rc433`. Keep maturity at `synthetic_validated` until
+  the full gate passes; the default mode remains `review`.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
