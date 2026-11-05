@@ -12,6 +12,7 @@ from pathlib import Path
 
 from .ci_hosted_support import HostedLog
 from .ci_hosted_usb_data_path_cases import usb_data_path_fixture_sources
+from .ci_hosted_usb_external_protection import validate_usb_external_protection_fixture_reports
 from .ci_hosted_usb_isolation import validate_usb_isolator_reference_boundary
 from .ci_hosted_usb_multiport_validation import validate_usb_multiport_peer_reference_reports
 from .ci_hosted_usb_protection_shunts import validate_usb_protection_shunt_fixture_reports
@@ -25,6 +26,7 @@ from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import DesignLintPolicy
 from .hwrepo.native_report_parsing import read_netlist
+from .hwrepo.netlist_contract_models import NetlistContract
 from .hwrepo.usb_data_paths import usb_data_path_mismatches
 
 
@@ -131,6 +133,7 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
     normalized_hashes: dict[tuple[str, str], str] = {}
     reports: dict[tuple[str, str], DesignLintReport] = {}
     raw_hashes: dict[tuple[str, str], str] = {}
+    observed_contracts: dict[tuple[str, str], NetlistContract] = {}
     unmapped_inline_coverage: DesignLintReport | None = None
     for case in cases:
         for run in ("first", "repeat"):
@@ -138,7 +141,7 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
             if not netlist_path.is_file():
                 raise ValueError(f"Native USB fixture omitted {netlist_path.name}")
             raw_hashes[(case, run)] = digest(netlist_path)
-            observed = read_netlist(netlist_path)
+            observed_contracts[(case, run)] = observed = read_netlist(netlist_path)
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
                 sort_keys=True,
@@ -357,6 +360,15 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         raise ValueError("Native exact bonded-reference USB control produced a reference finding")
 
     validate_usb_protection_shunt_fixture_reports(reports)
+    validate_usb_external_protection_fixture_reports(
+        observed_contracts,
+        raw_hashes,
+        source_hashes,
+        project=project,
+        kicad_version=config.kicad_version,
+        image=pinned,
+        log=log,
+    )
 
     series_peer_faults = tuple(
         item

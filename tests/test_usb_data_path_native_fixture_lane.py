@@ -101,6 +101,7 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-data-path-fixture/protection-shunt-split-reference",
         "usb-data-path-fixture/protection-shunt-common-reference",
         "usb-data-path-fixture/protection-shunt-pin-fault",
+        "usb-data-path-fixture/external-protection-contract",
     }
     unmapped_inline = results["usb-data-path-fixture/inline-component-unmapped-coverage"]
     assert unmapped_inline["status"] == "PASS"
@@ -137,6 +138,16 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         assert result["status"] == "PASS"
         assert result["usb_path_findings"] == "none"
         assert result["usb_unmapped_topology_findings"] == "none"
+    external_protection = results["usb-data-path-fixture/external-protection-contract"]
+    assert external_protection["status"] == "PASS"
+    assert external_protection["control_coverage_status"] == "COMPLETE"
+    assert external_protection["control_findings"] == "none"
+    assert external_protection["return_fault_rule"] == "protection.mapped_device_mismatch"
+    assert external_protection["return_fault_subject"] == "J1.1: mapped protection requirement"
+    assert "U6.2 is on USB_DP" in external_protection["return_fault_issues"]
+    assert external_protection["unmapped_coverage_status"] == "UNDECLARED"
+    assert external_protection["unmapped_rule"] == "protection.unreviewed_interface_pin"
+    assert external_protection["unmapped_subject"] == "J1.1: USB_D+"
     bonded_control = results["usb-data-path-fixture/external-series-reference-bond-control"]
     assert bonded_control["usb_reference_findings"] == "none"
     series_peer_fault = results["usb-data-path-fixture/external-series-reference-fault"]

@@ -712,6 +712,14 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **LINT-034 external-interface protection coverage:** The source-mapped
+  connector protection rules now run against the same exact-version synthetic
+  multi-pin protector fault/control exports used by the USB fixture lane. The
+  wrong U6.2 return assignment produces one mapped protection mismatch, while
+  the correctly mapped return stays clear; removing the map prompts for a
+  disposition. The focused rule selector passed 14 tests, including repeated
+  KiCad 10.0.0 and 10.0.5 exports. This adds contract-path validation, not a
+  unique-detector or field-effectiveness claim.
 - **LINT-280 compound connector supply-role review:** The repeated connector
   function rule now recognizes a single unambiguous supply-category token in
   compound functions such as `USB_VBUS` and `SERIAL_VBUS`. Split or open
@@ -15722,8 +15730,9 @@ control are documented in the
 
 #### LINT-034 — External-interface protection coverage contract
 
-- **Status:** Implemented v1; synthetic validation only. Exact direct-shunt
-  channel maps and explicit `not_required` decisions are supported.
+- **Status:** Implemented v1 with synthetic tests and exact-version native
+  source-to-netlist acceptance. Exact direct-shunt channel maps and explicit
+  `not_required` decisions are supported.
 - **Inspiration:** [kicad-happy](https://github.com/aklofas/kicad-happy)
   documents ESD/protection coverage and mapping protection devices to
   interfaces.
@@ -15748,10 +15757,21 @@ control are documented in the
   missing applicability; duplicate coverage against USB-C CC and signal
   protection contracts; CLI/MCP parity for a matching and mismatched map. All
   fixtures are synthetic.
+- **Native source evidence:** The digest-pinned USB fixture lane also evaluates
+  the external-protection contract against its repeated KiCad 10.0.0 and 10.0.5
+  exports. The common-reference protection-array map is a clear control; the
+  source fixture that assigns U6.2 to `USB_DP` produces one exact
+  `protection.mapped_device_mismatch`; replaying the control without a map
+  produces `protection.unreviewed_interface_pin`. The same U6.2 fault is also
+  within LINT-049's mapped USB topology scope, so this acceptance verifies the
+  distinct connector-protection contract path and makes no incremental-detector
+  claim. Local focused acceptance passed on KiCad 10.0.0 and 10.0.5. Native
+  export confirms schematic pin/net evidence only; hosted acceptance is pending.
 - **Done:** Typed contract, source-bound coverage report, two catalogued
-  review rules, review/block/ignore controls, CLI/MCP parity, and synthetic
-  fault/control tests are implemented. This is not a field benchmark and does
-  not validate protection effectiveness or physical return paths.
+  review rules, review/block/ignore controls, CLI/MCP parity, synthetic
+  fault/control tests, and exact-version native fault/control checks are
+  implemented. This is not a field benchmark and does not validate protection
+  effectiveness or physical return paths.
 
 #### LINT-035 — Crystal/resonator load-network review
 

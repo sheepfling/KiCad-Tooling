@@ -8055,12 +8055,14 @@
         "The check only sees connector pins mapped by the project interface catalog and cannot discover unlisted interfaces or prove integrated protection from a component name."
       ],
       "fault_fixtures": [
-        "tests.test_external_protection_review.test_missing_applicability_is_a_review_candidate_and_policy_can_block_it"
+        "tests.test_external_protection_review.test_missing_applicability_is_a_review_candidate_and_policy_can_block_it",
+        "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_external_protection_contract.test_explicit_not_required_decision_remains_covered",
         "tests.test_external_protection_contract.test_explicit_unmapped_pin_reason_and_usb_c_contract_suppress_duplicate_prompt",
-        "tests.test_external_protection_contract.test_usb_c_protection_map_covers_only_matching_signal_pins"
+        "tests.test_external_protection_contract.test_usb_c_protection_map_covers_only_matching_signal_pins",
+        "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -8069,6 +8071,9 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/external_protection.py#evaluate",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES"
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/external_protection.py#evaluate"
@@ -8090,12 +8095,14 @@
       ],
       "fault_fixtures": [
         "tests.test_external_protection_contract.test_wrong_connector_or_protector_net_is_a_project_requirement_mismatch",
-        "tests.test_external_protection_contract.test_wrong_identity_dnp_and_unaccounted_device_pin_fail"
+        "tests.test_external_protection_contract.test_wrong_identity_dnp_and_unaccounted_device_pin_fail",
+        "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_external_protection_contract.test_exact_tvs_channel_matches_native_component_pin_and_net_inventory",
         "tests.test_external_protection_contract.test_explicit_not_required_decision_remains_covered",
-        "tests.test_external_protection_contract.test_explicit_unmapped_pin_reason_and_usb_c_contract_suppress_duplicate_prompt"
+        "tests.test_external_protection_contract.test_explicit_unmapped_pin_reason_and_usb_c_contract_suppress_duplicate_prompt",
+        "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -8105,6 +8112,9 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/external_protection.py#evaluate",
         "kicad_tooling/hwrepo/design_lint_connector_coverage.py#external_protection_coverage_from_project"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES"
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/external_protection.py#evaluate"
