@@ -125,7 +125,15 @@ def verify_peer_pin_outlier_cases(ctx: ConnectorReturnFixtureContext):
         or dict(compound_findings["multiple connector symbols: ground/return"].evidence)
         != {"J1.4": ("USB_RETURN",), "J2.7": ("SERIAL_RETURN",)}
         or dict(compound_findings["multiple connector symbols: USB_VBUS"].evidence)
-        != {"J1.1": ("USB_SUPPLY",), "J2.9": ("SERIAL_SUPPLY",)}
+        != {
+            "J1.1": ("USB_SUPPLY",),
+            "J2.9": ("SERIAL_SUPPLY",),
+            "normalized_supply_category": ("vbus",),
+            "normalized_supply_category_sources": (
+                "J1.1: native symbol function=USB_VBUS; normalized supply category=vbus",
+                "J2.9: native symbol function=SERIAL_VBUS; normalized supply category=vbus",
+            ),
+        }
         or compound_pin_functions.get("J1.4") != "USB_GND"
         or compound_pin_functions.get("J1.1") != "USB_VBUS"
         or compound_pin_functions.get("J2.7") != "SERIAL_RETURN"

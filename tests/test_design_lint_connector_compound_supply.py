@@ -30,12 +30,13 @@ def _rule_findings(report: DesignLintReport) -> tuple[DesignLintFinding, ...]:
         "serial_connected",
         "expected_serial_nets",
         "expected_subject",
+        "expected_category",
     ),
     [
-        ("USB_VBUS", "SERIAL_VBUS", True, ("SERIAL_SUPPLY",), "USB_VBUS"),
-        ("USB_VBUS", "VBUS", True, ("SERIAL_SUPPLY",), "USB_VBUS"),
-        ("USB_3V3", "SERIAL_3.3V", True, ("SERIAL_SUPPLY",), "USB_3V3"),
-        ("USB_+5V", "SERIAL_5V", False, (), "USB_+5V"),
+        ("USB_VBUS", "SERIAL_VBUS", True, ("SERIAL_SUPPLY",), "USB_VBUS", "vbus"),
+        ("USB_VBUS", "VBUS", True, ("SERIAL_SUPPLY",), "USB_VBUS", "vbus"),
+        ("USB_3V3", "SERIAL_3.3V", True, ("SERIAL_SUPPLY",), "USB_3V3", "3v3"),
+        ("USB_+5V", "SERIAL_5V", False, (), "USB_+5V", "5v"),
     ],
     ids=("compound-vbus", "compound-to-exact-vbus", "voltage-aliases", "open-voltage-peer"),
 )
@@ -45,6 +46,7 @@ def test_matching_compound_supply_categories_prompt_review(
     serial_connected: bool,
     expected_serial_nets: tuple[str, ...],
     expected_subject: str,
+    expected_category: str,
 ) -> None:
     report = _report(
         cross_symbol_power(
@@ -61,6 +63,17 @@ def test_matching_compound_supply_categories_prompt_review(
     assert findings[0].evidence == {
         "J1.1": ("USB_SUPPLY",),
         "J2.1": expected_serial_nets,
+        "normalized_supply_category": (expected_category,),
+        "normalized_supply_category_sources": (
+            (
+                f"J1.1: native symbol function={usb_function}; normalized supply category="
+                f"{expected_category}"
+            ),
+            (
+                f"J2.1: native symbol function={serial_function}; normalized supply category="
+                f"{expected_category}"
+            ),
+        ),
     }
     assert "Matching connector supply pins" in findings[0].message
 

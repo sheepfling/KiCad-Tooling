@@ -14554,6 +14554,14 @@ control are documented in the
   `KICAD_RUN_NATIVE_MIXED_INTERFACE_RETURN_FIXTURES=1`; the external-template
   playtest and focused checks passed. Package and preview jobs were skipped by
   prerelease policy.
+- **Review-evidence follow-up (2026-11-05):** Compound matches now report the
+  normalized supply category and each matched pin's native symbol function, so
+  the CLI and MCP findings show why a pair such as `USB_VBUS`/`VBUS` matched.
+  This adds review context without changing the heuristic's default `review`
+  disposition or claiming the pins must share a net. The focused rule selection
+  passed 75 tests, including the source-bound Docker fixtures on exact KiCad
+  10.0.0 and 10.0.5 images; the public template checkout matched pinned commit
+  `5ca79bedf665a9b6577d96b1d47f13ccd518c968`.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

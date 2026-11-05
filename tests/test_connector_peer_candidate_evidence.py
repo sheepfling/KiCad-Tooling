@@ -72,6 +72,36 @@ def test_repeated_pin_candidate_retains_scan_and_reviewed_role_context() -> None
     assert project_repeated_connector_pin_evidence(source).evidence == candidate.evidence
 
 
+def test_repeated_pin_candidate_explains_compound_supply_category_match() -> None:
+    group = SimilarConnectorPinGroup(
+        symbol="multiple connector symbols",
+        function="USB_VBUS",
+        pins={"J1.1": ("USB_SUPPLY",), "J2.1": ("SERIAL_SUPPLY",)},
+    )
+    observed = NetlistContract(
+        components={},
+        nets={"USB_SUPPLY": ("J1.1",), "SERIAL_SUPPLY": ("J2.1",)},
+        pin_functions={"J1.1": "USB_VBUS", "J2.1": "SERIAL_VBUS"},
+    )
+    source = RepeatedConnectorPinFindingEvidence(
+        group=group,
+        observed=observed,
+        reviewed_connector_pins={},
+    )
+
+    candidate = RepeatedConnectorPinCandidate.from_source_evidence(
+        source,
+        subject="multiple connector symbols: USB_VBUS",
+        message="Review the intended supply topology.",
+    )
+
+    assert candidate.evidence["normalized_supply_category"] == ("vbus",)
+    assert candidate.evidence["normalized_supply_category_sources"] == (
+        "J1.1: native symbol function=USB_VBUS; normalized supply category=vbus",
+        "J2.1: native symbol function=SERIAL_VBUS; normalized supply category=vbus",
+    )
+
+
 def test_peer_outlier_candidate_retains_immutable_part_identity_and_scope() -> None:
     assignments = {"J1.1": ("NET_A",), "J2.1": (), "J3.1": ("NET_A",)}
     source = ConnectorPeerPinAssignmentOutlier(

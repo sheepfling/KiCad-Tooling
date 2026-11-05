@@ -8,7 +8,7 @@ from types import MappingProxyType
 from typing import TypeAlias
 
 from .connector_coverage_models import ConnectorMappedPinEvidenceByComponentPin
-from .connector_identity import connector_power_function_key
+from .connector_identity import connector_power_function_key, power_function_key
 from .connector_peer_pin_models import SimilarConnectorPinGroup
 from .connector_peer_pin_scan import (
     ConnectorPeerPinAssignmentDivergence,
@@ -109,12 +109,14 @@ def _connector_group_role_source_evidence(
             f"native symbol function={observed.pin_functions.get(pin) or '<unnamed>'}"
             for pin in sorted(group.pins)
         ]
-        return {
+        evidence = {
             "role_classification_sources": tuple(sources),
             "reviewed_voltage_domain": (domain,),
         }
+        evidence.update(_normalized_supply_category_source_evidence(group, observed))
+        return evidence
     if group.function != "ground/return":
-        return {}
+        return _normalized_supply_category_source_evidence(group, observed)
 
     sources: list[str] = []
     has_catalog_role = False
@@ -132,6 +134,34 @@ def _connector_group_role_source_evidence(
     if not has_catalog_role:
         return {}
     return {"role_classification_sources": tuple(sources)}
+
+
+def _normalized_supply_category_source_evidence(
+    group: SimilarConnectorPinGroup,
+    observed: NetlistContract,
+) -> dict[str, tuple[str, ...]]:
+    category = connector_power_function_key(group.function)
+    if category is None:
+        return {}
+
+    pin_functions = tuple(
+        (pin, observed.pin_functions.get(pin) or "<unnamed>") for pin in sorted(group.pins)
+    )
+    has_compound_function = any(
+        power_function_key(function) is None and connector_power_function_key(function) == category
+        for _, function in pin_functions
+    )
+    if not has_compound_function:
+        return {}
+
+    return {
+        "normalized_supply_category": (category,),
+        "normalized_supply_category_sources": tuple(
+            f"{pin}: native symbol function={function}; normalized supply category="
+            f"{connector_power_function_key(function) or '<unclassified>'}"
+            for pin, function in pin_functions
+        ),
+    }
 
 
 @dataclass(frozen=True, slots=True)
