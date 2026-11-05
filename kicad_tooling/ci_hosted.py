@@ -54,6 +54,9 @@ from .ci_hosted_net_dc_reference import net_dc_reference_fixture_lane
 from .ci_hosted_open_drain_bias import (
     open_drain_bias_fixture_lane as _run_open_drain_bias_fixture_lane,
 )
+from .ci_hosted_open_drain_control_voltage import (
+    open_drain_control_voltage_fixture_lane as _run_open_drain_control_voltage_fixture_lane,
+)
 from .ci_hosted_pcb_access import pcb_access_fixture_lane
 from .ci_hosted_pcb_component_inventory_fixture import pcb_component_inventory_fixture_lane
 from .ci_hosted_pcb_geometry_fixtures import pcb_decoupling_fixture_lane
@@ -153,6 +156,7 @@ __all__ = (
     "native_lane",
     "net_dc_reference_fixture_lane",
     "open_drain_bias_fixture_lane",
+    "open_drain_control_voltage_fixture_lane",
     "pcb_access_fixture_lane",
     "pcb_component_inventory_fixture_lane",
     "pcb_decoupling_fixture_lane",
@@ -217,6 +221,13 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
 def open_drain_bias_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
     """Keep the hosted CI import stable while checks live by theme."""
     _run_open_drain_bias_fixture_lane(root, project=project, image=image, log=log)
+
+
+def open_drain_control_voltage_fixture_lane(
+    root: Path, *, project: str, image: str, log: HostedLog
+) -> None:
+    """Keep the hosted CI import stable while checks live by theme."""
+    _run_open_drain_control_voltage_fixture_lane(root, project=project, image=image, log=log)
 
 
 def plan_lane(root: Path, args: argparse.Namespace, log: HostedLog) -> None:

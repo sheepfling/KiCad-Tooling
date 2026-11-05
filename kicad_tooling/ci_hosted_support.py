@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from .hwrepo.contracts import KiCadErcReport
+from .hwrepo.netlist_contract_models import NetlistContract
 
 
 def tooling_checkout_root() -> Path:
@@ -149,6 +150,16 @@ def normalized_erc_report_bytes(report: KiCadErcReport) -> bytes:
     )
     return json.dumps(
         {"kicad_version": report.kicad_version, "violations": violations},
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+
+
+def normalized_netlist_bytes(netlist: NetlistContract) -> bytes:
+    """Serialize typed native netlist evidence with stable mapping order."""
+    return json.dumps(
+        netlist.model_dump(mode="json"),
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,

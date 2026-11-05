@@ -19,6 +19,10 @@ from scripts.lint_gate_scope import (
     (
         ("power.mapped_sequence_dependency_mismatch", "KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES"),
         (
+            "power.open_drain_control_input_pullup_voltage_review",
+            "KICAD_RUN_NATIVE_OPEN_DRAIN_CONTROL_VOLTAGE_FIXTURES",
+        ),
+        (
             "component.two_pin_led_same_net",
             "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES",
         ),

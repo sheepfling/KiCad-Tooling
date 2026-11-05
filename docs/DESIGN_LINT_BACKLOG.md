@@ -14409,9 +14409,15 @@ control are documented in the
   wheel's external-template playtest passed. Package-release and preview jobs
   were skipped under prerelease policy. This scoped run did not execute a
   native KiCad export for LINT-278.
-- **Remaining:** Exact-version native schematic export and normalized-netlist
-  evidence are not yet recorded for this rule. The rule remains default
-  `review` and synthetic-validated until that lane is added.
+- **Native evidence:** Tooling-owned `fault` and equal-rail `control`
+  schematics now have source hashes and a digest-pinned KiCad 10.0.0/10.0.5
+  lane. The lane repeats each export, checks normalized typed-netlist
+  stability, verifies one finding with endpoint and resistor-path evidence on
+  the fault, and requires the control to stay quiet. It is enabled in hosted
+  package acceptance and registered as the rule's required native fixture.
+- **Remaining:** The new exact-version lane still needs a hosted run before
+  maturity can move beyond `synthetic_validated`. The rule remains default
+  `review` regardless of that evidence.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

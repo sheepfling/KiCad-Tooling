@@ -10,7 +10,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .ci_hosted_support import HostedLog, normalized_netlist_bytes, tooling_checkout_root
 from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
 from .hwrepo.design_lint_types import Candidate
@@ -28,16 +28,6 @@ FIXTURE_SOURCE_HASHES = {
     "fault": "066861e84e4dfebeac615ee62b6207c411267ff13b828a033ab32a382ca56437",
     "lower-source-fault": "8fbe7219de30483919845ad3d008d56e39e52c055db3d42a59b0b5c2e79727fe",
 }
-
-
-def _normalized_netlist_sha256(observed: NetlistContract) -> str:
-    payload = json.dumps(
-        observed.model_dump(mode="json"),
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=False,
-    ).encode("utf-8")
-    return hashlib.sha256(payload).hexdigest()
 
 
 def _finding_candidates(observed: NetlistContract) -> tuple[Candidate, ...]:
@@ -168,7 +158,7 @@ def gpio_control_voltage_native_fixture_lane(
                 raise ValueError(f"Native GPIO fixture omitted {netlist_path.name}")
             observed = read_netlist(netlist_path)
             observations[run] = observed
-            normalized_hashes[run] = _normalized_netlist_sha256(observed)
+            normalized_hashes[run] = hashlib.sha256(normalized_netlist_bytes(observed)).hexdigest()
         if normalized_hashes["first"] != normalized_hashes["repeat"]:
             raise ValueError(f"Native GPIO {case} exports differ after typed normalization")
 

@@ -270,6 +270,7 @@ INTERFACE_LINT_TEST_MODULES = frozenset(
         "tests/test_open_drain_heuristics.py",
         "tests/test_open_drain_control_voltage.py",
         "tests/test_design_lint_mcp_parity_open_drain_control_voltage.py",
+        "tests/test_open_drain_control_voltage_native_fixture_lane.py",
         "tests/test_serial_participants.py",
         "tests/test_serial_peer_candidate_evidence.py",
         "tests/test_design_lint_architecture_serial_peer_candidate_evidence.py",

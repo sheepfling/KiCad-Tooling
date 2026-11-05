@@ -33,6 +33,7 @@ LARGER_THEME_LANES = MappingProxyType(
         "power_pin_net_role_fixture_lane": "ci_hosted_power_pin_net_roles.py",
         "power_sequence_fixture_lane": "ci_hosted_power_sequences.py",
         "open_drain_bias_fixture_lane": "ci_hosted_open_drain_bias.py",
+        "open_drain_control_voltage_fixture_lane": "ci_hosted_open_drain_control_voltage.py",
     }
 )
 LEGACY_CEILINGS = Path(__file__).with_name("hosted_lane_line_ceilings.json")

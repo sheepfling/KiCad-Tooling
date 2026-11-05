@@ -12,7 +12,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal
 
-from .ci_hosted_support import HostedLog, tooling_checkout_root
+from .ci_hosted_support import HostedLog, normalized_netlist_bytes, tooling_checkout_root
 from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.contracts import read_kicad_erc_report, write_model
@@ -187,12 +187,7 @@ def open_drain_bias_fixture_lane(root: Path, *, project: str, image: str, log: H
                 raise ValueError(f"Native open-output {case} export omitted an expected report")
             observed = read_netlist(netlist_path)
             observations[run] = observed
-            normalized_netlist = json.dumps(
-                observed.model_dump(mode="json"),
-                sort_keys=True,
-                separators=(",", ":"),
-                ensure_ascii=False,
-            ).encode("utf-8")
+            normalized_netlist = normalized_netlist_bytes(observed)
             normalized_netlist_hashes[run] = hashlib.sha256(normalized_netlist).hexdigest()
 
             erc = read_kicad_erc_report(erc_path)
