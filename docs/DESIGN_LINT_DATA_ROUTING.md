@@ -776,14 +776,18 @@ authored-map state, and optional contract path and digest. Candidate order,
 rule IDs, subjects, messages, and report fingerprints remain with the existing
 theme adapters and evaluation path.
 
-The six schematic power and supply findings in `design_lint_power_candidates`
-now retain their typed scan records through `PowerCandidate`. Its projector
-owns the existing same-voltage pin map, capacitor-gap fields, conditional
-source-anchor state, connector/capacitor fields, repeated-supply pin map, and
-numbered-rail map. The adapter still owns rule ordering and finding wording;
-the serialized evidence keys and fingerprints stay unchanged. Pin and rail
-source maps are copied and frozen so retained records cannot drift from their
-report projection after candidate construction.
+The ten schematic power and supply findings in `design_lint_power_candidates`
+now retain typed scan records through `PowerCandidate`. Its projector owns the
+existing same-voltage pin map, capacitor-gap fields, conditional source-anchor
+state, connector/capacitor fields, repeated-supply pin map, numbered-rail map,
+and the two native power-pin role findings. Those pin records retain the exact
+observed netlist, native function, and unique assigned net; construction
+rechecks fitted state, role classification, connector-return scope, and the
+opposing rail label or peer-pin evidence. The shared pin-assignment index and
+bounded name recognizers remain their canonical owners. The adapters still own
+rule ordering and finding wording; serialized evidence keys and fingerprints
+stay unchanged. Map-shaped source records are copied and frozen so their
+projection cannot drift after candidate construction.
 
 ## External-protection candidate evidence route
 
@@ -1533,3 +1537,134 @@ test calls across 46 modules. Literal maps account for 29 production and 24
 test calls. This inventory covers direct `Candidate` calls only; it does not
 measure other dictionary-shaped interfaces. No exact native KiCad lane was
 run.
+
+## Native power-pin role evidence
+
+The named power-pin/net-role conflict and named supply pin/negative rail rules
+now retain `NamedPowerPinNetRoleConflictEvidence` or
+`NamedSupplyPinNegativeRailEvidence` through the existing `PowerCandidate`
+projector. Each source binds one native pin function to its exact unique net
+assignment and checks fitted state. The role-conflict source also validates
+connector-return scope and freezes the bounded opposing label or peer-pin
+clues. Both rule adapters still select findings and preserve their existing
+order, wording, evidence fields, and fingerprints. The catalog now names the
+typed source, projection, and shared assignment index.
+
+The two rule suites, source projection, architecture, catalog, marker, and CLI
+and MCP parity tests passed 122 tests. Ruff, targeted Pyright, Rumdl, mdrepo,
+JSON parsing, and `git diff --check` passed. No exact native KiCad lane was
+run. The AST census now finds 104 direct `Candidate(evidence=...)` calls: 32
+production calls across 32 modules and 72 test calls across 46 modules;
+literal maps account for 27 production and 24 test calls. This census still
+does not measure other dictionary-shaped interfaces.
+
+## Authored power-map candidate evidence
+
+The project-authored IC decoupling and regulator required-passive findings
+now also retain typed sources through `PowerCandidate`. The IC decoupling
+source keeps the complete authored map, exact requirement, native netlist,
+reviewed topology issues, and parsed nominal capacitor values; construction
+recomputes the review, total, minimum, and map digest. The regulator source
+keeps its authored topology map, exact mismatch, and netlist; construction
+reruns the topology comparison. Their projector preserves the existing
+serialized evidence fields, including conditional capacitance totals and the
+sorted component list. The rule adapters remain responsible for selection,
+message wording, and order.
+
+The local decoupling, regulator, power-role, source, architecture, catalog,
+marker, rule-selector, regulator CLI/MCP, and power-role CLI/MCP selection
+passed 151 tests. The IC decoupling CLI/MCP parity test could not start because
+this checkout has no `KICAD_TEMPLATE_ROOT` configured. Ruff, targeted Pyright,
+Rumdl, mdrepo, JSON parsing, and `git diff --check` passed; no exact native
+KiCad lane ran. The updated AST census now finds 102 direct
+`Candidate(evidence=...)` calls: 30 production calls across 30 modules and 72
+test calls across 46 modules; literal maps account for 26 production and 24
+test calls. Other dictionary-shaped interfaces remain outside this narrow
+census.
+
+## Component named-rail terminal-order evidence
+
+The BJT collector/emitter and MOSFET drain/source rail-order scanners now
+project through `ComponentTerminalOrderCandidate` with distinct
+`BjtTerminalOrderEvidence` and `MosfetTerminalOrderEvidence` source records.
+Each record retains the observed netlist, exact fitted symbol and pin roles,
+unique native pin-to-net occurrences, and recomputed named-rail potentials.
+Construction rejects stale assignments, changed rail evidence, unsupported
+roles, and a repaired conventional order. The existing rule owners still
+select candidates and supply the same subjects and messages; the projection
+keeps the current serialized evidence fields. Both rules now reference the
+typed source, projection, and shared source-order-preserving pin assignment
+index in the catalog.
+
+The terminal-order source, BJT and MOSFET rule regressions, pin-assignment
+index, catalog, and architecture checks passed 125 tests. Catalog, marker,
+collection, selector, backlog, and power-pin CLI/MCP parity checks passed 56
+more. Ruff and formatting passed; targeted Pyright reported zero errors,
+warnings, or information messages. JSON parsing, Rumdl, mdrepo, and
+`git diff --check` passed. No native KiCad lane ran. The IC decoupling
+CLI/MCP parity lane remains unavailable because `KICAD_TEMPLATE_ROOT` is not
+configured.
+
+The refreshed direct-candidate census finds 100 `Candidate(evidence=...)`
+calls: 28 production calls across 28 modules and 72 test calls across 46
+modules. Literal maps account for 26 production and 24 test calls. This
+census covers direct `Candidate` construction only; other dictionary-shaped
+interfaces remain outside it. The adjacent diode and polarized-capacitor
+routes are completed in the next entry.
+
+## Diode and polarized-capacitor named-rail evidence
+
+The diode A/K and polarized-capacitor pin 1/2 rules now retain separate
+`DiodeRailOrientationEvidence` and
+`PolarizedCapacitorRailOrientationEvidence` records through
+`ComponentPolarityCandidate`. Their symbol services return named terminal
+number records and validate the supported identities, native role metadata,
+and complete inventories. Both sources use the shared
+`NamedRailTerminalEvidence` and validator, which recompute the exact pin
+assignment and current named-rail potential while preserving each scanner's
+existing evidence spelling. Rule owners still control selection, subjects,
+and messages; serialized evidence keys and fingerprints remain unchanged.
+
+The source, diode and capacitor rule suites, BJT/MOSFET source regressions,
+pin-assignment helper, and catalog selection passed 95 tests. The catalog,
+marker, collection, selector, reachability, and architecture slice passed 58;
+component determinism passed 11. Ruff and formatting passed, targeted Pyright
+reported zero diagnostics, and JSON parsing, Rumdl, and mdrepo passed. No exact
+native KiCad or CLI/MCP parity lane ran; `KICAD_TEMPLATE_ROOT` is not set in
+this checkout.
+
+The refreshed direct-candidate census finds 98 calls: 26 production calls
+across 26 modules and 72 test calls across 46 modules. Literal maps account
+for 24 production and 24 test calls. This census covers direct `Candidate`
+construction only; the remaining mapping-shaped interfaces still require a
+separate source-bound inventory.
+
+## Connector comparison-scope route
+
+Connector peer, return, and supply comparisons now carry a
+`ConnectorComparisonScope` record with named `group` and `basis` fields. The
+reference-keyed index remains a map because lookups are by connector
+reference; the map values no longer encode two meanings in positional tuples.
+Source-matched coverage creates read-only scope maps only for complete maps
+whose pin evidence still matches the current netlist. Case-insensitive index
+normalization rejects duplicate references.
+
+The public `connector_pins` facade converts its supported legacy tuple-valued
+scope inputs into these records before calling the owning services. Internal
+candidate and coverage code imports the typed owners directly, so the legacy
+shape does not continue through the scan route.
+
+At the scanner boundary, a missing or incomplete scope still produces one
+unscoped partition for all participating assignments. It cannot partially
+partition the peers and accidentally suppress a finding. The return/supply
+singleton review consumes the same named scope fields. This is comparison
+scope evidence only: it does not establish a required shared net, continuity,
+or electrical isolation. Candidate evidence serialization and fingerprints
+remain unchanged.
+
+The next mapping audit starts with `netlist_pin_net_index`, whose mutable
+pin-to-set result reaches 23 production caller modules, then
+`source_matched_connector_pin_evidence`, whose typed values are returned in a
+mutable reference-keyed map to 15 modules. Check caller mutation and required
+lookup behavior before choosing whether either route needs a new container or
+only an immutable return type.

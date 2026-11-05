@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Literal
 
+from .connector_comparison_scope_types import ConnectorComparisonScopes
 from .connector_identity import (
     connector_candidate_references,
     native_pin_metadata_is_missing,
@@ -102,7 +103,7 @@ def unique_peer_pin_majority(
 def scan_connector_part_id_peer_pins(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
-    peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
+    peer_assignment_groups: ConnectorComparisonScopes | None = None,
 ) -> ConnectorPartIdPeerPinScan:
     """Compare connector aliases only after exact source identity and pin metadata match."""
     unpopulated = {reference.casefold() for reference in observed.dnp_components}

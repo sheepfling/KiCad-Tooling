@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from mcp import Client
 
+from kicad_tooling.hwrepo.connector_comparison_scope_types import ConnectorComparisonScope
 from kicad_tooling.hwrepo.connector_footprint_peer_metadata_open import (
     connector_footprint_peer_pin_metadata_open_outliers,
 )
@@ -186,8 +187,8 @@ def test_peer_assignment_groups_prevent_cross_port_comparison() -> None:
     candidates = connector_footprint_peer_pin_metadata_open_outliers(
         observed,
         peer_assignment_groups={
-            "J1": ("port-a", "Synthetic independent port A"),
-            "J2": ("port-b", "Synthetic independent port B"),
+            "J1": ConnectorComparisonScope("port-a", "Synthetic independent port A"),
+            "J2": ConnectorComparisonScope("port-b", "Synthetic independent port B"),
         },
     )
 
@@ -240,10 +241,10 @@ def test_incomplete_metadata_in_another_reviewed_scope_does_not_suppress_candida
     candidates = connector_footprint_peer_pin_metadata_open_outliers(
         observed,
         peer_assignment_groups={
-            "J1": ("port-a", "Synthetic independent port A"),
-            "J2": ("port-a", "Synthetic independent port A"),
-            "J3": ("port-b", "Synthetic independent port B"),
-            "J4": ("port-b", "Synthetic independent port B"),
+            "J1": ConnectorComparisonScope("port-a", "Synthetic independent port A"),
+            "J2": ConnectorComparisonScope("port-a", "Synthetic independent port A"),
+            "J3": ConnectorComparisonScope("port-b", "Synthetic independent port B"),
+            "J4": ConnectorComparisonScope("port-b", "Synthetic independent port B"),
         },
     )
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from kicad_tooling.hwrepo.connector_comparison_scope_types import ConnectorComparisonScope
 from kicad_tooling.hwrepo.connector_identity import (
     PeerAssignmentPartition,
     partition_peer_assignments,
@@ -30,9 +31,9 @@ def test_current_scope_keeps_group_assignments_and_review_basis_together() -> No
         "J3.1": ("SDA",),
     }
     groups = {
-        "J1": ("Returns", "Reviewed J1 in return group"),
-        "J2": ("Returns", "Reviewed J2 in return group"),
-        "J3": ("Signals", "Reviewed J3 in signal group"),
+        "J1": ConnectorComparisonScope("Returns", "Reviewed J1 in return group"),
+        "J2": ConnectorComparisonScope("Returns", "Reviewed J2 in return group"),
+        "J3": ConnectorComparisonScope("Signals", "Reviewed J3 in signal group"),
     }
 
     partitions = partition_peer_assignments(assignments, groups)
@@ -65,7 +66,7 @@ def test_current_scope_keeps_group_assignments_and_review_basis_together() -> No
 
 def test_incomplete_scope_does_not_return_partially_reviewed_groups() -> None:
     assignments = {"J1.1": ("GND_A",), "J2.1": ("GND_B",)}
-    groups = {"J1": ("Returns", "Reviewed J1 in return group")}
+    groups = {"J1": ConnectorComparisonScope("Returns", "Reviewed J1 in return group")}
 
     (partition,) = partition_peer_assignments(assignments, groups)
 

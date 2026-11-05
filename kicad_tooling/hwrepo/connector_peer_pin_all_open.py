@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from .connector_comparison_scope_types import ConnectorComparisonScopes
 from .connector_coverage_models import ConnectorMappedPinEvidence
 from .connector_identity import (
     connector_candidate_references,
@@ -90,7 +91,7 @@ def all_open_generic_connector_peer_pin_candidates(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
     reviewed_connector_pins: Mapping[str, ConnectorMappedPinEvidence] | None = None,
-    peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
+    peer_assignment_groups: ConnectorComparisonScopes | None = None,
 ) -> tuple[Candidate, ...]:
     """Prompt on generic passive or signal pins open across comparable peers.
 

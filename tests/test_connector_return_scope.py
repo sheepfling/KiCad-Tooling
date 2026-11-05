@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from kicad_tooling.hwrepo.connector_comparison_scope_types import ConnectorComparisonScope
 from kicad_tooling.hwrepo.connector_coverage import (
     evaluate as evaluate_connector_coverage,
 )
@@ -65,7 +66,7 @@ def test_split_returns_in_one_reviewed_group_still_need_review() -> None:
     )
 
     assert source_matched_connector_return_comparison_groups(netlist, coverage) == {
-        reference: (
+        reference: ConnectorComparisonScope(
             "external-returns",
             f"Reviewed {reference} in return-comparison group external-returns",
         )
@@ -116,11 +117,11 @@ def test_missing_or_stale_group_evidence_restores_global_comparison() -> None:
         return_comparison_groups={"J1": "external-returns", "J2": "external-returns"},
     )
     assert source_matched_connector_return_comparison_groups(netlist, missing_coverage) == {
-        "J1": (
+        "J1": ConnectorComparisonScope(
             "external-returns",
             "Reviewed J1 in return-comparison group external-returns",
         ),
-        "J2": (
+        "J2": ConnectorComparisonScope(
             "external-returns",
             "Reviewed J2 in return-comparison group external-returns",
         ),

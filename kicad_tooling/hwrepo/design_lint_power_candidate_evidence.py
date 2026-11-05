@@ -8,6 +8,14 @@ from typing import TypeAlias
 
 from .component_pin_patterns import RepeatedComponentSupplyPins
 from .component_power_input_domains import SplitPowerInputDomains
+from .design_lint_ic_decoupling_candidate_evidence import IcDecouplingFindingEvidence
+from .design_lint_power_pin_role_evidence import (
+    NamedPowerPinNetRoleConflictEvidence,
+    NamedSupplyPinNegativeRailEvidence,
+)
+from .design_lint_regulator_passive_candidate_evidence import (
+    RegulatorPassiveTopologyFindingEvidence,
+)
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .net_dc_reference import ConnectorCapacitorOnlyNet
@@ -22,6 +30,10 @@ PowerCandidateSource: TypeAlias = (
     | ConnectorCapacitorOnlyNet
     | RepeatedComponentSupplyPins
     | NumberedPowerRailGroup
+    | NamedPowerPinNetRoleConflictEvidence
+    | NamedSupplyPinNegativeRailEvidence
+    | IcDecouplingFindingEvidence
+    | RegulatorPassiveTopologyFindingEvidence
 )
 
 _SAME_VOLTAGE_POWER_INPUTS: DesignLintRuleId = "component.same_voltage_power_inputs_split"
@@ -30,6 +42,12 @@ _POWER_INPUT_SOURCE_PATH_GAP: DesignLintRuleId = "power.input_without_supported_
 _CONNECTOR_CAPACITOR_ONLY_NET: DesignLintRuleId = "net.connector_capacitor_only_no_dc_anchor"
 _REPEATED_SUPPLY_PIN_FUNCTION: DesignLintRuleId = "component.repeated_supply_pin_function"
 _NUMBERED_POWER_RAILS: DesignLintRuleId = "net.numbered_power_rails"
+_POWER_PIN_NET_ROLE_CONFLICT: DesignLintRuleId = "power.pin_function_net_role_conflict"
+_NAMED_SUPPLY_PIN_ON_NEGATIVE_RAIL: DesignLintRuleId = "power.named_supply_pin_on_negative_rail"
+_IC_DECOUPLING_BELOW_MINIMUM: DesignLintRuleId = "power.ic_decoupling_below_project_minimum"
+_REGULATOR_PASSIVE_TOPOLOGY_MISMATCH: DesignLintRuleId = (
+    "power.regulator_required_passive_topology_mismatch"
+)
 
 
 def _string_tuples(values: Mapping[str, tuple[str, ...]]) -> dict[str, tuple[str, ...]]:
@@ -75,6 +93,73 @@ def project_power_candidate_evidence(
         return CandidateEvidenceProjection(
             rule_id=_REPEATED_SUPPLY_PIN_FUNCTION,
             evidence=_string_tuples(source.pins),
+        )
+    if isinstance(source, NamedPowerPinNetRoleConflictEvidence):
+        return CandidateEvidenceProjection(
+            rule_id=_POWER_PIN_NET_ROLE_CONFLICT,
+            evidence={
+                source.pin: (
+                    f"native_function={source.function}",
+                    f"pin_role={source.pin_role}",
+                ),
+                "assigned_net": (source.net,),
+                "opposite_net_role_sources": source.opposite_role_sources,
+            },
+        )
+    if isinstance(source, NamedSupplyPinNegativeRailEvidence):
+        return CandidateEvidenceProjection(
+            rule_id=_NAMED_SUPPLY_PIN_ON_NEGATIVE_RAIL,
+            evidence={
+                source.pin: (
+                    f"native_function={source.function}",
+                    f"supply_function_key={source.supply_function_key}",
+                ),
+                "assigned_net": (source.net,),
+                "negative_rail_key": (source.negative_rail_key,),
+            },
+        )
+    if isinstance(source, IcDecouplingFindingEvidence):
+        requirement = source.requirement
+        evidence = {
+            "requirement_id": (requirement.id,),
+            "basis": (requirement.basis,),
+            "ic_reference": (requirement.ic_reference,),
+            "power_pin": (requirement.power_pin,),
+            "power_net": (requirement.power_net,),
+            "return_net": (requirement.return_net,),
+            "capacitor_references": tuple(item.reference for item in requirement.capacitors),
+            "capacitor_values_pf": tuple(
+                f"{item.reference}="
+                f"{item.capacitance_pf if item.capacitance_pf is not None else 'unsupported'}"
+                for item in source.review.capacitor_values
+            ),
+            "minimum_total_capacitance_pf": (str(source.minimum_pf),),
+            "observed_total_capacitance_pf": (
+                () if source.total_pf is None else (str(source.total_pf),)
+            ),
+            "requirement_sha256": (source.requirement_sha256,),
+            "mapping_issues": source.review.issues,
+        }
+        return CandidateEvidenceProjection(rule_id=_IC_DECOUPLING_BELOW_MINIMUM, evidence=evidence)
+    if isinstance(source, RegulatorPassiveTopologyFindingEvidence):
+        requirement = source.requirement
+        evidence = {
+            "topology_id": (requirement.id,),
+            "regulator": (requirement.regulator.reference,),
+            "required_passive_roles": tuple(
+                f"{item.role}:{item.component.reference}" for item in requirement.required_passives
+            ),
+            "approved_alternatives": tuple(
+                f"{alternative.id}:{alternative.basis}"
+                for alternative in requirement.approved_alternatives
+            ),
+            "components": source.component_references,
+            "issues": source.issues,
+            "map_sha256": (source.map_sha256,),
+        }
+        return CandidateEvidenceProjection(
+            rule_id=_REGULATOR_PASSIVE_TOPOLOGY_MISMATCH,
+            evidence=evidence,
         )
     return CandidateEvidenceProjection(
         rule_id=_NUMBERED_POWER_RAILS,

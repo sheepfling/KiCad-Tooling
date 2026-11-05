@@ -6,6 +6,7 @@ from typing import TypedDict
 
 import pytest
 
+from kicad_tooling.hwrepo.connector_comparison_scope_types import ConnectorComparisonScope
 from kicad_tooling.hwrepo.connector_peer_pin_all_open import (
     all_open_generic_connector_peer_pin_candidates,
 )
@@ -194,8 +195,8 @@ def test_part_id_all_open_prompt_requires_matching_identity_and_peer_scope() -> 
         all_open_generic_connector_peer_pin_candidates(
             source,
             peer_assignment_groups={
-                "J1": ("interface-a", "Reviewed synthetic interface A"),
-                "J2": ("interface-b", "Reviewed synthetic interface B"),
+                "J1": ConnectorComparisonScope("interface-a", "Reviewed synthetic interface A"),
+                "J2": ConnectorComparisonScope("interface-b", "Reviewed synthetic interface B"),
             },
         )
         == ()
@@ -205,9 +206,9 @@ def test_part_id_all_open_prompt_requires_matching_identity_and_peer_scope() -> 
 def test_distinct_reviewed_peer_groups_are_not_compared() -> None:
     source = generic_open_peer_netlist()
     groups = {
-        "J1": ("port-a", "Reviewed synthetic interface A"),
-        "J2": ("port-b", "Reviewed synthetic interface B"),
-        "J3": ("port-c", "Reviewed synthetic interface C"),
+        "J1": ConnectorComparisonScope("port-a", "Reviewed synthetic interface A"),
+        "J2": ConnectorComparisonScope("port-b", "Reviewed synthetic interface B"),
+        "J3": ConnectorComparisonScope("port-c", "Reviewed synthetic interface C"),
     }
 
     assert (

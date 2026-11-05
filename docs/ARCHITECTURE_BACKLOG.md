@@ -141,6 +141,12 @@ Connector peer assignment routing now returns a named, read-only
 `PeerAssignmentPartition` containing the peer-group identity, scoped observed
 assignments, and reviewed basis. Missing or incomplete authored scope stays
 unscoped as a whole; partial scope is not treated as reviewed coverage.
+The scope map now carries `ConnectorComparisonScope` records with named
+`group` and `basis` fields across peer, return, and supply comparisons. The
+source-matched producers return read-only maps, and a case-insensitive index
+owner guards duplicate connector references. The report projection remains
+unchanged. Architecture coverage checks that all connector scope parameters
+use the typed record instead of a two-string tuple.
 Connector alias checks now consume a named `ConnectorFootprintPeerPinInventory`
 with a read-only per-reference display-number map; missing or ambiguous pin
 inventories remain unavailable to the comparison.
@@ -1740,3 +1746,123 @@ catalog, marker, selector, determinism, and CLI/MCP parity selection passed
 test); literal maps are 29 production and 24 test. This inventory does not
 measure other dictionary-shaped interfaces. No exact native KiCad lane was
 run.
+
+## Native power-pin role evidence route (2026-11-04)
+
+The two native power-pin role findings now use typed source records.
+`NamedPowerPinNetRoleConflictEvidence` retains the observed netlist, exact
+pin/function/net, reviewed connector scope, and opposing label or peer-pin
+clues; its validator recomputes the current role and assignment.
+`NamedSupplyPinNegativeRailEvidence` rechecks fitted state, the exact net, the
+native supply-function key, and the bounded negative-rail key. Both flow
+through the existing `PowerCandidate` projection, and the catalog identifies
+their source, projection, and shared assignment-index owners. Their rule
+functions remain the selection and wording owners.
+
+The power-role, negative-rail, projection, architecture, catalog, marker, and
+CLI/MCP parity slice passed 122 tests. Ruff, targeted Pyright, Rumdl, mdrepo,
+JSON parsing, and `git diff --check` passed. No native KiCad lane ran. The
+direct-candidate AST census is now 104 calls (32 production across 32 modules,
+72 tests across 46 modules), with 27 production and 24 test literal evidence
+maps. This narrow census does not account for other dictionary-shaped
+interfaces. Continue choosing routes by capability and source-to-report
+ownership; do not infer that the remaining dict-shaped boundaries are absent
+from this candidate-call count.
+
+## Authored power-map candidate evidence route (2026-11-04)
+
+The IC decoupling and regulator required-passive findings now use typed
+`PowerCandidate` sources. IC decoupling review and source validation share the
+focused `design_lint_ic_decoupling_candidate_evidence` owner; it recomputes
+the exact native identity, DNP state, pin inventory, electrical types,
+assignments, supported capacitance values, total, minimum, and complete map
+digest. `RegulatorPassiveTopologyFindingEvidence` retains the full authored
+topology map, exact mismatch, and observed netlist, then reruns the shared
+topology comparison during construction. Both projectors preserve their
+current report fields and rule adapters preserve finding order and wording.
+
+The decoupling, regulator, power-role, source, architecture, catalog, marker,
+selector, regulator CLI/MCP, and power-role CLI/MCP selection passed 151
+tests. The IC decoupling CLI/MCP parity test could not start because
+`KICAD_TEMPLATE_ROOT` is not configured; no native KiCad lane ran. Ruff,
+targeted Pyright, Rumdl, mdrepo, JSON parsing, and `git diff --check` passed.
+The direct-candidate AST count is now 102 (30 production and 72 tests), with
+26 production and 24 test literal evidence maps. These direct candidate counts
+still do not inventory other opaque mapping boundaries.
+
+## Component named-rail terminal-order evidence route (2026-11-04)
+
+The BJT collector/emitter and MOSFET drain/source findings now retain explicit
+typed terminal sources and a shared stable projection. Their validators bind
+the source to the current fitted symbol, role mapping, unique native pin
+assignment, named net evidence, and unusual rail ordering. The rule-owner
+functions continue to select findings and preserve current wording and report
+fields; catalog references now expose the typed route and the canonical pin
+assignment index. Diode and polarized-capacitor orientation remain separate
+follow-up routes.
+
+The terminal-order source and behavior, pin-assignment, catalog, and
+architecture selection passed 125 tests; catalog, marker, selector, backlog,
+and power-pin CLI/MCP parity selection passed 56 more. Ruff, format, targeted
+Pyright, Rumdl, mdrepo, JSON parsing, and `git diff --check` passed. No native
+KiCad lane ran, and the IC decoupling CLI/MCP parity lane remains unavailable
+because `KICAD_TEMPLATE_ROOT` is not configured. The direct-candidate census
+now finds 100 calls (28 production and 72 test) with 26 production and 24 test
+literal evidence maps; this does not count other dictionary-shaped
+interfaces.
+
+## Diode and polarized-capacitor polarity evidence route (2026-11-04)
+
+Diode anode/cathode and polarized-capacitor positive/negative findings now
+retain separate typed source records. Their exact symbol services return
+named terminal roles, and both routes reuse `NamedRailTerminalEvidence` plus
+one current-assignment and rail-potential validator. The candidate projection
+preserves the existing report fields while source construction rejects stale
+symbols, inventories, assignments, rail clues, and repaired ordering. The
+catalog names each scanner, symbol service, source record, projector, and
+shared validator.
+
+The rule/source, catalog, and BJT/MOSFET regression slice passed 95 tests;
+catalog, marker, selector, reachability, and architecture gates passed 58;
+component determinism passed 11. Ruff, format, targeted Pyright, JSON parsing,
+Rumdl, mdrepo, and `git diff --check` passed. No native KiCad or CLI/MCP parity
+lane ran; this checkout has no `KICAD_TEMPLATE_ROOT`. The direct-candidate
+census now finds 98 calls (26 production, 72 test) and 24 production plus 24
+test literal maps. Other dictionary-shaped boundaries remain outside that
+narrow count.
+
+## Connector comparison-scope record route (2026-11-04)
+
+The peer, return, and supply comparison routes now carry
+`ConnectorComparisonScope(group, basis)` values in reference-keyed maps.
+Source-matched coverage producers return read-only maps, and the shared index
+owner normalizes reference case and rejects duplicate references. The
+partitioner and singleton-scope candidate read the named fields directly;
+candidate evidence keys and fingerprints stay unchanged. The public
+`connector_pins` facade converts its former tuple-valued inputs at the boundary
+for supported Python callers; internal services use the named records. The
+direct-candidate construction census does not measure this broader interface
+inventory, which remains an active part of SA-01.
+
+The connector scope, alias scan, source-evidence, catalog, marker, and
+architecture slice passed 209 tests, with 2 skipped. Full Ruff, strict Pyright,
+Rumdl (273 Markdown files), mdrepo, rule-catalog JSON parsing, and
+`git diff --check` passed. Native KiCad evidence was not exercised in this
+slice.
+
+The broader production API audit ranks `netlist_pin_net_index` as the next
+mapping route to inspect: its mutable pin-to-set result reaches 23 production
+caller modules. `source_matched_connector_pin_evidence` is the next candidate,
+returning a mutable reference-to-`ConnectorMappedPinEvidence` map to 15
+modules. Before changing either contract, verify whether callers mutate the
+returned containers and choose the smallest shared owner that preserves the
+existing lookup semantics.
+
+## Combined typed-evidence checkpoint (2026-11-04)
+
+The touched design-lint regressions since `v0.5.3rc413` passed as a focused
+selection across 67 test modules: 342 passed and 2 exact-native cases were
+skipped. Ruff and formatting passed for 203 changed Python files; targeted
+Pyright passed for 129 changed production modules. Markdown, mdrepo, rule
+catalog JSON parsing, and `git diff --check` passed. No exact native KiCad
+lane ran in this local selection.

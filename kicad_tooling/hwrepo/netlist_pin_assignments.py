@@ -2,17 +2,31 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
+from types import MappingProxyType
+from typing import TypeAlias
+
 from .casefold_mapping_lookup import lookup_unique_casefold
 from .netlist_contract_models import NetlistContract
 
+NetlistPinNetIndex: TypeAlias = Mapping[str, AbstractSet[str]]
 
-def netlist_pin_net_index(observed: NetlistContract) -> dict[str, set[str]]:
-    """Return each case-folded pin's exact assigned schematic net names."""
-    by_pin: dict[str, set[str]] = {}
+
+def netlist_pin_net_index(observed: NetlistContract) -> NetlistPinNetIndex:
+    """Return a read-only case-folded index of exact pin-to-net assignments."""
+    return MappingProxyType(
+        {pin: frozenset(nets) for pin, nets in netlist_pin_net_assignments(observed).items()}
+    )
+
+
+def netlist_pin_net_assignments(observed: NetlistContract) -> dict[str, tuple[str, ...]]:
+    """Return each pin's native net occurrences in source iteration order."""
+    by_pin: dict[str, list[str]] = {}
     for net, pins in observed.nets.items():
         for pin in pins:
-            by_pin.setdefault(pin.casefold(), set()).add(net)
-    return by_pin
+            by_pin.setdefault(pin.casefold(), []).append(net)
+    return {pin: tuple(nets) for pin, nets in by_pin.items()}
 
 
 def netlist_pin_inventory_contains(observed: NetlistContract, pin: str) -> bool | None:

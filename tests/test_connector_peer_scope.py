@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from kicad_tooling.hwrepo.connector_comparison_scope_types import ConnectorComparisonScope
 from kicad_tooling.hwrepo.connector_coverage import (
     evaluate as evaluate_connector_coverage,
 )
@@ -96,8 +97,12 @@ def test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global
     split = uart_peer_netlist(split_return=True)
     separate_groups = uart_header_coverage(split, groups=("uart-1", "uart-2"))
     assert source_matched_connector_peer_assignment_groups(split, separate_groups) == {
-        "J1": ("uart-1", "Reviewed J1 as a member of peer-assignment group uart-1"),
-        "J2": ("uart-2", "Reviewed J2 as a member of peer-assignment group uart-2"),
+        "J1": ConnectorComparisonScope(
+            "uart-1", "Reviewed J1 as a member of peer-assignment group uart-1"
+        ),
+        "J2": ConnectorComparisonScope(
+            "uart-2", "Reviewed J2 as a member of peer-assignment group uart-2"
+        ),
     }
     separate_report = evaluate_design_lint(
         "synthetic-separate-uart-peer-groups",
@@ -241,6 +246,14 @@ def test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global
         pin_functions={f"J{index}.1": "Pin_1" for index in (1, 2, 3)},
     )
     assert connector_peer_pin_assignment_outliers(outlier_netlist)[0].outlier_pins == ("J3.1",)
+    assert not connector_peer_pin_assignment_outliers(
+        outlier_netlist,
+        peer_assignment_groups={
+            "J1": ConnectorComparisonScope("uart-1", "Reviewed UART1 peer pins"),
+            "J2": ConnectorComparisonScope("uart-1", "Reviewed UART1 peer pins"),
+            "J3": ConnectorComparisonScope("uart-2", "Reviewed UART2 peer pins"),
+        },
+    )
     assert not connector_peer_pin_assignment_outliers(
         outlier_netlist,
         peer_assignment_groups={

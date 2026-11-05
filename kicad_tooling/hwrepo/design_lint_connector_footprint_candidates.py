@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
+from .connector_comparison_scope_types import ConnectorComparisonScopes
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_footprint_named_passive_divergence import (
     evaluate_footprint_named_passive_assignment_divergence,
@@ -81,7 +80,7 @@ from .netlist_contract_models import NetlistContract
 def connector_footprint_peer_pin_candidates(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
-    peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
+    peer_assignment_groups: ConnectorComparisonScopes | None = None,
     connector_coverage: ConnectorCoverageReport | None = None,
 ) -> tuple[Candidate, ...]:
     """Create review prompts when footprint-similar connector pin assignments differ."""

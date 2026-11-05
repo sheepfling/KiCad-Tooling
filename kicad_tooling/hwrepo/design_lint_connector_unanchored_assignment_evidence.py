@@ -4,10 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .connector_coverage import (
-    connector_peer_assignment_groups_by_reference,
-    source_matched_connector_peer_assignment_groups,
-)
+from .connector_comparison_scope_types import connector_comparison_scopes_by_reference
+from .connector_coverage import source_matched_connector_peer_assignment_groups
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_footprint_peer_pin_types import (
     ConnectorFootprintPeerPinDivergence,
@@ -56,8 +54,8 @@ def _validate_current_unanchored_assignment_evidence(
         observed,
         source.coverage,
     )
-    if connector_peer_assignment_groups_by_reference(current_peer_groups) != (
-        connector_peer_assignment_groups_by_reference(scan.source.peer_assignment_groups)
+    if connector_comparison_scopes_by_reference(current_peer_groups) != (
+        connector_comparison_scopes_by_reference(scan.source.peer_assignment_groups)
     ):
         raise ValueError(
             "Unanchored assignment scan must retain current source-matched peer groups"

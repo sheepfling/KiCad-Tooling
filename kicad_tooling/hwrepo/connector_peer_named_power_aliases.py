@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
+from .connector_comparison_scope_types import ConnectorComparisonScopes
 from .connector_identity import (
     is_named_supply_function,
     is_return_function,
@@ -31,7 +31,7 @@ def connector_named_power_alias_peers(
     observed: NetlistContract,
     electrical_type: ConnectorPowerElectricalType,
     declared_references: tuple[str, ...] = (),
-    peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
+    peer_assignment_groups: ConnectorComparisonScopes | None = None,
 ) -> tuple[ConnectorNamedPowerAliasPeer, ...]:
     """Return guarded, cross-symbol aliases for explicit unrecognized power pins."""
     symbols_by_reference = {

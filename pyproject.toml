@@ -38,7 +38,7 @@ dev = [
   "mdrepo==0.0.1.post0",
 ]
 dev-experimental = [
-  "alphus @ git+https://github.com/sheepfling/alphus.git@d5dfadf83006841cf135fca1995c628bac43d9e0",
+  "alphus @ git+https://github.com/sheepfling/alphus.git@3435f81aff7abac7716a5780d26319e8f314d61d",
 ]
 
 [project.scripts]

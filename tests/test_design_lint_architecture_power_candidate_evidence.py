@@ -6,6 +6,7 @@ import ast
 
 import pytest
 
+from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
 from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, line_count
 
 pytestmark = [
@@ -76,3 +77,107 @@ def test_each_power_source_loop_uses_the_typed_projection_adapter() -> None:
         assert not any(
             isinstance(node, ast.keyword) and node.arg == "evidence" for node in ast.walk(loop)
         ), source_name
+
+
+def test_power_pin_role_rules_use_bounded_source_evidence() -> None:
+    source_owner = HWREPO / "design_lint_power_pin_role_evidence.py"
+    source_tree = ast.parse(source_owner.read_text(encoding="utf-8"), filename=source_owner.name)
+    source_classes = {node.name for node in source_tree.body if isinstance(node, ast.ClassDef)}
+
+    assert line_count(source_owner) < IMPLEMENTATION_MAX_LINES
+    assert source_classes >= {
+        "NamedPowerPinNetRoleConflictEvidence",
+        "NamedSupplyPinNegativeRailEvidence",
+    }
+
+    routes = {
+        "power_pin_net_roles.py": (
+            "named_power_pin_net_role_conflicts",
+            "power.pin_function_net_role_conflict",
+            "NamedPowerPinNetRoleConflictEvidence",
+        ),
+        "power_negative_rail.py": (
+            "positive_supply_pins_on_negative_rails",
+            "power.named_supply_pin_on_negative_rail",
+            "NamedSupplyPinNegativeRailEvidence",
+        ),
+    }
+    for filename, (function_name, rule_id, evidence_name) in routes.items():
+        path = HWREPO / filename
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
+        function = next(
+            node
+            for node in tree.body
+            if isinstance(node, ast.FunctionDef) and node.name == function_name
+        )
+        calls = [node for node in ast.walk(function) if isinstance(node, ast.Call)]
+        assert any(
+            isinstance(node.func, ast.Attribute) and node.func.attr == "from_source_evidence"
+            for node in calls
+        ), function_name
+        assert not any(
+            isinstance(node, ast.keyword) and node.arg == "evidence" for node in ast.walk(function)
+        ), function_name
+
+        rule = rule_catalog(rule_id=rule_id).rules[0]
+        assert "kicad_tooling/hwrepo/design_lint_power_candidate_evidence.py#PowerCandidate" in (
+            rule.implementation_refs
+        )
+        assert (
+            f"kicad_tooling/hwrepo/design_lint_power_pin_role_evidence.py#{evidence_name}"
+            in rule.implementation_refs
+        )
+
+
+def test_authored_power_map_rules_use_bounded_source_evidence() -> None:
+    routes = {
+        "design_lint_power_decoupling.py": (
+            "ic_decoupling_candidates",
+            "power.ic_decoupling_below_project_minimum",
+            "kicad_tooling/hwrepo/design_lint_ic_decoupling_candidate_evidence.py#IcDecouplingFindingEvidence",
+        ),
+        "design_lint_power_regulator_passives.py": (
+            "regulator_required_passive_candidates",
+            "power.regulator_required_passive_topology_mismatch",
+            "kicad_tooling/hwrepo/design_lint_regulator_passive_candidate_evidence.py#RegulatorPassiveTopologyFindingEvidence",
+        ),
+    }
+    source_owners = (
+        "design_lint_ic_decoupling_candidate_evidence.py",
+        "design_lint_regulator_passive_candidate_evidence.py",
+    )
+    for filename in (*source_owners, *routes):
+        assert line_count(HWREPO / filename) < IMPLEMENTATION_MAX_LINES
+
+    for filename, (function_name, rule_id, source_reference) in routes.items():
+        path = HWREPO / filename
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
+        function = next(
+            node
+            for node in tree.body
+            if isinstance(node, ast.FunctionDef) and node.name == function_name
+        )
+        calls = [node for node in ast.walk(function) if isinstance(node, ast.Call)]
+        assert any(
+            isinstance(node.func, ast.Attribute) and node.func.attr == "from_source_evidence"
+            for node in calls
+        ), function_name
+        assert not any(
+            isinstance(node, ast.keyword) and node.arg == "evidence" for node in ast.walk(function)
+        ), function_name
+
+        rule = rule_catalog(rule_id=rule_id).rules[0]
+        assert source_reference in rule.implementation_refs
+        assert "kicad_tooling/hwrepo/design_lint_power_candidate_evidence.py#PowerCandidate" in (
+            rule.implementation_refs
+        )
+        assert (
+            "kicad_tooling/hwrepo/design_lint_power_candidate_evidence.py#project_power_candidate_evidence"
+            in rule.implementation_refs
+        )
+        expected_validation_owner = (
+            "kicad_tooling/hwrepo/design_lint_ic_decoupling_candidate_evidence.py#review_ic_decoupling_requirement"
+            if rule_id == "power.ic_decoupling_below_project_minimum"
+            else "kicad_tooling/hwrepo/regulator_passive_checks.py#regulator_passive_topology_issues"
+        )
+        assert expected_validation_owner in rule.implementation_refs

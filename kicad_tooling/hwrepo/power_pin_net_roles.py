@@ -2,53 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Literal
-
 from .connector_identity import (
     connector_candidate_references,
     is_return_function,
     power_function_key,
 )
+from .design_lint_power_candidate_evidence import PowerCandidate
+from .design_lint_power_pin_role_evidence import (
+    NamedPowerPinNetRoleConflictEvidence,
+    opposite_net_role_sources,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
-from .return_nets import is_return_like_net_name
-
-
-def _net_role_sources(
-    observed: NetlistContract,
-    net: str,
-    *,
-    role: Literal["return", "positive"],
-    exclude_pin: str,
-) -> tuple[str, ...]:
-    """Return bounded label and peer-pin evidence for one apparent net role."""
-    if role == "return":
-        if power_function_key(net) is not None:
-            return ()
-        if is_return_like_net_name(net):
-            return ("net_name=return_like",)
-        matches = tuple(
-            sorted(
-                f"{pin}:native_function={observed.pin_functions[pin]}"
-                for pin in observed.nets.get(net, ())
-                if pin.casefold() != exclude_pin.casefold()
-                and is_return_function(observed.pin_functions.get(pin, ""))
-            )
-        )
-        return matches
-    if is_return_like_net_name(net):
-        return ()
-    if power_function_key(net) is not None:
-        return (f"net_name=positive_supply:{power_function_key(net)}",)
-    matches = tuple(
-        sorted(
-            f"{pin}:native_function={observed.pin_functions[pin]}"
-            for pin in observed.nets.get(net, ())
-            if pin.casefold() != exclude_pin.casefold()
-            and power_function_key(observed.pin_functions.get(pin, "")) is not None
-        )
-    )
-    return matches
+from .netlist_pin_assignments import netlist_pin_net_index
 
 
 def named_power_pin_net_role_conflicts(
@@ -73,10 +39,7 @@ def named_power_pin_net_role_conflicts(
         )
     }
     dnp = {reference.casefold() for reference in observed.dnp_components}
-    nets_by_pin: dict[str, set[str]] = {}
-    for net, pins in observed.nets.items():
-        for pin in pins:
-            nets_by_pin.setdefault(pin.casefold(), set()).add(net)
+    nets_by_pin = netlist_pin_net_index(observed)
 
     findings: list[Candidate] = []
     for pin, function in sorted(observed.pin_functions.items()):
@@ -95,7 +58,7 @@ def named_power_pin_net_role_conflicts(
             continue
         net = next(iter(assigned_nets))
         opposite_role = "return" if supply_key is not None else "positive"
-        role_sources = _net_role_sources(
+        role_sources = opposite_net_role_sources(
             observed,
             net,
             role=opposite_role,
@@ -103,10 +66,17 @@ def named_power_pin_net_role_conflicts(
         )
         if not role_sources:
             continue
-        pin_role = f"positive_supply:{supply_key}" if supply_key is not None else "return"
+        source = NamedPowerPinNetRoleConflictEvidence(
+            observed=observed,
+            pin=pin,
+            function=function,
+            net=net,
+            reviewed_connector_references=reviewed_connector_references,
+            opposite_role_sources=role_sources,
+        )
         findings.append(
-            Candidate(
-                rule_id="power.pin_function_net_role_conflict",
+            PowerCandidate.from_source_evidence(
+                source,
                 subject=f"{pin}: {function} pin assigned to {net}",
                 message=(
                     "This component pin's named power or return function appears to conflict "
@@ -114,11 +84,6 @@ def named_power_pin_net_role_conflicts(
                     "the approved symbol pinout and rail intent; these names are review clues, "
                     "not proof of electrical potential or required connectivity."
                 ),
-                evidence={
-                    pin: (f"native_function={function}", f"pin_role={pin_role}"),
-                    "assigned_net": (net,),
-                    "opposite_net_role_sources": role_sources,
-                },
             )
         )
     return tuple(findings)

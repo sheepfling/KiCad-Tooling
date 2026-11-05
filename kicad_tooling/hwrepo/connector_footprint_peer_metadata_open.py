@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
+from .connector_comparison_scope_types import ConnectorComparisonScopes
 from .connector_footprint_peer_anchors import (
     connector_footprint_peer_common_anchor_pin_numbers,
 )
@@ -27,7 +26,7 @@ RULE_ID: DesignLintRuleId = "connector.footprint_peer_pin_metadata_open_outlier"
 def connector_footprint_peer_pin_metadata_open_outliers(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
-    peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
+    peer_assignment_groups: ConnectorComparisonScopes | None = None,
 ) -> tuple[Candidate, ...]:
     """Review exact partial-open assignments on peers with different pin roles."""
     functions = {pin.casefold(): value for pin, value in observed.pin_functions.items()}

@@ -9,6 +9,7 @@ from typing import cast
 
 import pytest
 
+from kicad_tooling.hwrepo.connector_comparison_scope_types import ConnectorComparisonScope
 from kicad_tooling.hwrepo.connector_footprint_peer_pins import (
     scan_connector_footprint_peer_pin_assignments,
 )
@@ -77,8 +78,8 @@ _RULE_CASES: tuple[
 
 def test_named_divergences_retain_current_scan_source_and_projection() -> None:
     groups = {
-        "J1": ("reviewed-port", "same source connector map"),
-        "J2": ("reviewed-port", "same source connector map"),
+        "J1": ConnectorComparisonScope("reviewed-port", "same source connector map"),
+        "J2": ConnectorComparisonScope("reviewed-port", "same source connector map"),
     }
     for rule_id, electrical_type, netlist_factory, function in _RULE_CASES:
         observed = netlist_factory(function=function)
@@ -135,23 +136,22 @@ def test_named_divergence_rejects_assignments_stale_against_source() -> None:
 def test_scan_source_copies_and_freezes_authored_peer_group_scope() -> None:
     observed = named_power_input_divergence_netlist()
     groups = {
-        "J1": ("port-a", "Reviewed interface map"),
-        "J2": ("port-a", "Reviewed interface map"),
+        "J1": ConnectorComparisonScope("port-a", "Reviewed interface map"),
+        "J2": ConnectorComparisonScope("port-a", "Reviewed interface map"),
     }
     scan = scan_connector_footprint_peer_pin_assignments(
         observed,
         peer_assignment_groups=groups,
     )
-    groups["J1"] = ("changed", "changed")
+    groups["J1"] = ConnectorComparisonScope("changed", "changed")
 
     assert scan.source.peer_assignment_groups == {
-        "J1": ("port-a", "Reviewed interface map"),
-        "J2": ("port-a", "Reviewed interface map"),
+        "J1": ConnectorComparisonScope("port-a", "Reviewed interface map"),
+        "J2": ConnectorComparisonScope("port-a", "Reviewed interface map"),
     }
     with pytest.raises(TypeError):
-        cast(dict[str, tuple[str, str]], scan.source.peer_assignment_groups)["J1"] = (
-            "changed",
-            "changed",
+        cast(dict[str, ConnectorComparisonScope], scan.source.peer_assignment_groups)["J1"] = (
+            ConnectorComparisonScope("changed", "changed")
         )
 
 

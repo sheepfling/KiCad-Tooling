@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
+from .connector_comparison_scope_types import ConnectorComparisonScopes
 from .connector_identity import (
     connector_candidate_references,
     has_meaningful_pin_function,
@@ -21,7 +20,7 @@ from .netlist_contract_models import NetlistContract
 def connector_peer_pin_assignment_outliers(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
-    peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
+    peer_assignment_groups: ConnectorComparisonScopes | None = None,
 ) -> tuple[ConnectorPeerPinAssignmentOutlier, ...]:
     """Find comparable connector peer pins with incomplete or minority assignments.
 
@@ -201,7 +200,7 @@ def connector_peer_pin_assignment_outliers(
 def connector_peer_pin_assignment_divergences(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
-    peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
+    peer_assignment_groups: ConnectorComparisonScopes | None = None,
 ) -> tuple[ConnectorPeerPinAssignmentDivergence, ...]:
     """Review comparable assigned peer contacts that differ with unknown roles.
 

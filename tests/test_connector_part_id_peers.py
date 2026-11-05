@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from mcp import Client
 
+from kicad_tooling.hwrepo.connector_comparison_scope_types import ConnectorComparisonScope
 from kicad_tooling.hwrepo.connector_pins import (
     connector_peer_pin_assignment_divergences,
     connector_peer_pin_assignment_outliers,
@@ -98,8 +99,8 @@ def test_common_part_id_aliases_are_a_quiet_control_and_split_groups_allow_isola
     assert divergence[0].evidence["peer_identity_basis"] == ("part_id",)
 
     reviewed_groups = {
-        "J1": ("isolated-port-a", "Reviewed independent interface A"),
-        "J2": ("isolated-port-b", "Reviewed independent interface B"),
+        "J1": ConnectorComparisonScope("isolated-port-a", "Reviewed independent interface A"),
+        "J2": ConnectorComparisonScope("isolated-port-b", "Reviewed independent interface B"),
     }
     assert (
         connector_peer_pin_assignment_outliers(split, peer_assignment_groups=reviewed_groups) == ()

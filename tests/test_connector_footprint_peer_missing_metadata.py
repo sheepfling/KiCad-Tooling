@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from mcp import Client
 
+from kicad_tooling.hwrepo.connector_comparison_scope_types import ConnectorComparisonScope
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.evidence import digest
@@ -162,8 +163,8 @@ def test_current_peer_assignment_scopes_prevent_cross_port_comparison() -> None:
     candidates = connector_footprint_peer_pin_missing_metadata_assignment_divergences(
         peer_missing_metadata_netlist(),
         peer_assignment_groups={
-            "J1": ("port-a", "Synthetic independent port A"),
-            "J2": ("port-b", "Synthetic independent port B"),
+            "J1": ConnectorComparisonScope("port-a", "Synthetic independent port A"),
+            "J2": ConnectorComparisonScope("port-b", "Synthetic independent port B"),
         },
     )
 

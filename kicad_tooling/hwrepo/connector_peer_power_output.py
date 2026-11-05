@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
+from .connector_comparison_scope_types import ConnectorComparisonScopes
 from .connector_peer_named_power_aliases import (
     connector_named_power_alias_peers,
 )
@@ -24,7 +23,7 @@ DIVERGENCE_RULE_ID: ConnectorNamedPowerAliasRuleId = (
 def connector_named_power_output_open_assignments(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
-    peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
+    peer_assignment_groups: ConnectorComparisonScopes | None = None,
 ) -> tuple[Candidate, ...]:
     """Review a named power-output contact open on one PART_ID symbol alias peer.
 
@@ -84,7 +83,7 @@ def connector_named_power_output_open_assignments(
 def connector_named_power_output_all_open(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
-    peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
+    peer_assignment_groups: ConnectorComparisonScopes | None = None,
 ) -> tuple[Candidate, ...]:
     """Review a named power-output pin left open on every guarded connector alias."""
     found: list[Candidate] = []
@@ -131,7 +130,7 @@ def connector_named_power_output_all_open(
 def connector_named_power_output_assignment_divergence(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
-    peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
+    peer_assignment_groups: ConnectorComparisonScopes | None = None,
 ) -> tuple[Candidate, ...]:
     """Review fully assigned named power-output pins on distinct alias nets."""
     found: list[Candidate] = []

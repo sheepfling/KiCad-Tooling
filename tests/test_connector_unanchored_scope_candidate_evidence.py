@@ -6,6 +6,7 @@ from dataclasses import replace
 
 import pytest
 
+from kicad_tooling.hwrepo.connector_comparison_scope_types import ConnectorComparisonScope
 from kicad_tooling.hwrepo.connector_footprint_peer_assignments import (
     connector_footprint_peer_pin_assignments,
     connector_footprint_peer_pin_net_map,
@@ -93,7 +94,7 @@ def test_unreviewed_scope_rejects_new_authored_peer_assignment_scope() -> None:
     source = _candidate().source_evidence
     changed_scan_source = replace(
         source.scan.source,
-        peer_assignment_groups={"J1": ("reviewed-peers", "Reviewed group")},
+        peer_assignment_groups={"J1": ConnectorComparisonScope("reviewed-peers", "Reviewed group")},
     )
 
     with pytest.raises(ValueError, match="absence of peer groups"):

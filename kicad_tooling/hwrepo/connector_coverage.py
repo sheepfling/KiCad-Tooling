@@ -7,6 +7,10 @@ from collections.abc import Set as AbstractSet
 from types import MappingProxyType
 from typing import Literal
 
+from .connector_comparison_scope_types import (
+    ConnectorComparisonScope,
+    ConnectorComparisonScopes,
+)
 from .connector_coverage_models import (
     ConnectorCoverageEntry,
     ConnectorCoverageReport,
@@ -370,12 +374,12 @@ def source_matched_connector_pin_evidence(
 def source_matched_connector_peer_assignment_groups(
     observed: NetlistContract,
     coverage: ConnectorCoverageReport | None,
-) -> dict[str, tuple[str, str]]:
+) -> ConnectorComparisonScopes:
     """Return reviewed comparison scopes only when their connector maps still match."""
     if coverage is None:
-        return {}
+        return MappingProxyType({})
     pin_evidence = source_matched_connector_pin_evidence(observed, coverage)
-    result: dict[str, tuple[str, str]] = {}
+    result: dict[str, ConnectorComparisonScope] = {}
     for entry in coverage.entries:
         if (
             entry.status != "COVERED"
@@ -386,35 +390,22 @@ def source_matched_connector_peer_assignment_groups(
         ):
             continue
         if all(pin_evidence.get(pin.component_pin) == pin for pin in entry.mapped_pins):
-            result[entry.reference] = (
-                entry.peer_assignment_group,
-                entry.peer_assignment_basis,
+            result[entry.reference] = ConnectorComparisonScope(
+                group=entry.peer_assignment_group,
+                basis=entry.peer_assignment_basis,
             )
-    return result
-
-
-def connector_peer_assignment_groups_by_reference(
-    groups: Mapping[str, tuple[str, str]] | None,
-) -> Mapping[str, tuple[str, str]]:
-    """Freeze a peer-scope map with case-insensitive, unique reference keys."""
-    normalized: dict[str, tuple[str, str]] = {}
-    for reference, scope in (groups or {}).items():
-        key = reference.casefold()
-        if key in normalized:
-            raise ValueError("Reviewed connector peer references must be unique")
-        normalized[key] = scope
-    return MappingProxyType(normalized)
+    return MappingProxyType(result)
 
 
 def source_matched_connector_return_comparison_groups(
     observed: NetlistContract,
     coverage: ConnectorCoverageReport | None,
-) -> dict[str, tuple[str, str]]:
+) -> ConnectorComparisonScopes:
     """Return return-pin scopes only for complete maps that still match this netlist."""
     if coverage is None:
-        return {}
+        return MappingProxyType({})
     pin_evidence = source_matched_connector_pin_evidence(observed, coverage)
-    result: dict[str, tuple[str, str]] = {}
+    result: dict[str, ConnectorComparisonScope] = {}
     for entry in coverage.entries:
         if (
             entry.status != "COVERED"
@@ -425,22 +416,22 @@ def source_matched_connector_return_comparison_groups(
         ):
             continue
         if all(pin_evidence.get(pin.component_pin) == pin for pin in entry.mapped_pins):
-            result[entry.reference] = (
-                entry.return_comparison_group,
-                entry.return_comparison_basis,
+            result[entry.reference] = ConnectorComparisonScope(
+                group=entry.return_comparison_group,
+                basis=entry.return_comparison_basis,
             )
-    return result
+    return MappingProxyType(result)
 
 
 def source_matched_connector_supply_comparison_groups(
     observed: NetlistContract,
     coverage: ConnectorCoverageReport | None,
-) -> dict[str, tuple[str, str]]:
+) -> ConnectorComparisonScopes:
     """Return supply scopes only for complete maps that still match this netlist."""
     if coverage is None:
-        return {}
+        return MappingProxyType({})
     pin_evidence = source_matched_connector_pin_evidence(observed, coverage)
-    result: dict[str, tuple[str, str]] = {}
+    result: dict[str, ConnectorComparisonScope] = {}
     for entry in coverage.entries:
         if entry.supply_comparison_group is None:
             continue
@@ -454,9 +445,9 @@ def source_matched_connector_supply_comparison_groups(
             or not all(pin_evidence.get(pin.component_pin) == pin for pin in entry.mapped_pins)
         ):
             # A stale explicit scope must never partition the remaining current peers.
-            return {}
-        result[entry.reference] = (
-            entry.supply_comparison_group,
-            entry.supply_comparison_basis,
+            return MappingProxyType({})
+        result[entry.reference] = ConnectorComparisonScope(
+            group=entry.supply_comparison_group,
+            basis=entry.supply_comparison_basis,
         )
-    return result
+    return MappingProxyType(result)

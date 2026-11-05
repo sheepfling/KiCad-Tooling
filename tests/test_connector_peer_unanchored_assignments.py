@@ -7,6 +7,7 @@ from typing import cast
 
 import pytest
 
+from kicad_tooling.hwrepo.connector_comparison_scope_types import ConnectorComparisonScope
 from kicad_tooling.hwrepo.connector_coverage import (
     source_matched_connector_peer_assignment_groups,
 )
@@ -52,8 +53,8 @@ def test_unanchored_generic_alias_assignments_in_reviewed_peer_group_need_review
     coverage = reviewed_coverage(observed)
 
     assert source_matched_connector_peer_assignment_groups(observed, coverage) == {
-        "J1": (PEER_GROUP, PEER_BASIS),
-        "J2": (PEER_GROUP, PEER_BASIS),
+        "J1": ConnectorComparisonScope(PEER_GROUP, PEER_BASIS),
+        "J2": ConnectorComparisonScope(PEER_GROUP, PEER_BASIS),
     }
     report = lint_report(observed, coverage)
     findings = [item for item in report.findings if item.rule_id == RULE_ID]

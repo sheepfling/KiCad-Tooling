@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from .connector_comparison_scope_types import ConnectorComparisonScopes
 from .connector_coverage_models import ConnectorMappedPinEvidence
 from .connector_peer_pin_models import SimilarConnectorPinGroup
 from .netlist_contract_models import NetlistContract
@@ -203,9 +204,9 @@ def similar_connector_pin_groups(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
     reviewed_connector_pins: Mapping[str, ConnectorMappedPinEvidence] | None = None,
-    peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
-    return_comparison_groups: Mapping[str, tuple[str, str]] | None = None,
-    supply_comparison_groups: Mapping[str, tuple[str, str]] | None = None,
+    peer_assignment_groups: ConnectorComparisonScopes | None = None,
+    return_comparison_groups: ConnectorComparisonScopes | None = None,
+    supply_comparison_groups: ConnectorComparisonScopes | None = None,
     *,
     include_consistent: bool = False,
 ) -> tuple[SimilarConnectorPinGroup, ...]:
@@ -315,7 +316,7 @@ def similar_connector_pin_groups(
 
 def partition_peer_assignments(
     assignments: Mapping[str, tuple[str, ...]],
-    peer_assignment_groups: Mapping[str, tuple[str, str]] | None,
+    peer_assignment_groups: ConnectorComparisonScopes | None,
 ) -> tuple[PeerAssignmentPartition, ...]:
     """Scope a comparison only when every participating connector has a current group."""
     if not peer_assignment_groups:
@@ -326,10 +327,7 @@ def partition_peer_assignments(
                 peer_assignment_basis=(),
             ),
         )
-    groups = {
-        reference.casefold(): (group, basis)
-        for reference, (group, basis) in peer_assignment_groups.items()
-    }
+    groups = {reference.casefold(): scope for reference, scope in peer_assignment_groups.items()}
     connector_references = tuple(
         sorted(
             {pin.rsplit(".", 1)[0] for pin in assignments},
@@ -350,7 +348,9 @@ def partition_peer_assignments(
     partitions: dict[str, tuple[str, dict[str, tuple[str, ...]], set[str]]] = {}
     for pin, nets in sorted(assignments.items(), key=lambda item: (item[0].casefold(), item[0])):
         reference = pin.rsplit(".", 1)[0]
-        group, basis = groups[reference.casefold()]
+        scope = groups[reference.casefold()]
+        group = scope.group
+        basis = scope.basis
         group_key = group.casefold()
         if group_key not in partitions:
             partitions[group_key] = (group, {}, set())

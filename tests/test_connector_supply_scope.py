@@ -8,6 +8,7 @@ from types import MappingProxyType
 import pytest
 from pydantic import ValidationError
 
+from kicad_tooling.hwrepo.connector_comparison_scope_types import ConnectorComparisonScope
 from kicad_tooling.hwrepo.connector_coverage import (
     evaluate as evaluate_connector_coverage,
 )
@@ -114,7 +115,7 @@ def test_split_supply_in_one_reviewed_group_prompts_and_separate_group_is_scoped
     coverage = _coverage(netlist, _GROUPS)
 
     assert source_matched_connector_supply_comparison_groups(netlist, coverage) == {
-        reference: (
+        reference: ConnectorComparisonScope(
             group,
             f"Reviewed {reference} in supply-comparison group {group}",
         )

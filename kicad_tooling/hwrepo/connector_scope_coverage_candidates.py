@@ -69,13 +69,11 @@ def connector_scope_singleton_candidates(
             # Incomplete scopes retain the existing broad comparison.
             continue
 
-        scope_by_reference = {
-            reference.casefold(): (scope, basis) for reference, (scope, basis) in scope_map.items()
-        }
+        scope_by_reference = {reference.casefold(): scope for reference, scope in scope_map.items()}
         references_by_scope: dict[str, set[str]] = defaultdict(set)
         for reference in references:
-            scope, _ = scope_by_reference[reference.casefold()]
-            references_by_scope[scope.casefold()].add(reference)
+            scope = scope_by_reference[reference.casefold()]
+            references_by_scope[scope.group.casefold()].add(reference)
 
         isolated_references = tuple(
             sorted(
@@ -94,9 +92,10 @@ def connector_scope_singleton_candidates(
         pin_assignments = tuple(
             sorted(
                 (
-                    f"{pin}={','.join(nets) if nets else '<unassigned>'}; {scope_kind}={scope}"
+                    f"{pin}={','.join(nets) if nets else '<unassigned>'}; "
+                    f"{scope_kind}={scope.group}"
                     for pin, nets in group.pins.items()
-                    for scope, _ in (scope_by_reference[pin.rsplit(".", 1)[0].casefold()],)
+                    for scope in (scope_by_reference[pin.rsplit(".", 1)[0].casefold()],)
                 ),
                 key=str.casefold,
             )
@@ -104,9 +103,9 @@ def connector_scope_singleton_candidates(
         scope_evidence = tuple(
             sorted(
                 (
-                    f"{reference}: {scope_kind}={scope}; {basis}"
+                    f"{reference}: {scope_kind}={scope.group}; {scope.basis}"
                     for reference in references
-                    for scope, basis in (scope_by_reference[reference.casefold()],)
+                    for scope in (scope_by_reference[reference.casefold()],)
                 ),
                 key=str.casefold,
             )

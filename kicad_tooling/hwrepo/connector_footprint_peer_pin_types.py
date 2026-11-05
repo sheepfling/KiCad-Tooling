@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from .connector_comparison_scope_types import ConnectorComparisonScope, ConnectorComparisonScopes
 from .netlist_contract_models import NetlistContract
 
 SIGNAL_ELECTRICAL_TYPES = frozenset(
@@ -21,12 +22,15 @@ def _freeze_assignments(
 
 
 def _freeze_peer_assignment_groups(
-    groups: Mapping[str, tuple[str, str]] | None,
-) -> Mapping[str, tuple[str, str]] | None:
+    groups: ConnectorComparisonScopes | None,
+) -> ConnectorComparisonScopes | None:
     if groups is None:
         return None
     return MappingProxyType(
-        {reference: (value[0], value[1]) for reference, value in groups.items()}
+        {
+            reference: ConnectorComparisonScope(value.group, value.basis)
+            for reference, value in groups.items()
+        }
     )
 
 
@@ -36,7 +40,7 @@ class ConnectorFootprintPeerPinScanSource:
 
     observed: NetlistContract
     declared_references: tuple[str, ...]
-    peer_assignment_groups: Mapping[str, tuple[str, str]] | None
+    peer_assignment_groups: ConnectorComparisonScopes | None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "declared_references", tuple(self.declared_references))

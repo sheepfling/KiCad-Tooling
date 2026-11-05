@@ -58,7 +58,7 @@ def test_named_open_roles_use_the_typed_scan_and_coverage_owner() -> None:
         f"{owner}#ConnectorNamedOpenCandidate",
         f"{owner}#project_connector_named_open_evidence",
         "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_peer_assignment_groups",
-        "kicad_tooling/hwrepo/connector_coverage.py#connector_peer_assignment_groups_by_reference",
+        "kicad_tooling/hwrepo/connector_comparison_scope_types.py#connector_comparison_scopes_by_reference",
         "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
     }
 

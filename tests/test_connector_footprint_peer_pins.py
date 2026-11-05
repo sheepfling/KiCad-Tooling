@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from kicad_tooling.hwrepo.connector_comparison_scope_types import ConnectorComparisonScope
 from kicad_tooling.hwrepo.connector_footprint_peer_pins import (
     scan_connector_footprint_peer_pin_assignments,
 )
@@ -159,8 +160,8 @@ def test_part_id_dnp_and_separate_peer_groups_exclude_footprint_alias_comparison
     isolated = scan_connector_footprint_peer_pin_assignments(
         peer_netlist(),
         peer_assignment_groups={
-            "J1": ("usb-port", "synthetic current review"),
-            "J2": ("uart-port", "synthetic current review"),
+            "J1": ConnectorComparisonScope("usb-port", "synthetic current review"),
+            "J2": ConnectorComparisonScope("uart-port", "synthetic current review"),
         },
     )
     assert isolated.peer_scope_group_count == 0

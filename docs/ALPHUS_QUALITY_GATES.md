@@ -1,7 +1,7 @@
 # Alphus quality checks
 
-The optional `dev-experimental` extra pins Alphus to the revision in
-`pyproject.toml`. The standard `dev` extra does not install it. CI explicitly
+The optional `dev-experimental` extra pins Alphus to the `v0.0.2` tag commit
+in `pyproject.toml`. The standard `dev` extra does not install it. CI explicitly
 opts in because the package and prerelease jobs run its advisory checks and
 regressions.
 `quality-gates.toml` scopes runtime-types and Pydantic practices checks to Python

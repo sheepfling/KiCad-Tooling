@@ -6,10 +6,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
-from .connector_coverage import (
-    connector_peer_assignment_groups_by_reference,
-    source_matched_connector_peer_assignment_groups,
-)
+from .connector_comparison_scope_types import connector_comparison_scopes_by_reference
+from .connector_coverage import source_matched_connector_peer_assignment_groups
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_footprint_peer_pin_types import (
     SIGNAL_ELECTRICAL_TYPES,
@@ -85,8 +83,8 @@ def _validate_current_named_open_evidence(source: ConnectorNamedOpenEvidence) ->
         observed,
         source.coverage,
     )
-    if connector_peer_assignment_groups_by_reference(current_peer_groups) != (
-        connector_peer_assignment_groups_by_reference(scan.source.peer_assignment_groups)
+    if connector_comparison_scopes_by_reference(current_peer_groups) != (
+        connector_comparison_scopes_by_reference(scan.source.peer_assignment_groups)
     ):
         raise ValueError("Named connector open scan must retain current source-matched peer groups")
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import MutableMapping
+from dataclasses import replace
 from operator import setitem
 from typing import cast
 
@@ -10,15 +11,36 @@ import pytest
 
 from kicad_tooling.hwrepo.component_pin_patterns import RepeatedComponentSupplyPins
 from kicad_tooling.hwrepo.component_power_input_domains import SplitPowerInputDomains
+from kicad_tooling.hwrepo.design_lint_ic_decoupling_candidate_evidence import (
+    IcDecouplingFindingEvidence,
+)
 from kicad_tooling.hwrepo.design_lint_power_candidate_evidence import (
     PowerCandidate,
     PowerCandidateSource,
     project_power_candidate_evidence,
 )
+from kicad_tooling.hwrepo.design_lint_power_decoupling import ic_decoupling_candidates
+from kicad_tooling.hwrepo.design_lint_power_pin_role_evidence import (
+    NamedPowerPinNetRoleConflictEvidence,
+    NamedSupplyPinNegativeRailEvidence,
+)
+from kicad_tooling.hwrepo.design_lint_power_regulator_passives import (
+    regulator_required_passive_candidates,
+)
+from kicad_tooling.hwrepo.design_lint_regulator_passive_candidate_evidence import (
+    RegulatorPassiveTopologyFindingEvidence,
+)
 from kicad_tooling.hwrepo.net_dc_reference import ConnectorCapacitorOnlyNet
 from kicad_tooling.hwrepo.power_decoupling import PowerRailCapacitorGap
 from kicad_tooling.hwrepo.power_pin_paths import PowerInputSourcePathGap
 from kicad_tooling.hwrepo.power_rail_models import NumberedPowerRailGroup
+from tests.design_lint_fixtures.ic_decoupling import ic_decoupling_map, ic_decoupling_netlist
+from tests.design_lint_fixtures.power_pin_net_roles import (
+    positive_supply_on_return_netlist,
+    supply_pin_on_rail_netlist,
+)
+from tests.test_regulator_feedback import regulator_netlist
+from tests.test_regulator_required_passives import topology_map
 
 
 @pytest.mark.parametrize(
@@ -119,6 +141,37 @@ from kicad_tooling.hwrepo.power_rail_models import NumberedPowerRailGroup
             {"5V_1": ("J1.1",), "5V_2": ("J2.1",)},
             id="numbered-rails",
         ),
+        pytest.param(
+            NamedPowerPinNetRoleConflictEvidence(
+                observed=positive_supply_on_return_netlist(),
+                pin="U1.1",
+                function="VDD",
+                net="GND",
+                opposite_role_sources=("net_name=return_like",),
+            ),
+            "power.pin_function_net_role_conflict",
+            {
+                "U1.1": ("native_function=VDD", "pin_role=positive_supply:vdd"),
+                "assigned_net": ("GND",),
+                "opposite_net_role_sources": ("net_name=return_like",),
+            },
+            id="power-pin-role-conflict",
+        ),
+        pytest.param(
+            NamedSupplyPinNegativeRailEvidence(
+                observed=supply_pin_on_rail_netlist("-5V"),
+                pin="U1.1",
+                function="VDD",
+                net="-5V",
+            ),
+            "power.named_supply_pin_on_negative_rail",
+            {
+                "U1.1": ("native_function=VDD", "supply_function_key=vdd"),
+                "assigned_net": ("-5V",),
+                "negative_rail_key": ("5V",),
+            },
+            id="named-negative-rail",
+        ),
     ],
 )
 def test_power_projection_keeps_report_fields_bound_to_typed_source(
@@ -188,3 +241,81 @@ def test_numbered_rail_source_copies_and_freezes_its_net_mapping() -> None:
     assert source.model_dump_json() == '{"stem":"5V","nets":{"5V_1":["J1.1"]}}'
     with pytest.raises(TypeError):
         setitem(cast(MutableMapping[str, tuple[str, ...]], source.nets), "5V_2", ("J2.1",))
+
+
+def test_power_pin_role_sources_reject_stale_assignments() -> None:
+    role_source = NamedPowerPinNetRoleConflictEvidence(
+        observed=positive_supply_on_return_netlist(),
+        pin="U1.1",
+        function="VDD",
+        net="GND",
+        opposite_role_sources=("net_name=return_like",),
+    )
+    negative_rail_source = NamedSupplyPinNegativeRailEvidence(
+        observed=supply_pin_on_rail_netlist("-5V"),
+        pin="U1.1",
+        function="VDD",
+        net="-5V",
+    )
+
+    with pytest.raises(ValueError, match="exact current net assignment"):
+        NamedPowerPinNetRoleConflictEvidence(
+            observed=role_source.observed,
+            pin=role_source.pin,
+            function=role_source.function,
+            net="+5V",
+            opposite_role_sources=role_source.opposite_role_sources,
+        )
+    with pytest.raises(ValueError, match="exact current net assignment"):
+        NamedSupplyPinNegativeRailEvidence(
+            observed=negative_rail_source.observed,
+            pin=negative_rail_source.pin,
+            function=negative_rail_source.function,
+            net="-3V3",
+        )
+
+
+def test_ic_decoupling_candidate_revalidates_its_authored_map_and_netlist() -> None:
+    observed = ic_decoupling_netlist(("47nF",))
+    requirements = ic_decoupling_map()
+    (candidate,) = ic_decoupling_candidates(observed, requirements)
+
+    assert isinstance(candidate, PowerCandidate)
+    assert isinstance(candidate.source_evidence, IcDecouplingFindingEvidence)
+    assert candidate.evidence["capacitor_values_pf"] == ("C1=47000",)
+    assert candidate.evidence["observed_total_capacitance_pf"] == ("47000",)
+    assert candidate.evidence["mapping_issues"] == ()
+    assert candidate.evidence["requirement_sha256"] == (
+        candidate.source_evidence.requirement_sha256,
+    )
+
+    with pytest.raises(ValueError, match="current netlist and map"):
+        replace(
+            candidate.source_evidence,
+            observed=ic_decoupling_netlist(("100nF",)),
+        )
+    with pytest.raises(ValueError, match="authored requirement"):
+        replace(
+            candidate.source_evidence,
+            requirements=ic_decoupling_map(minimum_total_pf=80_000.0),
+        )
+
+
+def test_regulator_passive_candidate_revalidates_its_authored_map_and_netlist() -> None:
+    observed = regulator_netlist()
+    requirements = topology_map()
+    (candidate,) = regulator_required_passive_candidates(observed, requirements)
+
+    assert isinstance(candidate, PowerCandidate)
+    assert isinstance(candidate.source_evidence, RegulatorPassiveTopologyFindingEvidence)
+    assert candidate.evidence["topology_id"] == ("main-regulator",)
+    assert candidate.evidence["issues"] == candidate.source_evidence.issues
+    assert candidate.evidence["map_sha256"] == (candidate.source_evidence.map_sha256,)
+
+    with pytest.raises(ValueError, match="one current topology mismatch"):
+        replace(
+            candidate.source_evidence,
+            observed=regulator_netlist(with_compensation_capacitor=True),
+        )
+    with pytest.raises(ValueError, match="current map and netlist"):
+        replace(candidate.source_evidence, requirements=topology_map(include_alternative=True))

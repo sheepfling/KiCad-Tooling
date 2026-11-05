@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .connector_comparison_scope_types import connector_comparison_scopes_by_reference
 from .connector_footprint_peer_anchors import connector_footprint_peer_common_anchor_pin_numbers
 from .connector_footprint_peer_assignments import (
     connector_footprint_peer_pin_assignments,
@@ -67,13 +68,9 @@ def validate_current_unanchored_peer_contacts(
 
     first = items[0]
     references = connector_footprint_peer_unanchored_references(first)
-    source_peer_groups = scan.source.peer_assignment_groups or {}
-    source_peer_groups_by_reference: dict[str, tuple[str, str]] = {}
-    for reference, scope in source_peer_groups.items():
-        reference_key = reference.casefold()
-        if reference_key in source_peer_groups_by_reference:
-            raise ValueError("Unanchored peer scope references must be unique")
-        source_peer_groups_by_reference[reference_key] = scope
+    source_peer_groups_by_reference = connector_comparison_scopes_by_reference(
+        scan.source.peer_assignment_groups
+    )
     if expected_peer_assignment_group is None:
         if any(reference.casefold() in source_peer_groups_by_reference for reference in references):
             raise ValueError(
@@ -81,8 +78,8 @@ def validate_current_unanchored_peer_contacts(
             )
     elif not expected_peer_assignment_group.strip() or any(
         (scope := source_peer_groups_by_reference.get(reference.casefold())) is None
-        or scope[0].casefold() != expected_peer_assignment_group.casefold()
-        or not scope[1].strip()
+        or scope.group.casefold() != expected_peer_assignment_group.casefold()
+        or not scope.basis.strip()
         for reference in references
     ):
         raise ValueError("Unanchored peer contacts must retain their current reviewed peer group")

@@ -81,6 +81,7 @@ CONNECTOR_LINT_TEST_MODULES = frozenset(
         "tests/test_connector_footprint_named_signal_divergence.py",
         "tests/test_connector_footprint_named_power_input_divergence.py",
         "tests/test_design_lint_architecture_connector_footprint_named_divergence_evidence.py",
+        "tests/test_design_lint_architecture_connector_comparison_scope.py",
         "tests/test_connector_footprint_same_voltage_power_input.py",
         "tests/test_connector_footprint_same_voltage_power_input_parity.py",
         "tests/test_connector_footprint_same_voltage_power_input_native_fixture_lane.py",

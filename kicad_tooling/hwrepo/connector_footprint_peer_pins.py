@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
+from .connector_comparison_scope_types import ConnectorComparisonScopes
 from .connector_footprint_peer_assignments import connector_footprint_peer_pin_net_map
 from .connector_footprint_peer_groups import (
     complete_connector_footprint_peer_pin_inventory,
@@ -45,7 +44,7 @@ _GENERIC_ALL_OPEN_PIN_TYPES = frozenset(
 def scan_connector_footprint_peer_pin_assignments(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
-    peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
+    peer_assignment_groups: ConnectorComparisonScopes | None = None,
 ) -> ConnectorFootprintPeerPinScan:
     """Review split generic contacts only when matching footprint peers share an anchor.
 

@@ -3,16 +3,25 @@
 from __future__ import annotations
 
 from .component_mosfet_symbols import mosfet_channel_type, mosfet_terminal_role_numbers
+from .component_named_rail_terminal import (
+    NamedRailTerminalEvidence,
+    normalized_pin_function_index,
+)
 from .component_rail_potentials import named_net_potential, potential_is_lower
-from .design_lint_types import Candidate
+from .design_lint_component_terminal_order_candidate_evidence import (
+    MOSFET_TERMINAL_ORDER_RULE_ID,
+    ComponentTerminalOrderCandidate,
+    MosfetTerminalOrderEvidence,
+)
 from .netlist_contract_models import NetlistContract
+from .netlist_pin_assignments import netlist_pin_net_assignments
 
-RULE_ID = "component.mosfet_terminal_order_on_named_rails"
+RULE_ID = MOSFET_TERMINAL_ORDER_RULE_ID
 
 
 def mosfets_with_unusual_drain_source_rail_order(
     observed: NetlistContract,
-) -> tuple[Candidate, ...]:
+) -> tuple[ComponentTerminalOrderCandidate, ...]:
     """Review a supported MOSFET when named rails reverse conventional D/S order.
 
     NMOS symbols conventionally place the source below the drain; PMOS symbols
@@ -26,17 +35,10 @@ def mosfets_with_unusual_drain_source_rail_order(
         reference.casefold(): tuple(numbers)
         for reference, numbers in observed.component_pin_numbers.items()
     }
-    functions = {
-        pin.casefold(): function.strip().casefold()
-        for pin, function in observed.pin_functions.items()
-        if function.strip()
-    }
-    nets_by_pin: dict[str, list[str]] = {}
-    for net, pins in observed.nets.items():
-        for pin in pins:
-            nets_by_pin.setdefault(pin.casefold(), []).append(net)
+    functions = normalized_pin_function_index(observed)
+    nets_by_pin = netlist_pin_net_assignments(observed)
 
-    findings: list[Candidate] = []
+    findings: list[ComponentTerminalOrderCandidate] = []
     for reference, symbol in sorted(
         observed.component_symbols.items(), key=lambda item: (item[0].casefold(), item[0])
     ):
@@ -75,36 +77,31 @@ def mosfets_with_unusual_drain_source_rail_order(
 
         if channel_type == "nmos":
             reversed_order = potential_is_lower(drain_potential, source_potential)
-            expected_lower, observed_lower = "source", "drain"
             unexpected_description = "NMOS drain resolves below its source"
         else:
             reversed_order = potential_is_lower(source_potential, drain_potential)
-            expected_lower, observed_lower = "drain", "source"
             unexpected_description = "PMOS source resolves below its drain"
         if not reversed_order:
             continue
 
-        evidence: dict[str, tuple[str, ...]] = {
-            "component": (reference,),
-            "symbol": (symbol,),
-            "channel_type": (channel_type,),
-            "drain_pin": (drain_pin,),
-            "drain_net": (drain_net,),
-            "drain_potential_basis": drain_potential.evidence,
-            "source_pin": (source_pin,),
-            "source_net": (source_net,),
-            "source_potential_basis": source_potential.evidence,
-            "expected_lower_terminal": (expected_lower,),
-            "observed_lower_terminal": (observed_lower,),
-        }
-        if drain_potential.value is not None:
-            evidence["drain_ordering_value_volts"] = (str(drain_potential.value),)
-        if source_potential.value is not None:
-            evidence["source_ordering_value_volts"] = (str(source_potential.value),)
-
         findings.append(
-            Candidate(
-                rule_id=RULE_ID,
+            ComponentTerminalOrderCandidate.from_source_evidence(
+                MosfetTerminalOrderEvidence(
+                    observed=observed,
+                    reference=reference,
+                    symbol=symbol,
+                    channel_type=channel_type,
+                    drain=NamedRailTerminalEvidence(
+                        pin=drain_pin,
+                        net=drain_net,
+                        potential=drain_potential,
+                    ),
+                    source=NamedRailTerminalEvidence(
+                        pin=source_pin,
+                        net=source_net,
+                        potential=source_potential,
+                    ),
+                ),
                 subject=f"{reference}: MOSFET {channel_type.upper()} drain/source order merits review",
                 message=(
                     f"{unexpected_description} based on named rail evidence. Review the exact "
@@ -112,7 +109,6 @@ def mosfets_with_unusual_drain_source_rail_order(
                     "behavior. The conventional order is not a requirement for every topology, "
                     "and net names do not establish measured voltage or physical pin mapping."
                 ),
-                evidence=evidence,
             )
         )
     return tuple(findings)
