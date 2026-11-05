@@ -256,9 +256,7 @@ def test_compound_return_functions_across_connector_symbols_need_review() -> Non
 
     report = _lint(source)
     findings = [
-        item
-        for item in report.findings
-        if item.rule_id == "connector.repeated_pin_function"
+        item for item in report.findings if item.rule_id == "connector.repeated_pin_function"
     ]
 
     assert report.status == "REVIEW"
@@ -268,9 +266,7 @@ def test_compound_return_functions_across_connector_symbols_need_review() -> Non
         "J1.4": ("USB_RETURN",),
         "J2.7": ("SERIAL_RETURN",),
     }
-    assert "net.return_labels_without_pin_roles" not in {
-        item.rule_id for item in report.findings
-    }
+    assert "net.return_labels_without_pin_roles" not in {item.rule_id for item in report.findings}
 
 
 @pytest.mark.design_lint_rule(rule_id="connector.repeated_pin_function")
@@ -295,9 +291,7 @@ def test_compound_return_functions_on_one_common_net_are_a_control() -> None:
     report = _lint(source)
 
     assert report.status == "PASS"
-    assert "connector.repeated_pin_function" not in {
-        item.rule_id for item in report.findings
-    }
+    assert "connector.repeated_pin_function" not in {item.rule_id for item in report.findings}
 
 
 @pytest.mark.design_lint_rule(rule_id="connector.repeated_pin_function")
@@ -319,9 +313,7 @@ def test_compound_shield_ground_functions_stay_outside_return_comparison() -> No
 
     report = _lint(source)
 
-    assert "connector.repeated_pin_function" not in {
-        item.rule_id for item in report.findings
-    }
+    assert "connector.repeated_pin_function" not in {item.rule_id for item in report.findings}
 
 
 @pytest.mark.design_lint_rule(rule_id="connector.repeated_pin_function")

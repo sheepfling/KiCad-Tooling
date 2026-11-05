@@ -116,8 +116,7 @@ def verify_peer_pin_outlier_cases(ctx: ConnectorReturnFixtureContext):
     ].pin_functions
     if (
         compound_fault.status != "REVIEW"
-        or {item.rule_id for item in compound_fault.findings}
-        != {"connector.repeated_pin_function"}
+        or {item.rule_id for item in compound_fault.findings} != {"connector.repeated_pin_function"}
         or set(compound_findings)
         != {"multiple connector symbols: ground/return", "multiple connector symbols: PWR"}
         or dict(compound_findings["multiple connector symbols: ground/return"].evidence)
