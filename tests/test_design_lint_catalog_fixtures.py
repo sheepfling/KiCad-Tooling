@@ -12,6 +12,7 @@ from kicad_tooling.hwrepo.design_lint import rule_catalog
 from tests.design_lint_footprint_peer_fixture_refs import (
     FOOTPRINT_PEER_PARITY_FIXTURES,
 )
+from tests.design_lint_power_fixture_refs import OPEN_DRAIN_CONTROL_PARITY_FIXTURES
 
 pytestmark = pytest.mark.design_lint
 
@@ -23,6 +24,7 @@ def _refs(owner: str, *tests: str) -> tuple[str, ...]:
 _PARITY_FIXTURES_BY_RULE = MappingProxyType(
     {
         **FOOTPRINT_PEER_PARITY_FIXTURES,
+        **OPEN_DRAIN_CONTROL_PARITY_FIXTURES,
         "bus.i2c_missing_pullup": MappingProxyType(
             {
                 "fault_fixtures": _refs(
@@ -354,39 +356,6 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
                 "valid_control_fixtures": _refs(
                     "tests.test_design_lint_mcp_parity_ic_decoupling",
                     "test_ic_decoupling_review_matches_between_cli_and_mcp",
-                ),
-            }
-        ),
-        "power.open_drain_control_input_pullup_voltage_review": MappingProxyType(
-            {
-                "fault_fixtures": _refs(
-                    "tests.test_open_drain_control_voltage",
-                    "test_open_collector_control_pullup_to_different_supply_requests_review",
-                )
-                + _refs(
-                    "tests.test_open_drain_control_voltage_native_fixture_lane",
-                    "test_native_open_drain_control_fault_and_control",
-                )
-                + _refs(
-                    "tests.test_design_lint_mcp_parity_open_drain_control_voltage",
-                    "test_open_drain_control_fault_and_control_match_cli_mcp",
-                ),
-                "valid_control_fixtures": _refs(
-                    "tests.test_open_drain_control_voltage",
-                    "test_equal_or_ambiguous_cases_remain_quiet",
-                )
-                + _refs(
-                    "tests.test_open_drain_control_voltage_native_fixture_lane",
-                    "test_native_open_drain_control_fault_and_control",
-                )
-                + _refs(
-                    "tests.test_design_lint_mcp_parity_open_drain_control_voltage",
-                    "test_open_drain_control_fault_and_control_match_cli_mcp",
-                ),
-                "metamorphic_fixtures": _refs(
-                    "tests.test_open_drain_control_voltage",
-                    "test_open_drain_control_fingerprint_is_stable_under_mapping_reordering",
-                    "test_rule_policy_can_block_disable_or_ignore_exact_finding",
                 ),
             }
         ),

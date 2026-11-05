@@ -14415,9 +14415,13 @@ control are documented in the
   stability, verifies one finding with endpoint and resistor-path evidence on
   the fault, and requires the control to stay quiet. It is enabled in hosted
   package acceptance and registered as the rule's required native fixture.
-- **Remaining:** The new exact-version lane still needs a hosted run before
-  maturity can move beyond `synthetic_validated`. The rule remains default
-  `review` regardless of that evidence.
+- **Hosted acceptance (2026-11-05, first attempt):** Tag `v0.5.3rc431`
+  executed both fault/control pairs on KiCad 10.0.0 and 10.0.5; those native
+  checks passed. The overall run failed afterward because the catalog fixture
+  registry had grown to 505 lines. Its power-rule references are now split
+  into a theme-owned registry, and the focused gate is queued for retry under
+  `v0.5.3rc432`. Keep maturity at `synthetic_validated` until the full gate
+  passes; the default mode remains `review`.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
