@@ -2658,6 +2658,8 @@ copper connectivity. An ERC-clean schematic export cannot verify the physical
 return path. The tooling-owned synthetic fault/control cases do not represent a
 product board. The native fixtures repeat with digest-pinned KiCad 10.0.0 and
 10.0.5; the CLI and MCP reports use the same typed service.
+The [synthetic native fixture README](../tests/fixtures/design_lint/signal-divider-native/README.md)
+records each case and its intended result.
 
 ```sh
 .venv/bin/python -I -m pytest -q tests/test_signal_divider_contract.py \
