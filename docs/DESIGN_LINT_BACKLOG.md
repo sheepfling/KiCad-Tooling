@@ -14264,8 +14264,8 @@ control are documented in the
   IC-to-J1 split-reference fault, an otherwise identical common-reference
   control, exact evidence localization, and CLI/MCP parity. The digest-pinned
   native pair is
-  `tests/fixtures/design_lint/serial-peer-connector-reference-native/serial-label-connector-fault.kicad_sch`
-  and its common-reference control. Their source hashes are
+  `serial-label-connector-fault.kicad_sch` and its common-reference control.
+  Their source hashes are
   `c9e6d76e9545b49e7713f5942dab34de639727d777ee67874635156bb8303cf5` and
   `9b9febbc2e61399ece1f33502eae3807336d7519f4c41312c3cd8d913f56a051`.
   Exact native exports are required on the pinned KiCad 10.0.0 and 10.0.5
