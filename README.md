@@ -208,12 +208,13 @@ $env:KICAD_TEMPLATE_ROOT = "C:\path\to\KiCad-Team-Workflow-Template"
 python -B scripts/ci.py --project-root $env:KICAD_TEMPLATE_ROOT
 ```
 
-The package gate runs the regression suite, Ruff formatting and lint, strict
-Pyright for the shipped package (including a Windows-targeted type pass), rumdl,
-mdrepo, and source/wheel build plus installed-wheel smoke checks. Each stage keeps
-its logs under ignored `build/ci/`. The shared regression suite uses the external
-template for public reference data; it does not copy Python tooling into that
-checkout.
+The package gate starts with Ruff formatting/lint and Markdown/graph checks so
+fast failures stop before the longer regression suite and type checks. It then
+runs the selected tests, strict Pyright for the shipped package (including a
+Windows-targeted type pass), and source/wheel builds plus installed-wheel smoke
+checks. Each stage keeps its logs under ignored `build/ci/`. The shared
+regression suite uses the external template for public reference data; it does
+not copy Python tooling into that checkout.
 
 Package CI owns shared lint, typing, regressions and wheel/source-distribution
 checks. Project CI owns project policy, documentation, contracts, local suites and
