@@ -67,6 +67,8 @@ def validate_usb_protection_shunt_fixture_reports(
 
     inline_control = reports[("inline-protection-shunt-control", "first")]
     inline_coverage = inline_control.usb_peer_reference_coverage
+    inline_path_entries = inline_coverage.path_entries if inline_coverage is not None else None
+    inline_data_path = inline_path_entries[0].data_path if inline_path_entries else None
     if (
         inline_coverage is None
         or inline_coverage.supported_data_path_count != 1
@@ -74,7 +76,9 @@ def validate_usb_protection_shunt_fixture_reports(
             item.rule_id in {"bus.usb_peer_reference_review", "bus.usb_data_path_mismatch"}
             for item in inline_control.findings
         )
-        or inline_coverage.path_entries[0].data_path.protection_shunts[0].reference != "U6"
+        or inline_data_path is None
+        or not inline_data_path.protection_shunts
+        or inline_data_path.protection_shunts[0].reference != "U6"
     ):
         raise ValueError("Native combined inline-path and mapped-shunt control was not supported")
 
