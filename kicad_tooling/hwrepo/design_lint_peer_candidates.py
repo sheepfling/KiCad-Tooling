@@ -17,6 +17,7 @@ from .design_lint_usb_unmapped_topology import usb_unmapped_multi_pin_topology_c
 from .digital_peer_voltage_scan import scan_digital_peer_voltage_reviews
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
 from .netlist_contract_models import NetlistContract
+from .power_gpio_control_voltage import gpio_to_control_input_voltage_candidates
 from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_scan import scan_serial_peer_reference_reviews
 from .spi_participants import SpiRosterContext
@@ -90,5 +91,9 @@ def scan_peer_candidates(inputs: PeerCandidateScanInputs) -> tuple[Candidate, ..
         *usb_unmapped_multi_pin_topology_candidates(usb_scan, usb_data_path),
         *spi_participant_candidates(observed, spi_scope),
         *digital_peer_voltage_candidates(peer_voltage_scope, peer_voltage_scan),
+        *gpio_to_control_input_voltage_candidates(
+            observed,
+            peer_voltage_scope.analysis,
+        ),
         *usb_c_port_candidates(observed, usb_c_scope, reviewed_connector_references),
     )

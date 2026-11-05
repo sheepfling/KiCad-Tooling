@@ -19,6 +19,7 @@ import tests.design_lint_fixtures.connector_named_power_aliases as _connector_na
 import tests.design_lint_fixtures.connector_peer_pin_all_open as _connector_peer_pin_all_open
 import tests.design_lint_fixtures.connector_return_supply as _connector_return_supply_fixtures
 import tests.design_lint_fixtures.connector_role_sharing_reachability as _connector_role_sharing_reachability
+import tests.design_lint_fixtures.gpio_control_voltage as _gpio_control_voltage_fixtures
 import tests.design_lint_fixtures.i2c_addresses as _tests_i2c_address_fixtures
 import tests.design_lint_fixtures.i2c_signal_label as _i2c_signal_label_fixtures
 import tests.design_lint_fixtures.i3c_same_net as _i3c_same_net_fixtures
@@ -470,5 +471,9 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         update={"nets": {"I3C_SCL": ("U1.2",)}}
     )
     emitted.update(item.rule_id for item in candidates(i3c_open_sda))
+    emitted.update(
+        item.rule_id
+        for item in candidates(_gpio_control_voltage_fixtures.gpio_control_voltage_netlist())
+    )
     active = {item.rule_id for item in rule_catalog().rules if item.status == "active"}
     assert emitted == active

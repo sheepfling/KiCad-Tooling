@@ -780,7 +780,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 259 active rules.
+The catalog currently contains 260 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -5393,6 +5393,35 @@ finding list alone does not mean that every interface or voltage relationship
 was checked. Coverage is bound to the native netlist and, when configured, the
 authored map hash. Net labels remain review clues; these counts do not prove
 actual rail voltages or electrical compatibility.
+
+## Review GPIO outputs feeding reset, enable, or boot inputs across named rails
+
+`power.gpio_to_control_input_voltage_review` is a default-`review` prompt for
+one direct native-net pattern: a fitted U/IC output pin named `GPIO`, `IO`, or
+a bounded port form such as `PA0` feeds a fitted U/IC input recognized as a
+reset, enable, or boot control. Both components need complete native pin-type
+inventories and exactly one unambiguous positive voltage-named `power_in` rail.
+The prompt appears only when the output component's parsed rail label is higher
+than the receiver's.
+
+These labels are clues for review, not measured voltage or device-limit data.
+The finding does not establish incompatibility or require level translation;
+the input may tolerate the output level. It skips ambiguous or unsupported pin
+functions, bidirectional and tri-state paths, open-drain signals, DNP parts,
+non-U/IC endpoints, incomplete pin metadata, and multiple or unrecognized
+supplies. It only checks directly shared schematic nets and does not trace
+translators, evaluate sequencing or transients, or prove PCB continuity.
+
+A complete exact `digital_peer_voltages` link with sourced output and input
+limits suppresses only the matching current pins, net, symbols, and footprints.
+Partial or stale maps leave the heuristic open. Project lint policy can set the
+rule to `off` or `block`, and exact findings can be ignored by fingerprint.
+Synthetic fault, control, policy, boundary, exact-map, and ordering cases are
+in [`tests/test_gpio_control_input_voltage.py`](../tests/test_gpio_control_input_voltage.py).
+CLI/MCP parity is in
+[`tests/test_design_lint_mcp_parity_gpio_control_voltage.py`](../tests/test_design_lint_mcp_parity_gpio_control_voltage.py).
+The digest-pinned KiCad 10.0.0/10.0.5 fault and control exports are in the
+[native fixture notes](../tests/fixtures/design_lint/gpio-control-voltage-native/README.md).
 
 ## Review direct UART peers with separate reference pins
 

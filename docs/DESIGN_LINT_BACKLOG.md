@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 259 rules are implemented with synthetic regression coverage.
+The following 260 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 259 active rules.
+The catalog currently contains 260 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -539,6 +539,7 @@ skipped under prerelease policy.
 - `component.led_directly_across_supply_and_return`
 - `component.led_directly_driven_from_output`
 - `oscillator.output_load_path_mismatch`
+- `power.gpio_to_control_input_voltage_review`
 - `power.ic_decoupling_below_project_minimum`
 - `power.ic_rail_without_fitted_capacitor`
 - `power.pin_function_net_role_conflict`
@@ -710,6 +711,17 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **LINT-277 direct GPIO-to-control voltage-label review:** LINT-066 covers
+  named SPI and UART/USART peer connections, but direct GPIO outputs feeding
+  reset, enable, or boot inputs can present the same unresolved question. The
+  new default-REVIEW rule uses fitted IC pins, complete native pin-type
+  inventories, explicit positive rail labels, a direct output-to-input net,
+  and a higher parsed source-rail label. Rail labels do not prove voltage or
+  incompatibility, and the rule does not require level translation. Synthetic
+  fault/control, policy, boundary, exact-map, mapping-order, and CLI/MCP parity
+  cases pass locally. Digest-pinned native fault/control exports are registered
+  for KiCad 10.0.0 and 10.0.5; local Docker access was unavailable during this
+  run, so hosted acceptance remains the native compatibility check.
 - **LINT-276 unmapped multi-pin USB topology:** The public four-port USB hub
   screen recorded four multi-pin protection-array candidates in USB reference
   coverage, but the default finding list did not ask the project to resolve
@@ -3402,7 +3414,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 259 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 260 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -14327,6 +14339,30 @@ control are documented in the
   USB map-identity service; its regression passes locally. The public USB hub
   screen is linked under LINT-031 and contributes no defect label or
   field-precision measurement.
+
+#### LINT-277 — Direct GPIO output to control-input voltage-label review
+
+- **Status:** Implemented as the default-`review`
+  `power.gpio_to_control_input_voltage_review` rule. Project policy can promote
+  it to `block`, turn it `off`, or ignore an exact fingerprint.
+- **Gap:** LINT-066 recognizes named SPI and UART/USART peers. A direct GPIO
+  output feeding a reset, enable, or boot input can have the same unanswered
+  voltage-domain question without a protocol signal name.
+- **Predicate:** Require fitted U/IC endpoints, complete native pin-type
+  inventories, one unambiguous positive voltage-named supply per endpoint, a
+  direct native output-to-input connection, a bounded GPIO function, and a
+  recognized control-input function. Prompt only when the source rail label
+  parses higher than the receiver label. A current exact
+  `digital_peer_voltages` link with sourced limits suppresses that same link.
+- **Boundary:** Rail labels are clues rather than measured voltages or device
+  limits. A finding does not prove incompatibility or require level
+  translation. The predicate does not trace translators or open-drain paths,
+  evaluate sequencing or transients, or prove PCB continuity.
+- **Evidence:** Synthetic fault/control, policy, boundary, exact-map, and
+  ordering tests; a CLI/MCP fault/control parity test; and exact-version
+  source-hashed KiCad 10.0.0/10.0.5 native fixtures are registered in the
+  focused interface/power gate. The lane checks one fault and one lower-source-
+  rail control and retains normalized export hashes.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
