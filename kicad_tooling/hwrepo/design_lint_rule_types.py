@@ -49,6 +49,7 @@ DesignLintRuleId = Literal[
     "component.repeated_signal_pin_unassigned",
     "power.pin_function_net_role_conflict",
     "power.gpio_to_control_input_voltage_review",
+    "power.open_drain_control_input_pullup_voltage_review",
     "power.named_supply_pin_on_negative_rail",
     "component.peer_power_pin_assignment_divergence",
     "component.peer_power_input_assignment_divergence",

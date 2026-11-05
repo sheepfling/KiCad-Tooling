@@ -244,5 +244,9 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
             {"interface_lint", "power_lint"}
         ),
         "test_design_lint_control_input_bias_paths.py": frozenset({"interface_lint", "power_lint"}),
+        "test_open_drain_control_voltage.py": frozenset({"interface_lint", "power_lint"}),
+        "test_design_lint_mcp_parity_open_drain_control_voltage.py": frozenset(
+            {"interface_lint", "power_lint"}
+        ),
     }
 )

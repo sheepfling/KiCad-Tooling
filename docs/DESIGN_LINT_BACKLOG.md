@@ -14374,6 +14374,39 @@ control are documented in the
   an equal-rail control and retains normalized export hashes. The scoped gate
   passed in `v0.5.3rc429` (GitHub Actions run `42016469635`).
 
+#### LINT-278 — Open-drain control pull-up voltage-label review
+
+- **Status:** Implemented as the default-`review`
+  `power.open_drain_control_input_pullup_voltage_review` rule. Project policy
+  can promote it to `block`, turn it `off`, or ignore an exact fingerprint.
+- **Gap:** LINT-277 deliberately skips open-drain paths. The generic open-output
+  bias lint asks whether a visible bias path exists, but does not compare a
+  control signal's pull-up rail label with the endpoint supply labels.
+- **Predicate:** Require fitted U/IC endpoints, complete native pin-type
+  inventories, an `open_collector` output sharing one exact net with a native
+  `input` recognized as reset, enable, or boot control, one unambiguous
+  positive voltage-named supply per endpoint, and at least one visible fitted
+  resistor path, with all recognized paths resolving to one explicit positive
+  voltage-named rail. Prompt when the pull-up label differs from either
+  endpoint supply label. Evidence records the paths, nominal rail clues, and
+  direction of each difference.
+- **Boundary:** Rail labels do not establish actual potential or device limits.
+  The prompt does not establish incompatibility or require translation. DNP or
+  non-resistor paths, custom rail names, internal/off-board pulls, multiple
+  pull-up rails, branched/ambiguous paths, incomplete endpoint metadata,
+  open-emitter outputs, sequencing/transient behavior, resistor adequacy, and
+  PCB continuity are outside this check.
+- **Evidence:** Synthetic faults cover pull-ups above and below endpoint rails
+  and a pull-up that differs from only one endpoint. Equal-label, DNP, multiple
+  rail, unsupported endpoint, missing metadata, and unparsed-label controls
+  remain quiet. Policy and input-order stability are covered. A CLI/MCP parity
+  fixture exercises the fault and equal-label control through the shared typed
+  service. Focused selection is `tests/test_open_drain_control_voltage.py`
+  with `design_lint`, `interface_lint`, and `power_lint` markers.
+- **Remaining:** Exact-version native schematic export and normalized-netlist
+  evidence are not yet recorded for this rule. The rule remains default
+  `review` and synthetic-validated until that lane is added.
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Rule precedence:** KiCad evaluates custom rules in reverse file order, and a later matching rule

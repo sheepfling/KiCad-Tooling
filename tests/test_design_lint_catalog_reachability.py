@@ -27,6 +27,7 @@ import tests.design_lint_fixtures.i3c_signal_named_rail as _i3c_signal_named_rai
 import tests.design_lint_fixtures.ic_decoupling as _ic_decoupling_fixtures
 import tests.design_lint_fixtures.mosfet_gate_source_bias as _mosfet_gate_source_bias_fixtures
 import tests.design_lint_fixtures.mosfet_terminal_same_net as _mosfet_terminal_same_net_fixtures
+import tests.design_lint_fixtures.open_drain_control_voltage as _open_drain_control_voltage_fixtures
 import tests.design_lint_fixtures.power_input_paths as _power_input_paths
 import tests.design_lint_fixtures.power_pin_net_roles as _power_pin_net_roles
 import tests.design_lint_fixtures.repeated_signal_pin_functions as _repeated_signal_pin_fixtures
@@ -474,6 +475,12 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     emitted.update(
         item.rule_id
         for item in candidates(_gpio_control_voltage_fixtures.gpio_control_voltage_netlist())
+    )
+    emitted.update(
+        item.rule_id
+        for item in candidates(
+            _open_drain_control_voltage_fixtures.open_drain_control_voltage_netlist()
+        )
     )
     active = {item.rule_id for item in rule_catalog().rules if item.status == "active"}
     assert emitted == active

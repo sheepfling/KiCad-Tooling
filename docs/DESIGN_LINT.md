@@ -5423,6 +5423,30 @@ boundary, exact-map, and ordering cases are
 in [`tests/test_gpio_control_input_voltage.py`](../tests/test_gpio_control_input_voltage.py).
 CLI/MCP parity is in
 [`tests/test_design_lint_mcp_parity_gpio_control_voltage.py`](../tests/test_design_lint_mcp_parity_gpio_control_voltage.py).
+
+## Review open-collector control pull-up voltage labels
+
+`power.open_drain_control_input_pullup_voltage_review` is a separate default-
+`review` prompt for a fitted open-collector output connected to a recognized
+reset, enable, or boot input, with visible fitted resistor path evidence that
+resolves to one positive voltage-named rail. It prompts when that pull-up label
+differs from either endpoint's unique supply label. This covers open-drain
+control links that the push-pull GPIO rule above intentionally skips.
+
+The lint recognizes only native pin types, complete endpoint pin inventories,
+explicit voltage tokens, and the existing supported resistor-path model.
+Multiple possible pull-up rails, DNP resistors, incomplete or ambiguous inputs,
+custom rail labels, and unsupported resistor networks stay outside the check.
+Values in net labels are review clues. The finding asks the reviewer to check
+the source pin's absolute maximum, receiver thresholds and absolute maximum,
+and power sequencing; it does not establish incompatibility or require
+translation. Projects can turn the rule off, promote it to `block`, or ignore
+an exact finding fingerprint.
+
+Synthetic fault, control, policy, boundary, and ordering cases are in
+[`tests/test_open_drain_control_voltage.py`](../tests/test_open_drain_control_voltage.py).
+CLI/MCP parity is in
+[`tests/test_design_lint_mcp_parity_open_drain_control_voltage.py`](../tests/test_design_lint_mcp_parity_open_drain_control_voltage.py).
 The digest-pinned KiCad 10.0.0/10.0.5 fault and control exports are in the
 [native fixture notes](../tests/fixtures/design_lint/gpio-control-voltage-native/README.md).
 

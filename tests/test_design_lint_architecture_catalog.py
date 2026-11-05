@@ -294,6 +294,10 @@ def test_active_rule_fixture_modules_have_design_lint_and_theme_markers() -> Non
             {"design_lint", "interface_lint", "power_lint"},
         ),
         (
+            "test_open_drain_control_voltage.py",
+            {"design_lint", "interface_lint", "power_lint"},
+        ),
+        (
             "test_stm32_pin_map.py",
             {"design_lint", "component_lint", "interface_lint"},
         ),

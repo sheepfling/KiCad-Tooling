@@ -357,6 +357,31 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
                 ),
             }
         ),
+        "power.open_drain_control_input_pullup_voltage_review": MappingProxyType(
+            {
+                "fault_fixtures": _refs(
+                    "tests.test_open_drain_control_voltage",
+                    "test_open_collector_control_pullup_to_different_supply_requests_review",
+                )
+                + _refs(
+                    "tests.test_design_lint_mcp_parity_open_drain_control_voltage",
+                    "test_open_drain_control_fault_and_control_match_cli_mcp",
+                ),
+                "valid_control_fixtures": _refs(
+                    "tests.test_open_drain_control_voltage",
+                    "test_equal_or_ambiguous_cases_remain_quiet",
+                )
+                + _refs(
+                    "tests.test_design_lint_mcp_parity_open_drain_control_voltage",
+                    "test_open_drain_control_fault_and_control_match_cli_mcp",
+                ),
+                "metamorphic_fixtures": _refs(
+                    "tests.test_open_drain_control_voltage",
+                    "test_open_drain_control_fingerprint_is_stable_under_mapping_reordering",
+                    "test_rule_policy_can_block_disable_or_ignore_exact_finding",
+                ),
+            }
+        ),
         "pcb.keepout_intent_coverage": MappingProxyType(
             {
                 "valid_control_fixtures": _refs(

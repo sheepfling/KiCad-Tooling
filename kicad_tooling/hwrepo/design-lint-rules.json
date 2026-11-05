@@ -11664,6 +11664,42 @@
       "implementation_owner": "kicad_tooling/hwrepo/power_gpio_control_voltage.py#gpio_to_control_input_voltage_candidates"
     },
     {
+      "rule_id": "power.open_drain_control_input_pullup_voltage_review",
+      "title": "Open-collector control pull-up differs from an endpoint supply label",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Normalized KiCad native XML netlist with pin types, functions, net assignments, component population, and passive values",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "predicate": "For fitted U/IC endpoints with complete native pin-type inventories, recognize an open_collector output and a directly assigned native input whose function is a reset, enable, or boot control. Require one unambiguous positive voltage-named supply per endpoint and at least one visible fitted conventional resistor path from the signal net, with every recognized path resolving to the same unique positive voltage-named rail. Prompt when that pull-up rail label differs from either endpoint supply label. Evidence identifies the endpoints, resistor paths, nominal label values, and direction of each difference.",
+      "limitations": [
+        "Positive voltage values parsed from net names are clues, not measured voltages or device limits. A finding does not establish incompatibility or require level translation.",
+        "The check skips open_emitter, non-control inputs, DNP endpoints or resistors, ambiguous multiple pull-up rails, incomplete pin-type inventories, unrecognized rail names, branched or unsupported resistor paths, internal bias, active pull-ups, and off-board circuitry.",
+        "The check does not validate output absolute maximum, receiver VIH, transient behavior, power sequencing, resistor adequacy, or PCB continuity. Projects can use policy overrides or exact finding ignores after review."
+      ],
+      "fault_fixtures": [
+        "tests.test_open_drain_control_voltage.test_open_collector_control_pullup_to_different_supply_requests_review",
+        "tests.test_open_drain_control_voltage.test_multiple_visible_pullups_to_one_rail_keep_the_review",
+        "tests.test_design_lint_mcp_parity_open_drain_control_voltage.test_open_drain_control_fault_and_control_match_cli_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_open_drain_control_voltage.test_equal_or_ambiguous_cases_remain_quiet",
+        "tests.test_design_lint_mcp_parity_open_drain_control_voltage.test_open_drain_control_fault_and_control_match_cli_mcp"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_open_drain_control_voltage.test_open_drain_control_fingerprint_is_stable_under_mapping_reordering",
+        "tests.test_open_drain_control_voltage.test_rule_policy_can_block_disable_or_ignore_exact_finding"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/power_open_drain_control_voltage.py#open_drain_control_pullup_voltage_candidates"
+      ],
+      "theme": "power",
+      "implementation_owner": "kicad_tooling/hwrepo/power_open_drain_control_voltage.py#open_drain_control_pullup_voltage_candidates"
+    },
+    {
       "rule_id": "power.ic_decoupling_below_project_minimum",
       "title": "Mapped IC decoupling capacitance is below the project minimum",
       "status": "active",

@@ -70,6 +70,8 @@ _LINT_AREA_MODULES = MappingProxyType(
         "power_lint": frozenset(
             {
                 "tests/test_design_lint_control_input_arrays.py",
+                "tests/test_open_drain_control_voltage.py",
+                "tests/test_design_lint_mcp_parity_open_drain_control_voltage.py",
                 "tests/test_connector_unconnected_power_output.py",
                 "tests/test_design_lint_connector_power_pins.py",
                 "tests/test_design_lint_connector_named_power_input_peers.py",

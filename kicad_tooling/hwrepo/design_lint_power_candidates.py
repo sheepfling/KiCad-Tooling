@@ -23,6 +23,7 @@ from .net_dc_reference import connector_capacitor_only_nets
 from .netlist_contract_models import NetlistContract
 from .power_decoupling import ic_power_rails_without_fitted_capacitors
 from .power_negative_rail import positive_supply_pins_on_negative_rails
+from .power_open_drain_control_voltage import open_drain_control_pullup_voltage_candidates
 from .power_path_models import PowerPathMap
 from .power_pin_net_roles import named_power_pin_net_role_conflicts
 from .power_pin_paths import power_inputs_without_supported_source_paths
@@ -93,6 +94,7 @@ def scan_power_candidates(
         )
     found.extend(ic_decoupling_candidates(observed, ic_decoupling_map))
     found.extend(positive_supply_pins_on_negative_rails(observed))
+    found.extend(open_drain_control_pullup_voltage_candidates(observed))
     mapped_capacitor_references = tuple(
         reference
         for reference, binding in resolve_component_role_map(
