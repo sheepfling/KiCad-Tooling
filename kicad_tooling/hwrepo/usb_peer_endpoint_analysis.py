@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Mapping
-from typing import TypeVar
+from collections.abc import Iterable
 
 from .bus_signal_pairs import usb_data_function_identity, usb_superspeed_function_identity
+from .casefold_mapping_lookup import casefolded_unique_index
 from .netlist_contract_models import NetlistContract
 from .peer_reference_assignments import peer_reference_assignments
 from .usb_peer_reference_types import (
@@ -17,13 +17,6 @@ from .usb_peer_reference_types import (
 )
 
 IC_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)
-
-
-ValueT = TypeVar("ValueT")
-
-
-def casefold_mapping(items: Mapping[str, ValueT]) -> dict[str, ValueT]:
-    return {key.casefold(): value for key, value in items.items()}
 
 
 def pin_net_index(observed: NetlistContract) -> UsbPeerPinNetIndex:
@@ -46,7 +39,7 @@ def usb_endpoint_reference_pins(
 ) -> tuple[UsbReferencePinAssignment, ...] | None:
     """Return complete, uniquely assigned explicit signal-reference pins for one endpoint."""
     assignments = pin_net_index(observed)
-    pin_inventories = casefold_mapping(observed.component_pin_numbers)
+    pin_inventories = casefolded_unique_index(observed.component_pin_numbers)
     numbers = pin_inventories.get(reference.casefold())
     if not numbers:
         return None
@@ -77,11 +70,11 @@ def usb_endpoint(
     if not connector and IC_REFERENCE.fullmatch(reference) is None:
         return ()
 
-    symbols = casefold_mapping(observed.component_symbols)
-    components = casefold_mapping(observed.components)
-    pin_inventories = casefold_mapping(observed.component_pin_numbers)
-    functions = casefold_mapping(observed.pin_functions)
-    electrical_types = casefold_mapping(observed.pin_electrical_types)
+    symbols = casefolded_unique_index(observed.component_symbols)
+    components = casefolded_unique_index(observed.components)
+    pin_inventories = casefolded_unique_index(observed.component_pin_numbers)
+    functions = casefolded_unique_index(observed.pin_functions)
+    electrical_types = casefolded_unique_index(observed.pin_electrical_types)
     symbol = symbols.get(reference_key)
     component = components.get(reference_key)
     numbers = pin_inventories.get(reference_key)
@@ -232,11 +225,11 @@ def usb_superspeed_endpoints(
 ) -> tuple[UsbEndpoint, ...]:
     """Recognize complete, directly connected SuperSpeed pair families by endpoint."""
     dnp_references = {reference.casefold() for reference in observed.dnp_components}
-    symbols = casefold_mapping(observed.component_symbols)
-    components = casefold_mapping(observed.components)
-    pin_inventories = casefold_mapping(observed.component_pin_numbers)
-    functions = casefold_mapping(observed.pin_functions)
-    electrical_types = casefold_mapping(observed.pin_electrical_types)
+    symbols = casefolded_unique_index(observed.component_symbols)
+    components = casefolded_unique_index(observed.components)
+    pin_inventories = casefolded_unique_index(observed.component_pin_numbers)
+    functions = casefolded_unique_index(observed.pin_functions)
+    electrical_types = casefolded_unique_index(observed.pin_electrical_types)
     endpoints: list[UsbEndpoint] = []
     for reference in references:
         reference_key = reference.casefold()

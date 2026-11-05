@@ -1921,3 +1921,26 @@ SA-01 census on other cross-module map results, keeping local accumulators out
 of the shared-route inventory. The combined connector/component mapping and
 role-record selection passed 265 tests with one skipped case; no exact native
 KiCad lane ran.
+
+## USB peer case-folded index route (2026-11-05)
+
+The USB peer endpoint owner had a generic case-fold helper that returned a
+mutable dictionary and selected the last value when source keys differed only
+by case. The import-aware audit found 25 calls across four production modules;
+none mutated those results. The typed `NetlistContract` preserves exact key
+spelling and permits values such as `U1` and `u1`, so last-write selection could
+attribute component metadata to an arbitrary source entry.
+
+Those consumers now use the canonical `casefolded_unique_index` service in
+`casefold_mapping_lookup.py`. It exposes a named read-only mapping contract and
+omits every ambiguous normalized key. Source `NetlistContract` objects and
+candidate evidence remain intact, and endpoint recognition requires a unique
+component identity. This route changes neither public CLI/MCP behavior nor
+serialized report evidence.
+
+The focused USB peer and case-fold selection passed 146 tests, with two cases
+deselected. Ruff and targeted Pyright passed. All six Alphus profile totals
+were unchanged, with no findings across the five production route files; the
+separate file-size and test-quality candidates found no new actionable issue.
+Continue SA-01 by auditing the resistor pull-up result and its consumers. Keep
+the source-to-report route decisions ahead of any size-driven splits.

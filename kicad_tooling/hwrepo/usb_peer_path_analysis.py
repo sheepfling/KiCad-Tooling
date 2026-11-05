@@ -6,8 +6,9 @@ import re
 from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
 
+from .casefold_mapping_lookup import casefolded_unique_index
 from .netlist_contract_models import NetlistContract
-from .usb_peer_endpoint_analysis import casefold_mapping, pin_net_index
+from .usb_peer_endpoint_analysis import pin_net_index
 from .usb_peer_reference_types import (
     UsbEndpoint,
     UsbPeerDataLink,
@@ -30,10 +31,10 @@ def d_designated_shunt_branches(
     """Accept complete two-pin passive D-designated branches to endpoint references."""
     if not extra_pins:
         return ()
-    components = casefold_mapping(observed.components)
-    symbols = casefold_mapping(observed.component_symbols)
-    inventories = casefold_mapping(observed.component_pin_numbers)
-    electrical_types = casefold_mapping(observed.pin_electrical_types)
+    components = casefolded_unique_index(observed.components)
+    symbols = casefolded_unique_index(observed.component_symbols)
+    inventories = casefolded_unique_index(observed.component_pin_numbers)
+    electrical_types = casefolded_unique_index(observed.pin_electrical_types)
     component_references = {reference.casefold(): reference for reference in observed.components}
     assignment_index = pin_net_index(observed)
     dnp = {reference.casefold() for reference in observed.dnp_components}
@@ -111,10 +112,10 @@ def _series_resistor_between_nets(
     """Find one complete, fitted Device:R connecting the endpoint data nets."""
     if connector_net.casefold() == phy_net.casefold():
         return None
-    inventories = casefold_mapping(observed.component_pin_numbers)
-    components = casefold_mapping(observed.components)
-    symbols = casefold_mapping(observed.component_symbols)
-    electrical_types = casefold_mapping(observed.pin_electrical_types)
+    inventories = casefolded_unique_index(observed.component_pin_numbers)
+    components = casefolded_unique_index(observed.components)
+    symbols = casefolded_unique_index(observed.component_symbols)
+    electrical_types = casefolded_unique_index(observed.pin_electrical_types)
     display_references = {reference.casefold(): reference for reference in observed.components}
     assignment_index = pin_net_index(observed)
     dnp = {reference.casefold() for reference in observed.dnp_components}

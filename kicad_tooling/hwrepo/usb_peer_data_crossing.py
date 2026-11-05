@@ -6,13 +6,13 @@ from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
 
 from .bus_signal_pairs import usb_data_function_identity
+from .casefold_mapping_lookup import casefolded_unique_index
 from .connector_identity import connector_candidate_references
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 from .usb_data_path_models import UsbDataPathMap
 from .usb_peer_endpoint_analysis import (
     IC_REFERENCE,
-    casefold_mapping,
     pin_net_index,
     usb_endpoints,
 )
@@ -96,8 +96,8 @@ def usb_peer_data_pair_crossing_candidates(
         assignments,
         connector=False,
     )
-    symbols = casefold_mapping(observed.component_symbols)
-    components = casefold_mapping(observed.components)
+    symbols = casefolded_unique_index(observed.component_symbols)
+    components = casefolded_unique_index(observed.components)
     findings: list[Candidate] = []
 
     for connector in connectors:

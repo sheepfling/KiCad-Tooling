@@ -14,7 +14,7 @@ provisional review profiles and are not CI blockers.
 
 The installed package metadata and `dev-experimental` pin both resolve to
 Alphus `v0.0.2` commit `3435f81aff7abac7716a5780d26319e8f314d61d`. A fresh
-re-sniff at KiCad head `aaf74c70b4d2bf6eca03896ff0f2cbef74b08bd4` reports 116
+re-sniff at KiCad head `2dd91707624d23e8d83405e8df57326701dd0e1a` reports 116
 runtime-type findings, 220 Python-style findings, one Pydantic warning, 37
 source-family candidates, four input-mutation candidates, and 30 complexity
 candidates. These are consumer review findings; they are not proof of defects.
@@ -70,7 +70,7 @@ siblings for architecture review; the groups are inventory prompts, not
 instructions to split or move modules. The scan does not establish ownership,
 coupling, or a public contract.
 
-At source revision `aaf74c70b4d2bf6eca03896ff0f2cbef74b08bd4`, it reported 37
+At source revision `2dd91707624d23e8d83405e8df57326701dd0e1a`, it reported 37
 groups, including `design_lint_*` (101 files), `component_*` (27), and
 `connector_*` (23). Inspect those candidates against the capability and
 data-route map before proposing module moves.
@@ -83,7 +83,7 @@ python -I -m alphus --profile architecture-candidates --json
 
 The `complexity-candidates` profile runs the pinned Ruff C901 check at maximum
 30 over `kicad_tooling/hwrepo/`. At KiCad head
-`aaf74c70b4d2bf6eca03896ff0f2cbef74b08bd4`, the current scan reports 30
+`2dd91707624d23e8d83405e8df57326701dd0e1a`, the current scan reports 30
 warning-level functions; review these as function-level refactoring candidates
 rather than line-count limits. The profile is provisional and remains outside
 CI while the service and data routes are being established.

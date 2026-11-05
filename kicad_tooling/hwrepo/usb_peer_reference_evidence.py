@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from .casefold_mapping_lookup import casefolded_unique_index
 from .netlist_contract_models import NetlistContract
-from .usb_peer_endpoint_analysis import casefold_mapping
 from .usb_peer_reference_types import (
     UsbPeerReferenceComponentObservation,
     UsbPeerReferenceComponentPin,
@@ -51,10 +51,10 @@ def usb_reference_net_component_observations(
             component_names.setdefault(reference_key, set()).add(reference)
             component_pins.setdefault(reference_key, {}).setdefault(role, set()).add((pin, net))
 
-    components = casefold_mapping(observed.components)
-    symbols = casefold_mapping(observed.component_symbols)
-    functions = casefold_mapping(observed.pin_functions)
-    electrical_types = casefold_mapping(observed.pin_electrical_types)
+    components = casefolded_unique_index(observed.components)
+    symbols = casefolded_unique_index(observed.component_symbols)
+    functions = casefolded_unique_index(observed.pin_functions)
+    electrical_types = casefolded_unique_index(observed.pin_electrical_types)
     dnp_references = {reference.casefold() for reference in observed.dnp_components}
     observations: list[UsbPeerReferenceComponentObservation] = []
     for reference_key in sorted(component_pins):

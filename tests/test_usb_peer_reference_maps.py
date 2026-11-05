@@ -9,7 +9,12 @@ from kicad_tooling.hwrepo.models import (
     DesignLintIgnore,
     DesignLintRuleOverride,
 )
+from kicad_tooling.hwrepo.netlist_contract_models import NetlistContract
 from kicad_tooling.hwrepo.usb_data_path_models import UsbDataInterfaceRequirement
+from kicad_tooling.hwrepo.usb_peer_endpoint_analysis import (
+    pin_net_index,
+    usb_endpoint,
+)
 from tests.usb_c_peer_support import (
     usb_c_data_map,
     usb_c_peer_netlist,
@@ -89,6 +94,32 @@ def test_stale_map_identity_does_not_suppress_peer_review() -> None:
     report = lint_report(usb_peer_netlist(), path_map=path_map)
     assert (RULE_ID) in ({item.rule_id for item in report.findings})
     assert (PATH_RULE_ID) in ({item.rule_id for item in report.findings})
+
+
+def test_casefold_colliding_symbol_keys_do_not_select_a_usb_endpoint() -> None:
+    source = usb_peer_netlist()
+    ambiguous = NetlistContract(
+        components=source.components,
+        nets=source.nets,
+        dnp_components=source.dnp_components,
+        component_symbols={
+            **source.component_symbols,
+            "j1": "Synthetic:ConflictingConnector",
+        },
+        pin_functions=source.pin_functions,
+        pin_electrical_types=source.pin_electrical_types,
+        component_pin_numbers=source.component_pin_numbers,
+    )
+
+    assert (
+        usb_endpoint(
+            "J1",
+            ambiguous,
+            connector=True,
+            assignments=pin_net_index(ambiguous),
+        )
+        == ()
+    )
 
 
 def test_review_block_off_and_exact_ignore_are_project_configurable() -> None:

@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
+from types import MappingProxyType
+from typing import TypeAlias
 
 from .connector_identity import power_function_key
 from .netlist_contract_models import NetlistContract
@@ -23,6 +26,9 @@ class VisibleResistorPath:
     references: tuple[str, ...]
     resistance_ohms: float
     rail_net: str
+
+
+VisibleResistorPathsByNet: TypeAlias = Mapping[str, tuple[VisibleResistorPath, ...]]
 
 
 # Compatibility name retained for existing bus-analysis callers.
@@ -151,7 +157,7 @@ def positive_power_net_families(observed: NetlistContract) -> dict[str, str]:
 
 def visible_resistor_pullups(
     observed: NetlistContract, *, include_device_r_symbol: bool = False
-) -> dict[str, list[VisiblePullupPath]]:
+) -> VisibleResistorPathsByNet:
     """Find direct or unbranched fitted resistor chains from a signal net to a named rail."""
     return visible_resistor_paths(
         observed,
@@ -173,7 +179,7 @@ def visible_resistor_paths(
     minimum_path_ohms: float | None = None,
     maximum_path_ohms: float | None = None,
     include_device_r_symbol: bool = False,
-) -> dict[str, list[VisibleResistorPath]]:
+) -> VisibleResistorPathsByNet:
     """Find direct or unbranched fitted resistor chains to explicit target nets.
 
     Optional bounds preserve the I2C pull-up heuristic's conservative resistor
@@ -264,10 +270,18 @@ def visible_resistor_paths(
             continue
         visit(start_net, start_net, (), 0.0, frozenset())
 
-    return {
-        net: sorted(
-            net_paths.values(),
-            key=lambda item: (item.rail_net.casefold(), item.references, item.resistance_ohms),
-        )
-        for net, net_paths in sorted(paths.items())
-    }
+    return MappingProxyType(
+        {
+            net: tuple(
+                sorted(
+                    net_paths.values(),
+                    key=lambda item: (
+                        item.rail_net.casefold(),
+                        item.references,
+                        item.resistance_ohms,
+                    ),
+                )
+            )
+            for net, net_paths in sorted(paths.items())
+        }
+    )

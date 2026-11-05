@@ -1742,3 +1742,26 @@ No exact native KiCad lane ran.
 The combined connector/component mapping and role-record selection passed 265
 tests with one skipped case. Ruff check/format, targeted Pyright, and
 `git diff --check` passed. No exact native KiCad lane ran.
+
+## USB case-folded netlist index route (2026-11-05)
+
+`NetlistContract` retains exact source keys and accepts distinct spellings such
+as `U1` and `u1`. The USB peer route now uses the shared
+`casefolded_unique_index` owner in `casefold_mapping_lookup.py`. It returns an
+immutable mapping of normalized keys and excludes every key with more than one
+case-folded source match, so a lookup cannot select a value based on input
+order. The four USB peer consumers use this owner directly across 25 calls;
+the audit found no mutation of any returned index.
+
+These indexes remain derived lookups, not source evidence. USB candidate
+evidence continues to retain its existing scan and authored map; endpoint
+recognition fails closed when a required component symbol becomes ambiguous.
+The netlist contract and serialized candidate evidence are unchanged.
+
+The focused case-fold tests, USB peer regressions, and architecture guards
+passed 146 tests, with two deselected cases. Ruff and targeted Pyright passed.
+The six Alphus profiles retained their current totals and reported no findings
+in the five route modules. The 1,500-line `hwrepo` file-size candidate and
+scoped test-quality candidate both returned zero findings. No exact native
+KiCad lane ran. Continue the SA-01 inventory with other returned maps, keeping
+local accumulation dictionaries out of the shared-route count.
