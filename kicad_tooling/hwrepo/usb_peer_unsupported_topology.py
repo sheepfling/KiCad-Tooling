@@ -6,7 +6,32 @@ from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
 
 from .netlist_contract_models import NetlistContract
+from .usb_data_path_models import UsbDataPathMap
+from .usb_peer_map_identity import usb_data_interface_matches_endpoint_group
 from .usb_peer_reference_types import UsbEndpoint, UsbPeerUnsupportedMultiPinPath
+
+
+def _mapped_component_references(
+    connector: UsbEndpoint,
+    phy: UsbEndpoint,
+    path_map: UsbDataPathMap | None,
+) -> frozenset[str]:
+    if path_map is None:
+        return frozenset()
+    return frozenset(
+        reference.casefold()
+        for item in path_map.interfaces
+        if usb_data_interface_matches_endpoint_group(
+            item,
+            connector_reference=connector.reference,
+            phy_reference=phy.reference,
+            port_groups=frozenset((connector.port_group, phy.port_group)),
+        )
+        for reference in (
+            *(() if item.inline_component is None else (item.inline_component.reference,)),
+            *(shunt.reference for shunt in item.protection_shunts),
+        )
+    )
 
 
 def unsupported_usb_multi_pin_path_candidates(
@@ -14,7 +39,7 @@ def unsupported_usb_multi_pin_path_candidates(
     phy: UsbEndpoint,
     observed: NetlistContract,
     net_members: Mapping[str, AbstractSet[str]],
-    mapped_component_references: AbstractSet[str],
+    path_map: UsbDataPathMap | None,
 ) -> tuple[UsbPeerUnsupportedMultiPinPath, ...]:
     """Report shared multi-pin candidates without asserting that they pass data."""
     if (
@@ -59,7 +84,7 @@ def unsupported_usb_multi_pin_path_candidates(
                 pin_net_counts[pin.casefold()] = pin_net_counts.get(pin.casefold(), 0) + 1
 
     endpoint_references = {connector.reference.casefold(), phy.reference.casefold()}
-    excluded_references = {item.casefold() for item in mapped_component_references}
+    excluded_references = _mapped_component_references(connector, phy, path_map)
     dnp_references = {item.casefold() for item in observed.dnp_components}
     component_by_reference = {item.casefold(): item for item in observed.components}
     symbol_by_reference = {

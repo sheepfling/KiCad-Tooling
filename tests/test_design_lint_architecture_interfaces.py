@@ -80,6 +80,7 @@ USB_PEER_ANALYSIS_MODULES = (
     "usb_peer_reference_evidence.py",
     "usb_peer_reference_scan.py",
     "usb_peer_unsupported_topology.py",
+    "usb_peer_map_identity.py",
 )
 
 

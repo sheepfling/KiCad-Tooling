@@ -9763,6 +9763,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/usb_peer_unsupported_topology.py#unsupported_usb_multi_pin_path_candidates",
         "kicad_tooling/hwrepo/usb_peer_reference_scan.py#scan_usb_peer_reference_reviews",
+        "kicad_tooling/hwrepo/usb_peer_map_identity.py#usb_data_interface_matches_endpoint_group",
         "kicad_tooling/hwrepo/design_lint_usb_unmapped_topology.py#usb_unmapped_multi_pin_topology_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],

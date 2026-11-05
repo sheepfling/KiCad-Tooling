@@ -14317,11 +14317,16 @@ control are documented in the
   mismatch finding. Direct and DNP controls, mapping-order stability, policy
   and ignore behavior, and a wrong-port-group map control passed in the
   focused local interface-lint selection (9 tests); the dedicated CLI/MCP
-  report-parity selection passed separately (1 test). Exact-version native exports are covered
-  by the pinned fixture lane, but the 2026-11-05 local attempt stopped before
-  KiCad ran because the runner could not access its Docker API socket; hosted
-  acceptance is pending. The public USB hub screen is linked under LINT-031
-  and contributes no defect label or field-precision measurement.
+  report-parity selection passed separately (1 test). Exact-version native
+  exports are covered by the pinned fixture lane, but the 2026-11-05 local
+  attempt stopped before KiCad ran because the runner could not access its
+  Docker API socket. Hosted run `v0.5.3rc425` (`42002849499`) passed the
+  selected native fixtures on KiCad 10.0.0 and 10.0.5 but exposed one
+  wrong-port-group map suppressing coverage. The follow-up scopes mapped
+  component exclusions by connector, PHY, and port group through the shared
+  USB map-identity service; its regression passes locally. The public USB hub
+  screen is linked under LINT-031 and contributes no defect label or
+  field-precision measurement.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

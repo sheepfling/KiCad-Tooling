@@ -5,6 +5,7 @@ from __future__ import annotations
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
+from .usb_peer_map_identity import usb_data_interface_matches_endpoint_group
 from .usb_peer_reference_types import UsbPeerReferenceScan, UsbPeerUnsupportedMultiPinPath
 
 RULE_ID: DesignLintRuleId = "bus.usb_unmapped_multi_pin_topology"
@@ -20,9 +21,12 @@ def _has_endpoint_map(
     if source.authored_map is None:
         return False
     return any(
-        item.connector_reference.casefold() == path.connector_reference.casefold()
-        and item.phy_reference.casefold() == path.phy_reference.casefold()
-        and (item.data_port_group is None or item.data_port_group == path.port_group)
+        usb_data_interface_matches_endpoint_group(
+            item,
+            connector_reference=path.connector_reference,
+            phy_reference=path.phy_reference,
+            port_groups=frozenset({path.port_group}),
+        )
         for item in source.authored_map.interfaces
     )
 

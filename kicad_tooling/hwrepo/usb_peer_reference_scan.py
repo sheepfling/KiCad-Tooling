@@ -223,7 +223,7 @@ def scan_usb_peer_reference_reviews(
                         phy,
                         observed,
                         assignments.pin_keys_by_net_key,
-                        mapped_path_component_references,
+                        path_map,
                     )
                 )
                 continue
