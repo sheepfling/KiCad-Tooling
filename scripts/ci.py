@@ -257,33 +257,6 @@ def main() -> int:
                 "Install this checkout with python -m pip install -e '.[dev]' "
                 "before running its regression suite"
             )
-        unit_environment = os.environ.copy()
-        unit_environment.pop("KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY", None)
-        unit_environment["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"
-        unit_command = (
-            sys.executable,
-            "-B",
-            "-I",
-            "-m",
-            "pytest",
-            "-q",
-            "--durations=10",
-        )
-        if pytest_paths:
-            unit_command += pytest_paths
-        elif args.pytest_markexpr:
-            unit_command += ("-m", args.pytest_markexpr)
-        stage(
-            "unit",
-            unit_command,
-            output,
-            cwd=ROOT,
-            environment=unit_environment,
-        )
-        if os.environ.get("KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY") == "1":
-            from kicad_tooling.hwrepo.native_geometry_lane import run
-
-            run(ROOT, output, stage)
         stage(
             "ruff-format",
             (
@@ -317,6 +290,49 @@ def main() -> int:
             cwd=ROOT,
         )
         stage(
+            "rumdl",
+            (
+                sys.executable,
+                "-I",
+                "-m",
+                "kicad_tooling.markdown_check",
+                "check",
+                ".",
+                "--no-cache",
+            ),
+            output,
+            cwd=ROOT,
+        )
+        if not args.skip_mdrepo:
+            stage("mdrepo", (sys.executable, "-m", "mdrepo", "check", "."), output, cwd=ROOT)
+        unit_environment = os.environ.copy()
+        unit_environment.pop("KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY", None)
+        unit_environment["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"
+        unit_command = (
+            sys.executable,
+            "-B",
+            "-I",
+            "-m",
+            "pytest",
+            "-q",
+            "--durations=10",
+        )
+        if pytest_paths:
+            unit_command += pytest_paths
+        elif args.pytest_markexpr:
+            unit_command += ("-m", args.pytest_markexpr)
+        stage(
+            "unit",
+            unit_command,
+            output,
+            cwd=ROOT,
+            environment=unit_environment,
+        )
+        if os.environ.get("KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY") == "1":
+            from kicad_tooling.hwrepo.native_geometry_lane import run
+
+            run(ROOT, output, stage)
+        stage(
             "pyright",
             (sys.executable, "-m", "pyright", "--pythonpath", sys.executable),
             output,
@@ -338,22 +354,6 @@ def main() -> int:
             output,
             cwd=ROOT,
         )
-        stage(
-            "rumdl",
-            (
-                sys.executable,
-                "-I",
-                "-m",
-                "kicad_tooling.markdown_check",
-                "check",
-                ".",
-                "--no-cache",
-            ),
-            output,
-            cwd=ROOT,
-        )
-        if not args.skip_mdrepo:
-            stage("mdrepo", (sys.executable, "-m", "mdrepo", "check", "."), output, cwd=ROOT)
         rebuilt_wheel, version = build_distributions(ROOT, output, args.build_python, stage)
         environment_dir = output / "environment"
         venv.EnvBuilder(with_pip=True).create(environment_dir)

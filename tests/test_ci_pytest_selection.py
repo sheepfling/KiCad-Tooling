@@ -90,3 +90,32 @@ def test_ci_driver_prefers_existing_test_modules_over_marker_selection(
 def test_ci_test_module_selection_rejects_missing_files(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="missing or outside tests"):
         validate_test_module_files(("tests/test_missing.py",), tmp_path)
+
+
+@pytest.mark.parametrize("failure_stage", ("ruff-format", "ruff", "rumdl", "mdrepo"))
+@pytest.mark.architecture
+def test_fast_quality_gate_failure_stops_before_unit_suite(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failure_stage: str,
+) -> None:
+    monkeypatch.setattr(ci, "ROOT", tmp_path)
+    monkeypatch.setattr(ci.sys, "argv", ["scripts/ci.py"])
+    calls: list[str] = []
+
+    def run_stage(name: str, *_args: object, **_kwargs: object) -> Mock:
+        calls.append(name)
+        if name == failure_stage:
+            raise RuntimeError(f"{name} failed")
+        result = Mock()
+        if name == "development-install":
+            result.stdout = str(tmp_path / "kicad_tooling/__init__.py")
+        return result
+
+    monkeypatch.setattr(ci, "stage", run_stage)
+
+    assert ci.main() == 1
+    fast_stages = ("development-install", "ruff-format", "ruff", "rumdl", "mdrepo")
+    expected = fast_stages[: fast_stages.index(failure_stage) + 1]
+    assert calls == list(expected)
+    assert "unit" not in calls
