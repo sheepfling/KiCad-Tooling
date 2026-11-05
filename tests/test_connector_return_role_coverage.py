@@ -364,3 +364,58 @@ def test_split_return_across_two_usb_and_one_serial_peer_group_is_reviewed() -> 
     assert not any(
         finding.rule_id == "connector.repeated_pin_function" for finding in common_report.findings
     )
+
+
+@pytest.mark.design_lint_rule(rule_id="connector.repeated_pin_function")
+def test_all_open_mapped_returns_across_usb_and_serial_peers_need_review() -> None:
+    observed, coverage = two_usb_one_serial_return_case(
+        common_return=False,
+        all_returns_open=True,
+        return_comparison_groups={
+            "J1": "external-returns",
+            "J2": "external-returns",
+            "J3": "external-returns",
+        },
+    )
+    report = evaluate_design_lint(
+        "synthetic-two-usb-one-serial-all-open-return",
+        ContractCoachReport(
+            status="READY_FOR_REVIEW",
+            project_id="synthetic-two-usb-one-serial-all-open-return",
+            observed=observed,
+            netlist_sha256=hashlib.sha256(model_json_bytes(observed)).hexdigest(),
+        ),
+        DesignLintPolicy(),
+        connector_coverage=coverage,
+    )
+
+    findings = tuple(
+        finding
+        for finding in report.findings
+        if finding.rule_id == "connector.repeated_pin_function"
+    )
+    assert report.status == "REVIEW"
+    assert coverage.status == "COMPLETE"
+    assert len(findings) == 1
+    assert {pin: findings[0].evidence[pin] for pin in ("J1.3", "J2.3", "J3.3")} == {
+        "J1.3": (),
+        "J2.3": (),
+        "J3.3": (),
+    }
+    assert findings[0].evidence["return_comparison_group"] == ("external-returns",)
+    assert "common, bonded, or intentionally isolated" in findings[0].message
+    assert "connector.no_connected_return" not in {item.rule_id for item in report.findings}
+
+    common, common_coverage = two_usb_one_serial_return_case(common_return=True)
+    control = evaluate_design_lint(
+        "synthetic-two-usb-one-serial-common-return",
+        ContractCoachReport(
+            status="READY_FOR_REVIEW",
+            project_id="synthetic-two-usb-one-serial-common-return",
+            observed=common,
+            netlist_sha256=hashlib.sha256(model_json_bytes(common)).hexdigest(),
+        ),
+        DesignLintPolicy(),
+        connector_coverage=common_coverage,
+    )
+    assert not any(item.rule_id == "connector.repeated_pin_function" for item in control.findings)

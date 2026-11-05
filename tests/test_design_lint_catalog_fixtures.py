@@ -9,6 +9,9 @@ from types import MappingProxyType
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import rule_catalog
+from tests.design_lint_connector_return_parity_fixtures import (
+    CONNECTOR_RETURN_PARITY_FIXTURES,
+)
 from tests.design_lint_footprint_peer_fixture_refs import (
     FOOTPRINT_PEER_PARITY_FIXTURES,
 )
@@ -25,6 +28,7 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
     {
         **FOOTPRINT_PEER_PARITY_FIXTURES,
         **OPEN_DRAIN_CONTROL_PARITY_FIXTURES,
+        **CONNECTOR_RETURN_PARITY_FIXTURES,
         "bus.i2c_missing_pullup": MappingProxyType(
             {
                 "fault_fixtures": _refs(

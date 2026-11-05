@@ -40,6 +40,7 @@ _SOURCE_HASHES = MappingProxyType(
     {
         "fault": "53af59844b37ac7181a99e22a5bc14cd868ef33083361590cd627e8907e3fb83",
         "control": "b0731cac3cba8b946e905a41f2f9251c459573f699d2c2990b2574c4ba7f5c45",
+        "all-open": "3fb246894f60b035be41eae58820d37e607919f3c33a5fd1189ed489fd1cf8ca",
     }
 )
 _INTERFACE_SHA256 = "e1216ee351d3fcdddd720f2bc6f0e2068bbc9d85e777aa4914c4af8102cb8b99"
@@ -76,7 +77,9 @@ def mixed_interface_return_fixture_lane(
         raise ValueError(f"Mixed-interface return fixtures do not cover KiCad {version}")
     pinned = pinned_image(image)
     fixture_root = tooling_checkout_root() / _FIXTURE_RELATIVE_ROOT
-    sources = {case: fixture_root / f"{case}.kicad_sch" for case in ("fault", "control")}
+    sources = {
+        case: fixture_root / f"{case}.kicad_sch" for case in ("fault", "control", "all-open")
+    }
     source_hashes = MappingProxyType({case: digest(source) for case, source in sources.items()})
     if source_hashes != _SOURCE_HASHES:
         raise ValueError("Mixed-interface return sources differ from the reviewed hashes")
@@ -123,7 +126,7 @@ def mixed_interface_return_fixture_lane(
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
         f'test "$actual" = "{version}"\n'
-        "for case in fault control; do\n"
+        f"for case in {' '.join(sources)}; do\n"
         "  for run in first repeat; do\n"
         "    kicad-cli sch export netlist --format kicadxml "
         '      --output "/output/$case.$run.netlist.xml" "/fixtures/$case.kicad_sch"\n'
@@ -193,6 +196,14 @@ def mixed_interface_return_fixture_lane(
             "USB2_D+": ("J3.1",),
             "USB2_D-": ("J3.2",),
         },
+        "all-open": {
+            "USB1_D+": ("J1.1",),
+            "USB1_D-": ("J1.2",),
+            "SERIAL_TX": ("J2.1",),
+            "SERIAL_RX": ("J2.2",),
+            "USB2_D+": ("J3.1",),
+            "USB2_D-": ("J3.2",),
+        },
     }
     normalized_hashes: dict[tuple[str, str], str] = {}
     erc_hashes: dict[tuple[str, str], str] = {}
@@ -221,6 +232,12 @@ def mixed_interface_return_fixture_lane(
                     f"Native mixed-interface {case} assignments changed: "
                     f"expected={expected_nets[case]!r}, actual={actual_nets!r}"
                 )
+            if case == "all-open" and any(
+                pin in members
+                for members in observed.nets.values()
+                for pin in ("J1.3", "J2.3", "J3.3")
+            ):
+                raise ValueError("All-open native return fixture assigned a return contact")
             normalized_hashes[case, run] = _normalized_sha256(observed)
             erc = read_kicad_erc_report(erc_path)
             if erc.kicad_version != version or any(
@@ -289,6 +306,18 @@ def mixed_interface_return_fixture_lane(
                 raise ValueError(
                     "One shared return-comparison scope should retain all connector peers"
                 )
+        elif case == "all-open":
+            if len(target_findings) != 1 or target_findings[0].mode != "review":
+                raise ValueError("All-open mixed-interface returns lost their review finding")
+            if any(target_findings[0].evidence.get(pin) != () for pin in ("J1.3", "J2.3", "J3.3")):
+                raise ValueError("All-open return review lost exact unassigned-pin evidence")
+            if (
+                target_findings[0].evidence.get("return_comparison_group") != ("external-returns",)
+                or len(target_findings[0].evidence.get("return_comparison_basis", ())) != 3
+            ):
+                raise ValueError("All-open return review lost its authored comparison scope")
+            if scope_findings:
+                raise ValueError("Complete all-open return scope retained a singleton prompt")
         elif target_findings:
             raise ValueError("Common mixed-interface return control retained a review finding")
         elif scope_findings:

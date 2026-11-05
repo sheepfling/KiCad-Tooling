@@ -2607,6 +2607,16 @@ is not a reason by itself to expand its scope or change its default policy.
   does not assert a required common ground or PCB continuity. Source and
   normalized digests are in the
   [fixture README](../tests/fixtures/design_lint/four-port-db9-returns/README.md).
+- **Additional all-open return regression:** A tooling-owned synthetic case now
+  leaves the mapped return contacts open across two USB peers and one serial
+  peer while retaining their data/signal assignments. The existing
+  `connector.repeated_pin_function` heuristic emits one `REVIEW` with all three
+  exact unassigned-pin observations; common returns are the quiet control.
+  Source-matched return-comparison scope makes the peer set explicit, but the
+  heuristic does not require commoning or decide whether open returns are
+  intentional. CLI/MCP parity passed locally; the digest-pinned KiCad 10.0.0
+  and 10.0.5 Docker lane also passed on 2026-11-05 with repeated native exports
+  and clean ERC. Only synthetic fixtures are used.
 - **Remaining:** No additional net-tie work is open here; see the synthetic and
   exact-version evidence recorded under LINT-025. Connector mate similarity
   remains a review candidate and never supplies the relationship contract.

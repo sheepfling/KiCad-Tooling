@@ -22,6 +22,14 @@ keeps them in one return-comparison group. It should produce no finding for
 deterministic behavior for this reviewed fixture; it does not establish that
 every real USB or serial design must common its returns.
 
+The `all-open.kicad_sch` review fixture marks all three return pins no-connect
+while retaining the USB data and serial signal assignments. The source-matched
+interface catalog still identifies the serial connector's generic `Pin_3` as a
+return role, and the complete authored comparison group yields one REVIEW
+finding with all three return pins shown as unassigned. The common-return
+schematic is its valid control. The prompt does not declare an open pin a defect
+or require common returns.
+
 The separate-group map deliberately puts J3 in a singleton return-comparison
 scope. `connector.repeated_pin_function` stays quiet across the reviewed
 boundary, while `connector.return_supply_scope_singleton` asks the reviewer to
@@ -31,7 +39,8 @@ returns common, separate, or electrically isolated.
 `interfaces.json` and both connector-review maps are part of the source-bound
 test input. The hosted lane verifies the exact source hashes, connector-map
 coverage, KiCad net assignments, no native ERC errors, and repeatability of
-netlist and ERC exports. It runs with the pinned KiCad 10.0.0 and 10.0.5
+netlist and ERC exports for the split, common, and all-open cases. It runs with
+the pinned KiCad 10.0.0 and 10.0.5
 toolchains declared by `kicad_tooling/ci_hosted_kicad10_images.py`.
 
 Reviewed input SHA-256 values:
@@ -40,6 +49,7 @@ Reviewed input SHA-256 values:
 | ----------------------------------------------- | ------------------------------------------------------------------ |
 | `fault.kicad_sch`                               | `53af59844b37ac7181a99e22a5bc14cd868ef33083361590cd627e8907e3fb83` |
 | `control.kicad_sch`                             | `b0731cac3cba8b946e905a41f2f9251c459573f699d2c2990b2574c4ba7f5c45` |
+| `all-open.kicad_sch`                            | `3fb246894f60b035be41eae58820d37e607919f3c33a5fd1189ed489fd1cf8ca` |
 | `interfaces.json`                               | `e1216ee351d3fcdddd720f2bc6f0e2068bbc9d85e777aa4914c4af8102cb8b99` |
 | `connector-reviews.json`                        | `a1ec6317ef6207572c89605a5c0ef1448fe7e5a62b2ec5383edea598dda2d0bc` |
 | `connector-reviews-separate-return-groups.json` | `fcbebe5c7c83a15d82daf1ae43c25f461bcd3809b4e9c02f4eaca1a0c8ae3329` |

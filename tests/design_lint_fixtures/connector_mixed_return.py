@@ -17,9 +17,12 @@ from tests.design_lint_fixtures.connector_coverage import (
 
 
 def two_usb_one_serial_return_case(
-    *, common_return: bool, return_comparison_groups: Mapping[str, str] | None = None
+    *,
+    common_return: bool,
+    all_returns_open: bool = False,
+    return_comparison_groups: Mapping[str, str] | None = None,
 ) -> tuple[NetlistContract, ConnectorCoverageReport]:
-    """Build two mapped USB peers and one serial peer with a split/common return."""
+    """Build mapped USB and serial peers with split, common, or open returns."""
     nets: dict[str, tuple[str, ...]] = {
         "USB1_D+": ("J1.1",),
         "USB1_D-": ("J1.2",),
@@ -29,11 +32,12 @@ def two_usb_one_serial_return_case(
         "USB2_D+": ("J3.1",),
         "USB2_D-": ("J3.2",),
     }
-    if common_return:
-        nets["COMMON_RETURN"] = ("J1.3", "J2.3", "J3.3")
-    else:
-        nets["COMMON_RETURN"] = ("J1.3", "J2.3")
-        nets["USB2_RETURN"] = ("J3.3",)
+    if not all_returns_open:
+        if common_return:
+            nets["COMMON_RETURN"] = ("J1.3", "J2.3", "J3.3")
+        else:
+            nets["COMMON_RETURN"] = ("J1.3", "J2.3")
+            nets["USB2_RETURN"] = ("J3.3",)
 
     netlist = NetlistContract(
         components={},

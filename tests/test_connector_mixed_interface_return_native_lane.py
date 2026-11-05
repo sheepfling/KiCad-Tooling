@@ -45,6 +45,7 @@ def test_native_mixed_interface_returns_are_source_bound_and_repeatable(
         f"{prefix}native-export",
         f"{prefix}fault",
         f"{prefix}control",
+        f"{prefix}all-open",
         f"{prefix}separate-scope-control",
     }
     assert expected_stages <= set(stages)
@@ -54,7 +55,7 @@ def test_native_mixed_interface_returns_are_source_bound_and_repeatable(
     native_export = results[f"{prefix}native-export"]
     assert native_export["kicad_version"] == version
     source_hashes = dict(entry.split(":", 1) for entry in native_export["source_hashes"].split(","))
-    assert set(source_hashes) == {"fault", "control"}
+    assert set(source_hashes) == {"fault", "control", "all-open"}
     assert all(re.fullmatch(r"[0-9a-f]{64}", value) for value in source_hashes.values())
     assert_native_fixture_mounts(root, native_export["command_receipt"])
 
@@ -70,6 +71,12 @@ def test_native_mixed_interface_returns_are_source_bound_and_repeatable(
     assert control["findings"] == "none"
     assert control["erc_errors"] == "none"
     assert control["repeatable"] == "true"
+    all_open = results[f"{prefix}all-open"]
+    assert all_open["kicad_version"] == version
+    assert all_open["connector_coverage"] == "COMPLETE"
+    assert all_open["findings"] != "none"
+    assert all_open["erc_errors"] == "none"
+    assert all_open["repeatable"] == "true"
     separate_scope = results[f"{prefix}separate-scope-control"]
     assert separate_scope["kicad_version"] == version
     assert separate_scope["connector_coverage"] == "COMPLETE"
