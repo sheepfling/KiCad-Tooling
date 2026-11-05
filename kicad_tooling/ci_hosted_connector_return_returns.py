@@ -59,8 +59,8 @@ def verify_ret_return_label_cases(ctx: ConnectorReturnFixtureContext) -> None:
         "I2C2_0V": ("J4.1",),
         "SPI1_RET": ("J1.2",),
         "SPI2_RET": ("J2.2",),
-        "RET1": ("J1.7", "J1.9"),
-        "RET2": ("J2.7", "J2.9"),
+        "VSSA1": ("J1.7", "J1.9"),
+        "VSSA2": ("J2.7", "J2.9"),
         "PORT3_RET": ("J3.7", "J3.9"),
         "PORT4_RET": ("J4.7", "J4.9"),
     }
@@ -104,6 +104,18 @@ def verify_ret_return_label_cases(ctx: ConnectorReturnFixtureContext) -> None:
     ):
         raise ValueError(
             "Native common RET control lost pin membership or raised return-label lint"
+        )
+
+    vss_control = ctx.reports["vss-control", "first"]
+    observed_common_vss_pins = set(
+        ctx.observed_contracts["vss-control", "first"].nets.get("VSSA", ())
+    )
+    if (
+        return_rules & {finding.rule_id for finding in vss_control.findings}
+        or observed_common_vss_pins != expected_common_pins
+    ):
+        raise ValueError(
+            "Native common VSSA control lost pin membership or raised return-label lint"
         )
 
 

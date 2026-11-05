@@ -8104,7 +8104,7 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "At least two distinct net names have the same recognized return-like stem and different numeric suffixes. A recognized ground stem may use a one-letter suffix such as GNDA before an optional numeric suffix. The bounded RET token is also recognized, including RET1/RET2 and PORT1_RET/PORT2_RET; compact allowlisted protocol prefixes include USB1_GND/USB2_GND, UART1_GND/UART2_GND, CAN1_GND/CAN2_GND, I2C1_0V/I2C2_0V, and SPI1_RET/SPI2_RET.",
+      "predicate": "At least two distinct net names have the same recognized return-like stem and different numeric suffixes. A recognized GND or VSS stem may use a one-letter suffix such as GNDA or VSSA before an optional numeric suffix. The bounded RET token is also recognized, including RET1/RET2 and PORT1_RET/PORT2_RET; compact allowlisted protocol prefixes include USB1_GND/USB2_GND, UART1_GND/UART2_GND, CAN1_GND/CAN2_GND, I2C1_0V/I2C2_0V, and SPI1_RET/SPI2_RET.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
@@ -8163,13 +8163,13 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "At least two distinct populated net names contain a recognized return token, are not already included in a numbered-return group, and have no attached exported symbol pin function that identifies a return. Recognized ground names include one-letter suffixes such as GNDA and GNDD; the bounded RET token is also recognized.",
+      "predicate": "At least two distinct populated net names contain a recognized return token, are not already included in a numbered-return group, and have no attached exported symbol pin function that identifies a return. Recognized ground names include one-letter suffixes such as GNDA, GNDD, VSSA, and VSSD; the bounded RET token is also recognized.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Net-label text does not establish that domains must be connected, bonded, or isolated; the finding only prompts review.",
-        "Only documented return tokens and native pin-function text are recognized; a one-letter suffix extends GND only (for example GNDA or GNDD). RET is matched as a bounded token, so RESET is not a match. Longer labels such as GNDAUDIO are not matched. Unrelated labels, missing symbol metadata, or an attached pin with a recognized return function can suppress this candidate.",
+        "Only documented return tokens and native pin-function text are recognized; a one-letter suffix extends GND or VSS (for example GNDA, GNDD, VSSA, or VSSD). Longer labels such as GNDAUDIO or VSSAUDIO and multi-letter stems such as VSSIO are not matched by the suffix form. RET is matched as a bounded token, so RESET is not a match. Unrelated labels, missing symbol metadata, or an attached pin with a recognized return function can suppress this candidate.",
         "The rule does not inspect PCB copper, off-board wiring, connector datasheets, or physical continuity."
       ],
       "fault_fixtures": [

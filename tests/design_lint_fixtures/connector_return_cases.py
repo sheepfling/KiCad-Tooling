@@ -274,7 +274,7 @@ def ret_return_label_case_contracts() -> dict[str, NetlistContract]:
                     **{
                         name: (f"J{reference}.7", f"J{reference}.9")
                         for reference, name in enumerate(
-                            ("RET1", "RET2", "PORT3_RET", "PORT4_RET"), start=1
+                            ("VSSA1", "VSSA2", "PORT3_RET", "PORT4_RET"), start=1
                         )
                     },
                 },
@@ -304,6 +304,20 @@ def ret_return_label_case_contracts() -> dict[str, NetlistContract]:
                         if name.startswith("SIGNAL")
                     },
                     "RET": tuple(
+                        f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9)
+                    ),
+                }
+            }
+        ),
+        "vss-control": common.model_copy(
+            update={
+                "nets": {
+                    **{
+                        name: pins
+                        for name, pins in common.nets.items()
+                        if name.startswith("SIGNAL")
+                    },
+                    "VSSA": tuple(
                         f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9)
                     ),
                 }

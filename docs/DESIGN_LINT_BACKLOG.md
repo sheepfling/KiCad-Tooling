@@ -4220,10 +4220,11 @@ is not a reason by itself to expand its scope or change its default policy.
   connector pin-function rule. When those functions differ across connector
   nets, that separate rule keeps a review prompt; it does not require common
   returns. The bounded return vocabulary now accepts a
-  one-letter suffix on `GND`, including `GNDA` and `GNDD`, which KiCad's
-  [net-class example](https://docs.kicad.org/8.0/en/eeschema/eeschema.pdf)
-  lists as a net matched by `GND*`. Matching names remain review-only and do
-  not imply a common electrical domain. The bounded `RET` token is also
+  one-letter suffix on `GND` and `VSS`, including `GNDA`, `GNDD`, `VSSA`, and
+  `VSSD`; KiCad's [net-class example](https://docs.kicad.org/8.0/en/eeschema/eeschema.pdf)
+  documents `GND*` matching. Matching names remain review-only and do not
+  imply a common electrical domain. Longer stems such as `VSSIO` and
+  `VSSAUDIO` stay outside the one-letter suffix form. The bounded `RET` token is also
   recognized for both numbered and unnumbered candidate groups. TI's
   [UCC28630EVM-572 user guide](https://www.ti.com/lit/ug/sluuax9b/sluuax9b.pdf)
   labels an output return `RET`; this supports the spelling only. Synthetic

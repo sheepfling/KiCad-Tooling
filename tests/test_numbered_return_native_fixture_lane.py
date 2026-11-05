@@ -243,12 +243,16 @@ def test_native_ret_return_label_fault_and_control_are_focused_and_repeatable(
     assert "net.return_labels_without_pin_roles" in unindexed["findings"].split(",")
     assert "net.numbered_returns" not in unindexed["findings"].split(",")
     control = results["connector-return-fixture/ret-control"]
+    vss_control = results["connector-return-fixture/vss-control"]
     assert control["status"] == "PASS"
     assert not {
         "net.numbered_returns",
         "net.return_labels_without_pin_roles",
     } & set(control["findings"].split(","))
-    for result in (numbered, unindexed, control):
+    assert vss_control["status"] == "PASS"
+    assert vss_control["lint_status"] == "PASS"
+    assert vss_control["findings"] == "none"
+    for result in (numbered, unindexed, control, vss_control):
         assert result["kicad_version"] == version
         assert result["repeatable"] == "true"
         assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]

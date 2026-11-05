@@ -10,15 +10,16 @@ The other seven contacts are wired to matching `SIGNAL<n>` nets across all four
 connectors. This keeps the regression focused on the return contacts and avoids
 warnings caused by unrelated unassigned synthetic pins.
 
-| Fixture                         | Assignment                                                                                                    | Expected lint result                                            |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| `fault.kicad_sch`               | J1–J4 pins 7/9 use `RETURN_PORT_n`                                                                            | `REVIEW` for repeated return functions and numbered return nets |
-| `control.kicad_sch`             | All J1–J4 pins 7/9 use `COMMON_RETURN`                                                                        | `PASS`                                                          |
-| `pwm-fault.kicad_sch`           | J1–J4 pins 7/9 use `0V PWM 1` through `0V PWM 4`                                                              | `REVIEW` for numbered return nets                               |
-| `pwm-control.kicad_sch`         | All J1–J4 pins 7/9 use `0V PWM`                                                                               | `PASS`                                                          |
-| `ret-numbered-fault.kicad_sch`  | J1/J2 use `RET1`/`RET2`; J3/J4 use `PORT3_RET`/`PORT4_RET`; CAN, I2C, and SPI return labels are split by port | `REVIEW` with exact numbered-return evidence                    |
-| `ret-unindexed-fault.kicad_sch` | J1/J2 use `RET_USB`/`RET_SERIAL`; J3/J4 use neutral labels                                                    | `REVIEW` for unindexed return-like labels                       |
-| `ret-control.kicad_sch`         | All J1–J4 pins 7/9 use one `RET` net with numeric pin functions                                               | No numbered or unindexed RET-label finding                      |
+| Fixture                         | Assignment                                                                                                      | Expected lint result                                            |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `fault.kicad_sch`               | J1–J4 pins 7/9 use `RETURN_PORT_n`                                                                              | `REVIEW` for repeated return functions and numbered return nets |
+| `control.kicad_sch`             | All J1–J4 pins 7/9 use `COMMON_RETURN`                                                                          | `PASS`                                                          |
+| `pwm-fault.kicad_sch`           | J1–J4 pins 7/9 use `0V PWM 1` through `0V PWM 4`                                                                | `REVIEW` for numbered return nets                               |
+| `pwm-control.kicad_sch`         | All J1–J4 pins 7/9 use `0V PWM`                                                                                 | `PASS`                                                          |
+| `ret-numbered-fault.kicad_sch`  | J1/J2 use `VSSA1`/`VSSA2`; J3/J4 use `PORT3_RET`/`PORT4_RET`; CAN, I2C, and SPI return labels are split by port | `REVIEW` with exact numbered-return evidence                    |
+| `ret-unindexed-fault.kicad_sch` | J1/J2 use `RET_USB`/`RET_SERIAL`; J3/J4 use neutral labels                                                      | `REVIEW` for unindexed return-like labels                       |
+| `ret-control.kicad_sch`         | All J1–J4 pins 7/9 use one `RET` net with numeric pin functions                                                 | No numbered or unindexed RET-label finding                      |
+| `vss-control.kicad_sch`         | All J1–J4 pins 7/9 use one `VSSA` net with explicit `GND` pin roles                                             | `PASS`                                                          |
 
 The PWM-named pair is a tooling-owned synthetic reproduction of the supplied
 name pattern. It checks that native KiCad export preserves the spaces and
@@ -33,18 +34,20 @@ specified path, or isolated. The fixture contains no proprietary project source 
 board reconstruction. All fixture labels and component attributes are generated
 synthetic values.
 
-## RET token native fault and control coverage
+## Bounded return-label native fault and control coverage
 
-The source-hash-pinned native lane also covers three synthetic return-label
-cases. The numbered fault exercises `RET1`/`RET2`, `PORT3_RET`/`PORT4_RET`,
+The source-hash-pinned native lane also covers four synthetic return-label
+cases. The numbered fault exercises `VSSA1`/`VSSA2`, `PORT3_RET`/`PORT4_RET`,
 `CAN1_GND`/`CAN2_GND`, `I2C1_0V`/`I2C2_0V`, and `SPI1_RET`/`SPI2_RET`; it must
 produce exact numbered-return evidence for each split family. The
 unindexed fault assigns `RET_USB` and `RET_SERIAL` to separate connector return
 pairs while leaving two neutral-label pairs as controls; it must produce the
 unindexed return-label review without a numbered-return finding. The common
-`RET` control places all eight contacts on one net and must produce neither
-return-label finding. Its numeric pin functions can still leave connector-role
-coverage open; this fixture does not claim the pinout itself is approved.
+`RET` and `VSSA` controls each place all eight contacts on one net and must
+produce neither return-label finding. The `RET` control has numeric pin
+functions and may leave connector-role coverage open; the `VSSA` control has
+explicit `GND` pin roles. Neither fixture claims a real connector pinout is
+approved.
 
 The focused source-bound lane is gated by
 `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES` and checks exact KiCad 10.0.0 and 10.0.5

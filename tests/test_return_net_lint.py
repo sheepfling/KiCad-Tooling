@@ -43,34 +43,77 @@ def lint_report(
     return evaluate(coach.project_id, coach, DesignLintPolicy())
 
 
-def test_letter_suffixed_ground_nets_without_return_pin_roles_request_review() -> None:
-    report = lint_report(("GNDA", "GNDD"))
+@pytest.mark.parametrize(
+    "net_names",
+    [
+        pytest.param(("GNDA", "GNDD"), id="gnd-letter-suffixes"),
+        pytest.param(("VSSA", "VSSD"), id="vss-letter-suffixes"),
+    ],
+)
+def test_letter_suffixed_ground_nets_without_return_pin_roles_request_review(
+    net_names: tuple[str, str],
+) -> None:
+    report = lint_report(net_names)
 
     finding = next(item for item in report.findings if item.rule_id == UNINDEXED_RULE)
     assert report.status == "REVIEW"
-    assert finding.evidence == {"GNDA": ("J1.7",), "GNDD": ("J2.7",)}
+    assert finding.evidence == {
+        name: (f"J{index}.7",) for index, name in enumerate(net_names, start=1)
+    }
     assert NUMBERED_RULE not in {item.rule_id for item in report.findings}
     assert "labels alone do not establish that they should be joined" in finding.message
 
 
-def test_numbered_letter_suffixed_ground_nets_are_grouped_for_review() -> None:
-    report = lint_report(("GNDA1", "GNDA2"))
+@pytest.mark.parametrize(
+    "net_names",
+    [
+        pytest.param(("GNDA1", "GNDA2"), id="gnda"),
+        pytest.param(("VSSA1", "VSSA2"), id="vssa"),
+        pytest.param(("VSSD1", "VSSD2"), id="vssd"),
+        pytest.param(("VSSP1", "VSSP2"), id="vssp"),
+    ],
+)
+def test_numbered_letter_suffixed_ground_nets_are_grouped_for_review(
+    net_names: tuple[str, str],
+) -> None:
+    report = lint_report(net_names)
 
     finding = next(item for item in report.findings if item.rule_id == NUMBERED_RULE)
     assert report.status == "REVIEW"
-    assert finding.evidence == {"GNDA1": ("J1.7",), "GNDA2": ("J2.7",)}
+    assert finding.evidence == {
+        name: (f"J{index}.7",) for index, name in enumerate(net_names, start=1)
+    }
     assert UNINDEXED_RULE not in {item.rule_id for item in report.findings}
 
 
-def test_explicit_return_pin_functions_suppress_letter_suffix_prompt() -> None:
-    report = lint_report(("GNDA", "GNDD"), pin_functions=("GND", "RTN"))
+@pytest.mark.parametrize(
+    "net_names",
+    [
+        pytest.param(("GNDA", "GNDD"), id="gnd-letter-suffixes"),
+        pytest.param(("VSSA", "VSSD"), id="vss-letter-suffixes"),
+    ],
+)
+def test_explicit_return_pin_functions_suppress_letter_suffix_prompt(
+    net_names: tuple[str, str],
+) -> None:
+    report = lint_report(net_names, pin_functions=("GND", "RTN"))
 
     assert report.status == "PASS"
     assert not any(item.rule_id in {NUMBERED_RULE, UNINDEXED_RULE} for item in report.findings)
 
 
-def test_longer_non_return_tokens_do_not_match_letter_suffix_rule() -> None:
-    report = lint_report(("GNDAUDIO", "GNDBUS"))
+@pytest.mark.parametrize(
+    "net_names",
+    [
+        pytest.param(("GNDAUDIO", "GNDBUS"), id="gnd-long-suffixes"),
+        pytest.param(("VSSAUDIO1", "VSSAUDIO2"), id="vss-audio-token"),
+        pytest.param(("VSSIO1", "VSSIO2"), id="vss-io-token"),
+    ],
+)
+def test_longer_non_return_tokens_do_not_match_letter_suffix_rule(
+    net_names: tuple[str, str],
+) -> None:
+    report = lint_report(net_names)
 
     assert report.status == "PASS"
     assert not any(item.rule_id in {NUMBERED_RULE, UNINDEXED_RULE} for item in report.findings)
@@ -106,7 +149,8 @@ def test_common_ret_and_reset_labels_are_valid_controls() -> None:
     common = lint_report(("RET", "RET"))
     reset_names = lint_report(("RESET1", "RESET2"))
     explicit_return_functions = lint_report(("RET_USB", "RET_SERIAL"), pin_functions=("RET", "RET"))
+    common_vssa = lint_report(("VSSA", "VSSA"))
 
-    for report in (common, reset_names, explicit_return_functions):
+    for report in (common, reset_names, explicit_return_functions, common_vssa):
         assert report.status == "PASS"
         assert not any(item.rule_id in {NUMBERED_RULE, UNINDEXED_RULE} for item in report.findings)

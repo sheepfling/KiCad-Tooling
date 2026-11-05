@@ -109,6 +109,7 @@ EXPECTED_CONNECTOR_RETURN_STAGES = frozenset(
         "connector-return-fixture/ret-numbered-fault",
         "connector-return-fixture/ret-unindexed-fault",
         "connector-return-fixture/ret-control",
+        "connector-return-fixture/vss-control",
         "connector-return-fixture/ground-contract-common-fault",
         "connector-return-fixture/ground-contract-common-control",
         "connector-return-fixture/ground-contract-isolated-fault",

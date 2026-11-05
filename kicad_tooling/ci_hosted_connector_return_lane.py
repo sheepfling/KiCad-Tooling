@@ -128,13 +128,13 @@ def numbered_pwm_return_fixture_lane(
 def ret_return_label_fixture_lane(
     root: Path, *, project: str, image: str, log: ConnectorReturnLog
 ) -> None:
-    """Run only the native numbered, unindexed, and common RET-label cases."""
+    """Run only the native numbered, unindexed, and common return-label cases."""
     context = prepare_connector_return_fixture_context(
         root,
         project=project,
         image=image,
         log=log,
-        case_names=("ret-numbered-fault", "ret-unindexed-fault", "ret-control"),
+        case_names=("ret-numbered-fault", "ret-unindexed-fault", "ret-control", "vss-control"),
     )
     verify_ret_return_label_cases(context)
     emit_connector_return_receipts(context, {})

@@ -25,6 +25,10 @@ def assert_ret_return_label_cases(results):
         "net.numbered_returns",
         "net.return_labels_without_pin_roles",
     } & set(control["findings"].split(","))
+    vss_control = results["connector-return-fixture/vss-control"]
+    assert vss_control["status"] == "PASS"
+    assert vss_control["lint_status"] == "PASS"
+    assert vss_control["findings"] == "none"
 
 
 def assert_base_connector_return_cases(results, version):
