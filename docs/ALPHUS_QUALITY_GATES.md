@@ -8,7 +8,17 @@ regressions.
 production and script files. The package CI job runs each in report mode: findings are
 advisory, while an invalid policy or tool failure still fails the step.
 The `python-style` check uses the same scope and is available on demand; it is
-not included in CI while its broader guidance is being reviewed.
+not included in CI while its broader guidance is being reviewed. The new
+`input-contracts` and `complexity-candidates` profiles are also on-demand,
+provisional review profiles and are not CI blockers.
+
+The installed package metadata and `dev-experimental` pin both resolve to
+Alphus `v0.0.2` commit `3435f81aff7abac7716a5780d26319e8f314d61d`. A fresh
+re-sniff at KiCad head `aaf74c70b4d2bf6eca03896ff0f2cbef74b08bd4` reports 116
+runtime-type findings, 220 Python-style findings, one Pydantic warning, 37
+source-family candidates, four input-mutation candidates, and 30 complexity
+candidates. These are consumer review findings; they are not proof of defects.
+The Python-style scan still reports zero opaque mappings.
 
 Run the same advisory check locally from this checkout:
 
@@ -17,6 +27,8 @@ python -m pip install -e '.[dev,dev-experimental]'
 python -I -m alphus --rule runtime-types --report
 python -I -m alphus --rule pydantic-practices --report
 python -I -m alphus --rule python-style --report --json
+python -I -m alphus --profile input-contracts --json
+python -I -m alphus --profile complexity-candidates --json
 ```
 
 Select only the experimental regression tests with
@@ -58,19 +70,39 @@ siblings for architecture review; the groups are inventory prompts, not
 instructions to split or move modules. The scan does not establish ownership,
 coupling, or a public contract.
 
+At source revision `aaf74c70b4d2bf6eca03896ff0f2cbef74b08bd4`, it reported 37
+groups, including `design_lint_*` (101 files), `component_*` (27), and
+`connector_*` (23). Inspect those candidates against the capability and
+data-route map before proposing module moves.
+
 Run the current candidate inventory with:
 
 ```sh
 python -I -m alphus --profile architecture-candidates --json
 ```
 
-The other new gate that appears relevant is `cyclomatic-complexity`. A trial
-using Ruff C901 at maximum 20 reported 83 functions across 855 selected
-`hwrepo` modules; maximum 30 still reported 30. It remains a calibration item
-instead of joining this profile or CI while we establish the service and data
-routes. `source-test-coverage` is another new candidate, but it requires an
-explicit source-to-test map and revision-matched execution evidence; revisit it
-after those routes are documented.
+The `complexity-candidates` profile runs the pinned Ruff C901 check at maximum
+30 over `kicad_tooling/hwrepo/`. At KiCad head
+`aaf74c70b4d2bf6eca03896ff0f2cbef74b08bd4`, the current scan reports 30
+warning-level functions; review these as function-level refactoring candidates
+rather than line-count limits. The profile is provisional and remains outside
+CI while the service and data routes are being established.
+
+The `input-contracts` profile reviews Python input mutation and read-only
+contracts. At the same head, the scan reports four possible caller-visible
+mutations in two functions. These findings can describe intentional mutable
+contracts, so review ownership and callers before changing an annotation or
+implementation.
+
+`source-test-coverage` remains deferred until the repository has an explicit
+source-to-test map and revision-matched execution evidence. `module-roles` and
+`package-boundaries` also need the capability-owner and package-layer map before
+their policy can distinguish intended routes from violations.
+The `file-size` gate remains disabled while the architecture plan prioritizes
+data ownership and routing decisions over line-count thresholds. No newly
+available architecture gate currently has enough consumer-owned context to add
+as a blocker; keep `source-families` as the advisory inventory and revisit the
+other selectors after the route map is explicit.
 
 For a common finding format, `--profile python-style --json` and
 `--profile pydantic-practices --json` include `steps[].findings[]` with a

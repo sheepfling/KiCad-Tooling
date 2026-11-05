@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -196,3 +197,55 @@ def test_architecture_candidate_profile_reports_families_as_warnings(
     assert (
         "Family fixture_family_*: 6 logical units across 6 physical files" in findings[0]["message"]
     )
+
+
+def test_input_contract_profile_reports_mutation_as_advisory(tmp_path: Path) -> None:
+    subprocess.run(("git", "init", "--quiet", str(tmp_path)), check=True, timeout=30)
+    (tmp_path / "quality-gates.toml").write_bytes((ROOT / "quality-gates.toml").read_bytes())
+    source = tmp_path / "kicad_tooling" / "probe.py"
+    source.parent.mkdir()
+    source.write_text(
+        "def normalize(values: dict[str, int]) -> None:\n    values.setdefault('count', 0)\n"
+    )
+
+    result = subprocess.run(
+        (
+            sys.executable,
+            "-I",
+            "-m",
+            "alphus",
+            "--root",
+            str(tmp_path),
+            "--profile",
+            "input-contracts",
+            "--json",
+        ),
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    report = json.loads(result.stdout)
+    assert report["profile"] == "input-contracts"
+    assert report["failure_threshold"] == "error"
+    assert report["severity_counts"] == {"error": 0, "info": 0, "warning": 1}
+    finding = report["steps"][0]["findings"][0]
+    assert finding["rule_id"] == "alphus/python/none/correctness/argument-mutation"
+    assert finding["path"] == "kicad_tooling/probe.py"
+    assert finding["severity"] == "warning"
+
+
+def test_complexity_candidate_profile_is_provisional_and_scoped() -> None:
+    policy = tomllib.loads((ROOT / "quality-gates.toml").read_text())
+    rule = policy["checks"]["cyclomatic_complexity"]
+    assert rule["maximum"] == 30
+    assert rule["severity"] == "warning"
+    assert rule["backends"] == [{"language": "python", "backend": "ruff", "version": "0.16.1"}]
+    assert rule["files"]["include"] == ["kicad_tooling/hwrepo/**/*.py"]
+    step = next(
+        row
+        for row in policy["orchestration"]["steps"]
+        if row.get("rule") == "cyclomatic-complexity"
+    )
+    assert step["rollout"] == "provisional"

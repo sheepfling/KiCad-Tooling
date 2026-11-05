@@ -29,6 +29,28 @@ report_field_positional_default = true
 report_external_model_docs = false
 external_model_names = []
 
+[checks.input_contracts]
+extensions = [".py"]
+exclude = []
+report_mutation = true
+suggest_read_only = true
+sequence_narrowing_paths = []
+
+[checks.cyclomatic_complexity]
+metric = "cyclomatic"
+maximum = 30
+severity = "warning"
+timeout_seconds = 60
+
+[checks.cyclomatic_complexity.files]
+include = ["kicad_tooling/hwrepo/**/*.py"]
+exclude = []
+
+[[checks.cyclomatic_complexity.backends]]
+language = "python"
+backend = "ruff"
+version = "0.16.1"
+
 [checks.source_families]
 extensions = [".py"]
 include = ["kicad_tooling/hwrepo/**/*.py"]
@@ -76,3 +98,23 @@ rule = "source-families"
 [[orchestration.profiles]]
 name = "architecture-candidates"
 steps = ["KiCad source-family architecture candidates"]
+
+[[orchestration.steps]]
+kind = "rule"
+name = "Python input contract review"
+rule = "input-contracts"
+rollout = "provisional"
+
+[[orchestration.profiles]]
+name = "input-contracts"
+steps = ["Python input contract review"]
+
+[[orchestration.steps]]
+kind = "rule"
+name = "KiCad cyclomatic complexity review"
+rule = "cyclomatic-complexity"
+rollout = "provisional"
+
+[[orchestration.profiles]]
+name = "complexity-candidates"
+steps = ["KiCad cyclomatic complexity review"]
