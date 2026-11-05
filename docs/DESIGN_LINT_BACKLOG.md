@@ -14420,13 +14420,20 @@ control are documented in the
   checks passed. The overall run failed afterward because the catalog fixture
   registry had grown to 505 lines. Its power-rule references are now split
   into a theme-owned registry.
-- **Hosted acceptance (2026-11-05, second attempt):** Tag `v0.5.3rc432`
+- **Hosted acceptance (2026-11-05, second attempt, failed):** Tag `v0.5.3rc432`
   passed the focused unit stage with the native fixture lane enabled, Ruff,
   Pyright, Windows typing, and Rumdl. The full gate stopped at `mdrepo`: the
   new fixture README was unreachable from the documentation graph. The design
-  lint rule reference now points to that README; the complete gate is queued
-  for retry under `v0.5.3rc433`. Keep maturity at `synthetic_validated` until
-  the full gate passes; the default mode remains `review`.
+  lint rule reference now points to the open-collector fixture and keeps the
+  related GPIO fixture reachable.
+- **Hosted acceptance (2026-11-05, successful third attempt):** Tag
+  `v0.5.3rc433` passed GitHub Actions run `42028064578`. The focused unit stage
+  ran with the required native fixture lane enabled; Ruff, Pyright, Windows
+  typing, Rumdl, `mdrepo`, wheel and source-distribution builds, installed-wheel
+  checks, and the external-template playtest passed. Package-release and
+  preview jobs were skipped under prerelease policy. Keep catalog maturity at
+  `synthetic_validated`: native exports establish fixture/tool compatibility,
+  not cohort or field value. The default mode remains `review`.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
