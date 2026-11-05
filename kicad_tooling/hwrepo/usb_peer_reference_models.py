@@ -197,7 +197,7 @@ class UsbPeerDataPathCoverage(StrictModel):
     ] = "USB 2.0 data"
 
     @model_validator(mode="after")
-    def mapped_shunts_match_direct_lines(self) -> UsbPeerDataPathCoverage:
+    def mapped_shunts_match_supported_lines(self) -> UsbPeerDataPathCoverage:
         is_superspeed = self.connector_signal_family.startswith("USB SuperSpeed ")
         if is_superspeed and (
             not self.phy_signal_family.startswith("USB SuperSpeed ")
@@ -224,10 +224,6 @@ class UsbPeerDataPathCoverage(StrictModel):
             or self.phy_signal_family != "USB 2.0 data"
         ):
             raise ValueError("USB 2.0 peer paths must use USB 2.0 data families")
-        if self.protection_shunts and any(
-            line.series_resistor is not None for line in (self.positive, self.negative)
-        ):
-            raise ValueError("USB mapped protection shunts do not support series-resistor paths")
         if len({item.reference.casefold() for item in self.protection_shunts}) != len(
             self.protection_shunts
         ):

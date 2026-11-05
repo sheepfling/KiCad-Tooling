@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.design_lint import evaluate, text_report
 from kicad_tooling.hwrepo.models import (
@@ -13,7 +14,12 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.usb_data_path_models import UsbDataPathMap
 from kicad_tooling.hwrepo.usb_data_paths import usb_data_path_mismatches
-from tests.usb_protection_shunt_support import protection_shunt_map, protection_shunt_netlist
+from tests.usb_protection_shunt_support import (
+    protection_shunt_map,
+    protection_shunt_netlist,
+    series_protection_shunt_map,
+    series_protection_shunt_netlist,
+)
 
 RULE_ID = "bus.usb_peer_reference_review"
 PATH_RULE_ID = "bus.usb_data_path_mismatch"
@@ -164,6 +170,29 @@ def test_explicit_common_reference_policy_suppresses_the_review() -> None:
     )
 
 
+@pytest.mark.design_lint_rule(rule_id="bus.usb_data_path_mismatch")
+def test_series_resistor_shunt_map_rejects_mixed_line_topologies() -> None:
+    path_map = series_protection_shunt_map()
+    interface = path_map.interfaces[0]
+    mixed = {
+        **path_map.model_dump(),
+        "interfaces": (
+            {
+                **interface.model_dump(),
+                "negative": {
+                    **interface.negative.model_dump(),
+                    "topology": "direct",
+                    "phy_net": interface.negative.connector_net,
+                    "series_resistor": None,
+                },
+            },
+        ),
+    }
+
+    with pytest.raises(ValidationError, match="matching direct, series-resistor"):
+        UsbDataPathMap.model_validate(mixed)
+
+
 def test_shunt_path_evidence_is_stable_under_native_mapping_order() -> None:
     observed = protection_shunt_netlist()
     reordered = observed.model_copy(
@@ -212,3 +241,90 @@ def test_shunt_path_evidence_is_stable_under_native_mapping_order() -> None:
             if item.rule_id == rule_id
         )
         assert first_findings == second_findings
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.usb_peer_reference_review")
+def test_exact_series_resistors_and_mapped_shunts_review_split_reference() -> None:
+    observed = series_protection_shunt_netlist()
+    path_map = series_protection_shunt_map()
+
+    assert usb_data_path_mismatches(path_map, observed) == ()
+    report = lint_report(observed, path_map)
+    reviews = tuple(item for item in report.findings if item.rule_id == RULE_ID)
+    assert report.status == "REVIEW"
+    assert len(reviews) == 1
+    assert PATH_RULE_ID not in {item.rule_id for item in report.findings}
+    assert report.usb_peer_reference_coverage is not None
+    assert report.usb_peer_reference_coverage.supported_data_path_count == 1
+    data_path = report.usb_peer_reference_coverage.path_entries[0].data_path
+    assert data_path.positive.series_resistor is not None
+    assert data_path.positive.series_resistor.reference == "R1"
+    assert data_path.negative.series_resistor is not None
+    assert data_path.negative.series_resistor.reference == "R2"
+    assert tuple(item.reference for item in data_path.protection_shunts) == ("U6",)
+    assert {item.net for item in data_path.protection_shunts[0].data_pins} == {
+        "USB_DP",
+        "USB_DM_PHY",
+    }
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.usb_peer_reference_review")
+def test_series_resistors_and_mapped_shunts_allow_common_reference_control() -> None:
+    observed = series_protection_shunt_netlist(common_reference=True)
+    path_map = series_protection_shunt_map(reference_net="GND")
+    report = lint_report(observed, path_map)
+
+    assert usb_data_path_mismatches(path_map, observed) == ()
+    assert RULE_ID not in {item.rule_id for item in report.findings}
+    assert PATH_RULE_ID not in {item.rule_id for item in report.findings}
+    assert report.usb_peer_reference_coverage is not None
+    assert report.usb_peer_reference_coverage.common_reference_path_count == 1
+    assert report.usb_peer_reference_coverage.supported_data_path_count == 1
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.usb_data_path_mismatch")
+def test_mapped_series_shunt_wrong_side_fails_closed() -> None:
+    observed = series_protection_shunt_netlist(wrong_dplus_side=True)
+    path_map = series_protection_shunt_map()
+
+    report = lint_report(observed, path_map)
+    path_findings = tuple(item for item in report.findings if item.rule_id == PATH_RULE_ID)
+    assert len(path_findings) == 1
+    assert path_findings[0].evidence["line"] == ("protection_shunt",)
+    assert "U6.1 is on USB_DP_PHY; expected USB_DP" in path_findings[0].evidence["issues"]
+    assert RULE_ID not in {item.rule_id for item in report.findings}
+    assert report.usb_peer_reference_coverage is not None
+    assert report.usb_peer_reference_coverage.supported_data_path_count == 0
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.usb_peer_reference_review")
+def test_series_shunt_path_rejects_unmapped_signal_peer() -> None:
+    observed = series_protection_shunt_netlist(extra_data_peer=True)
+    report = lint_report(observed, series_protection_shunt_map())
+
+    assert RULE_ID not in {item.rule_id for item in report.findings}
+    assert report.usb_peer_reference_coverage is not None
+    assert report.usb_peer_reference_coverage.supported_data_path_count == 0
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.usb_peer_reference_review")
+def test_series_shunt_review_is_stable_under_native_mapping_order() -> None:
+    observed = series_protection_shunt_netlist()
+    reordered = observed.model_copy(
+        update={
+            "components": dict(reversed(tuple(observed.components.items()))),
+            "component_symbols": dict(reversed(tuple(observed.component_symbols.items()))),
+            "component_pin_numbers": dict(reversed(tuple(observed.component_pin_numbers.items()))),
+            "nets": dict(reversed(tuple(observed.nets.items()))),
+            "pin_functions": dict(reversed(tuple(observed.pin_functions.items()))),
+            "pin_electrical_types": dict(reversed(tuple(observed.pin_electrical_types.items()))),
+        }
+    )
+    path_map = series_protection_shunt_map()
+    first = lint_report(observed, path_map)
+    second = lint_report(reordered, path_map)
+
+    assert tuple((item.fingerprint, item.evidence) for item in first.findings) == tuple(
+        (item.fingerprint, item.evidence) for item in second.findings
+    )
+    assert first.usb_peer_reference_coverage == second.usb_peer_reference_coverage

@@ -165,13 +165,14 @@ class UsbDataInterfaceRequirement(StrictModel):
             raise ValueError("USB inline-component data paths need an exact component map")
         if self.inline_component is not None and inline_lines != (True, True):
             raise ValueError("USB inline-component maps must cover both D+ and D- paths")
-        allowed_shunt_topology = (
-            "inline_component" if self.inline_component is not None else "direct"
-        )
-        if self.protection_shunts and any(
-            line.topology != allowed_shunt_topology for line in (self.positive, self.negative)
+        if self.protection_shunts and (
+            self.positive.topology != self.negative.topology
+            or self.positive.topology not in {"direct", "series_resistor", "inline_component"}
         ):
-            raise ValueError("USB protection-shunt maps need direct or exact inline paths")
+            raise ValueError(
+                "USB protection-shunt maps need matching direct, series-resistor, "
+                "or exact inline paths"
+            )
         if any(
             any(
                 not pin.casefold().startswith(f"{self.connector_reference}.".casefold())

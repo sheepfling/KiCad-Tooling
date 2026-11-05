@@ -26,6 +26,9 @@ regression.
 | `protection-shunt-pin-fault.kicad_sch`                 | Shunt pin U6.2 is incorrectly assigned to USB_DP                                             | One exact mapped shunt-pin finding; no duplicate peer review              |
 | `inline-protection-shunt-control.kicad_sch`            | Mapped inline path with U6 taps on USB_DP_PORT and USB_DM_PHY                                | One supported path; no path or peer-reference finding                     |
 | `inline-protection-shunt-fault.kicad_sch`              | U6.3 D− tap is assigned to USB_DM_SHUNT_FAULT                                                | One exact shunt-pin finding; no supported peer path                       |
+| `series-protection-shunt-split-reference.kicad_sch`    | 27 Ω per line; U6.1 taps connector-side D+, U6.3 taps PHY-side D−; returns split             | One supported path and one reference review                               |
+| `series-protection-shunt-common-reference.kicad_sch`   | Same series/shunt topology; connector, PHY, and shunt references use GND                     | One supported path; no USB path or peer-reference finding                 |
+| `series-protection-shunt-pin-fault.kicad_sch`          | U6.1 D+ tap moved from the mapped connector-side net to the PHY-side net                     | One exact shunt-pin finding; no supported peer path                       |
 
 SHA-256 hashes of the version-controlled schematic inputs:
 
@@ -46,12 +49,21 @@ SHA-256 hashes of the version-controlled schematic inputs:
 | `protection-shunt-pin-fault.kicad_sch`                 | `27a95acc910f2b379a3c1158c0dcb3bf7ca1faf644564d6d8b7811433838cc61` |
 | `inline-protection-shunt-control.kicad_sch`            | `d8ff88b4adbfec21bf369b11cd9171c7fba5cf8573b93b1de6bf3dcff1ce60a0` |
 | `inline-protection-shunt-fault.kicad_sch`              | `c86bcce0c3accc02257e7a5f92479945d1a4f8bb0d87d2b452c2643f0d4ab67f` |
+| `series-protection-shunt-split-reference.kicad_sch`    | `3f07e352bb2fb2ee9616df11ddfa153e47ebc251bde5aa75acf7e779426ccdb0` |
+| `series-protection-shunt-common-reference.kicad_sch`   | `775e658385917f5e2e772643167fa1514b8a080445c8b9da4ceb5dee5f32d8b6` |
+| `series-protection-shunt-pin-fault.kicad_sch`          | `b9fa9a9430f20aecf1b4a8f4e8752483eee1dca87cd11b95dad1fc951a0bd7cd` |
 
 The CLI/MCP parity regression also reads this synthetic native export:
 `inline-protection-shunt-control.netlist.xml`
 (`fdf813c9ea6a29a2ad521e4407c0ddc29bdb04ef11a09857b0086daa02693583`).
-The native fixture lane re-exports both schematics twice on each pinned KiCad
-version and checks the normalized typed contracts before evaluating the maps.
+The series-resistor/shunt parity case reads
+`series-protection-shunt-control.netlist.xml`
+(`37eb7c91fb4a538d419ad8c7692f1fae67cbf2416634d3a960c86277a542ea42`),
+exported from the split-reference schematic by digest-pinned KiCad 10.0.0.
+The CLI/MCP tests read these source-hashed snapshots and mutate them only in
+their disposable test workspaces. The native fixture lane separately re-exports
+all registered schematic sources twice on each pinned KiCad version and checks
+the normalized typed contracts before evaluating the maps.
 
 The native regression runs twice with each of these digest-pinned images:
 
@@ -131,6 +143,16 @@ current environment. Hosted acceptance for `v0.5.0rc194` (GitHub Actions run
 `38309295549`) passed the source-hashed split-reference, common-reference, and
 pin-fault cases on both KiCad 10.0.0 and 10.0.5. The same rule-scoped run
 passed the SuperSpeed fault and common-reference control lane.
+
+The series-plus-shunt cases compose one mapped resistor on each data line with
+the same exact six-pin shunt contract. The split-reference schematic places the
+D+ tap on the connector side of R1 and the D− tap on the PHY side of R2; the
+common-reference control keeps the same topology and maps all reference pins
+to GND. The fault moves U6.1 to the wrong side of R1 and must produce one exact
+pin mismatch with zero supported peer paths. These cases test schematic
+assignments only; they do not validate resistor selection, device behavior, or
+PCB copper continuity. Multi-hop paths and additional series components remain
+outside the supported topology.
 
 This is source-to-netlist regression evidence only. The lane does not run ERC,
 DRC, PCB copper continuity, component placement, signal-integrity analysis,

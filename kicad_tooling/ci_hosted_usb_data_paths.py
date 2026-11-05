@@ -18,6 +18,7 @@ from .ci_hosted_usb_multiport_validation import validate_usb_multiport_peer_refe
 from .ci_hosted_usb_protection_shunts import (
     validate_usb_protection_shunt_fixture_mismatches,
     validate_usb_protection_shunt_fixture_reports,
+    validate_usb_series_protection_shunt_fixture_reports,
 )
 from .ci_hosted_usb_requirements import usb_data_path_requirements
 from .hwrepo.contract_coach import pinned_image, run_command
@@ -358,6 +359,7 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         raise ValueError("Native exact bonded-reference USB control produced a reference finding")
 
     validate_usb_protection_shunt_fixture_reports(reports)
+    validate_usb_series_protection_shunt_fixture_reports(reports)
     validate_usb_external_protection_fixture_reports(
         observed_contracts,
         raw_hashes,

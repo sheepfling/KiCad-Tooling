@@ -15,6 +15,7 @@ def validate_usb_protection_shunt_fixture_mismatches(
     expected_issue = {
         "protection-shunt-pin-fault": "U6.2 is on USB_DP",
         "inline-protection-shunt-fault": "U6.3 is on USB_DM_SHUNT_FAULT; expected USB_DM_PHY",
+        "series-protection-shunt-pin-fault": "U6.1 is on USB_DP_PHY; expected USB_D+",
     }.get(case)
     if expected_issue is None:
         return False
@@ -98,3 +99,61 @@ def validate_usb_protection_shunt_fixture_reports(
         or inline_fault.usb_peer_reference_coverage.supported_data_path_count != 0
     ):
         raise ValueError("Native combined inline-path and mapped-shunt fault was not localized")
+
+
+def validate_usb_series_protection_shunt_fixture_reports(
+    reports: Mapping[tuple[str, str], DesignLintReport],
+) -> None:
+    """Require series-path shunt taps to match exact split, common, and fault maps."""
+    split = reports[("series-protection-shunt-split-reference", "first")]
+    split_reviews = tuple(
+        item for item in split.findings if item.rule_id == "bus.usb_peer_reference_review"
+    )
+    split_coverage = split.usb_peer_reference_coverage
+    if (
+        split.status != "REVIEW"
+        or len(split_reviews) != 1
+        or any(item.rule_id == "bus.usb_data_path_mismatch" for item in split.findings)
+        or split_coverage is None
+        or split_coverage.supported_data_path_count != 1
+        or split_reviews[0].evidence.get("USB_D+_series_resistor")
+        != ("R1 (Device:R, 27R; R1.1=USB_D+, R1.2=USB_DP_PHY)",)
+        or split_reviews[0].evidence.get("USB_D-_series_resistor")
+        != ("R2 (Device:R, 27R; R2.1=USB_D-, R2.2=USB_DM_PHY)",)
+        or split_reviews[0].evidence.get("USB_mapped_protection_shunts")
+        != ("U6 (Synthetic:UsbProtectionArray; Synthetic:DFN-6)",)
+        or "U6.2=USB_GND"
+        not in split_reviews[0].evidence.get("USB_mapped_protection_shunt_pin_assignments", ())
+    ):
+        raise ValueError("Native series-plus-shunt split-reference review lost exact path evidence")
+
+    common = reports[("series-protection-shunt-common-reference", "first")]
+    common_coverage = common.usb_peer_reference_coverage
+    if (
+        any(
+            item.rule_id in {"bus.usb_peer_reference_review", "bus.usb_data_path_mismatch"}
+            for item in common.findings
+        )
+        or common_coverage is None
+        or common_coverage.supported_data_path_count != 1
+    ):
+        raise ValueError("Native series-plus-shunt common-reference control produced a finding")
+
+    fault = reports[("series-protection-shunt-pin-fault", "first")]
+    fault_findings = tuple(
+        item for item in fault.findings if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    fault_coverage = fault.usb_peer_reference_coverage
+    if (
+        fault.status != "REVIEW"
+        or len(fault_findings) != 1
+        or fault_findings[0].evidence.get("line") != ("protection_shunt",)
+        or not any(
+            "U6.1 is on USB_DP_PHY; expected USB_D+" in issue
+            for issue in fault_findings[0].evidence.get("issues", ())
+        )
+        or any(item.rule_id == "bus.usb_peer_reference_review" for item in fault.findings)
+        or fault_coverage is None
+        or fault_coverage.supported_data_path_count != 0
+    ):
+        raise ValueError("Native series-plus-shunt wrong-side fault was not localized exactly")

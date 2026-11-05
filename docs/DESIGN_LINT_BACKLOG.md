@@ -1750,8 +1750,11 @@ standalone parity work when it closes a demonstrated feature regression.
   Synthetic controls, a wrong-side tap fault, stable-order evidence, CLI/MCP
   parity, and digest-pinned native fixture cases exercise this composition.
   A current exact map can establish schematic assignments for LINT-086; it does
-  not infer protection behavior, datasheet truth, or PCB continuity. Series
-  resistor plus protection-array combinations and multi-hop paths remain
+  not infer protection behavior, datasheet truth, or PCB continuity. The
+  series-resistor extension supports exactly one mapped resistor per data line
+  composed with an exact mapped protection shunt. Native synthetic coverage
+  includes split-reference review, common-reference control, and a wrong-side
+  tap fault. Multi-hop paths and additional series components remain
   unsupported.
 
 - **LINT-094 — Open native power output on comparable peers.** The original
@@ -7752,7 +7755,8 @@ control are documented in the
 - **Predicate:** USB 2.0 behavior remains unchanged: recognize direct D+/D−, unnumbered UD+/UD−, and
   numbered hub pairs DPn/DMn or USBnD+/USBnD-; support direct, one fitted complete two-pin
   `Device:R` per line, one exact mapped inline component, or a direct path with exact mapped
-  protection shunts. Preserve exact pin inventories, net members, and explicit reference-pin
+  protection shunts. A series-resistor pair can also use one exact mapped
+  protection-shunt contract. Preserve exact pin inventories, net members, and explicit reference-pin
   evidence. Separately, recognize direct USB SuperSpeed P/N pairs when native endpoint pin metadata
   is complete, exactly one positive and negative pin exists per family, connector TX connects to PHY
   RX or connector RX to PHY TX, and each data net contains exactly those two pins. Both endpoint
@@ -7855,6 +7859,20 @@ control are documented in the
   finding. This source-hashed comparison is registered for both pinned KiCad
   versions; its tagged hosted acceptance is recorded in Evidence history below.
 - **Evidence history:**
+
+  **Series-resistor/protection-shunt composition (2026-11-05; local pinned Docker):**
+  The exact native USB lane passed on KiCad 10.0.0 and 10.0.5 (2 pytest
+  cases). All three new tooling-owned synthetic schematics exported twice with
+  matching normalized typed-netlist hashes. The split-reference case retained
+  one supported data path and one exact reference review; the common-reference
+  case retained one supported path with no USB path or peer-reference finding;
+  the wrong-side U6.1 fault emitted one exact bus.usb_data_path_mismatch and
+  zero supported paths. The common fixture's overall lint status remains
+  REVIEW because the independent named USB_D+/USB_D- pair prompt still
+  applies. A dedicated CLI/MCP parity case also passed for split, common, and
+  wrong-side maps. This verifies source-to-netlist behavior only; it does not
+  verify device function, resistor suitability, PCB copper, or physical return
+  continuity.
 
   **Three-port native fixture (2026-10-20; local compatibility):** The new
   source-hashed J1/J2/J3 hub fixture exported twice with KiCad 10.0.6. Both

@@ -104,7 +104,7 @@ def d_designated_shunt_branches(
     return tuple(sorted(branches, key=lambda item: (item.data_pin.casefold(), item.data_pin)))
 
 
-def _series_resistor_between_nets(
+def series_resistor_between_nets(
     observed: NetlistContract,
     connector_net: str,
     phy_net: str,
@@ -204,7 +204,7 @@ def _data_line_path(
         )
         return None if shunts is None else (None, shunts)
 
-    series_resistor = _series_resistor_between_nets(observed, connector_net, phy_net)
+    series_resistor = series_resistor_between_nets(observed, connector_net, phy_net)
     if series_resistor is None:
         return None
     connector_members = net_members.get(connector_net.casefold(), set())

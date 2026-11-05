@@ -2234,9 +2234,9 @@ that the component conducts or protects as intended, or that board copper
 completes the route. Multiple inline devices and multi-hop paths remain outside
 this contract.
 
-A multi-pin part that shunts D+/D− while leaving the connector-to-PHY path
-direct can be declared under `protection_shunts` instead of
-`inline_component`:
+A mapped multi-pin part that taps D+/D− can be declared under
+`protection_shunts`. Its data pins may connect to either side of a mapped
+series resistor or inline component:
 
 ```json
 {
@@ -2270,8 +2270,12 @@ authored; adding common_net, separate_nets, or bonded requires the separately
 reviewed endpoint reference-pin decision above. The lint does not decide that
 the protection ground must join either endpoint, and the schematic map does not
 prove the device's datasheet pinout, protection performance, or PCB copper
-continuity. This initial mapping supports direct paths only and cannot be
-combined with an inline-component path.
+continuity. The shunt map can accompany a direct path, a path with exactly one
+mapped resistor on each data line, or one exact inline-component path. A
+series-resistor path must declare matching `series_resistor` topology on D+
+and D− and identify each resistor's native identity and pin-to-net path. Mixed
+inline-plus-series paths, additional series components, and other multi-hop
+paths remain unsupported.
 
 For a direct D+/D− interface whose reference decision has also been reviewed,
 add the endpoint pin and net assignments to the same interface entry. Both

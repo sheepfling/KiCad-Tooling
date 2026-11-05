@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import Literal
 
+from .ci_hosted_usb_series_protection_requirements import (
+    usb_series_protection_shunt_requirements,
+)
 from .hwrepo.reference_bond_models import ReferenceBondRequirement
 from .hwrepo.usb_data_path_component_models import (
     UsbDataPathInlinePinRequirement,
@@ -453,5 +456,6 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
         "inline-protection-shunt-control": inline_protection_shunt_map,
         "inline-protection-shunt-fault": inline_protection_shunt_map,
     }
+    requirements.update(usb_series_protection_shunt_requirements(series_map))
 
     return requirements

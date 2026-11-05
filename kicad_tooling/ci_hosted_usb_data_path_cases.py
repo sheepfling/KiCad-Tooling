@@ -57,4 +57,10 @@ def usb_data_path_fixture_sources() -> dict[str, Path]:
         / "usb-data-path-native/inline-protection-shunt-control.kicad_sch",
         "inline-protection-shunt-fault": fixture_root
         / "usb-data-path-native/inline-protection-shunt-fault.kicad_sch",
+        "series-protection-shunt-split-reference": fixture_root
+        / "usb-data-path-native/series-protection-shunt-split-reference.kicad_sch",
+        "series-protection-shunt-common-reference": fixture_root
+        / "usb-data-path-native/series-protection-shunt-common-reference.kicad_sch",
+        "series-protection-shunt-pin-fault": fixture_root
+        / "usb-data-path-native/series-protection-shunt-pin-fault.kicad_sch",
     }

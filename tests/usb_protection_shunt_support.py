@@ -16,6 +16,7 @@ from kicad_tooling.hwrepo.usb_data_path_models import (
     UsbDataPathMap,
 )
 from kicad_tooling.hwrepo.usb_reference_pin_models import UsbReferencePinRequirement
+from tests.usb_peer_reference_support import usb_peer_series_netlist, usb_series_data_map
 
 
 def protection_shunt_map(
@@ -148,4 +149,98 @@ def protection_shunt_netlist(*, common_reference: bool = False) -> NetlistContra
             "U6.5": "power_in",
             "U6.6": "passive",
         },
+    )
+
+
+def series_protection_shunt_map(
+    *, reference_net: str = "USB_GND", phy_symbol: str = "Synthetic:UsbPhy"
+) -> UsbDataPathMap:
+    """Map one exact series resistor per line and a multi-pin shunt on either side."""
+    series_map = usb_series_data_map(reference_policy=None)
+    shunt = UsbDataPathProtectionShuntRequirement(
+        reference="U6",
+        expected_symbol="Synthetic:UsbProtectionArray",
+        expected_footprint="Synthetic:DFN-6",
+        data_pins=(
+            UsbDataPathProtectionShuntDataPinRequirement(pin="U6.1", line="D+", net="USB_DP"),
+            UsbDataPathProtectionShuntDataPinRequirement(pin="U6.3", line="D-", net="USB_DM_PHY"),
+        ),
+        pins=(
+            UsbDataPathInlinePinRequirement(pin="U6.1", disposition="net", net="USB_DP"),
+            UsbDataPathInlinePinRequirement(pin="U6.2", disposition="net", net=reference_net),
+            UsbDataPathInlinePinRequirement(pin="U6.3", disposition="net", net="USB_DM_PHY"),
+            UsbDataPathInlinePinRequirement(pin="U6.4", disposition="net", net=reference_net),
+            UsbDataPathInlinePinRequirement(pin="U6.5", disposition="net", net=reference_net),
+            UsbDataPathInlinePinRequirement(pin="U6.6", disposition="unconnected"),
+        ),
+    )
+    interface = {
+        **series_map.interfaces[0].model_dump(),
+        "expected_phy_symbol": phy_symbol,
+        "protection_shunts": (shunt.model_dump(),),
+    }
+    return UsbDataPathMap.model_validate({**series_map.model_dump(), "interfaces": (interface,)})
+
+
+def series_protection_shunt_netlist(
+    *, common_reference: bool = False, wrong_dplus_side: bool = False, extra_data_peer: bool = False
+) -> NetlistContract:
+    """Add an exact synthetic protection array to a one-resistor-per-line USB pair."""
+    reference_net = "GND" if common_reference else "USB_GND"
+    phy_reference_net = "GND" if common_reference else "BOARD_GND"
+    observed = usb_peer_series_netlist(
+        connector_reference_net=reference_net,
+        phy_reference_net=phy_reference_net,
+    )
+    components = {
+        **observed.components,
+        "U6": ComponentContract(value="Synthetic protection array", footprint="Synthetic:DFN-6"),
+    }
+    component_symbols = {**observed.component_symbols, "U6": "Synthetic:UsbProtectionArray"}
+    component_pin_numbers = {
+        **observed.component_pin_numbers,
+        "U6": ("1", "2", "3", "4", "5", "6"),
+    }
+    nets = dict(observed.nets)
+    dplus_net = "USB_DP_PHY" if wrong_dplus_side else "USB_DP"
+    nets[dplus_net] = (*nets[dplus_net], "U6.1")
+    nets["USB_DM_PHY"] = (*nets["USB_DM_PHY"], "U6.3")
+    nets[reference_net] = (*nets[reference_net], "U6.2", "U6.4", "U6.5")
+    pin_functions = {
+        **observed.pin_functions,
+        "U6.1": "D+",
+        "U6.2": "GND",
+        "U6.3": "D-",
+        "U6.4": "GND",
+        "U6.5": "GND",
+        "U6.6": "NC",
+    }
+    pin_electrical_types = {
+        **observed.pin_electrical_types,
+        "U6.1": "passive",
+        "U6.2": "power_in",
+        "U6.3": "passive",
+        "U6.4": "power_in",
+        "U6.5": "power_in",
+        "U6.6": "passive",
+    }
+    if extra_data_peer:
+        components["TP1"] = ComponentContract(
+            value="Synthetic test point", footprint="Synthetic:TP"
+        )
+        component_symbols["TP1"] = "Connector:TestPoint"
+        component_pin_numbers["TP1"] = ("1",)
+        nets["USB_DP"] = (*nets["USB_DP"], "TP1.1")
+        pin_functions["TP1.1"] = "TestPoint"
+        pin_electrical_types["TP1.1"] = "passive"
+    return observed.model_copy(
+        update={
+            "components": components,
+            "component_symbols": component_symbols,
+            "component_pin_numbers": component_pin_numbers,
+            "nets": nets,
+            "unconnected_nets": {"unconnected-(U6-Pad6)": ("U6.6",)},
+            "pin_functions": pin_functions,
+            "pin_electrical_types": pin_electrical_types,
+        }
     )
