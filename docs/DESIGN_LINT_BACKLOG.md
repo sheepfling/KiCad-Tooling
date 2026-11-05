@@ -14491,6 +14491,12 @@ control are documented in the
   `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. Unit and native fixture checks,
   type checks, package builds, and installed-wheel verification against a
   separate project all passed.
+- **Hosted prefix-boundary follow-up (2026-11-05):** Tag `v0.5.3rc437`
+  passed run `42044779684`. The tag-scoped unit selection included
+  `design_lint_rule(rule_id="net.numbered_returns")` with
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`; unit tests, Pyright, Windows typing,
+  wheel/source builds, and the external-project playtest passed. Package and
+  preview jobs were skipped under prerelease policy.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
