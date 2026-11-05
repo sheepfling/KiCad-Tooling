@@ -10009,12 +10009,13 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/signal_dividers.py#scan_signal_divider_map",
+        "kicad_tooling/hwrepo/signal_dividers.py#evaluate_signal_divider_requirement",
         "kicad_tooling/hwrepo/design_lint_signal_divider_candidates.py#signal_divider_candidates",
         "kicad_tooling/hwrepo/design_lint_signal_divider_evidence.py#project_signal_divider_evidence",
         "kicad_tooling/hwrepo/signal_divider_models.py#SignalDividerMap"
       ],
       "theme": "interfaces",
-      "implementation_owner": "kicad_tooling/hwrepo/signal_dividers.py#scan_signal_divider_map",
+      "implementation_owner": "kicad_tooling/hwrepo/signal_dividers.py#evaluate_signal_divider_requirement",
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_SIGNAL_DIVIDER_FIXTURES"
       ]

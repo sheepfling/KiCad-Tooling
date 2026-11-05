@@ -20,7 +20,7 @@ from .signal_divider_models import (
 from .voltage_divider_math import divider_tap_fraction
 
 
-def _entry(
+def evaluate_signal_divider_requirement(
     requirement: SignalDividerRequirement,
     observed: NetlistContract,
     pins_by_net: Mapping[str, AbstractSet[str]],
@@ -250,7 +250,7 @@ def scan_signal_divider_map(
     pins_by_net = netlist_pin_net_index(observed)
     dnp_references = {reference.casefold() for reference in observed.dnp_components}
     entries = tuple(
-        _entry(requirement, observed, pins_by_net, dnp_references)
+        evaluate_signal_divider_requirement(requirement, observed, pins_by_net, dnp_references)
         for requirement in specification.dividers
     )
     status = "INCOMPLETE" if any(entry.status == "INCOMPLETE" for entry in entries) else "COMPLETE"

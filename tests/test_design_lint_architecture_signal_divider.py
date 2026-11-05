@@ -11,7 +11,7 @@ from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
 pytestmark = [pytest.mark.design_lint, pytest.mark.catalog_lint, pytest.mark.architecture]
 
 ROOT = Path(__file__).resolve().parents[1]
-OWNER = "kicad_tooling/hwrepo/signal_dividers.py#scan_signal_divider_map"
+OWNER = "kicad_tooling/hwrepo/signal_dividers.py#evaluate_signal_divider_requirement"
 RULE_ID = "interface.signal_divider_input_range_mismatch"
 
 

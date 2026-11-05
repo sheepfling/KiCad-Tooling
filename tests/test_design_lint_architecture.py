@@ -83,6 +83,7 @@ THEME_OWNER_PREFIXES = MappingProxyType(
             "open_drain_",
             "rs485_",
             "serial_",
+            "signal_divider",
             "spi_",
             "usb_",
         ),
