@@ -141,6 +141,48 @@ def test_compound_supply_heuristic_keeps_ambiguous_roles_quiet(
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_all_open_compound_supply_peers_need_review_with_a_common_anchor() -> None:
+    source = cross_symbol_power(
+        usb_function="USB_VBUS",
+        serial_function="SERIAL_VBUS",
+    ).model_copy(
+        update={
+            "nets": {"COMMON_RETURN": ("J1.2", "J2.2")},
+            "component_pin_numbers": {"J1": ("1", "2"), "J2": ("1", "2")},
+            "pin_functions": {
+                "J1.1": "USB_VBUS",
+                "J2.1": "SERIAL_VBUS",
+                "J1.2": "GND",
+                "J2.2": "GND",
+            },
+            "pin_electrical_types": {
+                "J1.1": "power_in",
+                "J2.1": "power_in",
+                "J1.2": "passive",
+                "J2.2": "passive",
+            },
+        }
+    )
+    report = _report(source)
+
+    findings = _rule_findings(report)
+    assert report.status == "REVIEW"
+    assert len(findings) == 1
+    assert findings[0].evidence["J1.1"] == ()
+    assert findings[0].evidence["J2.1"] == ()
+    assert findings[0].evidence["normalized_supply_category"] == ("vbus",)
+    assert "share a rail" in findings[0].message
+    assert "connector.unconnected_power_input" not in {item.rule_id for item in report.findings}
+
+    common_supply = source.model_copy(
+        update={"nets": {"COMMON_RETURN": ("J1.2", "J2.2"), "COMMON_SUPPLY": ("J1.1", "J2.1")}}
+    )
+    control = _report(common_supply)
+    assert control.status == "PASS"
+    assert not _rule_findings(control)
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_compound_supply_finding_is_stable_under_mapping_order() -> None:
     source = cross_symbol_power(
         usb_function="USB_VBUS",

@@ -34,7 +34,20 @@ pytestmark = [
 RULE_ID = "connector.repeated_pin_function"
 
 
-def _compound_supply_netlist(usb_function: str, serial_function: str) -> str:
+def _compound_supply_netlist(
+    usb_function: str,
+    serial_function: str,
+    *,
+    all_open: bool = False,
+) -> str:
+    supply_assignments = (
+        ""
+        if all_open
+        else (
+            '<net name="USB_SUPPLY"><node ref="J1" pin="1"/></net>'
+            '<net name="SERIAL_SUPPLY"><node ref="J2" pin="1"/></net>'
+        )
+    )
     return (
         "<export><components>"
         '<comp ref="J1"><value>USB port</value><footprint>Synthetic:Port</footprint>'
@@ -50,8 +63,7 @@ def _compound_supply_netlist(usb_function: str, serial_function: str) -> str:
         f'<pin num="1" name="{serial_function}" type="passive"/>'
         '<pin num="2" name="GND" type="passive"/>'
         "</pins></libpart></libparts><nets>"
-        '<net name="USB_SUPPLY"><node ref="J1" pin="1"/></net>'
-        '<net name="SERIAL_SUPPLY"><node ref="J2" pin="1"/></net>'
+        f"{supply_assignments}"
         '<net name="GND"><node ref="J1" pin="2"/><node ref="J2" pin="2"/></net>'
         "</nets></export>"
     )
@@ -92,18 +104,27 @@ async def _inspect_mcp(root: Path, native: Path) -> DesignLintReport:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 @pytest.mark.parametrize(
-    ("usb_function", "serial_function"),
-    (("USB_VBUS", "SERIAL_VBUS"), ("USB_VBUS", "VBUS")),
-    ids=("compound-peers", "compound-and-exact-alias"),
+    ("usb_function", "serial_function", "all_open"),
+    (
+        ("USB_VBUS", "SERIAL_VBUS", False),
+        ("USB_VBUS", "VBUS", False),
+        ("USB_VBUS", "SERIAL_VBUS", True),
+    ),
+    ids=("compound-peers", "compound-and-exact-alias", "all-open-compound-peers"),
 )
 def test_compound_supply_category_evidence_matches_between_cli_and_mcp(
     tmp_path: Path,
     usb_function: str,
     serial_function: str,
+    all_open: bool,
 ) -> None:
-    case = tmp_path / f"{usb_function.lower()}-{serial_function.lower()}"
+    mode = "all-open" if all_open else "split"
+    case = tmp_path / f"{usb_function.lower()}-{serial_function.lower()}-{mode}"
     root, native = synthetic_design_lint_project(case, _policy())
-    install_synthetic_netlist(native, _compound_supply_netlist(usb_function, serial_function))
+    install_synthetic_netlist(
+        native,
+        _compound_supply_netlist(usb_function, serial_function, all_open=all_open),
+    )
 
     cli_process = run_design_lint_cli(tmp_path, root, native)
     assert cli_process.returncode in {0, 1}, cli_process.stderr + cli_process.stdout
@@ -111,7 +132,13 @@ def test_compound_supply_category_evidence_matches_between_cli_and_mcp(
     mcp = asyncio.run(_inspect_mcp(root, native))
 
     assert semantic_design_lint_report(cli) == semantic_design_lint_report(mcp)
+    assert cli.status == "REVIEW"
+    assert "connector.unconnected_power_input" not in {item.rule_id for item in cli.findings}
     finding = next(item for item in cli.findings if item.rule_id == RULE_ID)
+    expected_usb_nets = () if all_open else ("USB_SUPPLY",)
+    expected_serial_nets = () if all_open else ("SERIAL_SUPPLY",)
+    assert finding.evidence["J1.1"] == expected_usb_nets
+    assert finding.evidence["J2.1"] == expected_serial_nets
     assert finding.evidence["normalized_supply_category"] == ("vbus",)
     assert finding.evidence["normalized_supply_category_sources"] == (
         f"J1.1: native symbol function={usb_function}; normalized supply category=vbus",

@@ -718,9 +718,13 @@ standalone parity work when it closes a demonstrated feature regression.
   assignments prompt `REVIEW`; matching categories do not assert that contacts
   must be tied. Negative, return, shield, sense, detection, monitoring,
   feedback, switching, enable, status, and multiple-rail names stay out of this
-  inference. Synthetic and source-hashed native fault/control cases pass on
-  KiCad 10.0.0 and 10.0.5. The installed-wheel acceptance passed under
-  `v0.5.3rc444` (run `42060470089`).
+  inference. Findings include the normalized category and each matched native
+  pin function. An all-open `USB_VBUS`/`SERIAL_VBUS` group with a shared return
+  anchor also prompts review; its common-supply control stays clear, and the
+  generic unconnected-power rule does not duplicate it. CLI/MCP parity covers
+  split, compound-to-exact, and all-open cases. Source-hashed native
+  fault/control cases pass on KiCad 10.0.0 and 10.0.5. The installed-wheel
+  acceptance passed under `v0.5.3rc446` (run `42066416259`).
 - **LINT-277 direct GPIO-to-control voltage-label review:** LINT-066 covers
   named SPI and UART/USART peer connections, but direct GPIO outputs feeding
   reset, enable, or boot inputs can present the same unresolved question. The
@@ -14542,12 +14546,13 @@ control are documented in the
   isolation, off-board wiring, or PCB copper continuity. Project-specific
   intent remains in authored connector and grounding contracts.
 - **Evidence:** Synthetic tests cover split and open `USB_VBUS`/`SERIAL_VBUS`
-  assignments, a common-net control, distinct rails, negative and compound
-  role exclusions, and mapping-order stability. The source-hashed native
-  compound connector fixture now carries the same supply fault/control and
-  keeps its separate return and shield controls. Both exact KiCad 10.0.0 and
-  10.0.5 lanes pass. The shared CLI/MCP evaluation and architecture/catalog
-  slice passed; no new surface operation was added.
+  assignments, a both-open compound supply fault with a shared return anchor,
+  a common-net control, distinct rails, negative and compound role exclusions,
+  and mapping-order stability. The both-open case has a focused CLI/MCP parity
+  check and does not duplicate `connector.unconnected_power_input`. The
+  source-hashed native compound connector fixture carries the split supply
+  fault/control and keeps separate return and shield controls. Both exact KiCad
+  10.0.0 and 10.0.5 lanes pass; no new surface operation was added.
 - **Hosted acceptance (2026-11-05):** Tag `v0.5.3rc444` passed GitHub Actions
   run `42060470089`. The rule-scoped installed-wheel gate ran with both
   `KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES=1` and
@@ -14558,9 +14563,11 @@ control are documented in the
   normalized supply category and each matched pin's native symbol function, so
   the CLI and MCP findings show why a pair such as `USB_VBUS`/`VBUS` matched.
   This adds review context without changing the heuristic's default `review`
-  disposition or claiming the pins must share a net. The focused rule selection
-  passed 75 tests, including the source-bound Docker fixtures on exact KiCad
-  10.0.0 and 10.0.5 images; the public template checkout matched pinned commit
+  disposition or claiming the pins must share a net. A both-open compound
+  supply group with a common return anchor produces one review finding; its
+  common-supply control passes. The focused rule selection passed 77 tests,
+  including source-bound Docker fixtures on exact KiCad 10.0.0 and 10.0.5
+  images; the public template checkout matched pinned commit
   `5ca79bedf665a9b6577d96b1d47f13ccd518c968`.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
