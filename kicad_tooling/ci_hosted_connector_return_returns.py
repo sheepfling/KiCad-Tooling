@@ -45,6 +45,34 @@ def verify_numbered_pwm_return_cases(ctx: ConnectorReturnFixtureContext) -> None
 
 def verify_ret_return_label_cases(ctx: ConnectorReturnFixtureContext) -> None:
     """Verify numbered and unindexed RET label reviews against native netlists."""
+    cpu_fault = ctx.reports["cpu-numbered-fault", "first"]
+    cpu_findings = [
+        finding for finding in cpu_fault.findings if finding.rule_id == "net.numbered_returns"
+    ]
+    expected_cpu = {
+        f"CPU{reference}_GND": (f"J{reference}.7", f"J{reference}.9") for reference in range(1, 5)
+    }
+    actual_cpu = {name: pins for finding in cpu_findings for name, pins in finding.evidence.items()}
+    if (
+        cpu_fault.status != "REVIEW"
+        or actual_cpu != expected_cpu
+        or any(
+            finding.rule_id == "net.return_labels_without_pin_roles"
+            for finding in cpu_fault.findings
+        )
+    ):
+        raise ValueError("Native compact numbered return prefixes lost exact review evidence")
+
+    cpu_control = ctx.reports["cpu-numbered-control", "first"]
+    return_rules = {"net.numbered_returns", "net.return_labels_without_pin_roles"}
+    if (
+        cpu_control.status != "PASS"
+        or return_rules & {finding.rule_id for finding in cpu_control.findings}
+        or set(ctx.observed_contracts["cpu-numbered-control", "first"].nets.get("CPU_GND", ()))
+        != {f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9)}
+    ):
+        raise ValueError("Native common compact-prefix control lost its quiet result")
+
     numbered = ctx.reports["ret-numbered-fault", "first"]
     numbered_findings = [
         finding for finding in numbered.findings if finding.rule_id == "net.numbered_returns"

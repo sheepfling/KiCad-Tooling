@@ -245,7 +245,11 @@ def ret_return_label_case_contracts() -> dict[str, NetlistContract]:
     """Return synthetic numbered, unindexed, and common return-label netlists."""
     neutral = return_case_contracts()["four-db9-neutral-fault"]
     common = return_case_contracts()["four-db9-neutral-control"]
+    identified = return_case_contracts()["four-db9-fault"]
     signal_nets = {name: pins for name, pins in neutral.nets.items() if name.startswith("SIGNAL")}
+    identified_signal_nets = {
+        name: pins for name, pins in identified.nets.items() if not name.startswith("RETURN_PORT_")
+    }
     numbered_signal_pin_exclusions = {
         "J1.1",
         "J2.1",
@@ -260,6 +264,27 @@ def ret_return_label_case_contracts() -> dict[str, NetlistContract]:
         if any(pin not in numbered_signal_pin_exclusions for pin in pins)
     }
     return {
+        "cpu-numbered-fault": identified.model_copy(
+            update={
+                "nets": {
+                    **identified_signal_nets,
+                    **{
+                        f"CPU{reference}_GND": (f"J{reference}.7", f"J{reference}.9")
+                        for reference in range(1, 5)
+                    },
+                }
+            }
+        ),
+        "cpu-numbered-control": identified.model_copy(
+            update={
+                "nets": {
+                    **identified_signal_nets,
+                    "CPU_GND": tuple(
+                        f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9)
+                    ),
+                }
+            }
+        ),
         "ret-numbered-fault": neutral.model_copy(
             update={
                 "nets": {

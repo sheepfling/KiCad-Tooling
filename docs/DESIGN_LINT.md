@@ -1744,16 +1744,17 @@ an incomplete section may omit values it could not establish. Matching hashes
 make the evidence internally consistent, but do not establish board approval
 or manufacturing readiness.
 
-The `net.numbered_returns` review also groups numbered protocol return labels
-such as `USB1_GND`/`USB2_GND`, `UART1_GND`/`UART2_GND`, `CAN1_GND`/`CAN2_GND`,
-`I2C1_0V`/`I2C2_0V`, and `SPI1_RET`/`SPI2_RET`. It asks whether each family’s
-domains should be common, bonded, or intentionally isolated; it does not infer
-that every port must share ground. The return-name recognizer also accepts one
-letter after `GND` or `VSS` (for example, `GNDA1`/`GNDA2` or
-`VSSA1`/`VSSA2`). Longer suffixes such as `VSSIO` stay outside that pattern.
-The compact-prefix list is explicit, so unrecognized forms such as
-`CPU1_GND`/`CPU2_GND` stay quiet. Synthetic tests cover separate protocol
-families, common-net controls, and the allowlist boundary.
+The `net.numbered_returns` review groups indexed return labels such as
+`GND1`/`GND2`, `0V_PWM_1`/`0V_PWM_2`, and compact identifier-prefix forms
+including `USB1_GND`/`USB2_GND`, `CAN1_GND`/`CAN2_GND`,
+`I2C1_0V`/`I2C2_0V`, `SPI1_RET`/`SPI2_RET`, and `CPU1_GND`/`CPU2_GND`. It asks
+whether each family’s domains should be common, bonded, or intentionally
+isolated; it does not infer that every port or processor domain must share
+ground. A prefix that is itself a complete return token is not classified as a
+device identifier. The recognizer also accepts one letter after `GND` or `VSS`
+(for example, `GNDA1`/`GNDA2` or `VSSA1`/`VSSA2`). Longer suffixes such as
+`VSSIO` stay outside that pattern. Synthetic tests cover multiple identifier
+families, common-net controls, rule policy, and exact-version native export.
 
 The `mapped_check_runs` records distinguish an absent optional map
 (`NOT_CONFIGURED`) from a map comparison that ran and found no mismatch

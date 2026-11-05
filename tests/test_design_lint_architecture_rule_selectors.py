@@ -96,6 +96,10 @@ RULE_NODE_CASES = (
         "tests/test_protocol_return_name_groups.py::test_compact_can_i2c_and_spi_return_families_are_reviewed_separately",
     ),
     (
+        "net.numbered_returns",
+        "tests/test_protocol_return_name_groups.py::test_generic_numbered_identifier_prefixes_are_reviewed",
+    ),
+    (
         "connector.unconnected_supply_pin",
         "tests/test_design_lint_power_pin_patterns.py::TestDesignLintPowerPinPatterns::test_unconnected_supply_and_return_pins_without_a_peer_are_reported",
     ),

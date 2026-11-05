@@ -232,6 +232,15 @@ def test_native_ret_return_label_fault_and_control_are_focused_and_repeatable(
     )
     assert_native_fixture_mounts(root, native_export["command_receipt"])
 
+    compact_fault = results["connector-return-fixture/cpu-numbered-fault"]
+    compact_control = results["connector-return-fixture/cpu-numbered-control"]
+    assert compact_fault["status"] == "PASS"
+    assert compact_fault["lint_status"] == "REVIEW"
+    assert "net.numbered_returns" in compact_fault["findings"].split(",")
+    assert compact_control["status"] == "PASS"
+    assert compact_control["lint_status"] == "PASS"
+    assert compact_control["findings"] == "none"
+
     numbered = results["connector-return-fixture/ret-numbered-fault"]
     assert numbered["status"] == "PASS"
     assert numbered["lint_status"] == "REVIEW"
@@ -252,7 +261,7 @@ def test_native_ret_return_label_fault_and_control_are_focused_and_repeatable(
     assert vss_control["status"] == "PASS"
     assert vss_control["lint_status"] == "PASS"
     assert vss_control["findings"] == "none"
-    for result in (numbered, unindexed, control, vss_control):
+    for result in (compact_fault, compact_control, numbered, unindexed, control, vss_control):
         assert result["kicad_version"] == version
         assert result["repeatable"] == "true"
         assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]

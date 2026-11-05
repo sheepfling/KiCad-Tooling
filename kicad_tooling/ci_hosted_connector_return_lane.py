@@ -134,7 +134,14 @@ def ret_return_label_fixture_lane(
         project=project,
         image=image,
         log=log,
-        case_names=("ret-numbered-fault", "ret-unindexed-fault", "ret-control", "vss-control"),
+        case_names=(
+            "cpu-numbered-fault",
+            "cpu-numbered-control",
+            "ret-numbered-fault",
+            "ret-unindexed-fault",
+            "ret-control",
+            "vss-control",
+        ),
     )
     verify_ret_return_label_cases(context)
     emit_connector_return_receipts(context, {})

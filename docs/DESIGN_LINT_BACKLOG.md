@@ -2367,11 +2367,12 @@ is not a reason by itself to expand its scope or change its default policy.
   10.0.5: the four split names and all eight pin memberships were retained on
   repeated exports, the fault produced `net.numbered_returns`, and the common
   control passed without findings.
-  The compact protocol-prefix allowlist now also groups `CAN1_GND`/
-  `CAN2_GND`, `I2C1_0V`/`I2C2_0V`, and `SPI1_RET`/`SPI2_RET`, alongside the
-  existing USB/UART forms. Synthetic controls cover one common net per family
-  and keep unknown prefixes such as `CPU1_GND`/`CPU2_GND` outside the
-  predicate. The source-hash-pinned `ret-numbered-fault.kicad_sch` fixture now
+  The compact numeric-prefix pattern groups `CAN1_GND`/`CAN2_GND`,
+  `I2C1_0V`/`I2C2_0V`, `SPI1_RET`/`SPI2_RET`, and other ASCII identifier
+  prefixes such as `CPU1_GND`/`CPU2_GND`. A token that is itself a complete
+  return name is excluded from the identifier-prefix form. Synthetic controls
+  cover common nets and the return-token boundary. The source-hash-pinned
+  `ret-numbered-fault.kicad_sch` fixture now
   adds exact native pin evidence for the CAN, I2C, and SPI groups to the
   existing RET cases; a common `GND` control remains in that fixture. This is
   a review clue about similarly named domains, not a requirement to join them.
@@ -14446,6 +14447,39 @@ control are documented in the
   prerelease policy. The native fixture lane remains compatibility evidence;
   the new synthetic counterfactual is the evidence that the added lint finds a
   mismatch missed by the existing visible-bias and GPIO voltage checks.
+
+#### LINT-279 — Review compact numeric-prefix return labels
+
+- **Status:** Implemented as a bounded extension to `net.numbered_returns`.
+  The rule remains default-`review`; projects can set `block`, `off`, or an
+  exact-fingerprint ignore.
+- **Gap:** The existing return-name heuristic recognized numbered stems and a
+  short protocol-prefix allowlist, but deliberately missed labels such as
+  `CPU1_GND` and `CPU2_GND`. These compact identifiers can describe separate
+  connector or device return domains whose relationship deserves review.
+- **Predicate:** For a recognized return token after a compact ASCII
+  alphanumeric identifier and numeric index, group nets with the same prefix
+  and return token when the numeric indexes differ. A prefix that is itself a
+  complete return token is not treated as an identifier.
+- **Boundary:** This is a name-based review clue. It does not establish that
+  two rails are electrically common, require joining them, or distinguish
+  intentionally isolated channels. A common label is a quiet control. PCB
+  continuity and off-board wiring remain outside the check.
+- **Evidence:** Synthetic tests cover `CPU1_GND`/`CPU2_GND`, a common `CPU_GND` control,
+  return-token prefixes, existing CAN/I2C/SPI groups, rule overrides, and deterministic
+  fingerprints. CLI/MCP parity covers the compact fault and common control. Tooling-owned native
+  fault/control schematics are source- hashed and exported twice with digest-pinned KiCad 10.0.0 and
+  10.0.5; the ret-return lane checks exact pin membership and repeatability. Sources and hashes are
+  recorded in the [fixture README](../tests/fixtures/design_lint/four-port-db9-returns/README.md).
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_protocol_return_name_groups.py \
+    tests/test_design_lint_numbered_returns.py \
+    tests/test_design_lint_mcp_parity_return_labels.py \
+    tests/test_numbered_return_native_fixture_lane.py \
+    -m 'design_lint and return_path_lint and design_lint_rule(rule_id="net.numbered_returns")'
+  ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

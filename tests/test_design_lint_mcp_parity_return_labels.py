@@ -95,6 +95,17 @@ def test_ret_return_names_match_cli_and_mcp(tmp_path: Path) -> None:
             )
             assert "net.numbered_returns" in {item.rule_id for item in numbered.findings}
 
+            compact_prefix = await compare(
+                {f"CPU{port}_GND": pins_by_port[f"J{port}"] for port in range(1, 5)}
+            )
+            assert "net.numbered_returns" in {item.rule_id for item in compact_prefix.findings}
+
+            compact_prefix_control = await compare(
+                {"CPU_GND": tuple(pin for pins in pins_by_port.values() for pin in pins)}
+            )
+            return_rule_ids = {"net.numbered_returns", "net.return_labels_without_pin_roles"}
+            assert not return_rule_ids & {item.rule_id for item in compact_prefix_control.findings}
+
             unindexed = await compare(
                 {
                     "RET_USB": pins_by_port["J1"],
@@ -110,7 +121,6 @@ def test_ret_return_names_match_cli_and_mcp(tmp_path: Path) -> None:
             common = await compare(
                 {"RET": tuple(pin for pins in pins_by_port.values() for pin in pins)}
             )
-            return_rule_ids = {"net.numbered_returns", "net.return_labels_without_pin_roles"}
             assert not return_rule_ids & {item.rule_id for item in common.findings}
 
     asyncio.run(exercise())

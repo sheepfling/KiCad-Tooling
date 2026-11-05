@@ -110,6 +110,8 @@ EXPECTED_CONNECTOR_RETURN_STAGES = frozenset(
         "connector-return-fixture/four-db9-control",
         "connector-return-fixture/four-db9-pwm-fault",
         "connector-return-fixture/four-db9-pwm-control",
+        "connector-return-fixture/cpu-numbered-fault",
+        "connector-return-fixture/cpu-numbered-control",
         "connector-return-fixture/four-db9-neutral-fault",
         "connector-return-fixture/four-db9-neutral-control",
         "connector-return-fixture/ret-numbered-fault",

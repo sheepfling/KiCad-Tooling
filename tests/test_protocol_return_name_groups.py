@@ -1,4 +1,4 @@
-"""Bound compact protocol-prefix matching in the numbered-return review."""
+"""Exercise compact numbered-prefix handling in return-name review."""
 
 from __future__ import annotations
 
@@ -65,8 +65,17 @@ def test_common_protocol_return_nets_are_a_valid_control() -> None:
     assert not report.findings
 
 
-def test_unrecognized_compact_prefix_is_not_grouped_as_a_protocol_return() -> None:
+def test_generic_numbered_identifier_prefixes_are_reviewed() -> None:
     report = _report({"CPU1_GND": ("J1.1",), "CPU2_GND": ("J2.1",)})
+
+    assert report.status == "REVIEW"
+    (finding,) = [item for item in report.findings if item.rule_id == RULE_ID]
+    assert finding.subject == "CPU_GND"
+    assert finding.evidence == {"CPU1_GND": ("J1.1",), "CPU2_GND": ("J2.1",)}
+
+
+def test_return_token_prefix_is_not_misread_as_a_device_identifier() -> None:
+    report = _report({"GND1_GND": ("J1.1",), "GND2_GND": ("J2.1",)})
 
     assert report.status == "PASS"
     assert not report.findings
