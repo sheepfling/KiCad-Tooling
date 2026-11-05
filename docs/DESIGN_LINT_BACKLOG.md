@@ -723,8 +723,12 @@ standalone parity work when it closes a demonstrated feature regression.
   higher-rail and lower-rail faults, an equal-rail control, policy, boundary,
   exact-map, mapping-order, and CLI/MCP parity cases are covered. The original
   gate ran in hosted `v0.5.3rc428` (run `42013202620`). This follow-up adds a
-  source-hashed lower-rail native fault and changes the control to equal rails;
-  exact KiCad 10.0.0/10.0.5 hosted acceptance is pending for this extension.
+  source-hashed lower-rail native fault and changes the control to equal rails.
+  Hosted `v0.5.3rc429` acceptance passed (run `42016469635`): both KiCad
+  10.0.0/10.0.5 native fixture parameters ran, and the scoped unit selection
+  reported 43 passed with 6,838 deselected. Wheel, install, external-template,
+  and playtest stages passed; stable-package and preview jobs were skipped by
+  prerelease policy.
 - **LINT-276 unmapped multi-pin USB topology:** The public four-port USB hub
   screen recorded four multi-pin protection-array candidates in USB reference
   coverage, but the default finding list did not ask the project to resolve
@@ -14367,7 +14371,8 @@ control are documented in the
   fault/control parity test; and exact-version
   source-hashed KiCad 10.0.0/10.0.5 native fixtures are registered in the
   focused interface/power gate. The lane checks both rail directions against
-  an equal-rail control and retains normalized export hashes.
+  an equal-rail control and retains normalized export hashes. The scoped gate
+  passed in `v0.5.3rc429` (GitHub Actions run `42016469635`).
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
