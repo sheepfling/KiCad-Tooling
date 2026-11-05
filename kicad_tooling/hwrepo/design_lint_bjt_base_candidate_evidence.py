@@ -51,7 +51,7 @@ def _bjt_base_pin(
         raise ValueError(
             "BJT base evidence requires exact native base, collector, and emitter roles"
         )
-    return f"{reference}.{roles['base']}"
+    return f"{reference}.{roles.base}"
 
 
 def _base_net_peers(
@@ -134,7 +134,7 @@ class BjtBaseBiasEvidence:
         functions = {pin.casefold(): value for pin, value in self.observed.pin_functions.items()}
         roles = basic_bjt_role_numbers(self.reference, self.symbol, inventory, functions)
         assert roles is not None
-        current_emitter_pin = f"{self.reference}.{roles['emitter']}"
+        current_emitter_pin = f"{self.reference}.{roles.emitter}"
 
         if self.base_pin.casefold() != current_base_pin.casefold():
             raise ValueError("BJT base pin must match its current native role")

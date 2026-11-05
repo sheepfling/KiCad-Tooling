@@ -66,8 +66,8 @@ def bjts_without_visible_emitter_bias(observed: NetlistContract) -> tuple[Candid
         if role_numbers is None:
             continue
 
-        base_pin = f"{reference}.{role_numbers['base']}"
-        emitter_pin = f"{reference}.{role_numbers['emitter']}"
+        base_pin = f"{reference}.{role_numbers.base}"
+        emitter_pin = f"{reference}.{role_numbers.emitter}"
         base_assignments = nets_by_pin.get(base_pin.casefold(), ())
         emitter_assignments = nets_by_pin.get(emitter_pin.casefold(), ())
         if len(base_assignments) != 1 or len(emitter_assignments) != 1:

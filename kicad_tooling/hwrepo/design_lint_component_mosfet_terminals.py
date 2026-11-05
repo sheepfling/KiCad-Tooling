@@ -46,8 +46,8 @@ def mosfets_with_drain_source_on_same_net(
         if roles is None:
             continue
 
-        drain_pin = f"{reference}.{roles['drain']}"
-        source_pin = f"{reference}.{roles['source']}"
+        drain_pin = f"{reference}.{roles.drain}"
+        source_pin = f"{reference}.{roles.source}"
         drain_nets = nets_by_pin.get(drain_pin.casefold(), ())
         source_nets = nets_by_pin.get(source_pin.casefold(), ())
         if len(drain_nets) != 1 or len(source_nets) != 1:
@@ -113,8 +113,8 @@ def mosfets_with_gate_source_on_same_net(
         if roles is None:
             continue
 
-        gate_pin = f"{reference}.{roles['gate']}"
-        source_pin = f"{reference}.{roles['source']}"
+        gate_pin = f"{reference}.{roles.gate}"
+        source_pin = f"{reference}.{roles.source}"
         gate_nets = nets_by_pin.get(gate_pin.casefold(), ())
         source_nets = nets_by_pin.get(source_pin.casefold(), ())
         if len(gate_nets) != 1 or len(source_nets) != 1:
@@ -181,8 +181,8 @@ def mosfets_with_gate_drain_on_same_net(
         if roles is None:
             continue
 
-        gate_pin = f"{reference}.{roles['gate']}"
-        drain_pin = f"{reference}.{roles['drain']}"
+        gate_pin = f"{reference}.{roles.gate}"
+        drain_pin = f"{reference}.{roles.drain}"
         gate_nets = nets_by_pin.get(gate_pin.casefold(), ())
         drain_nets = nets_by_pin.get(drain_pin.casefold(), ())
         if len(gate_nets) != 1 or len(drain_nets) != 1:

@@ -17,9 +17,11 @@ from .connector_coverage_models import (
     ConnectorInterfaceReview,
     ConnectorInventoryReview,
     ConnectorMappedPinEvidence,
+    ConnectorMappedPinEvidenceByComponentPin,
     ConnectorUnreviewedPinEvidence,
 )
 from .connector_identity import connector_candidate_references
+from .model_primitives import Reference
 from .models import (
     InterfacePin,
     InterfaceRecord,
@@ -316,17 +318,17 @@ def evaluate(
 def source_matched_connector_pin_evidence(
     observed: NetlistContract,
     coverage: ConnectorCoverageReport | None,
-) -> dict[str, ConnectorMappedPinEvidence]:
+) -> ConnectorMappedPinEvidenceByComponentPin:
     """Return complete interface mappings only when their evidence matches this netlist."""
     if coverage is None or coverage.interface_catalog_sha256 is None:
-        return {}
+        return MappingProxyType({})
 
     nets_by_pin: dict[str, set[str]] = {}
     for net, pins in observed.nets.items():
         for pin in pins:
             nets_by_pin.setdefault(pin, set()).add(net)
 
-    result: dict[str, ConnectorMappedPinEvidence] = {}
+    result: dict[Reference, ConnectorMappedPinEvidence] = {}
     for entry in coverage.entries:
         if entry.status != "COVERED" or entry.interface_id is None:
             continue
@@ -368,7 +370,7 @@ def source_matched_connector_pin_evidence(
         if not source_matches:
             continue
         result.update({item.component_pin: item for item in entry.mapped_pins})
-    return result
+    return MappingProxyType(result)
 
 
 def source_matched_connector_peer_assignment_groups(

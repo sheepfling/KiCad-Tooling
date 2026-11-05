@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from .connector_comparison_scope_types import ConnectorComparisonScopes
-from .connector_coverage_models import ConnectorMappedPinEvidence
+from .connector_coverage_models import ConnectorMappedPinEvidenceByComponentPin
 from .connector_peer_pin_models import SimilarConnectorPinGroup
 from .netlist_contract_models import NetlistContract
 
@@ -203,7 +203,7 @@ def _is_standard_connector_symbol(symbol_id: str) -> bool:
 def similar_connector_pin_groups(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
-    reviewed_connector_pins: Mapping[str, ConnectorMappedPinEvidence] | None = None,
+    reviewed_connector_pins: ConnectorMappedPinEvidenceByComponentPin | None = None,
     peer_assignment_groups: ConnectorComparisonScopes | None = None,
     return_comparison_groups: ConnectorComparisonScopes | None = None,
     supply_comparison_groups: ConnectorComparisonScopes | None = None,

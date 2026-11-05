@@ -10,7 +10,7 @@ from typing import Literal, cast
 
 from pydantic import JsonValue
 
-from .connector_pins import similar_connector_pin_groups
+from .connector_identity import similar_connector_pin_groups
 from .kicad_compatibility import require_cli_profile
 from .netlist_contract_models import ComponentContract, NetlistContract
 from .project_models import (

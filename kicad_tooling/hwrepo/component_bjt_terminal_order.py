@@ -51,8 +51,8 @@ def bjts_with_unusual_collector_emitter_rail_order(
         if role_to_number is None:
             continue
 
-        collector_pin = f"{reference}.{role_to_number['collector']}"
-        emitter_pin = f"{reference}.{role_to_number['emitter']}"
+        collector_pin = f"{reference}.{role_to_number.collector}"
+        emitter_pin = f"{reference}.{role_to_number.emitter}"
         collector_assignments = nets_by_pin.get(collector_pin.casefold(), ())
         emitter_assignments = nets_by_pin.get(emitter_pin.casefold(), ())
         if len(collector_assignments) != 1 or len(emitter_assignments) != 1:

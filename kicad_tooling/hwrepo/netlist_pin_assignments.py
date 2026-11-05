@@ -11,6 +11,7 @@ from .casefold_mapping_lookup import lookup_unique_casefold
 from .netlist_contract_models import NetlistContract
 
 NetlistPinNetIndex: TypeAlias = Mapping[str, AbstractSet[str]]
+NetlistPinNetAssignmentsByPin: TypeAlias = Mapping[str, tuple[str, ...]]
 
 
 def netlist_pin_net_index(observed: NetlistContract) -> NetlistPinNetIndex:
@@ -20,13 +21,13 @@ def netlist_pin_net_index(observed: NetlistContract) -> NetlistPinNetIndex:
     )
 
 
-def netlist_pin_net_assignments(observed: NetlistContract) -> dict[str, tuple[str, ...]]:
+def netlist_pin_net_assignments(observed: NetlistContract) -> NetlistPinNetAssignmentsByPin:
     """Return each pin's native net occurrences in source iteration order."""
     by_pin: dict[str, list[str]] = {}
     for net, pins in observed.nets.items():
         for pin in pins:
             by_pin.setdefault(pin.casefold(), []).append(net)
-    return {pin: tuple(nets) for pin, nets in by_pin.items()}
+    return MappingProxyType({pin: tuple(nets) for pin, nets in by_pin.items()})
 
 
 def netlist_pin_inventory_contains(observed: NetlistContract, pin: str) -> bool | None:

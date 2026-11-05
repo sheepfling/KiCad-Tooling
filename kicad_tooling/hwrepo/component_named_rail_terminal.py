@@ -2,27 +2,36 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
+from typing import TypeAlias
 
 from .component_rail_potentials import RailPotential, named_net_potential
+from .model_primitives import NonEmptyText, Reference
 from .netlist_contract_models import NetlistContract
 from .netlist_pin_assignments import netlist_pin_net_assignments
 
+ComponentPinFunctionIndex: TypeAlias = Mapping[Reference, NonEmptyText]
 
-def native_pin_function_index(observed: NetlistContract) -> dict[str, str]:
+
+def native_pin_function_index(observed: NetlistContract) -> ComponentPinFunctionIndex:
     """Return case-folded pin keys with their exact trimmed native function text."""
-    return {
-        pin.casefold(): function.strip()
-        for pin, function in observed.pin_functions.items()
-        if function.strip()
-    }
+    return MappingProxyType(
+        {
+            pin.casefold(): function.strip()
+            for pin, function in observed.pin_functions.items()
+            if function.strip()
+        }
+    )
 
 
-def normalized_pin_function_index(observed: NetlistContract) -> dict[str, str]:
+def normalized_pin_function_index(observed: NetlistContract) -> ComponentPinFunctionIndex:
     """Return case-folded pin keys and case-folded native function values."""
-    return {
-        pin: function.casefold() for pin, function in native_pin_function_index(observed).items()
-    }
+    native_functions = native_pin_function_index(observed)
+    return MappingProxyType(
+        {pin: function.casefold() for pin, function in native_functions.items()}
+    )
 
 
 @dataclass(frozen=True, slots=True)

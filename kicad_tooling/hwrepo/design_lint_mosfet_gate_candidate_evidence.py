@@ -224,9 +224,9 @@ class MosfetGateDirectDriveEvidence:
         if roles is None:
             raise ValueError("Direct-drive evidence requires unique native D/G/S pin roles")
         if (
-            f"{self.device.reference}.{roles['gate']}".casefold() != self.device.gate_pin.casefold()
-            or f"{self.device.reference}.{roles['drain']}".casefold() != self.drain_pin.casefold()
-            or f"{self.device.reference}.{roles['source']}".casefold() != self.source_pin.casefold()
+            f"{self.device.reference}.{roles.gate}".casefold() != self.device.gate_pin.casefold()
+            or f"{self.device.reference}.{roles.drain}".casefold() != self.drain_pin.casefold()
+            or f"{self.device.reference}.{roles.source}".casefold() != self.source_pin.casefold()
         ):
             raise ValueError("Direct-drive terminal pins must match the current MOSFET roles")
 

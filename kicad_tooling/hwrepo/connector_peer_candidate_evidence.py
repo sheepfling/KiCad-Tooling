@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import TypeAlias
 
-from .connector_coverage_models import ConnectorMappedPinEvidence
+from .connector_coverage_models import ConnectorMappedPinEvidenceByComponentPin
 from .connector_identity import power_function_key
 from .connector_peer_pin_models import SimilarConnectorPinGroup
 from .connector_peer_pin_scan import (
@@ -67,7 +67,7 @@ def connector_group_message(group: SimilarConnectorPinGroup) -> str:
 def connector_group_evidence(
     group: SimilarConnectorPinGroup,
     observed: NetlistContract,
-    reviewed_connector_pins: Mapping[str, ConnectorMappedPinEvidence],
+    reviewed_connector_pins: ConnectorMappedPinEvidenceByComponentPin,
 ) -> dict[str, tuple[str, ...]]:
     """Add authored comparison-scope and mapped-role evidence to a lint finding."""
     evidence: dict[str, tuple[str, ...]] = {}
@@ -99,7 +99,7 @@ def connector_group_evidence(
 def _connector_group_role_source_evidence(
     group: SimilarConnectorPinGroup,
     observed: NetlistContract,
-    reviewed_connector_pins: Mapping[str, ConnectorMappedPinEvidence],
+    reviewed_connector_pins: ConnectorMappedPinEvidenceByComponentPin,
 ) -> dict[str, tuple[str, ...]]:
     if group.reviewed_role == "supply" and group.reviewed_voltage_domain is not None:
         domain = str(group.reviewed_voltage_domain)
@@ -140,7 +140,7 @@ class RepeatedConnectorPinFindingEvidence:
 
     group: SimilarConnectorPinGroup
     observed: NetlistContract
-    reviewed_connector_pins: Mapping[str, ConnectorMappedPinEvidence]
+    reviewed_connector_pins: ConnectorMappedPinEvidenceByComponentPin
     pin_assignments: Mapping[str, tuple[str, ...]] = field(init=False)
 
     def __post_init__(self) -> None:

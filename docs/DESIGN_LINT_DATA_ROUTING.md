@@ -1662,9 +1662,83 @@ scope evidence only: it does not establish a required shared net, continuity,
 or electrical isolation. Candidate evidence serialization and fingerprints
 remain unchanged.
 
-The next mapping audit starts with `netlist_pin_net_index`, whose mutable
-pin-to-set result reaches 23 production caller modules, then
-`source_matched_connector_pin_evidence`, whose typed values are returned in a
-mutable reference-keyed map to 15 modules. Check caller mutation and required
-lookup behavior before choosing whether either route needs a new container or
-only an immutable return type.
+## Typed connector pin evidence map (2026-11-05)
+
+`netlist_pin_net_index` already exposes the named `NetlistPinNetIndex`
+read-only contract: case-folded `reference.pin` keys map to `frozenset`
+collections containing the exact native net names. Its 23 production consumer
+modules use lookup/iteration only. This corrects the earlier backlog note that
+described the published result as mutable.
+
+The occurrence-preserving `netlist_pin_net_assignments` projection now uses
+`NetlistPinNetAssignmentsByPin`. It returns a read-only mapping whose
+case-folded pin keys map to tuples retaining duplicate native assignments and
+source iteration order. Its five production consumers use lookup/iteration
+only; `netlist_pin_net_index` derives its set-valued view from this owner.
+
+`source_matched_connector_pin_evidence` now exposes
+`ConnectorMappedPinEvidenceByComponentPin`, owned by
+`connector_coverage_models.py`. The key type is `Reference`, and each key
+retains the exact native `reference.pin` spelling. The producer returns a
+`MappingProxyType` for populated and empty results; the frozen
+`ConnectorMappedPinEvidence` values retain their existing source-match checks.
+Fifteen production consumer modules make 23 direct calls, and the caller audit
+found no mutation of the returned maps. Consumers import the named contract
+from its theme-owned model module. Lookup behavior, coverage requirements, and
+serialized evidence/fingerprints are unchanged.
+
+The focused connector-map, mapped-interface, peer-compatibility, and
+architecture slice passed 98 tests with one skipped case. Ruff, formatting,
+and targeted Pyright passed. No native KiCad lane ran. Continue the API census
+with other mutable mapping routes; do not infer that all such routes are
+complete from this checkpoint.
+
+## Component pin-function index route (2026-11-05)
+
+`NetlistContract.pin_functions` remains the source observation. The
+component-owned `native_pin_function_index` derives a case-folded pin-key map
+with trimmed native function text; `normalized_pin_function_index` derives
+the same keys with case-folded function text. Both use the named
+`ComponentPinFunctionIndex` contract and return read-only mappings, including
+when no function data is present.
+
+The BJT and MOSFET terminal-order scanners and their source-evidence validator
+consume these views by lookup or pass them to role/potential checks. The audit
+found no consumer mutation. These indexes are derived lookup aids, not source
+evidence: terminal evidence continues retaining the exact observed
+`NetlistContract`, and validation recomputes the current roles and potentials.
+No serialized candidate fields, fingerprints, selection behavior, or report
+wording change.
+
+The focused terminal-order and component-polarity selection passed 12 tests;
+13 unrelated or marker-excluded cases were deselected. Ruff, targeted Pyright,
+Rumdl, and `git diff --check` passed. Alphus runtime-types, Python-style,
+Pydantic-practices, and input-contracts report scans found no findings in the
+four route modules. No exact native KiCad lane ran.
+
+## Component symbol role-number route (2026-11-05)
+
+The exact BJT and MOSFET symbol services now return `BjtPinRoleNumbers` and
+`MosfetPinRoleNumbers` frozen records instead of `dict[str, str]`. Their
+fields name the supported roles directly (`base`, `collector`, `emitter`;
+`drain`, `gate`, `source`). The service owners still require the exact
+supported symbol identity, a complete three-number inventory, and one
+unambiguous native function for every required role; unsupported or incomplete
+inputs still return `None`.
+
+The import-aware audit found 13 consumers across eight modules (seven BJT and
+six MOSFET calls); consumers read fields and do not mutate results. The role
+records are derived lookup results, not source evidence. Candidate evidence
+continues retaining the observed `NetlistContract` and recomputes symbol roles
+against it. Rule selection, source checks, serialized evidence, and report
+wording remain unchanged.
+
+The BJT/MOSFET rule, source-evidence, and architecture selection passed 195
+tests; 20 native or marker-excluded cases were deselected. Ruff and targeted
+Pyright passed. Alphus runtime-types, Python-style, Pydantic-practices, and
+input-contracts scans reported no findings in the 11 changed production files.
+No exact native KiCad lane ran.
+
+The combined connector/component mapping and role-record selection passed 265
+tests with one skipped case. Ruff check/format, targeted Pyright, and
+`git diff --check` passed. No exact native KiCad lane ran.

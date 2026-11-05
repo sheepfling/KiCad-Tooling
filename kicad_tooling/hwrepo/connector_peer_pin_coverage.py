@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
 from .connector_comparison_scope_types import ConnectorComparisonScopes
-from .connector_coverage_models import ConnectorMappedPinEvidence
+from .connector_coverage_models import ConnectorMappedPinEvidenceByComponentPin
 from .connector_footprint_named_passive_divergence import (
     evaluate_footprint_named_passive_assignment_divergence,
 )
@@ -46,7 +44,7 @@ def connector_peer_pin_heuristic_coverage(
     observed: NetlistContract,
     netlist_sha256: str,
     declared_references: tuple[str, ...] = (),
-    reviewed_connector_pins: Mapping[str, ConnectorMappedPinEvidence] | None = None,
+    reviewed_connector_pins: ConnectorMappedPinEvidenceByComponentPin | None = None,
     peer_assignment_groups: ConnectorComparisonScopes | None = None,
     *,
     finding_counts: ConnectorPeerPinFindingCounts,

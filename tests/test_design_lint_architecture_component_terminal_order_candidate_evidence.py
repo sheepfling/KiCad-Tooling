@@ -28,6 +28,11 @@ _RULE_OWNERS = {
         "MosfetTerminalOrderEvidence",
     ),
 }
+_PIN_FUNCTION_INDEX_CALLERS = {
+    "component_bjt_terminal_order.py": "normalized_pin_function_index",
+    "component_mosfet_terminal_order.py": "normalized_pin_function_index",
+    "design_lint_component_terminal_order_candidate_evidence.py": "normalized_pin_function_index",
+}
 
 
 def test_typed_terminal_order_owner_and_scanners_stay_focused() -> None:
@@ -79,3 +84,45 @@ def test_typed_terminal_order_owner_and_scanners_stay_focused() -> None:
             "kicad_tooling/hwrepo/netlist_pin_assignments.py#netlist_pin_net_assignments"
             in rule.implementation_refs
         )
+
+
+def test_pin_function_indexes_have_one_typed_component_owner() -> None:
+    owner_path = HWREPO / "component_named_rail_terminal.py"
+    owner_tree = ast.parse(owner_path.read_text(encoding="utf-8"), filename=owner_path.name)
+    alias = next(
+        node
+        for node in owner_tree.body
+        if isinstance(node, ast.AnnAssign)
+        and isinstance(node.target, ast.Name)
+        and node.target.id == "ComponentPinFunctionIndex"
+    )
+
+    assert isinstance(alias.annotation, ast.Name)
+    assert alias.annotation.id == "TypeAlias"
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+
+    for function_name in ("native_pin_function_index", "normalized_pin_function_index"):
+        function = next(
+            node
+            for node in owner_tree.body
+            if isinstance(node, ast.FunctionDef) and node.name == function_name
+        )
+        assert isinstance(function.returns, ast.Name)
+        assert function.returns.id == "ComponentPinFunctionIndex"
+        assert any(
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "MappingProxyType"
+            for node in ast.walk(function)
+        )
+
+    for filename, imported_name in _PIN_FUNCTION_INDEX_CALLERS.items():
+        source_path = HWREPO / filename
+        source_tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=filename)
+        assert line_count(source_path) < IMPLEMENTATION_MAX_LINES
+        assert any(
+            isinstance(node, ast.ImportFrom)
+            and node.module == "component_named_rail_terminal"
+            and imported_name in {item.name for item in node.names}
+            for node in source_tree.body
+        ), filename

@@ -2,9 +2,16 @@
 
 from __future__ import annotations
 
+from collections.abc import MutableMapping
+from types import MappingProxyType
+from typing import cast, get_type_hints
+
 import pytest
 
 from kicad_tooling.hwrepo.connector_coverage import source_matched_connector_pin_evidence
+from kicad_tooling.hwrepo.connector_coverage_models import (
+    ConnectorMappedPinEvidenceByComponentPin,
+)
 from kicad_tooling.hwrepo.connector_mapped_interface_pins import (
     unassigned_mapped_interface_signal_pins,
 )
@@ -24,6 +31,33 @@ pytestmark = [
     pytest.mark.power_lint,
     pytest.mark.evidence_lint,
 ]
+
+
+def test_source_matched_pin_evidence_is_an_immutable_exact_component_pin_map() -> None:
+    observed = mapped_interface_netlist()
+    coverage = interface_coverage(observed)
+
+    evidence = source_matched_connector_pin_evidence(observed, coverage)
+
+    assert (
+        get_type_hints(source_matched_connector_pin_evidence, include_extras=True)["return"]
+        == ConnectorMappedPinEvidenceByComponentPin
+    )
+    assert isinstance(evidence, MappingProxyType)
+    assert set(evidence) == {"J1.1", "J1.2", "J1.3"}
+    assert "j1.2" not in evidence
+    assert evidence["J1.2"].component_pin == "J1.2"
+    with pytest.raises(TypeError):
+        cast(MutableMapping[str, object], evidence)["J1.2"] = evidence["J1.2"]
+
+
+def test_missing_connector_coverage_returns_an_immutable_empty_pin_map() -> None:
+    evidence = source_matched_connector_pin_evidence(mapped_interface_netlist(), None)
+
+    assert isinstance(evidence, MappingProxyType)
+    assert not evidence
+    with pytest.raises(TypeError):
+        cast(MutableMapping[str, object], evidence)["J1.2"] = object()
 
 
 def test_unassigned_signal_candidate_retains_exact_matched_sources() -> None:

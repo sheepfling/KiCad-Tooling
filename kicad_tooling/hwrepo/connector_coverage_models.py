@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Literal
+from typing import Literal, TypeAlias
 
 from pydantic import Field, model_validator
 
@@ -28,6 +28,9 @@ class ConnectorMappedPinEvidence(StrictModel):
     symbol_function: NonEmptyText | None = None
     unconnected_reason: NonEmptyText | None = None
     nets: tuple[NetName, ...] = ()
+
+
+ConnectorMappedPinEvidenceByComponentPin: TypeAlias = Mapping[Reference, ConnectorMappedPinEvidence]
 
 
 class ConnectorUnreviewedPinEvidence(StrictModel):

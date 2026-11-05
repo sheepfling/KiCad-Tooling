@@ -16,7 +16,7 @@ from .hwrepo.connector_coverage_models import (
     ConnectorCoverageReport,
     ConnectorInventoryReview,
 )
-from .hwrepo.connector_pins import connector_candidate_references
+from .hwrepo.connector_identity import connector_candidate_references
 from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import write_model
 from .hwrepo.electrical import selected_config

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 
-from .component_bjt_symbols import basic_bjt_role_numbers
+from .component_bjt_symbols import BjtPinRoleNumbers, basic_bjt_role_numbers
 from .design_lint_component_terminal_candidate_evidence import (
     ComponentTerminalCandidate,
     ComponentTerminalSameNetEvidence,
@@ -18,7 +18,7 @@ BASE_COLLECTOR_RULE_ID = "component.bjt_base_collector_same_net"
 
 def _fitted_bjt_role_mappings(
     observed: NetlistContract,
-) -> Iterator[tuple[str, str, Mapping[str, str], Mapping[str, list[str]]]]:
+) -> Iterator[tuple[str, str, BjtPinRoleNumbers, Mapping[str, list[str]]]]:
     fitted = {reference.casefold() for reference in observed.components}
     dnp = {reference.casefold() for reference in observed.dnp_components}
     inventories = {
@@ -57,8 +57,8 @@ def bjts_with_collector_emitter_on_same_net(
     """Review fitted, supported basic BJTs with collector and emitter on one net."""
     findings: list[ComponentTerminalCandidate] = []
     for reference, symbol, roles, nets_by_pin in _fitted_bjt_role_mappings(observed):
-        collector_pin = f"{reference}.{roles['collector']}"
-        emitter_pin = f"{reference}.{roles['emitter']}"
+        collector_pin = f"{reference}.{roles.collector}"
+        emitter_pin = f"{reference}.{roles.emitter}"
         collector_nets = nets_by_pin.get(collector_pin.casefold(), ())
         emitter_nets = nets_by_pin.get(emitter_pin.casefold(), ())
         if len(collector_nets) != 1 or len(emitter_nets) != 1:
@@ -99,8 +99,8 @@ def bjts_with_base_emitter_on_same_net(
     """Review fitted, supported basic BJTs with base and emitter on one net."""
     findings: list[ComponentTerminalCandidate] = []
     for reference, symbol, roles, nets_by_pin in _fitted_bjt_role_mappings(observed):
-        base_pin = f"{reference}.{roles['base']}"
-        emitter_pin = f"{reference}.{roles['emitter']}"
+        base_pin = f"{reference}.{roles.base}"
+        emitter_pin = f"{reference}.{roles.emitter}"
         base_nets = nets_by_pin.get(base_pin.casefold(), ())
         emitter_nets = nets_by_pin.get(emitter_pin.casefold(), ())
         if len(base_nets) != 1 or len(emitter_nets) != 1:
@@ -141,8 +141,8 @@ def bjts_with_base_collector_on_same_net(
     """Review fitted, supported basic BJTs with base and collector on one net."""
     findings: list[ComponentTerminalCandidate] = []
     for reference, symbol, roles, nets_by_pin in _fitted_bjt_role_mappings(observed):
-        base_pin = f"{reference}.{roles['base']}"
-        collector_pin = f"{reference}.{roles['collector']}"
+        base_pin = f"{reference}.{roles.base}"
+        collector_pin = f"{reference}.{roles.collector}"
         base_nets = nets_by_pin.get(base_pin.casefold(), ())
         collector_nets = nets_by_pin.get(collector_pin.casefold(), ())
         if len(base_nets) != 1 or len(collector_nets) != 1:

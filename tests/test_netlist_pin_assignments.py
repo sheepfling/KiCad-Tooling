@@ -2,17 +2,22 @@
 
 from __future__ import annotations
 
-from typing import get_type_hints
+from collections.abc import MutableMapping
+from types import MappingProxyType
+from typing import cast, get_type_hints
 
 import pytest
 
 from kicad_tooling.hwrepo.models import NetlistContract
 from kicad_tooling.hwrepo.netlist_pin_assignments import (
+    NetlistPinNetAssignmentsByPin,
     NetlistPinNetIndex,
     netlist_pin_inventory_contains,
     netlist_pin_net_assignments,
     netlist_pin_net_index,
 )
+
+pytestmark = [pytest.mark.design_lint, pytest.mark.evidence_lint]
 
 
 def test_pin_net_index_api_uses_its_named_read_only_contract() -> None:
@@ -43,7 +48,12 @@ def test_occurrence_index_preserves_duplicate_assignments_and_native_order() -> 
         nets={"z_NET": ("U1.1",), "A_NET": ("u1.1", "U1.1")},
     )
 
-    assert netlist_pin_net_assignments(observed) == {"u1.1": ("z_NET", "A_NET", "A_NET")}
+    assignments = netlist_pin_net_assignments(observed)
+    assert get_type_hints(netlist_pin_net_assignments)["return"] == NetlistPinNetAssignmentsByPin
+    assert isinstance(assignments, MappingProxyType)
+    assert assignments == {"u1.1": ("z_NET", "A_NET", "A_NET")}
+    with pytest.raises(TypeError):
+        cast(MutableMapping[str, tuple[str, ...]], assignments)["u2.1"] = ("OTHER_NET",)
 
 
 def test_inventory_lookup_distinguishes_missing_inventory_from_missing_pin() -> None:

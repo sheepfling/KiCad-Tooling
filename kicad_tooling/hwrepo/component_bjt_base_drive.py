@@ -52,7 +52,7 @@ def bjts_with_direct_output_base_drive(
         if role_to_number is None:
             continue
 
-        base_pin = f"{reference}.{role_to_number['base']}"
+        base_pin = f"{reference}.{role_to_number.base}"
         base_assignments = nets_by_pin.get(base_pin.casefold(), ())
         if len(base_assignments) != 1:
             continue

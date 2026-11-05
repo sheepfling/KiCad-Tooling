@@ -6,6 +6,7 @@ import ast
 
 import pytest
 
+from kicad_tooling.hwrepo import connector_peer_pin_compat, connector_pins
 from kicad_tooling.hwrepo.connector_comparison_scope_types import (
     ConnectorComparisonScope,
     connector_comparison_scopes_by_reference,
@@ -75,9 +76,10 @@ def test_scope_record_stays_in_its_theme_owned_module() -> None:
     assert fields == {"group", "basis"}
 
 
-def test_public_connector_facade_is_the_only_legacy_tuple_adapter() -> None:
-    path = HWREPO / "connector_pins.py"
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
+def test_public_connector_facade_reexports_the_scoped_compatibility_adapter() -> None:
+    facade = HWREPO / "connector_pins.py"
+    adapter = HWREPO / "connector_peer_pin_compat.py"
+    tree = ast.parse(adapter.read_text(encoding="utf-8"), filename=adapter.name)
     aliases = {
         node.target.id: ast.unparse(node.value)
         for node in tree.body
@@ -86,9 +88,38 @@ def test_public_connector_facade_is_the_only_legacy_tuple_adapter() -> None:
         and node.value is not None
     }
 
-    assert line_count(path) < 220
+    assert line_count(facade) < 100
+    assert line_count(adapter) < IMPLEMENTATION_MAX_LINES
     assert "tuple[str, str]" in aliases["ConnectorComparisonScopeInputValue"]
     assert any(
         isinstance(node, ast.FunctionDef) and node.name == "_typed_comparison_scopes"
         for node in tree.body
     )
+    facade_tree = ast.parse(facade.read_text(encoding="utf-8"), filename=facade.name)
+    assert any(
+        isinstance(node, ast.ImportFrom)
+        and node.module == "connector_peer_pin_compat"
+        and any(alias.name == "similar_connector_pin_groups" for alias in node.names)
+        for node in facade_tree.body
+    )
+    for name in (
+        "similar_connector_pin_groups",
+        "connector_peer_pin_assignment_divergences",
+        "connector_peer_pin_assignment_outliers",
+        "connector_peer_pin_heuristic_coverage",
+    ):
+        assert getattr(connector_pins, name) is getattr(connector_peer_pin_compat, name)
+
+
+def test_internal_connector_services_import_the_theme_owner_directly() -> None:
+    service_paths = (
+        HWREPO / "native_report_parsing.py",
+        HWREPO.parent / "ci_hosted_connector_inventory.py",
+    )
+    for path in service_paths:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
+        imports = {
+            (node.level, node.module) for node in tree.body if isinstance(node, ast.ImportFrom)
+        }
+        assert not any(module.endswith("connector_pins") for _, module in imports if module)
+        assert any(module.endswith("connector_identity") for _, module in imports if module)

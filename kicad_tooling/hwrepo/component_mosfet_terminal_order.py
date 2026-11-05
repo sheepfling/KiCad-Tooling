@@ -60,8 +60,8 @@ def mosfets_with_unusual_drain_source_rail_order(
         if role_to_number is None:
             continue
 
-        drain_pin = f"{reference}.{role_to_number['drain']}"
-        source_pin = f"{reference}.{role_to_number['source']}"
+        drain_pin = f"{reference}.{role_to_number.drain}"
+        source_pin = f"{reference}.{role_to_number.source}"
         drain_assignments = nets_by_pin.get(drain_pin.casefold(), ())
         source_assignments = nets_by_pin.get(source_pin.casefold(), ())
         if len(drain_assignments) != 1 or len(source_assignments) != 1:

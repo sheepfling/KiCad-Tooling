@@ -55,12 +55,12 @@ class BjtTerminalOrderEvidence:
         validate_named_rail_terminal(
             self.observed,
             self.collector,
-            expected_pin=f"{self.reference}.{roles['collector']}",
+            expected_pin=f"{self.reference}.{roles.collector}",
         )
         validate_named_rail_terminal(
             self.observed,
             self.emitter,
-            expected_pin=f"{self.reference}.{roles['emitter']}",
+            expected_pin=f"{self.reference}.{roles.emitter}",
         )
         unusual = (
             potential_is_lower(self.collector.potential, self.emitter.potential)
@@ -102,12 +102,12 @@ class MosfetTerminalOrderEvidence:
         validate_named_rail_terminal(
             self.observed,
             self.drain,
-            expected_pin=f"{self.reference}.{roles['drain']}",
+            expected_pin=f"{self.reference}.{roles.drain}",
         )
         validate_named_rail_terminal(
             self.observed,
             self.source,
-            expected_pin=f"{self.reference}.{roles['source']}",
+            expected_pin=f"{self.reference}.{roles.source}",
         )
         unusual = (
             potential_is_lower(self.drain.potential, self.source.potential)

@@ -3,7 +3,21 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from types import MappingProxyType
+from typing import Literal, TypeAlias
+
+BjtTerminalRole: TypeAlias = Literal["base", "collector", "emitter"]
+
+
+@dataclass(frozen=True, slots=True)
+class BjtPinRoleNumbers:
+    """Native pin numbers for the complete roles of one supported BJT."""
+
+    base: str
+    collector: str
+    emitter: str
+
 
 SUPPORTED_BASIC_BJT_SYMBOLS = frozenset(
     f"transistor_bjt:q_{family}_{order}"
@@ -11,7 +25,7 @@ SUPPORTED_BASIC_BJT_SYMBOLS = frozenset(
     for order in ("bce", "bec", "cbe", "ceb", "ebc", "ecb")
 )
 
-_FUNCTION_ROLES = MappingProxyType(
+_FUNCTION_ROLES: Mapping[str, BjtTerminalRole] = MappingProxyType(
     {
         "b": "base",
         "base": "base",
@@ -28,7 +42,7 @@ def basic_bjt_role_numbers(
     symbol: str,
     pin_numbers: Sequence[str],
     pin_functions: Mapping[str, str],
-) -> dict[str, str] | None:
+) -> BjtPinRoleNumbers | None:
     """Map complete native B/C/E roles for an exact supported basic BJT symbol."""
     numbers = tuple(pin_numbers)
     if (
@@ -39,7 +53,7 @@ def basic_bjt_role_numbers(
         return None
 
     functions = {pin.casefold(): value.strip().casefold() for pin, value in pin_functions.items()}
-    roles: dict[str, str] = {}
+    roles: dict[BjtTerminalRole, str] = {}
     for number in numbers:
         role = _FUNCTION_ROLES.get(functions.get(f"{reference}.{number}".casefold(), ""))
         if role is None:
@@ -47,4 +61,10 @@ def basic_bjt_role_numbers(
         if role in roles:
             return None
         roles[role] = number
-    return roles if set(roles) == {"base", "collector", "emitter"} else None
+    if set(roles) != {"base", "collector", "emitter"}:
+        return None
+    return BjtPinRoleNumbers(
+        base=roles["base"],
+        collector=roles["collector"],
+        emitter=roles["emitter"],
+    )

@@ -28,6 +28,7 @@ _RULE_FUNCTIONS = {
     "mapped_shield_contacts_on_return_nets",
     "mapped_shield_contacts_on_supply_rails",
 }
+_MAPPED_PIN_EVIDENCE_ALIAS = "ConnectorMappedPinEvidenceByComponentPin"
 
 
 def test_mapped_interface_evidence_has_a_focused_owner() -> None:
@@ -58,6 +59,38 @@ def test_mapped_interface_evidence_has_a_focused_owner() -> None:
         isinstance(node, ast.ClassDef) and node.name == "MappedInterfacePinCandidate"
         for node in tree.body
     )
+
+
+def test_connector_pin_evidence_map_uses_its_theme_owned_alias() -> None:
+    owner = HWREPO / "connector_coverage_models.py"
+    owner_tree = ast.parse(owner.read_text(encoding="utf-8"), filename=owner.name)
+    alias = next(
+        node
+        for node in owner_tree.body
+        if isinstance(node, ast.AnnAssign)
+        and isinstance(node.target, ast.Name)
+        and node.target.id == _MAPPED_PIN_EVIDENCE_ALIAS
+    )
+
+    assert isinstance(alias.annotation, ast.Name)
+    assert alias.annotation.id == "TypeAlias"
+    assert line_count(owner) < IMPLEMENTATION_MAX_LINES
+
+    for module in HWREPO.glob("*.py"):
+        if module == owner:
+            continue
+        tree = ast.parse(module.read_text(encoding="utf-8"), filename=module.name)
+        if not any(
+            isinstance(node, ast.Name) and node.id == _MAPPED_PIN_EVIDENCE_ALIAS
+            for node in ast.walk(tree)
+        ):
+            continue
+        assert any(
+            isinstance(node, ast.ImportFrom)
+            and node.module == "connector_coverage_models"
+            and any(alias.name == _MAPPED_PIN_EVIDENCE_ALIAS for alias in node.names)
+            for node in tree.body
+        ), module.name
 
 
 def test_all_nine_mapped_interface_rules_use_the_typed_candidate_route() -> None:

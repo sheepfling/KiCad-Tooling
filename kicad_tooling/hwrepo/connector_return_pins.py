@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Literal, TypeAlias
 
-from .connector_coverage_models import ConnectorMappedPinEvidence
+from .connector_coverage_models import ConnectorMappedPinEvidenceByComponentPin
 from .connector_identity import (
     connector_candidate_references,
     is_named_supply_function,
@@ -72,7 +72,7 @@ class _UnconnectedGenericPowerConnectorPin:
 def unconnected_named_connector_pins(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
-    reviewed_connector_pins: Mapping[str, ConnectorMappedPinEvidence] | None = None,
+    reviewed_connector_pins: ConnectorMappedPinEvidenceByComponentPin | None = None,
 ) -> tuple[UnconnectedNamedConnectorPin, ...]:
     """Find unassigned native or project-mapped connector supply/return pins."""
     reviewed_connector_pins = reviewed_connector_pins or {}
@@ -219,7 +219,7 @@ def unconnected_generic_power_output_connector_pins(
 def connectors_without_connected_return(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
-    reviewed_connector_pins: Mapping[str, ConnectorMappedPinEvidence] | None = None,
+    reviewed_connector_pins: ConnectorMappedPinEvidenceByComponentPin | None = None,
 ) -> tuple[ConnectorReturnCoverage, ...]:
     """Flag multi-conductor connectors with no connected native or mapped return."""
     reviewed_connector_pins = reviewed_connector_pins or {}

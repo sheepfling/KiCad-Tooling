@@ -3,10 +3,21 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Literal, TypeAlias
 
 MosfetTerminalRole: TypeAlias = Literal["drain", "gate", "source"]
+
+
+@dataclass(frozen=True, slots=True)
+class MosfetPinRoleNumbers:
+    """Native pin numbers for the complete roles of one supported MOSFET."""
+
+    drain: str
+    gate: str
+    source: str
+
 
 SUPPORTED_THREE_TERMINAL_MOSFET_SYMBOLS = frozenset(
     {
@@ -59,7 +70,7 @@ def mosfet_terminal_role_numbers(
     symbol: str,
     pin_numbers: Sequence[str],
     pin_functions: Mapping[str, str],
-) -> dict[str, str] | None:
+) -> MosfetPinRoleNumbers | None:
     """Map complete native D/G/S roles for an exact supported three-terminal MOSFET."""
     numbers = tuple(pin_numbers)
     if (
@@ -70,7 +81,7 @@ def mosfet_terminal_role_numbers(
         return None
 
     functions = {pin.casefold(): value for pin, value in pin_functions.items()}
-    roles: dict[str, str] = {}
+    roles: dict[MosfetTerminalRole, str] = {}
     for number in numbers:
         role = mosfet_terminal_role(functions.get(f"{reference}.{number}".casefold()))
         if role is None:
@@ -78,4 +89,10 @@ def mosfet_terminal_role_numbers(
         if role in roles:
             return None
         roles[role] = number
-    return roles if set(roles) == {"drain", "gate", "source"} else None
+    if set(roles) != {"drain", "gate", "source"}:
+        return None
+    return MosfetPinRoleNumbers(
+        drain=roles["drain"],
+        gate=roles["gate"],
+        source=roles["source"],
+    )
