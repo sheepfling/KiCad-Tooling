@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import Literal
 
+from .ci_hosted_usb_composite_protection_requirements import (
+    composite_inline_protection_map,
+)
 from .ci_hosted_usb_series_protection_requirements import (
     usb_series_protection_shunt_requirements,
 )
@@ -429,6 +432,7 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
     inline_protection_shunt_map = UsbDataPathMap.model_validate(
         {**inline_component_map.model_dump(), "interfaces": (inline_combined_interface,)}
     )
+    composite_inline_map = composite_inline_protection_map(inline_component_map)
     requirements = {
         "integrated-direct": direct_map,
         "external-series": series_map,
@@ -455,6 +459,8 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
         "protection-shunt-pin-fault": protection_shunt_split_map,
         "inline-protection-shunt-control": inline_protection_shunt_map,
         "inline-protection-shunt-fault": inline_protection_shunt_map,
+        "composite-inline-protection-control": composite_inline_map,
+        "composite-inline-protection-fault": composite_inline_map,
     }
     requirements.update(usb_series_protection_shunt_requirements(series_map))
 

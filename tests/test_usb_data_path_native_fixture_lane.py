@@ -27,6 +27,8 @@ pytestmark = [
     ("project", "version"),
     (("controller", "10.0.0"), ("raspberry-pi-status-led", "10.0.5")),
 )
+@pytest.mark.design_lint_rule(rule_id="bus.usb_data_path_mismatch")
+@pytest.mark.design_lint_rule(rule_id="bus.usb_peer_reference_review")
 def test_native_usb_data_path_fixture_lane_is_repeatable(
     hosted_reference_root: Path, project: str, version: str
 ) -> None:
@@ -67,6 +69,8 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "series-protection-shunt-split-reference": "3f07e352bb2fb2ee9616df11ddfa153e47ebc251bde5aa75acf7e779426ccdb0",
         "series-protection-shunt-common-reference": "775e658385917f5e2e772643167fa1514b8a080445c8b9da4ceb5dee5f32d8b6",
         "series-protection-shunt-pin-fault": "b9fa9a9430f20aecf1b4a8f4e8752483eee1dca87cd11b95dad1fc951a0bd7cd",
+        "composite-inline-protection-control": "cce0c203ea0eb8a04a186526c8c9396050e311018f732c7b6e33dbe8f6ea8ad6",
+        "composite-inline-protection-fault": "02868a8ff51f8a942bd6719ff0bde57776b3d92aac75e0f225b71ab189e0dcb8",
     }
     root = hosted_reference_root
     config = selected_config(root, project)
@@ -112,6 +116,8 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-data-path-fixture/series-protection-shunt-split-reference",
         "usb-data-path-fixture/series-protection-shunt-common-reference",
         "usb-data-path-fixture/series-protection-shunt-pin-fault",
+        "usb-data-path-fixture/composite-inline-protection-control",
+        "usb-data-path-fixture/composite-inline-protection-fault",
     }
     unmapped_inline = results["usb-data-path-fixture/inline-component-unmapped-coverage"]
     assert unmapped_inline["status"] == "PASS"
@@ -141,6 +147,7 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "external-series",
         "external-series-reference-bond-control",
         "inline-component-control",
+        "composite-inline-protection-control",
         "inline-component-peer-reference-bond-control",
         "protection-shunt-common-reference",
         "series-protection-shunt-common-reference",
@@ -313,6 +320,8 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "series-protection-shunt-split-reference",
         "series-protection-shunt-common-reference",
         "series-protection-shunt-pin-fault",
+        "composite-inline-protection-control",
+        "composite-inline-protection-fault",
     ):
         result = results[f"usb-data-path-fixture/{case}"]
         assert result["kicad_version"] == version

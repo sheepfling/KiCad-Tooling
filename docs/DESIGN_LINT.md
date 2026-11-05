@@ -2277,6 +2277,26 @@ and D− and identify each resistor's native identity and pin-to-net path. Mixed
 inline-plus-series paths, additional series components, and other multi-hop
 paths remain unsupported.
 
+One component may serve both as the inline data path and as its mapped
+protection device. In that case, use the same reference, symbol, footprint,
+complete pin inventory, and pin assignments in both maps. List both component
+pins on each data line: one on the connector-side net and one on the PHY-side
+net. The composite `data_pins` entry therefore has four records:
+
+```json
+[
+  {"pin": "U2.1", "line": "D+", "net": "USB_DP_PORT"},
+  {"pin": "U2.2", "line": "D+", "net": "USB_DP_PHY"},
+  {"pin": "U2.3", "line": "D-", "net": "USB_DM_PORT"},
+  {"pin": "U2.4", "line": "D-", "net": "USB_DM_PHY"}
+]
+```
+
+The checker compares the complete schematic pin map and uses the inline-path
+finding to localize a mismatch once both roles share one component. This
+declares reviewed net assignments; it does not prove that the device's internal
+circuit provides pass-through protection or matches its datasheet.
+
 For a direct D+/D− interface whose reference decision has also been reviewed,
 add the endpoint pin and net assignments to the same interface entry. Both
 endpoints need at least one explicit reference pin; multiple pins per endpoint

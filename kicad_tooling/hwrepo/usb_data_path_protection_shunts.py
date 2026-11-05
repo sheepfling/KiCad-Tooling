@@ -15,6 +15,13 @@ def protection_shunt_mismatches(
     """Return one exact-map fault for each miswired mapped protection component."""
     mismatches: list[UsbDataPathMismatch] = []
     for requirement in interface.protection_shunts:
+        if (
+            interface.inline_component is not None
+            and requirement.reference.casefold() == interface.inline_component.reference.casefold()
+        ):
+            # The composite map requires identical complete pin inventories and assignments.
+            # The inline-path check already reports those same faults with line localization.
+            continue
         check = check_usb_component_pin_map(requirement, observed)
         issues = (*check.component_issues, *(message for _pin, message in check.pin_issues))
         if not issues:

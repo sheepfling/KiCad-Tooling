@@ -12,6 +12,12 @@ def validate_usb_protection_shunt_fixture_mismatches(
     case: str, mismatches: tuple[UsbDataPathMismatch, ...]
 ) -> bool:
     """Accept only the exact mapped-pin mismatches authored by shunt fault fixtures."""
+    if case == "composite-inline-protection-fault":
+        if {item.line for item in mismatches} != {"D+", "D-"} or not all(
+            any("U2.5 is on unconnected" in issue for issue in item.issues) for item in mismatches
+        ):
+            raise ValueError("Native composite inline-protection fault omitted exact pin evidence")
+        return True
     expected_issue = {
         "protection-shunt-pin-fault": "U6.2 is on USB_DP",
         "inline-protection-shunt-fault": "U6.3 is on USB_DM_SHUNT_FAULT; expected USB_DM_PHY",
@@ -29,7 +35,7 @@ def validate_usb_protection_shunt_fixture_mismatches(
 def validate_usb_protection_shunt_fixture_reports(
     reports: Mapping[tuple[str, str], DesignLintReport],
 ) -> None:
-    """Require split-reference, common-reference, and mapped-pin native outcomes."""
+    """Require separate and composite protection-map native outcomes."""
     split = reports[("protection-shunt-split-reference", "first")]
     peer_findings = tuple(
         item for item in split.findings if item.rule_id == "bus.usb_peer_reference_review"
@@ -99,6 +105,44 @@ def validate_usb_protection_shunt_fixture_reports(
         or inline_fault.usb_peer_reference_coverage.supported_data_path_count != 0
     ):
         raise ValueError("Native combined inline-path and mapped-shunt fault was not localized")
+
+    composite_control = reports[("composite-inline-protection-control", "first")]
+    composite_coverage = composite_control.usb_peer_reference_coverage
+    composite_path_entries = (
+        composite_coverage.path_entries if composite_coverage is not None else None
+    )
+    composite_data_path = composite_path_entries[0].data_path if composite_path_entries else None
+    composite_shunts = (
+        composite_data_path.protection_shunts if composite_data_path is not None else ()
+    )
+    if (
+        any(
+            item.rule_id in {"bus.usb_peer_reference_review", "bus.usb_data_path_mismatch"}
+            for item in composite_control.findings
+        )
+        or composite_coverage is None
+        or composite_coverage.supported_data_path_count != 1
+        or not composite_shunts
+        or composite_shunts[0].reference != "U2"
+        or len(composite_shunts[0].data_pins) != 4
+    ):
+        raise ValueError("Native composite inline-protection control was not supported exactly")
+
+    composite_fault = reports[("composite-inline-protection-fault", "first")]
+    composite_faults = tuple(
+        item for item in composite_fault.findings if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    if (
+        composite_fault.status != "REVIEW"
+        or {item.evidence.get("line", ()) for item in composite_faults} != {("D+",), ("D-",)}
+        or not all(
+            any("U2.5 is on unconnected" in issue for issue in item.evidence.get("issues", ()))
+            for item in composite_faults
+        )
+        or composite_fault.usb_peer_reference_coverage is None
+        or composite_fault.usb_peer_reference_coverage.supported_data_path_count != 0
+    ):
+        raise ValueError("Native composite inline-protection fault lost its exact pin diagnosis")
 
 
 def validate_usb_series_protection_shunt_fixture_reports(

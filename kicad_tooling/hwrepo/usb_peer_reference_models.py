@@ -107,15 +107,17 @@ class UsbPeerDataProtectionShuntCoverage(StrictModel):
     reference: Identifier
     symbol: NonEmptyText
     footprint: str
-    data_pins: Annotated[tuple[UsbPeerDataProtectionShuntPinCoverage, ...], Field(min_length=2)]
+    data_pins: Annotated[
+        tuple[UsbPeerDataProtectionShuntPinCoverage, ...], Field(min_length=2, max_length=4)
+    ]
     pin_assignments: Annotated[tuple[NonEmptyText, ...], Field(min_length=3)]
 
     @model_validator(mode="after")
     def assignments_match_component(self) -> UsbPeerDataProtectionShuntCoverage:
         if (
-            {item.line for item in self.data_pins} != {"D+", "D-"}
-            or len(self.data_pins) != 2
-            or len({item.pin.casefold() for item in self.data_pins}) != 2
+            {line: sum(item.line == line for item in self.data_pins) for line in ("D+", "D-")}
+            not in ({"D+": 1, "D-": 1}, {"D+": 2, "D-": 2})
+            or len({item.pin.casefold() for item in self.data_pins}) != len(self.data_pins)
             or any(
                 item.pin.rsplit(".", 1)[0].casefold() != self.reference.casefold()
                 for item in self.data_pins

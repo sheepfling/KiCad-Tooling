@@ -20,7 +20,10 @@ from kicad_tooling.hwrepo.models import (
     ProjectTestContract,
 )
 from tests.mcp_parity_support import McpParityHarness, run_mcp_parity
-from tests.usb_inline_protection_shunt_support import inline_protection_shunt_map
+from tests.usb_inline_protection_shunt_support import (
+    composite_inline_protection_test_map,
+    inline_protection_shunt_map,
+)
 from tests.usb_protection_shunt_support import series_protection_shunt_map
 
 pytestmark = [
@@ -285,6 +288,74 @@ class _UsbInlineProtectionShuntParityCases(McpParityHarness):
             )
             self.assertEqual(fault.usb_peer_reference_coverage.supported_data_path_count, 0)
 
+    async def _case_test_composite_inline_protection_parity(self) -> None:
+        """Compare one composite inline-protection map through CLI and MCP."""
+        native = self.native_evidence()
+        shutil.copyfile(
+            Path(__file__).parent
+            / "fixtures/design_lint/usb-data-path-native/inline-protection-control.netlist.xml",
+            native.parent / "netlist.xml",
+        )
+        self.rehash_native_netlist(native)
+        manifest_path = self.island / "project.json"
+        manifest = read_model(manifest_path, ProjectManifest)
+        write_model(
+            manifest_path,
+            manifest.model_copy(
+                update={
+                    "component_identity": ComponentIdentity(required=False, part_ids=()),
+                    "interfaces": (),
+                    "connector_reviews": (),
+                    "connector_inventory_review": ConnectorInventoryReview(
+                        basis="Synthetic parity fixture reviewed its USB connector inventory"
+                    ),
+                }
+            ),
+        )
+        contract_path = self.island / "tests/contract.json"
+        contract = read_model(contract_path, ProjectTestContract)
+        write_model(
+            contract_path,
+            contract.model_copy(
+                update={
+                    "design_lint": DesignLintPolicy(
+                        usb_data_path_map=composite_inline_protection_test_map()
+                    )
+                },
+            ),
+        )
+        async with Client(create_server(self.root), mode="legacy") as client:
+            cli = await self.cli(
+                "kicad_tooling.design_lint",
+                DesignLintReport,
+                "--project",
+                "controller",
+                "--native-summary",
+                str(native),
+                expected_exit=1,
+            )
+            mcp = await self.call(
+                client,
+                "inspect_design_lint",
+                DesignLintReport,
+                {
+                    "project_id": "controller",
+                    "native_summary": native.relative_to(self.root).as_posix(),
+                },
+            )
+        self.assertEqual(cli, mcp)
+        self.assertFalse(
+            any(item.rule_id == "bus.usb_data_path_mismatch" for item in mcp.findings),
+            mcp.findings,
+        )
+        self.assertEqual(mcp.usb_peer_reference_coverage.supported_data_path_count, 1)
+        self.assertEqual(
+            mcp.usb_peer_reference_coverage.path_entries[0]
+            .data_path.protection_shunts[0]
+            .reference,
+            "U2",
+        )
+
 
 def test_combined_inline_path_and_shunt_parity() -> None:
     run_mcp_parity(
@@ -297,4 +368,13 @@ def test_series_path_shunt_cli_mcp_parity() -> None:
     run_mcp_parity(
         _UsbInlineProtectionShuntParityCases,
         "_case_test_series_path_shunt_cli_mcp_parity",
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.usb_data_path_mismatch")
+@pytest.mark.design_lint_rule(rule_id="bus.usb_peer_reference_review")
+def test_composite_inline_protection_cli_mcp_parity() -> None:
+    run_mcp_parity(
+        _UsbInlineProtectionShuntParityCases,
+        "_case_test_composite_inline_protection_parity",
     )

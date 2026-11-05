@@ -46,8 +46,9 @@ HOSTED_PCB_GEOMETRY_MODULES = (
 HOSTED_USB_DATA_PATH_MODULES = (
     "ci_hosted_usb_data_paths.py",
     "ci_hosted_usb_data_path_cases.py",
+    "ci_hosted_usb_requirements.py",
+    "ci_hosted_usb_composite_protection_requirements.py",
 )
-HOSTED_USB_REQUIREMENTS_MODULE = "ci_hosted_usb_requirements.py"
 HOSTED_POWER_PATH_MODULES = (
     "ci_hosted_power_paths.py",
     "ci_hosted_power_path_native_evidence.py",
@@ -120,7 +121,6 @@ def test_pcb_geometry_hosted_fixtures_stay_split_by_lint_theme() -> None:
 def test_hosted_fixture_lanes_stay_theme_scoped() -> None:
     modules = (
         *(REPO_ROOT / "kicad_tooling" / name for name in HOSTED_USB_DATA_PATH_MODULES),
-        REPO_ROOT / "kicad_tooling" / HOSTED_USB_REQUIREMENTS_MODULE,
         *(REPO_ROOT / "kicad_tooling" / name for name in HOSTED_POWER_PATH_MODULES),
     )
     coordinator_text = (REPO_ROOT / "kicad_tooling" / "ci_hosted.py").read_text(encoding="utf-8")
@@ -130,6 +130,23 @@ def test_hosted_fixture_lanes_stay_theme_scoped() -> None:
     assert "from .ci_hosted_power_paths import power_path_fixture_lane" in coordinator_text
     assert "def usb_data_path_fixture_lane(" not in coordinator_text
     assert "def power_path_fixture_lane(" not in coordinator_text
+
+
+def test_composite_usb_hosted_map_builder_has_a_focused_owner() -> None:
+    helper = REPO_ROOT / "kicad_tooling" / "ci_hosted_usb_composite_protection_requirements.py"
+    requirements = REPO_ROOT / "kicad_tooling" / "ci_hosted_usb_requirements.py"
+    tree = ast.parse(helper.read_text(encoding="utf-8"), filename=helper.name)
+    functions = {
+        node.name
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+    }
+
+    assert _line_count(helper) < IMPLEMENTATION_MAX_LINES
+    assert "composite_inline_protection_map" in functions
+    assert "from .ci_hosted_usb_composite_protection_requirements import" in requirements.read_text(
+        encoding="utf-8"
+    )
 
 
 def test_component_rating_hosted_fixture_is_split_by_theme() -> None:

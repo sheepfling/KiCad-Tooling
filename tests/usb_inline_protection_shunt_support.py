@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from kicad_tooling.ci_hosted_usb_composite_protection_requirements import (
+    composite_inline_protection_map as build_composite_inline_protection_map,
+)
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 from kicad_tooling.hwrepo.usb_data_path_component_models import (
     UsbDataPathInlinePinRequirement,
@@ -39,6 +42,11 @@ def inline_protection_shunt_map() -> UsbDataPathMap:
         {**path_map.interfaces[0].model_dump(), "protection_shunts": (shunt,)}
     )
     return UsbDataPathMap.model_validate({**path_map.model_dump(), "interfaces": (interface,)})
+
+
+def composite_inline_protection_test_map() -> UsbDataPathMap:
+    """Build the shared exact composite map for synthetic interface regressions."""
+    return build_composite_inline_protection_map(usb_inline_component_map())
 
 
 def inline_protection_shunt_netlist(*, wrong_dminus_side: bool = False) -> NetlistContract:

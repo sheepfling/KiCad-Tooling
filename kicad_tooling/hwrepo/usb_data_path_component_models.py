@@ -50,7 +50,7 @@ class UsbDataPathProtectionShuntRequirement(StrictModel):
     expected_footprint: NonEmptyText
     data_pins: Annotated[
         tuple[UsbDataPathProtectionShuntDataPinRequirement, ...],
-        Field(min_length=2, max_length=2),
+        Field(min_length=2, max_length=4),
     ]
     pins: Annotated[tuple[UsbDataPathInlinePinRequirement, ...], Field(min_length=3)]
 
@@ -67,8 +67,13 @@ class UsbDataPathProtectionShuntRequirement(StrictModel):
             raise ValueError("USB protection-shunt data pins must belong to the declared component")
         if len(set(data_pin_ids)) != len(data_pin_ids):
             raise ValueError("USB protection-shunt data pins must be unique")
-        if {item.line for item in self.data_pins} != {"D+", "D-"}:
-            raise ValueError("USB protection shunts must map exactly one D+ and one D- pin")
+        line_counts = {
+            line: sum(item.line == line for item in self.data_pins) for line in ("D+", "D-")
+        }
+        if line_counts not in ({"D+": 1, "D-": 1}, {"D+": 2, "D-": 2}):
+            raise ValueError(
+                "USB protection shunts must map one pin per data line, or both sides of an inline pair"
+            )
         if not set(data_pin_ids) <= set(mapped_pin_ids):
             raise ValueError("USB protection-shunt pin inventory must include every data pin")
         pin_requirements = {item.pin.casefold(): item for item in self.pins}

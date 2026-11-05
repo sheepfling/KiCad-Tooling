@@ -10,6 +10,8 @@ import pytest
 from kicad_tooling.hwrepo import models as shared_models
 from kicad_tooling.hwrepo import (
     usb_data_path_component_models,
+    usb_data_path_composite_models,
+    usb_data_path_map_validation,
     usb_data_path_models,
     usb_reference_pin_models,
     usb_superspeed_reference_models,
@@ -207,6 +209,30 @@ def test_protection_shunt_checks_have_bounded_theme_owners() -> None:
         "kicad_tooling/hwrepo/usb_superspeed_reference_contract.py#usb_superspeed_reference_mismatches"
         in rule["implementation_refs"]
     )
+
+
+def test_composite_usb_map_validation_has_focused_theme_owners() -> None:
+    owners = (
+        (
+            "usb_data_path_composite_models.py",
+            usb_data_path_composite_models,
+            "validate_composite_inline_protection_map",
+        ),
+        (
+            "usb_data_path_map_validation.py",
+            usb_data_path_map_validation,
+            "validate_usb_data_path_map_references",
+        ),
+    )
+    for filename, module, function_name in owners:
+        owner = HWREPO / filename
+        assert line_count(owner) < IMPLEMENTATION_MAX_LINES
+        assert hasattr(module, function_name)
+        assert getattr(module, function_name).__module__ == module.__name__
+
+    assert "validate_usb_data_path_map_references(self.interfaces, self.superspeed_interfaces)" in (
+        HWREPO / "usb_data_path_models.py"
+    ).read_text(encoding="utf-8")
 
 
 def test_superspeed_reference_contract_has_a_bounded_owner_and_catalog_reference() -> None:
