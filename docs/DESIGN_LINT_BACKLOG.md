@@ -14465,12 +14465,14 @@ control are documented in the
   two rails are electrically common, require joining them, or distinguish
   intentionally isolated channels. A common label is a quiet control. PCB
   continuity and off-board wiring remain outside the check.
-- **Evidence:** Synthetic tests cover `CPU1_GND`/`CPU2_GND`, a common `CPU_GND` control,
-  return-token prefixes, existing CAN/I2C/SPI groups, rule overrides, and deterministic
-  fingerprints. CLI/MCP parity covers the compact fault and common control. Tooling-owned native
-  fault/control schematics are source- hashed and exported twice with digest-pinned KiCad 10.0.0 and
-  10.0.5; the ret-return lane checks exact pin membership and repeatability. Sources and hashes are
-  recorded in the [fixture README](../tests/fixtures/design_lint/four-port-db9-returns/README.md).
+- **Evidence:** Synthetic tests cover `CPU1_GND`/`CPU2_GND`, the common
+  `CPU_GND` control, return-token prefixes, CAN/I2C/SPI groups, rule overrides,
+  and deterministic fingerprints. CLI/MCP parity covers the compact fault
+  and common control. Tooling-owned native fault/control schematics are
+  source-hashed and exported twice with digest-pinned KiCad 10.0.0 and 10.0.5.
+  The ret-return lane checks exact pin membership and repeatability. Fixture
+  sources and hashes are in the
+  [README](../tests/fixtures/design_lint/four-port-db9-returns/README.md).
 - **Focused selection:**
 
   ```sh
@@ -14480,6 +14482,13 @@ control are documented in the
     tests/test_numbered_return_native_fixture_lane.py \
     -m 'design_lint and return_path_lint and design_lint_rule(rule_id="net.numbered_returns")'
   ```
+
+- **Hosted acceptance (2026-11-05):** Tag `v0.5.3rc436` passed run
+  `42040585127`. The tag-scoped command selected
+  `design_lint_rule(rule_id="net.numbered_returns")` with
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. Unit and native fixture checks,
+  type checks, package builds, and installed-wheel verification against a
+  separate project all passed.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
