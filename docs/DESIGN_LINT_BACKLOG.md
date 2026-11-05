@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 260 rules are implemented with synthetic regression coverage.
+The following 261 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 260 active rules.
+The catalog currently contains 261 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -540,6 +540,7 @@ skipped under prerelease policy.
 - `component.led_directly_driven_from_output`
 - `oscillator.output_load_path_mismatch`
 - `power.gpio_to_control_input_voltage_review`
+- `power.open_drain_control_input_pullup_voltage_review`
 - `power.ic_decoupling_below_project_minimum`
 - `power.ic_rail_without_fitted_capacitor`
 - `power.pin_function_net_role_conflict`
@@ -3430,7 +3431,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 260 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 261 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and

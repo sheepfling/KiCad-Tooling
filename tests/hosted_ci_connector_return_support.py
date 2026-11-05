@@ -58,10 +58,12 @@ def assert_base_connector_return_cases(results, version):
     assert compound_fault["lint_status"] == "REVIEW"
     assert set(compound_fault["subjects"].split(";")) == {
         "multiple connector symbols: ground/return",
-        "multiple connector symbols: PWR",
+        "multiple connector symbols: USB_VBUS",
     }
     assert "J1.4=USB_GND" in compound_fault["pin_functions"]
+    assert "J1.1=USB_VBUS" in compound_fault["pin_functions"]
     assert "J2.7=SERIAL_RETURN" in compound_fault["pin_functions"]
+    assert "J2.9=SERIAL_VBUS" in compound_fault["pin_functions"]
     assert "J3.1=USB_SHIELD_GND" in compound_fault["pin_functions"]
     compound_control = results["connector-return-fixture/cross-symbol-compound-control"]
     assert compound_control["lint_status"] == "PASS"

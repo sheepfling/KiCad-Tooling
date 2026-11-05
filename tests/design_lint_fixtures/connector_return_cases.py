@@ -87,9 +87,9 @@ def return_case_contracts() -> dict[str, NetlistContract]:
             },
             pin_functions={
                 "J1.4": "USB_GND",
-                "J1.1": "PWR",
+                "J1.1": "USB_VBUS",
                 "J2.7": "SERIAL_RETURN",
-                "J2.9": "PWR",
+                "J2.9": "SERIAL_VBUS",
                 "J3.1": "USB_SHIELD_GND",
             },
         ),
@@ -107,9 +107,9 @@ def return_case_contracts() -> dict[str, NetlistContract]:
             },
             pin_functions={
                 "J1.4": "USB_GND",
-                "J1.1": "PWR",
+                "J1.1": "USB_VBUS",
                 "J2.7": "SERIAL_RETURN",
-                "J2.9": "PWR",
+                "J2.9": "SERIAL_VBUS",
                 "J3.1": "USB_SHIELD_GND",
             },
         ),

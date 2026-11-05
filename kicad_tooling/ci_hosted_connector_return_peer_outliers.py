@@ -118,11 +118,18 @@ def verify_peer_pin_outlier_cases(ctx: ConnectorReturnFixtureContext):
         compound_fault.status != "REVIEW"
         or {item.rule_id for item in compound_fault.findings} != {"connector.repeated_pin_function"}
         or set(compound_findings)
-        != {"multiple connector symbols: ground/return", "multiple connector symbols: PWR"}
+        != {
+            "multiple connector symbols: ground/return",
+            "multiple connector symbols: USB_VBUS",
+        }
         or dict(compound_findings["multiple connector symbols: ground/return"].evidence)
         != {"J1.4": ("USB_RETURN",), "J2.7": ("SERIAL_RETURN",)}
+        or dict(compound_findings["multiple connector symbols: USB_VBUS"].evidence)
+        != {"J1.1": ("USB_SUPPLY",), "J2.9": ("SERIAL_SUPPLY",)}
         or compound_pin_functions.get("J1.4") != "USB_GND"
+        or compound_pin_functions.get("J1.1") != "USB_VBUS"
         or compound_pin_functions.get("J2.7") != "SERIAL_RETURN"
+        or compound_pin_functions.get("J2.9") != "SERIAL_VBUS"
         or compound_pin_functions.get("J3.1") != "USB_SHIELD_GND"
     ):
         raise ValueError("Mixed-symbol compound return fault lost its exact native pin evidence")

@@ -80,6 +80,23 @@ _POWER_FUNCTIONS = MappingProxyType(
     }
 )
 
+_CONNECTOR_POWER_ROLE_MODIFIERS = frozenset(
+    {
+        "detect",
+        "enable",
+        "feedback",
+        "monitor",
+        "n",
+        "neg",
+        "negative",
+        "minus",
+        "sense",
+        "status",
+        "switch",
+        "switched",
+    }
+)
+
 
 def power_function_key(function: str) -> str | None:
     """Return a narrow supply-pin category, preserving rail identity."""
@@ -88,6 +105,42 @@ def power_function_key(function: str) -> str | None:
         return None
     compact = compact.removeprefix("+")
     return _POWER_FUNCTIONS.get(compact)
+
+
+def connector_power_function_key(function: str) -> str | None:
+    """Return a connector power category only for an unambiguous compound role.
+
+    Compound names such as ``USB_VBUS`` and ``SERIAL_VBUS`` share a review
+    category. Return, shield, polarity, and mode qualifiers keep the name out
+    of this grouping because they can describe a different electrical role.
+    """
+    exact = power_function_key(function)
+    if exact is not None:
+        return exact
+    tokens = tuple(token.casefold() for token in re.split(r"[\s_/]+", function.strip()) if token)
+    categories = tuple(key for token in tokens if (key := power_function_key(token)) is not None)
+    if not categories or is_return_function(function):
+        return None
+    if any(
+        re.sub(r"\d+$", "", token) in (_SHIELD_FUNCTIONS | _CONNECTOR_POWER_ROLE_MODIFIERS)
+        or token.startswith("-")
+        for token in tokens
+    ):
+        return None
+    if len(set(categories)) != 1:
+        return None
+    return categories[0]
+
+
+def _has_compound_power_category(function: str) -> bool:
+    """Return whether a compound function contains any recognized rail token."""
+    if power_function_key(function) is not None:
+        return False
+    return any(
+        power_function_key(token) is not None
+        for token in re.split(r"[\s_/]+", function.strip())
+        if token
+    )
 
 
 def is_named_supply_function(function: str) -> bool:
@@ -139,6 +192,11 @@ def _function_group(function: str, symbol: str) -> tuple[str, str] | None:
     """Compare named roles, excluding generic Pin_N placeholders."""
     if not has_meaningful_pin_function(function):
         return None
+    if _has_compound_power_category(function):
+        power_key = connector_power_function_key(function)
+        if power_key is None:
+            return None
+        return "<connector-power>", power_key
     if is_return_function(function):
         return "<connector-return>", "ground/return"
     power_key = power_function_key(function)

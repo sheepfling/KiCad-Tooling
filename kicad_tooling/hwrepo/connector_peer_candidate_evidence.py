@@ -8,7 +8,7 @@ from types import MappingProxyType
 from typing import TypeAlias
 
 from .connector_coverage_models import ConnectorMappedPinEvidenceByComponentPin
-from .connector_identity import power_function_key
+from .connector_identity import connector_power_function_key
 from .connector_peer_pin_models import SimilarConnectorPinGroup
 from .connector_peer_pin_scan import (
     ConnectorPeerPinAssignmentDivergence,
@@ -53,7 +53,7 @@ def connector_group_message(group: SimilarConnectorPinGroup) -> str:
             "common, bonded, or intentionally isolated; role classification alone does not "
             "require commonality." + scope
         )
-    if power_function_key(group.function) is not None:
+    if connector_power_function_key(group.function) is not None:
         return (
             "Matching connector supply pins use different or missing nets. Review whether they "
             "share a rail, are intentionally separate, or have independent supplies." + scope
