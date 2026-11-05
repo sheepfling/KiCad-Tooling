@@ -17,7 +17,7 @@ from .signal_divider_models import (
     SignalDividerMap,
     SignalDividerRequirement,
 )
-from .voltage_divider_math import divider_tap_fraction
+from .voltage_divider_math import divider_tap_fraction, divider_tolerance_voltage_range
 
 
 def evaluate_signal_divider_requirement(
@@ -153,9 +153,17 @@ def evaluate_signal_divider_requirement(
         nets_valid = False
 
     nominal_values: dict[str, float] = {}
+    tolerance_percents: dict[str, float] = {}
+    tolerance_bases: dict[str, str] = {}
     values_valid = True
     value_out_of_range = False
     for resistor in (requirement.upper_resistor, requirement.lower_resistor):
+        if (
+            resistor.maximum_tolerance_percent is not None
+            and resistor.tolerance_basis is not None
+        ):
+            tolerance_percents[resistor.reference] = resistor.maximum_tolerance_percent
+            tolerance_bases[resistor.reference] = resistor.tolerance_basis
         component = lookup_unique_casefold(observed.components, resistor.reference)
         parsed = None if component is None else resistance_ohms(component.value)
         if parsed is None or not math.isfinite(parsed) or parsed <= 0:
@@ -180,6 +188,8 @@ def evaluate_signal_divider_requirement(
 
     calculated_minimum: float | None = None
     calculated_maximum: float | None = None
+    calculated_tolerance_minimum: float | None = None
+    calculated_tolerance_maximum: float | None = None
     calculation_valid = True
     if identity_valid and pins_valid and nets_valid and values_valid and len(nominal_values) == 2:
         try:
@@ -204,6 +214,32 @@ def evaluate_signal_divider_requirement(
                     f"{requirement.minimum_input_voltage_v:g}–"
                     f"{requirement.maximum_input_voltage_v:g} V"
                 )
+            if tolerance_percents:
+                try:
+                    calculated_tolerance_minimum, calculated_tolerance_maximum = (
+                        divider_tolerance_voltage_range(
+                            requirement.minimum_source_voltage_v,
+                            requirement.maximum_source_voltage_v,
+                            nominal_values[requirement.upper_resistor.reference],
+                            nominal_values[requirement.lower_resistor.reference],
+                            tolerance_percents[requirement.upper_resistor.reference],
+                            tolerance_percents[requirement.lower_resistor.reference],
+                        )
+                    )
+                except (KeyError, OverflowError, ValueError):
+                    calculation_valid = False
+                else:
+                    if (
+                        calculated_tolerance_minimum < requirement.minimum_input_voltage_v
+                        or calculated_tolerance_maximum > requirement.maximum_input_voltage_v
+                    ):
+                        issues.append(
+                            "Calculated worst-case tolerance input range "
+                            f"{calculated_tolerance_minimum:g}–"
+                            f"{calculated_tolerance_maximum:g} V is outside authored target "
+                            f"{requirement.minimum_input_voltage_v:g}–"
+                            f"{requirement.maximum_input_voltage_v:g} V"
+                        )
         if not calculation_valid:
             issues.append("Calculated divider output exceeds the supported finite numeric range")
 
@@ -229,8 +265,12 @@ def evaluate_signal_divider_requirement(
         input_net=requirement.input_net,
         reference_net=requirement.reference_net,
         nominal_resistance_ohms=nominal_values,
+        maximum_tolerance_percent=tolerance_percents,
+        tolerance_basis=tolerance_bases,
         calculated_input_minimum_v=calculated_minimum,
         calculated_input_maximum_v=calculated_maximum,
+        calculated_tolerance_input_minimum_v=calculated_tolerance_minimum,
+        calculated_tolerance_input_maximum_v=calculated_tolerance_maximum,
         source_minimum_v=requirement.minimum_source_voltage_v,
         source_maximum_v=requirement.maximum_source_voltage_v,
         target_input_minimum_v=requirement.minimum_input_voltage_v,

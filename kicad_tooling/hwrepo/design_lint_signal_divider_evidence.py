@@ -37,6 +37,17 @@ def project_signal_divider_evidence(
         if entry.calculated_input_minimum_v is None or entry.calculated_input_maximum_v is None
         else f"{entry.calculated_input_minimum_v:g}–{entry.calculated_input_maximum_v:g} V"
     )
+    calculated_tolerance = (
+        "not requested"
+        if not entry.maximum_tolerance_percent
+        else (
+            "unavailable"
+            if entry.calculated_tolerance_input_minimum_v is None
+            or entry.calculated_tolerance_input_maximum_v is None
+            else f"{entry.calculated_tolerance_input_minimum_v:g}–"
+            f"{entry.calculated_tolerance_input_maximum_v:g} V"
+        )
+    )
     return CandidateEvidenceProjection(
         rule_id=RULE_ID,
         evidence={
@@ -53,9 +64,14 @@ def project_signal_divider_evidence(
                 f"{reference}={value:g} Ω"
                 for reference, value in sorted(entry.nominal_resistance_ohms.items())
             ),
+            "maximum_resistor_tolerance": tuple(
+                f"{reference}={value:g}% ({entry.tolerance_basis[reference]})"
+                for reference, value in sorted(entry.maximum_tolerance_percent.items())
+            ),
             "formula": (entry.formula,),
             "source_voltage_range_v": (f"{entry.source_minimum_v:g}–{entry.source_maximum_v:g} V",),
             "calculated_nominal_input_range_v": (calculated,),
+            "calculated_tolerance_input_range_v": (calculated_tolerance,),
             "target_input_range_v": (
                 f"{entry.target_input_minimum_v:g}–{entry.target_input_maximum_v:g} V",
             ),

@@ -14603,18 +14603,25 @@ control are documented in the
   two-resistor map, compare receiver and resistor identities, pin inventory,
   receiver input function/type, fitted state, exact source/tap/reference net
   assignments, extra recognized direct resistors on the tap, nominal resistor
-  ranges, and the calculated nominal input interval.
+  ranges, and the calculated nominal input interval. When both resistors have
+  explicit maximum tolerance percentages and bases, also calculate the
+  conservative output interval from resistor tolerance corners and the authored
+  source-voltage endpoints.
 - **Boundary:** The map is the independently authored requirement; absent maps
   remain `NOT_REQUESTED` and the tool does not infer dividers by naming or
   resistor values. The estimate assumes a high-impedance input and does not
-  model tolerance, source impedance, receiver/protection leakage, transients,
-  analog accuracy, or PCB connectivity. It cannot determine whether two
-  observed grounds or signals should be joined.
+  model tolerance unless both project-authored resistor bounds are present,
+  source impedance, receiver/protection leakage, transients, analog accuracy,
+  or PCB connectivity. The stated tolerance values and bases are recorded but
+  not independently verified. It cannot determine whether two observed grounds
+  or signals should be joined.
 - **Evidence:** Tooling-owned synthetic tests cover an in-range control,
-  out-of-range value, split tap, DNP leg, identity/pin-type errors, extra load,
-  configuration overrides and ignores, stable fingerprints, and no-map
-  behavior. Source-hashed KiCad 10.0.0/10.0.5 fixtures cover control, value
-  fault, and split tap; a focused CLI/MCP parity test checks report equality.
+  out-of-range nominal value, a tolerance-only range failure, tolerance-valid
+  control, partial tolerance scope, split tap, DNP leg, identity/pin-type
+  errors, extra load, configuration overrides and ignores, stable fingerprints,
+  and no-map behavior. Source-hashed KiCad 10.0.0/10.0.5 fixtures cover control,
+  value fault, and split tap; a focused CLI/MCP parity test checks report
+  equality.
   The fixtures contain no product project data.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

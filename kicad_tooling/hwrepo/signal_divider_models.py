@@ -19,6 +19,10 @@ from .model_primitives import (
     StrictModel,
 )
 
+SignalDividerTolerancePercent = Annotated[
+    float, Field(gt=0, lt=100, allow_inf_nan=False)
+]
+
 
 class SignalDividerCoverageEntry(StrictModel):
     """One mapped divider compared with the exact exported native netlist."""
@@ -31,8 +35,14 @@ class SignalDividerCoverageEntry(StrictModel):
     reference_net: NetName
     formula: Literal["Vsource*Rbottom/(Rtop+Rbottom)"] = "Vsource*Rbottom/(Rtop+Rbottom)"
     nominal_resistance_ohms: Mapping[Identifier, ElectricalPositive] = Field(default_factory=dict)
+    maximum_tolerance_percent: Mapping[Identifier, SignalDividerTolerancePercent] = Field(
+        default_factory=dict
+    )
+    tolerance_basis: Mapping[Identifier, NonEmptyText] = Field(default_factory=dict)
     calculated_input_minimum_v: NonNegativeMeasure | None = None
     calculated_input_maximum_v: NonNegativeMeasure | None = None
+    calculated_tolerance_input_minimum_v: NonNegativeMeasure | None = None
+    calculated_tolerance_input_maximum_v: NonNegativeMeasure | None = None
     source_minimum_v: NonNegativeMeasure
     source_maximum_v: NonNegativeMeasure
     target_input_minimum_v: NonNegativeMeasure
@@ -40,6 +50,21 @@ class SignalDividerCoverageEntry(StrictModel):
     pin_nets: Mapping[Reference, tuple[NetName, ...]] = Field(default_factory=dict)
     basis: NonEmptyText
     issues: tuple[NonEmptyText, ...] = ()
+
+    @model_validator(mode="after")
+    def tolerance_evidence_is_paired(self) -> SignalDividerCoverageEntry:
+        if set(self.maximum_tolerance_percent) != set(self.tolerance_basis):
+            raise ValueError("Signal-divider tolerance bounds must have matching source bases")
+        if not self.maximum_tolerance_percent and (
+            self.calculated_tolerance_input_minimum_v is not None
+            or self.calculated_tolerance_input_maximum_v is not None
+        ):
+            raise ValueError("Signal-divider tolerance results require authored tolerance bounds")
+        if (self.calculated_tolerance_input_minimum_v is None) != (
+            self.calculated_tolerance_input_maximum_v is None
+        ):
+            raise ValueError("Signal-divider tolerance voltage bounds must be supplied together")
+        return self
 
 
 class SignalDividerCoverageReport(StrictModel):
@@ -49,7 +74,8 @@ class SignalDividerCoverageReport(StrictModel):
     scope: NonEmptyText = (
         "Only explicitly mapped, positive-source, two-resistor divider networks are checked. "
         "The nominal calculation assumes an unloaded high-impedance input and does not establish "
-        "component tolerance, transient response, protection, or PCB behavior."
+        "component tolerance unless project-authored bounds are supplied, transient response, "
+        "protection, or PCB behavior."
     )
     netlist_sha256: Digest | None = None
     entries: tuple[SignalDividerCoverageEntry, ...] = ()
@@ -85,6 +111,8 @@ class SignalDividerResistorRequirement(StrictModel):
     outer_pin: Reference
     minimum_nominal_resistance_ohms: ElectricalPositive
     maximum_nominal_resistance_ohms: ElectricalPositive
+    maximum_tolerance_percent: SignalDividerTolerancePercent | None = None
+    tolerance_basis: NonEmptyText | None = None
 
     @model_validator(mode="after")
     def pins_and_range_are_valid(self) -> SignalDividerResistorRequirement:
@@ -95,6 +123,8 @@ class SignalDividerResistorRequirement(StrictModel):
             raise ValueError("Divider resistor terminal pins must differ")
         if self.minimum_nominal_resistance_ohms > self.maximum_nominal_resistance_ohms:
             raise ValueError("Divider resistor nominal range is reversed")
+        if (self.maximum_tolerance_percent is None) != (self.tolerance_basis is None):
+            raise ValueError("Divider resistor tolerance and its basis must be supplied together")
         return self
 
 
@@ -153,6 +183,10 @@ class SignalDividerRequirement(StrictModel):
             raise ValueError("This signal-divider check supports non-negative voltage ranges only")
         if self.upper_resistor.outer_pin.casefold() == self.lower_resistor.outer_pin.casefold():
             raise ValueError("Signal-divider outer resistor pins must terminate on separate nets")
+        upper_has_tolerance = self.upper_resistor.maximum_tolerance_percent is not None
+        lower_has_tolerance = self.lower_resistor.maximum_tolerance_percent is not None
+        if upper_has_tolerance != lower_has_tolerance:
+            raise ValueError("Both signal-divider resistor tolerance bounds must be supplied together")
         return self
 
 

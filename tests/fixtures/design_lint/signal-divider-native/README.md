@@ -12,8 +12,9 @@ project requirements.
 
 The native lane exports each source twice with digest-pinned KiCad 10.0.0 and
 10.0.5, compares normalized netlist and ERC outputs, then evaluates the source-
-bound map. It does not validate tolerances, analog front-end protection,
-receiver leakage, PCB routing, or a physical product.
+bound map with a synthetic authored tolerance bound against the native nominal
+resistor values. It does not validate the stated tolerance source, analog
+front-end protection, receiver leakage, PCB routing, or a physical product.
 
 Run the focused native lane with:
 

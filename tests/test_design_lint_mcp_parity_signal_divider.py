@@ -94,7 +94,9 @@ class _SignalDividerParityCases(McpParityHarness):
         )
         contract_path = self.island / "tests/contract.json"
         contract = read_model(contract_path, ProjectTestContract)
-        policy = DesignLintPolicy(signal_divider_map=signal_divider_map())
+        policy = DesignLintPolicy(
+            signal_divider_map=signal_divider_map(tolerance_percents=(1.0, 2.0))
+        )
         write_model(contract_path, contract.model_copy(update={"design_lint": policy}))
 
         async with Client(create_server(self.root), mode="legacy") as client:
@@ -128,6 +130,13 @@ class _SignalDividerParityCases(McpParityHarness):
             self.assertEqual(control_coverage.status, "COMPLETE")
             self.assertEqual(control_coverage.netlist_sha256, digest(netlist))
             self.assertEqual(control_coverage.entries[0].status, "COMPLETE")
+            self.assertEqual(
+                control_coverage.entries[0].maximum_tolerance_percent,
+                {"R1": 1.0, "R2": 2.0},
+            )
+            self.assertIsNotNone(
+                control_coverage.entries[0].calculated_tolerance_input_minimum_v
+            )
 
             write_netlist(top_value="180k")
             mismatch = await compare("REVIEW", 1)

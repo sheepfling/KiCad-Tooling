@@ -65,7 +65,7 @@ def test_native_signal_divider_faults_and_control_are_source_bound(
             == (EXPECTED_SOURCE_HASHES[case])
         )
 
-    policy = DesignLintPolicy(signal_divider_map=signal_divider_map())
+    policy = DesignLintPolicy(signal_divider_map=signal_divider_map(tolerance_percents=(1.0, 1.0)))
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(
         tmp_path,
@@ -120,6 +120,13 @@ def test_native_signal_divider_faults_and_control_are_source_bound(
         "R2.2": ("GND",),
     }
     assert control.entries[0].nominal_resistance_ohms == {"R1": 220000.0, "R2": 33000.0}
+    assert control.entries[0].maximum_tolerance_percent == {"R1": 1.0, "R2": 1.0}
+    assert control.entries[0].target_input_minimum_v <= (
+        control.entries[0].calculated_tolerance_input_minimum_v or 0
+    )
+    assert (control.entries[0].calculated_tolerance_input_maximum_v or 0) <= (
+        control.entries[0].target_input_maximum_v
+    )
 
     value_fault = reports["value-fault"].signal_divider_coverage.entries[0]
     assert value_fault.status == "OUT_OF_RANGE"

@@ -10,7 +10,9 @@ from kicad_tooling.hwrepo.signal_divider_models import (
 )
 
 
-def signal_divider_map() -> SignalDividerMap:
+def signal_divider_map(
+    *, tolerance_percents: tuple[float, float] | None = None
+) -> SignalDividerMap:
     return SignalDividerMap(
         basis="Synthetic ADC absolute-input limits and reviewed sensor source range",
         dividers=(
@@ -34,6 +36,14 @@ def signal_divider_map() -> SignalDividerMap:
                     outer_pin="R1.1",
                     minimum_nominal_resistance_ohms=210_000.0,
                     maximum_nominal_resistance_ohms=230_000.0,
+                    maximum_tolerance_percent=(
+                        None if tolerance_percents is None else tolerance_percents[0]
+                    ),
+                    tolerance_basis=(
+                        None
+                        if tolerance_percents is None
+                        else "Synthetic reviewed tolerance bound for R1"
+                    ),
                 ),
                 lower_resistor=SignalDividerResistorRequirement(
                     reference="R2",
@@ -43,6 +53,14 @@ def signal_divider_map() -> SignalDividerMap:
                     outer_pin="R2.2",
                     minimum_nominal_resistance_ohms=32_000.0,
                     maximum_nominal_resistance_ohms=34_000.0,
+                    maximum_tolerance_percent=(
+                        None if tolerance_percents is None else tolerance_percents[1]
+                    ),
+                    tolerance_basis=(
+                        None
+                        if tolerance_percents is None
+                        else "Synthetic reviewed tolerance bound for R2"
+                    ),
                 ),
                 minimum_source_voltage_v=24.0,
                 maximum_source_voltage_v=24.0,

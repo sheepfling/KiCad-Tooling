@@ -2591,7 +2591,9 @@ performance. See the native fixture README and its case table:
 project's `design_lint.signal_divider_map`. Each entry names the receiver and
 its native input pin, both resistor identities and terminals, source/tap/
 reference nets, source and receiver voltage intervals, acceptable nominal
-resistor ranges, and the review basis. Without this map, the tool does not
+resistor ranges, and the review basis. Each resistor may also declare a
+maximum tolerance percentage and its basis; both resistor bounds must be
+present to enable worst-case interval checking. Without this map, the tool does not
 infer a divider from two resistors, component references, or net names.
 
 ```json
@@ -2618,7 +2620,9 @@ infer a divider from two resistors, component references, or net names.
             "divider_pin": "R1.2",
             "outer_pin": "R1.1",
             "minimum_nominal_resistance_ohms": 210000.0,
-            "maximum_nominal_resistance_ohms": 230000.0
+            "maximum_nominal_resistance_ohms": 230000.0,
+            "maximum_tolerance_percent": 5.0,
+            "tolerance_basis": "Reviewed resistor datasheet tolerance"
           },
           "lower_resistor": {
             "reference": "R2",
@@ -2627,7 +2631,9 @@ infer a divider from two resistors, component references, or net names.
             "divider_pin": "R2.1",
             "outer_pin": "R2.2",
             "minimum_nominal_resistance_ohms": 32000.0,
-            "maximum_nominal_resistance_ohms": 34000.0
+            "maximum_nominal_resistance_ohms": 34000.0,
+            "maximum_tolerance_percent": 5.0,
+            "tolerance_basis": "Reviewed resistor datasheet tolerance"
           },
           "minimum_source_voltage_v": 24.0,
           "maximum_source_voltage_v": 24.0,
@@ -2646,16 +2652,22 @@ state, native receiver pin function/type, terminal inventory, and net
 assignments. It parses the nominal resistor values and calculates
 `Vinput = Vsource * Rlower / (Rupper + Rlower)`. A changed or unsupported
 topology becomes incomplete coverage; a nominal resistor value or calculated
-input interval outside the authored limits produces a review finding. The
+input interval outside the authored limits produces a review finding. When the
+project supplies a maximum tolerance and basis for both resistors, the checker
+also calculates the conservative interval using the low/high resistor corners
+and the authored source-voltage endpoints. A tolerance-bounded interval outside
+the target produces a review finding even when the nominal value passes. The
 default mode is `review`; project policy can set the rule to `block`, `off`, or
 ignore an exact fingerprint. Rule-off and ignored findings remain visible in
 the report.
 
 The nominal calculation assumes a positive source and an unloaded, high-
-impedance input. It does not account for resistor tolerance, receiver leakage,
-source impedance, protection leakage, transients, analog accuracy, or PCB
-copper connectivity. An ERC-clean schematic export cannot verify the physical
-return path. The tooling-owned synthetic fault/control cases do not represent a
+impedance input. Tolerance bounds and their basis are project-authored inputs;
+the checker does not verify those sources. Without both resistor bounds, it
+reports only the nominal interval. It does not model receiver leakage, source
+impedance, protection leakage, transients, analog accuracy, or PCB copper
+connectivity. An ERC-clean schematic export cannot verify the physical return
+path. The tooling-owned synthetic fault/control cases do not represent a
 product board. The native fixtures repeat with digest-pinned KiCad 10.0.0 and
 10.0.5; the CLI and MCP reports use the same typed service.
 The [synthetic native fixture README](../tests/fixtures/design_lint/signal-divider-native/README.md)

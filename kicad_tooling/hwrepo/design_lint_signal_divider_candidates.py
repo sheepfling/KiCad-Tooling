@@ -25,8 +25,9 @@ def signal_divider_candidates(
                 SignalDividerFindingEvidence(report=coverage, entry=entry),
                 subject=f"{entry.receiver_reference}: mapped signal-input divider",
                 message=(
-                    "The source-bound divider identity, two-resistor topology, nominal values, or "
-                    "calculated input range differs from the project-authored requirement. "
+                    "The mapped divider identity, topology, resistor values, or input interval "
+                    "differs from the project-authored requirement. Where resistor tolerance "
+                    "bounds are supplied, the evidence also shows the worst-case interval. "
                     "Review the exact source and input limits."
                 ),
             )
