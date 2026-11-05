@@ -712,6 +712,15 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **LINT-280 compound connector supply-role review:** The repeated connector
+  function rule now recognizes a single unambiguous supply-category token in
+  compound functions such as `USB_VBUS` and `SERIAL_VBUS`. Split or open
+  assignments prompt `REVIEW`; matching categories do not assert that contacts
+  must be tied. Negative, return, shield, sense, detection, monitoring,
+  feedback, switching, enable, status, and multiple-rail names stay out of this
+  inference. Synthetic and source-hashed native fault/control cases pass on
+  KiCad 10.0.0 and 10.0.5. The installed-wheel acceptance passed under
+  `v0.5.3rc444` (run `42060470089`).
 - **LINT-277 direct GPIO-to-control voltage-label review:** LINT-066 covers
   named SPI and UART/USART peer connections, but direct GPIO outputs feeding
   reset, enable, or boot inputs can present the same unresolved question. The
@@ -14509,6 +14518,42 @@ control are documented in the
   `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`; unit tests, Pyright, Windows typing,
   wheel/source builds, and the external-project playtest passed. Package and
   preview jobs were skipped under prerelease policy.
+
+#### LINT-280 — Review matching compound connector supply roles
+
+- **Status:** Implemented as a bounded extension of
+  `connector.repeated_pin_function`. The rule remains default-`review`; the
+  project policy can also set it to `block`, `off`, or an exact-fingerprint
+  ignore.
+- **Gap:** The rule recognized exact supply functions such as `VBUS` and
+  `PWR`, but not compound interface names. A `USB_VBUS` pin and a
+  `SERIAL_VBUS` pin could be assigned to separate or missing nets without a
+  repeated-function candidate.
+- **Predicate:** For connector pins, split compound function names into
+  tokens and preserve the normalized category of one recognized supply token.
+  Matching categories across different function prefixes prompt review when
+  assignments differ or a peer is open. Exact positive aliases continue to
+  use their existing categories. Distinct categories such as `VBUS` and `VCC`
+  remain separate. A compound candidate is suppressed when return, shield,
+  negative-polarity, sense, detection, monitoring, feedback, switching,
+  enable, status, or multiple rail-category tokens make its role ambiguous.
+- **Boundary:** A matching category is a review clue, not proof that the
+  contacts should share a net. The check does not establish bonding,
+  isolation, off-board wiring, or PCB copper continuity. Project-specific
+  intent remains in authored connector and grounding contracts.
+- **Evidence:** Synthetic tests cover split and open `USB_VBUS`/`SERIAL_VBUS`
+  assignments, a common-net control, distinct rails, negative and compound
+  role exclusions, and mapping-order stability. The source-hashed native
+  compound connector fixture now carries the same supply fault/control and
+  keeps its separate return and shield controls. Both exact KiCad 10.0.0 and
+  10.0.5 lanes pass. The shared CLI/MCP evaluation and architecture/catalog
+  slice passed; no new surface operation was added.
+- **Hosted acceptance (2026-11-05):** Tag `v0.5.3rc444` passed GitHub Actions
+  run `42060470089`. The rule-scoped installed-wheel gate ran with both
+  `KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES=1` and
+  `KICAD_RUN_NATIVE_MIXED_INTERFACE_RETURN_FIXTURES=1`; the external-template
+  playtest and focused checks passed. Package and preview jobs were skipped by
+  prerelease policy.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

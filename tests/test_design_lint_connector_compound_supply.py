@@ -24,25 +24,40 @@ def _rule_findings(report: DesignLintReport) -> tuple[DesignLintFinding, ...]:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 @pytest.mark.parametrize(
-    ("serial_connected", "expected_serial_nets"),
-    [(True, ("SERIAL_SUPPLY",)), (False, ())],
-    ids=("separate-rails", "open-peer-pin"),
+    (
+        "usb_function",
+        "serial_function",
+        "serial_connected",
+        "expected_serial_nets",
+        "expected_subject",
+    ),
+    [
+        ("USB_VBUS", "SERIAL_VBUS", True, ("SERIAL_SUPPLY",), "USB_VBUS"),
+        ("USB_VBUS", "VBUS", True, ("SERIAL_SUPPLY",), "USB_VBUS"),
+        ("USB_3V3", "SERIAL_3.3V", True, ("SERIAL_SUPPLY",), "USB_3V3"),
+        ("USB_+5V", "SERIAL_5V", False, (), "USB_+5V"),
+    ],
+    ids=("compound-vbus", "compound-to-exact-vbus", "voltage-aliases", "open-voltage-peer"),
 )
 def test_matching_compound_supply_categories_prompt_review(
-    serial_connected: bool, expected_serial_nets: tuple[str, ...]
+    usb_function: str,
+    serial_function: str,
+    serial_connected: bool,
+    expected_serial_nets: tuple[str, ...],
+    expected_subject: str,
 ) -> None:
     report = _report(
         cross_symbol_power(
             serial_connected=serial_connected,
-            usb_function="USB_VBUS",
-            serial_function="SERIAL_VBUS",
+            usb_function=usb_function,
+            serial_function=serial_function,
         )
     )
 
     findings = _rule_findings(report)
     assert report.status == "REVIEW"
     assert len(findings) == 1
-    assert findings[0].subject == "multiple connector symbols: USB_VBUS"
+    assert findings[0].subject == f"multiple connector symbols: {expected_subject}"
     assert findings[0].evidence == {
         "J1.1": ("USB_SUPPLY",),
         "J2.1": expected_serial_nets,
@@ -74,8 +89,29 @@ def test_matching_compound_supply_categories_on_one_net_are_a_control() -> None:
         ("USB_GND_VBUS", "SERIAL_GND_VBUS"),
         ("USB_SHIELD_VBUS", "SERIAL_SHIELD_VBUS"),
         ("USB_VBUS_SENSE", "SERIAL_VBUS_SENSE"),
+        ("USB_VBUS", "SERIAL_VBUS_DETECT"),
+        ("USB_VBUS", "SERIAL_VBUS_MONITOR"),
+        ("USB_VBUS", "SERIAL_VBUS_FEEDBACK"),
+        ("USB_VBUS", "SERIAL_VBUS_SWITCHED"),
+        ("USB_VBUS", "SERIAL_VBUS_ENABLE"),
+        ("USB_VBUS", "SERIAL_VBUS_STATUS"),
+        ("USB_BUS", "SERIAL_BUS"),
     ],
-    ids=("distinct-rail", "negative-role", "multiple-rails", "mixed-return", "shield", "sense"),
+    ids=(
+        "distinct-rail",
+        "negative-role",
+        "multiple-rails",
+        "mixed-return",
+        "shield",
+        "sense",
+        "detect",
+        "monitor",
+        "feedback",
+        "switch",
+        "enable",
+        "status",
+        "substring-lookalike",
+    ),
 )
 def test_compound_supply_heuristic_keeps_ambiguous_roles_quiet(
     usb_function: str, serial_function: str
