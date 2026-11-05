@@ -173,14 +173,10 @@ def test_finding_fingerprint_is_stable_under_netlist_order_changes() -> None:
     reordered = NetlistContract.model_validate(reordered_payload)
 
     original_finding = next(
-        item
-        for item in _report(fault="top-resistor-value").findings
-        if item.rule_id == RULE_ID
+        item for item in _report(fault="top-resistor-value").findings if item.rule_id == RULE_ID
     )
     reordered_finding = next(
-        item
-        for item in _report(observed=reordered).findings
-        if item.rule_id == RULE_ID
+        item for item in _report(observed=reordered).findings if item.rule_id == RULE_ID
     )
 
     assert fingerprint(original_finding) == fingerprint(reordered_finding)

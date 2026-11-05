@@ -122,9 +122,7 @@ class SignalDividerRequirement(StrictModel):
 
     @model_validator(mode="after")
     def mapped_topology_is_unique(self) -> SignalDividerRequirement:
-        if not self.receiver_pin.casefold().startswith(
-            f"{self.receiver_reference}.".casefold()
-        ):
+        if not self.receiver_pin.casefold().startswith(f"{self.receiver_reference}.".casefold()):
             raise ValueError("Signal-divider receiver pin must belong to its declared component")
         components = (
             self.receiver_reference,

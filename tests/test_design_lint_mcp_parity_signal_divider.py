@@ -134,7 +134,9 @@ class _SignalDividerParityCases(McpParityHarness):
             entry = mismatch.signal_divider_coverage.entries[0]
             self.assertEqual(entry.status, "OUT_OF_RANGE")
             self.assertEqual(entry.nominal_resistance_ohms["R1"], 180000.0)
-            finding = next(item for item in mismatch.findings if item.rule_id.endswith("range_mismatch"))
+            finding = next(
+                item for item in mismatch.findings if item.rule_id.endswith("range_mismatch")
+            )
             self.assertIn("formula", finding.evidence)
 
 

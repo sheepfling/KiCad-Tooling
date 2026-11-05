@@ -91,7 +91,10 @@ def _entry(
     if receiver_function is None:
         issues.append(f"{requirement.receiver_pin} has no native symbol pin function")
         pins_valid = False
-    elif receiver_function.strip().casefold() != requirement.expected_receiver_pin_function.strip().casefold():
+    elif (
+        receiver_function.strip().casefold()
+        != requirement.expected_receiver_pin_function.strip().casefold()
+    ):
         issues.append(
             f"{requirement.receiver_pin} function is {receiver_function}; expected "
             f"{requirement.expected_receiver_pin_function}"
@@ -115,7 +118,11 @@ def _entry(
         (requirement.upper_resistor.outer_pin, requirement.source_net, "upper-resistor source"),
         (requirement.upper_resistor.divider_pin, requirement.input_net, "upper-resistor tap"),
         (requirement.lower_resistor.divider_pin, requirement.input_net, "lower-resistor tap"),
-        (requirement.lower_resistor.outer_pin, requirement.reference_net, "lower-resistor reference"),
+        (
+            requirement.lower_resistor.outer_pin,
+            requirement.reference_net,
+            "lower-resistor reference",
+        ),
     )
     nets_valid = True
     for pin, expected_net, role in expected_nets:
@@ -133,11 +140,10 @@ def _entry(
     }
     extra_input_resistors = tuple(
         item.reference
-        for item in direct_resistors(
-            observed, include_zero_ohm=True, include_device_r_symbol=True
-        )
+        for item in direct_resistors(observed, include_zero_ohm=True, include_device_r_symbol=True)
         if item.reference.casefold() not in mapped_resistors
-        and requirement.input_net.casefold() in (item.first_net.casefold(), item.second_net.casefold())
+        and requirement.input_net.casefold()
+        in (item.first_net.casefold(), item.second_net.casefold())
     )
     if extra_input_resistors:
         issues.append(
@@ -202,7 +208,13 @@ def _entry(
             issues.append("Calculated divider output exceeds the supported finite numeric range")
 
     output_out_of_range = any("outside authored target" in issue for issue in issues)
-    if not identity_valid or not pins_valid or not nets_valid or not values_valid or not calculation_valid:
+    if (
+        not identity_valid
+        or not pins_valid
+        or not nets_valid
+        or not values_valid
+        or not calculation_valid
+    ):
         status = "INCOMPLETE"
     elif value_out_of_range or output_out_of_range:
         status = "OUT_OF_RANGE"

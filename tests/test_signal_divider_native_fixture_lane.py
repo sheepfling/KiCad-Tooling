@@ -60,8 +60,9 @@ def test_native_signal_divider_faults_and_control_are_source_bound(
 ) -> None:
     fixture_root = Path(__file__).parent / "fixtures/design_lint"
     for case, relative in FIXTURES.items():
-        assert hashlib.sha256((fixture_root / relative).read_bytes()).hexdigest() == (
-            EXPECTED_SOURCE_HASHES[case]
+        assert (
+            hashlib.sha256((fixture_root / relative).read_bytes()).hexdigest()
+            == (EXPECTED_SOURCE_HASHES[case])
         )
 
     policy = DesignLintPolicy(signal_divider_map=signal_divider_map())
@@ -137,7 +138,5 @@ def test_native_signal_divider_faults_and_control_are_source_bound(
         assert result["source_sha256"] == EXPECTED_SOURCE_HASHES[case]
         assert result["erc_errors"] == "none"
         assert result["repeatable"] == "true"
-        assert result["normalized_netlist_sha256"] == result[
-            "repeat_normalized_netlist_sha256"
-        ]
+        assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
         assert result["normalized_erc_sha256"] == result["repeat_normalized_erc_sha256"]
