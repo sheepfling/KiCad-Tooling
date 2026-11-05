@@ -14437,6 +14437,15 @@ control are documented in the
   preview jobs were skipped under prerelease policy. Keep catalog maturity at
   `synthetic_validated`: native exports establish fixture/tool compatibility,
   not cohort or field value. The default mode remains `review`.
+- **Hosted acceptance (2026-11-05, counterfactual follow-up):** Tag
+  `v0.5.3rc435` passed GitHub Actions run `42034913090`. The tag selector ran
+  LINT-278 and rule-gate integrity tests with the exact native fixture switch
+  enabled. Ruff, Pyright, Windows typing, Rumdl, `mdrepo`, wheel and source-
+  distribution builds, installed-wheel checks, and the external-template
+  playtest all passed. Package-release and preview jobs were skipped under
+  prerelease policy. The native fixture lane remains compatibility evidence;
+  the new synthetic counterfactual is the evidence that the added lint finds a
+  mismatch missed by the existing visible-bias and GPIO voltage checks.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
