@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 258 rules are implemented with synthetic regression coverage.
+The following 259 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 258 active rules.
+The catalog currently contains 259 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -611,6 +611,7 @@ skipped under prerelease policy.
 - `bus.usb_c_sbu_same_net`
 - `bus.usb_c_unreviewed_port`
 - `bus.usb_data_path_mismatch`
+- `bus.usb_unmapped_multi_pin_topology`
 - `bus.usb_data_polarity_label_mismatch`
 - `bus.usb_c_superspeed_lane_label_mismatch`
 - `bus.usb_peer_data_pair_crossed`
@@ -709,28 +710,29 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **LINT-276 unmapped multi-pin USB topology:** The public four-port USB hub
+  screen recorded four multi-pin protection-array candidates in USB reference
+  coverage, but the default finding list did not ask the project to resolve
+  that coverage gap. The new default-REVIEW candidate prompts for exact part-pin
+  review and a project-authored USB data-path map. It does not claim a path,
+  component conduction, a defect, or common reference. Synthetic tests cover
+  an exact mapped control, direct and DNP controls, stale endpoint-map
+  precedence, policy, ignores, stable evidence, native exports, and CLI/MCP
+  parity. The pinned public screen remains applicability evidence only; owner
+  dispositions and reviewer value are unmeasured.
+
+**Recent connector peer-scope work:**
+
 - **LINT-274 unanchored connector aliases without complete coverage:** The
   baseline peer split and missing-scope rules both stayed quiet when connector
-  coverage was absent or incomplete. The new default-REVIEW candidate uses only
-  exact native alias and pin assignments to ask for pinout and peer-scope
-  review. It now also prompts for partial-open generic contacts when at least
-  one alias is assigned, another is open, every assigned alias has one exact
-  net (which may match or differ from other assigned aliases), and no
+  coverage was absent or incomplete. The default-REVIEW candidate uses exact
+  native alias and pin assignments to ask for pinout and peer-scope review. It
+  also prompts for partial-open generic contacts when at least one alias is
+  assigned, another is open, every assigned alias has one exact net, and no
   common-net anchor exists. It does not assert that contacts should be tied.
-  Synthetic fault/control, explicit-not-applicable, common-assignment, policy,
-  ignore, ordering, and CLI/MCP parity cases pass locally. Hosted acceptance
-  `v0.5.3rc361` passed in run `41795228921`, including the source-hashed
-  three-alias fault/control pair on both pinned native versions and the
-  installed-wheel external-project checks. The earlier `v0.5.3rc360` run
-  reached both native cases but exposed an unrelated test-module size limit;
-  the follow-up split the prepared-order helper out of that oversized suite.
-  A synthetic four-alias regression now checks a fully split generic-pin group
-  against a common-net-anchor control, extending beyond the two- and three-alias
-  cases. Hosted acceptance `v0.5.3rc362` passed in run `41797871842`, including
-  the four-alias regression, the existing exact-version native pair, and the
-  installed-wheel external-project checks.
-  Public-board applicability and independent reviewer-value measurement
-  remain open.
+  Synthetic fault/control, policy, ordering, CLI/MCP parity, and exact-version
+  native export coverage passed in hosted `v0.5.3rc362` (run `41797871842`).
+  Public-board applicability and reviewer-value measurement remain open.
 
 **Earlier peer-scope work:**
 
@@ -1689,6 +1691,15 @@ standalone parity work when it closes a demonstrated feature regression.
   supported or common-reference paths, produces no review candidate, and is
   not counted as a quiet non-finding. This validates the exclusion behavior
   only; it does not evaluate DStat or establish support for that adapter path.
+
+  A 2026-11-05 screen of the public
+  [brainsmoke USB 2.0 hub schematic](https://github.com/brainsmoke/usb2_hub/tree/a6288e2ffc4866b52eb5f64b998376bd619a7674)
+  found five connector groups and four PHY port groups, but its four
+  downstream data paths pass through multi-pin USBLC6-2SC6 parts outside the
+  supported predicate. The repeated export and 11 default-REVIEW prompts are
+  recorded under [LINT-031](DESIGN_LINT_COHORT_TRIALS.md). LINT-086 correctly
+  reports `NO_SUPPORTED_PEER_PATHS`; this adds no supported non-finding,
+  confirmed defect, or measured reviewer value.
 
 - **LINT-094 — Open native power output on comparable peers.** The original
   exact-symbol gate passed tagged GitHub package acceptance in `v0.5.0rc12` (run 37796753272),
@@ -3391,7 +3402,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 258 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 259 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -14278,6 +14289,39 @@ control are documented in the
   KiCad 10.0.0 and 10.0.5 fault/control exports. Ruff format, Ruff, Pyright,
   Windows typing, rumdl, mdrepo, wheel and source builds, installed-package
   checks, and the external-template rehearsal also passed.
+
+#### LINT-276 — Review unmapped multi-pin USB data topology candidates
+
+- **Status:** Implemented as default-REVIEW
+  `bus.usb_unmapped_multi_pin_topology`; project policy can promote it to
+  `block`, turn it `off`, or ignore one exact fingerprint.
+- **Gap:** LINT-086 already retained exact native pins, nets, and component
+  identity for a conservative multi-pin topology candidate, but only exposed
+  it in coverage. A normal design-lint finding could therefore omit the
+  action needed to establish whether the candidate is a USB path.
+- **Predicate:** Reuse the unsupported-topology scan. Require fitted USB 2.0
+  connector and PHY endpoint groups plus one fitted multi-pin component with
+  uniquely assigned native pins on four distinct endpoint-side nets covering
+  both D+ and D−. A map suppresses the prompt only when it names the same
+  connector, PHY, and port group; stale topology in that scope goes to
+  `bus.usb_data_path_mismatch`. Otherwise emit one REVIEW prompt with exact
+  net, pin, component, port-group, and optional map-digest evidence.
+- **Boundary:** The native netlist does not prove that the component passes
+  data or that those nets form a physical path. The prompt asks the reviewer to
+  confirm the part pinout and author an exact map, or explain why coverage is
+  intentionally absent. It does not infer common reference, isolation,
+  bonding, a defect, or USB compliance. DNP, direct, incomplete, ambiguous,
+  and incomplete-identity cases remain outside this predicate.
+- **Evidence:** Tooling-owned inline-device controls verify that an exact
+  current map clears the prompt and stale maps use the existing topology
+  mismatch finding. Direct and DNP controls, mapping-order stability, policy
+  and ignore behavior, and a wrong-port-group map control passed in the
+  focused local interface-lint selection (9 tests); the dedicated CLI/MCP
+  report-parity selection passed separately (1 test). Exact-version native exports are covered
+  by the pinned fixture lane, but the 2026-11-05 local attempt stopped before
+  KiCad ran because the runner could not access its Docker API socket; hosted
+  acceptance is pending. The public USB hub screen is linked under LINT-031
+  and contributes no defect label or field-precision measurement.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

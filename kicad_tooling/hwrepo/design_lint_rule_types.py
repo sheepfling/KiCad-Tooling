@@ -154,6 +154,7 @@ DesignLintRuleId = Literal[
     "bus.serial_peer_voltage_review",
     "bus.serial_peer_reference_review",
     "bus.usb_peer_reference_review",
+    "bus.usb_unmapped_multi_pin_topology",
     "bus.spi_unconnected_chip_select",
     "bus.spi_unconnected_data_pin",
     "bus.spi_unconnected_clock_pin",

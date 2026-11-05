@@ -357,6 +357,25 @@ class _DesignLintMcpParityUsbDataCases(McpParityHarness):
                     for item in findings
                 )
             )
+            unconfigured_contract = read_model(contract_path, ProjectTestContract)
+            write_model(
+                contract_path,
+                unconfigured_contract.model_copy(update={"design_lint": DesignLintPolicy()}),
+            )
+            unmapped = await compare(open_ground_pin=False)
+            topology_findings = tuple(
+                item
+                for item in unmapped.findings
+                if item.rule_id == "bus.usb_unmapped_multi_pin_topology"
+            )
+            self.assertEqual(
+                [item.subject for item in topology_findings],
+                ["J1 / U1: unmapped USB multi-pin topology port 1 (U2)"],
+            )
+            self.assertEqual(
+                unmapped.usb_peer_reference_coverage.supported_data_path_count,
+                0,
+            )
 
 
 def test_usb_data_path_map_parity() -> None:

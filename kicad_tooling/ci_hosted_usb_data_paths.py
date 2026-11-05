@@ -229,12 +229,21 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         raise ValueError(
             "Native unmapped inline-component coverage did not retain exact U2 pin/net topology"
         )
-    if unsupported_paths.supported_data_path_count != 0 or any(
-        item.rule_id in {"bus.usb_peer_reference_review", "bus.usb_data_path_mismatch"}
+    unmapped_topology_findings = tuple(
+        item
         for item in unmapped_inline_coverage.findings
+        if item.rule_id == "bus.usb_unmapped_multi_pin_topology"
+    )
+    if (
+        unsupported_paths.supported_data_path_count != 0
+        or len(unmapped_topology_findings) != 1
+        or any(
+            item.rule_id in {"bus.usb_peer_reference_review", "bus.usb_data_path_mismatch"}
+            for item in unmapped_inline_coverage.findings
+        )
     ):
         raise ValueError(
-            "Native unsupported-topology coverage must not promote the candidate to a path or finding"
+            "Native unsupported topology must request a map without claiming a data or reference path"
         )
     log.event(
         "usb-data-path-fixture/inline-component-unmapped-coverage",
@@ -248,11 +257,15 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         normalized_netlist_sha256=normalized_hashes[("inline-component-control", "first")],
         repeat_normalized_netlist_sha256=normalized_hashes[("inline-component-control", "repeat")],
         coverage_status=unsupported_paths.status,
+        lint_status=unmapped_inline_coverage.status,
         supported_data_paths=unsupported_paths.supported_data_path_count,
         unsupported_component_references=";".join(
             item.component_reference for item in unsupported_paths.unsupported_multi_pin_paths or ()
         ),
         usb_reference_findings="none",
+        usb_unmapped_topology_findings=";".join(
+            item.subject for item in unmapped_topology_findings
+        ),
     )
 
     fault = reports[("external-bypass", "first")]
@@ -446,6 +459,12 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
                 item.subject
                 for item in report.findings
                 if item.rule_id == "bus.usb_peer_reference_review"
+            )
+            or "none",
+            usb_unmapped_topology_findings=";".join(
+                item.subject
+                for item in report.findings
+                if item.rule_id == "bus.usb_unmapped_multi_pin_topology"
             )
             or "none",
             usb_reference_coverage_status=coverage.status,

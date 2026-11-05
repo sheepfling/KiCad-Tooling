@@ -8,7 +8,7 @@ for dispositions and timing; leave unmeasured values unstated.
 
 ## LINT-031 — Candidate analyzer trial and incremental-value register
 
-- **Status:** Partial v25; read-only synthetic comparisons across seven cohort
+- **Status:** Partial v26; read-only synthetic comparisons across seven cohort
   repositories, a first-party public-template applicability replay,
   kicad_skills schematic-rule trials, a ThomsonLint board-export trial, and
   public project review samples are recorded below, plus source-only audits of
@@ -41,7 +41,70 @@ for dispositions and timing; leave unmeasured values unstated.
   escaped pin keys against LINT-050; it adds no local detection and is not an
   adoption case. A pinned KiCad Library Tools KLC S5.1 runtime trial is also
   recorded below; it found a valid generic-connector false positive and no
-  board-design lint gain.
+  board-design lint gain. A pinned public USB 2.0 hub screen below records
+  repeated native netlist exports, common schematic return-net assignments,
+  11 default-REVIEW prompts, and LINT-086's unsupported multi-pin ESD paths;
+  reviewer value remains unmeasured.
+
+### Recorded public screen: brainsmoke USB 2.0 four-port hub (2026-11-05)
+
+- **Source and boundary:** Read-only screen of
+  [`brainsmoke/usb2_hub`][usb2-hub-revision] at pinned commit
+  `a6288e2ffc4866b52eb5f64b998376bd619a7674`. The repository README describes
+  four downstream USB-A ports and one upstream USB-C port. Its pinned
+  [`LICENSE`][usb2-hub-license] declares CC BY 4.0. The source checkout stayed
+  under `/tmp`; no project source, native export, or fixture was copied into
+  Tooling. Source SHA-256 values: `pcb/hub/project.kicad_sch`
+  `af958f75a99c070cda5dd39a3c179a6c2bffdc53d7d1196e4e64416f42ed1da6`,
+  `pcb/hub/port_out.kicad_sch`
+  `eec156b9257b28d699d7225e6830618b6f508cb3d745aa217089344329e82b22`,
+  `pcb/hub/project.kicad_pro`
+  `17e9d3c23529b8fa9ee8bdfc85c8a02f770ec1c6f7809fb4527e4ded8fcd3846`,
+  `README.md` `38b2a52c212dc91bb25ad51d4dd9c6531a24187ec68d78509ee8c9544ef150d4`,
+  and `LICENSE` `9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411`.
+- **Native input and repeatability:** Exported the hierarchical schematic
+  twice with the digest-pinned KiCad 10.0.5 image:
+
+  ```text
+  ghcr.io/kicad/kicad:10.0.5@sha256:fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c
+  ```
+
+  Both raw XML files have SHA-256
+  `7b3d639ec6c256b553f5965d9b5f72bbb2e6b4947a0aee3c74cdd787c405c416`; both
+  parse to equal typed contracts with canonical SHA-256
+  `9f0a7de129e48b5e8e2c396652992ff0ea6358ebf7595ad86eb3f109c9c04cb8`
+  (95 components, 67 nets). This screen ran native netlist export and a typed
+  default-policy replay only; it did not run ERC/DRC or inspect fabricated
+  copper.
+- **Return-net control:** The native netlist assigns USB-A J1–J4 pin 4 and
+  USB-C J5 pins A1, A12, B1, and B12 to the same schematic `GND` net. This is
+  a common-net control for the schematic assignment heuristic. It does not
+  establish PCB copper continuity, physical contact, or design approval.
+- **Default lint result:** An empty `DesignLintPolicy()` produced 11 REVIEW
+  findings: one `bus.complementary_pair_assignment`, one
+  `bus.usb_c_unreviewed_port`, one
+  `component.peer_power_pin_assignment_divergence`, three
+  `connector.repeated_pin_function`, and five
+  `signal.named_pair_without_reviewed_requirement`. They are review prompts,
+  not confirmed defects. The mirrored USB-C contacts and repeated downstream
+  D+/D− roles are expected interface patterns; repeated VBUS and differing
+  VBUS assignments across protection parts need authored port/power-domain
+  context to interpret.
+- **LINT-086 applicability:** Coverage recognizes five connector groups and
+  four U1 PHY port groups, but supports zero connector-to-PHY data paths and
+  produces zero review candidates. U7–U10 are four multi-pin USBLC6-2SC6
+  protection parts between J1–J4 and U1; these topologies remain outside the
+  direct/one-resistor path predicate. The result is
+  `NO_SUPPORTED_PEER_PATHS`, not a supported quiet non-finding. Coverage lists
+  all four topologies as unsupported candidates only, not as confirmed paths
+  or defects.
+- **Disposition and limits:** This screen adds a four-port public USB hub
+  applicability boundary and a repeatable common-return schematic control; it
+  demonstrates no incremental detector, so no cohort check or rule change is
+  adopted. A useful follow-up would need synthetic fault/control cases for a
+  documented multi-pin protector path and independently authored expected
+  reference domains. Owner dispositions, reviewer effort, PCB continuity, and
+  field precision remain unmeasured.
 
 ### Source-only recheck: kicad-happy v2.3.2 false-positive fixes (2026-10-29)
 
@@ -2168,10 +2231,10 @@ for dispositions and timing; leave unmeasured values unstated.
   [trial fixture record](../tests/fixtures/design_lint/cohort-stm32-pin-checker/README.md).
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 258 active rules. Each entry has a deterministic predicate, evidence
+contains 259 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-Of the 258 active rules, 203 default to `review`, 54 to `off`, and
+Of the 259 active rules, 204 default to `review`, 54 to `off`, and
 `pcb.required_fitted_reference` to `block`. Off-by-default checks include
 schematic geometry, generic peer assignment, selected component topology
 reviews such as the BJT base-bias and base/collector same-net prompts, and
@@ -2199,3 +2262,5 @@ it does not claim field validation or effectiveness against private boards.
 [happy-cp003-source]: <https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/skills/kicad/scripts/analyze_pcb.py#L5796-L6103>
 [happy-v232-commit]: https://github.com/aklofas/kicad-happy/commit/2fd9aa0fe2d620f36627d9221e8b1393987ae38e
 [happy-v232-release]: https://github.com/aklofas/kicad-happy/releases/tag/v2.3.2
+[usb2-hub-license]: <https://github.com/brainsmoke/usb2_hub/blob/a6288e2ffc4866b52eb5f64b998376bd619a7674/LICENSE>
+[usb2-hub-revision]: https://github.com/brainsmoke/usb2_hub/tree/a6288e2ffc4866b52eb5f64b998376bd619a7674

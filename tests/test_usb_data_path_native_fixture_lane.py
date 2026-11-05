@@ -118,9 +118,13 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         == results["usb-data-path-fixture/inline-component-control"]["normalized_netlist_sha256"]
     )
     assert unmapped_inline["coverage_status"] == "NO_SUPPORTED_PEER_PATHS"
+    assert unmapped_inline["lint_status"] == "REVIEW"
     assert unmapped_inline["supported_data_paths"] == 0
     assert unmapped_inline["unsupported_component_references"] == "U2"
     assert unmapped_inline["usb_reference_findings"] == "none"
+    assert unmapped_inline["usb_unmapped_topology_findings"] == (
+        "J1 / U1: unmapped USB multi-pin topology port 1 (U2)"
+    )
     for case in (
         "integrated-direct",
         "external-series",
@@ -132,6 +136,7 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         result = results[f"usb-data-path-fixture/{case}"]
         assert result["status"] == "PASS"
         assert result["usb_path_findings"] == "none"
+        assert result["usb_unmapped_topology_findings"] == "none"
     bonded_control = results["usb-data-path-fixture/external-series-reference-bond-control"]
     assert bonded_control["usb_reference_findings"] == "none"
     series_peer_fault = results["usb-data-path-fixture/external-series-reference-fault"]

@@ -163,6 +163,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_test_led_output_heuristics.output_led_netlist(),
         _tests_design_lint_fixtures.repeated_component_supply_pins(),
         _component_return_domains.component_return_pin_domains(),
+        _usb_data_path_support.usb_inline_component_netlist(),
         _repeated_signal_pin_fixtures.repeated_signal_pin_component(),
         _repeated_signal_pin_fixtures.repeated_signal_pin_with_unassigned_member(),
         _repeated_signal_pin_fixtures.repeated_signal_pin_split_assignments_with_open_member(),

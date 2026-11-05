@@ -1,0 +1,99 @@
+"""Review unsupported multi-pin USB data topologies without asserting a path."""
+
+from __future__ import annotations
+
+from .design_lint_rule_types import DesignLintRuleId
+from .design_lint_types import Candidate
+from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
+from .usb_peer_reference_types import UsbPeerReferenceScan, UsbPeerUnsupportedMultiPinPath
+
+RULE_ID: DesignLintRuleId = "bus.usb_unmapped_multi_pin_topology"
+
+
+def _pin_members(values: tuple[str, ...]) -> str:
+    return ", ".join(sorted(values, key=lambda value: (value.casefold(), value)))
+
+
+def _has_endpoint_map(
+    source: UsbDataPathCandidateInputs, path: UsbPeerUnsupportedMultiPinPath
+) -> bool:
+    if source.authored_map is None:
+        return False
+    return any(
+        item.connector_reference.casefold() == path.connector_reference.casefold()
+        and item.phy_reference.casefold() == path.phy_reference.casefold()
+        and (item.data_port_group is None or item.data_port_group == path.port_group)
+        for item in source.authored_map.interfaces
+    )
+
+
+def _candidate_evidence(
+    path: UsbPeerUnsupportedMultiPinPath,
+    source: UsbDataPathCandidateInputs,
+) -> dict[str, tuple[str, ...]]:
+    evidence = {
+        "connector": (path.connector_reference,),
+        "PHY": (path.phy_reference,),
+        "multi_pin_component": (
+            (
+                f"{path.component_reference}: {path.component_symbol}; "
+                f"{path.component_footprint}; {path.component_pin_count} native pins"
+            ),
+        ),
+        "USB_D+_connector_side": (
+            (
+                f"{path.positive_connector_net}: "
+                f"{_pin_members(path.positive_connector_component_pins)}"
+            ),
+        ),
+        "USB_D+_PHY_side": (
+            f"{path.positive_phy_net}: {_pin_members(path.positive_phy_component_pins)}",
+        ),
+        "USB_D-_connector_side": (
+            (
+                f"{path.negative_connector_net}: "
+                f"{_pin_members(path.negative_connector_component_pins)}"
+            ),
+        ),
+        "USB_D-_PHY_side": (
+            f"{path.negative_phy_net}: {_pin_members(path.negative_phy_component_pins)}",
+        ),
+        "USB_data_map_state": ("no map matches this connector/PHY port group",),
+    }
+    if path.port_group is not None:
+        evidence["USB_port_group"] = (path.port_group,)
+    if source.map_sha256 is not None:
+        evidence["USB_data_map_sha256"] = (source.map_sha256,)
+    return evidence
+
+
+def usb_unmapped_multi_pin_topology_candidates(
+    scan: UsbPeerReferenceScan,
+    source: UsbDataPathCandidateInputs,
+) -> tuple[Candidate, ...]:
+    """Ask for a map when observed multi-pin assignments cannot support a USB path."""
+    candidates: list[Candidate] = []
+    for path in scan.coverage.unsupported_multi_pin_paths:
+        if _has_endpoint_map(source, path):
+            continue
+        port = f" port {path.port_group}" if path.port_group is not None else ""
+        candidates.append(
+            Candidate(
+                rule_id=RULE_ID,
+                subject=(
+                    f"{path.connector_reference} / {path.phy_reference}: "
+                    f"unmapped USB multi-pin topology{port} ({path.component_reference})"
+                ),
+                message=(
+                    "Native pin assignments place one multi-pin component on connector-side and "
+                    "PHY-side USB 2.0 D+/D- nets, but do not establish a data path. Review the "
+                    "exact part pinout and provide a project-authored USB data-path map for "
+                    "this connector/PHY port group, or "
+                    "document why this topology remains outside coverage. This prompt does not "
+                    "assert component conduction, a confirmed path, a defect, or a required "
+                    "common reference."
+                ),
+                evidence=_candidate_evidence(path, source),
+            )
+        )
+    return tuple(candidates)

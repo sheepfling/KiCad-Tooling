@@ -13,6 +13,7 @@ from .design_lint_types import Candidate
 from .design_lint_usb_c_candidates import usb_c_port_candidates
 from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
 from .design_lint_usb_peer_candidates import usb_peer_reference_candidates
+from .design_lint_usb_unmapped_topology import usb_unmapped_multi_pin_topology_candidates
 from .digital_peer_voltage_scan import scan_digital_peer_voltage_reviews
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
 from .netlist_contract_models import NetlistContract
@@ -86,6 +87,7 @@ def scan_peer_candidates(inputs: PeerCandidateScanInputs) -> tuple[Candidate, ..
             reviewed_connector_references,
         ),
         *usb_peer_reference_candidates(usb_scan, usb_data_path),
+        *usb_unmapped_multi_pin_topology_candidates(usb_scan, usb_data_path),
         *spi_participant_candidates(observed, spi_scope),
         *digital_peer_voltage_candidates(peer_voltage_scope, peer_voltage_scan),
         *usb_c_port_candidates(observed, usb_c_scope, reviewed_connector_references),
