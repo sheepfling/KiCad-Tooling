@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from .design_lint_named_rail_candidate_evidence import (
+    NamedRailSignalCandidate,
+    Rs485SignalNamedRailEvidence,
+)
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .named_rail_pin_evidence import assigned_named_rail_ic_pins
+from .named_rail_pin_evidence import NamedRailPinSource, assigned_named_rail_ic_pins
 from .netlist_contract_models import NetlistContract
 from .rs485_data_functions import explicit_rs485_transceiver_identity, rs485_data_pin_role
 
@@ -26,8 +30,12 @@ def rs485_signal_on_named_rail_candidates(observed: NetlistContract) -> tuple[Ca
             continue
         role_name = "driver-data input" if role == "tx" else "receiver-data output"
         candidates.append(
-            Candidate(
-                rule_id=RULE_ID,
+            NamedRailSignalCandidate.from_source_evidence(
+                Rs485SignalNamedRailEvidence(
+                    pin=NamedRailPinSource(observed=observed, evidence=item),
+                    role=role,
+                    identity_basis=identity,
+                ),
                 subject=f"{item.pin}: {item.function} on {item.rail_role} net {item.net_name}",
                 message=(
                     f"The identified RS-485 {role_name} function is assigned to a net whose "
@@ -36,15 +44,6 @@ def rs485_signal_on_named_rail_candidates(observed: NetlistContract) -> tuple[Ca
                     "label are review clues, not proof of electrical potential, required "
                     "operating mode, a defect, PCB copper, or physical continuity."
                 ),
-                evidence={
-                    "pin": (item.pin,),
-                    "pin_function": (item.function,),
-                    "rs485_data_role": (role,),
-                    "assigned_net": (item.net_name,),
-                    "net_label_role_clue": (item.rail_role,),
-                    "identity_basis": (identity,),
-                    "component_pin_inventory": item.inventory,
-                },
             )
         )
     return tuple(sorted(candidates, key=lambda item: (item.subject.casefold(), item.subject)))

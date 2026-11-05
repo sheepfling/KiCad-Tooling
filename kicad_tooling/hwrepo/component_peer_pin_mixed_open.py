@@ -4,13 +4,27 @@ from __future__ import annotations
 
 from .component_peer_pin_identity import component_peer_pin_identity_context
 from .component_peer_pin_scan import PeerPinAssignmentScan
+from .design_lint_component_peer_open_candidate_evidence import (
+    GenericComponentPeerOpenCandidate,
+    GenericComponentPeerOpenScanEvidence,
+)
 from .design_lint_types import Candidate
+from .netlist_contract_models import NetlistContract
 
 
 def mixed_open_generic_component_peer_pin_candidates(
     scan: PeerPinAssignmentScan,
+    *,
+    observed: NetlistContract,
+    declared_references: tuple[str, ...] = (),
 ) -> tuple[Candidate, ...]:
     """Prompt when two peers agree on one net and another equivalent pin is open."""
+    source_scan = GenericComponentPeerOpenScanEvidence.from_scan(
+        observed=observed,
+        scan=scan,
+        declared_references=declared_references,
+        rule_id="component.generic_peer_pin_mixed_open",
+    )
     candidates: list[Candidate] = []
     for group in scan.outliers:
         if len(group.assignments) < 3 or not group.shared_anchor_contacts:
@@ -28,8 +42,8 @@ def mixed_open_generic_component_peer_pin_candidates(
         identity = component_peer_pin_identity_context(group)
         function = group.pin_function or ""
         candidates.append(
-            Candidate(
-                rule_id="component.generic_peer_pin_mixed_open",
+            GenericComponentPeerOpenCandidate.from_source_evidence(
+                source_scan.for_outlier(group),
                 subject=(
                     f"{identity.subject_identity} pin {group.pin_number} "
                     f"({function or 'generic'}): some fitted peers leave it open"
@@ -44,17 +58,6 @@ def mixed_open_generic_component_peer_pin_candidates(
                     "consensus do not establish that the pins must connect, and "
                     f"{identity.independent_net_note}."
                 ),
-                evidence={
-                    **group.assignments,
-                    **identity.evidence,
-                    "pin_number": (group.pin_number,),
-                    "pin_function": (function,),
-                    "pin_electrical_type": (group.electrical_type,),
-                    "assigned_pins": assigned_pins,
-                    "unassigned_pins": open_pins,
-                    "shared_assignment_net": shared_assignment,
-                    "shared_anchor_contacts": group.shared_anchor_contacts,
-                },
             )
         )
     return tuple(candidates)

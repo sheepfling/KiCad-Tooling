@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from .component_roles import component_role_binding_evidence
+from .design_lint_two_pin_candidate_evidence import (
+    TwoPinComponentFindingEvidence,
+    TwoPinSameNetCandidate,
+)
 from .design_lint_types import Candidate
 from .two_pin_components import TwoPinComponentOnSameNet
 
@@ -15,19 +18,9 @@ def two_pin_led_same_net_candidates(
     for item in observations:
         if item.kind != "led":
             continue
-        evidence = {
-            "symbol": (item.symbol,),
-            "value": (item.value,),
-            "net": (item.net,),
-            "pin_assignments": tuple(
-                f"{item.reference}.{number} -> {item.net}" for number in item.pin_numbers
-            ),
-        }
-        if item.role_binding is not None:
-            evidence.update(component_role_binding_evidence(item.role_binding))
         candidates.append(
-            Candidate(
-                rule_id="component.two_pin_led_same_net",
+            TwoPinSameNetCandidate.from_source_evidence(
+                TwoPinComponentFindingEvidence(item),
                 subject=f"{item.reference}: both LED terminals share {item.net}",
                 message=(
                     "Both terminals of this supported fitted two-pin LED are assigned to the same "
@@ -36,7 +29,6 @@ def two_pin_led_same_net_candidates(
                     "missing. This prompt does not establish LED behavior, current, physical board "
                     "connectivity, or assembly state."
                 ),
-                evidence=evidence,
             )
         )
     return tuple(candidates)

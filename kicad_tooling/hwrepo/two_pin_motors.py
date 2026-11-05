@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from .component_roles import component_role_binding_evidence
+from .design_lint_two_pin_candidate_evidence import (
+    TwoPinComponentFindingEvidence,
+    TwoPinSameNetCandidate,
+)
 from .design_lint_types import Candidate
 from .two_pin_components import TwoPinComponentOnSameNet
 
@@ -12,8 +15,8 @@ def two_pin_motor_same_net_candidates(
 ) -> tuple[Candidate, ...]:
     """Build REVIEW candidates for exact supported motors assigned to one net."""
     return tuple(
-        Candidate(
-            rule_id="component.two_pin_motor_same_net",
+        TwoPinSameNetCandidate.from_source_evidence(
+            TwoPinComponentFindingEvidence(item),
             subject=f"{item.reference}: both motor terminals share {item.net}",
             message=(
                 "Both terminals of this supported fitted two-pin DC motor are assigned to the "
@@ -21,21 +24,6 @@ def two_pin_motor_same_net_candidates(
                 "across the motor. Review whether it is intentionally bypassed or a connection "
                 "is missing. This prompt does not establish motor behavior, driver compatibility, "
                 "footprint mapping, physical connectivity, or assembly state."
-            ),
-            evidence=(
-                {
-                    "symbol": (item.symbol,),
-                    "value": (item.value,),
-                    "net": (item.net,),
-                    "pin_assignments": tuple(
-                        f"{item.reference}.{number} -> {item.net}" for number in item.pin_numbers
-                    ),
-                }
-                | (
-                    {}
-                    if item.role_binding is None
-                    else component_role_binding_evidence(item.role_binding)
-                )
             ),
         )
         for item in observations

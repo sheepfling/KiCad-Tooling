@@ -25,17 +25,32 @@ PEER_MODULES = (
 )
 
 ANCHOR_MODULES = ("connector_footprint_peer_anchors.py",)
-OPEN_OUTLIER_MODULES = ("connector_footprint_peer_open_outliers.py",)
+OPEN_OUTLIER_MODULES = (
+    "connector_footprint_peer_open_outliers.py",
+    "connector_footprint_open_named_candidates.py",
+    "design_lint_connector_footprint_named_open_evidence.py",
+)
 UNANCHORED_MODULES = (
     "connector_footprint_peer_unanchored_divergence.py",
     "connector_footprint_peer_unanchored_coverage_review.py",
+    "design_lint_connector_unanchored_assignment_evidence.py",
+    "design_lint_connector_unanchored_source_evidence.py",
+    "design_lint_connector_unanchored_coverage_evidence.py",
+    "design_lint_connector_unanchored_scope_evidence.py",
 )
+ASSIGNMENT_MODULES = ("connector_footprint_peer_assignments.py",)
 
 
 def test_connector_footprint_peer_modules_stay_below_review_limit() -> None:
     sizes = {
         name: line_count(HWREPO / name)
-        for name in (*PEER_MODULES, *ANCHOR_MODULES, *OPEN_OUTLIER_MODULES, *UNANCHORED_MODULES)
+        for name in (
+            *PEER_MODULES,
+            *ANCHOR_MODULES,
+            *OPEN_OUTLIER_MODULES,
+            *UNANCHORED_MODULES,
+            *ASSIGNMENT_MODULES,
+        )
     }
     oversized = {name: size for name, size in sizes.items() if size >= IMPLEMENTATION_MAX_LINES}
 
@@ -105,3 +120,31 @@ def test_connector_footprint_peer_candidates_use_typed_projection_owner() -> Non
     assert not any(
         isinstance(node, ast.keyword) and node.arg == "evidence" for node in ast.walk(service_tree)
     )
+
+
+def test_peer_pin_assignment_extraction_has_one_shared_owner() -> None:
+    expected_imports = {
+        "connector_footprint_peer_pins.py": {"connector_footprint_peer_pin_net_map"},
+        "design_lint_connector_footprint_peer_metadata_evidence.py": {
+            "connector_footprint_peer_pin_assignments",
+            "connector_footprint_peer_pin_net_map",
+        },
+        "design_lint_connector_footprint_named_divergence_evidence.py": {
+            "connector_footprint_peer_pin_assignments",
+            "connector_footprint_peer_pin_net_map",
+        },
+        "design_lint_connector_unanchored_source_evidence.py": {
+            "connector_footprint_peer_pin_assignments",
+            "connector_footprint_peer_pin_net_map",
+        },
+    }
+    for filename, expected in expected_imports.items():
+        tree = ast.parse((HWREPO / filename).read_text(encoding="utf-8"), filename=filename)
+        actual = {
+            alias.name
+            for node in tree.body
+            if isinstance(node, ast.ImportFrom)
+            and node.module == "connector_footprint_peer_assignments"
+            for alias in node.names
+        }
+        assert expected <= actual, f"{filename} must use the shared peer assignment owner"

@@ -2,14 +2,24 @@
 
 from __future__ import annotations
 
-from .component_mosfet_symbols import SUPPORTED_THREE_TERMINAL_MOSFET_SYMBOLS
+from .component_mosfet_symbols import (
+    SUPPORTED_THREE_TERMINAL_MOSFET_SYMBOLS,
+    mosfet_terminal_role,
+)
+from .design_lint_mosfet_gate_candidate_evidence import (
+    MOSFET_GATE_WITHOUT_PEER_RULE_ID,
+    MOSFET_GATE_WITHOUT_SOURCE_BIAS_RULE_ID,
+    MosfetGateCandidate,
+    MosfetGateWithoutPeerEvidence,
+    MosfetGateWithoutSourceBiasEvidence,
+    SupportedMosfetGate,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 from .resistor_paths import direct_resistors
 
-RULE_ID = "component.mosfet_gate_without_peer"
-SOURCE_BIAS_RULE_ID = "component.mosfet_gate_without_visible_source_bias"
-_GATE_FUNCTIONS = frozenset({"g", "gate"})
+RULE_ID = MOSFET_GATE_WITHOUT_PEER_RULE_ID
+SOURCE_BIAS_RULE_ID = MOSFET_GATE_WITHOUT_SOURCE_BIAS_RULE_ID
 
 
 def mosfet_gates_without_peer(observed: NetlistContract) -> tuple[Candidate, ...]:
@@ -23,6 +33,9 @@ def mosfet_gates_without_peer(observed: NetlistContract) -> tuple[Candidate, ...
     functions = {
         pin.casefold(): function.strip().casefold()
         for pin, function in observed.pin_functions.items()
+    }
+    native_functions = {
+        pin.casefold(): function for pin, function in observed.pin_functions.items()
     }
     nets_by_pin: dict[str, list[tuple[str, str]]] = {}
     for net, pins in observed.nets.items():
@@ -47,7 +60,7 @@ def mosfet_gates_without_peer(observed: NetlistContract) -> tuple[Candidate, ...
         gate_pins = tuple(
             f"{reference}.{number}"
             for number in pin_numbers
-            if functions.get(f"{reference}.{number}".casefold()) in _GATE_FUNCTIONS
+            if mosfet_terminal_role(functions.get(f"{reference}.{number}".casefold())) == "gate"
         )
         if len(gate_pins) != 1:
             continue
@@ -75,9 +88,20 @@ def mosfet_gates_without_peer(observed: NetlistContract) -> tuple[Candidate, ...
         if peers:
             continue
 
+        device = SupportedMosfetGate(
+            observed=observed,
+            reference=reference,
+            symbol=symbol,
+            gate_pin=gate_pin,
+            gate_function=native_functions[gate_pin.casefold()],
+        )
         findings.append(
-            Candidate(
-                rule_id=RULE_ID,
+            MosfetGateCandidate.from_source_evidence(
+                MosfetGateWithoutPeerEvidence(
+                    device=device,
+                    assigned_net=assigned_net,
+                    other_fitted_net_members=peers,
+                ),
                 subject=f"{gate_pin}: MOSFET gate has no other fitted pin on its net",
                 message=(
                     "This fitted, supported three-terminal MOSFET gate has no other fitted pin "
@@ -86,14 +110,6 @@ def mosfet_gates_without_peer(observed: NetlistContract) -> tuple[Candidate, ...
                     "pin would not prove that the gate is driven, biased to a safe state, or "
                     "connected on the PCB."
                 ),
-                evidence={
-                    "component": (reference,),
-                    "symbol": (symbol,),
-                    "gate_pin": (gate_pin,),
-                    "gate_function": (observed.pin_functions[gate_pin],),
-                    "assigned_net": (assigned_net or "<unassigned>",),
-                    "other_fitted_net_members": peers,
-                },
             )
         )
     return tuple(findings)
@@ -111,13 +127,17 @@ def mosfet_gates_without_visible_source_bias(observed: NetlistContract) -> tuple
         pin.casefold(): function.strip().casefold()
         for pin, function in observed.pin_functions.items()
     }
+    native_functions = {
+        pin.casefold(): function for pin, function in observed.pin_functions.items()
+    }
     nets_by_pin: dict[str, list[str]] = {}
     for net, pins in observed.nets.items():
         for pin in pins:
             nets_by_pin.setdefault(pin.casefold(), []).append(net)
+    resistors = direct_resistors(observed)
     resistor_pairs = {
         frozenset((resistor.first_net.casefold(), resistor.second_net.casefold()))
-        for resistor in direct_resistors(observed)
+        for resistor in resistors
     }
 
     findings: list[Candidate] = []
@@ -137,12 +157,12 @@ def mosfet_gates_without_visible_source_bias(observed: NetlistContract) -> tuple
         gate_numbers = tuple(
             number
             for number in pin_numbers
-            if functions.get(f"{reference}.{number}".casefold()) in _GATE_FUNCTIONS
+            if mosfet_terminal_role(functions.get(f"{reference}.{number}".casefold())) == "gate"
         )
         source_numbers = tuple(
             number
             for number in pin_numbers
-            if functions.get(f"{reference}.{number}".casefold()) in {"s", "source"}
+            if mosfet_terminal_role(functions.get(f"{reference}.{number}".casefold())) == "source"
         )
         if len(gate_numbers) != 1 or len(source_numbers) != 1:
             continue
@@ -173,9 +193,33 @@ def mosfet_gates_without_visible_source_bias(observed: NetlistContract) -> tuple
         if not peers or frozenset((gate_net.casefold(), source_net.casefold())) in resistor_pairs:
             continue
 
+        gate_function = native_functions[gate_pin.casefold()]
+        source_function = native_functions[source_pin.casefold()]
+        device = SupportedMosfetGate(
+            observed=observed,
+            reference=reference,
+            symbol=symbol,
+            gate_pin=gate_pin,
+            gate_function=gate_function,
+        )
         findings.append(
-            Candidate(
-                rule_id=SOURCE_BIAS_RULE_ID,
+            MosfetGateCandidate.from_source_evidence(
+                MosfetGateWithoutSourceBiasEvidence(
+                    device=device,
+                    source_pin=source_pin,
+                    source_function=source_function,
+                    gate_net=gate_net,
+                    source_net=source_net,
+                    fitted_gate_peers=peers,
+                    visible_source_bias_resistors=tuple(
+                        resistor
+                        for resistor in resistors
+                        if frozenset(
+                            (resistor.first_net.casefold(), resistor.second_net.casefold())
+                        )
+                        == frozenset((gate_net.casefold(), source_net.casefold()))
+                    ),
+                ),
                 subject=f"{gate_pin}: MOSFET gate has no visible source-bias resistor",
                 message=(
                     "This fitted MOSFET gate shares a net with another fitted pin, but no fitted, "
@@ -184,16 +228,6 @@ def mosfet_gates_without_visible_source_bias(observed: NetlistContract) -> tuple
                     "disabled or unpowered. This prompt does not prove that a bias is required, "
                     "that a driver lacks an internal bias, or that any resistor value is adequate."
                 ),
-                evidence={
-                    "component": (reference,),
-                    "symbol": (symbol,),
-                    "gate_pin": (gate_pin,),
-                    "gate_net": (gate_net,),
-                    "source_pin": (source_pin,),
-                    "source_net": (source_net,),
-                    "fitted_gate_peers": peers,
-                    "visible_source_bias_resistors": (),
-                },
             )
         )
     return tuple(findings)

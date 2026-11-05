@@ -99,6 +99,16 @@ def spi_data_function_role_and_channel(value: str) -> tuple[str, str] | None:
     return None
 
 
+def spi_data_label_role(value: str) -> Literal["MOSI", "MISO"] | None:
+    """Recognize only unindexed MOSI/MISO net-label spellings."""
+    function = re.sub(r"[^a-z0-9]", "", value.casefold())
+    if function in {"mosi", "spimosi"}:
+        return "MOSI"
+    if function in {"miso", "spimiso"}:
+        return "MISO"
+    return None
+
+
 def spi_signal_role_and_channel(value: str) -> tuple[str, str] | None:
     """Recognize bounded SPI clock, data, and chip-select roles with channel identity."""
     data_role = spi_data_function_role_and_channel(value)

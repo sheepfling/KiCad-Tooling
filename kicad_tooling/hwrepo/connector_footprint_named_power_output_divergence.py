@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Literal
 
 from .connector_footprint_peer_pin_types import ConnectorFootprintPeerPinScan
 from .connector_identity import (
@@ -10,17 +11,21 @@ from .connector_identity import (
     is_return_function,
     pin_function_is_generic,
 )
-from .design_lint_rule_types import DesignLintRuleId
-from .design_lint_types import Candidate
+from .design_lint_connector_footprint_named_divergence_evidence import (
+    ConnectorFootprintNamedDivergenceCandidate,
+    connector_footprint_named_divergence_candidate,
+)
 
-RULE_ID: DesignLintRuleId = "connector.footprint_named_power_output_assignment_divergence"
+RULE_ID: Literal["connector.footprint_named_power_output_assignment_divergence"] = (
+    "connector.footprint_named_power_output_assignment_divergence"
+)
 
 
 @dataclass(frozen=True, slots=True)
 class NamedPowerOutputDivergenceEvaluation:
     """Candidates and coverage counts for split named power-output contacts."""
 
-    candidates: tuple[Candidate, ...]
+    candidates: tuple[ConnectorFootprintNamedDivergenceCandidate, ...]
     candidate_count: int
     unanchored_count: int
 
@@ -42,8 +47,9 @@ def evaluate_footprint_named_power_output_assignment_divergence(
     )
     anchored = tuple(item for item in eligible if item.common_anchor_pin_numbers)
     candidates = tuple(
-        Candidate(
-            rule_id=RULE_ID,
+        connector_footprint_named_divergence_candidate(
+            item,
+            RULE_ID,
             subject=f"{item.value} [{item.footprint}] pin {item.pin_number} ({item.pin_function})",
             message=(
                 "Fitted connectors with distinct native symbols share the same value, footprint, "
@@ -58,24 +64,6 @@ def evaluate_footprint_named_power_output_assignment_divergence(
                     else ""
                 )
             ),
-            evidence={
-                "value": (item.value,),
-                "footprint": (item.footprint,),
-                "pin_number": (item.pin_number,),
-                "pin_function": (item.pin_function,),
-                "pin_electrical_type": (item.pin_electrical_type.strip().casefold(),),
-                "assignments": tuple(f"{pin}={nets[0]}" for pin, nets in item.assignments.items()),
-                "symbols": item.symbols,
-                "common_anchor_pin_numbers": item.common_anchor_pin_numbers,
-                **(
-                    {}
-                    if item.peer_assignment_group is None
-                    else {
-                        "peer_assignment_group": (item.peer_assignment_group,),
-                        "peer_assignment_basis": item.peer_assignment_basis,
-                    }
-                ),
-            },
         )
         for item in anchored
     )

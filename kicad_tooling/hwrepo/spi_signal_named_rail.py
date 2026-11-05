@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from types import MappingProxyType
 
+from .design_lint_named_rail_candidate_evidence import (
+    NamedRailSignalCandidate,
+    SpiSignalNamedRailEvidence,
+)
 from .design_lint_rule_types import DesignLintRuleId
-from .design_lint_types import Candidate
-from .named_rail_pin_evidence import assigned_named_rail_ic_pins
+from .named_rail_pin_evidence import NamedRailPinSource, assigned_named_rail_ic_pins
 from .netlist_contract_models import NetlistContract
 from .spi_participants import spi_signal_role_and_channel
 
@@ -22,13 +25,15 @@ _ROLE_LABELS = MappingProxyType(
 )
 
 
-def spi_signal_on_named_rail_candidates(observed: NetlistContract) -> tuple[Candidate, ...]:
+def spi_signal_on_named_rail_candidates(
+    observed: NetlistContract,
+) -> tuple[NamedRailSignalCandidate, ...]:
     """Review fitted IC SPI pins with one assignment to a rail-like net name.
 
     Native pin functions and net labels are clues only. A direct rail strap,
     including an intentionally inactive chip select, can be valid.
     """
-    candidates: list[Candidate] = []
+    candidates: list[NamedRailSignalCandidate] = []
     for item in assigned_named_rail_ic_pins(observed):
         role_channel = spi_signal_role_and_channel(item.function)
         if role_channel is None:
@@ -36,8 +41,12 @@ def spi_signal_on_named_rail_candidates(observed: NetlistContract) -> tuple[Cand
         role, channel = role_channel
         role_label = _ROLE_LABELS[role]
         candidates.append(
-            Candidate(
-                rule_id=RULE_ID,
+            NamedRailSignalCandidate.from_source_evidence(
+                SpiSignalNamedRailEvidence(
+                    pin=NamedRailPinSource(observed=observed, evidence=item),
+                    role=role,
+                    channel=channel,
+                ),
                 subject=f"{item.pin}: {item.function} on {item.rail_role} net {item.net_name}",
                 message=(
                     f"The native SPI pin function indicates {role_label} on channel "
@@ -47,15 +56,6 @@ def spi_signal_on_named_rail_candidates(observed: NetlistContract) -> tuple[Cand
                     "clues, not proof of electrical potential, required SPI connectivity, or a "
                     "defect; this check does not assess PCB copper or physical continuity."
                 ),
-                evidence={
-                    "pin": (item.pin,),
-                    "pin_function": (item.function,),
-                    "pin_role": (role,),
-                    "spi_channel": (channel,),
-                    "assigned_net": (item.net_name,),
-                    "net_label_role_clue": (item.rail_role,),
-                    "component_pin_inventory": item.inventory,
-                },
             )
         )
 

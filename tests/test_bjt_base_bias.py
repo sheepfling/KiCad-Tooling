@@ -106,6 +106,7 @@ def test_direct_output_drive_is_left_to_the_more_specific_rule() -> None:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_open_peer_dnp_and_unsupported_bjt_cases_are_not_classified() -> None:
+    ambiguous_base_net = bjt_base_bias_netlist()
     cases = (
         bjt_base_bias_netlist(base_peer=False),
         bjt_base_bias_netlist(dnp=("Q1",)),
@@ -115,6 +116,14 @@ def test_open_peer_dnp_and_unsupported_bjt_cases_are_not_classified() -> None:
         bjt_base_bias_netlist(inventory=()),
         bjt_base_bias_netlist(function_overrides={"Q1.1": "C"}),
         bjt_base_bias_netlist(duplicate_base_assignment=True),
+        ambiguous_base_net.model_copy(
+            update={
+                "nets": {
+                    **ambiguous_base_net.nets,
+                    "base": ("R1.2",),
+                }
+            }
+        ),
     )
 
     for observed in cases:

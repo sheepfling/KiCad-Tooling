@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from .casefold_mapping_lookup import lookup_unique_casefold
 from .component_references import is_integrated_circuit_reference
+from .design_lint_signal_label_role_candidate_evidence import (
+    Rs485DataLabelRoleMismatchEvidence,
+    SignalLabelRoleMismatchCandidate,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 from .rs485_data_functions import rs485_data_pin_role
@@ -80,9 +84,24 @@ def rs485_data_direction_label_candidates(
             net_role = serial_function_role_and_channel(net)
             if net_role is None or net_role[0] == pin_role:
                 continue
+            paired_role = "rx" if pin_role == "tx" else "tx"
+            paired_pin, _paired_number = data_pins[paired_role]
+            paired_net = assignments[paired_role][0]
             findings.append(
-                Candidate(
-                    rule_id=RULE_ID,
+                SignalLabelRoleMismatchCandidate.from_source_evidence(
+                    Rs485DataLabelRoleMismatchEvidence(
+                        observed=observed,
+                        reference=reference,
+                        pin=pin,
+                        pin_function=observed.pin_functions[pin],
+                        pin_role=pin_role,
+                        net=net,
+                        net_role=net_role[0],
+                        channel=channel,
+                        paired_pin=paired_pin,
+                        paired_function=observed.pin_functions[paired_pin],
+                        paired_net=paired_net,
+                    ),
                     subject=f"{pin}: {observed.pin_functions[pin]} on {net}",
                     message=(
                         f"The RS-485 data-pin function indicates host {pin_role.upper()}, but "
@@ -90,15 +109,6 @@ def rs485_data_direction_label_candidates(
                         "Review the transceiver pin map and naming convention; the heuristic "
                         "does not establish a required connection."
                     ),
-                    evidence={
-                        "reference": (reference,),
-                        "pin": (pin,),
-                        "pin_function": (observed.pin_functions[pin],),
-                        "pin_role": (pin_role,),
-                        "channel": (channel,),
-                        "net": (net,),
-                        "net_role": (net_role[0],),
-                    },
                 )
             )
     return tuple(findings)

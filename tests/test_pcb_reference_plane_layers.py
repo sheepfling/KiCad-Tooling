@@ -178,7 +178,7 @@ class PcbReferencePlaneLayerTests:
         assert quiet_entry.excluded_short_track_uuids == (short_track.uuid,)
         quiet = evaluate(
             "synthetic-short-track-policy",
-            coach(),
+            coach(project_id="synthetic-short-track-policy"),
             DesignLintPolicy(pcb_reference_plane_map=quiet_spec),
             pcb_reference_plane_coverage=report(quiet_spec, source),
         )
@@ -196,7 +196,7 @@ class PcbReferencePlaneLayerTests:
         assert "require review" in review_entry.issues[0]
         reviewed = evaluate(
             "synthetic-short-track-policy",
-            coach(),
+            coach(project_id="synthetic-short-track-policy"),
             DesignLintPolicy(pcb_reference_plane_map=review_spec),
             pcb_reference_plane_coverage=report(review_spec, source),
         )
@@ -209,7 +209,7 @@ class PcbReferencePlaneLayerTests:
 
         blocking = evaluate(
             "synthetic-short-track-policy",
-            coach(),
+            coach(project_id="synthetic-short-track-policy"),
             DesignLintPolicy(
                 pcb_reference_plane_map=review_spec,
                 rules=(

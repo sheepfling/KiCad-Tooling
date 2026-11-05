@@ -123,13 +123,13 @@ class PcbReferencePlaneGeometryTests:
 
         control = evaluate(
             "synthetic-narrow-reference-void-control",
-            coach(),
+            coach(project_id="synthetic-narrow-reference-void-control"),
             DesignLintPolicy(pcb_reference_plane_map=spec),
             pcb_reference_plane_coverage=report(spec, control_source),
         )
         fault = evaluate(
             "synthetic-narrow-reference-void-fault",
-            coach(),
+            coach(project_id="synthetic-narrow-reference-void-fault"),
             DesignLintPolicy(pcb_reference_plane_map=spec),
             pcb_reference_plane_coverage=report(spec, fault_source),
         )
@@ -213,7 +213,7 @@ class PcbReferencePlaneGeometryTests:
         assert gnd_entry.tracks[0].below_minimum
         review = evaluate(
             "synthetic-split-plane",
-            coach(),
+            coach(project_id="synthetic-split-plane"),
             DesignLintPolicy(pcb_reference_plane_map=gnd_spec),
             pcb_reference_plane_coverage=report(gnd_spec, split_source),
         )
@@ -234,7 +234,7 @@ class PcbReferencePlaneGeometryTests:
         ) == (1, 1)
         control = evaluate(
             "synthetic-split-plane-alternate-domain",
-            coach(),
+            coach(project_id="synthetic-split-plane-alternate-domain"),
             DesignLintPolicy(pcb_reference_plane_map=agnd_spec),
             pcb_reference_plane_coverage=report(agnd_spec, agnd_source),
         )
@@ -270,7 +270,7 @@ class PcbReferencePlaneGeometryTests:
 
         lint = evaluate(
             "synthetic-branched-route",
-            coach(),
+            coach(project_id="synthetic-branched-route"),
             DesignLintPolicy(pcb_reference_plane_map=spec),
             pcb_reference_plane_coverage=report(spec, source),
         )
@@ -300,7 +300,7 @@ class PcbReferencePlaneGeometryTests:
         )
         control = evaluate(
             "synthetic-branched-route-control",
-            coach(),
+            coach(project_id="synthetic-branched-route-control"),
             DesignLintPolicy(pcb_reference_plane_map=spec),
             pcb_reference_plane_coverage=report(spec, control_source),
         )

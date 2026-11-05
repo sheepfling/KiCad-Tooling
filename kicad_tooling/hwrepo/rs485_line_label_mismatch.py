@@ -2,25 +2,17 @@
 
 from __future__ import annotations
 
-import re
-
 from .component_references import is_integrated_circuit_reference
+from .design_lint_signal_label_role_candidate_evidence import (
+    Rs485LineLabelRoleMismatchEvidence,
+    SignalLabelRoleMismatchCandidate,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 from .rs485_data_functions import explicit_rs485_transceiver_identity
-from .rs485_line_functions import rs485_bus_line_role
+from .rs485_line_functions import rs485_bus_line_label_role, rs485_bus_line_role
 
 RULE_ID = "bus.rs485_line_label_mismatch"
-
-
-def _rs485_net_label_role(net: str) -> str | None:
-    """Recognize only unindexed RS-485 A/B labels, not generic A/B names."""
-    normalized = re.sub(r"[^a-z0-9]", "", net.casefold())
-    if normalized in {"rs485a", "rs485linea"}:
-        return "a"
-    if normalized in {"rs485b", "rs485lineb"}:
-        return "b"
-    return None
 
 
 def rs485_line_label_mismatch_candidates(
@@ -77,7 +69,7 @@ def rs485_line_label_mismatch_candidates(
             if len(assigned_nets) != 1:
                 break
             net = next(iter(assigned_nets))
-            net_role = _rs485_net_label_role(net)
+            net_role = rs485_bus_line_label_role(net)
             if net_role is not None:
                 assignments[role] = (net, net_role)
         if len(assignments) != 2:
@@ -90,9 +82,24 @@ def rs485_line_label_mismatch_candidates(
             if role == net_role:
                 continue
             pin, function = pins[role][0], observed.pin_functions[pins[role][0]]
+            paired_role = "b" if role == "a" else "a"
+            paired_pin, _paired_number = pins[paired_role]
+            paired_net = assignments[paired_role][0]
             findings.append(
-                Candidate(
-                    rule_id=RULE_ID,
+                SignalLabelRoleMismatchCandidate.from_source_evidence(
+                    Rs485LineLabelRoleMismatchEvidence(
+                        observed=observed,
+                        reference=reference,
+                        pin=pin,
+                        pin_function=function,
+                        pin_role=role,
+                        net=net,
+                        net_role=net_role,
+                        identity_basis=identity,
+                        paired_pin=paired_pin,
+                        paired_function=observed.pin_functions[paired_pin],
+                        paired_net=paired_net,
+                    ),
                     subject=f"{pin}: RS-485 {role.upper()} function on {net}",
                     message=(
                         f"The fitted RS-485 transceiver pin function identifies line {role.upper()}, "
@@ -100,15 +107,6 @@ def rs485_line_label_mismatch_candidates(
                         "Review the exact part pinout and interface map; function and net names "
                         "do not establish the required line assignment or physical polarity."
                     ),
-                    evidence={
-                        "reference": (reference,),
-                        "pin": (pin,),
-                        "pin_function": (function,),
-                        "pin_role": (role,),
-                        "net": (net,),
-                        "net_role": (net_role,),
-                        "identity_basis": (identity,),
-                    },
                 )
             )
     return tuple(sorted(findings, key=lambda item: (item.subject.casefold(), item.subject)))

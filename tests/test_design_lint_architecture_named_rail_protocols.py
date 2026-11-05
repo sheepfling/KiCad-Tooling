@@ -13,6 +13,28 @@ pytestmark = [
     pytest.mark.architecture,
 ]
 
+TYPED_SIGNAL_RULES = frozenset(
+    {
+        "bus.i2c_signal_on_named_rail",
+        "bus.i3c_signal_on_named_rail",
+        "bus.spi_signal_on_named_rail",
+        "bus.serial_signal_on_named_rail",
+        "bus.can_signal_on_named_rail",
+        "bus.ethernet_signal_on_named_rail",
+        "bus.ethernet_management_signal_on_named_rail",
+        "bus.usb_signal_on_named_rail",
+        "bus.rs485_signal_on_named_rail",
+        "bus.usb_c_sbu_signal_on_named_rail",
+    }
+)
+TYPED_SIGNAL_OWNER = (
+    "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#NamedRailSignalCandidate"
+)
+TYPED_LINE_RULES = frozenset({"bus.can_line_on_named_rail", "bus.rs485_line_on_named_rail"})
+TYPED_LINE_OWNER = (
+    "kicad_tooling/hwrepo/design_lint_named_rail_line_candidate_evidence.py#NamedRailLineCandidate"
+)
+
 
 def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
     owner_functions = {
@@ -72,6 +94,12 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
     catalog = {item.rule_id: item for item in rule_catalog().rules}
     for shared_name in ("named_rail_roles.py", "named_rail_pin_evidence.py"):
         assert line_count(HWREPO / shared_name) < IMPLEMENTATION_MAX_LINES
+    assert line_count(HWREPO / "design_lint_named_rail_candidate_evidence.py") < (
+        IMPLEMENTATION_MAX_LINES
+    )
+    assert line_count(HWREPO / "design_lint_named_rail_line_candidate_evidence.py") < (
+        IMPLEMENTATION_MAX_LINES
+    )
 
     for rule_id, (filename, owner_reference) in owner_functions.items():
         rule = catalog[rule_id]
@@ -79,3 +107,9 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
         assert rule.theme == "interfaces"
         assert rule.implementation_owner == owner_reference
         assert owner_reference in rule.implementation_refs
+
+    for rule_id in TYPED_SIGNAL_RULES:
+        assert TYPED_SIGNAL_OWNER in catalog[rule_id].implementation_refs
+
+    for rule_id in TYPED_LINE_RULES:
+        assert TYPED_LINE_OWNER in catalog[rule_id].implementation_refs

@@ -13,6 +13,10 @@ from .connector_identity import (
     is_return_function,
     pin_function_is_generic,
 )
+from .design_lint_connector_footprint_all_open_candidate_evidence import (
+    ConnectorFootprintAllOpenCandidate,
+    ConnectorFootprintAllOpenEvidence,
+)
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 
@@ -44,8 +48,8 @@ def evaluate_footprint_named_signal_all_open(
     )
     anchored = tuple(item for item in eligible if item.common_anchor_pin_numbers)
     candidates = tuple(
-        Candidate(
-            rule_id=RULE_ID,
+        ConnectorFootprintAllOpenCandidate.from_source_evidence(
+            ConnectorFootprintAllOpenEvidence(scan=scan, item=item, kind="signal"),
             subject=f"{item.value} [{item.footprint}] pin {item.pin_number} ({item.pin_function})",
             message=(
                 "Fitted connectors with distinct native symbols share the same value, footprint, "
@@ -60,25 +64,6 @@ def evaluate_footprint_named_signal_all_open(
                     else ""
                 )
             ),
-            evidence={
-                "value": (item.value,),
-                "footprint": (item.footprint,),
-                "pin_number": (item.pin_number,),
-                "pin_function": (item.pin_function,),
-                "pin_electrical_type": (item.pin_electrical_type.strip().casefold(),),
-                "assignments": tuple(f"{pin}=<unassigned>" for pin in item.assignments),
-                "open_pins": tuple(item.assignments),
-                "symbols": item.symbols,
-                "common_anchor_pin_numbers": item.common_anchor_pin_numbers,
-                **(
-                    {}
-                    if item.peer_assignment_group is None
-                    else {
-                        "peer_assignment_group": (item.peer_assignment_group,),
-                        "peer_assignment_basis": item.peer_assignment_basis,
-                    }
-                ),
-            },
         )
         for item in anchored
     )

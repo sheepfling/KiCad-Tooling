@@ -11,7 +11,12 @@ from .connector_footprint_peer_groups import (
     complete_connector_footprint_peer_pin_inventory,
     connector_footprint_peer_candidate_groups,
 )
+from .connector_footprint_peer_pin_types import ConnectorFootprintPeerPinScanSource
 from .connector_identity import native_pin_metadata_is_missing, partition_peer_assignments
+from .design_lint_connector_footprint_peer_metadata_evidence import (
+    ConnectorFootprintPeerMetadataCandidate,
+    ConnectorFootprintPeerMetadataEvidence,
+)
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
@@ -25,11 +30,15 @@ def connector_footprint_peer_pin_missing_metadata_open_outliers(
     peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
 ) -> tuple[Candidate, ...]:
     """Review a partially open peer pin when exact assignments and an anchor agree."""
-    symbols = {reference.casefold(): item for reference, item in observed.component_symbols.items()}
     functions = {pin.casefold(): value for pin, value in observed.pin_functions.items()}
     electrical_types = {
         pin.casefold(): value for pin, value in observed.pin_electrical_types.items()
     }
+    source = ConnectorFootprintPeerPinScanSource(
+        observed=observed,
+        declared_references=declared_references,
+        peer_assignment_groups=peer_assignment_groups,
+    )
     pin_nets: dict[str, set[str]] = {}
     for net, pins in observed.nets.items():
         for pin in pins:
@@ -50,7 +59,6 @@ def connector_footprint_peer_pin_missing_metadata_open_outliers(
 
         for pin_number in pin_numbers:
             assignments_by_pin: dict[str, tuple[str, ...]] = {}
-            metadata_by_reference: dict[str, tuple[str, str, str]] = {}
             missing_by_reference: dict[str, tuple[str, ...]] = {}
             for reference in group.references:
                 reference_key = reference.casefold()
@@ -68,15 +76,6 @@ def connector_footprint_peer_pin_missing_metadata_open_outliers(
                 )
                 if missing_fields:
                     missing_by_reference[reference_key] = missing_fields
-                metadata_by_reference[reference_key] = (
-                    pin,
-                    "<missing>"
-                    if native_pin_metadata_is_missing(function)
-                    else (function or "").strip(),
-                    "<missing>"
-                    if native_pin_metadata_is_missing(electrical_type)
-                    else (electrical_type or "").strip(),
-                )
                 assignments_by_pin[pin] = tuple(
                     sorted(
                         pin_nets.get(pin.casefold(), ()), key=lambda item: (item.casefold(), item)
@@ -92,7 +91,6 @@ def connector_footprint_peer_pin_missing_metadata_open_outliers(
             ):
                 peer_group = partition.peer_assignment_group
                 scoped_assignments = partition.assignments_by_pin
-                peer_basis = partition.peer_assignment_basis
                 if len(scoped_assignments) < 2:
                     continue
                 scope_references = tuple(
@@ -135,34 +133,21 @@ def connector_footprint_peer_pin_missing_metadata_open_outliers(
                 if not anchors:
                     continue
 
-                missing_evidence = tuple(
-                    f"{metadata_by_reference[reference.casefold()][0]}: {field}"
-                    for reference in scope_references
-                    for field in missing_by_reference.get(reference.casefold(), ())
-                )
-                metadata_evidence = tuple(
-                    f"{metadata_by_reference[reference.casefold()][0]}: "
-                    f"function={metadata_by_reference[reference.casefold()][1]}; "
-                    f"electrical_type={metadata_by_reference[reference.casefold()][2]}"
-                    for reference in scope_references
-                )
-                assignment_evidence = tuple(
-                    f"{pin}={nets[0] if nets else '<unassigned>'}"
-                    for pin, nets in sorted(
-                        scoped_assignments.items(),
-                        key=lambda item: (item[0].casefold(), item[0]),
-                    )
-                )
-                symbols_evidence = tuple(
-                    f"{reference}={symbols[reference.casefold()]}" for reference in scope_references
-                )
                 displayed_target = displayed_numbers[group.references[0].casefold()][
                     pin_number.casefold()
                 ]
+                typed_source = ConnectorFootprintPeerMetadataEvidence.from_scan(
+                    source=source,
+                    group=group,
+                    scope=partition,
+                    kind="missing_open",
+                    pin_number=displayed_target,
+                    common_anchor_pin_numbers=anchors,
+                )
                 candidates.append(
-                    Candidate(
-                        rule_id=RULE_ID,
-                        subject=(f"{group.value} [{group.footprint}] pin {displayed_target}"),
+                    ConnectorFootprintPeerMetadataCandidate.from_source_evidence(
+                        typed_source,
+                        subject=f"{group.value} [{group.footprint}] pin {displayed_target}",
                         message=(
                             "Fitted connector aliases with matching value, footprint, and complete "
                             "pin inventory have missing or unnamed native role metadata for this "
@@ -176,28 +161,6 @@ def connector_footprint_peer_pin_missing_metadata_open_outliers(
                                 else ""
                             )
                         ),
-                        evidence={
-                            "value": (group.value,),
-                            "footprint": (group.footprint,),
-                            "pin_number": (displayed_target,),
-                            "missing_metadata": missing_evidence,
-                            "peer_pin_metadata": metadata_evidence,
-                            "assignments": assignment_evidence,
-                            "symbols": symbols_evidence,
-                            "peer_identity_basis": (
-                                "part_id" if group.part_id is not None else "footprint_value",
-                            ),
-                            **({} if group.part_id is None else {"part_id": (group.part_id,)}),
-                            "common_anchor_pin_numbers": anchors,
-                            **(
-                                {}
-                                if peer_group is None
-                                else {
-                                    "peer_assignment_group": (peer_group,),
-                                    "peer_assignment_basis": peer_basis,
-                                }
-                            ),
-                        },
                     )
                 )
 

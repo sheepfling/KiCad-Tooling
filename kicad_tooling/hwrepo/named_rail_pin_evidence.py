@@ -23,6 +23,71 @@ class NamedRailPinEvidence:
     inventory: tuple[str, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class NamedRailPinSource:
+    """One extracted named-rail pin bound to its source netlist."""
+
+    observed: NetlistContract
+    evidence: NamedRailPinEvidence
+
+    def __post_init__(self) -> None:
+        if not named_rail_pin_evidence_matches_source(self.observed, self.evidence):
+            raise ValueError("Named-rail pin evidence must match its current native netlist")
+
+
+def named_rail_pin_evidence_matches_source(
+    observed: NetlistContract,
+    evidence: NamedRailPinEvidence,
+) -> bool:
+    """Check one extracted rail pin against the current fitted native source."""
+    reference, separator, number = evidence.pin.rpartition(".")
+    if (
+        not separator
+        or reference.casefold() != evidence.reference.casefold()
+        or number != evidence.number
+        or not is_integrated_circuit_reference(reference)
+        or lookup_unique_casefold(observed.components, evidence.reference) is None
+        or evidence.reference.casefold() in {item.casefold() for item in observed.dnp_components}
+        or lookup_unique_casefold(observed.pin_functions, evidence.pin) != evidence.function
+    ):
+        return False
+
+    native_pins = tuple(
+        pin for pin in observed.pin_functions if pin.casefold() == evidence.pin.casefold()
+    )
+    references = tuple(
+        component
+        for component in observed.components
+        if component.casefold() == evidence.reference.casefold()
+    )
+    inventories = tuple(
+        inventory
+        for reference_key, inventory in observed.component_pin_numbers.items()
+        if reference_key.casefold() == evidence.reference.casefold()
+    )
+    if native_pins != (evidence.pin,) or len(references) != 1 or len(inventories) != 1:
+        return False
+
+    inventory_keys = tuple(sorted(number.casefold() for number in inventories[0]))
+    if (
+        len(set(inventory_keys)) != len(inventories[0])
+        or number.casefold() not in inventory_keys
+        or inventory_keys != evidence.inventory
+    ):
+        return False
+
+    assigned_nets = {
+        net
+        for net, pins in observed.nets.items()
+        if any(pin.casefold() == evidence.pin.casefold() for pin in pins)
+    }
+    return (
+        len(assigned_nets) == 1
+        and evidence.net_name in assigned_nets
+        and named_rail_role_clue(evidence.net_name) == evidence.rail_role
+    )
+
+
 def assigned_named_rail_ic_pins(observed: NetlistContract) -> tuple[NamedRailPinEvidence, ...]:
     """Collect fitted IC pins with exactly one native assignment to a named rail."""
     nets_by_pin: dict[str, set[str]] = {}

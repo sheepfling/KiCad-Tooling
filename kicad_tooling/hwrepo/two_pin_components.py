@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import MappingProxyType
 
+from .casefold_mapping_lookup import lookup_unique_casefold
 from .component_role_models import ComponentRoleBinding, ComponentRoleMap
 from .component_roles import resolve_component_role_map
 from .netlist_contract_models import NetlistContract
+from .netlist_pin_assignments import netlist_pin_net_index
 
 _SUPPORTED_DEVICE_SYMBOL = re.compile(
     r"^Device:(?P<kind>R|C|L|D|Fuse|Polyfuse|FerriteBead|Crystal|Varistor|Thermistor)"
@@ -66,6 +68,107 @@ class TwoPinComponentOnSameNet:
     pin_numbers: tuple[str, str]
     net: str
     role_binding: ComponentRoleBinding | None = None
+    source_netlist: NetlistContract | None = field(default=None, compare=False, repr=False)
+
+
+def _supported_native_kind(symbol: str) -> str | None:
+    match = _SUPPORTED_DEVICE_SYMBOL.fullmatch(symbol)
+    if match is not None:
+        native_kind = match.group("kind").casefold()
+        if native_kind == "ferritebead" and (match.group("variant") or "").casefold() not in {
+            "",
+            "small",
+        }:
+            return None
+        if native_kind == "varistor" and symbol not in {
+            "Device:Varistor",
+            "Device:Varistor_US",
+        }:
+            return None
+        if native_kind == "thermistor" and symbol not in _SUPPORTED_THERMISTOR_SYMBOLS:
+            return None
+        return _KIND_NAMES[native_kind]
+    if _SUPPORTED_SWITCH_SYMBOL.fullmatch(symbol):
+        return "switch"
+    if symbol in _SUPPORTED_LED_SYMBOLS:
+        return "led"
+    if symbol in _SUPPORTED_BUZZER_SYMBOLS:
+        return "buzzer"
+    if symbol in _SUPPORTED_SPEAKER_SYMBOLS:
+        return "speaker"
+    if symbol in _SUPPORTED_BATTERY_SYMBOLS:
+        return "battery"
+    if symbol in _SUPPORTED_MOTOR_SYMBOLS:
+        return "motor"
+    if symbol in _SUPPORTED_SOLAR_CELL_SYMBOLS:
+        return "solar_cell"
+    if symbol in _SUPPORTED_THERMOCOUPLE_SYMBOLS:
+        return "thermocouple"
+    return None
+
+
+def two_pin_component_is_current(component: TwoPinComponentOnSameNet) -> bool:
+    """Check a retained two-pin observation against its exact native netlist."""
+    observed = component.source_netlist
+    if observed is None:
+        return False
+
+    native_component = lookup_unique_casefold(observed.components, component.reference)
+    symbol = lookup_unique_casefold(observed.component_symbols, component.reference)
+    pin_numbers = lookup_unique_casefold(observed.component_pin_numbers, component.reference)
+    if (
+        native_component is None
+        or symbol != component.symbol
+        or native_component.value != component.value
+        or component.reference.casefold()
+        in {reference.casefold() for reference in observed.dnp_components}
+        or pin_numbers is None
+        or symbol is None
+    ):
+        return False
+
+    ordered_pin_numbers = tuple(sorted(pin_numbers, key=lambda item: (item.casefold(), item)))
+    if (
+        ordered_pin_numbers != component.pin_numbers
+        or len({number.casefold() for number in ordered_pin_numbers}) != 2
+    ):
+        return False
+
+    assignments = netlist_pin_net_index(observed)
+    if any(
+        assignments.get(f"{component.reference}.{number}".casefold(), set()) != {component.net}
+        for number in component.pin_numbers
+    ):
+        return False
+
+    native_kind = _supported_native_kind(symbol)
+    binding = component.role_binding
+    if native_kind is not None:
+        return native_kind == component.kind and binding is None
+    if (
+        binding is None
+        or binding.role != component.kind
+        or binding.symbol != symbol
+        or native_component.part_id != binding.part_id
+        or native_component.footprint != binding.footprint
+    ):
+        return False
+
+    expected_pins = tuple(
+        sorted(binding.pins, key=lambda item: (item.number.casefold(), item.number))
+    )
+    if tuple(item.number for item in expected_pins) != ordered_pin_numbers:
+        return False
+    functions = {pin.casefold(): value for pin, value in observed.pin_functions.items()}
+    electrical_types = {
+        pin.casefold(): value.casefold() for pin, value in observed.pin_electrical_types.items()
+    }
+    return all(
+        functions.get(f"{component.reference}.{item.number}".casefold()) == item.function
+        and electrical_types.get(f"{component.reference}.{item.number}".casefold())
+        == item.electrical_type.casefold()
+        for item in expected_pins
+    )
 
 
 def two_pin_components_on_same_net(
@@ -95,46 +198,8 @@ def two_pin_components_on_same_net(
     for reference, symbol in observed.component_symbols.items():
         if reference.casefold() in dnp:
             continue
-        match = _SUPPORTED_DEVICE_SYMBOL.fullmatch(symbol)
-        if match is not None:
-            native_kind = match.group("kind").casefold()
-            if native_kind == "ferritebead" and (match.group("variant") or "").casefold() not in {
-                "",
-                "small",
-            }:
-                continue
-            if native_kind == "varistor" and symbol not in {
-                "Device:Varistor",
-                "Device:Varistor_US",
-            }:
-                continue
-            if native_kind == "thermistor" and symbol not in _SUPPORTED_THERMISTOR_SYMBOLS:
-                continue
-            kind = _KIND_NAMES[native_kind]
-            role_binding = None
-        elif _SUPPORTED_SWITCH_SYMBOL.fullmatch(symbol):
-            kind = "switch"
-            role_binding = None
-        elif symbol in _SUPPORTED_LED_SYMBOLS:
-            kind = "led"
-            role_binding = None
-        elif symbol in _SUPPORTED_BUZZER_SYMBOLS:
-            kind = "buzzer"
-            role_binding = None
-        elif symbol in _SUPPORTED_SPEAKER_SYMBOLS:
-            kind = "speaker"
-            role_binding = None
-        elif symbol in _SUPPORTED_BATTERY_SYMBOLS:
-            kind = "battery"
-            role_binding = None
-        elif symbol in _SUPPORTED_MOTOR_SYMBOLS:
-            kind = "motor"
-            role_binding = None
-        elif symbol in _SUPPORTED_SOLAR_CELL_SYMBOLS:
-            kind = "solar_cell"
-            role_binding = None
-        elif symbol in _SUPPORTED_THERMOCOUPLE_SYMBOLS:
-            kind = "thermocouple"
+        kind = _supported_native_kind(symbol)
+        if kind is not None:
             role_binding = None
         else:
             role_binding = role_bindings.get(reference.casefold())
@@ -190,6 +255,7 @@ def two_pin_components_on_same_net(
                 pin_numbers=(pin_numbers[0], pin_numbers[1]),
                 net=first_net,
                 role_binding=role_binding,
+                source_netlist=observed,
             )
         )
     return tuple(sorted(results, key=lambda item: (item.reference.casefold(), item.reference)))

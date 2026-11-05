@@ -4,6 +4,11 @@ from __future__ import annotations
 
 import re
 
+from .design_lint_two_wire_same_net_candidate_evidence import (
+    I2cSameNetEvidence,
+    TwoWirePinEvidence,
+    TwoWireSameNetCandidate,
+)
 from .design_lint_types import Candidate
 from .i2c_addressing import i2c_signal_role
 from .netlist_contract_models import NetlistContract
@@ -79,8 +84,14 @@ def i2c_sda_scl_same_net_candidates(observed: NetlistContract) -> tuple[Candidat
 
         reference = fitted[reference_key]
         findings.append(
-            Candidate(
-                rule_id=RULE_ID,
+            TwoWireSameNetCandidate.from_source_evidence(
+                I2cSameNetEvidence(
+                    observed=observed,
+                    reference=reference,
+                    sda=TwoWirePinEvidence.from_native_pin_map(observed, sda_pin),
+                    scl=TwoWirePinEvidence.from_native_pin_map(observed, scl_pin),
+                    net=sda_net,
+                ),
                 subject=f"{reference}: I2C SDA/SCL pins share {sda_net}",
                 message=(
                     f"The bounded native I2C SDA pin {sda_pin} and SCL pin {scl_pin} on "
@@ -88,12 +99,6 @@ def i2c_sda_scl_same_net_candidates(observed: NetlistContract) -> tuple[Candidat
                     "is intentional. Function names are clues only; this check does not prove "
                     "the part implements standard I2C or establish the intended topology."
                 ),
-                evidence={
-                    "component": (reference,),
-                    "SDA_pin": (sda_pin,),
-                    "SCL_pin": (scl_pin,),
-                    "net": (sda_net,),
-                },
             )
         )
     return tuple(findings)

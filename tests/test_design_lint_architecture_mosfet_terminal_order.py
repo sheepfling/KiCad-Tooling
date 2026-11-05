@@ -53,6 +53,7 @@ def test_gate_and_terminal_rules_share_one_allowlisted_mosfet_identity_service()
     ).read_text(encoding="utf-8")
 
     assert symbols.is_file()
-    assert "from .component_mosfet_symbols import SUPPORTED_THREE_TERMINAL_MOSFET_SYMBOLS" in gate
+    assert "SUPPORTED_THREE_TERMINAL_MOSFET_SYMBOLS" in gate
+    assert "mosfet_terminal_role" in gate
     assert "from .component_mosfet_symbols import mosfet_channel_type" in terminal_order
     assert "_SUPPORTED_SYMBOLS = frozenset" not in gate

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
+from types import MappingProxyType
 from typing import Literal
 
 from .connector_coverage_models import (
@@ -390,6 +391,19 @@ def source_matched_connector_peer_assignment_groups(
                 entry.peer_assignment_basis,
             )
     return result
+
+
+def connector_peer_assignment_groups_by_reference(
+    groups: Mapping[str, tuple[str, str]] | None,
+) -> Mapping[str, tuple[str, str]]:
+    """Freeze a peer-scope map with case-insensitive, unique reference keys."""
+    normalized: dict[str, tuple[str, str]] = {}
+    for reference, scope in (groups or {}).items():
+        key = reference.casefold()
+        if key in normalized:
+            raise ValueError("Reviewed connector peer references must be unique")
+        normalized[key] = scope
+    return MappingProxyType(normalized)
 
 
 def source_matched_connector_return_comparison_groups(

@@ -7,6 +7,11 @@ import re
 from .bus_signal_roles import usb_c_cc_role
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
+from .design_lint_usb_c_cc_same_net_candidate_evidence import (
+    UsbCcControllerSameNetEvidence,
+    UsbCcPinEvidence,
+    UsbCcSameNetCandidate,
+)
 from .netlist_contract_models import NetlistContract
 from .netlist_pin_assignments import netlist_pin_net_index
 
@@ -66,8 +71,14 @@ def usb_c_cc_controller_same_net_candidates(observed: NetlistContract) -> tuple[
         reference = fitted[key]
         net = next(iter(cc1_nets))
         findings.append(
-            Candidate(
-                rule_id=RULE_ID,
+            UsbCcSameNetCandidate.from_source_evidence(
+                UsbCcControllerSameNetEvidence(
+                    observed=observed,
+                    reference=reference,
+                    cc1=UsbCcPinEvidence(cc1_pin, cc1_function),
+                    cc2=UsbCcPinEvidence(cc2_pin, cc2_function),
+                    net=net,
+                ),
                 subject=f"{reference}: USB-C controller CC1/CC2 pins share {net}",
                 message=(
                     f"The fitted USB-C controller {reference} has CC1 pin {cc1_pin} "
@@ -76,14 +87,6 @@ def usb_c_cc_controller_same_net_candidates(observed: NetlistContract) -> tuple[
                     "and port topology. This does not establish that the pins must be "
                     "separate, prove USB-C behavior, or assess PCB copper or continuity."
                 ),
-                evidence={
-                    "component": (reference,),
-                    "CC1_pin": (cc1_pin,),
-                    "CC1_function": (cc1_function,),
-                    "CC2_pin": (cc2_pin,),
-                    "CC2_function": (cc2_function,),
-                    "net": (net,),
-                },
             )
         )
     return tuple(sorted(findings, key=lambda item: (item.subject.casefold(), item.subject)))

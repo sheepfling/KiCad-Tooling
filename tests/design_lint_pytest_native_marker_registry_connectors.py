@@ -12,6 +12,12 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         ),
         "test_pin_connectivity_acceptance.py": frozenset({"connector_lint"}),
         "test_connector_peer_pin_all_open.py": frozenset({"connector_lint"}),
+        "test_design_lint_architecture_connector_all_open_candidate_evidence.py": frozenset(
+            {"connector_lint", "evidence_lint"}
+        ),
+        "test_design_lint_architecture_connector_footprint_named_divergence_evidence.py": frozenset(
+            {"connector_lint", "evidence_lint", "interface_lint", "power_lint"}
+        ),
         "test_design_lint_determinism_connector_all_open.py": frozenset({"connector_lint"}),
         "test_design_lint_connector_power_pins.py": frozenset({"connector_lint", "power_lint"}),
         "test_design_lint_connector_named_power_input_peers.py": frozenset(

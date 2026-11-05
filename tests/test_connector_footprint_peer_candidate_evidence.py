@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import pytest
 
 from kicad_tooling.hwrepo.connector_footprint_peer_pin_types import (
@@ -10,17 +12,24 @@ from kicad_tooling.hwrepo.connector_footprint_peer_pin_types import (
     ConnectorFootprintPeerPinNamedAllOpen,
     ConnectorFootprintPeerPinNamedDivergence,
     ConnectorFootprintPeerPinOpenOutlier,
+    ConnectorFootprintPeerPinScanSource,
 )
 from kicad_tooling.hwrepo.design_lint_connector_footprint_candidate_evidence import (
     ConnectorFootprintPeerPinCandidate,
     project_connector_footprint_peer_pin_evidence,
 )
+from kicad_tooling.hwrepo.netlist_contract_models import NetlistContract
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.evidence_lint]
 
 
 def test_all_footprint_peer_scan_records_freeze_assignments() -> None:
-    assignments = {"J1.2": ()}
+    assignments: dict[str, tuple[str, ...]] = {"J1.2": ()}
+    source = ConnectorFootprintPeerPinScanSource(
+        observed=NetlistContract(components={}, nets={}),
+        declared_references=(),
+        peer_assignment_groups=None,
+    )
     records = (
         ConnectorFootprintPeerPinDivergence(
             footprint="Synthetic:Connector_2x1",
@@ -40,6 +49,7 @@ def test_all_footprint_peer_scan_records_freeze_assignments() -> None:
             assignments=assignments,
             symbols=("Synthetic:Port",),
             common_anchor_pin_numbers=("1",),
+            source=source,
         ),
         ConnectorFootprintPeerPinOpenOutlier(
             footprint="Synthetic:Connector_2x1",
@@ -77,7 +87,7 @@ def test_all_footprint_peer_scan_records_freeze_assignments() -> None:
     for record in records:
         assert record.assignments["J1.2"] == ()
         with pytest.raises(TypeError):
-            record.assignments["J1.2"] = ("CHANGED",)  # type: ignore[index]
+            cast(dict[str, tuple[str, ...]], record.assignments)["J1.2"] = ("CHANGED",)
 
 
 def test_divergence_candidate_retains_frozen_source_and_existing_evidence_fields() -> None:

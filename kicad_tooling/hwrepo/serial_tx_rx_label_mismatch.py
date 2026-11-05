@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from .casefold_mapping_lookup import lookup_unique_casefold
 from .component_references import is_integrated_circuit_reference
+from .design_lint_signal_label_role_candidate_evidence import (
+    SerialTxRxLabelRoleMismatchEvidence,
+    SignalLabelRoleMismatchCandidate,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 from .serial_participants import serial_function_role_and_channel
@@ -61,8 +65,17 @@ def serial_tx_rx_label_mismatch_candidates(
             continue
 
         findings.append(
-            Candidate(
-                rule_id=RULE_ID,
+            SignalLabelRoleMismatchCandidate.from_source_evidence(
+                SerialTxRxLabelRoleMismatchEvidence(
+                    observed=observed,
+                    reference=reference,
+                    pin=pin,
+                    pin_function=function,
+                    pin_role=pin_role[0],
+                    net=net,
+                    net_role=net_role[0],
+                    channel=pin_role[1],
+                ),
                 subject=f"{pin}: {function} on {net}",
                 message=(
                     f"The native serial pin function indicates {pin_role[0].upper()}, but the "
@@ -70,15 +83,6 @@ def serial_tx_rx_label_mismatch_candidates(
                     "part-specific pin map and naming convention; an explicit label is a "
                     "review clue, not a topology requirement."
                 ),
-                evidence={
-                    "reference": (reference,),
-                    "pin": (pin,),
-                    "pin_function": (function,),
-                    "pin_role": (pin_role[0],),
-                    "channel": (pin_role[1],),
-                    "net": (net,),
-                    "net_role": (net_role[0],),
-                },
             )
         )
     return tuple(findings)

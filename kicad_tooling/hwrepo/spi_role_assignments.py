@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from .netlist_contract_models import NetlistContract
 from .spi_participants import is_spi_ic_reference, spi_signal_role_and_channel
@@ -27,6 +28,13 @@ class SpiRoleAssignmentGroup:
     reference: str
     channel: str
     roles: Mapping[str, tuple[SpiRolePinAssignment, ...]]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "roles",
+            MappingProxyType({role: tuple(pins) for role, pins in self.roles.items()}),
+        )
 
 
 def spi_role_assignment_groups(observed: NetlistContract) -> tuple[SpiRoleAssignmentGroup, ...]:

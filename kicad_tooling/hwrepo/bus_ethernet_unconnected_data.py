@@ -5,6 +5,10 @@ from __future__ import annotations
 from .bus_signal_pairs import ethernet_data_pair_function_role
 from .casefold_mapping_lookup import lookup_unique_casefold
 from .component_references import is_integrated_circuit_reference
+from .design_lint_ethernet_unconnected_candidate_evidence import (
+    EthernetDataOpenPairEvidence,
+    EthernetUnconnectedCandidate,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 
@@ -92,8 +96,19 @@ def ethernet_data_unconnected_pin_candidates(
                 continue
 
             findings.append(
-                Candidate(
-                    rule_id=RULE_ID,
+                EthernetUnconnectedCandidate.from_source_evidence(
+                    EthernetDataOpenPairEvidence(
+                        observed=observed,
+                        reference=reference,
+                        component_pin_inventory=tuple(inventory or ()),
+                        direction=direction,
+                        polarity=polarity,
+                        open_pin=open_pin,
+                        open_function=open_function,
+                        paired_pin=paired_pin,
+                        paired_function=paired_function,
+                        paired_net=paired_net,
+                    ),
                     subject=(
                         f"{open_pin}: {open_function} is open while {paired_function} "
                         f"{paired_pin} is assigned to {paired_net}"
@@ -105,16 +120,6 @@ def ethernet_data_unconnected_pin_candidates(
                         "connection is missing. Native pin functions do not establish that the "
                         "lane is required or prove PCB routing."
                     ),
-                    evidence={
-                        open_pin: (),
-                        "ethernet_direction": (direction,),
-                        "ethernet_polarity": (polarity,),
-                        "function": (open_function,),
-                        "paired_pin": (paired_pin,),
-                        "paired_function": (paired_function,),
-                        "paired_net": (paired_net,),
-                        "component_pin_inventory": tuple(sorted(inventory_numbers)),
-                    },
                 )
             )
 

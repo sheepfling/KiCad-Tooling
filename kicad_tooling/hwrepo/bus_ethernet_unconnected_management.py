@@ -5,6 +5,10 @@ from __future__ import annotations
 from .bus_signal_pairs import ethernet_management_function_role
 from .casefold_mapping_lookup import lookup_unique_casefold
 from .component_references import is_integrated_circuit_reference
+from .design_lint_ethernet_unconnected_candidate_evidence import (
+    EthernetManagementOpenPairEvidence,
+    EthernetUnconnectedCandidate,
+)
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
@@ -88,8 +92,18 @@ def ethernet_management_unconnected_pin_candidates(
             continue
 
         found.append(
-            Candidate(
-                rule_id=RULE_ID,
+            EthernetUnconnectedCandidate.from_source_evidence(
+                EthernetManagementOpenPairEvidence(
+                    observed=observed,
+                    reference=reference,
+                    component_pin_inventory=tuple(inventory or ()),
+                    open_role=open_role,
+                    open_pin=open_pin,
+                    open_function=open_function,
+                    paired_pin=paired_pin,
+                    paired_function=paired_function,
+                    paired_net=paired_net,
+                ),
                 subject=(
                     f"{open_pin}: {open_function} is open while {paired_function} "
                     f"{paired_pin} is assigned to {paired_net}"
@@ -101,15 +115,6 @@ def ethernet_management_unconnected_pin_candidates(
                     "missing. Native pin functions do not establish that both signals are "
                     "required or prove PCB routing."
                 ),
-                evidence={
-                    open_pin: (),
-                    "function": (open_function,),
-                    "ethernet_management_role": (open_role,),
-                    "paired_pin": (paired_pin,),
-                    "paired_function": (paired_function,),
-                    "paired_net": (paired_net,),
-                    "component_pin_inventory": tuple(sorted(inventory_numbers)),
-                },
             )
         )
 

@@ -14,6 +14,12 @@ from .connector_peer_pin_scan import (
     ConnectorPartIdPeerPinGroup,
     scan_connector_part_id_peer_pins,
 )
+from .design_lint_connector_all_open_candidate_evidence import (
+    ConnectorAllOpenPeerPinCandidate,
+    ConnectorAllOpenPeerPinEvidence,
+    ConnectorPeerOpenPin,
+    ConnectorSharedAnchor,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 
@@ -219,7 +225,7 @@ def all_open_generic_connector_peer_pin_candidates(
                 )
                 if len(scoped_references) < 2 or any(scoped_assignments.values()):
                     continue
-                shared_anchors: list[str] = []
+                exact_shared_anchors: list[ConnectorSharedAnchor] = []
                 for anchor_number in pin_numbers:
                     if anchor_number == pin_number:
                         continue
@@ -240,39 +246,54 @@ def all_open_generic_connector_peer_pin_candidates(
                         and len(set(anchor_assignments)) == 1
                         and len(anchor_assignments[0]) == 1
                     ):
-                        shared_anchors.append(
-                            " / ".join(
-                                f"{reference}.{displayed_numbers[reference.casefold()][anchor_number]}"
-                                for reference in scoped_references
+                        exact_shared_anchors.append(
+                            ConnectorSharedAnchor(
+                                pins=tuple(
+                                    f"{reference}.{displayed_numbers[reference.casefold()][anchor_number]}"
+                                    for reference in scoped_references
+                                ),
+                                net=anchor_assignments[0][0],
                             )
-                            + f" -> {anchor_assignments[0][0]}"
                         )
-                if not shared_anchors:
+                if not exact_shared_anchors:
                     continue
 
                 symbol = peers[0][1]
-                evidence = {
-                    **scoped_assignments,
-                    "symbol": (symbol,),
-                    "pin_number": (pin_number,),
-                    "shared_anchor_contacts": tuple(
-                        sorted(shared_anchors, key=lambda item: (item.casefold(), item))
+                source_evidence = ConnectorAllOpenPeerPinEvidence(
+                    observed=observed,
+                    identity_basis="exact_symbol",
+                    identity=symbol,
+                    pin_number=pin_number,
+                    pin_electrical_type=pin_type,
+                    open_pins=tuple(
+                        ConnectorPeerOpenPin(
+                            pin=pin,
+                            assignments=nets,
+                            pin_function=functions.get(pin.casefold()),
+                            pin_electrical_type=electrical_types[pin.casefold()],
+                        )
+                        for pin, nets in sorted(
+                            scoped_assignments.items(),
+                            key=lambda item: (item[0].casefold(), item[0]),
+                        )
                     ),
-                }
-                if pin_type != "passive":
-                    evidence["pin_electrical_type"] = (pin_type,)
-                if peer_group is not None:
-                    evidence["peer_assignment_group"] = (peer_group,)
-                    evidence["peer_assignment_basis"] = peer_review
+                    shared_anchors=tuple(
+                        sorted(
+                            exact_shared_anchors,
+                            key=lambda item: (item.display.casefold(), item.display),
+                        )
+                    ),
+                    peer_assignment_group=peer_group,
+                    peer_assignment_basis=peer_review,
+                )
                 candidates.append(
-                    Candidate(
-                        rule_id="connector.generic_peer_pin_all_open",
+                    ConnectorAllOpenPeerPinCandidate.from_source_evidence(
+                        source_evidence,
                         subject=(
                             f"{symbol} pin {pin_number}: "
                             f"{_contact_description(pin_type)} is open on every peer"
                         ),
                         message=_contact_message(pin_type, scoped=peer_group is not None),
-                        evidence=evidence,
                     )
                 )
 
@@ -322,32 +343,44 @@ def all_open_generic_connector_peer_pin_candidates(
             if not shared_anchor_groups:
                 continue
 
-            anchor_contacts = tuple(
+            part_id_shared_anchors = tuple(
                 sorted(
                     (
-                        " / ".join(anchor.assignments)
-                        + f" -> {next(iter(anchor.assignments.values()))[0]}"
-                    )
-                    for anchor in shared_anchor_groups
+                        ConnectorSharedAnchor(
+                            pins=tuple(anchor.assignments),
+                            net=next(iter(anchor.assignments.values()))[0],
+                        )
+                        for anchor in shared_anchor_groups
+                    ),
+                    key=lambda item: item.display,
                 )
             )
-            evidence = {
-                **group.assignments,
-                "symbol": ("multiple connector symbols",),
-                "pin_number": (group.pin_number,),
-                "shared_anchor_contacts": anchor_contacts,
-                "peer_identity_basis": ("part_id",),
-                "peer_identity": (group.part_id,),
-                "peer_symbols": group.symbols,
-            }
-            if pin_type != "passive":
-                evidence["pin_electrical_type"] = (pin_type,)
-            if group.peer_assignment_group is not None:
-                evidence["peer_assignment_group"] = (group.peer_assignment_group,)
-                evidence["peer_assignment_basis"] = group.peer_assignment_basis
+            source_evidence = ConnectorAllOpenPeerPinEvidence(
+                observed=observed,
+                identity_basis="part_id",
+                identity=group.part_id,
+                pin_number=group.pin_number,
+                pin_electrical_type=pin_type,
+                open_pins=tuple(
+                    ConnectorPeerOpenPin(
+                        pin=pin,
+                        assignments=nets,
+                        pin_function=functions.get(pin.casefold()),
+                        pin_electrical_type=electrical_types[pin.casefold()],
+                    )
+                    for pin, nets in sorted(
+                        group.assignments.items(),
+                        key=lambda item: (item[0].casefold(), item[0]),
+                    )
+                ),
+                shared_anchors=part_id_shared_anchors,
+                peer_symbols=group.symbols,
+                peer_assignment_group=group.peer_assignment_group,
+                peer_assignment_basis=group.peer_assignment_basis,
+            )
             part_id_candidates.append(
-                Candidate(
-                    rule_id="connector.generic_peer_pin_all_open",
+                ConnectorAllOpenPeerPinCandidate.from_source_evidence(
+                    source_evidence,
                     subject=(
                         f"PART_ID {group.part_id} pin {group.pin_number}: "
                         f"{_contact_description(pin_type)} is open on every peer"
@@ -357,7 +390,6 @@ def all_open_generic_connector_peer_pin_candidates(
                         scoped=group.peer_assignment_group is not None,
                         part_id=True,
                     ),
-                    evidence=evidence,
                 )
             )
 

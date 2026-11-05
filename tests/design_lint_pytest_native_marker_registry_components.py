@@ -29,6 +29,9 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_electrical_component_evidence.py": frozenset({"component_lint", "evidence_lint"}),
         "test_mosfet_stress.py": frozenset({"component_lint"}),
         "test_mosfet_gate_connectivity.py": frozenset({"component_lint"}),
+        "test_design_lint_architecture_mosfet_gate_candidate_evidence.py": frozenset(
+            {"component_lint", "evidence_lint"}
+        ),
         "test_mosfet_gate_source_bias.py": frozenset({"component_lint"}),
         "test_mosfet_gate_direct_drive.py": frozenset({"component_lint"}),
         "test_mosfet_gate_native_fixture.py": frozenset({"component_lint", "native_kicad", "slow"}),

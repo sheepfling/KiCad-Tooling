@@ -45,3 +45,6 @@ def test_mosfet_gate_predicate_has_a_small_theme_owned_module() -> None:
         assert rule.theme == "components"
         assert rule.implementation_owner == owner
         assert owner in rule.implementation_refs
+        assert "kicad_tooling/hwrepo/component_mosfet_symbols.py#mosfet_terminal_role" in (
+            rule.implementation_refs
+        )

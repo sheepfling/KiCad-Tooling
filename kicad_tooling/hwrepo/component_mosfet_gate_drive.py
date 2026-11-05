@@ -2,15 +2,21 @@
 
 from __future__ import annotations
 
-from .component_mosfet_symbols import SUPPORTED_THREE_TERMINAL_MOSFET_SYMBOLS
+from .component_mosfet_symbols import (
+    SUPPORTED_THREE_TERMINAL_MOSFET_SYMBOLS,
+    mosfet_terminal_role,
+)
 from .component_pin_types import fitted_output_pins_on_net
+from .design_lint_mosfet_gate_candidate_evidence import (
+    MOSFET_GATE_DIRECT_DRIVE_RULE_ID,
+    MosfetGateCandidate,
+    MosfetGateDirectDriveEvidence,
+    SupportedMosfetGate,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 
-RULE_ID = "component.mosfet_gate_direct_drive"
-_GATE_FUNCTIONS = frozenset({"g", "gate"})
-_DRAIN_FUNCTIONS = frozenset({"d", "drain"})
-_SOURCE_FUNCTIONS = frozenset({"s", "source"})
+RULE_ID = MOSFET_GATE_DIRECT_DRIVE_RULE_ID
 
 
 def mosfets_with_direct_output_gate_drive(
@@ -31,6 +37,9 @@ def mosfets_with_direct_output_gate_drive(
     functions = {
         pin.casefold(): function.strip().casefold()
         for pin, function in observed.pin_functions.items()
+    }
+    native_functions = {
+        pin.casefold(): function for pin, function in observed.pin_functions.items()
     }
     nets_by_pin: dict[str, list[str]] = {}
     for net, pins in observed.nets.items():
@@ -55,15 +64,7 @@ def mosfets_with_direct_output_gate_drive(
         roles: dict[str, str] = {}
         for number in pin_numbers:
             function = functions.get(f"{reference}.{number}".casefold(), "")
-            role = (
-                "gate"
-                if function in _GATE_FUNCTIONS
-                else "drain"
-                if function in _DRAIN_FUNCTIONS
-                else "source"
-                if function in _SOURCE_FUNCTIONS
-                else None
-            )
+            role = mosfet_terminal_role(function)
             if role is None or role in roles:
                 roles.clear()
                 break
@@ -84,9 +85,23 @@ def mosfets_with_direct_output_gate_drive(
 
         output_pins = tuple(pin for pin, _ in output_peers)
         output_pin_types = tuple(f"{pin}={pin_type}" for pin, pin_type in output_peers)
+        device = SupportedMosfetGate(
+            observed=observed,
+            reference=reference,
+            symbol=symbol,
+            gate_pin=gate_pin,
+            gate_function=native_functions[gate_pin.casefold()],
+        )
         findings.append(
-            Candidate(
-                rule_id=RULE_ID,
+            MosfetGateCandidate.from_source_evidence(
+                MosfetGateDirectDriveEvidence(
+                    device=device,
+                    drain_pin=f"{reference}.{roles['drain']}",
+                    source_pin=f"{reference}.{roles['source']}",
+                    gate_net=gate_net,
+                    output_pins=output_pins,
+                    output_pin_types=output_pin_types,
+                ),
                 subject=f"{gate_pin}: MOSFET gate directly shares a net with an output-capable pin",
                 message=(
                     "The native netlist assigns this MOSFET gate and an output-capable pin to the "
@@ -95,14 +110,6 @@ def mosfets_with_direct_output_gate_drive(
                     "prompt does not establish a resistor requirement, switching performance, "
                     "driver impedance, or PCB continuity."
                 ),
-                evidence={
-                    "component": (reference,),
-                    "symbol": (symbol,),
-                    "gate_pin": (gate_pin,),
-                    "gate_net": (gate_net,),
-                    "output_pins": output_pins,
-                    "output_pin_types": output_pin_types,
-                },
             )
         )
     return tuple(findings)

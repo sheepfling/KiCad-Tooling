@@ -2,16 +2,86 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
-from kicad_tooling.hwrepo.component_role_models import ComponentRoleBinding, ComponentRolePin
+from kicad_tooling.hwrepo.component_role_models import (
+    ComponentRoleBinding,
+    ComponentRoleMap,
+    ComponentRolePin,
+)
 from kicad_tooling.hwrepo.component_roles import component_role_binding_evidence
 from kicad_tooling.hwrepo.design_lint_two_pin_candidate_evidence import (
     TwoPinComponentFindingEvidence,
     TwoPinSameNetCandidate,
     project_two_pin_component_evidence,
 )
-from kicad_tooling.hwrepo.two_pin_components import TwoPinComponentOnSameNet
+from kicad_tooling.hwrepo.netlist_contract_models import ComponentContract, NetlistContract
+from kicad_tooling.hwrepo.two_pin_buzzers import two_pin_buzzer_same_net_candidates
+from kicad_tooling.hwrepo.two_pin_components import (
+    TwoPinComponentOnSameNet,
+    two_pin_components_on_same_net,
+)
+
+_SYMBOLS = {
+    "diode": "Device:D",
+    "crystal": "Device:Crystal",
+    "fuse": "Device:Fuse",
+    "polyfuse": "Device:Polyfuse",
+    "ferrite_bead": "Device:FerriteBead",
+    "switch": "Switch:SW_SPST",
+    "led": "Device:LED",
+    "buzzer": "Device:Buzzer",
+    "speaker": "Device:Speaker",
+    "battery": "Device:Battery",
+    "motor": "Motor:Motor_DC",
+    "solar_cell": "Device:Solar_Cell",
+    "thermocouple": "Device:Thermocouple",
+    "resistor": "Device:R",
+    "capacitor": "Device:C",
+    "inductor": "Device:L",
+    "varistor": "Device:Varistor",
+    "thermistor": "Device:Thermistor",
+}
+
+
+def _two_pin_scan(
+    kind: str,
+    *,
+    role_binding: ComponentRoleBinding | None = None,
+    net: str = "BYPASSED",
+    value: str = "10k",
+) -> tuple[NetlistContract, TwoPinComponentOnSameNet]:
+    reference = "C7" if role_binding is not None else "R1"
+    symbol = role_binding.symbol if role_binding is not None else _SYMBOLS[kind]
+    pin_numbers = (
+        tuple(pin.number for pin in role_binding.pins) if role_binding is not None else ("1", "2")
+    )
+    footprint = role_binding.footprint if role_binding is not None else "Synthetic:TwoPin"
+    part_id = role_binding.part_id if role_binding is not None else None
+    components = {reference: ComponentContract(value=value, footprint=footprint, part_id=part_id)}
+    nets = {net: tuple(f"{reference}.{number}" for number in pin_numbers)}
+    observed = NetlistContract(
+        components=components,
+        nets=nets,
+        component_symbols={reference: symbol},
+        component_pin_numbers={reference: pin_numbers},
+        pin_functions=(
+            {}
+            if role_binding is None
+            else {f"{reference}.{pin.number}": pin.function for pin in role_binding.pins}
+        ),
+        pin_electrical_types=(
+            {}
+            if role_binding is None
+            else {f"{reference}.{pin.number}": pin.electrical_type for pin in role_binding.pins}
+        ),
+    )
+    role_map = None if role_binding is None else ComponentRoleMap(entries=(role_binding,))
+    findings = two_pin_components_on_same_net(observed, role_map)
+    assert len(findings) == 1
+    return observed, findings[0]
 
 
 @pytest.mark.parametrize(
@@ -29,6 +99,15 @@ from kicad_tooling.hwrepo.two_pin_components import TwoPinComponentOnSameNet
             "ferrite_bead", "component.two_pin_ferrite_same_net", "component_kind", id="ferrite"
         ),
         pytest.param("switch", "component.two_pin_switch_same_net", "component_kind", id="switch"),
+        pytest.param("led", "component.two_pin_led_same_net", None, id="led"),
+        pytest.param("buzzer", "component.two_pin_buzzer_same_net", None, id="buzzer"),
+        pytest.param("speaker", "component.two_pin_speaker_same_net", None, id="speaker"),
+        pytest.param("battery", "component.two_pin_battery_same_net", None, id="battery"),
+        pytest.param("motor", "component.two_pin_motor_same_net", None, id="motor"),
+        pytest.param("solar_cell", "component.two_pin_solar_cell_same_net", None, id="solar-cell"),
+        pytest.param(
+            "thermocouple", "component.two_pin_thermocouple_same_net", None, id="thermocouple"
+        ),
         pytest.param(
             "resistor", "component.two_pin_passive_same_net", "passive_kind", id="resistor"
         ),
@@ -49,18 +128,10 @@ from kicad_tooling.hwrepo.two_pin_components import TwoPinComponentOnSameNet
 def test_two_pin_projection_preserves_rule_and_kind_specific_fields(
     kind: str,
     rule_id: str,
-    kind_field: str,
+    kind_field: str | None,
 ) -> None:
-    source = TwoPinComponentFindingEvidence(
-        TwoPinComponentOnSameNet(
-            reference="R1",
-            symbol=f"Device:{kind}",
-            value="10k",
-            kind=kind,
-            pin_numbers=("1", "2"),
-            net="BYPASSED",
-        )
-    )
+    observed, component = _two_pin_scan(kind, value="10k")
+    source = TwoPinComponentFindingEvidence(component)
     candidate = TwoPinSameNetCandidate.from_source_evidence(
         source,
         subject="R1: same-net two-pin review",
@@ -68,14 +139,18 @@ def test_two_pin_projection_preserves_rule_and_kind_specific_fields(
     )
 
     assert candidate.rule_id == rule_id
-    assert dict(project_two_pin_component_evidence(source).evidence) == {
-        "symbol": (f"Device:{kind}",),
+    expected_evidence = {
+        "symbol": (component.symbol,),
         "value": ("10k",),
-        kind_field: (kind,),
         "net": ("BYPASSED",),
         "pin_assignments": ("R1.1 -> BYPASSED", "R1.2 -> BYPASSED"),
     }
+    if kind_field is not None:
+        expected_evidence[kind_field] = (kind,)
+
+    assert dict(project_two_pin_component_evidence(source).evidence) == expected_evidence
     assert candidate.source_evidence is source
+    assert component.source_netlist is observed
 
 
 def test_two_pin_projection_keeps_authored_role_binding_evidence() -> None:
@@ -90,17 +165,8 @@ def test_two_pin_projection_keeps_authored_role_binding_evidence() -> None:
         ),
         basis="reviewed component datasheet",
     )
-    source = TwoPinComponentFindingEvidence(
-        TwoPinComponentOnSameNet(
-            reference="C7",
-            symbol="Custom:TwoPin",
-            value="1uF",
-            kind="capacitor",
-            pin_numbers=("1", "2"),
-            net="BYPASSED",
-            role_binding=binding,
-        )
-    )
+    _, component = _two_pin_scan("capacitor", role_binding=binding, value="1uF")
+    source = TwoPinComponentFindingEvidence(component)
 
     evidence = project_two_pin_component_evidence(source).evidence
 
@@ -114,9 +180,8 @@ def test_two_pin_projection_keeps_authored_role_binding_evidence() -> None:
 
 
 def test_two_pin_finding_rejects_a_projection_mismatch() -> None:
-    source = TwoPinComponentFindingEvidence(
-        TwoPinComponentOnSameNet("F1", "Device:Fuse", "0R", "fuse", ("1", "2"), "+3V3")
-    )
+    _, component = _two_pin_scan("fuse", net="+3V3")
+    source = TwoPinComponentFindingEvidence(component)
 
     with pytest.raises(ValueError, match="typed source projection"):
         TwoPinSameNetCandidate(
@@ -131,5 +196,19 @@ def test_two_pin_finding_rejects_a_projection_mismatch() -> None:
 def test_two_pin_source_rejects_kinds_owned_by_other_candidate_routes() -> None:
     with pytest.raises(ValueError, match="Unsupported same-net component kind"):
         TwoPinComponentFindingEvidence(
-            TwoPinComponentOnSameNet("D1", "Device:LED", "red", "led", ("1", "2"), "N1")
+            TwoPinComponentOnSameNet(
+                "D1", "Custom:Unsupported", "red", "unsupported", ("1", "2"), "N1"
+            )
         )
+
+
+def test_two_pin_evidence_rejects_a_different_netlist_source() -> None:
+    observed, component = _two_pin_scan("buzzer")
+    other_source, _ = _two_pin_scan("buzzer", net="OTHER")
+
+    with pytest.raises(ValueError, match="retained source netlist"):
+        TwoPinComponentFindingEvidence(replace(component, source_netlist=other_source))
+
+    candidate = two_pin_buzzer_same_net_candidates((component,))[0]
+    assert isinstance(candidate, TwoPinSameNetCandidate)
+    assert candidate.source_evidence.component.source_netlist is observed

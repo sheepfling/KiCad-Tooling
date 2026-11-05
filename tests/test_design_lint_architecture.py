@@ -55,6 +55,7 @@ PIN_ANALYSIS_MODULES = (
     "component_power_input_peer_scan.py",
     "component_peer_pin_all_open.py",
     "component_peer_pin_mixed_open.py",
+    "design_lint_component_peer_open_candidate_evidence.py",
     "component_peer_pin_identity.py",
     "component_peer_pin_scan.py",
     "component_peer_pin_assignment_outlier.py",

@@ -4,13 +4,27 @@ from __future__ import annotations
 
 from .component_peer_pin_identity import component_peer_pin_identity_context
 from .component_peer_pin_scan import PeerPinAssignmentScan
+from .design_lint_component_peer_open_candidate_evidence import (
+    GenericComponentPeerOpenCandidate,
+    GenericComponentPeerOpenScanEvidence,
+)
 from .design_lint_types import Candidate
+from .netlist_contract_models import NetlistContract
 
 
 def all_open_generic_component_peer_pin_candidates(
     scan: PeerPinAssignmentScan,
+    *,
+    observed: NetlistContract,
+    declared_references: tuple[str, ...] = (),
 ) -> tuple[Candidate, ...]:
     """Build opt-in prompts from complete, anchored all-open peer observations."""
+    source_scan = GenericComponentPeerOpenScanEvidence.from_scan(
+        observed=observed,
+        scan=scan,
+        declared_references=declared_references,
+        rule_id="component.generic_peer_pin_all_open",
+    )
     candidates: list[Candidate] = []
     for group in scan.outliers:
         if not group.shared_anchor_contacts:
@@ -21,8 +35,8 @@ def all_open_generic_component_peer_pin_candidates(
         identity = component_peer_pin_identity_context(group)
         function = group.pin_function or ""
         candidates.append(
-            Candidate(
-                rule_id="component.generic_peer_pin_all_open",
+            GenericComponentPeerOpenCandidate.from_source_evidence(
+                source_scan.for_outlier(group),
                 subject=(
                     f"{identity.subject_identity} pin {group.pin_number} "
                     f"({function or 'generic'}): "
@@ -37,15 +51,6 @@ def all_open_generic_component_peer_pin_candidates(
                     "Matching symbol or part identity and shared peer wiring do not establish "
                     "that this pin must connect."
                 ),
-                evidence={
-                    **group.assignments,
-                    **identity.evidence,
-                    "pin_number": (group.pin_number,),
-                    "pin_function": (function,),
-                    "pin_electrical_type": (group.electrical_type,),
-                    "unassigned_pins": open_pins,
-                    "shared_anchor_contacts": group.shared_anchor_contacts,
-                },
             )
         )
     return tuple(candidates)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .connector_coverage_models import ConnectorCoverageReport
 from .connector_footprint_open_named_candidates import open_named_outlier_candidates
 from .connector_footprint_peer_pin_types import ConnectorFootprintPeerPinScan
 from .connector_identity import (
@@ -9,14 +10,15 @@ from .connector_identity import (
     is_return_function,
     pin_function_is_generic,
 )
-from .design_lint_rule_types import DesignLintRuleId
+from .design_lint_connector_footprint_named_open_evidence import ConnectorNamedOpenRuleId
 from .design_lint_types import Candidate
 
-RULE_ID: DesignLintRuleId = "connector.footprint_named_passive_open_outlier"
+RULE_ID: ConnectorNamedOpenRuleId = "connector.footprint_named_passive_open_outlier"
 
 
 def footprint_named_passive_open_outlier_candidates(
     scan: ConnectorFootprintPeerPinScan,
+    coverage: ConnectorCoverageReport | None = None,
 ) -> tuple[Candidate, ...]:
     """Review an explicitly named passive contact open on one alias peer."""
     records = tuple(
@@ -28,7 +30,8 @@ def footprint_named_passive_open_outlier_candidates(
         and not is_return_function(item.pin_function)
     )
     return open_named_outlier_candidates(
+        scan,
         records,
+        coverage=coverage,
         rule_id=RULE_ID,
-        role_label="passive signal",
     )

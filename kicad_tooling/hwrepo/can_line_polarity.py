@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 from .bus_signal_roles import can_function_role
+from .design_lint_signal_label_role_candidate_evidence import (
+    CanLinePolarityLabelMismatchEvidence,
+    SignalLabelRoleMismatchCandidate,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 
@@ -49,21 +53,21 @@ def can_line_polarity_label_candidates(observed: NetlistContract) -> tuple[Candi
 
         function = observed.pin_functions[pin]
         findings.append(
-            Candidate(
-                rule_id=RULE_ID,
+            SignalLabelRoleMismatchCandidate.from_source_evidence(
+                CanLinePolarityLabelMismatchEvidence(
+                    observed=observed,
+                    pin=pin,
+                    pin_function=function,
+                    pin_role=pin_role,
+                    net=net,
+                    net_role=net_role,
+                ),
                 subject=f"{pin}: {function} on {net}",
                 message=(
                     f"Native CAN pin function is {pin_role}, but the assigned net name {net!r} "
                     f"identifies {net_role}. Review the endpoint pin map and line labels; names "
                     "alone do not establish bus intent or physical wiring."
                 ),
-                evidence={
-                    "pin": (pin,),
-                    "pin_function": (function,),
-                    "pin_role": (pin_role,),
-                    "net": (net,),
-                    "net_role": (net_role,),
-                },
             )
         )
     return tuple(findings)

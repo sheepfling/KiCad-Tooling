@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 import pytest
 
 from kicad_tooling.hwrepo.can_tx_rx_same_net import (
@@ -27,7 +29,7 @@ RULE_ID = "bus.can_tx_rx_same_net"
 
 def _report(
     netlist: NetlistContract,
-    mode: str = "review",
+    mode: Literal["review", "block", "off"] = "review",
     *,
     ignore: DesignLintIgnore | None = None,
 ) -> DesignLintReport:
@@ -107,6 +109,12 @@ def test_dnp_open_duplicate_role_channel_mismatch_and_incomplete_inventory_are_s
     channel_mismatch = can_tx_rx_same_net_netlist(rx_function="CAN2_RX")
     missing_inventory = source.model_copy(update={"component_pin_numbers": {}})
     pin_missing_from_inventory = source.model_copy(update={"component_pin_numbers": {"U1": ("2",)}})
+    duplicate_casefold_pin = source.model_copy(
+        update={
+            "pin_functions": {"U1.1": "CAN1_TX", "u1.1": "CAN1_RX"},
+            "nets": {"CAN_CONTROL_SHARED": ("U1.1", "U1.2")},
+        }
+    )
     connector = source.model_copy(
         update={
             "components": {"J1": source.components["U1"]},
@@ -126,6 +134,7 @@ def test_dnp_open_duplicate_role_channel_mismatch_and_incomplete_inventory_are_s
         channel_mismatch,
         missing_inventory,
         pin_missing_from_inventory,
+        duplicate_casefold_pin,
         connector,
     ):
         assert not can_tx_rx_same_net_candidates(unsupported)

@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from .design_lint_types import Candidate
+from .design_lint_spi_same_net_candidate_evidence import (
+    SpiClockSelectSameNetEvidence,
+    SpiSameNetCandidate,
+)
 from .netlist_contract_models import NetlistContract
 from .spi_role_assignments import spi_channel_label, spi_role_assignment_groups
 
@@ -11,14 +14,14 @@ RULE_ID = "bus.spi_clock_chip_select_same_net"
 
 def spi_clock_chip_select_same_net_candidates(
     observed: NetlistContract,
-) -> tuple[Candidate, ...]:
+) -> tuple[SpiSameNetCandidate, ...]:
     """Find one fitted SPI IC's clock and chip-select roles on the same net.
 
     The default-off prompt uses bounded native function and net assignments.
     It does not infer the configured SPI mode or whether either pin is
     intentionally multiplexed.
     """
-    findings: list[Candidate] = []
+    findings: list[SpiSameNetCandidate] = []
     for group in spi_role_assignment_groups(observed):
         clocks = group.roles.get("clock", ())
         chip_selects = group.roles.get("chip_select", ())
@@ -36,9 +39,16 @@ def spi_clock_chip_select_same_net_candidates(
 
         channel = spi_channel_label(group.channel)
         net = clock.nets[0]
+        source_evidence = SpiClockSelectSameNetEvidence(
+            observed=observed,
+            group=group,
+            clock=clock,
+            chip_select=chip_select,
+            net=net,
+        )
         findings.append(
-            Candidate(
-                rule_id=RULE_ID,
+            SpiSameNetCandidate.from_source_evidence(
+                source_evidence,
                 subject=(
                     f"{group.reference}: {channel} clock {clock.function} and chip select "
                     f"{chip_select.function} share {net}"
@@ -51,17 +61,6 @@ def spi_clock_chip_select_same_net_candidates(
                     "Review whether the assignment is intentional. Pin-function names do not "
                     "establish the device's configured mode or required topology."
                 ),
-                evidence={
-                    "component": (group.reference,),
-                    "channel": (channel,),
-                    "clock_pin": (clock.pin,),
-                    "clock_function": (clock.function,),
-                    "clock_electrical_type": (clock.electrical_type,),
-                    "chip_select_pin": (chip_select.pin,),
-                    "chip_select_function": (chip_select.function,),
-                    "chip_select_electrical_type": (chip_select.electrical_type,),
-                    "net": (net,),
-                },
             )
         )
     return tuple(findings)

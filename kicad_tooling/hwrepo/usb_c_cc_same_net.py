@@ -6,6 +6,11 @@ from .bus_signal_roles import usb_c_cc_role
 from .connector_identity import connector_candidate_references
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
+from .design_lint_usb_c_cc_same_net_candidate_evidence import (
+    UsbCcConnectorSameNetEvidence,
+    UsbCcPinEvidence,
+    UsbCcSameNetCandidate,
+)
 from .netlist_contract_models import NetlistContract
 from .netlist_pin_assignments import netlist_pin_net_index
 
@@ -72,8 +77,15 @@ def usb_c_cc_same_net_candidates(
             continue
 
         findings.append(
-            Candidate(
-                rule_id=RULE_ID,
+            UsbCcSameNetCandidate.from_source_evidence(
+                UsbCcConnectorSameNetEvidence(
+                    observed=observed,
+                    reference=reference,
+                    reviewed_connector_references=reviewed_connector_references,
+                    cc1=UsbCcPinEvidence(cc1_pin, cc1_function),
+                    cc2=UsbCcPinEvidence(cc2_pin, cc2_function),
+                    net=cc1_net,
+                ),
                 subject=f"{reference}: USB-C CC1/CC2 pins share {cc1_net}",
                 message=(
                     f"The fitted USB-C connector {reference} has CC1 pin {cc1_pin} "
@@ -83,14 +95,6 @@ def usb_c_cc_same_net_candidates(
                     "establish the exact connector behavior, USB-C compliance, PCB copper, "
                     "or physical continuity."
                 ),
-                evidence={
-                    "connector": (reference,),
-                    "CC1_pin": (cc1_pin,),
-                    "CC1_function": (cc1_function,),
-                    "CC2_pin": (cc2_pin,),
-                    "CC2_function": (cc2_function,),
-                    "net": (cc1_net,),
-                },
             )
         )
     return tuple(sorted(findings, key=lambda item: (item.subject.casefold(), item.subject)))

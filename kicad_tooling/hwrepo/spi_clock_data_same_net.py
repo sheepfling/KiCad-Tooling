@@ -5,7 +5,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 from types import MappingProxyType
 
-from .design_lint_types import Candidate
+from .design_lint_spi_same_net_candidate_evidence import (
+    SpiClockDataSameNetEvidence,
+    SpiControlRole,
+    SpiDataRole,
+    SpiSameNetCandidate,
+)
 from .netlist_contract_models import NetlistContract
 from .spi_role_assignments import (
     SpiRoleAssignmentGroup,
@@ -15,26 +20,35 @@ from .spi_role_assignments import (
 )
 
 RULE_ID = "bus.spi_clock_control_data_same_net"
-_SPI_CONTROL_ROLES = frozenset({"clock", "chip_select"})
-_SPI_DATA_ROLES = frozenset({"data_input", "data_output"})
+_SPI_CONTROL_ROLES: frozenset[SpiControlRole] = frozenset({"clock", "chip_select"})
+_SPI_DATA_ROLES: frozenset[SpiDataRole] = frozenset({"data_input", "data_output"})
 _ROLE_ORDER: Mapping[str, int] = MappingProxyType(
     {"clock": 0, "chip_select": 1, "data_input": 2, "data_output": 3}
 )
 
 
 def _candidate(
+    observed: NetlistContract,
     group: SpiRoleAssignmentGroup,
-    control_role: str,
-    data_role: str,
+    control_role: SpiControlRole,
+    data_role: SpiDataRole,
     control: SpiRolePinAssignment,
     data: SpiRolePinAssignment,
     net: str,
-) -> Candidate:
+) -> SpiSameNetCandidate:
     channel = spi_channel_label(group.channel)
     control_name = control_role.replace("_", " ")
     data_name = data_role.replace("_", " ")
-    return Candidate(
-        rule_id=RULE_ID,
+    return SpiSameNetCandidate.from_source_evidence(
+        SpiClockDataSameNetEvidence(
+            observed=observed,
+            group=group,
+            control_role=control_role,
+            data_role=data_role,
+            control=control,
+            data=data,
+            net=net,
+        ),
         subject=(
             f"{group.reference}: {channel} {control_name} {control.function} and "
             f"{data_name} {data.function} share {net}"
@@ -46,32 +60,19 @@ def _candidate(
             f"on one schematic net ({net}). Review whether the assignment is intentional. "
             "Pin-function names do not establish the device's configured mode or required topology."
         ),
-        evidence={
-            "component": (group.reference,),
-            "channel": (channel,),
-            "spi_role_pin": (control.pin,),
-            "spi_role": (control_role,),
-            "spi_function": (control.function,),
-            "spi_electrical_type": (control.electrical_type,),
-            "data_pin": (data.pin,),
-            "data_role": (data_role,),
-            "data_function": (data.function,),
-            "data_electrical_type": (data.electrical_type,),
-            "net": (net,),
-        },
     )
 
 
 def spi_clock_control_data_same_net_candidates(
     observed: NetlistContract,
-) -> tuple[Candidate, ...]:
+) -> tuple[SpiSameNetCandidate, ...]:
     """Find one supported SPI clock/control and data pin pair on the same net.
 
     This opt-in review clue does not prove that a device uses the function names
     as its configured SPI roles. Data-input/output pairs are owned by the more
     specific SPI data-role same-net rule.
     """
-    findings: list[Candidate] = []
+    findings: list[SpiSameNetCandidate] = []
     for group in spi_role_assignment_groups(observed):
         control_roles = sorted(_SPI_CONTROL_ROLES & group.roles.keys(), key=_ROLE_ORDER.__getitem__)
         data_roles = sorted(_SPI_DATA_ROLES & group.roles.keys(), key=_ROLE_ORDER.__getitem__)
@@ -91,6 +92,14 @@ def spi_clock_control_data_same_net_candidates(
                 if control.electrical_type == data.electrical_type == "output":
                     continue
                 findings.append(
-                    _candidate(group, control_role, data_role, control, data, control.nets[0])
+                    _candidate(
+                        observed,
+                        group,
+                        control_role,
+                        data_role,
+                        control,
+                        data,
+                        control.nets[0],
+                    )
                 )
     return tuple(findings)

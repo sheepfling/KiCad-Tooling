@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from .connector_footprint_peer_assignments import connector_footprint_peer_pin_net_map
 from .connector_footprint_peer_groups import (
     complete_connector_footprint_peer_pin_inventory,
     connector_footprint_peer_candidate_groups,
@@ -17,6 +18,7 @@ from .connector_footprint_peer_pin_types import (
     ConnectorFootprintPeerPinNamedDivergence,
     ConnectorFootprintPeerPinOpenOutlier,
     ConnectorFootprintPeerPinScan,
+    ConnectorFootprintPeerPinScanSource,
 )
 from .connector_identity import (
     is_named_supply_function,
@@ -53,15 +55,17 @@ def scan_connector_footprint_peer_pin_assignments(
     excludes PART_ID-bearing components, which use the separately reviewed
     exact-part alias checks.
     """
+    scan_source = ConnectorFootprintPeerPinScanSource(
+        observed=observed,
+        declared_references=declared_references,
+        peer_assignment_groups=peer_assignment_groups,
+    )
     symbols = {reference.casefold(): item for reference, item in observed.component_symbols.items()}
     functions = {pin.casefold(): value for pin, value in observed.pin_functions.items()}
     electrical_types = {
         pin.casefold(): value for pin, value in observed.pin_electrical_types.items()
     }
-    pin_nets: dict[str, set[str]] = {}
-    for net, pins in observed.nets.items():
-        for pin in pins:
-            pin_nets.setdefault(pin.casefold(), set()).add(net)
+    pin_nets = connector_footprint_peer_pin_net_map(observed)
 
     candidate_groups = connector_footprint_peer_candidate_groups(
         observed,
@@ -261,6 +265,7 @@ def scan_connector_footprint_peer_pin_assignments(
                         assignments=dict(sorted(assignments.items())),
                         symbols=peer_symbols,
                         common_anchor_pin_numbers=tuple(sorted(anchors)),
+                        source=scan_source,
                         peer_assignment_group=peer_group,
                         peer_assignment_basis=basis,
                     )
@@ -443,6 +448,7 @@ def scan_connector_footprint_peer_pin_assignments(
         )
     )
     return ConnectorFootprintPeerPinScan(
+        source=scan_source,
         candidate_group_count=len(candidate_groups),
         incomplete_pin_inventory_group_count=incomplete_inventory_count,
         incomplete_pin_metadata_group_count=incomplete_metadata_count,

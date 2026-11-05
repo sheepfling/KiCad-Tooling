@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from .design_lint_tx_output_sharing_candidate_evidence import (
+    SerialTxOutputSharingEvidence,
+    TxOutputSharingCandidate,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 from .serial_participants import is_serial_ic_reference, serial_function_role_and_channel
@@ -18,8 +22,8 @@ def serial_tx_output_sharing_candidates(observed: NetlistContract) -> tuple[Cand
     not already identify an output-to-output conflict.
     """
     return tuple(
-        Candidate(
-            rule_id=RULE_ID,
+        TxOutputSharingCandidate.from_source_evidence(
+            SerialTxOutputSharingEvidence(observed=observed, group=group),
             subject=f"{', '.join(group.components)}: serial TX functions share {group.net}",
             message=(
                 f"Fitted IC transmit-function pins {', '.join(group.pins)} share one schematic net "
@@ -28,14 +32,6 @@ def serial_tx_output_sharing_candidates(observed: NetlistContract) -> tuple[Cand
                 "intentionally sharing this net or whether one pin assignment is wrong. "
                 "The function names do not prove driver behavior or required peer topology."
             ),
-            evidence={
-                "components": group.components,
-                "channels": tuple(channel.upper() for channel in group.channels),
-                "functions": group.functions,
-                "pins": group.pins,
-                "pin_types": group.pin_types,
-                "net": (group.net,),
-            },
         )
         for group in tx_output_sharing_groups(
             observed,

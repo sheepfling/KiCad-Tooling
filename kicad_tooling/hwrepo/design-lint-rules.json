@@ -447,6 +447,14 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
         "kicad_tooling/hwrepo/connector_footprint_peer_unanchored_divergence.py#reviewed_unanchored_connector_alias_divergences",
+        "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_peer_assignment_groups",
+        "kicad_tooling/hwrepo/connector_coverage.py#connector_peer_assignment_groups_by_reference",
+        "kicad_tooling/hwrepo/connector_identity.py#partition_peer_assignments",
+        "kicad_tooling/hwrepo/design_lint_connector_unanchored_assignment_evidence.py#ConnectorUnanchoredAssignmentEvidence",
+        "kicad_tooling/hwrepo/design_lint_connector_unanchored_assignment_evidence.py#ConnectorUnanchoredAssignmentCandidate",
+        "kicad_tooling/hwrepo/design_lint_connector_unanchored_assignment_evidence.py#_validate_current_unanchored_assignment_evidence",
+        "kicad_tooling/hwrepo/design_lint_connector_unanchored_assignment_evidence.py#project_connector_unanchored_assignment_evidence",
+        "kicad_tooling/hwrepo/design_lint_connector_unanchored_source_evidence.py#validate_current_unanchored_peer_contacts",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
@@ -501,6 +509,14 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
         "kicad_tooling/hwrepo/connector_footprint_peer_unanchored_coverage_review.py#uncovered_unanchored_connector_alias_scope",
+        "kicad_tooling/hwrepo/design_lint_connector_unanchored_coverage_evidence.py#ConnectorUnanchoredCoverageEvidence",
+        "kicad_tooling/hwrepo/design_lint_connector_unanchored_coverage_evidence.py#ConnectorUnanchoredCoverageCandidate",
+        "kicad_tooling/hwrepo/design_lint_connector_unanchored_coverage_evidence.py#project_connector_unanchored_coverage_evidence",
+        "kicad_tooling/hwrepo/design_lint_connector_unanchored_coverage_evidence.py#connector_coverage_entries_by_reference",
+        "kicad_tooling/hwrepo/design_lint_connector_unanchored_coverage_evidence.py#unanchored_coverage_needs_review",
+        "kicad_tooling/hwrepo/design_lint_connector_unanchored_source_evidence.py#connector_footprint_peer_unanchored_references",
+        "kicad_tooling/hwrepo/design_lint_connector_unanchored_source_evidence.py#connector_footprint_peer_unanchored_cohort_key",
+        "kicad_tooling/hwrepo/design_lint_connector_unanchored_source_evidence.py#validate_current_unanchored_peer_contacts",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
@@ -548,7 +564,13 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
+        "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinScanSource",
         "kicad_tooling/hwrepo/connector_footprint_peer_unanchored_scope_review.py#unreviewed_unanchored_connector_alias_scope",
+        "kicad_tooling/hwrepo/design_lint_connector_unanchored_scope_evidence.py#ConnectorUnanchoredPeerScopeEvidence",
+        "kicad_tooling/hwrepo/design_lint_connector_unanchored_scope_evidence.py#ConnectorUnanchoredPeerScopeCandidate",
+        "kicad_tooling/hwrepo/design_lint_connector_unanchored_scope_evidence.py#project_connector_unanchored_peer_scope_evidence",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_net_map",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_assignments",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
         "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
@@ -602,7 +624,17 @@
         "kicad_tooling/hwrepo/connector_footprint_peer_groups.py#connector_footprint_peer_candidate_groups",
         "kicad_tooling/hwrepo/connector_identity.py#native_pin_metadata_is_missing",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
-        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_peer_metadata_evidence.py#ConnectorFootprintPeerMetadataEvidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_peer_metadata_evidence.py#ConnectorFootprintPeerMetadataCandidate",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_peer_metadata_evidence.py#project_connector_footprint_peer_metadata_evidence",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_net_map",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_assignments",
+        "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinScanSource",
+        "kicad_tooling/hwrepo/connector_footprint_peer_groups.py#ConnectorFootprintPeerGroup",
+        "kicad_tooling/hwrepo/connector_footprint_peer_groups.py#complete_connector_footprint_peer_pin_inventory",
+        "kicad_tooling/hwrepo/connector_identity.py#PeerAssignmentPartition",
+        "kicad_tooling/hwrepo/connector_identity.py#partition_peer_assignments"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_peer_metadata.py#connector_footprint_peer_pin_metadata_assignment_divergences",
@@ -654,7 +686,17 @@
         "kicad_tooling/hwrepo/connector_footprint_peer_groups.py#connector_footprint_peer_candidate_groups",
         "kicad_tooling/hwrepo/connector_identity.py#native_pin_metadata_is_missing",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
-        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_peer_metadata_evidence.py#ConnectorFootprintPeerMetadataEvidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_peer_metadata_evidence.py#ConnectorFootprintPeerMetadataCandidate",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_peer_metadata_evidence.py#project_connector_footprint_peer_metadata_evidence",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_net_map",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_assignments",
+        "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinScanSource",
+        "kicad_tooling/hwrepo/connector_footprint_peer_groups.py#ConnectorFootprintPeerGroup",
+        "kicad_tooling/hwrepo/connector_footprint_peer_groups.py#complete_connector_footprint_peer_pin_inventory",
+        "kicad_tooling/hwrepo/connector_identity.py#PeerAssignmentPartition",
+        "kicad_tooling/hwrepo/connector_identity.py#partition_peer_assignments"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_peer_missing_metadata.py#connector_footprint_peer_pin_missing_metadata_assignment_divergences",
@@ -700,7 +742,17 @@
         "kicad_tooling/hwrepo/connector_footprint_peer_groups.py#connector_footprint_peer_candidate_groups",
         "kicad_tooling/hwrepo/connector_identity.py#native_pin_metadata_is_missing",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
-        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_peer_metadata_evidence.py#ConnectorFootprintPeerMetadataEvidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_peer_metadata_evidence.py#ConnectorFootprintPeerMetadataCandidate",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_peer_metadata_evidence.py#project_connector_footprint_peer_metadata_evidence",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_net_map",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_assignments",
+        "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinScanSource",
+        "kicad_tooling/hwrepo/connector_footprint_peer_groups.py#ConnectorFootprintPeerGroup",
+        "kicad_tooling/hwrepo/connector_footprint_peer_groups.py#complete_connector_footprint_peer_pin_inventory",
+        "kicad_tooling/hwrepo/connector_identity.py#PeerAssignmentPartition",
+        "kicad_tooling/hwrepo/connector_identity.py#partition_peer_assignments"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_peer_missing_metadata_open.py#connector_footprint_peer_pin_missing_metadata_open_outliers",
@@ -748,7 +800,17 @@
         "kicad_tooling/hwrepo/connector_footprint_peer_groups.py#connector_footprint_peer_candidate_groups",
         "kicad_tooling/hwrepo/connector_identity.py#native_pin_metadata_is_missing",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
-        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_peer_metadata_evidence.py#ConnectorFootprintPeerMetadataEvidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_peer_metadata_evidence.py#ConnectorFootprintPeerMetadataCandidate",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_peer_metadata_evidence.py#project_connector_footprint_peer_metadata_evidence",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_net_map",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_assignments",
+        "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinScanSource",
+        "kicad_tooling/hwrepo/connector_footprint_peer_groups.py#ConnectorFootprintPeerGroup",
+        "kicad_tooling/hwrepo/connector_footprint_peer_groups.py#complete_connector_footprint_peer_pin_inventory",
+        "kicad_tooling/hwrepo/connector_identity.py#PeerAssignmentPartition",
+        "kicad_tooling/hwrepo/connector_identity.py#partition_peer_assignments"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_peer_metadata_open.py#connector_footprint_peer_pin_metadata_open_outliers",
@@ -841,7 +903,13 @@
         "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
         "kicad_tooling/hwrepo/connector_footprint_power_input.py#footprint_named_power_input_open_outlier_candidates",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
-        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#ConnectorNamedOpenEvidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#ConnectorNamedOpenCandidate",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#_validate_current_named_open_evidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#project_connector_named_open_evidence",
+        "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_peer_assignment_groups",
+        "kicad_tooling/hwrepo/connector_coverage.py#connector_peer_assignment_groups_by_reference"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_power_input.py#footprint_named_power_input_open_outlier_candidates",
@@ -889,7 +957,13 @@
         "kicad_tooling/hwrepo/connector_footprint_signal_input.py#footprint_named_signal_input_open_outlier_candidates",
         "kicad_tooling/hwrepo/connector_footprint_open_named_candidates.py#open_named_outlier_candidates",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
-        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#ConnectorNamedOpenEvidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#ConnectorNamedOpenCandidate",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#_validate_current_named_open_evidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#project_connector_named_open_evidence",
+        "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_peer_assignment_groups",
+        "kicad_tooling/hwrepo/connector_coverage.py#connector_peer_assignment_groups_by_reference"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_signal_input.py#footprint_named_signal_input_open_outlier_candidates",
@@ -937,7 +1011,13 @@
         "kicad_tooling/hwrepo/connector_footprint_power_output.py#footprint_named_power_output_open_outlier_candidates",
         "kicad_tooling/hwrepo/connector_footprint_open_named_candidates.py#open_named_outlier_candidates",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
-        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#ConnectorNamedOpenEvidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#ConnectorNamedOpenCandidate",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#_validate_current_named_open_evidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#project_connector_named_open_evidence",
+        "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_peer_assignment_groups",
+        "kicad_tooling/hwrepo/connector_coverage.py#connector_peer_assignment_groups_by_reference"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_power_output.py#footprint_named_power_output_open_outlier_candidates",
@@ -985,7 +1065,13 @@
         "kicad_tooling/hwrepo/connector_footprint_signal_output.py#footprint_named_signal_output_open_outlier_candidates",
         "kicad_tooling/hwrepo/connector_footprint_open_named_candidates.py#open_named_outlier_candidates",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
-        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#ConnectorNamedOpenEvidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#ConnectorNamedOpenCandidate",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#_validate_current_named_open_evidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#project_connector_named_open_evidence",
+        "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_peer_assignment_groups",
+        "kicad_tooling/hwrepo/connector_coverage.py#connector_peer_assignment_groups_by_reference"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_signal_output.py#footprint_named_signal_output_open_outlier_candidates",
@@ -1030,6 +1116,10 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
         "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinNamedDivergence",
+        "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinScanSource",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_divergence_evidence.py#project_connector_footprint_named_divergence",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_net_map",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_assignments",
         "kicad_tooling/hwrepo/connector_footprint_named_signal_divergence.py#evaluate_footprint_named_signal_assignment_divergence",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
@@ -1078,6 +1168,10 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
         "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinNamedDivergence",
+        "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinScanSource",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_divergence_evidence.py#project_connector_footprint_named_divergence",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_net_map",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_assignments",
         "kicad_tooling/hwrepo/connector_footprint_named_passive_divergence.py#evaluate_footprint_named_passive_assignment_divergence",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
@@ -1171,6 +1265,10 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
         "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinNamedDivergence",
+        "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinScanSource",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_divergence_evidence.py#project_connector_footprint_named_divergence",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_net_map",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_assignments",
         "kicad_tooling/hwrepo/connector_footprint_named_power_input_divergence.py#evaluate_footprint_named_power_input_assignment_divergence",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
@@ -1217,6 +1315,10 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
         "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinNamedDivergence",
+        "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinScanSource",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_divergence_evidence.py#project_connector_footprint_named_divergence",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_net_map",
+        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_assignments",
         "kicad_tooling/hwrepo/connector_footprint_named_power_output_divergence.py#evaluate_footprint_named_power_output_assignment_divergence",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
@@ -1265,6 +1367,9 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
         "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinNamedAllOpen",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_all_open_candidate_evidence.py#ConnectorFootprintAllOpenCandidate",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_all_open_candidate_evidence.py#ConnectorFootprintAllOpenEvidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_all_open_candidate_evidence.py#project_connector_footprint_all_open_evidence",
         "kicad_tooling/hwrepo/connector_footprint_named_power_input_all_open.py#evaluate_footprint_named_power_input_all_open",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
         "kicad_tooling/hwrepo/connector_peer_pin_coverage.py#connector_peer_pin_heuristic_coverage",
@@ -1314,6 +1419,9 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
         "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinNamedAllOpen",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_all_open_candidate_evidence.py#ConnectorFootprintAllOpenCandidate",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_all_open_candidate_evidence.py#ConnectorFootprintAllOpenEvidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_all_open_candidate_evidence.py#project_connector_footprint_all_open_evidence",
         "kicad_tooling/hwrepo/connector_footprint_named_power_output_all_open.py#evaluate_footprint_named_power_output_all_open",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
         "kicad_tooling/hwrepo/connector_peer_pin_coverage.py#connector_peer_pin_heuristic_coverage",
@@ -1363,6 +1471,9 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
         "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinNamedAllOpen",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_all_open_candidate_evidence.py#ConnectorFootprintAllOpenCandidate",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_all_open_candidate_evidence.py#ConnectorFootprintAllOpenEvidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_all_open_candidate_evidence.py#project_connector_footprint_all_open_evidence",
         "kicad_tooling/hwrepo/connector_footprint_named_signal_all_open.py#evaluate_footprint_named_signal_all_open",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
         "kicad_tooling/hwrepo/connector_peer_pin_coverage.py#connector_peer_pin_heuristic_coverage",
@@ -1416,7 +1527,13 @@
         "kicad_tooling/hwrepo/connector_footprint_open_named_candidates.py#open_named_outlier_candidates",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
         "kicad_tooling/hwrepo/connector_peer_pin_coverage.py#connector_peer_pin_heuristic_coverage",
-        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#ConnectorNamedOpenEvidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#ConnectorNamedOpenCandidate",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#_validate_current_named_open_evidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#project_connector_named_open_evidence",
+        "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_peer_assignment_groups",
+        "kicad_tooling/hwrepo/connector_coverage.py#connector_peer_assignment_groups_by_reference"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_named_signal_mode_dependent_open.py#footprint_named_signal_mode_dependent_open_outlier_candidates",
@@ -1466,7 +1583,13 @@
         "kicad_tooling/hwrepo/connector_footprint_open_named_candidates.py#open_named_outlier_candidates",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
         "kicad_tooling/hwrepo/connector_peer_pin_coverage.py#connector_peer_pin_heuristic_coverage",
-        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#ConnectorNamedOpenEvidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#ConnectorNamedOpenCandidate",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#_validate_current_named_open_evidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_named_open_evidence.py#project_connector_named_open_evidence",
+        "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_peer_assignment_groups",
+        "kicad_tooling/hwrepo/connector_coverage.py#connector_peer_assignment_groups_by_reference"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_named_passive_open.py#footprint_named_passive_open_outlier_candidates",
@@ -1869,6 +1992,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_peer_pin_all_open.py#all_open_generic_connector_peer_pin_candidates",
         "kicad_tooling/hwrepo/connector_peer_pin_scan.py#scan_connector_part_id_peer_pins",
+        "kicad_tooling/hwrepo/design_lint_connector_all_open_candidate_evidence.py#project_connector_all_open_peer_pin_evidence",
         "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates"
       ],
       "implementation_owner": "kicad_tooling/hwrepo/connector_peer_pin_all_open.py#all_open_generic_connector_peer_pin_candidates",
@@ -2554,6 +2678,12 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/component_peer_pin_all_open.py#all_open_generic_component_peer_pin_candidates",
         "kicad_tooling/hwrepo/component_peer_pin_scan.py#scan_component_peer_pin_assignments",
+        "kicad_tooling/hwrepo/design_lint_component_peer_open_candidate_evidence.py#GenericComponentPeerOpenScanEvidence",
+        "kicad_tooling/hwrepo/design_lint_component_peer_open_candidate_evidence.py#GenericComponentPeerOpenEvidence",
+        "kicad_tooling/hwrepo/design_lint_component_peer_open_candidate_evidence.py#GenericComponentPeerOpenCandidate",
+        "kicad_tooling/hwrepo/design_lint_component_peer_open_candidate_evidence.py#_current_scan",
+        "kicad_tooling/hwrepo/design_lint_component_peer_open_candidate_evidence.py#_validate_open_peer_outlier",
+        "kicad_tooling/hwrepo/design_lint_component_peer_open_candidate_evidence.py#project_generic_component_peer_open_evidence",
         "kicad_tooling/hwrepo/design_lint_component_peer_candidates.py#component_peer_candidates"
       ],
       "theme": "components",
@@ -2602,6 +2732,12 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/component_peer_pin_mixed_open.py#mixed_open_generic_component_peer_pin_candidates",
         "kicad_tooling/hwrepo/component_peer_pin_scan.py#scan_component_peer_pin_assignments",
+        "kicad_tooling/hwrepo/design_lint_component_peer_open_candidate_evidence.py#GenericComponentPeerOpenScanEvidence",
+        "kicad_tooling/hwrepo/design_lint_component_peer_open_candidate_evidence.py#GenericComponentPeerOpenEvidence",
+        "kicad_tooling/hwrepo/design_lint_component_peer_open_candidate_evidence.py#GenericComponentPeerOpenCandidate",
+        "kicad_tooling/hwrepo/design_lint_component_peer_open_candidate_evidence.py#_current_scan",
+        "kicad_tooling/hwrepo/design_lint_component_peer_open_candidate_evidence.py#_validate_open_peer_outlier",
+        "kicad_tooling/hwrepo/design_lint_component_peer_open_candidate_evidence.py#project_generic_component_peer_open_evidence",
         "kicad_tooling/hwrepo/design_lint_component_peer_candidates.py#component_peer_candidates"
       ],
       "theme": "components",
@@ -2806,7 +2942,8 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/two_pin_leds.py#two_pin_led_same_net_candidates",
-        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net"
+        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net",
+        "kicad_tooling/hwrepo/design_lint_two_pin_candidate_evidence.py#TwoPinSameNetCandidate"
       ],
       "theme": "components",
       "implementation_owner": "kicad_tooling/hwrepo/two_pin_leds.py#two_pin_led_same_net_candidates"
@@ -2848,7 +2985,8 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/two_pin_buzzers.py#two_pin_buzzer_same_net_candidates",
-        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net"
+        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net",
+        "kicad_tooling/hwrepo/design_lint_two_pin_candidate_evidence.py#TwoPinSameNetCandidate"
       ],
       "theme": "components",
       "implementation_owner": "kicad_tooling/hwrepo/two_pin_buzzers.py#two_pin_buzzer_same_net_candidates"
@@ -2893,7 +3031,8 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/two_pin_speakers.py#two_pin_speaker_same_net_candidates",
-        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net"
+        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net",
+        "kicad_tooling/hwrepo/design_lint_two_pin_candidate_evidence.py#TwoPinSameNetCandidate"
       ],
       "theme": "components",
       "implementation_owner": "kicad_tooling/hwrepo/two_pin_speakers.py#two_pin_speaker_same_net_candidates"
@@ -2939,7 +3078,8 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/two_pin_batteries.py#two_pin_battery_same_net_candidates",
-        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net"
+        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net",
+        "kicad_tooling/hwrepo/design_lint_two_pin_candidate_evidence.py#TwoPinSameNetCandidate"
       ],
       "theme": "components",
       "implementation_owner": "kicad_tooling/hwrepo/two_pin_batteries.py#two_pin_battery_same_net_candidates"
@@ -2985,7 +3125,8 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/two_pin_motors.py#two_pin_motor_same_net_candidates",
-        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net"
+        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net",
+        "kicad_tooling/hwrepo/design_lint_two_pin_candidate_evidence.py#TwoPinSameNetCandidate"
       ],
       "theme": "components",
       "implementation_owner": "kicad_tooling/hwrepo/two_pin_motors.py#two_pin_motor_same_net_candidates"
@@ -3028,7 +3169,8 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/two_pin_solar_cells.py#two_pin_solar_cell_same_net_candidates",
-        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net"
+        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net",
+        "kicad_tooling/hwrepo/design_lint_two_pin_candidate_evidence.py#TwoPinSameNetCandidate"
       ],
       "theme": "components",
       "implementation_owner": "kicad_tooling/hwrepo/two_pin_solar_cells.py#two_pin_solar_cell_same_net_candidates"
@@ -3071,7 +3213,8 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/two_pin_thermocouples.py#two_pin_thermocouple_same_net_candidates",
-        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net"
+        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net",
+        "kicad_tooling/hwrepo/design_lint_two_pin_candidate_evidence.py#TwoPinSameNetCandidate"
       ],
       "theme": "components",
       "implementation_owner": "kicad_tooling/hwrepo/two_pin_thermocouples.py#two_pin_thermocouple_same_net_candidates"
@@ -4357,6 +4500,8 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/mosfet_gate_connectivity.py#mosfet_gates_without_peer",
+        "kicad_tooling/hwrepo/design_lint_mosfet_gate_candidate_evidence.py#project_mosfet_gate_candidate_evidence",
+        "kicad_tooling/hwrepo/component_mosfet_symbols.py#mosfet_terminal_role",
         "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
@@ -4402,6 +4547,8 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/mosfet_gate_connectivity.py#mosfet_gates_without_visible_source_bias",
+        "kicad_tooling/hwrepo/design_lint_mosfet_gate_candidate_evidence.py#project_mosfet_gate_candidate_evidence",
+        "kicad_tooling/hwrepo/component_mosfet_symbols.py#mosfet_terminal_role",
         "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
@@ -4445,6 +4592,8 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/component_mosfet_gate_drive.py#mosfets_with_direct_output_gate_drive",
+        "kicad_tooling/hwrepo/design_lint_mosfet_gate_candidate_evidence.py#project_mosfet_gate_candidate_evidence",
+        "kicad_tooling/hwrepo/component_mosfet_symbols.py#mosfet_terminal_role",
         "kicad_tooling/hwrepo/component_pin_types.py#fitted_output_pins_on_net",
         "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
@@ -4724,6 +4873,7 @@
         "kicad_tooling/hwrepo/component_bjt_base_drive.py#bjts_with_direct_output_base_drive",
         "kicad_tooling/hwrepo/component_pin_types.py#is_output_capable_pin_type",
         "kicad_tooling/hwrepo/component_pin_types.py#fitted_output_pins_on_net",
+        "kicad_tooling/hwrepo/design_lint_bjt_base_candidate_evidence.py#BjtBaseCandidate",
         "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
@@ -4772,6 +4922,7 @@
         "kicad_tooling/hwrepo/component_bjt_base_bias.py#bjts_without_visible_emitter_bias",
         "kicad_tooling/hwrepo/component_bjt_symbols.py#basic_bjt_role_numbers",
         "kicad_tooling/hwrepo/resistor_paths.py#direct_resistors",
+        "kicad_tooling/hwrepo/design_lint_bjt_base_candidate_evidence.py#BjtBaseCandidate",
         "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
@@ -5929,8 +6080,10 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/bus_usb_signal_named_rail.py#usb_signal_on_named_rail_candidates",
-        "kicad_tooling/hwrepo/bus_usb_signal_named_rail.py#_usb_signal_identity",
+        "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#NamedRailSignalCandidate",
         "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#named_rail_pin_evidence_matches_source",
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_signal_family_and_side",
         "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_data_function_identity",
         "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_superspeed_function_identity",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
@@ -6020,6 +6173,7 @@
         "kicad_tooling/hwrepo/bus_signal_roles.py#usb_c_cc_role",
         "kicad_tooling/hwrepo/connector_identity.py#connector_candidate_references",
         "kicad_tooling/hwrepo/netlist_pin_assignments.py#netlist_pin_net_index",
+        "kicad_tooling/hwrepo/design_lint_usb_c_cc_same_net_candidate_evidence.py#UsbCcSameNetCandidate",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
       ],
       "theme": "interfaces",
@@ -6063,6 +6217,10 @@
         "kicad_tooling/hwrepo/usb_c_sbu_named_rail.py#usb_c_sbu_signal_on_named_rail_candidates",
         "kicad_tooling/hwrepo/bus_signal_roles.py#usb_c_sbu_role",
         "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#named_rail_pin_evidence_matches_source",
+        "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#NamedRailSignalCandidate",
+        "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#UsbCSbuSignalNamedRailEvidence",
+        "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#usb_c_sbu_pair_is_complete",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
       ],
       "theme": "interfaces",
@@ -6148,6 +6306,7 @@
         "kicad_tooling/hwrepo/usb_c_cc_controller_same_net.py#usb_c_cc_controller_same_net_candidates",
         "kicad_tooling/hwrepo/bus_signal_roles.py#usb_c_cc_role",
         "kicad_tooling/hwrepo/netlist_pin_assignments.py#netlist_pin_net_index",
+        "kicad_tooling/hwrepo/design_lint_usb_c_cc_same_net_candidate_evidence.py#UsbCcSameNetCandidate",
         "kicad_tooling/hwrepo/design_lint_usb_c_same_net_candidates.py#usb_c_same_net_candidates",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
       ],
@@ -6504,6 +6663,10 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/can_line_polarity.py#can_line_polarity_label_candidates",
         "kicad_tooling/hwrepo/bus_signal_roles.py#can_function_role",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#SignalLabelRoleMismatchCandidate",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#CanLinePolarityLabelMismatchEvidence",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#_source_mismatch_matches",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#project_signal_label_role_mismatch_evidence",
         "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
@@ -6635,6 +6798,7 @@
         "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
         "kicad_tooling/hwrepo/casefold_mapping_lookup.py#lookup_unique_casefold",
         "kicad_tooling/hwrepo/design_lint_ethernet_unconnected_candidates.py#ethernet_unconnected_pin_candidates",
+        "kicad_tooling/hwrepo/design_lint_ethernet_unconnected_candidate_evidence.py#EthernetUnconnectedCandidate",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
       ],
       "theme": "interfaces",
@@ -6681,6 +6845,7 @@
         "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
         "kicad_tooling/hwrepo/casefold_mapping_lookup.py#lookup_unique_casefold",
         "kicad_tooling/hwrepo/design_lint_ethernet_unconnected_candidates.py#ethernet_unconnected_pin_candidates",
+        "kicad_tooling/hwrepo/design_lint_ethernet_unconnected_candidate_evidence.py#EthernetUnconnectedCandidate",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
       ],
       "theme": "interfaces",
@@ -6721,8 +6886,10 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/bus_ethernet_management_named_rail.py#ethernet_management_signal_on_named_rail_candidates",
+        "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#NamedRailSignalCandidate",
         "kicad_tooling/hwrepo/bus_signal_pairs.py#ethernet_management_function_role",
         "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#named_rail_pin_evidence_matches_source",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
       ],
       "theme": "interfaces",
@@ -6763,7 +6930,9 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/bus_ethernet_signal_named_rail.py#ethernet_signal_on_named_rail_candidates",
+        "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#NamedRailSignalCandidate",
         "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#named_rail_pin_evidence_matches_source",
         "kicad_tooling/hwrepo/bus_signal_pairs.py#ethernet_data_pair_function_role",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
       ],
@@ -6805,7 +6974,9 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/can_tx_rx_same_net.py#can_tx_rx_same_net_candidates",
         "kicad_tooling/hwrepo/can_signal_functions.py#can_signal_role_and_channel",
+        "kicad_tooling/hwrepo/can_signal_functions.py#can_channel_label",
         "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
+        "kicad_tooling/hwrepo/design_lint_can_tx_rx_candidate_evidence.py#CanTxRxSameNetCandidate",
         "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
@@ -6891,7 +7062,11 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/can_line_named_rail.py#can_line_on_named_rail_candidates",
         "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#named_rail_pin_evidence_matches_source",
         "kicad_tooling/hwrepo/bus_signal_roles.py#can_function_role",
+        "kicad_tooling/hwrepo/design_lint_named_rail_line_candidate_evidence.py#NamedRailLineCandidate",
+        "kicad_tooling/hwrepo/design_lint_named_rail_line_candidate_evidence.py#CanLineNamedRailEvidence",
+        "kicad_tooling/hwrepo/design_lint_named_rail_line_candidate_evidence.py#can_line_named_rail_peer",
         "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates"
       ],
       "theme": "interfaces",
@@ -6933,7 +7108,9 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/can_signal_named_rail.py#can_signal_on_named_rail_candidates",
+        "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#NamedRailSignalCandidate",
         "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#named_rail_pin_evidence_matches_source",
         "kicad_tooling/hwrepo/can_signal_functions.py#can_signal_role_and_channel",
         "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates"
       ],
@@ -6975,8 +7152,10 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/can_tx_output_sharing.py#can_tx_output_sharing_candidates",
         "kicad_tooling/hwrepo/can_signal_functions.py#can_signal_role_and_channel",
+        "kicad_tooling/hwrepo/can_signal_functions.py#can_channel_label",
         "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
         "kicad_tooling/hwrepo/signal_pair_tx_output_sharing.py#tx_output_sharing_groups",
+        "kicad_tooling/hwrepo/design_lint_tx_output_sharing_candidate_evidence.py#TxOutputSharingCandidate",
         "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
@@ -7018,6 +7197,11 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/spi_data_label.py#spi_data_polarity_label_candidates",
+        "kicad_tooling/hwrepo/spi_participants.py#spi_data_label_role",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#SignalLabelRoleMismatchCandidate",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#SpiDataLabelRoleMismatchEvidence",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#_source_mismatch_matches",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#project_signal_label_role_mismatch_evidence",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
@@ -7102,7 +7286,9 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/spi_signal_named_rail.py#spi_signal_on_named_rail_candidates",
+        "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#NamedRailSignalCandidate",
         "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#named_rail_pin_evidence_matches_source",
         "kicad_tooling/hwrepo/spi_participants.py#spi_signal_role_and_channel",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
       ],
@@ -7227,6 +7413,8 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/spi_same_net.py#spi_data_input_output_same_net_candidates",
+        "kicad_tooling/hwrepo/design_lint_spi_same_net_candidate_evidence.py#SpiSameNetCandidate",
+        "kicad_tooling/hwrepo/spi_role_assignments.py#spi_role_assignment_groups",
         "kicad_tooling/hwrepo/spi_participants.py#spi_data_function_role_and_channel",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
@@ -7269,6 +7457,7 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/spi_clock_data_same_net.py#spi_clock_control_data_same_net_candidates",
+        "kicad_tooling/hwrepo/design_lint_spi_same_net_candidate_evidence.py#SpiSameNetCandidate",
         "kicad_tooling/hwrepo/spi_role_assignments.py#spi_role_assignment_groups",
         "kicad_tooling/hwrepo/spi_participants.py#spi_signal_role_and_channel",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
@@ -7311,6 +7500,7 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/spi_control_same_net.py#spi_clock_chip_select_same_net_candidates",
+        "kicad_tooling/hwrepo/design_lint_spi_same_net_candidate_evidence.py#SpiSameNetCandidate",
         "kicad_tooling/hwrepo/spi_role_assignments.py#spi_role_assignment_groups",
         "kicad_tooling/hwrepo/spi_participants.py#spi_signal_role_and_channel",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
@@ -7482,7 +7672,10 @@
         "kicad_tooling/hwrepo/rs485_data_functions.py#rs485_data_pin_role",
         "kicad_tooling/hwrepo/serial_participants.py#serial_function_role_and_channel",
         "kicad_tooling/hwrepo/design_lint_rs485_candidates.py#rs485_candidates",
-        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#SignalLabelRoleMismatchCandidate",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#Rs485DataLabelRoleMismatchEvidence",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#project_signal_label_role_mismatch_evidence"
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/rs485_data_label_mismatch.py#rs485_data_direction_label_candidates"
@@ -7611,6 +7804,10 @@
         "kicad_tooling/hwrepo/rs485_line_functions.py#rs485_bus_line_role",
         "kicad_tooling/hwrepo/rs485_data_functions.py#explicit_rs485_transceiver_identity",
         "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#named_rail_pin_evidence_matches_source",
+        "kicad_tooling/hwrepo/design_lint_named_rail_line_candidate_evidence.py#NamedRailLineCandidate",
+        "kicad_tooling/hwrepo/design_lint_named_rail_line_candidate_evidence.py#Rs485LineNamedRailEvidence",
+        "kicad_tooling/hwrepo/design_lint_named_rail_line_candidate_evidence.py#rs485_line_named_rail_peer",
         "kicad_tooling/hwrepo/design_lint_rs485_candidates.py#rs485_candidates"
       ],
       "theme": "interfaces",
@@ -7652,7 +7849,11 @@
         "kicad_tooling/hwrepo/rs485_line_label_mismatch.py#rs485_line_label_mismatch_candidates",
         "kicad_tooling/hwrepo/rs485_line_functions.py#rs485_bus_line_role",
         "kicad_tooling/hwrepo/rs485_data_functions.py#explicit_rs485_transceiver_identity",
-        "kicad_tooling/hwrepo/design_lint_rs485_candidates.py#rs485_candidates"
+        "kicad_tooling/hwrepo/design_lint_rs485_candidates.py#rs485_candidates",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#SignalLabelRoleMismatchCandidate",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#Rs485LineLabelRoleMismatchEvidence",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#project_signal_label_role_mismatch_evidence",
+        "kicad_tooling/hwrepo/rs485_line_functions.py#rs485_bus_line_label_role"
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/rs485_line_label_mismatch.py#rs485_line_label_mismatch_candidates"
@@ -7695,6 +7896,9 @@
         "kicad_tooling/hwrepo/rs485_data_functions.py#rs485_data_pin_role",
         "kicad_tooling/hwrepo/rs485_data_functions.py#explicit_rs485_transceiver_identity",
         "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#named_rail_pin_evidence_matches_source",
+        "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#NamedRailSignalCandidate",
+        "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#Rs485SignalNamedRailEvidence",
         "kicad_tooling/hwrepo/design_lint_rs485_candidates.py#rs485_candidates"
       ],
       "theme": "interfaces",
@@ -8662,6 +8866,9 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_signal_named_rail.py#i2c_signal_on_named_rail_candidates",
+        "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#NamedRailSignalCandidate",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#named_rail_pin_evidence_matches_source",
         "kicad_tooling/hwrepo/named_rail_roles.py#named_rail_role_clue",
         "kicad_tooling/hwrepo/bus_signal_roles.py#i2c_signal_role",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
@@ -8705,7 +8912,9 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/i3c_signal_named_rail.py#i3c_signal_on_named_rail_candidates",
+        "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#NamedRailSignalCandidate",
         "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#named_rail_pin_evidence_matches_source",
         "kicad_tooling/hwrepo/named_rail_roles.py#named_rail_role_clue",
         "kicad_tooling/hwrepo/bus_signal_roles.py#i3c_signal_identity",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
@@ -8750,6 +8959,8 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/i3c_same_net.py#i3c_sda_scl_same_net_candidates",
         "kicad_tooling/hwrepo/bus_signal_roles.py#i3c_signal_identity",
+        "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
+        "kicad_tooling/hwrepo/design_lint_two_wire_same_net_candidate_evidence.py#TwoWireSameNetCandidate",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
       ],
       "theme": "interfaces",
@@ -8790,6 +9001,10 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_signal_label.py#i2c_signal_label_role_candidates",
         "kicad_tooling/hwrepo/bus_signal_roles.py#i2c_signal_role",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#SignalLabelRoleMismatchCandidate",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#I2cSignalLabelRoleMismatchEvidence",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#_source_mismatch_matches",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#project_signal_label_role_mismatch_evidence",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
@@ -8832,6 +9047,9 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_same_net.py#i2c_sda_scl_same_net_candidates",
         "kicad_tooling/hwrepo/i2c_addressing.py#i2c_signal_role",
+        "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
+        "kicad_tooling/hwrepo/casefold_mapping_lookup.py#lookup_unique_casefold",
+        "kicad_tooling/hwrepo/design_lint_two_wire_same_net_candidate_evidence.py#TwoWireSameNetCandidate",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
@@ -8959,7 +9177,10 @@
         "kicad_tooling/hwrepo/serial_participants.py#serial_function_role_and_channel",
         "kicad_tooling/hwrepo/casefold_mapping_lookup.py#lookup_unique_casefold",
         "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
-        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#SignalLabelRoleMismatchCandidate",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#SerialTxRxLabelRoleMismatchEvidence",
+        "kicad_tooling/hwrepo/design_lint_signal_label_role_candidate_evidence.py#project_signal_label_role_mismatch_evidence"
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/serial_tx_rx_label_mismatch.py#serial_tx_rx_label_mismatch_candidates"
@@ -9000,6 +9221,9 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/serial_signal_named_rail.py#serial_signal_on_named_rail_candidates",
+        "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#NamedRailSignalCandidate",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#named_rail_pin_evidence_matches_source",
         "kicad_tooling/hwrepo/named_rail_roles.py#named_rail_role_clue",
         "kicad_tooling/hwrepo/serial_participants.py#serial_function_role_and_channel",
         "kicad_tooling/hwrepo/casefold_mapping_lookup.py#lookup_unique_casefold",
@@ -9131,6 +9355,7 @@
         "kicad_tooling/hwrepo/serial_participants.py#is_serial_ic_reference",
         "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
         "kicad_tooling/hwrepo/signal_pair_tx_output_sharing.py#tx_output_sharing_groups",
+        "kicad_tooling/hwrepo/design_lint_tx_output_sharing_candidate_evidence.py#TxOutputSharingCandidate",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],

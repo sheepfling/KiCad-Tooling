@@ -4,10 +4,15 @@ from __future__ import annotations
 
 from .component_bjt_symbols import basic_bjt_role_numbers
 from .component_pin_types import fitted_output_pins_on_net
+from .design_lint_bjt_base_candidate_evidence import (
+    BJT_BASE_DIRECT_DRIVE_RULE_ID,
+    BjtBaseCandidate,
+    BjtBaseDirectDriveEvidence,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 
-RULE_ID = "component.bjt_base_direct_drive"
+RULE_ID = BJT_BASE_DIRECT_DRIVE_RULE_ID
 
 
 def bjts_with_direct_output_base_drive(
@@ -58,11 +63,16 @@ def bjts_with_direct_output_base_drive(
         if not output_peers:
             continue
 
-        output_pins = tuple(pin for pin, _ in output_peers)
-        output_pin_types = tuple(f"{pin}={pin_type}" for pin, pin_type in output_peers)
         findings.append(
-            Candidate(
-                rule_id=RULE_ID,
+            BjtBaseCandidate.from_source_evidence(
+                BjtBaseDirectDriveEvidence(
+                    observed=observed,
+                    reference=reference,
+                    symbol=symbol,
+                    base_pin=base_pin,
+                    base_net=base_net,
+                    output_peers=output_peers,
+                ),
                 subject=f"{base_pin}: BJT base directly shares a net with an output-capable pin",
                 message=(
                     "The native netlist assigns the BJT base and output-capable pin to the same "
@@ -71,14 +81,6 @@ def bjts_with_direct_output_base_drive(
                     "requirement is met. This prompt does not establish a required resistor, "
                     "current limit, safe operating point, or physical path."
                 ),
-                evidence={
-                    "component": (reference,),
-                    "symbol": (symbol,),
-                    "base_pin": (base_pin,),
-                    "base_net": (base_net,),
-                    "output_pins": output_pins,
-                    "output_pin_types": output_pin_types,
-                },
             )
         )
     return tuple(findings)

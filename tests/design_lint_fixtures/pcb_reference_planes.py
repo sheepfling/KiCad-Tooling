@@ -174,10 +174,10 @@ def report(
     )
 
 
-def coach() -> ContractCoachReport:
+def coach(project_id: str = "synthetic-plane") -> ContractCoachReport:
     return ContractCoachReport(
         status="READY_FOR_REVIEW",
-        project_id="synthetic-plane",
+        project_id=project_id,
         observed=NetlistContract(components={}, nets={}),
         netlist_sha256=NETLIST,
         source_hashes={"projects/synthetic/board.kicad_pcb": BOARD},

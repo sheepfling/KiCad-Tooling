@@ -5,6 +5,11 @@ from __future__ import annotations
 import re
 
 from .bus_signal_roles import i3c_signal_identity
+from .design_lint_two_wire_same_net_candidate_evidence import (
+    I3cSameNetEvidence,
+    TwoWirePinEvidence,
+    TwoWireSameNetCandidate,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 
@@ -81,8 +86,15 @@ def i3c_sda_scl_same_net_candidates(observed: NetlistContract) -> tuple[Candidat
             reference = fitted[reference_key]
             channel_text = "unindexed" if channel is None else channel
             findings.append(
-                Candidate(
-                    rule_id=RULE_ID,
+                TwoWireSameNetCandidate.from_source_evidence(
+                    I3cSameNetEvidence(
+                        observed=observed,
+                        reference=reference,
+                        channel=channel,
+                        sda=TwoWirePinEvidence.from_native_pin_map(observed, sda_pin),
+                        scl=TwoWirePinEvidence.from_native_pin_map(observed, scl_pin),
+                        net=sda_net,
+                    ),
                     subject=f"{reference}: I3C{channel_text} SDA/SCL pins share {sda_net}",
                     message=(
                         f"The explicit I3C SDA pin {sda_pin} and SCL pin {scl_pin} on "
@@ -90,13 +102,6 @@ def i3c_sda_scl_same_net_candidates(observed: NetlistContract) -> tuple[Candidat
                         "this is intentional. Function names are clues only; this check does "
                         "not prove the part implements I3C or establish its intended topology."
                     ),
-                    evidence={
-                        "component": (reference,),
-                        "channel": (channel_text,),
-                        "SDA_pin": (sda_pin,),
-                        "SCL_pin": (scl_pin,),
-                        "net": (sda_net,),
-                    },
                 )
             )
     return tuple(sorted(findings, key=lambda item: (item.subject.casefold(), item.subject)))

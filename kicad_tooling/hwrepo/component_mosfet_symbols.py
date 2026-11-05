@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from types import MappingProxyType
-from typing import Literal
+from typing import Literal, TypeAlias
+
+MosfetTerminalRole: TypeAlias = Literal["drain", "gate", "source"]
 
 SUPPORTED_THREE_TERMINAL_MOSFET_SYMBOLS = frozenset(
     {
@@ -33,7 +35,7 @@ def mosfet_channel_type(symbol: str) -> Literal["nmos", "pmos"] | None:
     return "pmos"
 
 
-_TERMINAL_FUNCTION_ROLES = MappingProxyType(
+_TERMINAL_FUNCTION_ROLES: Mapping[str, MosfetTerminalRole] = MappingProxyType(
     {
         "d": "drain",
         "drain": "drain",
@@ -43,6 +45,13 @@ _TERMINAL_FUNCTION_ROLES = MappingProxyType(
         "source": "source",
     }
 )
+
+
+def mosfet_terminal_role(function: str | None) -> MosfetTerminalRole | None:
+    """Return a recognized native D/G/S role from one pin function."""
+    if function is None:
+        return None
+    return _TERMINAL_FUNCTION_ROLES.get(function.strip().casefold())
 
 
 def mosfet_terminal_role_numbers(
@@ -60,10 +69,10 @@ def mosfet_terminal_role_numbers(
     ):
         return None
 
-    functions = {pin.casefold(): value.strip().casefold() for pin, value in pin_functions.items()}
+    functions = {pin.casefold(): value for pin, value in pin_functions.items()}
     roles: dict[str, str] = {}
     for number in numbers:
-        role = _TERMINAL_FUNCTION_ROLES.get(functions.get(f"{reference}.{number}".casefold(), ""))
+        role = mosfet_terminal_role(functions.get(f"{reference}.{number}".casefold()))
         if role is None:
             continue
         if role in roles:

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from .connector_coverage_models import ConnectorCoverageReport
 from .connector_footprint_open_named_candidates import open_named_outlier_candidates
 from .connector_footprint_peer_pin_types import (
-    SIGNAL_ELECTRICAL_TYPES,
     ConnectorFootprintPeerPinScan,
 )
 from .connector_identity import (
@@ -12,15 +12,18 @@ from .connector_identity import (
     is_return_function,
     pin_function_is_generic,
 )
-from .design_lint_rule_types import DesignLintRuleId
+from .design_lint_connector_footprint_named_open_evidence import (
+    MODE_DEPENDENT_SIGNAL_TYPES,
+    ConnectorNamedOpenRuleId,
+)
 from .design_lint_types import Candidate
 
-RULE_ID: DesignLintRuleId = "connector.footprint_named_signal_mode_dependent_open_outlier"
-MODE_DEPENDENT_SIGNAL_TYPES = SIGNAL_ELECTRICAL_TYPES - {"input", "output"}
+RULE_ID: ConnectorNamedOpenRuleId = "connector.footprint_named_signal_mode_dependent_open_outlier"
 
 
 def footprint_named_signal_mode_dependent_open_outlier_candidates(
     scan: ConnectorFootprintPeerPinScan,
+    coverage: ConnectorCoverageReport | None = None,
 ) -> tuple[Candidate, ...]:
     """Review named bidirectional or high-impedance signal pins open on some peers."""
     records = tuple(
@@ -32,7 +35,8 @@ def footprint_named_signal_mode_dependent_open_outlier_candidates(
         and not is_return_function(item.pin_function)
     )
     return open_named_outlier_candidates(
+        scan,
         records,
+        coverage=coverage,
         rule_id=RULE_ID,
-        role_label="mode-dependent signal",
     )

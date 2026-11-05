@@ -244,7 +244,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         mode="review",
         map_sha256="b" * 64,
         netlist_sha256="a" * 64,
-        ioc_source_hashes={"firmware/controller.ioc": stm32_ioc_sha256},
+        ioc_source_hashes={stm32_map.ioc_path: stm32_ioc_sha256},
         mapped_pin_count=len(stm32_map.pins),
         excluded_pin_count=len(stm32_map.exclusions),
         mismatches=stm32_pin_map_mismatches(

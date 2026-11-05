@@ -311,7 +311,17 @@ def _component_peer_candidate_items(
             )
         )
     found.extend(
-        mixed_open_generic_component_peer_pin_candidates(peer_pin_scans.generic_partial_open)
+        mixed_open_generic_component_peer_pin_candidates(
+            peer_pin_scans.generic_partial_open,
+            observed=observed,
+            declared_references=reviewed_connector_references,
+        )
     )
-    found.extend(all_open_generic_component_peer_pin_candidates(peer_pin_scans.generic_all_open))
+    found.extend(
+        all_open_generic_component_peer_pin_candidates(
+            peer_pin_scans.generic_all_open,
+            observed=observed,
+            declared_references=reviewed_connector_references,
+        )
+    )
     return tuple(found)

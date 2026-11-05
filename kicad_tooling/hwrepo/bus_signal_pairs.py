@@ -253,6 +253,17 @@ def usb_data_function_identity(function: str) -> tuple[str | None, str] | None:
     return None, family_side[1]
 
 
+def usb_signal_family_and_side(function: str) -> tuple[str, str] | None:
+    """Return the bounded USB 2.0 or SuperSpeed family and pair side."""
+    data_identity = usb_data_function_identity(function)
+    if data_identity is not None:
+        port, side = data_identity
+        family = "USB 2.0 data" if port is None else f"USB 2.0 data port {port}"
+        return family, side
+
+    return usb_superspeed_function_identity(function)
+
+
 def usb_superspeed_function_identity(
     function: str,
 ) -> (

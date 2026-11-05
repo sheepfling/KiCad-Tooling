@@ -1085,3 +1085,451 @@ production modules across 93 files and 72 in tests across 46 files. Literal
 dictionaries account for 83 production calls and 24 test calls. The largest
 remaining production concentrations tie at two calls each in
 `connector_peer_pin_all_open.py` and `mosfet_gate_connectivity.py`.
+
+## Generic connector all-open candidate evidence
+
+The exact-symbol and PART_ID branches now retain
+`ConnectorAllOpenPeerPinEvidence` through `ConnectorAllOpenPeerPinCandidate`.
+The source record keeps the peer identity basis explicit and verifies current
+fitted peers, native pin functions and electrical types, all-open assignments,
+and shared-anchor contacts against the current `NetlistContract`. The
+projector preserves the existing rule ID, report fields, subjects, messages,
+and candidate ordering. Predicate selection, reviewed peer scoping, and
+PART_ID subsumption are unchanged.
+
+The connector all-open selection passed 80 source, architecture, catalog,
+marker, selector, determinism, and CLI/MCP parity tests. Ruff, format,
+targeted Pyright, Markdown checks, mdrepo, and `git diff --check` passed. No
+exact native KiCad lane was run.
+
+## MOSFET gate candidate evidence
+
+No-peer, source-bias, and direct-drive findings retain distinct source types
+through `MosfetGateCandidate`. Each binds a `SupportedMosfetGate` to the
+current fitted component, exact supported symbol, complete three-pin
+inventory, and unique native gate function through the canonical
+`component_mosfet_symbols.mosfet_terminal_role` service. The no-peer variant
+verifies the current gate assignment and absence of fitted peers. The
+source-bias variant verifies the source terminal, distinct current gate/source
+nets, exact fitted gate peers, and absence of a direct resistor recognized by
+`resistor_paths.direct_resistors`. The direct-drive variant verifies all D/G/S
+roles plus the current output-capable peer pins and types. The projector
+preserves existing rule IDs and evidence shapes; predicate behavior, policy
+modes, and CLI/MCP mapping are unchanged.
+
+At the MOSFET-gate checkpoint, the AST inventory found 158 direct `Candidate(evidence=...)`
+constructions across 132 modules: 86 production calls across 86 modules and
+72 test calls across 46 modules. Literal dictionaries account for 76
+production calls and 24 test calls. No production module has more than one
+direct construction now; the remaining single-call routes still need to be
+reviewed by source contract rather than by count alone.
+
+The MOSFET gate selection passed 106 focused source, architecture, catalog,
+marker, selector, and CLI/MCP parity tests. Ruff, format, targeted Pyright,
+Markdown checks, mdrepo, and `git diff --check` passed. No exact native KiCad
+lane was run.
+
+## Footprint-similar connector named-divergence evidence
+
+Named power-input, power-output, signal, and passive footprint-peer divergences retain a
+`ConnectorFootprintPeerPinScanSource` with the exact `NetlistContract`, declared
+reference scope, and frozen peer-assignment groups. Their shared source owner
+checks current peer identity, complete pin inventory, matching native metadata,
+per-pin assignments, the selected peer scope, and all common-net anchors. One
+projector preserves each rule ID and existing evidence fields. Predicate
+selection, findings, messages, and policy behavior are unchanged.
+
+The connector footprint peer, CLI/MCP parity, source, architecture, catalog,
+and marker selection passed 251 tests; 26 digest-pinned native cases were
+skipped. Ruff, targeted Pyright, format, Markdown, mdrepo, and
+`git diff --check` passed. No exact native KiCad lane was run.
+
+## Two-pin same-net source evidence
+
+All two-pin same-net candidates now retain their exact source `NetlistContract`
+on `TwoPinComponentOnSameNet`. The shared evidence owner verifies the fitted
+component, exact native symbol and value, complete two-pin inventory, single
+net assignment for each pin, and any authored custom-role binding before
+projecting the existing report fields. LED, buzzer, speaker, battery, motor,
+solar-cell, and thermocouple candidates use the same owner as diode, crystal,
+fuse, switch, and passive candidates. Rule IDs, messages, predicate selection,
+policy behavior, and serialized report fields remain stable.
+
+The focused two-pin source, behavior, catalog, selector, marker, determinism,
+and CLI/MCP parity selection passed 235 tests; 26 digest-pinned native cases were skipped.
+Ruff, format, targeted Pyright, Rumdl, mdrepo, and `git diff --check` passed.
+The parity tests used the separate public `KiCAD-Test` checkout at `ed89536`;
+no exact native KiCad lane was run.
+
+The refreshed AST inventory finds 137 direct `Candidate(evidence=...)`
+constructions across 111 Python modules: 65 production calls across 65
+modules and 72 test calls across 46 modules. Literal dictionaries account for
+58 production calls and 24 test calls. This inventory does not classify every
+mapping used by typed projectors or other findings.
+
+## BJT base review evidence
+
+BJT base-bias and direct-drive findings retain separate typed source variants
+through `BjtBaseCandidate`. Both bind the native symbol, role-mapped base pin,
+and assignment to the current `NetlistContract`. Direct-drive evidence also
+rechecks the exact fitted output-capable peers and their pin types. Base-bias
+evidence rechecks the emitter assignment, fitted base-net peers, absence of a
+recognized direct resistor, and the direct-drive exclusion. Their existing
+rule IDs, report fields, messages, and selection remain stable. The catalog
+preserves the different modes: direct-drive defaults to `review`, while
+base-bias defaults to `off`.
+
+The focused BJT source, behavior, catalog, selector, marker, determinism, and
+CLI/MCP parity selection passed 80 tests; four digest-pinned native cases were
+skipped. Ruff, format, targeted Pyright, and `git diff --check` passed. The
+parity test used the separate public `KiCAD-Test` checkout at `ed89536`; no
+exact native KiCad lane was run.
+
+## Ethernet open-pair evidence
+
+Ethernet TX/RX data-pair and MDC/MDIO management open-pin findings retain
+typed source variants through `EthernetUnconnectedCandidate`. Each source
+retains the exact `NetlistContract` and rechecks the fitted IC, complete native
+pin inventory, unique complementary roles, open pin, and exact assigned peer
+net. The two variants preserve their rule-specific evidence fields; candidate
+selection, wording, and default-off policy remain stable.
+
+The focused behavior, source, architecture, catalog, marker, and selector
+selection passed 92 tests. Ethernet data CLI/MCP parity passed against the
+separate public `KiCAD-Test` checkout at `ed89536`. Ruff, targeted Pyright,
+Rumdl, mdrepo, and `git diff --check` passed. No exact native KiCad lane was
+run.
+
+## CAN and serial TX-sharing evidence
+
+CAN and serial TX-output-sharing findings now retain `TxOutputSharingGroup`
+through `TxOutputSharingCandidate`, alongside the exact source
+`NetlistContract`. The typed source re-runs the canonical group service and
+rejects a group that no longer matches the current native source. It keeps
+each protocol's existing rules for supported references, inventory
+requirements, return-like nets, and output-to-output ERC exclusion. The
+report projection keeps the existing fields and channel labels; CAN channel
+formatting now lives in the shared CAN function owner.
+
+The focused CAN/serial output-sharing, CAN TX/RX, architecture, catalog,
+selector, marker, and CLI/MCP parity selection passed 99 tests. Ruff, targeted
+Pyright, Rumdl, mdrepo, and `git diff --check` passed. Parity used the separate
+public `KiCAD-Test` checkout at `ed89536`; no exact native KiCad lane was run.
+
+## I2C and I3C same-net evidence
+
+I2C and I3C same-net findings retain separate protocol source records through
+`TwoWireSameNetCandidate`. Each record binds the exact source `NetlistContract`,
+current fitted IC, native SDA/SCL functions, role-pin inventory membership, and
+exact shared assignment; the I3C source also keeps the parsed channel. The
+projector preserves the distinct I2C and I3C evidence fields and keeps the
+existing rule that leaves two native outputs to ERC.
+
+The focused I2C/I3C behavior, source, architecture, determinism, catalog,
+marker, selector, and I2C CLI/MCP parity selection passed 89 tests. Ruff,
+targeted Pyright, Rumdl, mdrepo, and `git diff --check` passed. No exact native
+KiCad lane was run.
+
+## USB-C connector/controller CC same-net evidence
+
+The connector and controller CC same-net rules now share
+`UsbCcSameNetCandidate` with distinct source variants. The connector source
+retains reviewed connector-reference scope alongside the exact netlist and
+rechecks connector identity, native CC roles, role-pin inventory membership,
+and exact assignments. The controller source rechecks fitted U/IC identity,
+inventory membership for recognized CC pins, exact assignments, and the
+existing two-output exclusion. The projection preserves the separate
+connector/component fields and current review policies.
+
+The focused source, behavior, architecture, determinism, catalog, marker,
+selector, and CLI/MCP parity selection passed 111 tests. Ruff, targeted Pyright,
+Rumdl, mdrepo, and `git diff --check` passed. No exact native KiCad lane was
+run.
+
+## CAN TX/RX same-net evidence
+
+CAN TX/RX same-net findings retain one `CanTxRxSameNetEvidence` record through
+`CanTxRxSameNetCandidate`. The record binds the TX and RX endpoints to the
+exact source `NetlistContract`, validates the fitted component, unique roles
+within the recognized channel, inventory membership, exact shared assignment,
+and current electrical types. The existing output/output exclusion and
+rule-specific report fields remain unchanged.
+
+The combined Ethernet and CAN source, behavior, architecture, catalog, marker,
+selector, and CLI/MCP parity selection passed 104 tests. Parity used the
+separate public `KiCAD-Test` checkout at `ed89536`. Ruff, targeted Pyright,
+Rumdl, mdrepo, and `git diff --check` passed. No exact native KiCad lane was
+run.
+
+## SPI same-net source evidence
+
+SPI data-role, clock/data, and clock/chip-select same-net findings now share
+`SpiSameNetCandidate` with explicit typed variants. Each variant retains the
+exact `NetlistContract` and canonical `SpiRoleAssignmentGroup`; construction
+rechecks that the role group is current, that each selected role has one
+inventoried pin and one net, and that two explicit outputs remain excluded.
+The data-role variant keeps its case-insensitive net comparison and preserves
+the input-side native net spelling. Each projector emits its existing rule
+fields, while predicate ownership, messages, policies, and rule IDs stay
+unchanged.
+
+The focused SPI source, behavior, architecture, catalog, marker, selector,
+determinism, and CLI/MCP parity selection passed 158 tests. Ruff, format,
+targeted Pyright, Rumdl, mdrepo, and `git diff --check` passed. No exact native
+KiCad lane was run.
+
+## Named-rail protocol signal source evidence
+
+The CAN controller, I2C, I3C, SPI, serial, Ethernet data, Ethernet management,
+USB, RS-485, and USB-C SBU signal-on-named-rail rules now share
+`NamedRailSignalCandidate` while retaining protocol-specific typed source
+variants. Each source carries a `NamedRailPinSource` bound to its
+`NetlistContract`. Validation rechecks the fitted component, exact native
+function and inventory, unique rail-like net assignment, and
+protocol-specific role/channel or pair identity. RS-485 evidence also
+rechecks explicit transceiver identity, while USB-C SBU evidence requires the
+current unique SBU1/SBU2 pair and complete pin inventory. USB 2.0 and
+SuperSpeed family/side recognition now has one shared owner. Existing
+predicate owners, messages, policy modes, and serialized evidence fields stay
+stable.
+
+The direct `Candidate(evidence=...)` inventory is now 127 constructions:
+55 production calls across 55 modules and 72 test calls across 46 modules.
+Literal maps account for 48 production and 24 test calls.
+
+The focused named-rail behavior, source, architecture, catalog, marker, and
+selector selection, including RS-485 and USB-C SBU, passed 313 tests. Ruff,
+format, targeted Pyright, Rumdl, mdrepo, and `git diff --check` passed. No exact
+native KiCad lane was run. The combined regression also found and closed a CAN
+TX/RX ambiguity where case-fold duplicate pin-function keys could reach
+source construction.
+
+## CAN and RS-485 named-rail line source evidence
+
+CANH/CANL and RS-485 A/B findings retain their complementary line pins through
+`NamedRailLineCandidate`, a separate owner from the single-pin signal route.
+Each typed source carries a `NamedRailPinSource` bound to its current
+`NetlistContract` and revalidates the unique native role pair and complete pin
+inventory. The RS-485 variant also rechecks the explicit transceiver identity.
+The projectors preserve each rule's existing complementary-pin fields,
+identity field, messages, and review policy; malformed or incomplete pairs
+remain skipped.
+
+The direct `Candidate(evidence=...)` inventory is now 125 constructions:
+53 production calls across 53 modules and 72 test calls across 46 modules.
+Literal maps account for 46 production and 24 test calls.
+
+The focused CAN/RS-485 line behavior, source, architecture, catalog, marker,
+selector, determinism, and native-gate architecture selection passed 242 tests.
+Ruff, format, targeted Pyright, and `git diff --check` passed. No exact native
+KiCad lane was run.
+
+## Named connector all-open source evidence
+
+Named power-input, power-output, and signal contacts open across footprint
+aliases now use `ConnectorFootprintAllOpenCandidate`. Its typed source retains
+the exact `ConnectorFootprintPeerPinScan` and selected
+`ConnectorFootprintPeerPinNamedAllOpen` record, then checks that the record
+belongs to the scan, every peer remains open, a common anchor exists, and the
+contact function and electrical type match the selected rule. Each projector
+preserves its existing assignments, open-pin list, symbols, anchor fields,
+and optional reviewed peer-group evidence. Predicate selection, wording,
+coverage counts, and policy remain unchanged.
+
+The direct `Candidate(evidence=...)` inventory is now 122 constructions:
+50 production calls across 50 modules and 72 test calls across 46 modules.
+Literal maps account for 43 production and 24 test calls.
+
+The focused named contact behavior, source, architecture, catalog, marker,
+selector, and native-gate architecture selection passed 213 tests; the
+CLI/MCP parity test passed separately. Ruff, format, targeted Pyright, Rumdl,
+mdrepo, and `git diff --check` passed. No exact native KiCad lane was run.
+
+## I2C, CAN, and SPI signal-label role evidence
+
+The I2C, CAN, and SPI label-mismatch adapters now pass typed source variants
+through `SignalLabelRoleMismatchCandidate`. Each variant binds the finding to
+the current native pin and its unique exact net assignment, and the source
+owner rechecks fitted state, native function, parsed pin and net roles, and
+the role mismatch. CAN also rechecks the same-symbol opposite-line short
+exclusion. SPI label parsing is owned by `spi_participants.py` and reused by
+the rule and source validator. Projectors preserve the existing evidence
+fields, messages, policies, and rule owners.
+
+The direct `Candidate(evidence=...)` inventory is now 119 constructions:
+47 production calls across 47 modules and 72 test calls across 46 modules.
+Literal maps account for 40 production and 24 test calls.
+
+The focused I2C/CAN/SPI behavior, source, architecture, catalog, marker,
+selector, native-gate architecture, and candidate-scanner parity selection
+passed 130 tests. Ruff and targeted Pyright passed. No exact native KiCad lane
+was run.
+
+## RS-485 and serial signal-label source evidence
+
+The shared `SignalLabelRoleMismatchCandidate` route now covers RS-485 D/R
+pins against explicit UART/USART labels, RS-485 A/B functions against bounded
+line labels, and serial TX/RX functions against same-channel UART/USART
+labels. The D/R variant retains its exact paired pins and same-channel source
+assignments. The A/B variant retains explicit transceiver identity, complete
+pin inventory, the complementary native pin, and both distinct assigned
+nets. Serial TX/RX evidence rechecks fitted state, exact function and
+assignment, complete inventory, and channel. Bounded RS-485 line-label
+recognition now belongs to `rs485_line_functions.py`. Existing rule owners,
+policy, messages, report fields, and fingerprints remain stable.
+
+The direct `Candidate(evidence=...)` inventory is now 116 constructions:
+44 production calls across 44 modules and 72 test calls across 46 modules.
+Literal maps account for 37 production and 24 test calls.
+
+The six-rule behavior, typed source, catalog, architecture, marker, selector,
+native-gate architecture, and candidate-scanner parity selection passed 146
+tests. The RS-485 A/B CLI/MCP parity test passed separately. Ruff, targeted
+Pyright, Rumdl, mdrepo, and `git diff --check` passed. No exact native KiCad
+lane was run.
+
+## Connector footprint peer metadata evidence
+
+The four connector-footprint metadata rules now project through
+`ConnectorFootprintPeerMetadataCandidate`. Its source retains the exact
+`NetlistContract`, authored peer grouping, footprint identity group, complete
+native pin inventory, target pin, scoped assignment partition, role metadata,
+and common-anchor pins. Construction recomputes the current group, scope,
+metadata, assignments, and anchors before projection. A typed state selects
+one of four separate predicates: complete metadata with split assignments,
+complete metadata with partial opens, missing metadata with split assignments,
+or missing metadata with partial opens. The rule-specific evidence keys,
+missing-value formatting, peer-symbol field names, part-ID basis, messages,
+and policies remain unchanged.
+
+The direct `Candidate(evidence=...)` inventory is now 112 constructions:
+40 production calls across 40 modules and 72 test calls across 46 modules.
+Literal maps account for 33 production and 24 test calls.
+
+The four rule behavior, typed-source, catalog, architecture, marker, selector,
+native-gate architecture, and candidate-scanner parity selection passed 182
+tests, including the rules' embedded CLI/MCP parity cases. Ruff and targeted
+Pyright passed. No exact native KiCad lane was run.
+
+## Unreviewed connector peer-scope evidence
+
+The unreviewed peer-scope rule now constructs
+`ConnectorUnanchoredPeerScopeEvidence` from its current peer scan, observed
+netlist, complete connector coverage, and one alias cohort. The source owner
+rechecks the scan/netlist identity, current fitted alias group, complete
+inventory and matching native pin metadata, exact one-net assignments, absence
+of common anchors, and source-matched complete interface maps without a
+peer-assignment group. It projects the established finding evidence, including
+catalog and inventory review identifiers, through
+`ConnectorUnanchoredPeerScopeCandidate`; the rule ID, message, policy, and
+serialized evidence fields stay stable. The peer scan and source validators
+share exact pin-to-net indexing from `connector_footprint_peer_assignments.py`.
+
+The focused connector scope, peer metadata, named-divergence, typed-source,
+architecture, marker, selector, catalog, active-rule reachability, and
+public-template CLI/MCP parity selection passed 162 tests. Ruff, targeted
+Pyright, Rumdl, mdrepo, and `git diff --check` passed. No exact native KiCad
+lane was run. The reviewed-assignment route is documented below.
+
+## Unanchored connector coverage-missing evidence
+
+The incomplete-coverage variant now projects through
+`ConnectorUnanchoredCoverageEvidence` and
+`ConnectorUnanchoredCoverageCandidate`. The source retains the current native
+peer scan, optional connector coverage report, and one cohort of split or
+partially open generic contacts. Shared validation checks that the contact
+records belong to the current scan, the fitted alias identity and complete
+pin inventory still match, native function and electrical metadata remain
+complete and equal, assignments still match the current netlist, and no
+common-net anchor or authored peer-assignment scope has appeared.
+
+Absent and incomplete coverage remain reviewable under the rule's existing
+disposition policy; stale and not-applicable entries suppress the prompt.
+Entries marked covered must still have exact source-matched pin maps. The
+projection preserves the published evidence keys and coverage statuses. The
+rule catalog references the adapter, typed source/candidate, projection,
+coverage policy, and shared current-source validator. The new owner modules
+are guarded by the connector architecture suite.
+
+The coverage and scope routes, peer metadata and named-divergence regressions,
+catalog, marker, selector, and architecture selection passed 278 tests. The
+peer assignment regressions passed 14 tests; two exact native-fixture cases
+were skipped. Ruff, format, targeted Pyright, JSON parsing, Rumdl, mdrepo, and
+`git diff --check` passed. No exact native KiCad lane was run. The reviewed
+assignment route is documented below.
+
+## Reviewed unanchored connector assignment evidence
+
+The reviewed assignment adapter now routes through
+`ConnectorUnanchoredAssignmentEvidence` and
+`ConnectorUnanchoredAssignmentCandidate`. The source retains the exact peer
+scan and `ConnectorCoverageReport`. Before projection, it recomputes the
+source-matched peer groups from that report, checks that the scan and each
+divergence retain the current group and review basis, and revalidates native
+identity, complete pin inventory, native metadata, exact net assignments, and
+absence of common anchors. The candidate preserves the existing evidence
+keys, message, subject, and rule owner. The adapter no longer creates a raw
+`Candidate(evidence=...)` for this rule.
+
+The combined reviewed-assignment, unreviewed-scope, coverage-missing, connector
+peer metadata, named-divergence, catalog, marker, selector, and architecture
+selection passed 298 tests; two native-fixture tests were skipped. Ruff,
+format, targeted Pyright, and adjacent connector quality checks passed. No
+exact native KiCad lane was run.
+
+At this checkpoint, an AST inventory of direct `Candidate(evidence=...)`
+construction finds 109 calls: 37 production calls across 37 modules and 72
+test calls across 46 modules. The calls contain 32 production and 24 test
+literal evidence maps. This inventory covers direct `Candidate` calls only;
+it does not measure other dictionary-shaped interfaces.
+
+## Named connector open-peer evidence
+
+The six named-open connector rules now route through
+`ConnectorNamedOpenEvidence` and `ConnectorNamedOpenCandidate`. The typed
+source retains the exact peer scan, optional coverage report, open-contact
+record, and rule ID. Before projection, it recomputes source-matched peer
+groups, rebuilds the scan from the observed netlist and declared references,
+and confirms the record still belongs to both scans and matches the selected
+electrical role, open pins, and common-anchor scope. The shared peer-group
+normalizer is owned by `connector_coverage.py` and is also used by the reviewed
+assignment route.
+
+The six adapters preserve their current subjects, messages, rule owners, and
+serialized evidence fields. The rule catalog points to the typed owner,
+projection, source-group validator and normalizer, scanner, and adapter. The
+connector architecture suite guards the new owner's size and checks every
+catalog route.
+
+The named-open and adjacent connector behavior, typed-source, architecture,
+catalog, marker, selector, CLI/MCP parity, and peer parity selection passed
+111 tests. The AST inventory now finds 108 direct `Candidate(evidence=...)`
+calls: 36 production calls across 36 modules and 72 test calls across 46
+modules. Literal maps account for 31 production and 24 test calls. This
+inventory covers direct `Candidate` calls only; it does not measure other
+dictionary-shaped interfaces. No exact native KiCad lane was run.
+
+## Generic component peer open evidence
+
+The generic component all-open and mixed-open rules now retain
+`GenericComponentPeerOpenScanEvidence` and
+`GenericComponentPeerOpenEvidence`. The scan source binds the observed
+`NetlistContract`, the exact peer scan, declared connector references, and
+rule ID. It rebuilds the rule-specific scan once for the batch; each selected
+outlier must belong to that scan and still satisfy the rule's all-open or
+same-net mixed-open conditions before projection.
+
+The all-open and mixed-open adapters preserve their existing subjects,
+messages, rule owners, evidence keys, and field order. The catalog references
+the typed scan and candidate, current-scan validation, semantic validation,
+and projection. Component and evidence marker registries include the source
+and architecture suites.
+
+The source, behavior, candidate scanner, coverage, architecture, catalog,
+marker, selector, determinism, and CLI/MCP parity selection passed 150 tests;
+two native fixture tests were skipped. The AST inventory now finds 106 direct
+`Candidate(evidence=...)` calls: 34 production calls across 34 modules and 72
+test calls across 46 modules. Literal maps account for 29 production and 24
+test calls. This inventory covers direct `Candidate` calls only; it does not
+measure other dictionary-shaped interfaces. No exact native KiCad lane was
+run.

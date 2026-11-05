@@ -4,11 +4,16 @@ from __future__ import annotations
 
 from .component_bjt_symbols import basic_bjt_role_numbers
 from .component_pin_types import fitted_output_pins_on_net
+from .design_lint_bjt_base_candidate_evidence import (
+    BJT_BASE_WITHOUT_EMITTER_BIAS_RULE_ID,
+    BjtBaseBiasEvidence,
+    BjtBaseCandidate,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 from .resistor_paths import direct_resistors
 
-RULE_ID = "component.bjt_base_without_visible_emitter_bias"
+RULE_ID = BJT_BASE_WITHOUT_EMITTER_BIAS_RULE_ID
 
 
 def bjts_without_visible_emitter_bias(observed: NetlistContract) -> tuple[Candidate, ...]:
@@ -30,8 +35,14 @@ def bjts_without_visible_emitter_bias(observed: NetlistContract) -> tuple[Candid
         if value.strip()
     }
     nets_by_pin: dict[str, list[str]] = {}
-    net_members = {name.casefold(): (name, tuple(pins)) for name, pins in observed.nets.items()}
+    net_members: dict[str, tuple[str, tuple[str, ...]]] = {}
+    ambiguous_net_keys: set[str] = set()
     for net, pins in observed.nets.items():
+        key = net.casefold()
+        if key in net_members:
+            ambiguous_net_keys.add(key)
+        else:
+            net_members[key] = (net, tuple(pins))
         for pin in pins:
             nets_by_pin.setdefault(pin.casefold(), []).append(net)
 
@@ -65,6 +76,8 @@ def bjts_without_visible_emitter_bias(observed: NetlistContract) -> tuple[Candid
         base_key, emitter_key = base_net.casefold(), emitter_net.casefold()
         if base_key == emitter_key or frozenset((base_key, emitter_key)) in resistor_pairs:
             continue
+        if base_key in ambiguous_net_keys:
+            continue
 
         _, assigned_base_pins = net_members.get(base_key, (base_net, ()))
         peers = tuple(
@@ -87,8 +100,17 @@ def bjts_without_visible_emitter_bias(observed: NetlistContract) -> tuple[Candid
             continue
 
         findings.append(
-            Candidate(
-                rule_id=RULE_ID,
+            BjtBaseCandidate.from_source_evidence(
+                BjtBaseBiasEvidence(
+                    observed=observed,
+                    reference=reference,
+                    symbol=symbol,
+                    base_pin=base_pin,
+                    base_net=base_net,
+                    emitter_pin=emitter_pin,
+                    emitter_net=emitter_net,
+                    fitted_base_net_peers=peers,
+                ),
                 subject=f"{base_pin}: BJT base has no visible base-emitter bias resistor",
                 message=(
                     "This fitted, supported BJT base has a fitted peer but no recognized nonzero "
@@ -97,16 +119,6 @@ def bjts_without_visible_emitter_bias(observed: NetlistContract) -> tuple[Candid
                     "unpowered. Active drive, internal bias, or another topology can be valid; "
                     "this prompt does not establish that a resistor is required or adequate."
                 ),
-                evidence={
-                    "component": (reference,),
-                    "symbol": (symbol,),
-                    "base_pin": (base_pin,),
-                    "base_net": (base_net,),
-                    "emitter_pin": (emitter_pin,),
-                    "emitter_net": (emitter_net,),
-                    "fitted_base_net_peers": peers,
-                    "visible_base_emitter_bias_resistors": (),
-                },
             )
         )
     return tuple(findings)

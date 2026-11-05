@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
-from .can_signal_functions import can_signal_role_and_channel
+from .can_signal_functions import can_channel_label, can_signal_role_and_channel
 from .component_references import is_integrated_circuit_reference
+from .design_lint_can_tx_rx_candidate_evidence import (
+    CanTxRxEndpoint,
+    CanTxRxSameNetCandidate,
+    CanTxRxSameNetEvidence,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 
@@ -30,6 +35,9 @@ def can_tx_rx_same_net_candidates(observed: NetlistContract) -> tuple[Candidate,
         pin.casefold(): value.strip().casefold()
         for pin, value in observed.pin_electrical_types.items()
     }
+    function_counts: dict[str, int] = {}
+    for pin in observed.pin_functions:
+        function_counts[pin.casefold()] = function_counts.get(pin.casefold(), 0) + 1
 
     groups: dict[
         tuple[str, str],
@@ -43,6 +51,7 @@ def can_tx_rx_same_net_candidates(observed: NetlistContract) -> tuple[Candidate,
             or reference_key not in fitted
             or reference_key in dnp
             or number.casefold() not in inventory.get(reference_key, set())
+            or function_counts[pin.casefold()] != 1
         ):
             continue
         assignments = nets_by_pin.get(pin.casefold(), set())
@@ -72,16 +81,26 @@ def can_tx_rx_same_net_candidates(observed: NetlistContract) -> tuple[Candidate,
         if tx_net != rx_net or tx_type == rx_type == "output":
             continue
 
-        protocol, channel_index = channel.split(":", maxsplit=1)
-        channel_label = (
-            protocol.upper()
-            if channel_index == "default"
-            else f"{protocol.upper()} channel {channel_index.removeprefix('index')}"
-        )
+        channel_label = can_channel_label(channel)
         reference = fitted[reference_key]
         findings.append(
-            Candidate(
-                rule_id=RULE_ID,
+            CanTxRxSameNetCandidate.from_source_evidence(
+                CanTxRxSameNetEvidence(
+                    observed=observed,
+                    reference=reference,
+                    channel=channel,
+                    tx=CanTxRxEndpoint(
+                        pin=tx_pin,
+                        function=tx_function,
+                        electrical_type=tx_type,
+                    ),
+                    rx=CanTxRxEndpoint(
+                        pin=rx_pin,
+                        function=rx_function,
+                        electrical_type=rx_type,
+                    ),
+                    net=tx_net,
+                ),
                 subject=(
                     f"{reference}: {channel_label} TX {tx_function} and RX {rx_function} "
                     f"share {tx_net}"
@@ -93,17 +112,6 @@ def can_tx_rx_same_net_candidates(observed: NetlistContract) -> tuple[Candidate,
                     "Review whether this is an intentional loopback or a pin-assignment mistake; "
                     "function names alone do not establish the required topology."
                 ),
-                evidence={
-                    "component": (reference,),
-                    "channel": (channel_label,),
-                    "tx_pin": (tx_pin,),
-                    "tx_function": (tx_function,),
-                    "tx_electrical_type": (tx_type,),
-                    "rx_pin": (rx_pin,),
-                    "rx_function": (rx_function,),
-                    "rx_electrical_type": (rx_type,),
-                    "net": (tx_net,),
-                },
             )
         )
     return tuple(findings)

@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 from .bus_signal_roles import i2c_signal_role
+from .design_lint_signal_label_role_candidate_evidence import (
+    I2cSignalLabelRoleMismatchEvidence,
+    SignalLabelRoleMismatchCandidate,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 
@@ -38,21 +42,21 @@ def i2c_signal_label_role_candidates(observed: NetlistContract) -> tuple[Candida
 
         function = observed.pin_functions[pin]
         findings.append(
-            Candidate(
-                rule_id=RULE_ID,
+            SignalLabelRoleMismatchCandidate.from_source_evidence(
+                I2cSignalLabelRoleMismatchEvidence(
+                    observed=observed,
+                    pin=pin,
+                    pin_function=function,
+                    pin_role=pin_role,
+                    net=net,
+                    net_role=net_role,
+                ),
                 subject=f"{pin}: {function} on {net}",
                 message=(
                     f"Native I2C signal-pin function is {pin_role}, but the assigned net name "
                     f"{net!r} identifies {net_role}. Review the part-specific interface map; "
                     "names alone do not establish bus intent or routing."
                 ),
-                evidence={
-                    "pin": (pin,),
-                    "pin_function": (function,),
-                    "pin_role": (pin_role,),
-                    "net": (net,),
-                    "net_role": (net_role,),
-                },
             )
         )
     return tuple(findings)

@@ -6,6 +6,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from .netlist_contract_models import NetlistContract
+
 SIGNAL_ELECTRICAL_TYPES = frozenset(
     {"input", "output", "bidirectional", "tri_state", "open_collector", "open_emitter"}
 )
@@ -16,6 +18,33 @@ def _freeze_assignments(
 ) -> Mapping[str, tuple[str, ...]]:
     """Copy a peer assignment snapshot so frozen records stay immutable."""
     return MappingProxyType({pin: tuple(nets) for pin, nets in assignments.items()})
+
+
+def _freeze_peer_assignment_groups(
+    groups: Mapping[str, tuple[str, str]] | None,
+) -> Mapping[str, tuple[str, str]] | None:
+    if groups is None:
+        return None
+    return MappingProxyType(
+        {reference: (value[0], value[1]) for reference, value in groups.items()}
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class ConnectorFootprintPeerPinScanSource:
+    """Exact native source and authored scope used by one footprint-peer scan."""
+
+    observed: NetlistContract
+    declared_references: tuple[str, ...]
+    peer_assignment_groups: Mapping[str, tuple[str, str]] | None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "declared_references", tuple(self.declared_references))
+        object.__setattr__(
+            self,
+            "peer_assignment_groups",
+            _freeze_peer_assignment_groups(self.peer_assignment_groups),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +77,7 @@ class ConnectorFootprintPeerPinNamedDivergence:
     assignments: Mapping[str, tuple[str, ...]]
     symbols: tuple[str, ...]
     common_anchor_pin_numbers: tuple[str, ...]
+    source: ConnectorFootprintPeerPinScanSource
     peer_assignment_group: str | None = None
     peer_assignment_basis: tuple[str, ...] = ()
 
@@ -116,6 +146,7 @@ class ConnectorFootprintPeerPinNamedAllOpen:
 class ConnectorFootprintPeerPinScan:
     """Coverage and review candidates derived from one native netlist snapshot."""
 
+    source: ConnectorFootprintPeerPinScanSource
     candidate_group_count: int
     incomplete_pin_inventory_group_count: int
     incomplete_pin_metadata_group_count: int
