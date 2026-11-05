@@ -90,21 +90,37 @@ for dispositions and timing; leave unmeasured values unstated.
   D+/D− roles are expected interface patterns; repeated VBUS and differing
   VBUS assignments across protection parts need authored port/power-domain
   context to interpret.
+- **Composite-path follow-up (v0.5.3rc462):** Replaying the same pinned
+  native export through the current source-bound lint reports the four
+  `bus.usb_unmapped_multi_pin_topology` findings alongside the eleven other
+  findings listed above. An in-memory four-port map for J1–J4, U1, and U7–U10
+  used the export's endpoint assignments and complete protector pin maps.
+  With that temporary map, coverage reports four supported paths, zero USB
+  data-path mismatches, and zero unmapped-topology prompts; the report remains
+  REVIEW with the eleven unrelated findings. The map was derived from the same
+  export, not independently authored project intent, so this demonstrates map
+  representability and applicability only—not an independent defect finding,
+  device behavior, field precision, or PCB continuity. The export hash is
+  unchanged (`7b3d639ec6c256b553f5965d9b5f72bbb2e6b4947a0aee3c74cdd787c405c416`);
+  no source, export, or map was added to Tooling.
 - **LINT-086 applicability:** Coverage recognizes five connector groups and
-  four U1 PHY port groups, but supports zero connector-to-PHY data paths and
-  produces zero review candidates. U7–U10 are four multi-pin USBLC6-2SC6
-  protection parts between J1–J4 and U1; these topologies remain outside the
-  direct/one-resistor path predicate. The result is
-  `NO_SUPPORTED_PEER_PATHS`, not a supported quiet non-finding. Coverage lists
-  all four topologies as unsupported candidates only, not as confirmed paths
-  or defects.
-- **Disposition and limits:** This screen adds a four-port public USB hub
-  applicability boundary and a repeatable common-return schematic control; it
-  demonstrates no incremental detector, so no cohort check or rule change is
-  adopted. A useful follow-up would need synthetic fault/control cases for a
-  documented multi-pin protector path and independently authored expected
-  reference domains. Owner dispositions, reviewer effort, PCB continuity, and
-  field precision remain unmeasured.
+  four U1 PHY port groups. Without a path map, it supports zero connector-to-PHY
+  data paths and returns `NO_SUPPORTED_PEER_PATHS`; it does not produce a
+  supported quiet non-finding. The separate
+  `bus.usb_unmapped_multi_pin_topology` rule emits four REVIEW candidates for
+  U7–U10, with the connector-side and PHY-side pins listed per line. These are
+  unsupported-topology observations, not confirmed paths or defects. The
+  composite-path replay above shows that an exact temporary project map can
+  represent all four paths and resolve those prompts.
+- **Disposition and limits:** The first screen added a four-port public USB
+  hub applicability boundary and a repeatable common-return schematic control.
+  The v0.5.3rc462 change adds exact composite-map support with synthetic
+  fault/control and native Docker coverage, and the replay confirms four
+  supported paths when the temporary map is supplied. This is a coverage and
+  review-evidence improvement, not a unique detector result or an independent
+  defect finding. The temporary map was derived from the same native export.
+  Owner dispositions, independently authored expected reference domains,
+  reviewer effort, PCB continuity, and field precision remain unmeasured.
 
 ### Source-only recheck: kicad-happy v2.3.2 false-positive fixes (2026-10-29)
 

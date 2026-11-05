@@ -2739,8 +2739,10 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-049 — USB connector-to-PHY data path contract
 
-- **Status:** Implemented v3 as an opt-in, project-mapped REVIEW rule. The
-  cohort's universal series-resistor heuristic remains unadopted.
+- **Status:** Implemented v4 as an opt-in, project-mapped REVIEW rule. The
+  cohort's universal series-resistor heuristic remains unadopted. v4 adds an
+  exact composite map for a component that provides both the inline data path
+  and protection taps.
 - **Cohort input:** The pinned detector looks for connectors whose value or
   library ID contains `USB`, recognizes a bounded set of D+/D− pin names, and
   reports when it cannot find a 15–33 Ω resistor on the connector-side data
@@ -2776,7 +2778,10 @@ is not a reason by itself to expand its scope or change its default policy.
   selected external resistor networks. A direct path can additionally map
   exact multi-pin protection shunts by identity, one D+/D− tap per part, full
   native pin inventory, and expected net or explicit no-connect assignments.
-  It uses the standard project `review`,
+  A composite map may reuse the inline component reference only when symbol,
+  footprint, complete pin inventory, every pin disposition, and every net
+  assignment match exactly; its four data-pin records identify both sides of
+  D+ and D−. It uses the standard project `review`,
   `block`, `off`, and exact-ignore lifecycle.
 - **Boundary:** This rule checks a schematic decision after the project
   supplies it; it does not infer applicability, select resistor values, or
@@ -2784,8 +2789,9 @@ is not a reason by itself to expand its scope or change its default policy.
   component and netlist assignments but does not prove that the component
   conducts or that PCB copper joins the endpoints. The inline map checks exact
   schematic pin assignments, not datasheet pinout truth or protector behavior.
-  It supports one inline component or direct-path protection shunts, but does
-  not combine these maps or model multi-hop paths. The rule
+  It supports a separate protection component alongside an inline path, and
+  one exact component map that combines both roles; it does not model
+  multi-hop paths. The rule
   does not prove placement, signal integrity, PCB copper continuity, USB-C
   roles, or USB 3.x lane design.
 - **Fixtures and validation:** Synthetic integrated-STM32 direct-path control;
@@ -2795,12 +2801,14 @@ is not a reason by itself to expand its scope or change its default policy.
   control and absent, wrong-identity, wrong-value, DNP, active-pin, and
   wrong-net bond faults; exact multi-pin protection-shunt pin-map control and
   stale identity, population, inventory, net, and no-connect faults in
-  `tests/test_usb_data_path_protection_shunts.py`; rule override, disable,
-  exact-ignore, CLI/MCP parity,
+  `tests/test_usb_data_path_protection_shunts.py`; composite inline/protection
+  control, localized wrong-line fault, partial-map rejection, and CLI/MCP
+  parity; rule override, disable, exact-ignore,
   mapping-order stability, and independent-process hash-seed stability. The
   hash-pinned native lane now includes a split-reference protection-shunt
-  review, a common-reference control, and a miswired shunt-pin fault. Those
-  source fixtures are registered but have not run under native KiCad locally.
+  review, a common-reference control, a miswired shunt-pin fault, and composite
+  inline/protection fault and control exports. The focused Docker lane passed
+  on KiCad 10.0.0 and 10.0.5.
   The exact topology check adds coverage beyond the broad named-pair prompt,
   because that baseline does not compare connector-to-PHY component topology.
   Fixtures contain no product design.
