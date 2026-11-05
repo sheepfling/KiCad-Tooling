@@ -716,12 +716,15 @@ standalone parity work when it closes a demonstrated feature regression.
   reset, enable, or boot inputs can present the same unresolved question. The
   new default-REVIEW rule uses fitted IC pins, complete native pin-type
   inventories, explicit positive rail labels, a direct output-to-input net,
-  and a higher parsed source-rail label. Rail labels do not prove voltage or
+  and differing parsed source/receiver rail labels. Evidence distinguishes
+  higher output rails from lower output rails so review can cover absolute-
+  maximum and input-high thresholds. Rail labels do not prove voltage or
   incompatibility, and the rule does not require level translation. Synthetic
-  fault/control, policy, boundary, exact-map, mapping-order, and CLI/MCP parity
-  cases pass locally. Digest-pinned native fault/control exports are registered
-  for KiCad 10.0.0 and 10.0.5; local Docker access was unavailable during this
-  run, so hosted acceptance remains the native compatibility check.
+  higher-rail and lower-rail faults, an equal-rail control, policy, boundary,
+  exact-map, mapping-order, and CLI/MCP parity cases are covered. The original
+  gate ran in hosted `v0.5.3rc428` (run `42013202620`). This follow-up adds a
+  source-hashed lower-rail native fault and changes the control to equal rails;
+  exact KiCad 10.0.0/10.0.5 hosted acceptance is pending for this extension.
 - **LINT-276 unmapped multi-pin USB topology:** The public four-port USB hub
   screen recorded four multi-pin protection-array candidates in USB reference
   coverage, but the default finding list did not ask the project to resolve
@@ -14351,18 +14354,20 @@ control are documented in the
 - **Predicate:** Require fitted U/IC endpoints, complete native pin-type
   inventories, one unambiguous positive voltage-named supply per endpoint, a
   direct native output-to-input connection, a bounded GPIO function, and a
-  recognized control-input function. Prompt only when the source rail label
-  parses higher than the receiver label. A current exact
+  recognized control-input function. Prompt when the source and receiver rail
+  labels parse to different nominal values, with evidence identifying whether
+  the output-side label is higher or lower. A current exact
   `digital_peer_voltages` link with sourced limits suppresses that same link.
 - **Boundary:** Rail labels are clues rather than measured voltages or device
   limits. A finding does not prove incompatibility or require level
   translation. The predicate does not trace translators or open-drain paths,
   evaluate sequencing or transients, or prove PCB continuity.
-- **Evidence:** Synthetic fault/control, policy, boundary, exact-map, and
-  ordering tests; a CLI/MCP fault/control parity test; and exact-version
+- **Evidence:** Synthetic higher-rail and lower-rail faults, an equal-rail
+  control, policy, boundary, exact-map, and ordering tests; a CLI/MCP
+  fault/control parity test; and exact-version
   source-hashed KiCad 10.0.0/10.0.5 native fixtures are registered in the
-  focused interface/power gate. The lane checks one fault and one lower-source-
-  rail control and retains normalized export hashes.
+  focused interface/power gate. The lane checks both rail directions against
+  an equal-rail control and retains normalized export hashes.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

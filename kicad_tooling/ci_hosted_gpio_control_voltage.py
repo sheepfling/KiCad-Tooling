@@ -24,8 +24,9 @@ from .hwrepo.power_gpio_control_voltage import (
 
 RULE_ID = "power.gpio_to_control_input_voltage_review"
 FIXTURE_SOURCE_HASHES = {
-    "control": "8fbe7219de30483919845ad3d008d56e39e52c055db3d42a59b0b5c2e79727fe",
+    "control": "70184e5ab963e8e2afffbdaf6f803d4ebeae67e2a7d5cf0195e30439569d5454",
     "fault": "066861e84e4dfebeac615ee62b6207c411267ff13b828a033ab32a382ca56437",
+    "lower-source-fault": "8fbe7219de30483919845ad3d008d56e39e52c055db3d42a59b0b5c2e79727fe",
 }
 
 
@@ -89,7 +90,7 @@ def gpio_control_voltage_native_fixture_lane(
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
         f'test "$actual" = "{config.kicad_version}"\n'
-        "for case in control fault; do\n"
+        f"for case in {' '.join(FIXTURE_SOURCE_HASHES)}; do\n"
         "  for run in first repeat; do\n"
         "    kicad-cli sch export netlist --format kicadxml \\\n"
         '      --output "/output/${case}.${run}.netlist.xml" \\\n'
@@ -172,18 +173,23 @@ def gpio_control_voltage_native_fixture_lane(
             raise ValueError(f"Native GPIO {case} exports differ after typed normalization")
 
         findings = _finding_candidates(observations["first"])
-        expected_count = 1 if case == "fault" else 0
+        expected_count = 0 if case == "control" else 1
         if len(findings) != expected_count:
             raise ValueError(
                 f"Native GPIO {case} exported {len(findings)} findings; expected {expected_count}"
             )
-        if case == "fault":
+        if case != "control":
             evidence = findings[0].evidence
+            output_rail, input_rail = (
+                ("+5V: 5 V", "+3V3: 3.3 V") if case == "fault" else ("+3V3: 3.3 V", "+5V: 5 V")
+            )
+            relation = "output_higher" if case == "fault" else "output_lower"
             if (
                 evidence.get("GPIO_output") != ("U1.1: GPIO0 (Synthetic:GpioController)",)
                 or evidence.get("control_input") != ("U2.1: EN (Synthetic:ControlReceiver)",)
-                or evidence.get("output_supply_label") != ("+5V: 5 V",)
-                or evidence.get("input_supply_label") != ("+3V3: 3.3 V",)
+                or evidence.get("output_supply_label") != (output_rail,)
+                or evidence.get("input_supply_label") != (input_rail,)
+                or evidence.get("supply_label_relation") != (relation,)
             ):
                 raise ValueError(
                     "Native GPIO fault evidence differs from the reviewed pin/rail map"

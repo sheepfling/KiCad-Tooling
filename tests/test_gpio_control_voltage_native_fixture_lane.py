@@ -62,8 +62,9 @@ def test_gpio_control_voltage_lane_uses_only_reviewed_fixture_sources(
     pinned = image + "@sha256:" + "a" * 64
     config = SimpleNamespace(image=image, kicad_version="10.0.0")
     observed = {
-        "control": gpio_control_voltage_netlist(output_rail="+3V3", input_rail="+5V"),
+        "control": gpio_control_voltage_netlist(output_rail="+3V3", input_rail="+3V3"),
         "fault": gpio_control_voltage_netlist(),
+        "lower-source-fault": gpio_control_voltage_netlist(output_rail="+3V3", input_rail="+5V"),
     }
 
     def fake_run_command(root: Path, argv: tuple[str, ...], timeout: int) -> CommandEvidence:
@@ -81,8 +82,7 @@ def test_gpio_control_voltage_lane_uses_only_reviewed_fixture_sources(
         source_directory = Path(source_mount.removesuffix(":/fixtures:ro"))
         output_directory = Path(output_mount.removesuffix(":/output:rw"))
         assert {item.name for item in source_directory.iterdir()} == {
-            "control.kicad_sch",
-            "fault.kicad_sch",
+            f"{case}.kicad_sch" for case in lane.FIXTURE_SOURCE_HASHES
         }
         for case in observed:
             for run in ("first", "repeat"):
@@ -120,10 +120,13 @@ def test_gpio_control_voltage_lane_uses_only_reviewed_fixture_sources(
         "gpio-control-voltage-fixture/native-export",
         "gpio-control-voltage-fixture/control",
         "gpio-control-voltage-fixture/fault",
+        "gpio-control-voltage-fixture/lower-source-fault",
     }
     assert results["gpio-control-voltage-fixture/control"]["findings"] == 0
     assert results["gpio-control-voltage-fixture/fault"]["findings"] == 1
+    assert results["gpio-control-voltage-fixture/lower-source-fault"]["findings"] == 1
     assert results["gpio-control-voltage-fixture/fault"]["evidence"]
+    assert results["gpio-control-voltage-fixture/lower-source-fault"]["evidence"]
     for case in lane.FIXTURE_SOURCE_HASHES:
         result = results[f"gpio-control-voltage-fixture/{case}"]
         assert result["source_sha256"] == lane.FIXTURE_SOURCE_HASHES[case]
@@ -157,11 +160,14 @@ def test_native_gpio_control_voltage_fault_and_control(
         "gpio-control-voltage-fixture/native-export",
         "gpio-control-voltage-fixture/control",
         "gpio-control-voltage-fixture/fault",
+        "gpio-control-voltage-fixture/lower-source-fault",
     }
     assert results["gpio-control-voltage-fixture/native-export"]["status"] == "PASS"
     assert results["gpio-control-voltage-fixture/control"]["findings"] == 0
     assert results["gpio-control-voltage-fixture/fault"]["findings"] == 1
+    assert results["gpio-control-voltage-fixture/lower-source-fault"]["findings"] == 1
     assert results["gpio-control-voltage-fixture/fault"]["evidence"]
+    assert results["gpio-control-voltage-fixture/lower-source-fault"]["evidence"]
     for case in lane.FIXTURE_SOURCE_HASHES:
         result = results[f"gpio-control-voltage-fixture/{case}"]
         assert result["kicad_version"] == version

@@ -5401,8 +5401,10 @@ one direct native-net pattern: a fitted U/IC output pin named `GPIO`, `IO`, or
 a bounded port form such as `PA0` feeds a fitted U/IC input recognized as a
 reset, enable, or boot control. Both components need complete native pin-type
 inventories and exactly one unambiguous positive voltage-named `power_in` rail.
-The prompt appears only when the output component's parsed rail label is higher
-than the receiver's.
+The prompt appears only when the endpoint components have different parsed
+rail labels. Evidence records which label is higher. Review both whether the
+output-high range can exceed the receiver's absolute maximum and whether it
+meets the receiver's input-high threshold.
 
 These labels are clues for review, not measured voltage or device-limit data.
 The finding does not establish incompatibility or require level translation;
@@ -5416,7 +5418,8 @@ A complete exact `digital_peer_voltages` link with sourced output and input
 limits suppresses only the matching current pins, net, symbols, and footprints.
 Partial or stale maps leave the heuristic open. Project lint policy can set the
 rule to `off` or `block`, and exact findings can be ignored by fingerprint.
-Synthetic fault, control, policy, boundary, exact-map, and ordering cases are
+Synthetic higher-rail and lower-rail faults, equal-rail control, policy,
+boundary, exact-map, and ordering cases are
 in [`tests/test_gpio_control_input_voltage.py`](../tests/test_gpio_control_input_voltage.py).
 CLI/MCP parity is in
 [`tests/test_design_lint_mcp_parity_gpio_control_voltage.py`](../tests/test_design_lint_mcp_parity_gpio_control_voltage.py).

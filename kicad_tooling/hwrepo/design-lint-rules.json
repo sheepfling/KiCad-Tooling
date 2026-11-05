@@ -11622,22 +11622,23 @@
     },
     {
       "rule_id": "power.gpio_to_control_input_voltage_review",
-      "title": "GPIO output feeds a control input across voltage-named rails",
+      "title": "GPIO output feeds a control input across different voltage-named rails",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including pin functions, electrical types, assignments, and power-input supply labels",
-      "predicate": "For a fitted U/IC reference with complete pin-type inventory and one unambiguous explicit positive-voltage power-input net, report a direct same-net link from a native output pin with a bounded GPIO function name to a fitted U/IC native input pin whose function is a recognized reset, enable, or boot control. Prompt only when the parsed source supply-label voltage is greater than the receiver supply-label voltage. Suppress only a current exact DigitalPeerVoltageAnalysis link with both sourced output and input limits and matching reference, symbol, footprint, pin, and net identity.",
+      "predicate": "For a fitted U/IC reference with complete pin-type inventory and one unambiguous explicit positive-voltage power-input net, report a direct same-net link from a native output pin with a bounded GPIO function name to a fitted U/IC native input pin whose function is a recognized reset, enable, or boot control. Prompt when the parsed source and receiver supply-label voltages differ. Evidence records whether the source label is higher or lower; the reviewer checks output range against receiver VIH and absolute-maximum limits. Suppress only a current exact DigitalPeerVoltageAnalysis link with both sourced output and input limits and matching reference, symbol, footprint, pin, and net identity.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
-        "Positive rail values parsed from net names are clues only; they do not establish actual potential, output range, receiver tolerance, or incompatibility. A tolerant input may be valid.",
+        "Positive rail values parsed from net names are clues only; they do not establish actual potential, output range, receiver VIH, absolute-maximum limits, or incompatibility. A tolerant input may be valid.",
         "The bounded GPIO function pattern recognizes GPIO/IO with an optional numeric suffix and port names such as PA0. Control inputs use the existing reset, enable, and boot/strap recognizer. Other output/input functions, bidirectional or tri-state pins, non-U/IC endpoints, open-drain paths, incomplete pin-type inventory, DNP endpoints, unassigned or ambiguous pins, and supply labels without exactly one supported positive-voltage token are skipped.",
         "This checks only directly shared schematic nets. It does not identify level shifters, validate data-sheet sources, inspect power sequencing or transient behavior, prove PCB continuity, or establish a requirement to translate voltage. Projects can use the exact digital-peer voltage contract for sourced limits or turn this review off."
       ],
       "fault_fixtures": [
         "tests.test_gpio_control_input_voltage.test_higher_named_gpio_rail_to_control_input_requests_review",
+        "tests.test_gpio_control_input_voltage.test_lower_named_gpio_rail_to_control_input_requests_review",
         "tests.test_gpio_control_input_voltage.test_rule_policy_can_block_turn_off_or_ignore_exact_finding",
         "tests.test_gpio_control_voltage_native_fixture_lane.test_native_gpio_control_voltage_fault_and_control",
         "tests.test_design_lint_mcp_parity_gpio_control_voltage.test_gpio_control_voltage_fault_and_control_match_between_cli_and_mcp"
@@ -11645,7 +11646,6 @@
       "valid_control_fixtures": [
         "tests.test_gpio_control_input_voltage.test_incomplete_or_intentional_cases_remain_quiet",
         "tests.test_gpio_control_input_voltage.test_complete_exact_voltage_map_suppresses_only_current_gpio_link",
-        "tests.test_gpio_control_input_voltage.test_lower_voltage_gpio_control_remains_a_valid_review_control",
         "tests.test_gpio_control_voltage_native_fixture_lane.test_native_gpio_control_voltage_fault_and_control",
         "tests.test_design_lint_mcp_parity_gpio_control_voltage.test_gpio_control_voltage_fault_and_control_match_between_cli_and_mcp"
       ],

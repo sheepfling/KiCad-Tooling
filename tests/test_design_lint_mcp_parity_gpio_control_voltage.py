@@ -68,7 +68,8 @@ class _GpioControlVoltageParityCases(McpParityHarness):
         async with Client(create_server(self.root), mode="legacy") as client:
             for case, output_rail, input_rail, expected_findings in (
                 ("fault", "+5V", "+3V3", 1),
-                ("control", "+3V3", "+5V", 0),
+                ("lower-source", "+3V3", "+5V", 1),
+                ("control", "+3V3", "+3V3", 0),
             ):
                 with self.subTest(case=case):
                     netlist_path.write_text(

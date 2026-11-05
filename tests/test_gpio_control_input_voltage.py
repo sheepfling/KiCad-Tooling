@@ -63,9 +63,23 @@ def test_higher_named_gpio_rail_to_control_input_requests_review(
         "control_input": (f"U2.1: {input_function} (Synthetic:Regulator)",),
         "output_supply_label": ("+5V: 5 V",),
         "input_supply_label": ("+3V3: 3.3 V",),
+        "supply_label_relation": ("output_higher",),
     }
+    assert "VIH" in finding.message
     assert "do not establish" in finding.message
     assert "does not require level translation" in finding.message
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_lower_named_gpio_rail_to_control_input_requests_review() -> None:
+    source = gpio_control_voltage_netlist(output_rail="+3V3", input_rail="+5V")
+
+    finding = _finding(source)
+
+    assert finding.evidence["output_supply_label"] == ("+3V3: 3.3 V",)
+    assert finding.evidence["input_supply_label"] == ("+5V: 5 V",)
+    assert finding.evidence["supply_label_relation"] == ("output_lower",)
+    assert "VIH" in finding.message
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -74,10 +88,6 @@ def test_higher_named_gpio_rail_to_control_input_requests_review(
     (
         pytest.param(
             gpio_control_voltage_netlist(output_rail="+3V3", input_rail="+3V3"), id="same-rail"
-        ),
-        pytest.param(
-            gpio_control_voltage_netlist(output_rail="+3V3", input_rail="+5V"),
-            id="lower-source-rail",
         ),
         pytest.param(gpio_control_voltage_netlist(dnp=("U2",)), id="dnp-receiver"),
         pytest.param(gpio_control_voltage_netlist(dnp=("U1",)), id="dnp-driver"),
@@ -240,10 +250,3 @@ def test_gpio_voltage_fingerprint_is_stable_under_mapping_reordering() -> None:
     second = _finding(reordered)
 
     assert (fingerprint(second), second.evidence) == (fingerprint(first), first.evidence)
-
-
-@pytest.mark.design_lint_rule(rule_id=RULE_ID)
-def test_lower_voltage_gpio_control_remains_a_valid_review_control() -> None:
-    source = gpio_control_voltage_netlist(output_rail="+3V3", input_rail="+5V")
-
-    assert RULE_ID not in {item.rule_id for item in candidates(source)}

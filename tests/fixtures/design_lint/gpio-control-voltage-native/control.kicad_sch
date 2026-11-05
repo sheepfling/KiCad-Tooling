@@ -90,7 +90,7 @@
   (wire (pts (xy 170.08 80) (xy 180.24 80))
     (stroke (width 0) (type default))
     (uuid "8ce4b2a1-9217-4fa8-8e75-161bcd15f014"))
-  (label "+5V" (at 180.24 80 0)
+  (label "+3V3" (at 180.24 80 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid "8ce4b2a1-9217-4fa8-8e75-161bcd15f015"))
   (wire (pts (xy 90 85.08) (xy 90 95.24))

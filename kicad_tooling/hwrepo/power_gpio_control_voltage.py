@@ -57,7 +57,7 @@ def gpio_to_control_input_voltage_candidates(
     observed: NetlistContract,
     analysis: DigitalPeerVoltageAnalysis | None = None,
 ) -> tuple[Candidate, ...]:
-    """Flag direct GPIO-to-control links with a higher explicitly named source rail."""
+    """Flag direct GPIO-to-control links with differing explicit supply labels."""
     assignments = pin_assignment_index(observed)
     dnp = {reference.casefold() for reference in observed.dnp_components}
     functions = {pin.casefold(): function for pin, function in observed.pin_functions.items()}
@@ -118,7 +118,7 @@ def gpio_to_control_input_voltage_candidates(
                 if (
                     output_rail is None
                     or input_rail is None
-                    or output_rail.voltage_v <= input_rail.voltage_v
+                    or output_rail.voltage_v == input_rail.voltage_v
                     or _is_exactly_mapped(
                         output_reference,
                         output_pin,
@@ -132,6 +132,12 @@ def gpio_to_control_input_voltage_candidates(
                 ):
                     continue
 
+                rail_relation = (
+                    "output_higher"
+                    if output_rail.voltage_v > input_rail.voltage_v
+                    else "output_lower"
+                )
+
                 candidates.append(
                     Candidate(
                         rule_id=RULE_ID,
@@ -140,12 +146,12 @@ def gpio_to_control_input_voltage_candidates(
                         ),
                         message=(
                             "A direct GPIO output is assigned to a named reset, enable, or boot "
-                            "control input, and the output component's explicit supply label has "
-                            "a higher parsed nominal value than the input component's supply "
-                            "label. Review the exact device limits and circuit conditions. Rail "
-                            "names do not establish actual voltage, output range, input tolerance, "
-                            "or incompatibility; this prompt does not require level translation. "
-                            "A complete exact digital-peer voltage map is evaluated separately."
+                            "control input, and the endpoint components have different explicit "
+                            "supply-label values. Review output-high range, receiver VIH and "
+                            "absolute-maximum limits, and power-off conditions. Rail names do not "
+                            "establish actual voltage, output range, input tolerance, or "
+                            "incompatibility; this prompt does not require level translation. A "
+                            "complete exact digital-peer voltage map is evaluated separately."
                         ),
                         evidence={
                             "signal_net": (net,),
@@ -165,6 +171,7 @@ def gpio_to_control_input_voltage_candidates(
                                 f"{output_rail.net}: {output_rail.voltage_v} V",
                             ),
                             "input_supply_label": (f"{input_rail.net}: {input_rail.voltage_v} V",),
+                            "supply_label_relation": (rail_relation,),
                         },
                     )
                 )
