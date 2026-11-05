@@ -73,9 +73,13 @@ def test_exact_project_map_reports_valid_signal_divider_control() -> None:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_authored_tolerance_bounds_keep_a_valid_input_range_inside_target() -> None:
-    report = _report(policy=DesignLintPolicy(signal_divider_map=signal_divider_map(
-        tolerance_percents=(1.0, 2.0),
-    )))
+    report = _report(
+        policy=DesignLintPolicy(
+            signal_divider_map=signal_divider_map(
+                tolerance_percents=(1.0, 2.0),
+            )
+        )
+    )
 
     entry = report.signal_divider_coverage.entries[0]
     assert entry.status == "COMPLETE"
@@ -123,9 +127,11 @@ def test_tolerance_range_at_exact_authored_boundaries_is_inclusive() -> None:
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_tolerance_envelope_catches_range_failure_missed_by_nominal_calculation() -> None:
     report = _report(
-        policy=DesignLintPolicy(signal_divider_map=signal_divider_map(
-            tolerance_percents=(5.0, 5.0),
-        ))
+        policy=DesignLintPolicy(
+            signal_divider_map=signal_divider_map(
+                tolerance_percents=(5.0, 5.0),
+            )
+        )
     )
 
     entry = report.signal_divider_coverage.entries[0]
@@ -135,16 +141,12 @@ def test_tolerance_envelope_catches_range_failure_missed_by_nominal_calculation(
     assert entry.calculated_tolerance_input_minimum_v < entry.target_input_minimum_v
     assert entry.calculated_tolerance_input_maximum_v > entry.target_input_maximum_v
     finding = next(item for item in report.findings if item.rule_id == RULE_ID)
-    nominal_range = (
-        f"{entry.calculated_input_minimum_v:g}–{entry.calculated_input_maximum_v:g} V"
-    )
+    nominal_range = f"{entry.calculated_input_minimum_v:g}–{entry.calculated_input_maximum_v:g} V"
     tolerance_range = (
         f"{entry.calculated_tolerance_input_minimum_v:g}–"
         f"{entry.calculated_tolerance_input_maximum_v:g} V"
     )
-    assert finding.evidence["calculated_nominal_input_range_v"] == (
-        nominal_range,
-    )
+    assert finding.evidence["calculated_nominal_input_range_v"] == (nominal_range,)
     assert finding.evidence["calculated_tolerance_input_range_v"] == (tolerance_range,)
     assert finding.evidence["maximum_resistor_tolerance"] == (
         "R1=5% (Synthetic reviewed tolerance bound for R1)",
@@ -154,8 +156,8 @@ def test_tolerance_envelope_catches_range_failure_missed_by_nominal_calculation(
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_resistor_tolerance_bounds_must_be_complete_and_cited() -> None:
-    payload = signal_divider_map(tolerance_percents=(5.0, 5.0)).dividers[0].model_dump(
-        mode="python"
+    payload = (
+        signal_divider_map(tolerance_percents=(5.0, 5.0)).dividers[0].model_dump(mode="python")
     )
     payload["lower_resistor"]["maximum_tolerance_percent"] = None
     payload["lower_resistor"]["tolerance_basis"] = None
@@ -170,9 +172,7 @@ def test_resistor_tolerance_bounds_must_be_complete_and_cited() -> None:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_tolerance_math_is_ordered_and_rejects_invalid_ranges() -> None:
-    minimum, maximum = divider_tolerance_voltage_range(
-        24.0, 24.0, 220_000.0, 33_000.0, 5.0, 5.0
-    )
+    minimum, maximum = divider_tolerance_voltage_range(24.0, 24.0, 220_000.0, 33_000.0, 5.0, 5.0)
 
     assert minimum == pytest.approx(24 * 31_350 / (231_000 + 31_350))
     assert maximum == pytest.approx(24 * 34_650 / (209_000 + 34_650))

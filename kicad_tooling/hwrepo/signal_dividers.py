@@ -158,10 +158,7 @@ def evaluate_signal_divider_requirement(
     values_valid = True
     value_out_of_range = False
     for resistor in (requirement.upper_resistor, requirement.lower_resistor):
-        if (
-            resistor.maximum_tolerance_percent is not None
-            and resistor.tolerance_basis is not None
-        ):
+        if resistor.maximum_tolerance_percent is not None and resistor.tolerance_basis is not None:
             tolerance_percents[resistor.reference] = resistor.maximum_tolerance_percent
             tolerance_bases[resistor.reference] = resistor.tolerance_basis
         component = lookup_unique_casefold(observed.components, resistor.reference)

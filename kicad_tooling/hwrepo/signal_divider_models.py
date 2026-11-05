@@ -19,9 +19,7 @@ from .model_primitives import (
     StrictModel,
 )
 
-SignalDividerTolerancePercent = Annotated[
-    float, Field(gt=0, lt=100, allow_inf_nan=False)
-]
+SignalDividerTolerancePercent = Annotated[float, Field(gt=0, lt=100, allow_inf_nan=False)]
 
 
 class SignalDividerCoverageEntry(StrictModel):
@@ -186,7 +184,9 @@ class SignalDividerRequirement(StrictModel):
         upper_has_tolerance = self.upper_resistor.maximum_tolerance_percent is not None
         lower_has_tolerance = self.lower_resistor.maximum_tolerance_percent is not None
         if upper_has_tolerance != lower_has_tolerance:
-            raise ValueError("Both signal-divider resistor tolerance bounds must be supplied together")
+            raise ValueError(
+                "Both signal-divider resistor tolerance bounds must be supplied together"
+            )
         return self
 
 

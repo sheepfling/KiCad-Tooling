@@ -134,9 +134,7 @@ class _SignalDividerParityCases(McpParityHarness):
                 control_coverage.entries[0].maximum_tolerance_percent,
                 {"R1": 1.0, "R2": 2.0},
             )
-            self.assertIsNotNone(
-                control_coverage.entries[0].calculated_tolerance_input_minimum_v
-            )
+            self.assertIsNotNone(control_coverage.entries[0].calculated_tolerance_input_minimum_v)
 
             write_netlist(top_value="180k")
             mismatch = await compare("REVIEW", 1)
