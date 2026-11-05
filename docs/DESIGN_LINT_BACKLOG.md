@@ -14270,9 +14270,13 @@ control are documented in the
   `9b9febbc2e61399ece1f33502eae3807336d7519f4c41312c3cd8d913f56a051`.
   Exact native exports are required on the pinned KiCad 10.0.0 and 10.0.5
   lane. No external or proprietary project source is used.
-- **Acceptance:** The focused synthetic, parity, and mocked-lane checks are
-  pending this feature gate. The exact-version native result will be recorded
-  from hosted acceptance; it is not inferred from mocked fixtures.
+- **Acceptance:** The focused prerelease gate passed for `v0.5.3rc417` on
+  2026-11-05 (hosted run 41978126609).
+  The scoped unit lane ran with
+  `KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES=1`, covering the digest-pinned
+  KiCad 10.0.0 and 10.0.5 fault/control exports. Ruff format, Ruff, Pyright,
+  Windows typing, rumdl, mdrepo, wheel and source builds, installed-package
+  checks, and the external-template rehearsal also passed.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
