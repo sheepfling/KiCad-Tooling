@@ -13305,6 +13305,9 @@ control are documented in the
   normalized netlist remains unchanged. A separate-group scenario also checks
   that singleton supply scopes produce the independent
   `connector.return_supply_scope_singleton` review.
+- **Surface parity:** A synthetic CLI/MCP regression checks the same complete
+  source-matched finding and same-domain and split-net controls through both
+  adapters.
 - **Focused selection:**
 
   ```sh

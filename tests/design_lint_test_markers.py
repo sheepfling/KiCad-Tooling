@@ -255,6 +255,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_connector_named_power_output_peers.py",
                 "tests/test_design_lint_connector_named_power_output_divergence.py",
                 "tests/test_design_lint_mcp_parity_connector_named_power_peers.py",
+                "tests/test_design_lint_mcp_parity_connector_supply_domains.py",
                 "tests/test_design_lint_mcp_parity_mapped_contact_sharing.py",
                 "tests/test_connector_mapped_interface_candidate_evidence.py",
                 "tests/test_design_lint_architecture_connector_mapped_interface_candidate_evidence.py",
