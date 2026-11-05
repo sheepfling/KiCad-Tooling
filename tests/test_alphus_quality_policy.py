@@ -143,11 +143,56 @@ def test_python_style_policy_exposes_opaque_mapping_category(tmp_path: Path) -> 
         check=False,
         timeout=30,
     )
-    assert profile.returncode == 1, profile.stderr
-    findings = json.loads(profile.stdout)["steps"][0]["findings"]
+    assert profile.returncode == 0, profile.stderr
+    profile_report = json.loads(profile.stdout)
+    assert profile_report["failure_threshold"] == "error"
+    assert profile_report["severity_counts"] == {"error": 0, "info": 0, "warning": 1}
+    findings = profile_report["steps"][0]["findings"]
     assert any(
         item["rule_id"] == "alphus/python/none/style/opaque-mappings"
         and item["path"] == "kicad_tooling/probe.py"
         and item["line"] == 2
+        and item["severity"] == "warning"
         for item in findings
+    )
+
+
+def test_architecture_candidate_profile_reports_families_as_warnings(
+    tmp_path: Path,
+) -> None:
+    subprocess.run(("git", "init", "--quiet", str(tmp_path)), check=True, timeout=30)
+    (tmp_path / "quality-gates.toml").write_bytes((ROOT / "quality-gates.toml").read_bytes())
+    family = tmp_path / "kicad_tooling" / "hwrepo"
+    family.mkdir(parents=True)
+    for name in ("one", "two", "three", "four", "five", "six"):
+        (family / f"fixture_family_{name}.py").write_text("VALUE = 1\n")
+
+    result = subprocess.run(
+        (
+            sys.executable,
+            "-I",
+            "-m",
+            "alphus",
+            "--root",
+            str(tmp_path),
+            "--profile",
+            "architecture-candidates",
+            "--json",
+        ),
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    report = json.loads(result.stdout)
+    assert report["profile"] == "architecture-candidates"
+    assert report["failure_threshold"] == "error"
+    assert report["severity_counts"] == {"error": 0, "info": 0, "warning": 1}
+    findings = report["steps"][0]["findings"]
+    assert len(findings) == 1
+    assert findings[0]["rule_id"] == "alphus/any/none/maintainability/flat-source-family"
+    assert findings[0]["severity"] == "warning"
+    assert (
+        "Family fixture_family_*: 6 logical units across 6 physical files" in findings[0]["message"]
     )

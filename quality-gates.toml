@@ -29,6 +29,15 @@ report_field_positional_default = true
 report_external_model_docs = false
 external_model_names = []
 
+[checks.source_families]
+extensions = [".py"]
+include = ["kicad_tooling/hwrepo/**/*.py"]
+exclude = []
+min_family_files = 6
+min_prefix_characters = 6
+python_import_evidence = true
+python_module_roots = ["."]
+
 [orchestration]
 default_profile = "runtime-types"
 
@@ -58,3 +67,12 @@ rule = "pydantic-practices"
 [[orchestration.profiles]]
 name = "pydantic-practices"
 steps = ["Pydantic practices"]
+
+[[orchestration.steps]]
+kind = "rule"
+name = "KiCad source-family architecture candidates"
+rule = "source-families"
+
+[[orchestration.profiles]]
+name = "architecture-candidates"
+steps = ["KiCad source-family architecture candidates"]

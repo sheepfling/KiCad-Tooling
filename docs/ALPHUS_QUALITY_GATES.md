@@ -33,6 +33,12 @@ alone does not indicate that its report is empty. `Field(default_factory=...)`
 is a supported way to create per-instance mutable defaults; review contextual
 guidance before changing it.
 
+The `python-style` profile also uses the default `error` failure threshold. In
+v0.0.2, some categories such as opaque mappings are warnings, so a warning-only
+profile passes even when it contains findings. Inspect `severity_counts` and
+the individual findings instead of treating a successful exit as an empty
+report.
+
 The `python-style` JSON output groups findings by file and category. For
 example, this command prints only opaque mapping locations:
 
@@ -42,6 +48,29 @@ python -I -m alphus --rule python-style --report --json | python -c 'import json
 
 An opaque mapping can be an intentional external boundary. Review the data
 owner and intended contract before converting it or adding a boundary marker.
+
+## Architecture candidate scan
+
+Alphus `v0.0.2` adds the `source-families` selector. The
+`architecture-candidates` profile scopes it to `kicad_tooling/hwrepo/` and
+enables bounded direct Python import evidence. It groups similarly named
+siblings for architecture review; the groups are inventory prompts, not
+instructions to split or move modules. The scan does not establish ownership,
+coupling, or a public contract.
+
+Run the current candidate inventory with:
+
+```sh
+python -I -m alphus --profile architecture-candidates --json
+```
+
+The other new gate that appears relevant is `cyclomatic-complexity`. A trial
+using Ruff C901 at maximum 20 reported 83 functions across 855 selected
+`hwrepo` modules; maximum 30 still reported 30. It remains a calibration item
+instead of joining this profile or CI while we establish the service and data
+routes. `source-test-coverage` is another new candidate, but it requires an
+explicit source-to-test map and revision-matched execution evidence; revisit it
+after those routes are documented.
 
 For a common finding format, `--profile python-style --json` and
 `--profile pydantic-practices --json` include `steps[].findings[]` with a
