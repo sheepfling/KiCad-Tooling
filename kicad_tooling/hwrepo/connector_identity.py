@@ -98,7 +98,16 @@ def is_named_supply_function(function: str) -> bool:
 
 def is_return_function(function: str) -> bool:
     compact = re.sub(r"[\s_./-]+", "", function).casefold()
-    return re.sub(r"\d+$", "", compact) in _RETURN_FUNCTIONS
+    if re.sub(r"\d+$", "", compact) in _RETURN_FUNCTIONS:
+        return True
+
+    tokens = tuple(
+        re.sub(r"\d+$", "", token).casefold()
+        for token in re.findall(r"[A-Z0-9]+", function, re.IGNORECASE)
+    )
+    if any(token in _SHIELD_FUNCTIONS for token in tokens):
+        return False
+    return any(token in _RETURN_FUNCTIONS for token in tokens)
 
 
 def is_shield_function(function: str) -> bool:

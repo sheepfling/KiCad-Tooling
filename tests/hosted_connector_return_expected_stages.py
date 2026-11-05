@@ -17,6 +17,8 @@ EXPECTED_CONNECTOR_RETURN_STAGES = frozenset(
         "connector-return-fixture/unconnected-generic-component-power-input-dnp-control",
         "connector-return-fixture/cross-symbol-fault",
         "connector-return-fixture/cross-symbol-control",
+        "connector-return-fixture/cross-symbol-compound-fault",
+        "connector-return-fixture/cross-symbol-compound-control",
         "connector-return-fixture/cross-symbol-open",
         "connector-return-fixture/mapped-supply-fault",
         "connector-return-fixture/mapped-supply-control",

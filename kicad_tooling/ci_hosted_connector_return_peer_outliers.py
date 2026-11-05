@@ -105,6 +105,31 @@ def verify_peer_pin_outlier_cases(ctx: ConnectorReturnFixtureContext):
     cross_control = ctx.reports["cross-symbol-control", "first"]
     if cross_control.status != "PASS" or cross_control.findings:
         raise ValueError("Mixed-symbol common-return/supply control no longer passes")
+    compound_fault = ctx.reports["cross-symbol-compound-fault", "first"]
+    compound_findings = {
+        item.subject: item
+        for item in compound_fault.findings
+        if item.rule_id == "connector.repeated_pin_function"
+    }
+    compound_pin_functions = ctx.observed_contracts[
+        "cross-symbol-compound-fault", "first"
+    ].pin_functions
+    if (
+        compound_fault.status != "REVIEW"
+        or {item.rule_id for item in compound_fault.findings}
+        != {"connector.repeated_pin_function"}
+        or set(compound_findings)
+        != {"multiple connector symbols: ground/return", "multiple connector symbols: PWR"}
+        or dict(compound_findings["multiple connector symbols: ground/return"].evidence)
+        != {"J1.4": ("USB_RETURN",), "J2.7": ("SERIAL_RETURN",)}
+        or compound_pin_functions.get("J1.4") != "USB_GND"
+        or compound_pin_functions.get("J2.7") != "SERIAL_RETURN"
+        or compound_pin_functions.get("J3.1") != "USB_SHIELD_GND"
+    ):
+        raise ValueError("Mixed-symbol compound return fault lost its exact native pin evidence")
+    compound_control = ctx.reports["cross-symbol-compound-control", "first"]
+    if compound_control.status != "PASS" or compound_control.findings:
+        raise ValueError("Compound common-return control grouped the shield or split clean nets")
     cross_open = ctx.reports["cross-symbol-open", "first"]
     open_return = next(
         (

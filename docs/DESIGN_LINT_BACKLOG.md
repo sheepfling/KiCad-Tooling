@@ -2280,6 +2280,14 @@ is not a reason by itself to expand its scope or change its default policy.
   in version-parameterized pytest cases in `tests.test_ci_hosted_connector_returns`.
   Native verify and CLI/MCP regressions assert that incomplete or undeclared coverage stays
   visible.
+- **Compound return-function coverage (2026-11-05):**
+  `connector.repeated_pin_function` now recognizes token-bounded return terms
+  inside compound native pin functions such as `USB_GND` and `SERIAL_RETURN`.
+  These can identify a peer-return review group even when the surrounding
+  function names differ and the net labels are unindexed. Compound shield,
+  chassis, earth, frame, and FG functions stay outside signal-return grouping.
+  Synthetic split/common, shield, and ordering cases cover the extension. The
+  finding remains a REVIEW cue; it does not require joining the domains.
 - **Empty-contract integration regression:** The synthetic project in
   [`test_verify_design_lint.py`](../tests/test_verify_design_lint.py) exercises
   `test_empty_connectivity_expectations_still_raise_native_connector_review`.

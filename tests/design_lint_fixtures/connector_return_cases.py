@@ -71,6 +71,48 @@ def return_case_contracts() -> dict[str, NetlistContract]:
                 "J3.1": "SHIELD",
             },
         ),
+        "cross-symbol-compound-fault": NetlistContract(
+            components={},
+            nets={
+                "USB_RETURN": ("J1.4",),
+                "USB_SUPPLY": ("J1.1",),
+                "SERIAL_RETURN": ("J2.7",),
+                "SERIAL_SUPPLY": ("J2.9",),
+                "CHASSIS": ("J3.1",),
+            },
+            component_symbols={
+                "J1": "Synthetic:UsbPort",
+                "J2": "Synthetic:SerialPort",
+                "J3": "Synthetic:ShieldPort",
+            },
+            pin_functions={
+                "J1.4": "USB_GND",
+                "J1.1": "PWR",
+                "J2.7": "SERIAL_RETURN",
+                "J2.9": "PWR",
+                "J3.1": "USB_SHIELD_GND",
+            },
+        ),
+        "cross-symbol-compound-control": NetlistContract(
+            components={},
+            nets={
+                "COMMON_RETURN": ("J1.4", "J2.7"),
+                "COMMON_SUPPLY": ("J1.1", "J2.9"),
+                "CHASSIS": ("J3.1",),
+            },
+            component_symbols={
+                "J1": "Synthetic:UsbPort",
+                "J2": "Synthetic:SerialPort",
+                "J3": "Synthetic:ShieldPort",
+            },
+            pin_functions={
+                "J1.4": "USB_GND",
+                "J1.1": "PWR",
+                "J2.7": "SERIAL_RETURN",
+                "J2.9": "PWR",
+                "J3.1": "USB_SHIELD_GND",
+            },
+        ),
         "cross-symbol-open": NetlistContract(
             components={},
             nets={

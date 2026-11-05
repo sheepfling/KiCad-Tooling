@@ -54,13 +54,34 @@ def assert_base_connector_return_cases(results, version):
     cross_control = results["connector-return-fixture/cross-symbol-control"]
     assert cross_control["lint_status"] == "PASS"
     assert cross_control["findings"] == "none"
+    compound_fault = results["connector-return-fixture/cross-symbol-compound-fault"]
+    assert compound_fault["lint_status"] == "REVIEW"
+    assert set(compound_fault["subjects"].split(";")) == {
+        "multiple connector symbols: ground/return",
+        "multiple connector symbols: PWR",
+    }
+    assert "J1.4=USB_GND" in compound_fault["pin_functions"]
+    assert "J2.7=SERIAL_RETURN" in compound_fault["pin_functions"]
+    assert "J3.1=USB_SHIELD_GND" in compound_fault["pin_functions"]
+    compound_control = results["connector-return-fixture/cross-symbol-compound-control"]
+    assert compound_control["lint_status"] == "PASS"
+    assert compound_control["findings"] == "none"
+    assert "J3.1=USB_SHIELD_GND" in compound_control["pin_functions"]
     cross_open = results["connector-return-fixture/cross-symbol-open"]
     assert cross_open["lint_status"] == "REVIEW"
     assert cross_open["subjects"] == "multiple connector symbols: ground/return"
     assert_connector_result_sources(
         results,
         version,
-        ("fault", "control", "cross-symbol-fault", "cross-symbol-control", "cross-symbol-open"),
+        (
+            "fault",
+            "control",
+            "cross-symbol-fault",
+            "cross-symbol-control",
+            "cross-symbol-compound-fault",
+            "cross-symbol-compound-control",
+            "cross-symbol-open",
+        ),
     )
     assert_ret_return_label_cases(results)
 

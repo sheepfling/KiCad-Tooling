@@ -9,12 +9,13 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Pins with matching meaningful normalized functions on repeated connector symbols, or within one symbol, use different or missing net assignments. A complete source-matched project interface map can supply a return role when native function text is absent, generic Pin_N, or numeric-only; this can compare returns across different connector symbols. The same map can compare generic or numeric-only supply contacts across symbols only when their exact authored voltage_domain values match. Numeric function text can identify a comparable contact within an exact repeated symbol by itself, but does not establish an electrical role. Generic KiCad Pin_N labels remain unknown unless the source-matched map supplies a supported role. When every participating connector has a current source-matched peer_assignment_group, non-return and non-supply comparisons are partitioned by that group. Return comparisons are partitioned only when every mapped return participant has complete source-matched return_comparison_group evidence; otherwise the broad comparison is retained. Supply role comparisons are partitioned by supply_comparison_group only when every participating mapped supply contact has complete source-matched supply_comparison_group evidence; otherwise the broad comparison is retained.",
+      "predicate": "Pins with matching meaningful normalized functions on repeated connector symbols, or within one symbol, use different or missing net assignments. Exact return aliases and compound pin-function names with token-bounded return terms are grouped as one review role; compound names containing shield, chassis, earth, frame, or FG terms are excluded from signal-return grouping. A complete source-matched project interface map can supply a return role when native function text is absent, generic Pin_N, or numeric-only; this can compare returns across different connector symbols. The same map can compare generic or numeric-only supply contacts across symbols only when their exact authored voltage_domain values match. Numeric function text can identify a comparable contact within an exact repeated symbol by itself, but does not establish an electrical role. Generic KiCad Pin_N labels remain unknown unless the source-matched map supplies a supported role. When every participating connector has a current source-matched peer_assignment_group, non-return and non-supply comparisons are partitioned by that group. Return comparisons are partitioned only when every mapped return participant has complete source-matched return_comparison_group evidence; otherwise the broad comparison is retained. Supply role comparisons are partitioned by supply_comparison_group only when every participating mapped supply contact has complete source-matched supply_comparison_group evidence; otherwise the broad comparison is retained.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Matching functions are only candidate evidence; the rule cannot decide whether nets must be common, bonded, or isolated.",
+        "Token-bounded return terms in compound native pin functions can identify a review group even when the surrounding function text differs; these names do not prove that the pins should be common. Compound function names containing shield, chassis, earth, frame, or FG tokens are excluded from this signal-return grouping.",
         "Project-mapped return roles are used only from a complete interface entry whose catalog digest, component pin inventory, native pin functions, and net assignments match the current native netlist; role classification still does not require commonality.",
         "Project-mapped supply roles are compared across symbols only when a complete source-matched interface map supplies the same exact voltage_domain text for both contacts. A matching role and domain prompt review; they do not prove that nets must be common or that independent, switched, ORed, or isolated sources are invalid.",
         "A numeric function such as 7 is compared only as matching native function text within an exact repeated symbol; it does not mean ground, supply, or a required common connection.",
@@ -31,6 +32,7 @@
         "tests.test_design_lint_connector_returns.test_return_pin_disagreement_within_one_connector_needs_review",
         "tests.test_connector_mapped_interface_power_contact_unassigned.test_open_mapped_return_contacts_are_reported_once_by_peer_rule",
         "tests.test_design_lint_connector_returns.test_return_functions_across_connector_symbols_need_review",
+        "tests.test_design_lint_connector_returns.test_compound_return_functions_across_connector_symbols_need_review",
         "tests.test_design_lint_connector_returns.test_explicit_return_roles_review_split_neutral_net_names",
         "tests.test_design_lint_numbered_returns.test_four_db9_separately_named_return_domains_are_reviewed",
         "tests.test_connector_peer_pin_coverage.test_split_meaningful_returns_are_reported_and_counted",
@@ -53,6 +55,8 @@
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_returns.test_common_return_across_symbols_keeps_shield_separate",
+        "tests.test_design_lint_connector_returns.test_compound_return_functions_on_one_common_net_are_a_control",
+        "tests.test_design_lint_connector_returns.test_compound_shield_ground_functions_stay_outside_return_comparison",
         "tests.test_design_lint_connector_returns.test_connector_power_labels_do_not_merge_distinct_domains",
         "tests.test_design_lint_numbered_returns.test_four_db9_common_return_control_clears_review_findings",
         "tests.test_connector_peer_pin_coverage.test_common_peer_assignments_are_counted_without_a_finding",
@@ -78,6 +82,7 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_connector_returns.test_cross_connector_return_order_preserves_finding_and_commoning_clears_it",
+        "tests.test_design_lint_connector_returns.test_compound_return_functions_remain_order_stable",
         "tests.test_design_lint_numbered_returns.test_neutral_net_renaming_preserves_repeated_pin_review",
         "tests.test_connector_supply_peer_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
         "tests.test_connector_return_role_coverage.test_split_return_across_two_usb_and_one_serial_peer_group_is_reviewed",

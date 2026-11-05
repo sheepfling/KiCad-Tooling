@@ -17,6 +17,10 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         / "cohort-cross-symbol-connectors/cross-symbol-fault.kicad_sch",
         "cross-symbol-control": fixture_root
         / "cohort-cross-symbol-connectors/cross-symbol-control.kicad_sch",
+        "cross-symbol-compound-fault": fixture_root
+        / "cohort-cross-symbol-connectors/cross-symbol-compound-fault.kicad_sch",
+        "cross-symbol-compound-control": fixture_root
+        / "cohort-cross-symbol-connectors/cross-symbol-compound-control.kicad_sch",
         "cross-symbol-open": fixture_root
         / "cohort-cross-symbol-connectors/cross-symbol-open.kicad_sch",
         "mapped-supply-fault": fixture_root
@@ -280,6 +284,8 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = MappingProxyType(
         "return-positive-rail-control": "9584fbcc1f0560ac66306691f49d161617199b240cb7520588ad298a69b72176",
         "cross-symbol-fault": "941aa1acc62384d86fe04e7dec77638a5e23cd8b67b196bc1d93130e5e99f21e",
         "cross-symbol-control": "5b9f1a9d18b4e57495d090e815ff192c44f61b8a164ef03622e3d962ac553baf",
+        "cross-symbol-compound-fault": "c56899dd89bcbb863b319d4754ef7f98e476b4f77b7c614b6aa305eb8c2a0145",
+        "cross-symbol-compound-control": "fb746aa2191f080416e8a81f321393a028507e1f1c4756fb757abd7632ff91fb",
         "cross-symbol-open": "180c28fd280b71febe0c636e799217f0d86a3659c45e280cb86a768b7a03533a",
         "mapped-supply-fault": "0991c6df2403df88ff33d5c359b14487b6aa385023bd864573ce236478449213",
         "mapped-supply-control": "c45d390f138ebb9e440a1c6b0fea822f858ce9e31bfa229b28aaddc248adca3b",

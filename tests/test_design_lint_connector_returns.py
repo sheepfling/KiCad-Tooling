@@ -235,6 +235,142 @@ def test_return_functions_across_connector_symbols_need_review() -> None:
 
 
 @pytest.mark.design_lint_rule(rule_id="connector.repeated_pin_function")
+def test_compound_return_functions_across_connector_symbols_need_review() -> None:
+    source = cross_symbol_returns().model_copy(
+        update={
+            "nets": {
+                "USB_RETURN": ("J1.4",),
+                "SERIAL_RETURN": ("J2.7",),
+                "COMMON_SUPPLY": ("J1.1", "J2.9"),
+                "SHIELD": ("J3.5",),
+            },
+            "pin_functions": {
+                "J1.4": "USB_GND",
+                "J1.1": "PWR",
+                "J2.7": "SERIAL_RETURN",
+                "J2.9": "PWR",
+                "J3.5": "SHIELD",
+            },
+        }
+    )
+
+    report = _lint(source)
+    findings = [
+        item
+        for item in report.findings
+        if item.rule_id == "connector.repeated_pin_function"
+    ]
+
+    assert report.status == "REVIEW"
+    assert len(findings) == 1
+    assert findings[0].subject == "multiple connector symbols: ground/return"
+    assert findings[0].evidence == {
+        "J1.4": ("USB_RETURN",),
+        "J2.7": ("SERIAL_RETURN",),
+    }
+    assert "net.return_labels_without_pin_roles" not in {
+        item.rule_id for item in report.findings
+    }
+
+
+@pytest.mark.design_lint_rule(rule_id="connector.repeated_pin_function")
+def test_compound_return_functions_on_one_common_net_are_a_control() -> None:
+    source = cross_symbol_returns(common=True).model_copy(
+        update={
+            "nets": {
+                "COMMON_RETURN": ("J1.4", "J2.7"),
+                "COMMON_SUPPLY": ("J1.1", "J2.9"),
+                "SHIELD": ("J3.5",),
+            },
+            "pin_functions": {
+                "J1.4": "USB_GND",
+                "J1.1": "PWR",
+                "J2.7": "SERIAL_RETURN",
+                "J2.9": "PWR",
+                "J3.5": "SHIELD",
+            },
+        }
+    )
+
+    report = _lint(source)
+
+    assert report.status == "PASS"
+    assert "connector.repeated_pin_function" not in {
+        item.rule_id for item in report.findings
+    }
+
+
+@pytest.mark.design_lint_rule(rule_id="connector.repeated_pin_function")
+def test_compound_shield_ground_functions_stay_outside_return_comparison() -> None:
+    source = cross_symbol_returns().model_copy(
+        update={
+            "nets": {
+                "USB_CHASSIS": ("J1.4",),
+                "SERIAL_CHASSIS": ("J2.7",),
+                "SHIELD": ("J3.5",),
+            },
+            "pin_functions": {
+                "J1.4": "USB_SHIELD_GND",
+                "J2.7": "SERIAL_SHIELD_GND",
+                "J3.5": "SHIELD",
+            },
+        }
+    )
+
+    report = _lint(source)
+
+    assert "connector.repeated_pin_function" not in {
+        item.rule_id for item in report.findings
+    }
+
+
+@pytest.mark.design_lint_rule(rule_id="connector.repeated_pin_function")
+def test_compound_return_functions_remain_order_stable() -> None:
+    source = cross_symbol_returns().model_copy(
+        update={
+            "nets": {
+                "USB_RETURN": ("J1.4",),
+                "SERIAL_RETURN": ("J2.7",),
+                "COMMON_SUPPLY": ("J1.1", "J2.9"),
+                "SHIELD": ("J3.5",),
+            },
+            "pin_functions": {
+                "J1.4": "USB_GND",
+                "J1.1": "PWR",
+                "J2.7": "SERIAL_RETURN",
+                "J2.9": "PWR",
+                "J3.5": "SHIELD",
+            },
+        }
+    )
+    reordered = source.model_copy(
+        update={
+            "nets": dict(reversed(tuple(source.nets.items()))),
+            "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
+            "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
+        }
+    )
+
+    original = next(
+        item
+        for item in _lint(source).findings
+        if item.rule_id == "connector.repeated_pin_function"
+        and item.subject == "multiple connector symbols: ground/return"
+    )
+    permuted = next(
+        item
+        for item in _lint(reordered).findings
+        if item.rule_id == "connector.repeated_pin_function"
+        and item.subject == "multiple connector symbols: ground/return"
+    )
+
+    assert (permuted.fingerprint, permuted.evidence) == (
+        original.fingerprint,
+        original.evidence,
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id="connector.repeated_pin_function")
 def test_explicit_return_roles_review_split_neutral_net_names() -> None:
     observed = cross_symbol_returns().model_copy(
         update={
