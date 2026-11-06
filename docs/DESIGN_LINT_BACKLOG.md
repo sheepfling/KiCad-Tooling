@@ -14403,8 +14403,9 @@ control are documented in the
   ambiguous-pin control. The Docker-backed,
   digest-pinned native fixture lane passed on KiCad 10.0.0 and 10.0.5 (2 tests).
   Ruff, Pyright, and rumdl also passed. Hosted run `v0.5.3rc472`
-  (`42165622388`) passed the prior tagged gate and native fixture lane; this
-  new boundary control remains for the next tagged acceptance. Earlier hosted
+  (`42165622388`) passed the prior tagged gate and native fixture lane;
+  `v0.5.3rc473` (`42167516491`) passed the tagged scoped gate and
+  installed-wheel check against the separate public project. Earlier hosted
   run `v0.5.3rc425` (`42002849499`) exposed one wrong-port-group map
   suppressing coverage. The follow-up scopes mapped
   component exclusions by connector, PHY, and port group through the shared
