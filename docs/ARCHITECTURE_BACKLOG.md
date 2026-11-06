@@ -3189,3 +3189,19 @@ files were not changed in this route. Full CI and exact native KiCad tests did
 not run. After the profile run, four Python files in that separate draft
 changed. The current working tree no longer matches the frozen scan inventory;
 re-run the profiles after the PCB DRC work settles.
+
+## Release orchestration module size ceiling (2026-11-06)
+
+The first rule-scoped gate exercised shared architecture integrity tests and
+found the existing `hwrepo/releasing.py` module at 510 lines without a recorded
+entry in `tests/python_module_line_ceilings.json`. The file predates this lint
+change and was not modified. Its exact current size is now recorded as a
+no-growth legacy ceiling so the architecture gate can account for the existing
+module while continuing to reject growth.
+
+The module currently combines native execution, release-project selection,
+preparation orchestration, and artifact retention. A future release-operations
+decomposition should move those responsibilities into focused owners while
+preserving the existing `releasing` compatibility imports and patch points.
+This exception records known architecture debt; it does not change release
+behavior or waive the below-500-line target for new modules.
