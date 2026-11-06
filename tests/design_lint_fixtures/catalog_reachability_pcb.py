@@ -230,6 +230,12 @@ def pcb_rule_ids() -> set[str]:
         message="Synthetic custom DRC declarations share a name and request review.",
         evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
     )
+    casefold_custom_rule_names = Candidate(
+        rule_id="pcb.custom_drc_casefold_rule_name_collision",
+        subject="projects/synthetic/controller.kicad_dru#casefold-rules[1,2] syntheticcase",
+        message="Synthetic custom DRC names differ only by case and request review.",
+        evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
+    )
     conflicting_custom_rule_severity = Candidate(
         rule_id="pcb.custom_drc_conflicting_severities",
         subject="projects/synthetic/controller.kicad_dru#rule[1] SyntheticConflictingRule",
@@ -253,6 +259,7 @@ def pcb_rule_ids() -> set[str]:
             text_variable_rule,
             unconstrained_custom_rule,
             duplicate_custom_rule_name,
+            casefold_custom_rule_names,
             conflicting_custom_rule_severity,
             mechanical_edge_rule,
         ),

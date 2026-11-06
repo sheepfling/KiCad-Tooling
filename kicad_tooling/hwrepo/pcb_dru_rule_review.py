@@ -9,8 +9,6 @@ from .contracts import repo_path
 from .design_lint_pcb_dru_rule_candidate_evidence import (
     PcbDruConflictingSeveritiesCandidate,
     PcbDruConflictingSeveritiesFindingEvidence,
-    PcbDruDuplicateRuleNameCandidate,
-    PcbDruDuplicateRuleNameFindingEvidence,
     PcbDruInputRole,
     PcbDruRuleCandidate,
     PcbDruRuleFindingEvidence,
@@ -22,6 +20,12 @@ from .design_lint_pcb_dru_rule_candidate_evidence import (
     SourceBoundPcbDruInput,
     SourceBoundPcbDruRuleFile,
     is_supported_pcb_dru_kicad_version,
+)
+from .design_lint_pcb_dru_rule_name_evidence import (
+    PcbDruCasefoldRuleNameCandidate,
+    PcbDruCasefoldRuleNameFindingEvidence,
+    PcbDruDuplicateRuleNameCandidate,
+    PcbDruDuplicateRuleNameFindingEvidence,
 )
 from .design_lint_types import Candidate
 from .evidence import digest
@@ -296,6 +300,57 @@ def custom_drc_duplicate_rule_name_candidates(
                     f"Custom DRC rule name {name!r} appears in declarations {ordinal_text}. "
                     "KiCad treats a rule name as its unique identifier in DRC reports; give each "
                     "rule a distinct name or confirm this duplicate is intentional."
+                ),
+            )
+        )
+    return tuple(candidates)
+
+
+def custom_drc_casefold_rule_name_collision_candidates(
+    root: Path,
+    config: ProjectConfig,
+    source_hashes: SourceHashInventory,
+) -> tuple[Candidate, ...]:
+    """Prompt when distinct custom DRC names share the same case-folded spelling."""
+    if not is_supported_pcb_dru_kicad_version(config.kicad_version):
+        return ()
+    source_file = _source_bound_rule_file(root, config, source_hashes)
+    if source_file is None:
+        return ()
+    source = source_file.local_path.read_text(encoding="utf-8")
+    if digest(source_file.local_path) != source_file.source_sha256:
+        raise ValueError("Custom DRC rules changed during design-lint inspection")
+    if "${" in source:
+        return ()
+
+    groups: dict[str, list[NativeDrcRuleDeclaration]] = {}
+    for rule in native_rule_declarations(source):
+        if rule.name:
+            groups.setdefault(rule.name.casefold(), []).append(rule)
+
+    candidates: list[Candidate] = []
+    ordered_groups = sorted(groups.items(), key=lambda item: item[1][0].ordinal)
+    for casefold_key, rules in ordered_groups:
+        if len({rule.name for rule in rules}) < 2:
+            continue
+        rule_names = tuple(rule.name for rule in rules)
+        rule_ordinals = tuple(rule.ordinal for rule in rules)
+        source_evidence = PcbDruCasefoldRuleNameFindingEvidence(
+            source_file=source_file,
+            casefold_key=casefold_key,
+            rule_names=rule_names,
+            rule_ordinals=rule_ordinals,
+        )
+        ordinal_text = ",".join(str(ordinal) for ordinal in rule_ordinals)
+        names_text = ", ".join(repr(name) for name in rule_names)
+        candidates.append(
+            PcbDruCasefoldRuleNameCandidate.from_source_evidence(
+                source_evidence,
+                subject=f"{source_file.source_path}#casefold-rules[{ordinal_text}] {casefold_key}",
+                message=(
+                    f"Custom DRC rule names {names_text} share the case-folded spelling "
+                    f"{casefold_key!r}. Confirm that the naming distinction is intentional; "
+                    "this prompt does not assert that KiCad treats the rules as duplicates."
                 ),
             )
         )

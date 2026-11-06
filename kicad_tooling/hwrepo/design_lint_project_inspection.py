@@ -61,6 +61,7 @@ from .pcb_drc_models import (
 )
 from .pcb_drc_source_scan import scan_source_bound_rule_map
 from .pcb_dru_rule_review import (
+    custom_drc_casefold_rule_name_collision_candidates,
     custom_drc_conflicting_severity_candidates,
     custom_drc_duplicate_rule_name_candidates,
     custom_drc_rule_without_constraint_candidates,
@@ -157,6 +158,7 @@ def inspect_design_lint_request(
             *text_variable_custom_drc_rule_candidates(root, config, coach.source_hashes),
             *custom_drc_rule_without_constraint_candidates(root, config, coach.source_hashes),
             *custom_drc_duplicate_rule_name_candidates(root, config, coach.source_hashes),
+            *custom_drc_casefold_rule_name_collision_candidates(root, config, coach.source_hashes),
             *custom_drc_conflicting_severity_candidates(root, config, coach.source_hashes),
         )
         pcb_native_drc_candidates = (

@@ -245,6 +245,7 @@ DesignLintRuleId = Literal[
     "pcb.custom_drc_rule_excluded",
     "pcb.custom_drc_rule_without_constraint",
     "pcb.custom_drc_duplicate_rule_name",
+    "pcb.custom_drc_casefold_rule_name_collision",
     "pcb.custom_drc_conflicting_severities",
     "pcb.custom_drc_text_variable_review",
     "pcb.core_drc_check_ignored",

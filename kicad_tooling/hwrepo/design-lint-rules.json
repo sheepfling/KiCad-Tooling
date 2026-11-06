@@ -10619,7 +10619,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_dru_rule_review.py#custom_drc_duplicate_rule_name_candidates",
         "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_rule_declarations",
-        "kicad_tooling/hwrepo/design_lint_pcb_dru_rule_candidate_evidence.py#PcbDruDuplicateRuleNameFindingEvidence",
+        "kicad_tooling/hwrepo/design_lint_pcb_dru_rule_name_evidence.py#PcbDruDuplicateRuleNameFindingEvidence",
         "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
       ]
     },
@@ -10662,6 +10662,43 @@
         "kicad_tooling/hwrepo/pcb_dru_rule_review.py#custom_drc_conflicting_severity_candidates",
         "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_rules_with_conflicting_severities",
         "kicad_tooling/hwrepo/design_lint_pcb_dru_rule_candidate_evidence.py#PcbDruConflictingSeveritiesFindingEvidence",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ]
+    },
+    {
+      "rule_id": "pcb.custom_drc_casefold_rule_name_collision",
+      "title": "Case-folded custom DRC rule names need review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_dru_rule_review.py#custom_drc_casefold_rule_name_collision_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-verified .kicad_dru path and SHA-256, case-folded key, exact rule names and source ordinals, and exact configured KiCad version",
+      "predicate": "For a source-bound KiCad 10 version-1 PCB custom-rule file without text-variable substitution, group named top-level declarations by the Unicode case-folded spelling of their exact names and emit one review candidate when a group contains at least two distinct exact names. Preserve declaration order in the evidence.",
+      "supported_kicad_versions": [
+        "KiCad 10.x version-1 .kicad_dru source; no claim about native case-insensitive rule identity"
+      ],
+      "limitations": [
+        "This is a potential human-review ambiguity only. It does not assert that KiCad treats case-folded names as duplicate identifiers, merges their behavior, or changes DRC output; review is the default disposition.",
+        "Only exact top-level names are case-folded. Whitespace and compatibility normalization are not applied, empty names are skipped, and comments or nested text are not declarations.",
+        "Files containing ${ text-variable substitutions are deferred to the separate substitution review. This predicate does not inspect conditions, constraints, severity, or board applicability."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_dru_casefold_rule_name_collisions.test_distinct_casefolded_names_request_source_bound_review_per_group",
+        "tests.test_design_lint_mcp_parity_pcb_dru_casefold_rule_name.test_casefold_rule_name_review_matches_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_dru_casefold_rule_name_collisions.test_distinct_names_and_comment_text_are_a_control",
+        "tests.test_pcb_dru_casefold_rule_name_collisions.test_exact_duplicate_names_remain_with_the_exact_duplicate_rule"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_dru_casefold_rule_name_collisions.test_appending_unrelated_rule_preserves_casefold_group_identity"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_dru_rule_review.py#custom_drc_casefold_rule_name_collision_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_rule_declarations",
+        "kicad_tooling/hwrepo/design_lint_pcb_dru_rule_name_evidence.py#PcbDruCasefoldRuleNameFindingEvidence",
         "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
       ]
     },

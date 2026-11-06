@@ -47,6 +47,18 @@ RULE_NODE_CASES = (
         "tests/test_pcb_dru_duplicate_rule_names_native.py::test_duplicate_and_unique_rule_names_reach_native_sentinel",
     ),
     (
+        "pcb.custom_drc_casefold_rule_name_collision",
+        "tests/test_pcb_dru_casefold_rule_name_collisions.py::test_distinct_casefolded_names_request_source_bound_review_per_group",
+    ),
+    (
+        "pcb.custom_drc_casefold_rule_name_collision",
+        "tests/test_pcb_dru_casefold_rule_name_collisions.py::test_distinct_names_and_comment_text_are_a_control",
+    ),
+    (
+        "pcb.custom_drc_casefold_rule_name_collision",
+        "tests/test_design_lint_mcp_parity_pcb_dru_casefold_rule_name.py::test_casefold_rule_name_review_matches_cli_and_mcp",
+    ),
+    (
         "connector.footprint_same_voltage_power_input_unanchored",
         "tests/test_connector_footprint_same_voltage_power_input.py::test_unanchored_peer_power_inputs_with_equal_voltage_labels_are_reviewed",
     ),

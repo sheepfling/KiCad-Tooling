@@ -671,6 +671,7 @@ skipped under prerelease policy.
 - `pcb.custom_drc_rule_excluded`
 - `pcb.custom_drc_rule_without_constraint`
 - `pcb.custom_drc_duplicate_rule_name`
+- `pcb.custom_drc_casefold_rule_name_collision`
 - `pcb.custom_drc_conflicting_severities`
 - `pcb.custom_drc_text_variable_review`
 - `pcb.core_drc_check_ignored`
@@ -14769,6 +14770,35 @@ control are documented in the
   native fault/control pair repeats twice on both digest-pinned KiCad 10.0.0
   and 10.0.5. No project design source is included; see the
   [fixture notes](../tests/fixtures/design_lint/pcb-dru-conflicting-severities/README.md).
+
+#### LINT-286 — Review case-folded custom DRC rule names
+
+- **Status:** Implemented as the configurable default-review rule
+  `pcb.custom_drc_casefold_rule_name_collision`.
+- **Gap:** Exact duplicate-name checks do not prompt when two distinct custom
+  rule names differ only in their Unicode case-folded spelling. Such names may
+  be easy for reviewers to confuse even when they remain distinct strings.
+- **Predicate:** For a source-bound KiCad 10 version-1 `.kicad_dru` file without
+  `${...}` substitutions, group nonempty top-level declaration names by their
+  Python Unicode `casefold()` value. Emit one review candidate per group with
+  at least two distinct exact names. Preserve every participating name and
+  source ordinal, along with the exact file hash and configured KiCad version.
+  Project policy can select `review`, `block`, `off`, or an exact-fingerprint
+  ignore.
+- **Boundary:** This prompts human review of naming similarity only. It does
+  not claim that KiCad treats case-folded names as duplicate identifiers,
+  merges their behavior, or changes DRC output. No whitespace or compatibility
+  normalization is applied; empty names are skipped; comments and nested text
+  are not declarations; sources containing substitutions are deferred. The
+  check does not assess rule conditions, constraints, severity, or board
+  applicability. Exact duplicate names remain with LINT-284.
+- **Evidence:** Synthetic fixtures cover two case-fold groups, exact names and
+  ordinals, non-colliding names, comment text, exact-duplicate-only controls,
+  policy dispositions, fingerprint changes, source/version/project/variable
+  boundaries, and CLI/MCP parity. Catalog reachability and marker suites tie
+  the fault/control/metamorphic cases to this active rule. This lexical prompt
+  makes no native KiCad behavior claim, so no native lane is attached. See the
+  [fixture notes](../tests/fixtures/design_lint/pcb-dru-casefold-name-collision/README.md).
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

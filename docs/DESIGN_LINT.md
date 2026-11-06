@@ -3713,6 +3713,35 @@ KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
   -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_duplicate_rule_name")'
 ```
 
+## Review case-folded custom DRC rule names
+
+`pcb.custom_drc_casefold_rule_name_collision` asks for review when distinct
+exact top-level names in a source-bound KiCad 10 version-1 `.kicad_dru` file
+share one Unicode case-folded spelling. The finding preserves the exact names,
+their source ordinals, the case-folded key, file hash, and configured KiCad
+version. It defaults to `review`; project policy can select `block`, `off`, or
+an exact-fingerprint ignore.
+
+This is a naming ambiguity prompt only. It does not claim that KiCad treats
+case-folded names as duplicate identifiers, merges their behavior, or changes
+DRC results. Names are compared without whitespace or compatibility
+normalization; empty names are skipped, and comments and nested text are not
+declarations. Exact duplicate names remain covered by
+`pcb.custom_drc_duplicate_rule_name`. Files containing `${...}` are deferred
+because substitution may change declarations. The rule does not inspect
+conditions, constraints, severity, or board applicability.
+
+Synthetic fault/control fixtures cover multiple case-fold groups, distinct
+names, exact-duplicate-only controls, source identity, policy, fingerprints,
+and CLI/MCP parity. No native behavior is claimed or required. See the
+[fixture note](../tests/fixtures/design_lint/pcb-dru-casefold-name-collision/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_pcb_dru_casefold_rule_name_collisions.py \
+  tests/test_design_lint_mcp_parity_pcb_dru_casefold_rule_name.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.custom_drc_casefold_rule_name_collision")'
+```
+
 ## Review conflicting custom DRC severities
 
 `pcb.custom_drc_conflicting_severities` asks for review when one source-bound

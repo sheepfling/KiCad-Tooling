@@ -25,6 +25,7 @@ PcbDruRuleId: TypeAlias = Literal[
     "pcb.custom_drc_rule_excluded",
     "pcb.custom_drc_rule_without_constraint",
     "pcb.custom_drc_duplicate_rule_name",
+    "pcb.custom_drc_casefold_rule_name_collision",
     "pcb.custom_drc_conflicting_severities",
 ]
 PcbDruParsedRule: TypeAlias = NativeIgnoredDrcRule | NativeDrcRuleWithSeverity
@@ -132,27 +133,6 @@ class PcbDruRuleWithoutConstraintFindingEvidence:
 
 
 @dataclass(frozen=True, slots=True)
-class PcbDruDuplicateRuleNameFindingEvidence:
-    """A source-bound group of custom DRC declarations sharing one exact name."""
-
-    source_file: SourceBoundPcbDruRuleFile
-    rule_name: str
-    rule_ordinals: tuple[int, ...]
-
-    def __post_init__(self) -> None:
-        if not self.rule_name:
-            raise ValueError("Duplicate custom DRC rule evidence requires a nonempty name")
-        if (
-            len(self.rule_ordinals) < 2
-            or self.rule_ordinals != tuple(sorted(set(self.rule_ordinals)))
-            or self.rule_ordinals[0] < 1
-        ):
-            raise ValueError("Duplicate rule ordinals must be sorted, unique, and contain a pair")
-        if not is_supported_pcb_dru_kicad_version(self.source_file.kicad_version):
-            raise ValueError("Duplicate custom DRC name review requires a supported KiCad version")
-
-
-@dataclass(frozen=True, slots=True)
 class PcbDruConflictingSeveritiesFindingEvidence:
     """A source-bound rule with multiple distinct severity declarations."""
 
@@ -219,22 +199,6 @@ def project_pcb_dru_rule_without_constraint_evidence(
             "rule_name": (source.rule.name,),
             "rule_ordinal": (str(source.rule.ordinal),),
             "constraint_count": (str(source.rule.constraint_count),),
-        },
-    )
-
-
-def project_pcb_dru_duplicate_rule_name_evidence(
-    source: PcbDruDuplicateRuleNameFindingEvidence,
-) -> CandidateEvidenceProjection:
-    """Project duplicate rule identity and source ordinals into report evidence."""
-    return CandidateEvidenceProjection(
-        rule_id="pcb.custom_drc_duplicate_rule_name",
-        evidence={
-            "source_path": (source.source_file.source_path,),
-            "source_sha256": (source.source_file.source_sha256,),
-            "kicad_version": (source.source_file.kicad_version,),
-            "rule_name": (source.rule_name,),
-            "rule_ordinals": tuple(str(ordinal) for ordinal in source.rule_ordinals),
         },
     )
 
@@ -344,36 +308,6 @@ class PcbDruRuleWithoutConstraintCandidate(Candidate):
         projection = project_pcb_dru_rule_without_constraint_evidence(self.source_evidence)
         if self.rule_id != projection.rule_id or self.evidence != projection.evidence:
             raise ValueError("Unconstrained-rule fields must match their source-bound projection")
-
-
-@dataclass(frozen=True, slots=True)
-class PcbDruDuplicateRuleNameCandidate(Candidate):
-    """Duplicate-name prompt retaining exact source identity and declaration ordinals."""
-
-    source_evidence: PcbDruDuplicateRuleNameFindingEvidence
-
-    @classmethod
-    def from_source_evidence(
-        cls,
-        source_evidence: PcbDruDuplicateRuleNameFindingEvidence,
-        *,
-        subject: str,
-        message: str,
-    ) -> PcbDruDuplicateRuleNameCandidate:
-        projection = project_pcb_dru_duplicate_rule_name_evidence(source_evidence)
-        return cls(
-            rule_id=projection.rule_id,
-            subject=subject,
-            message=message,
-            evidence=projection.evidence,
-            source_evidence=source_evidence,
-        )
-
-    def __post_init__(self) -> None:
-        Candidate.__post_init__(self)
-        projection = project_pcb_dru_duplicate_rule_name_evidence(self.source_evidence)
-        if self.rule_id != projection.rule_id or self.evidence != projection.evidence:
-            raise ValueError("Duplicate rule fields must match their source-bound projection")
 
 
 @dataclass(frozen=True, slots=True)

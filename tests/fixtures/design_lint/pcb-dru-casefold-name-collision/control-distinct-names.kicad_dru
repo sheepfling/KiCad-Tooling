@@ -1,0 +1,18 @@
+(version 1)
+(rule "SYNTHETIC_USB_WIDTH"
+  (condition "A.Type == 'Track'")
+  (severity error)
+  (constraint track_width (min 0.2mm)))
+(rule "SYNTHETIC_USB_CLEARANCE"
+  (condition "A.Type == 'Track'")
+  (severity warning)
+  (constraint clearance (min 0.3mm)))
+(rule "SYNTHETIC_RETURN_GAP"
+  (condition "A.Type == 'Track'")
+  (severity error)
+  (constraint clearance (min 0.4mm)))
+(rule "SYNTHETIC_RETURN_VIA_GAP"
+  (condition "A.Type == 'Via'")
+  (severity warning)
+  (constraint clearance (min 0.5mm)))
+# Comments do not create declarations: synthetic_usb_width

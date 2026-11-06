@@ -13,7 +13,7 @@ from kicad_tooling.hwrepo.design_lint_finding_models import (
     DesignLintIgnore,
     DesignLintRuleOverride,
 )
-from kicad_tooling.hwrepo.design_lint_pcb_dru_rule_candidate_evidence import (
+from kicad_tooling.hwrepo.design_lint_pcb_dru_rule_name_evidence import (
     PcbDruDuplicateRuleNameCandidate,
 )
 from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy

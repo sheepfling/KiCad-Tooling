@@ -29,19 +29,16 @@ def test_custom_drc_source_records_and_candidates_have_a_focused_owner() -> None
         "PcbDruRuleFindingEvidence",
         "PcbDruTextVariableFindingEvidence",
         "PcbDruRuleWithoutConstraintFindingEvidence",
-        "PcbDruDuplicateRuleNameFindingEvidence",
         "PcbDruConflictingSeveritiesFindingEvidence",
         "PcbDruRuleCandidate",
         "PcbDruTextVariableCandidate",
         "PcbDruRuleWithoutConstraintCandidate",
-        "PcbDruDuplicateRuleNameCandidate",
         "PcbDruConflictingSeveritiesCandidate",
     } <= classes
     assert {
         "project_pcb_dru_rule_evidence",
         "project_pcb_dru_text_variable_evidence",
         "project_pcb_dru_rule_without_constraint_evidence",
-        "project_pcb_dru_duplicate_rule_name_evidence",
         "project_pcb_dru_conflicting_severities_evidence",
     } <= functions
     parser_imports = {
@@ -61,7 +58,38 @@ def test_custom_drc_source_records_and_candidates_have_a_focused_owner() -> None
         for node in tree.body
         if isinstance(node, ast.FunctionDef) and node.name.startswith("project_")
     }
-    assert len(projections) == 5
+    assert len(projections) == 4
+    for function in projections.values():
+        assert not any(
+            isinstance(node, ast.Attribute) and node.attr == "local_path"
+            for node in ast.walk(function)
+        )
+
+
+def test_custom_drc_name_evidence_has_a_separate_focused_owner() -> None:
+    owner = HWREPO / "design_lint_pcb_dru_rule_name_evidence.py"
+    tree = ast.parse(owner.read_text(encoding="utf-8"), filename=owner.name)
+
+    assert line_count(owner) < IMPLEMENTATION_MAX_LINES
+    classes = {node.name for node in tree.body if isinstance(node, ast.ClassDef)}
+    functions = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
+    assert {
+        "PcbDruDuplicateRuleNameFindingEvidence",
+        "PcbDruCasefoldRuleNameFindingEvidence",
+        "PcbDruDuplicateRuleNameCandidate",
+        "PcbDruCasefoldRuleNameCandidate",
+    } <= classes
+    assert {
+        "project_pcb_dru_duplicate_rule_name_evidence",
+        "project_pcb_dru_casefold_rule_name_evidence",
+    } <= functions
+
+    projections = {
+        node.name: node
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("project_")
+    }
+    assert len(projections) == 2
     for function in projections.values():
         assert not any(
             isinstance(node, ast.Attribute) and node.attr == "local_path"
@@ -84,6 +112,7 @@ def test_custom_drc_adapter_only_routes_through_typed_candidate_builders() -> No
         "text_variable_custom_drc_rule_candidates",
         "custom_drc_rule_without_constraint_candidates",
         "custom_drc_duplicate_rule_name_candidates",
+        "custom_drc_casefold_rule_name_collision_candidates",
         "custom_drc_conflicting_severity_candidates",
     } <= functions.keys()
 
@@ -100,6 +129,7 @@ def test_custom_drc_adapter_only_routes_through_typed_candidate_builders() -> No
         "text_variable_custom_drc_rule_candidates": "from_source_evidence",
         "custom_drc_rule_without_constraint_candidates": "_rule_without_constraint_candidate",
         "custom_drc_duplicate_rule_name_candidates": "from_source_evidence",
+        "custom_drc_casefold_rule_name_collision_candidates": "from_source_evidence",
         "custom_drc_conflicting_severity_candidates": "from_source_evidence",
     }
     for name, builder in expected_builders.items():

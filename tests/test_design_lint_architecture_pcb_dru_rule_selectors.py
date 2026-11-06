@@ -26,10 +26,18 @@ RULE_NODE_CASES = (
         "pcb.custom_drc_conflicting_severities",
         "tests/test_pcb_dru_conflicting_severities_native.py::test_multiple_and_single_severity_rules_reach_native_sentinel",
     ),
+    (
+        "pcb.custom_drc_casefold_rule_name_collision",
+        "tests/test_pcb_dru_casefold_rule_name_collisions.py::test_distinct_casefolded_names_request_source_bound_review_per_group",
+    ),
+    (
+        "pcb.custom_drc_casefold_rule_name_collision",
+        "tests/test_design_lint_mcp_parity_pcb_dru_casefold_rule_name.py::test_casefold_rule_name_review_matches_cli_and_mcp",
+    ),
 )
 
 
-def test_conflicting_severity_selector_collects_only_registered_rule_tests() -> None:
+def test_custom_drc_selector_collects_only_registered_rule_tests() -> None:
     rule_ids = tuple(sorted({rule_id for rule_id, _ in RULE_NODE_CASES}))
     result = collect_rule_nodes(rule_ids)
 
