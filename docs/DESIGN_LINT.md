@@ -2784,7 +2784,10 @@ resistor power, brightness, transient behavior, active or off-board limiting,
 PCB copper, or physical population. The project-authored bounds and their bases
 are recorded but not independently verified; the result is not electrical
 approval. The native fixtures are synthetic and run on digest-pinned KiCad
-10.0.0 and 10.0.5 images. CLI and MCP call the same typed service.
+10.0.0 and 10.0.5 images. See the
+[fixture record](../tests/fixtures/design_lint/led-current-range/README.md)
+for source hashes and reproduction details. CLI and MCP call the same typed
+service.
 
 ```sh
 .venv/bin/python -I -m pytest -q tests/test_led_current_range.py \
