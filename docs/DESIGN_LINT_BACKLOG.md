@@ -720,6 +720,10 @@ standalone parity work when it closes a demonstrated feature regression.
   the shared net. This is a review-evidence improvement, not a new rule or
   detection claim; synthetic fault/control sources run through the existing
   exact KiCad 10.0.0/10.0.5 Docker lane.
+- **LINT-284 Aggregate active-rule reachability:** The synthetic catalog
+  reachability gate now exercises the existing Ethernet MDC/MDIO shared-net
+  fault and source-mapped signal-divider range fault. These cases already had
+  dedicated suites; the aggregate inventory had omitted them.
 - **LINT-034 external-interface protection coverage:** The source-mapped
   connector protection rules now run against the same exact-version synthetic
   multi-pin protector fault/control exports used by the USB fixture lane. The
@@ -14743,6 +14747,32 @@ control are documented in the
   KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_complementary_pair_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.complementary_pair_assignment")'
+  ```
+
+#### LINT-284 — Close aggregate active-rule reachability gaps
+
+- **Status:** Completed as a synthetic catalog-coverage repair. No lint
+  predicate or rule catalog entry changed.
+- **Gap:** The all-active-rule reachability assertion omitted the existing
+  `bus.ethernet_management_same_net` and
+  `interface.signal_divider_input_range_mismatch` fault cases even though
+  each had dedicated fault/control tests.
+- **Change:** Protocol candidate reachability now includes the synthetic
+  MDC/MDIO shared-net case. A focused mapped-interface helper evaluates the
+  source-bound divider contract with its out-of-range resistor-value fault.
+- **Evidence:** The aggregate test now reaches every active catalog rule.
+  Dedicated suites continue to validate the Ethernet split-net control and
+  divider valid, incomplete, policy, and metamorphic cases. The helper is in
+  `tests/design_lint_fixtures/catalog_reachability_mapped_interfaces.py`.
+- **Boundary:** Aggregate reachability proves that a synthetic case activates
+  each rule. It does not independently validate each electrical requirement
+  or replace the per-rule fault/control tests.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest -q \
+    tests/test_design_lint_catalog_reachability.py \
+    -m 'design_lint'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

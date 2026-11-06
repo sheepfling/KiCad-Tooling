@@ -333,6 +333,9 @@ def catalog_reachability_rule_ids() -> set[str]:
 def protocol_peer_candidate_rule_ids() -> set[str]:
     """Reach protocol and control-input candidate rules from synthetic netlists."""
     from tests.can_peer_reference_support import can_peer_reference_netlist
+    from tests.design_lint_fixtures.ethernet_management_same_net import (
+        ethernet_management_same_net_netlist,
+    )
     from tests.i2c_peer_reference_support import i2c_peer_netlist
     from tests.serial_peer_reference_support import serial_reference_netlist
     from tests.spi_peer_reference_support import spi_peer_netlist
@@ -348,6 +351,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         serial_reference_netlist(),
         can_netlist(),
         ethernet_signal_on_named_rail_netlist(),
+        ethernet_management_same_net_netlist(),
         can_tx_rx_same_net_netlist(),
         can_signal_on_named_rail_netlist(),
         can_tx_rx_same_net_netlist(shared=False).model_copy(

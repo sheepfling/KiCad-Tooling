@@ -73,6 +73,9 @@ from tests.design_lint_fixtures.catalog_reachability import (
     mapped_connector_rule_ids,
     protocol_peer_candidate_rule_ids,
 )
+from tests.design_lint_fixtures.catalog_reachability_mapped_interfaces import (
+    mapped_signal_divider_rule_ids,
+)
 from tests.design_lint_fixtures.catalog_reachability_pcb import pcb_rule_ids
 from tests.design_lint_fixtures.component_catalog_reachability import (
     reachable_component_rule_ids,
@@ -189,6 +192,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _usb_peer_reference_support.usb_peer_netlist(),
     )
     emitted = {item.rule_id for source in cases for item in candidates(source)}
+    emitted.update(mapped_signal_divider_rule_ids())
     mapped_supply_source = _mapped_supply_return_net.mapped_supply_return_net_netlist()
     mapped_supply_report, _ = _mapped_supply_return_net.mapped_supply_return_net_report(
         mapped_supply_source
