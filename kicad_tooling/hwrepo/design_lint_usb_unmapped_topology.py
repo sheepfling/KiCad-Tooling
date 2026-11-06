@@ -44,26 +44,41 @@ def _candidate_evidence(
                 f"{path.component_footprint}; {path.component_pin_count} native pins"
             ),
         ),
-        "USB_D+_connector_side": (
+        "USB_data_map_state": ("no map matches this connector/PHY port group",),
+    }
+    if path.topology == "shared_data_net_attachment":
+        evidence["USB_D+_shared_net"] = (
             (
                 f"{path.positive_connector_net}: "
                 f"{_pin_members(path.positive_connector_component_pins)}"
             ),
-        ),
-        "USB_D+_PHY_side": (
-            f"{path.positive_phy_net}: {_pin_members(path.positive_phy_component_pins)}",
-        ),
-        "USB_D-_connector_side": (
+        )
+        evidence["USB_D-_shared_net"] = (
             (
                 f"{path.negative_connector_net}: "
                 f"{_pin_members(path.negative_connector_component_pins)}"
             ),
-        ),
-        "USB_D-_PHY_side": (
+        )
+    else:
+        evidence["USB_D+_connector_side"] = (
+            (
+                f"{path.positive_connector_net}: "
+                f"{_pin_members(path.positive_connector_component_pins)}"
+            ),
+        )
+        evidence["USB_D+_PHY_side"] = (
+            f"{path.positive_phy_net}: {_pin_members(path.positive_phy_component_pins)}",
+        )
+        evidence["USB_D-_connector_side"] = (
+            (
+                f"{path.negative_connector_net}: "
+                f"{_pin_members(path.negative_connector_component_pins)}"
+            ),
+        )
+        evidence["USB_D-_PHY_side"] = (
             f"{path.negative_phy_net}: {_pin_members(path.negative_phy_component_pins)}",
-        ),
-        "USB_data_map_state": ("no map matches this connector/PHY port group",),
-    }
+        )
+    evidence["USB_topology_kind"] = (path.topology,)
     if path.port_group is not None:
         evidence["USB_port_group"] = (path.port_group,)
     if source.map_sha256 is not None:
@@ -81,22 +96,33 @@ def usb_unmapped_multi_pin_topology_candidates(
         if _has_endpoint_map(source, path):
             continue
         port = f" port {path.port_group}" if path.port_group is not None else ""
+        topology_text = (
+            "unmapped USB multi-pin data attachment"
+            if path.topology == "shared_data_net_attachment"
+            else "unmapped USB multi-pin topology"
+        )
+        topology_message = (
+            "Native pin assignments place one fitted multi-pin component on both shared USB 2.0 "
+            "D+/D- nets, but no exact current USB data-path map covers it. Review the exact "
+            "part pinout and map the part where appropriate, or document why this attachment "
+            "remains outside coverage. This prompt does not identify the component's function, "
+            "assert a data path, or establish a defect."
+            if path.topology == "shared_data_net_attachment"
+            else "Native pin assignments place one multi-pin component on connector-side and "
+            "PHY-side USB 2.0 D+/D- nets, but do not establish a data path. Review the exact "
+            "part pinout and provide a project-authored USB data-path map for this "
+            "connector/PHY port group, or document why this topology remains outside coverage. "
+            "This prompt does not assert component conduction, a confirmed path, a defect, or a "
+            "required common reference."
+        )
         candidates.append(
             Candidate(
                 rule_id=RULE_ID,
                 subject=(
-                    f"{path.connector_reference} / {path.phy_reference}: "
-                    f"unmapped USB multi-pin topology{port} ({path.component_reference})"
+                    f"{path.connector_reference} / {path.phy_reference}: {topology_text}"
+                    f"{port} ({path.component_reference})"
                 ),
-                message=(
-                    "Native pin assignments place one multi-pin component on connector-side and "
-                    "PHY-side USB 2.0 D+/D- nets, but do not establish a data path. Review the "
-                    "exact part pinout and provide a project-authored USB data-path map for "
-                    "this connector/PHY port group, or "
-                    "document why this topology remains outside coverage. This prompt does not "
-                    "assert component conduction, a confirmed path, a defect, or a required "
-                    "common reference."
-                ),
+                message=topology_message,
                 evidence=_candidate_evidence(path, source),
             )
         )

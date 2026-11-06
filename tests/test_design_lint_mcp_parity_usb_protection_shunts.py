@@ -58,12 +58,6 @@ class _UsbProtectionShuntParity(McpParityHarness):
         contract_path = self.island / "tests/contract.json"
         contract = read_model(contract_path, ProjectTestContract)
         path_map = protection_shunt_map()
-        write_model(
-            contract_path,
-            contract.model_copy(
-                update={"design_lint": DesignLintPolicy(usb_data_path_map=path_map)}
-            ),
-        )
 
         def write_netlist(*, common_reference: bool, wrong_shunt_pin: bool = False) -> None:
             shutil.copyfile(fixture, netlist)
@@ -110,8 +104,18 @@ class _UsbProtectionShuntParity(McpParityHarness):
         async with Client(create_server(self.root), mode="legacy") as client:
 
             async def compare(
-                *, common_reference: bool, wrong_shunt_pin: bool = False
+                *, common_reference: bool, wrong_shunt_pin: bool = False, mapped: bool = True
             ) -> DesignLintReport:
+                write_model(
+                    contract_path,
+                    contract.model_copy(
+                        update={
+                            "design_lint": DesignLintPolicy(
+                                usb_data_path_map=path_map if mapped else None
+                            )
+                        }
+                    ),
+                )
                 write_netlist(
                     common_reference=common_reference,
                     wrong_shunt_pin=wrong_shunt_pin,
@@ -169,6 +173,17 @@ class _UsbProtectionShuntParity(McpParityHarness):
                     for item in path_faults
                     for issue in item.evidence["issues"]
                 )
+            )
+            unmapped = await compare(common_reference=False, mapped=False)
+            topology_findings = tuple(
+                item
+                for item in unmapped.findings
+                if item.rule_id == "bus.usb_unmapped_multi_pin_topology"
+            )
+            self.assertEqual(len(topology_findings), 1, unmapped.findings)
+            self.assertEqual(
+                topology_findings[0].evidence["USB_topology_kind"],
+                ("shared_data_net_attachment",),
             )
 
 

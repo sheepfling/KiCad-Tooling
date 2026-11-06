@@ -51,6 +51,7 @@ import tests.test_open_drain_heuristics as _tests_test_open_drain_heuristics
 import tests.test_power_paths as _tests_test_power_paths
 import tests.test_rc_filters as _tests_test_rc_filters
 import tests.test_regulator_feedback as _tests_test_regulator_feedback
+import tests.test_signal_divider_contract as _tests_test_signal_divider_contract
 import tests.test_stm32_pin_map as _tests_test_stm32_pin_map
 import tests.test_usb_c_ports as _tests_test_usb_c_ports
 import tests.usb_data_path_support as _usb_data_path_support
@@ -481,6 +482,10 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         for item in candidates(
             _open_drain_control_voltage_fixtures.open_drain_control_voltage_netlist()
         )
+    )
+    emitted.update(
+        item.rule_id
+        for item in _tests_test_signal_divider_contract._report(fault="top-resistor-value").findings
     )
     active = {item.rule_id for item in rule_catalog().rules if item.status == "active"}
     assert emitted == active

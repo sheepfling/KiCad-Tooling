@@ -105,6 +105,15 @@ for dispositions and timing; leave unmeasured values unstated.
   documented multi-pin protector path and independently authored expected
   reference domains. Owner dispositions, reviewer effort, PCB continuity, and
   field precision remain unmeasured.
+- **Tooling follow-up:** LINT-276 now also recognizes a fitted multi-pin
+  component that has one uniquely assigned pin on each of the connector and
+  PHY's already shared D+/D− nets. This remains a topology-review prompt: the
+  name, library symbol, and native connectivity do not establish that the part
+  is a protector or that its pins conduct data. Tooling-owned synthetic and
+  source-hashed native cases cover the no-map prompt and an exact map control;
+  no project source or exported netlist from this public screen was copied into
+  the tooling checkout. Reviewer dispositions and field value remain
+  unmeasured.
 
 ### Source-only recheck: kicad-happy v2.3.2 false-positive fixes (2026-10-29)
 

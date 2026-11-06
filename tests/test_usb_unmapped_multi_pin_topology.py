@@ -11,6 +11,7 @@ from tests.usb_data_path_support import (
     usb_inline_component_netlist,
 )
 from tests.usb_peer_reference_support import usb_peer_netlist
+from tests.usb_protection_shunt_support import protection_shunt_map, protection_shunt_netlist
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
 
@@ -42,6 +43,75 @@ def test_unmapped_inline_usb_topology_requests_a_project_map_without_claiming_a_
     assert "do not establish a data path" in finding.message
     assert "does not assert component conduction" in finding.message
     assert not any(item.rule_id == "bus.usb_peer_reference_review" for item in report.findings)
+
+
+def test_unmapped_multi_pin_attachment_to_shared_usb_data_nets_requests_review() -> None:
+    report = lint_report(protection_shunt_netlist(), None)
+    finding = _finding(report)
+
+    coverage = report.usb_peer_reference_coverage
+    assert coverage is not None
+    assert coverage.status == "NO_SUPPORTED_PEER_PATHS"
+    assert coverage.supported_data_path_count == 0
+    assert len(coverage.unsupported_multi_pin_paths) == 1
+    candidate = coverage.unsupported_multi_pin_paths[0]
+    assert candidate.topology == "shared_data_net_attachment"
+    assert candidate.component_reference == "U6"
+    assert candidate.positive_connector_net == candidate.positive_phy_net == "USB_DP"
+    assert candidate.negative_connector_net == candidate.negative_phy_net == "USB_DM"
+    assert finding.subject == "J1 / U1: unmapped USB multi-pin data attachment (U6)"
+    assert finding.evidence["USB_D+_shared_net"] == ("USB_DP: U6.1",)
+    assert finding.evidence["USB_D-_shared_net"] == ("USB_DM: U6.3",)
+    assert finding.evidence["USB_topology_kind"] == ("shared_data_net_attachment",)
+    assert "does not identify the component's function" in finding.message
+    assert not any(item.rule_id == "bus.usb_peer_reference_review" for item in report.findings)
+
+
+def test_exact_protection_map_covers_shared_usb_data_net_attachment() -> None:
+    report = lint_report(protection_shunt_netlist(), protection_shunt_map())
+
+    assert not any(item.rule_id == RULE_ID for item in report.findings)
+    assert report.usb_peer_reference_coverage is not None
+    assert report.usb_peer_reference_coverage.supported_data_path_count == 1
+    assert report.usb_peer_reference_coverage.unsupported_multi_pin_paths == ()
+
+
+def test_dnp_multi_pin_shared_data_net_attachment_is_not_reported() -> None:
+    observed = protection_shunt_netlist().model_copy(update={"dnp_components": ("U6",)})
+    report = lint_report(observed, None)
+
+    assert not any(item.rule_id == RULE_ID for item in report.findings)
+    assert report.usb_peer_reference_coverage is not None
+    assert report.usb_peer_reference_coverage.unsupported_multi_pin_paths == ()
+
+
+def test_single_line_multi_pin_attachment_is_outside_the_usb_data_pair_predicate() -> None:
+    observed = protection_shunt_netlist()
+    nets = dict(observed.nets)
+    nets["USB_DM"] = ("J1.2", "U1.2")
+    nets["BOARD_GND"] = (*nets["BOARD_GND"], "U6.3")
+    report = lint_report(observed.model_copy(update={"nets": nets}), None)
+
+    assert not any(item.rule_id == RULE_ID for item in report.findings)
+    assert report.usb_peer_reference_coverage is not None
+    assert report.usb_peer_reference_coverage.unsupported_multi_pin_paths == ()
+
+
+def test_shared_data_net_attachment_fingerprint_is_stable_under_netlist_order() -> None:
+    observed = protection_shunt_netlist()
+    reordered = observed.model_copy(
+        update={
+            "components": dict(reversed(tuple(observed.components.items()))),
+            "nets": dict(reversed(tuple(observed.nets.items()))),
+            "component_symbols": dict(reversed(tuple(observed.component_symbols.items()))),
+            "component_pin_numbers": dict(reversed(tuple(observed.component_pin_numbers.items()))),
+        }
+    )
+
+    first = _finding(lint_report(observed, None))
+    second = _finding(lint_report(reordered, None))
+
+    assert (second.fingerprint, second.evidence) == (first.fingerprint, first.evidence)
 
 
 def test_exact_project_map_resolves_unmapped_topology_prompt() -> None:

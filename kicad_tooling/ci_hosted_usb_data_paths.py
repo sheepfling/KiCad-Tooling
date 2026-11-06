@@ -17,6 +17,7 @@ from .ci_hosted_usb_isolation import validate_usb_isolator_reference_boundary
 from .ci_hosted_usb_multiport_validation import validate_usb_multiport_peer_reference_reports
 from .ci_hosted_usb_protection_shunts import validate_usb_protection_shunt_fixture_reports
 from .ci_hosted_usb_requirements import usb_data_path_requirements
+from .ci_hosted_usb_unmapped_topologies import validate_usb_unmapped_topology_fixtures
 from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.contracts import write_model
@@ -134,7 +135,6 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
     reports: dict[tuple[str, str], DesignLintReport] = {}
     raw_hashes: dict[tuple[str, str], str] = {}
     observed_contracts: dict[tuple[str, str], NetlistContract] = {}
-    unmapped_inline_coverage: DesignLintReport | None = None
     for case in cases:
         for run in ("first", "repeat"):
             netlist_path = output / f"{case}.{run}.netlist.xml"
@@ -196,12 +196,6 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
                 coach,
                 DesignLintPolicy(usb_data_path_map=requirements[case]),
             )
-            if case == "inline-component-control" and run == "first":
-                unmapped_inline_coverage = evaluate(
-                    project_id,
-                    coach,
-                    DesignLintPolicy(),
-                )
 
     if any(
         normalized_hashes[(case, "first")] != normalized_hashes[(case, "repeat")] for case in cases
@@ -210,63 +204,16 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
             "Native USB exports differ after normalization to parsed netlist contracts"
         )
 
-    if unmapped_inline_coverage is None:
-        raise ValueError("Native inline-component fixture omitted its unmapped coverage report")
-    unsupported_paths = unmapped_inline_coverage.usb_peer_reference_coverage
-    if unsupported_paths is None or tuple(
-        (
-            item.connector_reference,
-            item.phy_reference,
-            item.component_reference,
-            item.positive_connector_net,
-            item.positive_phy_net,
-            item.negative_connector_net,
-            item.negative_phy_net,
-        )
-        for item in unsupported_paths.unsupported_multi_pin_paths or ()
-    ) != (("J1", "U1", "U2", "USB_DP_PORT", "USB_DP_PHY", "USB_DM_PORT", "USB_DM_PHY"),):
-        raise ValueError(
-            "Native unmapped inline-component coverage did not retain exact U2 pin/net topology"
-        )
-    unmapped_topology_findings = tuple(
-        item
-        for item in unmapped_inline_coverage.findings
-        if item.rule_id == "bus.usb_unmapped_multi_pin_topology"
-    )
-    if (
-        unsupported_paths.supported_data_path_count != 0
-        or len(unmapped_topology_findings) != 1
-        or any(
-            item.rule_id in {"bus.usb_peer_reference_review", "bus.usb_data_path_mismatch"}
-            for item in unmapped_inline_coverage.findings
-        )
-    ):
-        raise ValueError(
-            "Native unsupported topology must request a map without claiming a data or reference path"
-        )
-    log.event(
-        "usb-data-path-fixture/inline-component-unmapped-coverage",
-        "PASS",
+    validate_usb_unmapped_topology_fixtures(
+        observed_contracts=observed_contracts,
+        source_hashes=source_hashes,
+        raw_hashes=raw_hashes,
+        normalized_hashes=normalized_hashes,
         project=project,
         kicad_version=config.kicad_version,
         image=pinned,
-        source_sha256=source_hashes["inline-component-control"],
-        netlist_sha256=raw_hashes[("inline-component-control", "first")],
-        repeat_netlist_sha256=raw_hashes[("inline-component-control", "repeat")],
-        normalized_netlist_sha256=normalized_hashes[("inline-component-control", "first")],
-        repeat_normalized_netlist_sha256=normalized_hashes[("inline-component-control", "repeat")],
-        coverage_status=unsupported_paths.status,
-        lint_status=unmapped_inline_coverage.status,
-        supported_data_paths=unsupported_paths.supported_data_path_count,
-        unsupported_component_references=";".join(
-            item.component_reference for item in unsupported_paths.unsupported_multi_pin_paths or ()
-        ),
-        usb_reference_findings="none",
-        usb_unmapped_topology_findings=";".join(
-            item.subject for item in unmapped_topology_findings
-        ),
+        log=log,
     )
-
     fault = reports[("external-bypass", "first")]
     fault_findings = tuple(
         item for item in fault.findings if item.rule_id == "bus.usb_data_path_mismatch"

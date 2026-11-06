@@ -53,14 +53,28 @@ def unsupported_usb_multi_pin_path_candidates(
     ):
         return ()
 
-    endpoint_nets = (
-        connector.positive_net,
-        phy.positive_net,
-        connector.negative_net,
-        phy.negative_net,
+    endpoint_nets = tuple(
+        net.casefold()
+        for net in (
+            connector.positive_net,
+            phy.positive_net,
+            connector.negative_net,
+            phy.negative_net,
+        )
     )
-    if len({net.casefold() for net in endpoint_nets}) != 4:
+    split_endpoint_nets = (
+        endpoint_nets[0] != endpoint_nets[1]
+        and endpoint_nets[2] != endpoint_nets[3]
+        and len(set(endpoint_nets)) == 4
+    )
+    shared_data_net_attachment = (
+        endpoint_nets[0] == endpoint_nets[1]
+        and endpoint_nets[2] == endpoint_nets[3]
+        and endpoint_nets[0] != endpoint_nets[2]
+    )
+    if not (split_endpoint_nets or shared_data_net_attachment):
         return ()
+    topology = "split_endpoint_nets" if split_endpoint_nets else "shared_data_net_attachment"
 
     pin_owner: dict[str, tuple[str, str]] = {}
     component_pin_counts: dict[str, int] = {}
@@ -108,16 +122,19 @@ def unsupported_usb_multi_pin_path_candidates(
             continue
 
         assigned_pins = (
-            tuple(by_net.get(connector.positive_net.casefold(), ())),
-            tuple(by_net.get(phy.positive_net.casefold(), ())),
-            tuple(by_net.get(connector.negative_net.casefold(), ())),
-            tuple(by_net.get(phy.negative_net.casefold(), ())),
+            tuple(sorted(by_net.get(connector.positive_net.casefold(), ()), key=str.casefold)),
+            tuple(sorted(by_net.get(phy.positive_net.casefold(), ()), key=str.casefold)),
+            tuple(sorted(by_net.get(connector.negative_net.casefold(), ()), key=str.casefold)),
+            tuple(sorted(by_net.get(phy.negative_net.casefold(), ()), key=str.casefold)),
         )
         if any(not group for group in assigned_pins):
             continue
         if any(pin_net_counts.get(pin.casefold()) != 1 for group in assigned_pins for pin in group):
             continue
-        flattened_pins = tuple(pin.casefold() for group in assigned_pins for pin in group)
+        candidate_pin_groups = (
+            (assigned_pins[0], assigned_pins[2]) if shared_data_net_attachment else assigned_pins
+        )
+        flattened_pins = tuple(pin.casefold() for group in candidate_pin_groups for pin in group)
         if len(set(flattened_pins)) != len(flattened_pins):
             continue
         candidates.append(
@@ -129,6 +146,7 @@ def unsupported_usb_multi_pin_path_candidates(
                 component_footprint=component.footprint,
                 component_pin_count=component_pin_counts[reference_key],
                 port_group=connector.port_group or phy.port_group,
+                topology=topology,
                 positive_connector_net=connector.positive_net,
                 positive_phy_net=phy.positive_net,
                 positive_connector_component_pins=assigned_pins[0],

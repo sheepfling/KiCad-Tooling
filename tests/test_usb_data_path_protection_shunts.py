@@ -114,13 +114,21 @@ def test_stale_or_faulty_shunt_map_fails_closed(fault: str) -> None:
     assert path_findings[0].evidence["line"] == ("protection_shunt",)
     assert path_findings[0].subject == "usb-port-1: USB protection shunt map"
     assert RULE_ID not in {item.rule_id for item in report.findings}
+    assert "bus.usb_unmapped_multi_pin_topology" not in {item.rule_id for item in report.findings}
     assert report.usb_peer_reference_coverage.supported_data_path_count == 0
 
 
 def test_unmapped_array_and_unexplained_data_peer_remain_unsupported() -> None:
     unmapped = lint_report(protection_shunt_netlist(), None)
-    assert RULE_ID not in {item.rule_id for item in unmapped.findings}
+    assert (
+        sum(item.rule_id == "bus.usb_unmapped_multi_pin_topology" for item in unmapped.findings)
+        == 1
+    )
     assert unmapped.usb_peer_reference_coverage.supported_data_path_count == 0
+    assert (
+        unmapped.usb_peer_reference_coverage.unsupported_multi_pin_paths[0].topology
+        == "shared_data_net_attachment"
+    )
 
     observed = protection_shunt_netlist()
     extra = observed.model_copy(

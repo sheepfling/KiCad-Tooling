@@ -214,6 +214,7 @@ class UsbPeerUnsupportedMultiPinPath:
     negative_phy_net: str
     negative_connector_component_pins: tuple[str, ...]
     negative_phy_component_pins: tuple[str, ...]
+    topology: Literal["split_endpoint_nets", "shared_data_net_attachment"] = "split_endpoint_nets"
 
 
 @dataclass(frozen=True, slots=True)

@@ -177,6 +177,7 @@ def _unsupported_multi_pin_path_entry(
         component_footprint=item.component_footprint,
         component_pin_count=item.component_pin_count,
         port_group=item.port_group,
+        topology=item.topology,
         positive_connector_net=item.positive_connector_net,
         positive_phy_net=item.positive_phy_net,
         positive_connector_component_pins=item.positive_connector_component_pins,

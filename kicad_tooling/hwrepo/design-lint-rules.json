@@ -9765,20 +9765,24 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, with complete component pin inventory and exact net membership",
-      "predicate": "For a fitted USB 2.0 connector and PHY pair, report a REVIEW candidate when one fitted multi-pin component has uniquely assigned native pins on distinct connector-side and PHY-side nets for both D+ and D-, and the typed scan cannot establish a supported path. A project-authored USB data-path map for the same connector, PHY, and port group delegates stale topology to bus.usb_data_path_mismatch instead. The candidate asks for exact part-pin review and an authored path map; it does not infer that the multi-pin component conducts data or that endpoint references should be common.",
+      "predicate": "For a fitted USB 2.0 connector and PHY pair, report a REVIEW candidate when one fitted, fully inventoried multi-pin component with uniquely assigned pins either spans distinct connector-side and PHY-side nets for both D+ and D-, or taps both shared direct D+/D- nets, and the typed scan cannot establish a supported path. A project-authored USB data-path map for the same connector, PHY, and port group delegates stale topology to bus.usb_data_path_mismatch instead. The candidate asks for exact part-pin review and an authored map; it does not infer component function, conduction, a confirmed data path, or common references.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
-        "A component with pins on both endpoint-side nets is only an unsupported-topology candidate. The native netlist does not prove pass-through behavior, an actual electrical path, or part function.",
-        "The rule recognizes only complete, uniquely assigned, non-DNP multi-pin components spanning both nets of both USB 2.0 data lines. Single-line, incomplete, ambiguous, missing-identity, direct, and DNP topologies remain outside this predicate.",
+        "A component with pins on both split endpoint-side nets or both shared direct data nets is only an unsupported-topology candidate. The native netlist does not prove pass-through behavior, protection function, an actual electrical path, or part function.",
+        "The rule recognizes only complete-identity, non-DNP multi-pin components with uniquely assigned pins on both data lines. Split-path candidates need four distinct endpoint-side nets; shared-net attachments need one common direct net per data line. Single-line, mixed direct/series, incomplete, ambiguous, missing-identity, and DNP topologies remain outside this predicate.",
         "A matching endpoint and port-group map suppresses this coverage prompt and leaves exact topology mismatches to bus.usb_data_path_mismatch. The map records project intent but does not validate datasheet pinout, device conduction, PCB copper, or off-board continuity.",
         "The prompt requests data-path coverage only. It does not infer a common reference, bonding, isolation, defect, USB compliance, or electrical approval."
       ],
       "fault_fixtures": [
         "tests.test_usb_unmapped_multi_pin_topology.test_unmapped_inline_usb_topology_requests_a_project_map_without_claiming_a_path",
+        "tests.test_usb_unmapped_multi_pin_topology.test_unmapped_multi_pin_attachment_to_shared_usb_data_nets_requests_review",
         "tests.test_usb_unmapped_multi_pin_topology.test_map_for_another_data_port_group_does_not_suppress_topology_prompt",
         "tests.test_usb_unmapped_multi_pin_topology.test_project_can_configure_or_ignore_the_unmapped_topology_prompt",
+        "tests.test_usb_data_path_protection_shunts.test_unmapped_array_and_unexplained_data_peer_remain_unsupported",
+        "tests.test_usb_data_path_protection_shunts.test_stale_or_faulty_shunt_map_fails_closed",
+        "tests.test_design_lint_mcp_parity_usb_protection_shunts.test_usb_protection_shunt_review_cli_mcp_parity",
         "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable",
         "tests.test_design_lint_mcp_parity_usb_data.test_usb_inline_component_map_parity"
       ],
@@ -9786,12 +9790,17 @@
         "tests.test_usb_unmapped_multi_pin_topology.test_exact_project_map_resolves_unmapped_topology_prompt",
         "tests.test_usb_unmapped_multi_pin_topology.test_direct_usb_path_is_not_a_multi_pin_topology_candidate",
         "tests.test_usb_unmapped_multi_pin_topology.test_dnp_component_is_not_reported_as_an_unmapped_path_candidate",
+        "tests.test_usb_unmapped_multi_pin_topology.test_exact_protection_map_covers_shared_usb_data_net_attachment",
+        "tests.test_usb_unmapped_multi_pin_topology.test_dnp_multi_pin_shared_data_net_attachment_is_not_reported",
+        "tests.test_usb_unmapped_multi_pin_topology.test_single_line_multi_pin_attachment_is_outside_the_usb_data_pair_predicate",
         "tests.test_usb_unmapped_multi_pin_topology.test_endpoint_pair_with_authored_but_stale_map_uses_path_mismatch_only",
+        "tests.test_design_lint_mcp_parity_usb_protection_shunts.test_usb_protection_shunt_review_cli_mcp_parity",
         "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable",
         "tests.test_design_lint_mcp_parity_usb_data.test_usb_inline_component_map_parity"
       ],
       "metamorphic_fixtures": [
         "tests.test_usb_unmapped_multi_pin_topology.test_unmapped_topology_fingerprint_is_stable_under_netlist_order",
+        "tests.test_usb_unmapped_multi_pin_topology.test_shared_data_net_attachment_fingerprint_is_stable_under_netlist_order",
         "tests.test_usb_unmapped_multi_pin_topology.test_exact_project_map_resolves_unmapped_topology_prompt"
       ],
       "required_native_fixtures": [

@@ -171,18 +171,28 @@ def peer_reference_report_lines(report: DesignLintReport) -> list[str]:
                     f"{item.component_reference} ({item.component_symbol}; "
                     f"{item.component_footprint}; {item.component_pin_count} native pins)"
                 )
-                lines.append(
-                    f"        D+: {item.positive_connector_net} "
-                    f"[{', '.join(item.positive_connector_component_pins)}] / "
-                    f"{item.positive_phy_net} "
-                    f"[{', '.join(item.positive_phy_component_pins)}]"
-                )
-                lines.append(
-                    f"        D-: {item.negative_connector_net} "
-                    f"[{', '.join(item.negative_connector_component_pins)}] / "
-                    f"{item.negative_phy_net} "
-                    f"[{', '.join(item.negative_phy_component_pins)}]"
-                )
+                if item.topology == "shared_data_net_attachment":
+                    lines.append(
+                        f"        D+ shared net: {item.positive_connector_net} "
+                        f"[{', '.join(item.positive_connector_component_pins)}]"
+                    )
+                    lines.append(
+                        f"        D- shared net: {item.negative_connector_net} "
+                        f"[{', '.join(item.negative_connector_component_pins)}]"
+                    )
+                else:
+                    lines.append(
+                        f"        D+: {item.positive_connector_net} "
+                        f"[{', '.join(item.positive_connector_component_pins)}] / "
+                        f"{item.positive_phy_net} "
+                        f"[{', '.join(item.positive_phy_component_pins)}]"
+                    )
+                    lines.append(
+                        f"        D-: {item.negative_connector_net} "
+                        f"[{', '.join(item.negative_connector_component_pins)}] / "
+                        f"{item.negative_phy_net} "
+                        f"[{', '.join(item.negative_phy_component_pins)}]"
+                    )
             lines.append(
                 "      An exact project-authored data-path map is required to evaluate "
                 "these multi-pin topologies."

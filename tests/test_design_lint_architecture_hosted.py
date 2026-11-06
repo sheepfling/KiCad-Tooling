@@ -46,6 +46,7 @@ HOSTED_PCB_GEOMETRY_MODULES = (
 HOSTED_USB_DATA_PATH_MODULES = (
     "ci_hosted_usb_data_paths.py",
     "ci_hosted_usb_data_path_cases.py",
+    "ci_hosted_usb_unmapped_topologies.py",
 )
 HOSTED_USB_REQUIREMENTS_MODULE = "ci_hosted_usb_requirements.py"
 HOSTED_POWER_PATH_MODULES = (

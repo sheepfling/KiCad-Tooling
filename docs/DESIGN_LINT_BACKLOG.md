@@ -755,10 +755,12 @@ standalone parity work when it closes a demonstrated feature regression.
 - **LINT-276 unmapped multi-pin USB topology:** The public four-port USB hub
   screen recorded four multi-pin protection-array candidates in USB reference
   coverage, but the default finding list did not ask the project to resolve
-  that coverage gap. The new default-REVIEW candidate prompts for exact part-pin
-  review and a project-authored USB data-path map. It does not claim a path,
-  component conduction, a defect, or common reference. Synthetic tests cover
-  an exact mapped control, direct and DNP controls, stale endpoint-map
+  that coverage gap. LINT-276 now prompts for both a fitted part spanning four
+  distinct endpoint-side nets and a fitted multi-pin part tapping the two
+  shared direct D+/D− nets. Both are default-REVIEW prompts for exact part-pin
+  review and a project-authored map; neither claims component function,
+  conduction, a confirmed path, a defect, or common reference. Synthetic tests
+  cover exact mapped controls, direct and DNP controls, stale endpoint-map
   precedence, policy, ignores, stable evidence, native exports, and CLI/MCP
   parity. The pinned public screen remains applicability evidence only; owner
   dispositions and reviewer value are unmeasured.
@@ -14378,28 +14380,28 @@ control are documented in the
   action needed to establish whether the candidate is a USB path.
 - **Predicate:** Reuse the unsupported-topology scan. Require fitted USB 2.0
   connector and PHY endpoint groups plus one fitted multi-pin component with
-  uniquely assigned native pins on four distinct endpoint-side nets covering
-  both D+ and D−. A map suppresses the prompt only when it names the same
-  connector, PHY, and port group; stale topology in that scope goes to
-  `bus.usb_data_path_mismatch`. Otherwise emit one REVIEW prompt with exact
-  net, pin, component, port-group, and optional map-digest evidence.
+  uniquely assigned native pins either on four distinct endpoint-side nets
+  covering both D+ and D−, or on both shared direct D+/D− nets. A map suppresses
+  the prompt only when it names the same connector, PHY, and port group; stale
+  topology in that scope goes to `bus.usb_data_path_mismatch`. Otherwise emit
+  one REVIEW prompt with exact net, pin, component, topology, port-group, and
+  optional map-digest evidence.
 - **Boundary:** The native netlist does not prove that the component passes
   data or that those nets form a physical path. The prompt asks the reviewer to
   confirm the part pinout and author an exact map, or explain why coverage is
-  intentionally absent. It does not infer common reference, isolation,
-  bonding, a defect, or USB compliance. DNP, direct, incomplete, ambiguous,
-  and incomplete-identity cases remain outside this predicate.
+  intentionally absent. It does not infer component function, conduction,
+  common reference, isolation, bonding, a defect, or USB compliance. DNP,
+  single-line, mixed direct/series, incomplete, ambiguous, and
+  incomplete-identity cases remain outside this predicate.
 - **Evidence:** Tooling-owned inline-device controls verify that an exact
   current map clears the prompt and stale maps use the existing topology
   mismatch finding. Direct and DNP controls, mapping-order stability, policy
-  and ignore behavior, and a wrong-port-group map control passed in the
-  focused local interface-lint selection (9 tests); the dedicated CLI/MCP
-  report-parity selection passed separately (1 test). Exact-version native
-  exports are covered by the pinned fixture lane, but the 2026-11-05 local
-  attempt stopped before KiCad ran because the runner could not access its
-  Docker API socket. Hosted run `v0.5.3rc425` (`42002849499`) passed the
-  selected native fixtures on KiCad 10.0.0 and 10.0.5 but exposed one
-  wrong-port-group map suppressing coverage. The follow-up scopes mapped
+  and ignore behavior, a wrong-port-group map control, and the new shared-data
+  attachment fault and controls passed with CLI/MCP parity and architecture
+  checks in the focused local selection (143 tests). The Docker-backed,
+  digest-pinned native fixture lane passed on KiCad 10.0.0 and 10.0.5 (2 tests).
+  Ruff, Pyright, and rumdl also passed. Earlier hosted run `v0.5.3rc425`
+  (`42002849499`) exposed one wrong-port-group map suppressing coverage. The follow-up scopes mapped
   component exclusions by connector, PHY, and port group through the shared
   USB map-identity service; its regression passes locally. The public USB hub
   screen is linked under LINT-031 and contributes no defect label or

@@ -8,24 +8,25 @@ it does not represent a real product or validate device behavior. Connector
 power, shielding, signal integrity, and PCB routing remain outside this
 regression.
 
-| Fixture                                                | Expected path                                                                                | Rule result                                                               |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `integrated-phy-direct.kicad_sch`                      | Connector D+/D− directly to a synthetic integrated STM32 PHY                                 | No USB data-path finding                                                  |
-| `external-phy-series-control.kicad_sch`                | 27 Ω on each TUSB2036 data line; connector and PHY share GND                                 | No USB data-path or reference review                                      |
-| `external-phy-series-reference-bond-control.kicad_sch` | 27 Ω data paths; USB_GND and BOARD_GND use a mapped fitted 0R bond                           | No USB data-path or reference review                                      |
-| `external-phy-series-reference-fault.kicad_sch`        | Same series paths; connector and PHY returns use separate nets                               | One reference review with exact resistor evidence                         |
-| `external-phy-direct-bypass-fault.kicad_sch`           | Connector data lines bypass both resistors before the external PHY                           | One finding for D+ and one for D−                                         |
-| `inline-protection-control.kicad_sch`                  | Exact six-pin pass-through component with mapped data and reference pins                     | No USB data-path finding                                                  |
-| `inline-protection-control.kicad_sch` (no-map replay)  | Same native export, evaluated without a project USB data-path map                            | One `bus.usb_unmapped_multi_pin_topology` REVIEW; no confirmed path       |
-| `inline-protection-ground-fault.kicad_sch`             | Same path with the inline component's required GND pin explicitly unconnected                | Findings for D+ and D− with U2.5 evidence                                 |
-| `inline-protection-split-reference.kicad_sch`          | Exact mapped inline path; connector return is USB_GND and PHY/protection return is BOARD_GND | One USB reference review unless separate references are explicitly mapped |
-| `inline-protection-reference-bond-fault.kicad_sch`     | Same inline path; the authored R3 0R bond is absent                                          | One exact USB reference-path finding naming the absent R3                 |
-| `inline-protection-reference-bond-control.kicad_sch`   | Same inline path; USB_GND and BOARD_GND use a mapped fitted 0R bond                          | No USB path or reference finding; exact bond map is required              |
-| `protection-shunt-split-reference.kicad_sch`           | Direct data pair with an exact six-pin shunt map; connector and PHY references differ        | One reference review with the shunt's complete pin-map evidence           |
-| `protection-shunt-common-reference.kicad_sch`          | Same shunt with an explicit common reference policy                                          | No USB path or reference finding                                          |
-| `protection-shunt-pin-fault.kicad_sch`                 | Shunt pin U6.2 is incorrectly assigned to USB_DP                                             | One exact mapped shunt-pin finding; no duplicate peer review              |
-| `inline-protection-shunt-control.kicad_sch`            | Mapped inline path with U6 taps on USB_DP_PORT and USB_DM_PHY                                | One supported path; no path or peer-reference finding                     |
-| `inline-protection-shunt-fault.kicad_sch`              | U6.3 D− tap is assigned to USB_DM_SHUNT_FAULT                                                | One exact shunt-pin finding; no supported peer path                       |
+| Fixture                                                      | Expected path                                                                                | Rule result                                                               |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `integrated-phy-direct.kicad_sch`                            | Connector D+/D− directly to a synthetic integrated STM32 PHY                                 | No USB data-path finding                                                  |
+| `external-phy-series-control.kicad_sch`                      | 27 Ω on each TUSB2036 data line; connector and PHY share GND                                 | No USB data-path or reference review                                      |
+| `external-phy-series-reference-bond-control.kicad_sch`       | 27 Ω data paths; USB_GND and BOARD_GND use a mapped fitted 0R bond                           | No USB data-path or reference review                                      |
+| `external-phy-series-reference-fault.kicad_sch`              | Same series paths; connector and PHY returns use separate nets                               | One reference review with exact resistor evidence                         |
+| `external-phy-direct-bypass-fault.kicad_sch`                 | Connector data lines bypass both resistors before the external PHY                           | One finding for D+ and one for D−                                         |
+| `inline-protection-control.kicad_sch`                        | Exact six-pin pass-through component with mapped data and reference pins                     | No USB data-path finding                                                  |
+| `inline-protection-control.kicad_sch` (no-map replay)        | Same native export, evaluated without a project USB data-path map                            | One `bus.usb_unmapped_multi_pin_topology` REVIEW; no confirmed path       |
+| `inline-protection-ground-fault.kicad_sch`                   | Same path with the inline component's required GND pin explicitly unconnected                | Findings for D+ and D− with U2.5 evidence                                 |
+| `inline-protection-split-reference.kicad_sch`                | Exact mapped inline path; connector return is USB_GND and PHY/protection return is BOARD_GND | One USB reference review unless separate references are explicitly mapped |
+| `inline-protection-reference-bond-fault.kicad_sch`           | Same inline path; the authored R3 0R bond is absent                                          | One exact USB reference-path finding naming the absent R3                 |
+| `inline-protection-reference-bond-control.kicad_sch`         | Same inline path; USB_GND and BOARD_GND use a mapped fitted 0R bond                          | No USB path or reference finding; exact bond map is required              |
+| `protection-shunt-split-reference.kicad_sch`                 | Direct data pair with an exact six-pin shunt map; connector and PHY references differ        | One reference review with the shunt's complete pin-map evidence           |
+| `protection-shunt-split-reference.kicad_sch` (no-map replay) | Same native export evaluated without the authored path map                                   | One LINT-276 REVIEW for U6 on shared D+/D− nets; no confirmed path        |
+| `protection-shunt-common-reference.kicad_sch`                | Same shunt with an explicit common reference policy                                          | No USB path or reference finding                                          |
+| `protection-shunt-pin-fault.kicad_sch`                       | Shunt pin U6.2 is incorrectly assigned to USB_DP                                             | One exact mapped shunt-pin finding; no duplicate peer review              |
+| `inline-protection-shunt-control.kicad_sch`                  | Mapped inline path with U6 taps on USB_DP_PORT and USB_DM_PHY                                | One supported path; no path or peer-reference finding                     |
+| `inline-protection-shunt-fault.kicad_sch`                    | U6.3 D− tap is assigned to USB_DM_SHUNT_FAULT                                                | One exact shunt-pin finding; no supported peer path                       |
 
 SHA-256 hashes of the version-controlled schematic inputs:
 
@@ -126,8 +127,10 @@ exercise LINT-086's review and control paths while LINT-049 validates the
 complete component identity and pin map. The pin-fault variant moves U6.2 onto
 USB_DP and checks that LINT-049 reports that exact mismatch without a duplicate
 peer-reference finding. These source fixtures are registered in the
-digest-pinned native lane. Exact local native execution is unavailable in the
-current environment. Hosted acceptance for `v0.5.0rc194` (GitHub Actions run
+digest-pinned native lane. The no-map replay feeds the same native export into
+LINT-276 and asks for exact part-pin/map review because U6 taps both shared USB
+data nets. It does not infer a protection function, data-path conduction, or a
+defect. Hosted acceptance for `v0.5.0rc194` (GitHub Actions run
 `38309295549`) passed the source-hashed split-reference, common-reference, and
 pin-fault cases on both KiCad 10.0.0 and 10.0.5. The same rule-scoped run
 passed the SuperSpeed fault and common-reference control lane.

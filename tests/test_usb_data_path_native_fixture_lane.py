@@ -101,6 +101,7 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-data-path-fixture/inline-component-peer-reference-bond-fault",
         "usb-data-path-fixture/inline-component-peer-reference-bond-control",
         "usb-data-path-fixture/protection-shunt-split-reference",
+        "usb-data-path-fixture/protection-shunt-unmapped-topology",
         "usb-data-path-fixture/protection-shunt-common-reference",
         "usb-data-path-fixture/protection-shunt-pin-fault",
         "usb-data-path-fixture/external-protection-contract",
@@ -198,6 +199,14 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
     assert shunt_split["usb_path_findings"] == "none"
     assert shunt_split["usb_reference_findings"] == (
         "J1 / U1: USB reference-domain review (port 1)"
+    )
+    unmapped_shunt = results["usb-data-path-fixture/protection-shunt-unmapped-topology"]
+    assert unmapped_shunt["status"] == "PASS"
+    assert unmapped_shunt["coverage_status"] == "NO_SUPPORTED_PEER_PATHS"
+    assert unmapped_shunt["lint_status"] == "REVIEW"
+    assert unmapped_shunt["unsupported_component_references"] == "U6"
+    assert unmapped_shunt["usb_unmapped_topology_findings"] == (
+        "J1 / U1: unmapped USB multi-pin data attachment port 1 (U6)"
     )
     shunt_common = results["usb-data-path-fixture/protection-shunt-common-reference"]
     assert shunt_common["status"] == "PASS"
