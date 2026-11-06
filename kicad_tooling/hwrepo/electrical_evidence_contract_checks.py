@@ -336,7 +336,9 @@ def retained_electrical_contract_checks(
         if not isinstance(energy_storage, electrical_contracts.AnalysisNotApplicable):
             raise ValueError("Energy-storage requirements remain pending")  # noqa: TRY004
         checks.append(
-            ElectricalCheck(id="energy-storage", status="NOT_APPLICABLE", detail=energy_storage.reason)
+            ElectricalCheck(
+                id="energy-storage", status="NOT_APPLICABLE", detail=energy_storage.reason
+            )
         )
     if isinstance(connector_contact_ratings, electrical_contracts.ConnectorContactRatingAnalysis):
         assert netlist is not None
