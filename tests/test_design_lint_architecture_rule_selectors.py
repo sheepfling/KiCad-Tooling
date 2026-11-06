@@ -235,6 +235,10 @@ RULE_NODE_CASES = (
         "tests/test_rs485_data_input_output_same_net.py::test_explicit_rs485_driver_input_and_receiver_output_on_one_net_are_reviewed",
     ),
     (
+        "bus.rs485_generic_connector_pair_review",
+        "tests/test_rs485_generic_connector_pair_review.py::test_generic_contacts_on_exact_identified_rs485_pair_emit_review",
+    ),
+    (
         "bus.rs485_ab_same_net",
         "tests/test_rs485_ab_same_net.py::test_explicit_rs485_a_b_pins_on_one_net_request_review",
     ),

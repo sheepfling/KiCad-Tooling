@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 274 rules are implemented with synthetic regression coverage.
+The following 275 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 274 active rules.
+The catalog currently contains 275 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -588,6 +588,7 @@ skipped under prerelease policy.
 - `bus.rs485_peer_reference_review`
 - `bus.rs485_data_direction_label_mismatch`
 - `bus.rs485_data_input_output_same_net`
+- `bus.rs485_generic_connector_pair_review`
 - `bus.rs485_ab_same_net`
 - `bus.rs485_line_label_mismatch`
 - `bus.rs485_line_on_named_rail`
@@ -3557,7 +3558,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 274 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 275 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -19087,6 +19088,40 @@ acceptance threads while new lint features proceed:
   interface_lint and design_lint_rule(rule_id="bus.serial_generic_connector_pair_review")'`.
   The exact native test uses
   `KICAD_RUN_NATIVE_SERIAL_GENERIC_CONNECTOR_FIXTURES=1`.
+
+#### LINT-294 — Prompt review of generic connector pins assigned to RS-485 pairs
+
+- **Rule:** `bus.rs485_generic_connector_pair_review`, default `review`.
+- **Trigger:** A fitted U/IC endpoint has an explicitly recognized RS-485
+  identity, complete unique native pin metadata, and exactly one A and one B
+  pin on distinct, unambiguous nets. A completely inventoried connector
+  candidate has generic `Pin_N` contacts on both exact nets. A source-matched
+  connector map assigning every matched contact to the corresponding A/B role
+  and exact net, or an explicit `NOT_APPLICABLE` connector disposition,
+  suppresses the prompt.
+- **Purpose:** Generic connector contacts can hide a possible RS-485 line pair
+  from a schematic reviewer. The prompt asks whether the connector belongs to
+  that interface and whether its exact pinout is documented. It does not infer
+  connector identity or participation, nor require return, shield, or supply
+  contacts to be common.
+- **Evidence and limits:** Candidate evidence retains the connector pin count,
+  generic contacts and functions, exact line nets, and fitted native endpoint
+  pins. DNP components, incomplete or inconsistent inventories, ambiguous
+  assignments, duplicate roles, same-net endpoints, and one-sided connector
+  matches stay quiet. The rule does not establish off-board wiring or PCB
+  copper continuity.
+- **Fixtures:** Synthetic generic-pin fault, named-role control,
+  source-matched map, explicit not-applicable disposition, incomplete metadata,
+  ambiguous assignment, DNP state, policy override, exact ignore, and
+  mapping-order cases. Tooling-owned fault/control schematics are hash-pinned
+  and exported twice with digest-pinned KiCad 10.0.0 and 10.0.5 images. These
+  establish deterministic fixture behavior and export compatibility, not field
+  precision or reviewer value.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_rs485_generic_connector_pair_review.py -m 'design_lint and
+  interface_lint and design_lint_rule(rule_id="bus.rs485_generic_connector_pair_review")'`.
+  The exact native test uses
+  `KICAD_RUN_NATIVE_RS485_GENERIC_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate
 

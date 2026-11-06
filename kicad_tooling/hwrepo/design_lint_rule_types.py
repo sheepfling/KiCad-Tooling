@@ -137,6 +137,7 @@ DesignLintRuleId = Literal[
     "bus.i2c_peer_reference_review",
     "bus.i2c_generic_connector_pair_review",
     "bus.serial_generic_connector_pair_review",
+    "bus.rs485_generic_connector_pair_review",
     "bus.spi_generic_connector_triad_review",
     "bus.i2c_signal_label_role_mismatch",
     "bus.i2c_signal_on_named_rail",

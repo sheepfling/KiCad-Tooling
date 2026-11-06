@@ -787,7 +787,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 274 active rules.
+The catalog currently contains 275 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -6624,6 +6624,15 @@ scope. A shared net may be intentional for echo or single-wire operation; the
 default is `review`, and the rule does not infer the required transceiver mode
 or PCB continuity. See the
 [fixture README](../tests/fixtures/design_lint/rs485-data-same-net/README.md).
+
+The configurable `bus.rs485_generic_connector_pair_review` rule asks whether
+generic connector contacts on both exact line nets of an explicitly identified
+RS-485 transceiver have a reviewed pinout. It requires complete native
+connector and endpoint inventories and distinct A/B assignments. A current
+source-matched A/B pin map or `NOT_APPLICABLE` disposition suppresses the
+prompt. The check does not infer connector purpose, common return or supply
+intent, off-board wiring, or PCB copper. Its default is `review`; see the
+[synthetic fixture record](../tests/fixtures/design_lint/rs485-generic-connector-native/README.md).
 
 When the reviewed bus design identifies the duplex arrangement and local
 electrical strategy, record each differential pair, endpoint pin map,

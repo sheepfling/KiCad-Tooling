@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from .connector_coverage_models import ConnectorCoverageReport
+from .design_lint_rs485_generic_connector_candidates import (
+    rs485_generic_connector_pair_review_candidates,
+)
 from .design_lint_rs485_peer_candidate_evidence import (
     Rs485PeerReferenceCandidate,
     Rs485PeerReferenceFindingEvidence,
@@ -22,6 +26,8 @@ def rs485_candidates(
     observed: NetlistContract,
     scan: Rs485PeerReferenceScan | None = None,
     component_peer_findings: tuple[Candidate, ...] = (),
+    reviewed_connector_references: tuple[str, ...] = (),
+    connector_coverage: ConnectorCoverageReport | None = None,
 ) -> tuple[Candidate, ...]:
     """Combine RS-485 data-role and mapped reference-review candidates."""
     reference_candidates = (
@@ -36,6 +42,11 @@ def rs485_candidates(
         *rs485_line_on_named_rail_candidates(observed),
         *rs485_signal_on_named_rail_candidates(observed),
         *rs485_unconnected_data_pin_candidates(observed),
+        *rs485_generic_connector_pair_review_candidates(
+            observed,
+            reviewed_connector_references,
+            connector_coverage,
+        ),
     )
 
 

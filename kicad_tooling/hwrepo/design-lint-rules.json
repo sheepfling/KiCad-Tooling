@@ -8060,6 +8060,55 @@
       "implementation_owner": "kicad_tooling/hwrepo/rs485_same_net.py#rs485_data_input_output_same_net_candidates"
     },
     {
+      "rule_id": "bus.rs485_generic_connector_pair_review",
+      "title": "Generic connector contacts match an RS-485 A/B pair",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete connector and IC pin inventories, native functions, and exact net membership",
+      "predicate": "For each fitted U/IC endpoint with an explicitly recognized RS-485 identity, complete unique native pin inventory, exactly one A and one B pin function, and distinct exact net assignments, emit REVIEW when a completely inventoried connector candidate has generic Pin_N contacts on both exact line nets. A source-matched connector map assigning each such contact to the corresponding A/B role and exact net, or a NOT_APPLICABLE disposition, suppresses the prompt.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native fixture exports; the selected project exact version is checked before export"
+      ],
+      "limitations": [
+        "Recognition requires a bounded RS-485 transceiver identity marker and exact A/B native pin-function names on fitted U/IC references. Complete, unique connector and endpoint inventories, all required pin metadata, and one exact net assignment per counted pin are required; DNP, incomplete, duplicate-role, open, ambiguous, same-net, and one-sided groups remain quiet.",
+        "A source-matched connector map must cover every generic matched contact with the corresponding A/B role and exact net, or the connector must have a reviewed NOT_APPLICABLE disposition, to suppress the prompt. Stale, partial, or mismatched maps do not count as review evidence.",
+        "This is a configurable connector pinout review clue. It does not infer connector identity or RS-485 participation, establish the authoritative transceiver pinout, require returns, shields, or supplies to be common, establish off-board wiring, or prove PCB copper continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_rs485_generic_connector_pair_review.test_generic_contacts_on_exact_identified_rs485_pair_emit_review",
+        "tests.test_rs485_generic_connector_pair_review.test_rule_override_and_exact_ignore_remain_available",
+        "tests.test_design_lint_mcp_parity_rs485_generic_connector_pair.test_generic_rs485_connector_cli_mcp_parity",
+        "tests.test_rs485_generic_connector_native_fixture_lane.test_native_generic_connector_fault_and_named_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_rs485_generic_connector_pair_review.test_named_connector_roles_and_source_matched_map_suppress_review",
+        "tests.test_rs485_generic_connector_pair_review.test_not_applicable_disposition_named_functions_and_partial_map_are_controls",
+        "tests.test_rs485_generic_connector_pair_review.test_incomplete_dnp_unsupported_and_ambiguous_shapes_stay_quiet",
+        "tests.test_rs485_generic_connector_native_fixture_lane.test_native_generic_connector_fault_and_named_control"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_rs485_generic_connector_pair_review.test_report_is_stable_when_netlist_mappings_are_reordered",
+        "tests.test_rs485_generic_connector_native_fixture_registry.test_native_source_registry_is_hash_pinned_and_local"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_RS485_GENERIC_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/rs485_generic_connector_candidates.py#rs485_generic_connector_pairs",
+        "kicad_tooling/hwrepo/rs485_generic_connector_models.py#Rs485GenericConnectorPair",
+        "kicad_tooling/hwrepo/design_lint_rs485_generic_connector_candidates.py#rs485_generic_connector_pair_review_candidates",
+        "kicad_tooling/hwrepo/design_lint_rs485_generic_connector_candidate_evidence.py#Rs485GenericConnectorCandidate",
+        "kicad_tooling/hwrepo/rs485_line_functions.py#rs485_bus_line_role",
+        "kicad_tooling/hwrepo/rs485_data_functions.py#explicit_rs485_transceiver_identity",
+        "kicad_tooling/hwrepo/design_lint_rs485_candidates.py#rs485_candidates",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/rs485_generic_connector_candidates.py#rs485_generic_connector_pairs"
+    },
+    {
       "rule_id": "bus.rs485_line_on_named_rail",
       "title": "RS-485 transceiver bus line pin assigned to a named rail",
       "status": "active",
