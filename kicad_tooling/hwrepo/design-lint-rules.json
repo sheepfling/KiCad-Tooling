@@ -7267,6 +7267,53 @@
       "implementation_owner": "kicad_tooling/hwrepo/can_generic_connector_candidates.py#generic_can_connector_pairs"
     },
     {
+      "rule_id": "bus.i2c_generic_connector_pair_review",
+      "title": "Generic connector contacts match a recognized SDA/SCL pair",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete connector and IC pin inventories, native pin functions, pin electrical types, and exact net membership",
+      "predicate": "For each fitted U/IC endpoint with a complete, unique native pin inventory and exactly one uniquely assigned SDA function and one uniquely assigned SCL function on distinct nets, emit a REVIEW prompt when a fully inventoried connector candidate has one or more generic Pin_N contacts on each exact bus net. The prompt asks whether the connector is part of that I2C interface and whether its exact pinout is documented; it does not infer connector identity or intended electrical connections.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Both IC and connector inventories must be complete and unique, all native pin functions and electrical types must be present, and each counted pin must have exactly one net assignment. Incomplete, ambiguous, DNP, same-net, or one-sided groups remain quiet.",
+        "The heuristic recognizes only bounded SDA, SCL, I2C_SDA, and I2C_SCL functions on U/IC references. It does not infer I2C from net names, references, values, connector identity, or wiring conventions.",
+        "A source-matched connector pin map that assigns the contacts to SDA and SCL, or a reviewed NOT_APPLICABLE connector disposition, suppresses the prompt. Stale or incomplete maps do not count as review evidence.",
+        "The prompt does not prove that the connector is an I2C interface, establish bus topology, common grounds or power, off-board wiring, or PCB copper continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_i2c_generic_connector_pair_review.test_generic_contacts_on_exact_i2c_pair_emit_review",
+        "tests.test_i2c_generic_connector_pair_review.test_rule_override_and_exact_ignore_remain_available",
+        "tests.test_design_lint_mcp_parity_i2c_generic_connector_pair.test_generic_connector_review_cli_mcp_parity",
+        "tests.test_i2c_generic_connector_native_fixture_lane.test_native_generic_connector_fault_and_named_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_i2c_generic_connector_pair_review.test_named_roles_and_source_matched_pin_map_suppress_review",
+        "tests.test_i2c_generic_connector_pair_review.test_one_sided_pair_dnp_and_incomplete_inventories_are_quiet",
+        "tests.test_i2c_generic_connector_pair_review.test_ambiguous_assignments_and_not_applicable_disposition_are_quiet",
+        "tests.test_i2c_generic_connector_native_fixture_lane.test_native_generic_connector_fault_and_named_control"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_i2c_generic_connector_pair_review.test_report_is_stable_when_netlist_mappings_are_reordered",
+        "tests.test_i2c_generic_connector_native_fixture_registry.test_native_source_registry_is_hash_pinned_and_local"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I2C_GENERIC_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/i2c_generic_connector_candidates.py#generic_i2c_connector_pairs",
+        "kicad_tooling/hwrepo/i2c_generic_connector_models.py#I2cGenericConnectorPair",
+        "kicad_tooling/hwrepo/design_lint_i2c_generic_connector_candidates.py#generic_i2c_connector_pair_review_candidates",
+        "kicad_tooling/hwrepo/design_lint_i2c_generic_connector_candidate_evidence.py#I2cGenericConnectorCandidate",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/i2c_generic_connector_candidates.py#generic_i2c_connector_pairs"
+    },
+    {
       "rule_id": "bus.can_signal_on_named_rail",
       "title": "CAN/FDCAN controller signal pin is assigned directly to a named rail",
       "status": "active",

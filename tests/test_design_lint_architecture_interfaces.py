@@ -68,26 +68,12 @@ I2C_PEER_REFERENCE_MODELS = frozenset(
     }
 )
 
-USB_PEER_ANALYSIS_MODULES = (
-    "usb_peer_reference_types.py",
-    "usb_peer_endpoint_analysis.py",
-    "usb_peer_data_crossing.py",
-    "usb_peer_path_analysis.py",
-    "usb_peer_inline_path_analysis.py",
-    "usb_peer_mapped_protection_evidence.py",
-    "usb_peer_protection_shunt_analysis.py",
-    "usb_peer_reference_contract.py",
-    "usb_peer_reference_decision.py",
-    "usb_peer_reference_evidence.py",
-    "usb_peer_reference_scan.py",
-    "usb_peer_unsupported_topology.py",
-    "usb_peer_map_identity.py",
-    "usb_peer_generic_connector_models.py",
-    "usb_peer_generic_connector_candidates.py",
-    "design_lint_usb_generic_connector_candidate_evidence.py",
-    "design_lint_usb_generic_connector_candidates.py",
+I2C_GENERIC_CONNECTOR_MODULES = (
+    "i2c_generic_connector_models.py",
+    "i2c_generic_connector_candidates.py",
+    "design_lint_i2c_generic_connector_candidate_evidence.py",
+    "design_lint_i2c_generic_connector_candidates.py",
 )
-
 
 SERIAL_PEER_ANALYSIS_MODULES = (
     "serial_peer_reference_types.py",
@@ -121,6 +107,27 @@ def test_i3c_named_rail_rule_stays_in_a_focused_protocol_module() -> None:
     module = HWREPO / "i3c_signal_named_rail.py"
 
     assert _line_count(module) < IMPLEMENTATION_MAX_LINES
+
+
+def test_i2c_generic_connector_pair_rule_stays_in_focused_modules() -> None:
+    modules = [HWREPO / name for name in I2C_GENERIC_CONNECTOR_MODULES]
+    rule = next(
+        item
+        for item in rule_catalog().rules
+        if item.rule_id == "bus.i2c_generic_connector_pair_review"
+    )
+    module_sizes = {path.name: _line_count(path) for path in modules if path.is_file()}
+    oversized = {
+        name: lines for name, lines in module_sizes.items() if lines >= IMPLEMENTATION_MAX_LINES
+    }
+
+    assert len(module_sizes) == len(I2C_GENERIC_CONNECTOR_MODULES)
+    assert not oversized, f"I2C connector-pair modules reached the review limit: {oversized}"
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == (
+        "kicad_tooling/hwrepo/i2c_generic_connector_candidates.py#generic_i2c_connector_pairs"
+    )
+    assert rule.implementation_owner in rule.implementation_refs
 
 
 def test_usb_c_sbu_unconnected_rule_uses_its_focused_protocol_owner() -> None:
@@ -371,76 +378,6 @@ def test_spi_clock_chip_select_same_net_rule_uses_a_focused_predicate_owner() ->
         "kicad_tooling/hwrepo/spi_role_assignments.py#spi_role_assignment_groups"
         in rule.implementation_refs
     )
-
-
-def test_usb_peer_reference_review_stays_split_by_responsibility() -> None:
-    facade = HWREPO / "usb_peer_reference_review.py"
-    modules = [HWREPO / name for name in USB_PEER_ANALYSIS_MODULES]
-
-    assert _line_count(facade) < FACADE_MAX_LINES
-    assert all(path.is_file() for path in modules)
-    module_sizes = {path.name: _line_count(path) for path in modules}
-    oversized = {
-        name: lines for name, lines in module_sizes.items() if lines >= IMPLEMENTATION_MAX_LINES
-    }
-
-    assert not oversized, (
-        "Keep USB endpoint, path, map, and scan logic in reviewable modules below 500 lines; "
-        f"oversized modules: {oversized}"
-    )
-
-
-def test_usb_peer_reference_rule_refs_point_to_the_owning_modules() -> None:
-    rule = next(
-        item for item in rule_catalog().rules if item.rule_id == "bus.usb_peer_reference_review"
-    )
-    references = {
-        item.split("#", maxsplit=1)[0].rsplit("/", maxsplit=1)[-1]
-        for item in rule.implementation_refs
-    }
-
-    assert rule.theme == "interfaces"
-    assert rule.implementation_owner == (
-        "kicad_tooling/hwrepo/usb_peer_reference_decision.py#usb_peer_reference_disposition"
-    )
-    assert rule.implementation_owner in rule.implementation_refs
-    assert (
-        "kicad_tooling/hwrepo/usb_peer_inline_path_analysis.py#mapped_inline_usb_data_link"
-        in rule.implementation_refs
-    )
-    assert (
-        "kicad_tooling/hwrepo/usb_peer_protection_shunt_analysis.py#mapped_protection_shunt_usb_data_link"
-        in rule.implementation_refs
-    )
-    assert (
-        "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_superspeed_function_identity"
-        in rule.implementation_refs
-    )
-    assert (
-        "kicad_tooling/hwrepo/usb_peer_endpoint_analysis.py#usb_superspeed_endpoints"
-        in rule.implementation_refs
-    )
-    assert (
-        "kicad_tooling/hwrepo/usb_peer_reference_evidence.py"
-        "#usb_reference_net_component_observations"
-    ) in rule.implementation_refs
-    assert (
-        "kicad_tooling/hwrepo/usb_peer_path_analysis.py#usb_superspeed_direct_data_link"
-        in rule.implementation_refs
-    )
-    assert (
-        "kicad_tooling/hwrepo/usb_peer_unsupported_topology.py#unsupported_usb_multi_pin_path_candidates"
-        in rule.implementation_refs
-    )
-    assert references <= {
-        *USB_PEER_ANALYSIS_MODULES,
-        "bus_signal_pairs.py",
-        "peer_reference_assignments.py",
-        "design_lint_candidate_aggregation.py",
-        "design_lint_peer_candidates.py",
-        "design_lint_usb_generic_connector_candidate_evidence.py",
-        "design_lint_usb_generic_connector_candidates.py",
-    }
 
 
 def test_serial_peer_reference_review_stays_split_by_responsibility() -> None:

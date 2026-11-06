@@ -2410,6 +2410,34 @@ KICAD_RUN_NATIVE_CAN_GENERIC_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest 
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_generic_connector_pair_review")'
 ```
 
+## Review generic connector contacts on an I2C pair
+
+`bus.i2c_generic_connector_pair_review` asks for pinout review when a complete
+connector has generic `Pin_N` contacts on both exact SDA and SCL nets of a
+fitted, completely inventoried U/IC endpoint. A source-matched connector map
+assigning those contacts to SDA and SCL, or an explicit `NOT_APPLICABLE`
+connector disposition, suppresses the prompt. Named connector functions, DNP
+components, incomplete inventories, ambiguous assignments, and one-sided
+matches stay quiet. The heuristic does not infer connector identity, require
+common grounds or power, establish bus topology, or prove copper or off-board
+wiring. Project policy can set it to `block` or `off`, or ignore one exact
+finding.
+
+Synthetic generic-pin fault, named-role control, source-matched map, incomplete
+evidence, override, ignore, and mapping-order cases are covered. Tooling-owned
+KiCad schematics are exported twice using the digest-pinned KiCad 10.0.0 and
+10.0.5 images; see the
+[fixture record](../tests/fixtures/design_lint/i2c-generic-connector-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_i2c_generic_connector_pair_review.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2c_generic_connector_pair_review")'
+
+KICAD_RUN_NATIVE_I2C_GENERIC_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_i2c_generic_connector_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_generic_connector_pair_review")'
+```
+
 ## Review a mapped crystal load network
 
 Crystal checks require an explicit project-owned `design_lint.crystal_network_map`.

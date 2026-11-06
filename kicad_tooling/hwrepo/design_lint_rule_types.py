@@ -135,6 +135,7 @@ DesignLintRuleId = Literal[
     "bus.i2c_low_equivalent_resistance",
     "bus.i2c_multiple_pullup_rail_families",
     "bus.i2c_peer_reference_review",
+    "bus.i2c_generic_connector_pair_review",
     "bus.i2c_signal_label_role_mismatch",
     "bus.i2c_signal_on_named_rail",
     "bus.i3c_signal_on_named_rail",

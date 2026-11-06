@@ -14,6 +14,9 @@ from .design_lint_i2c_candidates import (
     i2c_address_theme_candidates,
     i2c_peer_reference_candidates,
 )
+from .design_lint_i2c_generic_connector_candidates import (
+    generic_i2c_connector_pair_review_candidates,
+)
 from .design_lint_i2c_pullup_candidates import i2c_pullup_theme_candidates
 from .design_lint_interfaces_usb_data_polarity import usb_data_polarity_label_candidates
 from .design_lint_rs485_candidates import rs485_candidates
@@ -58,6 +61,11 @@ def bus_candidates(inputs: BusCandidateInputs) -> tuple[Candidate, ...]:
             observed,
             inputs.i2c_peer_reference_scan,
             component_peer_findings,
+        ),
+        *generic_i2c_connector_pair_review_candidates(
+            observed,
+            inputs.reviewed_connector_references,
+            inputs.connector_coverage,
         ),
         *two_wire_signal_candidates(observed),
         *serial_signal_candidates(observed),

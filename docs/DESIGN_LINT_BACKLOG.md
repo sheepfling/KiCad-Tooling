@@ -722,6 +722,16 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **LINT-291 generic I2C connector pair review:** A complete connector with
+  generic `Pin_N` contacts on both exact SDA/SCL nets of a fitted, completely
+  inventoried U/IC endpoint prompts for pinout review. A source-matched map or
+  reviewed `NOT_APPLICABLE` disposition suppresses it. Named pins, DNP parts,
+  incomplete metadata, and ambiguous or one-sided assignments stay quiet.
+  The prompt does not infer connector purpose or common grounds and does not
+  prove bus topology, off-board wiring, or PCB continuity. Synthetic fault and
+  named-role control schematics are registered for repeated digest-pinned
+  KiCad 10.0.0/10.0.5 export; real-board applicability and reviewer value are
+  unmeasured.
 - **LINT-290 generic CAN connector pair review:** A complete connector with
   generic `Pin_N` contacts on both exact CANH/CANL nets of a fitted,
   completely inventoried U/IC endpoint prompts for pinout review. A
@@ -18943,6 +18953,39 @@ acceptance threads while new lint features proceed:
   interface_lint and design_lint_rule(rule_id="bus.can_generic_connector_pair_review")'`.
   The exact native test uses
   `KICAD_RUN_NATIVE_CAN_GENERIC_CONNECTOR_FIXTURES=1`.
+
+#### LINT-291 — Prompt review of generic connector pins assigned to I2C pairs
+
+- **Rule:** `bus.i2c_generic_connector_pair_review`, default `review`.
+- **Trigger:** A fitted U/IC endpoint has complete, unique native pin metadata
+  and exactly one SDA and SCL pin on distinct, unambiguous nets. A completely
+  inventoried connector candidate has generic `Pin_N` contacts on both exact
+  nets. A source-matched connector map assigning those contacts to SDA/SCL, or
+  an explicit `NOT_APPLICABLE` connector disposition, suppresses the prompt.
+- **Purpose:** Generic connector pins can conceal an external I2C interface in
+  the schematic netlist. The prompt asks whether the connector belongs to that
+  bus and whether its exact pinout is documented. It does not infer connector
+  identity or intended contact connections and does not declare grounds or
+  supply contacts common.
+- **Evidence and limits:** Candidate evidence retains the connector pin count,
+  generic contacts and functions, exact line nets, and recognized native SDA/
+  SCL endpoint assignments. DNP components, named connector roles, incomplete
+  or inconsistent inventories, ambiguous assignments, same-net endpoint
+  pairs, and one-sided connector matches stay quiet. The heuristic does not
+  establish bus topology, shield/return policy, off-board wiring, or PCB copper
+  continuity.
+- **Fixtures:** Synthetic generic-pin fault, named-role control, source-matched
+  connector map, explicit not-applicable disposition, incomplete metadata,
+  ambiguous assignment, override, exact ignore, and mapping-order cases.
+  Tooling-owned fault/control schematics are hash-pinned and exported twice
+  with the exact KiCad 10.0.0 and 10.0.5 container images. These establish
+  deterministic fixture behavior and export compatibility, not field
+  precision or reviewer value.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_i2c_generic_connector_pair_review.py -m 'design_lint and
+  interface_lint and design_lint_rule(rule_id="bus.i2c_generic_connector_pair_review")'`.
+  The exact native test uses
+  `KICAD_RUN_NATIVE_I2C_GENERIC_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate
 

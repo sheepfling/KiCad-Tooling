@@ -49,6 +49,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="can-generic-connector-pair",
     ),
     pytest.param(
+        "bus.i2c_generic_connector_pair_review",
+        "KICAD_RUN_NATIVE_I2C_GENERIC_CONNECTOR_FIXTURES",
+        "tests.test_i2c_generic_connector_native_fixture_lane."
+        "test_native_generic_connector_fault_and_named_control",
+        id="i2c-generic-connector-pair",
+    ),
+    pytest.param(
         "bus.spi_clock_control_data_same_net",
         "KICAD_RUN_NATIVE_SPI_CLOCK_CONTROL_SAME_NET_FIXTURES",
         "tests.test_spi_clock_control_same_net_native_fixture_lane."
