@@ -787,7 +787,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 276 active rules.
+The catalog currently contains 277 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -2523,6 +2523,35 @@ do not replace native endpoint pin functions for this rule.
 KICAD_RUN_NATIVE_SERIAL_GENERIC_CONNECTOR_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
   .venv/bin/python -I -m pytest tests/test_serial_generic_connector_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.serial_generic_connector_pair_review")'
+```
+
+## Review generic connector contacts on Ethernet PHY data pairs
+
+`bus.ethernet_generic_connector_pair_review` asks for pinout review when a
+complete connector has generic `Pin_N` contacts on both exact TX or RX nets of
+a fitted, completely inventoried U/IC endpoint with recognized Ethernet PHY
+pin functions. Either direction can prompt independently. A source-matched
+connector map that covers the exact roles and current nets, or an explicit
+`NOT_APPLICABLE` disposition, suppresses the prompt. Named connector roles,
+DNP endpoints, incomplete inventories, duplicate or ambiguous pair members,
+same-net pairs, and one-sided matches stay quiet. The heuristic does not infer
+connector identity, Ethernet port purpose, magnetics or termination, power or
+return requirements, shield policy, PCB copper, or off-board wiring. Project
+policy can set it to `block` or `off`, or ignore one exact finding.
+
+Synthetic TX and RX faults, named-role and source-map controls, incomplete and
+ambiguous evidence, overrides, ignores, and ordering stability are covered.
+CLI/MCP output is compared. Tooling-owned schematics are exported twice with
+digest-pinned KiCad 10.0.0 and 10.0.5 images; see the
+[fixture record](../tests/fixtures/design_lint/ethernet-generic-connector-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest -q tests/test_ethernet_generic_connector_pair_review.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_generic_connector_pair_review")'
+
+KICAD_RUN_NATIVE_ETHERNET_GENERIC_CONNECTOR_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
+  .venv/bin/python -I -m pytest -q tests/test_ethernet_generic_connector_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_generic_connector_pair_review")'
 ```
 
 ## Review a mapped crystal load network

@@ -243,6 +243,18 @@ RULE_NODE_CASES = (
         "tests/test_design_lint_mcp_parity_usb_superspeed_generic_connector.py::test_generic_superspeed_connector_cli_mcp_parity",
     ),
     (
+        "bus.ethernet_generic_connector_pair_review",
+        "tests/test_ethernet_generic_connector_pair_review.py::test_generic_contacts_on_exact_ethernet_tx_and_rx_pairs_emit_review",
+    ),
+    (
+        "bus.ethernet_generic_connector_pair_review",
+        "tests/test_design_lint_mcp_parity_ethernet_generic_connector.py::test_ethernet_generic_connector_review_cli_mcp_parity",
+    ),
+    (
+        "bus.ethernet_generic_connector_pair_review",
+        "tests/test_ethernet_generic_connector_native_fixture_lane.py::test_native_ethernet_generic_connector_fault_and_control_repeat",
+    ),
+    (
         "bus.rs485_generic_connector_pair_review",
         "tests/test_rs485_generic_connector_pair_review.py::test_generic_contacts_on_exact_identified_rs485_pair_emit_review",
     ),

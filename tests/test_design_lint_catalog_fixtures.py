@@ -63,6 +63,14 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
                 ),
             }
         ),
+        "bus.ethernet_generic_connector_pair_review": MappingProxyType(
+            {
+                "fault_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_ethernet_generic_connector",
+                    "test_ethernet_generic_connector_review_cli_mcp_parity",
+                ),
+            }
+        ),
         "component.peer_power_output_unconnected": MappingProxyType(
             {
                 "fault_fixtures": _refs(

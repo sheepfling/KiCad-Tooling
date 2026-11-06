@@ -352,6 +352,9 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
     from tests.design_lint_fixtures.can_generic_connector_pair import (
         generic_can_connector_pair_netlist,
     )
+    from tests.design_lint_fixtures.ethernet_generic_connector import (
+        generic_ethernet_connector_netlist,
+    )
     from tests.design_lint_fixtures.i2c_generic_connector_pair import (
         generic_i2c_connector_pair_netlist,
     )
@@ -404,6 +407,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         ),
         can_peer_reference_netlist(),
         generic_can_connector_pair_netlist(),
+        generic_ethernet_connector_netlist(),
         generic_i2c_connector_pair_netlist(),
         i2c_netlist(),
         i2c_netlist_with_parallel_sda(),

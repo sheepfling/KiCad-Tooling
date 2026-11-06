@@ -27,6 +27,7 @@ EthernetLabelFeature = Literal[
     "management_named_rail",
     "management_unconnected",
     "data_unconnected",
+    "generic_connector",
 ]
 
 
@@ -284,6 +285,76 @@ ETHERNET_LABEL_FIXTURES: Mapping[EthernetLabelFeature, EthernetLabelFixtureExpec
                     subjects=("U1.1: TDP on return-like net GND",),
                     pins=(
                         EthernetLabelPinExpectation(reference="U1.1", function="TDP", net="GND"),
+                        EthernetLabelPinExpectation(
+                            reference="U1.2", function="TDN", net="ETH_TX_N"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.3", function="RDP", net="ETH_RX_P"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.4", function="RDN", net="ETH_RX_N"
+                        ),
+                    ),
+                ),
+            ),
+            "generic_connector": EthernetLabelFixtureExpectation(
+                directory="ethernet-generic-connector-native",
+                rule_id="bus.ethernet_generic_connector_pair_review",
+                stage_prefix="ethernet-generic-connector-fixture",
+                control=EthernetLabelCaseExpectation(
+                    source_sha256="d2c73ad7a30f2095ef2096723ace951913c2ac13ed6a6bbdf2a8671f76101903",
+                    subjects=(),
+                    pins=(
+                        EthernetLabelPinExpectation(
+                            reference="J1.1", function="Pin_1", net="PORT_TX_POS"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="J1.2", function="Pin_2", net="PORT_TX_NEG"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="J1.3", function="Pin_3", net="PORT_RX_POS"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="J1.4", function="Pin_4", net="PORT_RX_NEG"
+                        ),
+                        EthernetLabelPinExpectation(reference="J1.5", function="GND", net="GND"),
+                        EthernetLabelPinExpectation(
+                            reference="U1.1", function="TDP", net="ETH_TX_P"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.2", function="TDN", net="ETH_TX_N"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.3", function="RDP", net="ETH_RX_P"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.4", function="RDN", net="ETH_RX_N"
+                        ),
+                    ),
+                ),
+                fault=EthernetLabelCaseExpectation(
+                    source_sha256="aa1d5c3ecee3a4a7f84a98e314122a2baf8a7c356b03a980d221d93ff2435198",
+                    subjects=(
+                        "J1: generic pins match Ethernet RX pair nets",
+                        "J1: generic pins match Ethernet TX pair nets",
+                    ),
+                    pins=(
+                        EthernetLabelPinExpectation(
+                            reference="J1.1", function="Pin_1", net="ETH_TX_P"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="J1.2", function="Pin_2", net="ETH_TX_N"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="J1.3", function="Pin_3", net="ETH_RX_P"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="J1.4", function="Pin_4", net="ETH_RX_N"
+                        ),
+                        EthernetLabelPinExpectation(reference="J1.5", function="GND", net="GND"),
+                        EthernetLabelPinExpectation(
+                            reference="U1.1", function="TDP", net="ETH_TX_P"
+                        ),
                         EthernetLabelPinExpectation(
                             reference="U1.2", function="TDN", net="ETH_TX_N"
                         ),

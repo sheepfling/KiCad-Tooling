@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 276 rules are implemented with synthetic regression coverage.
+The following 277 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 276 active rules.
+The catalog currently contains 277 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -644,6 +644,7 @@ skipped under prerelease policy.
 - `bus.ethernet_management_unconnected_pin`
 - `bus.ethernet_management_signal_on_named_rail`
 - `bus.ethernet_signal_on_named_rail`
+- `bus.ethernet_generic_connector_pair_review`
 - `bus.can_tx_rx_same_net`
 - `bus.can_tx_rx_label_mismatch`
 - `bus.can_tx_outputs_share_net`
@@ -727,6 +728,16 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **LINT-296 generic Ethernet connector pair review:** When a fitted,
+  completely inventoried Ethernet PHY has a uniquely recognized TX or RX pair
+  on distinct nets, and a complete connector has generic contacts on both
+  exact pair nets, ask for connector pinout review. A source-matched role map
+  or reviewed `NOT_APPLICABLE` disposition suppresses the prompt. It does not
+  infer Ethernet connector identity, magnetics or termination, power or
+  return requirements, shield policy, PCB copper, or off-board wiring.
+  Synthetic fault/control tests, CLI/MCP parity, and repeatable digest-pinned
+  KiCad 10.0.0/10.0.5 exports pass; field applicability and reviewer value
+  remain unmeasured.
 - **LINT-293 generic UART connector pair review:** When native U/IC TX/RX
   functions with compatible electrical directions share two distinct nets with
   generic contacts on a complete connector, ask whether the connector belongs
@@ -19161,6 +19172,37 @@ acceptance threads while new lint features proceed:
   design_lint_rule(rule_id="bus.usb_superspeed_generic_connector_pair_review")'`.
   The exact native test uses the existing
   `KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1` lane.
+
+#### LINT-296 — Prompt review of generic connector pins on Ethernet PHY pairs
+
+- **Rule:** `bus.ethernet_generic_connector_pair_review`, default `review`.
+- **Trigger:** A fitted U/IC endpoint has complete, unique pin inventory and
+  exactly one recognized Ethernet TX-positive/TX-negative or RX-positive/
+  RX-negative pair on distinct, unambiguous nets. A fully inventoried generic
+  connector has `Pin_N` contacts on both exact pair nets. TX and RX are
+  evaluated independently. A source-matched connector map covering the exact
+  roles and current nets, or `NOT_APPLICABLE`, suppresses the prompt.
+- **Purpose:** Ask for pinout review when an untyped connector symbol hides a
+  possible connection to an Ethernet PHY pair. This is a review prompt; the
+  rule does not label the connector as Ethernet.
+- **Evidence and limits:** The candidate retains exact PHY pin functions,
+  electrical types, endpoint assignments, nets, connector generic contacts,
+  and inventory coverage. DNP endpoints, incomplete evidence, duplicate or
+  ambiguous pair roles, same-net pairs, and one-sided matches stay quiet. It
+  does not identify connector purpose, infer magnetics or termination, or
+  decide power, return, shield, PCB copper, or off-board requirements.
+- **Fixtures:** Synthetic TX and RX faults, named-role control, current and
+  stale map cases, `NOT_APPLICABLE`, DNP, incomplete, ambiguous, same-net,
+  override/ignore, mapping-order stability, and CLI/MCP parity. The tooling-
+  owned native fault/control pair exports twice with digest-pinned KiCad
+  10.0.0 and 10.0.5 images. These establish predicate behavior and export
+  compatibility, not field precision or reviewer value.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_ethernet_generic_connector_pair_review.py -m 'design_lint and
+  interface_lint and
+  design_lint_rule(rule_id="bus.ethernet_generic_connector_pair_review")'`.
+  The native lane uses
+  `KICAD_RUN_NATIVE_ETHERNET_GENERIC_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate
 

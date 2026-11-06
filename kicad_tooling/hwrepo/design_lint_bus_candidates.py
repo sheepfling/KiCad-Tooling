@@ -9,6 +9,9 @@ from .bus_ethernet_pair_labels import (
 from .design_lint_bus_inputs import BusCandidateInputs
 from .design_lint_bus_named_rail_candidates import bus_named_rail_candidates
 from .design_lint_can_candidates import can_candidates
+from .design_lint_ethernet_generic_connector_candidates import (
+    ethernet_generic_connector_pair_review_candidates,
+)
 from .design_lint_ethernet_unconnected_candidates import ethernet_unconnected_pin_candidates
 from .design_lint_i2c_bus_candidates import i2c_protocol_bus_candidates
 from .design_lint_i2c_candidates import i2c_address_theme_candidates
@@ -71,6 +74,11 @@ def bus_candidates(inputs: BusCandidateInputs) -> tuple[Candidate, ...]:
         *ethernet_data_label_mismatch_candidates(observed),
         *ethernet_management_label_mismatch_candidates(observed),
         *ethernet_unconnected_pin_candidates(observed),
+        *ethernet_generic_connector_pair_review_candidates(
+            observed,
+            inputs.reviewed_connector_references,
+            inputs.connector_coverage,
+        ),
         *bus_named_rail_candidates(observed),
         *complementary_signal_candidates(observed, inputs.complementary_alias_resolution),
         *usb_data_polarity_label_candidates(observed),
