@@ -37,6 +37,9 @@ a focused native lane per rule.
 The named peer power-input assignment-divergence fault and control are synthetic tooling
 fixtures; their source boundary and pinned hashes are recorded in the
 [peer power-input fixture README](fixtures/design_lint/named-peer-power-input-divergence/README.md).
+The generic USB data-pair connector review fault and control are tooling-owned synthetic
+fixtures, with their source boundary and pinned hashes recorded in the
+[USB connector-pair fixture README](fixtures/design_lint/usb-generic-connector-native/README.md).
 The all-open named peer power-input fault and control are separate synthetic tooling fixtures;
 their source boundary and pinned hashes are recorded in the
 [all-open peer power-input fixture README](fixtures/design_lint/named-peer-power-input-all-open/README.md).
