@@ -3158,3 +3158,34 @@ readiness, release-contract, release-operation, and capability-architecture
 suites passed 57 tests and 5 subtests. Ruff and formatting passed; targeted
 Pyright reported zero diagnostics. No native KiCad lane or full CI run was
 required.
+
+## Schematic geometry candidate source-identity route (2026-11-06)
+
+An import-aware review found that the geometry, text-placement, and
+symbol-body candidate projectors independently received a mutable seven-field
+`dict[str, tuple[str, ...]]` containing the selected child schematic identity,
+sheet occurrence, root source, and source-tree digest. The shared owner now
+returns a frozen `SchematicGeometrySourceIdentity`; the projectors convert its
+read-only report fields into their existing candidate evidence maps at the
+projection boundary. This names the common source contract without mixing
+family-specific finding fields into one broad mapping type.
+
+The seven serialized report fields and their order are unchanged. Four
+source-family unions used for `isinstance` narrowing are now declared as
+explicit `TypeAlias` contracts. The Alphus runtime-type scan consequently has
+zero findings in the three schematic projection owners; the exact profile
+totals and current selector review are recorded in
+`docs/ALPHUS_QUALITY_GATES.md` and the separate external complaint ledger. No
+report schema, finding selection, message, rule ownership, or native-evidence
+meaning changed. No module split was made.
+
+The focused architecture and five candidate-evidence modules passed 18 tests.
+Ruff check and formatting passed; targeted Pyright reported zero diagnostics.
+The nine-profile Alphus scan used a stable 2,621-file Python inventory with
+content-manifest SHA-256
+`f47acd3f5823e40b443fb763f27ceb272537ea9882a5ec6db56a4df84db37edb`. The
+working tree also contained a separate PCB DRC draft during the scan; those
+files were not changed in this route. Full CI and exact native KiCad tests did
+not run. After the profile run, four Python files in that separate draft
+changed. The current working tree no longer matches the frozen scan inventory;
+re-run the profiles after the PCB DRC work settles.

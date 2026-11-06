@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TypeAlias
 
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_schematic_geometry_candidate_evidence import (
-    schematic_geometry_evidence,
+    schematic_geometry_source_identity,
     schematic_mm_box,
     schematic_mm_segment,
 )
@@ -59,7 +60,7 @@ class FreeTextWireOverlapSource:
             raise ValueError("Text-wire finding must be an observation from its source scan")
 
 
-SchematicTextGeometrySource = (
+SchematicTextGeometrySource: TypeAlias = (
     CoincidentTextAnchorsSource | FreeTextOverlapSource | FreeTextWireOverlapSource
 )
 
@@ -69,7 +70,9 @@ def project_schematic_text_geometry_evidence(
 ) -> CandidateEvidenceProjection:
     """Project a retained text-placement observation into stable report fields."""
     scan = source.scan
-    evidence = schematic_geometry_evidence(scan, source.finding.sheet_instance_path)
+    evidence = dict(
+        schematic_geometry_source_identity(scan, source.finding.sheet_instance_path).report_fields()
+    )
     evidence["kicad_version"] = (scan.kicad_version,)
 
     if isinstance(source, CoincidentTextAnchorsSource):

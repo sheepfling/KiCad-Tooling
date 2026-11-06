@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TypeAlias
 
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_schematic_geometry_candidate_evidence import (
-    schematic_geometry_evidence,
+    schematic_geometry_source_identity,
     schematic_mm_box,
     schematic_mm_segment,
 )
@@ -45,7 +46,9 @@ class WireThroughSymbolBodySource:
             raise ValueError("Wire-body finding must be an observation from its source scan")
 
 
-SchematicSymbolBodyObstructionSource = FreeTextSymbolBodyOverlapSource | WireThroughSymbolBodySource
+SchematicSymbolBodyObstructionSource: TypeAlias = (
+    FreeTextSymbolBodyOverlapSource | WireThroughSymbolBodySource
+)
 
 
 def project_schematic_symbol_body_evidence(
@@ -53,7 +56,9 @@ def project_schematic_symbol_body_evidence(
 ) -> CandidateEvidenceProjection:
     """Project a retained text or wire obstruction of a symbol body."""
     scan = source.scan
-    evidence = schematic_geometry_evidence(scan, source.finding.sheet_instance_path)
+    evidence = dict(
+        schematic_geometry_source_identity(scan, source.finding.sheet_instance_path).report_fields()
+    )
     evidence["kicad_version"] = (scan.kicad_version,)
 
     if isinstance(source, FreeTextSymbolBodyOverlapSource):

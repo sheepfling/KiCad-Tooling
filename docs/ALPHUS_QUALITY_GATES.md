@@ -188,3 +188,46 @@ are under the ignored
 `build/alphus-v0.0.2/resniff-2026-11-06-release-board-variant-selection/`;
 the external feedback bundle preserves the complaint ledger and route
 evidence.
+
+## Schematic geometry source-identity re-sniff (2026-11-06)
+
+The development dependency and installed Alphus metadata still resolve to
+`v0.0.2` at commit `3435f81aff7abac7716a5780d26319e8f314d61d`. Remote
+`main` remains at `c880093f7ccb73c2af78ffb5c7de8c15d2b75b0e`; the latest
+`v0.0.3` tag remains `186323772564aab918a3519265b4043762f50200`. The existing
+catalog comparison shows no applicable new selector: `v0.0.3` adds only
+`test-layout`, which remains a poor fit for the behavior-organized test tree.
+`file-size`, `package-boundaries`, and `source-test-coverage` remain deferred.
+
+All nine configured `v0.0.2` profiles ran over the same 2,621-file Python
+inventory. The content-manifest SHA-256 was
+`f47acd3f5823e40b443fb763f27ceb272537ea9882a5ec6db56a4df84db37edb`; policy
+SHA-256 remains
+`25876352db808b0e9f33e73a2dd81ff97d01469d5c685d700bb4e500e1b5c34f`.
+
+| Profile                      | Findings | Errors | Warnings | Exit |
+| ---------------------------- | -------: | -----: | -------: | ---: |
+| `runtime-types`              |      104 |    104 |        0 |    1 |
+| `python-style`               |      226 |    226 |        0 |    1 |
+| `pydantic-practices`         |        4 |      0 |        4 |    0 |
+| `architecture-candidates`    |       41 |      0 |       41 |    0 |
+| `input-contracts`            |        4 |      0 |        4 |    0 |
+| `complexity-candidates`      |       28 |      0 |       28 |    0 |
+| `test-quality`               |        0 |      0 |        0 |    0 |
+| `module-role-boundaries`     |        0 |      0 |        0 |    0 |
+| `shared-utility-duplication` |        0 |      0 |        0 |    0 |
+
+The `python-style` profile still reports 139 legacy Pydantic-field labels,
+75 local imports, 10 mutable module constants, and two unslotted dataclasses;
+opaque-mapping findings remain zero. The three changed projection owners have
+no runtime-type findings after their source unions were declared with
+`TypeAlias`. Profile reports and the frozen inventory are under
+`build/alphus-v0.0.2/resniff-2026-11-06-schematic-geometry-source-identity/`.
+The scan included an unrelated uncommitted PCB DRC draft that remained stable
+through the run. Four Python files in that draft changed afterward, so the
+current working tree no longer matches this frozen inventory; rerun the
+profiles after that work settles. The source-family and complexity counts did
+not change in the frozen run, no new Alphus complaint was confirmed, and no new
+gate is ready to enable. The existing APL-KT-001 through APL-KT-008 feedback
+set remains in the external ledger; no issue, pull request, or maintainer
+message was submitted.

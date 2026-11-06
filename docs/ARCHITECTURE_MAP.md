@@ -218,6 +218,16 @@ and call `releasing.prepare_request`. The legacy positional `releasing.prepare`
 function only adapts its arguments into that request. The authored
 `ReleaseManifest` and its JSON schema remain separate and unchanged.
 
+## Schematic geometry candidate source identity
+
+The schematic geometry, text-placement, and symbol-body candidate projectors
+share `SchematicGeometrySourceIdentity`, owned by
+`design_lint_schematic_geometry_candidate_evidence.py`. It retains the exact
+child schematic path and digest, sheet-instance path, human-readable sheet
+path, root schematic path and digest, and canonical source-tree digest. Each
+projector turns that frozen identity into the established report fields at the
+candidate boundary. Their serialized keys and order remain unchanged.
+
 ## Schematic hierarchical reference route
 
 `schematic_geometry_source.schematic_instance_references` resolves each placed

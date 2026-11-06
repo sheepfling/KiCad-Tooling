@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
+from typing import TypeAlias
 
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
@@ -96,10 +99,37 @@ class LabelNearWireEndpointSource:
             raise ValueError("Label finding must be an observation from its source scan")
 
 
-SchematicPinGeometrySource = (
+SchematicPinGeometrySource: TypeAlias = (
     WireEndOnPinLineSource | PinTipOnWireInteriorSource | WireEndpointNearPinTipSource
 )
-SchematicWireTopologySource = UnmarkedWireCrossingSource | UnmarkedTJunctionSource
+SchematicWireTopologySource: TypeAlias = UnmarkedWireCrossingSource | UnmarkedTJunctionSource
+
+
+@dataclass(frozen=True, slots=True)
+class SchematicGeometrySourceIdentity:
+    """Exact source and hierarchy identity shared by geometry report projectors."""
+
+    source_path: str
+    source_sha256: str
+    sheet_instance_path: str
+    sheet_path: str
+    root_source_path: str
+    root_source_sha256: str
+    source_tree_sha256: str
+
+    def report_fields(self) -> Mapping[str, tuple[str, ...]]:
+        """Project the stable source identity fields used by existing reports."""
+        return MappingProxyType(
+            {
+                "schematic": (self.source_path,),
+                "schematic_sha256": (self.source_sha256,),
+                "sheet_instance_path": (self.sheet_instance_path,),
+                "sheet_path": (self.sheet_path,),
+                "schematic_root": (self.root_source_path,),
+                "schematic_root_sha256": (self.root_source_sha256,),
+                "schematic_tree_sha256": (self.source_tree_sha256,),
+            }
+        )
 
 
 def schematic_mm_box(box: tuple[float, float, float, float]) -> str:
@@ -112,25 +142,25 @@ def schematic_mm_segment(start: tuple[float, float], end: tuple[float, float]) -
     return ",".join(f"{value:.6f}" for value in (*start, *end))
 
 
-def schematic_geometry_evidence(
+def schematic_geometry_source_identity(
     scan: SchematicGeometryScan, sheet_instance_path: str
-) -> dict[str, tuple[str, ...]]:
-    """Bind geometry evidence to its exact sheet occurrence and source bytes."""
+) -> SchematicGeometrySourceIdentity:
+    """Bind geometry findings to their exact sheet occurrence and source bytes."""
     binding = next(
         (item for item in scan.source_bindings if item.sheet_instance_path == sheet_instance_path),
         None,
     )
     source_path = scan.source_path if binding is None else binding.source_path
     source_sha256 = scan.source_sha256 if binding is None else binding.source_sha256
-    return {
-        "schematic": (source_path,),
-        "schematic_sha256": (source_sha256,),
-        "sheet_instance_path": (sheet_instance_path,),
-        "sheet_path": (" / ".join(binding.sheet_path) if binding is not None else "",),
-        "schematic_root": (scan.source_path,),
-        "schematic_root_sha256": (scan.source_sha256,),
-        "schematic_tree_sha256": (scan.source_tree_sha256 or scan.source_sha256,),
-    }
+    return SchematicGeometrySourceIdentity(
+        source_path=source_path,
+        source_sha256=source_sha256,
+        sheet_instance_path=sheet_instance_path,
+        sheet_path=" / ".join(binding.sheet_path) if binding is not None else "",
+        root_source_path=scan.source_path,
+        root_source_sha256=scan.source_sha256,
+        source_tree_sha256=scan.source_tree_sha256 or scan.source_sha256,
+    )
 
 
 def project_schematic_pin_geometry_evidence(
@@ -138,7 +168,9 @@ def project_schematic_pin_geometry_evidence(
 ) -> CandidateEvidenceProjection:
     """Project a retained pin/wire source observation into stable report fields."""
     scan = source.scan
-    evidence = schematic_geometry_evidence(scan, source.finding.sheet_instance_path)
+    evidence = dict(
+        schematic_geometry_source_identity(scan, source.finding.sheet_instance_path).report_fields()
+    )
     evidence["kicad_version"] = (scan.kicad_version,)
 
     if isinstance(source, WireEndOnPinLineSource):
@@ -201,7 +233,9 @@ def project_schematic_wire_topology_evidence(
 ) -> CandidateEvidenceProjection:
     """Project a retained crossing or T-junction into stable report fields."""
     scan = source.scan
-    evidence = schematic_geometry_evidence(scan, source.finding.sheet_instance_path)
+    evidence = dict(
+        schematic_geometry_source_identity(scan, source.finding.sheet_instance_path).report_fields()
+    )
     evidence["kicad_version"] = (scan.kicad_version,)
 
     if isinstance(source, UnmarkedWireCrossingSource):
@@ -233,7 +267,9 @@ def project_schematic_label_endpoint_evidence(
     """Project a retained label and its exact nearby wire endpoints."""
     scan = source.scan
     finding = source.finding
-    evidence = schematic_geometry_evidence(scan, finding.sheet_instance_path)
+    evidence = dict(
+        schematic_geometry_source_identity(scan, finding.sheet_instance_path).report_fields()
+    )
     evidence.update(
         {
             "label_kind": (finding.label_kind,),

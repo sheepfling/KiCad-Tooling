@@ -3,9 +3,15 @@
 from __future__ import annotations
 
 import ast
+from dataclasses import fields
+from typing import get_type_hints
 
 import pytest
 
+from kicad_tooling.hwrepo.design_lint_schematic_geometry_candidate_evidence import (
+    SchematicGeometrySourceIdentity,
+    schematic_geometry_source_identity,
+)
 from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, line_count
 
 pytestmark = [
@@ -85,9 +91,9 @@ def test_schematic_candidate_projection_has_bounded_theme_owners() -> None:
         isinstance(node, ast.Attribute) and node.attr == "source_bindings"
         for node in ast.walk(adapter_tree)
     )
-    assert "def schematic_geometry_evidence" in owner.read_text(encoding="utf-8")
-    assert "schematic_geometry_evidence" in text_owner.read_text(encoding="utf-8")
-    assert "schematic_geometry_evidence" in body_owner.read_text(encoding="utf-8")
+    assert "def schematic_geometry_source_identity" in owner.read_text(encoding="utf-8")
+    assert "schematic_geometry_source_identity" in text_owner.read_text(encoding="utf-8")
+    assert "schematic_geometry_source_identity" in body_owner.read_text(encoding="utf-8")
     assert "SchematicPinGeometryCandidate.from_source_evidence" in adapter.read_text(
         encoding="utf-8"
     )
@@ -97,3 +103,48 @@ def test_schematic_candidate_projection_has_bounded_theme_owners() -> None:
     assert "SchematicLabelEndpointCandidate.from_source_evidence" in adapter.read_text(
         encoding="utf-8"
     )
+
+
+def test_shared_schematic_source_identity_has_a_named_immutable_contract() -> None:
+    expected_fields = (
+        "source_path",
+        "source_sha256",
+        "sheet_instance_path",
+        "sheet_path",
+        "root_source_path",
+        "root_source_sha256",
+        "source_tree_sha256",
+    )
+
+    assert tuple(field.name for field in fields(SchematicGeometrySourceIdentity)) == expected_fields
+    assert (
+        get_type_hints(schematic_geometry_source_identity)["return"]
+        is SchematicGeometrySourceIdentity
+    )
+    assert get_type_hints(SchematicGeometrySourceIdentity) == {
+        field: str for field in expected_fields
+    }
+
+    identity = SchematicGeometrySourceIdentity(
+        source_path="Projects/Child.kicad_sch",
+        source_sha256="a" * 64,
+        sheet_instance_path="root/child",
+        sheet_path="Child",
+        root_source_path="Projects/Root.kicad_sch",
+        root_source_sha256="b" * 64,
+        source_tree_sha256="c" * 64,
+    )
+    report_fields = identity.report_fields()
+    assert tuple(report_fields) == (
+        "schematic",
+        "schematic_sha256",
+        "sheet_instance_path",
+        "sheet_path",
+        "schematic_root",
+        "schematic_root_sha256",
+        "schematic_tree_sha256",
+    )
+    assert report_fields["schematic"] == ("Projects/Child.kicad_sch",)
+    assert report_fields["sheet_path"] == ("Child",)
+    with pytest.raises(TypeError):
+        report_fields["schematic"] = ("stale.kicad_sch",)  # type: ignore[index]
