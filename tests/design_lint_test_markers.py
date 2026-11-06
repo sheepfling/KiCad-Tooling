@@ -129,6 +129,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_can_generic_connector_native_fixture_registry.py",
                 "tests/test_design_lint_architecture_can_generic_connector.py",
                 "tests/test_design_lint_mcp_parity_can_generic_connector_pair.py",
+                "tests/test_design_lint_mcp_parity_spi_generic_connector_triad.py",
                 "tests/test_design_lint_mcp_parity_power_input.py",
                 "tests/test_connector_named_power_pin_fixture_lane.py",
                 "tests/test_design_lint_mcp_parity_power_paths.py",

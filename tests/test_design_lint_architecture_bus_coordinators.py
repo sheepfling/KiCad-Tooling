@@ -51,6 +51,7 @@ def test_peer_candidate_coordinator_delegates_by_protocol() -> None:
     modules = (
         "design_lint_serial_peer_candidates.py",
         "design_lint_usb_peer_candidates.py",
+        "design_lint_usb_peer_group_candidates.py",
         "design_lint_spi_peer_candidates.py",
         "design_lint_digital_peer_voltage_candidates.py",
         "design_lint_usb_c_candidates.py",
@@ -76,10 +77,10 @@ def test_peer_candidate_coordinator_delegates_by_protocol() -> None:
     assert {
         "serial_unmapped_peer_candidates",
         "serial_reference_candidates",
-        "usb_peer_reference_candidates",
         "spi_participant_candidates",
         "digital_peer_voltage_candidates",
-        "usb_c_port_candidates",
+        "usb_peer_group_candidates",
+        "usb_c_peer_candidates",
     } <= calls
     assert not candidate_constructions, "Peer dispatch should not construct lint findings."
     assert (
@@ -92,8 +93,11 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
     facade = HWREPO / "design_lint_bus_candidates.py"
     modules = (
         "design_lint_i2c_candidates.py",
+        "design_lint_i2c_bus_candidates.py",
         "design_lint_i2c_pullup_candidates.py",
         "design_lint_spi_candidates.py",
+        "design_lint_spi_bus_candidates.py",
+        "design_lint_spi_generic_connector_candidates.py",
         "design_lint_unconnected_interface_candidates.py",
         "design_lint_can_candidates.py",
         "design_lint_rs485_candidates.py",
@@ -138,13 +142,10 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
     ]
 
     assert [name for _, name in calls] == [
-        "i2c_pullup_theme_candidates",
-        "i2c_peer_reference_candidates",
+        "i2c_protocol_bus_candidates",
         "two_wire_signal_candidates",
         "serial_signal_candidates",
-        "spi_peer_reference_candidates",
-        "spi_bias_candidates",
-        "spi_signal_candidates",
+        "spi_protocol_bus_candidates",
         "unconnected_interface_candidates",
         "can_candidates",
         "rs485_candidates",

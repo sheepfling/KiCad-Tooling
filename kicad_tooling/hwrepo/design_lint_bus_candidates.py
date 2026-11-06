@@ -10,14 +10,8 @@ from .design_lint_bus_inputs import BusCandidateInputs
 from .design_lint_bus_named_rail_candidates import bus_named_rail_candidates
 from .design_lint_can_candidates import can_candidates
 from .design_lint_ethernet_unconnected_candidates import ethernet_unconnected_pin_candidates
-from .design_lint_i2c_candidates import (
-    i2c_address_theme_candidates,
-    i2c_peer_reference_candidates,
-)
-from .design_lint_i2c_generic_connector_candidates import (
-    generic_i2c_connector_pair_review_candidates,
-)
-from .design_lint_i2c_pullup_candidates import i2c_pullup_theme_candidates
+from .design_lint_i2c_bus_candidates import i2c_protocol_bus_candidates
+from .design_lint_i2c_candidates import i2c_address_theme_candidates
 from .design_lint_interfaces_usb_data_polarity import usb_data_polarity_label_candidates
 from .design_lint_rs485_candidates import rs485_candidates
 from .design_lint_serial_signal_candidates import serial_signal_candidates
@@ -25,8 +19,7 @@ from .design_lint_signal_pair_candidates import (
     complementary_signal_candidates,
     named_differential_pair_candidates,
 )
-from .design_lint_spi_candidates import spi_bias_candidates, spi_peer_reference_candidates
-from .design_lint_spi_signal_candidates import spi_signal_candidates
+from .design_lint_spi_bus_candidates import spi_protocol_bus_candidates
 from .design_lint_two_wire_signal_candidates import two_wire_signal_candidates
 from .design_lint_types import Candidate
 from .design_lint_unconnected_interface_candidates import unconnected_interface_candidates
@@ -56,26 +49,10 @@ def bus_candidates(inputs: BusCandidateInputs) -> tuple[Candidate, ...]:
     observed = inputs.observed
     component_peer_findings = inputs.component_peer_findings
     return (
-        *i2c_pullup_theme_candidates(inputs.i2c_pullup),
-        *i2c_peer_reference_candidates(
-            observed,
-            inputs.i2c_peer_reference_scan,
-            component_peer_findings,
-        ),
-        *generic_i2c_connector_pair_review_candidates(
-            observed,
-            inputs.reviewed_connector_references,
-            inputs.connector_coverage,
-        ),
+        *i2c_protocol_bus_candidates(inputs),
         *two_wire_signal_candidates(observed),
         *serial_signal_candidates(observed),
-        *spi_peer_reference_candidates(
-            observed,
-            inputs.spi_peer_reference_scan,
-            component_peer_findings,
-        ),
-        *spi_bias_candidates(observed, inputs.spi_roster),
-        *spi_signal_candidates(observed),
+        *spi_protocol_bus_candidates(inputs),
         *unconnected_interface_candidates(observed),
         *can_candidates(
             observed,

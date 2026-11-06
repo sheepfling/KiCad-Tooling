@@ -10,16 +10,11 @@ from .design_lint_serial_peer_candidates import (
 )
 from .design_lint_spi_peer_candidates import spi_participant_candidates
 from .design_lint_types import Candidate
-from .design_lint_usb_c_candidates import (
-    usb_c_port_candidates,
-    usb_c_vbus_capacitance_candidates,
-)
 from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
-from .design_lint_usb_generic_connector_candidates import (
-    generic_usb_connector_phy_pair_review_candidates,
+from .design_lint_usb_peer_group_candidates import (
+    usb_c_peer_candidates,
+    usb_peer_group_candidates,
 )
-from .design_lint_usb_peer_candidates import usb_peer_reference_candidates
-from .design_lint_usb_unmapped_topology import usb_unmapped_multi_pin_topology_candidates
 from .digital_peer_voltage_scan import scan_digital_peer_voltage_reviews
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
 from .netlist_contract_models import NetlistContract
@@ -29,7 +24,6 @@ from .serial_peer_reference_scan import scan_serial_peer_reference_reviews
 from .spi_participants import SpiRosterContext
 from .usb_c_ports import UsbCPortRosterContext
 from .usb_data_path_models import UsbDataPathMap
-from .usb_peer_data_crossing import usb_peer_data_pair_crossing_candidates
 from .usb_peer_reference_scan import scan_usb_peer_reference_reviews
 
 
@@ -88,28 +82,17 @@ def scan_peer_candidates(inputs: PeerCandidateScanInputs) -> tuple[Candidate, ..
     return (
         *serial_unmapped_peer_candidates(observed, serial_scope),
         *serial_reference_candidates(serial_reference_scan, serial_scope),
-        *usb_peer_data_pair_crossing_candidates(
+        *usb_peer_group_candidates(
             observed,
-            usb_data_path_map,
-            reviewed_connector_references,
-        ),
-        *usb_peer_reference_candidates(usb_scan, usb_data_path),
-        *generic_usb_connector_phy_pair_review_candidates(
-            observed,
+            usb_scan,
             usb_data_path,
             reviewed_connector_references,
         ),
-        *usb_unmapped_multi_pin_topology_candidates(usb_scan, usb_data_path),
         *spi_participant_candidates(observed, spi_scope),
         *digital_peer_voltage_candidates(peer_voltage_scope, peer_voltage_scan),
         *gpio_to_control_input_voltage_candidates(
             observed,
             peer_voltage_scope.analysis,
         ),
-        *usb_c_port_candidates(observed, usb_c_scope, reviewed_connector_references),
-        *usb_c_vbus_capacitance_candidates(
-            observed,
-            usb_c_scope,
-            reviewed_connector_references,
-        ),
+        *usb_c_peer_candidates(observed, usb_c_scope, reviewed_connector_references),
     )

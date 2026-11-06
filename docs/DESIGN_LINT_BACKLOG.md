@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 271 rules are implemented with synthetic regression coverage.
+The following 273 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 271 active rules.
+The catalog currently contains 273 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -561,6 +561,7 @@ skipped under prerelease policy.
 - `bus.i2c_low_equivalent_resistance`
 - `bus.i2c_multiple_pullup_rail_families`
 - `bus.i2c_peer_reference_review`
+- `bus.i2c_generic_connector_pair_review`
 - `bus.i2c_address_mismatch`
 - `bus.i2c_address_collision`
 - `bus.i2c_unmapped_responder`
@@ -579,6 +580,7 @@ skipped under prerelease policy.
 - `bus.serial_tx_rx_same_net`
 - `bus.serial_tx_outputs_share_net`
 - `bus.spi_peer_reference_review`
+- `bus.spi_generic_connector_triad_review`
 - `bus.spi_peer_voltage_review`
 - `bus.serial_peer_voltage_review`
 - `bus.serial_peer_reference_review`
@@ -722,6 +724,16 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **LINT-292 generic SPI connector triad review:** A complete connector with
+  generic `Pin_N` contacts on the exact clock, controller-to-peripheral data,
+  and peripheral-to-controller data nets of one fitted, completely inventoried
+  SPI endpoint prompts for pinout review. A source-matched role map or reviewed
+  `NOT_APPLICABLE` disposition suppresses it. Named pins, DNP parts, incomplete
+  metadata, ambiguous assignments, and partial or same-net triads stay quiet.
+  It does not infer connector identity, chip-select/power/return requirements,
+  off-board wiring, or PCB continuity. Synthetic fault/control checks, CLI/MCP
+  parity, and repeatable exact-native exports on KiCad 10.0.0/10.0.5 pass;
+  field applicability and reviewer value remain unmeasured.
 - **LINT-291 generic I2C connector pair review:** A complete connector with
   generic `Pin_N` contacts on both exact SDA/SCL nets of a fitted, completely
   inventoried U/IC endpoint prompts for pinout review. A source-matched map or
@@ -3533,7 +3545,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 271 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 273 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -18986,6 +18998,40 @@ acceptance threads while new lint features proceed:
   interface_lint and design_lint_rule(rule_id="bus.i2c_generic_connector_pair_review")'`.
   The exact native test uses
   `KICAD_RUN_NATIVE_I2C_GENERIC_CONNECTOR_FIXTURES=1`.
+
+#### LINT-292 — Prompt review of generic connector pins assigned to SPI triads
+
+- **Rule:** `bus.spi_generic_connector_triad_review`, default `review`.
+- **Trigger:** One fitted U/IC endpoint has complete, unique native pin
+  metadata and exactly one clock, controller-to-peripheral data, and
+  peripheral-to-controller data function in one SPI channel on three distinct,
+  unambiguous nets. A completely inventoried connector candidate has generic
+  `Pin_N` contacts on all three exact nets. A source-matched connector map
+  assigning every generic contact to the corresponding observed role/net, or
+  an explicit `NOT_APPLICABLE` connector disposition, suppresses the prompt.
+- **Purpose:** Generic connector pins can hide a possible SPI interface from
+  a schematic reviewer. The prompt asks whether the connector is part of that
+  interface and whether its pinout is documented. It does not infer connector
+  identity, device participation, chip-select requirements, or return/power
+  requirements.
+- **Evidence and limits:** Candidate evidence retains the connector pin count,
+  generic contact functions, exact role nets, and fitted native endpoint pins.
+  DNP components, named connector roles, incomplete or inconsistent
+  inventories, ambiguous assignments, same-net endpoint roles, and partial
+  connector matches stay quiet. The rule does not establish off-board wiring
+  or PCB copper continuity.
+- **Fixtures:** Synthetic fault/control netlists cover exact role matching,
+  named-role and source-matched map controls, explicit not-applicable review,
+  incomplete metadata, partial groups, ambiguity, DNP state, duplicate roles,
+  override, exact ignore, and mapping-order stability. Tooling-owned native
+  schematics are hash-pinned and exported twice in digest-pinned KiCad 10.0.0
+  and 10.0.5 images. These verify predicate behavior and export compatibility,
+  not field precision or reviewer value.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_spi_generic_connector_triad_review.py -m 'design_lint and
+  interface_lint and design_lint_rule(rule_id="bus.spi_generic_connector_triad_review")'`.
+  The exact native test uses
+  `KICAD_RUN_NATIVE_SPI_GENERIC_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate
 

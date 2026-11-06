@@ -780,7 +780,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 271 active rules.
+The catalog currently contains 273 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -2436,6 +2436,35 @@ KiCad schematics are exported twice using the digest-pinned KiCad 10.0.0 and
 KICAD_RUN_NATIVE_I2C_GENERIC_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_i2c_generic_connector_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_generic_connector_pair_review")'
+```
+
+## Review generic connector contacts on an SPI triad
+
+`bus.spi_generic_connector_triad_review` asks for pinout review when a complete
+connector has generic `Pin_N` contacts on the exact clock,
+controller-to-peripheral data, and peripheral-to-controller data nets of one
+fitted, completely inventoried U/IC endpoint. A source-matched connector map
+assigning every generic contact to its observed role and exact net, or an
+explicit `NOT_APPLICABLE` connector disposition, suppresses the prompt. Named
+connector functions, DNP components, incomplete inventories, ambiguous
+assignments, and partial matches stay quiet. The heuristic does not infer
+connector identity, SPI participation, chip-select requirements, power/return
+requirements, or PCB/off-board continuity. Project policy can set it to `block`
+or `off`, or ignore one exact finding.
+
+Synthetic generic-pin fault, named-role control, source-matched map, explicit
+not-applicable disposition, incomplete evidence, override, ignore, and
+mapping-order cases are covered. Tooling-owned KiCad schematics are exported
+twice using digest-pinned KiCad 10.0.0 and 10.0.5 images; see the
+[fixture record](../tests/fixtures/design_lint/spi-generic-connector-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_spi_generic_connector_triad_review.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_generic_connector_triad_review")'
+
+KICAD_RUN_NATIVE_SPI_GENERIC_CONNECTOR_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
+  .venv/bin/python -I -m pytest tests/test_spi_generic_connector_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_generic_connector_triad_review")'
 ```
 
 ## Review a mapped crystal load network
