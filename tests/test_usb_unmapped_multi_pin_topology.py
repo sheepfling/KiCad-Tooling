@@ -97,6 +97,17 @@ def test_single_line_multi_pin_attachment_is_outside_the_usb_data_pair_predicate
     assert report.usb_peer_reference_coverage.unsupported_multi_pin_paths == ()
 
 
+def test_ambiguous_component_pin_assignment_is_not_a_topology_candidate() -> None:
+    observed = protection_shunt_netlist()
+    nets = dict(observed.nets)
+    nets["USB_DP_ALIAS"] = ("U6.1",)
+    report = lint_report(observed.model_copy(update={"nets": nets}), None)
+
+    assert not any(item.rule_id == RULE_ID for item in report.findings)
+    assert report.usb_peer_reference_coverage is not None
+    assert report.usb_peer_reference_coverage.unsupported_multi_pin_paths == ()
+
+
 def test_shared_data_net_attachment_fingerprint_is_stable_under_netlist_order() -> None:
     observed = protection_shunt_netlist()
     reordered = observed.model_copy(

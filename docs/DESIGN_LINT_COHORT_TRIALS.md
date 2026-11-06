@@ -110,10 +110,12 @@ for dispositions and timing; leave unmeasured values unstated.
   PHY's already shared D+/D− nets. This remains a topology-review prompt: the
   name, library symbol, and native connectivity do not establish that the part
   is a protector or that its pins conduct data. Tooling-owned synthetic and
-  source-hashed native cases cover the no-map prompt and an exact map control;
-  no project source or exported netlist from this public screen was copied into
-  the tooling checkout. Reviewer dispositions and field value remain
-  unmeasured.
+  source-hashed native cases cover the no-map prompt and an exact map control.
+  An ambiguous multi-net assignment on a candidate component pin is a quiet
+  control: it cannot establish the unique pin-to-net evidence required by the
+  predicate. No project source or exported netlist from this public screen was
+  copied into the tooling checkout. Reviewer dispositions and field value
+  remain unmeasured.
 
 ### Source-only recheck: kicad-happy v2.3.2 false-positive fixes (2026-10-29)
 

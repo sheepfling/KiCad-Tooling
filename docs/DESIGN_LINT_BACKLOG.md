@@ -760,9 +760,10 @@ standalone parity work when it closes a demonstrated feature regression.
   shared direct D+/D− nets. Both are default-REVIEW prompts for exact part-pin
   review and a project-authored map; neither claims component function,
   conduction, a confirmed path, a defect, or common reference. Synthetic tests
-  cover exact mapped controls, direct and DNP controls, stale endpoint-map
-  precedence, policy, ignores, stable evidence, native exports, and CLI/MCP
-  parity. The pinned public screen remains applicability evidence only; owner
+  cover exact mapped controls, direct and DNP controls, ambiguous pin
+  assignments, stale endpoint-map precedence, policy, ignores, stable
+  evidence, native exports, and CLI/MCP parity. The pinned public screen
+  remains applicability evidence only; owner
   dispositions and reviewer value are unmeasured.
 
 **Recent connector peer-scope work:**
@@ -14396,12 +14397,16 @@ control are documented in the
 - **Evidence:** Tooling-owned inline-device controls verify that an exact
   current map clears the prompt and stale maps use the existing topology
   mismatch finding. Direct and DNP controls, mapping-order stability, policy
-  and ignore behavior, a wrong-port-group map control, and the new shared-data
+  and ignore behavior, a wrong-port-group map control, and the shared-data
   attachment fault and controls passed with CLI/MCP parity and architecture
-  checks in the focused local selection (143 tests). The Docker-backed,
+  checks in the focused local selection (144 tests), including the new
+  ambiguous-pin control. The Docker-backed,
   digest-pinned native fixture lane passed on KiCad 10.0.0 and 10.0.5 (2 tests).
-  Ruff, Pyright, and rumdl also passed. Earlier hosted run `v0.5.3rc425`
-  (`42002849499`) exposed one wrong-port-group map suppressing coverage. The follow-up scopes mapped
+  Ruff, Pyright, and rumdl also passed. Hosted run `v0.5.3rc472`
+  (`42165622388`) passed the prior tagged gate and native fixture lane; this
+  new boundary control remains for the next tagged acceptance. Earlier hosted
+  run `v0.5.3rc425` (`42002849499`) exposed one wrong-port-group map
+  suppressing coverage. The follow-up scopes mapped
   component exclusions by connector, PHY, and port group through the shared
   USB map-identity service; its regression passes locally. The public USB hub
   screen is linked under LINT-031 and contributes no defect label or

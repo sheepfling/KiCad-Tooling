@@ -9793,6 +9793,7 @@
         "tests.test_usb_unmapped_multi_pin_topology.test_exact_protection_map_covers_shared_usb_data_net_attachment",
         "tests.test_usb_unmapped_multi_pin_topology.test_dnp_multi_pin_shared_data_net_attachment_is_not_reported",
         "tests.test_usb_unmapped_multi_pin_topology.test_single_line_multi_pin_attachment_is_outside_the_usb_data_pair_predicate",
+        "tests.test_usb_unmapped_multi_pin_topology.test_ambiguous_component_pin_assignment_is_not_a_topology_candidate",
         "tests.test_usb_unmapped_multi_pin_topology.test_endpoint_pair_with_authored_but_stale_map_uses_path_mismatch_only",
         "tests.test_design_lint_mcp_parity_usb_protection_shunts.test_usb_protection_shunt_review_cli_mcp_parity",
         "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable",
