@@ -780,7 +780,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 268 active rules.
+The catalog currently contains 269 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -5493,6 +5493,20 @@ verdict. The check does not account for capacitor tolerance, DC-bias derating,
 temperature, frequency, transients, placement, PCB copper, or dynamic source
 states. Older contracts without `usb_c` remain readable and make no USB-C role
 claim.
+
+### Review likely USB-C ports with no VBUS return capacitor
+
+The default-review `bus.usb_c_vbus_capacitance_review` heuristic recognizes a
+fitted connector only when its native pin functions identify exactly one CC1
+and CC2 plus unambiguous VBUS and return assignments. It prompts when no
+recognized, fitted two-pin capacitor connects those exact VBUS and return nets.
+A project USB-C capacitance map with `required` or `not_applicable` owns the
+decision and suppresses the heuristic; `pending` remains reviewable. The prompt
+asks for an approved requirement or a reasoned exclusion. It does not set a
+capacitance value, assert a universal requirement, or establish placement,
+copper continuity, USB compliance, or physical behavior. See the
+[synthetic fault/control fixture](../tests/fixtures/design_lint/usb-c-vbus-cap-review/README.md)
+and the focused `interface_lint` tests.
 
 ## Require an SPI controller and device map
 

@@ -10,6 +10,7 @@ import tests.test_connector_mapped_interface_power_contact_unassigned as _mapped
 import tests.test_connector_mapped_interface_shield_on_return_net as _mapped_shield_return
 import tests.test_connector_mapped_interface_shield_on_supply_rail as _mapped_shield_supply
 import tests.test_connector_mapped_interface_signal_on_named_rail as _mapped_signal_rail
+import tests.test_connector_return_signal_net as _connector_return_signal_net
 from kicad_tooling.hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
 from kicad_tooling.hwrepo.design_lint import candidates
 from kicad_tooling.hwrepo.schematic_geometry import scan_wire_ends_on_pin_lines
@@ -116,6 +117,7 @@ from tests.test_oscillator_output_paths import (
     oscillator_output_path_map,
 )
 from tests.test_regulator_required_passives import catalog_reachable_rule_ids
+from tests.usb_c_vbus_capacitance_support import usb_c_vbus_netlist
 
 TESTS = Path(__file__).resolve().parents[1]
 
@@ -139,6 +141,20 @@ def mapped_connector_rule_ids() -> set[str]:
         for report in (power, other, other_rail, signal, shield_return, shield_supply)
         for item in report.findings
     }
+
+
+def usb_c_vbus_and_connector_return_review_rule_ids() -> set[str]:
+    """Reach the USB-C capacitor prompt and local return/signal review."""
+    from kicad_tooling.hwrepo.usb_c_ports import UsbCPortRosterContext
+
+    usb_c = candidates(
+        usb_c_vbus_netlist(),
+        usb_c_port_roster=UsbCPortRosterContext(state="not_configured"),
+    )
+    connector_return = _connector_return_signal_net._report(
+        _connector_return_signal_net._source()
+    ).findings
+    return {item.rule_id for item in (*usb_c, *connector_return)}
 
 
 def catalog_reachability_rule_ids() -> set[str]:

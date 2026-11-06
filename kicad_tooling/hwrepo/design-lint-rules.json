@@ -5858,6 +5858,51 @@
       "implementation_owner": "kicad_tooling/hwrepo/usb_c_ports.py#unmapped_usb_c_ports"
     },
     {
+      "rule_id": "bus.usb_c_vbus_capacitance_review",
+      "title": "USB-C port VBUS has no recognized return capacitor",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including exact USB-C connector pin functions, assignments, capacitor symbol identity, and native pin inventory",
+      "predicate": "For each fitted connector candidate with unique CC1, CC2, VBUS, and return native pin roles, exactly one VBUS net and one distinct return net, and no fitted recognized capacitor symbol with an exact two-pin native inventory assigned across those nets, emit a REVIEW candidate unless the current project USB-C port map marks VBUS capacitance required or not applicable.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The native pin functions identify only a likely USB-C port and return pair. The finding asks for review; it does not claim that every port requires capacitance, set a value, establish a USB-C compliance threshold, or verify a cited specification.",
+        "Capacitor recognition is limited to the existing bounded native symbol-ID predicate and a complete exact two-pin inventory. A custom capacitor without an exact project role-map extension can be missed; DNP, open, ambiguous, wrong-return, and multiply assigned capacitors do not satisfy presence.",
+        "Schematic net assignments cannot prove capacitor placement, value, tolerance, voltage-bias derating, return-path geometry, copper continuity, source/sink behavior, off-board capacitance, or physical USB-C behavior. A current authored required or not-applicable VBUS-capacitance scope delegates to the electrical contract.",
+        "Connector discovery remains bounded to numeric J/P/X/CN references, standard Connector library identities, and exact project-reviewed interface references; unrecognized pin functions and unreviewed custom connector identities remain outside the scan."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_c_vbus_capacitance_review.test_likely_usb_c_port_without_vbus_capacitor_prompts_for_review",
+        "tests.test_usb_c_vbus_capacitance_review_native_fixture_lane.test_native_usb_c_vbus_capacitance_review_fault_and_control_repeat",
+        "tests.test_design_lint_mcp_parity_usb_c_vbus_capacitance.test_usb_c_vbus_capacitance_review_cli_mcp_parity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_c_vbus_capacitance_review.test_fitted_exact_two_pin_capacitor_clears_candidate_and_dnp_does_not",
+        "tests.test_usb_c_vbus_capacitance_review.test_capacitor_on_another_return_or_ambiguous_pin_assignment_does_not_satisfy",
+        "tests.test_usb_c_vbus_capacitance_review.test_authored_required_or_not_applicable_scope_delegates_or_suppresses",
+        "tests.test_usb_c_vbus_capacitance_review_native_fixture_lane.test_native_usb_c_vbus_capacitance_review_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_c_vbus_capacitance_review.test_candidate_order_is_stable_and_project_policy_is_configurable",
+        "tests.test_usb_c_vbus_capacitance_review_native_fixture_lane.test_native_usb_c_vbus_capacitance_review_fault_and_control_repeat"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_C_VBUS_CAP_REVIEW_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_c_vbus_review.py#usb_c_vbus_capacitance_gaps",
+        "kicad_tooling/hwrepo/design_lint_usb_c_vbus_candidate_evidence.py#project_usb_c_vbus_capacitance_evidence",
+        "kicad_tooling/hwrepo/design_lint_usb_c_candidates.py#usb_c_vbus_capacitance_candidates",
+        "kicad_tooling/hwrepo/design_lint_peer_candidates.py#peer_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_c_vbus_review.py#usb_c_vbus_capacitance_gaps"
+    },
+    {
       "rule_id": "bus.usb_unconnected_data_pin",
       "title": "Recognized USB 2.0 data pin is unassigned beside its pair member",
       "status": "active",

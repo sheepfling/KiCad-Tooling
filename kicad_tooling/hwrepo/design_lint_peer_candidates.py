@@ -10,7 +10,10 @@ from .design_lint_serial_peer_candidates import (
 )
 from .design_lint_spi_peer_candidates import spi_participant_candidates
 from .design_lint_types import Candidate
-from .design_lint_usb_c_candidates import usb_c_port_candidates
+from .design_lint_usb_c_candidates import (
+    usb_c_port_candidates,
+    usb_c_vbus_capacitance_candidates,
+)
 from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
 from .design_lint_usb_peer_candidates import usb_peer_reference_candidates
 from .design_lint_usb_unmapped_topology import usb_unmapped_multi_pin_topology_candidates
@@ -96,4 +99,9 @@ def scan_peer_candidates(inputs: PeerCandidateScanInputs) -> tuple[Candidate, ..
             peer_voltage_scope.analysis,
         ),
         *usb_c_port_candidates(observed, usb_c_scope, reviewed_connector_references),
+        *usb_c_vbus_capacitance_candidates(
+            observed,
+            usb_c_scope,
+            reviewed_connector_references,
+        ),
     )

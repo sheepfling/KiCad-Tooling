@@ -73,6 +73,7 @@ from tests.design_lint_fixtures.catalog_reachability import (
     catalog_reachability_rule_ids,
     mapped_connector_rule_ids,
     protocol_peer_candidate_rule_ids,
+    usb_c_vbus_and_connector_return_review_rule_ids,
 )
 from tests.design_lint_fixtures.catalog_reachability_pcb import pcb_rule_ids
 from tests.design_lint_fixtures.component_catalog_reachability import (
@@ -390,6 +391,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
             usb_c_port_roster=UsbCPortRosterContext(state="not_configured"),
         )
     )
+    emitted.update(usb_c_vbus_and_connector_return_review_rule_ids())
     emitted.update(
         item.rule_id for item in candidates(_tests_test_open_drain_heuristics.signal_netlist())
     )

@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 268 rules are implemented with synthetic regression coverage.
+The following 269 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 268 active rules.
+The catalog currently contains 269 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -614,6 +614,7 @@ skipped under prerelease policy.
 - `bus.usb_c_sbu_unconnected_pin`
 - `bus.usb_c_sbu_same_net`
 - `bus.usb_c_unreviewed_port`
+- `bus.usb_c_vbus_capacitance_review`
 - `bus.usb_data_path_mismatch`
 - `bus.usb_unmapped_multi_pin_topology`
 - `bus.usb_data_polarity_label_mismatch`
@@ -719,6 +720,15 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **LINT-288 USB-C VBUS capacitor review:** A likely fitted USB-C connector
+  prompts `REVIEW` when native pin functions show unique CC1/CC2, VBUS, and
+  return roles with unambiguous assignments, but no fitted, exactly inventoried
+  two-pin capacitor spans that connector's VBUS and return nets. A project map
+  marked `required` or `not_applicable` owns the decision; pending or unmapped
+  scope remains reviewable. This is a configurable coverage prompt, not a
+  universal capacitance requirement or placement/continuity check. Synthetic
+  fault/control tests, CLI/MCP parity, catalog reachability, and repeatable
+  native exports on KiCad 10.0.0 and 10.0.5 pass locally in Docker.
 - **LINT-287 connector return/signal net review:** A fitted connector GND/return
   contact now prompts `REVIEW` when it shares one native schematic net with a
   pin whose native function matches an existing bounded I2C, I3C, UART, SPI,
@@ -3501,7 +3511,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 268 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 269 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -14840,6 +14850,37 @@ control are documented in the
   fault/control pair is source-hashed and exports repeatably on digest-pinned
   KiCad 10.0.0 and 10.0.5 images with no ERC errors. See the
   [fixture notes](../tests/fixtures/design_lint/connector-return-signal-net/README.md).
+
+#### LINT-288 — Review likely USB-C VBUS without a return capacitor
+
+- **Status:** Implemented as the configurable default-review rule
+  `bus.usb_c_vbus_capacitance_review`.
+- **Inspiration:** kicad-happy documents UC-001 for absent VBUS decoupling and
+  UC-004 for undersized VBUS capacitance in its
+  [release notes](https://github.com/aklofas/kicad-happy/releases). We adopted
+  the review gap, not its implementation or a universal electrical rule. The
+  separate LINT-090 contract remains authoritative for project-approved numeric
+  capacitance limits.
+- **Predicate:** For a fitted recognized connector with exactly one native CC1
+  and CC2 function, at least one VBUS and return pin, complete connector pin
+  inventory, and one distinct unambiguous net per role group, prompt if no
+  recognized fitted capacitor with an exact two-pin inventory connects those
+  VBUS and return nets. A per-port capacitance scope marked `required` or
+  `not_applicable` suppresses the heuristic; pending or absent scope remains a
+  review prompt. DNP, incomplete, ambiguous, multi-net, and same-net cases are
+  skipped.
+- **Boundary:** This asks the project reviewer to resolve applicability. It
+  does not declare every USB-C port requires a capacitor, set a value, validate
+  a specification, recognize every custom capacitor symbol, check placement or
+  return geometry, or establish copper continuity or physical USB behavior.
+  Schematic netlist evidence is the full basis for the candidate.
+- **Evidence:** A tooling-owned two-port native schematic supplies a missing-cap
+  fault and exact fitted-cap control. Five synthetic unit cases cover role and
+  net recognition, DNP and ambiguous assignments, authored scope delegation,
+  order stability, and policy. CLI/MCP parity and catalog fault/control
+  reachability pass. The source hash is recorded in the fixture README and
+  checked by the runner; repeated exact exports and lint results pass on the
+  digest-pinned KiCad 10.0.0 and 10.0.5 Docker images with zero ERC errors.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
