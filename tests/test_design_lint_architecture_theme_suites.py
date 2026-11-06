@@ -57,6 +57,8 @@ USB_HOSTED_THEME_SUITES = (
 )
 USB_INLINE_COMPONENT_THEME_SUITES = (
     "test_usb_inline_component_paths.py",
+    "test_usb_inline_protection_shunts.py",
+    "test_design_lint_mcp_parity_usb_inline_protection_shunts.py",
     "test_usb_data_path_protection_shunts.py",
     "test_design_lint_mcp_parity_usb_protection_shunts.py",
 )

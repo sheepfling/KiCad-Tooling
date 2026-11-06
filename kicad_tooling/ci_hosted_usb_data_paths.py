@@ -176,14 +176,10 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
                     raise ValueError(
                         "Native inline bonded-reference fault omitted exact missing-bond evidence"
                     )
-            elif case == "protection-shunt-pin-fault":
-                if tuple(item.line for item in mismatches) != ("protection_shunt",) or not any(
-                    "U6.2 is on USB_DP" in issue for issue in mismatches[0].issues
-                ):
-                    raise ValueError(
-                        "Native protection-shunt pin fault omitted exact U6.2 net evidence"
-                    )
-            elif mismatches:
+            elif mismatches and case not in {
+                "protection-shunt-pin-fault",
+                "inline-protection-shunt-fault",
+            }:
                 raise ValueError(
                     f"Native {case} USB control mismatched the authored topology: {mismatches}"
                 )

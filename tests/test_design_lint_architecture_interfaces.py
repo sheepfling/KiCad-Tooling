@@ -74,6 +74,7 @@ USB_PEER_ANALYSIS_MODULES = (
     "usb_peer_data_crossing.py",
     "usb_peer_path_analysis.py",
     "usb_peer_inline_path_analysis.py",
+    "usb_peer_mapped_protection_evidence.py",
     "usb_peer_protection_shunt_analysis.py",
     "usb_peer_reference_contract.py",
     "usb_peer_reference_decision.py",

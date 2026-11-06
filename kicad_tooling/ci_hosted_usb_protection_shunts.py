@@ -46,3 +46,35 @@ def validate_usb_protection_shunt_fixture_reports(
         raise ValueError(
             "Native protection-shunt fault omitted exact pin evidence or duplicated review"
         )
+
+    inline_control = reports[("inline-protection-shunt-control", "first")]
+    inline_coverage = inline_control.usb_peer_reference_coverage
+    if inline_coverage is None or inline_coverage.supported_data_path_count != 1:
+        raise ValueError("Native combined inline-path and mapped-shunt control was not supported")
+    if (
+        inline_coverage.path_entries is None
+        or len(inline_coverage.path_entries) != 1
+        or inline_coverage.path_entries[0].data_path.protection_shunts[0].reference != "U6"
+        or any(
+            item.rule_id in {"bus.usb_peer_reference_review", "bus.usb_data_path_mismatch"}
+            for item in inline_control.findings
+        )
+    ):
+        raise ValueError("Native combined inline-path and mapped-shunt control was not supported")
+
+    inline_fault = reports[("inline-protection-shunt-fault", "first")]
+    inline_faults = tuple(
+        item for item in inline_fault.findings if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    if (
+        inline_fault.status != "REVIEW"
+        or len(inline_faults) != 1
+        or inline_faults[0].evidence.get("line") != ("protection_shunt",)
+        or not any(
+            "U6.3 is on USB_DM_SHUNT_FAULT; expected USB_DM_PHY" in issue
+            for issue in inline_faults[0].evidence.get("issues", ())
+        )
+        or inline_fault.usb_peer_reference_coverage is None
+        or inline_fault.usb_peer_reference_coverage.supported_data_path_count != 0
+    ):
+        raise ValueError("Native combined inline-path and mapped-shunt fault was not localized")

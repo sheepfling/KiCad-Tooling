@@ -62,6 +62,8 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "protection-shunt-split-reference": "315b0318669d9cadeb28fcfe2ec549100f9ac5c10555e3828619e379770d287b",
         "protection-shunt-common-reference": "0d2d087d73bc68cae85b2446cf2f8432ed07296d999fd4a588d53a7470b43ec5",
         "protection-shunt-pin-fault": "27a95acc910f2b379a3c1158c0dcb3bf7ca1faf644564d6d8b7811433838cc61",
+        "inline-protection-shunt-control": "d8ff88b4adbfec21bf369b11cd9171c7fba5cf8573b93b1de6bf3dcff1ce60a0",
+        "inline-protection-shunt-fault": "c86bcce0c3accc02257e7a5f92479945d1a4f8bb0d87d2b452c2643f0d4ab67f",
     }
     root = hosted_reference_root
     config = selected_config(root, project)
@@ -102,6 +104,8 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-data-path-fixture/protection-shunt-common-reference",
         "usb-data-path-fixture/protection-shunt-pin-fault",
         "usb-data-path-fixture/external-protection-contract",
+        "usb-data-path-fixture/inline-protection-shunt-control",
+        "usb-data-path-fixture/inline-protection-shunt-fault",
     }
     unmapped_inline = results["usb-data-path-fixture/inline-component-unmapped-coverage"]
     assert unmapped_inline["status"] == "PASS"

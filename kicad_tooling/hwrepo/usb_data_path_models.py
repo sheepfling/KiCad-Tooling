@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import hashlib
-from typing import Annotated, Literal
+from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import model_validator
 
+from . import usb_data_path_component_models as _usb_data_path_component_models
 from .model_primitives import (
     ElectricalPositive,
     Identifier,
@@ -19,11 +20,13 @@ from .model_primitives import (
 )
 from .reference_bond_models import ReferenceBondRequirement
 from .usb_data_path_component_models import (
-    UsbDataPathInlinePinRequirement,
+    UsbDataPathInlineComponentRequirement,
     UsbDataPathProtectionShuntRequirement,
 )
 from .usb_reference_pin_models import UsbReferencePinRequirement
 from .usb_superspeed_reference_models import UsbSuperspeedReferencePathRequirement
+
+UsbDataPathInlinePinRequirement = _usb_data_path_component_models.UsbDataPathInlinePinRequirement
 
 
 class UsbDataSeriesResistorRequirement(StrictModel):
@@ -39,45 +42,6 @@ class UsbDataSeriesResistorRequirement(StrictModel):
     def valid_resistance_range(self) -> UsbDataSeriesResistorRequirement:
         if self.maximum_ohms < self.minimum_ohms:
             raise ValueError("USB data series-resistor range is reversed")
-        return self
-
-
-class UsbDataPathInlineComponentRequirement(StrictModel):
-    """Reviewed exact pass-through pin map for one multi-pin USB inline component."""
-
-    reference: Identifier
-    expected_symbol: NonEmptyText
-    expected_footprint: NonEmptyText
-    positive_connector_pin: Reference
-    positive_phy_pin: Reference
-    negative_connector_pin: Reference
-    negative_phy_pin: Reference
-    pins: Annotated[tuple[UsbDataPathInlinePinRequirement, ...], Field(min_length=4)]
-
-    @property
-    def data_pins(self) -> tuple[str, ...]:
-        return (
-            self.positive_connector_pin,
-            self.positive_phy_pin,
-            self.negative_connector_pin,
-            self.negative_phy_pin,
-        )
-
-    @model_validator(mode="after")
-    def complete_distinct_component_pin_map(self) -> UsbDataPathInlineComponentRequirement:
-        reference_prefix = f"{self.reference}.".casefold()
-        pins = tuple(item.pin.casefold() for item in self.pins)
-        if any(not item.pin.casefold().startswith(reference_prefix) for item in self.pins):
-            raise ValueError("USB inline-component pin maps must belong to the declared component")
-        if len(set(pins)) != len(pins):
-            raise ValueError("USB inline-component pin maps must be unique")
-        data_pins = tuple(pin.casefold() for pin in self.data_pins)
-        if any(not pin.startswith(reference_prefix) for pin in data_pins):
-            raise ValueError("USB inline data-path pins must belong to the declared component")
-        if len(set(data_pins)) != len(data_pins):
-            raise ValueError("USB inline D+ and D- pins must be distinct")
-        if not set(data_pins) <= set(pins):
-            raise ValueError("USB inline pin inventory must include all four data-path pins")
         return self
 
 
@@ -165,14 +129,15 @@ class UsbDataInterfaceRequirement(StrictModel):
             raise ValueError("USB inline-component data paths need an exact component map")
         if self.inline_component is not None and inline_lines != (True, True):
             raise ValueError("USB inline-component maps must cover both D+ and D- paths")
-        if self.inline_component is not None and self.protection_shunts:
-            raise ValueError(
-                "USB inline-component and protection-shunt maps cannot be combined in one interface"
-            )
+        allowed_shunt_topology = (
+            "inline_component" if self.inline_component is not None else "direct"
+        )
         if self.protection_shunts and any(
-            line.topology != "direct" for line in (self.positive, self.negative)
+            line.topology != allowed_shunt_topology for line in (self.positive, self.negative)
         ):
-            raise ValueError("USB protection-shunt maps currently require direct data paths")
+            raise ValueError(
+                "USB protection-shunt maps require direct paths or one exact inline-component path"
+            )
         if any(
             any(
                 not pin.casefold().startswith(f"{self.connector_reference}.".casefold())
@@ -293,8 +258,14 @@ class UsbDataInterfaceRequirement(StrictModel):
                         )
         if self.protection_shunts:
             expected_data_nets = {
-                "D+": self.positive.connector_net.casefold(),
-                "D-": self.negative.connector_net.casefold(),
+                "D+": {
+                    self.positive.connector_net.casefold(),
+                    self.positive.phy_net.casefold(),
+                },
+                "D-": {
+                    self.negative.connector_net.casefold(),
+                    self.negative.phy_net.casefold(),
+                },
             }
             reserved_pins = {
                 pin.casefold()
@@ -345,9 +316,9 @@ class UsbDataInterfaceRequirement(StrictModel):
                         "USB protection-shunt pins must be distinct from endpoint pins"
                     )
                 for data_pin in shunt.data_pins:
-                    if data_pin.net.casefold() != expected_data_nets[data_pin.line]:
+                    if data_pin.net.casefold() not in expected_data_nets[data_pin.line]:
                         raise ValueError(
-                            "USB protection-shunt data pin nets must match direct endpoint nets"
+                            "USB protection-shunt data pins must match a mapped data-path net"
                         )
         mapped_signal_and_reference_pins = {
             item.casefold()

@@ -29,9 +29,9 @@ USB_DATA_PATH_MODEL_NAMES = (
     "UsbDataInterfaceRequirement",
     "UsbDataPathMap",
 )
-USB_DATA_PATH_OWNER_ONLY_MODEL_NAMES = ("UsbDataPathInlineComponentRequirement",)
 USB_DATA_PATH_COMPONENT_MODEL_NAMES = (
     "UsbDataPathInlinePinRequirement",
+    "UsbDataPathInlineComponentRequirement",
     "UsbDataPathProtectionShuntDataPinRequirement",
     "UsbDataPathProtectionShuntRequirement",
 )
@@ -42,17 +42,12 @@ def test_usb_data_path_models_have_a_bounded_theme_owner_and_compat_exports() ->
     assert line_count(owner) < IMPLEMENTATION_MAX_LINES
     tree = ast.parse(owner.read_text(encoding="utf-8"), filename=owner.name)
     definitions = {node.name for node in tree.body if isinstance(node, ast.ClassDef)}
-    assert set(USB_DATA_PATH_MODEL_NAMES + USB_DATA_PATH_OWNER_ONLY_MODEL_NAMES) <= definitions
+    assert set(USB_DATA_PATH_MODEL_NAMES) <= definitions
 
     for name in USB_DATA_PATH_MODEL_NAMES:
         model = getattr(usb_data_path_models, name)
         assert getattr(shared_models, name) is model
         assert model.__module__ == "kicad_tooling.hwrepo.usb_data_path_models"
-
-    for name in USB_DATA_PATH_OWNER_ONLY_MODEL_NAMES:
-        model = getattr(usb_data_path_models, name)
-        assert model.__module__ == "kicad_tooling.hwrepo.usb_data_path_models"
-        assert not hasattr(shared_models, name)
 
 
 def test_usb_component_pin_maps_live_in_their_theme_owner() -> None:
@@ -69,6 +64,10 @@ def test_usb_component_pin_maps_live_in_their_theme_owner() -> None:
     assert usb_data_path_models.UsbDataPathInlinePinRequirement is (
         usb_data_path_component_models.UsbDataPathInlinePinRequirement
     )
+    inline_component = usb_data_path_component_models.UsbDataPathInlineComponentRequirement
+    assert inline_component.__module__ == ("kicad_tooling.hwrepo.usb_data_path_component_models")
+    assert usb_data_path_models.UsbDataPathInlineComponentRequirement is inline_component
+    assert not hasattr(shared_models, "UsbDataPathInlineComponentRequirement")
 
 
 def test_usb_reference_pin_model_has_a_bounded_owner_and_compat_exports() -> None:

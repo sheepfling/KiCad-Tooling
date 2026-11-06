@@ -27,6 +27,45 @@ class UsbDataPathInlinePinRequirement(StrictModel):
         return self
 
 
+class UsbDataPathInlineComponentRequirement(StrictModel):
+    """Reviewed exact pass-through pin map for one multi-pin USB inline component."""
+
+    reference: Identifier
+    expected_symbol: NonEmptyText
+    expected_footprint: NonEmptyText
+    positive_connector_pin: Reference
+    positive_phy_pin: Reference
+    negative_connector_pin: Reference
+    negative_phy_pin: Reference
+    pins: Annotated[tuple[UsbDataPathInlinePinRequirement, ...], Field(min_length=4)]
+
+    @property
+    def data_pins(self) -> tuple[str, ...]:
+        return (
+            self.positive_connector_pin,
+            self.positive_phy_pin,
+            self.negative_connector_pin,
+            self.negative_phy_pin,
+        )
+
+    @model_validator(mode="after")
+    def complete_distinct_component_pin_map(self) -> UsbDataPathInlineComponentRequirement:
+        reference_prefix = f"{self.reference}.".casefold()
+        pins = tuple(item.pin.casefold() for item in self.pins)
+        if any(not item.pin.casefold().startswith(reference_prefix) for item in self.pins):
+            raise ValueError("USB inline-component pin maps must belong to the declared component")
+        if len(set(pins)) != len(pins):
+            raise ValueError("USB inline-component pin maps must be unique")
+        data_pins = tuple(pin.casefold() for pin in self.data_pins)
+        if any(not pin.startswith(reference_prefix) for pin in data_pins):
+            raise ValueError("USB inline data-path pins must belong to the declared component")
+        if len(set(data_pins)) != len(data_pins):
+            raise ValueError("USB inline D+ and D- pins must be distinct")
+        if not set(data_pins) <= set(pins):
+            raise ValueError("USB inline pin inventory must include all four data-path pins")
+        return self
+
+
 class UsbDataPathProtectionShuntDataPinRequirement(StrictModel):
     """One exact data-line tap pin on a mapped multi-pin USB protection device."""
 

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from .netlist_contract_models import NetlistContract
 from .usb_data_path_component_checks import check_usb_component_pin_map
-from .usb_data_path_models import UsbDataPathInlineComponentRequirement
+from .usb_data_path_component_models import UsbDataPathInlineComponentRequirement
 
 
 @dataclass(frozen=True, slots=True)

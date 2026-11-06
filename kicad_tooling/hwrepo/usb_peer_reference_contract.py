@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from .usb_data_path_component_models import UsbDataPathInlineComponentRequirement
 from .usb_data_path_models import (
     UsbDataInterfaceRequirement,
-    UsbDataPathInlineComponentRequirement,
     UsbDataPathLineRequirement,
     UsbDataPathMap,
 )

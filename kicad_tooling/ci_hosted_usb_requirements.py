@@ -6,13 +6,13 @@ from typing import Literal
 
 from .hwrepo.reference_bond_models import ReferenceBondRequirement
 from .hwrepo.usb_data_path_component_models import (
+    UsbDataPathInlineComponentRequirement,
     UsbDataPathInlinePinRequirement,
     UsbDataPathProtectionShuntDataPinRequirement,
     UsbDataPathProtectionShuntRequirement,
 )
 from .hwrepo.usb_data_path_models import (
     UsbDataInterfaceRequirement,
-    UsbDataPathInlineComponentRequirement,
     UsbDataPathLineRequirement,
     UsbDataPathMap,
     UsbDataSeriesResistorRequirement,
@@ -394,6 +394,41 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
 
     protection_shunt_split_map = protection_shunt_map(common_reference=False)
     protection_shunt_common_map = protection_shunt_map(common_reference=True)
+    inline_shunt_nets = {
+        "U6.1": "USB_DP_PORT",
+        "U6.2": "GND",
+        "U6.3": "USB_DM_PHY",
+        "U6.4": "GND",
+        "U6.5": "GND",
+    }
+    inline_shunt = UsbDataPathProtectionShuntRequirement.model_validate(
+        {
+            **protection_shunt.model_dump(),
+            "data_pins": (
+                UsbDataPathProtectionShuntDataPinRequirement(
+                    pin="U6.1", line="D+", net="USB_DP_PORT"
+                ),
+                UsbDataPathProtectionShuntDataPinRequirement(
+                    pin="U6.3", line="D-", net="USB_DM_PHY"
+                ),
+            ),
+            "pins": tuple(
+                item.model_copy(update={"net": inline_shunt_nets[item.pin]})
+                if item.pin in inline_shunt_nets
+                else item
+                for item in protection_shunt.pins
+            ),
+        }
+    )
+    inline_combined_interface = UsbDataInterfaceRequirement.model_validate(
+        {
+            **inline_component_map.interfaces[0].model_dump(),
+            "protection_shunts": (inline_shunt,),
+        }
+    )
+    inline_protection_shunt_map = UsbDataPathMap.model_validate(
+        {**inline_component_map.model_dump(), "interfaces": (inline_combined_interface,)}
+    )
     requirements = {
         "integrated-direct": direct_map,
         "external-series": series_map,
@@ -418,6 +453,8 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
         "protection-shunt-split-reference": protection_shunt_split_map,
         "protection-shunt-common-reference": protection_shunt_common_map,
         "protection-shunt-pin-fault": protection_shunt_split_map,
+        "inline-protection-shunt-control": inline_protection_shunt_map,
+        "inline-protection-shunt-fault": inline_protection_shunt_map,
     }
 
     return requirements

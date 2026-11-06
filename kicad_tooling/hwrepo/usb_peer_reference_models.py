@@ -225,10 +225,9 @@ class UsbPeerDataPathCoverage(StrictModel):
         ):
             raise ValueError("USB 2.0 peer paths must use USB 2.0 data families")
         if self.protection_shunts and any(
-            line.series_resistor is not None or line.inline_component is not None
-            for line in (self.positive, self.negative)
+            line.series_resistor is not None for line in (self.positive, self.negative)
         ):
-            raise ValueError("USB mapped protection shunts require direct data-line evidence")
+            raise ValueError("USB mapped protection shunts do not support series-resistor paths")
         if len({item.reference.casefold() for item in self.protection_shunts}) != len(
             self.protection_shunts
         ):
@@ -236,14 +235,14 @@ class UsbPeerDataPathCoverage(StrictModel):
         for shunt in self.protection_shunts:
             for item in shunt.data_pins:
                 line = self.positive if item.line == "D+" else self.negative
-                if (
-                    item.pin.casefold()
-                    in {pin.casefold() for pin in (*line.connector_pins, *line.phy_pins)}
-                    or item.net.casefold() != line.connector_net.casefold()
-                    or item.net.casefold() != line.phy_net.casefold()
-                ):
+                if item.pin.casefold() in {
+                    pin.casefold() for pin in (*line.connector_pins, *line.phy_pins)
+                } or item.net.casefold() not in {
+                    line.connector_net.casefold(),
+                    line.phy_net.casefold(),
+                }:
                     raise ValueError(
-                        "USB mapped protection-shunt data pins must match direct lines"
+                        "USB mapped protection-shunt data pins must match a mapped path net"
                     )
         return self
 

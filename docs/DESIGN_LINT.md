@@ -2234,9 +2234,11 @@ that the component conducts or protects as intended, or that board copper
 completes the route. Multiple inline devices and multi-hop paths remain outside
 this contract.
 
-A multi-pin part that shunts D+/D− while leaving the connector-to-PHY path
-direct can be declared under `protection_shunts` instead of
-`inline_component`:
+A multi-pin part that shunts D+/D− can be declared under `protection_shunts`.
+For a direct connector-to-PHY path, its data pins use the shared net for each
+line. One exact mapped inline-component path can also include a separately
+mapped protection shunt on either the connector side or PHY side of each line.
+The direct-path map shape is:
 
 ```json
 {
@@ -2262,6 +2264,34 @@ direct can be declared under `protection_shunts` instead of
 }
 ```
 
+To combine the inline path shown above with a protection array, add a
+`protection_shunts` entry to the same interface. Each data pin names the exact
+connector-side or PHY-side net from that interface's D+/D− path:
+
+```json
+{
+  "protection_shunts": [
+    {
+      "reference": "U6",
+      "expected_symbol": "Synthetic:UsbProtectionArray",
+      "expected_footprint": "Synthetic:DFN-6",
+      "data_pins": [
+        {"pin": "U6.1", "line": "D+", "net": "USB_DP_PORT"},
+        {"pin": "U6.3", "line": "D-", "net": "USB_DM_PHY"}
+      ],
+      "pins": [
+        {"pin": "U6.1", "disposition": "net", "net": "USB_DP_PORT"},
+        {"pin": "U6.2", "disposition": "net", "net": "BOARD_GND"},
+        {"pin": "U6.3", "disposition": "net", "net": "USB_DM_PHY"},
+        {"pin": "U6.4", "disposition": "net", "net": "BOARD_GND"},
+        {"pin": "U6.5", "disposition": "net", "net": "BOARD_GND"},
+        {"pin": "U6.6", "disposition": "unconnected"}
+      ]
+    }
+  ]
+}
+```
+
 This map makes the multi-pin part eligible for the USB peer-reference review
 only when its exact identity, full native pin inventory, every assignment, and
 data-net membership match. A changed or incomplete map fails closed. It can
@@ -2270,8 +2300,10 @@ authored; adding common_net, separate_nets, or bonded requires the separately
 reviewed endpoint reference-pin decision above. The lint does not decide that
 the protection ground must join either endpoint, and the schematic map does not
 prove the device's datasheet pinout, protection performance, or PCB copper
-continuity. This initial mapping supports direct paths only and cannot be
-combined with an inline-component path.
+continuity. A combined map supports exactly one inline-component path with a
+mapped protection shunt on the direct connector-side or PHY-side nets. Series
+resistor paths, multiple inline devices, and other multi-hop paths remain
+unsupported.
 
 For a direct D+/D− interface whose reference decision has also been reviewed,
 add the endpoint pin and net assignments to the same interface entry. Both

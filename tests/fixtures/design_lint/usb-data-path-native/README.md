@@ -24,6 +24,8 @@ regression.
 | `protection-shunt-split-reference.kicad_sch`           | Direct data pair with an exact six-pin shunt map; connector and PHY references differ        | One reference review with the shunt's complete pin-map evidence           |
 | `protection-shunt-common-reference.kicad_sch`          | Same shunt with an explicit common reference policy                                          | No USB path or reference finding                                          |
 | `protection-shunt-pin-fault.kicad_sch`                 | Shunt pin U6.2 is incorrectly assigned to USB_DP                                             | One exact mapped shunt-pin finding; no duplicate peer review              |
+| `inline-protection-shunt-control.kicad_sch`            | Mapped inline path with U6 taps on USB_DP_PORT and USB_DM_PHY                                | One supported path; no path or peer-reference finding                     |
+| `inline-protection-shunt-fault.kicad_sch`              | U6.3 D− tap is assigned to USB_DM_SHUNT_FAULT                                                | One exact shunt-pin finding; no supported peer path                       |
 
 SHA-256 hashes of the version-controlled schematic inputs:
 
@@ -42,6 +44,14 @@ SHA-256 hashes of the version-controlled schematic inputs:
 | `protection-shunt-split-reference.kicad_sch`           | `315b0318669d9cadeb28fcfe2ec549100f9ac5c10555e3828619e379770d287b` |
 | `protection-shunt-common-reference.kicad_sch`          | `0d2d087d73bc68cae85b2446cf2f8432ed07296d999fd4a588d53a7470b43ec5` |
 | `protection-shunt-pin-fault.kicad_sch`                 | `27a95acc910f2b379a3c1158c0dcb3bf7ca1faf644564d6d8b7811433838cc61` |
+| `inline-protection-shunt-control.kicad_sch`            | `d8ff88b4adbfec21bf369b11cd9171c7fba5cf8573b93b1de6bf3dcff1ce60a0` |
+| `inline-protection-shunt-fault.kicad_sch`              | `c86bcce0c3accc02257e7a5f92479945d1a4f8bb0d87d2b452c2643f0d4ab67f` |
+
+The CLI/MCP parity regression also reads this synthetic native export:
+`inline-protection-shunt-control.netlist.xml`
+(`fdf813c9ea6a29a2ad521e4407c0ddc29bdb04ef11a09857b0086daa02693583`).
+The native fixture lane re-exports both schematics twice on each pinned KiCad
+version and checks the normalized typed contracts before evaluating the maps.
 
 The native regression runs twice with each of these digest-pinned images:
 

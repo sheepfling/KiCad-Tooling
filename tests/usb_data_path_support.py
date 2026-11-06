@@ -14,10 +14,12 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
     ReferenceBondRequirement,
 )
-from kicad_tooling.hwrepo.usb_data_path_component_models import UsbDataPathInlinePinRequirement
+from kicad_tooling.hwrepo.usb_data_path_component_models import (
+    UsbDataPathInlineComponentRequirement,
+    UsbDataPathInlinePinRequirement,
+)
 from kicad_tooling.hwrepo.usb_data_path_models import (
     UsbDataInterfaceRequirement,
-    UsbDataPathInlineComponentRequirement,
     UsbDataPathLineRequirement,
     UsbDataPathMap,
     UsbDataSeriesResistorRequirement,
