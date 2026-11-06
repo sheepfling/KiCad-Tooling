@@ -2488,6 +2488,8 @@ not-applicable disposition, incomplete evidence, override, ignore, and
 mapping-order cases are covered. Tooling-owned KiCad schematics are exported
 twice using digest-pinned KiCad 10.0.0 and 10.0.5 images; see the
 [fixture record](../tests/fixtures/design_lint/serial-generic-connector-native/README.md).
+An explicit label-only control confirms that `UART_TX` and `UART_RX` net names
+do not replace native endpoint pin functions for this rule.
 
 ```sh
 .venv/bin/python -I -m pytest tests/test_serial_generic_connector_pair_review.py \

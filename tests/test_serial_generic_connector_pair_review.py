@@ -100,6 +100,16 @@ def test_generic_contacts_on_exact_native_uart_pair_emit_review() -> None:
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_uart_net_labels_do_not_replace_native_endpoint_functions() -> None:
+    label_only = generic_serial_connector_pair_netlist(
+        endpoint_functions=("GPIO1", "GPIO2"),
+        signal_nets=("UART_TX", "UART_RX"),
+    )
+
+    assert not any(item.rule_id == RULE_ID for item in _report(label_only).findings)
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_named_roles_source_matched_map_and_not_applicable_suppress_review() -> None:
     named = generic_serial_connector_pair_netlist(connector_functions=("TXD", "RXD", "GND", "3V3"))
     not_applicable = ConnectorCoverageReport(

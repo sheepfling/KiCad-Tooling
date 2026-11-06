@@ -12844,6 +12844,7 @@
         "tests.test_serial_generic_connector_native_fixture_lane.test_native_generic_connector_fault_and_named_control"
       ],
       "valid_control_fixtures": [
+        "tests.test_serial_generic_connector_pair_review.test_uart_net_labels_do_not_replace_native_endpoint_functions",
         "tests.test_serial_generic_connector_pair_review.test_named_roles_source_matched_map_and_not_applicable_suppress_review",
         "tests.test_serial_generic_connector_pair_review.test_partial_dnp_incomplete_and_ambiguous_cases_stay_quiet",
         "tests.test_serial_generic_connector_native_fixture_lane.test_native_generic_connector_fault_and_named_control"

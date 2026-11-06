@@ -9,11 +9,13 @@ def generic_serial_connector_pair_netlist(
     *,
     connector_functions: tuple[str, ...] = ("Pin_1", "Pin_2", "GND", "3V3"),
     include_rx_contact: bool = True,
+    endpoint_functions: tuple[str, str] = ("TXD", "RXD"),
+    signal_nets: tuple[str, str] = ("LINE_A", "LINE_B"),
 ) -> NetlistContract:
     """Return a completely inventoried connector and fitted UART endpoint."""
     nets = {
-        "LINE_A": ("J1.1", "U1.1"),
-        "LINE_B": ("U1.2", *(("J1.2",) if include_rx_contact else ())),
+        signal_nets[0]: ("J1.1", "U1.1"),
+        signal_nets[1]: ("U1.2", *(("J1.2",) if include_rx_contact else ())),
         "BOARD_GND": ("J1.3", "U1.3"),
         "+3V3": ("U1.4", "J1.4"),
     }
@@ -31,8 +33,8 @@ def generic_serial_connector_pair_netlist(
         },
         pin_functions={
             **{f"J1.{index + 1}": function for index, function in enumerate(connector_functions)},
-            "U1.1": "TXD",
-            "U1.2": "RXD",
+            "U1.1": endpoint_functions[0],
+            "U1.2": endpoint_functions[1],
             "U1.3": "VSS",
             "U1.4": "VDD",
         },

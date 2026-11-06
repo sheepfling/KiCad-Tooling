@@ -19072,7 +19072,8 @@ acceptance threads while new lint features proceed:
 - **Fixtures:** Synthetic neutral-label fault, named TXD/RXD control,
   source-matched map, explicit not-applicable disposition, incomplete and
   ambiguous evidence, DNP state, policy override, exact ignore, and
-  mapping-order cases. Tooling-owned fault/control schematics are hash-pinned
+  mapping-order cases, and a label-only control with generic native endpoint
+  functions. Tooling-owned fault/control schematics are hash-pinned
   and exported twice with exact KiCad 10.0.0 and 10.0.5 container images.
   These verify predicate behavior and export compatibility, not field
   precision or reviewer value.
