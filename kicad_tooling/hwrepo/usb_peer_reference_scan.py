@@ -17,6 +17,9 @@ from .usb_peer_endpoint_analysis import (
     usb_endpoints,
     usb_superspeed_endpoints,
 )
+from .usb_peer_generic_connector_candidates import (
+    mapped_generic_usb_superspeed_connector_endpoints,
+)
 from .usb_peer_inline_path_analysis import mapped_inline_usb_data_link
 from .usb_peer_path_analysis import usb_data_link, usb_superspeed_direct_data_link
 from .usb_peer_protection_shunt_analysis import mapped_protection_shunt_usb_data_link
@@ -57,7 +60,15 @@ def scan_usb_peer_reference_reviews(
     remain outside this bounded topology check.
     """
     assignments = pin_net_index(observed)
-    connector_candidates = connector_candidate_references(observed, declared_connector_references)
+    mapped_superspeed_connector_references = (
+        ()
+        if path_map is None
+        else tuple(item.connector_reference for item in path_map.superspeed_interfaces)
+    )
+    connector_candidates = connector_candidate_references(
+        observed,
+        (*declared_connector_references, *mapped_superspeed_connector_references),
+    )
     connector_references = {item.casefold() for item in connector_candidates}
     mapped_path_component_references: set[str] = (
         set()
@@ -84,6 +95,7 @@ def scan_usb_peer_reference_reviews(
             assignments,
             connector=True,
         ),
+        *mapped_generic_usb_superspeed_connector_endpoints(observed, path_map),
     )
     phy_references = tuple(
         reference

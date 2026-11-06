@@ -235,6 +235,14 @@ RULE_NODE_CASES = (
         "tests/test_rs485_data_input_output_same_net.py::test_explicit_rs485_driver_input_and_receiver_output_on_one_net_are_reviewed",
     ),
     (
+        "bus.usb_superspeed_generic_connector_pair_review",
+        "tests/test_usb_superspeed_generic_connector_pair_review.py::test_generic_connector_contacts_on_exact_superspeed_pair_emit_review",
+    ),
+    (
+        "bus.usb_superspeed_generic_connector_pair_review",
+        "tests/test_design_lint_mcp_parity_usb_superspeed_generic_connector.py::test_generic_superspeed_connector_cli_mcp_parity",
+    ),
+    (
         "bus.rs485_generic_connector_pair_review",
         "tests/test_rs485_generic_connector_pair_review.py::test_generic_contacts_on_exact_identified_rs485_pair_emit_review",
     ),

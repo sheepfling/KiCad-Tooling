@@ -367,6 +367,9 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
     from tests.design_lint_fixtures.usb_generic_connector_pair import (
         generic_usb_connector_pair_netlist,
     )
+    from tests.design_lint_fixtures.usb_superspeed_generic_connector import (
+        generic_usb_superspeed_connector_pair_netlist,
+    )
     from tests.i2c_peer_reference_support import i2c_peer_netlist
     from tests.serial_peer_reference_support import serial_reference_netlist
     from tests.spi_peer_reference_support import spi_peer_netlist
@@ -432,6 +435,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         usb_signal_on_named_rail_netlist(),
         usb_data_pair_crossing_netlist(),
         generic_usb_connector_pair_netlist(),
+        generic_usb_superspeed_connector_pair_netlist(),
     )
     return (
         {item.rule_id for source in cases for item in candidates(source)}

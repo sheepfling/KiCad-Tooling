@@ -787,7 +787,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 275 active rules.
+The catalog currently contains 276 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -2214,6 +2214,24 @@ or a required bond produce `bus.usb_data_path_mismatch`; a split-reference
 review remains visible when the policy map does not match. This schematic
 comparison does not prove bond conduction, PCB copper continuity, external
 grounding, lane routing, or signal integrity.
+
+For generic `Pin_N` connector symbols, `bus.usb_superspeed_generic_connector_pair_review`
+prompts when both contacts of a recognized direct SuperSpeed TX or RX PHY pair
+share the exact pair nets. A source-matched `superspeed_interfaces` entry can
+state the generic connector pin roles; the existing data-path mismatch check
+then verifies those exact pins and nets against the native netlist. Without a
+map, this stays a configurable `REVIEW` prompt. It does not identify the
+connector as USB, classify lane-indexed USB-C wiring, or decide any reference,
+power, return, or shield connections.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_usb_superspeed_generic_connector_pair_review.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_superspeed_generic_connector_pair_review")'
+
+KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_usb_generic_connector_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_superspeed_generic_connector_pair_review")'
+```
 
 A reviewed path through one multi-pin component can use
 `topology: "inline_component"` on both data lines and an `inline_component`

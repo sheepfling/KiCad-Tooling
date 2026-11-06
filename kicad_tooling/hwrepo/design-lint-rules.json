@@ -10158,6 +10158,54 @@
       "implementation_owner": "kicad_tooling/hwrepo/usb_peer_generic_connector_candidates.py#generic_usb_connector_data_pair_candidates"
     },
     {
+      "rule_id": "bus.usb_superspeed_generic_connector_pair_review",
+      "title": "Generic connector contacts match a recognized USB SuperSpeed PHY pair",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete connector pin inventory, generic pin-function metadata, exact PHY pair assignments, and exact net membership",
+      "predicate": "For a fitted, completely inventoried connector candidate, emit REVIEW when generic Pin_N contacts on both distinct native nets of one recognized USB SuperSpeed TX or RX PHY pair share the exact positive and negative nets. A project-authored superspeed_interfaces entry for the exact connector, PHY, and complementary signal families suppresses the prompt. For mapped generic connectors, the existing USB data-path checker compares authored pins, identities, nets, reference pins, and reference policy with current native evidence.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native fixture exports; the selected project exact version is checked before export"
+      ],
+      "limitations": [
+        "Only a fitted U/IC endpoint with complete native pin metadata, an explicitly recognized SSTX+/SSTX- or SSRX+/SSRX- pair, and distinct unambiguous nets is considered. Connector candidates need complete unique pin inventories and function/electrical-type metadata; each counted contact needs one exact net and a generic Pin_N function.",
+        "The prompt requires generic connector contacts on both exact pair nets. It does not infer connector identity or USB participation from names, prove data-path topology or PCB copper, determine lane-indexed USB-C orientation, or require power, reference, return, or shield contacts to be common.",
+        "A source-matched superspeed_interfaces entry for the exact connector/PHY pair and complementary signal families suppresses the prompt. The USB data-path mismatch rule remains responsible for stale pin, identity, net, reference-pin, and reference-policy expectations; incomplete or unsupported maps do not establish coverage."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_superspeed_generic_connector_pair_review.test_generic_connector_contacts_on_exact_superspeed_pair_emit_review",
+        "tests.test_usb_superspeed_generic_connector_pair_review.test_rule_override_and_exact_ignore_remain_available",
+        "tests.test_design_lint_mcp_parity_usb_superspeed_generic_connector.test_generic_superspeed_connector_cli_mcp_parity",
+        "tests.test_usb_generic_connector_native_fixture_lane.test_native_generic_connector_fault_and_named_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_superspeed_generic_connector_pair_review.test_named_connector_roles_are_outside_the_generic_pin_prompt",
+        "tests.test_usb_superspeed_generic_connector_pair_review.test_incomplete_pairs_dnp_and_incomplete_pin_inventories_stay_quiet",
+        "tests.test_usb_superspeed_generic_connector_pair_review.test_source_matched_map_suppresses_candidate_and_checks_exact_assignments",
+        "tests.test_usb_generic_connector_native_fixture_lane.test_native_generic_connector_fault_and_named_control"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_superspeed_generic_connector_pair_review.test_candidate_fingerprint_is_stable_when_netlist_mappings_are_reordered",
+        "tests.test_usb_generic_connector_native_fixture_registry.test_native_source_registry_is_hash_pinned_and_local"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_peer_generic_connector_candidates.py#generic_usb_connector_superspeed_pair_candidates",
+        "kicad_tooling/hwrepo/usb_peer_generic_connector_candidates.py#mapped_generic_usb_superspeed_connector_endpoints",
+        "kicad_tooling/hwrepo/usb_peer_generic_connector_models.py#UsbGenericConnectorSuperspeedPair",
+        "kicad_tooling/hwrepo/design_lint_usb_superspeed_generic_connector_candidates.py#generic_usb_superspeed_connector_pair_review_candidates",
+        "kicad_tooling/hwrepo/design_lint_usb_superspeed_generic_connector_candidate_evidence.py#UsbSuperspeedGenericConnectorCandidate",
+        "kicad_tooling/hwrepo/usb_peer_reference_scan.py#scan_usb_peer_reference_reviews",
+        "kicad_tooling/hwrepo/design_lint_peer_candidates.py#scan_peer_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_peer_generic_connector_candidates.py#generic_usb_connector_superspeed_pair_candidates"
+    },
+    {
       "rule_id": "oscillator.crystal_load_network_mismatch",
       "title": "Mapped crystal load network differs from the authored requirement",
       "status": "active",

@@ -16,11 +16,12 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
 
 
 @pytest.mark.design_lint_rule(rule_id="bus.usb_generic_connector_phy_pair_review")
+@pytest.mark.design_lint_rule(rule_id="bus.usb_superspeed_generic_connector_pair_review")
 def test_native_source_registry_is_hash_pinned_and_local() -> None:
     fixture_root = Path(__file__).parent / "fixtures/design_lint/usb-generic-connector-native"
     sources = usb_generic_connector_fixture_sources()
 
-    assert set(sources) == {"fault", "control"}
+    assert set(sources) == {"fault", "control", "superspeed_fault", "superspeed_control"}
     assert all(path.resolve().is_relative_to(fixture_root.resolve()) for path in sources.values())
     assert {
         case: hashlib.sha256(path.read_bytes()).hexdigest() for case, path in sources.items()

@@ -24,6 +24,8 @@ from .hwrepo.models import DesignLintPolicy
 from .hwrepo.native_report_parsing import read_netlist
 
 RULE_ID = "bus.usb_generic_connector_phy_pair_review"
+SUPERSPEED_RULE_ID = "bus.usb_superspeed_generic_connector_pair_review"
+RULE_IDS = (RULE_ID, SUPERSPEED_RULE_ID)
 
 
 def generic_usb_connector_fixture_lane(
@@ -112,7 +114,7 @@ def generic_usb_connector_fixture_lane(
         normalized_hashes: list[str] = []
         raw_hashes: list[str] = []
         finding_signatures: list[
-            tuple[tuple[str, tuple[tuple[str, tuple[str, ...]], ...]], ...]
+            tuple[tuple[str, tuple[tuple[str, tuple[tuple[str, tuple[str, ...]], ...]], ...]], ...]
         ] = []
         for run in ("first", "repeat"):
             netlist_path = output / f"{case}.{run}.netlist.xml"
@@ -131,32 +133,58 @@ def generic_usb_connector_fixture_lane(
                 netlist_sha256=raw_hashes[-1],
             )
             report = evaluate(coach.project_id, coach, DesignLintPolicy())
-            findings = tuple(item for item in report.findings if item.rule_id == RULE_ID)
             finding_signatures.append(
                 tuple(
                     (
-                        item.subject,
+                        rule_id,
                         tuple(
-                            sorted((key, tuple(values)) for key, values in item.evidence.items())
+                            (
+                                item.subject,
+                                tuple(
+                                    sorted(
+                                        (key, tuple(values))
+                                        for key, values in item.evidence.items()
+                                    )
+                                ),
+                            )
+                            for item in report.findings
+                            if item.rule_id == rule_id
                         ),
                     )
-                    for item in findings
+                    for rule_id in RULE_IDS
                 )
             )
         if normalized_hashes[0] != normalized_hashes[1]:
             raise ValueError(f"Native {case} generic USB netlists differ after normalization")
         if finding_signatures[0] != finding_signatures[1]:
             raise ValueError(f"Native {case} generic USB findings differ on repeat export")
-        expected_count = 1 if case == "fault" else 0
-        if len(finding_signatures[0]) != expected_count:
-            raise ValueError(
-                f"Native {case} expected {expected_count} generic USB review(s), "
-                f"got {len(finding_signatures[0])}"
-            )
-        if case == "fault" and finding_signatures[0][0][0] != (
-            "J1 / U1: generic pins match USB data nets"
-        ):
-            raise ValueError("Native generic connector finding omitted the exact endpoint pair")
+        expected_counts = {
+            "fault": {RULE_ID: 1, SUPERSPEED_RULE_ID: 0},
+            "control": {RULE_ID: 0, SUPERSPEED_RULE_ID: 0},
+            "superspeed_fault": {RULE_ID: 0, SUPERSPEED_RULE_ID: 1},
+            "superspeed_control": {RULE_ID: 0, SUPERSPEED_RULE_ID: 0},
+        }[case]
+        first_findings = dict(finding_signatures[0])
+        for rule_id, expected_count in expected_counts.items():
+            actual_findings = first_findings[rule_id]
+            if len(actual_findings) != expected_count:
+                raise ValueError(
+                    f"Native {case} expected {expected_count} {rule_id} review(s), "
+                    f"got {len(actual_findings)}"
+                )
+        expected_subject = {
+            "fault": (RULE_ID, "J1 / U1: generic pins match USB data nets"),
+            "superspeed_fault": (
+                SUPERSPEED_RULE_ID,
+                "J1 / U1: generic pins match USB SuperSpeed TX pair",
+            ),
+        }.get(case)
+        if expected_subject is not None:
+            rule_id, subject = expected_subject
+            if first_findings[rule_id][0][0] != subject:
+                raise ValueError(
+                    f"Native {rule_id} finding omitted the expected endpoint pair for {case}"
+                )
         log.event(
             f"usb-generic-connector-fixture/{case}",
             "PASS",
@@ -168,5 +196,6 @@ def generic_usb_connector_fixture_lane(
             repeat_netlist_sha256=raw_hashes[1],
             normalized_netlist_sha256=normalized_hashes[0],
             repeat_normalized_netlist_sha256=normalized_hashes[1],
-            finding_count=expected_count,
+            usb2_finding_count=expected_counts[RULE_ID],
+            superspeed_finding_count=expected_counts[SUPERSPEED_RULE_ID],
         )

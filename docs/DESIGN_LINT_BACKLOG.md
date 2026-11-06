@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 275 rules are implemented with synthetic regression coverage.
+The following 276 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 275 active rules.
+The catalog currently contains 276 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -622,6 +622,7 @@ skipped under prerelease policy.
 - `bus.usb_data_path_mismatch`
 - `bus.usb_unmapped_multi_pin_topology`
 - `bus.usb_generic_connector_phy_pair_review`
+- `bus.usb_superspeed_generic_connector_pair_review`
 - `bus.usb_data_polarity_label_mismatch`
 - `bus.usb_c_superspeed_lane_label_mismatch`
 - `bus.usb_peer_data_pair_crossed`
@@ -3558,7 +3559,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 275 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 276 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -19122,6 +19123,44 @@ acceptance threads while new lint features proceed:
   interface_lint and design_lint_rule(rule_id="bus.rs485_generic_connector_pair_review")'`.
   The exact native test uses
   `KICAD_RUN_NATIVE_RS485_GENERIC_CONNECTOR_FIXTURES=1`.
+
+#### LINT-295 — Prompt review of generic connector pins on USB SuperSpeed pairs
+
+- **Rule:** `bus.usb_superspeed_generic_connector_pair_review`, default
+  `review`.
+- **Trigger:** A fitted U/IC endpoint has a complete, unique native pin
+  inventory and exactly one recognized `SSTX+`/`SSTX-` or
+  `SSRX+`/`SSRX-` pair on distinct, unambiguous nets. A completely inventoried
+  connector candidate has generic `Pin_N` contacts on both exact pair nets.
+  A source-matched `superspeed_interfaces` map for the connector, PHY, and
+  complementary signal families suppresses the prompt. Mapped generic
+  connector pins are then checked against current native pin, net, identity,
+  reference-pin, and reference-policy evidence by
+  `bus.usb_data_path_mismatch`.
+- **Purpose:** A generic connector symbol can hide an external SuperSpeed
+  connection from a schematic reviewer. The prompt requests an exact connector
+  pinout and interface disposition without assuming the generic contacts are
+  USB pins.
+- **Evidence and limits:** The candidate retains the connector pin count,
+  generic positive/negative contacts and functions, exact line nets, and native
+  PHY pin assignments. DNP endpoints, incomplete metadata, duplicate or
+  ambiguous pair members, same-net pairs, and incomplete connector matches
+  stay quiet. It does not infer connector identity, USB participation,
+  lane-indexed USB-C orientation, mux/retimer paths, signal integrity, PCB
+  copper continuity, or how power, reference, return, or shield contacts
+  should be connected.
+- **Fixtures:** Synthetic TX and RX pair faults, named-role and incomplete
+  controls, DNP and ambiguous assignment controls, exact and stale authored
+  maps, override/ignore, mapping-order stability, CLI/MCP parity, and
+  tooling-owned KiCad schematics. The native fault/control pair exports twice
+  with digest-pinned KiCad 10.0.0 and 10.0.5 images. These establish predicate
+  behavior and export compatibility, not field precision or reviewer value.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_usb_superspeed_generic_connector_pair_review.py -m 'design_lint
+  and interface_lint and
+  design_lint_rule(rule_id="bus.usb_superspeed_generic_connector_pair_review")'`.
+  The exact native test uses the existing
+  `KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1` lane.
 
 ## Completion and release gate
 
