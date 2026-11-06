@@ -33,6 +33,22 @@ _CORRECT_LABELS = MappingProxyType(
         "J1.8": "USB_RX2_N",
     }
 )
+_IC_FUNCTIONS = MappingProxyType(
+    {
+        "U1.1": "TX1_P",
+        "U1.2": "TX1_N",
+        "U1.3": "RX1_P",
+        "U1.4": "RX1_N",
+    }
+)
+_IC_LABELS = MappingProxyType(
+    {
+        "U1.1": "USB Debug, DP/USBC0_TX1_P",
+        "U1.2": "USB Debug, DP/USBC0_TX1_N",
+        "U1.3": "USB Debug, DP/USBC0_RX1_P",
+        "U1.4": "USB Debug, DP/USBC0_RX1_N",
+    }
+)
 
 
 def _netlist(labels: Mapping[str, str]) -> NetlistContract:
@@ -46,6 +62,25 @@ def _netlist(labels: Mapping[str, str]) -> NetlistContract:
 
 def _findings(source: NetlistContract) -> tuple[Candidate, ...]:
     return tuple(item for item in candidates(source) if item.rule_id == RULE_ID)
+
+
+def _ic_netlist(
+    labels: Mapping[str, str],
+    *,
+    functions: Mapping[str, str] = _IC_FUNCTIONS,
+    dnp: bool = False,
+) -> NetlistContract:
+    grouped: dict[str, list[str]] = {}
+    for pin, net in labels.items():
+        grouped.setdefault(net, []).append(pin)
+    return NetlistContract(
+        components={},
+        nets={net: tuple(pins) for net, pins in grouped.items()},
+        component_symbols={"U1": "Synthetic:UsbMux"},
+        pin_functions=dict(functions),
+        component_pin_numbers={"U1": ("1", "2", "3", "4")},
+        dnp_components=("U1",) if dnp else (),
+    )
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -120,6 +155,60 @@ def test_usb_and_superspeed_label_aliases_support_both_polarity_spellings() -> N
     labels["J1.2"] = "SSTX1-"
 
     assert not _findings(_netlist(labels))
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_integrated_circuit_lane_functions_match_hierarchical_usb_labels() -> None:
+    labels = dict(_IC_LABELS)
+    labels["U1.1"] = "USB Debug, DP/USBC0_RX1_P"
+
+    findings = _findings(_ic_netlist(labels))
+
+    assert len(findings) == 1
+    assert findings[0].subject == "U1.1: TX1_P on USB Debug, DP/USBC0_RX1_P"
+    assert findings[0].evidence == {
+        "pin": ("U1.1",),
+        "pin_function": ("TX1_P",),
+        "pin_lane": ("USB SuperSpeed TX lane 1",),
+        "pin_side": ("positive",),
+        "net": ("USB Debug, DP/USBC0_RX1_P",),
+        "net_lane": ("USB SuperSpeed RX lane 1",),
+        "net_side": ("positive",),
+    }
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_ic_lane_review_needs_usb_label_and_exact_supported_function() -> None:
+    generic_label = dict(_IC_LABELS)
+    generic_label["U1.1"] = "TX2_P"
+    ambiguous_label = dict(_IC_LABELS)
+    ambiguous_label["U1.1"] = "USB_TX1_P/SSRX2_N"
+    unbounded_function = dict(_IC_FUNCTIONS)
+    unbounded_function["U1.1"] = "TX3_P"
+    connector_function = {"J2.1": "TX1_P"}
+
+    assert not _findings(_ic_netlist(generic_label))
+    assert not _findings(_ic_netlist(ambiguous_label))
+    assert not _findings(_ic_netlist(_IC_LABELS, functions=unbounded_function))
+    assert not _findings(
+        _ic_netlist(
+            {"J2.1": "USBC0_RX1_N"},
+            functions=connector_function,
+        )
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_dnp_open_and_multiply_assigned_ic_pins_are_skipped() -> None:
+    fault = dict(_IC_LABELS)
+    fault["U1.1"] = "USBC0_RX1_P"
+    source = _ic_netlist(fault)
+    open_pin = _ic_netlist({pin: net for pin, net in fault.items() if pin != "U1.1"})
+    multiple = source.model_copy(update={"nets": {**source.nets, "USBC0_TX1_P_ALIAS": ("U1.1",)}})
+
+    assert not _findings(_ic_netlist(fault, dnp=True))
+    assert not _findings(open_pin)
+    assert not _findings(multiple)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

@@ -38,29 +38,36 @@ The same native gate also checks all four indexed USB-C SuperSpeed pairs, with
 a TX1 same-net fault and a distinct-net control. Generic `TX1+/TX1-` names and
 lane indices outside 1 and 2 remain unclassified.
 
-## Review USB-C SuperSpeed pin and net-label mismatches
+## Review USB SuperSpeed pin and net-label mismatches
 
 `bus.usb_c_superspeed_lane_label_mismatch` compares explicit `StdA_` and
-`StdB_` `SSTX`/`SSRX` lane 1/2 pin functions with net labels that explicitly
-encode USB or SuperSpeed direction, lane, and polarity, such as
-`USB_TX1_P` or `SSRX2-`. A mismatch in lane, TX/RX direction, or polarity
-creates one `REVIEW` finding for the affected pin. Neutral labels, generic
-`TX1`/`RX1` functions, open or multiply assigned pins, DNP connectors, and
-unrecognized labels stay quiet. The names are clues for review; they do not
-establish the correct pinout, lane mapping, USB compliance, routed copper, or
-physical continuity. Project policy can set the rule to `block` or `off`, or
-ignore an exact finding fingerprint.
+`StdB_` `SSTX`/`SSRX` lane 1/2 connector functions, and exact U/IC `TX`/`RX`
+lane 1/2 functions, with net-label segments that explicitly encode USB or
+SuperSpeed direction, lane, and polarity. For example, it can compare an IC
+`TX1_P` pin with `USBC0_TX1_P` even when the full net name includes a sheet
+path. A mismatch in lane, TX/RX direction, or polarity creates one `REVIEW`
+finding for the affected pin. Generic U/IC `TX`/`RX` aliases are considered
+only with an explicit USB or SuperSpeed label; generic lane functions on other
+references stay quiet. Neutral labels, unsupported lanes, open or multiply
+assigned pins, DNP endpoints, and unrecognized labels stay quiet. These names
+are clues for review; they do not establish the correct pinout, USB port
+identity, lane mapping, USB compliance, routed copper, or physical continuity.
+Project policy can set the rule to `block` or `off`, or ignore an exact finding
+fingerprint.
 
 Synthetic regressions cover lane swaps, polarity and direction mismatches,
 neutral and ambiguous controls, DNP/open/ambiguous boundaries, policy, and
 ordering. The exact KiCad 10.0.0/10.0.5 native fixture checks swapped TX1/TX2
-labels beside a correct lane-label control, independently of pair-completeness
-findings:
+labels on connector and IC pin functions beside correct controls,
+independently of pair-completeness findings. A CLI/MCP parity case checks that
+both surfaces return the same IC-pin finding:
 
 ```sh
 .venv/bin/python -I -m pytest tests/test_usb_c_superspeed_lane_labels.py -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_superspeed_lane_label_mismatch")'
 
 KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES=1 .venv/bin/python -I -m pytest tests/test_complementary_pair_native_fixture_lane.py -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_superspeed_lane_label_mismatch")'
+
+KICAD_TEMPLATE_ROOT=/path/to/public/KiCad-Team-Workflow-Template .venv/bin/python -I -m pytest tests/test_design_lint_mcp_parity_usb_ic_lane_labels.py -m 'parity_lint and design_lint and interface_lint'
 ```
 
 ## Review unassigned USB 2.0 data pins

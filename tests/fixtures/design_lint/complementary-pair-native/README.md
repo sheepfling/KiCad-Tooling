@@ -7,8 +7,9 @@ The indexed USB-C lane pair also uses tooling-authored `SSTX1/2` and
 `SSRX1/2` functions to ensure each direction/lane combination is evaluated
 separately.
 The lane-label cases also exercise
-`bus.usb_c_superspeed_lane_label_mismatch` against explicit USB-C direction,
-lane, and polarity net names.
+`bus.usb_c_superspeed_lane_label_mismatch` against explicit USB direction,
+lane, and polarity net names on both USB-C connector pins and U/IC endpoint
+pins.
 
 - `fault.kicad_sch` has SHA-256
   `6147ed074f97e061213d048174c1820d76dc523e682c96e6c58bfb6231e4a49d`.
@@ -40,6 +41,15 @@ lane, and polarity net names.
   pin functions; both the lane-label and pair-completeness rules stay quiet.
   The overall report may still be `REVIEW` for an independent heuristic, so
   this control asserts only the two rules exercised by this fixture.
+- `ic-lane-label-fault.kicad_sch` has SHA-256
+  `b395946b8cb8dfa1f6a2d802f55294c4eb0a7437cfb943e6bdf8ba64fd874846`.
+  Its synthetic U1 uses exact `TX1_P/N`, `TX2_P/N`, `RX1_P/N`, and `RX2_P/N`
+  pin functions. The TX1 and TX2 labels are swapped under `USBC0_`; four
+  localized endpoint reviews and no pair-completeness findings are expected.
+- `ic-lane-label-control.kicad_sch` has SHA-256
+  `576d0008c9fb41f038936aa9195f219989b7923fe284318a132de5d2a33165fd`.
+  All four indexed TX/RX pairs have explicit matching `USBC0_` labels, so the
+  lane-label rule stays quiet.
 
 The digest-pinned native lane exports each schematic twice using exact KiCad
 10.0.0 and 10.0.5 images selected from the public reference template. It checks

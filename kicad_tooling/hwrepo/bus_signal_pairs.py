@@ -76,6 +76,7 @@ _COMPLEMENTARY_FUNCTIONS: Mapping[str, tuple[str, str]] = MappingProxyType(
 )
 
 _USB_C_SUPERSPEED_LANE_FUNCTION = re.compile(r"(?:(?:stda|stdb))?ss(tx|rx)([12])([+-])")
+_USB_IC_SUPERSPEED_LANE_FUNCTION = re.compile(r"(tx|rx)([12])([pn+\-])")
 
 ComplementaryPairSide = Literal["positive", "negative"]
 ComplementarySideAssignments = Mapping[ComplementaryPairSide, tuple[str, ...]]
@@ -298,6 +299,16 @@ def usb_c_superspeed_lane_function_role(function: str) -> tuple[str, str] | None
         return None
     direction, lane, polarity = match.groups()
     side = "positive" if polarity == "+" else "negative"
+    return f"USB SuperSpeed {direction.upper()} lane {lane}", side
+
+
+def usb_ic_superspeed_lane_function_role(function: str) -> tuple[str, str] | None:
+    """Return an exact TX/RX lane 1/2 IC pin alias and polarity."""
+    match = _USB_IC_SUPERSPEED_LANE_FUNCTION.fullmatch(_complementary_function_key(function))
+    if match is None:
+        return None
+    direction, lane, polarity = match.groups()
+    side = "positive" if polarity in {"p", "+"} else "negative"
     return f"USB SuperSpeed {direction.upper()} lane {lane}", side
 
 

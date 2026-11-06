@@ -64,6 +64,8 @@ def test_complementary_pair_fault_and_control_export_repeatably(
             "complementary-pair-fixture/lane-control",
             "complementary-pair-fixture/lane-label-fault",
             "complementary-pair-fixture/lane-label-control",
+            "complementary-pair-fixture/ic-lane-label-fault",
+            "complementary-pair-fixture/ic-lane-label-control",
         }
         fault = results["complementary-pair-fixture/fault"]
         control = results["complementary-pair-fixture/control"]
@@ -71,6 +73,8 @@ def test_complementary_pair_fault_and_control_export_repeatably(
         lane_control = results["complementary-pair-fixture/lane-control"]
         lane_label_fault = results["complementary-pair-fixture/lane-label-fault"]
         lane_label_control = results["complementary-pair-fixture/lane-label-control"]
+        ic_lane_label_fault = results["complementary-pair-fixture/ic-lane-label-fault"]
+        ic_lane_label_control = results["complementary-pair-fixture/ic-lane-label-control"]
         assert fault["lint_status"] == "REVIEW"
         assert fault["pair_findings"] == "J1: USB SuperSpeed RX pair;U1: Ethernet TX pair"
         assert "J1.4=StdA_SSRX-" in fault["pin_functions"]
@@ -97,6 +101,14 @@ def test_complementary_pair_fault_and_control_export_repeatably(
         )
         assert lane_label_control["pair_findings"] == "none"
         assert lane_label_control["lane_label_findings"] == "none"
+        assert ic_lane_label_fault["lane_label_findings"] == (
+            "U1.1: TX1_P on USBC0_TX2_P;"
+            "U1.2: TX1_N on USBC0_TX2_N;"
+            "U1.3: TX2_P on USBC0_TX1_P;"
+            "U1.4: TX2_N on USBC0_TX1_N"
+        )
+        assert ic_lane_label_control["lane_label_findings"] == "none"
+        assert "U1.1=TX1_P" in ic_lane_label_fault["pin_functions"]
         for result in (
             fault,
             control,
@@ -104,6 +116,8 @@ def test_complementary_pair_fault_and_control_export_repeatably(
             lane_control,
             lane_label_fault,
             lane_label_control,
+            ic_lane_label_fault,
+            ic_lane_label_control,
         ):
             assert result["kicad_version"] == version
             assert result["repeatable"] == "true"
@@ -119,6 +133,8 @@ def test_complementary_pair_fault_and_control_export_repeatably(
                 "lane-control",
                 "lane-label-fault",
                 "lane-label-control",
+                "ic-lane-label-fault",
+                "ic-lane-label-control",
             )
         }
     assert set(normalized_hashes) == {"10.0.0", "10.0.5"}

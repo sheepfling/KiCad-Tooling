@@ -42,6 +42,8 @@ def complementary_pair_fixture_lane(
         "lane-control": "lane-control.kicad_sch",
         "lane-label-fault": "lane-label-fault.kicad_sch",
         "lane-label-control": "lane-label-control.kicad_sch",
+        "ic-lane-label-fault": "ic-lane-label-fault.kicad_sch",
+        "ic-lane-label-control": "ic-lane-label-control.kicad_sch",
     }
     source_hashes = {case: digest(fixture_root / filename) for case, filename in cases.items()}
     expected_source_hashes = {
@@ -51,6 +53,8 @@ def complementary_pair_fixture_lane(
         "lane-control": "9e14b4a936dbfc2907ec031f10dccc4ed32a385134abd568144ea7104a66a853",
         "lane-label-fault": "fe4cf3472eb4961faaef4d935317188d23e7028350c245bb8eb0ef1a29ba0248",
         "lane-label-control": "a4be145343d775dee661e5381eff65a8895feea6581adfd77cea5f07952bdf91",
+        "ic-lane-label-fault": "b395946b8cb8dfa1f6a2d802f55294c4eb0a7437cfb943e6bdf8ba64fd874846",
+        "ic-lane-label-control": "576d0008c9fb41f038936aa9195f219989b7923fe284318a132de5d2a33165fd",
     }
     if source_hashes != expected_source_hashes:
         raise ValueError("Complementary-pair fixture sources differ from the reviewed hashes")
@@ -67,7 +71,8 @@ def complementary_pair_fixture_lane(
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
         f'test "$actual" = "{config.kicad_version}"\n'
-        "for case in fault control lane-fault lane-control lane-label-fault lane-label-control; do\n"
+        "for case in fault control lane-fault lane-control lane-label-fault lane-label-control "
+        "ic-lane-label-fault ic-lane-label-control; do\n"
         "  for run in first repeat; do\n"
         "    kicad-cli sch export netlist --format kicadxml "
         '      --output "/output/${case}.${run}.netlist.xml" '
@@ -215,6 +220,40 @@ def complementary_pair_fixture_lane(
                 1,
             )
         },
+        "ic-lane-label-fault": {
+            f"U1.{index}": function
+            for index, function in enumerate(
+                (
+                    "TX1_P",
+                    "TX1_N",
+                    "TX2_P",
+                    "TX2_N",
+                    "RX1_P",
+                    "RX1_N",
+                    "RX2_P",
+                    "RX2_N",
+                    "GND",
+                ),
+                1,
+            )
+        },
+        "ic-lane-label-control": {
+            f"U1.{index}": function
+            for index, function in enumerate(
+                (
+                    "TX1_P",
+                    "TX1_N",
+                    "TX2_P",
+                    "TX2_N",
+                    "RX1_P",
+                    "RX1_N",
+                    "RX2_P",
+                    "RX2_N",
+                    "GND",
+                ),
+                1,
+            )
+        },
     }
     normalized_hashes: dict[tuple[str, str], str] = {}
     raw_hashes: dict[tuple[str, str], str] = {}
@@ -259,6 +298,8 @@ def complementary_pair_fixture_lane(
         "lane-control": 0,
         "lane-label-fault": 0,
         "lane-label-control": 0,
+        "ic-lane-label-fault": 0,
+        "ic-lane-label-control": 0,
     }
     expected_lane_label_findings = {
         "fault": 0,
@@ -267,6 +308,8 @@ def complementary_pair_fixture_lane(
         "lane-control": 0,
         "lane-label-fault": 4,
         "lane-label-control": 0,
+        "ic-lane-label-fault": 4,
+        "ic-lane-label-control": 0,
     }
     expected_status_by_case: dict[str, str | None] = {
         "fault": "REVIEW",
@@ -277,6 +320,8 @@ def complementary_pair_fixture_lane(
         # Explicit USB net names can make other independent heuristics applicable.
         # This control asserts that the pair and lane-label rules stay quiet.
         "lane-label-control": None,
+        "ic-lane-label-fault": None,
+        "ic-lane-label-control": None,
     }
     for case in cases:
         report = reports[(case, "first")]
@@ -338,6 +383,15 @@ def complementary_pair_fixture_lane(
             )
             if tuple(item.subject for item in lane_label_findings) != expected_subjects:
                 raise ValueError("Native USB-C lane-label fault did not localize its four pins")
+        if case == "ic-lane-label-fault":
+            expected_subjects = (
+                "U1.1: TX1_P on USBC0_TX2_P",
+                "U1.2: TX1_N on USBC0_TX2_N",
+                "U1.3: TX2_P on USBC0_TX1_P",
+                "U1.4: TX2_N on USBC0_TX1_N",
+            )
+            if tuple(item.subject for item in lane_label_findings) != expected_subjects:
+                raise ValueError("Native USB IC lane-label fault did not localize its four pins")
         log.event(
             f"complementary-pair-fixture/{case}",
             "PASS",

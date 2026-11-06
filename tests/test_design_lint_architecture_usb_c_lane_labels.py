@@ -32,4 +32,13 @@ def test_usb_c_superspeed_lane_label_rule_uses_a_focused_predicate_owner() -> No
         "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_c_superspeed_lane_function_role"
         in rule.implementation_refs
     )
+    assert (
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_ic_superspeed_lane_function_role"
+        in rule.implementation_refs
+    )
+    assert (
+        "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference"
+        in rule.implementation_refs
+    )
     assert line_count(owner) < IMPLEMENTATION_MAX_LINES
+    assert line_count(HWREPO / "bus_signal_pairs.py") < IMPLEMENTATION_MAX_LINES

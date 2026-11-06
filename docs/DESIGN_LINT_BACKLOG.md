@@ -6045,7 +6045,7 @@ control are documented in the
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_cc_same_net")'
   ```
 
-#### LINT-256 — Review USB-C SuperSpeed lane labels against pin functions
+#### LINT-256 — Review USB SuperSpeed lane labels against endpoint pin functions
 
 - **Status:** Implemented as the default-review heuristic
   `bus.usb_c_superspeed_lane_label_mismatch`. Project policy can promote it to
@@ -6053,23 +6053,28 @@ control are documented in the
 - **Gap:** Lane-indexed USB-C pair completeness detects open and same-net pair
   assignments, but an intact, separately named pair can still be assigned to
   the wrong SuperSpeed lane, direction, or polarity. Pair completeness alone
-  does not compare explicit labels with the native connector functions.
+  does not compare explicit labels with native connector or IC functions.
 - **Predicate:** For a fitted pin with one exported net assignment, recognize
-  exact `StdA_` or `StdB_` `SSTX`/`SSRX` lane 1/2 native functions and net labels
-  using a bounded USB or `SS` prefix plus direction, lane 1/2, and `P`/`N` or
-  `+`/`-` polarity. Emit a pin-localized review if lane, direction, or side
-  differs. Neutral or unrecognized labels, generic function names, open or
-  multiply assigned pins, and DNP connector instances are skipped.
+  exact `StdA_` or `StdB_` `SSTX`/`SSRX` lane 1/2 connector functions, plus exact
+  U/IC `TX`/`RX` lane 1/2 functions. Compare them with a net-label segment that
+  uses a bounded USB or `SS` prefix plus direction, lane 1/2, and `P`/`N` or
+  `+`/`-` polarity. Hierarchical paths and comma-separated label context are
+  reduced to their explicit segment before matching. Emit a pin-localized
+  review if lane, direction, or side differs. Generic IC lane functions only
+  qualify when the label explicitly identifies USB/SuperSpeed. Neutral or
+  unrecognized labels, unsupported lanes, open or multiply assigned pins, and
+  DNP endpoints are skipped.
 - **Boundary:** Naming conflicts do not prove which lane assignment is
-  intended or that the schematic, device pinout, USB-C behavior, routed PCB,
+  intended or that the schematic, device pinout, USB behavior, routed PCB,
   or off-board connection is wrong. The check does not infer a project
   requirement or trace physical copper.
 - **Fixtures and quality gate:** Synthetic lane-swap, polarity, direction,
   neutral/ambiguous, DNP, open, multiply assigned, policy, ordering, and repair
-  coverage; catalog and focused-selector gates; and source-hashed native
+  coverage; catalog, focused-selector, and CLI/MCP parity gates; and source-hashed native
   fault/control schematics exported twice with digest-pinned KiCad 10.0.0 and
-  10.0.5. The native lane also confirms pair-completeness stays quiet for the
-  intact cross-lane fault.
+  10.0.5. Synthetic and native IC-pin faults verify explicit `USBC0_` lane
+  labels against exact U/IC pin functions. The native lane also confirms
+  pair-completeness stays quiet for the intact connector cross-lane fault.
 - **Focused selection:**
 
   ```sh

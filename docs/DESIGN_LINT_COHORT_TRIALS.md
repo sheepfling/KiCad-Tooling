@@ -2338,6 +2338,31 @@ for dispositions and timing; leave unmeasured values unstated.
   Source hashes and invocation are in the
   [trial fixture record](../tests/fixtures/design_lint/cohort-stm32-pin-checker/README.md).
 
+### Recorded public-source screen: USB SuperSpeed IC lane labels
+
+- **Pinned source:** [Antmicro Jetson Orin Baseboard](https://github.com/antmicro/jetson-orin-baseboard/tree/34f0e7f5fbca441191e20ed55d93cf8614e12bed), revision
+  `34f0e7f5fbca441191e20ed55d93cf8614e12bed`. Its README declares
+  Apache-2.0. The checkout and exports remained under `/private/tmp`; no source
+  schematic, project file, or generated netlist was copied into this repo.
+- **Screen:** Exported the public top-level schematic twice using the
+  `ghcr.io/kicad/kicad:10.0.5@sha256:fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c`
+  container. The raw XML contains volatile metadata, while both exports
+  normalize to equal typed netlist contracts (669
+  components, 644 nets, and 1465 pin functions).
+- **Observed pattern:** U10 exposes exact `RX1_N/P`, `RX2_N/P`, `TX1_N/P`, and
+  `TX2_N/P` pin functions on explicitly named `USB Debug, DP/USBC0_*` nets.
+  LINT-256 previously considered only Standard-A/B connector functions, so its
+  run on this source produced no IC lane-label candidates.
+- **Local response:** Extend LINT-256 to compare exact U/IC lane 1/2 functions
+  only when the assigned label segment explicitly names USB/SuperSpeed and
+  encodes direction, lane, and polarity. Add synthetic fault/control schematics
+  and test both the direct label and hierarchical-path form. This review signal
+  still does not infer a required port, lane map, mux state, or routed path.
+- **Disposition and limits:** This screen found a useful predicate gap, not a
+  defect in the public board. The matching labels on U10 remain quiet. The
+  source screen did not measure field precision, reviewer effort, or external
+  maintenance cost. No cohort implementation or board data was adopted.
+
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
 contains 274 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
