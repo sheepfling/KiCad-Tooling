@@ -2803,7 +2803,10 @@ is not a reason by itself to expand its scope or change its default policy.
   stale identity, population, inventory, net, and no-connect faults in
   `tests/test_usb_data_path_protection_shunts.py`; composite inline/protection
   control, localized wrong-line fault, partial-map rejection, and CLI/MCP
-  parity; rule override, disable, exact-ignore,
+  parity. A four-port synthetic regression shares one PHY across four exact
+  protector maps, clears all four unmapped-topology prompts, localizes one
+  wrong D+ pin, and checks mapping-order stability in
+  `tests/test_usb_composite_multiport.py`; rule override, disable, exact-ignore,
   mapping-order stability, and independent-process hash-seed stability. The
   hash-pinned native lane now includes a split-reference protection-shunt
   review, a common-reference control, a miswired shunt-pin fault, and composite

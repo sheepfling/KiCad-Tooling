@@ -5884,7 +5884,8 @@
         "tests.test_design_lint_mcp_parity_usb_inline_protection_shunts.test_combined_inline_path_and_shunt_parity",
         "tests.test_usb_data_path_protection_shunts.test_mapped_series_shunt_wrong_side_fails_closed",
         "tests.test_design_lint_mcp_parity_usb_inline_protection_shunts.test_series_path_shunt_cli_mcp_parity",
-        "tests.test_usb_data_path_protection_shunts.test_series_resistor_shunt_map_rejects_mixed_line_topologies"
+        "tests.test_usb_data_path_protection_shunts.test_series_resistor_shunt_map_rejects_mixed_line_topologies",
+        "tests.test_usb_composite_multiport.test_four_port_map_localizes_one_wrong_composite_pin"
       ],
       "valid_control_fixtures": [
         "tests.test_usb_data_paths.test_documented_integrated_phy_direct_path_is_a_valid_control",
@@ -5906,7 +5907,8 @@
         "tests.test_usb_data_path_protection_shunts.test_exact_series_resistors_and_mapped_shunts_review_split_reference",
         "tests.test_usb_data_path_protection_shunts.test_series_resistors_and_mapped_shunts_allow_common_reference_control",
         "tests.test_design_lint_mcp_parity_usb_inline_protection_shunts.test_series_path_shunt_cli_mcp_parity",
-        "tests.test_design_lint_mcp_parity_usb_inline_protection_shunts.test_composite_inline_protection_cli_mcp_parity"
+        "tests.test_design_lint_mcp_parity_usb_inline_protection_shunts.test_composite_inline_protection_cli_mcp_parity",
+        "tests.test_usb_composite_multiport.test_four_composite_ports_share_one_phy_and_resolve_topology_prompts"
       ],
       "metamorphic_fixtures": [
         "tests.test_usb_data_paths.test_missing_path_evidence_is_order_stable_and_repair_clears_it",
@@ -5916,7 +5918,8 @@
         "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic",
         "tests.test_usb_inline_protection_shunts.test_inline_shunt_fault_evidence_is_stable_under_netlist_order",
         "tests.test_usb_inline_protection_shunts.test_composite_inline_protection_findings_are_order_stable",
-        "tests.test_design_lint_mcp_parity_usb_inline_protection_shunts.test_combined_inline_path_and_shunt_parity"
+        "tests.test_design_lint_mcp_parity_usb_inline_protection_shunts.test_combined_inline_path_and_shunt_parity",
+        "tests.test_usb_composite_multiport.test_four_port_composite_findings_are_stable_under_mapping_order"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES"
@@ -9735,7 +9738,9 @@
         "tests.test_usb_data_path_protection_shunts.test_series_resistors_and_mapped_shunts_allow_common_reference_control",
         "tests.test_usb_data_path_protection_shunts.test_series_shunt_path_rejects_unmapped_signal_peer",
         "tests.test_design_lint_mcp_parity_usb_inline_protection_shunts.test_series_path_shunt_cli_mcp_parity",
-        "tests.test_design_lint_mcp_parity_usb_inline_protection_shunts.test_composite_inline_protection_cli_mcp_parity"
+        "tests.test_design_lint_mcp_parity_usb_inline_protection_shunts.test_composite_inline_protection_cli_mcp_parity",
+        "tests.test_usb_composite_multiport.test_four_composite_ports_share_one_phy_and_resolve_topology_prompts",
+        "tests.test_usb_composite_multiport.test_four_port_map_localizes_one_wrong_composite_pin"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -9749,7 +9754,8 @@
         "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic",
         "tests.test_usb_inline_protection_shunts.test_inline_shunt_fault_evidence_is_stable_under_netlist_order",
         "tests.test_usb_inline_protection_shunts.test_composite_inline_protection_findings_are_order_stable",
-        "tests.test_usb_data_path_protection_shunts.test_series_shunt_review_is_stable_under_native_mapping_order"
+        "tests.test_usb_data_path_protection_shunts.test_series_shunt_review_is_stable_under_native_mapping_order",
+        "tests.test_usb_composite_multiport.test_four_port_composite_findings_are_stable_under_mapping_order"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES"
@@ -9798,7 +9804,8 @@
         "tests.test_usb_unmapped_multi_pin_topology.test_map_for_another_data_port_group_does_not_suppress_topology_prompt",
         "tests.test_usb_unmapped_multi_pin_topology.test_project_can_configure_or_ignore_the_unmapped_topology_prompt",
         "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable",
-        "tests.test_design_lint_mcp_parity_usb_data.test_usb_inline_component_map_parity"
+        "tests.test_design_lint_mcp_parity_usb_data.test_usb_inline_component_map_parity",
+        "tests.test_usb_composite_multiport.test_four_composite_ports_share_one_phy_and_resolve_topology_prompts"
       ],
       "valid_control_fixtures": [
         "tests.test_usb_unmapped_multi_pin_topology.test_exact_project_map_resolves_unmapped_topology_prompt",
@@ -9806,7 +9813,8 @@
         "tests.test_usb_unmapped_multi_pin_topology.test_dnp_component_is_not_reported_as_an_unmapped_path_candidate",
         "tests.test_usb_unmapped_multi_pin_topology.test_endpoint_pair_with_authored_but_stale_map_uses_path_mismatch_only",
         "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable",
-        "tests.test_design_lint_mcp_parity_usb_data.test_usb_inline_component_map_parity"
+        "tests.test_design_lint_mcp_parity_usb_data.test_usb_inline_component_map_parity",
+        "tests.test_usb_composite_multiport.test_four_composite_ports_share_one_phy_and_resolve_topology_prompts"
       ],
       "metamorphic_fixtures": [
         "tests.test_usb_unmapped_multi_pin_topology.test_unmapped_topology_fingerprint_is_stable_under_netlist_order",

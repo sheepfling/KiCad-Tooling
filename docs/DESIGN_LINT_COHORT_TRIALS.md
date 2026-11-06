@@ -100,7 +100,11 @@ for dispositions and timing; leave unmeasured values unstated.
   REVIEW with the eleven unrelated findings. The map was derived from the same
   export, not independently authored project intent, so this demonstrates map
   representability and applicability only—not an independent defect finding,
-  device behavior, field precision, or PCB continuity. The export hash is
+  device behavior, field precision, or PCB continuity. A tooling-owned
+  synthetic four-port regression now covers the same shared-PHY map shape,
+  localized wrong-pin fault, and order stability in
+  `tests/test_usb_composite_multiport.py`; it contains no public-project source.
+  The export hash is
   unchanged (`7b3d639ec6c256b553f5965d9b5f72bbb2e6b4947a0aee3c74cdd787c405c416`);
   no source, export, or map was added to Tooling.
 - **LINT-086 applicability:** Coverage recognizes five connector groups and
