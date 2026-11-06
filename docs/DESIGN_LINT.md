@@ -1062,6 +1062,24 @@ KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_SAME_NET_FIXTURES=1 .venv/bin/python -I -m 
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_same_net")'
 ```
 
+### Localize Ethernet same-net pair findings
+
+The existing `bus.complementary_pair_assignment` rule already reports a recognized
+Ethernet TX/RX pair assigned to one net. Its subject now names the direction,
+both native pins, and the shared net so reviewers can locate the issue quickly.
+This improves review evidence; it adds no new detection rule. The native
+fault/control schematics live in the [fixture record](../tests/fixtures/design_lint/ethernet-data-pair-same-net-native/README.md)
+and are included in the existing digest-pinned complementary-pair Docker gate.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_ethernet_pair_same_net_localization.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.complementary_pair_assignment")'
+
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_complementary_pair_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.complementary_pair_assignment")'
+```
+
 ### Ethernet TX/RX data pair has one open pin
 
 `bus.ethernet_data_unconnected_pin` recognizes one exact supported TX or RX positive/negative pin

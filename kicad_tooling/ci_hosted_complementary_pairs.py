@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -34,14 +35,16 @@ def complementary_pair_fixture_lane(
     if config.kicad_version not in {"10.0.0", "10.0.5"}:
         raise ValueError(f"Complementary-pair fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
-    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/complementary-pair-native"
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint"
     cases = {
-        "fault": "fault.kicad_sch",
-        "control": "control.kicad_sch",
-        "lane-fault": "lane-fault.kicad_sch",
-        "lane-control": "lane-control.kicad_sch",
-        "lane-label-fault": "lane-label-fault.kicad_sch",
-        "lane-label-control": "lane-label-control.kicad_sch",
+        "fault": "complementary-pair-native/fault.kicad_sch",
+        "control": "complementary-pair-native/control.kicad_sch",
+        "lane-fault": "complementary-pair-native/lane-fault.kicad_sch",
+        "lane-control": "complementary-pair-native/lane-control.kicad_sch",
+        "lane-label-fault": "complementary-pair-native/lane-label-fault.kicad_sch",
+        "lane-label-control": "complementary-pair-native/lane-label-control.kicad_sch",
+        "ethernet-rx-same-net-fault": ("ethernet-data-pair-same-net-native/fault.kicad_sch"),
+        "ethernet-rx-same-net-control": ("ethernet-data-pair-same-net-native/control.kicad_sch"),
     }
     source_hashes = {case: digest(fixture_root / filename) for case, filename in cases.items()}
     expected_source_hashes = {
@@ -51,6 +54,12 @@ def complementary_pair_fixture_lane(
         "lane-control": "9e14b4a936dbfc2907ec031f10dccc4ed32a385134abd568144ea7104a66a853",
         "lane-label-fault": "fe4cf3472eb4961faaef4d935317188d23e7028350c245bb8eb0ef1a29ba0248",
         "lane-label-control": "a4be145343d775dee661e5381eff65a8895feea6581adfd77cea5f07952bdf91",
+        "ethernet-rx-same-net-fault": (
+            "4a5adfdaeb19add80a6e3d382c425e5cdad27741fd2b48dbc5180863bc82cf84"
+        ),
+        "ethernet-rx-same-net-control": (
+            "1f1a9c2d402f78ca88b80bb1ef9569fc08a2436b5cb98b3e92fb2ff01c6f74ad"
+        ),
     }
     if source_hashes != expected_source_hashes:
         raise ValueError("Complementary-pair fixture sources differ from the reviewed hashes")
@@ -59,6 +68,10 @@ def complementary_pair_fixture_lane(
     )
     output = scratch / "output"
     output.mkdir()
+    fixture_mount = scratch / "fixtures"
+    fixture_mount.mkdir()
+    for case, filename in cases.items():
+        shutil.copyfile(fixture_root / filename, fixture_mount / f"{case}.kicad_sch")
     user: tuple[str, ...] = ()
     if sys.platform != "win32":
         user = ("--user", f"{os.getuid()}:{os.getgid()}")
@@ -67,7 +80,8 @@ def complementary_pair_fixture_lane(
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
         f'test "$actual" = "{config.kicad_version}"\n'
-        "for case in fault control lane-fault lane-control lane-label-fault lane-label-control; do\n"
+        "for case in fault control lane-fault lane-control lane-label-fault lane-label-control "
+        "ethernet-rx-same-net-fault ethernet-rx-same-net-control; do\n"
         "  for run in first repeat; do\n"
         "    kicad-cli sch export netlist --format kicadxml "
         '      --output "/output/${case}.${run}.netlist.xml" '
@@ -90,7 +104,7 @@ def complementary_pair_fixture_lane(
         "-e",
         "HOME=/tmp/kicad-complementary-pair-fixtures",
         "-v",
-        f"{fixture_root.resolve()}:/fixtures:ro",
+        f"{fixture_mount.resolve()}:/fixtures:ro",
         "-v",
         f"{output}:/output:rw",
         "-w",
@@ -215,11 +229,38 @@ def complementary_pair_fixture_lane(
                 1,
             )
         },
+        "ethernet-rx-same-net-fault": {
+            "J1.1": "StdA_SSTX+",
+            "J1.2": "StdA_SSTX-",
+            "J1.3": "StdA_SSRX+",
+            "J1.4": "StdA_SSRX-",
+            "J1.5": "GND",
+            "U1.1": "TDP",
+            "U1.2": "TDN",
+            "U1.3": "RDP",
+            "U1.4": "RDN",
+            "U1.5": "MDC",
+            "U1.6": "MDIO",
+        },
+        "ethernet-rx-same-net-control": {
+            "J1.1": "StdA_SSTX+",
+            "J1.2": "StdA_SSTX-",
+            "J1.3": "StdA_SSRX+",
+            "J1.4": "StdA_SSRX-",
+            "J1.5": "GND",
+            "U1.1": "TDP",
+            "U1.2": "TDN",
+            "U1.3": "RDP",
+            "U1.4": "RDN",
+            "U1.5": "MDC",
+            "U1.6": "MDIO",
+        },
     }
     normalized_hashes: dict[tuple[str, str], str] = {}
     raw_hashes: dict[tuple[str, str], str] = {}
     reports: dict[tuple[str, str], DesignLintReport] = {}
     observed_by_case: dict[str, NetlistContract] = {}
+    ethernet_rx_assignments_by_case: dict[str, dict[str, str]] = {}
     for case in cases:
         for run in ("first", "repeat"):
             netlist_path = output / f"{case}.{run}.netlist.xml"
@@ -232,6 +273,28 @@ def complementary_pair_fixture_lane(
                     "KiCad native export did not preserve the expected pair pin functions: "
                     f"{observed.pin_functions}"
                 )
+            if case == "ethernet-rx-same-net-fault":
+                expected_rx_assignments = {
+                    "U1.3": "ETH_RX_SHARED",
+                    "U1.4": "ETH_RX_SHARED",
+                }
+            elif case == "ethernet-rx-same-net-control":
+                expected_rx_assignments = {"U1.3": "ETH_RX_P", "U1.4": "ETH_RX_N"}
+            else:
+                expected_rx_assignments = None
+            if expected_rx_assignments is not None:
+                observed_rx_assignments = {
+                    pin: net
+                    for net, pins in observed.nets.items()
+                    for pin in pins
+                    if pin in {"U1.3", "U1.4"}
+                }
+                if observed_rx_assignments != expected_rx_assignments:
+                    raise ValueError(
+                        f"Native {case} RX pin assignments differ from the exact fixture: "
+                        f"{observed_rx_assignments}"
+                    )
+                ethernet_rx_assignments_by_case[case] = observed_rx_assignments
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
                 sort_keys=True,
@@ -259,6 +322,8 @@ def complementary_pair_fixture_lane(
         "lane-control": 0,
         "lane-label-fault": 0,
         "lane-label-control": 0,
+        "ethernet-rx-same-net-fault": 1,
+        "ethernet-rx-same-net-control": 0,
     }
     expected_lane_label_findings = {
         "fault": 0,
@@ -267,6 +332,8 @@ def complementary_pair_fixture_lane(
         "lane-control": 0,
         "lane-label-fault": 4,
         "lane-label-control": 0,
+        "ethernet-rx-same-net-fault": 0,
+        "ethernet-rx-same-net-control": 0,
     }
     expected_status_by_case: dict[str, str | None] = {
         "fault": "REVIEW",
@@ -277,6 +344,8 @@ def complementary_pair_fixture_lane(
         # Explicit USB net names can make other independent heuristics applicable.
         # This control asserts that the pair and lane-label rules stay quiet.
         "lane-label-control": None,
+        "ethernet-rx-same-net-fault": "REVIEW",
+        "ethernet-rx-same-net-control": None,
     }
     for case in cases:
         report = reports[(case, "first")]
@@ -338,6 +407,16 @@ def complementary_pair_fixture_lane(
             )
             if tuple(item.subject for item in lane_label_findings) != expected_subjects:
                 raise ValueError("Native USB-C lane-label fault did not localize its four pins")
+        if case == "ethernet-rx-same-net-fault":
+            finding = pair_findings[0]
+            if (
+                finding.subject != "U1: Ethernet RX pair U1.3/U1.4 share ETH_RX_SHARED"
+                or finding.evidence["positive_pins"] != ("U1.3",)
+                or finding.evidence["negative_pins"] != ("U1.4",)
+                or finding.evidence["positive_nets"] != ("ETH_RX_SHARED",)
+                or finding.evidence["negative_nets"] != ("ETH_RX_SHARED",)
+            ):
+                raise ValueError("Native Ethernet RX same-net fault did not localize its pins/net")
         log.event(
             f"complementary-pair-fixture/{case}",
             "PASS",
@@ -357,6 +436,14 @@ def complementary_pair_fixture_lane(
             pair_findings=";".join(sorted(item.subject for item in pair_findings)) or "none",
             lane_label_findings=";".join(sorted(item.subject for item in lane_label_findings))
             or "none",
+            ethernet_rx_assignments=(
+                ";".join(
+                    f"{pin}={net}"
+                    for pin, net in sorted(ethernet_rx_assignments_by_case[case].items())
+                )
+                if case.startswith("ethernet-rx-same-net-")
+                else "not-applicable"
+            ),
             repeatable="true",
             repeatability_basis="normalized_netlist_and_design_lint_report",
             command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),

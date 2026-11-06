@@ -29,6 +29,34 @@ def complementary_signal_candidates(
         ):
             # The per-pin CAN rule already reports open CANH/CANL assignments.
             continue
+        if (
+            gap.family in {"Ethernet TX", "Ethernet RX"}
+            and gap.reason == "both pair functions share one schematic net"
+            and len(gap.positive_pins) == 1
+            and len(gap.negative_pins) == 1
+            and len(gap.positive_nets) == 1
+            and gap.positive_nets == gap.negative_nets
+        ):
+            positive_pin = gap.positive_pins[0]
+            negative_pin = gap.negative_pins[0]
+            net = gap.positive_nets[0]
+            direction = gap.family.removeprefix("Ethernet ")
+            found.append(
+                SignalPairCandidate.from_source_evidence(
+                    source_evidence=gap,
+                    subject=(
+                        f"{gap.reference}: Ethernet {direction} pair {positive_pin}/{negative_pin} "
+                        f"share {net}"
+                    ),
+                    message=(
+                        f"The recognized Ethernet {direction} complementary pins {positive_pin} "
+                        f"and {negative_pin} both resolve to one schematic net ({net}). Review "
+                        "the interface pin assignment. Native function names do not prove PHY "
+                        "identity, signal polarity, PCB copper continuity, or external wiring."
+                    ),
+                )
+            )
+            continue
         found.append(
             SignalPairCandidate.from_source_evidence(
                 source_evidence=gap,

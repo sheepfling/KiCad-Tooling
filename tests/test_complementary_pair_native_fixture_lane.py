@@ -64,6 +64,8 @@ def test_complementary_pair_fault_and_control_export_repeatably(
             "complementary-pair-fixture/lane-control",
             "complementary-pair-fixture/lane-label-fault",
             "complementary-pair-fixture/lane-label-control",
+            "complementary-pair-fixture/ethernet-rx-same-net-fault",
+            "complementary-pair-fixture/ethernet-rx-same-net-control",
         }
         fault = results["complementary-pair-fixture/fault"]
         control = results["complementary-pair-fixture/control"]
@@ -71,6 +73,8 @@ def test_complementary_pair_fault_and_control_export_repeatably(
         lane_control = results["complementary-pair-fixture/lane-control"]
         lane_label_fault = results["complementary-pair-fixture/lane-label-fault"]
         lane_label_control = results["complementary-pair-fixture/lane-label-control"]
+        ethernet_fault = results["complementary-pair-fixture/ethernet-rx-same-net-fault"]
+        ethernet_control = results["complementary-pair-fixture/ethernet-rx-same-net-control"]
         assert fault["lint_status"] == "REVIEW"
         assert fault["pair_findings"] == "J1: USB SuperSpeed RX pair;U1: Ethernet TX pair"
         assert "J1.4=StdA_SSRX-" in fault["pin_functions"]
@@ -97,6 +101,17 @@ def test_complementary_pair_fault_and_control_export_repeatably(
         )
         assert lane_label_control["pair_findings"] == "none"
         assert lane_label_control["lane_label_findings"] == "none"
+        assert ethernet_fault["pair_findings"] == (
+            "U1: Ethernet RX pair U1.3/U1.4 share ETH_RX_SHARED"
+        )
+        assert ethernet_fault["ethernet_rx_assignments"] == (
+            "U1.3=ETH_RX_SHARED;U1.4=ETH_RX_SHARED"
+        )
+        assert ethernet_fault["lane_label_findings"] == "none"
+        assert ethernet_fault["lint_status"] == "REVIEW"
+        assert ethernet_control["pair_findings"] == "none"
+        assert ethernet_control["ethernet_rx_assignments"] == "U1.3=ETH_RX_P;U1.4=ETH_RX_N"
+        assert ethernet_control["lane_label_findings"] == "none"
         for result in (
             fault,
             control,
@@ -104,6 +119,8 @@ def test_complementary_pair_fault_and_control_export_repeatably(
             lane_control,
             lane_label_fault,
             lane_label_control,
+            ethernet_fault,
+            ethernet_control,
         ):
             assert result["kicad_version"] == version
             assert result["repeatable"] == "true"
@@ -119,6 +136,8 @@ def test_complementary_pair_fault_and_control_export_repeatably(
                 "lane-control",
                 "lane-label-fault",
                 "lane-label-control",
+                "ethernet-rx-same-net-fault",
+                "ethernet-rx-same-net-control",
             )
         }
     assert set(normalized_hashes) == {"10.0.0", "10.0.5"}

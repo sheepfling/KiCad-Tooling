@@ -8032,6 +8032,7 @@
       ],
       "fault_fixtures": [
         "tests.test_design_lint_complementary_pairs.test_complementary_pair_assignments_are_reviewed_without_inferred_requirements",
+        "tests.test_ethernet_pair_same_net_localization.test_ethernet_same_net_pair_finding_names_pins_and_net",
         "tests.test_design_lint_complementary_pairs.test_builtin_pairs_do_not_require_native_symbol_library_ids",
         "tests.test_design_lint_complementary_pairs.test_usb_superspeed_connector_aliases_have_fault_and_control_coverage",
         "tests.test_design_lint_complementary_pairs.test_ethernet_media_pair_aliases_have_fault_and_control_coverage",
@@ -8041,6 +8042,7 @@
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_complementary_pairs.test_complementary_pair_assignments_are_reviewed_without_inferred_requirements",
+        "tests.test_ethernet_pair_same_net_localization.test_ethernet_same_net_pair_finding_names_pins_and_net",
         "tests.test_design_lint_complementary_pairs.test_builtin_pairs_do_not_require_native_symbol_library_ids",
         "tests.test_design_lint_complementary_pairs.test_usb_superspeed_connector_aliases_have_fault_and_control_coverage",
         "tests.test_design_lint_complementary_pairs.test_ethernet_media_pair_aliases_have_fault_and_control_coverage",
@@ -8056,12 +8058,14 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_complementary_pairs.test_complementary_pair_finding_is_order_stable_and_assignment_clears_it",
+        "tests.test_ethernet_pair_same_net_localization.test_ethernet_same_net_pair_finding_names_pins_and_net",
         "tests.test_usb_c_superspeed_lane_pairs.test_lane_indexed_usb_c_pair_is_order_stable_and_assignment_repair_clears_it",
         "tests.test_design_lint_complementary_pairs.test_builtin_pairs_do_not_require_native_symbol_library_ids",
         "tests.test_design_lint_complementary_pairs.test_project_complementary_aliases_are_symbol_scoped_and_stale_maps_block"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/bus_signal_pairs.py#complementary_signal_gaps",
+        "kicad_tooling/hwrepo/design_lint_signal_pair_candidates.py#complementary_signal_candidates",
         "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_c_superspeed_lane_function_role",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],

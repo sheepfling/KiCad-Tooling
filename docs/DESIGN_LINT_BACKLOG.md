@@ -714,6 +714,12 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **LINT-283 Ethernet same-net finding localization:** The existing
+  `bus.complementary_pair_assignment` rule already detected a recognized
+  Ethernet TX/RX pair on one net. Its subject now names both native pins and
+  the shared net. This is a review-evidence improvement, not a new rule or
+  detection claim; synthetic fault/control sources run through the existing
+  exact KiCad 10.0.0/10.0.5 Docker lane.
 - **LINT-034 external-interface protection coverage:** The source-mapped
   connector protection rules now run against the same exact-version synthetic
   multi-pin protector fault/control exports used by the USB fixture lane. The
@@ -14703,6 +14709,40 @@ control are documented in the
   KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_SAME_NET_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_ethernet_management_same_net_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_same_net")'
+  ```
+
+#### LINT-283 — Localize Ethernet same-net pair findings
+
+- **Status:** Completed as a review-evidence improvement to the existing
+  `bus.complementary_pair_assignment` rule. No new rule ID or electrical
+  detection predicate was added.
+- **Prior behavior:** The generic pair rule already reported recognized
+  Ethernet TX/RX pins assigned to one schematic net, but its subject named
+  only the component and pair direction.
+- **Improvement:** When the existing complementary-pair candidate is an exact
+  supported Ethernet TX/RX same-net case, the subject names the direction,
+  positive and negative pin references, and shared net. The evidence payload
+  retains the exact positive/negative pin and net arrays.
+- **Boundary:** Native function aliases do not prove PHY identity, design
+  intent, differential polarity, PCB copper, cable wiring, or physical
+  continuity. This change improves localization and does not claim a new
+  detection gain.
+- **Evidence:** The tooling-owned `ETH_RX_SHARED` fault and distinct-net
+  control are source-hashed in
+  [`tests/fixtures/design_lint/ethernet-data-pair-same-net-native/README.md`](../tests/fixtures/design_lint/ethernet-data-pair-same-net-native/README.md).
+  The existing digest-pinned KiCad 10.0.0 and 10.0.5 Docker lane exports each
+  source twice and checks normalized-netlist repeatability, pin-function
+  inventory, one localized fault finding, and a quiet control. The fixture
+  contains synthetic tooling data only.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_ethernet_pair_same_net_localization.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.complementary_pair_assignment")'
+
+  KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_complementary_pair_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.complementary_pair_assignment")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
