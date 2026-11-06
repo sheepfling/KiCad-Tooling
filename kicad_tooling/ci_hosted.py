@@ -36,6 +36,7 @@ from .ci_hosted_component_unconnected_power_output import (
 from .ci_hosted_connector_inventory import connector_inventory_fixture_lane
 from .ci_hosted_connector_power_output import connector_unconnected_power_output_fixture_lane
 from .ci_hosted_connector_return_lane import connector_return_lint_fixture_lane
+from .ci_hosted_connector_return_signal_net import connector_return_signal_net_fixture_lane
 from .ci_hosted_control_inputs import native_control_input_demo_lane
 from .ci_hosted_digital_peer_lane import digital_peer_fixture_lane as _digital_peer_fixture_lane
 from .ci_hosted_electrical_lane import electrical_lane, project_simulator
@@ -136,6 +137,7 @@ __all__ = (
     "component_unconnected_power_output_fixture_lane",
     "connector_inventory_fixture_lane",
     "connector_return_lint_fixture_lane",
+    "connector_return_signal_net_fixture_lane",
     "connector_unconnected_power_output_fixture_lane",
     "digital_peer_fixture_lane",
     "electrical_lane",

@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 266 rules are implemented with synthetic regression coverage.
+The following 268 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 266 active rules.
+The catalog currently contains 268 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -502,6 +502,7 @@ skipped under prerelease policy.
 - `component.two_pin_switch_same_net`
 - `connector.no_connected_return`
 - `connector.return_pin_on_positive_rail`
+- `connector.return_pin_shares_protocol_signal_net`
 - `connector.unconnected_supply_pin`
 - `connector.unconnected_return_pin`
 - `connector.mapped_interface_signal_unassigned`
@@ -718,6 +719,17 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **LINT-287 connector return/signal net review:** A fitted connector GND/return
+  contact now prompts `REVIEW` when it shares one native schematic net with a
+  pin whose native function matches an existing bounded I2C, I3C, UART, SPI,
+  CAN, USB, Ethernet, or identified RS-485 role. This covers a local shared-net
+  pattern that peer-connector return checks do not require. It reads no role
+  from net names, excludes DNP and ambiguous assignments, and leaves fully
+  source-mapped signal/return sharing to the mapped-contact rule. Synthetic
+  fault/control coverage includes policy, stable evidence, parser families,
+  CLI/MCP parity, and exact native exports on KiCad 10.0.0 and 10.0.5. It asks
+  for comparison with the approved connector pinout; it does not declare every
+  signal/return tie incorrect or establish PCB copper continuity.
 - **LINT-034 external-interface protection coverage:** The source-mapped
   connector protection rules now run against the same exact-version synthetic
   multi-pin protector fault/control exports used by the USB fixture lane. The
@@ -3489,7 +3501,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 266 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 268 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -14799,6 +14811,35 @@ control are documented in the
   the fault/control/metamorphic cases to this active rule. This lexical prompt
   makes no native KiCad behavior claim, so no native lane is attached. See the
   [fixture notes](../tests/fixtures/design_lint/pcb-dru-casefold-name-collision/README.md).
+
+#### LINT-287 — Review a connector return sharing a protocol-signal net
+
+- **Status:** Implemented as the configurable default-review rule
+  `connector.return_pin_shares_protocol_signal_net`.
+- **Gap:** A return pin can share a net with a protocol signal on one connector
+  even when there are no peer connectors, positive-rail names, or complete
+  source-mapped pin roles. ERC sees a valid net assignment and cannot identify
+  whether the connector pinout intended a shared return.
+- **Predicate:** For fitted connector candidates, compare each uniquely
+  assigned native ground/return pin function with other uniquely assigned
+  native functions on the same net. Prompt once when a signal function matches
+  an existing exact I2C, I3C, UART/USART, SPI, CAN/FDCAN, USB, Ethernet, or
+  explicitly identified RS-485 role. Do not infer protocol roles from net
+  names. Project policy can select `review`, `block`, `off`, or an
+  exact-fingerprint ignore.
+- **Boundary:** This is a review prompt, not a universal grounding requirement.
+  It does not establish the approved pinout, board copper path, external
+  circuitry, voltage, or off-board behavior. Custom or generic signal names,
+  DNP connectors, open/ambiguous assignments, and unrecognized transceivers
+  are outside the check. Complete source-mapped return/signal sharing remains
+  owned by the mapped-contact rule.
+- **Evidence:** Synthetic tests cover the I2C fault, UART/SPI/CAN/USB/Ethernet
+  role parsing, separated-net and unrecognized-function controls, DNP
+  exclusion, deterministic fingerprints, repair behavior, policy dispositions,
+  mapped-rule deduplication, and CLI/MCP parity. The synthetic schematic
+  fault/control pair is source-hashed and exports repeatably on digest-pinned
+  KiCad 10.0.0 and 10.0.5 images with no ERC errors. See the
+  [fixture notes](../tests/fixtures/design_lint/connector-return-signal-net/README.md).
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

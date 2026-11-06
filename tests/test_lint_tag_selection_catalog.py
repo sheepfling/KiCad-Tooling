@@ -358,6 +358,10 @@ from scripts.lint_gate_scope import (
             "power.regulator_required_passive_topology_mismatch",
             "KICAD_RUN_NATIVE_REGULATOR_REQUIRED_PASSIVE_FIXTURES",
         ),
+        (
+            "connector.return_pin_shares_protocol_signal_net",
+            "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES",
+        ),
     ),
 )
 def test_lint_tag_selects_rule_and_all_its_configured_native_fixtures(

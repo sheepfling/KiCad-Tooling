@@ -37,6 +37,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.return_pin_on_positive_rail": {
             "tests.test_ci_hosted_connector_returns.test_return_pin_on_positive_rail",
         },
+        "connector.return_pin_shares_protocol_signal_net": {
+            "tests.test_connector_return_signal_net_native_fixture_lane.test_native_return_signal_shared_net_fault_and_control_are_repeatable",
+        },
         "connector.unconnected_supply_pin": {
             "tests.test_ci_hosted_connector_returns.test_native_unconnected_named_connector_supply_pin_cases_repeat",
         },

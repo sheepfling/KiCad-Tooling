@@ -780,7 +780,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 266 active rules.
+The catalog currently contains 268 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -3212,6 +3212,42 @@ the required signal reference or prove an electrical or copper defect.
 The exact-version native fault/control reuses the tooling-owned two-contact
 connector fixture. The same exported net is mapped as return/signal for the
 fault and shield/signal for the control in the KiCad 10.0.0 and 10.0.5 lane.
+
+## Review an unmapped connector return sharing a protocol-signal net
+
+`connector.return_pin_shares_protocol_signal_net` prompts when a fitted
+connector's native GND/return contact shares one uniquely assigned schematic
+net with a contact whose native pin function matches a supported I2C, I3C,
+UART/USART, SPI, CAN/FDCAN, USB, Ethernet, or identified RS-485 role. It uses
+the existing exact pin-function recognizers and does not guess a signal role
+from the net name. A complete, current, source-matched interface map leaves
+shared return/signal contacts to `connector.mapped_signal_return_share_net`.
+
+The default is `review`. A shared schematic net may be intentional; compare
+the finding with the approved connector pinout and project grounding
+requirements. The heuristic does not establish the intended return, external
+circuitry, PCB copper continuity, or off-board behavior. Generic/custom signal
+functions, DNP connectors, and open or ambiguous net assignments are outside
+its scope. Use a project-authored mapped connector or grounding contract when
+the pinout requires specific signal, return, bond, or isolation behavior.
+
+Synthetic role-family, valid-control, policy, ordering, and CLI/MCP parity
+cases are in the focused suite:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_return_signal_net.py \
+  -m 'design_lint and connector_lint and interface_lint and return_path_lint and design_lint_rule(rule_id="connector.return_pin_shares_protocol_signal_net")'
+```
+
+The source-hashed fault/control schematics and exact KiCad 10.0.0/10.0.5
+native fixture lane are documented in the
+[fixture notes](../tests/fixtures/design_lint/connector-return-signal-net/README.md):
+
+```sh
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_connector_return_signal_net_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and return_path_lint and native_kicad and design_lint_rule(rule_id="connector.return_pin_shares_protocol_signal_net")'
+```
 
 ## Review a mapped shield contact on a return-labeled net
 

@@ -4219,6 +4219,52 @@
       ]
     },
     {
+      "rule_id": "connector.return_pin_shares_protocol_signal_net",
+      "title": "Connector return shares a native net with a protocol signal",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted connector with a native ground/return pin function, emit a REVIEW candidate when that return pin and a uniquely assigned pin with one of the existing exact I2C, I3C, UART/USART, SPI, CAN/FDCAN, USB, Ethernet, or identified RS-485 function roles share one native net. Do not infer signal roles from net names.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The check recognizes only protocol pin-function aliases already supported by the named role parsers; custom, generic, passive-only, or otherwise unrecognized signal contacts can evade it.",
+        "A shared net is a review prompt, not proof of an electrical defect or a requirement to separate the contacts. The tool does not infer the approved connector pinout, intervening circuitry, PCB copper path, or off-board behavior.",
+        "DNP connectors and pins with no assignment or multiple ambiguous net assignments are excluded. When current source-matched connector coverage already identifies return and signal contacts on the same net, the mapped contact-sharing rule owns that finding."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_return_signal_net.test_connector_return_sharing_i2c_signal_requests_review",
+        "tests.test_connector_return_signal_net_native_fixture_lane.test_native_return_signal_shared_net_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_return_signal_net.test_separate_signal_and_return_nets_are_a_control",
+        "tests.test_connector_return_signal_net.test_net_name_alone_and_unrecognized_pin_functions_are_controls",
+        "tests.test_connector_return_signal_net.test_unpopulated_connector_does_not_support_a_candidate",
+        "tests.test_connector_return_signal_net_native_fixture_lane.test_native_return_signal_shared_net_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_return_signal_net.test_protocol_role_families_are_recognized_without_net_name_guessing",
+        "tests.test_connector_return_signal_net.test_candidate_is_stable_under_netlist_order_and_repair_clears_it"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_return_signal_net.py#return_pin_protocol_signal_net_candidates",
+        "kicad_tooling/hwrepo/connector_return_signal_net.py#_protocol_signal_role",
+        "kicad_tooling/hwrepo/bus_signal_roles.py#i2c_signal_role",
+        "kicad_tooling/hwrepo/serial_participants.py#serial_function_role_and_channel",
+        "kicad_tooling/hwrepo/spi_participants.py#spi_signal_role_and_channel",
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_data_function_identity",
+        "kicad_tooling/hwrepo/design_lint_return_domain_candidates.py#return_domain_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_return_signal_net.py#return_pin_protocol_signal_net_candidates",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "connector.unconnected_power_input",
       "title": "Generic connector power-input typed pin is unassigned",
       "status": "active",
