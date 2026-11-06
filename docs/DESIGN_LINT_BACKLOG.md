@@ -14775,6 +14775,44 @@ control are documented in the
     -m 'design_lint'
   ```
 
+#### LINT-285 — Check source-authored capacitor hold-up envelopes
+
+- **Status:** Implemented as the optional typed `energy_storage` electrical
+  contract section. It is an exact-part deterministic calculation, not a
+  topology heuristic that guesses whether a capacitor is intended as backup.
+- **Predicate:** For each authored storage capacitor, bind the exact symbol,
+  footprint, `PART_ID`, fitted state, two pins, and native net assignments.
+  Parse its explicit capacitance and calculate
+  `C_required = I_max * t_min / (V_start_min - V_operating_min)`. Apply the
+  project-authored minimum effective-capacitance fraction and utilization
+  ceiling; fail when identity, pin mapping, or an explicit value is missing or
+  differs.
+- **Evidence:** Unit cases cover capacitance parsing, exact identity and nets,
+  boundaries, malformed/missing evidence, and stable input ordering. CLI/MCP
+  parity covers both pass and over-limit fault. The tooling-owned 0.1 F
+  fixture has repeated native netlist/ERC evidence and a 0.5 s pass / 0.6 s
+  fail on digest-pinned KiCad 10.0.0 and 10.0.5. See
+  [`component-voltage-ratings/README.md`](../tests/fixtures/design_lint/component-voltage-ratings/README.md).
+- **Boundary:** This constant-current single-capacitor calculation does not
+  infer requirements or model ESR, leakage, changing loads, charge paths,
+  aging, parallel capacitor tolerances, PCB copper, or physical continuity.
+  Source bases and bounds must be project-authored. Voltage rating remains a
+  separate check.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest -q tests/test_energy_storage_hold_up.py \
+    tests/test_capacitance_values.py tests/test_energy_storage_model_architecture.py \
+    -m 'power_lint'
+
+  KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test .venv/bin/python -I -m pytest -q \
+    tests/test_electrical_energy_storage_parity.py::test_energy_storage_requirement_matches_cli_and_mcp
+
+  KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES=1 \
+    .venv/bin/python -I -m pytest -q tests/test_component_rating_native_fixture_lane.py \
+    -m 'design_lint and component_lint and native_kicad'
+  ```
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Rule precedence:** KiCad evaluates custom rules in reverse file order, and a later matching rule

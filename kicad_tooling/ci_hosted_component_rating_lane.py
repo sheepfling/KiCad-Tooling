@@ -11,6 +11,7 @@ from .ci_hosted_component_power_rating_fixture import verify_component_power_rat
 from .ci_hosted_component_rating_context import ComponentRatingFixtureContext
 from .ci_hosted_component_voltage_rating_fixture import verify_component_voltage_rating_fixture
 from .ci_hosted_connector_contact_rating_fixture import verify_connector_contact_rating_fixture
+from .ci_hosted_energy_storage_hold_up_fixture import verify_energy_storage_hold_up_fixture
 from .ci_hosted_mosfet_stress_fixture import verify_mosfet_stress_fixture
 from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.contract_coach import pinned_image, run_command
@@ -20,7 +21,7 @@ from .hwrepo.evidence import digest
 
 
 def component_rating_fixtures_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
-    """Verify authored component voltage, power, and contact limits on native netlists."""
+    """Verify authored component, contact, and storage limits on native netlists."""
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image:
@@ -37,6 +38,8 @@ def component_rating_fixtures_lane(root: Path, *, project: str, image: str, log:
     power_fixture_sha256 = digest(power_fixture)
     contact_fixture = fixture_root / "contact-control.kicad_sch"
     contact_fixture_sha256 = digest(contact_fixture)
+    energy_storage_fixture = fixture_root / "energy-storage-hold-up.kicad_sch"
+    energy_storage_fixture_sha256 = digest(energy_storage_fixture)
     mosfet_fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/mosfet-stress"
     mosfet_fixture = mosfet_fixture_root / "mosfet.kicad_sch"
     mosfet_fixture_sha256 = digest(mosfet_fixture)
@@ -83,6 +86,16 @@ def component_rating_fixtures_lane(root: Path, *, project: str, image: str, log:
                 "for run in first repeat; do kicad-cli sch erc --format json --severity-all "
                 '--output "/output/contact.${run}.erc.json" '
                 '"/fixtures/contact-control.kicad_sch"; done\n'
+            ),
+            (
+                "for run in first repeat; do kicad-cli sch export netlist "
+                '--format kicadxml --output "/output/energy-storage.${run}.netlist.xml" '
+                '"/fixtures/energy-storage-hold-up.kicad_sch"; done\n'
+            ),
+            (
+                "for run in first repeat; do kicad-cli sch erc --format json --severity-all "
+                '--output "/output/energy-storage.${run}.erc.json" '
+                '"/fixtures/energy-storage-hold-up.kicad_sch"; done\n'
             ),
             (
                 "for run in first repeat; do kicad-cli sch export netlist "
@@ -170,6 +183,8 @@ def component_rating_fixtures_lane(root: Path, *, project: str, image: str, log:
         power_fixture_sha256=power_fixture_sha256,
         contact_fixture=contact_fixture,
         contact_fixture_sha256=contact_fixture_sha256,
+        energy_storage_fixture=energy_storage_fixture,
+        energy_storage_fixture_sha256=energy_storage_fixture_sha256,
         mosfet_fixture_root=mosfet_fixture_root,
         mosfet_fixture=mosfet_fixture,
         mosfet_fixture_sha256=mosfet_fixture_sha256,
@@ -179,4 +194,5 @@ def component_rating_fixtures_lane(root: Path, *, project: str, image: str, log:
     verify_component_voltage_rating_fixture(context, log)
     verify_component_power_rating_fixture(context, log)
     verify_connector_contact_rating_fixture(context, log)
+    verify_energy_storage_hold_up_fixture(context, log)
     verify_mosfet_stress_fixture(context, log)

@@ -23,6 +23,8 @@ class ComponentRatingFixtureContext:
     power_fixture_sha256: str
     contact_fixture: Path
     contact_fixture_sha256: str
+    energy_storage_fixture: Path
+    energy_storage_fixture_sha256: str
     mosfet_fixture_root: Path
     mosfet_fixture: Path
     mosfet_fixture_sha256: str

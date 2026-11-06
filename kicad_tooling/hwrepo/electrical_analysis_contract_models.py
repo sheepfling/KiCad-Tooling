@@ -22,6 +22,7 @@ from .component_rating_models import (
 from .connector_contact_rating_models import ConnectorContactRatingAnalysis
 from .control_input_models import ControlInputsAnalysis
 from .digital_peer_voltage_models import DigitalPeerVoltageAnalysis
+from .energy_storage_models import EnergyStorageAnalysis
 from .grounding_models import GroundingAnalysis
 from .i2c_pullup_models import I2cPullupAnalysis
 from .model_primitives import Digest, Identifier, NonEmptyText, StrictModel
@@ -110,6 +111,13 @@ class ElectricalAnalysisContract(StrictModel):
     component_power_ratings: (
         Annotated[
             ComponentPowerRatingAnalysis | AnalysisNotApplicable | AnalysisPending,
+            Field(discriminator="mode"),
+        ]
+        | None
+    ) = None
+    energy_storage: (
+        Annotated[
+            EnergyStorageAnalysis | AnalysisNotApplicable | AnalysisPending,
             Field(discriminator="mode"),
         ]
         | None

@@ -52,6 +52,10 @@ def test_component_and_connector_rating_controls_export_repeatably(tmp_path: Pat
         repository
         / "tests/fixtures/design_lint/component-voltage-ratings/contact-control.kicad_sch"
     )
+    energy_storage_fixture = (
+        repository
+        / "tests/fixtures/design_lint/component-voltage-ratings/energy-storage-hold-up.kicad_sch"
+    )
     mosfet_fixture = repository / "tests/fixtures/design_lint/mosfet-stress/mosfet.kicad_sch"
     expected_fixture_sha256 = "c3dd7c1e551613664c776875e217d7580238d04f5f40fe093ff6a86b1fa82af0"
     expected_power_fixture_sha256 = (
@@ -59,6 +63,9 @@ def test_component_and_connector_rating_controls_export_repeatably(tmp_path: Pat
     )
     expected_contact_fixture_sha256 = (
         "a210495b6df2c7f43ca4d44361c6be6f022d31116dbd4efa200c76faf03f3182"
+    )
+    expected_energy_storage_fixture_sha256 = (
+        "ce78138cc6cf85460d2f5088a6da601540dbcce2c44cd31ed5d406f57b0ab926"
     )
     expected_mosfet_fixture_sha256 = (
         "92e70feba1b173c5cbcf8bf2bc9d820be1f7bf1116448e76b072da0b7d1119b6"
@@ -68,10 +75,15 @@ def test_component_and_connector_rating_controls_export_repeatably(tmp_path: Pat
     assert (
         hashlib.sha256(contact_fixture.read_bytes()).hexdigest() == expected_contact_fixture_sha256
     )
+    assert (
+        hashlib.sha256(energy_storage_fixture.read_bytes()).hexdigest()
+        == expected_energy_storage_fixture_sha256
+    )
     assert hashlib.sha256(mosfet_fixture.read_bytes()).hexdigest() == expected_mosfet_fixture_sha256
     normalized_hashes: dict[str, str] = {}
     power_normalized_hashes: dict[str, str] = {}
     contact_normalized_hashes: dict[str, str] = {}
+    energy_storage_normalized_hashes: dict[str, str] = {}
     mosfet_normalized_hashes: dict[str, str] = {}
     for project, version in expected_versions.items():
         config = selected_config(root, project)
@@ -210,6 +222,62 @@ def test_component_and_connector_rating_controls_export_repeatably(tmp_path: Pat
                 == contact_native["normalized_erc_sha256"]
             )
             assert contact_results[case]["native_erc_error_types"] == "none"
+        energy_storage_results = {
+            item["stage"]: item
+            for item in events
+            if item.get("stage", "").startswith("energy-storage-hold-up-fixture/")
+        }
+        assert set(energy_storage_results) == {
+            "energy-storage-hold-up-fixture/native-export",
+            "energy-storage-hold-up-fixture/control",
+            "energy-storage-hold-up-fixture/over-limit-fault",
+        }
+        energy_storage_native = energy_storage_results[
+            "energy-storage-hold-up-fixture/native-export"
+        ]
+        assert energy_storage_native["status"] == "PASS"
+        assert energy_storage_native["fixture_sha256"] == expected_energy_storage_fixture_sha256
+        assert energy_storage_native["kicad_version"] == version
+        assert energy_storage_native["image"] == expected_images[project]
+        assert energy_storage_native["repeatable"] == "true"
+        assert energy_storage_native["repeatability_basis"] == "normalized_netlist_and_erc"
+        assert (
+            energy_storage_native["normalized_netlist_sha256"]
+            == energy_storage_native["repeat_normalized_netlist_sha256"]
+        )
+        assert (
+            energy_storage_native["normalized_erc_sha256"]
+            == energy_storage_native["repeat_normalized_erc_sha256"]
+        )
+        assert energy_storage_native["native_erc_error_types"] == "none"
+        energy_storage_normalized_hashes[project] = energy_storage_native[
+            "normalized_netlist_sha256"
+        ]
+        assert (
+            energy_storage_results["energy-storage-hold-up-fixture/control"]["utilization_status"]
+            == "PASS"
+        )
+        assert (
+            energy_storage_results["energy-storage-hold-up-fixture/over-limit-fault"][
+                "utilization_status"
+            ]
+            == "FAIL"
+        )
+        for case in (
+            "energy-storage-hold-up-fixture/control",
+            "energy-storage-hold-up-fixture/over-limit-fault",
+        ):
+            assert energy_storage_results[case]["kicad_version"] == version
+            assert energy_storage_results[case]["image"] == expected_images[project]
+            assert energy_storage_results[case]["fixture_sha256"] == (
+                expected_energy_storage_fixture_sha256
+            )
+            assert energy_storage_results[case]["repeatable"] == "true"
+            assert (
+                energy_storage_results[case]["normalized_erc_sha256"]
+                == energy_storage_native["normalized_erc_sha256"]
+            )
+            assert energy_storage_results[case]["native_erc_error_types"] == "none"
         mosfet_results = {
             item["stage"]: item
             for item in events
@@ -268,4 +336,5 @@ def test_component_and_connector_rating_controls_export_repeatably(tmp_path: Pat
     assert len(set(normalized_hashes.values())) == 1
     assert len(set(power_normalized_hashes.values())) == 1
     assert len(set(contact_normalized_hashes.values())) == 1
+    assert len(set(energy_storage_normalized_hashes.values())) == 1
     assert len(set(mosfet_normalized_hashes.values())) == 1

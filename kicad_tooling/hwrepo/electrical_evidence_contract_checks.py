@@ -20,6 +20,7 @@ from .digital_peer_voltages import digital_peer_voltage_checks
 from .electrical import grounding_checks, pin_relationship_checks, power_budget_checks
 from .electrical_analysis_contract_models import ElectricalAnalysisContract
 from .electrical_report_models import ElectricalAnalysisReport, ElectricalCheck
+from .energy_storage_hold_up import energy_storage_hold_up_checks
 from .evidence import digest
 from .i2c_pullup_contract import i2c_pullup_checks
 from .mosfet_stress import mosfet_stress_checks
@@ -93,6 +94,7 @@ def retained_electrical_contract_checks(
     component_power_ratings: (
         electrical_contracts.ComponentPowerRatingAnalysis | ElectricalAnalysisState | None
     ) = contract.component_power_ratings
+    energy_storage = contract.energy_storage
     connector_contact_ratings: (
         electrical_contracts.ConnectorContactRatingAnalysis | ElectricalAnalysisState | None
     ) = contract.connector_contact_ratings
@@ -126,6 +128,7 @@ def retained_electrical_contract_checks(
             component_voltage_ratings, electrical_contracts.ComponentVoltageRatingAnalysis
         )
         or isinstance(component_power_ratings, electrical_contracts.ComponentPowerRatingAnalysis)
+        or isinstance(energy_storage, electrical_contracts.EnergyStorageAnalysis)
         or isinstance(
             connector_contact_ratings, electrical_contracts.ConnectorContactRatingAnalysis
         )
@@ -325,6 +328,15 @@ def retained_electrical_contract_checks(
                 status="NOT_APPLICABLE",
                 detail=component_power_ratings.reason,
             )
+        )
+    if isinstance(energy_storage, electrical_contracts.EnergyStorageAnalysis):
+        assert netlist is not None
+        checks.extend(energy_storage_hold_up_checks(energy_storage, netlist))
+    elif energy_storage is not None:
+        if not isinstance(energy_storage, electrical_contracts.AnalysisNotApplicable):
+            raise ValueError("Energy-storage requirements remain pending")  # noqa: TRY004
+        checks.append(
+            ElectricalCheck(id="energy-storage", status="NOT_APPLICABLE", detail=energy_storage.reason)
         )
     if isinstance(connector_contact_ratings, electrical_contracts.ConnectorContactRatingAnalysis):
         assert netlist is not None

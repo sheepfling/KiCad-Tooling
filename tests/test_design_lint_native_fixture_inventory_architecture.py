@@ -37,7 +37,7 @@ _NON_RULE_NATIVE_TESTS = MappingProxyType(
             "tests.test_component_rating_native_fixture_lane",
             None,
             "test_component_and_connector_rating_controls_export_repeatably",
-        ): "This native lane validates authored component and connector rating requirements; the design-lint catalog has no rating predicate.",
+        ): "This native lane validates authored component, connector, and storage requirements; the design-lint catalog has no rating predicate.",
         (
             "tests.test_empty_netlist_evidence_native_fixture_lane",
             None,

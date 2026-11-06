@@ -75,6 +75,11 @@ class ElectricalAnalysisReport(StrictModel):
             "a project-authored maximum stress envelope, a datasheet working rating, and a project-selected "
             "utilization limit; the sources and stress derivation are not independently validated."
         ),
+        (
+            "Energy-storage hold-up checks use an exact fitted capacitor and project-authored minimum "
+            "effective-capacitance fraction, constant-current load, voltage window, and duration; "
+            "they do not model ESR, leakage, load transients, charge current, or PCB continuity."
+        ),
         "Simulation results apply only to the reviewed models, cases, timestep and frequency grid.",
         "Power budgets use simultaneous worst-case loads and engineer-supplied derated path ratings.",
         "Physical startup, thermal behavior, RF/EMC and manufacturing acceptance remain unverified.",

@@ -95,3 +95,31 @@ normalized ERC SHA-256
 The 1.60 A case passed at exactly 0.8 utilization; the 1.61 A case failed at
 0.805. The receipts are under ignored `build/ci/` outputs and were generated
 locally; no hosted GitHub result for the current dirty branch is recorded.
+
+## Synthetic energy-storage hold-up fixture
+
+`energy-storage-hold-up.kicad_sch` is a tooling-owned capacitor fixture. C1 is
+`Device:C`, footprint `Synthetic:Radial_Supercap`, part ID
+`SUPER-CAP-0P1F`, value `0.1F`, and exact assignments `C1.1=VLOAD`,
+`C1.2=GND`. Its source SHA-256 is
+`ce78138cc6cf85460d2f5088a6da601540dbcce2c44cd31ed5d406f57b0ab926`.
+The component identity, capacitance, operating bounds, derating fraction, and
+source descriptions are all synthetic.
+
+The exact-version lane exports this schematic twice using digest-pinned KiCad
+10.0.0 and 10.0.5, checks repeatable normalized netlist and ERC hashes, and
+requires no ERC errors. Both versions produced normalized netlist SHA-256
+`cc711a7566741669518be27ed62bfdec680c365f58dbad62791dc72f47339c38`.
+KiCad 10.0.0 produced normalized ERC SHA-256
+`8945db6cb5e10cc79180475f596dec5807ca1a246be947c84ad4a3e8c6fbd17b`; KiCad
+10.0.5 produced
+`b1f928b2543cac139c3067384c152844cae9e49e684e39e666b7d4c18445ab4b`.
+
+The authored envelope uses 1.8 V minimum start, 1.2 V minimum operating,
+0.05 A maximum constant load, a 0.6 effective-capacitance factor, and an 0.8
+utilization ceiling. A 0.5 s hold-up control passes at 0.694444 utilization;
+the 0.6 s fault fails at 0.833333. This is the deterministic constant-current
+capacitor model `C_required = I * t / (V_start - V_operating)`. The evidence
+does not model ESR, leakage, load transients, charging, aging, or physical PCB
+continuity; separate authored checks are needed for those requirements.
+Generated command and report receipts remain in ignored `build/` directories.

@@ -66,6 +66,7 @@ from .electrical_simulation_evaluation import (
     evaluate_electrical_simulations,
 )
 from .electrical_simulation_evidence import SimulationVersionObserved
+from .energy_storage_hold_up import energy_storage_hold_up_checks
 from .evidence import digest, source_state
 from .model_primitives import Digest, RepositoryPath
 from .mosfet_stress import mosfet_stress_checks
@@ -188,6 +189,7 @@ def _analyze(
             component_power_ratings: (
                 electrical_contracts.ComponentPowerRatingAnalysis | ElectricalAnalysisState | None
             ) = contract.component_power_ratings
+            energy_storage = contract.energy_storage
             connector_contact_ratings: (
                 electrical_contracts.ConnectorContactRatingAnalysis | ElectricalAnalysisState | None
             ) = contract.connector_contact_ratings
@@ -234,6 +236,7 @@ def _analyze(
                     isinstance(
                         component_power_ratings, electrical_contracts.ComponentPowerRatingAnalysis
                     ),
+                    isinstance(energy_storage, electrical_contracts.EnergyStorageAnalysis),
                     isinstance(
                         connector_contact_ratings,
                         electrical_contracts.ConnectorContactRatingAnalysis,
@@ -494,6 +497,29 @@ def _analyze(
                             else "NOT_APPLICABLE"
                         ),
                         detail=component_power_ratings.reason,
+                    )
+                )
+            if isinstance(energy_storage, electrical_contracts.EnergyStorageAnalysis):
+                if netlist is None:
+                    checks.append(
+                        ElectricalCheck(
+                            id="energy-storage",
+                            status="FAIL",
+                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
+                        )
+                    )
+                else:
+                    checks.extend(energy_storage_hold_up_checks(energy_storage, netlist))
+            elif energy_storage is not None:
+                checks.append(
+                    ElectricalCheck(
+                        id="energy-storage",
+                        status=(
+                            "NOT_CONFIGURED"
+                            if isinstance(energy_storage, electrical_contracts.AnalysisPending)
+                            else "NOT_APPLICABLE"
+                        ),
+                        detail=energy_storage.reason,
                     )
                 )
             if isinstance(

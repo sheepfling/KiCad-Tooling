@@ -371,6 +371,7 @@ def pending_sections(contract: ElectricalAnalysisContract) -> tuple[str, ...]:
         ("digital_peer_voltages", contract.digital_peer_voltages),
         ("component_voltage_ratings", contract.component_voltage_ratings),
         ("component_power_ratings", contract.component_power_ratings),
+        ("energy_storage", contract.energy_storage),
         ("connector_contact_ratings", contract.connector_contact_ratings),
         ("mosfet_stress", contract.mosfet_stress),
         ("rs485", contract.rs485),

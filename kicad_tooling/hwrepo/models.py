@@ -35,6 +35,7 @@ from . import digital_peer_voltage_models as _digital_peer_voltage_models
 from . import electrical_analysis_contract_models as _electrical_analysis_contract_models
 from . import electrical_chart_models as _electrical_chart_models
 from . import electrical_simulation_models as _electrical_simulation_models
+from . import energy_storage_models as _energy_storage_models
 from . import external_protection_models as _external_protection_models
 from . import file_access_models as _file_access_models
 from . import grounding_models as _grounding_models
@@ -307,6 +308,8 @@ ComponentVoltageRatingRequirement = _component_rating_models.ComponentVoltageRat
 ComponentVoltageRatingAnalysis = _component_rating_models.ComponentVoltageRatingAnalysis
 ComponentPowerRatingRequirement = _component_rating_models.ComponentPowerRatingRequirement
 ComponentPowerRatingAnalysis = _component_rating_models.ComponentPowerRatingAnalysis
+EnergyStorageHoldUpRequirement = _energy_storage_models.EnergyStorageHoldUpRequirement
+EnergyStorageAnalysis = _energy_storage_models.EnergyStorageAnalysis
 ComponentRolePin = _component_role_models.ComponentRolePin
 ComponentRoleBinding = _component_role_models.ComponentRoleBinding
 ComponentRoleMap = _component_role_models.ComponentRoleMap

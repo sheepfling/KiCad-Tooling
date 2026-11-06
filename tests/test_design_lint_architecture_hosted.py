@@ -60,6 +60,7 @@ HOSTED_COMPONENT_RATING_MODULES = (
     "ci_hosted_component_voltage_rating_fixture.py",
     "ci_hosted_component_power_rating_fixture.py",
     "ci_hosted_connector_contact_rating_fixture.py",
+    "ci_hosted_energy_storage_hold_up_fixture.py",
     "ci_hosted_mosfet_stress_fixture.py",
 )
 
@@ -166,6 +167,7 @@ def test_component_rating_hosted_fixture_is_split_by_theme() -> None:
         "verify_component_voltage_rating_fixture",
         "verify_component_power_rating_fixture",
         "verify_connector_contact_rating_fixture",
+        "verify_energy_storage_hold_up_fixture",
         "verify_mosfet_stress_fixture",
     ):
         assert f"{function}(context, log)" in lane_text

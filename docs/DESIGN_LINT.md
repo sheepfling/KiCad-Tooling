@@ -6004,6 +6004,63 @@ behavior. A passing ratio confirms only the authored numeric comparison.
 Omit the section when no scope is claimed, or mark it pending/not applicable
 when that decision is part of project review.
 
+## Check source-authored capacitor hold-up envelopes
+
+Use `energy_storage` when a project has an exact fitted storage capacitor and
+reviewed minimum start voltage, minimum operating voltage, maximum constant
+load, and hold-up duration. This calculation is opt-in; it does not infer
+backup intent from a net name or capacitor value. Each requirement binds the
+symbol, footprint, `PART_ID`, both pins and their native nets, a source
+reference, an effective-capacitance fraction, and the project-authored bounds
+used in the calculation.
+
+```json
+{
+  "energy_storage": {
+    "mode": "required",
+    "basis": "Reviewed backup-rail duration and load envelope",
+    "requirements": [
+      {
+        "id": "backup-rail-hold-up",
+        "reference": "C1",
+        "expected_symbol": "Device:C",
+        "expected_footprint": "Synthetic:Radial_Supercap",
+        "expected_part_id": "SYNTHETIC-CAP-0P1F",
+        "pins": ["C1.1", "C1.2"],
+        "nets": ["BACKUP_RAIL", "GND"],
+        "minimum_start_voltage_v": 1.8,
+        "minimum_operating_voltage_v": 1.2,
+        "maximum_constant_load_current_a": 0.05,
+        "minimum_hold_up_time_s": 0.5,
+        "minimum_effective_capacitance_fraction": 0.6,
+        "maximum_utilization_fraction": 0.8,
+        "capacitance_source": "Exact part datasheet and reviewed operating conditions",
+        "effective_capacitance_basis": "Project tolerance and temperature lower bound",
+        "load_current_basis": "Reviewed maximum backup-rail load",
+        "voltage_window_basis": "Reviewed minimum start and load operating voltages",
+        "hold_up_basis": "Project minimum backup duration"
+      }
+    ]
+  }
+}
+```
+
+The calculation uses `C_required = I_max * t_min / (V_start_min -
+V_operating_min)` and compares it with the parsed nominal capacitance multiplied
+by `minimum_effective_capacitance_fraction`. The resulting utilization is
+`C_required / C_effective`; equality at the project-selected limit passes. A
+mismatched exact part, DNP state, pin inventory, or pin/net assignment fails
+its identity or topology check and leaves the hold-up comparison
+`NOT_APPLICABLE`. Unsupported or missing explicit capacitance fails.
+
+The project owns and must review each source, operating bound, load, effective
+capacitance factor, and acceptance limit. The checker does not validate those
+sources or model ESR, leakage, changing loads, charge current, aging, parallel
+capacitor tolerance, PCB copper, or physical continuity. It does not replace
+the separate component working-voltage check or first-article testing.
+Omit the section when this requirement is out of scope, or mark it pending or
+not applicable when that decision is part of the project review.
+
 ## Check mapped connector contact-current margins
 
 Use `connector_contact_ratings` when a project has reviewed maximum current

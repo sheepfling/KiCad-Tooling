@@ -29,6 +29,8 @@ from tests.test_component_voltage_ratings import (
 from tests.test_component_voltage_ratings import (
     requirement as component_voltage_requirement,
 )
+from tests.test_energy_storage_hold_up import native_netlist_xml as energy_storage_netlist_xml
+from tests.test_energy_storage_hold_up import requirement as energy_storage_requirement
 from tests.test_mosfet_stress import (
     native_netlist_xml as mosfet_stress_netlist_xml,
 )
@@ -39,6 +41,7 @@ from tests.test_mosfet_stress import (
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.component_lint,
+    pytest.mark.power_lint,
     pytest.mark.evidence_lint,
     pytest.mark.template_checkout,
 ]
@@ -96,6 +99,20 @@ pytestmark = [
                 "mosfet-stress/switch-q1/state-on/vgs",
             ),
             id="mosfet-stress",
+        ),
+        pytest.param(
+            "energy_storage",
+            energy_storage_requirement,
+            energy_storage_netlist_xml,
+            "energy-storage-hold-up-replay",
+            "energy-storage/controller-rail-hold-up/hold-up",
+            (
+                "energy-storage/controller-rail-hold-up/identity",
+                "energy-storage/controller-rail-hold-up/pin-1",
+                "energy-storage/controller-rail-hold-up/pin-2",
+                "energy-storage/controller-rail-hold-up/hold-up",
+            ),
+            id="energy-storage-hold-up",
         ),
     ),
 )
