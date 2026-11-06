@@ -3,10 +3,10 @@
 These tooling-owned schematics exercise one project-authored LED current map.
 They contain no product design or private project source.
 
-| Fixture | Expected result | SHA-256 |
-| --- | --- | --- |
-| `control.kicad_sch` | 470 Ω nominal resistor with the authored 5% tolerance remains inside the 2.2–3.4 mA window | `a6be3691cf356ac8020d10341116d56a7cd9e36a6cb09b1c885c574d899ee17c` |
-| `value-fault.kicad_sch` | 100 Ω nominal resistor exceeds the authored upper current bound | `ef95f66b22f00b3a23ab8db26a3a53c0f36d11dba1add141dc440449d0d1485f` |
+| Fixture                 | Expected result                                                                            | SHA-256                                                            |
+| ----------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| `control.kicad_sch`     | 470 Ω nominal resistor with the authored 5% tolerance remains inside the 2.2–3.4 mA window | `a6be3691cf356ac8020d10341116d56a7cd9e36a6cb09b1c885c574d899ee17c` |
+| `value-fault.kicad_sch` | 100 Ω nominal resistor exceeds the authored upper current bound                            | `ef95f66b22f00b3a23ab8db26a3a53c0f36d11dba1add141dc440449d0d1485f` |
 
 The native fixture lane exports each schematic twice with the exact digest-
 pinned KiCad 10.0.0 and 10.0.5 images. It checks repeatable native netlists,
