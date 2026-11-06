@@ -231,3 +231,48 @@ not change in the frozen run, no new Alphus complaint was confirmed, and no new
 gate is ready to enable. The existing APL-KT-001 through APL-KT-008 feedback
 set remains in the external ledger; no issue, pull request, or maintainer
 message was submitted.
+
+## Follow-up re-sniff after the PCB DRC draft landed (2026-11-06)
+
+The consumer remains pinned and installed at Alphus `v0.0.2`, commit
+`3435f81aff7abac7716a5780d26319e8f314d61d`. All nine configured profiles ran
+over 2,624 Python files with source-manifest SHA-256
+`fbc3ec3d48cb2421949f92d611acf8dc28d1b77c0ba9729d315dcba269df56ec`; the
+manifest was unchanged after the run. The capture started at KiCad HEAD
+`e6a904e909e19da32b468e8d727b5c1fa3c4734f`. During the run, the same source
+bytes were committed as `e8ac8180008cf954ad17193c60e0841c9ecfbfb2`; the
+post-scan checkout is clean and the captured inventory exactly matches its
+tracked Python files.
+
+| Profile                      | Findings | Errors | Warnings | Exit |
+| ---------------------------- | -------: | -----: | -------: | ---: |
+| `runtime-types`              |      104 |    104 |        0 |    1 |
+| `python-style`               |      226 |    226 |        0 |    1 |
+| `pydantic-practices`         |        4 |      0 |        4 |    0 |
+| `architecture-candidates`    |       41 |      0 |       41 |    0 |
+| `input-contracts`            |        4 |      0 |        4 |    0 |
+| `complexity-candidates`      |       28 |      0 |       28 |    0 |
+| `test-quality`               |        0 |      0 |        0 |    0 |
+| `module-role-boundaries`     |        0 |      0 |        0 |    0 |
+| `shared-utility-duplication` |        0 |      0 |        0 |    0 |
+
+Python-style still reports 139 legacy Pydantic-field labels, 75 local imports,
+10 mutable module constants, and two unslotted dataclasses; opaque mappings
+remain at zero. One of the four existing `dump-revalidation` warnings is at
+`design_lint_project_inspection.py:376`, where the assembled report is
+revalidated after source-bound evidence is added to enforce its cross-field
+contract. This refreshes context for APL-KT-008; it is not a new complaint.
+The other current pain points remain tracked as APL-KT-001 through APL-KT-008
+in the external ledger.
+
+An isolated Alphus `v0.0.3` trial of its only added selector, `test-layout`,
+reported 1,141 error-severity findings on the current tree: 949 unmirrored test
+directories and 192 misplaced test modules. It remains unsuitable for the
+behavior-organized test tree and disabled under APL-KT-006. Upstream `main`
+remains at `c880093f7ccb73c2af78ffb5c7de8c15d2b75b0e` with the same 62-selector
+catalog as v0.0.2; v0.0.3 has 63 selectors and adds only `test-layout`. No new
+gate is ready to enable. `file-size`, `package-boundaries`, and
+`source-test-coverage` remain deferred until their consumer contracts are
+defined. Raw reports, inventory, catalog comparison, upstream refs, and the
+post-scan identity are under the ignored
+`build/alphus-v0.0.2/resniff-2026-11-06-current-shared-worktree/` directory.

@@ -3205,3 +3205,34 @@ decomposition should move those responsibilities into focused owners while
 preserving the existing `releasing` compatibility imports and patch points.
 This exception records known architecture debt; it does not change release
 behavior or waive the below-500-line target for new modules.
+
+## Alphus re-sniff after the PCB DRC draft landed (2026-11-06)
+
+The re-sniff that was pending after the PCB DRC draft changed is complete. The
+consumer is still pinned to Alphus `v0.0.2` at
+`3435f81aff7abac7716a5780d26319e8f314d61d`. All nine profiles ran over a stable
+2,624-file Python inventory with manifest SHA-256
+`fbc3ec3d48cb2421949f92d611acf8dc28d1b77c0ba9729d315dcba269df56ec`; policy
+SHA-256 remains
+`25876352db808b0e9f33e73a2dd81ff97d01469d5c685d700bb4e500e1b5c34f`. The
+capture began at `e6a904e909e19da32b468e8d727b5c1fa3c4734f`; while profiles ran,
+those exact source bytes were committed at `e8ac8180008cf954ad17193c60e0841c9ecfbfb2`.
+The clean post-scan tree and tracked-file inventory match the captured source
+manifest.
+
+Results remain 104 runtime-type errors, 226 Python-style errors (139 legacy
+Pydantic-field labels, 75 local imports, 10 mutable module constants, two
+unslotted dataclasses, and zero opaque-mapping findings), four Pydantic
+warnings, 41 architecture candidates, four input-contract candidates, and 28
+complexity candidates. Test quality, module-role boundaries, and shared-utility
+duplication remain at zero. The warning at
+`design_lint_project_inspection.py:376` is the existing intentional
+cross-field revalidation case under APL-KT-008, not a new Alphus complaint.
+
+The live v0.0.3-only `test-layout` trial reported 1,141 errors (949 unmirrored
+directories and 192 misplaced modules) on the current behavior-organized test
+tree. It remains disabled under APL-KT-006. The v0.0.2 catalog and current
+upstream `main` each have 62 selectors; v0.0.3 adds only `test-layout`. No new
+gate is ready to enable. APL-KT-001 through APL-KT-008 remain the external
+feedback set. Full details and raw reports are in
+`docs/ALPHUS_QUALITY_GATES.md` and the external Alphus feedback bundle.
