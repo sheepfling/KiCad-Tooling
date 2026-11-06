@@ -9,7 +9,11 @@ from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .spi_generic_connector_models import SpiGenericConnectorTriad
 
 SPI_GENERIC_CONNECTOR_RULE_ID: DesignLintRuleId = "bus.spi_generic_connector_triad_review"
-_ROLE_LABELS = {"clock": "clock", "data_input": "controller-to-peripheral data", "data_output": "peripheral-to-controller data"}
+_ROLE_LABELS = {
+    "clock": "clock",
+    "data_input": "controller-to-peripheral data",
+    "data_output": "peripheral-to-controller data",
+}
 
 
 @dataclass(frozen=True, slots=True)

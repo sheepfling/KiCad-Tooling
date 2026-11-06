@@ -139,7 +139,9 @@ def spi_generic_connector_fixture_lane(
                 tuple(
                     (
                         item.subject,
-                        tuple(sorted((key, tuple(values)) for key, values in item.evidence.items())),
+                        tuple(
+                            sorted((key, tuple(values)) for key, values in item.evidence.items())
+                        ),
                     )
                     for item in findings
                 )
