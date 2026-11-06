@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Set as AbstractSet
 
 from .bus_signal_roles import can_function_role
 from .can_generic_connector_models import CanGenericConnectorPair, CanGenericEndpointPair
@@ -14,6 +15,7 @@ from .connector_coverage_models import (
     ConnectorMappedPinEvidence,
 )
 from .connector_identity import connector_candidate_references, pin_function_is_generic
+from .connector_pin_metadata import connector_pin_metadata_matches_inventory
 from .netlist_contract_models import ComponentContract, NetlistContract
 
 _IC_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)
@@ -82,7 +84,9 @@ def generic_can_connector_pairs(
         numbers = inventories.get(connector_key)
         if not numbers or len({number.casefold() for number in numbers}) != len(numbers):
             continue
-        if not _metadata_matches_inventory(connector_key, numbers, functions, electrical_types):
+        if not connector_pin_metadata_matches_inventory(
+            connector_key, numbers, functions, electrical_types
+        ):
             continue
         connector_functions = tuple(
             functions.get(f"{connector_reference}.{number}".casefold()) for number in numbers
@@ -167,8 +171,8 @@ def _recognized_can_endpoint_pairs(
     inventories: Mapping[str, tuple[str, ...]],
     functions: Mapping[str, str],
     electrical_types: Mapping[str, str],
-    assignments: Mapping[str, set[str]],
-    dnp: set[str],
+    assignments: Mapping[str, AbstractSet[str]],
+    dnp: AbstractSet[str],
     reference_spellings: Mapping[str, str],
 ) -> tuple[CanGenericEndpointPair, ...]:
     endpoint_pairs: list[CanGenericEndpointPair] = []
@@ -184,7 +188,9 @@ def _recognized_can_endpoint_pairs(
         numbers = inventories.get(reference_key)
         if not numbers or len({number.casefold() for number in numbers}) != len(numbers):
             continue
-        if not _metadata_matches_inventory(reference_key, numbers, functions, electrical_types):
+        if not connector_pin_metadata_matches_inventory(
+            reference_key, numbers, functions, electrical_types
+        ):
             continue
         by_role: dict[str, list[tuple[str, str]]] = {"CANH": [], "CANL": []}
         for number in numbers:
@@ -215,30 +221,8 @@ def _recognized_can_endpoint_pairs(
     return tuple(endpoint_pairs)
 
 
-def _metadata_matches_inventory(
-    reference_key: str,
-    numbers: tuple[str, ...],
-    functions: Mapping[str, str],
-    electrical_types: Mapping[str, str],
-) -> bool:
-    expected = {number.casefold() for number in numbers}
-    for metadata in (functions, electrical_types):
-        actual = {
-            pin.rsplit(".", 1)[1].casefold()
-            for pin in metadata
-            if pin.rpartition(".")[0] == reference_key
-        }
-        if actual != expected:
-            return False
-    return all(
-        functions.get(f"{reference_key}.{number.casefold()}")
-        and electrical_types.get(f"{reference_key}.{number.casefold()}")
-        for number in numbers
-    )
-
-
 def _source_map_covers_pair(
-    assignments: list[tuple[str, str]],
+    assignments: Sequence[tuple[str, str]],
     expected_net: str,
     expected_role: str,
     mapped: Mapping[str, ConnectorMappedPinEvidence],
@@ -258,6 +242,6 @@ def _ordered(pins: Iterable[str]) -> tuple[str, ...]:
     return tuple(sorted(pins, key=lambda item: (item.casefold(), item)))
 
 
-def _functions_for(assignments: list[tuple[str, str]]) -> tuple[str, ...]:
+def _functions_for(assignments: Iterable[tuple[str, str]]) -> tuple[str, ...]:
     by_pin = {pin.casefold(): function for pin, function in assignments}
     return tuple(by_pin[pin.casefold()] for pin in _ordered(by_pin))

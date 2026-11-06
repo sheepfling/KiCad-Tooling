@@ -9,6 +9,7 @@ from .casefold_mapping_lookup import casefolded_unique_index
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageReport, ConnectorMappedPinEvidence
 from .connector_identity import connector_candidate_references, pin_function_is_generic
+from .connector_pin_metadata import connector_pin_metadata_matches_inventory
 from .netlist_contract_models import ComponentContract, NetlistContract
 from .spi_generic_connector_models import SpiGenericConnectorTriad, SpiGenericEndpointTriad
 from .spi_participants import spi_signal_role_and_channel
@@ -84,7 +85,9 @@ def generic_spi_connector_triads(
         numbers = inventories.get(connector_key)
         if not numbers or len({number.casefold() for number in numbers}) != len(numbers):
             continue
-        if not _metadata_matches_inventory(connector_key, numbers, functions, electrical_types):
+        if not connector_pin_metadata_matches_inventory(
+            connector_key, numbers, functions, electrical_types
+        ):
             continue
         connector_functions = tuple(
             functions.get(f"{connector_key}.{number.casefold()}") for number in numbers
@@ -177,7 +180,9 @@ def _recognized_spi_endpoint_triads(
         numbers = inventories.get(reference_key)
         if not numbers or len({number.casefold() for number in numbers}) != len(numbers):
             continue
-        if not _metadata_matches_inventory(reference_key, numbers, functions, electrical_types):
+        if not connector_pin_metadata_matches_inventory(
+            reference_key, numbers, functions, electrical_types
+        ):
             continue
         role_pins = {role: group.roles.get(role, ()) for role in _ROLE_ORDER}
         if any(len(role_pins[role]) != 1 for role in _ROLE_ORDER):
@@ -210,28 +215,6 @@ def _recognized_spi_endpoint_triads(
             )
         )
     return tuple(result)
-
-
-def _metadata_matches_inventory(
-    reference_key: str,
-    numbers: tuple[str, ...],
-    functions: Mapping[str, str],
-    electrical_types: Mapping[str, str],
-) -> bool:
-    expected = {number.casefold() for number in numbers}
-    for metadata in (functions, electrical_types):
-        actual = {
-            pin.rsplit(".", 1)[1].casefold()
-            for pin in metadata
-            if pin.rpartition(".")[0] == reference_key
-        }
-        if actual != expected:
-            return False
-    return all(
-        functions.get(f"{reference_key}.{number.casefold()}")
-        and electrical_types.get(f"{reference_key}.{number.casefold()}")
-        for number in numbers
-    )
 
 
 def _source_map_covers_triad(

@@ -14,6 +14,7 @@ from kicad_tooling.hwrepo import (
     design_lint_peer_candidates,
     digital_peer_voltage_types,
 )
+from kicad_tooling.hwrepo.connector_pin_metadata import connector_pin_metadata_matches_inventory
 from kicad_tooling.hwrepo.design_lint_bus_inputs import BusCandidateInputs
 from kicad_tooling.hwrepo.design_lint_candidate_inputs import DesignLintCandidateInputs
 from kicad_tooling.hwrepo.design_lint_component_candidates import (
@@ -185,6 +186,30 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "usb_c_cc_signal_on_named_rail_candidates",
         "usb_c_sbu_signal_on_named_rail_candidates",
     ]
+
+
+def test_generic_connector_protocols_share_pin_metadata_inventory_check() -> None:
+    helper = HWREPO / "connector_pin_metadata.py"
+    modules = (
+        "can_generic_connector_candidates.py",
+        "i2c_generic_connector_candidates.py",
+        "spi_generic_connector_candidates.py",
+    )
+    assert line_count(helper) < IMPLEMENTATION_MAX_LINES
+    for name in modules:
+        source = HWREPO / name
+        tree = ast.parse(source.read_text(encoding="utf-8"), filename=source.name)
+        imports = {
+            (node.module, alias.name)
+            for node in ast.walk(tree)
+            if isinstance(node, ast.ImportFrom)
+            for alias in node.names
+        }
+        local_helpers = {node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)}
+        assert ("connector_pin_metadata", "connector_pin_metadata_matches_inventory") in imports
+        assert "_metadata_matches_inventory" not in local_helpers
+
+    assert callable(connector_pin_metadata_matches_inventory)
 
 
 def test_control_and_digital_peer_rule_refs_point_to_their_owners() -> None:

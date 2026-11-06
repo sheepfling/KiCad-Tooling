@@ -14,6 +14,7 @@ from .connector_coverage_models import (
     ConnectorMappedPinEvidence,
 )
 from .connector_identity import connector_candidate_references, pin_function_is_generic
+from .connector_pin_metadata import connector_pin_metadata_matches_inventory
 from .i2c_generic_connector_models import I2cGenericConnectorPair, I2cGenericEndpointPair
 from .netlist_contract_models import ComponentContract, NetlistContract
 
@@ -83,7 +84,9 @@ def generic_i2c_connector_pairs(
         numbers = inventories.get(connector_key)
         if not numbers or len({number.casefold() for number in numbers}) != len(numbers):
             continue
-        if not _metadata_matches_inventory(connector_key, numbers, functions, electrical_types):
+        if not connector_pin_metadata_matches_inventory(
+            connector_key, numbers, functions, electrical_types
+        ):
             continue
         connector_functions = tuple(
             functions.get(f"{connector_key}.{number.casefold()}") for number in numbers
@@ -171,7 +174,9 @@ def _recognized_i2c_endpoint_pairs(
         numbers = inventories.get(reference_key)
         if not numbers or len({number.casefold() for number in numbers}) != len(numbers):
             continue
-        if not _metadata_matches_inventory(reference_key, numbers, functions, electrical_types):
+        if not connector_pin_metadata_matches_inventory(
+            reference_key, numbers, functions, electrical_types
+        ):
             continue
         by_role: dict[str, list[str]] = {"SDA": [], "SCL": []}
         for number in numbers:
@@ -202,28 +207,6 @@ def _recognized_i2c_endpoint_pairs(
             )
         )
     return tuple(endpoints)
-
-
-def _metadata_matches_inventory(
-    reference_key: str,
-    numbers: tuple[str, ...],
-    functions: Mapping[str, str],
-    electrical_types: Mapping[str, str],
-) -> bool:
-    expected = {number.casefold() for number in numbers}
-    for metadata in (functions, electrical_types):
-        actual = {
-            pin.rsplit(".", 1)[1].casefold()
-            for pin in metadata
-            if pin.rpartition(".")[0].casefold() == reference_key
-        }
-        if actual != expected:
-            return False
-    return all(
-        functions.get(f"{reference_key}.{number.casefold()}")
-        and electrical_types.get(f"{reference_key}.{number.casefold()}")
-        for number in numbers
-    )
 
 
 def _source_map_covers_role(
