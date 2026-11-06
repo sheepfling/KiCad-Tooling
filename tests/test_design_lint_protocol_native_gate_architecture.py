@@ -84,6 +84,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="ethernet-management-label-mismatch",
     ),
     pytest.param(
+        "bus.ethernet_management_same_net",
+        "KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_SAME_NET_FIXTURES",
+        "tests.test_ethernet_management_same_net_native_fixture_lane."
+        "test_native_ethernet_management_same_net_fault_and_control_repeat",
+        id="ethernet-management-same-net",
+    ),
+    pytest.param(
         "bus.ethernet_signal_on_named_rail",
         "KICAD_RUN_NATIVE_ETHERNET_SIGNAL_NAMED_RAIL_FIXTURES",
         "tests.test_ethernet_signal_named_rail_native_fixture_lane."

@@ -6824,6 +6824,51 @@
       "implementation_owner": "kicad_tooling/hwrepo/bus_ethernet_pair_labels.py#ethernet_management_label_mismatch_candidates"
     },
     {
+      "rule_id": "bus.ethernet_management_same_net",
+      "title": "Ethernet MDC and MDIO pins share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted U/IC with a complete native pin-function inventory and exactly one recognized MDC plus one MDIO pin, emit a REVIEW candidate when each pin has one unambiguous assignment to the same exact native net, except when both native electrical types are output because ERC can report that conflict.",
+      "supported_kicad_versions": [
+        "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixtures; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Recognition is limited to bounded exact MDC and MDIO native pin-function aliases on fitted U/IC references with complete, unique pin inventories. Connectors, DNP components, duplicate roles, mismatched or incomplete inventories, open pins, and multiply assigned pins are skipped.",
+        "A shared net assignment is a schematic topology clue. Function names do not prove that the component is an Ethernet PHY or that the design uses its management interface. The default is REVIEW; project policy can promote, disable, or exactly ignore the prompt.",
+        "This check does not establish controller-to-PHY intent, PHY behavior, PCB copper continuity, external wiring, electrical approval, or manufacturing readiness."
+      ],
+      "fault_fixtures": [
+        "tests.test_ethernet_management_same_net.test_shared_management_net_is_reviewed_and_separate_nets_are_control",
+        "tests.test_ethernet_management_same_net.test_existing_management_checks_leave_this_same_net_case_unclassified",
+        "tests.test_ethernet_management_same_net_native_fixture_lane.test_native_ethernet_management_same_net_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_ethernet_management_same_net.test_shared_management_net_is_reviewed_and_separate_nets_are_control",
+        "tests.test_ethernet_management_same_net.test_dnp_open_ambiguous_duplicate_and_incomplete_pins_are_skipped",
+        "tests.test_ethernet_management_same_net.test_two_output_pins_are_left_to_native_erc",
+        "tests.test_ethernet_management_same_net_native_fixture_lane.test_native_ethernet_management_same_net_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_ethernet_management_same_net.test_mapping_order_is_stable_and_assigning_separate_nets_clears_candidate"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_SAME_NET_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/bus_ethernet_management_same_net.py#ethernet_management_same_net_candidates",
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#ethernet_management_function_role",
+        "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
+        "kicad_tooling/hwrepo/casefold_mapping_lookup.py#lookup_unique_casefold",
+        "kicad_tooling/hwrepo/netlist_pin_assignments.py#netlist_pin_net_index",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/bus_ethernet_management_same_net.py#ethernet_management_same_net_candidates"
+    },
+    {
       "rule_id": "bus.ethernet_management_unconnected_pin",
       "title": "Ethernet MDC/MDIO pair has one open pin",
       "status": "active",

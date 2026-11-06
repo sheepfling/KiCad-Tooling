@@ -780,7 +780,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 262 active rules.
+The catalog currently contains 263 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1037,6 +1037,29 @@ fault/control schematics are inventoried in the
 KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_UNCONNECTED_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_ethernet_management_unconnected_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_unconnected_pin")'
+```
+
+### Ethernet MDC/MDIO same-net review
+
+`bus.ethernet_management_same_net` reviews a fitted U/IC when its complete,
+unique native pin inventory contains exactly one MDC and one MDIO pin and
+both have one assignment to the same exact net. This flags a shared schematic
+assignment between the management clock and data roles without relying on net naming.
+The rule defaults to `review`; DNP parts, connectors, duplicate roles,
+incomplete inventories, open or multiply assigned pins are skipped, and two
+output pins remain with ERC. Native function names do not prove PHY identity
+or design intent, and a schematic assignment does not establish PCB copper or
+external continuity. Project policy can promote, disable, or exactly ignore
+the finding. Synthetic fault/control inputs are source-hashed in the
+[fixture record](../tests/fixtures/design_lint/ethernet-management-same-net-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_ethernet_management_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_management_same_net")'
+
+KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_ethernet_management_same_net_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_same_net")'
 ```
 
 ### Ethernet TX/RX data pair has one open pin

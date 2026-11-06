@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from .bus_ethernet_management_same_net import ethernet_management_same_net_candidates
 from .bus_ethernet_pair_labels import (
     ethernet_data_label_mismatch_candidates,
     ethernet_management_label_mismatch_candidates,
@@ -73,6 +74,7 @@ def bus_candidates(inputs: BusCandidateInputs) -> tuple[Candidate, ...]:
         *rs485_candidates(observed, inputs.rs485_peer_reference_scan, component_peer_findings),
         *ethernet_data_label_mismatch_candidates(observed),
         *ethernet_management_label_mismatch_candidates(observed),
+        *ethernet_management_same_net_candidates(observed),
         *ethernet_unconnected_pin_candidates(observed),
         *bus_named_rail_candidates(observed),
         *complementary_signal_candidates(observed, inputs.complementary_alias_resolution),

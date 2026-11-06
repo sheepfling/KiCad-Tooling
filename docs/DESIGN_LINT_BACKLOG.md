@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 262 rules are implemented with synthetic regression coverage.
+The following 263 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 262 active rules.
+The catalog currently contains 263 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -631,6 +631,7 @@ skipped under prerelease policy.
 - `bus.ethernet_data_label_mismatch`
 - `bus.ethernet_data_unconnected_pin`
 - `bus.ethernet_management_label_mismatch`
+- `bus.ethernet_management_same_net`
 - `bus.ethernet_management_unconnected_pin`
 - `bus.ethernet_management_signal_on_named_rail`
 - `bus.ethernet_signal_on_named_rail`
@@ -3488,7 +3489,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 262 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 263 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -14663,6 +14664,46 @@ control are documented in the
   value fault, and split tap; a focused CLI/MCP parity test checks report
   equality.
   The fixtures contain no product project data.
+
+#### LINT-282 — Review Ethernet MDC and MDIO pins assigned to one net
+
+- **Status:** Implemented as `bus.ethernet_management_same_net`, default
+  `review`. Project policy can promote the finding to `block`, turn it `off`,
+  or ignore one exact fingerprint.
+- **Gap:** The Ethernet label-role heuristic deliberately skips a
+  same-component MDC/MDIO same-net assignment, and ERC has no project-authored
+  requirement that these roles be separate. The missing check left that
+  clock/data topology without a dedicated review prompt.
+- **Predicate:** For a fitted U/IC with a complete native pin/function
+  inventory and exactly one recognized MDC and one MDIO role, emit one review
+  candidate when both pins have a unique assignment to the same exact native
+  net. Leave two native output pins to ERC.
+- **Boundary:** This uses exact native function aliases and per-component
+  scope; it does not infer a controller-to-PHY map, prove Ethernet identity,
+  establish intended wiring, or verify PCB copper or external continuity.
+  Connectors, DNP parts, duplicate roles, incomplete inventory, open pins, and
+  ambiguous assignments are skipped. The review mode is a heuristic, not an
+  electrical requirement.
+- **Evidence:** Synthetic fault/control, DNP/open/ambiguous/incomplete and
+  duplicate-role boundaries, two-output ERC control, policy overrides,
+  exact ignore, and stable-order tests are covered. A counterfactual confirms
+  that the existing management label, unconnected-pin, and named-rail checks
+  stay quiet on this same-net case while the new rule reports it. Source-hashed
+  synthetic native schematics share the MDC/MDIO pins only in the fault case;
+  repeated exports are checked on digest-pinned KiCad 10.0.0 and 10.0.5.
+  Focused synthetic, catalog, marker, selector, and architecture validation
+  passed 196 tests; the local Docker native lane passed both version cases.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_ethernet_management_same_net.py \
+    tests/test_design_lint_architecture_ethernet_management_same_net.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_management_same_net")'
+
+  KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_SAME_NET_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_ethernet_management_same_net_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_same_net")'
+  ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

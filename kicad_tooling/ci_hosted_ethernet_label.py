@@ -50,7 +50,7 @@ def ethernet_label_fixture_lane(
     log: HostedLog,
     feature: EthernetLabelFeature = "data",
 ) -> None:
-    """Export source-hashed Ethernet label controls and evaluate one focused rule."""
+    """Export source-hashed Ethernet pin controls and evaluate one focused rule."""
     root = root.resolve()
     fixture = ETHERNET_LABEL_FIXTURES[feature]
     if project is None:

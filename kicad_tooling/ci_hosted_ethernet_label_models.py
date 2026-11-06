@@ -23,6 +23,7 @@ from .hwrepo.model_primitives import (
 EthernetLabelFeature = Literal[
     "data",
     "management",
+    "management_same_net",
     "named_rail",
     "management_named_rail",
     "management_unconnected",
@@ -160,6 +161,35 @@ ETHERNET_LABEL_FIXTURES: Mapping[EthernetLabelFeature, EthernetLabelFixtureExpec
                         ),
                         EthernetLabelPinExpectation(
                             reference="U1.6", function="MDIO", net="ETH_MDC"
+                        ),
+                    ),
+                ),
+            ),
+            "management_same_net": EthernetLabelFixtureExpectation(
+                directory="ethernet-management-same-net-native",
+                rule_id="bus.ethernet_management_same_net",
+                stage_prefix="ethernet-management-same-net-fixture",
+                control=EthernetLabelCaseExpectation(
+                    source_sha256="3ddd8d2919eade8a6bb8f7a8c059dafbe9b348aacbb5a6bb8398b0c62944d31b",
+                    subjects=(),
+                    pins=(
+                        EthernetLabelPinExpectation(
+                            reference="U1.5", function="MDC", net="ETH_MDC"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.6", function="MDIO", net="ETH_MDIO"
+                        ),
+                    ),
+                ),
+                fault=EthernetLabelCaseExpectation(
+                    source_sha256="7cc82eec2c6ef277e34d7b506eb430518c28d3ef9126db01b01953ba3c4d4568",
+                    subjects=("U1: MDC U1.5 and MDIO U1.6 share MII_MANAGEMENT",),
+                    pins=(
+                        EthernetLabelPinExpectation(
+                            reference="U1.5", function="MDC", net="MII_MANAGEMENT"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.6", function="MDIO", net="MII_MANAGEMENT"
                         ),
                     ),
                 ),
