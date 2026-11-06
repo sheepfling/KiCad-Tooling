@@ -2130,7 +2130,9 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/component_return_pin_domains.py#component_return_pin_net_divergences",
-        "kicad_tooling/hwrepo/design_lint_return_domain_candidates.py#return_domain_candidates"
+        "kicad_tooling/hwrepo/design_lint_return_domain_candidates.py#return_domain_candidates",
+        "kicad_tooling/hwrepo/design_lint_component_return_candidate_evidence.py#project_component_return_pin_evidence",
+        "kicad_tooling/hwrepo/design_lint_component_return_candidate_evidence.py#component_return_pin_candidate"
       ],
       "theme": "returns",
       "implementation_owner": "kicad_tooling/hwrepo/component_return_pin_domains.py#component_return_pin_net_divergences"

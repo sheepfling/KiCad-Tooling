@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
+from kicad_tooling.hwrepo.component_return_pin_domains import component_return_pin_net_divergences
 from kicad_tooling.hwrepo.design_lint import evaluate
+from kicad_tooling.hwrepo.design_lint_component_return_candidate_evidence import (
+    ComponentReturnPinCandidate,
+)
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.models import (
     DesignLintIgnore,
@@ -50,6 +56,31 @@ def test_split_component_return_pins_request_review_with_exact_evidence() -> Non
         "pin_functions": ("U1.1=GND", "U1.2=AGND"),
     }
     assert "does not require those nets to be joined" in finding.message
+
+
+def test_return_candidate_retains_native_source_for_its_report_projection() -> None:
+    observed = component_return_pin_domains()
+    candidate = component_return_pin_net_divergences(observed)[0]
+
+    assert isinstance(candidate, ComponentReturnPinCandidate)
+    assert candidate.source_evidence.observed is observed
+    assert candidate.evidence == {
+        "U1.1": ("RETURN_A",),
+        "U1.2": ("RETURN_B",),
+        "component_symbol": ("Lint:MultiReturnComponent",),
+        "pin_functions": ("U1.1=GND", "U1.2=AGND"),
+    }
+
+
+def test_return_candidate_rejects_a_forged_projection_or_stale_pin_source() -> None:
+    candidate = component_return_pin_net_divergences(component_return_pin_domains())[0]
+
+    with pytest.raises(ValueError, match="retained source projection"):
+        replace(candidate, evidence={"U1.1": ("FORGED",)})
+
+    stale_pin = replace(candidate.source_evidence.pins[0], assignments=("STALE",))
+    with pytest.raises(ValueError, match="must match the native source"):
+        replace(candidate.source_evidence, pins=(stale_pin, *candidate.source_evidence.pins[1:]))
 
 
 def test_common_return_pins_are_a_quiet_control() -> None:
