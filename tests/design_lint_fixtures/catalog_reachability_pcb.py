@@ -218,6 +218,24 @@ def pcb_rule_ids() -> set[str]:
         message="Synthetic custom DRC text substitution requires review.",
         evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
     )
+    unconstrained_custom_rule = Candidate(
+        rule_id="pcb.custom_drc_rule_without_constraint",
+        subject="projects/synthetic/controller.kicad_dru#rule[1] SyntheticUnconstrainedRule",
+        message="Synthetic custom DRC rule without constraints requests review.",
+        evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
+    )
+    duplicate_custom_rule_name = Candidate(
+        rule_id="pcb.custom_drc_duplicate_rule_name",
+        subject="projects/synthetic/controller.kicad_dru#rules[1,3] SyntheticRepeatedRuleName",
+        message="Synthetic custom DRC declarations share a name and request review.",
+        evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
+    )
+    conflicting_custom_rule_severity = Candidate(
+        rule_id="pcb.custom_drc_conflicting_severities",
+        subject="projects/synthetic/controller.kicad_dru#rule[1] SyntheticConflictingRule",
+        message="Synthetic custom DRC severity clauses conflict and request review.",
+        evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
+    )
     mechanical_edge_rule = Candidate(
         rule_id="pcb.mechanical_edge_clearance_rule_coverage",
         subject="projects/synthetic/controller.kicad_dru#front-edge",
@@ -233,6 +251,9 @@ def pcb_rule_ids() -> set[str]:
             ignored_rule,
             excluded_custom_rule,
             text_variable_rule,
+            unconstrained_custom_rule,
+            duplicate_custom_rule_name,
+            conflicting_custom_rule_severity,
             mechanical_edge_rule,
         ),
         pcb_native_drc_candidates=(

@@ -15,7 +15,6 @@ from .discovery import load_config, load_registry
 from .electrical_report_models import ElectricalAnalysisReport
 from .evidence import digest, evidence_path, source_state
 from .generation import expected_outputs
-from .layout import layout
 from .markdown import release_review, write_markdown
 from .models import (
     InterfacesCatalog,
@@ -29,9 +28,9 @@ from .native_project_validation_models import ValidationSummary
 from .policy_issue_models import PolicyIssue
 from .portable_evidence import verify_release_portable
 from .product_models import (
-    ProductIndex,
     ProductRecord,
 )
+from .product_repository_models import ProductRepository
 from .project_models import (
     ProjectManifest,
     ProjectRecord,
@@ -41,10 +40,13 @@ from .project_static_pipeline_models import ProjectStaticPipelineRequest
 from .release import (
     configured_toolchains,
     load_release_repository,
-    selected_board_variants,
     selected_products,
     selected_project_records,
-    verify_board_population,
+)
+from .release_board_variant_selection import (
+    ReleaseBoardVariantSelection,
+    require_release_board_variant_sources_current,
+    resolve_release_board_variants,
 )
 from .release_contract_models import (
     EvidenceFile,
@@ -58,6 +60,8 @@ from .release_contract_models import (
     ReleaseVariant,
 )
 from .release_model_types import ReleaseClass
+from .release_operation_models import ReleasePreparationRequest
+from .release_population import verify_board_population
 
 
 def reference(root: Path, path: Path) -> EvidenceFile:
@@ -162,42 +166,21 @@ def run_native(
 
 
 def resolve_variants(root: Path, values: tuple[str, ...]) -> tuple[ReleaseVariant, ...]:
-    """Resolve explicit PRODUCT:VARIANT choices to current typed revision identities."""
-    if not values:
-        return ()
-    index = read_model(repo_path(root, layout(root).products), ProductIndex)
-    indexed = {entry.id: entry for entry in index.products}
-    if len(indexed) != len(index.products):
-        raise ValueError(f"{layout(root).products} has duplicate product IDs")
-    selections: list[ReleaseVariant] = []
-    for value in values:
-        product_id, separator, variant_id = value.partition(":")
-        if not separator:
-            raise ValueError("Variant selection uses PRODUCT:VARIANT")
-        entry = indexed.get(product_id)
-        if entry is None:
-            raise ValueError(f"Unknown release product {product_id!r} in {layout(root).products}")
-        product = read_model(repo_path(root, entry.path), ProductRecord)
-        if product.id != product_id:
-            raise ValueError(f"{entry.path}: product ID differs from {layout(root).products}")
-        variant = next((item for item in product.variants if item.id == variant_id), None)
-        if variant is None:
-            raise ValueError(f"Unknown variant {variant_id!r} for product {product_id!r}")
-        selections.append(
-            ReleaseVariant(
-                product=product.id,
-                product_revision=product.revision,
-                variant=variant.id,
-                variant_revision=variant.revision,
-            )
-        )
-    return tuple(selections)
+    """Compatibility adapter for source-current release-variant selection."""
+    from .release_variants import resolve_variants as select_release_variants
+
+    return select_release_variants(root, values)
 
 
-def selected_scope(
+def _selected_scope_with_repository(
     root: Path,
     candidate: ReleaseManifest,
-) -> tuple[tuple[ProjectRecord, ...], tuple[ProductRecord, ...]]:
+) -> tuple[
+    ProductRepository,
+    tuple[ProjectRecord, ...],
+    tuple[ProductRecord, ...],
+    ReleaseBoardVariantSelection,
+]:
     """Validate release scope and its common toolchain before creating any evidence."""
     repository = load_release_repository(root, candidate)
     findings: list[PolicyIssue] = list(repository.issues)
@@ -215,12 +198,15 @@ def selected_scope(
         )
     if len(configured_toolchains(root, projects)) != 1:
         raise ValueError("Prepare separate release candidates for different toolchains")
-    board_variants = selected_board_variants(
-        products, candidate.variants, (project.id for project in projects)
+    board_variants = resolve_release_board_variants(
+        repository,
+        candidate.variants,
+        (project.id for project in projects),
     )
+    require_release_board_variant_sources_current(root, board_variants)
     for project in projects:
         if (
-            project.id in board_variants
+            board_variants.for_project(project.id).state == "ASSIGNED"
             and read_model(
                 repo_path(root, project.config),
                 ProjectManifest,
@@ -230,6 +216,15 @@ def selected_scope(
             raise ValueError(
                 f"{project.id} needs release_exports to apply its product KiCad variant"
             )
+    return repository, projects, products, board_variants
+
+
+def selected_scope(
+    root: Path,
+    candidate: ReleaseManifest,
+) -> tuple[tuple[ProjectRecord, ...], tuple[ProductRecord, ...]]:
+    """Compatibility projection of the selected projects and products."""
+    _, projects, products, _ = _selected_scope_with_repository(root, candidate)
     return projects, products
 
 
@@ -238,17 +233,15 @@ def selected_projects(root: Path, candidate: ReleaseManifest) -> tuple[ProjectRe
     return selected_scope(root, candidate)[0]
 
 
-def prepare(
-    root: Path,
-    release_id: str,
-    project_ids: tuple[str, ...],
-    variants: tuple[ReleaseVariant, ...] = (),
-    release_class: ReleaseClass = ReleaseClass.ENGINEERING_REVIEW,
-    cli: str | None = None,
-    portable: Path | None = None,
-    ngspice: str = "ngspice",
-) -> ReleaseManifest:
-    """Commit source first; reports and the candidate are then written under build/."""
+def prepare_request(root: Path, request: ReleasePreparationRequest) -> ReleaseManifest:
+    """Prepare one candidate from a typed project scope and execution request."""
+    release_id = request.release_id
+    project_ids = request.project_ids
+    variants = request.variants
+    release_class = request.release_class
+    cli = request.cli
+    portable = request.portable
+    ngspice = request.ngspice
     root = root.resolve()
     source = source_state(root)
     if not source.clean or source.commit is None:
@@ -268,14 +261,13 @@ def prepare(
         interfaces=(),
         artifacts=(),
     )
-    projects, products = selected_scope(root, candidate)
+    repository, projects, products, board_variants = _selected_scope_with_repository(
+        root, candidate
+    )
     from .electrical_evidence import required_projects, verify_electrical
 
     electrical_ids = required_projects(root, projects, release_class)
     toolchains = configured_toolchains(root, projects)
-    board_variants = selected_board_variants(
-        products, variants, (project.id for project in projects)
-    )
     output = repo_path(root, f"build/releases/{release_id}")
     output.mkdir(parents=True, exist_ok=False)
     selected_ids = tuple(project.id for project in projects)
@@ -313,6 +305,7 @@ def prepare(
     exports: dict[str, EvidenceFile] = {}
     electrical: dict[str, EvidenceFile] = {}
     for project in projects:
+        require_release_board_variant_sources_current(root, board_variants)
         native_output = output / "native" / project.id
         run_native(root, project, native_output, cli, dependencies)
         native[project.id] = reference(root, native_output / "summary.json")
@@ -341,6 +334,8 @@ def prepare(
         manifest = read_model(repo_path(root, project.config), ProjectManifest)
         if manifest.release_exports is not None:
             export_output = output / "exports" / project.id
+            board_variant = board_variants.for_project(project.id)
+            require_release_board_variant_sources_current(root, board_variants)
             run_native(
                 root,
                 project,
@@ -348,12 +343,20 @@ def prepare(
                 cli,
                 dependencies,
                 export_only=True,
-                assembly_variant=board_variants.get(project.id),
+                assembly_variant=(
+                    board_variant.variant_name if board_variant.state == "ASSIGNED" else None
+                ),
             )
             verify_board_population(
-                products, variants, project.id, export_output / "assembly/bom.csv"
+                products,
+                variants,
+                project.id,
+                export_output / "assembly/bom.csv",
+                product_sources=repository.product_sources,
             )
             exports[project.id] = reference(root, export_output / "exports.json")
+        elif board_variants.for_project(project.id).state == "ASSIGNED":
+            raise ValueError(f"{project.id} KiCad assembly variant has no native export evidence")
     # Only retain projections of selected product variants in this candidate.
     projections = expected_outputs(root, tuple(project.id for project in projects))
     for selection in variants:
@@ -423,8 +426,34 @@ def prepare(
         raise ValueError(
             "Source changed while preparing the release; retained outputs are not a candidate"
         )
+    require_release_board_variant_sources_current(root, board_variants)
     write_model(output / "manifest.json", candidate)
     return candidate
+
+
+def prepare(
+    root: Path,
+    release_id: str,
+    project_ids: tuple[str, ...],
+    variants: tuple[ReleaseVariant, ...] = (),
+    release_class: ReleaseClass = ReleaseClass.ENGINEERING_REVIEW,
+    cli: str | None = None,
+    portable: Path | None = None,
+    ngspice: str = "ngspice",
+) -> ReleaseManifest:
+    """Compatibility adapter for the established release-preparation arguments."""
+    return prepare_request(
+        root,
+        ReleasePreparationRequest(
+            release_id=release_id,
+            project_ids=project_ids,
+            variants=variants,
+            release_class=release_class,
+            cli=cli,
+            portable=portable,
+            ngspice=ngspice,
+        ),
+    )
 
 
 def artifact_kind(path: Path, output: Path) -> ReleaseArtifactKind:

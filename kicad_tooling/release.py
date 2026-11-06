@@ -10,6 +10,7 @@ from pathlib import Path
 from kicad_tooling.hwrepo.models import ReleaseExportReport
 from kicad_tooling.hwrepo.release_contract_models import ReleaseManifest
 from kicad_tooling.hwrepo.release_model_types import ReleaseClass
+from kicad_tooling.hwrepo.release_operation_models import ReleasePreparationRequest
 from kicad_tooling.hwrepo.release_report_models import (
     ReleasePackageReport,
     ReleaseReadinessReport,
@@ -118,20 +119,23 @@ def main() -> int:
     root = args.root.resolve()
     try:
         if args.command == "prepare":
-            from .hwrepo.releasing import prepare, resolve_variants
+            from .hwrepo.release_variants import resolve_variants
+            from .hwrepo.releasing import prepare_request
 
             if args.release_id is None:
                 parser.error("prepare requires --release-id and --project or --variant")
             selections = resolve_variants(root, tuple(args.variant))
-            manifest = prepare(
+            manifest = prepare_request(
                 root,
-                args.release_id,
-                tuple(args.project),
-                selections,
-                ReleaseClass(args.release_class),
-                args.cli,
-                args.portable,
-                args.ngspice,
+                ReleasePreparationRequest(
+                    release_id=args.release_id,
+                    project_ids=tuple(args.project),
+                    variants=selections,
+                    release_class=ReleaseClass(args.release_class),
+                    cli=args.cli,
+                    portable=args.portable,
+                    ngspice=args.ngspice,
+                ),
             )
             if args.json or args.format == "json":
                 print(manifest.model_dump_json(indent=2))

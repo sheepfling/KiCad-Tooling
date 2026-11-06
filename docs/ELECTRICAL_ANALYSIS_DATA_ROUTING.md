@@ -154,3 +154,56 @@ not configured. The focused netlist admission module passed nine tests and the
 bus evaluation module passed five. Ruff, focused Pyright, Rumdl, and
 `git diff --check` passed. These synthetic and parity checks do not establish
 electrical or manufacturing approval.
+
+## Read-only report indexes (2026-11-05)
+
+`ElectricalAnalysisReport.input_sha256`, `artifacts_sha256`, and `commands` are
+now copied and frozen when the report is created. The input index comes from
+typed `BoundElectricalInputs`; artifact digests are assembled once at report
+construction; command evidence is accumulated locally by the runner. Report
+consumers in evidence, chart, view, release, and readiness paths only read these
+indexes.
+
+The report serializers still emit ordinary JSON objects with the existing
+field names and schema version `1`. CLI and MCP continue to use the same
+operation and return the same report type. The focused selection passed 34 tests
+and 6 subtests; project Pyright reported zero errors, warnings, or
+informations. Ruff and `git diff --check` passed. No exact native KiCad lane ran.
+
+## Release and readiness consumers (2026-11-05)
+
+Release preparation selects electrical evidence for exactly the projects whose
+reviewed contracts require it. Release checking recomputes that required set,
+then verifies each retained report against the current clean source, contract,
+bound input digests, native netlist evidence, checks, commands, and artifact
+hashes. Readiness capture records the selected manifest and its nested evidence
+dependencies, then stores the separate policy result from `release.check`.
+The captured readiness result has `build_authorized=false`; a passing check is
+not an approval or publication authorization.
+
+The readiness inventory now uses `ReleaseDependencyInventory`. Its
+`artifact_enumeration_complete` state means nested evidence reports could be
+read to enumerate their artifacts. A path that is known but absent remains in
+`declared_files_sha256` with a null digest; that observation is distinct from
+being unable to enumerate a report's dependencies. The public receipt still
+uses its schema-version-1 mapping fields. Its source, declared-file, and output
+hash indexes are immutable in memory and serialize as ordinary JSON objects.
+
+The release manifest also keeps native, export, and electrical evidence keyed
+by project, with typed `EvidenceFile` values; its check outcomes use a closed
+`PASS`/`NOT_APPLICABLE` vocabulary. Those maps are now read-only after model
+construction and retain the same object-shaped manifest JSON. Release checking
+keeps the candidate status separate from policy approval: non-review classes
+require an approved status, a scoped approval record, role-eligible actors,
+retained approval evidence, and an annotated tag bound to the source commit.
+Packaging calls that check, builds a source bundle plus the retained evidence,
+and restores and rechecks the staged archive before writing the final package.
+Restore verifies the archive index and every member before exposing the
+checkout; it does not create a new approval.
+
+The focused readiness module passed eight tests, including known-missing and
+unreadable-report cases, immutable-map checks, CLI/MCP parity, and history
+freshness checks. After freezing the manifest maps, the release, evidence,
+history, and surface-parity selection passed 53 tests and 37 subtests. Project
+Pyright, Ruff, formatting, Rumdl, and `git diff --check` passed. No native
+KiCad lane ran.

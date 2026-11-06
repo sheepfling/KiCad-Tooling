@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path, PurePosixPath
 
 from .design_lint_rule_models import DesignLintRuleCatalog
+from .evidence import digest
 
 
 def validate_field_validation_evidence_sources(
@@ -41,7 +41,7 @@ def validate_field_validation_evidence_sources(
             if not source.is_file():
                 errors.append(f"{rule.rule_id}: evidence source is not a file: {relative_path}")
                 continue
-            actual_digest = hashlib.sha256(source.read_bytes()).hexdigest()
+            actual_digest = digest(source)
             if actual_digest != expected_digest:
                 errors.append(f"{rule.rule_id}: evidence digest mismatch: {relative_path}")
     if errors:

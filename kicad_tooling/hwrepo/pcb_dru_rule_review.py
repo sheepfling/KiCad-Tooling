@@ -7,10 +7,16 @@ from pathlib import Path
 
 from .contracts import repo_path
 from .design_lint_pcb_dru_rule_candidate_evidence import (
+    PcbDruConflictingSeveritiesCandidate,
+    PcbDruConflictingSeveritiesFindingEvidence,
+    PcbDruDuplicateRuleNameCandidate,
+    PcbDruDuplicateRuleNameFindingEvidence,
     PcbDruInputRole,
     PcbDruRuleCandidate,
     PcbDruRuleFindingEvidence,
     PcbDruRuleSeverity,
+    PcbDruRuleWithoutConstraintCandidate,
+    PcbDruRuleWithoutConstraintFindingEvidence,
     PcbDruTextVariableCandidate,
     PcbDruTextVariableFindingEvidence,
     SourceBoundPcbDruInput,
@@ -20,9 +26,12 @@ from .design_lint_pcb_dru_rule_candidate_evidence import (
 from .design_lint_types import Candidate
 from .evidence import digest
 from .pcb_drc_rule_parser import (
+    NativeDrcRuleDeclaration,
     NativeDrcRuleWithSeverity,
     NativeIgnoredDrcRule,
     native_ignored_rules,
+    native_rule_declarations,
+    native_rules_with_conflicting_severities,
     native_rules_with_severity,
 )
 from .project_models import ProjectConfig, ProjectKind
@@ -203,3 +212,128 @@ def text_variable_custom_drc_rule_candidates(
             ),
         ),
     )
+
+
+def _rule_without_constraint_candidate(
+    source_file: SourceBoundPcbDruRuleFile,
+    rule: NativeDrcRuleDeclaration,
+) -> PcbDruRuleWithoutConstraintCandidate:
+    source_evidence = PcbDruRuleWithoutConstraintFindingEvidence(
+        source_file=source_file,
+        rule=rule,
+    )
+    return PcbDruRuleWithoutConstraintCandidate.from_source_evidence(
+        source_evidence,
+        subject=f"{source_file.source_path}#rule[{rule.ordinal}] {rule.name}",
+        message=(
+            f"Custom DRC rule {rule.name!r} has no direct constraint clauses. "
+            "It may be an inert declaration; confirm this is intentional or add a "
+            "specific constraint."
+        ),
+    )
+
+
+def custom_drc_rule_without_constraint_candidates(
+    root: Path,
+    config: ProjectConfig,
+    source_hashes: SourceHashInventory,
+) -> tuple[Candidate, ...]:
+    """Review source-bound named custom rules that declare no constraints."""
+    if not is_supported_pcb_dru_kicad_version(config.kicad_version):
+        return ()
+    source_file = _source_bound_rule_file(root, config, source_hashes)
+    if source_file is None:
+        return ()
+    source = source_file.local_path.read_text(encoding="utf-8")
+    if digest(source_file.local_path) != source_file.source_sha256:
+        raise ValueError("Custom DRC rules changed during design-lint inspection")
+    if "${" in source:
+        return ()
+    rules = native_rule_declarations(source)
+    return tuple(
+        _rule_without_constraint_candidate(source_file, rule)
+        for rule in rules
+        if rule.constraint_count == 0
+    )
+
+
+def custom_drc_duplicate_rule_name_candidates(
+    root: Path,
+    config: ProjectConfig,
+    source_hashes: SourceHashInventory,
+) -> tuple[Candidate, ...]:
+    """Review exact duplicate names in source-bound KiCad 10 custom rules."""
+    if not is_supported_pcb_dru_kicad_version(config.kicad_version):
+        return ()
+    source_file = _source_bound_rule_file(root, config, source_hashes)
+    if source_file is None:
+        return ()
+    source = source_file.local_path.read_text(encoding="utf-8")
+    if digest(source_file.local_path) != source_file.source_sha256:
+        raise ValueError("Custom DRC rules changed during design-lint inspection")
+    if "${" in source:
+        return ()
+
+    name_ordinals: dict[str, list[int]] = {}
+    for rule in native_rule_declarations(source):
+        name_ordinals.setdefault(rule.name, []).append(rule.ordinal)
+
+    candidates: list[Candidate] = []
+    for name, ordinals in name_ordinals.items():
+        if len(ordinals) < 2:
+            continue
+        source_evidence = PcbDruDuplicateRuleNameFindingEvidence(
+            source_file=source_file,
+            rule_name=name,
+            rule_ordinals=tuple(ordinals),
+        )
+        ordinal_text = ",".join(str(ordinal) for ordinal in ordinals)
+        candidates.append(
+            PcbDruDuplicateRuleNameCandidate.from_source_evidence(
+                source_evidence,
+                subject=f"{source_file.source_path}#rules[{ordinal_text}] {name}",
+                message=(
+                    f"Custom DRC rule name {name!r} appears in declarations {ordinal_text}. "
+                    "KiCad treats a rule name as its unique identifier in DRC reports; give each "
+                    "rule a distinct name or confirm this duplicate is intentional."
+                ),
+            )
+        )
+    return tuple(candidates)
+
+
+def custom_drc_conflicting_severity_candidates(
+    root: Path,
+    config: ProjectConfig,
+    source_hashes: SourceHashInventory,
+) -> tuple[Candidate, ...]:
+    """Review source-bound named rules with conflicting direct severities."""
+    if not is_supported_pcb_dru_kicad_version(config.kicad_version):
+        return ()
+    source_file = _source_bound_rule_file(root, config, source_hashes)
+    if source_file is None:
+        return ()
+    source = source_file.local_path.read_text(encoding="utf-8")
+    if digest(source_file.local_path) != source_file.source_sha256:
+        raise ValueError("Custom DRC rules changed during design-lint inspection")
+    if "${" in source:
+        return ()
+
+    candidates: list[Candidate] = []
+    for rule in native_rules_with_conflicting_severities(source):
+        source_evidence = PcbDruConflictingSeveritiesFindingEvidence(
+            source_file=source_file,
+            rule=rule,
+        )
+        severity_text = ", ".join(rule.severities)
+        candidates.append(
+            PcbDruConflictingSeveritiesCandidate.from_source_evidence(
+                source_evidence,
+                subject=f"{source_file.source_path}#rule[{rule.ordinal}] {rule.name}",
+                message=(
+                    f"Custom DRC rule {rule.name!r} declares conflicting severities in order "
+                    f"{severity_text}. Confirm the intended severity for this KiCad version."
+                ),
+            )
+        )
+    return tuple(candidates)

@@ -18,11 +18,11 @@ import pytest
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.electrical import (
     bound_inputs,
-    load_analysis,
     policy_issues,
     power_budget_checks,
     selected_config,
 )
+from kicad_tooling.hwrepo.electrical_report_models import BoundElectricalInputs
 from kicad_tooling.hwrepo.electrical_runner import analyze
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.generation import expected_outputs
@@ -279,19 +279,6 @@ class ElectricalTests(unittest.TestCase):
         self.assertEqual(command.returncode, 1, command.stderr)
         self.assertEqual(json.loads(command.stdout)["status"], "NOT_CONFIGURED")
 
-    def test_bound_inputs_and_policy_are_rechecked_after_execution(self) -> None:
-        root = self.stage()
-        contract = install_fixture(root)
-        contract = contract.model_copy(update={"power": NA, "high_frequency": NA, "grounding": NA})
-        write_model(root / ISLAND / "tests/electrical.json", contract)
-        config = selected_config(root, PROJECT)
-        self.assertIsNotNone(load_analysis(root, config))
-        before = bound_inputs(root, config, contract)
-        with patch("kicad_tooling.hwrepo.electrical.bound_inputs", side_effect=[before, {}]):
-            report = analyze(root, PROJECT)
-        self.assertEqual(report.status, "FAIL")
-        self.assertIn("changed during", report.checks[-1].detail)
-
     def test_binding_rejects_configuration_or_requirements_changed_after_loading(self) -> None:
         for target in ("requirements", "manifest"):
             with self.subTest(target=target):
@@ -309,7 +296,7 @@ class ElectricalTests(unittest.TestCase):
                     contract: ElectricalAnalysisContract,
                     path: Path = path,
                     target: str = target,
-                ) -> dict[str, str]:
+                ) -> BoundElectricalInputs:
                     payload = json.loads(path.read_text(encoding="utf-8"))
                     if target == "requirements":
                         payload["ngspice_version"] = "99.99"

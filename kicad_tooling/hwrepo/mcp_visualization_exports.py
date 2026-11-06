@@ -21,8 +21,9 @@ from .bom_compare import compare_bom
 from .bom_compare_models import BomComparisonReport
 from .connectivity_view import build_connectivity_view
 from .connectivity_view_models import ConnectivityViewReport
-from .cross_probe import build_cross_probe
+from .cross_probe import build_cross_probe_request
 from .cross_probe_models import CrossProbeReport
+from .cross_probe_operation_models import CrossProbeBuildRequest
 from .electrical_ac_comparison import compare_ac_runs
 from .electrical_chart_models import AcComparisonReport
 from .findings_view import build_findings_view
@@ -403,13 +404,15 @@ def register_visualization_export_tools(
     ) -> CrossProbeReport:
         """Locate fitted BOM references on verified saved design drawings."""
         with service_operation(operation):
-            return build_cross_probe(
+            return build_cross_probe_request(
                 root,
-                project_id,
-                Path(parts_report),
-                Path(findings_view),
-                fresh_output(root, "cross-probe", view_id),
-                assembly_variant,
+                CrossProbeBuildRequest(
+                    project_id=project_id,
+                    parts_report=Path(parts_report),
+                    findings_view=Path(findings_view),
+                    output=fresh_output(root, "cross-probe", view_id),
+                    assembly_variant=assembly_variant,
+                ),
             )
 
     server.tool(annotations=create_only)(export_bom_cross_probe)

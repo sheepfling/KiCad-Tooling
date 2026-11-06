@@ -22,7 +22,7 @@ from .contracts import parse_model_text, read_model, repo_path, write_model
 from .digikey_handoff_models import DigiKeyHandoffPayload
 from .discovery import load_registry
 from .evidence import digest
-from .model_primitives import Digest
+from .model_primitives import Digest, RepositoryPath
 from .part_catalog_models import PartsCatalog
 from .parts_workflow import input_hashes, preferences_path, selected_project
 from .purchasing import plan as purchasing_plan
@@ -44,7 +44,7 @@ def _artifact(root: Path, value: str) -> Path:
     return path
 
 
-def _relative(root: Path, path: Path) -> str:
+def _relative(root: Path, path: Path) -> RepositoryPath:
     return path.relative_to(root).as_posix()
 
 
@@ -55,7 +55,7 @@ def _payload_digest(payload: DigiKeyHandoffPayload) -> str:
     return hashlib.sha256(content).hexdigest()
 
 
-def _current(root: Path, expected: Mapping[str, str | None]) -> None:
+def _current(root: Path, expected: Mapping[RepositoryPath, Digest | None]) -> None:
     for name, expected_hash in expected.items():
         path = repo_path(root, name)
         if expected_hash is None:
@@ -130,7 +130,7 @@ def prepare_supplier_handoff(
     assert report.plan is not None
     payload = digikey_handoff.build_payload(report.plan)
     payload_sha = _payload_digest(payload)
-    conditions: dict[str, str | None] = dict(report.input_hashes)
+    conditions: dict[RepositoryPath, Digest | None] = dict(report.input_hashes)
     conditions.update(input_hashes(root, project_id, None))
     default_preferences = preferences_path(root, project_id, None)
     conditions.setdefault(_relative(root, default_preferences), None)

@@ -16,6 +16,7 @@ from tests.lint_architecture_support import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
 SCHEMATIC_GEOMETRY_MODULES = (
+    "schematic_geometry_models.py",
     "schematic_geometry_types.py",
     "schematic_geometry_source.py",
     "schematic_geometry_primitives.py",
@@ -26,6 +27,7 @@ SCHEMATIC_GEOMETRY_MODULES = (
     "schematic_obstruction_geometry.py",
     "schematic_geometry_scan.py",
     "schematic_geometry_tree.py",
+    "schematic_source_tree.py",
 )
 
 

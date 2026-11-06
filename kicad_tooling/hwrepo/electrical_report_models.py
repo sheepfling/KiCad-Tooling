@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Literal
+from types import MappingProxyType
+from typing import Annotated, Literal, TypeAlias
 
-from pydantic import Field
+from pydantic import Field, PlainSerializer, field_serializer, model_validator
 
 from .command_evidence_models import CommandEvidence
 from .model_primitives import (
@@ -16,7 +17,83 @@ from .model_primitives import (
     RepositoryPath,
     StrictModel,
 )
-from .source_state_models import SourceState
+from .source_state_models import (
+    SerializedPathDigestInventory,
+    SourceHashInventory,
+    SourceState,
+)
+
+ElectricalInputBindingRole = Literal[
+    "design-source",
+    "project-manifest",
+    "project-checks",
+    "electrical-requirements",
+    "simulation-model",
+]
+
+
+def serialize_electrical_command_inventory(
+    value: Mapping[str, CommandEvidence],
+) -> dict[str, CommandEvidence]:
+    return dict(value)
+
+
+ElectricalCommandInventory: TypeAlias = Annotated[
+    Mapping[str, CommandEvidence],
+    PlainSerializer(
+        serialize_electrical_command_inventory,
+        return_type=dict[str, CommandEvidence],
+        when_used="always",
+    ),
+]
+
+
+class ElectricalInputDigest(StrictModel):
+    """One retained digest with each reason it participates in analysis."""
+
+    source_path: RepositoryPath
+    source_sha256: Digest
+    roles: tuple[ElectricalInputBindingRole, ...]
+
+    @model_validator(mode="after")
+    def unique_roles(self) -> ElectricalInputDigest:
+        if not self.roles or len(self.roles) != len(set(self.roles)):
+            raise ValueError("Electrical input roles must be non-empty and unique")
+        return self
+
+
+class BoundElectricalInputs(StrictModel):
+    """Immutable path, digest, and role inventory admitted for one analysis."""
+
+    entries: tuple[ElectricalInputDigest, ...]
+
+    @model_validator(mode="after")
+    def unique_paths(self) -> BoundElectricalInputs:
+        paths = tuple(entry.source_path for entry in self.entries)
+        if len(paths) != len(set(paths)):
+            raise ValueError("Electrical input paths must be unique")
+        return self
+
+    @property
+    def all_sha256(self) -> SourceHashInventory:
+        return MappingProxyType({entry.source_path: entry.source_sha256 for entry in self.entries})
+
+    @property
+    def source_sha256(self) -> SourceHashInventory:
+        return self._hashes_for_role("design-source")
+
+    @property
+    def model_sha256(self) -> SourceHashInventory:
+        return self._hashes_for_role("simulation-model")
+
+    def _hashes_for_role(self, role: ElectricalInputBindingRole) -> SourceHashInventory:
+        return MappingProxyType(
+            {
+                entry.source_path: entry.source_sha256
+                for entry in self.entries
+                if role in entry.roles
+            }
+        )
 
 
 class ElectricalCheck(StrictModel):
@@ -35,9 +112,9 @@ class ElectricalAnalysisReport(StrictModel):
     source: SourceState | None = None
     status: Literal["PASS", "FAIL", "NOT_CONFIGURED"]
     run_directory: str = ""
-    input_sha256: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
-    artifacts_sha256: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
-    commands: Mapping[str, CommandEvidence] = Field(default_factory=dict)
+    input_sha256: SerializedPathDigestInventory = Field(default_factory=dict)
+    artifacts_sha256: SerializedPathDigestInventory = Field(default_factory=dict)
+    commands: ElectricalCommandInventory = Field(default_factory=dict)
     checks: tuple[ElectricalCheck, ...]
     limits: tuple[str, ...] = (
         "Grounding covers declared schematic pins; copper return paths and physical bonds need review.",
@@ -85,6 +162,13 @@ class ElectricalAnalysisReport(StrictModel):
         ),
     )
 
+    @model_validator(mode="after")
+    def freeze_report_indexes(self) -> ElectricalAnalysisReport:
+        object.__setattr__(self, "input_sha256", MappingProxyType(dict(self.input_sha256)))
+        object.__setattr__(self, "artifacts_sha256", MappingProxyType(dict(self.artifacts_sha256)))
+        object.__setattr__(self, "commands", MappingProxyType(dict(self.commands)))
+        return self
+
 
 class ElectricalSuiteReport(StrictModel):
     schema_version: Literal["1"] = "1"
@@ -112,3 +196,15 @@ class ElectricalInputInventory(StrictModel):
     source_sha256: Mapping[RepositoryPath, Digest]
     model_sha256: Mapping[RepositoryPath, Digest]
     next_actions: tuple[NonEmptyText, ...]
+
+    @model_validator(mode="after")
+    def freeze_hash_inventories(self) -> ElectricalInputInventory:
+        object.__setattr__(self, "source_sha256", MappingProxyType(dict(self.source_sha256)))
+        object.__setattr__(self, "model_sha256", MappingProxyType(dict(self.model_sha256)))
+        return self
+
+    @field_serializer("source_sha256", "model_sha256", when_used="json")
+    def serialize_hash_inventories(
+        self, value: SourceHashInventory
+    ) -> dict[RepositoryPath, Digest]:
+        return dict(value)

@@ -498,8 +498,8 @@ class PartsExtensionsTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.semantic(cli, cli.handoff), self.semantic(prepared, prepared.handoff))
         cli_plan = read_model(self.root / cli.handoff, SupplierHandoffPlan)
         plan = read_model(self.root / prepared.handoff, SupplierHandoffPlan)
-        self.assertEqual(cli_plan, plan)
-        self.assertEqual(plan.source_hashes, order.source_hashes)
+        self.assertEqual((cli_plan, plan.source_hashes), (plan, order.source_hashes))
+        self.assertIsNone(plan.preconditions["examples/projects/controller/docs/purchasing.json"])
         self.assertEqual(
             digest((self.root / prepared.handoff).parent / "payload.json"), prepared.payload_sha256
         )

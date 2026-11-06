@@ -6,10 +6,8 @@ import tempfile
 from collections import Counter
 from pathlib import Path
 
+from . import netlist_runner_selection
 from .contract_coach import (
-    AutoNetlistRunner,
-    ContainerNetlistRunner,
-    LocalNetlistRunner,
     NetlistRunner,
     capture,
     inspect_summary,
@@ -30,6 +28,7 @@ from .project_models import (
 from .purchasing import plan, read_components, write_csvs
 from .purchasing_models import PurchasingReport
 from .purchasing_preference_models import PurchasingPreferences
+from .source_state_models import PathDigestInventory
 
 
 def selected_project(root: Path, project_id: str) -> ProjectRecord:
@@ -108,7 +107,7 @@ def new_receipt(root: Path, project_id: str, requested: Path | None) -> Path:
     return Path(tempfile.mkdtemp(prefix=f"{project_id}-", dir=parent))
 
 
-def input_hashes(root: Path, project_id: str, requested: Path | None) -> dict[str, str]:
+def input_hashes(root: Path, project_id: str, requested: Path | None) -> PathDigestInventory:
     registry = load_registry(root)
     project = selected_project(root, project_id)
     # Config includes independent contract and toolchain/catalog references; bind them
@@ -144,7 +143,7 @@ def prepare(
     """Inspect a saved design and explicit identities without selecting substitutes."""
     root = root.resolve()
     evidence = None
-    before: dict[str, str] = {}
+    before: PathDigestInventory = {}
     try:
         output = local_path(root, output)
         if (
@@ -343,14 +342,6 @@ def save_report(output: Path, report: PurchasingReport) -> None:
     )
 
 
-def _selected_netlist_runner(request: PartsPreparationRequest) -> NetlistRunner:
-    if request.runner_mode == "local":
-        return LocalNetlistRunner(request.cli)
-    if request.runner_mode == "container":
-        return ContainerNetlistRunner()
-    return AutoNetlistRunner(request.cli)
-
-
 def prepare_request(root: Path, request: PartsPreparationRequest) -> PurchasingReport:
     """Prepare and retain one source-bound purchasing review from a typed request."""
     root = root.resolve()
@@ -359,7 +350,7 @@ def prepare_request(root: Path, request: PartsPreparationRequest) -> PurchasingR
         root,
         request.project_id,
         output,
-        _selected_netlist_runner(request),
+        netlist_runner_selection.select_netlist_runner(request.runner_mode, request.cli),
         request.native_summary,
         request.requested_preferences,
         request.boards,

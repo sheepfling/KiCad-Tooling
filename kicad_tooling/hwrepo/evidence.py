@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import hashlib
+import os
+import stat
 import subprocess
 from pathlib import Path
 
 from ..git import git_output, run_git_bytes, run_git_text
-from .contracts import read_model, repo_path
+from .contracts import file_fingerprint, read_model, repo_path
 from .models import ScopedReleasePortableReport
 from .native_project_validation_models import ValidationSummary
 from .release_contract_models import EvidenceFile
@@ -20,11 +22,31 @@ def git(root: Path, *args: str) -> str:
 
 
 def digest(path: Path) -> str:
+    """Hash one regular file through a stable, no-follow descriptor read."""
+    path_state = path.lstat()
+    if not stat.S_ISREG(path_state.st_mode):
+        raise ValueError("Select a regular file without symlinks")
+    descriptor = os.open(
+        path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+    )
     checksum = hashlib.sha256()
-    with path.open("rb") as stream:
+    with os.fdopen(descriptor, "rb") as stream:
+        before = os.fstat(stream.fileno())
+        if not stat.S_ISREG(before.st_mode) or file_fingerprint(path_state) != file_fingerprint(
+            before
+        ):
+            raise ValueError("File changed before hashing")
         for chunk in iter(lambda: stream.read(65536), b""):
             checksum.update(chunk)
+        after = os.fstat(stream.fileno())
+        if file_fingerprint(before) != file_fingerprint(after):
+            raise ValueError("File changed while hashing")
     return checksum.hexdigest()
+
+
+def digest_bytes(content: bytes) -> str:
+    """Hash already-read evidence bytes with the canonical SHA-256 operation."""
+    return hashlib.sha256(content).hexdigest()
 
 
 def source_state(root: Path) -> SourceState:
@@ -70,7 +92,7 @@ def committed_hashes(root: Path, commit: str) -> dict[str, str]:
         end = batch.stdout.index(b"\n", offset)
         size = int(batch.stdout[offset:end].split()[-1])
         start = end + 1
-        hashes[name] = hashlib.sha256(batch.stdout[start : start + size]).hexdigest()
+        hashes[name] = digest_bytes(batch.stdout[start : start + size])
         offset = start + size + 1
     return hashes
 

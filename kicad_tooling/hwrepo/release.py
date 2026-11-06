@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import csv
 import subprocess
 from collections.abc import Iterable, Mapping
 from datetime import UTC, date, datetime
@@ -19,9 +18,17 @@ from .models import GovernanceRecord, InterfacesCatalog, LibrariesCatalog, TeamP
 from .native_evidence import verify_native
 from .policy_issue_models import PolicyIssue
 from .portable_evidence import verify_release_portable
-from .product import ProductRepository, excluded, load_repository, occurrences
-from .product_models import Assurance, ProductIndex, ProductRecord
+from .product import load_repository
+from .product_models import Assurance, ProductRecord
+from .product_repository_models import ProductRepository
+from .product_source_inputs import ProductSourceIdentity as ProductSourceIdentity  # noqa: PLC0414
+from .product_source_inputs import read_product_index_document
 from .project_models import ProjectKind, ProjectRecord, ToolchainsCatalog
+from .release_board_variant_selection import (
+    project_board_variant_names,
+    require_release_board_variant_sources_current,
+    resolve_release_board_variants,
+)
 from .release_contract_models import (
     DeviationStatus,
     ReleaseArtifactKind,
@@ -32,6 +39,10 @@ from .release_contract_models import (
     ReleaseVariant,
 )
 from .release_model_types import ReleaseClass
+from .release_population import (
+    expected_board_population as expected_board_population,  # noqa: PLC0414
+)
+from .release_population import verify_board_population
 from .release_report_models import ReleaseReadinessReport
 
 MATURITY_ORDER: Mapping[str, int] = MappingProxyType(
@@ -112,7 +123,8 @@ def load_release_repository(root: Path, manifest: ReleaseManifest) -> ProductRep
     the scoped product repository. An unrelated legacy island is not a release
     dependency merely because it appears in the project registry.
     """
-    index = read_model(repo_path(root, layout(root).products), ProductIndex)
+    index_document = read_product_index_document(root, layout(root).products)
+    index = index_document.value
     indexed = {product.id: product for product in index.products}
     if len(indexed) != len(index.products):
         raise ValueError("Product index has duplicate IDs")
@@ -146,7 +158,11 @@ def load_release_repository(root: Path, manifest: ReleaseManifest) -> ProductRep
                 f"{layout(root).products}: product {product_id} omits "
                 f"product-view project {project.id} declared by {project.config}"
             )
-    return load_repository(root, tuple(sorted(selected)))
+    return load_repository(
+        root,
+        tuple(sorted(selected)),
+        product_index_document=index_document,
+    )
 
 
 def selected_products(
@@ -236,103 +252,8 @@ def selected_board_variants(
     selections: tuple[ReleaseVariant, ...],
     project_ids: Iterable[str],
 ) -> dict[str, str]:
-    """Resolve reviewed product-to-KiCad population mappings without ambiguity."""
-    indexed = {product.id: product for product in products}
-    allowed = set(project_ids)
-    result: dict[str, str] = {}
-    for selection in selections:
-        product = indexed.get(selection.product)
-        if product is None:
-            continue  # selected_products already reports an unknown product.
-        variant = next((item for item in product.variants if item.id == selection.variant), None)
-        if variant is None:
-            continue  # selected_products already reports an unknown variant.
-        for project_id, name in variant.board_variants.items():
-            if project_id not in allowed:
-                raise ValueError(
-                    f"{selection.product}:{selection.variant} maps unselected board {project_id}"
-                )
-            if project_id in result and result[project_id] != name:
-                raise ValueError(
-                    f"Conflicting KiCad assembly variants for {project_id}: "
-                    f"{result[project_id]} and {name}; prepare separate candidates"
-                )
-            result[project_id] = name
-    return result
-
-
-def expected_board_population(
-    product: ProductRecord, variant_id: str, project_id: str
-) -> dict[str, str] | None:
-    """Resolve the fitted reference/part identities for every included board occurrence."""
-    variant = next((item for item in product.variants if item.id == variant_id), None)
-    if variant is None:
-        raise ValueError(f"Unknown product variant {product.id}:{variant_id}")
-    board_assemblies = {
-        assembly.id: assembly
-        for assembly in product.assemblies
-        if assembly.project_id == project_id
-    }
-    populations: list[dict[str, str]] = []
-    for path, occurrence in occurrences(product).items():
-        assembly = board_assemblies.get(occurrence.item)
-        if assembly is None or excluded(path, variant):
-            continue
-        population: dict[str, str] = {}
-        for member in assembly.members:
-            if not excluded(f"{path}.{member.ref}", variant):
-                population[member.ref] = member.item
-        populations.append(population)
-    if not populations:
-        return None
-    if any(population != populations[0] for population in populations[1:]):
-        raise ValueError(
-            f"Product {product.id}:{variant_id} uses different populations of "
-            f"board {project_id}; prepare separate board variants"
-        )
-    return populations[0]
-
-
-def verify_board_population(
-    products: Iterable[ProductRecord],
-    selections: tuple[ReleaseVariant, ...],
-    project_id: str,
-    bom_path: Path,
-) -> None:
-    """Native fitted BOM must agree with each selected product's part identities."""
-    selected = {product.id: product for product in products}
-    expectations: list[tuple[str, dict[str, str]]] = []
-    for choice in selections:
-        product = selected.get(choice.product)
-        if product is None:
-            continue
-        expected = expected_board_population(product, choice.variant, project_id)
-        if expected is not None:
-            expectations.append((f"{choice.product}:{choice.variant}", expected))
-    if not expectations:
-        return
-    with bom_path.open(newline="", encoding="utf-8-sig") as stream:
-        reader = csv.DictReader(stream)
-        if reader.fieldnames != ["Reference", "Value", "Footprint", "PartID", "DNP"]:
-            raise ValueError(f"{bom_path}: unexpected native BOM columns")
-        actual: dict[str, str] = {}
-        for row in reader:
-            reference, part_id = row["Reference"], row["PartID"]
-            if not reference or not part_id or reference in actual:
-                raise ValueError(f"{bom_path}: duplicate or incomplete BOM reference {reference!r}")
-            actual[reference] = part_id
-    for label, expected in expectations:
-        if actual != expected:
-            missing = sorted(expected.keys() - actual.keys())
-            extra = sorted(actual.keys() - expected.keys())
-            changed = sorted(
-                ref for ref in actual.keys() & expected.keys() if actual[ref] != expected[ref]
-            )
-            raise ValueError(
-                f"{project_id} native KiCad BOM differs from {label} product population: "
-                f"missing={missing}, extra={extra}, changed_part_ids={changed}. "
-                "Review product exclusions, KiCad DNP/variant overrides and PART_ID fields"
-            )
+    """Compatibility projection for callers of the former mapping return."""
+    return project_board_variant_names(products, selections, project_ids)
 
 
 def configured_toolchains(root: Path, projects: Iterable[ProjectRecord]) -> frozenset[str]:
@@ -580,10 +501,17 @@ def check(
 
         if not set(manifest.evidence.exports) <= {project.id for project in projects}:
             raise ValueError("Export evidence names an unselected project")
-        board_variants = selected_board_variants(
-            products, manifest.variants, (project.id for project in projects)
+        board_variants = resolve_release_board_variants(
+            repository,
+            manifest.variants,
+            (project.id for project in projects),
         )
+        require_release_board_variant_sources_current(resolved_root, board_variants)
         for project in projects:
+            board_variant = board_variants.for_project(project.id)
+            assembly_variant = (
+                board_variant.variant_name if board_variant.state == "ASSIGNED" else None
+            )
             exported = manifest.evidence.exports.get(project.id)
             if exported is not None:
                 verify_exports(
@@ -592,15 +520,16 @@ def check(
                     source,
                     project.id,
                     project.config,
-                    board_variants.get(project.id),
+                    assembly_variant,
                 )
                 verify_board_population(
                     products,
                     manifest.variants,
                     project.id,
                     repo_path(resolved_root, exported.path).parent / "assembly/bom.csv",
+                    product_sources=repository.product_sources,
                 )
-            elif project.id in board_variants:
+            elif board_variant.state == "ASSIGNED":
                 raise ValueError(
                     f"{project.id} KiCad assembly variant has no native export evidence"
                 )
@@ -611,6 +540,7 @@ def check(
                 raise ValueError(
                     f"Production board {project.id} requires native fabrication and assembly exports"
                 )
+        require_release_board_variant_sources_current(resolved_root, board_variants)
     except (OSError, ValueError, KeyError, StopIteration) as exc:
         findings.append(issue("RELEASE_EVIDENCE", "evidence", str(exc)))
 

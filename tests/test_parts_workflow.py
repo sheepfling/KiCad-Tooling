@@ -309,6 +309,31 @@ class PartsWorkflowTests(unittest.TestCase):
         self.assertNotIn(original.relative_to(self.root).as_posix(), bound)
         self.assertEqual(self.review().status, "READY_FOR_ORDER_REVIEW")
 
+    def test_input_hashes_keep_path_digest_json_and_missing_default_semantics(self) -> None:
+        bound = input_hashes(self.root, self.project_id, None)
+        missing_preferences = self.island / "docs/purchasing.json"
+        self.assertFalse(missing_preferences.exists())
+        self.assertNotIn(missing_preferences.relative_to(self.root).as_posix(), bound)
+        self.assertTrue(all(len(value) == 64 for value in bound.values()))
+
+        report = PurchasingReport(
+            project_id=self.project_id,
+            status="BLOCKED",
+            receipt_dir="build/parts/review",
+            input_hashes=bound,
+        )
+        self.assertEqual(json.loads(report.model_dump_json())["input_hashes"], dict(bound))
+
+    def test_missing_explicit_preferences_do_not_fall_back_to_defaults(self) -> None:
+        missing = self.island / "docs/missing-purchasing.json"
+        self.assertFalse(missing.exists())
+        bound = input_hashes(self.root, self.project_id, missing)
+        self.assertNotIn(missing.relative_to(self.root).as_posix(), bound)
+
+        report = self.review(requested_preferences=missing)
+        self.assertEqual(report.status, "BLOCKED")
+        self.assertIn("missing-purchasing.json", report.issues[0])
+
     def test_init_preferences_refuses_overwrite_and_paths_outside_island_docs(self) -> None:
         path = self.island / "docs/purchasing.json"
         saved = PurchasingPreferences(boards=3)

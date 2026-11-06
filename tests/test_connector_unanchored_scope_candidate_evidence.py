@@ -9,7 +9,6 @@ import pytest
 from kicad_tooling.hwrepo.connector_comparison_scope_types import ConnectorComparisonScope
 from kicad_tooling.hwrepo.connector_footprint_peer_assignments import (
     connector_footprint_peer_pin_assignments,
-    connector_footprint_peer_pin_net_map,
 )
 from kicad_tooling.hwrepo.connector_footprint_peer_pins import (
     scan_connector_footprint_peer_pin_assignments,
@@ -21,6 +20,7 @@ from kicad_tooling.hwrepo.design_lint_connector_unanchored_scope_evidence import
     ConnectorUnanchoredPeerScopeCandidate,
     project_connector_unanchored_peer_scope_evidence,
 )
+from kicad_tooling.hwrepo.netlist_pin_assignments import netlist_pin_net_index
 from tests.connector_footprint_peer_support import peer_netlist
 from tests.connector_peer_unanchored_scope_support import reviewed_coverage
 
@@ -54,7 +54,7 @@ def test_unreviewed_scope_candidate_keeps_current_scan_and_projection() -> None:
 def test_peer_pin_assignment_owner_normalizes_case_and_keeps_ambiguous_nets() -> None:
     observed = peer_netlist(assignments=(("PORT_A", "PORT_B"), ("DATA_A", "DATA_B")))
     observed = observed.model_copy(update={"nets": {"Z_NET": ("J1.1",), "A_NET": ("j1.1",)}})
-    pin_nets = connector_footprint_peer_pin_net_map(observed)
+    pin_nets = netlist_pin_net_index(observed)
 
     assert connector_footprint_peer_pin_assignments(pin_nets, "J1.1") == (
         "A_NET",

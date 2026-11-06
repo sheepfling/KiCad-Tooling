@@ -9,11 +9,16 @@ from dataclasses import dataclass
 from pathlib import PurePosixPath
 
 from .contracts import repo_path_is_within
-from .model_inventory import (  # pyright: ignore[reportPrivateUsage]
-    _atoms,  # pyright: ignore[reportPrivateUsage]
-    _children,  # pyright: ignore[reportPrivateUsage]
-    _Span,  # pyright: ignore[reportPrivateUsage]
+from .kicad_sexpr import (
+    SExprSpan as _Span,
 )
+from .kicad_sexpr import (
+    sexpr_atoms as _atoms,
+)
+from .kicad_sexpr import (
+    sexpr_children as _children,
+)
+from .schematic_geometry_models import SchematicInstanceReferenceResolution
 from .schematic_geometry_types import SchematicSheetReference
 from .source_state_models import SourceHashInventory
 
@@ -129,9 +134,11 @@ def resolve_schematic_sheet_path(
 def schematic_instance_references(
     source: str,
     root: _Span,
+    *,
+    source_path: str,
     project_name: str,
     sheet_instance_path: str,
-) -> tuple[dict[str, str], tuple[str, ...]]:
+) -> SchematicInstanceReferenceResolution:
     references: dict[str, str] = {}
     issues: list[str] = []
     for symbol in schematic_nodes(source, root, "symbol"):
@@ -164,7 +171,14 @@ def schematic_instance_references(
             )
             continue
         references[symbol_uuid] = matches[0]
-    return references, tuple(issues)
+    return SchematicInstanceReferenceResolution(
+        source_path=source_path,
+        source_sha256=hashlib.sha256(source.encode("utf-8")).hexdigest(),
+        project_name=project_name,
+        sheet_instance_path=sheet_instance_path,
+        references_by_symbol_uuid=references,
+        issues=tuple(issues),
+    )
 
 
 def schematic_number(value: str, field: str) -> float:

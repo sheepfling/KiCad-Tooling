@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import date
 from typing import Literal
 
@@ -16,6 +15,7 @@ from .model_primitives import (
     RepositoryPath,
     StrictModel,
 )
+from .source_state_models import PathDigestInventory, SourceHashInventory
 
 OfferFreshness = Literal["CURRENT", "STALE", "FUTURE"]
 OfferChange = Literal["ADDED", "REMOVED", "CHANGED", "UNCHANGED"]
@@ -77,8 +77,8 @@ class SupplierAnalysisReport(StrictModel):
     project_id: Identifier
     parts_receipt: RepositoryPath
     parts_receipt_sha256: Digest
-    parts_source_hashes: Mapping[RepositoryPath, Digest]
-    parts_input_hashes: Mapping[RepositoryPath, Digest]
+    parts_source_hashes: SourceHashInventory
+    parts_input_hashes: PathDigestInventory
     parts_source_current: bool
     as_of: date
     max_age_days: int = Field(ge=0)
@@ -89,4 +89,4 @@ class SupplierAnalysisReport(StrictModel):
     currencies: tuple[NonEmptyText, ...]
     issues: tuple[NonEmptyText, ...] = ()
     output_directory: str
-    artifacts_sha256: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
+    artifacts_sha256: PathDigestInventory = Field(default_factory=dict)

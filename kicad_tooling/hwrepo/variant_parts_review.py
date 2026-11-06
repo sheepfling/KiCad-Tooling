@@ -8,7 +8,8 @@ from uuid import uuid4
 from .artifact_access import artifact_file, read_regular_bytes
 from .contract_coach import receipt_directory
 from .contracts import parse_model_text, read_model, repo_path, write_model
-from .cross_probe import build_cross_probe
+from .cross_probe import build_cross_probe_request
+from .cross_probe_operation_models import CrossProbeBuildRequest
 from .cross_probe_variant import read_variant_observation
 from .discovery import load_config, load_registry
 from .evidence import digest
@@ -126,13 +127,15 @@ def build_variant_parts_review(
     verify_inputs()
     target = output or Path("build/variant-parts") / f"{project_id}-{uuid4().hex[:12]}"
     directory = receipt_directory(root, project_id, target)
-    navigation = build_cross_probe(
+    navigation = build_cross_probe_request(
         root,
-        project_id,
-        parts_path,
-        findings_path,
-        directory / "navigation",
-        observed.name,
+        CrossProbeBuildRequest(
+            project_id=project_id,
+            parts_report=parts_path,
+            findings_view=findings_path,
+            output=directory / "navigation",
+            assembly_variant=observed.name,
+        ),
     )
     if (
         navigation.variant_evidence_sha256 != observed.evidence_sha256

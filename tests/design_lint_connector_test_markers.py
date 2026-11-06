@@ -116,6 +116,7 @@ CONNECTOR_LINT_TEST_MODULES = frozenset(
         "tests/test_connector_footprint_signal_output.py",
         "tests/test_connector_footprint_power_output.py",
         "tests/test_connector_peer_pin_all_open.py",
+        "tests/test_connector_split_return_peers_native.py",
         "tests/test_design_lint_determinism_connector_all_open.py",
         "tests/test_connector_signal_peer_pin_all_open.py",
         "tests/test_connector_peer_pin_coverage.py",

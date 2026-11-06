@@ -10,8 +10,10 @@ from unittest.mock import patch
 
 from kicad_tooling.check_toolchain import assessment, cli_executable, toolchain
 from kicad_tooling.ci_matrix import build_matrix
-from kicad_tooling.hwrepo.contracts import read_model, write_model
-from kicad_tooling.hwrepo.discovery import load_registry
+from kicad_tooling.hwrepo import governance_lint as governance_lint_service
+from kicad_tooling.hwrepo import governance_lint_project_policy as project_policy_service
+from kicad_tooling.hwrepo.contracts import read_model, repo_path, write_model
+from kicad_tooling.hwrepo.discovery import load_registry, load_registry_snapshot
 from kicad_tooling.hwrepo.models import (
     ComponentIdentity,
     GovernanceRecord,
@@ -20,6 +22,7 @@ from kicad_tooling.hwrepo.models import (
     ProjectManifest,
     TeamPolicy,
 )
+from kicad_tooling.hwrepo.project_source_hashes import ProjectSourceInventoryInput
 from kicad_tooling.hwrepo.selection import ProjectSelector, resolve_project_ids, select_projects
 from kicad_tooling.lint_registry import lint, lint_governance_record
 
@@ -77,6 +80,149 @@ class GovernanceLintTests(unittest.TestCase):
     def test_individual_project_lint_passes(self) -> None:
         result = lint(ROOT, ["controller"])
         self.assertEqual(result.status, "PASS", result.issues)
+
+    def test_manifest_changed_during_lint_fails_the_registry_freshness_barrier(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            staged = Path(temporary) / "template"
+            shutil.copytree(
+                ROOT,
+                staged,
+                ignore=shutil.ignore_patterns(".git", "build", ".evidence", "__pycache__"),
+            )
+            manifest_path = staged / "examples/projects/controller/project.json"
+            original_capture = project_policy_service.capture_project_source_inventory
+            mutated = False
+
+            def mutate_after_capture(
+                root: Path, source_roots: tuple[str, ...]
+            ) -> ProjectSourceInventoryInput:
+                nonlocal mutated
+                result = original_capture(root, source_roots)
+                if not mutated:
+                    manifest = read_model(manifest_path, ProjectManifest)
+                    write_model(manifest_path, manifest.model_copy(update={"tags": ("changed",)}))
+                    mutated = True
+                return result
+
+            with patch.object(
+                project_policy_service,
+                "capture_project_source_inventory",
+                side_effect=mutate_after_capture,
+            ):
+                result = governance_lint_service.lint(staged, ["controller"])
+
+            self.assertTrue(mutated)
+            self.assertEqual(result.status, "FAIL")
+            self.assertTrue(
+                any(
+                    "Project manifest controller source changed during operation" in issue
+                    for issue in result.issues
+                ),
+                result.issues,
+            )
+
+    def test_check_contract_changed_during_lint_fails_its_freshness_barrier(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            staged = Path(temporary) / "template"
+            shutil.copytree(
+                ROOT,
+                staged,
+                ignore=shutil.ignore_patterns(".git", "build", ".evidence", "__pycache__"),
+            )
+            contract_path = staged / "examples/projects/controller/tests/contract.json"
+            original_capture = project_policy_service.capture_project_source_inventory
+            mutated = False
+
+            def mutate_after_capture(
+                root: Path, source_roots: tuple[str, ...]
+            ) -> ProjectSourceInventoryInput:
+                nonlocal mutated
+                result = original_capture(root, source_roots)
+                if not mutated:
+                    contract_path.write_bytes(contract_path.read_bytes() + b"\n")
+                    mutated = True
+                return result
+
+            with patch.object(
+                project_policy_service,
+                "capture_project_source_inventory",
+                side_effect=mutate_after_capture,
+            ):
+                result = governance_lint_service.lint(staged, ["controller"])
+
+            self.assertTrue(mutated)
+            self.assertEqual(result.status, "FAIL")
+            self.assertTrue(
+                any(
+                    "Project test contract for controller source changed during operation" in issue
+                    for issue in result.issues
+                ),
+                result.issues,
+            )
+
+    def test_shared_governance_sources_changed_during_lint_fail_freshness_barrier(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            staged = Path(temporary) / "template"
+            shutil.copytree(
+                ROOT,
+                staged,
+                ignore=shutil.ignore_patterns(".git", "build", ".evidence", "__pycache__"),
+            )
+            staged = staged.resolve()
+            snapshot = load_registry_snapshot(staged)
+            parts_path = repo_path(staged, snapshot.registry.catalogs.parts)
+            team_policy_path = repo_path(
+                staged,
+                snapshot.discovery.repository_configuration.value.layout.team_policy,
+            )
+            product_index_path = repo_path(
+                staged,
+                snapshot.discovery.repository_configuration.value.layout.products,
+            )
+            original_capture = project_policy_service.capture_project_source_inventory
+            mutated = False
+
+            def mutate_after_capture(
+                root: Path, source_roots: tuple[str, ...]
+            ) -> ProjectSourceInventoryInput:
+                nonlocal mutated
+                result = original_capture(root, source_roots)
+                if not mutated:
+                    parts_path.write_bytes(parts_path.read_bytes() + b"\n")
+                    team_policy_path.write_bytes(team_policy_path.read_bytes() + b"\n")
+                    product_index_path.write_bytes(product_index_path.read_bytes() + b"\n")
+                    mutated = True
+                return result
+
+            with patch.object(
+                project_policy_service,
+                "capture_project_source_inventory",
+                side_effect=mutate_after_capture,
+            ):
+                result = governance_lint_service.lint(staged, ["controller"])
+
+            self.assertTrue(mutated)
+            self.assertEqual(result.status, "FAIL")
+            changed_governance_sources = (
+                parts_path.relative_to(staged).as_posix(),
+                team_policy_path.relative_to(staged).as_posix(),
+            )
+            for source in changed_governance_sources:
+                self.assertTrue(
+                    any(
+                        f"Governance source {source} changed during operation" in issue
+                        for issue in result.issues
+                    ),
+                    result.issues,
+                )
+            product_index_source = product_index_path.relative_to(staged).as_posix()
+            self.assertTrue(
+                any(
+                    f"Product source {product_index_source} changed during operation" in issue
+                    for issue in result.issues
+                ),
+                result.issues,
+            )
 
     def test_project_metadata_selectors_include_and_exclude_tags(self) -> None:
         self.assertEqual(

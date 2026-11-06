@@ -11,7 +11,7 @@ from kicad_tooling.hwrepo.component_role_models import (
     ComponentRoleMap,
     ComponentRolePin,
 )
-from kicad_tooling.hwrepo.component_roles import component_role_binding_evidence
+from kicad_tooling.hwrepo.component_roles import component_role_binding_report_fields
 from kicad_tooling.hwrepo.design_lint_two_pin_candidate_evidence import (
     TwoPinComponentFindingEvidence,
     TwoPinSameNetCandidate,
@@ -170,12 +170,26 @@ def test_two_pin_projection_keeps_authored_role_binding_evidence() -> None:
 
     evidence = project_two_pin_component_evidence(source).evidence
 
+    assert tuple(evidence) == (
+        "symbol",
+        "value",
+        "net",
+        "pin_assignments",
+        "passive_kind",
+        "classified_role",
+        "role_part_id",
+        "role_symbol",
+        "role_footprint",
+        "role_pin_inventory",
+        "role_basis",
+        "role_binding_sha256",
+    )
     assert evidence["classified_role"] == ("capacitor",)
     assert evidence["role_part_id"] == ("custom-capacitor-1",)
     assert evidence["role_pin_inventory"] == ("1=CAP+/passive", "2=CAP-/passive")
     assert (
         evidence["role_binding_sha256"]
-        == component_role_binding_evidence(binding)["role_binding_sha256"]
+        == component_role_binding_report_fields(binding)["role_binding_sha256"]
     )
 
 

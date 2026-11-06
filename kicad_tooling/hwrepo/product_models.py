@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import Enum
-from typing import Annotated, Literal
+from typing import Annotated, Literal, NewType, TypeAlias
 
 from pydantic import Field, model_validator
 
@@ -19,6 +19,8 @@ from .model_primitives import (
     StrictModel,
 )
 from .policy_issue_models import PolicyIssue
+
+ProductInstancePath = NewType("ProductInstancePath", str)
 
 
 class Assurance(str, Enum):
@@ -176,6 +178,9 @@ class ProductPolicyReport(StrictModel):
 class Occurrence(StrictModel):
     item: Reference
     quantity: PositiveCount
+
+
+ProductOccurrenceMap: TypeAlias = Mapping[ProductInstancePath, Occurrence]
 
 
 class BomRow(StrictModel):

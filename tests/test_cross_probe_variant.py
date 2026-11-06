@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import MutableMapping
 from pathlib import Path
+from typing import cast
 
 import pytest
 from mcp import Client
@@ -12,6 +14,7 @@ from kicad_tooling.hwrepo.command_evidence_models import CommandEvidence
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.cross_probe import build_cross_probe
 from kicad_tooling.hwrepo.cross_probe_models import CrossProbeReport
+from kicad_tooling.hwrepo.cross_probe_variant import VariantObservation
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.discovery import load_config
 from kicad_tooling.hwrepo.evidence import digest
@@ -19,6 +22,7 @@ from kicad_tooling.hwrepo.findings_view import build_findings_view
 from kicad_tooling.hwrepo.findings_view_models import FindingsViewReport
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import PurchasingReport
+from kicad_tooling.hwrepo.netlist_contract_models import ComponentContract
 from kicad_tooling.hwrepo.pcb_component_inventory_models import (
     PcbComponentInventoryCoverageReport,
     PcbVariantPopulationCoverage,
@@ -29,6 +33,41 @@ from tests.mcp_parity_support import McpParityHarness, parity_workspace, run_mcp
 from tests.test_cross_probe import saved_inputs
 
 pytestmark = pytest.mark.template_checkout
+
+
+def test_variant_observation_copies_and_freezes_its_reference_maps() -> None:
+    evidence_hashes = {"build/netlist.xml": "abc"}
+    schematic = {"r1": ComponentContract(value="1k", footprint="R_0805")}
+    schematic_references = {"r1": "R1"}
+    board_all = {"r1": "R1"}
+    observation = VariantObservation(
+        name="default",
+        netlist_path=Path("build/netlist.xml"),
+        lint_path=Path("build/report.json"),
+        lint_sha256="def",
+        evidence_sha256=evidence_hashes,
+        schematic=schematic,
+        schematic_references=schematic_references,
+        schematic_dnp=frozenset(),
+        board_all=board_all,
+        board_fitted=frozenset({"r1"}),
+    )
+
+    evidence_hashes["build/late.csv"] = "ghi"
+    schematic_references["r2"] = "R2"
+    board_all["r2"] = "R2"
+    assert dict(observation.evidence_sha256) == {"build/netlist.xml": "abc"}
+    assert dict(observation.schematic_references) == {"r1": "R1"}
+    assert dict(observation.board_all) == {"r1": "R1"}
+
+    for mapping in (
+        observation.evidence_sha256,
+        observation.schematic,
+        observation.schematic_references,
+        observation.board_all,
+    ):
+        with pytest.raises(TypeError):
+            cast(MutableMapping[str, object], mapping)["r2"] = "R2"
 
 
 def _variant_files(

@@ -57,7 +57,7 @@ def test_unreviewed_peer_scope_rule_uses_typed_current_source_projection() -> No
         "ConnectorFootprintPeerPinScanSource"
     )
     assignment_refs = {
-        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_net_map",
+        "kicad_tooling/hwrepo/netlist_pin_assignments.py#netlist_pin_net_index",
         "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_assignments",
     }
     scope_candidate_calls = tuple(

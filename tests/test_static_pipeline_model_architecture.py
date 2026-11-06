@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import ast
+from operator import setitem
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
@@ -40,6 +42,7 @@ def test_source_and_static_pipeline_owners_have_closed_dependencies() -> None:
     assert len(report_owner.read_text(encoding="utf-8").splitlines()) < 500
     assert _imports(source_owner) == {
         "collections.abc",
+        "types",
         "typing",
         "pydantic",
         "model_primitives",
@@ -113,6 +116,11 @@ def test_registry_exports_preserve_identity_and_report_json_contract() -> None:
     assert models.StaticPipelineReport is static_pipeline_models.StaticPipelineReport
 
     report = _repository_static_report()
+    source = report.source
+    assert source is not None
+    assert report.model_dump(mode="json")["source"]["files_sha256"] == {"README.md": "b" * 64}
+    with pytest.raises(TypeError):
+        setitem(cast(Any, source.files_sha256), "README.md", "c" * 64)
     assert (
         static_pipeline_models.StaticPipelineReport.model_validate_json(report.model_dump_json())
         == report

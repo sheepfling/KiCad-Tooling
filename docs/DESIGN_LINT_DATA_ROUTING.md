@@ -254,13 +254,13 @@ the candidate constructor verifies its rule ID and fields against that typed
 source. `BLOCKED` and `NOT_REQUESTED` reports remain ineligible for mismatch
 and collision candidates.
 
-The public `candidates()` call accepts 49 arguments and remains available to
-direct predicate consumers. Full evaluation now builds the grouped scanner
-inputs from `DesignLintEvaluationPreparation`, whose coverage has already been
-source-checked. Keep the public call shape for compatibility and continue
-migrating direct consumers by capability group. Direct `candidates()` calls
-remain unverified observations unless the caller supplies and validates the
-relevant source identity.
+The public `candidates()` adapter retains its named legacy keyword inputs in
+`LegacyCandidateArguments` while keeping the Python signature compact. Full
+evaluation builds the grouped scanner inputs from
+`DesignLintEvaluationPreparation`, whose coverage has already been
+source-checked. Continue migrating direct consumers by capability group.
+Direct `candidates()` calls remain unverified observations unless the caller
+supplies and validates the relevant source identity.
 
 Candidate registration has one shared check: after all theme, native, and
 rule-specific candidates are collected, every rule ID must be active in the
@@ -1427,7 +1427,9 @@ peer-assignment group. It projects the established finding evidence, including
 catalog and inventory review identifiers, through
 `ConnectorUnanchoredPeerScopeCandidate`; the rule ID, message, policy, and
 serialized evidence fields stay stable. The peer scan and source validators
-share exact pin-to-net indexing from `connector_footprint_peer_assignments.py`.
+use `netlist_pin_assignments.netlist_pin_net_index` for the shared immutable
+case-folded pin-to-exact-net index. The connector-owned assignment projector
+retains its deterministic ordering contract without rebuilding the index.
 
 The focused connector scope, peer metadata, named-divergence, typed-source,
 architecture, marker, selector, catalog, active-rule reachability, and
@@ -1786,3 +1788,367 @@ low-confidence source-family prompts that can mention themed modules; they do
 not establish ownership or call for a split. No exact native KiCad lane ran.
 Continue SA-01 with another import-aware returned-map audit, keeping local
 accumulators out of the shared-route count.
+
+## Cross-probe board-anchor index route (2026-11-05)
+
+`board_footprint_anchors` now returns the named
+`BoardFootprintAnchorsByCasefoldedReference` contract. Its read-only mapping
+groups all placements under a case-folded reference key and retains the native
+reference spelling and source order in each frozen `BoardFootprintAnchor`.
+Case-only collisions therefore remain a multi-anchor result and cannot become
+a unique board location.
+
+The import-aware audit found one production consumer in `cross_probe.py`; it
+only reads the index. The index is a derived lookup, not source evidence:
+`cross_probe.py` verifies the board bytes against the current source hash, and
+the resulting `CrossProbeReport` retains that source-hash inventory. No
+serialized report or marker behavior changed.
+
+The focused parser and cross-probe consumer selection passed three tests using
+the separate public template checkout. Ruff and targeted Pyright passed. The
+fresh Alphus scan found no runtime-type, Python-style, Pydantic, or
+input-contract findings in the changed route; its provisional complexity scan
+still flags `build_cross_probe` for responsibility review. No native KiCad tool
+ran.
+
+The optional variant route now also exposes read-only maps in its frozen
+`VariantObservation`: artifact paths to validated digests, case-folded
+references to parsed schematic components, case-folded references to exact
+native names, and the full-board reference index. Construction copies every
+map before wrapping it, so caller-owned dictionaries cannot mutate an
+observation after validation. The cross-probe operation reads these maps and
+revalidates the retained variant evidence before export. Variant evidence
+hashes still project into the existing report field; report schema and source
+binding are unchanged.
+
+The complete cross-probe and named-variant selection passed 15 tests against
+the separate public template checkout. Ruff and targeted Pyright passed. The
+scoped Alphus profiles retain their existing totals; the complexity candidate
+continues to identify `build_cross_probe` for an ownership review.
+
+### Typed cross-probe request and receipt admission
+
+`CrossProbeBuildRequest` now carries the project identifier, selected parts
+receipt, findings receipt, output path, and optional named variant into
+`build_cross_probe_request`. The positional `build_cross_probe` function stays
+as a compatibility adapter. CLI, MCP, and variant-review composition now build
+the same request model and call the typed operation.
+
+`cross_probe_admission.py` owns receipt selection and validation. It admits
+only parts and findings that match the selected project and current source
+hashes, binds the native summary and optional variant, verifies each retained
+drawing, and returns a frozen envelope containing the exact accepted records
+and bytes. The operation rechecks that envelope before and after preparing the
+HTML view so source or receipt changes abort publication. Anchor capture,
+reconciliation, report assembly, and publication remain coordinated by
+`cross_probe.py`; no new publication owner is implied by this extraction.
+
+Ruff and targeted Pyright pass for the changed production modules. The
+stable current-head Alphus re-sniff found no findings in the changed route
+modules across runtime-types, Python-style, Pydantic, input-contracts,
+complexity, and shared-utilities. No native KiCad lane is part of this slice.
+
+## Schematic source-tree route (2026-11-05)
+
+The hierarchical schematic reader now returns a VerifiedSchematicSourceTree.
+Each SchematicSourceFile retains its repository path, verified SHA-256 digest,
+and exact bytes together; model validation checks the digest against those
+bytes. The tree also retains the root path and project directory used for
+sheet resolution and exposes read-only path-to-file, path-to-bytes, and
+path-to-digest projections.
+
+The schematic coverage scanner and findings-view sheet binder now consume
+those projections. Schematic instance bindings take the verified tree itself
+and reuse each retained digest instead of hashing the payload again. The public
+scanner API, serialized finding fields, and source-tree fingerprint remain
+unchanged.
+
+The focused source-tree, findings-view, inventory, architecture, and synthetic
+open-drain lane selection passed 35 tests with 2 skipped. Ruff and targeted
+Pyright passed. No exact native KiCad lane ran. The fresh Alphus scan found no
+new finding in this route; see the current record in ALPHUS_QUALITY_GATES.md.
+Continue SA-01 with the electrical input-binding map audit, keeping source
+admission records distinct from local accumulation dictionaries.
+
+## Electrical input-binding route (2026-11-05)
+
+Electrical input admission now returns BoundElectricalInputs, a frozen record
+of path-and-digest entries with explicit roles for design sources, the project
+manifest, project checks, electrical requirements, and simulation models.
+Repeated paths retain all applicable roles and must resolve to one digest.
+Read-only projections expose the complete input hash inventory and the
+design-source and simulation-model subsets.
+
+The analyzer uses the source-only projection for native-netlist admission and
+simulation requests. End-of-run validation compares the same complete
+path-to-digest mapping as before. Saved electrical reports still serialize
+input_sha256 with its existing JSON shape, and the evidence verifier continues
+to compare that saved map against current inputs. The setup-time
+ElectricalInputInventory remains separate: it is an unreviewed capture receipt
+and does not include manifest, checks, or requirements as a current-run
+admission record.
+
+The electrical evidence, report-owner, CLI/MCP parity, I2C parity, PCB return
+parity, and simulator parity selection passed 44 tests and 14 subtests. Ruff
+and targeted Pyright passed. The fresh Alphus scan reproduced all nine profile
+totals and found no new selector or complaint. No exact native KiCad lane ran.
+
+## Setup and source-state inventory maps (2026-11-05)
+
+The setup-time `ElectricalInputInventory` route is now closed. Its
+`source_sha256` and `model_sha256` fields are read-only after validation, while
+the shared CLI/MCP service continues to serialize ordinary JSON mappings. This
+unreviewed capture receipt remains distinct from the current-run
+`BoundElectricalInputs`, which also admits the manifest, checks, and
+requirements files.
+
+`SourceState.files_sha256` is also read-only in memory and retains its normal
+mapping shape when nested inside static-pipeline and electrical reports. Its
+model remains owned by `source_state_models.py`; `models.py` keeps the same
+identity-compatible public export. A named Pydantic serializer converts the
+immutable mapping at the serialization boundary, avoiding a warning without
+changing the report contract.
+
+The focused source-state and electrical setup selection passed 31 tests and 15
+subtests with warnings treated as errors. Project Pyright, Ruff, formatting,
+and `git diff --check` passed. The three `ElectricalAnalysisReport` indexes
+(`input_sha256`, `artifacts_sha256`, and `commands`) have since been traced
+through their producer, verifier, release/readiness consumers, and shared
+CLI/MCP operation. They are copied and frozen on the report while retaining
+their existing JSON objects. The focused implementation and verification are
+documented in `ELECTRICAL_ANALYSIS_DATA_ROUTING.md` and the architecture
+backlog. Continue the SA-01 inventory with cross-module returns that still
+expose an untyped mapping; exclude local accumulation dictionaries.
+
+## Catalog-to-surface route audit: mapped connector supply domains
+
+The active catalog entry for `connector.mapped_supply_domains_share_net`
+declares `connectors` as its theme and
+`design_lint_connectors_supply_domains.py#mapped_supply_domains_shared_net_candidates`
+as its implementation owner. That predicate receives the observed
+`NetlistContract` and source-matched `ConnectorCoverageReport`, then emits a
+typed candidate whose `MappedSupplyDomainsFindingEvidence` retains both source
+records and the exact shared-net assignments. It treats distinct authored
+domain identifiers as a review prompt; it does not infer voltage incompatibility
+or a physical board fault.
+
+The route continues through `connector_candidates` and
+`scan_candidate_result`, then `evaluate_request` applies catalog default modes,
+project overrides, and exact-fingerprint ignores through
+`resolve_finding_dispositions`. Report assembly retains the catalog and source
+identity with the resulting `mode` and `disposition`. The CLI inspection and
+MCP `inspect_design_lint` operation both reach the same project-inspection
+service and canonical evaluator.
+
+The gap was that no CLI/MCP parity regression selected this exact rule ID.
+`tests/test_design_lint_mcp_parity_connector_supply_domains.py` now exercises
+the authored interface catalog, native-netlist XML, review mode, and source
+digest on both surfaces. It checks the rule owner in the report catalog, the
+open review finding and its mapped evidence, and semantic CLI/MCP equality. Its
+two controls cover one shared net with one authored domain and distinct domains
+on separate nets. A second scenario saves a quiet same-domain report, changes
+the authored voltage-domain mapping, and checks that CLI baseline reconciliation
+and MCP `reconcile_design_lint` both retain the exact rule as a `NEW` review
+transition. The tests use synthetic netlist evidence and do not run native KiCad
+or certify electrical approval.
+
+The focused rule, reconciliation-parity, catalog-fixture, rule-selector, and
+pytest-marker selection passed 24 tests. Ruff and targeted Pyright passed, and
+`git diff --check` was clean. No catalog schema or runtime surface change was
+needed. Continue with a rule that has a different evidence input class before
+considering module moves.
+
+## Source-bound custom DRC text-variable route
+
+`pcb.custom_drc_text_variable_review` uses a different evidence class from the
+connector map route: it reads the project-owned `.kicad_dru` source, the paired
+`.kicad_pro` and `.kicad_pcb` sources, their exact digests, and the configured
+KiCad version. `pcb_dru_rule_review.py` verifies those inputs against the
+current source-hash inventory and emits `PcbDruTextVariableFindingEvidence`.
+That typed record retains the unresolved variable names and all three source
+identities; it deliberately does not resolve variable values.
+
+Project inspection routes the candidate through the PCB input group into
+`evaluate_request`. The catalog's default review mode and project overrides or
+exact-fingerprint ignores are applied by the normal disposition service, and
+the report preserves the catalog owner and projected hashes. CLI inspection
+and MCP `inspect_design_lint` share that evaluator. The CLI and MCP
+`reconcile_design_lint` surfaces also share the typed reconciliation service.
+
+`tests/test_design_lint_mcp_parity_pcb_dru_text_variable.py` now asserts the
+catalog owner, the source hashes, and the quiet-to-review transition across
+inspection and reconciliation. The transition compares separate synthetic
+project snapshots with and without the target rule finding, so each side has a
+source-matched native-summary receipt. No native KiCad DRC command runs and no
+resolved variable value or manufacturing conclusion is asserted.
+
+The focused custom-DRC parity, parser, reconciliation, catalog-fixture,
+rule-selector, and marker selection passed 35 tests. Ruff and targeted Pyright
+passed; Rumdl and `git diff --check` were clean. The source-text review does not
+replace native DRC compilation or validation of resolved variable values.
+
+## Source-bound PCB value-comparison route
+
+`pcb.schematic_pcb_value_mismatch` is owned by
+`pcb_component_values.py#compare_schematic_pcb_values`. Project inspection
+reaches it through `scan_pcb_geometry`, which captures one native PCB snapshot
+and shares that typed evidence with the inventory, population, value, and
+pad-net comparisons. The capture binds the board path and digest to the
+project's source-hash inventory, checks the configured KiCad version and
+pinned image, checks the probe digest and refilled-zone state, and retains
+snapshot and native-command receipts. Receipt bytes and digests are checked
+again before coverage is returned.
+
+The base-value comparison requires snapshot schema 13 or later. It compares
+trimmed CAD value strings for case-insensitive references that have a
+nonempty schematic footprint assignment and are fitted in both inputs. Values
+are compared case-sensitively. For named variants, the scan requests
+same-name netlist and PCB position exports; missing or stale variant evidence
+blocks that comparison rather than falling back to base-design data. The
+catalog's default disposition is `review`; project overrides and exact
+fingerprint ignores use the shared disposition resolver.
+
+`PcbValueMismatchEvidence` retains the mismatch, the shared
+`PcbComponentInventorySourceReceipt`, and variant coverage state. The report
+projection includes netlist and board identity, snapshot digest and schema,
+KiCad version, pinned image, probe digest, and any variant export identities.
+The report validator checks the projected board identity against its source
+hash inventory. The CLI and MCP inspection paths use the same project
+inspection service and evaluator; both reconciliation surfaces use the same
+typed reconciliation service.
+
+`tests/test_design_lint_mcp_parity_pcb_value_mismatch.py` now drives the real
+capture, inventory comparison, candidate, disposition, and report path for a
+source-matched synthetic quiet baseline and value mismatch. Only the external
+native-command execution adapter is replaced; the test keeps the capture's
+source, version, image, probe, command-shape, and receipt checks active. It
+asserts the catalog owner and captured identities, CLI/MCP inspection parity,
+and a `NEW` open-review transition through CLI and MCP reconciliation. The
+native command result is synthetic, so this verifies route and receipt
+semantics without claiming KiCad execution or electrical approval.
+
+The older broad fixture in `tests/test_pcb_component_inventory_mcp_parity.py`
+(`test_component_inventory_findings_match_cli_and_mcp`) replaces the entire
+geometry scan. It remains useful as report-projection parity coverage; it does
+not prove source capture. The new focused fixture separates that guarantee and
+is registered as both a fault and valid-control fixture for the active rule.
+
+The focused value-route, underlying comparison, broad inventory parity,
+reconciliation, catalog-fixture, selector, and marker selection passed 31
+tests. Ruff and targeted Pyright passed. No exact native KiCad lane ran.
+
+## Source-bound PCB pad-net comparison route
+
+`pcb.schematic_pcb_pad_net_mismatch` is owned by
+`pcb_pad_net_comparison.py#compare_schematic_pcb_pad_nets`. Project inspection
+provides the admitted native schematic netlist and source hashes to
+`scan_pcb_geometry`. The scan resolves the rule's mode, captures one shared
+`PcbGeometrySourceEvidence`, and passes it to
+`scan_pcb_component_inventory` alongside the inventory, population, and value
+modes. The source capture checks the authoritative board path and digest,
+configured KiCad version, pinned image, probe digest, refilled-zone state,
+native command shape, and snapshot/command receipts. The inventory comparison
+accepts snapshot schemas 12 through 15.
+
+`evaluate_native_component_inventory_coverage` coordinates the comparisons
+that share the snapshot; it is not the owner of the individual pad-net
+predicate. It carries the source receipt fields in
+`PcbComponentInventorySourceReceipt`: netlist digest, board path and digest,
+snapshot digest and schema, KiCad version, image, and probe digest. Missing
+netlist identity or unsupported snapshot schema blocks the comparison route.
+If only the pad-net predicate raises `ValueError`, the pad-net subcomparison is
+`BLOCKED` while other successfully completed inventory checks can remain
+complete. An `off` rule mode stays `DISABLED` and emits no pad-net candidate.
+
+The predicate compares explicit schematic pin assignments with same-numbered
+native PCB pads for matching case-insensitive references and footprint IDs.
+Net names remain exact after native netlist normalization. The result reports
+assignment mismatches; it does not infer that peer pins must be bonded or prove
+routed copper continuity or physical conduction.
+
+`design_lint_pcb_pad_net_candidates.py` converts either an exact mismatch or a
+blocked comparison into a candidate. The evidence owner,
+`design_lint_pcb_pad_net_candidate_evidence.py`, projects the typed observation
+with the shared source receipt. The active catalog entry points at the
+predicate owner. The default rule mode is `review`; the normal disposition
+resolver applies project overrides and exact fingerprint ignores after
+candidate generation. CLI inspection, MCP inspection, and their
+reconciliation operations share the same typed evaluator and source route.
+
+`tests/test_design_lint_mcp_parity_pcb_pad_net_mismatch.py` exercises a quiet
+baseline and a mismatching source-bound synthetic project through live source
+capture, receipt checks, comparison, candidate projection, CLI/MCP parity, and
+a `NEW` open-review reconciliation transition. The test replaces only native
+process execution; its snapshot and command receipt are synthetic, and no exact
+native KiCad lane ran. The test is registered in the active rule's fault and
+valid-control fixtures. The broad
+`test_pcb_component_inventory_mcp_parity.py` fixture remains projection
+parity because it replaces the full geometry scan; it does not certify source
+capture.
+
+## Source-bound PCB DRC exclusion candidate evidence
+
+`pcb.drc_exclusion_present` remains owned by
+`pcb_drc_exclusion_review.py#source_bound_pcb_drc_exclusion_candidates`. The
+review service admits the configured `.kicad_pro` path from the source-hash
+inventory, checks the exact settings digest before and after parsing, and
+restricts the rule to PCB projects using the supported KiCad 10.0 settings
+schema. Missing, stale, linked, malformed, or unsupported inputs fail closed
+or remain out of scope according to the existing service contract.
+
+The candidate route now carries `PcbDrcExclusionFindingEvidence`: the exact
+project-relative path, captured source digest, configured KiCad patch version,
+and parsed marker/comment record. `project_pcb_drc_exclusion_evidence` owns the
+projection into the stable report evidence keys. `PcbDrcExclusionCandidate`
+derives its subject and message from that source object and rejects report
+fields that do not match the projection. The outer review service still owns
+source admission and freshness checks; retaining a digest in a candidate does
+not itself prove the file is current.
+
+The candidate rule ID, subject fingerprint, wording, evidence values and key
+order, ordering behavior, and disposition flow remain unchanged. This route
+does not run DRC, resolve markers against board geometry, or decide whether an
+exclusion is acceptable. At the DRC-route checkpoint, a direct-AST inventory
+found 28 production `Candidate(evidence=...)` constructions in 28 modules,
+with 26 literal maps; this inventory only recognized direct calls named
+`Candidate` and did not claim complete data-flow coverage.
+
+## Mapped LED current candidate source evidence
+
+`component.mapped_led_current_range_mismatch` retains the authored
+`LedCurrentMap`, an independent typed copy of the normalized netlist, its
+supplied source digest, and the exact calculated entry in
+`LedCurrentRangeFindingEvidence`. Construction re-evaluates the entry against
+those retained inputs. `project_led_current_range_evidence` owns the existing
+report mapping, while `LedCurrentRangeCandidate` checks that the candidate
+subject, message, rule ID, and evidence still match that source projection.
+
+`led_current_range.py#evaluate_led_current_requirement` remains the
+calculation owner and the component scanner remains responsible for whether an
+entry becomes a candidate. The report schema, evidence values and key order,
+finding order, fingerprint inputs, and review-only policy are unchanged. The
+candidate retains the scanner-supplied digest; it does not independently
+authenticate the native file. The active catalog-reachability fixture now
+exercises this fault. The focused route validation passed 20 tests, targeted
+production and test Pyright plus Ruff, and the direct-call census reports zero
+generic `Candidate(evidence=...)` calls in production design-lint modules.
+
+## Component-role report-field projection
+
+The shared component-role projector previously returned a generic
+`dict[str, tuple[str, ...]]` to the LED and two-pin candidate owners. Those
+candidates already retained the authored `ComponentRoleBinding` and its
+identity; the returned map represented only the corresponding report fields.
+
+`component_roles.py` now names that output as
+`ComponentRoleBindingReportFields`, with explicit keys for role, part ID,
+symbol, footprint, pin inventory, basis, and binding digest. Each rule-owned
+projector merges those fields only while constructing its existing
+`CandidateEvidenceProjection`. The common projection freezes the final
+mapping. Synthetic regressions check the exact evidence values and key order;
+the architecture test checks the named field set and return type. No rule,
+source identity, disposition, or serialized field changed.
+
+The focused LED/two-pin source and architecture selection passed 34 tests.
+Targeted Pyright, Ruff, formatting, and scoped `git diff --check` passed. No
+exact native KiCad lane was required for this mapping projection.

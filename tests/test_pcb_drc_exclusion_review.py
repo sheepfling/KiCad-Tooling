@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Mapping
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
@@ -20,6 +21,7 @@ from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import NetlistContract, ProjectConfig, ProjectKind
 from kicad_tooling.hwrepo.pcb_drc_exclusion_review import (
+    PcbDrcExclusionCandidate,
     source_bound_pcb_drc_exclusion_candidates,
 )
 from kicad_tooling.hwrepo.pcb_drc_project_settings import PcbDrcExclusion, pcb_drc_exclusions
@@ -90,6 +92,28 @@ def test_saved_exclusions_report_rule_key_comment_and_source_binding(tmp_path: P
     assert by_rule["clearance"].evidence["exclusion_comment"] == (
         "Approved synthetic mounting-point clearance exception.",
     )
+
+
+def test_typed_candidate_retains_source_and_rejects_forged_report_fields(
+    tmp_path: Path,
+) -> None:
+    root, project, config, source_hashes = _project(tmp_path)
+
+    candidate = _scan(root, config, source_hashes)[0]
+
+    assert isinstance(candidate, PcbDrcExclusionCandidate)
+    assert candidate.source_evidence.source_path == PROJECT_RELATIVE
+    assert candidate.source_evidence.source_sha256 == digest(project)
+    assert candidate.source_evidence.kicad_version == "10.0.5"
+    assert candidate.source_evidence.exclusion.marker == candidate.evidence["serialized_marker"][0]
+    assert candidate.source_evidence.exclusion.comment == candidate.evidence["exclusion_comment"][0]
+
+    forged_evidence = dict(candidate.evidence)
+    forged_evidence["drc_rule_key"] = ("unconnected_items",)
+    with pytest.raises(ValueError, match="must match their source projection"):
+        replace(candidate, evidence=forged_evidence)
+    with pytest.raises(ValueError, match="must match their source projection"):
+        replace(candidate, subject=f"{candidate.subject}/stale")
 
 
 def test_empty_or_absent_exclusion_lists_are_valid_controls(tmp_path: Path) -> None:

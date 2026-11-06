@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import os
 import subprocess
@@ -11,15 +12,22 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from kicad_tooling.hwrepo.contracts import read_model
 from kicad_tooling.hwrepo.discovery import (
     load_config,
+    load_config_from_snapshot,
     load_registry,
+    load_registry_snapshot,
     manifest_paths,
     project_destination,
 )
 from kicad_tooling.hwrepo.importing import import_project
 from kicad_tooling.hwrepo.inventory import inventory
-from kicad_tooling.hwrepo.layout import layout
+from kicad_tooling.hwrepo.layout import (
+    layout,
+    read_repository_layout,
+    require_repository_layout_current,
+)
 from kicad_tooling.hwrepo.mcp_files import (
     artifact_path,
     preview_project_edit,
@@ -27,6 +35,7 @@ from kicad_tooling.hwrepo.mcp_files import (
     read_project_file,
 )
 from kicad_tooling.hwrepo.models import ProjectKind
+from kicad_tooling.hwrepo.project_models import ToolchainsCatalog
 from kicad_tooling.hwrepo.rescue import selected_manifest
 from kicad_tooling.hwrepo.scaffold import new_project
 
@@ -183,6 +192,65 @@ library_roots = ["shared/cad"]
         report = inventory(self.root)
         self.assertEqual("FAIL", report.status)
         self.assertIn("kicad-tooling.toml", str(report.issues))
+
+    def test_repository_layout_document_binds_authored_bytes(self) -> None:
+        captured = read_repository_layout(self.root)
+
+        self.assertEqual("AUTHORED", captured.source.state)
+        self.assertEqual("kicad-tooling.toml", captured.source.path)
+        self.assertEqual(
+            hashlib.sha256(self.config.read_bytes()).hexdigest(),
+            captured.source.sha256,
+        )
+        self.assertEqual(layout(self.root), captured.value.layout)
+        require_repository_layout_current(self.root, captured)
+
+        self.config.write_text(self.config.read_text() + "# source changed\n")
+        with self.assertRaisesRegex(ValueError, "changed after"):
+            require_repository_layout_current(self.root, captured)
+
+    def test_repository_layout_default_state_is_explicit_and_freshness_checked(self) -> None:
+        self.config.unlink()
+
+        captured = read_repository_layout(self.root)
+
+        self.assertEqual("DEFAULTED", captured.source.state)
+        self.assertEqual("kicad-tooling.toml", captured.source.path)
+        self.assertIsNone(captured.source.sha256)
+        require_repository_layout_current(self.root, captured)
+
+        self.config.write_text('schema_version = "1"\n')
+        with self.assertRaisesRegex(ValueError, "changed after"):
+            require_repository_layout_current(self.root, captured)
+
+    def test_dangling_configuration_symlink_is_not_treated_as_default(self) -> None:
+        self.config.unlink()
+        self.config.symlink_to(self.root / "missing.toml")
+
+        with self.assertRaises(ValueError):
+            read_repository_layout(self.root)
+
+    def test_project_config_uses_captured_manifest_and_toolchain_values(self) -> None:
+        island = self.create()
+        snapshot = load_registry_snapshot(self.root)
+        toolchains = read_model(self.root / "policy/toolchains.json", ToolchainsCatalog)
+        expected = load_config(self.root, island / "project.json")
+
+        self.config.write_text(
+            self.config.read_text().replace(
+                'discovery = "policy/discovery.json"',
+                'discovery = "unavailable/discovery.json"',
+            )
+        )
+        captured_config = load_config_from_snapshot(
+            self.root,
+            snapshot.by_id["board"],
+            toolchains,
+        )
+
+        self.assertEqual(expected, captured_config)
+        with self.assertRaisesRegex(ValueError, "unavailable/discovery"):
+            load_config(self.root, island / "project.json")
 
     def test_loaded_project_retains_explicit_new_major_profile(self) -> None:
         island = self.create()

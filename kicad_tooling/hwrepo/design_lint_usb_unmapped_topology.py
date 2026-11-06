@@ -5,14 +5,15 @@ from __future__ import annotations
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
+from .design_lint_usb_unmapped_topology_candidate_evidence import (
+    USB_UNMAPPED_TOPOLOGY_RULE_ID,
+    UsbUnmappedMultiPinTopologyCandidate,
+    UsbUnmappedMultiPinTopologyFindingEvidence,
+)
 from .usb_peer_map_identity import usb_data_interface_matches_endpoint_group
 from .usb_peer_reference_types import UsbPeerReferenceScan, UsbPeerUnsupportedMultiPinPath
 
-RULE_ID: DesignLintRuleId = "bus.usb_unmapped_multi_pin_topology"
-
-
-def _pin_members(values: tuple[str, ...]) -> str:
-    return ", ".join(sorted(values, key=lambda value: (value.casefold(), value)))
+RULE_ID: DesignLintRuleId = USB_UNMAPPED_TOPOLOGY_RULE_ID
 
 
 def _has_endpoint_map(
@@ -29,61 +30,6 @@ def _has_endpoint_map(
         )
         for item in source.authored_map.interfaces
     )
-
-
-def _candidate_evidence(
-    path: UsbPeerUnsupportedMultiPinPath,
-    source: UsbDataPathCandidateInputs,
-) -> dict[str, tuple[str, ...]]:
-    evidence = {
-        "connector": (path.connector_reference,),
-        "PHY": (path.phy_reference,),
-        "multi_pin_component": (
-            (
-                f"{path.component_reference}: {path.component_symbol}; "
-                f"{path.component_footprint}; {path.component_pin_count} native pins"
-            ),
-        ),
-        "USB_data_map_state": ("no map matches this connector/PHY port group",),
-    }
-    if path.topology == "shared_data_net_attachment":
-        evidence["USB_D+_shared_net"] = (
-            (
-                f"{path.positive_connector_net}: "
-                f"{_pin_members(path.positive_connector_component_pins)}"
-            ),
-        )
-        evidence["USB_D-_shared_net"] = (
-            (
-                f"{path.negative_connector_net}: "
-                f"{_pin_members(path.negative_connector_component_pins)}"
-            ),
-        )
-    else:
-        evidence["USB_D+_connector_side"] = (
-            (
-                f"{path.positive_connector_net}: "
-                f"{_pin_members(path.positive_connector_component_pins)}"
-            ),
-        )
-        evidence["USB_D+_PHY_side"] = (
-            f"{path.positive_phy_net}: {_pin_members(path.positive_phy_component_pins)}",
-        )
-        evidence["USB_D-_connector_side"] = (
-            (
-                f"{path.negative_connector_net}: "
-                f"{_pin_members(path.negative_connector_component_pins)}"
-            ),
-        )
-        evidence["USB_D-_PHY_side"] = (
-            f"{path.negative_phy_net}: {_pin_members(path.negative_phy_component_pins)}",
-        )
-    evidence["USB_topology_kind"] = (path.topology,)
-    if path.port_group is not None:
-        evidence["USB_port_group"] = (path.port_group,)
-    if source.map_sha256 is not None:
-        evidence["USB_data_map_sha256"] = (source.map_sha256,)
-    return evidence
 
 
 def usb_unmapped_multi_pin_topology_candidates(
@@ -116,14 +62,13 @@ def usb_unmapped_multi_pin_topology_candidates(
             "required common reference."
         )
         candidates.append(
-            Candidate(
-                rule_id=RULE_ID,
+            UsbUnmappedMultiPinTopologyCandidate.from_source_evidence(
+                UsbUnmappedMultiPinTopologyFindingEvidence(path=path, data_path=source),
                 subject=(
                     f"{path.connector_reference} / {path.phy_reference}: {topology_text}"
                     f"{port} ({path.component_reference})"
                 ),
                 message=topology_message,
-                evidence=_candidate_evidence(path, source),
             )
         )
     return tuple(candidates)

@@ -2,19 +2,26 @@
 
 from __future__ import annotations
 
+from collections.abc import MutableMapping
 from pathlib import Path
+from typing import cast
 
 import pytest
 from mcp import Client
 
 from kicad_tooling.hwrepo.contracts import read_model, write_model
-from kicad_tooling.hwrepo.cross_probe import (  # pyright: ignore[reportPrivateUsage]
-    _entry,
-    build_cross_probe,
+from kicad_tooling.hwrepo.cross_probe import build_cross_probe
+from kicad_tooling.hwrepo.cross_probe_board import (
+    BoardFootprintAnchor,
+    BoardFootprintAnchorsByCasefoldedReference,
+    board_footprint_anchors,
 )
-from kicad_tooling.hwrepo.cross_probe_board import board_footprint_anchors
 from kicad_tooling.hwrepo.cross_probe_html import render_cross_probe
 from kicad_tooling.hwrepo.cross_probe_models import CrossProbeReport
+from kicad_tooling.hwrepo.cross_probe_reconciliation import (
+    CrossProbeLocationEvidence,
+    build_cross_probe_entry,
+)
 from kicad_tooling.hwrepo.cross_probe_schematic import (
     schematic_drawing_bindings,
     schematic_symbol_anchors,
@@ -27,6 +34,8 @@ from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import PurchasingComponent, PurchasingPlan, PurchasingReport
 from kicad_tooling.hwrepo.purchasing_preference_models import PurchasingPreferences
 from kicad_tooling.validate import hashes
+from tests.cross_probe_board_support import source_bound_board_marker_resolution
+from tests.cross_probe_schematic_support import cross_probe_fixture_tree
 from tests.findings_view_support import add_native_review, select_schematic_geometry_toolchain
 from tests.mcp_parity_support import (
     McpParityHarness,
@@ -125,6 +134,26 @@ def test_stale_source_or_drawing_is_rejected(tmp_path: Path) -> None:
         build_cross_probe(root, "controller", parts, findings)
 
 
+def test_stale_admitted_inputs_are_rejected_before_receipt_creation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root, island, _ = parity_workspace(tmp_path)
+    parts, findings = saved_inputs(root, island)
+    output = Path("build/cross-probe/preflight")
+
+    def reject_stale_inputs(_root: Path, _admitted: object) -> None:
+        raise ValueError("stale evidence at publication boundary")
+
+    monkeypatch.setattr(
+        "kicad_tooling.hwrepo.cross_probe.verify_cross_probe_inputs",
+        reject_stale_inputs,
+    )
+    with pytest.raises(ValueError, match="publication boundary"):
+        build_cross_probe(root, "controller", parts, findings, output)
+
+    assert not (root / output).exists()
+
+
 def test_back_side_and_unsupported_frame_keep_coordinates_without_markers(
     tmp_path: Path,
 ) -> None:
@@ -176,24 +205,38 @@ def test_board_parser_retains_duplicate_placements_without_a_unique_marker() -> 
     text = source.read_bytes()
     anchors = board_footprint_anchors(text)
     assert [(item.x_mm, item.y_mm) for item in anchors["c1"]] == [(11.0, 10.0)]
-    duplicate = text.replace(b'(property "Reference" "C2")', b'(property "Reference" "C1")')
-    assert len(board_footprint_anchors(duplicate)["c1"]) == 2
+    duplicate = text.replace(b'(property "Reference" "C2")', b'(property "Reference" "c1")')
+    duplicate_anchors = board_footprint_anchors(duplicate)
+    assert [item.reference for item in duplicate_anchors["c1"]] == ["C1", "c1"]
+    with pytest.raises(TypeError):
+        cast(
+            MutableMapping[str, tuple[BoardFootprintAnchor, ...]],
+            anchors,
+        )["c1"] = ()
+
+
+def test_board_anchor_index_is_read_only_when_empty() -> None:
+    anchors: BoardFootprintAnchorsByCasefoldedReference = board_footprint_anchors(b"(kicad_pcb)")
+    assert not anchors
+    with pytest.raises(TypeError):
+        cast(
+            MutableMapping[str, tuple[BoardFootprintAnchor, ...]],
+            anchors,
+        )["c1"] = ()
 
 
 def test_hierarchy_and_multiunit_symbols_retain_exact_instances() -> None:
-    fixtures = Path(__file__).parent / "fixtures/cross_probe"
     root = "projects/demo/kicad/root.kicad_sch"
     child = "projects/demo/kicad/child.kicad_sch"
-    anchors, issues = schematic_symbol_anchors(
-        {
-            root: (fixtures / "root.kicad_sch").read_bytes(),
-            child: (fixtures / "child.kicad_sch").read_bytes(),
-        },
+    resolution = schematic_symbol_anchors(
+        cross_probe_fixture_tree(),
         root_path=root,
         project_directory="projects/demo/kicad",
         project_name="demo",
     )
-    assert not issues
+    anchors = resolution.anchors_by_casefolded_reference
+    assert resolution.status == "COMPLETE" and not resolution.issues
+    assert set(resolution.source_hashes) == {root, child}
     assert [(item.x_mm, item.y_mm) for item in anchors["u1"]] == [(10.0, 20.0), (30.0, 20.0)]
     assert anchors["r1"][0].sheet_path == ("Power A",)
     assert anchors["r2"][0].sheet_path == ("Power B",)
@@ -202,19 +245,17 @@ def test_hierarchy_and_multiunit_symbols_retain_exact_instances() -> None:
 
 
 def test_reused_child_symbols_link_only_to_their_exact_bound_drawings() -> None:
-    fixtures = Path(__file__).parent / "fixtures/cross_probe"
     root = "projects/demo/kicad/root.kicad_sch"
     child = "projects/demo/kicad/child.kicad_sch"
-    anchors, issues = schematic_symbol_anchors(
-        {
-            root: (fixtures / "root.kicad_sch").read_bytes(),
-            child: (fixtures / "child.kicad_sch").read_bytes(),
-        },
+    resolution = schematic_symbol_anchors(
+        cross_probe_fixture_tree(),
         root_path=root,
         project_directory="projects/demo/kicad",
         project_name="demo",
     )
-    assert not issues
+    anchors = resolution.anchors_by_casefolded_reference
+    assert resolution.status == "COMPLETE" and not resolution.issues
+    child_sha256 = resolution.source_hashes[child]
     drawings = tuple(
         ReviewDrawing(
             kind="schematic",
@@ -227,23 +268,31 @@ def test_reused_child_symbols_link_only_to_their_exact_bound_drawings() -> None:
             sheet_instance_path=anchors[reference][0].sheet_instance_path,
             sheet_path=anchors[reference][0].sheet_path,
             schematic_source=child,
-            schematic_source_sha256="b" * 64,
+            schematic_source_sha256=child_sha256,
         )
         for index, (reference, name) in enumerate((("r1", "PowerA"), ("r2", "PowerB")), 1)
     )
-    bound, binding_issues = schematic_drawing_bindings(
-        drawings, {child: "b" * 64}, root_source=root, legacy_root_instance=None
+    binding_resolution = schematic_drawing_bindings(
+        drawings, {child: child_sha256}, root_source=root, legacy_root_instance=None
     )
-    assert not binding_issues and len(bound) == 2
+    assert binding_resolution.status == "COMPLETE" and not binding_resolution.issues
+    bound = binding_resolution.drawings_by_instance
+    assert len(bound) == 2
+    locations = CrossProbeLocationEvidence(
+        source_hashes=resolution.source_hashes,
+        board_marker_resolution=source_bound_board_marker_resolution(
+            board_path="projects/demo/kicad/demo.kicad_pcb",
+            board_source_sha256=None,
+        ),
+        schematic_anchor_resolution=resolution,
+        schematic_drawing_resolution=binding_resolution,
+    )
     entries = tuple(
-        _entry(
+        build_cross_probe_entry(
             PurchasingComponent(reference=reference, value="1k", footprint="Res:R"),
             duplicate=False,
-            board_path="projects/demo/kicad/demo.kicad_pcb",
-            board_anchors={},
-            schematic_anchors=anchors,
-            board_drawing=None,
-            schematic_drawings=bound,
+            origin="PARTS_PLAN",
+            locations=locations,
         )
         for reference in ("R1", "R2")
     )
@@ -255,7 +304,7 @@ def test_reused_child_symbols_link_only_to_their_exact_bound_drawings() -> None:
         parts_report_sha256="c" * 64,
         findings_view="build/findings/review.json",
         findings_view_sha256="d" * 64,
-        source_hashes={child: "b" * 64},
+        source_hashes={child: child_sha256},
         entries=entries,
         drawings=drawings,
         output_directory="build/cross-probe",
@@ -268,17 +317,19 @@ def test_reused_child_symbols_link_only_to_their_exact_bound_drawings() -> None:
     assert 'id="marker-2-schematic-1"' in second
     assert 'id="marker-1-schematic-1"' not in second
 
-    stale, stale_issues = schematic_drawing_bindings(
+    stale = schematic_drawing_bindings(
         drawings, {child: "e" * 64}, root_source=root, legacy_root_instance=None
     )
-    assert not stale and len(stale_issues) == 2
-    duplicate, duplicate_issues = schematic_drawing_bindings(
+    assert stale.status == "PARTIAL" and not stale.drawings_by_instance
+    assert len(stale.issues) == 2
+    duplicate = schematic_drawing_bindings(
         (drawings[0], drawings[0]),
-        {child: "b" * 64},
+        {child: child_sha256},
         root_source=root,
         legacy_root_instance=None,
     )
-    assert not duplicate and "Multiple schematic drawings" in duplicate_issues[0]
+    assert duplicate.status == "PARTIAL" and not duplicate.drawings_by_instance
+    assert "Multiple schematic drawings" in duplicate.issues[0]
 
 
 class _CrossProbeParity(McpParityHarness):

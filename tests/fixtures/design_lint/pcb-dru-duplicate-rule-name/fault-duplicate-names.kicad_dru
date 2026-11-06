@@ -1,0 +1,13 @@
+(version 1)
+(rule "SYNTHETIC_DUPLICATE_NAME"
+  (condition "A.Type == 'Track'")
+  (severity error)
+  (constraint track_width (min 0.2mm)))
+(rule "SYNTHETIC_DUPLICATE_NAME"
+  (condition "A.Type == 'Via'")
+  (severity warning)
+  (constraint clearance (min 0.3mm)))
+(rule "SYNTHETIC_DUPLICATE_NAME"
+  (condition "A.Type == 'Pad'")
+  (severity error)
+  (constraint physical_clearance (min 0.4mm)))

@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol, TypeVar
 
@@ -30,21 +29,45 @@ from kicad_tooling.hwrepo.product_models import (
     EvidenceKind,
     Harness,
     MechanicalHandoff,
-    Occurrence,
-    ProductIndex,
+    ProductInstancePath,
     ProductPolicyReport,
     ProductRecord,
     Terminal,
     TerminalKind,
-    Variant,
 )
 
 from . import project_models
 from .contracts import read_model, repo_path
-from .discovery import load_config, load_registry
+from .discovery import (
+    ProjectRegistrySnapshot,
+    load_config,
+    load_config_from_snapshot,
+    load_registry_snapshot,
+)
 from .evidence import digest as file_digest
-from .layout import RepositoryLayout, layout, within_roots
+from .layout import RepositoryLayout, within_roots
 from .policy_issue_models import PolicyIssue
+from .product_occurrences import ProductOccurrenceIndex as ProductOccurrenceIndex  # noqa: PLC0414
+from .product_occurrences import excluded, occurrences
+from .product_occurrences import occurrences_for as occurrences_for  # noqa: PLC0414
+from .product_occurrences import (
+    product_occurrence_index as product_occurrence_index,  # noqa: PLC0414
+)
+from .product_repository_models import ProductRepository
+from .product_source_inputs import (
+    ProductIndexDocument,
+    ProductRecordInput,
+    ProductSourceIdentity,
+    capture_product_record,
+    resolve_product_index_document,
+)
+from .product_source_inputs import (
+    read_product_source as read_product_source,  # noqa: PLC0414 - compatibility export
+)
+from .product_view_contracts import (
+    validate_harness_interface_contract,
+    validate_system_wiring_contract,
+)
 from .project_models import ProductViewValidation
 
 
@@ -53,18 +76,6 @@ class HasIdentifier(Protocol):
 
 
 Record = TypeVar("Record", bound=HasIdentifier)
-
-
-@dataclass(frozen=True, slots=True)
-class ProductRepository:
-    """Validated repository records indexed once for policy services."""
-
-    products: tuple[ProductRecord, ...]
-    product_project_ids: Mapping[str, tuple[str, ...]]
-    parts: Mapping[str, PartRecord]
-    interfaces: Mapping[str, InterfaceRecord]
-    projects: Mapping[str, project_models.ProjectRecord]
-    issues: tuple[PolicyIssue, ...]
 
 
 def index_by_id(
@@ -79,38 +90,6 @@ def index_by_id(
         casefolded.add(record.id.casefold())
         result[record.id] = record
     return result, tuple(issues)
-
-
-def occurrences(product: ProductRecord) -> dict[str, Occurrence]:
-    """Expand a product tree without silently treating built and purchased alike."""
-    assemblies = {assembly.id: assembly for assembly in product.assemblies}
-    result: dict[str, Occurrence] = {}
-
-    def visit(item: str, path: str, quantity: int, ancestry: tuple[str, ...]) -> None:
-        if item in ancestry or len(ancestry) > 64:
-            raise ValueError("Assembly cycle or excessive nesting")
-        if len(result) >= 10_000:
-            raise ValueError("Assembly exceeds the v1 limit of 10000 expanded instances")
-        result[path] = Occurrence(item=item, quantity=quantity)
-        assembly = assemblies.get(item)
-        if assembly is not None and assembly.kind is not AssemblyKind.PURCHASED:
-            for member in assembly.members:
-                child = f"{path}.{member.ref}" if path else member.ref
-                if child in result:
-                    raise ValueError(f"Duplicate instance: {child}")
-                visit(
-                    member.item,
-                    child,
-                    quantity * member.quantity,
-                    (*ancestry, item),
-                )
-
-    visit(product.root_assembly, "", 1, ())
-    return result
-
-
-def excluded(path: str, variant: Variant) -> bool:
-    return any(path == item or path.startswith(item + ".") for item in variant.exclude)
 
 
 def validate_product(
@@ -257,7 +236,7 @@ def validate_product(
 
     terminal_pairs: set[tuple[str, str]] = set()
     for terminal in terminals.values():
-        occurrence = instances.get(terminal.instance)
+        occurrence = instances.get(ProductInstancePath(terminal.instance))
         if occurrence is None or occurrence.quantity != 1:
             fail(
                 "TERMINAL_REF",
@@ -270,7 +249,7 @@ def validate_product(
             fail("DUPLICATE_TERMINAL", terminal.id, str(pair))
         terminal_pairs.add(pair)
         parent, _, reference = terminal.instance.rpartition(".")
-        parent_item = instances.get(parent)
+        parent_item = instances.get(ProductInstancePath(parent))
         config = configurations.get(parent_item.item) if parent_item is not None else None
         project = project_bindings.get(parent_item.item) if parent_item is not None else None
         if config is not None:
@@ -426,7 +405,7 @@ def validate_product(
                 fail("VARIANT_HARNESS", connection.id, variant_id)
 
     for harness in harnesses.values():
-        occurrence = instances.get(harness.instance)
+        occurrence = instances.get(ProductInstancePath(harness.instance))
         if occurrence is None or occurrence.quantity != 1:
             fail(
                 "HARNESS_INSTANCE",
@@ -449,25 +428,42 @@ def validate_product(
 
 
 def load_repository(
-    root: Path, selected_project_ids: tuple[str, ...] | None = None
+    root: Path,
+    selected_project_ids: tuple[str, ...] | None = None,
+    *,
+    registry_snapshot: ProjectRegistrySnapshot | None = None,
+    toolchains_catalog: project_models.ToolchainsCatalog | None = None,
+    product_index_document: ProductIndexDocument | None = None,
+    parts_catalog: PartsCatalog | None = None,
+    interfaces_catalog: InterfacesCatalog | None = None,
 ) -> ProductRepository:
-    """Load global catalogs and only products relevant to an optional project scope."""
+    """Load product records from one registry route and an optional project scope."""
     root = root.resolve()
     selected = None if selected_project_ids is None else frozenset(selected_project_ids)
     issues: list[PolicyIssue] = []
+    index_document: ProductIndexDocument | None = None
     products: list[ProductRecord] = []
+    product_sources: dict[str, ProductSourceIdentity] = {}
+    record_inputs: list[ProductRecordInput] = []
     product_project_ids: dict[str, tuple[str, ...]] = {}
     parts: Mapping[str, PartRecord] = {}
     interfaces: Mapping[str, InterfaceRecord] = {}
     projects: Mapping[str, project_models.ProjectRecord] = {}
     try:
-        configuration = layout(root)
-        index = read_model(repo_path(root, configuration.products), ProductIndex)
-        registry = load_registry(root)
-        parts_catalog = read_model(repo_path(root, registry.catalogs.parts), PartsCatalog)
-        interfaces_catalog = read_model(
-            repo_path(root, registry.catalogs.interfaces), InterfacesCatalog
+        if registry_snapshot is None:
+            registry_snapshot = load_registry_snapshot(root)
+        configuration = registry_snapshot.discovery.repository_configuration.value.layout
+        index_document = resolve_product_index_document(
+            root, configuration.products, product_index_document
         )
+        index = index_document.value
+        registry = registry_snapshot.registry
+        if parts_catalog is None:
+            parts_catalog = read_model(repo_path(root, registry.catalogs.parts), PartsCatalog)
+        if interfaces_catalog is None:
+            interfaces_catalog = read_model(
+                repo_path(root, registry.catalogs.interfaces), InterfacesCatalog
+            )
         parts, index_issues = index_by_id(parts_catalog.parts, "parts")
         issues.extend(index_issues)
         interfaces, index_issues = index_by_id(interfaces_catalog.interfaces, "interfaces")
@@ -509,7 +505,16 @@ def load_repository(
                 }
             ):
                 continue
-            config: project_models.ProjectConfig = load_config(root, project.config)
+            if toolchains_catalog is None:
+                toolchains_catalog = read_model(
+                    repo_path(root, registry.catalogs.toolchains),
+                    project_models.ToolchainsCatalog,
+                )
+            config: project_models.ProjectConfig = load_config_from_snapshot(
+                root,
+                registry_snapshot.by_id[project.id],
+                toolchains_catalog,
+            )
             validation: project_models.ProjectValidationContract = config.validation
             if isinstance(
                 validation,
@@ -525,19 +530,19 @@ def load_repository(
         declared: set[str] = set()
         for entry in index.products:
             product_project_ids[entry.id] = entry.project_ids
-            path = repo_path(root, entry.path)
             if (
                 not any(
                     within_roots(entry.path, (directory,))
                     and len(Path(entry.path).relative_to(directory).parts) == 2
                     for directory in configuration.product_roots
                 )
-                or path.suffix != ".json"
+                or Path(entry.path).suffix != ".json"
                 or entry.path in declared
             ):
                 raise ValueError(
                     "Products need unique .json paths in direct child directories of product_roots"
                 )
+            repo_path(root, entry.path)
             declared.add(entry.path)
             if len(set(entry.project_ids)) != len(entry.project_ids):
                 issues.append(
@@ -549,7 +554,20 @@ def load_repository(
                 )
             if selected is not None and selected.isdisjoint(entry.project_ids):
                 continue
-            product = read_model(path, ProductRecord)
+            record_input = capture_product_record(root, entry)
+            record_inputs.append(record_input)
+            product_source = record_input.source
+            if product_source is None:
+                issues.append(
+                    PolicyIssue(
+                        code="PRODUCT_LOAD",
+                        location=entry.path,
+                        message=record_input.issue or "Product source is unavailable",
+                    )
+                )
+                continue
+            product = product_source.record
+            product_sources[product.id] = product_source
             if product.id != entry.id:
                 issues.append(
                     PolicyIssue(
@@ -644,7 +662,10 @@ def load_repository(
         parts=parts,
         interfaces=interfaces,
         projects=projects,
+        product_sources=product_sources,
         issues=tuple(issues),
+        record_inputs=tuple(record_inputs),
+        product_index_document=index_document,
     )
 
 
@@ -679,75 +700,6 @@ def check(
         open_items=open_items,
         issues=tuple(issues),
     )
-
-
-def validate_system_wiring_contract(
-    product: ProductRecord, validation: project_models.SystemWiringValidationContract
-) -> None:
-    """Fail unless a system diagram declares complete typed product traceability.
-
-    The drawing is a review view. Product records remain authoritative for relation
-    kinds, terminals, harnesses, and mechanical handoffs, so a visual line cannot
-    silently turn a functional or mechanical relationship into electrical truth.
-    """
-    connections = {connection.id: connection for connection in product.connections}
-    terminals = {terminal.id for terminal in product.terminals}
-    harnesses = {harness.id for harness in product.harnesses}
-    handoffs = {handoff.id for handoff in product.mechanical}
-    declared_connections = set(validation.connection_ids)
-    if declared_connections != set(connections):
-        raise ValueError(
-            "System wiring connection coverage differs; "
-            f"missing={sorted(set(connections) - declared_connections)}, "
-            f"extra={sorted(declared_connections - set(connections))}"
-        )
-    endpoints = {
-        terminal_id
-        for connection in connections.values()
-        for terminal_id in (connection.from_terminal, connection.to_terminal)
-    }
-    if set(validation.terminal_ids) != endpoints or not endpoints <= terminals:
-        raise ValueError("System wiring terminal coverage differs from connection endpoints")
-    if set(validation.harness_ids) != harnesses:
-        raise ValueError("System wiring harness coverage differs from the product contract")
-    if set(validation.mechanical_handoff_ids) != handoffs:
-        raise ValueError(
-            "System wiring mechanical-handoff coverage differs from the product contract"
-        )
-
-
-def validate_harness_interface_contract(
-    product: ProductRecord, validation: project_models.HarnessInterfaceValidationContract
-) -> None:
-    """Fail unless a harness view owns exactly its declared electrical conductors."""
-    connections = {connection.id: connection for connection in product.connections}
-    terminals = {terminal.id for terminal in product.terminals}
-    harnesses = {harness.id for harness in product.harnesses}
-    declared_harnesses = set(validation.harness_ids)
-    if not declared_harnesses <= set(harnesses):
-        raise ValueError("Harness interface references an unknown product harness")
-    expected_connections = {
-        connection.id
-        for connection in connections.values()
-        if connection.kind is ConnectionKind.ELECTRICAL and connection.harness in declared_harnesses
-    }
-    declared_connections = set(validation.connection_ids)
-    if declared_connections != expected_connections:
-        raise ValueError(
-            "Harness interface conductor coverage differs; "
-            f"missing={sorted(expected_connections - declared_connections)}, "
-            f"extra={sorted(declared_connections - expected_connections)}"
-        )
-    endpoints = {
-        terminal_id
-        for connection_id in declared_connections
-        for terminal_id in (
-            connections[connection_id].from_terminal,
-            connections[connection_id].to_terminal,
-        )
-    }
-    if set(validation.terminal_ids) != endpoints or not endpoints <= terminals:
-        raise ValueError("Harness interface terminal coverage differs from conductor endpoints")
 
 
 def check_system_wiring_contract(root: Path, config: project_models.ProjectConfig) -> None:

@@ -22,9 +22,11 @@ from urllib.parse import urlsplit
 
 from .cad_source_models import CadProviderIdentity, CadSourceBundle, CadSourceFile, CadSourceReport
 from .contracts import parse_easyeda_identity, read_model, repo_path, write_model
-from .model_inventory import (
-    _atoms,  # pyright: ignore[reportPrivateUsage]
-    _children,  # pyright: ignore[reportPrivateUsage]
+from .kicad_sexpr import (
+    sexpr_atoms as _atoms,
+)
+from .kicad_sexpr import (
+    sexpr_children as _children,
 )
 
 VERSION = "1.0.1"

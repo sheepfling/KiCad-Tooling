@@ -6,7 +6,6 @@ from .connector_comparison_scope_types import connector_comparison_scopes_by_ref
 from .connector_footprint_peer_anchors import connector_footprint_peer_common_anchor_pin_numbers
 from .connector_footprint_peer_assignments import (
     connector_footprint_peer_pin_assignments,
-    connector_footprint_peer_pin_net_map,
 )
 from .connector_footprint_peer_groups import (
     complete_connector_footprint_peer_pin_inventory,
@@ -19,6 +18,7 @@ from .connector_footprint_peer_pin_types import (
     ConnectorFootprintPeerPinScan,
 )
 from .connector_identity import native_pin_metadata_is_missing, pin_function_is_generic
+from .netlist_pin_assignments import netlist_pin_net_index
 
 
 def connector_footprint_peer_unanchored_references(
@@ -142,7 +142,7 @@ def validate_current_unanchored_peer_contacts(
         ):
             raise ValueError("Unanchored peer metadata must still match across aliases")
 
-    pin_nets = connector_footprint_peer_pin_net_map(observed)
+    pin_nets = netlist_pin_net_index(observed)
     for item in items:
         scope_matches = (
             item.peer_assignment_group is None

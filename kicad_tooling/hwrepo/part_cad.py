@@ -12,12 +12,37 @@ from uuid import UUID
 
 from .contracts import lexical_absolute_path, read_model, repo_path, repo_path_is_within
 from .discovery import load_config, load_registry
-from .model_inventory import (
-    _atoms,  # pyright: ignore[reportPrivateUsage]
-    _children,  # pyright: ignore[reportPrivateUsage]
-    _Span,  # pyright: ignore[reportPrivateUsage]
+from .kicad_sexpr import (
+    SExprSpan as _Span,
 )
-from .model_population import _validate_shared_roots  # pyright: ignore[reportPrivateUsage]
+from .kicad_sexpr import (
+    quote_sexpr_atom as _quote,
+)
+from .kicad_sexpr import (
+    sexpr_atoms as _atoms,
+)
+from .kicad_sexpr import (
+    sexpr_field as _field,
+)
+from .kicad_sexpr import (
+    sexpr_nodes as _nodes,
+)
+from .kicad_sexpr import (
+    sexpr_properties as _properties,
+)
+from .kicad_sexpr import (
+    sexpr_property_value as _property,
+)
+from .kicad_sexpr import (
+    sexpr_root as _root,
+)
+from .kicad_sexpr import (
+    sexpr_scalar as _scalar,
+)
+from .kicad_sexpr import (
+    sexpr_tokens as _tokens,
+)
+from .model_population import validate_shared_model_roots
 from .models import (
     PartCadChanges,
     PartCadComponent,
@@ -29,13 +54,6 @@ from .project_models import (
     ProjectManifest,
 )
 from .selection import resolve_project
-
-
-@dataclass(frozen=True, slots=True)
-class _Token:
-    start: int
-    end: int
-    quoted: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,42 +82,6 @@ class _Schematic:
     board: Path
 
 
-def _root(source: str, kind: str) -> _Span:
-    roots = _children(source, 0, len(source))
-    if len(roots) != 1 or _atoms(source, roots[0])[:1] != (kind,):
-        raise ValueError(f"Expected exactly one {kind} root")
-    for outside in (source[: roots[0].start], source[roots[0].end :]):
-        if any(line.split("#", 1)[0].strip() for line in outside.splitlines()):
-            raise ValueError(f"Unexpected text outside {kind} root")
-    return roots[0]
-
-
-def _nodes(source: str, parent: _Span, name: str) -> tuple[_Span, ...]:
-    return tuple(
-        child
-        for child in _children(source, parent.start + 1, parent.end - 1)
-        if _atoms(source, child)[:1] == (name,)
-    )
-
-
-def _field(source: str, parent: _Span, name: str, *, required: bool = True) -> tuple[str, ...]:
-    found = _nodes(source, parent, name)
-    if len(found) > 1 or (required and not found):
-        raise ValueError(f"Expected one {name} node in CAD source")
-    if not found:
-        return ()
-    return _atoms(source, found[0])[1:]
-
-
-def _scalar(source: str, parent: _Span, name: str, *, default: str | None = None) -> str:
-    values = _field(source, parent, name, required=default is None)
-    if not values and default is not None:
-        return default
-    if len(values) != 1:
-        raise ValueError(f"Expected a single {name} value in CAD source")
-    return values[0]
-
-
 def _uuid(value: str) -> str:
     try:
         if str(UUID(value)) != value.casefold():
@@ -107,29 +89,6 @@ def _uuid(value: str) -> str:
     except ValueError as exc:
         raise ValueError(f"Invalid CAD UUID: {value!r}") from exc
     return value
-
-
-def _properties(source: str, parent: _Span) -> dict[str, _Span]:
-    result: dict[str, _Span] = {}
-    for node in _nodes(source, parent, "property"):
-        atoms = _atoms(source, node)
-        if len(atoms) != 3 or not atoms[1] or atoms[1] in result:
-            raise ValueError("Malformed or duplicate CAD property")
-        tokens = _tokens(source, node)
-        if len(tokens) != 3 or not tokens[1].quoted or not tokens[2].quoted:
-            raise ValueError("CAD property names and values must be quoted strings")
-        result[atoms[1]] = node
-    return result
-
-
-def _property(
-    source: str, properties: Mapping[str, _Span], name: str, *, required: bool = False
-) -> str:
-    if name not in properties:
-        if required:
-            raise ValueError(f"Missing {name} property")
-        return ""
-    return _atoms(source, properties[name])[2]
 
 
 def _yes_no(source: str, span: _Span, name: str, default: str) -> bool:
@@ -260,50 +219,6 @@ def read_cad_components(root: Path, project_id: str) -> tuple[PartCadComponent, 
     return tuple(
         min(group, key=lambda item: item.unit).component for _, group in sorted(groups.items())
     )
-
-
-def _tokens(source: str, span: _Span) -> tuple[_Token, ...]:
-    tokens: list[_Token] = []
-    position = span.start + 1
-    while position < span.end - 1:
-        if source[position].isspace():
-            position += 1
-            continue
-        if source[position] in "()":
-            break
-        if source[position] == "#":
-            newline = source.find("\n", position, span.end)
-            position = span.end if newline == -1 else newline + 1
-            continue
-        start = position
-        quoted = source[position] == '"'
-        if quoted:
-            position += 1
-            while position < span.end - 1:
-                if source[position] == "\\":
-                    position += 2
-                elif source[position] == '"':
-                    position += 1
-                    break
-                else:
-                    position += 1
-            else:
-                raise ValueError("Unterminated CAD property string")
-        else:
-            while (
-                position < span.end - 1
-                and not source[position].isspace()
-                and source[position] not in "()"
-            ):
-                position += 1
-        tokens.append(_Token(start, position, quoted))
-    return tuple(tokens)
-
-
-def _quote(value: str) -> str:
-    if any(ord(char) < 32 or ord(char) == 127 for char in value):
-        raise ValueError("Reviewed CAD field contains a control character")
-    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
 def _property_change(
@@ -532,7 +447,7 @@ def validate_footprint_binding(root: Path, project_id: str, footprint: str) -> N
         raise ValueError(f"Unknown project {project_id!r}")
     manifest = read_model(repo_path(root, record.config), ProjectManifest)
     config = load_config(root, record.config)
-    _validate_shared_roots(root, registry, manifest)
+    validate_shared_model_roots(root, registry, manifest)
     pieces = footprint.split(":")
     if len(pieces) != 2 or not all(pieces):
         raise ValueError("Reviewed footprint must use an exact library:name identity")

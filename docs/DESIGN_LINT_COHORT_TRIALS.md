@@ -8,7 +8,7 @@ for dispositions and timing; leave unmeasured values unstated.
 
 ## LINT-031 — Candidate analyzer trial and incremental-value register
 
-- **Status:** Partial v26; read-only synthetic comparisons across seven cohort
+- **Status:** Partial v27; read-only synthetic comparisons across seven cohort
   repositories, a first-party public-template applicability replay,
   kicad_skills schematic-rule trials, a ThomsonLint board-export trial, and
   public project review samples are recorded below, plus source-only audits of
@@ -45,6 +45,63 @@ for dispositions and timing; leave unmeasured values unstated.
   repeated native netlist exports, common schematic return-net assignments,
   11 default-REVIEW prompts, and LINT-086's unsupported multi-pin ESD paths;
   reviewer value remains unmeasured.
+
+### Source review: kicad-druid custom DRC rule lint
+
+- **Source and license:** Reviewed the public README and MIT declaration for
+  [`Cimos/kicad-druid` at `8af046d6a1839320a360a4b6790ac11eb27a78ae`](https://github.com/Cimos/kicad-druid/tree/8af046d6a1839320a360a4b6790ac11eb27a78ae).
+  The README describes a dependency-free `.kicad_dru` lint, including rules
+  without constraints, duplicate names, and lower-case `A.Type`/`B.Type`
+  item-type literals (`track`, `via`, `pad`) that KiCad does not match.
+- **Local gap:** LINT-138's terminal sentinel proves the native rule parser
+  reached the final appended rule. It does not prove each earlier authored
+  condition matches intended objects. The local compile control already had
+  a syntactically valid lower-case condition, but no source-lint finding named
+  that semantic risk.
+- **Native trial result:** The case-sensitivity claim was checked using
+  tooling-owned synthetic boards and the digest-pinned KiCad 10.0.0 and 10.0.5
+  images. In each version, the lowercase and canonical item-type variants had
+  equal observed behavior: both produced zero authored-rule track-width
+  matches on 10.0.0 and both produced two on 10.0.5. The terminal sentinel
+  passed in all runs. This does not establish that either condition expressed
+  the intended design rule, but it disproves the proposed simple case-mismatch
+  predicate for the versions tested.
+- **Disposition:** No item-type case lint was adopted. LINT-283 adds a
+  source-bound default-REVIEW prompt for named custom rules with no direct
+  `(constraint ...)` clauses. LINT-284 independently adds a default-REVIEW
+  prompt for exact repeated names, consistent with KiCad's unique-name
+  description. Its synthetic fault/control and native sentinel lane test the
+  same source property without adopting candidate implementation code. The
+  review prompt does not claim that either duplicate is a board defect or
+  determine which rule should be renamed. No cohort code, rule files, board,
+  or project data was copied. See the LINT-283 and LINT-284 entries in the
+  [design-lint backlog](DESIGN_LINT_BACKLOG.md#lint-284--review-duplicate-custom-drc-rule-names)
+  and the tooling-owned [negative case trial](../tests/test_pcb_dru_item_type_case_native.py).
+
+### Native trial: conflicting custom DRC severities
+
+- **Gap and motivation:** The shared custom-rule parser already recognized
+  multiple severity clauses as ambiguous constraint evidence, but the source
+  review did not emit a candidate for conflicting direct severity values.
+  This is a local extension of the `.kicad_dru` source-lint work above; no
+  additional cohort code or rules were imported.
+- **Inputs:** The tooling-owned fault and control differ only by the duplicate
+  severity declaration. Their hashes and exact fixture limits are recorded in
+  the [fixture note](../tests/fixtures/design_lint/pcb-dru-conflicting-severities/README.md).
+  The native terminal-sentinel probe ran each case twice on the pinned KiCad
+  10.0.0 and 10.0.5 images.
+- **Observed result:** KiCad 10.0.5 reported two authored track-width findings
+  as `warning` for the conflicting `(severity error)` then
+  `(severity warning)` fault, while the single-`error` control produced two
+  `error` findings. KiCad 10.0.0 produced no authored track-width findings for
+  either case, but the terminal sentinel fired in every run.
+- **Disposition and limits:** Adopted a default-REVIEW source rule for named
+  custom rules with multiple distinct supported severity values. It preserves
+  source order and does not claim which value wins across KiCad versions. The
+  10.0.0 experiment does not explain why the authored rule had no reported
+  matches, so this feature does not treat the discrepancy as severity-specific
+  detection. The synthetic fixtures do not establish how often real projects
+  contain this condition or the reviewer time saved.
 
 ### Recorded public screen: brainsmoke USB 2.0 four-port hub (2026-11-05)
 
@@ -2242,10 +2299,10 @@ for dispositions and timing; leave unmeasured values unstated.
   [trial fixture record](../tests/fixtures/design_lint/cohort-stm32-pin-checker/README.md).
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 263 active rules. Each entry has a deterministic predicate, evidence
+contains 266 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-Of the 263 active rules, 208 default to `review`, 54 to `off`, and
+Of the 266 active rules, 211 default to `review`, 54 to `off`, and
 `pcb.required_fitted_reference` to `block`. Off-by-default checks include
 schematic geometry, generic peer assignment, selected component topology
 reviews such as the BJT base-bias and base/collector same-net prompts, and

@@ -9,12 +9,20 @@ from __future__ import annotations
 
 import re
 from bisect import bisect_right
-from dataclasses import dataclass
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from urllib.parse import urlsplit
 
 from .contracts import lexical_absolute_path, repo_path, repo_path_is_within
 from .diagnostics_models import DiagnosticFinding
+from .kicad_sexpr import (
+    SExprSpan as _Span,
+)
+from .kicad_sexpr import (
+    sexpr_atoms as _atoms,
+)
+from .kicad_sexpr import (
+    sexpr_children as _children,
+)
 from .models import (
     FootprintModels,
     InventoryStatus,
@@ -37,101 +45,6 @@ __all__ = [
 
 MODEL_SUFFIXES = frozenset({".step", ".stp", ".wrl", ".idf", ".igs", ".iges"})
 GUIDE = "docs/workflow/LIBRARIES.md"
-
-
-@dataclass(frozen=True, slots=True)
-class _Span:
-    start: int
-    end: int
-
-
-def _children(text: str, start: int, end: int) -> tuple[_Span, ...]:
-    """Return direct S-expression children, respecting strings and comments."""
-    children: list[_Span] = []
-    depth = 0
-    opening = 0
-    quoted = False
-    escaped = False
-    comment = False
-    for position in range(start, end):
-        char = text[position]
-        if comment:
-            if char == "\n":
-                comment = False
-            continue
-        if quoted:
-            if escaped:
-                escaped = False
-            elif char == "\\":
-                escaped = True
-            elif char == '"':
-                quoted = False
-            continue
-        if char == "#":
-            comment = True
-        elif char == '"':
-            quoted = True
-        elif char == "(":
-            if depth == 0:
-                opening = position
-            depth += 1
-        elif char == ")":
-            depth -= 1
-            if depth < 0:
-                raise ValueError("Unmatched closing parenthesis in PCB source")
-            if depth == 0:
-                children.append(_Span(opening, position + 1))
-    if quoted:
-        raise ValueError("Unterminated quoted string in PCB source")
-    if depth:
-        raise ValueError("Unclosed parenthesis in PCB source")
-    return tuple(children)
-
-
-def _atoms(text: str, span: _Span) -> tuple[str, ...]:
-    """Read only a node's leading atoms, before its first child expression."""
-    values: list[str] = []
-    position = span.start + 1
-    while position < span.end - 1:
-        while position < span.end - 1 and text[position].isspace():
-            position += 1
-        if position >= span.end - 1 or text[position] in "()":
-            break
-        if text[position] == "#":
-            newline = text.find("\n", position, span.end)
-            if newline < 0:
-                break
-            position = newline + 1
-            continue
-        if text[position] == '"':
-            position += 1
-            value: list[str] = []
-            while position < span.end - 1:
-                char = text[position]
-                if char == "\\" and position + 1 < span.end - 1:
-                    following = text[position + 1]
-                    # Only quote and backslash need unescaping for model paths.
-                    value.append(following if following in {'"', "\\"} else "\\" + following)
-                    position += 2
-                elif char == '"':
-                    position += 1
-                    break
-                else:
-                    value.append(char)
-                    position += 1
-            else:
-                raise ValueError("Unterminated quoted atom in PCB source")
-            values.append("".join(value))
-        else:
-            start = position
-            while (
-                position < span.end - 1
-                and not text[position].isspace()
-                and text[position] not in "()"
-            ):
-                position += 1
-            values.append(text[start:position])
-    return tuple(values)
 
 
 def _finding(

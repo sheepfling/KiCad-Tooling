@@ -780,7 +780,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 263 active rules.
+The catalog currently contains 266 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -3646,6 +3646,104 @@ normal board DRC run for board geometry. Neither result establishes electrical
 approval or fabrication readiness. The tooling-owned synthetic control and
 fault, plus the exact-version native lane, are documented in
 [`tests/fixtures/design_lint/pcb-dru-rule-compilation/`](../tests/fixtures/design_lint/pcb-dru-rule-compilation/README.md).
+
+## Review custom PCB rules with no constraints
+
+`pcb.custom_drc_rule_without_constraint` asks for review when a source-bound
+KiCad 10 `.kicad_dru` contains a named top-level rule with no direct
+`(constraint ...)` clause. The exact file hash, rule name and ordinal, zero
+constraint count, and configured KiCad version appear in the finding. It
+defaults to `review`; project policy can select `block`, `off`, or an
+exact-fingerprint ignore.
+
+An unconstrained rule may be an intentional placeholder, so this is a
+structural prompt rather than an electrical defect claim. The rule does not
+infer which constraint the project should add or whether it applies to the
+board. If the rule file contains `${...}`, this check stays quiet because a
+substitution may supply or alter constraints; the separate text-variable
+review covers that file. Native compilation proves the rule file loads, not
+that each authored rule has useful effect. Use normal board DRC and reviewed
+project requirements for those decisions.
+
+Tooling-owned fault and constrained-control fixtures cover source binding,
+policy, fingerprints, CLI/MCP parity, and pinned KiCad 10.0.0/10.0.5
+compilation. The native terminal sentinel passes even when the authored rule
+has no constraint, showing why compilation proof alone does not enumerate
+rule content. See the
+[fixture note](../tests/fixtures/design_lint/pcb-dru-rule-without-constraint/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_pcb_dru_rule_without_constraint.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.custom_drc_rule_without_constraint")'
+
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_dru_rule_without_constraint_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_rule_without_constraint")'
+```
+
+## Review duplicate custom DRC rule names
+
+`pcb.custom_drc_duplicate_rule_name` asks for review when a source-bound
+KiCad 10 `.kicad_dru` repeats the exact same top-level rule name. KiCad uses
+rule names as identifiers in DRC reports and documents them as unique. The
+finding identifies the name and every source ordinal, plus the rule-file hash
+and configured KiCad version. It defaults to `review`; project policy can
+select `block`, `off`, or an exact-fingerprint ignore.
+
+Names are compared exactly; case variants are distinct. Comments do not count
+as declarations. This prompt does not decide which rule should be renamed or
+whether either rule expresses the intended board constraint. Files containing
+`${...}` are deferred to the text-variable review because substitution may
+change the declaration. The exact-version native sentinel verifies that a
+duplicate-name file still reaches a final rule; it does not establish the
+behavior of each authored rule.
+
+Synthetic fault/control fixtures cover duplicate names, unique names, case
+variants, comments, source binding, policy, fingerprint changes, CLI/MCP
+parity, and digest-pinned KiCad 10.0.0/10.0.5 compilation. See the
+[fixture note](../tests/fixtures/design_lint/pcb-dru-duplicate-rule-name/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_pcb_dru_duplicate_rule_names.py \
+  tests/test_design_lint_mcp_parity_pcb_dru_duplicate_rule_names.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.custom_drc_duplicate_rule_name")'
+
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_dru_duplicate_rule_names_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_duplicate_rule_name")'
+```
+
+## Review conflicting custom DRC severities
+
+`pcb.custom_drc_conflicting_severities` asks for review when one source-bound
+KiCad 10 custom rule declares two or more different supported severities. The
+finding preserves the exact rule name, ordinal, source hash, configured KiCad
+version, and severity order. The default is `review`; project policy can
+select `block`, `off`, or an exact-fingerprint ignore.
+
+The check requires every direct severity clause to contain one supported
+value. Identical repeated values, malformed clauses, nested text, and files
+containing `${...}` are outside the predicate. It does not choose the intended
+severity or assume the same precedence in every version. In the tooling-owned
+probe, KiCad 10.0.5 reported two `warning` violations for an `error` then
+`warning` rule and two `error` violations for a single-`error` control. KiCad
+10.0.0 reported no authored track-width violations for either file, although
+the appended terminal sentinel fired. The version-specific output is preserved
+in the [fixture note](../tests/fixtures/design_lint/pcb-dru-conflicting-severities/README.md).
+
+Synthetic tests cover source binding, identical and conflicting severities,
+comments, policy, fingerprint changes, and CLI/MCP parity. The native lane
+repeats the fault/control probe twice on digest-pinned KiCad 10.0.0 and 10.0.5.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_pcb_dru_conflicting_severities.py \
+  tests/test_design_lint_mcp_parity_pcb_dru_conflicting_severities.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.custom_drc_conflicting_severities")'
+
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_dru_conflicting_severities_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_conflicting_severities")'
+```
 
 ## Review custom PCB rule text-variable substitutions
 

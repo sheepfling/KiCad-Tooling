@@ -5,8 +5,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
+from typing import cast
 
-from .component_roles import component_role_binding_evidence
+from .component_roles import component_role_binding_report_fields
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .two_pin_components import TwoPinComponentOnSameNet, two_pin_component_is_current
@@ -55,7 +56,7 @@ def project_two_pin_component_evidence(
     """Project a scanned component into its kind-specific stable report fields."""
     component = source.component
     rule_id = _TWO_PIN_RULES.get(component.kind, "component.two_pin_passive_same_net")
-    evidence = {
+    evidence: dict[str, tuple[str, ...]] = {
         "symbol": (component.symbol,),
         "value": (component.value,),
         "net": (component.net,),
@@ -68,7 +69,8 @@ def project_two_pin_component_evidence(
     elif component.kind in _TWO_PIN_PASSIVE_KINDS:
         evidence["passive_kind"] = (component.kind,)
     if component.role_binding is not None:
-        evidence.update(component_role_binding_evidence(component.role_binding))
+        role_evidence = component_role_binding_report_fields(component.role_binding)
+        evidence.update(cast(Mapping[str, tuple[str, ...]], role_evidence))
     return CandidateEvidenceProjection(rule_id=rule_id, evidence=evidence)
 
 

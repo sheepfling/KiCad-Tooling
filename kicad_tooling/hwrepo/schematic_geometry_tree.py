@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Mapping
 from dataclasses import replace
 from typing import Literal
@@ -70,23 +71,31 @@ def scan_schematic_geometry_tree(
         if sheet_instance_path in occurrence_paths:
             raise ValueError(f"Duplicate schematic sheet-instance path: {sheet_instance_path}")
         occurrence_paths.add(sheet_instance_path)
-        references, reference_issues = schematic_instance_references(
+        reference_resolution = schematic_instance_references(
             text,
             root,
-            project_name,
-            sheet_instance_path,
+            source_path=source_path,
+            project_name=project_name,
+            sheet_instance_path=sheet_instance_path,
         )
+        if (
+            reference_resolution.source_path != source_path
+            or reference_resolution.source_sha256 != hashlib.sha256(source).hexdigest()
+            or reference_resolution.project_name != project_name
+            or reference_resolution.sheet_instance_path != sheet_instance_path
+        ):
+            raise ValueError("Schematic instance references do not match the retained context")
         scan = scan_unconnected_pin_wire_geometry(
             source,
             source_path=source_path,
             kicad_version=kicad_version,
             unconnected_pins=unconnected_pins,
             sheet_instance_path=sheet_instance_path,
-            reference_overrides=references,
+            reference_overrides=reference_resolution.references_by_symbol_uuid,
             require_reference_overrides=True,
             allow_hierarchical_sheets=True,
         )
-        scan_issues = tuple(sorted(set(scan.unsupported) | set(reference_issues)))
+        scan_issues = tuple(sorted(set(scan.unsupported) | set(reference_resolution.issues)))
         occurrence_issues = tuple(
             f"{source_path} at {sheet_instance_path}: {issue}" for issue in scan_issues
         )
@@ -95,11 +104,11 @@ def scan_schematic_geometry_tree(
                 rule_id: [f"{source_path} at {sheet_instance_path}: {issue}" for issue in issues]
                 for rule_id, issues in scan.unsupported_by_rule.items()
             }
-            if reference_issues:
+            if reference_resolution.issues:
                 for rule_id in (*PIN_GEOMETRY_RULE_IDS, *SYMBOL_BODY_RULE_IDS):
                     occurrence_issues_by_rule.setdefault(rule_id, []).extend(
                         f"{source_path} at {sheet_instance_path}: {issue}"
-                        for issue in reference_issues
+                        for issue in reference_resolution.issues
                     )
             scan = replace(
                 scan,

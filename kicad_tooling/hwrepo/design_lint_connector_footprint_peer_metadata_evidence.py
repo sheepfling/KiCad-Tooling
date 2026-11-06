@@ -9,7 +9,6 @@ from typing import Literal, TypeAlias
 from .connector_footprint_peer_anchors import connector_footprint_peer_common_anchor_pin_numbers
 from .connector_footprint_peer_assignments import (
     connector_footprint_peer_pin_assignments,
-    connector_footprint_peer_pin_net_map,
 )
 from .connector_footprint_peer_groups import (
     ConnectorFootprintPeerGroup,
@@ -24,6 +23,7 @@ from .connector_identity import (
 )
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
+from .netlist_pin_assignments import netlist_pin_net_index
 
 ConnectorFootprintPeerMetadataKind: TypeAlias = Literal[
     "known_split",
@@ -155,7 +155,7 @@ def _validate_current_metadata_evidence(
 ) -> None:
     source = evidence.source
     observed = source.observed
-    pin_nets = connector_footprint_peer_pin_net_map(observed)
+    pin_nets = netlist_pin_net_index(observed)
     include_part_id_peers = evidence.kind in {"missing_split", "missing_open"}
     current_groups = connector_footprint_peer_candidate_groups(
         observed,

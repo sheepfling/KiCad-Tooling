@@ -6,7 +6,8 @@ import argparse
 import sys
 from pathlib import Path
 
-from .hwrepo.cross_probe import build_cross_probe
+from .hwrepo.cross_probe import build_cross_probe_request
+from .hwrepo.cross_probe_operation_models import CrossProbeBuildRequest
 from .hwrepo.layout import default_project_root
 
 
@@ -21,13 +22,15 @@ def main() -> int:
     parser.add_argument("--format", choices=("text", "json"), default="text")
     args = parser.parse_args()
     try:
-        report = build_cross_probe(
+        report = build_cross_probe_request(
             args.root,
-            args.project,
-            args.parts_report,
-            args.findings_view,
-            args.output,
-            args.assembly_variant,
+            CrossProbeBuildRequest(
+                project_id=args.project,
+                parts_report=args.parts_report,
+                findings_view=args.findings_view,
+                output=args.output,
+                assembly_variant=args.assembly_variant,
+            ),
         )
     except (OSError, ValueError) as exc:
         print(f"BOM cross-probe could not finish: {exc}", file=sys.stderr)

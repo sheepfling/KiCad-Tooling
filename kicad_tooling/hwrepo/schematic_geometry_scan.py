@@ -6,7 +6,7 @@ import hashlib
 from collections.abc import Mapping
 from dataclasses import replace
 
-from .model_inventory import _atoms  # pyright: ignore[reportPrivateUsage]
+from .kicad_sexpr import sexpr_atoms as _atoms
 from .schematic_geometry_models import SchematicGeometryRuleId
 from .schematic_geometry_source import (
     schematic_library_symbols,

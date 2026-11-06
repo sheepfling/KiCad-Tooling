@@ -58,7 +58,7 @@ def reconcile_variant_population(
             )
         else:
             accepted.append(component)
-    if seen != observed.schematic.keys():
+    if seen != set(observed.schematic):
         raise ValueError("Named variant parsers disagree on schematic population")
     for key in sorted(observed.board_fitted - seen):
         unresolved.append(

@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Literal
+from typing import Literal, TypeAlias
 
 from pydantic import Field
 
 from .comparison_change_models import Change
 from .model_primitives import Digest, Identifier, RepositoryPath, StrictModel
-from .product_models import BomRow
+from .product_models import BomRow, ProductInstancePath
 
 
 class VariantBomInstanceState(StrictModel):
@@ -21,10 +21,13 @@ class VariantBomInstanceState(StrictModel):
 
 
 class VariantBomInstanceDifference(StrictModel):
-    path: str
+    path: ProductInstancePath
     change: Change
     before: VariantBomInstanceState
     after: VariantBomInstanceState
+
+
+VariantBomInstanceIndex: TypeAlias = Mapping[ProductInstancePath, VariantBomInstanceState]
 
 
 class VariantBomPartDifference(StrictModel):

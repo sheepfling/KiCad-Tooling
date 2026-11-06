@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import csv
-import hashlib
 import importlib.util
 import io
 import math
@@ -18,6 +17,7 @@ from uuid import uuid4
 from .artifact_access import read_regular_bytes
 from .contract_coach import receipt_directory
 from .contracts import write_model
+from .evidence import digest_bytes
 from .measured_series_models import MeasuredChannel, MeasuredSeriesReport
 from .project_source_access import project_owned_source_path
 
@@ -237,7 +237,7 @@ def import_measured_series(
     channels = parse_channel_mappings(channel_mappings)
     source_path, source_name = project_owned_source_path(root, project_id, source, ".csv")
     raw, _ = read_regular_bytes(source_path, maximum=MAX_SOURCE_BYTES)
-    source_hash = hashlib.sha256(raw).hexdigest()
+    source_hash = digest_bytes(raw)
     destination = receipt_directory(
         root,
         project_id,
@@ -265,10 +265,10 @@ def import_measured_series(
         errors.append(str(exc))
     for name in ("data.csv", "plot.png", "plot.svg"):
         if (destination / name).is_file():
-            artifacts[name] = hashlib.sha256((destination / name).read_bytes()).hexdigest()
+            artifacts[name] = digest_bytes((destination / name).read_bytes())
     try:
         current, _ = read_regular_bytes(source_path, maximum=MAX_SOURCE_BYTES)
-        if hashlib.sha256(current).hexdigest() != source_hash:
+        if digest_bytes(current) != source_hash:
             errors.append("Source CSV changed during import")
     except (OSError, ValueError):
         errors.append("Source CSV could not be rechecked after import")

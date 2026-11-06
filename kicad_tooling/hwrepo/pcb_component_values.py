@@ -58,7 +58,7 @@ def compare_schematic_pcb_values(
     for source in variants:
         if not source.variant.strip():
             raise ValueError("Named PCB value variant cannot be blank")
-        if source.board_values is None:
+        if source.board_value_status != "AVAILABLE" or source.board_values is None:
             raise ValueError(f"Variant {source.variant!r} native PCB value export is unavailable")
         board_keys = [reference.casefold() for reference in source.board_references]
         fitted_keys = [reference.casefold() for reference in source.fitted_board_references]

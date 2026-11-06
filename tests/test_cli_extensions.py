@@ -34,10 +34,16 @@ from kicad_tooling.hwrepo.models import (
     ReleaseVariant,
     TemplateDoctorReport,
 )
-from kicad_tooling.hwrepo.product import load_repository, validate_product
+from kicad_tooling.hwrepo.product import (
+    load_repository,
+    validate_product,
+)
+from kicad_tooling.hwrepo.product_occurrences import product_occurrence_index
 from kicad_tooling.hwrepo.release import (
-    expected_board_population,
     selected_board_variants,
+)
+from kicad_tooling.hwrepo.release_population import (
+    expected_board_population,
     verify_board_population,
 )
 from kicad_tooling.hwrepo.releasing import artifact_kind
@@ -230,7 +236,8 @@ class ExportExtensionTests(unittest.TestCase):
         )
 
     def test_product_population_must_match_native_fitted_part_id_rows(self) -> None:
-        product = load_repository(reference_root()).products[0]
+        repository = load_repository(reference_root())
+        product = repository.products[0]
         standard = product.variants[0].model_copy(update={"exclude": ("UNO.R1",)})
         edited = product.model_copy(update={"variants": (standard, *product.variants[1:])})
         expected = expected_board_population(edited, standard.id, "arduino-uno-status-led")
@@ -261,6 +268,31 @@ class ExportExtensionTests(unittest.TestCase):
             write({**expected, "J1": "wrong-part"})
             with self.assertRaisesRegex(ValueError, "changed_part_ids=\\['J1'\\]"):
                 verify_board_population((edited,), (choice,), "arduino-uno-status-led", path)
+
+            source_variant = product.variants[0]
+            source_choice = ReleaseVariant(
+                product=product.id,
+                product_revision=product.revision,
+                variant=source_variant.id,
+                variant_revision=source_variant.revision,
+            )
+            source_index = product_occurrence_index(repository.product_sources[product.id])
+            source_expected = expected_board_population(
+                product,
+                source_variant.id,
+                "arduino-uno-status-led",
+                occurrence_index=source_index,
+            )
+            self.assertIsNotNone(source_expected)
+            assert source_expected is not None
+            write(source_expected)
+            verify_board_population(
+                (product,),
+                (source_choice,),
+                "arduino-uno-status-led",
+                path,
+                product_sources=repository.product_sources,
+            )
 
 
 class ForeignPcbConversionTests(unittest.TestCase):

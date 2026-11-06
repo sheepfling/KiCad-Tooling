@@ -122,29 +122,29 @@ def test_connector_footprint_peer_candidates_use_typed_projection_owner() -> Non
     )
 
 
-def test_peer_pin_assignment_extraction_has_one_shared_owner() -> None:
-    expected_imports = {
-        "connector_footprint_peer_pins.py": {"connector_footprint_peer_pin_net_map"},
-        "design_lint_connector_footprint_peer_metadata_evidence.py": {
-            "connector_footprint_peer_pin_assignments",
-            "connector_footprint_peer_pin_net_map",
-        },
-        "design_lint_connector_footprint_named_divergence_evidence.py": {
-            "connector_footprint_peer_pin_assignments",
-            "connector_footprint_peer_pin_net_map",
-        },
-        "design_lint_connector_unanchored_source_evidence.py": {
-            "connector_footprint_peer_pin_assignments",
-            "connector_footprint_peer_pin_net_map",
-        },
-    }
-    for filename, expected in expected_imports.items():
+def test_peer_pin_net_index_uses_the_canonical_netlist_owner() -> None:
+    index_consumers = (
+        "connector_footprint_peer_pins.py",
+        "design_lint_connector_footprint_peer_metadata_evidence.py",
+        "design_lint_connector_footprint_named_divergence_evidence.py",
+        "design_lint_connector_unanchored_source_evidence.py",
+    )
+    for filename in index_consumers:
         tree = ast.parse((HWREPO / filename).read_text(encoding="utf-8"), filename=filename)
-        actual = {
+        imports = {
             alias.name
             for node in tree.body
-            if isinstance(node, ast.ImportFrom)
-            and node.module == "connector_footprint_peer_assignments"
+            if isinstance(node, ast.ImportFrom) and node.module == "netlist_pin_assignments"
             for alias in node.names
         }
-        assert expected <= actual, f"{filename} must use the shared peer assignment owner"
+        assert "netlist_pin_net_index" in imports, (
+            f"{filename} must reuse the canonical source-netlist index"
+        )
+
+    assignments = HWREPO / "connector_footprint_peer_assignments.py"
+    assignment_tree = ast.parse(assignments.read_text(encoding="utf-8"), filename=assignments.name)
+    definitions = {node.name for node in assignment_tree.body if isinstance(node, ast.FunctionDef)}
+    assert definitions == {"connector_footprint_peer_pin_assignments"}
+    assert "NetlistPinNetIndex" in (HWREPO / "connector_footprint_peer_assignments.py").read_text(
+        encoding="utf-8"
+    )

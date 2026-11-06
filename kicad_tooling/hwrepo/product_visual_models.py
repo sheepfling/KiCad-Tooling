@@ -8,12 +8,12 @@ from typing import Literal
 from pydantic import Field
 
 from .model_primitives import Digest, Identifier, RepositoryPath, StrictModel
-from .product_models import HarnessScheduleRow
+from .product_models import HarnessScheduleRow, ProductInstancePath
 
 
 class ProductVisualInstance(StrictModel):
-    path: str
-    parent: str | None = None
+    path: ProductInstancePath
+    parent: ProductInstancePath | None = None
     item: str
     quantity: int
     kind: Literal["BUILT", "PHANTOM", "PURCHASED", "PART", "UNRESOLVED"]

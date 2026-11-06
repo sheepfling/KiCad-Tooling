@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+import hashlib
 from collections import defaultdict
-from collections.abc import Mapping
-from dataclasses import dataclass
 from pathlib import Path
 
+from .cross_probe_schematic_models import (
+    SchematicDrawingBindingResolution,
+    SchematicSymbolAnchor,
+    SchematicSymbolAnchorResolution,
+)
 from .findings_view_models import ReviewDrawing
-from .model_inventory import _atoms  # pyright: ignore[reportPrivateUsage]
+from .kicad_sexpr import sexpr_atoms as _atoms
+from .schematic_geometry_models import VerifiedSchematicSourceTree
 from .schematic_geometry_source import (
     resolve_schematic_sheet_path,
     schematic_at,
@@ -17,20 +22,10 @@ from .schematic_geometry_source import (
     schematic_root,
     schematic_scalar,
     schematic_sheet_references,
+    source_tree_sha256,
 )
 from .schematic_geometry_types import MAX_SHEET_OCCURRENCES
 from .source_state_models import SourceHashInventory
-
-
-@dataclass(frozen=True, slots=True)
-class SchematicSymbolAnchor:
-    reference: str
-    source_path: str
-    sheet_instance_path: str
-    sheet_path: tuple[str, ...]
-    symbol_uuid: str
-    x_mm: float
-    y_mm: float
 
 
 def schematic_drawing_bindings(
@@ -39,11 +34,22 @@ def schematic_drawing_bindings(
     *,
     root_source: str,
     legacy_root_instance: str | None,
-) -> tuple[dict[str, ReviewDrawing], tuple[str, ...]]:
+) -> SchematicDrawingBindingResolution:
     """Use exact source and sheet identities; retain the single-sheet legacy fallback."""
     candidates: dict[str, list[ReviewDrawing]] = defaultdict(list)
     issues: list[str] = []
     schematic = tuple(item for item in drawings if item.kind == "schematic")
+    decision_paths: set[str] = set()
+    if schematic and legacy_root_instance is not None:
+        decision_paths.add(root_source)
+    for drawing in schematic:
+        if drawing.schematic_source is not None:
+            decision_paths.add(drawing.schematic_source)
+    observed_hashes = {
+        source_path: source_hashes[source_path]
+        for source_path in sorted(decision_paths)
+        if source_path in source_hashes
+    }
     for drawing in schematic:
         if not drawing.mapping_supported:
             continue
@@ -67,22 +73,53 @@ def schematic_drawing_bindings(
             issues.append(f"Multiple schematic drawings claim sheet instance {instance}.")
         else:
             result[instance] = matches[0]
-    return result, tuple(issues)
+    issue_tuple = tuple(issues)
+    status = (
+        "NOT_REQUESTED"
+        if not schematic
+        else "COMPLETE"
+        if len(result) == len(schematic) and not issue_tuple
+        else "PARTIAL"
+    )
+    return SchematicDrawingBindingResolution(
+        root_source=root_source,
+        legacy_root_instance=legacy_root_instance,
+        source_hashes=observed_hashes,
+        source_inventory_sha256=source_tree_sha256(observed_hashes),
+        source_drawings=schematic,
+        status=status,
+        drawings_by_instance=result,
+        issues=issue_tuple,
+    )
 
 
 def schematic_symbol_anchors(
-    source_files: Mapping[str, bytes],
+    source_tree: VerifiedSchematicSourceTree | None,
     *,
     root_path: str,
     project_directory: str,
     project_name: str,
-) -> tuple[dict[str, tuple[SchematicSymbolAnchor, ...]], tuple[str, ...]]:
-    """Resolve references for each sheet occurrence and retain all symbol units."""
-    if root_path not in source_files:
-        return {}, ("Root schematic source is unavailable.",)
+) -> SchematicSymbolAnchorResolution:
+    """Resolve exact symbol locations and retain their verified source identity."""
+    if source_tree is None:
+        return SchematicSymbolAnchorResolution(
+            root_path=root_path,
+            project_directory=project_directory,
+            project_name=project_name,
+            status="BLOCKED",
+            source_tree_sha256=None,
+            source_hashes={},
+            anchors_by_casefolded_reference={},
+            issues=("Root schematic source is unavailable.",),
+        )
+    if source_tree.root_path != root_path or source_tree.project_directory != project_directory:
+        raise ValueError("Schematic source tree does not match the requested project context")
+    source_files = source_tree.source_contents_by_path
+    source_hashes = source_tree.source_hashes
     found: dict[str, list[SchematicSymbolAnchor]] = defaultdict(list)
     issues: list[str] = []
     visited: set[str] = set()
+    visited_sources: set[str] = set()
 
     def visit(
         source_path: str,
@@ -98,19 +135,33 @@ def schematic_symbol_anchors(
         payload = source_files.get(source_path)
         if payload is None:
             raise ValueError(f"Schematic child source is unavailable: {source_path}")
+        visited_sources.add(source_path)
         document = schematic_root(payload)
         text = document.text
         root = document.root
-        references, mapping_issues = schematic_instance_references(
-            text, root, project_name, instance_path
+        reference_resolution = schematic_instance_references(
+            text,
+            root,
+            source_path=source_path,
+            project_name=project_name,
+            sheet_instance_path=instance_path,
         )
-        issues.extend(f"{source_path} at {instance_path}: {item}" for item in mapping_issues)
+        if (
+            reference_resolution.source_path != source_path
+            or reference_resolution.source_sha256 != hashlib.sha256(payload).hexdigest()
+            or reference_resolution.project_name != project_name
+            or reference_resolution.sheet_instance_path != instance_path
+        ):
+            raise ValueError("Schematic instance references do not match the retained context")
+        issues.extend(
+            f"{source_path} at {instance_path}: {item}" for item in reference_resolution.issues
+        )
         for symbol in schematic_nodes(text, root, "symbol"):
             uuids = schematic_nodes(text, symbol, "uuid")
             if len(uuids) != 1:
                 continue
             symbol_uuid = _atoms(text, uuids[0])[1]
-            reference = references.get(symbol_uuid)
+            reference = reference_resolution.references_by_symbol_uuid.get(symbol_uuid)
             if reference is None:
                 continue
             try:
@@ -137,4 +188,18 @@ def schematic_symbol_anchors(
     root = document.root
     root_uuid = schematic_scalar(text, root, "uuid")
     visit(root_path, f"/{root_uuid}", (), ())
-    return {key: tuple(values) for key, values in found.items()}, tuple(issues)
+    referenced_hashes = {
+        source_path: source_hashes[source_path] for source_path in sorted(visited_sources)
+    }
+    anchor_index = {key: tuple(values) for key, values in found.items()}
+    issue_tuple = tuple(issues)
+    return SchematicSymbolAnchorResolution(
+        root_path=root_path,
+        project_directory=project_directory,
+        project_name=project_name,
+        status="PARTIAL" if issue_tuple else "COMPLETE",
+        source_tree_sha256=source_tree_sha256(referenced_hashes),
+        source_hashes=referenced_hashes,
+        anchors_by_casefolded_reference=anchor_index,
+        issues=issue_tuple,
+    )

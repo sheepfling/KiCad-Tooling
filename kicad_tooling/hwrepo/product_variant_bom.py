@@ -4,19 +4,23 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
+from types import MappingProxyType
 from uuid import uuid4
 
 from .comparison_change import change_state
 from .contract_coach import receipt_directory
-from .contracts import read_model, repo_path, write_model
+from .contracts import repo_path, write_model
 from .evidence import digest
 from .generation import bom_rows
 from .product import load_repository
-from .product_models import AssemblyKind, BomRow, ProductRecord
+from .product_models import AssemblyKind, BomRow, ProductInstancePath, ProductRecord
+from .product_occurrences import product_occurrence_index
+from .product_source_inputs import read_product_source
 from .product_variant_bom_html import render_product_variant_bom
 from .product_variant_bom_models import (
     ProductVariantBomReport,
     VariantBomInstanceDifference,
+    VariantBomInstanceIndex,
     VariantBomInstanceState,
     VariantBomPartDifference,
 )
@@ -28,9 +32,9 @@ def instance_states(
     view: ProductVisualReport,
     product: ProductRecord,
     revisions: Mapping[str, str],
-) -> dict[str, VariantBomInstanceState]:
+) -> VariantBomInstanceIndex:
     assemblies = {item.id: item for item in product.assemblies}
-    result: dict[str, VariantBomInstanceState] = {}
+    result: dict[ProductInstancePath, VariantBomInstanceState] = {}
     for instance in view.instances:
         if instance.kind not in {"PART", "PURCHASED", "UNRESOLVED"}:
             continue
@@ -48,7 +52,7 @@ def instance_states(
             quantity=instance.quantity,
             population=instance.population if known else "UNRESOLVED",
         )
-    return result
+    return MappingProxyType(result)
 
 
 def part_differences(
@@ -99,9 +103,11 @@ def compare_product_variants(
     after = build_product_visual(root, product_id, after_variant, directory / "after")
     if before.source_hashes != after.source_hashes or before.product_sha256 != after.product_sha256:
         raise ValueError("Selected variants must have the same product source revision")
-    product = read_model(directory / "before/product.json", ProductRecord)
-    if digest(directory / "before/product.json") != before.product_sha256:
+    product_source, _ = read_product_source(directory / "before/product.json", before.product_path)
+    if product_source.sha256 != before.product_sha256:
         raise ValueError("Retained product record changed during comparison")
+    product = product_source.record
+    occurrence_index = product_occurrence_index(product_source)
     variants = {item.id: item for item in product.variants}
     repository = load_repository(root, ())
     revisions = {name: part.revision for name, part in repository.parts.items()}
@@ -125,8 +131,18 @@ def compare_product_variants(
     if projected:
         try:
             parts = part_differences(
-                bom_rows(product, repository.parts, variants[before_variant]),
-                bom_rows(product, repository.parts, variants[after_variant]),
+                bom_rows(
+                    product,
+                    repository.parts,
+                    variants[before_variant],
+                    occurrence_index=occurrence_index,
+                ),
+                bom_rows(
+                    product,
+                    repository.parts,
+                    variants[after_variant],
+                    occurrence_index=occurrence_index,
+                ),
             )
         except (KeyError, ValueError) as exc:
             projected = False

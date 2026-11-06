@@ -51,7 +51,9 @@ from .release_contract_models import (
     ReleaseStatus,
 )
 from .release_model_types import ReleaseClass
+from .release_operation_models import ReleasePreparationRequest
 from .release_report_models import ReleasePackageReport, ReleaseReadinessReport
+from .release_variants import resolve_variants
 from .selection import ProjectSelector, resolve_project_ids
 from .sharding import shard_projects
 
@@ -374,7 +376,7 @@ def prepare_review_scope(
     source = source_state(root)
     if source.commit is None:
         raise ValueError("Commit the reviewed source before preparing a review")
-    selections = releasing.resolve_variants(root, variants)
+    selections = resolve_variants(root, variants)
     request = ReleaseManifest(
         release_id=release_id,
         release_class=ReleaseClass.ENGINEERING_REVIEW,
@@ -398,14 +400,16 @@ def prepare_review_scope(
         )
     cli = selected_cli(root, projects[0].id, runner)
     if cli is not None:
-        return releasing.prepare(
+        return releasing.prepare_request(
             root,
-            release_id,
-            project_ids,
-            selections,
-            release_class=ReleaseClass.ENGINEERING_REVIEW,
-            cli=cli,
-            portable=None if portable_path is None else portable_path.relative_to(root),
+            ReleasePreparationRequest(
+                release_id=release_id,
+                project_ids=project_ids,
+                variants=selections,
+                release_class=ReleaseClass.ENGINEERING_REVIEW,
+                cli=cli,
+                portable=None if portable_path is None else portable_path.relative_to(root),
+            ),
         )
     # Existing dependency preparation inherits stdout; capture the CLI so progress
     # cannot enter the stdio protocol. Every option comes from a validated selection.

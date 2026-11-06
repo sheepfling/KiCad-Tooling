@@ -210,7 +210,7 @@ def test_all_named_divergence_rules_catalog_the_shared_evidence_owner() -> None:
         "project_connector_footprint_named_divergence"
     )
     assignment_refs = {
-        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_net_map",
+        "kicad_tooling/hwrepo/netlist_pin_assignments.py#netlist_pin_net_index",
         "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_assignments",
     }
     rule_ids = {case[0] for case in _RULE_CASES}

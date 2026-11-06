@@ -42,6 +42,9 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
             {"connector_lint", "power_lint"}
         ),
         "test_native_db9_return_contracts.py": frozenset({"connector_lint", "return_path_lint"}),
+        "test_connector_split_return_peers_native.py": frozenset(
+            {"connector_lint", "return_path_lint"}
+        ),
         "test_design_lint_determinism_component_peers.py": frozenset(
             {"component_lint", "connector_lint", "power_lint"}
         ),

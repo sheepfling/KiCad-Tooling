@@ -156,6 +156,27 @@ def test_connected_pin_board_pad_net_differences_are_reviewable_and_configurable
         assert tuple(item.rule_id for item in stale.stale_ignores) == (RULE_ID,)
 
 
+def test_schema_15_native_snapshot_is_supported_for_pad_net_comparison() -> None:
+    observed = netlist(
+        components={"U1": FOOTPRINT},
+        nets={"SCHEMATIC_SIGNAL": ("U1.1",)},
+    )
+    coverage = _coverage(
+        observed,
+        snapshot(
+            "U1",
+            schema_version="15",
+            footprint_by_reference={"U1": FOOTPRINT},
+            pad_net_by_reference={"U1.1": "BOARD_SIGNAL"},
+        ),
+    )
+
+    assert coverage.snapshot_schema == "15"
+    assert coverage.pad_net_comparison_status == "COMPLETE"
+    (mismatch,) = coverage.pad_net_mismatches
+    assert mismatch.mismatch == "net_assignment_differs"
+
+
 def test_board_assignment_on_schematic_unconnected_pin_is_reviewable() -> None:
     observed = netlist(
         components={"U1": FOOTPRINT},

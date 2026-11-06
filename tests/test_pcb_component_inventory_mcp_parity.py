@@ -1,4 +1,4 @@
-"""CLI/MCP parity for source-bound PCB component inventory findings."""
+"""CLI/MCP projection parity for typed PCB component inventory findings."""
 
 from __future__ import annotations
 
@@ -59,12 +59,15 @@ from tests.synthetic_design_lint_project import synthetic_design_lint_project
 pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint, pytest.mark.parity_lint]
 BOARD_ONLY_RULE = "pcb.board_only_footprint"
 REQUIRED_FITTED_RULE = "pcb.required_fitted_reference"
+VALUE_MISMATCH_RULE = "pcb.schematic_pcb_value_mismatch"
+VALUE_MISMATCH_OWNER = "kicad_tooling/hwrepo/pcb_component_values.py#compare_schematic_pcb_values"
 VARIANT = "Synthetic Assembly A"
 SYNTHETIC_IMAGE = "registry.invalid/kicad:10.0.5@sha256:" + "a" * 64
 
 
 @pytest.mark.design_lint_rule(rule_id=BOARD_ONLY_RULE)
 @pytest.mark.design_lint_rule(rule_id=REQUIRED_FITTED_RULE)
+@pytest.mark.design_lint_rule(rule_id=VALUE_MISMATCH_RULE)
 def test_component_inventory_findings_match_cli_and_mcp(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -296,6 +299,11 @@ def test_component_inventory_findings_match_cli_and_mcp(
 
     assert cli_returncode == 1
     assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(mcp_report)
+    assert mcp_report.rule_catalog is not None
+    value_rule = next(
+        item for item in mcp_report.rule_catalog.rules if item.rule_id == VALUE_MISMATCH_RULE
+    )
+    assert value_rule.implementation_owner == VALUE_MISMATCH_OWNER
     findings = tuple(
         item for item in mcp_report.findings if item.rule_id == "pcb.schematic_component_inventory"
     )

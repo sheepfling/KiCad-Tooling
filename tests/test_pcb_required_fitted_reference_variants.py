@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from kicad_tooling.hwrepo.design_lint_pcb_required_fitted_reference_candidates import (
@@ -14,7 +16,10 @@ from kicad_tooling.hwrepo.pcb_component_inventory_models import (
     PcbVariantPopulationCoverage,
     PcbVariantPopulationEvidence,
 )
-from kicad_tooling.hwrepo.pcb_component_population import PcbVariantPopulationSource
+from kicad_tooling.hwrepo.pcb_component_population import (
+    PcbVariantPopulationSource,
+    PcbVariantPositionReceipt,
+)
 from kicad_tooling.hwrepo.pcb_required_fitted_reference_checks import (
     required_fitted_reference_map_sha256,
 )
@@ -88,7 +93,14 @@ def _variant_capture(source: PcbVariantPopulationSource) -> PcbVariantPopulation
         board_variant_command_sha256="d" * 64,
         evidence=(evidence,),
     )
-    return PcbVariantPopulationCapture(sources=(source,), coverage=coverage)
+    source_with_receipt = replace(
+        source,
+        position_receipt=PcbVariantPositionReceipt(
+            path=evidence.board_all_positions_path,
+            sha256=evidence.board_all_positions_sha256,
+        ),
+    )
+    return PcbVariantPopulationCapture(sources=(source_with_receipt,), coverage=coverage)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE)
@@ -215,3 +227,25 @@ def test_complete_variant_capture_rejects_sources_without_matching_evidence_name
 
     with pytest.raises(ValueError, match="must match the source-bound evidence inventory"):
         PcbVariantPopulationCapture(sources=(changed_name,), coverage=capture.coverage)
+
+
+def test_complete_variant_capture_rejects_mismatched_position_export_receipt() -> None:
+    source = PcbVariantPopulationSource(
+        variant=VARIANT,
+        netlist=netlist(components={"U1": FOOTPRINT}),
+        board_references=("U1",),
+        fitted_board_references=("U1",),
+    )
+    capture = _variant_capture(source)
+    captured_source = capture.sources[0]
+    assert captured_source.position_receipt is not None
+    changed = replace(
+        captured_source,
+        position_receipt=PcbVariantPositionReceipt(
+            path=captured_source.position_receipt.path,
+            sha256="f" * 64,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="all-position export receipt"):
+        PcbVariantPopulationCapture(sources=(changed,), coverage=capture.coverage)

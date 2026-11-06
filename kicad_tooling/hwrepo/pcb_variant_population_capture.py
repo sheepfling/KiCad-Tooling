@@ -23,7 +23,8 @@ from .pcb_component_inventory_models import (
     PcbVariantPopulationCoverage,
     PcbVariantPopulationEvidence,
 )
-from .pcb_component_population import PcbVariantPopulationSource
+from .pcb_component_population import PcbVariantPopulationSource, PcbVariantPositionReceipt
+from .pcb_variant_position_export import read_pcb_variant_position_export
 from .project_models import ProjectConfig
 from .project_source_hashes import hash_project_sources as hashes
 from .source_state_models import SourceHashInventory
@@ -46,6 +47,18 @@ class PcbVariantPopulationCapture:
                 raise ValueError(
                     "Complete variant sources must match the source-bound evidence inventory"
                 )
+            evidence_by_variant = {item.variant.casefold(): item for item in self.coverage.evidence}
+            for source in self.sources:
+                receipt = source.position_receipt
+                evidence = evidence_by_variant[source.variant.casefold()]
+                if (
+                    receipt is None
+                    or receipt.path != evidence.board_all_positions_path
+                    or receipt.sha256 != evidence.board_all_positions_sha256
+                ):
+                    raise ValueError(
+                        "Complete variant source must match its all-position export receipt"
+                    )
         elif self.sources:
             raise ValueError("Incomplete variant capture cannot expose parsed source records")
 
@@ -264,10 +277,20 @@ def capture_variant_population(
             write_model(fitted_command_path, fitted_command)
             _require_export(fitted_command, fitted_positions_path, variant, "fitted PCB positions")
 
-            board_references, board_values = _position_records(all_positions_path)
-            if not supports_named_variant_pcb_values(kicad_version):
+            all_position_export = read_pcb_variant_position_export(all_positions_path)
+            fitted_position_export = read_pcb_variant_position_export(fitted_positions_path)
+            board_references = all_position_export.references
+            if supports_named_variant_pcb_values(kicad_version):
+                if all_position_export.value_column_status != "PRESENT":
+                    raise ValueError(
+                        f"KiCad {kicad_version} position export has no value column for {variant!r}"
+                    )
+                board_values = all_position_export.values_by_reference
+                board_value_status = "AVAILABLE"
+            else:
                 board_values = None
-            fitted_references = position_references(fitted_positions_path)
+                board_value_status = "UNSUPPORTED_KICAD_VERSION"
+            fitted_references = fitted_position_export.references
             netlist_relative = netlist_path.relative_to(root).as_posix()
             all_relative = all_positions_path.relative_to(root).as_posix()
             fitted_relative = fitted_positions_path.relative_to(root).as_posix()
@@ -281,11 +304,11 @@ def capture_variant_population(
                 netlist_command_path=netlist_command_relative,
                 netlist_command_sha256=digest(netlist_command_path),
                 board_all_positions_path=all_relative,
-                board_all_positions_sha256=digest(all_positions_path),
+                board_all_positions_sha256=all_position_export.source_sha256,
                 board_all_command_path=all_command_relative,
                 board_all_command_sha256=digest(all_command_path),
                 board_fitted_positions_path=fitted_relative,
-                board_fitted_positions_sha256=digest(fitted_positions_path),
+                board_fitted_positions_sha256=fitted_position_export.source_sha256,
                 board_fitted_command_path=fitted_command_relative,
                 board_fitted_command_sha256=digest(fitted_command_path),
             )
@@ -297,6 +320,11 @@ def capture_variant_population(
                     board_references=board_references,
                     fitted_board_references=fitted_references,
                     board_values=board_values,
+                    board_value_status=board_value_status,
+                    position_receipt=PcbVariantPositionReceipt(
+                        path=all_relative,
+                        sha256=all_position_export.source_sha256,
+                    ),
                 )
             )
 
@@ -410,42 +438,7 @@ def _require_export(
 
 def position_references(path: Path) -> tuple[str, ...]:
     """Read unique native PCB position references for review consumers."""
-    return _position_records(path)[0]
+    return read_pcb_variant_position_export(path).references
 
 
 _position_references = position_references
-
-
-def _position_records(path: Path) -> tuple[tuple[str, ...], dict[str, str] | None]:
-    with path.open(encoding="utf-8-sig", newline="") as stream:
-        reader = csv.DictReader(stream)
-        if reader.fieldnames is None:
-            raise ValueError(f"KiCad position export has no CSV header: {path.name}")
-        reference_column = next(
-            (name for name in reader.fieldnames if name.strip().casefold() in {"ref", "reference"}),
-            None,
-        )
-        if reference_column is None:
-            raise ValueError(f"KiCad position export has no reference column: {path.name}")
-        value_column = next(
-            (name for name in reader.fieldnames if name.strip().casefold() in {"val", "value"}),
-            None,
-        )
-        rows = tuple(
-            row for row in reader if any(value and value.strip() for value in row.values())
-        )
-        references = tuple((row.get(reference_column) or "").strip() for row in rows)
-    keys = [reference.casefold() for reference in references]
-    if any(not reference for reference in references) or len(keys) != len(set(keys)):
-        raise ValueError(
-            f"KiCad position export contains blank or duplicate references: {path.name}"
-        )
-    values = (
-        None
-        if value_column is None
-        else {
-            reference: (row.get(value_column) or "").strip()
-            for reference, row in zip(references, rows, strict=True)
-        }
-    )
-    return references, values

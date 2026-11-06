@@ -5,7 +5,15 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping
 
-from .model_inventory import _atoms, _children, _Span  # pyright: ignore[reportPrivateUsage]
+from .kicad_sexpr import (
+    SExprSpan as _Span,
+)
+from .kicad_sexpr import (
+    sexpr_atoms as _atoms,
+)
+from .kicad_sexpr import (
+    sexpr_children as _children,
+)
 from .schematic_geometry_primitives import transform_point
 from .schematic_geometry_source import (
     schematic_at,

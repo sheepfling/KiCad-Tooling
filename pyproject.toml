@@ -25,6 +25,7 @@ mcp = ["mcp==2.2.0"]
 charts = ["matplotlib==3.11.2"]
 cad = ["easyeda2kicad==1.0.1"]
 dev = [
+  "alphus @ git+https://github.com/sheepfling/alphus.git@3435f81aff7abac7716a5780d26319e8f314d61d",
   "build>=1.2",
   "pytest==9.1.1",
   "setuptools>=80",

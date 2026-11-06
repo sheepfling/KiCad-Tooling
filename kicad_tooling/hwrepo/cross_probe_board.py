@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import hashlib
 import math
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Literal
+from types import MappingProxyType
+from typing import Literal, TypeAlias
 
-from .model_inventory import _atoms, _children  # pyright: ignore[reportPrivateUsage]
+from .findings_view_models import ReviewDrawing
+from .kicad_sexpr import sexpr_atoms as _atoms
+from .kicad_sexpr import sexpr_children as _children
+from .model_primitives import Digest, RepositoryPath
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,8 +26,76 @@ class BoardFootprintAnchor:
     issue: str | None = None
 
 
-def board_footprint_anchors(source: bytes) -> dict[str, tuple[BoardFootprintAnchor, ...]]:
-    """Keep malformed and duplicate references visible without assigning a location."""
+BoardFootprintAnchorsByCasefoldedReference: TypeAlias = Mapping[
+    str, tuple[BoardFootprintAnchor, ...]
+]
+BoardMarkerDrawingStatus: TypeAlias = Literal["UNAVAILABLE", "UNIQUE", "AMBIGUOUS", "UNSUPPORTED"]
+
+
+@dataclass(frozen=True, slots=True)
+class CrossProbeBoardMarkerResolution:
+    """Bind PCB anchors and the selected drawing state to their source receipts."""
+
+    board_path: RepositoryPath
+    board_source_sha256: Digest | None
+    board_status: Literal["COMPLETE", "BLOCKED"]
+    anchors_by_casefolded_reference: BoardFootprintAnchorsByCasefoldedReference
+    findings_view_path: RepositoryPath
+    findings_view_sha256: Digest
+    drawing_candidates: tuple[ReviewDrawing, ...]
+    drawing_status: BoardMarkerDrawingStatus
+    board_drawing: ReviewDrawing | None
+    issues: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        anchors = MappingProxyType(
+            {
+                reference: tuple(items)
+                for reference, items in self.anchors_by_casefolded_reference.items()
+            }
+        )
+        drawing_candidates = tuple(self.drawing_candidates)
+        issues = tuple(self.issues)
+        if any(
+            not reference or reference != reference.casefold() or not items
+            for reference, items in anchors.items()
+        ):
+            raise ValueError("PCB anchor indexes require non-empty case-folded entries")
+        if any(
+            anchor.reference.casefold() != reference
+            for reference, items in anchors.items()
+            for anchor in items
+        ):
+            raise ValueError("PCB anchors must match their normalized index keys")
+        expected_board_status = "COMPLETE" if self.board_source_sha256 is not None else "BLOCKED"
+        if self.board_status != expected_board_status:
+            raise ValueError("PCB board status must match its retained source hash")
+        if self.board_status == "BLOCKED":
+            if anchors or issues != ("PCB source is unavailable.",):
+                raise ValueError("Unavailable PCB source requires blocked empty anchor evidence")
+        elif issues:
+            raise ValueError("Complete PCB source evidence cannot carry capture issues")
+        if any(drawing.kind != "pcb" for drawing in drawing_candidates):
+            raise ValueError("PCB drawing resolution may retain only PCB drawings")
+        if not drawing_candidates:
+            expected_drawing_status = "UNAVAILABLE"
+        elif len(drawing_candidates) > 1:
+            expected_drawing_status = "AMBIGUOUS"
+        else:
+            selected = next(iter(drawing_candidates))
+            expected_drawing_status = "UNIQUE" if selected.mapping_supported else "UNSUPPORTED"
+        if self.drawing_status != expected_drawing_status:
+            raise ValueError("PCB drawing status must match its retained candidates")
+        expected_drawing = next(iter(drawing_candidates)) if len(drawing_candidates) == 1 else None
+        if self.board_drawing != expected_drawing:
+            raise ValueError("Only one retained PCB drawing may be selected")
+        object.__setattr__(self, "anchors_by_casefolded_reference", anchors)
+        object.__setattr__(self, "drawing_candidates", drawing_candidates)
+        object.__setattr__(self, "issues", issues)
+
+
+def board_footprint_anchors(source: bytes) -> BoardFootprintAnchorsByCasefoldedReference:
+    """Index all anchors by case-folded reference without discarding duplicates."""
     try:
         text = source.decode("utf-8")
         roots = _children(text, 0, len(text))
@@ -72,4 +146,52 @@ def board_footprint_anchors(source: bytes) -> dict[str, tuple[BoardFootprintAnch
         found[reference.casefold()].append(
             BoardFootprintAnchor(reference, footprint, x_mm, y_mm, side, issue)
         )
-    return {key: tuple(values) for key, values in found.items()}
+    return MappingProxyType({key: tuple(values) for key, values in found.items()})
+
+
+def resolve_cross_probe_board_markers(
+    *,
+    board_path: RepositoryPath,
+    board_source_sha256: Digest | None,
+    board_source: bytes | None,
+    findings_view_path: RepositoryPath,
+    findings_view_sha256: Digest,
+    drawings: tuple[ReviewDrawing, ...],
+) -> CrossProbeBoardMarkerResolution:
+    """Capture source-bound board anchors and preserve PCB drawing cardinality."""
+    if board_source is None:
+        if board_source_sha256 is not None:
+            raise ValueError("Unavailable PCB source cannot have a source hash")
+        anchors: BoardFootprintAnchorsByCasefoldedReference = {}
+        board_status: Literal["COMPLETE", "BLOCKED"] = "BLOCKED"
+        issues = ("PCB source is unavailable.",)
+    else:
+        if board_source_sha256 is None:
+            raise ValueError("PCB source bytes require their admitted source hash")
+        if hashlib.sha256(board_source).hexdigest() != board_source_sha256:
+            raise ValueError("PCB source bytes do not match their admitted source hash")
+        anchors = board_footprint_anchors(board_source)
+        board_status = "COMPLETE"
+        issues = ()
+    pcb_drawings = tuple(drawing for drawing in drawings if drawing.kind == "pcb")
+    if not pcb_drawings:
+        drawing_status: BoardMarkerDrawingStatus = "UNAVAILABLE"
+        board_drawing = None
+    elif len(pcb_drawings) > 1:
+        drawing_status = "AMBIGUOUS"
+        board_drawing = None
+    else:
+        board_drawing = next(iter(pcb_drawings))
+        drawing_status = "UNIQUE" if board_drawing.mapping_supported else "UNSUPPORTED"
+    return CrossProbeBoardMarkerResolution(
+        board_path=board_path,
+        board_source_sha256=board_source_sha256,
+        board_status=board_status,
+        anchors_by_casefolded_reference=anchors,
+        findings_view_path=findings_view_path,
+        findings_view_sha256=findings_view_sha256,
+        drawing_candidates=pcb_drawings,
+        drawing_status=drawing_status,
+        board_drawing=board_drawing,
+        issues=issues,
+    )

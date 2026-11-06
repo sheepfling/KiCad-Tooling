@@ -40,7 +40,7 @@ EXPECTED_OWNER_IMPORTS = MappingProxyType(
                 "ConnectorReturnDistributionCoverageReport",
             }
         ),
-        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py": frozenset(
+        "kicad_tooling/hwrepo/design_lint_candidate_legacy_arguments.py": frozenset(
             {
                 "ConnectorReturnDistributionCoverageReport",
             }

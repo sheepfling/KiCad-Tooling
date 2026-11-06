@@ -319,6 +319,25 @@ def test_named_variant_value_comparison_blocks_when_export_is_incomplete() -> No
         compare_schematic_pcb_values(base, board, (source,))
 
 
+def test_named_variant_source_defensively_freezes_board_value_map() -> None:
+    values = {"R1": "10K"}
+    source = PcbVariantPopulationSource(
+        variant="Assembly A",
+        netlist=netlist(components={"R1": FOOTPRINT}, values={"R1": "10k"}),
+        board_references=("R1",),
+        fitted_board_references=("R1",),
+        board_values=values,
+    )
+
+    values["R1"] = "mutated"
+
+    assert source.board_values is not None
+    assert source.board_values == {"R1": "10K"}
+    assert source.board_value_status == "AVAILABLE"
+    with pytest.raises(TypeError):
+        source.board_values["R1"] = "mutated"
+
+
 def test_schema_12_remains_supported_for_inventory_but_blocks_value_comparison() -> None:
     observed = netlist(components={"R1": FOOTPRINT}, values={"R1": "10k"})
     board = snapshot("R1", footprint_by_reference={"R1": FOOTPRINT})

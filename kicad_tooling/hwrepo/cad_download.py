@@ -18,9 +18,11 @@ from pathlib import Path, PurePosixPath
 from urllib.parse import quote, urlsplit
 
 from .evidence import digest as file_digest
-from .model_inventory import (
-    _atoms,  # pyright: ignore[reportPrivateUsage]
-    _children,  # pyright: ignore[reportPrivateUsage]
+from .kicad_sexpr import (
+    sexpr_atoms as _atoms,
+)
+from .kicad_sexpr import (
+    sexpr_children as _children,
 )
 
 _HOST = "gitlab.com"

@@ -6,14 +6,17 @@ source and restored files are deliberately outside the artifact read scope.
 
 from __future__ import annotations
 
-import os
-import stat
 from pathlib import Path
 
+from .contracts import file_fingerprint as _file_fingerprint
 from .contracts import read_model, repo_path
+from .contracts import read_regular_bytes as _read_regular_bytes
 from .discovery import manifest_paths
 from .layout import layout, within_roots
 from .product_models import ProductIndex
+
+file_fingerprint = _file_fingerprint
+read_regular_bytes = _read_regular_bytes
 
 
 def artifact_path(root: Path, value: str) -> Path:
@@ -50,29 +53,3 @@ def artifact_file(root: Path, value: str) -> Path:
     if not path.is_file():
         raise ValueError(f"Select an existing generated artifact file: {value}")
     return path
-
-
-def file_fingerprint(value: os.stat_result) -> tuple[int, int, int, int, int]:
-    return value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns, value.st_ctime_ns
-
-
-def read_regular_bytes(path: Path, maximum: int | None = None) -> tuple[bytes, os.stat_result]:
-    """Read a stable regular file without following a final-component symlink."""
-    if not stat.S_ISREG(path.lstat().st_mode):
-        raise ValueError("Select a regular file without symlinks")
-    descriptor = os.open(
-        path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
-    )
-    with os.fdopen(descriptor, "rb") as stream:
-        before = os.fstat(stream.fileno())
-        if not stat.S_ISREG(before.st_mode):
-            raise ValueError("Select a regular file")
-        if maximum is not None and before.st_size > maximum:
-            raise ValueError(f"File exceeds the {maximum}-byte limit")
-        data = stream.read() if maximum is None else stream.read(maximum + 1)
-        after = os.fstat(stream.fileno())
-        if file_fingerprint(before) != file_fingerprint(after):
-            raise ValueError("File changed while reading; retry from fresh metadata")
-        if maximum is not None and len(data) > maximum:
-            raise ValueError(f"File exceeds the {maximum}-byte limit")
-    return data, after

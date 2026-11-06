@@ -290,6 +290,42 @@ def main() -> int:
             cwd=ROOT,
         )
         stage(
+            "alphus-module-role-boundaries",
+            (
+                sys.executable,
+                "-I",
+                "-m",
+                "alphus",
+                "--root",
+                str(ROOT),
+                "--config",
+                "quality-gates.toml",
+                "--profile",
+                "module-role-boundaries",
+                "--json",
+            ),
+            output,
+            cwd=ROOT,
+        )
+        stage(
+            "alphus-shared-utility-duplication",
+            (
+                sys.executable,
+                "-I",
+                "-m",
+                "alphus",
+                "--root",
+                str(ROOT),
+                "--config",
+                "quality-gates.toml",
+                "--profile",
+                "shared-utility-duplication",
+                "--json",
+            ),
+            output,
+            cwd=ROOT,
+        )
+        stage(
             "rumdl",
             (
                 sys.executable,

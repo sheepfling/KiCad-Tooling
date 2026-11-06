@@ -67,6 +67,22 @@ def test_output_driven_candidate_retains_role_binding_and_its_digest() -> None:
 
     assert candidate.source_evidence is source
     assert candidate.rule_id == "component.led_directly_driven_from_output"
+    assert tuple(candidate.evidence) == (
+        "symbol",
+        "led_pins",
+        "output_pins",
+        "output_pin_types",
+        "driven_net",
+        "opposite_net",
+        "opposite_net_role",
+        "classified_role",
+        "role_part_id",
+        "role_symbol",
+        "role_footprint",
+        "role_pin_inventory",
+        "role_basis",
+        "role_binding_sha256",
+    )
     assert candidate.evidence == {
         "symbol": (binding.symbol,),
         "led_pins": ("D1.1", "D1.2"),

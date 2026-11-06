@@ -1,0 +1,4 @@
+(version 1)
+(rule "SyntheticUnconstrained"
+  (condition "A.Type == 'Track'")
+  (severity error))

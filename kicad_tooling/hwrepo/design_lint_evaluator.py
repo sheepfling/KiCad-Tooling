@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing_extensions import Unpack
+
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_return_distribution_models import ConnectorReturnDistributionCoverageReport
 from .contract_coach_models import ContractCoachReport
@@ -15,14 +17,16 @@ from .design_lint_evaluation_report_inputs import (
     blocked_disposition_report,
     evaluation_report_input,
 )
-from .design_lint_evaluation_types import DesignLintEvaluationRequest
+from .design_lint_evaluation_types import (
+    DesignLintEvaluationRequest,
+    LegacyPcbCandidateArguments,
+)
 from .design_lint_finding_disposition import resolve_finding_dispositions
 from .design_lint_pcb_coverage_policy import PcbMappedCoverageInputs
 from .design_lint_pcb_geometry_coverage_policy import PcbInputCoverageInputs
 from .design_lint_peer_evaluation import PeerDesignLintScanInputs
 from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_report_models import DesignLintReport
-from .design_lint_types import Candidate
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
 from .external_protection_models import ExternalProtectionCoverageReport
 from .i2c_address_models import I2cAddressCoverageReport
@@ -89,8 +93,7 @@ def evaluate(
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None = None,
     pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport | None = None,
     pcb_component_inventory_coverage: PcbComponentInventoryCoverageReport | None = None,
-    pcb_dru_rule_candidates: tuple[Candidate, ...] = (),
-    pcb_native_drc_candidates: tuple[Candidate, ...] = (),
+    **pcb_candidates: Unpack[LegacyPcbCandidateArguments],
 ) -> DesignLintReport:
     """Apply project policy to findings while preserving the established call shape."""
     request = DesignLintEvaluationRequest(
@@ -134,8 +137,8 @@ def evaluate(
             protection_path=pcb_protection_path_coverage,
         ),
         pcb_component_inventory_coverage=pcb_component_inventory_coverage,
-        pcb_dru_rule_candidates=pcb_dru_rule_candidates,
-        pcb_native_drc_candidates=pcb_native_drc_candidates,
+        pcb_dru_rule_candidates=pcb_candidates.get("pcb_dru_rule_candidates", ()),
+        pcb_native_drc_candidates=pcb_candidates.get("pcb_native_drc_candidates", ()),
     )
 
     return evaluate_request(request)

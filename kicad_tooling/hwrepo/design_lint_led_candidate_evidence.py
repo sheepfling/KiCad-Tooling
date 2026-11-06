@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import TypeAlias
+from typing import TypeAlias, cast
 
-from .component_roles import component_role_binding_digest, component_role_binding_evidence
+from .component_roles import (
+    ComponentRoleBindingReportFields,
+    component_role_binding_digest,
+    component_role_binding_report_fields,
+)
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .led_heuristics import DirectLedRailBridge, LedOutputWithoutVisibleSeriesResistor
 
@@ -38,18 +43,20 @@ def project_led_candidate_evidence(
     ):
         raise ValueError("Output-driven LED evidence must retain a complete rail-spanning path")
     role_evidence = _role_binding_evidence(source)
+    evidence: dict[str, tuple[str, ...]] = {
+        "symbol": (source.symbol,),
+        "led_pins": source.led_pins,
+        "output_pins": source.output_pins,
+        "output_pin_types": source.output_pin_types,
+        "driven_net": (source.driven_net,),
+        "opposite_net": (source.opposite_net,),
+        "opposite_net_role": (source.opposite_net_role,),
+    }
+    if role_evidence is not None:
+        evidence.update(cast(Mapping[str, tuple[str, ...]], role_evidence))
     return CandidateEvidenceProjection(
         rule_id="component.led_directly_driven_from_output",
-        evidence={
-            "symbol": (source.symbol,),
-            "led_pins": source.led_pins,
-            "output_pins": source.output_pins,
-            "output_pin_types": source.output_pin_types,
-            "driven_net": (source.driven_net,),
-            "opposite_net": (source.opposite_net,),
-            "opposite_net_role": (source.opposite_net_role,),
-            **role_evidence,
-        },
+        evidence=evidence,
     )
 
 
@@ -87,11 +94,11 @@ class LedTopologyCandidate(Candidate):
 
 def _role_binding_evidence(
     source: LedOutputWithoutVisibleSeriesResistor,
-) -> dict[str, tuple[str, ...]]:
+) -> ComponentRoleBindingReportFields | None:
     if source.role_binding is None:
         if source.role_binding_sha256 is not None:
             raise ValueError("An absent LED role binding cannot carry a role-map digest")
-        return {}
+        return None
     if (
         source.role_binding.role != "led"
         or source.role_binding.symbol != source.symbol
@@ -99,4 +106,4 @@ def _role_binding_evidence(
         or source.role_binding_sha256 != component_role_binding_digest(source.role_binding)
     ):
         raise ValueError("LED role evidence must retain its exact binding and digest")
-    return component_role_binding_evidence(source.role_binding)
+    return component_role_binding_report_fields(source.role_binding)

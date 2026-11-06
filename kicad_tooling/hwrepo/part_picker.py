@@ -7,7 +7,6 @@ import hashlib
 import os
 import shlex
 import tempfile
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal
 
@@ -15,12 +14,7 @@ from .contract_coach import NetlistRunner, capture, inspect_summary, project_con
 from .contracts import read_model, repo_path, update_project_manifest_parts
 from .discovery import load_config, load_registry
 from .evidence import digest
-from .layout import CONFIG_NAME, layout
-from .model_population import (
-    _model_path,  # pyright: ignore[reportPrivateUsage]
-    _require_shared_consumer_inventory,  # pyright: ignore[reportPrivateUsage]
-    _validate_shared_roots,  # pyright: ignore[reportPrivateUsage]
-)
+from .model_population import require_shared_consumer_inventory
 from .models import (
     PartCadComponent,
     PartPickerItem,
@@ -31,20 +25,19 @@ from .models import (
     PartSourceEdit,
 )
 from .part_cad import preview_cad, read_cad_components
-from .part_catalog_models import (
-    PartRecord,
-    PartsCatalog,
-    PartStatus,
+from .part_catalog_models import PartRecord, PartsCatalog
+from .part_selection_sources import (
+    capture_part_cad_source_snapshot,
+    part_candidate_problem,
+    read_parts_catalog,
+    require_part_cad_preconditions_current,
+    resolve_part_cad_model,
 )
 from .parts_workflow import local_path, preferences_path, selected_project
 from .project_models import ProjectKind, ProjectManifest
-from .project_source_hashes import hash_project_sources as hashes
-from .purchasing import (
-    _PLACEHOLDER,  # pyright: ignore[reportPrivateUsage]
-    _safe_cell,  # pyright: ignore[reportPrivateUsage]
-    read_components,
-)
+from .purchasing import read_components
 from .purchasing_preference_models import PurchasingPreferences
+from .source_state_models import SourcePreconditionInventory
 
 
 def _sha(text: str) -> str:
@@ -67,102 +60,14 @@ def _receipt(root: Path, output: Path) -> Path:
     return output
 
 
-def _catalog(root: Path) -> PartsCatalog:
-    registry = load_registry(root)
-    catalog = read_model(repo_path(root, registry.catalogs.parts), PartsCatalog)
-    if len({part.id for part in catalog.parts}) != len(catalog.parts):
-        raise ValueError(
-            "Parts catalog repeats PART_IDs; repair duplicate records before selecting"
-        )
-    return catalog
+def _snapshot(root: Path, project_id: str) -> SourcePreconditionInventory:
+    """Compatibility view of the typed, project-bound CAD source snapshot."""
+    return capture_part_cad_source_snapshot(root, project_id).preconditions
 
 
-def _candidate_problem(part: PartRecord) -> str | None:
-    if part.cad is None:
-        return "No reviewed CAD binding is recorded."
-    if part.status != PartStatus.APPROVED:
-        return "Catalog part is training or unapproved."
-    if _PLACEHOLDER.search(part.manufacturer) or _PLACEHOLDER.search(part.mpn):
-        return "Catalog manufacturer or MPN is a placeholder."
-    if part.cad.digikey_sku is not None and _PLACEHOLDER.search(part.cad.digikey_sku):
-        return "Catalog DigiKey SKU is a placeholder."
-    try:
-        _safe_cell(part.manufacturer)
-        _safe_cell(part.mpn)
-        if part.cad.digikey_sku is not None:
-            _safe_cell(part.cad.digikey_sku)
-    except ValueError as error:
-        return str(error)
-    return None
-
-
-def _model(root: Path, project_id: str, part: PartRecord) -> tuple[Path, str, str, str]:
-    project = selected_project(root, project_id)
-    manifest_path = repo_path(root, project.config)
-    manifest = read_model(manifest_path, ProjectManifest)
-    if part.cad is None:
-        raise ValueError(f"{part.id}: reviewed CAD metadata is missing")
-    _validate_shared_roots(root, load_registry(root), manifest)
-    return _model_path(
-        root,
-        manifest_path.parent,
-        repo_path(root, project.project).parent,
-        manifest,
-        part.cad.model,
-    )
-
-
-def _snapshot(root: Path, project_id: str) -> dict[str, str | None]:
-    """Bind complete source plus every policy input read by selection, including absence."""
-    registry = load_registry(root)
-    project = selected_project(root, project_id)
-    config = load_config(root, project.config)
-    result: dict[str, str | None] = dict(hashes(root, config.source_roots))
-    manifest = read_model(repo_path(root, project.config), ProjectManifest)
-    names = {
-        layout(root).discovery,
-        registry.catalogs.parts,
-        registry.catalogs.libraries,
-        registry.catalogs.toolchains,
-        registry.catalogs.interfaces,
-        registry.catalogs.release_policies,
-        project.config,
-        (Path(project.config).parent / manifest.checks).as_posix(),
-    }
-    names.add(CONFIG_NAME)
-    # Shared model review reads every consumer manifest, not only the selected one.
-    names.update(record.config for record in registry.projects)
-    names.add(preferences_path(root, project_id, None).relative_to(root).as_posix())
-    for name in sorted(names):
-        path = repo_path(root, name)
-        result[name] = digest(path) if path.is_file() else None
-    # Valid candidate assets must be within declared roots and are already hashed.
-    # Explicit indexing documents their role and prevents accidental future omission.
-    for part in _catalog(root).parts:
-        if _candidate_problem(part) is None:
-            try:
-                path, _, _, _ = _model(root, project_id, part)
-            except ValueError:
-                continue
-            result[path.relative_to(root).as_posix()] = digest(path)
-    return dict(sorted(result.items()))
-
-
-def _verify_snapshot(root: Path, project_id: str, expected: Mapping[str, str | None]) -> None:
-    current = _snapshot(root, project_id)
-    if current != dict(expected):
-        changed = sorted(
-            name
-            for name in set(current) | set(expected)
-            if name not in current
-            or name not in expected
-            or current.get(name) != expected.get(name)
-        )
-        raise ValueError(
-            "Source or selection inputs changed, or preconditions are incomplete: "
-            + ", ".join(changed[:8])
-            + ". Create and review a fresh selection."
-        )
+def _verify_snapshot(root: Path, project_id: str, expected: SourcePreconditionInventory) -> None:
+    """Adapt the persisted map shape to the source owner's typed freshness check."""
+    require_part_cad_preconditions_current(root, project_id, expected)
 
 
 def _choices(
@@ -182,12 +87,12 @@ def _choices(
                     component.value,
                 ):
                     continue
-                problem = _candidate_problem(part)
+                problem = part_candidate_problem(part)
                 if problem is not None:
                     issues.append(f"{part.id}: {problem}")
                     continue
                 try:
-                    _, _, _, model_reference = _model(root, project_id, part)
+                    model_reference = resolve_part_cad_model(root, project_id, part).kicad_reference
                     preview_cad(
                         root,
                         project_id,
@@ -264,7 +169,7 @@ def create_picker(
                 "Native component inventory differs from the editable schematic; "
                 "save the current assembly and recapture before selecting"
             )
-        items, choices = _choices(root, project_id, components, _catalog(root))
+        items, choices = _choices(root, project_id, components, read_parts_catalog(root))
         _verify_snapshot(root, project_id, before)
         if digest(netlist) != evidence.netlist_sha256:
             raise ValueError("Native netlist changed during picker generation")
@@ -305,7 +210,7 @@ def _planned_edits(
     project_context(
         root, project_id
     )  # Never bypass declared native-source inventory with an edited map.
-    catalog = _catalog(root)
+    catalog = read_parts_catalog(root)
     records = {part.id: part for part in catalog.parts}
     components = {
         component.reference: component for component in read_cad_components(root, project_id)
@@ -325,7 +230,7 @@ def _planned_edits(
             )
         if part is None:
             raise ValueError(f"{assignment.reference}: unknown catalog part {assignment.part_id}")
-        problem = _candidate_problem(part)
+        problem = part_candidate_problem(part)
         if problem is not None:
             raise ValueError(f"{assignment.part_id}: {problem}")
         if part.cad is None or (part.cad.symbol_id, part.cad.value) != (
@@ -335,11 +240,11 @@ def _planned_edits(
             raise ValueError(
                 f"{assignment.reference}: selected part must preserve the exact symbol and electrical value"
             )
-        _, field, name, reference = _model(root, project_id, part)
-        additions[field].add(name)
-        model_references[assignment.reference] = reference
+        resolution = resolve_part_cad_model(root, project_id, part)
+        additions[resolution.manifest_field].add(resolution.manifest_input_path)
+        model_references[assignment.reference] = resolution.kicad_reference
         selected[assignment.reference] = part
-    _require_shared_consumer_inventory(
+    require_shared_consumer_inventory(
         root, load_registry(root), project.config, manifest, additions["shared_inputs"]
     )
     changes = preview_cad(root, project_id, selected, model_references)
@@ -419,7 +324,7 @@ def _contract_guidance(root: Path, project_id: str, spec: PartSelectionMap) -> t
     validation = config.validation
     if validation.kind != ProjectKind.PCB and validation.kind != ProjectKind.SCHEMATIC:
         return ()
-    catalog = {part.id: part for part in _catalog(root).parts}
+    catalog = {part.id: part for part in read_parts_catalog(root).parts}
     different: list[str] = []
     for assignment in spec.assignments:
         part = catalog[assignment.part_id]
@@ -447,7 +352,7 @@ def _apply_edits(
     root: Path,
     project_id: str,
     edits: tuple[PartSourceEdit, ...],
-    preconditions: Mapping[str, str | None],
+    preconditions: SourcePreconditionInventory,
 ) -> None:
     """Stage all bytes, recheck all inputs for each replacement, roll back on failure."""
     applied: list[PartSourceEdit] = []
@@ -595,7 +500,7 @@ def resume_selection(root: Path, project_id: str, output: Path) -> PartSelection
     try:
         output = _receipt(root, output)
         before = _snapshot(root, project_id)
-        parts = {part.id: part for part in _catalog(root).parts}
+        parts = {part.id: part for part in read_parts_catalog(root).parts}
         assignments = tuple(
             PartSelectionAssignment(reference=component.reference, part_id=component.part_id)
             for component in read_cad_components(root, project_id)

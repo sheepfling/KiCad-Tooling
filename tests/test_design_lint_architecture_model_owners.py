@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from pathlib import Path
 from types import MappingProxyType
 
 import pytest
@@ -12,6 +13,8 @@ from kicad_tooling.hwrepo import (
     connector_part_id_peer_models,
     connector_peer_pin_models,
     connector_stateful_contact_models,
+    cross_probe_board,
+    cross_probe_schematic_models,
     design_lint_policy_models,
     oscillator_output_path_models,
     pcb_touch_pad_clearance_models,
@@ -105,9 +108,20 @@ SCHEMATIC_GEOMETRY_RULE_TYPES = (
 )
 CONNECTOR_PEER_PIN_TYPES = ("ConnectorPinRole",)
 NEW_CONNECTOR_THEME_MODELS = ("ConnectorUnreviewedPinEvidence",)
+NEW_SCHEMATIC_SOURCE_TREE_MODELS = (
+    "SchematicSourceFile",
+    "SchematicInstanceReferenceResolution",
+    "VerifiedSchematicSourceTree",
+)
+NEW_CROSS_PROBE_SCHEMATIC_MODELS = (
+    "SchematicSymbolAnchor",
+    "SchematicSymbolAnchorResolution",
+    "SchematicDrawingBindingResolution",
+)
+NEW_CROSS_PROBE_BOARD_MODELS = ("CrossProbeBoardMarkerResolution",)
 
 
-def _top_level_definitions(path) -> set[str]:
+def _top_level_definitions(path: Path) -> set[str]:
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
     return {
         node.name
@@ -116,7 +130,7 @@ def _top_level_definitions(path) -> set[str]:
     }
 
 
-def _top_level_assignment_names(path) -> set[str]:
+def _top_level_assignment_names(path: Path) -> set[str]:
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
     names: set[str] = set()
     for node in tree.body:
@@ -205,6 +219,47 @@ def test_schematic_geometry_rule_types_have_theme_owner_and_compatible_exports()
         assert getattr(compatibility_models, name) is getattr(schematic_geometry_models, name)
 
 
+def test_schematic_source_tree_models_stay_in_their_theme_owner() -> None:
+    owner_path = HWREPO / "schematic_geometry_models.py"
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert set(NEW_SCHEMATIC_SOURCE_TREE_MODELS) <= _top_level_definitions(owner_path)
+    assert all(
+        getattr(schematic_geometry_models, name).__module__ == schematic_geometry_models.__name__
+        for name in NEW_SCHEMATIC_SOURCE_TREE_MODELS
+    )
+    assert not (
+        set(NEW_SCHEMATIC_SOURCE_TREE_MODELS) & _top_level_definitions(HWREPO / "models.py")
+    )
+    assert all(not hasattr(compatibility_models, name) for name in NEW_SCHEMATIC_SOURCE_TREE_MODELS)
+
+
+def test_cross_probe_schematic_models_stay_in_their_source_owner() -> None:
+    owner_path = HWREPO / "cross_probe_schematic_models.py"
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert set(NEW_CROSS_PROBE_SCHEMATIC_MODELS) <= _top_level_definitions(owner_path)
+    assert all(
+        getattr(cross_probe_schematic_models, name).__module__
+        == cross_probe_schematic_models.__name__
+        for name in NEW_CROSS_PROBE_SCHEMATIC_MODELS
+    )
+    assert not (
+        set(NEW_CROSS_PROBE_SCHEMATIC_MODELS) & _top_level_definitions(HWREPO / "models.py")
+    )
+    assert all(not hasattr(compatibility_models, name) for name in NEW_CROSS_PROBE_SCHEMATIC_MODELS)
+
+
+def test_cross_probe_board_marker_model_stays_with_its_capture_owner() -> None:
+    owner_path = HWREPO / "cross_probe_board.py"
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert set(NEW_CROSS_PROBE_BOARD_MODELS) <= _top_level_definitions(owner_path)
+    assert all(
+        getattr(cross_probe_board, name).__module__ == cross_probe_board.__name__
+        for name in NEW_CROSS_PROBE_BOARD_MODELS
+    )
+    assert not (set(NEW_CROSS_PROBE_BOARD_MODELS) & _top_level_definitions(HWREPO / "models.py"))
+    assert all(not hasattr(compatibility_models, name) for name in NEW_CROSS_PROBE_BOARD_MODELS)
+
+
 def test_connector_peer_pin_role_has_theme_owner_and_compatible_export() -> None:
     owner_path = HWREPO / "connector_peer_pin_models.py"
     assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
@@ -223,6 +278,9 @@ def test_internal_services_import_lint_models_from_their_theme_owners() -> None:
     moved_names.update(NEW_CONNECTOR_THEME_MODELS)
     moved_names.update(OSCILLATOR_OUTPUT_PATH_MODELS)
     moved_names.update(SCHEMATIC_GEOMETRY_RULE_TYPES)
+    moved_names.update(NEW_SCHEMATIC_SOURCE_TREE_MODELS)
+    moved_names.update(NEW_CROSS_PROBE_SCHEMATIC_MODELS)
+    moved_names.update(NEW_CROSS_PROBE_BOARD_MODELS)
     moved_names.update(CONNECTOR_PEER_PIN_TYPES)
     legacy_imports: list[str] = []
     for path in sorted(HWREPO.rglob("*.py")):

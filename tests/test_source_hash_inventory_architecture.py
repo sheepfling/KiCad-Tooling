@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import MutableMapping
 from pathlib import Path
 from typing import get_type_hints
 
@@ -18,6 +19,7 @@ from kicad_tooling.hwrepo import (
     findings_view_sheets,
     native_netlist_evidence,
     native_summary_binding,
+    parts_workflow,
     pcb_variant_population_capture,
     product_visual,
     project_source_hashes,
@@ -29,8 +31,11 @@ from kicad_tooling.hwrepo import (
     verification_history_evidence,
 )
 from kicad_tooling.hwrepo.model_primitives import Digest, RepositoryPath
-from kicad_tooling.hwrepo.source_state_models import SourceHashInventory
+from kicad_tooling.hwrepo.purchasing_models import PurchasingReport
+from kicad_tooling.hwrepo.schematic_geometry_models import VerifiedSchematicSourceTree
+from kicad_tooling.hwrepo.source_state_models import PathDigestInventory, SourceHashInventory
 from kicad_tooling.hwrepo.stm32_pin_map_models import Stm32PinMapCoverageReport
+from kicad_tooling.hwrepo.supplier_analysis_models import SupplierAnalysisReport
 
 pytestmark = [pytest.mark.architecture, pytest.mark.evidence_lint]
 
@@ -85,6 +90,12 @@ def test_native_and_schematic_inventory_handoffs_use_the_shared_type() -> None:
 
 def test_project_inventory_producers_and_review_context_use_shared_type() -> None:
     assert (
+        get_type_hints(schematic_source_tree.verified_schematic_sources, include_extras=True)[
+            "return"
+        ]
+        == VerifiedSchematicSourceTree
+    )
+    assert (
         get_type_hints(project_source_hashes.hash_project_sources, include_extras=True)["return"]
         == SourceHashInventory
     )
@@ -108,7 +119,7 @@ def test_project_inventory_producers_and_review_context_use_shared_type() -> Non
             product_visual._project_identities,  # pyright: ignore[reportPrivateUsage]
             include_extras=True,
         )["source_hashes"]
-        == dict[RepositoryPath, Digest]
+        == MutableMapping[RepositoryPath, Digest]
     )
     assert (
         get_type_hints(electrical_view_evidence.ElectricalViewEvidence, include_extras=True)[
@@ -119,6 +130,28 @@ def test_project_inventory_producers_and_review_context_use_shared_type() -> Non
     assert (
         get_type_hints(verification_history_evidence.current_source, include_extras=True)["return"]
         == tuple[SourceHashInventory, str]
+    )
+
+
+def test_parts_policy_input_hashes_use_the_shared_path_digest_contract() -> None:
+    assert (
+        get_type_hints(parts_workflow.input_hashes, include_extras=True)["return"]
+        == PathDigestInventory
+    )
+    assert (
+        get_type_hints(PurchasingReport, include_extras=True)["input_hashes"] == PathDigestInventory
+    )
+    assert (
+        get_type_hints(PurchasingReport, include_extras=True)["source_hashes"]
+        == SourceHashInventory
+    )
+    assert (
+        get_type_hints(SupplierAnalysisReport, include_extras=True)["parts_input_hashes"]
+        == PathDigestInventory
+    )
+    assert (
+        get_type_hints(SupplierAnalysisReport, include_extras=True)["parts_source_hashes"]
+        == SourceHashInventory
     )
 
 

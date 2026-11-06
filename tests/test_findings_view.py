@@ -395,12 +395,10 @@ def test_reused_child_sheet_findings_map_to_distinct_drawings(tmp_path: Path) ->
     source_hashes = lint.source_hashes
     primary_name = primary.relative_to(root).as_posix()
     child_name = child.relative_to(root).as_posix()
-    source_files = verified_schematic_sources(
+    source_tree = verified_schematic_sources(
         root, primary_name, primary.parent.relative_to(root).as_posix(), source_hashes
     )
-    bindings = schematic_instance_bindings(
-        source_files, primary_name, primary.parent.relative_to(root).as_posix()
-    )
+    bindings = schematic_instance_bindings(source_tree)
     child_bindings = [item for item in bindings if item.source_path == child_name]
     assert len(child_bindings) == 2
     findings = tuple(
@@ -428,9 +426,7 @@ def test_reused_child_sheet_findings_map_to_distinct_drawings(tmp_path: Path) ->
                 "findings": findings,
                 "schematic_geometry": lint.schematic_geometry.model_copy(
                     update={
-                        "source_tree_sha256": source_tree_sha256(
-                            {name: source_hashes[name] for name in source_files}
-                        ),
+                        "source_tree_sha256": source_tree_sha256(source_tree.source_hashes),
                         "source_bindings": bindings,
                         "finding_count": 2,
                     }

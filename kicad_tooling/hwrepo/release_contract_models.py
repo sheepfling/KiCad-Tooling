@@ -5,9 +5,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from enum import Enum
-from typing import Literal
+from types import MappingProxyType
+from typing import Annotated, Literal, TypeAlias
 
-from pydantic import Field
+from pydantic import Field, PlainSerializer, model_validator
 
 from .model_primitives import (
     Digest,
@@ -104,11 +105,56 @@ class EvidenceFile(StrictModel):
     sha256: Digest
 
 
+ProjectEvidenceInventory: TypeAlias = Mapping[Identifier, EvidenceFile]
+
+
+def serialize_project_evidence_inventory(
+    value: ProjectEvidenceInventory,
+) -> dict[Identifier, EvidenceFile]:
+    return dict(value)
+
+
+SerializedProjectEvidenceInventory: TypeAlias = Annotated[
+    ProjectEvidenceInventory,
+    PlainSerializer(
+        serialize_project_evidence_inventory,
+        return_type=dict[Identifier, EvidenceFile],
+        when_used="always",
+    ),
+]
+
+
+ReleaseCheckInventory: TypeAlias = Mapping[Identifier, Literal["PASS", "NOT_APPLICABLE"]]
+
+
+def serialize_release_check_inventory(
+    value: ReleaseCheckInventory,
+) -> dict[Identifier, Literal["PASS", "NOT_APPLICABLE"]]:
+    return dict(value)
+
+
+SerializedReleaseCheckInventory: TypeAlias = Annotated[
+    ReleaseCheckInventory,
+    PlainSerializer(
+        serialize_release_check_inventory,
+        return_type=dict[Identifier, Literal["PASS", "NOT_APPLICABLE"]],
+        when_used="always",
+    ),
+]
+
+
 class ReleaseEvidence(StrictModel):
     portable: EvidenceFile
-    native: Mapping[Identifier, EvidenceFile]
-    exports: Mapping[Identifier, EvidenceFile] = Field(default_factory=dict)
-    electrical: Mapping[Identifier, EvidenceFile] = Field(default_factory=dict)
+    native: SerializedProjectEvidenceInventory
+    exports: SerializedProjectEvidenceInventory = Field(default_factory=dict)
+    electrical: SerializedProjectEvidenceInventory = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def freeze_project_evidence(self) -> ReleaseEvidence:
+        object.__setattr__(self, "native", MappingProxyType(dict(self.native)))
+        object.__setattr__(self, "exports", MappingProxyType(dict(self.exports)))
+        object.__setattr__(self, "electrical", MappingProxyType(dict(self.electrical)))
+        return self
 
 
 class ReleaseManifest(StrictModel):
@@ -123,8 +169,13 @@ class ReleaseManifest(StrictModel):
     variants: tuple[ReleaseVariant, ...] = ()
     libraries: tuple[ReleaseLibrary, ...]
     interfaces: tuple[ReleaseInterface, ...]
-    checks: Mapping[Identifier, Literal["PASS", "NOT_APPLICABLE"]] = Field(default_factory=dict)
+    checks: SerializedReleaseCheckInventory = Field(default_factory=dict)
     evidence: ReleaseEvidence | None = None
     artifacts: tuple[ReleaseArtifact, ...]
     deviations: tuple[ReleaseDeviation, ...] = ()
     approval: ReleaseApproval | None = None
+
+    @model_validator(mode="after")
+    def freeze_release_checks(self) -> ReleaseManifest:
+        object.__setattr__(self, "checks", MappingProxyType(dict(self.checks)))
+        return self

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Literal
 
 from pydantic import Field
@@ -14,10 +13,10 @@ from .model_primitives import (
     NonEmptyText,
     NonNegativeCount,
     PositiveCount,
-    RepositoryPath,
     StrictModel,
 )
 from .purchasing_preference_models import PurchasingPreferences, PurchasingSchemaModel
+from .source_state_models import PathDigestInventory, SourceHashInventory
 
 
 class PurchasingComponent(StrictModel):
@@ -76,8 +75,8 @@ class PurchasingReport(PurchasingSchemaModel):
     purchase_authorized: Literal[False] = False
     build_authorized: Literal[False] = False
     plan: PurchasingPlan | None = None
-    source_hashes: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
-    input_hashes: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
+    source_hashes: SourceHashInventory = Field(default_factory=dict)
+    input_hashes: PathDigestInventory = Field(default_factory=dict)
     netlist_sha256: Digest | None = None
     native_status: Literal["PASS", "FAIL"] | None = None
     selected_runner: Literal["local", "container"] | None = None

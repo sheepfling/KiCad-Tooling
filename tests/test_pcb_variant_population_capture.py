@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -20,6 +21,10 @@ from kicad_tooling.hwrepo.pcb_variant_population_capture import (
     _position_references,
     capture_variant_population,
     supports_named_variant_pcb_values,
+)
+from kicad_tooling.hwrepo.pcb_variant_position_export import (
+    read_pcb_variant_position_export,
+    read_verified_pcb_variant_position_export,
 )
 from kicad_tooling.validate import hashes
 from tests.design_lint_fixtures.pcb_component_inventory import netlist
@@ -60,6 +65,7 @@ def fake_native_runner(
     board_variant_present: bool = True,
     board_dnp: bool = False,
     mutate_schematic_after_export: bool = False,
+    include_value_column: bool = True,
 ):
     calls: list[tuple[str, ...]] = []
 
@@ -99,11 +105,15 @@ def fake_native_runner(
                 references = () if fitted and board_dnp else ("U1",)
                 with output_file.open("w", encoding="utf-8", newline="") as stream:
                     writer = csv.writer(stream)
-                    writer.writerow(("Ref", "Val", "Package", "PosX", "PosY", "Rot", "Side"))
+                    headers = ("Ref", "Val", "Package", "PosX", "PosY", "Rot", "Side")
+                    if not include_value_column:
+                        headers = tuple(header for header in headers if header != "Val")
+                    writer.writerow(headers)
                     for reference in references:
-                        writer.writerow(
-                            (reference, "synthetic", "Synthetic:Probe_Module", 1, 2, 0, "top")
-                        )
+                        row = (reference, "synthetic", "Synthetic:Probe_Module", 1, 2, 0, "top")
+                        if not include_value_column:
+                            row = (reference, "Synthetic:Probe_Module", 1, 2, 0, "top")
+                        writer.writerow(row)
                 if mutate_schematic_after_export and fitted:
                     schematic = root / "projects/synthetic/controller.kicad_sch"
                     schematic.write_text("changed schematic", encoding="utf-8")
@@ -147,11 +157,16 @@ def test_variant_capture_binds_same_name_and_source_hashes(
     assert capture.sources[0].variant == VARIANT
     assert capture.sources[0].board_references == ("U1",)
     assert capture.sources[0].fitted_board_references == ()
+    assert capture.sources[0].board_value_status == "AVAILABLE"
+    assert capture.sources[0].board_values == {"U1": "synthetic"}
+    assert capture.sources[0].position_receipt is not None
     export_calls = [call for call in calls if call[0] == "kicad-cli"]
     assert len(export_calls) == 3
     assert all(call[call.index("--variant") + 1] == VARIANT for call in export_calls)
     assert any("--exclude-dnp" in call for call in export_calls)
     evidence = capture.coverage.evidence[0]
+    assert capture.sources[0].position_receipt.path == evidence.board_all_positions_path
+    assert capture.sources[0].position_receipt.sha256 == evidence.board_all_positions_sha256
     assert evidence.netlist_sha256 != "0" * 64
     assert evidence.board_all_positions_sha256 != evidence.board_fitted_positions_sha256
 
@@ -249,6 +264,65 @@ def test_position_csv_parser_requires_one_reference_per_row(tmp_path: Path) -> N
     csv_path.write_text("Value\nprobe\n", encoding="utf-8")
     with pytest.raises(ValueError, match="no reference column"):
         _position_references(csv_path)
+
+
+def test_position_export_binds_immutable_values_to_exact_csv_bytes(tmp_path: Path) -> None:
+    csv_path = tmp_path / "positions.csv"
+    content = b"Reference,Value\nU1,probe\n"
+    csv_path.write_bytes(content)
+
+    export = read_pcb_variant_position_export(csv_path)
+
+    assert export.source_sha256 == hashlib.sha256(content).hexdigest()
+    assert (
+        read_verified_pcb_variant_position_export(
+            csv_path,
+            expected_sha256=export.source_sha256,
+        )
+        == export
+    )
+    with pytest.raises(ValueError, match="differs from source-bound evidence"):
+        read_verified_pcb_variant_position_export(csv_path, expected_sha256="f" * 64)
+    assert export.references == ("U1",)
+    assert export.value_column_status == "PRESENT"
+    assert export.values_by_reference == {"U1": "probe"}
+    assert export.values_by_reference is not None
+    with pytest.raises(TypeError):
+        export.values_by_reference["U1"] = "mutated"
+
+    csv_path.write_text("Reference\nU1\n", encoding="utf-8")
+    no_values = read_pcb_variant_position_export(csv_path)
+    assert no_values.value_column_status == "ABSENT"
+    assert no_values.values_by_reference is None
+    assert no_values.source_sha256 != export.source_sha256
+
+
+def test_supported_variant_export_without_value_column_is_blocked(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root, config = make_project(tmp_path)
+    _, runner = fake_native_runner(include_value_column=False)
+    monkeypatch.setattr(
+        "kicad_tooling.hwrepo.pcb_variant_population_capture.run_variant_native_command", runner
+    )
+    monkeypatch.setattr(
+        "kicad_tooling.hwrepo.pcb_variant_population_capture.read_netlist",
+        lambda _path: netlist(components={"U1": "Synthetic:Probe_Module"}),
+    )
+
+    capture = capture_variant_population(
+        root,
+        config,
+        root / "build/design-lint/variant-population",
+        expected_source_hashes=hashes(root, config.source_roots),
+        kicad_version="10.0.5",
+    )
+
+    assert capture.coverage.status == "BLOCKED"
+    assert "has no value column" in (capture.coverage.issue or "")
+    assert capture.sources == ()
+    assert capture.coverage.evidence == ()
 
 
 def test_variant_population_off_skips_named_variant_native_exports(

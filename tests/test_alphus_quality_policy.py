@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import subprocess
 import sys
@@ -267,3 +268,189 @@ def test_complexity_candidate_profile_is_provisional_and_scoped() -> None:
         if row.get("rule") == "cyclomatic-complexity"
     )
     assert step["rollout"] == "provisional"
+
+
+def test_module_role_boundary_profile_blocks_reintroduced_implementations(
+    tmp_path: Path,
+) -> None:
+    policy = tomllib.loads((ROOT / "quality-gates.toml").read_text())
+    module_rules = policy["checks"]["module_roles"]["modules"]
+    guarded_paths = {item["path"] for item in module_rules}
+    assert {
+        "kicad_tooling/hwrepo/cross_probe.py",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py",
+        "kicad_tooling/hwrepo/governance_lint.py",
+    } <= guarded_paths
+    step = next(
+        row for row in policy["orchestration"]["steps"] if row.get("rule") == "module-roles"
+    )
+    assert step["rollout"] == "mainline"
+
+    subprocess.run(("git", "init", "--quiet", str(tmp_path)), check=True, timeout=30)
+    config = tmp_path / "quality-gates.toml"
+    config.write_bytes((ROOT / "quality-gates.toml").read_bytes())
+    for rule in module_rules:
+        path = tmp_path / rule["path"]
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("VALUE = True\n")
+
+    command = (
+        sys.executable,
+        "-I",
+        "-m",
+        "alphus",
+        "--root",
+        str(tmp_path),
+        "--config",
+        "quality-gates.toml",
+        "--profile",
+        "module-role-boundaries",
+        "--json",
+    )
+    valid = subprocess.run(command, text=True, capture_output=True, check=False, timeout=30)
+    assert valid.returncode == 0, valid.stderr
+    assert json.loads(valid.stdout)["severity_counts"] == {
+        "error": 0,
+        "info": 0,
+        "warning": 0,
+    }
+
+    coordinator = tmp_path / "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py"
+    coordinator.write_text("def scan_connector_candidates(*args, **kwargs):\n    return ()\n")
+    invalid = subprocess.run(command, text=True, capture_output=True, check=False, timeout=30)
+    assert invalid.returncode == 1, invalid.stderr
+    report = json.loads(invalid.stdout)
+    assert report["failed"] == 1
+    findings = report["steps"][0]["findings"]
+    assert len(findings) == 1
+    assert findings[0]["path"] == "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py"
+    assert findings[0]["rule_id"].endswith("/architecture/forbidden-module-definition")
+
+
+def test_mainline_module_role_profile_runs_in_package_ci() -> None:
+    tree = ast.parse((ROOT / "scripts/ci.py").read_text())
+    stages = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "stage"
+        and node.args
+        and isinstance(node.args[0], ast.Constant)
+        and node.args[0].value == "alphus-module-role-boundaries"
+    ]
+    (stage,) = stages
+    command = stage.args[1]
+    assert isinstance(command, ast.Tuple)
+    assert [
+        element.value
+        for element in command.elts
+        if isinstance(element, ast.Constant) and isinstance(element.value, str)
+    ] == [
+        "-I",
+        "-m",
+        "alphus",
+        "--root",
+        "--config",
+        "quality-gates.toml",
+        "--profile",
+        "module-role-boundaries",
+        "--json",
+    ]
+
+
+def test_shared_utility_duplication_profile_is_a_mainline_ci_gate(
+    tmp_path: Path,
+) -> None:
+    policy = tomllib.loads((ROOT / "quality-gates.toml").read_text())
+    shared_utilities = policy["checks"]["shared_utilities"]
+    assert shared_utilities["extensions"] == [".py"]
+    assert shared_utilities["exclude"] == ["scripts/**/*.py", "tests/**/*.py"]
+    assert shared_utilities["canonical_file_hash_path"] == "kicad_tooling/hwrepo/evidence.py"
+    assert shared_utilities["canonical_file_hash_function"] == "digest"
+    step = next(
+        row for row in policy["orchestration"]["steps"] if row.get("rule") == "shared-utilities"
+    )
+    assert step["rollout"] == "mainline"
+    assert (
+        next(
+            row["name"]
+            for row in policy["orchestration"]["profiles"]
+            if row["steps"] == [step["name"]]
+        )
+        == "shared-utility-duplication"
+    )
+
+    tree = ast.parse((ROOT / "scripts/ci.py").read_text())
+    stages = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "stage"
+        and node.args
+        and isinstance(node.args[0], ast.Constant)
+        and node.args[0].value == "alphus-shared-utility-duplication"
+    ]
+    (stage,) = stages
+    command = stage.args[1]
+    assert isinstance(command, ast.Tuple)
+    assert [
+        element.value
+        for element in command.elts
+        if isinstance(element, ast.Constant) and isinstance(element.value, str)
+    ] == [
+        "-I",
+        "-m",
+        "alphus",
+        "--root",
+        "--config",
+        "quality-gates.toml",
+        "--profile",
+        "shared-utility-duplication",
+        "--json",
+    ]
+
+    subprocess.run(("git", "init", "--quiet", str(tmp_path)), check=True, timeout=30)
+    config = tmp_path / "quality-gates.toml"
+    config.write_bytes((ROOT / "quality-gates.toml").read_bytes())
+    command = (
+        sys.executable,
+        "-I",
+        "-m",
+        "alphus",
+        "--root",
+        str(tmp_path),
+        "--config",
+        "quality-gates.toml",
+        "--profile",
+        "shared-utility-duplication",
+        "--json",
+    )
+    clean = subprocess.run(command, text=True, capture_output=True, check=False, timeout=30)
+    assert clean.returncode == 0, clean.stderr
+    assert json.loads(clean.stdout)["severity_counts"] == {
+        "error": 0,
+        "info": 0,
+        "warning": 0,
+    }
+
+    duplicate_helper = (
+        "def normalize(value):\n"
+        "    stripped = value.strip()\n"
+        "    normalized = stripped.lower()\n"
+        "    return normalized\n"
+    )
+    for name in ("first.py", "second.py"):
+        path = tmp_path / "kicad_tooling/hwrepo" / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(duplicate_helper)
+    duplicate = subprocess.run(command, text=True, capture_output=True, check=False, timeout=30)
+    assert duplicate.returncode == 1, duplicate.stderr
+    report = json.loads(duplicate.stdout)
+    assert report["failed"] == 1
+    findings = report["steps"][0]["findings"]
+    assert len(findings) == 1
+    assert findings[0]["rule_id"].endswith("/maintainability/duplicate-helper")
+    assert "first.py" in findings[0]["message"]
+    assert "second.py" in findings[0]["message"]

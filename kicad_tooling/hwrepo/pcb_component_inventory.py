@@ -39,7 +39,7 @@ def compare_fitted_schematic_pcb_inventory(
     """Compare fitted schematic footprint assignments with native PCB placements."""
     if snapshot.schema_version not in {"12", "13", "14", "15"}:
         raise ValueError(
-            "PCB component inventory requires native footprint snapshot schema 12, 13, or 14"
+            "PCB component inventory requires native footprint snapshot schema 12, 13, 14, or 15"
         )
 
     schematic_references: dict[str, str] = {}
@@ -196,7 +196,7 @@ def evaluate_native_component_inventory_coverage(
     elif netlist_sha256 is None:
         issue = "Source-bound native schematic netlist digest is unavailable"
     elif snapshot.schema_version not in {"12", "13", "14", "15"}:
-        issue = "PCB component inventory needs native footprint snapshot schema 12, 13, or 14"
+        issue = "PCB component inventory needs native footprint snapshot schema 12, 13, 14, or 15"
     else:
         try:
             comparison = compare_fitted_schematic_pcb_inventory(netlist, snapshot)
@@ -330,7 +330,7 @@ def evaluate_native_component_inventory_coverage(
 
     if snapshot.schema_version not in {"12", "13", "14", "15"}:
         raise ValueError(
-            "PCB component inventory requires native footprint snapshot schema 12, 13, or 14"
+            "PCB component inventory requires native footprint snapshot schema 12, 13, 14, or 15"
         )
     return PcbComponentInventoryCoverageReport(
         status="COMPLETE",

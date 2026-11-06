@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import ast
+
 import pytest
 
+from kicad_tooling.hwrepo import models as compatibility_models
 from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
 from tests.lint_architecture_support import IMPLEMENTATION_MAX_LINES, REPO_ROOT, line_count
 
@@ -15,6 +18,7 @@ pytestmark = [
 
 RULE_ID = "component.mapped_led_current_range_mismatch"
 OWNER = "kicad_tooling/hwrepo/led_current_range.py#evaluate_led_current_requirement"
+EVIDENCE_OWNER = "kicad_tooling/hwrepo/design_lint_led_current_candidate_evidence.py"
 
 
 def test_led_current_range_rule_has_a_theme_owned_predicate_and_shared_routes() -> None:
@@ -27,16 +31,32 @@ def test_led_current_range_rule_has_a_theme_owned_predicate_and_shared_routes() 
     coverage_source = (
         REPO_ROOT / "kicad_tooling/hwrepo/design_lint_mapped_topology_coverage.py"
     ).read_text(encoding="utf-8")
+    candidate_source = (
+        REPO_ROOT / "kicad_tooling/hwrepo/design_lint_led_current_candidates.py"
+    ).read_text(encoding="utf-8")
 
+    candidate_tree = ast.parse(candidate_source)
+    refs = set(rule.implementation_refs)
     assert rule.theme == "components"
     assert rule.default_mode == "review"
     assert rule.implementation_owner == OWNER
     assert OWNER in rule.implementation_refs
+    assert f"{EVIDENCE_OWNER}#project_led_current_range_evidence" in refs
+    assert f"{EVIDENCE_OWNER}#led_current_range_candidate" in refs
     assert f"def {owner_function}(" in owner_source
     assert "from .design_lint_led_current_candidates import led_current_range_candidates" in (
         component_source
     )
     assert "component.mapped_led_current_range_mismatch" in coverage_source
+    assert "LedCurrentRangeCandidate" in candidate_source
+    assert not any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "Candidate"
+        for node in ast.walk(candidate_tree)
+    )
+    assert not hasattr(compatibility_models, "LedCurrentRangeFindingEvidence")
+    assert not hasattr(compatibility_models, "LedCurrentRangeCandidate")
 
 
 def test_led_current_rule_and_regression_modules_stay_below_review_threshold() -> None:
@@ -44,6 +64,7 @@ def test_led_current_rule_and_regression_modules_stay_below_review_threshold() -
         "kicad_tooling/hwrepo/led_current_models.py",
         "kicad_tooling/hwrepo/led_current_range.py",
         "kicad_tooling/hwrepo/design_lint_led_current_candidates.py",
+        EVIDENCE_OWNER,
         "tests/design_lint_fixtures/led_current.py",
         "tests/test_led_current_range.py",
         "tests/test_led_current_native_fixture_lane.py",

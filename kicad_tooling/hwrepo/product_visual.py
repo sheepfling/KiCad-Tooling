@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from collections.abc import Set as AbstractSet
 from pathlib import Path
 from typing import Literal
@@ -11,14 +11,31 @@ from uuid import uuid4
 
 from .artifact_access import read_regular_bytes
 from .contract_coach import receipt_directory
-from .contracts import model_json_bytes, parse_model_text, repo_path, write_model
+from .contracts import model_json_bytes, repo_path, write_model
 from .discovery import load_config, load_registry
 from .evidence import digest
 from .generation import harness_schedule, system_view
 from .layout import CONFIG_NAME, layout, within_roots
 from .model_primitives import Digest, RepositoryPath
-from .product import excluded, load_repository, occurrences, validate_product
-from .product_models import AssemblyKind, ProductIndex, ProductRecord, Terminal, Variant
+from .product import (
+    load_repository,
+    validate_product,
+)
+from .product_models import (
+    AssemblyKind,
+    ProductInstancePath,
+    ProductRecord,
+    Terminal,
+    Variant,
+)
+from .product_occurrences import (
+    ProductOccurrenceIndex,
+    excluded,
+    occurrences,
+    occurrences_for,
+    product_occurrence_index,
+)
+from .product_source_inputs import parse_product_index_document, read_product_source
 from .product_visual_html import render_product_visual
 from .product_visual_models import (
     ProductProjectIdentity,
@@ -97,13 +114,22 @@ def _relationships(
 
 
 def project_instances(
-    product: ProductRecord, variant: Variant, parts: AbstractSet[str]
+    product: ProductRecord,
+    variant: Variant,
+    parts: AbstractSet[str],
+    *,
+    occurrence_index: ProductOccurrenceIndex | None = None,
 ) -> tuple[ProductVisualInstance, ...]:
-    expanded = occurrences(product)
+    expanded = (
+        occurrences(product)
+        if occurrence_index is None
+        else occurrences_for(product, occurrence_index)
+    )
     assemblies = {assembly.id: assembly for assembly in product.assemblies}
     result: list[ProductVisualInstance] = []
     for path, occurrence in expanded.items():
         assembly = assemblies.get(occurrence.item)
+        parent_path, separator, _ = path.rpartition(".")
         kind: Literal["BUILT", "PHANTOM", "PURCHASED", "PART", "UNRESOLVED"]
         if assembly is None:
             kind = "PART" if occurrence.item in parts else "UNRESOLVED"
@@ -116,7 +142,7 @@ def project_instances(
         result.append(
             ProductVisualInstance(
                 path=path,
-                parent=path.rpartition(".")[0] if path else None,
+                parent=ProductInstancePath(parent_path) if separator else None,
                 item=occurrence.item,
                 quantity=occurrence.quantity,
                 kind=kind,
@@ -130,7 +156,7 @@ def project_instances(
 def _project_identities(
     root: Path,
     ids: AbstractSet[str],
-    source_hashes: dict[RepositoryPath, Digest],
+    source_hashes: MutableMapping[RepositoryPath, Digest],
 ) -> tuple[ProductProjectIdentity, ...]:
     projects = {item.id: item for item in load_registry(root).projects}
     result: list[ProductProjectIdentity] = []
@@ -183,7 +209,8 @@ def build_product_visual(
     configuration = layout(root)
     index_path = repo_path(root, configuration.products)
     index_bytes, _ = read_regular_bytes(index_path, maximum=2 * 1024 * 1024)
-    index = parse_model_text(index_bytes.decode("utf-8"), ProductIndex)
+    index_document = parse_product_index_document(root, configuration.products, index_bytes)
+    index = index_document.value
     matches = [entry for entry in index.products if entry.id == product_id]
     if len(matches) != 1:
         raise ValueError(f"Select one indexed product ID: {product_id}")
@@ -198,8 +225,8 @@ def build_product_visual(
     ):
         raise ValueError("Indexed product must live in a configured product island")
     product_path = repo_path(root, entry.path)
-    product_bytes, _ = read_regular_bytes(product_path, maximum=4 * 1024 * 1024)
-    product = parse_model_text(product_bytes.decode("utf-8"), ProductRecord)
+    product_source, product_bytes = read_product_source(product_path, entry.path)
+    product = product_source.record
     if product.id != product_id:
         raise ValueError("Indexed product identity differs from its record")
     selected_variants = [item for item in product.variants if item.id == variant_id]
@@ -215,8 +242,15 @@ def build_product_visual(
         entry.path,
     )
     source_hashes: dict[RepositoryPath, Digest] = {
-        name: digest(repo_path(root, name)) for name in baseline
+        name: (
+            index_document.source.sha256
+            if name == configuration.products
+            else digest(repo_path(root, name))
+        )
+        for name in baseline
+        if name != entry.path
     }
+    source_hashes[entry.path] = product_source.sha256
     parts_path = registry.catalogs.parts
     parts_bytes, _ = read_regular_bytes(repo_path(root, parts_path), maximum=8 * 1024 * 1024)
     parts_sha256 = hashlib.sha256(parts_bytes).hexdigest()
@@ -226,13 +260,18 @@ def build_product_visual(
     if adapter.is_file():
         source_hashes[CONFIG_NAME] = digest(adapter)
     # Load shared typed catalogs without validating unrelated product islands.
-    repository = load_repository(root, ())
+    repository = load_repository(root, (), product_index_document=index_document)
     policy_issues = validate_product(
         root, product, repository.parts, repository.interfaces, repository.projects
     )
     issues = [f"{issue.code} at {issue.location}: {issue.message}" for issue in policy_issues]
     try:
-        instances = project_instances(product, variant, set(repository.parts))
+        instances = project_instances(
+            product,
+            variant,
+            set(repository.parts),
+            occurrence_index=product_occurrence_index(product_source),
+        )
     except ValueError as exc:
         instances = ()
         issues.append(f"Assembly hierarchy cannot be expanded: {exc}")
@@ -283,7 +322,7 @@ def build_product_visual(
         variant_revision=variant.revision,
         status="CURRENT" if projection_available else "REVIEW",
         product_path=entry.path,
-        product_sha256=hashlib.sha256(product_bytes).hexdigest(),
+        product_sha256=product_source.sha256,
         parts_catalog_path=parts_path,
         parts_catalog_sha256=parts_sha256,
         source_hashes=source_hashes,

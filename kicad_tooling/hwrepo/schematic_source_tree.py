@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping
 from pathlib import Path
 
 from .artifact_access import read_regular_bytes
 from .contracts import repo_path
-from .schematic_geometry_models import SchematicGeometrySourceBinding
+from .schematic_geometry_models import (
+    SchematicGeometrySourceBinding,
+    SchematicSourceFile,
+    VerifiedSchematicSourceTree,
+)
 from .schematic_geometry_source import (
     resolve_schematic_sheet_path,
     schematic_root,
@@ -24,9 +27,9 @@ def verified_schematic_sources(
     root_path: str,
     project_directory: str,
     source_hashes: SourceHashInventory,
-) -> dict[str, bytes]:
+) -> VerifiedSchematicSourceTree:
     """Read each project-local sheet source once against the exact saved inventory."""
-    source_files: dict[str, bytes] = {}
+    source_files: dict[str, SchematicSourceFile] = {}
     pending = [root_path]
     while pending:
         current_path = pending.pop()
@@ -41,26 +44,36 @@ def verified_schematic_sources(
                 f"hashes: {current_path}"
             )
         source, _ = read_regular_bytes(repo_path(root, current_path), maximum=16 * 1024 * 1024)
-        if hashlib.sha256(source).hexdigest() != expected_hash:
+        source_sha256 = hashlib.sha256(source).hexdigest()
+        if source_sha256 != expected_hash:
             raise ValueError(f"Schematic differs from the source-bound hashes: {current_path}")
-        source_files[current_path] = source
-        for sheet in schematic_sheet_references(source):
+        source_file = SchematicSourceFile(
+            source_path=current_path,
+            source_sha256=source_sha256,
+            contents=source,
+        )
+        source_files[current_path] = source_file
+        for sheet in schematic_sheet_references(source_file.contents):
             child_path = resolve_schematic_sheet_path(current_path, project_directory, sheet.file)
             repo_path(root, child_path)
             if child_path not in source_files:
                 pending.append(child_path)
-    return source_files
+    return VerifiedSchematicSourceTree(
+        root_path=root_path,
+        project_directory=project_directory,
+        source_files=tuple(source_files.values()),
+    )
 
 
 def schematic_instance_bindings(
-    source_files: Mapping[str, bytes],
-    root_path: str,
-    project_directory: str,
+    source_tree: VerifiedSchematicSourceTree,
 ) -> tuple[SchematicGeometrySourceBinding, ...]:
     """Resolve reused sheet files to their distinct UUID paths and displayed names."""
+    source_files = source_tree.source_files_by_path
+    root_path = source_tree.root_path
     if root_path not in source_files:
         raise ValueError("Root schematic source is unavailable")
-    document = schematic_root(source_files[root_path])
+    document = schematic_root(source_files[root_path].contents)
     text = document.text
     root = document.root
     root_uuid = schematic_scalar(text, root, "uuid")
@@ -78,19 +91,21 @@ def schematic_instance_bindings(
         if len(visited) >= MAX_SHEET_OCCURRENCES or instance_path in visited:
             raise ValueError("Schematic has too many or duplicate sheet instances")
         visited.add(instance_path)
-        payload = source_files.get(source_path)
-        if payload is None:
+        source_file = source_files.get(source_path)
+        if source_file is None:
             raise ValueError(f"Schematic child source is unavailable: {source_path}")
         found.append(
             SchematicGeometrySourceBinding(
                 source_path=source_path,
-                source_sha256=hashlib.sha256(payload).hexdigest(),
+                source_sha256=source_file.source_sha256,
                 sheet_instance_path=instance_path,
                 sheet_path=sheet_path,
             )
         )
-        for sheet in schematic_sheet_references(payload):
-            child_path = resolve_schematic_sheet_path(source_path, project_directory, sheet.file)
+        for sheet in schematic_sheet_references(source_file.contents):
+            child_path = resolve_schematic_sheet_path(
+                source_path, source_tree.project_directory, sheet.file
+            )
             visit(
                 child_path,
                 f"{instance_path}/{sheet.uuid}",

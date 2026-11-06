@@ -8,14 +8,12 @@ from uuid import uuid4
 
 import kicad_tooling.hwrepo.electrical_analysis_contract_models as electrical_contracts
 
+from . import netlist_runner_selection
 from .command_evidence_models import CommandEvidence
 from .component_power_ratings import component_power_rating_checks
 from .component_voltage_ratings import component_voltage_rating_checks
 from .connector_contact_ratings import connector_contact_rating_checks
 from .contract_coach import (
-    AutoNetlistRunner,
-    ContainerNetlistRunner,
-    LocalNetlistRunner,
     NetlistRunner,
     capture,
     inspect_summary,
@@ -57,6 +55,7 @@ from .electrical_pcb_evidence import (
     admit_pcb_connectivity_capture,
 )
 from .electrical_report_models import (
+    BoundElectricalInputs,
     ElectricalAnalysisReport,
     ElectricalCheck,
     ElectricalSuiteReport,
@@ -67,7 +66,6 @@ from .electrical_simulation_evaluation import (
 )
 from .electrical_simulation_evidence import SimulationVersionObserved
 from .evidence import digest, source_state
-from .model_primitives import Digest, RepositoryPath
 from .mosfet_stress import mosfet_stress_checks
 from .netlist_contract_models import NetlistContract
 from .pcb_return_path_capture import (
@@ -116,14 +114,6 @@ def analyze_request(
     return _analyze(root, request, None)
 
 
-def _selected_netlist_runner(request: ElectricalAnalysisRequest) -> NetlistRunner:
-    if request.runner_mode == "local":
-        return LocalNetlistRunner(request.cli)
-    if request.runner_mode == "container":
-        return ContainerNetlistRunner()
-    return AutoNetlistRunner(request.cli)
-
-
 def _analyze(
     root: Path,
     request: ElectricalAnalysisRequest,
@@ -142,7 +132,7 @@ def _analyze(
     output = receipt_directory(root, project_id, output)
     checks: list[ElectricalCheck] = []
     commands: dict[str, CommandEvidence] = {}
-    inputs: dict[RepositoryPath, Digest] = {}
+    inputs = BoundElectricalInputs(entries=())
     status = "FAIL"
     try:
         config = selected_config(root, project_id)
@@ -253,7 +243,10 @@ def _analyze(
                         root,
                         project_id,
                         netlist_output,
-                        runner or _selected_netlist_runner(request),
+                        runner
+                        or netlist_runner_selection.select_netlist_runner(
+                            request.runner_mode, request.cli
+                        ),
                     )
                 else:
                     netlist_report = inspect_summary(root, project_id, native_summary)
@@ -261,7 +254,7 @@ def _analyze(
                 netlist_evidence = admit_netlist_evidence(
                     netlist_report,
                     project_id,
-                    {name: inputs[name] for name in config.required_inputs},
+                    inputs.source_sha256,
                 )
                 if isinstance(netlist_evidence, NetlistEvidenceObserved):
                     netlist = netlist_evidence.observed
@@ -650,7 +643,7 @@ def _analyze(
                     output=output,
                     ngspice=ngspice,
                     expected_version=contract.ngspice_version,
-                    source_sha256={name: inputs[name] for name in config.required_inputs},
+                    source_sha256=inputs.source_sha256,
                     cases=simulation_cases(contract),
                 )
             )
@@ -660,7 +653,7 @@ def _analyze(
                 if result.command is not None:
                     commands[result.case.id] = result.command
                 checks.extend(result.checks)
-            bind_electrical_inputs(root, config, contract, inputs)
+            bind_electrical_inputs(root, config, contract, inputs.all_sha256)
             if source_state(root) != source:
                 raise ValueError("Repository source changed during electrical analysis")
             status = (
@@ -675,7 +668,7 @@ def _analyze(
         source=source,
         status=status,
         run_directory=str(output),
-        input_sha256=inputs,
+        input_sha256=inputs.all_sha256,
         artifacts_sha256={
             path.relative_to(output).as_posix(): digest(path)
             for path in sorted(output.rglob("*"))

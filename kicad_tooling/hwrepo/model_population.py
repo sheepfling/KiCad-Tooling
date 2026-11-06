@@ -16,19 +16,17 @@ from kicad_tooling.hwrepo.models import ModelMap
 
 from .contracts import (
     read_model,
-    relative_path_from,
     repo_path,
     repo_path_is_within,
     update_project_manifest_inputs,
 )
 from .diagnostic_journal import DiagnosticJournal
 from .discovery import load_config, load_registry
+from .kicad_sexpr import sexpr_atoms as _atoms
+from .kicad_sexpr import sexpr_children as _children
 from .layout import layout
-from .model_inventory import (
-    _atoms,  # pyright: ignore[reportPrivateUsage]
-    _children,  # pyright: ignore[reportPrivateUsage]
-    inspect_models,
-)
+from .model_inventory import inspect_models
+from .model_population_sources import ModelSourceResolution, resolve_model_source_path
 from .models import (
     LibrariesCatalog,
     ModelMapAssignment,
@@ -41,12 +39,14 @@ __all__ = [
     "ModelMap",
     "ModelMapAssignment",
     "ModelPopulationReport",
+    "ModelSourceResolution",
     "init_model_map",
     "populate_models",
     "render_population_text",
+    "require_shared_consumer_inventory",
+    "resolve_model_source_path",
+    "validate_shared_model_roots",
 ]
-
-AUTHORABLE_SUFFIXES = frozenset({".step", ".stp", ".igs", ".iges", ".wrl"})
 
 
 def _digest(value: bytes) -> str:
@@ -64,33 +64,7 @@ def _diff(before: str, after: str, name: str) -> str:
     )
 
 
-def _model_path(
-    root: Path, manifest_dir: Path, board_dir: Path, manifest: ProjectManifest, name: str
-) -> tuple[Path, str, str, str]:
-    if Path(name).suffix.casefold() not in AUTHORABLE_SUFFIXES:
-        raise ValueError(
-            f"{name}: assign STEP/STP/IGS/IGES/WRL source; IDF and exports are not viewable model inputs"
-        )
-    if "$" in name:
-        raise ValueError(f"{name}: model filenames must not contain KiCad variable syntax")
-    path = repo_path(root, name)
-    if not path.is_file():
-        raise ValueError(f"{name}: reviewed model file is missing")
-    local_roots = tuple(repo_path(manifest_dir, item) for item in manifest.source_roots)
-    shared_roots = tuple(repo_path(root, item) for item in manifest.shared_source_roots)
-    local = any(path.is_relative_to(source) for source in local_roots)
-    shared = any(path.is_relative_to(source) for source in shared_roots)
-    if local == shared:
-        raise ValueError(
-            f"{name}: model must belong to exactly one declared project-local or shared source root"
-        )
-    inventory_field = "required_inputs" if local else "shared_inputs"
-    inventory_name = path.relative_to(manifest_dir).as_posix() if local else name
-    relative = relative_path_from(path, board_dir).as_posix()
-    return path, inventory_field, inventory_name, "${KIPRJMOD}/" + relative
-
-
-def _validate_shared_roots(
+def validate_shared_model_roots(
     root: Path, registry: ProjectRegistry, manifest: ProjectManifest
 ) -> None:
     """Accept shared model roots only through this project's registered libraries."""
@@ -114,7 +88,7 @@ def _validate_shared_roots(
         repo_path(root, name)
 
 
-def _require_shared_consumer_inventory(
+def require_shared_consumer_inventory(
     root: Path,
     registry: ProjectRegistry,
     selected_config: str,
@@ -333,7 +307,7 @@ def populate_models(
             manifest_name = record.config
             manifest_path = repo_path(root, manifest_name)
             manifest = read_model(manifest_path, ProjectManifest)
-            _validate_shared_roots(root, registry, manifest)
+            validate_shared_model_roots(root, registry, manifest)
             board_name = Path(record.project).with_suffix(".kicad_pcb").as_posix()
             board_path = repo_path(root, board_name)
             if not board_path.is_file():
@@ -360,16 +334,16 @@ def populate_models(
                         f"{item.reference}: choose a reviewed model path or remove this "
                         "unneeded assignment from the draft map"
                     )
-                path, field, inventory_name, reference = _model_path(
+                resolution = resolve_model_source_path(
                     root,
                     manifest_path.parent,
                     board_path.parent,
                     manifest,
                     item.model,
                 )
-                additions[field].add(inventory_name)
-                references[item.reference] = reference
-                digest = _digest(path.read_bytes())
+                additions[resolution.manifest_field].add(resolution.manifest_input_path)
+                references[item.reference] = resolution.kicad_reference
+                digest = _digest(resolution.model_path.read_bytes())
                 if item.model_sha256 is not None and item.model_sha256 != digest:
                     raise ValueError(
                         f"{item.reference}: model source changed since review: {item.model}; "
@@ -377,7 +351,7 @@ def populate_models(
                     )
                 model_hashes[item.model] = digest
                 locked_assignments.append(item.model_copy(update={"model_sha256": digest}))
-            _require_shared_consumer_inventory(
+            require_shared_consumer_inventory(
                 root,
                 registry,
                 manifest_name,
@@ -421,7 +395,7 @@ def populate_models(
                 for name, digest in model_hashes.items():
                     if _digest(repo_path(root, name).read_bytes()) != digest:
                         raise ValueError(f"Model source changed after planning: {name}")
-                _require_shared_consumer_inventory(
+                require_shared_consumer_inventory(
                     root,
                     registry,
                     manifest_name,

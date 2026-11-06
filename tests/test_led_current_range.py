@@ -3,11 +3,18 @@
 from __future__ import annotations
 
 import hashlib
+from dataclasses import replace
 
 import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.design_lint import evaluate
+from kicad_tooling.hwrepo.design_lint_finding_models import DesignLintFinding
+from kicad_tooling.hwrepo.design_lint_led_current_candidate_evidence import (
+    LedCurrentRangeCandidate,
+)
+from kicad_tooling.hwrepo.design_lint_led_current_candidates import led_current_range_candidates
+from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.design_lint_rule_types import DesignLintRuleId
 from kicad_tooling.hwrepo.led_current_models import LedCurrentMap
 from kicad_tooling.hwrepo.led_current_range import led_current_map_sha256
@@ -33,7 +40,7 @@ def _report(
     include_netlist_digest: bool = True,
     rules: tuple[DesignLintRuleOverride, ...] = (),
     ignores: tuple[DesignLintIgnore, ...] = (),
-):
+) -> DesignLintReport:
     digest = (
         netlist_sha256
         if netlist_sha256 is not None
@@ -54,7 +61,7 @@ def _report(
     )
 
 
-def _finding(report):
+def _finding(report: DesignLintReport) -> DesignLintFinding:
     return next(item for item in report.findings if item.rule_id == RULE_ID)
 
 
@@ -87,6 +94,29 @@ def test_wrong_resistor_value_exceeds_authored_current_window() -> None:
         "Synthetic project-selected indicator-current range",
     )
     assert finding.evidence["netlist_sha256"] == (report.netlist_sha256,)
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_candidate_retains_copied_map_and_netlist_sources() -> None:
+    netlist = led_current_netlist(resistor_value="100R")
+    requirement_map = led_current_map()
+    digest = hashlib.sha256(netlist.model_dump_json().encode()).hexdigest()
+    (candidate,) = led_current_range_candidates(netlist, requirement_map, digest)
+
+    assert isinstance(candidate, LedCurrentRangeCandidate)
+    assert candidate.source_evidence.led_map == requirement_map
+    assert candidate.source_evidence.observed == netlist
+    assert candidate.source_evidence.led_map is not requirement_map
+    assert candidate.source_evidence.observed is not netlist
+    assert candidate.source_evidence.observed.nets is not netlist.nets
+    assert candidate.source_evidence.netlist_sha256 == digest
+    assert candidate.source_evidence.entry.status == "OUT_OF_RANGE"
+
+    altered_entry = candidate.source_evidence.entry.model_copy(update={"source_net": "+5V"})
+    with pytest.raises(ValueError, match="result must match its retained map and netlist"):
+        replace(candidate.source_evidence, entry=altered_entry)
+    with pytest.raises(ValueError, match="must match its retained source projection"):
+        replace(candidate, evidence={"forged": ("value",)})
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -138,7 +168,9 @@ def test_return_side_series_resistor_matches_the_same_authored_current_window() 
         ),
     ),
 )
-def test_incomplete_population_or_topology_requests_review(netlist, expected_issue: str) -> None:
+def test_incomplete_population_or_topology_requests_review(
+    netlist: NetlistContract, expected_issue: str
+) -> None:
     report = _report(netlist, led_current_map())
 
     finding = _finding(report)

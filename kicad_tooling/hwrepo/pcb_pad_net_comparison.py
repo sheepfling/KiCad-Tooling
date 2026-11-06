@@ -22,7 +22,7 @@ def compare_schematic_pcb_pad_nets(
     establish physical copper continuity.
     """
     if snapshot.schema_version not in _SUPPORTED_SNAPSHOT_SCHEMAS:
-        raise ValueError("PCB pad net comparison requires native snapshot schema 12, 13, or 14")
+        raise ValueError("PCB pad net comparison requires native snapshot schema 12, 13, 14, or 15")
 
     components: dict[str, tuple[str, str]] = {}
     for reference, component in netlist.components.items():

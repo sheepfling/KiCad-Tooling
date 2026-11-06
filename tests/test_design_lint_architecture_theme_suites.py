@@ -33,6 +33,7 @@ PCB_REFERENCE_PLANE_THEME_SUITES = (
     "test_ci_hosted_pcb_reference_planes.py",
 )
 CONNECTOR_COVERAGE_THEME_SUITES = (
+    "test_connector_split_return_peers_native.py",
     "test_connector_peer_unanchored_coverage.py",
     "test_connector_peer_unanchored_coverage_parity.py",
     "test_connector_inventory_coverage.py",
@@ -139,6 +140,15 @@ PCB_THEME_SUITES = (
     "test_pcb_access_fixture_lane.py",
     "test_pcb_access_native_fixture_lane.py",
     "test_pcb_drc_coverage.py",
+    "test_pcb_dru_rule_without_constraint.py",
+    "test_pcb_dru_rule_without_constraint_native.py",
+    "test_pcb_dru_duplicate_rule_names.py",
+    "test_pcb_dru_duplicate_rule_names_native.py",
+    "test_pcb_dru_conflicting_severities.py",
+    "test_pcb_dru_conflicting_severities_native.py",
+    "test_design_lint_mcp_parity_pcb_dru_duplicate_rule_names.py",
+    "test_design_lint_mcp_parity_pcb_dru_conflicting_severities.py",
+    "test_pcb_dru_item_type_case_native.py",
     "test_pcb_signal_path_coverage.py",
     "test_pcb_signal_path_edge_clearance.py",
     "test_pcb_signal_path_evidence.py",

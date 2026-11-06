@@ -9,11 +9,13 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from types import MappingProxyType
-from typing import Literal, cast
+from typing import Literal, TypeAlias, cast
 
 from pydantic import JsonValue
 
-from .model_inventory import _atoms, _children, _Span  # pyright: ignore[reportPrivateUsage]
+from .kicad_sexpr import SExprSpan as _Span
+from .kicad_sexpr import sexpr_atoms as _atoms
+from .kicad_sexpr import sexpr_children as _children
 from .pcb_drc_models import PcbDrcConstraintName
 
 RULE_SEVERITY = MappingProxyType(
@@ -92,7 +94,17 @@ class NativeIgnoredDrcRule:
     ordinal: int
 
 
-NativeDrcRuleSeverity = Literal["error", "warning", "ignore", "exclusion"]
+@dataclass(frozen=True, slots=True)
+class NativeDrcRuleDeclaration:
+    """Direct source structure for one named version-1 custom DRC rule."""
+
+    name: str
+    ordinal: int
+    constraint_count: int
+    condition: str | None
+
+
+NativeDrcRuleSeverity: TypeAlias = Literal["error", "warning", "ignore", "exclusion"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,6 +114,44 @@ class NativeDrcRuleWithSeverity:
     name: str
     ordinal: int
     severity: NativeDrcRuleSeverity
+
+
+@dataclass(frozen=True, slots=True)
+class NativeDrcRuleWithConflictingSeverities:
+    """A named version-1 custom rule with multiple supported severities."""
+
+    name: str
+    ordinal: int
+    severities: tuple[NativeDrcRuleSeverity, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class _NativeNamedRule:
+    name: str
+    ordinal: int
+    children: tuple[_Span, ...]
+
+
+def _native_named_rules(source: str) -> tuple[_NativeNamedRule, ...]:
+    """Parse the canonical named-rule inventory for version-1 custom rules."""
+    if not source.strip():
+        return ()
+    nodes = _children(source, 0, len(source))
+    versions = [_atoms(source, node) for node in nodes if _atoms(source, node)[:1] == ("version",)]
+    if len(versions) != 1 or versions[0] != ("version", "1"):
+        raise ValueError("Expected one version 1 root atom in the native DRC rules file")
+    rules: list[_NativeNamedRule] = []
+    ordinal = 0
+    for node in nodes:
+        header = _atoms(source, node)
+        if not header or header[0] != "rule":
+            continue
+        ordinal += 1
+        if len(header) != 2:
+            raise ValueError("Malformed named rule in the native DRC rules file")
+        children = _children(source, node.start + 1, node.end - 1)
+        rules.append(_NativeNamedRule(header[1], ordinal, children))
+    return tuple(rules)
 
 
 def _length_nm(value: str) -> int:
@@ -196,20 +246,9 @@ def native_constraints(source: str) -> tuple[NativeRuleConstraint, ...]:
                 None,
             ),
         )
-    nodes = _children(source, 0, len(source))
-    versions = [_atoms(source, node) for node in nodes if _atoms(source, node)[:1] == ("version",)]
-    if len(versions) != 1 or versions[0] != ("version", "1"):
-        raise ValueError("Expected one version 1 root atom in the native DRC rules file")
     result: list[NativeRuleConstraint] = []
-    ordinal = 0
-    for rule in nodes:
-        header = _atoms(source, rule)
-        if not header or header[0] != "rule":
-            continue
-        ordinal += 1
-        if len(header) != 2:
-            raise ValueError("Malformed named rule in the native DRC rules file")
-        children = _children(source, rule.start + 1, rule.end - 1)
+    for rule in _native_named_rules(source):
+        children = rule.children
         conditions = [node for node in children if _atoms(source, node)[:1] == ("condition",)]
         condition_atoms = _atoms(source, conditions[0]) if len(conditions) == 1 else ()
         condition = condition_atoms[1] if len(condition_atoms) == 2 else ""
@@ -248,8 +287,8 @@ def native_constraints(source: str) -> tuple[NativeRuleConstraint, ...]:
                 continue
             parsed = _parse_constraint(
                 source,
-                header[1],
-                ordinal,
+                rule.name,
+                rule.ordinal,
                 condition,
                 not conditions,
                 node,
@@ -274,26 +313,61 @@ def native_rules_with_severity(
     """
     if not source.strip():
         return ()
-    nodes = _children(source, 0, len(source))
-    versions = [_atoms(source, node) for node in nodes if _atoms(source, node)[:1] == ("version",)]
-    if len(versions) != 1 or versions[0] != ("version", "1"):
-        raise ValueError("Expected one version 1 root atom in the native DRC rules file")
     result: list[NativeDrcRuleWithSeverity] = []
-    ordinal = 0
-    for node in nodes:
-        header = _atoms(source, node)
-        if not header or header[0] != "rule":
-            continue
-        ordinal += 1
-        if len(header) != 2:
-            raise ValueError("Malformed named rule in the native DRC rules file")
-        children = _children(source, node.start + 1, node.end - 1)
-        if any(_atoms(source, child) == ("severity", severity) for child in children):
+    for rule in _native_named_rules(source):
+        if any(_atoms(source, child) == ("severity", severity) for child in rule.children):
             result.append(
                 NativeDrcRuleWithSeverity(
-                    name=header[1],
-                    ordinal=ordinal,
+                    name=rule.name,
+                    ordinal=rule.ordinal,
                     severity=severity,
+                )
+            )
+    return tuple(result)
+
+
+def _native_rule_severity(value: str) -> NativeDrcRuleSeverity | None:
+    if value == "error":
+        return "error"
+    if value == "warning":
+        return "warning"
+    if value == "ignore":
+        return "ignore"
+    if value == "exclusion":
+        return "exclusion"
+    return None
+
+
+def native_rules_with_conflicting_severities(
+    source: str,
+) -> tuple[NativeDrcRuleWithConflictingSeverities, ...]:
+    """Return named rules with multiple distinct, supported direct severities."""
+    if not source.strip():
+        return ()
+    result: list[NativeDrcRuleWithConflictingSeverities] = []
+    for rule in _native_named_rules(source):
+        clauses = [
+            _atoms(source, child)
+            for child in rule.children
+            if _atoms(source, child)[:1] == ("severity",)
+        ]
+        if len(clauses) < 2:
+            continue
+        parsed_severities: list[NativeDrcRuleSeverity] = []
+        for clause in clauses:
+            severity = _native_rule_severity(clause[1]) if len(clause) == 2 else None
+            if severity is None:
+                break
+            parsed_severities.append(severity)
+        if len(parsed_severities) != len(clauses):
+            continue
+        severities = tuple(parsed_severities)
+        if len(set(severities)) > 1:
+            result.append(
+                NativeDrcRuleWithConflictingSeverities(
+                    name=rule.name,
+                    ordinal=rule.ordinal,
+                    severities=severities,
                 )
             )
     return tuple(result)
@@ -305,6 +379,36 @@ def native_ignored_rules(source: str) -> tuple[NativeIgnoredDrcRule, ...]:
         NativeIgnoredDrcRule(name=rule.name, ordinal=rule.ordinal)
         for rule in native_rules_with_severity(source, "ignore")
     )
+
+
+def native_rule_declarations(source: str) -> tuple[NativeDrcRuleDeclaration, ...]:
+    """Return each named rule's direct constraint count and unambiguous condition.
+
+    This reads only version-1 source structure. It does not expand text
+    variables or evaluate KiCad's condition language.
+    """
+    result: list[NativeDrcRuleDeclaration] = []
+    for rule in _native_named_rules(source):
+        conditions = [
+            child for child in rule.children if _atoms(source, child)[:1] == ("condition",)
+        ]
+        condition: str | None = None
+        if len(conditions) == 1:
+            atoms = _atoms(source, conditions[0])
+            if len(atoms) == 2:
+                condition = atoms[1]
+        constraint_count = sum(
+            _atoms(source, child)[:1] == ("constraint",) for child in rule.children
+        )
+        result.append(
+            NativeDrcRuleDeclaration(
+                name=rule.name,
+                ordinal=rule.ordinal,
+                constraint_count=constraint_count,
+                condition=condition,
+            )
+        )
+    return tuple(result)
 
 
 def drc_pad_selector(pad: str) -> str:

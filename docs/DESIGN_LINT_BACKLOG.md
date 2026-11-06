@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 263 rules are implemented with synthetic regression coverage.
+The following 266 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 263 active rules.
+The catalog currently contains 266 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -669,6 +669,9 @@ skipped under prerelease policy.
 - `pcb.signal_path_rule_coverage`
 - `pcb.custom_drc_rule_ignored`
 - `pcb.custom_drc_rule_excluded`
+- `pcb.custom_drc_rule_without_constraint`
+- `pcb.custom_drc_duplicate_rule_name`
+- `pcb.custom_drc_conflicting_severities`
 - `pcb.custom_drc_text_variable_review`
 - `pcb.core_drc_check_ignored`
 - `pcb.core_drc_check_warning`
@@ -2686,7 +2689,12 @@ is not a reason by itself to expand its scope or change its default policy.
   on digest-pinned KiCad 10.0.0 and 10.0.5. Both report the no-majority fault
   as `connector.peer_pin_assignment_divergence`; each common-net control
   passes. The same lane asserts that a unique two-to-one assignment emits only
-  the higher-confidence outlier rule.
+  the higher-confidence outlier rule. A separate synthetic four-peer DB9
+  subset fixture exports pins 7 and 9 with split assignments and a common-net
+  control on digest-pinned KiCad 10.0.0 and 10.0.5. Repeated exports match as
+  typed netlist contracts; each split assignment requests review, and the
+  common control is quiet for this rule. See the
+  [fixture README](../tests/fixtures/design_lint/db9-peer-return-native/README.md).
 - **Focused gate acceptance (2026-10-11):** The annotated tag `v0.5.0rc78`
   declared `Lint-Area: connector_lint` and passed GitHub Actions run
   `38139244092`, including the new synthetic nine-contact split-return case.
@@ -3480,7 +3488,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 263 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 266 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -14678,6 +14686,89 @@ control are documented in the
   native schematics repeat on KiCad 10.0.0 and 10.0.5; a CLI/MCP test checks
   matching finding evidence and mapped-check coverage. All schematics are
   synthetic and include no product project data.
+
+#### LINT-283 — Review custom DRC rules without constraints
+
+- **Status:** Implemented as the configurable default-review rule
+  `pcb.custom_drc_rule_without_constraint`.
+- **Gap:** The custom-rule terminal sentinel can pass when an authored named
+  rule contains a condition and severity but no direct constraint. Loading the
+  rule file does not enumerate the usefulness of each rule declaration.
+- **Predicate:** For a source-bound KiCad 10 `.kicad_dru` without `${...}`
+  substitutions, count direct `(constraint ...)` children for each named
+  top-level rule and prompt when that count is zero. Evidence retains the exact
+  file hash, rule name and ordinal, zero count, and configured KiCad version.
+  Projects can select `review`, `block`, `off`, or an exact-fingerprint
+  ignore.
+- **Boundary:** A rule without constraints may be an intentional placeholder.
+  This structural check does not infer which constraint is required, execute
+  rule conditions, or establish board applicability. It defers any source with
+  text-variable substitutions to the separate text-variable review. The native
+  sentinel and board DRC remain separate from this authored-source prompt.
+- **Evidence:** Tooling-owned fault/control fixtures cover source hashes,
+  policy, fingerprint changes, CLI/MCP parity, and exact-version sentinel
+  compilation on KiCad 10.0.0/10.0.5. The unconstrained rule does not prevent
+  the sentinel from passing, demonstrating the gap this rule covers. No project
+  design data is included. See the cohort evaluation and
+  [fixture notes](../tests/fixtures/design_lint/pcb-dru-rule-without-constraint/README.md).
+
+#### LINT-284 — Review duplicate custom DRC rule names
+
+- **Status:** Implemented as the configurable default-review rule
+  `pcb.custom_drc_duplicate_rule_name`.
+- **Cohort input:** The pinned `kicad-druid` README identifies duplicate custom
+  rule names as a source-lint category. KiCad describes a rule name as a
+  unique identifier used in DRC reports. Tooling implements only this bounded
+  source check; no candidate code or fab-specific rule is imported.
+- **Gap:** The custom-rule terminal sentinel can prove that the appended rule
+  executes while duplicate names earlier in the source remain hard to
+  attribute in reports and editor workflows.
+- **Predicate:** For a source-bound KiCad 10 version-1 `.kicad_dru` without
+  `${...}` substitutions, group top-level rule declarations by exact name and
+  emit one review candidate for each name at two or more ordinals. Evidence
+  retains the exact source hash, name, ordinals, and configured KiCad version.
+  Project policy can select `review`, `block`, `off`, or an exact-fingerprint
+  ignore.
+- **Boundary:** Names are compared exactly and case variants remain distinct.
+  Comments and nested expressions are not declarations. The review does not
+  infer which declaration should be renamed, whether either rule is shadowed,
+  or whether either predicate has the intended effect. Text-variable source is
+  handled by the separate substitution review.
+- **Evidence:** Synthetic fault/control fixtures cover repeated names,
+  unique and case-variant names, comments, source identity, policy, and
+  fingerprint changes. The CLI and MCP findings match. Digest-pinned KiCad
+  10.0.0 and 10.0.5 sentinel probes verify that duplicate-name and unique-name
+  files both reach the terminal rule. See the
+  [fixture notes](../tests/fixtures/design_lint/pcb-dru-duplicate-rule-name/README.md).
+
+#### LINT-285 — Review conflicting custom DRC severity clauses
+
+- **Status:** Implemented as the configurable default-review rule
+  `pcb.custom_drc_conflicting_severities`.
+- **Gap:** The native parser's typed constraint record already noted multiple
+  direct severity clauses, but design lint did not surface their conflicting
+  values as a source-bound review candidate.
+- **Predicate:** For a source-bound KiCad 10 version-1 `.kicad_dru` without
+  `${...}` substitutions, prompt once per named top-level rule that has at
+  least two direct severity clauses, every clause has one supported severity
+  value, and at least two values differ. Preserve declaration order in the
+  finding evidence. The project can choose `review`, `block`, `off`, or an
+  exact-fingerprint ignore.
+- **Boundary:** The rule flags conflicting authored policy; it does not choose
+  the intended severity or assume universal precedence. Exact-version native
+  probes on KiCad 10.0.5 emitted two warnings for an `error` then `warning`
+  fault and two errors for a one-`error` control. KiCad 10.0.0 emitted no
+  authored track-width violations for either input, although the terminal
+  sentinel fired. The trial does not establish why that version omitted the
+  authored findings. Identical repeated severities, unsupported/malformed
+  values, variable substitutions, and indirect/nested clauses are outside the
+  predicate.
+- **Evidence:** Synthetic tests cover distinct and identical severities,
+  single/malformed clauses, comments, nested text, source hashes, exact policy
+  overrides, fingerprint changes, and CLI/MCP parity. The tooling-owned
+  native fault/control pair repeats twice on both digest-pinned KiCad 10.0.0
+  and 10.0.5. No project design source is included; see the
+  [fixture notes](../tests/fixtures/design_lint/pcb-dru-conflicting-severities/README.md).
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

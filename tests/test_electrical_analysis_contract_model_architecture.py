@@ -19,7 +19,6 @@ CONSUMER_FILES = (
     "electrical_charts.py",
     "electrical_evidence.py",
     "electrical_setup.py",
-    "generation.py",
     "project_source_access.py",
 )
 

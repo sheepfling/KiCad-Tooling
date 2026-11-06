@@ -10,17 +10,23 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
+from kicad_tooling.hwrepo import release_variants
 from kicad_tooling.hwrepo.generation import expected_outputs, generate, snapshot
 from kicad_tooling.hwrepo.impact import plan_paths
 from kicad_tooling.hwrepo.inventory import inventory
+from kicad_tooling.hwrepo.layout import RepositoryLayoutDocument
+from kicad_tooling.hwrepo.model_primitives import RepositoryPath
 from kicad_tooling.hwrepo.models import ReleaseClass, ReleaseManifest, ReleaseStatus
 from kicad_tooling.hwrepo.part_picker import _snapshot, _verify_snapshot
 from kicad_tooling.hwrepo.parts_workflow import input_hashes
 from kicad_tooling.hwrepo.product import load_repository
+from kicad_tooling.hwrepo.product_models import ProductIndexEntry
+from kicad_tooling.hwrepo.product_source_inputs import ProductIndexDocument, ProductRecordInput
 from kicad_tooling.hwrepo.project_tests import run_tests
 from kicad_tooling.hwrepo.release import load_release_repository
-from kicad_tooling.hwrepo.releasing import resolve_variants
+from kicad_tooling.hwrepo.release_variants import resolve_variants
 from kicad_tooling.hwrepo.selection import ProjectSelector, resolve_project_ids
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
@@ -234,6 +240,63 @@ library_roots = ["cad/libraries"]
             self.project + "/project.json", json.loads(result.stdout)["projects"][0]["manifest"]
         )
         self.assertFalse((self.root / "catalog").exists())
+
+    def test_variant_resolution_rejects_layout_changes_during_capture(self) -> None:
+        path = self.root / "kicad-tooling.toml"
+        original = path.read_text(encoding="utf-8")
+        read_layout = release_variants.read_repository_layout
+
+        def capture_then_change(root: Path) -> RepositoryLayoutDocument:
+            document = read_layout(root)
+            path.write_text(original + "\n", encoding="utf-8")
+            return document
+
+        with (
+            patch(
+                "kicad_tooling.hwrepo.release_variants.read_repository_layout",
+                side_effect=capture_then_change,
+            ),
+            self.assertRaisesRegex(ValueError, "kicad-tooling.toml changed"),
+        ):
+            resolve_variants(self.root, ("device:standard",))
+
+    def test_variant_resolution_rejects_product_index_changes_during_capture(self) -> None:
+        path = self.root / self.products
+        original = path.read_text(encoding="utf-8")
+        read_index = release_variants.read_product_index_document
+
+        def capture_then_change(root: Path, value: RepositoryPath) -> ProductIndexDocument:
+            document = read_index(root, value)
+            path.write_text(original + " ", encoding="utf-8")
+            return document
+
+        with (
+            patch(
+                "kicad_tooling.hwrepo.release_variants.read_product_index_document",
+                side_effect=capture_then_change,
+            ),
+            self.assertRaisesRegex(ValueError, "changed during operation"),
+        ):
+            resolve_variants(self.root, ("device:standard",))
+
+    def test_variant_resolution_rejects_product_record_changes_during_capture(self) -> None:
+        path = self.root / self.product / "product.json"
+        original = path.read_text(encoding="utf-8")
+        capture_product = release_variants.capture_product_record
+
+        def capture_then_change(root: Path, entry: ProductIndexEntry) -> ProductRecordInput:
+            record = capture_product(root, entry)
+            path.write_text(original + " ", encoding="utf-8")
+            return record
+
+        with (
+            patch(
+                "kicad_tooling.hwrepo.release_variants.capture_product_record",
+                side_effect=capture_then_change,
+            ),
+            self.assertRaisesRegex(ValueError, "changed during operation"),
+        ):
+            resolve_variants(self.root, ("device:standard",))
 
     def test_generation_cli_and_service_use_custom_product_destination(self) -> None:
         outputs = expected_outputs(self.root, ("board",))

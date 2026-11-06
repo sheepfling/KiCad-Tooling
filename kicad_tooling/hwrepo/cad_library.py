@@ -12,6 +12,7 @@ import re
 from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
 
+from . import kicad_sexpr as sx
 from .auto_cad import _Edit, _receipt, _write_edits  # pyright: ignore[reportPrivateUsage]
 from .cad_assets import _model_signature, _pads  # pyright: ignore[reportPrivateUsage]
 from .cad_source_models import CadBundleCheck, CadImportPlan, CadImportReport, CadSourceBundle
@@ -23,18 +24,12 @@ from .contracts import (
     update_project_manifest_inputs,
 )
 from .discovery import load_config
-from .model_inventory import _atoms, _Span  # pyright: ignore[reportPrivateUsage]
 from .models import AutoCadPlan
-from .part_cad import (
-    _nodes,  # pyright: ignore[reportPrivateUsage]
-    _properties,  # pyright: ignore[reportPrivateUsage]
-    _property,  # pyright: ignore[reportPrivateUsage]
-    _quote,  # pyright: ignore[reportPrivateUsage]
-    _root,  # pyright: ignore[reportPrivateUsage]
-    _scalar,  # pyright: ignore[reportPrivateUsage]
-    _tokens,  # pyright: ignore[reportPrivateUsage]
+from .part_selection_sources import (
+    capture_part_cad_source_snapshot,
+    part_cad_snapshot_from_preconditions,
+    require_part_cad_source_snapshot_current,
 )
-from .part_picker import _snapshot, _verify_snapshot  # pyright: ignore[reportPrivateUsage]
 from .parts_workflow import local_path, selected_project
 from .project_models import ProjectManifest
 from .project_source_hashes import hash_project_sources as hashes
@@ -108,21 +103,21 @@ def _files(bundle_dir: Path, expected: Mapping[str, str]) -> dict[str, bytes]:
     return result
 
 
-def _symbol(source: str, name: str) -> tuple[_Span, tuple[str, ...]]:
-    parent = _root(source, "kicad_symbol_lib")
-    symbols = _nodes(source, parent, "symbol")
-    if len(symbols) != 1 or _atoms(source, symbols[0]) != ("symbol", name):
+def _symbol(source: str, name: str) -> tuple[sx.SExprSpan, tuple[str, ...]]:
+    parent = sx.sexpr_root(source, "kicad_symbol_lib")
+    symbols = sx.sexpr_nodes(source, parent, "symbol")
+    if len(symbols) != 1 or sx.sexpr_atoms(source, symbols[0]) != ("symbol", name):
         raise ValueError("CAD bundle must contain exactly its named native symbol")
     symbol = symbols[0]
-    if _nodes(source, symbol, "extends"):
+    if sx.sexpr_nodes(source, symbol, "extends"):
         raise ValueError("Inherited symbols need their full native dependency bundle")
     pins: list[str] = []
     pending = [symbol]
     while pending:
         node = pending.pop()
-        pending.extend(_nodes(source, node, "symbol"))
-        for pin in _nodes(source, node, "pin"):
-            number = _scalar(source, pin, "number")
+        pending.extend(sx.sexpr_nodes(source, node, "symbol"))
+        for pin in sx.sexpr_nodes(source, node, "pin"):
+            number = sx.sexpr_scalar(source, pin, "number")
             if not number or any(ord(char) < 32 for char in number):
                 raise ValueError("Sourced symbol has an empty or invalid pin number")
             pins.append(number)
@@ -134,28 +129,28 @@ def _symbol(source: str, name: str) -> tuple[_Span, tuple[str, ...]]:
 def _native_member(name: str) -> None:
     if not name or any(char in name for char in "/\\:$") or name in {".", ".."}:
         raise ValueError("Native CAD member must have one unambiguous portable name")
-    _quote(name)
+    sx.quote_sexpr_atom(name)
 
 
 def _native_footprint(source: str, name: str) -> str:
     """Normalize only the legacy module header; keep every geometry node intact."""
     if source.lstrip().startswith("(module"):
-        parent = _root(source, "module")
-        atoms = _atoms(source, parent)
+        parent = sx.sexpr_root(source, "module")
+        atoms = sx.sexpr_atoms(source, parent)
         if len(atoms) != 2 or atoms[1] not in {name, "easyeda2kicad:" + name}:
             raise ValueError("Legacy sourced footprint root differs from its recorded identity")
-        tokens = _tokens(source, parent)
+        tokens = sx.sexpr_tokens(source, parent)
         first, identity = tokens[0], tokens[1]
-        source = source[: identity.start] + _quote(name) + source[identity.end :]
+        source = source[: identity.start] + sx.quote_sexpr_atom(name) + source[identity.end :]
         source = source[: first.start] + "footprint" + source[first.end :]
-    parent = _root(source, "footprint")
-    if _atoms(source, parent) != ("footprint", name):
+    parent = sx.sexpr_root(source, "footprint")
+    if sx.sexpr_atoms(source, parent) != ("footprint", name):
         raise ValueError("Sourced footprint root differs from its recorded identity")
     return source
 
 
-def _model_reference(source: str, parent: _Span, expected: str) -> str:
-    models = _nodes(source, parent, "model")
+def _model_reference(source: str, parent: sx.SExprSpan, expected: str) -> str:
+    models = sx.sexpr_nodes(source, parent, "model")
     if len(models) != 1:
         raise ValueError("Sourced footprint must have exactly one paired WRL model")
     model = models[0]
@@ -176,25 +171,25 @@ def _model_reference(source: str, parent: _Span, expected: str) -> str:
     return reference
 
 
-def _replace_property(source: str, parent: _Span, name: str, value: str) -> str:
-    properties = _properties(source, parent)
+def _replace_property(source: str, parent: sx.SExprSpan, name: str, value: str) -> str:
+    properties = sx.sexpr_properties(source, parent)
     if name not in properties:
         raise ValueError(f"Sourced symbol is missing its {name} property")
-    token = _tokens(source, properties[name])[2]
-    return source[: token.start] + _quote(value) + source[token.end :]
+    token = sx.sexpr_tokens(source, properties[name])[2]
+    return source[: token.start] + sx.quote_sexpr_atom(value) + source[token.end :]
 
 
 def _table(source: str | None, kind: str, nickname: str, uri: str) -> str:
     entry = (
-        f'(lib (name {_quote(nickname)})(type "KiCad")'
-        f'(uri {_quote(uri)})(options "")(descr "Sourced CAD; review pinout and physical fit"))'
+        f'(lib (name {sx.quote_sexpr_atom(nickname)})(type "KiCad")'
+        f'(uri {sx.quote_sexpr_atom(uri)})(options "")(descr "Sourced CAD; review pinout and physical fit"))'
     )
     if source is None:
         return f"({kind}\n  (version 7)\n  {entry}\n)\n"
-    parent = _root(source, kind)
+    parent = sx.sexpr_root(source, kind)
     seen: set[str] = set()
-    for node in _nodes(source, parent, "lib"):
-        name = _scalar(source, node, "name")
+    for node in sx.sexpr_nodes(source, parent, "lib"):
+        name = sx.sexpr_scalar(source, node, "name")
         if not name or name.casefold() in seen:
             raise ValueError(
                 "Project library table contains duplicate or case-conflicting nicknames"
@@ -203,9 +198,9 @@ def _table(source: str | None, kind: str, nickname: str, uri: str) -> str:
         if name.casefold() == nickname.casefold():
             if (
                 name == nickname
-                and _scalar(source, node, "type") == "KiCad"
-                and _scalar(source, node, "uri") == uri
-                and _scalar(source, node, "options", default="") == ""
+                and sx.sexpr_scalar(source, node, "type") == "KiCad"
+                and sx.sexpr_scalar(source, node, "uri") == uri
+                and sx.sexpr_scalar(source, node, "options", default="") == ""
             ):
                 return source
             raise ValueError(f"Project library nickname conflicts with sourced CAD: {nickname}")
@@ -270,24 +265,24 @@ def _checked(directory: Path, bundle: CadSourceBundle) -> tuple[CadBundleCheck, 
         raise ValueError("Sourced footprint must be inside a native .pretty library")
     symbol_text = files[bundle.symbol_file].decode("utf-8")
     symbol, pins = _symbol(symbol_text, bundle.symbol_name)
-    properties = _properties(symbol_text, symbol)
+    properties = sx.sexpr_properties(symbol_text, symbol)
     for name, expected_value in (
         ("Manufacturer", bundle.manufacturer),
         ("MPN", bundle.mpn),
         ("LCSC Part", bundle.supplier_id),
     ):
-        if _property(symbol_text, properties, name, required=True) != expected_value:
+        if sx.sexpr_property_value(symbol_text, properties, name, required=True) != expected_value:
             raise ValueError(f"Sourced symbol {name} differs from the recorded exact part identity")
-    bound_footprint = _property(symbol_text, properties, "Footprint", required=True)
+    bound_footprint = sx.sexpr_property_value(symbol_text, properties, "Footprint", required=True)
     if bound_footprint.split(":")[-1] != bundle.footprint_name or bound_footprint.count(":") != 1:
         raise ValueError("Sourced symbol's footprint assignment differs from its paired footprint")
     footprint_text = _native_footprint(
         files[bundle.footprint_file].decode("utf-8"), bundle.footprint_name
     )
-    footprint = _root(footprint_text, "footprint")
-    if _atoms(footprint_text, footprint) != ("footprint", bundle.footprint_name):
+    footprint = sx.sexpr_root(footprint_text, "footprint")
+    if sx.sexpr_atoms(footprint_text, footprint) != ("footprint", bundle.footprint_name):
         raise ValueError("Sourced footprint root differs from its recorded identity")
-    if _scalar(footprint_text, footprint, "layer") != "F.Cu":
+    if sx.sexpr_scalar(footprint_text, footprint, "layer") != "F.Cu":
         raise ValueError("Sourced footprint must use the native front-side coordinate system")
     pads = _pads(footprint_text, footprint)
     numbers: list[str] = []
@@ -365,12 +360,14 @@ def _build(
     footprint = _native_footprint(
         files[bundle.footprint_file].decode("utf-8"), bundle.footprint_name
     )
-    parent = _root(footprint, "footprint")
-    model = _nodes(footprint, parent, "model")[0]
-    token = _tokens(footprint, model)[1]
+    parent = sx.sexpr_root(footprint, "footprint")
+    model = sx.sexpr_nodes(footprint, parent, "model")[0]
+    token = sx.sexpr_tokens(footprint, model)[1]
     model_target = destination / bundle.model_file
     portable_model = "${KIPRJMOD}/" + model_target.relative_to(project_dir).as_posix()
-    footprint = footprint[: token.start] + _quote(portable_model) + footprint[token.end :]
+    footprint = (
+        footprint[: token.start] + sx.quote_sexpr_atom(portable_model) + footprint[token.end :]
+    )
     proposed: dict[str, bytes] = {}
     for name, content in (
         (bundle.symbol_file, symbol.encode("utf-8")),
@@ -436,13 +433,17 @@ def _run(
     output = _receipt(root, output)
     check: CadBundleCheck | None = None
     try:
-        before = _snapshot(root, project_id)
+        before = capture_part_cad_source_snapshot(root, project_id)
         spec: CadImportPlan | None = None
         if locked is not None:
             spec = read_model(local_path(root, locked), CadImportPlan)
             if spec.project_id != project_id:
                 raise ValueError("CAD import plan belongs to another project")
-            _verify_snapshot(root, project_id, spec.preconditions)
+            require_part_cad_source_snapshot_current(
+                root,
+                project_id,
+                part_cad_snapshot_from_preconditions(project_id, spec.preconditions),
+            )
             bundle_dir = Path(spec.bundle_dir)
         if bundle_dir is None:
             raise ValueError("Choose a sourced CAD bundle before previewing import")
@@ -453,7 +454,7 @@ def _run(
         check, edits, symbol_id, footprint_id = _build(
             root, project_id, directory, bundle, original
         )
-        _verify_snapshot(root, project_id, before)
+        require_part_cad_source_snapshot_current(root, project_id, before)
         # Bind the manifest bytes used for output, as well as every original file hash.
         current_bundle, current_original = _read_bundle(directory)
         if current_bundle != bundle or current_original != original:
@@ -466,7 +467,7 @@ def _run(
             project_id=project_id,
             bundle_dir=str(directory),
             bundle_sha256=_sha(original),
-            preconditions=before,
+            preconditions=before.preconditions,
             after_hashes=after_hashes,
         )
         plan_path = output / "cad-import-plan.json"

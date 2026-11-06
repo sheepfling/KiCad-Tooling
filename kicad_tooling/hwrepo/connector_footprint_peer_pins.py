@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from .connector_comparison_scope_types import ConnectorComparisonScopes
-from .connector_footprint_peer_assignments import connector_footprint_peer_pin_net_map
 from .connector_footprint_peer_groups import (
     complete_connector_footprint_peer_pin_inventory,
     connector_footprint_peer_candidate_groups,
@@ -27,6 +26,7 @@ from .connector_identity import (
     pin_function_is_generic,
 )
 from .netlist_contract_models import NetlistContract
+from .netlist_pin_assignments import netlist_pin_net_index
 
 _GENERIC_ALL_OPEN_PIN_TYPES = frozenset(
     {
@@ -64,7 +64,7 @@ def scan_connector_footprint_peer_pin_assignments(
     electrical_types = {
         pin.casefold(): value for pin, value in observed.pin_electrical_types.items()
     }
-    pin_nets = connector_footprint_peer_pin_net_map(observed)
+    pin_nets = netlist_pin_net_index(observed)
 
     candidate_groups = connector_footprint_peer_candidate_groups(
         observed,

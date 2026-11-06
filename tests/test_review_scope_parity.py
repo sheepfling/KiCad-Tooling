@@ -24,7 +24,7 @@ from kicad_tooling.hwrepo.models import (
     ReleaseStatus,
 )
 from kicad_tooling.hwrepo.product import load_repository
-from kicad_tooling.hwrepo.release import expected_board_population
+from kicad_tooling.hwrepo.release_population import expected_board_population
 from tests import test_release_evidence
 
 
@@ -228,7 +228,7 @@ class ReviewScopeParityTests(unittest.IsolatedAsyncioTestCase):
     def test_container_scope_preserves_selection_and_captures_nonprotocol_stdout(self) -> None:
         project = self.fixture.project_id
         variant = "status-indicator-system:STANDARD"
-        from kicad_tooling.hwrepo.releasing import resolve_variants
+        from kicad_tooling.hwrepo.release_variants import resolve_variants
 
         selection = resolve_variants(self.root, (variant,))
         expected = self.fixture.manifest.model_copy(

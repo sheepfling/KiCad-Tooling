@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 from datetime import date
 from pathlib import Path
+from typing import Literal, cast
 
 import pytest
 
@@ -54,6 +55,7 @@ def test_release_contract_owner_has_only_domain_and_primitive_dependencies() -> 
         "enum",
         "typing",
         "pydantic",
+        "types",
         "model_primitives",
         "product_models",
         "release_model_types",
@@ -89,6 +91,12 @@ def test_registry_exports_and_authored_manifest_json_remain_compatible() -> None
     evidence = release_contract_models.EvidenceFile(
         path="build/release/native.json", sha256="b" * 64
     )
+    native_evidence = {"controller": evidence}
+    release_evidence = release_contract_models.ReleaseEvidence(
+        portable=evidence,
+        native=native_evidence,
+    )
+    checks: dict[str, Literal["PASS", "NOT_APPLICABLE"]] = {"portable": "PASS"}
     report = release_contract_models.ReleaseManifest(
         release_id="controller-1.0.0",
         release_class=ReleaseClass.ENGINEERING_REVIEW,
@@ -112,7 +120,8 @@ def test_registry_exports_and_authored_manifest_json_remain_compatible() -> None
             ),
         ),
         interfaces=(release_contract_models.ReleaseInterface(id="power", revision="1"),),
-        evidence=release_contract_models.ReleaseEvidence(portable=evidence, native={}),
+        evidence=release_evidence,
+        checks=checks,
         artifacts=(
             release_contract_models.ReleaseArtifact(
                 id="review",
@@ -140,6 +149,10 @@ def test_registry_exports_and_authored_manifest_json_remain_compatible() -> None
             evidence=("review",),
         ),
     )
+    native_evidence["later"] = evidence
+    checks["later"] = "NOT_APPLICABLE"
+    assert report.evidence is not None
+    retained_evidence = report.evidence
     policy = release_contract_models.ReleasePoliciesCatalog(
         policies=(
             release_contract_models.ReleaseAssurancePolicy(
@@ -151,3 +164,18 @@ def test_registry_exports_and_authored_manifest_json_remain_compatible() -> None
 
     assert type(report).model_validate_json(report.model_dump_json()) == report
     assert type(policy).model_validate_json(policy.model_dump_json()) == policy
+    assert tuple(retained_evidence.native) == ("controller",)
+    assert dict(report.checks) == {"portable": "PASS"}
+    for inventory in (
+        retained_evidence.native,
+        retained_evidence.exports,
+        retained_evidence.electrical,
+        report.checks,
+    ):
+        with pytest.raises(TypeError):
+            cast(dict[str, object], inventory)["later"] = evidence
+    serialized = report.model_dump(mode="json")
+    assert serialized["checks"] == {"portable": "PASS"}
+    assert serialized["evidence"]["native"] == {
+        "controller": {"path": "build/release/native.json", "sha256": "b" * 64}
+    }

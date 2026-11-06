@@ -10,7 +10,9 @@ import sys
 import tempfile
 import unittest
 from io import StringIO
+from operator import setitem
 from pathlib import Path
+from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
@@ -193,11 +195,20 @@ class ElectricalSetupTests(unittest.TestCase):
         self.assertFalse(report.build_authorized)
         self.assertEqual(len(report.model_sha256), 2)
         self.assertEqual(report.model_sha256[deck.relative_to(self.root).as_posix()], digest(deck))
+        source_path = next(iter(report.source_sha256))
+        model_path = deck.relative_to(self.root).as_posix()
+        with self.assertRaises(TypeError):
+            setitem(cast(Any, report.source_sha256), source_path, "0" * 64)
+        with self.assertRaises(TypeError):
+            setitem(cast(Any, report.model_sha256), model_path, "0" * 64)
         self.assertEqual(self.sidecar.read_bytes(), before)
         self.assertTrue(policy_issues(self.root, selected_config(self.root, PROJECT)))
         receipt = Path(report.run_directory) / "inputs.json"
         self.assertTrue(receipt.is_relative_to(self.root / "build"))
-        self.assertEqual(json.loads(receipt.read_text())["status"], "UNREVIEWED")
+        serialized = json.loads(receipt.read_text())
+        self.assertEqual(serialized["status"], "UNREVIEWED")
+        self.assertEqual(serialized["source_sha256"], dict(report.source_sha256))
+        self.assertEqual(serialized["model_sha256"], dict(report.model_sha256))
         self.assertNotEqual(capture_inputs(self.root, PROJECT).run_directory, report.run_directory)
 
     def test_capture_accepts_explicit_model_before_contract_and_rejects_unowned_paths(self) -> None:
@@ -301,6 +312,7 @@ class ElectricalSetupTests(unittest.TestCase):
             )
         native.assert_not_called()
         self.assertEqual(report.status, "FAIL")
+        assert report.doctor is not None
         self.assertTrue(report.doctor.electrical_requested)
         self.assertIn("ngspice", report.model_dump_json())
 

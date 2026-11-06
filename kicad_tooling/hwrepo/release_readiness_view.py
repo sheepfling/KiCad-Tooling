@@ -6,6 +6,7 @@ import hashlib
 from datetime import UTC, date, datetime
 from html import escape
 from pathlib import Path
+from types import MappingProxyType
 from urllib.parse import quote
 from uuid import uuid4
 
@@ -15,20 +16,19 @@ from .contract_coach import receipt_directory
 from .contracts import parse_model_text, read_model, relative_path_from, repo_path, write_model
 from .electrical_report_models import ElectricalAnalysisReport
 from .evidence import digest
+from .model_primitives import Digest, RepositoryPath
 from .models import ReleaseExportReport
 from .native_project_validation_models import ValidationSummary
 from .release import check
 from .release_contract_models import ReleaseManifest
-from .release_readiness_view_models import ReleaseReadinessViewReport
+from .release_readiness_view_models import ReleaseDependencyInventory, ReleaseReadinessViewReport
 from .repository import checkout_input_hashes
 
 
-def declared_file_hashes(
-    root: Path, manifest: ReleaseManifest
-) -> tuple[dict[str, str | None], bool]:
+def declared_file_hashes(root: Path, manifest: ReleaseManifest) -> ReleaseDependencyInventory:
     """Record manifest inputs and nested artifacts from typed evidence reports."""
-    paths = {item.path for item in manifest.artifacts}
-    complete = True
+    paths: set[RepositoryPath] = {item.path for item in manifest.artifacts}
+    artifact_enumeration_complete = True
     if manifest.evidence is not None:
         paths.add(manifest.evidence.portable.path)
         for collection, model in (
@@ -46,8 +46,8 @@ def declared_file_hashes(
                         for name in report.artifacts_sha256
                     )
                 except (OSError, TypeError, ValueError):
-                    complete = False
-    result: dict[str, str | None] = {}
+                    artifact_enumeration_complete = False
+    result: dict[RepositoryPath, Digest | None] = {}
     if len(paths) > 5000:
         raise ValueError("Release dependency inventory exceeds the 5000-file limit")
     for name in sorted(paths):
@@ -56,8 +56,11 @@ def declared_file_hashes(
             result[name] = digest(path) if path.is_file() else None
         except (OSError, ValueError):
             result[name] = None
-            complete = False
-    return result, complete
+            artifact_enumeration_complete = False
+    return ReleaseDependencyInventory(
+        declared_files_sha256=result,
+        artifact_enumeration_complete=artifact_enumeration_complete,
+    )
 
 
 def _render(root: Path, report: ReleaseReadinessViewReport) -> str:
@@ -110,15 +113,17 @@ def capture_release_readiness(
     content, _ = read_regular_bytes(path, maximum=16 * 1024 * 1024)
     manifest = parse_model_text(content.decode("utf-8"), ReleaseManifest)
     source_hashes = checkout_input_hashes(root)
-    declared, inventory_complete = declared_file_hashes(root, manifest)
+    dependency_inventory = declared_file_hashes(root, manifest)
     commit = git_output(root, "rev-parse", "HEAD")
     checked_on = today or datetime.now(UTC).date()
     readiness = check(root, manifest, checked_on)
-    end_declared, end_inventory_complete = declared_file_hashes(root, manifest)
+    end_dependency_inventory = declared_file_hashes(root, manifest)
     source_stable = (
         source_hashes == checkout_input_hashes(root)
-        and declared == end_declared
-        and inventory_complete == end_inventory_complete
+        and dependency_inventory.declared_files_sha256
+        == end_dependency_inventory.declared_files_sha256
+        and dependency_inventory.artifact_enumeration_complete
+        == end_dependency_inventory.artifact_enumeration_complete
         and commit == git_output(root, "rev-parse", "HEAD")
         and hashlib.sha256(content).hexdigest() == digest(path)
     )
@@ -131,16 +136,18 @@ def capture_release_readiness(
         manifest_sha256=hashlib.sha256(content).hexdigest(),
         source_commit=commit,
         source_stable=source_stable,
-        dependency_inventory_complete=inventory_complete,
+        dependency_inventory_complete=dependency_inventory.artifact_enumeration_complete,
         checked_on=checked_on,
         source_hashes=source_hashes,
-        declared_files_sha256=declared,
+        declared_files_sha256=dependency_inventory.declared_files_sha256,
         readiness=readiness,
         output_directory=str(directory),
     )
     (directory / "index.html").write_text(_render(root, report), encoding="utf-8")
     report = report.model_copy(
-        update={"artifacts_sha256": {"index.html": digest(directory / "index.html")}}
+        update={
+            "artifacts_sha256": MappingProxyType({"index.html": digest(directory / "index.html")})
+        }
     )
     write_model(directory / "readiness.json", report)
     return report

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal
@@ -162,7 +161,7 @@ def scan_schematic_geometry(
                 "Primary schematic is absent from the source-bound native summary hashes"
             )
 
-        source_files = verified_schematic_sources(
+        source_tree = verified_schematic_sources(
             root, relative_path, project_directory, coach.source_hashes
         )
 
@@ -170,17 +169,17 @@ def scan_schematic_geometry(
             pin for pins in coach.observed.unconnected_nets.values() for pin in pins
         )
         scan = scan_schematic_geometry_tree(
-            source_files,
-            root_path=relative_path,
-            project_directory=project_directory,
+            source_tree.source_contents_by_path,
+            root_path=source_tree.root_path,
+            project_directory=source_tree.project_directory,
             project_name=source_path.stem,
             kicad_version=config.kicad_version,
             unconnected_pins=unconnected_pins,
         )
+        source_files = source_tree.source_files_by_path
         if any(
             binding.source_path not in source_files
-            or hashlib.sha256(source_files[binding.source_path]).hexdigest()
-            != binding.source_sha256
+            or source_files[binding.source_path].source_sha256 != binding.source_sha256
             for binding in scan.source_bindings
         ):
             raise ValueError("Geometry scan returned an unbound hierarchical source instance")

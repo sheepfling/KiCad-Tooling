@@ -37,6 +37,12 @@ def test_cad_source_models_have_a_small_evidence_and_primitives_boundary() -> No
         and node.module is not None
         and node.module != "__future__"
     }
+    source_state_imports = {
+        alias.name
+        for node in ast.walk(ast.parse(source))
+        if isinstance(node, ast.ImportFrom) and node.module == "source_state_models"
+        for alias in node.names
+    }
 
     assert len(source.splitlines()) < 500
     assert imported_modules == {
@@ -45,6 +51,12 @@ def test_cad_source_models_have_a_small_evidence_and_primitives_boundary() -> No
         "pydantic",
         "command_evidence_models",
         "model_primitives",
+        "source_state_models",
+    }
+    assert source_state_imports == {
+        "SerializedPathDigestInventory",
+        "SerializedSourcePreconditionInventory",
+        "SourceIndexPlan",
     }
 
 

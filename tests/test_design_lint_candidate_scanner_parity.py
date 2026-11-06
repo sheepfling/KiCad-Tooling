@@ -250,6 +250,7 @@ def test_scanner_passes_extended_mapped_input_to_its_owner(monkeypatch: pytest.M
         external_protection=protection,
         crystal_network=None,
         regulator_feedback=None,
+        signal_divider=None,
         rc_filter=None,
     )
     inputs = replace(inputs, mapped=extended)

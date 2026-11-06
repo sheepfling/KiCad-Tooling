@@ -7,10 +7,13 @@ from pathlib import Path
 import pytest
 from mcp import Client
 
+from kicad_tooling.hwrepo import product_visual
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.product_models import ProductRecord
+from kicad_tooling.hwrepo.product_repository_models import ProductRepository
+from kicad_tooling.hwrepo.product_source_inputs import ProductIndexDocument
 from kicad_tooling.hwrepo.product_visual import build_product_visual
 from kicad_tooling.hwrepo.product_visual_models import ProductVisualReport
 from tests.mcp_parity_support import McpParityHarness, parity_workspace, run_mcp_parity
@@ -42,6 +45,39 @@ def test_standard_variant_renders_source_bound_hierarchy_and_harness(tmp_path: P
     assert (output / "product.json").read_bytes() == (root / SOURCE).read_bytes()
     assert read_model(output / "product-visual.json", ProductVisualReport) == report
     assert all(digest(output / name) == sha for name, sha in report.artifacts_sha256.items())
+
+
+def test_visual_export_uses_its_captured_product_index(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    root, _, _ = parity_workspace(tmp_path)
+    original_load_repository = product_visual.load_repository
+    captured: list[ProductIndexDocument] = []
+
+    def capture_repository(
+        repository_root: Path,
+        selected_project_ids: tuple[str, ...] | None = None,
+        *,
+        product_index_document: ProductIndexDocument | None = None,
+    ) -> ProductRepository:
+        if product_index_document is None:
+            raise AssertionError("product visualization omitted its captured index")
+        captured.append(product_index_document)
+        return original_load_repository(
+            repository_root,
+            selected_project_ids,
+            product_index_document=product_index_document,
+        )
+
+    monkeypatch.setattr(product_visual, "load_repository", capture_repository)
+    report = product_visual.build_product_visual(
+        root, PRODUCT, "STANDARD", Path("build/product-visual/captured-index")
+    )
+
+    assert len(captured) == 1
+    document = captured[0]
+    assert report.source_hashes[document.source.path] == document.source.sha256
+    assert digest(Path(report.output_directory) / "product-index.json") == document.source.sha256
 
 
 @pytest.mark.parametrize(

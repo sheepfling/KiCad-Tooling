@@ -3,34 +3,55 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
+from typing import TypeAlias
 
 from .artifact_access import artifact_file, read_regular_bytes
 from .command_evidence_models import CommandEvidence
 from .contracts import kicad_variant_names, parse_model_text, repo_path
 from .design_lint_report_models import DesignLintReport
 from .findings_view_models import FindingsViewReport
+from .model_primitives import Digest, RepositoryPath
 from .native_report_parsing import read_netlist
 from .netlist_contract_models import ComponentContract
-from .pcb_variant_population_capture import position_references
+from .pcb_variant_position_export import read_verified_pcb_variant_position_export
 from .project_models import ProjectConfig
 from .review_overview_evidence import read_receipt, selected_receipt
 from .source_state_models import SourceHashInventory
 
+VariantEvidenceDigestByPath: TypeAlias = Mapping[RepositoryPath, Digest]
+VariantComponentsByCasefoldedReference: TypeAlias = Mapping[str, ComponentContract]
+VariantNativeReferencesByCasefoldedKey: TypeAlias = Mapping[str, str]
+
 
 @dataclass(frozen=True, slots=True)
 class VariantObservation:
+    """Verified variant evidence and read-only reference indexes."""
+
     name: str
     netlist_path: Path
     lint_path: Path
     lint_sha256: str
-    evidence_sha256: dict[str, str]
-    schematic: dict[str, ComponentContract]
-    schematic_references: dict[str, str]
+    evidence_sha256: VariantEvidenceDigestByPath
+    schematic: VariantComponentsByCasefoldedReference
+    schematic_references: VariantNativeReferencesByCasefoldedKey
     schematic_dnp: frozenset[str]
-    board_all: dict[str, str]
+    board_all: VariantNativeReferencesByCasefoldedKey
     board_fitted: frozenset[str]
+
+    def __post_init__(self) -> None:
+        """Copy and freeze every mapping so the frozen record stays immutable."""
+        object.__setattr__(self, "evidence_sha256", MappingProxyType(dict(self.evidence_sha256)))
+        object.__setattr__(self, "schematic", MappingProxyType(dict(self.schematic)))
+        object.__setattr__(
+            self,
+            "schematic_references",
+            MappingProxyType(dict(self.schematic_references)),
+        )
+        object.__setattr__(self, "board_all", MappingProxyType(dict(self.board_all)))
 
 
 def _verified_artifact(root: Path, name: str, expected: str) -> Path:
@@ -195,12 +216,16 @@ def read_variant_observation(
     schematic = {
         key: netlist.components[reference] for key, reference in schematic_references.items()
     }
-    all_board = _reference_map(
-        position_references(paths[evidence.board_all_positions_path]), "PCB positions"
+    all_position_export = read_verified_pcb_variant_position_export(
+        paths[evidence.board_all_positions_path],
+        expected_sha256=evidence.board_all_positions_sha256,
     )
-    fitted_board = _reference_map(
-        position_references(paths[evidence.board_fitted_positions_path]), "fitted PCB positions"
+    fitted_position_export = read_verified_pcb_variant_position_export(
+        paths[evidence.board_fitted_positions_path],
+        expected_sha256=evidence.board_fitted_positions_sha256,
     )
+    all_board = _reference_map(all_position_export.references, "PCB positions")
+    fitted_board = _reference_map(fitted_position_export.references, "fitted PCB positions")
     if not fitted_board.keys() <= all_board.keys():
         raise ValueError("Named variant fitted PCB positions are absent from its full positions")
     for name, sha in hashes.items():

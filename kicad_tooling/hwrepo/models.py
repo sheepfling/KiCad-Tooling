@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Annotated, Literal
 
 from pydantic import (
@@ -174,7 +175,12 @@ from .release_contract_models import (
 from .repository_policy_models import (
     RepositoryPolicyReport,  # noqa: F401  # pyright: ignore[reportUnusedImport]
 )
-from .source_state_models import SourceState
+from .source_state_models import (
+    SerializedPathDigestInventory,
+    SerializedSourcePreconditionInventory,
+    SourceIndexPlan,
+    SourceState,
+)
 from .static_pipeline_models import StaticPipelineReport
 
 ToolchainRecord = _project_models.ToolchainRecord
@@ -1224,16 +1230,18 @@ class PartSelectionAssignment(StrictModel):
 
 class PartSelectionMap(PurchasingSchemaModel):
     project_id: Identifier
-    preconditions: Mapping[RepositoryPath, Digest | None]
+    preconditions: SerializedSourcePreconditionInventory
     assignments: tuple[PartSelectionAssignment, ...] = ()
     locked: bool = False
-    after_hashes: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
+    after_hashes: SerializedPathDigestInventory = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def unique_assignments(self) -> PartSelectionMap:
         references = [item.reference for item in self.assignments]
         if len(references) != len(set(references)):
             raise ValueError("Part selection repeats a component reference")
+        object.__setattr__(self, "preconditions", MappingProxyType(dict(self.preconditions)))
+        object.__setattr__(self, "after_hashes", MappingProxyType(dict(self.after_hashes)))
         return self
 
 
@@ -1278,11 +1286,11 @@ class AutoCadItem(StrictModel):
     detail: NonEmptyText
 
 
-class AutoCadPlan(StrictModel):
+class AutoCadPlan(SourceIndexPlan):
     schema_version: Literal["1"] = "1"
     project_id: Identifier
-    preconditions: dict[RepositoryPath, Digest | None]
-    after_hashes: dict[RepositoryPath, Digest]
+    preconditions: SerializedSourcePreconditionInventory
+    after_hashes: SerializedPathDigestInventory
 
 
 class AutoCadAsset(StrictModel):

@@ -4,11 +4,22 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
+from typing import Literal
 
+from .model_primitives import Digest, RepositoryPath
 from .netlist_contract_models import NetlistContract
 from .pcb_component_inventory_models import PcbPopulationMismatch
 from .pcb_connectivity_observations import PcbFootprintPlacementObservation
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
+
+
+@dataclass(frozen=True, slots=True)
+class PcbVariantPositionReceipt:
+    """Identity for the all-placement export that produced one variant source."""
+
+    path: RepositoryPath
+    sha256: Digest
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,6 +31,18 @@ class PcbVariantPopulationSource:
     board_references: tuple[str, ...]
     fitted_board_references: tuple[str, ...]
     board_values: Mapping[str, str] | None = None
+    board_value_status: Literal["AVAILABLE", "UNSUPPORTED_KICAD_VERSION"] | None = None
+    position_receipt: PcbVariantPositionReceipt | None = None
+
+    def __post_init__(self) -> None:
+        values = None if self.board_values is None else MappingProxyType(dict(self.board_values))
+        expected_status = "AVAILABLE" if values is not None else "UNSUPPORTED_KICAD_VERSION"
+        if self.board_value_status is not None and self.board_value_status != expected_status:
+            raise ValueError("PCB variant board-value status must match its retained values")
+        object.__setattr__(self, "board_references", tuple(self.board_references))
+        object.__setattr__(self, "fitted_board_references", tuple(self.fitted_board_references))
+        object.__setattr__(self, "board_values", values)
+        object.__setattr__(self, "board_value_status", expected_status)
 
 
 def compare_schematic_pcb_population(

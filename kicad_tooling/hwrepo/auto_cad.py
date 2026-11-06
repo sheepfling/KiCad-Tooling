@@ -26,7 +26,12 @@ from .models import (
     AutoCadProvenance,
     AutoCadReport,
 )
-from .part_picker import _snapshot, _verify_snapshot  # pyright: ignore[reportPrivateUsage]
+from .part_selection_sources import (
+    capture_part_cad_source_snapshot,
+    part_cad_snapshot_from_preconditions,
+    require_part_cad_preconditions_current,
+    require_part_cad_source_snapshot_current,
+)
 from .parts_workflow import local_path, selected_project
 from .project_models import ProjectManifest
 
@@ -243,7 +248,7 @@ def _write_edits(root: Path, project_id: str, spec: AutoCadPlan, edits: tuple[_E
                 path.chmod(target.stat().st_mode)
         try:
             for index, edit in enumerate(edits):
-                _verify_snapshot(root, project_id, expected)
+                require_part_cad_preconditions_current(root, project_id, expected)
                 target = repo_path(root, edit.path)
                 current = target.read_bytes() if target.exists() else None
                 if current != edit.before:
@@ -252,7 +257,7 @@ def _write_edits(root: Path, project_id: str, spec: AutoCadPlan, edits: tuple[_E
                 os.replace(stage / str(index), target)
                 applied.append(edit)
                 expected[edit.path] = _sha(edit.after)
-            _verify_snapshot(root, project_id, expected)
+            require_part_cad_preconditions_current(root, project_id, expected)
         except (OSError, ValueError) as error:
             failures: list[str] = []
             for index, edit in enumerate(reversed(applied)):
@@ -282,19 +287,27 @@ def _run(
     root = root.resolve()
     output = _receipt(root, output)
     try:
-        before = _snapshot(root, project_id)
+        before = capture_part_cad_source_snapshot(root, project_id)
         spec = None if locked is None else read_model(local_path(root, locked), AutoCadPlan)
         if spec is not None:
             if spec.project_id != project_id:
                 raise ValueError("CAD plan belongs to a different project")
-            _verify_snapshot(root, project_id, spec.preconditions)
+            require_part_cad_source_snapshot_current(
+                root,
+                project_id,
+                part_cad_snapshot_from_preconditions(project_id, spec.preconditions),
+            )
         items, edits = _build(root, project_id, allow_downloads=allow_downloads)
-        _verify_snapshot(root, project_id, before)
+        require_part_cad_source_snapshot_current(root, project_id, before)
         hashes = {edit.path: _sha(edit.after) for edit in edits}
         if spec is not None and hashes != spec.after_hashes:
             raise ValueError("CAD assets or plan changed since preview; scan and review again")
         locked_path = output / "cad-plan.json"
-        plan_record = AutoCadPlan(project_id=project_id, preconditions=before, after_hashes=hashes)
+        plan_record = AutoCadPlan(
+            project_id=project_id,
+            preconditions=before.preconditions,
+            after_hashes=hashes,
+        )
         locked_path.write_text(plan_record.model_dump_json(indent=2) + "\n", encoding="utf-8")
         diff = _diff(edits)
         (output / "cad.diff").write_text(diff, encoding="utf-8")

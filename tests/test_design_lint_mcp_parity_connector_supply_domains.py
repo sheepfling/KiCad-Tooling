@@ -10,6 +10,9 @@ import pytest
 from mcp import Client
 
 from kicad_tooling.hwrepo.contracts import read_model, write_model
+from kicad_tooling.hwrepo.design_lint_reconciliation_models import (
+    DesignLintReconciliationReport,
+)
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
@@ -183,3 +186,66 @@ def test_mapped_supply_domain_rule_matches_between_cli_and_mcp(
         "J2.5=SHARED_SUPPLY; voltage_domain=serial-vbus",
     )
     assert finding.evidence["interface_catalog_sha256"] == (digest(interface_catalog),)
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_mapped_supply_domain_finding_transition_matches_between_cli_and_mcp(
+    tmp_path: Path,
+) -> None:
+    """Retain the exact rule's quiet-to-review transition on both surfaces."""
+    root, native = synthetic_design_lint_project(
+        tmp_path,
+        parity_design_lint_policy(DesignLintPolicy()),
+    )
+    _install_connector_reviews(root, serial_voltage_domain="external-5v")
+    install_synthetic_netlist(native, contract_netlist_xml(_observed_netlist(common_supply=True)))
+
+    baseline_process = run_design_lint_cli(tmp_path, root, native)
+    assert baseline_process.returncode in {0, 1}, baseline_process.stderr + baseline_process.stdout
+    baseline = DesignLintReport.model_validate_json(baseline_process.stdout)
+    assert not any(item.rule_id == RULE_ID for item in baseline.findings)
+    baseline_path = root / "lint-baseline.json"
+    baseline_path.write_text(baseline.model_dump_json(), encoding="utf-8")
+
+    _install_connector_reviews(root, serial_voltage_domain="serial-vbus")
+    cli_process = run_design_lint_cli(
+        tmp_path,
+        root,
+        native,
+        baseline_report=Path(baseline_path.name),
+    )
+    assert cli_process.returncode == 1, cli_process.stderr + cli_process.stdout
+    cli_report = DesignLintReconciliationReport.model_validate_json(cli_process.stdout)
+
+    async def reconcile_mcp() -> DesignLintReconciliationReport:
+        async with Client(create_server(root), mode="legacy") as client:
+            result = await client.call_tool(
+                "reconcile_design_lint",
+                {
+                    "project_id": "controller",
+                    "native_summary": native.relative_to(root).as_posix(),
+                    "baseline_report_json": baseline.model_dump_json(),
+                },
+            )
+        assert not result.is_error, result.content
+        assert result.structured_content is not None
+        return DesignLintReconciliationReport.model_validate_json(
+            json.dumps(result.structured_content)
+        )
+
+    mcp_report = asyncio.run(reconcile_mcp())
+    assert cli_report == mcp_report
+    assert cli_report.status == "REVIEW"
+    assert cli_report.baseline_status == baseline.status
+    assert cli_report.current_status == "REVIEW"
+    (transition,) = tuple(
+        item
+        for item in cli_report.transitions
+        if item.current is not None and item.current.rule_id == RULE_ID
+    )
+    assert transition.kind == "NEW"
+    assert transition.baseline is None
+    assert transition.current is not None
+    assert transition.current.mode == "review"
+    assert transition.current.disposition == "OPEN"
+    assert transition.current.evidence["native_shared_net"] == ("SHARED_SUPPLY",)

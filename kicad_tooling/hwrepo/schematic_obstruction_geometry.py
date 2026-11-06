@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from .model_inventory import _Span  # pyright: ignore[reportPrivateUsage]
+from .kicad_sexpr import SExprSpan as _Span
 from .schematic_geometry_primitives import clip_segment_to_box
 from .schematic_geometry_source import schematic_nodes
 from .schematic_geometry_types import (

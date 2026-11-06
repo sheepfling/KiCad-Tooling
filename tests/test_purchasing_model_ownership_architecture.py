@@ -100,12 +100,12 @@ _OWNER_FILES = {
 def test_purchasing_model_owners_have_bounded_dependencies() -> None:
     expected_imports = {
         "purchasing_models.py": {
-            "collections.abc",
             "typing",
             "pydantic",
             "contract_coach_models",
             "model_primitives",
             "purchasing_preference_models",
+            "source_state_models",
         },
         "digikey_handoff_models.py": {
             "typing",

@@ -6,6 +6,7 @@ import hashlib
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import TypedDict
 
 from .component_role_models import ComponentRoleBinding, ComponentRoleMap
 from .netlist_contract_models import NetlistContract
@@ -19,6 +20,18 @@ class ComponentRoleResolution:
     issues: tuple[str, ...]
 
 
+class ComponentRoleBindingReportFields(TypedDict):
+    """Named report fields projected from one authored component-role binding."""
+
+    classified_role: tuple[str, ...]
+    role_part_id: tuple[str, ...]
+    role_symbol: tuple[str, ...]
+    role_footprint: tuple[str, ...]
+    role_pin_inventory: tuple[str, ...]
+    role_basis: tuple[str, ...]
+    role_binding_sha256: tuple[str, ...]
+
+
 def component_role_binding_digest(binding: ComponentRoleBinding) -> str:
     """Return a stable digest for the complete reviewed identity and basis."""
     payload = binding.model_dump(mode="json")
@@ -29,10 +42,10 @@ def component_role_binding_digest(binding: ComponentRoleBinding) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-def component_role_binding_evidence(
+def component_role_binding_report_fields(
     binding: ComponentRoleBinding,
-) -> dict[str, tuple[str, ...]]:
-    """Format the exact authored role identity used to classify a finding."""
+) -> ComponentRoleBindingReportFields:
+    """Project the exact authored role identity into named report fields."""
     pins = tuple(
         f"{pin.number}={pin.function}/{pin.electrical_type}"
         for pin in sorted(binding.pins, key=lambda item: (item.number.casefold(), item.number))

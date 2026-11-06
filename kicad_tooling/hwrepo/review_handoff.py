@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import re
 from collections import defaultdict
 from dataclasses import dataclass
@@ -12,6 +11,7 @@ from uuid import uuid4
 from .artifact_access import read_regular_bytes
 from .contract_coach import receipt_directory
 from .contracts import parse_model_text, write_model
+from .evidence import digest_bytes
 from .findings_view_evidence import verified_findings_drawing
 from .findings_view_models import finding_fingerprint
 from .project_source_access import project_owned_source_path
@@ -58,7 +58,7 @@ def _read_input(
         baseline=old,
         candidate=new,
         notes_path=path,
-        notes_sha256=hashlib.sha256(raw).hexdigest(),
+        notes_sha256=digest_bytes(raw),
         notes_bytes=raw,
         notes=parsed,
         current_source=current,
@@ -173,7 +173,7 @@ def _evidence_bytes(
     def copy(source: Path, name: str, expected: str) -> None:
         try:
             raw, _ = read_regular_bytes(source, maximum=32 * 1024 * 1024)
-            if hashlib.sha256(raw).hexdigest() != expected:
+            if digest_bytes(raw) != expected:
                 raise ValueError("digest mismatch")
         except (OSError, ValueError) as exc:
             issues.append(f"Evidence changed or is missing: {source.relative_to(root)} ({exc})")
@@ -250,7 +250,7 @@ def export_review_handoff(
         destination = directory / name
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes(raw)
-        files[name] = hashlib.sha256(raw).hexdigest()
+        files[name] = digest_bytes(raw)
     report = ReviewHandoffReport(
         project_id=project_id,
         requested_fingerprints=selected,
@@ -265,7 +265,7 @@ def export_review_handoff(
         output_directory=str(directory),
     )
     (directory / "index.html").write_text(render_review_handoff(report), encoding="utf-8")
-    files["index.html"] = hashlib.sha256((directory / "index.html").read_bytes()).hexdigest()
+    files["index.html"] = digest_bytes((directory / "index.html").read_bytes())
     verify_inputs()
     report = report.model_copy(update={"artifacts_sha256": files})
     write_model(directory / "handoff.json", report)

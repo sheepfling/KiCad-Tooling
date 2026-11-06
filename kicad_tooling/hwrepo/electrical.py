@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import os
 import stat
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Protocol
 
@@ -22,7 +21,12 @@ from kicad_tooling.hwrepo.pin_connectivity_models import PinConnectivityAnalysis
 
 from .contracts import parse_model_text, read_model, repo_path
 from .discovery import load_config
-from .electrical_report_models import ElectricalCheck
+from .electrical_report_models import (
+    BoundElectricalInputs,
+    ElectricalCheck,
+    ElectricalInputBindingRole,
+    ElectricalInputDigest,
+)
 from .model_primitives import Digest, RepositoryPath
 from .netlist_contract_models import NetlistContract
 from .project_models import (
@@ -33,6 +37,7 @@ from .project_models import (
 from .project_source_hashes import hash_project_sources as hashes
 from .return_nets import return_net_groups
 from .selection import resolve_project
+from .source_state_models import SourceHashInventory
 
 
 class _ModeledAnalysisSection(Protocol):
@@ -103,7 +108,7 @@ def load_analysis(root: Path, config: ProjectConfig) -> ElectricalAnalysisContra
 
 def bound_inputs(
     root: Path, config: ProjectConfig, contract: ElectricalAnalysisContract
-) -> dict[RepositoryPath, Digest]:
+) -> BoundElectricalInputs:
     """Check reviewed model/design hashes and inventory every input used by this run."""
     root = root.resolve()
     source = hashes(root, config.source_roots)
@@ -113,9 +118,29 @@ def bound_inputs(
     manifest_path = repo_path(root, project.config)
     manifest = read_model(manifest_path, ProjectManifest)
     checks_path = repo_path(manifest_path.parent, manifest.checks)
-    inputs: dict[RepositoryPath, Digest] = dict(source)
-    for path in (manifest_path, checks_path, repo_path(root, config.electrical or "")):
-        inputs[path.relative_to(root).as_posix()] = model_digest(path)
+    input_records: dict[RepositoryPath, tuple[Digest, list[ElectricalInputBindingRole]]] = {}
+
+    def record_input(
+        path: RepositoryPath, source_sha256: Digest, role: ElectricalInputBindingRole
+    ) -> None:
+        existing = input_records.get(path)
+        if existing is None:
+            input_records[path] = (source_sha256, [role])
+            return
+        if existing[0] != source_sha256:
+            raise ValueError(f"Electrical input changed while binding: {path}")
+        if role not in existing[1]:
+            existing[1].append(role)
+
+    for path, source_sha256 in source.items():
+        record_input(path, source_sha256, "design-source")
+    input_files: tuple[tuple[Path, ElectricalInputBindingRole], ...] = (
+        (manifest_path, "project-manifest"),
+        (checks_path, "project-checks"),
+        (repo_path(root, config.electrical or ""), "electrical-requirements"),
+    )
+    for path, role in input_files:
+        record_input(path.relative_to(root).as_posix(), model_digest(path), role)
     for case in simulation_cases(contract):
         if dict(case.source_sha256) != source:
             raise ValueError(f"{case.id}: stale or incomplete reviewed design source hashes")
@@ -130,18 +155,27 @@ def bound_inputs(
             actual = model_digest(path)
             if actual != expected:
                 raise ValueError(f"{case.id}: stale reviewed model hash: {name}")
-            inputs[name] = actual
-    return inputs
+            record_input(name, actual, "simulation-model")
+    return BoundElectricalInputs(
+        entries=tuple(
+            ElectricalInputDigest(
+                source_path=path,
+                source_sha256=source_sha256,
+                roles=tuple(roles),
+            )
+            for path, (source_sha256, roles) in input_records.items()
+        )
+    )
 
 
 def bind_electrical_inputs(
     root: Path,
     config: ProjectConfig,
     contract: ElectricalAnalysisContract,
-    expected: Mapping[RepositoryPath, Digest] | None = None,
+    expected: SourceHashInventory | None = None,
     *,
     mismatch_message: str = "Electrical inputs changed during analysis",
-) -> dict[RepositoryPath, Digest]:
+) -> BoundElectricalInputs:
     """Bind the parsed records to current inputs and recheck an existing binding."""
     actual = bound_inputs(root, config, contract)
     if (
@@ -154,7 +188,7 @@ def bind_electrical_inputs(
             else mismatch_message
         )
         raise ValueError(message)
-    if expected is not None and actual != expected:
+    if expected is not None and actual.all_sha256 != expected:
         raise ValueError(mismatch_message)
     return actual
 

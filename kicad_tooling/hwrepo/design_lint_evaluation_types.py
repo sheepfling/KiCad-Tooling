@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, TypedDict
 
 from .bus_signal_pairs import (
     ComplementaryPinFunctionAliasResolution,
@@ -40,6 +40,15 @@ from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
+
+
+class LegacyPcbCandidateArguments(TypedDict, total=False):
+    """Keyword-only native/custom PCB candidate inputs kept for compatibility."""
+
+    pcb_dru_rule_candidates: tuple[Candidate, ...]
+    pcb_native_drc_candidates: tuple[Candidate, ...]
+
+
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
 from .external_protection_models import ExternalProtectionCoverageReport
 from .i2c_address_models import I2cAddressCoverageReport

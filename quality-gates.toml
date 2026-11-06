@@ -65,6 +65,59 @@ min_prefix_characters = 6
 python_import_evidence = true
 python_module_roots = ["."]
 
+[checks.shared_utilities]
+extensions = [".py"]
+exclude = ["scripts/**/*.py", "tests/**/*.py"]
+canonical_file_hash_path = "kicad_tooling/hwrepo/evidence.py"
+canonical_file_hash_function = "digest"
+canonical_git_path = "kicad_tooling/git.py"
+minimum_body_statements = 3
+minimum_ast_nodes = 8
+
+[[checks.module_roles.modules]]
+path = "kicad_tooling/hwrepo/cross_probe.py"
+role = "composition"
+forbidden_definitions = [
+  "build_cross_probe_entry",
+  "reconcile_cross_probe_population",
+  "admit_cross_probe_inputs",
+  "verify_cross_probe_inputs",
+]
+
+[[checks.module_roles.modules]]
+path = "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py"
+role = "composition"
+forbidden_definitions = [
+  "scan_bus_candidates",
+  "scan_component_candidates",
+  "scan_component_peer_candidates",
+  "scan_connector_candidates",
+  "scan_control_candidates",
+  "scan_mapped_coverage_candidates",
+  "pcb_board_only_footprint_candidates",
+  "pcb_component_inventory_candidates",
+  "pcb_pad_net_candidates",
+  "pcb_required_fitted_reference_candidates",
+  "scan_pcb_measurement_candidates",
+  "scan_pcb_requirement_candidates",
+  "scan_peer_candidates",
+  "scan_power_candidates",
+  "return_distribution_candidates",
+  "schematic_geometry_candidates",
+  "stm32_candidates",
+]
+
+[[checks.module_roles.modules]]
+path = "kicad_tooling/hwrepo/governance_lint.py"
+role = "composition"
+forbidden_definitions = [
+  "capture_governance_lint_filesystem_inputs",
+  "evaluate_governance_lint_catalog_policy",
+  "evaluate_governance_lint_project_policy",
+  "read_governance_lint_shared_inputs",
+  "resolve_governance_lint_project_scope",
+]
+
 [orchestration]
 default_profile = "runtime-types"
 
@@ -133,3 +186,23 @@ rollout = "provisional"
 [[orchestration.profiles]]
 name = "test-quality"
 steps = ["Python test quality review"]
+
+[[orchestration.steps]]
+kind = "rule"
+name = "Capability-owner composition boundaries"
+rule = "module-roles"
+rollout = "mainline"
+
+[[orchestration.profiles]]
+name = "module-role-boundaries"
+steps = ["Capability-owner composition boundaries"]
+
+[[orchestration.steps]]
+kind = "rule"
+name = "Shared utility duplication review"
+rule = "shared-utilities"
+rollout = "mainline"
+
+[[orchestration.profiles]]
+name = "shared-utility-duplication"
+steps = ["Shared utility duplication review"]

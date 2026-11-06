@@ -31,6 +31,11 @@ _PLACEHOLDER = re.compile(
 )
 
 
+def is_placeholder_purchase_identity(value: str) -> bool:
+    """Return whether a purchasing identity uses template or non-production text."""
+    return _PLACEHOLDER.search(value) is not None
+
+
 def _single_text(component: ET.Element, tag: str) -> str:
     elements = component.findall(tag)
     if len(elements) > 1:
@@ -360,7 +365,8 @@ def plan(
     )
 
 
-def _safe_cell(value: str) -> str:
+def safe_spreadsheet_cell(value: str) -> str:
+    """Validate source text before placing it in a spreadsheet-readable export."""
     if any(ord(character) < 32 or ord(character) == 127 for character in value):
         raise ValueError("CSV text contains a control character; correct the source metadata")
     if value.lstrip().startswith(("=", "+", "-", "@")):
@@ -372,7 +378,7 @@ def review_csv_text(rows: tuple[tuple[str, ...], ...]) -> str:
     stream = io.StringIO(newline="")
     writer = csv.writer(stream, lineterminator="\n")
     for row in rows:
-        writer.writerow(tuple(_safe_cell(value) for value in row))
+        writer.writerow(tuple(safe_spreadsheet_cell(value) for value in row))
     return stream.getvalue()
 
 

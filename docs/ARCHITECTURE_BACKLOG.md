@@ -1252,11 +1252,13 @@ checks; keep disputed guidance review-only and record upstream complaints
 outside this repository.
 
 `quality-gates.toml` defines reproducible runtime-types, Pydantic practices,
-and Python-style scopes for an external, opt-in experiment. The repository no
-longer pins that tool or invokes its reports in CI; the focused policy tests
-skip unless the tool is supplied separately. Python-style remains available
-on demand while its broader output is reviewed. See
-`ALPHUS_QUALITY_GATES.md` for the command and enforcement boundary.
+Python-style, architecture-candidate, and review profiles.
+`pyproject.toml` pins Alphus `v0.0.2` in the development extra; most profiles
+remain review diagnostics, while the explicit module-role and shared-utility
+profiles are CI blockers. Keep consumer complaint IDs and raw reports in the
+separate external ledger. The v0.0.3 `test-layout` selector remains disabled
+for this behavior-organized test tree. See `ALPHUS_QUALITY_GATES.md` for
+configured selectors and the enforcement boundary.
 The source-derived raw-JSON boundary now recognizes aliased `json.load(s)`
 imports and classifies native KiCad report and bounded GLB parsing as explicit
 adapters; it no longer exempts `validate.py` after parsing moved to its owner.
@@ -1265,6 +1267,29 @@ The typed-boundary architecture suite now scans annotations throughout
 or value type falls back to `Any` or `object`. The two remaining `object`
 inputs are limited to Pydantic validators that must accept arbitrary raw input
 before validation; they are not open collection contracts.
+The Alphus `module-role-boundaries` profile now checks explicit composition
+ownership for cross-probe, design-lint candidate aggregation, and governance
+lint. It is a mainline rule when the profile is invoked: a coordinator cannot
+silently reclaim named implementation functions from its route owners. A
+synthetic fault/control test proves both detection and a clean configured
+boundary. This is a symbol-level architecture gate, not a general-purpose
+God-file detector or a physical line limit. `scripts/ci.py` invokes the profile
+in package and prerelease CI, and the CI stage preserves its JSON report with
+the other stage logs.
+The post-change v0.0.2 scan passed the enabled module-role profile with zero
+findings; all other profile counts were unchanged, with only runtime-types and
+python-style above threshold. The new policy test proves one valid control and
+one failing reintroduction of a theme implementation. No additional upstream
+selector was found.
+The shared-utility profile initially identified duplicate runner-selection
+logic, duplicated source-index immutability validators, and three direct
+SHA-256 implementations. Runner selection now has one owner in
+`netlist_runner_selection.py`; CAD and automatic-CAD plan records share the
+`SourceIndexPlan` contract; and file and byte hashing use `evidence.digest`
+and `evidence.digest_bytes`. The pinned profile now reports zero findings on
+this baseline. It is a mainline CI gate with a synthetic clean control and
+duplicate-helper fault test; its configured scan covers production Python and
+excludes tests and scripts.
 The contract-owner architecture gate now requires production references to
 `ComponentContract`, `NetlistContract`, `CheckEvidence`, and
 `ValidationSummary`, `ContractCoachReport`, and `ContractDifference` to import
@@ -1963,3 +1988,1171 @@ source-family prompts that can mention themed modules; they do not establish
 ownership or call for a split. Continue SA-01 with another import-aware
 returned-map audit and keep source-to-report decisions ahead of size-driven
 splits.
+
+## Cross-probe board-anchor index route (2026-11-05)
+
+The PCB parser now returns `BoardFootprintAnchorsByCasefoldedReference`, a
+read-only mapping from normalized reference keys to source-ordered tuples of
+frozen board anchors. Exact native reference spelling remains on each anchor;
+case-only duplicates remain together so navigation cannot assign a unique
+location. The one production consumer reads the index only. The board bytes
+remain verified against the active project source hash, and the report retains
+that inventory. The focused parser and cross-probe consumer selection passed
+three tests with the public template checkout; Ruff and targeted Pyright
+passed. No report or marker behavior changed.
+
+### Cross-probe operation boundary review
+
+The earlier Alphus scan flagged `build_cross_probe` at cyclomatic complexity
+35 against the provisional maximum of 30. Treat that as a prompt to review its
+stage responsibilities, not a line-splitting target. Existing owners already
+separate board parsing, schematic parsing, variant observation, HTML rendering,
+and report models.
+
+`VariantObservation` names and freezes its artifact-digest, parsed-component,
+native-reference, and full-board reference maps; `build_cross_probe` consumes
+them read-only and revalidates the observation against the retained receipts.
+The selected-variant population stage now receives `CrossProbePopulationInput`
+and source-matched `CrossProbeLocationEvidence`. Its owner constructs entries,
+compares variant schematic and board population, retains parts-versus-native
+origin, and reports board-only references. Receipt admission, anchor capture,
+final report assembly, and input revalidation remain in the operation.
+
+`CrossProbeBuildRequest` now selects the receipts, project, destination, and
+optional variant for one typed operation. The former positional entry point
+remains a compatibility adapter, while CLI, MCP, and variant-review callers
+construct the request directly. `cross_probe_admission.py` owns receipt and
+source admission, retains the exact drawing bytes, and revalidates project,
+receipt, native-summary, and variant evidence before and after view generation.
+The composition still captures anchors, reconciles the typed population,
+assembles the report, and publishes artifacts. Keep publication there until a
+separate stable owner boundary is demonstrated; do not split to satisfy a
+numeric complexity target.
+
+The current complexity scan no longer reports the cross-probe coordinator;
+receipt admission and variant reconciliation now have explicit owners. Keep the
+symbol-level provisional module-role profile aligned with those owners by
+rejecting their implementation functions in `cross_probe.py`.
+
+A follow-up regression caught that the extraction had dropped the pre-publication
+call to `verify_cross_probe_inputs`. The operation now revalidates admitted
+sources and receipts before `receipt_directory` creates output, then checks
+again after HTML rendering. The regression forces the first check to fail and
+asserts that no output directory is created.
+
+The cross-probe parser, admission, population, variant, and CLI/MCP selection
+passed 19 tests with the separate public template checkout. Ruff, formatting,
+and targeted Pyright passed. The current provisional complexity profile has 29
+findings across its inventory and none on `cross_probe.py`; the module-role
+profile reports zero findings.
+
+## Schematic verified source-tree route (2026-11-05)
+
+The hierarchical schematic route now couples each admitted source path,
+verified digest, and retained bytes in a typed immutable source-tree record.
+Both production consumers use the record's read-only projections, and sheet
+instance bindings reuse the admitted digest. Public scanner behavior and
+serialized evidence remain unchanged. The focused selection passed 35 tests
+with 2 skipped; Ruff and targeted Pyright passed. No exact native KiCad lane
+ran.
+
+The electrical input-binding route is now implemented with BoundElectricalInputs
+and ElectricalInputDigest in electrical_report_models.py. The immutable records
+retain exact paths and digests with roles for design sources, project manifest,
+project checks, electrical requirements, and simulation models. Runner consumers
+use the source-only projection for netlist and simulation admission; the report
+continues to serialize the same combined input_sha256 mapping.
+
+The setup-time `ElectricalInputInventory` is now read-only in memory for both
+its design-source and simulation-model digest maps. The shared CLI/MCP service
+still emits the same ordinary JSON receipt. This unreviewed pre-run inventory
+stays separate from current-run bindings, which also admit the manifest,
+checks, and requirements files.
+
+`SourceState.files_sha256` is now read-only after validation and keeps its
+existing mapping shape inside static-pipeline and electrical reports. Its
+serializer converts the immutable map at the Pydantic boundary, and the
+compatibility registry still re-exports the identical owner class. A focused
+selection passed 31 tests and 15 subtests; project Pyright, Ruff, formatting,
+and `git diff --check` passed. No exact native KiCad lane ran.
+
+The SA-01 audit now follows `ElectricalAnalysisReport.input_sha256`,
+`artifacts_sha256`, and `commands` through release verification and readiness
+capture. Release checking derives exact electrical-evidence coverage from
+selected contracts and revalidates retained reports against source, inputs,
+native observations, checks, commands, and artifacts. Readiness capture keeps
+that computed policy result separate from approval authority and records nested
+file dependencies. Its internal inventory distinguishes an enumerable report
+with a known missing file from a report whose nested artifacts could not be
+enumerated. Release manifest evidence and check maps are typed and read-only;
+their JSON object shape stays unchanged. Release checking, human approval,
+package assembly, and restored verification remain distinct steps. Details are in
+[ELECTRICAL_ANALYSIS_DATA_ROUTING.md](ELECTRICAL_ANALYSIS_DATA_ROUTING.md).
+
+The catalog-to-surface route audit is complete for
+`connector.mapped_supply_domains_share_net`. Its authored owner, typed source
+evidence, evaluation disposition, and CLI/MCP outputs now have a focused
+end-to-end regression. `tests/test_design_lint_mcp_parity_connector_supply_domains.py`
+covers inspection parity, two quiet controls, and the exact rule's quiet-to-review
+finding transition through both CLI and MCP reconciliation. Route details and
+validation are in `docs/DESIGN_LINT_DATA_ROUTING.md`.
+
+The second catalog-to-surface route audit covers
+`pcb.custom_drc_text_variable_review`. Its typed evidence binds the project DRC
+file, project file, board file, and configured KiCad version; its CLI/MCP
+inspection and reconciliation transition passed a focused 35-test selection.
+The route deliberately reports unresolved substitutions without claiming their
+resolved values or native DRC outcome.
+
+The third catalog-to-surface route audit completes
+`pcb.schematic_pcb_value_mismatch` through the shared source-bound native PCB
+snapshot. The new focused fixture exercises capture receipts, the schema-13+
+value comparison, default review disposition, CLI/MCP inspection parity, and
+the `NEW` reconciliation transition. The existing broad inventory parity
+fixture is now clearly identified as projection parity because it replaces
+the full geometry scan. The focused architecture/parity/catalog selection
+passed 31 tests; Ruff and targeted Pyright passed. No exact native KiCad lane
+ran. Route detail is in `docs/DESIGN_LINT_DATA_ROUTING.md`.
+
+The fourth catalog-to-surface route audit completes
+`pcb.schematic_pcb_pad_net_mismatch` through the shared source-bound native PCB
+snapshot. It confirms the shared capture and inventory coordinator remain
+separate from `pcb_pad_net_comparison.compare_schematic_pcb_pad_nets` and the
+typed candidate-evidence projection. The rule catalog now describes schema 15
+support and registers the end-to-end fixture as both fault and valid control.
+The focused route, direct comparison, inventory parity, catalog, selector, and
+marker selection passed 29 tests. Ruff check and targeted Pyright passed. No
+exact native KiCad lane ran; the source-bound route test replaces only native
+process execution with a synthetic snapshot and command receipt.
+
+The capability map now summarizes all four audited catalog-to-surface routes
+and gives the shared PCB inventory path a focused ownership table. Together,
+they distinguish authored connector mappings, source-bound custom-DRC text,
+and schematic-to-PCB comparisons while keeping their predicate owners and
+report surfaces explicit.
+
+## Connector peer pin-net index route (2026-11-05)
+
+An import-aware returned-map audit found four production consumers building
+the same case-folded pin-to-exact-net set from `NetlistContract.nets`. The
+canonical `netlist_pin_assignments.netlist_pin_net_index` already owns that
+immutable `NetlistPinNetIndex`; the connector helper duplicated its iteration,
+case folding, set semantics, and read-only wrapper. The four peer consumers
+now use the canonical service. The connector-owned assignment projection still
+sorts exact net names for its established evidence ordering. Active rule
+catalog references now name the canonical index owner.
+
+This changes no source evidence, rule selection, or serialized finding fields.
+The connector data-routing note records the shared index and the remaining
+connector-specific projection.
+
+The focused shared-index, connector evidence, architecture, catalog, and
+CLI/MCP parity selection passed 173 tests with the separate public template
+checkout. Ruff, formatting, targeted Pyright, Rumdl, JSON parsing, and
+`git diff --check` passed. No exact native KiCad lane ran.
+
+## SA-01 route progress
+
+The parts policy input route is now typed end to end. `parts_workflow.input_hashes`
+returns the shared `PathDigestInventory`; `PurchasingReport` and supplier
+analysis receipts carry that same contract for policy inputs and
+`SourceHashInventory` for project sources. Supplier handoff verification
+accepts typed repository paths and digest expectations. JSON remains a
+repository-path-to-lowercase-digest mapping.
+
+The missing-preference behavior remains explicit: a missing default preferences
+file is omitted from `input_hashes`, while supplier handoff records its path
+with an absent-value precondition and rejects the file appearing later. A
+missing explicitly requested preferences file still blocks preparation.
+Custom contract paths and exact digest values remain bound. The focused tests
+guard the shared return and receipt types, serialized path/digest shape, and
+missing-default behavior.
+
+The selected parts, assistant, extensions, supplier-analysis, shared-inventory,
+and purchasing-model suites passed 69 tests plus 68 subtests. Targeted Pyright
+reported zero errors, warnings, or informations; Ruff, formatting, Rumdl, and
+`git diff --check` passed. No exact native KiCad lane ran. A post-change
+Alphus `v0.0.2`/`v0.0.3` re-sniff kept the same nine profile counts and found no
+new source-family groups; the test-layout trial reports 1,093 findings (906
+unmirrored test directories and 187 misplaced modules) and remains unsuitable
+for this behavior-organized test tree. Raw reports and the updated separate
+complaint ledger are in the external Alphus feedback bundle.
+
+The earlier import-aware census found 88 direct mapping-return owners, 12 with
+at least two cross-module call sites. It excludes aliased return types, model
+fields, local accumulators, and dynamic imports, so it ranks candidates rather
+than claiming a complete map.
+
+## Product occurrence source route (2026-11-05)
+
+The product hierarchy now retains the source that produced its occurrence
+index. `read_product_source` reads one stable regular file, validates the
+`ProductRecord` from those exact bytes, and stores its indexed repository path
+and digest in `ProductSourceIdentity`. `ProductRepository.product_sources`
+keeps that identity alongside each parsed product, including records that
+parse but fail cross-record policy checks so review tooling can still explain
+them.
+
+`product_occurrence_index` returns an immutable `ProductOccurrenceIndex` bound
+to that source record and its selected root assembly. Its keys are
+`ProductInstancePath`: the empty string is the root instance and nested
+`AssemblyMember.ref` values are joined with dots. Each `Occurrence` holds the
+referenced item and the quantity expanded through authored assembly members;
+the index describes the product model, not physical population or fit.
+`occurrences(product)` remains the existing mapping compatibility entry point.
+Production generation, product visualization, saved variant/revision BOM
+comparisons, and release board-population checking pass the source-bound index.
+Pairing an index with a different in-memory product record fails before
+projection. Product visual path strings and report JSON remain unchanged.
+
+The product, product-model architecture, product-visual, variant/revision BOM,
+release, and CLI-extension selection passed 106 tests plus 71 subtests.
+Targeted Pyright reported zero errors, warnings, or informations; Ruff,
+formatting, Rumdl, and `git diff --check` passed. No exact native KiCad lane
+ran. A post-change Alphus `v0.0.2`/`v0.0.3` re-sniff kept all nine configured
+profile counts identical and found no new complaint. The test-layout trial now
+reports 1,094 findings (907 unmirrored test directories, 187 misplaced
+modules), so that candidate remains disabled. The raw reports and separate
+complaint ledger are archived externally. No module split or report schema
+change was introduced.
+
+## Governance catalog index route (2026-11-05)
+
+The five `records_by_id` calls were operation-local: four indexed shared
+catalogs, while the fifth indexed the synthesized project registry. Nothing
+consumes these maps outside the governance linter. `lint_registry.records_by_id`
+remains a compatibility projection for callers of the older helper; the new
+index model is not re-exported as a shared public contract.
+
+Parts, interfaces, libraries, and toolchain catalogs now use
+`GovernanceCatalogIndex`. `read_governance_catalog` reads a stable regular file,
+validates the model from those exact bytes, and retains the repository path and
+SHA-256 beside the immutable lookup. Release policies use the same source-bound
+document read even though they do not need an ID index. A case-fold collision
+is reported and every colliding ID is omitted from the index, so later checks
+cannot select one record based on file order. The synthesized project-registry
+lookup remains operation-local and does not yet retain its contributing
+`project.json` identities.
+
+`GovernanceLintReport` remains a diagnostic result rather than a persisted
+catalog receipt, so it does not expose these digests. The indexes bind parsed
+records to their immediate catalog input; they do not claim that the whole
+governance result is source-bound. Adding report-level provenance requires a
+separate contract decision covering discovery policy, project manifests, and
+other inputs that affect the result.
+
+The focused governance, index, pipeline-model architecture, and CLI-output
+selection passed 28 tests. Targeted Pyright reported zero errors, warnings, or
+informations; Ruff check and format passed. No exact native KiCad lane ran.
+No module split or report-schema change was introduced.
+
+## Project manifest source identity route (2026-11-05)
+
+`load_registry_snapshot` now reads each authored `project.json` through the
+stable regular-file reader, validates the same bytes, and retains the manifest,
+its `ProjectRecord` projection, repository path, and SHA-256 in a frozen
+`ProjectRegistryEntry`. The snapshot exposes an immutable ID lookup. The
+existing `load_registry` API remains a projection returning the same
+`ProjectRegistry` model, while governance lint now consumes the source-bound
+snapshot internally.
+
+The exact manifest digest is an operation-local input identity; no governance
+report or persistent registry receipt exposes it. The discovery policy,
+team-policy record, and other governance inputs are not all retained by this
+snapshot, so it does not establish end-to-end provenance for
+`GovernanceLintReport`. That broader receipt contract remains a separate
+decision. The new stable byte reader lives in `contracts.py`; the older
+`artifact_access.py` path re-exports it for compatibility.
+
+The focused snapshot, governance, registry, and CLI-output checks passed with
+the targeted architecture and static checks. Alphus `v0.0.2` and `v0.0.3`
+reported one duplicate helper while the byte reader was being moved; the
+compatibility module now imports the canonical implementation, removing that
+candidate. The current findings and gate decisions are recorded in the
+separate Alphus feedback ledger. No module split or report-schema change was
+introduced.
+
+Next data-route review: determine which remaining governance inputs and
+freshness conditions belong in a durable governance receipt. Module moves and
+line-size work remain deferred until ownership, source identity, and absence
+semantics are explicit.
+
+## Project-discovery policy identity route (2026-11-05)
+
+`read_project_discovery` now reads the checked-in discovery policy from stable
+regular-file bytes, validates those bytes, and retains the policy's repository
+path and SHA-256 in `ProjectDiscoveryDocument`. `load_registry_snapshot` uses
+that same policy instance for catalog selection, bounded project traversal,
+and registry projection, alongside the already retained `project.json`
+identities. Governance lint consumes the snapshot's project roots rather than
+rereading the discovery policy. `settings`, `manifest_paths`, and
+`load_registry` remain compatibility projections.
+
+The snapshot binds the discovery document and manifests, but it does not yet
+bind the repository-layout configuration that locates the discovery document,
+team policy, per-project governance records, or every downstream evidence
+input. It therefore improves operation-local consistency without claiming
+that `GovernanceLintReport` is a complete source-provenance receipt. Choosing
+the durable receipt boundary and its freshness conditions remains the next
+governance route decision.
+
+The Alphus complexity candidate still scores `governance_lint.lint` at 99
+against its provisional maximum of 30. Treat it as a coordinator
+responsibility review: trace the discovery, catalog, project-policy, record,
+and result flows, then derive stage boundaries from their typed inputs and
+outputs. Do not move code solely to lower the complexity score.
+
+The focused registry, governance, selection, layout, and CLI-output selection
+passed 59 tests and 10 subtests. Targeted Pyright, Ruff check/format, Rumdl, and
+`git diff --check` passed. No exact native KiCad lane ran. No module split or
+report-schema change was introduced.
+
+## Governance record policy route (2026-11-05)
+
+Governance lint now reads the configured `TeamPolicy` once through
+`read_governance_team_policy`, retaining the repository path and digest beside
+the validated value. Each production project's `GovernanceRecordReview`
+consumes that same policy document and retains the exact governance-record
+source identity when bytes are available. Its state distinguishes a missing
+record, unavailable or invalid bytes, and an evaluated record whose policy
+issues remain visible. The compatibility `lint_governance_record` projection
+still returns the established issue tuple.
+
+This makes one policy-to-record route consistent within a lint run, but does
+not add the sources to `GovernanceLintReport` or claim a durable governance
+receipt. The report schema and CLI/MCP output remain unchanged. The next receipt
+route must decide how layout configuration, project `project.json`, project
+check contracts, catalogs, product records, and all consulted document hashes
+are captured and rechecked together. `load_config` still performs its own
+reads, so this increment does not claim operation-wide snapshot consistency.
+
+Focused governance-record and governance-lint tests, source-identity checks,
+Ruff, Pyright, Rumdl, and `git diff --check` were run for this route. No exact
+native KiCad lane ran. No file split or serialized schema change was made.
+
+## Alphus gate boundary
+
+`quality-gates.toml` and `ALPHUS_QUALITY_GATES.md` define the consumer's
+configured and deferred profiles. Alphus complaint IDs, finding-level case
+analysis, and raw reports stay in the external consumer ledger rather than
+this architecture backlog. The v0.0.3 `test-layout` selector remains disabled
+while tests are organized by behavior. Other architecture selectors stay
+deferred until capability owners, package layers, and source-to-test evidence
+are explicit.
+
+## Repository-layout configuration route (2026-11-05)
+
+`read_repository_layout` now returns a typed document with an explicit source
+state. An authored `kicad-tooling.toml` carries its repository-relative path
+and exact-byte SHA-256; an absent file is represented as `DEFAULTED` with no
+digest. Non-regular, unreadable, oversized, or invalid TOML is an input error,
+not the default state. The compatibility `layout(root)` remains a projection
+of the captured document's `RepositoryLayout`.
+
+`ProjectDiscoveryDocument` retains that adapter document alongside the
+discovery-policy identity. `load_registry_snapshot` checks the adapter source
+again after project manifests have been read. Governance lint passes the same
+captured adapter to team-policy selection, library-root checks, and selected
+product traversal. It builds per-project `ProjectConfig` values from the
+snapshot's manifest plus the already-read toolchain catalog, rather than
+rereading layout, discovery, manifests, and toolchains for each project. A
+registry-snapshot freshness check makes mid-run changes to the adapter,
+discovery policy, or project manifests visible as a failed governance result.
+
+This closes the adapter-consistency gap for discovery and governance. It is
+not a complete governance receipt: the report still does not retain all
+catalog, product, and consulted-document identities. Selected project check
+contracts are now captured and rechecked during the operation, but their
+identities are not persisted in the report. `GovernanceLintReport` and
+serialized surfaces remain unchanged. The next route decision is how the
+remaining inputs should be admitted and freshness-checked together; do not
+split or reorganize modules to reduce a quality score. The current source
+inventory and staged route order are in
+[GOVERNANCE_LINT_DATA_ROUTING.md](GOVERNANCE_LINT_DATA_ROUTING.md).
+
+## Governance registry-snapshot freshness barrier (2026-11-05)
+
+The typed registry snapshot now has one freshness check for its captured
+repository-layout adapter, discovery policy, and every project manifest. The
+loader runs it before returning the snapshot; governance lint repeats it after
+evaluation, so a discovery or manifest change during the operation produces a
+`FAIL` issue instead of returning a result based on stale registry inputs.
+Discovery and manifest sources are re-read through the stable regular-file
+boundary and compared with their captured SHA-256 identities.
+
+This barrier covers the registry route. Governance catalogs, product records,
+governance documents, library provenance/licensing files, and project source
+inventories are not yet one freshness-checked input set. `GovernanceLintReport`
+remains a diagnostic result, not a durable provenance receipt, and its JSON
+shape is unchanged. The next route decision is to define the complete governance
+input set and decide which of those source identities must survive in a
+persisted receipt before changing report or CLI/MCP schemas. No module split or
+size-driven move was made.
+
+The focused registry snapshot and governance lint selection passed 22 tests.
+Targeted Pyright, Ruff check/format, and `git diff --check` passed.
+
+## Project check-contract source route (2026-11-05)
+
+Governance now loads each selected project's check contract through one stable
+regular-file read. The path is resolved from the captured manifest, the exact
+bytes are validated as `ProjectTestContract`, and that same value builds the
+`ProjectConfig`. `ProjectConfigDocument` retains the project ID and typed
+contract path/digest. Before returning, governance lint rechecks each selected
+contract source; a changed or unavailable file adds a failure issue. Invalid or
+missing contracts remain input errors.
+
+This makes the check contract part of the operation's freshness barrier without
+changing `GovernanceLintReport`, its JSON schema, or CLI/MCP surfaces. The
+contract source identity is not yet a persisted receipt. Unselected projects'
+check-contract contents are not loaded; registry manifests remain global while
+contract semantics follow the selected-project scope.
+
+The focused registry, governance, and layout selection passed 41 tests and 7
+subtests in an isolated Python 3.11 environment. Ruff, targeted Pyright,
+Rumdl, and the changed-file `git diff --check` passed. All nine Alphus v0.0.2
+profiles were rerun; finding totals matched the preceding capture, with no new
+finding in the two changed production modules. The current next route is to
+admit and freshness-check shared catalogs, team policy, governance records,
+product-index identity, and selected product records as typed sources. No
+size-driven module split was made.
+
+## Governance shared-input freshness route (2026-11-05)
+
+`governance_lint_inputs.py` owns the named `GovernanceLintSharedInputs` set for
+the parts, interface, library, toolchain, and release-policy catalogs plus the
+team policy. It retains the validated catalog indexes/documents and each
+source path/digest together. Governance lint now evaluates those same captured
+values, then asks the governance document owner to re-read and compare their
+exact bytes before returning. A changed or unavailable shared source adds a
+failure issue; no public report or CLI/MCP schema changed.
+
+The route covers sources that govern all project selections. Project governance
+records, the product index, selected product records, and filesystem evidence
+remain outside this barrier. The selected product loader still independently
+reads parts and interface catalogs; the next product route should pass the
+already captured catalog values into that service instead of introducing a
+second read.
+
+The governance, registry snapshot, source-index, and Python module-size
+selections were run for this route. The route tests and targeted static checks
+passed; the full module-size architecture selector also exposed two unrelated
+oversized dirty-worktree files without registered ceilings. No native KiCad
+lane ran, and no line-based module split was made.
+
+## Governance records and product-source routing (2026-11-05)
+
+Governance input capture now includes a `ProductIndexDocument` with the exact
+index path and digest. The shared-input freshness barrier rechecks that source
+for both whole-repository and selected-project lint. Selected product loading
+accepts the captured index and the already parsed parts/interface catalog
+values, so it does not make a second read of those inputs. Each selected
+product record retains an explicit `MISSING`, `UNAVAILABLE`, or `EVALUATED`
+state; readable bytes carry a digest and are rechecked after policy evaluation.
+The source reader and identity models now live in
+`product_source_inputs.py`; compatibility names remain available from
+`product.py`, while visual, variant-BOM, and release consumers import from the
+source owner.
+
+Production governance-record reviews now retain the requested path and either
+the exact source digest or their missing/unavailable state. Governance lint
+rechecks that source or state before returning. The report, JSON shape, and
+CLI/MCP adapters remain unchanged; this remains an operation freshness barrier,
+not an atomic snapshot or persisted approval receipt. The broader filesystem
+evidence route remains open for library provenance, mechanical handoff,
+project-source hashes, and project-file membership.
+
+The focused governance, product, visual, BOM, release, and routing selection
+passed 137 tests and 91 subtests. Ruff, formatting, targeted Pyright, Rumdl, and
+scoped `git diff --check` passed. The new source owner is 206 lines and the
+coordinator is 476 lines. `product.py` remains at the 953-line count present
+when this tranche began; its registered no-growth ceiling is 864 lines, so
+that pre-existing worktree debt remains open. The full module-size selector
+currently fails first on two other dirty-worktree files without ceilings. Do
+not raise their ceilings or treat the current selector failure as validation.
+The product repository source-route follow-up is recorded below. No native
+KiCad lane ran, and no module was split solely to reduce a score.
+
+## Governance filesystem-evidence route (2026-11-05)
+
+Governance lint now retains selected library provenance/licensing inputs and
+production mechanical handoffs in `GovernanceLintFilesystemInputs`. Shared
+governance file identity lives in `governance_records.py` and uses the stable
+regular-file digest service. Project source hashes are captured as explicit
+`MISSING`, `UNAVAILABLE`, or `EVALUATED` inventories by
+`project_source_hashes.py`. Bounded `.kicad_pro` membership and per-root state
+belong to `project_file_membership.py`.
+
+The coordinator rechecks those records and inventories after policy evaluation.
+This detects changed bytes, availability, and visible membership changes at
+the recheck points; it does not lock the filesystem or create an atomic
+snapshot. `GovernanceLintReport` and its CLI/MCP schema remain unchanged. The
+route order and ownership table are recorded in
+[`GOVERNANCE_LINT_DATA_ROUTING.md`](GOVERNANCE_LINT_DATA_ROUTING.md); persistence
+of a complete governance receipt remains a separate decision.
+
+The focused governance, registry-snapshot, source-inventory, and project-file
+membership selection passed 36 tests. Ruff check/format and targeted Pyright
+passed. Alphus v0.0.2's nine configured profiles were re-sniffed after this
+route; candidate results and any consumer feedback remain in the external
+Alphus feedback bundle. No additional gate was enabled, and no module was
+split for a size or complexity score.
+
+## Governance scope and receipt decision (2026-11-05)
+
+The governance coordinator now asks `governance_lint_scope.py` to resolve the
+selected project records, dependent product records, their source inputs, and
+the part/interface/library/toolchain IDs used by policy evaluation. The result
+is the immutable `GovernanceLintProjectScope`; the coordinator consumes that
+single named route instead of building a second project-record map and
+carrying its catalog dependency sets independently. The policy rules,
+selection semantics, and `GovernanceLintReport` schema remain unchanged.
+
+The caller audit found no current request to reuse governance source identities
+after lint completes. Portable/native pipeline reports use the diagnostic
+project scope, status, and issue text, so a durable governance receipt is
+deferred until an actual consumer defines its needs. The source identities
+remain attached to their typed inputs during evaluation and freshness checks.
+
+The Alphus v0.0.2 re-sniff after this change is recorded in the external
+complaint ledger; it produced no new complaint or gate ready to enable. No
+pytest suite was run for this slice. Ruff check/format passed for both
+governance modules, which remain below the repository's 500-line review limit.
+
+## Governance per-project policy route (2026-11-05)
+
+Per-project policy evaluation now belongs to
+`governance_lint_project_policy.py`. The coordinator passes a named
+`GovernanceLintProjectPolicyRequest` containing one registry entry and the
+captured shared inputs. `GovernanceLintProjectPolicyResult` keeps issues beside
+the project identity, config document, governance-record review, and source
+inventory used by the final freshness barriers. Selection semantics, issue
+ordering, source checks, and the public report remain unchanged. The route and
+ownership table are recorded in
+[`GOVERNANCE_LINT_DATA_ROUTING.md`](GOVERNANCE_LINT_DATA_ROUTING.md).
+
+Alphus v0.0.2 re-sniff results and consumer context are in the external
+complaint ledger. The 225 Python-style errors, 116 runtime-type errors, four
+Pydantic warnings, 39 source-family candidates, four input-contract candidates,
+30 complexity candidates, zero test-quality findings, zero module-role
+findings, and two provisional shared-utility findings match the prior scope
+route. Opaque-mapping findings remain zero. The governance coordinator's
+complexity candidate moved from C901 81 to 34; it remains advisory against 30.
+No new Alphus complaint was confirmed, and no gate became ready to enable.
+
+## Governance catalog-policy route (2026-11-05)
+
+Catalog policy now belongs to `governance_lint_catalog_policy.py` behind a
+`GovernanceLintCatalogPolicyRequest` and `GovernanceLintCatalogPolicyResult`.
+The request carries the captured registry snapshot, typed shared catalog
+documents/indexes, and `GovernanceLintProjectScope`. The evaluator keeps
+library path safety and release-policy completeness repository-wide, while
+interface pins, part alternates, selected library locations, and toolchain
+requirements follow the selected dependency IDs. It preserves the existing
+diagnostic ordering and returns issues without taking ownership of catalog
+source freshness. The coordinator still rechecks captured sources through
+their source owners and the public report remains unchanged.
+
+The focused governance, routing, and capability-architecture selection passed
+48 tests. Ruff check/format, targeted Pyright, Rumdl, and scoped
+`git diff --check` passed. Alphus v0.0.2's nine profiles were rerun: 116
+runtime-type errors; 224 Python-style errors (including zero opaque mappings);
+four Pydantic warnings; 39 source-family candidates; four input-contract
+candidates; 29 complexity candidates; zero test-quality findings; zero
+module-role findings; and two provisional shared-utility findings. The
+governance coordinator no longer appears in the complexity candidates above
+the configured maximum of 30. No new complaint or gate was confirmed; the
+external ledger and evidence bundle retain the detailed re-sniff. Do not split
+this policy by catalog size; extend an owner when its policy semantics grow and
+establish a new boundary only when a distinct route or consumer requires it.
+
+## Product repository index route (2026-11-05)
+
+The review found that `generation.expected_outputs` and
+`release.load_release_repository` read the product index separately from the
+one used by `product.load_repository`. This could combine records and paths
+selected from different index bytes during one operation. `ProductRepository`
+now retains the existing typed `ProductIndexDocument` alongside per-entry
+`ProductRecordInput` states and evaluated `ProductSourceIdentity` values.
+Generation derives product paths from that captured document, and release
+selection passes the same document into repository loading.
+
+This is a narrow input capture, not a long-lived snapshot of every repository
+catalog. Governance already owns its product-index freshness check and retains
+the selected `ProductRecordInput` tuple for record freshness. Keep those
+responsibilities separate; add freshness checks for other operations only when
+their duration or output contract requires them. The aggregate result type now
+lives in the focused `product_repository_models.py` owner; `product.py` keeps
+its compatibility export and did not grow. Focused routing, product, release,
+governance, and architecture regressions passed 86 tests and 57 subtests. Ruff,
+formatting, targeted Pyright, Rumdl, and scoped `git diff --check` passed. No
+native KiCad lane ran.
+
+The post-route Alphus v0.0.2 re-sniff kept all nine profile counts unchanged:
+116 runtime-type errors; 224 Python-style errors, including zero opaque
+mappings; four Pydantic warnings; 39 source-family candidates; four
+input-contract candidates; 29 complexity candidates; zero test-quality and
+module-role findings; and two provisional shared-utility candidates. The
+isolated v0.0.3 `test-layout` trial reports 1,108 findings (920 unmirrored test
+directories and 188 misplaced modules), so it remains disabled. Current
+upstream main still exposes the same 62 selectors as v0.0.2. No new Alphus
+complaint or gate was confirmed; details remain in the external consumer
+ledger and evidence bundle.
+
+## Product generation output ownership (2026-11-05)
+
+Deterministic product and repository projections now belong to
+`hwrepo/generation_outputs.py`. The existing `hwrepo/generation.py` surface
+continues to export the projection functions for compatibility and owns file
+publication, drift inspection, and retained snapshot assembly. Both `drift`
+and `snapshot` load one `ProductRepository` and pass that capture to
+`expected_outputs_from_repository`; stale product-output discovery reads the
+same captured `ProductIndexDocument` used to select product records. This
+prevents a single operation from combining records and output paths read from
+different index bytes.
+
+The boundary follows the product data route: pure projections consume typed
+`ProductRepository` values, while filesystem effects stay in the coordinator.
+It is not a line-count split. The two modules are now below 500 lines, the
+obsolete no-growth ceiling for `generation.py` was removed, and architecture
+tests guard both the typed projection owner and single-capture composition.
+The existing generation imports remain available to their callers.
+
+The post-route Alphus v0.0.2 scan retained the same nine-profile counts: 116
+runtime-type errors, 224 Python-style errors with zero opaque mappings, four
+Pydantic warnings, 39 source-family candidates, four input-contract candidates,
+29 complexity candidates, zero test-quality or module-role findings, and two
+provisional shared-utility findings. The only profiles over their configured
+error thresholds remain runtime-types and python-style. Upstream `main` still
+has no selector beyond the v0.0.2 catalog. The v0.0.3 `test-layout` candidate
+remains disabled; its last verified trial is 1,108 findings. A fresh isolated
+candidate installation did not resolve `markdown-it-py>=4` from the available
+package index, so that attempt is recorded as an environment blocker, not a
+new Alphus finding. The current reports and install log are in ignored
+`build/alphus-resniff-2026-11-05-generation-output-owner/`.
+
+## Product visualization index capture (2026-11-05)
+
+`build_product_visual` now parses its already-captured index bytes through the
+canonical `product_source_inputs` parser and passes the resulting
+`ProductIndexDocument` to `load_repository`. The document's byte digest is the
+index entry in the visual receipt's source map. Its final freshness check
+compares the checkout against that original digest, including edits that occur
+between initial capture and shared-catalog loading. The selected product
+record is still read and validated separately, and shared catalog loading
+continues to use an empty product scope so unrelated product islands do not
+become visualization inputs.
+
+The source-input architecture test guards the parser owner, the routing test
+checks that the same document reaches repository composition and matches the
+receipt bytes, and the product occurrence architecture test guards this route.
+
+The route regression selection passed: 126 tests and 85 subtests. Ruff and Rumdl
+passed, and targeted Pyright reported zero errors in the changed production and
+architecture modules (the existing `test_product_visual.py` parity harness has
+12 pre-existing Pyright errors outside the added test). The post-route Alphus
+v0.0.2 re-sniff retained all nine profile totals: 116 runtime-type errors; 224
+Python-style errors, including zero opaque mappings; four Pydantic warnings; 39
+source-family candidates; four input-contract candidates; 29 complexity
+candidates; zero test-quality or module-role findings; and two provisional
+shared-utility candidates. Only runtime-types and python-style cross their
+configured error thresholds. Live upstream refs still identify v0.0.2 at
+`3435f81aff7abac7716a5780d26319e8f314d61d` and main at
+`c880093f7ccb73c2af78ffb5c7de8c15d2b75b0e`; the catalog adds no selector over
+the pinned v0.0.2 version. The v0.0.3-only `test-layout` candidate remains
+disabled with its previously recorded 1,108 current-tree findings. No new
+Alphus complaint or gate was confirmed. Raw profile reports and live refs are in
+ignored `build/alphus-resniff-2026-11-05-product-visual-index-route/`.
+
+## Release variant selection source capture (2026-11-05)
+
+`releasing.resolve_variants` now uses the canonical layout and product-source
+owners. It retains the configured `RepositoryLayoutDocument`, one
+`ProductIndexDocument`, and one `ProductRecordInput` per selected product while
+it resolves the user's `PRODUCT:VARIANT` values. Before returning, it verifies
+the captured layout and index are still current and checks each selected
+product record's captured identity. This prevents selection from combining a
+path chosen by one layout/index revision with product bytes read after those
+inputs changed.
+
+The persisted `ReleaseVariant` and schema-version-1 `ReleaseManifest` shapes
+remain unchanged. `releasing.prepare` still validates product and variant
+revision IDs against its source-state-bound repository capture, and its final
+source check remains the barrier before candidate manifest publication. The
+resolver remains a shared internal operation for the release CLI and MCP review
+workflow; no surface or release-policy semantics changed.
+
+The focused layout-consumer regressions exercise stable custom-layout
+selection and changes to the layout adapter, product index, or selected
+product record during capture. Architecture coverage requires the resolver to
+use the canonical layout and product-source owners. This route improves input
+admission without introducing a new receipt or splitting a module for its
+size.
+
+The focused release, layout, product-source, and review-scope selection passed
+38 tests and 33 subtests. Ruff check/format, targeted Pyright, Rumdl, and the
+scoped `git diff --check` passed. All nine configured Alphus v0.0.2 profiles
+were rerun: 116 runtime-type errors; 224 Python-style errors (including zero
+opaque mappings); four Pydantic warnings; 39 source-family candidates; four
+input-contract candidates; 29 complexity candidates; zero test-quality and
+module-role findings; and two provisional shared-utility candidates. Only
+runtime-types and python-style exceed their configured thresholds. The resolver
+has no new Alphus diagnostics. Live upstream refs still show main at
+`c880093f7ccb73c2af78ffb5c7de8c15d2b75b0e`; its previously compared catalog
+contains no selector beyond v0.0.2. The v0.0.3-only `test-layout` candidate
+remains disabled. No new complaint or gate was confirmed; reports are in ignored
+`build/alphus-resniff-2026-11-05-release-variant-source-capture/`.
+
+## Release preparation operation request
+
+Release candidate preparation now has an explicit immutable
+`ReleasePreparationRequest` in `release_operation_models.py`, separate from the
+persisted `ReleaseManifest` contract. The CLI and MCP review workflow construct
+that request and call `releasing.prepare_request`; the container-backed MCP
+path invokes the same CLI adapter. The established positional `releasing.prepare`
+entry point remains as a compatibility adapter that only packs its arguments
+and delegates to the typed operation.
+
+The request describes project and product-variant scope, release class, native
+CLI choice, optional portable evidence, and simulator executable. Variant
+selection retains its own captured layout/index/product freshness checks, while
+`prepare_request` keeps the current clean-source guard, repository revision
+validation, and final source-state check before candidate publication. CLI/MCP
+transport behavior and persisted manifest JSON are unchanged. This is a
+capability contract change, not a size-driven module split.
+
+The focused release, evidence, review-scope, product-occurrence, source-input,
+layout-consumer, and operation-architecture selection passed 59 tests and 54
+subtests. Ruff, Ruff format check, targeted Pyright, Rumdl, and the scoped
+`git diff --check` passed. The Alphus v0.0.2 installation remains pinned to the
+tag commit `3435f81aff7abac7716a5780d26319e8f314d61d`; all nine configured
+profiles were rerun. Counts are 116 runtime-type errors; 224 Python-style
+errors (138 legacy Pydantic fields, 73 local imports, 10 mutable module
+constants, two unslotted dataclasses, one concrete input, and zero opaque
+mappings); four Pydantic warnings; 40 source-family candidates; four
+input-contract candidates; 29 complexity candidates; zero test-quality and
+module-role findings; and two provisional shared-utility findings. Only
+runtime-types and python-style exceed their configured thresholds. The source
+family count rose from 39 to 40 because the `release_*` files now form a six-file
+family. This remains a low-confidence ownership review prompt, not evidence of
+a God module or a reason for a size-driven split; it updates the existing
+APL-KT-003 consumer-fit complaint.
+
+The exact v0.0.3-tag `test-layout` trial reports 1,109 errors: 921
+behavior-organized test directories without matching source directories and
+188 test modules outside source-mirrored locations. The newly added
+`test_release_operation_architecture.py` is included among the affected root
+tests. Keep this selector disabled until an explicit source-to-test ownership
+map makes its assumptions fit this suite. The live upstream `main` ref remains
+`c880093f7ccb73c2af78ffb5c7de8c15d2b75b0e` and exposes no selector beyond the
+62 in the pinned v0.0.2 catalog. No new complaint or gate was confirmed. Raw
+reports and exact tag metadata are in ignored
+`build/alphus-resniff-2026-11-05-release-preparation-request/`; the cumulative
+external ledger and bundle retain the review evidence.
+
+## Product repository snapshot and governance handoff (2026-11-05)
+
+The remaining governance route review found that the operation-local
+`ProductRepository` already provides the needed aggregate: it combines the
+captured product index, selected `ProductRecordInput` states, validated product
+records, and the lookup maps used to derive dependent catalog IDs. Governance
+scope retains the `ProductRecordInput` tuple for its final product-byte and
+availability check, while shared governance inputs retain and recheck the
+`ProductIndexDocument`. No current policy consumer needs the full repository
+after scope resolution, so `GovernanceLintProjectScope` does not retain another
+repository snapshot and no additional module boundary is warranted.
+
+The repository's lookup maps were typed as `Mapping` but were still mutable
+dicts. `ProductRepository.__post_init__` now makes defensive read-only copies
+of each lookup, preventing callers from changing product-to-project selection,
+catalog dependencies, or source identities after capture. The builder no
+longer wraps only `product_sources`; the result owner enforces one consistent
+immutability contract. `test_product_repository_index_routing.py` checks
+defensive copying and mutation rejection, while `test_governance_input_routing.py`
+continues to cover captured inputs and stale product bytes.
+
+The three focused route and architecture modules passed 24 tests. Ruff check
+and formatting, targeted Pyright, Rumdl, and scoped `git diff --check` passed.
+No native KiCad lane or full CI run was performed. This closes the product
+repository handoff review without a size-driven split or report-schema change;
+the broader SA-01 route inventory remains open for any capability whose typed
+source and absence/freshness contract has not yet been reviewed.
+
+## Native PCB snapshot validation route (2026-11-05)
+
+`PcbConnectivitySnapshot` previously concentrated schema-version requirements
+and cross-observation checks in the model validator named
+`unique_observed_items`. Review of its data contract showed separate concerns:
+required inventory fields introduced across snapshot schemas 3 through 15;
+pad, via, zone, track, and probe relationships; and evidence-specific footprint,
+rule-area, touch-pad, and net-tie consistency. This is an ownership and
+extension-path concern, not a file-size request.
+
+The model validator now coordinates ordered validation phases with owners named
+for those contracts. A private frozen `_PcbConnectivityIndex` carries
+read-only lookups for case-folded pad, track, and zone identities and via IDs.
+`_PcbZoneKey` names the UUID/layer identity instead of leaving it as an
+unexplained two-string tuple. Cross-record checks reuse that one index. Schema
+requirements compare against their introduction version, so later schemas
+inherit earlier inventory contracts without repeating growing version sets.
+The public schema versions, serialized fields, evidence meaning, and existing
+validation error ordering remain unchanged. All logic stays in
+`pcb_connectivity_snapshot.py`; no module split was needed.
+
+The schema-15 component-inventory path already accepted snapshots through 15,
+while one synthetic regression still expected a maximum of 14. The assertion
+now follows the supported schema contract. The 17 test modules importing
+`PcbConnectivitySnapshot` passed 174 tests and 15 subtests, with exact native
+KiCad tests excluded. Ruff, format, targeted Pyright, and scoped diff checks
+passed.
+
+Alphus v0.0.2 was rerun after the route. The complexity profile decreased from
+29 to 28 warnings; the snapshot model no longer has a complexity finding. The
+other profile counts are unchanged: 116 runtime-type errors, 224 Python-style
+errors (including zero opaque mappings), four Pydantic warnings, 40
+source-family candidates, four input-contract candidates, zero test-quality
+findings, zero module-role findings, and two provisional shared-utility
+findings. Only runtime-types and python-style exceed their configured
+thresholds. Current upstream main still has the same 62 selectors as v0.0.2;
+v0.0.3 adds only `test-layout`, whose current-tree trial remains at 1,109
+findings (921 unmirrored test directories and 188 misplaced test modules).
+No gate was newly enabled and no new Alphus complaint was confirmed. The
+updated external feedback ledger and raw scan bundle record the evidence.
+
+## Unmapped USB topology candidate evidence route (2026-11-05)
+
+The live production AST inventory found one remaining direct generic
+`Candidate(evidence=...)` construction in the USB unmapped multi-pin topology
+translator. That adapter now constructs `UsbUnmappedMultiPinTopologyCandidate`
+from `UsbUnmappedMultiPinTopologyFindingEvidence`, which retains the exact
+unsupported native topology record and the authored USB data-path input,
+including its map digest when present. The candidate owner derives the stable
+evidence projection and rejects mismatched rule/evidence fields at construction.
+The existing scanner still decides whether a matching map suppresses the
+candidate; finding order, wording, evidence fields, fingerprint input, and
+review/block/off disposition remain unchanged. The catalog keeps the predicate
+owner and lists the candidate evidence owner as an implementation reference.
+
+This closes the USB topology adapter identified at that checkpoint. The
+architecture test guards its owner and source-factory route; the synthetic
+regression checks source retention, immutable projection, and rejection of
+forged evidence. The broader generic-candidate inventory remained open and
+was updated after subsequent routes. No general data-flow claim is inferred
+from a direct-call AST check, and no module was split to reduce its size.
+
+## Source-bound PCB DRC exclusion evidence route (2026-11-05)
+
+`pcb.drc_exclusion_present` already admitted the configured KiCad project
+settings through `SourceHashInventory` and checked the exact digest both before
+and after parsing. Its report adapter then rebuilt source path/hash, KiCad
+version, marker digest, rule key, serialized marker, and comment as a generic
+candidate evidence map. The rule now retains those typed inputs in
+`PcbDrcExclusionFindingEvidence`; its projection owns the stable report fields,
+and `PcbDrcExclusionCandidate` derives and validates its subject and message
+from that source object.
+
+The source admission barrier, supported-version scope, finding order, report
+schema and fingerprint, wording, and review-only meaning are unchanged. The
+rule still does not run DRC or prove an exclusion acceptable. No file was split
+for size. At the DRC-route checkpoint, a direct-AST inventory found 28
+production `Candidate(evidence=...)` constructions across 28 modules, 26 with
+literal evidence maps; this narrow census did not claim complete data-flow
+coverage.
+
+## Mapped LED current candidate source route (2026-11-06)
+
+`component.mapped_led_current_range_mismatch` now carries its authored
+`LedCurrentMap`, copied normalized `NetlistContract`, supplied native-netlist
+digest, and calculated `LedCurrentRangeEntry` through
+`LedCurrentRangeFindingEvidence`. The rule-owned projection recreates the
+existing report evidence keys, and the typed candidate rejects an entry that
+does not recompute from its retained map and netlist or a report projection
+that does not match its source record.
+
+The predicate remains in `led_current_range.py`; the component scanner still
+owns candidate admission, and policy/disposition handling remains in the
+shared evaluator. Report fields, ordering, fingerprint inputs, message, and
+review-only meaning are unchanged. The active-rule reachability fixture now
+includes an emitted mapped-LED fault. The new evidence owner stays below the
+review size limit and is not re-exported through `models.py`.
+
+After the route, the scoped production AST inventory finds zero direct
+`Candidate(evidence=...)` calls in `kicad_tooling/hwrepo/design_lint*.py`.
+This checks only direct calls with that spelling; it is not a complete data
+flow proof. Focused LED, catalog-reachability, MCP parity, and mapped-topology
+tests passed (20 tests); targeted production and test Pyright plus Ruff passed.
+
+## Component-role report-field contract (2026-11-06)
+
+An import-aware route review found that
+`component_role_binding_evidence` returned `dict[str, tuple[str, ...]]` from
+`component_roles.py` to the LED and two-pin candidate projectors. Both
+candidates already retain their exact authored `ComponentRoleBinding`; the
+remaining gap was an unnamed field contract at the report projection boundary.
+
+The route now names those seven fields as
+`ComponentRoleBindingReportFields`, a `TypedDict` owned by `component_roles.py`.
+The LED and two-pin projectors consume that exact contract, then pass the fields
+into `CandidateEvidenceProjection`, which freezes the final report mapping.
+Candidate source records, role digest calculation, report keys and insertion
+order, fingerprints, rule ownership, and dispositions are unchanged. The
+architecture suite guards the closed field set and the projector's return
+contract. No model registry export or module split was added.
+
+The LED/two-pin behavior and architecture selection passed 34 tests. Targeted
+Pyright, Ruff, formatting, and scoped `git diff --check` passed. No exact native
+KiCad lane was required for this report-field contract.
+
+## KiCad S-expression parser ownership route (2026-11-06)
+
+The source-span and direct-child parser lived in the 3D model inventory
+service, while token, property, and root helpers lived in `part_cad.py`.
+`cad_assets.py`, `cad_library.py`, `cad_step.py`, PCB DRC parsing, schematic
+geometry, cross-probe readers, and other services imported those private
+helpers across capability boundaries. This blurred the source parser owner and
+left property-index callers with a generic mutable-dictionary return.
+
+`kicad_sexpr.py` now owns the KiCad source span/token types, expression
+traversal, root/field/property readers, and quoted-atom writing. Its
+`SExprProperties` contract is a read-only `Mapping[str, SExprSpan]`, returned
+as an immutable mapping. The source services import the parser owner directly;
+`model_inventory.py` remains the 3D-assignment inventory and `part_cad.py`
+remains the reviewed part/CAD operation owner. Existing source validation,
+property order, offsets, error behavior, and CAD output semantics are retained.
+
+This extracts shared parsing behavior by ownership, not to meet a line-count
+target. `kicad_sexpr.py` is 230 lines, and the extraction reduced
+`model_inventory.py` from 512 to 425 lines; `part_cad.py` remains intact at 575
+lines. The focused parser, CAD, model-inventory, and schematic-source selection
+passed 135 tests. Ruff check/format and scoped `git diff --check` passed.
+Full-package Pyright reported two unrelated unused imports in the already-dirty
+`product.py` and `release_population.py`; it reported no diagnostics in this
+route. No native KiCad lane was required. Continue the SA-01 ownership/data
+route audit with another cross-module return contract.
+
+## Part-selection and CAD source-precondition route (2026-11-06)
+
+A fresh import-aware return-contract inventory found that `part_picker._snapshot`
+was consumed by both `auto_cad.py` and `cad_library.py`. That helper captured
+project source hashes, shared policy and catalog inputs, registered manifests,
+eligible reviewed CAD models, and an absent-preferences precondition. It lived
+inside one operation even though three part/CAD operations relied on the same
+source contract.
+
+`part_selection_sources.py` now owns catalog eligibility and composes model
+resolution from `model_population_sources.py`. That module returns a named
+`ModelSourceResolution` for the resolved path, manifest inventory field, input
+path, and KiCad reference. Shared-root and consumer-inventory checks remain
+explicit service functions in `model_population.py` rather than private
+cross-module helpers. The model-source owner has its own size and import-boundary
+guard.
+`PartCadSourceSnapshot` binds the project ID to immutable
+path-to-digest-or-absence preconditions. The owner recaptures the same source
+set and reports changed, added, removed, or newly present inputs before
+applying reviewed changes. `auto_cad.py` and `cad_library.py` now depend
+directly on this owner; `part_picker.py` keeps its private map-shaped adapters
+only for its existing callers and tests.
+
+The persisted selection, automatic-CAD, and CAD-import plan fields remain JSON
+objects with the same paths, digest strings, and null absent-source values.
+Their source and output-hash maps are now read-only in memory after validation.
+This route clarifies a shared source boundary without adding report provenance
+or changing plan schemas.
+
+The focused part-selection, automatic-CAD, CAD-library, model-population,
+CAD-assets, part-CAD, and architecture selection passed 109 tests and 74
+subtests. Targeted Pyright reported zero errors, warnings, or informations;
+Ruff check/format, Rumdl, and scoped `git diff --check` passed. No exact native
+KiCad lane or full CI run was required. A frozen post-fix Alphus v0.0.2 scan
+covered all nine configured profiles. It reported 116 runtime-type errors,
+226 Python-style errors, four Pydantic warnings, 41 low-confidence source-family
+candidates, four input-mutation candidates, and 28 complexity candidates; the
+test-quality, module-role, and shared-utility profiles reported zero findings.
+The first frozen scan caught a duplicate plan-validator candidate, which was
+removed by the common `SourceIndexPlan` owner before the final scan. This route
+did not change any quality threshold or selector, and it confirmed no new
+Alphus complaint. Catalog and consumer-feedback details remain in
+`docs/ALPHUS_QUALITY_GATES.md` and the separate external feedback ledger.
+
+## Product BOM instance-state index route (2026-11-06)
+
+The import-aware return-contract census found that `product_variant_bom.instance_states`
+returned a mutable `dict[str, VariantBomInstanceState]` used by both variant
+and historical-revision comparisons. These keys are product hierarchy paths,
+and `ProductVisualInstance` already uses the domain-owned `ProductInstancePath`
+type.
+
+`product_variant_bom_models.py` now owns the named
+`VariantBomInstanceIndex` mapping contract. `instance_states` returns that
+contract keyed by `ProductInstancePath` and wraps its completed local index in
+a read-only mapping. `VariantBomInstanceDifference.path` uses the same domain
+type. Its JSON remains a string path; instance selection, revision lookup,
+ordering, comparison semantics, and report fields remain unchanged. This
+derived index does not create a second source receipt: callers continue to
+admit and compare the source-bound product view before deriving instance
+states.
+
+The variant/revision BOM and product-occurrence architecture selection passed
+23 tests. Targeted Pyright reported zero errors, warnings, or informations;
+Ruff check/format passed. The external Alphus re-sniff covered all nine
+configured profiles against a frozen Python-source inventory: 116
+runtime-type errors, 226 Python-style errors, four Pydantic warnings, 41
+source-family candidates, four input-contract candidates, and 28 complexity
+candidates; test-quality and both mainline architecture/duplication gates
+reported zero findings. No quality threshold or selector changed, and no new
+Alphus complaint was confirmed. Full CI and the native KiCad lane did not run.
+
+The `schematic_geometry_source.schematic_instance_references` route is now
+typed and source-bound; see the route record below. The next map-plus-issues
+route is `cross_probe_schematic.schematic_drawing_bindings`, which returns
+sheet-instance keys with drawings and a separate issue tuple. Review whether
+its drawing and schematic-source identities belong in one named result before
+changing that signature.
+
+## Schematic instance-reference resolution route (2026-11-06)
+
+The hierarchical parser previously returned a mutable UUID-to-reference dict
+beside a separate tuple of issues. Both the schematic geometry tree and
+cross-probe hierarchy consumed the pair. `schematic_geometry_models.py` now
+owns `SchematicInstanceReferenceResolution`, with the source path and SHA-256,
+project name, exact sheet-instance path, a read-only
+`SchematicInstanceReferenceIndex`, and parse issues. The parser computes the
+digest from the exact UTF-8 source text it resolved. Both consumers verify that
+digest against their retained source bytes before using the references.
+
+The geometry scanner continues to attach unresolved references to its existing
+unsupported/partial result, and cross-probe continues to report the same
+hierarchical mapping issues. No report schema, finding order, or reference
+normalization changed. The source-map, geometry-tree, and cross-probe selection
+passed 28 tests. Targeted Pyright reported zero diagnostics; Ruff check and
+format passed after formatting. The schematic architecture suite now guards
+the model owner size. Full CI and exact native KiCad validation did not run.
+
+## Cross-probe schematic symbol-anchor route (2026-11-06)
+
+`cross_probe_schematic.schematic_symbol_anchors` previously returned a
+case-folded reference-to-anchor dict and an independent issue tuple. It now
+consumes `VerifiedSchematicSourceTree` and returns
+`SchematicSymbolAnchorResolution` from `cross_probe_schematic_models.py`.
+The result retains project/root context, a read-only anchor index, visited
+source hashes, a canonical source-tree digest, issues, and explicit
+`COMPLETE`, `PARTIAL`, or `BLOCKED` status. Cross-probe constructs the tree
+from the already admitted bytes, preserving its existing 32 MiB read limit
+instead of recapturing the same files through the geometry reader's 16 MiB
+limit.
+
+`CrossProbeLocationEvidence` now carries the resolution itself and checks its
+source hashes against the admitted project inventory before exposing the
+immutable index to population reconciliation. The published report schema,
+reference normalization, drawing association, and issue text are unchanged.
+The source-tree route has dedicated state, context-mismatch, digest, and
+read-only tests. The normal pytest bootstrap is currently blocked before
+collection by the already-dirty PCB DRC parser/refactor: its native-rule review
+imports `NativeDrcRuleCondition` from `pcb_drc_rule_parser.py`, where that name
+is not defined. The independent route/architecture subset passed with
+`--noconftest`; the cross-probe integration module could not be collected in
+this workspace state. Targeted Pyright and Ruff passed. No native KiCad lane
+ran.
+
+The nine configured Alphus profiles remain the review surface; no new
+applicable gate was found. `file-size`, package-boundary policy, and
+revision-matched source/test coverage still need explicit consumer contracts
+before activation. Consumer complaint IDs and raw scan reports remain in the
+external feedback ledger.
+
+## Cross-probe schematic drawing-binding route (2026-11-06)
+
+The next map-plus-issues route returned a mutable sheet-instance-to-drawing
+dict beside an issue tuple. `cross_probe_schematic_models.py` now owns
+`SchematicDrawingBindingResolution`, which retains the filtered source drawing
+records, current hashes for paths used by the binding decision, a canonical
+inventory digest, a read-only instance index, issues, and
+`COMPLETE`/`PARTIAL`/`NOT_REQUESTED` status. `CrossProbeLocationEvidence`
+retains this result and validates its source hashes against the admitted
+inventory before reconciliation projects the mapping.
+
+The existing single-root SVG fallback, stale-binding and duplicate issue text,
+marker associations, and serialized report schema are unchanged. Focused tests
+cover current child bindings, stale source digests, duplicate instance claims,
+the legacy root fallback, no schematic input, read-only maps, and rejection of
+stale retained evidence. The normal focused pytest selection passed 40 tests;
+this supersedes the earlier bootstrap limitation recorded for the preceding
+anchor route. No exact native KiCad lane was required.
+
+The board-marker input audit below completes this route review. It checks the
+source and receipt identity plus missing-versus-ambiguous drawing states; it
+does not request a module split.
+
+## Cross-probe PCB board-marker route (2026-11-06)
+
+`cross_probe.py` previously passed the board path, footprint-anchor map, and
+nullable selected PCB drawing separately into reconciliation. The parser also
+represented both a verified empty board and an unavailable board as an empty
+map, and multiple PCB drawings lost their explicit ambiguous state.
+
+`cross_probe_board.py` now owns `CrossProbeBoardMarkerResolution`. It binds the
+board path and expected digest to the read-only anchor index, retains the exact
+findings-view receipt, and keeps all PCB drawing candidates with explicit
+`UNAVAILABLE`, `UNIQUE`, `AMBIGUOUS`, or `UNSUPPORTED` status. A verified board
+with no placements is `COMPLETE`; a missing source or digest mismatch is
+`BLOCKED`. `CrossProbeLocationEvidence` retains the resolution and validates
+its board digest against the admitted source inventory before reconciliation.
+
+The public report fields, marker behavior, and existing issue text remain
+unchanged. Focused tests cover matching and stale digests, verified empty and
+missing boards, drawing cardinality and support states, immutable anchors, and
+receipt identity. The selected cross-probe, architecture, and inventory
+selection passed 44 tests. Ruff and formatting checks passed; targeted
+Pyright reported zero diagnostics. No exact native KiCad lane was required.
+
+## Named-variant PCB position-export route (2026-11-06)
+
+The variant population source kept a mutable `board_values` dictionary inside
+a frozen record. The CSV parser returned that map separately from the hash
+recorded in `PcbVariantPopulationEvidence`, so the identity and parsed values
+were produced by separate reads. A supported KiCad 10.0.5 export without a
+`Val` column also produced `board_values=None` and could leave value comparison
+unavailable while population coverage remained complete.
+
+`pcb_variant_position_export.py` now owns `PcbVariantPositionExport`, which
+parses one stable regular-file read and hashes those exact bytes. It retains an
+immutable reference-to-value index and `PRESENT`/`ABSENT` column state. Capture
+reuses its digest for the position-file receipt, and the resulting
+`PcbVariantPositionReceipt` stays with `PcbVariantPopulationSource`.
+`PcbVariantPopulationCapture` checks that each source's path and digest match
+the evidence row for the same variant. The source defensively freezes its value
+map and names `AVAILABLE` versus `UNSUPPORTED_KICAD_VERSION` explicitly.
+
+When KiCad 10.0.5 claims value support but the export omits `Val`, capture now
+returns `BLOCKED` with a specific input issue. Older unsupported versions keep
+their existing value-comparison behavior with the unsupported state explicit
+in the in-memory source. `cross_probe_variant` imports the parser owner
+directly and verifies each position export against the recorded digest using
+the same bytes it parses. Existing report JSON and supported-version selection
+are unchanged; no size-driven split was made.
+
+The focused capture, comparison, source-receipt, architecture, and cross-probe
+variant selection passed 43 tests using the separate public template checkout.
+Ruff, formatting, and targeted Pyright passed with zero diagnostics. No exact
+native KiCad lane or full CI run was required for this synthetic route.
+
+## Release board-variant selection route (2026-11-06)
+
+Release readiness and preparation previously rebuilt a project-to-variant
+`dict[str, str]` and inferred “use the configured default” from a missing map
+entry. That erased the selected product-file identity and made the absent
+assignment indistinguishable from an unexamined input.
+
+`release_board_variant_selection.py` now owns immutable typed choices for every
+selected project. Each choice is explicitly `ASSIGNED` or `DEFAULT`; selected
+product and variant revisions retain the exact product path and SHA-256, even
+when they assign no board override. Readiness and preparation call the typed
+resolver directly and recheck those product bytes before evidence use and
+candidate publication. `release.selected_board_variants` remains the narrow
+mapping compatibility projection.
+
+Conflicting assignments, unselected-project mappings, and existing export
+requirements are unchanged. Release manifest JSON and report behavior are
+unchanged. Six focused route, architecture, release, and compatibility modules
+passed 38 tests and 19 subtests. Ruff and formatting passed; targeted Pyright
+reported zero diagnostics. No native KiCad lane or full CI run was required.

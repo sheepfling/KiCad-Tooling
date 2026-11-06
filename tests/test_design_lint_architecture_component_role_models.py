@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import ast
 from types import MappingProxyType
+from typing import get_type_hints
 
 import pytest
 
-from kicad_tooling.hwrepo import component_role_models
+from kicad_tooling.hwrepo import component_role_models, component_roles
 from kicad_tooling.hwrepo import models as shared_models
 from tests.lint_architecture_support import IMPLEMENTATION_MAX_LINES, REPO_ROOT, line_count
 
@@ -22,7 +23,7 @@ EXPECTED_OWNER_IMPORTS = MappingProxyType(
         "kicad_tooling/hwrepo/component_roles.py": frozenset(
             {"ComponentRoleBinding", "ComponentRoleMap"}
         ),
-        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py": frozenset(
+        "kicad_tooling/hwrepo/design_lint_candidate_legacy_arguments.py": frozenset(
             {"ComponentRoleMap"}
         ),
         "kicad_tooling/hwrepo/design_lint_component_candidates.py": frozenset({"ComponentRoleMap"}),
@@ -100,3 +101,20 @@ def test_internal_component_role_services_import_models_from_owner() -> None:
             f"{source_name} must import component-role models from their owner: "
             f"missing {sorted(expected - actual_owner_imports.get(source_name, set()))}"
         )
+
+
+def test_component_role_report_fields_have_a_closed_typed_projection() -> None:
+    report_fields = component_roles.ComponentRoleBindingReportFields
+
+    assert set(report_fields.__annotations__) == {
+        "classified_role",
+        "role_part_id",
+        "role_symbol",
+        "role_footprint",
+        "role_pin_inventory",
+        "role_basis",
+        "role_binding_sha256",
+    }
+    assert get_type_hints(component_roles.component_role_binding_report_fields)["return"] is (
+        report_fields
+    )

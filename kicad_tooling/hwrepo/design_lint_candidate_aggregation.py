@@ -7,19 +7,10 @@ import json
 from collections.abc import Sequence
 from dataclasses import replace
 
-from .bus_signal_pairs import (
-    ComplementaryPinFunctionAliasResolution,
-)
-from .can_peer_reference_scan import CanPeerReferenceScan
+from typing_extensions import Unpack
+
 from .component_peer_pin_candidate_types import ComponentPeerCandidateInputs
 from .component_peer_pin_evaluation import component_peer_pin_assignment_scans
-from .component_peer_pin_scan import ComponentPeerPinAssignmentScans
-from .component_role_models import ComponentRoleMap
-from .connector_coverage_models import ConnectorCoverageReport
-from .connector_return_distribution_models import ConnectorReturnDistributionCoverageReport
-from .connector_stateful_contact_models import ConnectorStatefulContactMap
-from .control_input_models import ControlInputBiasHeuristicCoverage
-from .crystal_network_models import CrystalNetworkCoverageReport
 from .design_lint_bus_candidates import scan_bus_candidates
 from .design_lint_bus_inputs import BusCandidateInputs
 from .design_lint_candidate_inputs import (
@@ -28,6 +19,7 @@ from .design_lint_candidate_inputs import (
     DesignLintCandidateInputs,
     MappedCandidateInputs,
 )
+from .design_lint_candidate_legacy_arguments import LegacyCandidateArguments
 from .design_lint_candidate_results import DesignLintCandidateScanResult
 from .design_lint_catalog import rule_catalog
 from .design_lint_component_candidates import (
@@ -64,56 +56,10 @@ from .design_lint_schematic_geometry import schematic_geometry_candidates
 from .design_lint_stm32_candidates import stm32_candidates
 from .design_lint_types import Candidate
 from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
-from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
-from .external_protection_models import ExternalProtectionCoverageReport
 from .i2c_address_inputs import I2cAddressCandidateInput
-from .i2c_address_models import (
-    I2cAddressCoverageReport,
-    I2cAddressMap,
-)
-from .i2c_peer_reference_scan import I2cPeerReferenceScan
 from .i2c_pullup_inputs import I2cPullupSnifferInput
-from .i2c_pullup_models import I2cPullupHeuristicCoverage
-from .ic_decoupling_models import IcDecouplingMap
-from .led_current_models import LedCurrentMap
 from .netlist_contract_models import NetlistContract
-from .oscillator_output_path_models import OscillatorOutputPathMap
-from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
-from .pcb_decoupling_models import PcbDecouplingCoverageReport
-from .pcb_drc_models import (
-    PcbDifferentialPairRuleCoverageReport,
-    PcbDifferentialPairRuleMap,
-    PcbSignalPathRuleCoverageReport,
-)
-from .pcb_keepout_models import (
-    PcbKeepoutCoverageReport,
-)
-from .pcb_protection_path_models import PcbProtectionPathCoverageReport
-from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport
-from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
-from .pcb_switching_loop_models import (
-    PcbSwitchingLoopCoverageReport,
-)
-from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
-from .pcb_track_width_models import PcbTrackWidthCoverageReport
 from .peer_reference_candidate_keys import PeerReferenceCandidateKeys
-from .power_path_models import PowerPathMap
-from .power_sequence_models import PowerSequenceMap
-from .rc_filter_models import RcFilterCoverageReport
-from .regulator_feedback_models import RegulatorFeedbackCoverageReport
-from .rs485_peer_reference_types import Rs485PeerReferenceScan
-from .schematic_geometry import (
-    SchematicGeometryScan,
-)
-from .serial_participants import SerialPeerRosterContext
-from .serial_peer_reference_types import SerialPeerReferenceScan
-from .signal_divider_models import SignalDividerCoverageReport
-from .spi_participants import SpiRosterContext
-from .spi_peer_reference_scan import SpiPeerReferenceScan
-from .stm32_pin_map_models import Stm32PinMapCoverageReport
-from .usb_c_ports import UsbCPortRosterContext
-from .usb_data_path_models import UsbDataPathMap
-from .usb_peer_reference_types import UsbPeerReferenceScan
 
 
 def fingerprint(item: Candidate) -> str:
@@ -143,56 +89,7 @@ def validate_catalogued_candidates(
 def candidates(
     observed: NetlistContract,
     catalog: DesignLintRuleCatalog | None = None,
-    schematic_geometry: SchematicGeometryScan | None = None,
-    i2c_address_coverage: I2cAddressCoverageReport | None = None,
-    external_protection_coverage: ExternalProtectionCoverageReport | None = None,
-    crystal_network_coverage: CrystalNetworkCoverageReport | None = None,
-    regulator_feedback_coverage: RegulatorFeedbackCoverageReport | None = None,
-    signal_divider_coverage: SignalDividerCoverageReport | None = None,
-    rc_filter_coverage: RcFilterCoverageReport | None = None,
-    connector_return_distribution: ConnectorReturnDistributionCoverageReport | None = None,
-    pcb_decoupling_coverage: PcbDecouplingCoverageReport | None = None,
-    pcb_protection_path_coverage: PcbProtectionPathCoverageReport | None = None,
-    pcb_track_width_coverage: PcbTrackWidthCoverageReport | None = None,
-    pcb_switching_loop_coverage: PcbSwitchingLoopCoverageReport | None = None,
-    pcb_differential_pair_coverage: PcbDifferentialPairRuleCoverageReport | None = None,
-    pcb_differential_pair_rule_map: PcbDifferentialPairRuleMap | None = None,
-    i2c_address_map: I2cAddressMap | None = None,
-    usb_data_path_map: UsbDataPathMap | None = None,
-    stm32_pin_map_coverage: Stm32PinMapCoverageReport | None = None,
-    spi_roster: SpiRosterContext | None = None,
-    usb_c_port_roster: UsbCPortRosterContext | None = None,
-    power_path_map: PowerPathMap | None = None,
-    power_sequence_map: PowerSequenceMap | None = None,
-    pcb_reference_plane_coverage: PcbReferencePlaneCoverageReport | None = None,
-    control_input_bias_coverage: ControlInputBiasHeuristicCoverage | None = None,
-    i2c_pullup_heuristic_coverage: I2cPullupHeuristicCoverage | None = None,
-    digital_peer_voltage_context: DigitalPeerVoltageLintContext | None = None,
-    component_role_map: ComponentRoleMap | None = None,
-    serial_peer_roster: SerialPeerRosterContext | None = None,
-    reviewed_connector_references: tuple[str, ...] = (),
-    complementary_alias_resolution: ComplementaryPinFunctionAliasResolution | None = None,
-    connector_coverage: ConnectorCoverageReport | None = None,
-    digital_peer_voltage_scan: DigitalPeerVoltageScan | None = None,
-    usb_peer_reference_scan: UsbPeerReferenceScan | None = None,
-    serial_peer_reference_scan: SerialPeerReferenceScan | None = None,
-    pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None = None,
-    pcb_keepout_coverage: PcbKeepoutCoverageReport | None = None,
-    pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None = None,
-    pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport | None = None,
-    peer_pin_assignment_scans: ComponentPeerPinAssignmentScans | None = None,
-    pcb_component_inventory_coverage: PcbComponentInventoryCoverageReport | None = None,
-    i2c_peer_reference_scan: I2cPeerReferenceScan | None = None,
-    spi_peer_reference_scan: SpiPeerReferenceScan | None = None,
-    can_peer_reference_scan: CanPeerReferenceScan | None = None,
-    rs485_peer_reference_scan: Rs485PeerReferenceScan | None = None,
-    peer_power_output_review_enabled: bool = True,
-    connector_power_output_review_enabled: bool = True,
-    ic_decoupling_map: IcDecouplingMap | None = None,
-    oscillator_output_path_map: OscillatorOutputPathMap | None = None,
-    connector_stateful_contact_map: ConnectorStatefulContactMap | None = None,
-    led_current_map: LedCurrentMap | None = None,
-    netlist_sha256: str | None = None,
+    **legacy: Unpack[LegacyCandidateArguments],
 ) -> tuple[Candidate, ...]:
     """Adapt legacy inputs to the shared typed candidate scanner."""
     resolved_catalog = catalog if catalog is not None else rule_catalog()
@@ -200,78 +97,84 @@ def candidates(
         DesignLintCandidateInputs(
             observed=observed,
             catalog=resolved_catalog,
-            schematic_geometry=schematic_geometry,
-            reviewed_connector_references=reviewed_connector_references,
+            schematic_geometry=legacy.get("schematic_geometry"),
+            reviewed_connector_references=legacy.get("reviewed_connector_references", ()),
             connector=ConnectorCandidateInputs(
-                coverage=connector_coverage,
-                return_distribution=connector_return_distribution,
-                stateful_contact_map=connector_stateful_contact_map,
-                power_output_review_enabled=connector_power_output_review_enabled,
+                coverage=legacy.get("connector_coverage"),
+                return_distribution=legacy.get("connector_return_distribution"),
+                stateful_contact_map=legacy.get("connector_stateful_contact_map"),
+                power_output_review_enabled=legacy.get(
+                    "connector_power_output_review_enabled", True
+                ),
             ),
             component=ComponentCandidateInputs(
-                peer_pin_assignment_scans=peer_pin_assignment_scans,
-                peer_power_output_review_enabled=peer_power_output_review_enabled,
+                peer_pin_assignment_scans=legacy.get("peer_pin_assignment_scans"),
+                peer_power_output_review_enabled=legacy.get(
+                    "peer_power_output_review_enabled", True
+                ),
             ),
             control=ControlCandidateInputs.from_legacy_arguments(
                 observed,
-                control_input_bias_coverage,
+                legacy.get("control_input_bias_coverage"),
             ),
             power=PowerCandidateInputs(
-                component_role_map=component_role_map,
-                power_path_map=power_path_map,
-                power_sequence_map=power_sequence_map,
-                oscillator_output_path_map=oscillator_output_path_map,
-                ic_decoupling_map=ic_decoupling_map,
-                led_current_map=led_current_map,
+                component_role_map=legacy.get("component_role_map"),
+                power_path_map=legacy.get("power_path_map"),
+                power_sequence_map=legacy.get("power_sequence_map"),
+                oscillator_output_path_map=legacy.get("oscillator_output_path_map"),
+                ic_decoupling_map=legacy.get("ic_decoupling_map"),
+                led_current_map=legacy.get("led_current_map"),
             ),
             bus=BusCandidateInputs(
                 observed=observed,
                 i2c_address=I2cAddressCandidateInput.from_candidate_arguments(
-                    observed, i2c_address_map, i2c_address_coverage
+                    observed,
+                    legacy.get("i2c_address_map"),
+                    legacy.get("i2c_address_coverage"),
                 ),
                 i2c_pullup=I2cPullupSnifferInput.from_legacy_arguments(
-                    observed, i2c_pullup_heuristic_coverage
+                    observed, legacy.get("i2c_pullup_heuristic_coverage")
                 ),
-                complementary_alias_resolution=complementary_alias_resolution,
-                i2c_peer_reference_scan=i2c_peer_reference_scan,
-                spi_roster=spi_roster,
-                spi_peer_reference_scan=spi_peer_reference_scan,
-                can_peer_reference_scan=can_peer_reference_scan,
-                rs485_peer_reference_scan=rs485_peer_reference_scan,
-                pcb_differential_pair_rule_map=pcb_differential_pair_rule_map,
-                reviewed_connector_references=reviewed_connector_references,
+                complementary_alias_resolution=legacy.get("complementary_alias_resolution"),
+                i2c_peer_reference_scan=legacy.get("i2c_peer_reference_scan"),
+                spi_roster=legacy.get("spi_roster"),
+                spi_peer_reference_scan=legacy.get("spi_peer_reference_scan"),
+                can_peer_reference_scan=legacy.get("can_peer_reference_scan"),
+                rs485_peer_reference_scan=legacy.get("rs485_peer_reference_scan"),
+                pcb_differential_pair_rule_map=legacy.get("pcb_differential_pair_rule_map"),
+                reviewed_connector_references=legacy.get("reviewed_connector_references", ()),
             ),
             peer=PeerCandidateInputs(
-                digital_voltage_context=digital_peer_voltage_context,
-                digital_voltage_scan=digital_peer_voltage_scan,
-                usb_reference_scan=usb_peer_reference_scan,
-                serial_reference_scan=serial_peer_reference_scan,
-                serial_roster=serial_peer_roster,
-                usb_c_port_roster=usb_c_port_roster,
+                digital_voltage_context=legacy.get("digital_peer_voltage_context"),
+                digital_voltage_scan=legacy.get("digital_peer_voltage_scan"),
+                usb_reference_scan=legacy.get("usb_peer_reference_scan"),
+                serial_reference_scan=legacy.get("serial_peer_reference_scan"),
+                serial_roster=legacy.get("serial_peer_roster"),
+                usb_c_port_roster=legacy.get("usb_c_port_roster"),
             ),
             mapped=MappedCandidateInputs(
-                external_protection=external_protection_coverage,
-                crystal_network=crystal_network_coverage,
-                regulator_feedback=regulator_feedback_coverage,
-                signal_divider=signal_divider_coverage,
-                rc_filter=rc_filter_coverage,
+                external_protection=legacy.get("external_protection_coverage"),
+                crystal_network=legacy.get("crystal_network_coverage"),
+                regulator_feedback=legacy.get("regulator_feedback_coverage"),
+                signal_divider=legacy.get("signal_divider_coverage"),
+                rc_filter=legacy.get("rc_filter_coverage"),
             ),
             pcb=PcbCandidateInputs(
-                component_inventory=pcb_component_inventory_coverage,
-                decoupling=pcb_decoupling_coverage,
-                protection_path=pcb_protection_path_coverage,
-                track_width=pcb_track_width_coverage,
-                reference_plane=pcb_reference_plane_coverage,
-                switching_loop=pcb_switching_loop_coverage,
-                differential_pair=pcb_differential_pair_coverage,
-                signal_path=pcb_signal_path_coverage,
-                keepout=pcb_keepout_coverage,
-                rf_antenna=pcb_rf_module_antenna_coverage,
-                touch_pad_clearance=pcb_touch_pad_clearance_coverage,
-                stm32_pin_map=stm32_pin_map_coverage,
+                component_inventory=legacy.get("pcb_component_inventory_coverage"),
+                decoupling=legacy.get("pcb_decoupling_coverage"),
+                protection_path=legacy.get("pcb_protection_path_coverage"),
+                track_width=legacy.get("pcb_track_width_coverage"),
+                reference_plane=legacy.get("pcb_reference_plane_coverage"),
+                switching_loop=legacy.get("pcb_switching_loop_coverage"),
+                differential_pair=legacy.get("pcb_differential_pair_coverage"),
+                signal_path=legacy.get("pcb_signal_path_coverage"),
+                keepout=legacy.get("pcb_keepout_coverage"),
+                rf_antenna=legacy.get("pcb_rf_module_antenna_coverage"),
+                touch_pad_clearance=legacy.get("pcb_touch_pad_clearance_coverage"),
+                stm32_pin_map=legacy.get("stm32_pin_map_coverage"),
             ),
-            usb_data_path=UsbDataPathCandidateInputs(authored_map=usb_data_path_map),
-            netlist_sha256=netlist_sha256,
+            usb_data_path=UsbDataPathCandidateInputs(authored_map=legacy.get("usb_data_path_map")),
+            netlist_sha256=legacy.get("netlist_sha256"),
         )
     )
 

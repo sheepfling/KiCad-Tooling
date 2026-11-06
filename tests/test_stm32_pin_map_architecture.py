@@ -60,7 +60,9 @@ MODEL_CONSUMERS = MappingProxyType(
         HWREPO / "design_lint_evaluation_types.py": frozenset({"Stm32PinMapCoverageReport"}),
         HWREPO / "design_lint_evaluator.py": frozenset({"Stm32PinMapCoverageReport"}),
         HWREPO / "design_lint_missing_evidence.py": frozenset({"Stm32PinMapCoverageReport"}),
-        HWREPO / "design_lint_candidate_aggregation.py": frozenset({"Stm32PinMapCoverageReport"}),
+        HWREPO / "design_lint_candidate_legacy_arguments.py": frozenset(
+            {"Stm32PinMapCoverageReport"}
+        ),
         HWREPO / "design_lint_report_models.py": frozenset({"Stm32PinMapCoverageReport"}),
         HWREPO.parents[0] / "ci_hosted_stm32_pin_map.py": frozenset(
             {

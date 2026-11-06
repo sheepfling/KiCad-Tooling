@@ -104,14 +104,19 @@ def test_native_lane_uses_only_reviewed_synthetic_fixture_sources(
             stdout="kicad_version=10.0.0\n",
         )
 
-    monkeypatch.setattr(lane, "selected_config", lambda *_args: config)
-    monkeypatch.setattr(lane, "pinned_image", lambda _image: pinned)
+    def fake_selected_config(_root: Path, _project: str) -> SimpleNamespace:
+        return config
+
+    def fake_pinned_image(_image: str) -> str:
+        return pinned
+
+    def fake_read_netlist(path: Path) -> NetlistContract:
+        return observed[path.name.split(".", maxsplit=1)[0]]
+
+    monkeypatch.setattr(lane, "selected_config", fake_selected_config)
+    monkeypatch.setattr(lane, "pinned_image", fake_pinned_image)
     monkeypatch.setattr(lane, "run_command", fake_run_command)
-    monkeypatch.setattr(
-        lane,
-        "read_netlist",
-        lambda path: observed[path.name.split(".", maxsplit=1)[0]],
-    )
+    monkeypatch.setattr(lane, "read_netlist", fake_read_netlist)
 
     log = HostedLog(root, "open-drain-control-voltage-fixture-unit")
     lane.open_drain_control_voltage_fixture_lane(root, project="synthetic", image=image, log=log)

@@ -19,6 +19,7 @@ RETURN_PATH_LINT_TEST_MODULES = frozenset(
         "tests/test_connector_return_role_coverage.py",
         "tests/test_connector_return_scope.py",
         "tests/test_connector_split_return_peers.py",
+        "tests/test_connector_split_return_peers_native.py",
         "tests/test_design_lint_connector_returns.py",
         "tests/test_design_lint_determinism_components.py",
         "tests/test_design_lint_determinism_interfaces.py",

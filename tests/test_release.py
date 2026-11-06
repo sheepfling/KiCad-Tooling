@@ -39,6 +39,7 @@ from kicad_tooling.hwrepo.models import (
     ReleaseVariant,
 )
 from kicad_tooling.hwrepo.release import check, load_release_repository, selected_project_records
+from kicad_tooling.hwrepo.release_operation_models import ReleasePreparationRequest
 from kicad_tooling.hwrepo.scaffold import new_project
 from kicad_tooling.hwrepo.source_state_models import SourceState
 from kicad_tooling.release import main as release_main
@@ -246,10 +247,16 @@ class ReleaseReadinessTests(unittest.TestCase):
             "--project",
             "passive-signal-reference",
         ]
-        with patch("kicad_tooling.hwrepo.releasing.prepare", return_value=manifest):
+        with patch(
+            "kicad_tooling.hwrepo.releasing.prepare_request", return_value=manifest
+        ) as prepared:
             machine_output = StringIO()
             with patch.object(sys, "argv", [*argv, "--json"]), redirect_stdout(machine_output):
                 self.assertEqual(release_main(), 0)
+            request = prepared.call_args.args[1]
+            self.assertIsInstance(request, ReleasePreparationRequest)
+            self.assertEqual(request.release_id, manifest.release_id)
+            self.assertEqual(request.project_ids, ("passive-signal-reference",))
             self.assertEqual(
                 json.loads(machine_output.getvalue()), manifest.model_dump(mode="json")
             )
@@ -314,13 +321,15 @@ class ReleaseReadinessTests(unittest.TestCase):
         ]
         with (
             patch(
-                "kicad_tooling.hwrepo.releasing.prepare", return_value=self.manifest()
+                "kicad_tooling.hwrepo.releasing.prepare_request", return_value=self.manifest()
             ) as prepared,
             patch.object(sys, "argv", argv),
             redirect_stdout(StringIO()),
         ):
             self.assertEqual(release_main(), 0)
-        self.assertEqual(prepared.call_args.args[3][0].product, "status-indicator-system")
+        request = prepared.call_args.args[1]
+        self.assertIsInstance(request, ReleasePreparationRequest)
+        self.assertEqual(request.variants[0].product, "status-indicator-system")
 
         for selection, expected in (
             ("unknown:STANDARD", "Unknown release product"),

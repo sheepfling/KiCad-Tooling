@@ -115,7 +115,15 @@ def test_fast_quality_gate_failure_stops_before_unit_suite(
     monkeypatch.setattr(ci, "stage", run_stage)
 
     assert ci.main() == 1
-    fast_stages = ("development-install", "ruff-format", "ruff", "rumdl", "mdrepo")
+    fast_stages = (
+        "development-install",
+        "ruff-format",
+        "ruff",
+        "alphus-module-role-boundaries",
+        "alphus-shared-utility-duplication",
+        "rumdl",
+        "mdrepo",
+    )
     expected = fast_stages[: fast_stages.index(failure_stage) + 1]
     assert calls == list(expected)
     assert "unit" not in calls

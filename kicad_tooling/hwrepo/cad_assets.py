@@ -12,20 +12,10 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
+from . import kicad_sexpr as sx
 from .contracts import lexical_absolute_path, read_model, repo_path, repo_path_is_within
 from .discovery import load_config, load_registry
-from .model_inventory import _atoms, _children, _Span  # pyright: ignore[reportPrivateUsage]
-from .model_population import _validate_shared_roots  # pyright: ignore[reportPrivateUsage]
-from .part_cad import (
-    _field,  # pyright: ignore[reportPrivateUsage]
-    _nodes,  # pyright: ignore[reportPrivateUsage]
-    _properties,  # pyright: ignore[reportPrivateUsage]
-    _property,  # pyright: ignore[reportPrivateUsage]
-    _quote,  # pyright: ignore[reportPrivateUsage]
-    _root,  # pyright: ignore[reportPrivateUsage]
-    _scalar,  # pyright: ignore[reportPrivateUsage]
-    _tokens,  # pyright: ignore[reportPrivateUsage]
-)
+from .model_population import validate_shared_model_roots
 from .project_models import ProjectManifest
 
 
@@ -110,9 +100,9 @@ def _number(value: str) -> float:
 
 
 def _values(
-    source: str, parent: _Span, name: str, count: int, default: tuple[float, ...] = ()
+    source: str, parent: sx.SExprSpan, name: str, count: int, default: tuple[float, ...] = ()
 ) -> tuple[float, ...]:
-    values = _field(source, parent, name, required=False)
+    values = sx.sexpr_field(source, parent, name, required=False)
     if not values:
         return default
     if len(values) != count:
@@ -131,31 +121,33 @@ def _pair(values: tuple[float, ...]) -> tuple[float, float]:
 
 
 def _pads(
-    source: str, parent: _Span, rotation: float = 0, bottom: bool = False
+    source: str, parent: sx.SExprSpan, rotation: float = 0, bottom: bool = False
 ) -> tuple[PadSignature, ...]:
     result: list[PadSignature] = []
     sign = -1 if bottom else 1
-    for pad in _nodes(source, parent, "pad"):
-        atoms = _atoms(source, pad)
+    for pad in sx.sexpr_nodes(source, parent, "pad"):
+        atoms = sx.sexpr_atoms(source, pad)
         if len(atoms) != 4 or atoms[3] not in {"rect", "circle", "oval", "roundrect"}:
             raise ValueError(
                 "Automatic model alignment supports rectangular, circular, oval and roundrect pads; review custom pads in KiCad"
             )
-        if any(_nodes(source, pad, name) for name in ("primitives", "chamfer", "rect_delta")):
+        if any(
+            sx.sexpr_nodes(source, pad, name) for name in ("primitives", "chamfer", "rect_delta")
+        ):
             raise ValueError("Automatic model alignment cannot establish custom pad geometry")
-        at = _field(source, pad, "at")
+        at = sx.sexpr_field(source, pad, "at")
         if len(at) not in {2, 3}:
             raise ValueError("Malformed pad position")
         x, y = _number(at[0]), sign * _number(at[1])
         angle = _angle(sign * ((_number(at[2]) if len(at) == 3 else 0) - rotation))
         size = _pair(_values(source, pad, "size", 2))
-        drill_nodes = _nodes(source, pad, "drill")
+        drill_nodes = sx.sexpr_nodes(source, pad, "drill")
         if len(drill_nodes) > 1:
             raise ValueError("Duplicate drill definition")
         drill = (0.0, 0.0)
         offset = (0.0, 0.0)
         if drill_nodes:
-            fields = _atoms(source, drill_nodes[0])[1:]
+            fields = sx.sexpr_atoms(source, drill_nodes[0])[1:]
             if len(fields) == 1:
                 drill = (_number(fields[0]), _number(fields[0]))
             elif len(fields) == 3 and fields[0] == "oval":
@@ -166,7 +158,7 @@ def _pads(
             offset = (dx, sign * dy)
         if any(value <= 0 for value in size) or any(value < 0 for value in drill):
             raise ValueError("Invalid pad size or drill")
-        layers = _field(source, pad, "layers")
+        layers = sx.sexpr_field(source, pad, "layers")
         normalized = tuple(
             sorted(
                 (
@@ -247,7 +239,7 @@ def _library(
     config = load_config(root, record.config)
     manifest_path = repo_path(root, record.config)
     manifest = read_model(manifest_path, ProjectManifest)
-    _validate_shared_roots(root, registry, manifest)
+    validate_shared_model_roots(root, registry, manifest)
     roots = tuple(repo_path(root, name) for name in config.source_roots)
     project_dir = repo_path(root, config.project).parent
     major = config.kicad_version.split(".")[0]
@@ -255,18 +247,18 @@ def _library(
     table = project_dir / "fp-lib-table"
     if explicit is None and table.is_file():
         text = table.read_bytes().decode("utf-8")
-        parent = _root(text, "fp_lib_table")
+        parent = sx.sexpr_root(text, "fp_lib_table")
         seen: set[str] = set()
-        for entry in _nodes(text, parent, "lib"):
-            name = _scalar(text, entry, "name")
+        for entry in sx.sexpr_nodes(text, parent, "lib"):
+            name = sx.sexpr_scalar(text, entry, "name")
             if name in seen:
                 raise ValueError("Duplicate footprint library nickname in project table")
             seen.add(name)
             if name != nickname:
                 continue
-            if _scalar(text, entry, "type") != "KiCad":
+            if sx.sexpr_scalar(text, entry, "type") != "KiCad":
                 raise ValueError("Automatic CAD retrieval needs a native KiCad footprint library")
-            uri = _scalar(text, entry, "uri")
+            uri = sx.sexpr_scalar(text, entry, "uri")
             prefix = f"${{KICAD{major}_FOOTPRINT_DIR}}/"
             if uri.startswith(prefix):
                 relative = uri[len(prefix) :]
@@ -358,8 +350,8 @@ def _model_path(reference: str, library: _Library, major: str, project_dir: Path
 def _model_signature(
     expression: str,
 ) -> tuple[str, tuple[float, ...], tuple[float, ...], tuple[float, ...], bool]:
-    parent = _root(expression, "model")
-    atoms = _atoms(expression, parent)
+    parent = sx.sexpr_root(expression, "model")
+    atoms = sx.sexpr_atoms(expression, parent)
     if len(atoms) != 2:
         raise ValueError("Malformed model path")
     transforms: list[tuple[float, ...]] = []
@@ -368,7 +360,7 @@ def _model_signature(
         ("scale", (1.0, 1.0, 1.0)),
         ("rotate", (0.0, 0.0, 0.0)),
     ):
-        nodes = _nodes(expression, parent, name)
+        nodes = sx.sexpr_nodes(expression, parent, name)
         if len(nodes) > 1:
             raise ValueError("Duplicate model transform")
         value = _values(expression, nodes[0], "xyz", 3) if nodes else default
@@ -377,14 +369,14 @@ def _model_signature(
         transforms.append(value)
     known = {"offset", "scale", "rotate", "hide", "opacity"}
     if any(
-        _atoms(expression, child)[0] not in known
-        for child in _children(expression, parent.start + 1, parent.end - 1)
+        sx.sexpr_atoms(expression, child)[0] not in known
+        for child in sx.sexpr_children(expression, parent.start + 1, parent.end - 1)
     ):
         raise ValueError("Unsupported model expression needs review in KiCad")
-    hide = _field(expression, parent, "hide", required=False)
+    hide = sx.sexpr_field(expression, parent, "hide", required=False)
     if hide and hide not in {("yes",), ("no",)}:
         raise ValueError("Malformed model visibility")
-    hidden = bool(_nodes(expression, parent, "hide")) and hide != ("no",)
+    hidden = bool(sx.sexpr_nodes(expression, parent, "hide")) and hide != ("no",)
     return atoms[1], transforms[0], transforms[1], transforms[2], hidden
 
 
@@ -410,16 +402,16 @@ def resolve_footprint(
         raise MissingFootprintError(f"Exact footprint member is unavailable: {member}")
     path = _safe_file(member, library.roots)
     source = path.read_bytes().decode("utf-8")
-    parent = _root(source, "footprint")
-    if _atoms(source, parent) != ("footprint", name):
+    parent = sx.sexpr_root(source, "footprint")
+    if sx.sexpr_atoms(source, parent) != ("footprint", name):
         raise ValueError("Resolved footprint's name differs from requested identity")
-    if _scalar(source, parent, "layer") != "F.Cu":
+    if sx.sexpr_scalar(source, parent, "layer") != "F.Cu":
         raise ValueError("Library footprint must use the standard front-side coordinate system")
     registry = load_registry(root)
     record = next(item for item in registry.projects if item.id == project_id)
     project_dir = repo_path(root, record.project).parent
     models: list[ResolvedModel] = []
-    for model in _nodes(source, parent, "model"):
+    for model in sx.sexpr_nodes(source, parent, "model"):
         expression = source[model.start : model.end]
         reference, _, _, _, hidden = _model_signature(expression)
         if hidden:
@@ -446,20 +438,20 @@ def resolve_footprint(
 
 
 def _placed(source: str) -> tuple[PlacedFootprint, ...]:
-    parent = _root(source, "kicad_pcb")
-    if _nodes(source, parent, "module"):
+    parent = sx.sexpr_root(source, "kicad_pcb")
+    if sx.sexpr_nodes(source, parent, "module"):
         raise ValueError("Upgrade legacy PCB modules in KiCad before automatic model population")
     result: list[PlacedFootprint] = []
-    for span in _nodes(source, parent, "footprint"):
-        atoms = _atoms(source, span)
+    for span in sx.sexpr_nodes(source, parent, "footprint"):
+        atoms = sx.sexpr_atoms(source, span)
         if len(atoms) != 2:
             raise ValueError("Malformed placed footprint identity")
-        properties = _properties(source, span)
-        reference = _property(source, properties, "Reference")
+        properties = sx.sexpr_properties(source, span)
+        reference = sx.sexpr_property_value(source, properties, "Reference")
         legacy = tuple(
-            _atoms(source, item)
-            for item in _nodes(source, span, "fp_text")
-            if _atoms(source, item)[:2] == ("fp_text", "reference")
+            sx.sexpr_atoms(source, item)
+            for item in sx.sexpr_nodes(source, span, "fp_text")
+            if sx.sexpr_atoms(source, item)[:2] == ("fp_text", "reference")
         )
         if len(legacy) > 1 or (
             legacy and (len(legacy[0]) != 3 or reference and legacy[0][2] != reference)
@@ -469,14 +461,16 @@ def _placed(source: str) -> tuple[PlacedFootprint, ...]:
             reference = legacy[0][2]
         if not reference or reference in {item.reference for item in result}:
             raise ValueError("Missing or duplicate footprint reference")
-        layer = _scalar(source, span, "layer")
+        layer = sx.sexpr_scalar(source, span, "layer")
         if layer not in {"F.Cu", "B.Cu"}:
             raise ValueError("Footprint is not on a board copper side")
-        at = _field(source, span, "at")
+        at = sx.sexpr_field(source, span, "at")
         if len(at) not in {2, 3}:
             raise ValueError("Malformed footprint placement")
         rotation = _number(at[2]) if len(at) == 3 else 0.0
-        expressions = tuple(source[node.start : node.end] for node in _nodes(source, span, "model"))
+        expressions = tuple(
+            source[node.start : node.end] for node in sx.sexpr_nodes(source, span, "model")
+        )
         geometry_issue: str | None = None
         try:
             pads = _pads(source, span, rotation, layer == "B.Cu")
@@ -490,7 +484,7 @@ def _placed(source: str) -> tuple[PlacedFootprint, ...]:
                 layer,
                 rotation,
                 (_number(at[0]), _number(at[1])),
-                _scalar(source, span, "path", default=""),
+                sx.sexpr_scalar(source, span, "path", default=""),
                 pads,
                 expressions,
                 span.start,
@@ -558,8 +552,10 @@ def plan_model_assignment(
         ):
             raise ValueError("Imported model paths must be portable KIPRJMOD references")
         text = model.model_expression
-        token = _tokens(text, _root(text, "model"))[1]
-        expressions.append(text[: token.start] + _quote(destination) + text[token.end :])
+        token = sx.sexpr_tokens(text, sx.sexpr_root(text, "model"))[1]
+        expressions.append(
+            text[: token.start] + sx.quote_sexpr_atom(destination) + text[token.end :]
+        )
     if placed.model_expressions:
         existing = tuple(_model_signature(item) for item in placed.model_expressions)
         desired = tuple(_model_signature(item) for item in expressions)
@@ -573,12 +569,12 @@ def plan_model_assignment(
             )
         if existing == desired:
             return board_source
-        footprint_span = _Span(placed.start, placed.end)
-        spans = _nodes(board_source, footprint_span, "model")
+        footprint_span = sx.SExprSpan(placed.start, placed.end)
+        spans = sx.sexpr_nodes(board_source, footprint_span, "model")
         replacements = [
-            (token.start, token.end, _quote(signature[0]))
+            (token.start, token.end, sx.quote_sexpr_atom(signature[0]))
             for span, signature in zip(spans, desired)
-            for token in (_tokens(board_source, span)[1],)
+            for token in (sx.sexpr_tokens(board_source, span)[1],)
         ]
         result = board_source
         for start, end, value in reversed(replacements):

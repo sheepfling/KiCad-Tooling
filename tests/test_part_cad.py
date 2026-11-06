@@ -8,7 +8,8 @@ import unittest
 from pathlib import Path
 
 from kicad_tooling.hwrepo.contracts import read_model, write_model
-from kicad_tooling.hwrepo.model_inventory import _atoms, _children
+from kicad_tooling.hwrepo.kicad_sexpr import sexpr_atoms as _atoms
+from kicad_tooling.hwrepo.kicad_sexpr import sexpr_children as _children
 from kicad_tooling.hwrepo.models import PartCadBinding, PartRecord, PartStatus, ProjectManifest
 from kicad_tooling.hwrepo.part_cad import (
     preview_cad,

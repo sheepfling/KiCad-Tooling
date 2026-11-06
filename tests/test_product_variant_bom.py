@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import MutableMapping
 from pathlib import Path
+from typing import cast
 
 import pytest
 from mcp import Client
@@ -11,9 +13,13 @@ from kicad_tooling.hwrepo import product_variant_bom as variant_service
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
-from kicad_tooling.hwrepo.product_models import ProductRecord
+from kicad_tooling.hwrepo.product_models import ProductInstancePath, ProductRecord
 from kicad_tooling.hwrepo.product_variant_bom import compare_product_variants
-from kicad_tooling.hwrepo.product_variant_bom_models import ProductVariantBomReport
+from kicad_tooling.hwrepo.product_variant_bom_models import (
+    ProductVariantBomReport,
+    VariantBomInstanceState,
+)
+from kicad_tooling.hwrepo.product_visual import build_product_visual
 from tests.mcp_parity_support import McpParityHarness, parity_workspace, run_mcp_parity
 
 pytestmark = pytest.mark.template_checkout
@@ -52,6 +58,24 @@ def test_variant_removes_purchased_and_direct_part(tmp_path: Path) -> None:
     cable = next(item for item in report.instances if item.path == "CABLE")
     assert cable.before.part_id == "training-generic-cable"
     assert cable.change == "UNCHANGED"
+
+
+def test_variant_instance_index_uses_product_paths_and_is_read_only(tmp_path: Path) -> None:
+    root, _, _ = parity_workspace(tmp_path)
+    view = build_product_visual(
+        root, PRODUCT, "STANDARD", Path("build/product-visual/variant-instance-index")
+    )
+    product = read_model(root / SOURCE, ProductRecord)
+
+    states = variant_service.instance_states(view, product, {})
+
+    assert ProductInstancePath("PI.J1") in states
+    assert set(states) == {
+        item.path for item in view.instances if item.kind in {"PART", "PURCHASED", "UNRESOLVED"}
+    }
+    mutable_states = cast(MutableMapping[ProductInstancePath, VariantBomInstanceState], states)
+    with pytest.raises(TypeError):
+        mutable_states[ProductInstancePath("INJECTED")] = states[ProductInstancePath("PI.J1")]
 
 
 def test_unknown_part_keeps_unresolved_instance_and_blocks_bom(tmp_path: Path) -> None:

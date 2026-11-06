@@ -14,7 +14,9 @@ from .contracts import read_model, repo_path, write_model
 from .evidence import digest
 from .generation import bom_rows
 from .part_catalog_models import PartRecord, PartsCatalog
+from .product import read_product_source
 from .product_models import ProductRecord
+from .product_occurrences import ProductOccurrenceIndex, product_occurrence_index
 from .product_revision_bom_html import render_product_revision_bom
 from .product_revision_bom_models import (
     ProductRevisionBomReport,
@@ -37,6 +39,7 @@ class SavedProductView:
     snapshot: ProductRevisionSnapshot
     view: ProductVisualReport
     product: ProductRecord
+    occurrence_index: ProductOccurrenceIndex
     parts: dict[str, PartRecord] | None
 
 
@@ -71,7 +74,11 @@ def _load_view(root: Path, requested: Path) -> SavedProductView:
         or view.artifacts_sha256["product.json"] != view.product_sha256
     ):
         raise ValueError("Retained product record does not bind the view source identity")
-    product = read_model(path.parent / "product.json", ProductRecord)
+    product_source, _ = read_product_source(path.parent / "product.json", view.product_path)
+    if product_source.sha256 != view.product_sha256:
+        raise ValueError("Retained product bytes differ from the selected view source")
+    product = product_source.record
+    occurrence_index = product_occurrence_index(product_source)
     variant = next((item for item in product.variants if item.id == view.variant_id), None)
     if (
         product.id != view.product_id
@@ -94,7 +101,12 @@ def _load_view(root: Path, requested: Path) -> SavedProductView:
         if len(parts) != len(catalog.parts):
             raise ValueError("Retained parts catalog repeats an ID")
         try:
-            expected_instances = project_instances(product, variant, set(parts))
+            expected_instances = project_instances(
+                product,
+                variant,
+                set(parts),
+                occurrence_index=occurrence_index,
+            )
         except ValueError as exc:
             if view.status == "CURRENT":
                 raise ValueError("Current product view has an invalid retained hierarchy") from exc
@@ -115,7 +127,13 @@ def _load_view(root: Path, requested: Path) -> SavedProductView:
         view_status=view.status,
         issues=view.issues,
     )
-    return SavedProductView(snapshot=snapshot, view=view, product=product, parts=parts)
+    return SavedProductView(
+        snapshot=snapshot,
+        view=view,
+        product=product,
+        occurrence_index=occurrence_index,
+        parts=parts,
+    )
 
 
 def compare_product_revisions(
@@ -160,8 +178,18 @@ def compare_product_revisions(
                 item for item in new.product.variants if item.id == new.view.variant_id
             )
             parts = part_differences(
-                bom_rows(old.product, old.parts, old_variant),
-                bom_rows(new.product, new.parts, new_variant),
+                bom_rows(
+                    old.product,
+                    old.parts,
+                    old_variant,
+                    occurrence_index=old.occurrence_index,
+                ),
+                bom_rows(
+                    new.product,
+                    new.parts,
+                    new_variant,
+                    occurrence_index=new.occurrence_index,
+                ),
             )
         except (KeyError, ValueError) as exc:
             projected = False

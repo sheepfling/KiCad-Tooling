@@ -202,25 +202,32 @@ def install_synthetic_netlist(summary_path: Path, serialized_netlist: str) -> Pa
 
 
 def run_design_lint_cli(
-    base: Path, root: Path, summary: Path, *, project_id: str = "controller"
+    base: Path,
+    root: Path,
+    summary: Path,
+    *,
+    project_id: str = "controller",
+    baseline_report: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
-    """Run the installed CLI from another cwd, resolving the repo through --root."""
+    """Run CLI inspection or reconciliation from another cwd through --root."""
+    command = [
+        sys.executable,
+        "-I",
+        "-B",
+        "-m",
+        "kicad_tooling.design_lint",
+        "--root",
+        str(root),
+        "--project",
+        project_id,
+        "--native-summary",
+        str(summary),
+    ]
+    if baseline_report is not None:
+        command.extend(("--baseline-report", baseline_report.as_posix()))
+    command.extend(("--format", "json"))
     return subprocess.run(
-        (
-            sys.executable,
-            "-I",
-            "-B",
-            "-m",
-            "kicad_tooling.design_lint",
-            "--root",
-            str(root),
-            "--project",
-            project_id,
-            "--native-summary",
-            str(summary),
-            "--format",
-            "json",
-        ),
+        tuple(command),
         cwd=base,
         env=os.environ.copy(),
         text=True,

@@ -29,7 +29,7 @@ def test_connector_peer_metadata_rules_use_the_typed_source_projection() -> None
         "ConnectorFootprintPeerPinScanSource"
     )
     assignment_refs = {
-        "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_net_map",
+        "kicad_tooling/hwrepo/netlist_pin_assignments.py#netlist_pin_net_index",
         "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_assignments",
     }
     routes = (

@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Mapping
-from typing import Literal
+from types import MappingProxyType
+from typing import Literal, TypeAlias
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_serializer, model_validator
 
 from .model_primitives import (
     Digest,
@@ -14,6 +16,7 @@ from .model_primitives import (
     RepositoryPath,
     StrictModel,
 )
+from .source_state_models import SourceHashInventory
 
 SchematicGeometryRuleId = Literal[
     "schematic.wire_end_on_pin_line",
@@ -29,6 +32,7 @@ SchematicGeometryRuleId = Literal[
     "schematic.wire_through_symbol_body",
 ]
 SchematicGeometryRuleCoverageStatus = Literal["DISABLED", "COMPLETE", "PARTIAL", "UNSUPPORTED"]
+SchematicInstanceReferenceIndex: TypeAlias = Mapping[NonEmptyText, NonEmptyText]
 
 
 def _empty_rule_modes() -> dict[SchematicGeometryRuleId, Literal["review", "block", "off"]]:
@@ -50,6 +54,78 @@ class SchematicGeometrySourceBinding(StrictModel):
     source_sha256: Digest
     sheet_instance_path: NonEmptyText
     sheet_path: tuple[NonEmptyText, ...] = ()
+
+
+class SchematicSourceFile(StrictModel):
+    """One schematic payload retained with the digest that admitted its bytes."""
+
+    source_path: RepositoryPath
+    source_sha256: Digest
+    contents: bytes
+
+    @model_validator(mode="after")
+    def digest_matches_contents(self) -> SchematicSourceFile:
+        if hashlib.sha256(self.contents).hexdigest() != self.source_sha256:
+            raise ValueError("Schematic source digest does not match its retained bytes")
+        return self
+
+
+class SchematicInstanceReferenceResolution(StrictModel):
+    """Instance-specific symbol references and parse issues bound to source context."""
+
+    source_path: RepositoryPath
+    source_sha256: Digest
+    project_name: NonEmptyText
+    sheet_instance_path: NonEmptyText
+    references_by_symbol_uuid: SchematicInstanceReferenceIndex
+    issues: tuple[NonEmptyText, ...] = ()
+
+    @model_validator(mode="after")
+    def make_reference_index_read_only(self) -> SchematicInstanceReferenceResolution:
+        object.__setattr__(
+            self,
+            "references_by_symbol_uuid",
+            MappingProxyType(dict(self.references_by_symbol_uuid)),
+        )
+        return self
+
+    @field_serializer("references_by_symbol_uuid")
+    def serialize_reference_index(
+        self,
+        references_by_symbol_uuid: SchematicInstanceReferenceIndex,
+    ) -> dict[str, str]:
+        return dict(references_by_symbol_uuid)
+
+
+class VerifiedSchematicSourceTree(StrictModel):
+    """Hash-verified schematic files plus the project context used to resolve sheets."""
+
+    root_path: RepositoryPath
+    project_directory: RepositoryPath
+    source_files: tuple[SchematicSourceFile, ...]
+
+    @model_validator(mode="after")
+    def unique_sources_include_root(self) -> VerifiedSchematicSourceTree:
+        paths = tuple(item.source_path for item in self.source_files)
+        if len(paths) != len(set(paths)):
+            raise ValueError("Verified schematic source paths must be unique")
+        if self.root_path not in paths:
+            raise ValueError("Verified schematic source tree must include its root file")
+        return self
+
+    @property
+    def source_files_by_path(self) -> Mapping[RepositoryPath, SchematicSourceFile]:
+        return MappingProxyType({item.source_path: item for item in self.source_files})
+
+    @property
+    def source_contents_by_path(self) -> Mapping[RepositoryPath, bytes]:
+        return MappingProxyType({item.source_path: item.contents for item in self.source_files})
+
+    @property
+    def source_hashes(self) -> SourceHashInventory:
+        return MappingProxyType(
+            {item.source_path: item.source_sha256 for item in self.source_files}
+        )
 
 
 class SchematicGeometryCoverage(StrictModel):

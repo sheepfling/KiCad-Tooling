@@ -38,16 +38,16 @@ def _bind_single_root_drawing(
         return drawings, (), None, ()
     try:
         project_directory = Path(primary).parent.as_posix()
-        sources = verified_schematic_sources(root, primary, project_directory, source_hashes)
-        bindings = schematic_instance_bindings(sources, primary, project_directory)
+        source_tree = verified_schematic_sources(root, primary, project_directory, source_hashes)
+        bindings = schematic_instance_bindings(source_tree)
     except (OSError, ValueError) as exc:
         return drawings, (), None, (f"Schematic root instance could not be verified: {exc}",)
     if (
-        len(sources) != 1
+        len(source_tree.source_files) != 1
         or len(bindings) != 1
         or bindings[0].source_path != primary
         or bindings[0].sheet_path != ()
-        or bindings[0].source_sha256 != source_hashes.get(primary)
+        or bindings[0].source_sha256 != source_tree.source_hashes.get(primary)
     ):
         return drawings, (), None, ()
     binding = bindings[0]
@@ -64,7 +64,7 @@ def _bind_single_root_drawing(
             (bound, content) if item is drawing else (item, content) for item, content in drawings
         ),
         (binding,),
-        source_tree_sha256({primary: source_hashes[primary]}),
+        source_tree_sha256(source_tree.source_hashes),
         (),
     )
 
@@ -90,11 +90,11 @@ def bind_schematic_drawings(
         return drawings, (), None, ()
     try:
         project_directory = Path(primary).parent.as_posix()
-        sources = verified_schematic_sources(root, primary, project_directory, source_hashes)
-        bindings = schematic_instance_bindings(sources, primary, project_directory)
+        source_tree = verified_schematic_sources(root, primary, project_directory, source_hashes)
+        bindings = schematic_instance_bindings(source_tree)
     except (OSError, ValueError) as exc:
         return drawings, (), None, (f"Schematic sheet instances could not be verified: {exc}",)
-    tree_hash = source_tree_sha256({name: source_hashes[name] for name in sources})
+    tree_hash = source_tree_sha256(source_tree.source_hashes)
     by_title: dict[tuple[tuple[str, ...], str], list[SchematicGeometrySourceBinding]] = {}
     for binding in bindings:
         key = binding.sheet_path, Path(binding.source_path).name

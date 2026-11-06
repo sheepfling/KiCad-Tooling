@@ -9,6 +9,11 @@ from pydantic import Field, StringConstraints
 
 from .command_evidence_models import CommandEvidence
 from .model_primitives import Digest, Identifier, NonEmptyText, RepositoryPath, StrictModel
+from .source_state_models import (
+    SerializedPathDigestInventory,
+    SerializedSourcePreconditionInventory,
+    SourceIndexPlan,
+)
 
 
 class CadProviderIdentity(StrictModel):
@@ -85,13 +90,13 @@ class CadBundleCheck(StrictModel):
     physical_fit_verified: Literal[False] = False
 
 
-class CadImportPlan(StrictModel):
+class CadImportPlan(SourceIndexPlan):
     schema_version: Literal["1"] = "1"
     project_id: Identifier
     bundle_dir: str
     bundle_sha256: Digest
-    preconditions: Mapping[RepositoryPath, Digest | None]
-    after_hashes: Mapping[RepositoryPath, Digest]
+    preconditions: SerializedSourcePreconditionInventory
+    after_hashes: SerializedPathDigestInventory
 
 
 class CadImportReport(StrictModel):

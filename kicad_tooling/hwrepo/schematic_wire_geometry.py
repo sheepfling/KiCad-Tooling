@@ -7,7 +7,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from itertools import pairwise
 
-from .model_inventory import _atoms, _Span  # pyright: ignore[reportPrivateUsage]
+from .kicad_sexpr import SExprSpan as _Span
+from .kicad_sexpr import sexpr_atoms as _atoms
 from .schematic_geometry_primitives import point_to_segment, strictly_inside
 from .schematic_geometry_source import schematic_at, schematic_nodes, schematic_number
 from .schematic_geometry_types import (

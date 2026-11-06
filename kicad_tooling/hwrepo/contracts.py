@@ -8,6 +8,8 @@ The models module remains a compatibility registry for supported imports.
 from __future__ import annotations
 
 import json
+import os
+import stat
 from collections.abc import Iterable, Mapping
 from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
@@ -82,6 +84,33 @@ def read_model(path: Path, model: type[Model]) -> Model:
         return parse_model_text(document, model)
     except ValueError as exc:
         raise ValueError(f"{path}: {exc}") from exc
+
+
+def file_fingerprint(value: os.stat_result) -> tuple[int, int, int, int, int]:
+    """Identify one regular-file state across a stable descriptor read."""
+    return value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns, value.st_ctime_ns
+
+
+def read_regular_bytes(path: Path, maximum: int | None = None) -> tuple[bytes, os.stat_result]:
+    """Read a stable regular file without following a final-component symlink."""
+    if not stat.S_ISREG(path.lstat().st_mode):
+        raise ValueError("Select a regular file without symlinks")
+    descriptor = os.open(
+        path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+    )
+    with os.fdopen(descriptor, "rb") as stream:
+        before = os.fstat(stream.fileno())
+        if not stat.S_ISREG(before.st_mode):
+            raise ValueError("Select a regular file")
+        if maximum is not None and before.st_size > maximum:
+            raise ValueError(f"File exceeds the {maximum}-byte limit")
+        data = stream.read() if maximum is None else stream.read(maximum + 1)
+        after = os.fstat(stream.fileno())
+        if file_fingerprint(before) != file_fingerprint(after):
+            raise ValueError("File changed while reading; retry from fresh metadata")
+        if maximum is not None and len(data) > maximum:
+            raise ValueError(f"File exceeds the {maximum}-byte limit")
+    return data, after
 
 
 def _read_external_json(path: Path) -> JsonValue:

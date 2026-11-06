@@ -23,6 +23,8 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_design_lint_determinism_pcb_value.py": frozenset({"pcb_lint"}),
         "test_design_lint_determinism_pcb_pad_net.py": frozenset({"pcb_lint"}),
         "test_pcb_touch_pad_clearance_native.py": frozenset({"pcb_lint"}),
+        "test_pcb_dru_duplicate_rule_names_native.py": frozenset({"pcb_lint", "evidence_lint"}),
+        "test_pcb_dru_conflicting_severities_native.py": frozenset({"pcb_lint", "evidence_lint"}),
         "test_ci_hosted_pcb_fixture_schedule.py": frozenset({"pcb_lint", "return_path_lint"}),
     }
 )

@@ -19,7 +19,18 @@ from .contracts import parse_easyeda_identity, repo_path, write_model
 from .discovery import load_config
 from .evidence import digest as file_digest
 from .kicad_compatibility import require_cli_profile
-from .part_cad import _nodes, _quote, _root, _tokens  # pyright: ignore[reportPrivateUsage]
+from .kicad_sexpr import (
+    quote_sexpr_atom as _quote,
+)
+from .kicad_sexpr import (
+    sexpr_nodes as _nodes,
+)
+from .kicad_sexpr import (
+    sexpr_root as _root,
+)
+from .kicad_sexpr import (
+    sexpr_tokens as _tokens,
+)
 from .parts_workflow import selected_project
 from .three_d import _command, _valid_artifact  # pyright: ignore[reportPrivateUsage]
 

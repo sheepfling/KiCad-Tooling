@@ -2,40 +2,11 @@
 
 from __future__ import annotations
 
-import os
-import subprocess
-import sys
-from pathlib import Path
-
 import pytest
 
+from tests.design_lint_rule_selector_support import collect_rule_nodes
+
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
-
-
-def _collect_rule_nodes(rule_ids: str | tuple[str, ...]) -> subprocess.CompletedProcess[str]:
-    environment = os.environ.copy()
-    environment.pop("KICAD_TEMPLATE_ROOT", None)
-    return subprocess.run(
-        (
-            sys.executable,
-            "-I",
-            "-m",
-            "pytest",
-            "-q",
-            "--collect-only",
-            "-m",
-            " or ".join(
-                f'design_lint_rule(rule_id="{rule_id}")'
-                for rule_id in ((rule_ids,) if isinstance(rule_ids, str) else rule_ids)
-            ),
-        ),
-        cwd=Path(__file__).resolve().parents[1],
-        env=environment,
-        capture_output=True,
-        text=True,
-        timeout=30,
-        check=False,
-    )
 
 
 RULE_NODE_CASES = (
@@ -46,6 +17,34 @@ RULE_NODE_CASES = (
     (
         "pcb.custom_drc_text_variable_review",
         "tests/test_design_lint_mcp_parity_pcb_dru_text_variable.py::test_custom_drc_substitution_review_matches_cli_and_mcp",
+    ),
+    (
+        "pcb.custom_drc_rule_without_constraint",
+        "tests/test_pcb_dru_rule_without_constraint.py::test_rule_without_direct_constraint_requests_source_bound_review",
+    ),
+    (
+        "pcb.custom_drc_rule_without_constraint",
+        "tests/test_design_lint_mcp_parity_pcb_dru_rule_without_constraint.py::test_unconstrained_custom_rule_review_matches_cli_and_mcp",
+    ),
+    (
+        "pcb.custom_drc_rule_without_constraint",
+        "tests/test_pcb_dru_rule_without_constraint_native.py::test_unconstrained_rule_does_not_prevent_terminal_sentinel",
+    ),
+    (
+        "pcb.custom_drc_duplicate_rule_name",
+        "tests/test_pcb_dru_duplicate_rule_names.py::test_duplicate_rule_names_request_source_bound_review_per_exact_name",
+    ),
+    (
+        "pcb.custom_drc_duplicate_rule_name",
+        "tests/test_pcb_dru_duplicate_rule_names.py::test_unique_names_case_variants_and_comments_are_quiet",
+    ),
+    (
+        "pcb.custom_drc_duplicate_rule_name",
+        "tests/test_design_lint_mcp_parity_pcb_dru_duplicate_rule_names.py::test_duplicate_custom_rule_name_review_matches_cli_and_mcp",
+    ),
+    (
+        "pcb.custom_drc_duplicate_rule_name",
+        "tests/test_pcb_dru_duplicate_rule_names_native.py::test_duplicate_and_unique_rule_names_reach_native_sentinel",
     ),
     (
         "connector.footprint_same_voltage_power_input_unanchored",
@@ -110,6 +109,10 @@ RULE_NODE_CASES = (
     (
         "connector.generic_peer_pin_all_open",
         "tests/test_connector_peer_pin_all_open.py::test_all_open_generic_passive_peer_pin_is_opt_in_review",
+    ),
+    (
+        "connector.peer_pin_assignment_divergence",
+        "tests/test_connector_split_return_peers_native.py::test_native_four_peer_db9_split_returns_review_and_common_returns_clear",
     ),
     (
         "connector.generic_peer_pin_all_open",
@@ -384,7 +387,7 @@ RULE_NODE_CASES = (
 
 
 def test_rule_markers_select_catalogued_cases_without_external_checkout() -> None:
-    result = _collect_rule_nodes(tuple(sorted({rule_id for rule_id, _ in RULE_NODE_CASES})))
+    result = collect_rule_nodes(tuple(sorted({rule_id for rule_id, _ in RULE_NODE_CASES})))
     assert result.returncode == 0, result.stdout + result.stderr
     for _, expected_node in RULE_NODE_CASES:
         assert expected_node in result.stdout
@@ -416,7 +419,7 @@ def test_peer_pin_rule_selector_collects_only_its_parity_case(
     rule_id: str,
     selected_node: str,
 ) -> None:
-    result = _collect_rule_nodes(rule_id)
+    result = collect_rule_nodes(rule_id)
     assert result.returncode == 0, result.stdout + result.stderr
     selected_peer_cases = {
         line
@@ -427,7 +430,7 @@ def test_peer_pin_rule_selector_collects_only_its_parity_case(
 
 
 def test_rule_selector_filters_parametrized_peer_identity_cases() -> None:
-    result = _collect_rule_nodes("component.peer_signal_input_unconnected")
+    result = collect_rule_nodes("component.peer_signal_input_unconnected")
     assert result.returncode == 0, result.stdout + result.stderr
     selected_identity_cases = {
         line
@@ -444,7 +447,7 @@ def test_rule_selector_filters_parametrized_peer_identity_cases() -> None:
 
 def test_serial_reference_rule_selects_its_exact_native_regressions() -> None:
     rule_id = "bus.serial_peer_reference_review"
-    result = _collect_rule_nodes(rule_id)
+    result = collect_rule_nodes(rule_id)
     assert result.returncode == 0, result.stdout + result.stderr
     for function in (
         "test_serial_peer_voltage_fault_and_controls_by_native_version",

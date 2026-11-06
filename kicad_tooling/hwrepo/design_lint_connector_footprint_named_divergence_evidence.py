@@ -7,7 +7,6 @@ from typing import Literal, TypeAlias
 
 from .connector_footprint_peer_assignments import (
     connector_footprint_peer_pin_assignments,
-    connector_footprint_peer_pin_net_map,
 )
 from .connector_footprint_peer_groups import (
     ConnectorFootprintPeerGroup,
@@ -27,6 +26,7 @@ from .connector_identity import (
     pin_function_is_generic,
 )
 from .design_lint_types import Candidate, CandidateEvidenceProjection
+from .netlist_pin_assignments import netlist_pin_net_index
 
 ConnectorFootprintNamedDivergenceRuleId: TypeAlias = Literal[
     "connector.footprint_named_power_input_assignment_divergence",
@@ -95,7 +95,7 @@ def _validate_current_divergence(
 ) -> None:
     peer_group, references, inventory = _group_and_inventory(source, divergence)
     observed = source.observed
-    pin_nets = connector_footprint_peer_pin_net_map(observed)
+    pin_nets = netlist_pin_net_index(observed)
     components = {reference.casefold(): item for reference, item in observed.components.items()}
     symbols = {reference.casefold(): item for reference, item in observed.component_symbols.items()}
     functions = {pin.casefold(): item for pin, item in observed.pin_functions.items()}

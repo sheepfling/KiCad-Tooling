@@ -6,12 +6,8 @@ from dataclasses import dataclass
 from math import ceil
 from pathlib import Path
 
+from . import kicad_sexpr as sx
 from .electrical_report_models import ElectricalCheck
-from .model_inventory import (  # pyright: ignore[reportPrivateUsage]
-    _atoms,  # pyright: ignore[reportPrivateUsage]
-    _children,  # pyright: ignore[reportPrivateUsage]
-    _Span,  # pyright: ignore[reportPrivateUsage]
-)
 from .netlist_contract_models import NetlistContract
 from .pcb_connectivity_observations import PcbAccessProbeObservation
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
@@ -38,14 +34,6 @@ class _BoardFootprint:
     pads: dict[str, tuple[_BoardPad, ...]]
 
 
-def _nodes(source: str, parent: _Span, name: str) -> tuple[_Span, ...]:
-    return tuple(
-        child
-        for child in _children(source, parent.start + 1, parent.end - 1)
-        if _atoms(source, child)[:1] == (name,)
-    )
-
-
 def _exposed_outer_sides(pads: tuple[_BoardPad, ...]) -> tuple[str, ...]:
     """Return outer pad sides with both copper and solder-mask declarations."""
     sides: set[str] = set()
@@ -61,25 +49,25 @@ def _exposed_outer_sides(pads: tuple[_BoardPad, ...]) -> tuple[str, ...]:
 def _board_footprints(path: Path) -> dict[str, _BoardFootprint]:
     """Read only KiCad 10 board footprints and pad net/mask declarations."""
     source = path.read_text(encoding="utf-8")
-    roots = _children(source, 0, len(source))
-    if len(roots) != 1 or _atoms(source, roots[0])[:1] != ("kicad_pcb",):
+    roots = sx.sexpr_children(source, 0, len(source))
+    if len(roots) != 1 or sx.sexpr_atoms(source, roots[0])[:1] != ("kicad_pcb",):
         raise ValueError("PCB source does not have one native kicad_pcb root")
     root = roots[0]
     net_ids: dict[str, str] = {}
-    for span in _nodes(source, root, "net"):
-        atoms = _atoms(source, span)
+    for span in sx.sexpr_nodes(source, root, "net"):
+        atoms = sx.sexpr_atoms(source, span)
         if len(atoms) != 3 or not atoms[1].isdigit() or atoms[1] in net_ids:
             raise ValueError("PCB source contains a malformed or duplicate net identity")
         net_ids[atoms[1]] = atoms[2]
 
     footprints: dict[str, _BoardFootprint] = {}
-    for span in _nodes(source, root, "footprint"):
-        header = _atoms(source, span)
+    for span in sx.sexpr_nodes(source, root, "footprint"):
+        header = sx.sexpr_atoms(source, span)
         if len(header) != 2:
             raise ValueError("PCB footprint has no exact library identity")
         properties: dict[str, str] = {}
-        for property_span in _nodes(source, span, "property"):
-            atoms = _atoms(source, property_span)
+        for property_span in sx.sexpr_nodes(source, span, "property"):
+            atoms = sx.sexpr_atoms(source, property_span)
             if len(atoms) != 3 or atoms[1] in properties:
                 raise ValueError("PCB footprint has malformed or duplicate properties")
             properties[atoms[1]] = atoms[2]
@@ -87,11 +75,11 @@ def _board_footprints(path: Path) -> dict[str, _BoardFootprint]:
         if not reference:
             legacy = tuple(
                 item
-                for item in _nodes(source, span, "fp_text")
-                if _atoms(source, item)[:2] == ("fp_text", "reference")
+                for item in sx.sexpr_nodes(source, span, "fp_text")
+                if sx.sexpr_atoms(source, item)[:2] == ("fp_text", "reference")
             )
             if len(legacy) == 1:
-                atoms = _atoms(source, legacy[0])
+                atoms = sx.sexpr_atoms(source, legacy[0])
                 reference = atoms[2] if len(atoms) >= 3 else None
             elif len(legacy) > 1:
                 raise ValueError("PCB footprint has duplicate legacy reference text")
@@ -99,17 +87,17 @@ def _board_footprints(path: Path) -> dict[str, _BoardFootprint]:
             raise ValueError("PCB footprint has no reference or duplicates another footprint")
 
         grouped_pads: dict[str, list[_BoardPad]] = {}
-        for pad_span in _nodes(source, span, "pad"):
-            pad_header = _atoms(source, pad_span)
+        for pad_span in sx.sexpr_nodes(source, span, "pad"):
+            pad_header = sx.sexpr_atoms(source, pad_span)
             if len(pad_header) < 3:
                 raise ValueError(f"{reference}: malformed PCB pad")
             number = pad_header[1]
-            net_nodes = _nodes(source, pad_span, "net")
+            net_nodes = sx.sexpr_nodes(source, pad_span, "net")
             if len(net_nodes) > 1:
                 raise ValueError(f"{reference}.{number}: duplicate pad net assignments")
             net: str | None = None
             if net_nodes:
-                net_atoms = _atoms(source, net_nodes[0])
+                net_atoms = sx.sexpr_atoms(source, net_nodes[0])
                 if len(net_atoms) != 3 or not net_atoms[1].isdigit():
                     raise ValueError(f"{reference}.{number}: malformed pad net assignment")
                 if net_ids.get(net_atoms[1]) != net_atoms[2]:
@@ -117,19 +105,19 @@ def _board_footprints(path: Path) -> dict[str, _BoardFootprint]:
                         f"{reference}.{number}: pad net identity differs from board net table"
                     )
                 net = net_atoms[2]
-            layer_nodes = _nodes(source, pad_span, "layers")
+            layer_nodes = sx.sexpr_nodes(source, pad_span, "layers")
             if len(layer_nodes) != 1:
                 raise ValueError(f"{reference}.{number}: expected one pad layer declaration")
-            layer_atoms = _atoms(source, layer_nodes[0])
+            layer_atoms = sx.sexpr_atoms(source, layer_nodes[0])
             if len(layer_atoms) < 2:
                 raise ValueError(f"{reference}.{number}: pad has no assigned layers")
             grouped_pads.setdefault(number, []).append(
                 _BoardPad(number=number, net=net, layers=frozenset(layer_atoms[1:]))
             )
-        attr = _nodes(source, span, "attr")
+        attr = sx.sexpr_nodes(source, span, "attr")
         if len(attr) > 1:
             raise ValueError(f"{reference}: duplicate PCB footprint attributes")
-        attributes: set[str] = set(_atoms(source, attr[0])[1:]) if attr else set()
+        attributes: set[str] = set(sx.sexpr_atoms(source, attr[0])[1:]) if attr else set()
         dnp_property = next(
             (value.casefold() for key, value in properties.items() if key.casefold() == "dnp"),
             "",

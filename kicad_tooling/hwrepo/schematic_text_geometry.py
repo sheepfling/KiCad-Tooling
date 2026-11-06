@@ -7,7 +7,8 @@ from functools import lru_cache
 from importlib.resources import files
 
 from .contracts import parse_model_text
-from .model_inventory import _atoms, _Span  # pyright: ignore[reportPrivateUsage]
+from .kicad_sexpr import SExprSpan as _Span
+from .kicad_sexpr import sexpr_atoms as _atoms
 from .models import SchematicTextMetricsResource
 from .schematic_geometry_source import schematic_at, schematic_nodes, schematic_number
 from .schematic_geometry_types import (

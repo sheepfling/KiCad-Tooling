@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
+from typing import cast
 
 import pytest
 from mcp import Client
@@ -118,6 +119,73 @@ def test_capture_links_computed_result_to_source_and_declared_artifact(tmp_path:
         == receipt.artifacts_sha256["index.html"]
     )
     assert "RELEASE_EVIDENCE" in (issue.code for issue in receipt.readiness.issues)
+
+
+def test_missing_declared_file_stays_explicit_in_complete_inventory(tmp_path: Path) -> None:
+    root, _, _ = parity_workspace(tmp_path)
+    manifest = _release(root)
+    artifact = root / "build/release-artifacts/drawing.txt"
+    artifact.unlink()
+
+    receipt = capture_release_readiness(root, manifest)
+
+    assert receipt.source_stable
+    assert receipt.dependency_inventory_complete
+    assert receipt.declared_files_sha256[artifact.relative_to(root).as_posix()] is None
+
+
+def test_unreadable_nested_report_marks_artifact_enumeration_incomplete(tmp_path: Path) -> None:
+    root, _, _ = parity_workspace(tmp_path)
+    manifest_path = _release(root)
+    native_report = root / "build/native/readiness/summary.json"
+    native_report.parent.mkdir(parents=True)
+    native_report.write_text("not-json", encoding="utf-8")
+    manifest = read_model(manifest_path, ReleaseManifest)
+    write_model(
+        manifest_path,
+        manifest.model_copy(
+            update={
+                "evidence": ReleaseEvidence(
+                    portable=EvidenceFile(path="build/portable/missing.json", sha256="0" * 64),
+                    native={
+                        "controller": EvidenceFile(
+                            path=native_report.relative_to(root).as_posix(),
+                            sha256=digest(native_report),
+                        )
+                    },
+                )
+            }
+        ),
+    )
+
+    receipt = capture_release_readiness(root, manifest_path)
+
+    assert not receipt.dependency_inventory_complete
+    assert receipt.declared_files_sha256[native_report.relative_to(root).as_posix()]
+    assert receipt.declared_files_sha256["build/portable/missing.json"] is None
+
+
+def test_readiness_report_hash_indexes_are_immutable_and_serialize_as_mappings(
+    tmp_path: Path,
+) -> None:
+    root, _, _ = parity_workspace(tmp_path)
+    manifest = _release(root)
+    receipt = capture_release_readiness(root, manifest)
+    source_hashes = cast(dict[str, str], receipt.source_hashes)
+    declared_hashes = cast(dict[str, str | None], receipt.declared_files_sha256)
+    artifact_hashes = cast(dict[str, str], receipt.artifacts_sha256)
+
+    with pytest.raises(TypeError):
+        source_hashes["new-source"] = "0" * 64
+    with pytest.raises(TypeError):
+        declared_hashes["new-dependency"] = "0" * 64
+    with pytest.raises(TypeError):
+        artifact_hashes["new-artifact"] = "0" * 64
+
+    serialized = receipt.model_dump(mode="json")
+    assert isinstance(serialized["source_hashes"], dict)
+    assert isinstance(serialized["declared_files_sha256"], dict)
+    assert isinstance(serialized["artifacts_sha256"], dict)
 
 
 def test_capture_includes_nested_native_artifact_hashes(tmp_path: Path) -> None:

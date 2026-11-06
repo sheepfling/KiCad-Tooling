@@ -80,7 +80,9 @@ def test_typed_operation_maps_to_the_shared_planner_and_retains_one_receipt(
     )
 
     monkeypatch.setattr(
-        parts_workflow, "_selected_netlist_runner", lambda _request: selected_runner
+        parts_workflow.netlist_runner_selection,
+        "select_netlist_runner",
+        lambda _mode, _cli: selected_runner,
     )
     monkeypatch.setattr(
         parts_workflow, "prepare", lambda *args: (prepare_calls.append(args), report)[1]

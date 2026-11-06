@@ -28,12 +28,21 @@ def test_custom_drc_source_records_and_candidates_have_a_focused_owner() -> None
         "SourceBoundPcbDruInput",
         "PcbDruRuleFindingEvidence",
         "PcbDruTextVariableFindingEvidence",
+        "PcbDruRuleWithoutConstraintFindingEvidence",
+        "PcbDruDuplicateRuleNameFindingEvidence",
+        "PcbDruConflictingSeveritiesFindingEvidence",
         "PcbDruRuleCandidate",
         "PcbDruTextVariableCandidate",
+        "PcbDruRuleWithoutConstraintCandidate",
+        "PcbDruDuplicateRuleNameCandidate",
+        "PcbDruConflictingSeveritiesCandidate",
     } <= classes
     assert {
         "project_pcb_dru_rule_evidence",
         "project_pcb_dru_text_variable_evidence",
+        "project_pcb_dru_rule_without_constraint_evidence",
+        "project_pcb_dru_duplicate_rule_name_evidence",
+        "project_pcb_dru_conflicting_severities_evidence",
     } <= functions
     parser_imports = {
         alias.name
@@ -41,14 +50,18 @@ def test_custom_drc_source_records_and_candidates_have_a_focused_owner() -> None
         if isinstance(node, ast.ImportFrom) and node.module == "pcb_drc_rule_parser"
         for alias in node.names
     }
-    assert {"NativeDrcRuleWithSeverity", "NativeIgnoredDrcRule"} <= parser_imports
+    assert {
+        "NativeDrcRuleDeclaration",
+        "NativeDrcRuleWithSeverity",
+        "NativeIgnoredDrcRule",
+    } <= parser_imports
 
     projections = {
         node.name: node
         for node in tree.body
         if isinstance(node, ast.FunctionDef) and node.name.startswith("project_")
     }
-    assert len(projections) == 2
+    assert len(projections) == 5
     for function in projections.values():
         assert not any(
             isinstance(node, ast.Attribute) and node.attr == "local_path"
@@ -69,6 +82,9 @@ def test_custom_drc_adapter_only_routes_through_typed_candidate_builders() -> No
         "ignored_custom_drc_rule_candidates",
         "excluded_custom_drc_rule_candidates",
         "text_variable_custom_drc_rule_candidates",
+        "custom_drc_rule_without_constraint_candidates",
+        "custom_drc_duplicate_rule_name_candidates",
+        "custom_drc_conflicting_severity_candidates",
     } <= functions.keys()
 
     source_reader = functions["_source_bound_rule_file"]
@@ -82,6 +98,9 @@ def test_custom_drc_adapter_only_routes_through_typed_candidate_builders() -> No
         "ignored_custom_drc_rule_candidates": "_rule_candidate",
         "excluded_custom_drc_rule_candidates": "_rule_candidate",
         "text_variable_custom_drc_rule_candidates": "from_source_evidence",
+        "custom_drc_rule_without_constraint_candidates": "_rule_without_constraint_candidate",
+        "custom_drc_duplicate_rule_name_candidates": "from_source_evidence",
+        "custom_drc_conflicting_severity_candidates": "from_source_evidence",
     }
     for name, builder in expected_builders.items():
         function = functions[name]
@@ -109,4 +128,9 @@ def test_custom_drc_adapter_only_routes_through_typed_candidate_builders() -> No
         if isinstance(node, ast.ImportFrom) and node.module == "pcb_drc_rule_parser"
         for alias in node.names
     }
-    assert {"native_ignored_rules", "native_rules_with_severity"} <= parser_imports
+    assert {
+        "native_ignored_rules",
+        "native_rule_declarations",
+        "native_rules_with_severity",
+        "native_rules_with_conflicting_severities",
+    } <= parser_imports

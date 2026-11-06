@@ -36,7 +36,9 @@ EXTERNAL_PROTECTION_MODEL_NAMES = (
 
 EXPECTED_OWNER_IMPORTS = MappingProxyType(
     {
-        "design_lint_candidate_aggregation.py": frozenset({"ExternalProtectionCoverageReport"}),
+        "design_lint_candidate_legacy_arguments.py": frozenset(
+            {"ExternalProtectionCoverageReport"}
+        ),
         "design_lint_connector_coverage.py": frozenset({"ExternalProtectionCoverageReport"}),
         "design_lint_evaluation_types.py": frozenset({"ExternalProtectionCoverageReport"}),
         "design_lint_evaluator.py": frozenset({"ExternalProtectionCoverageReport"}),
