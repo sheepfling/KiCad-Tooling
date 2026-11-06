@@ -15,6 +15,9 @@ from .design_lint_usb_c_candidates import (
     usb_c_vbus_capacitance_candidates,
 )
 from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
+from .design_lint_usb_generic_connector_candidates import (
+    generic_usb_connector_phy_pair_review_candidates,
+)
 from .design_lint_usb_peer_candidates import usb_peer_reference_candidates
 from .design_lint_usb_unmapped_topology import usb_unmapped_multi_pin_topology_candidates
 from .digital_peer_voltage_scan import scan_digital_peer_voltage_reviews
@@ -91,6 +94,11 @@ def scan_peer_candidates(inputs: PeerCandidateScanInputs) -> tuple[Candidate, ..
             reviewed_connector_references,
         ),
         *usb_peer_reference_candidates(usb_scan, usb_data_path),
+        *generic_usb_connector_phy_pair_review_candidates(
+            observed,
+            usb_data_path,
+            reviewed_connector_references,
+        ),
         *usb_unmapped_multi_pin_topology_candidates(usb_scan, usb_data_path),
         *spi_participant_candidates(observed, spi_scope),
         *digital_peer_voltage_candidates(peer_voltage_scope, peer_voltage_scan),

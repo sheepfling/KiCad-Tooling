@@ -9916,6 +9916,53 @@
       "implementation_owner": "kicad_tooling/hwrepo/usb_peer_unsupported_topology.py#unsupported_usb_multi_pin_path_candidates"
     },
     {
+      "rule_id": "bus.usb_generic_connector_phy_pair_review",
+      "title": "Generic connector contacts match a recognized USB PHY data pair",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete connector pin inventory, generic pin-function metadata, and exact net membership",
+      "predicate": "For a fitted, completely inventoried connector candidate, emit a REVIEW prompt when two or more generic Pin_N contacts on distinct native nets share the exact positive and negative USB 2.0 data nets of one recognized PHY port group. The prompt requests connector/interface review and an exact project-authored USB data-path map where applicable; it does not classify the connector or assert that the observed assignments are correct.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only connector candidates with complete, unique pin-number inventories and native function/electrical-type metadata are considered. Each candidate contact must have one unambiguous net assignment and a generic Pin_N function.",
+        "Both contacts must match the exact positive and negative nets for one recognized USB 2.0 PHY port. The rule does not infer USB from net names, connector references, or power/return pins; it ignores connectors with named data roles, DNP connectors, incomplete pairs, and multi-net pin assignments.",
+        "The prompt identifies only native net membership. It does not establish that the connector carries USB, confirm its physical pinout, prove a data path or PCB copper, or determine whether power, signal-reference, shield, or other contacts should connect.",
+        "A project-authored map for the exact connector, PHY, and port group suppresses this coverage prompt; stale mapped connectivity remains the responsibility of bus.usb_data_path_mismatch."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_generic_connector_pair_review.test_generic_connector_pair_emits_bounded_port_review",
+        "tests.test_usb_generic_connector_pair_review.test_rule_override_and_exact_ignore_remain_available",
+        "tests.test_design_lint_mcp_parity_usb_generic_connector_pair.test_generic_connector_review_cli_mcp_parity",
+        "tests.test_usb_generic_connector_native_fixture_lane.test_native_generic_connector_fault_and_named_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_generic_connector_pair_review.test_explicit_connector_roles_are_outside_the_generic_pin_prompt",
+        "tests.test_usb_generic_connector_pair_review.test_incomplete_pair_dnp_and_missing_pin_inventory_are_quiet",
+        "tests.test_usb_generic_connector_pair_review.test_exact_endpoint_map_resolves_the_generic_connector_review",
+        "tests.test_usb_generic_connector_native_fixture_lane.test_native_generic_connector_fault_and_named_control"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_generic_connector_pair_review.test_report_is_stable_when_netlist_mappings_are_reordered",
+        "tests.test_usb_generic_connector_native_fixture_registry.test_native_source_registry_is_hash_pinned_and_local"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_peer_generic_connector_candidates.py#generic_usb_connector_data_pair_candidates",
+        "kicad_tooling/hwrepo/usb_peer_generic_connector_models.py#UsbGenericConnectorDataPair",
+        "kicad_tooling/hwrepo/design_lint_usb_generic_connector_candidates.py#generic_usb_connector_phy_pair_review_candidates",
+        "kicad_tooling/hwrepo/design_lint_usb_generic_connector_candidate_evidence.py#UsbGenericConnectorCandidate",
+        "kicad_tooling/hwrepo/design_lint_peer_candidates.py#scan_peer_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_peer_generic_connector_candidates.py#generic_usb_connector_data_pair_candidates"
+    },
+    {
       "rule_id": "oscillator.crystal_load_network_mismatch",
       "title": "Mapped crystal load network differs from the authored requirement",
       "status": "active",

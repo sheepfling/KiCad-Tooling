@@ -82,6 +82,10 @@ USB_PEER_ANALYSIS_MODULES = (
     "usb_peer_reference_scan.py",
     "usb_peer_unsupported_topology.py",
     "usb_peer_map_identity.py",
+    "usb_peer_generic_connector_models.py",
+    "usb_peer_generic_connector_candidates.py",
+    "design_lint_usb_generic_connector_candidate_evidence.py",
+    "design_lint_usb_generic_connector_candidates.py",
 )
 
 
@@ -433,6 +437,9 @@ def test_usb_peer_reference_rule_refs_point_to_the_owning_modules() -> None:
         "bus_signal_pairs.py",
         "peer_reference_assignments.py",
         "design_lint_candidate_aggregation.py",
+        "design_lint_peer_candidates.py",
+        "design_lint_usb_generic_connector_candidate_evidence.py",
+        "design_lint_usb_generic_connector_candidates.py",
     }
 
 

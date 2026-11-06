@@ -96,6 +96,7 @@ from .ci_hosted_two_pin_component_cases import TWO_PIN_COMPONENT_FIXTURE_CASES
 from .ci_hosted_two_pin_components import two_pin_component_fixture_lane
 from .ci_hosted_usb_c_ports import usb_c_port_fixture_lane as _run_usb_c_port_fixture_lane
 from .ci_hosted_usb_data_paths import usb_data_path_fixture_lane
+from .ci_hosted_usb_generic_connector_lane import generic_usb_connector_fixture_lane
 from .ci_matrix import build_matrix
 from .git import git_output
 from .hwrepo.contracts import (
@@ -143,6 +144,7 @@ __all__ = (
     "electrical_lane",
     "empty_netlist_evidence_fixture_lane",
     "gate_result",
+    "generic_usb_connector_fixture_lane",
     "i2c_peer_reference_native_fixture_lane",
     "i2c_pullup_native_fixture_lane",
     "i2c_unconnected_pin_fixture_lane",

@@ -44,7 +44,10 @@ for dispositions and timing; leave unmeasured values unstated.
   board-design lint gain. A pinned public USB 2.0 hub screen below records
   repeated native netlist exports, common schematic return-net assignments,
   11 default-REVIEW prompts, and LINT-086's unsupported multi-pin ESD paths;
-  reviewer value remains unmeasured.
+  reviewer value remains unmeasured. A second pinned public multiport hub
+  screen for LINT-289 now records seven generic connector-to-PHY pair review
+  prompts from repeated KiCad 10.0.5 exports; these are applicability prompts,
+  not confirmed defects.
 
 ### Source review: kicad-druid custom DRC rule lint
 
@@ -173,6 +176,43 @@ for dispositions and timing; leave unmeasured values unstated.
   predicate. No project source or exported netlist from this public screen was
   copied into the tooling checkout. Reviewer dispositions and field value
   remain unmeasured.
+
+### Recorded public screen: StickHub seven-port USB hub (2026-11-06)
+
+- **Source and boundary:** Read-only screen of the public
+  [StickHub schematic][stickhub-schematic] at commit
+  `5f369a785bedc4b1d3b99222c841ac684e04f016`. Its pinned
+  [license][stickhub-license] declares CC BY-NC-SA 4.0 with a commercial-use
+  exemption. The source and generated exports stayed outside this repository;
+  only pinned references, hashes, and the bounded result are recorded here.
+  Source SHA-256 values are `bf7616095dbeb01b9f3a70f25da4e9916dc9b5424e8414c47dd5f204320d1932`
+  for `StickHub.kicad_sch` and
+  `9962b75e57113a5df84ba397cec20b8d937a6d5e86dc407471f505ac5a064d88` for
+  `LICENSE.md`.
+- **Native input and repeatability:** Two exports of the pinned schematic used
+  this digest-pinned KiCad 10.0.5 image:
+
+  ```text
+  ghcr.io/kicad/kicad:10.0.5@sha256:fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c
+  ```
+
+  Both raw XML exports have SHA-256
+  `8a796b6621114063c2837f391a7b3b0913eeb7e3c4f3b6ff212c71da8e300dfc`; both
+  parse to equal typed netlists with SHA-256
+  `dcc0a02721c06ba07b530a7cce5bfa88dcf2d1501c76fa772a06088c61ebcd25`
+  (94 components, 45 nets).
+- **Incremental coverage:** Before LINT-289, the interface scanner recognized
+  seven USB PHY port groups but zero connector groups and zero supported
+  connector-to-PHY paths. LINT-289 produced seven default-REVIEW candidates:
+  J2 through J8, paired to U1 ports 1 through 7 using their generic `Pin_N`
+  assignments. This confirms an applicability gap in the baseline and
+  demonstrates that the new prompt reaches it; it does not confirm a pinout
+  error, defect, or intended connector role.
+- **Disposition and limits:** The screen supports retaining LINT-289 as a
+  deterministic, source-backed review prompt. No reviewer dispositions,
+  precision rate, or saved review time were measured. The check cannot
+  determine USB intent from a generic symbol and does not establish PCB copper
+  connectivity or electrical correctness.
 
 ### Source-only recheck: kicad-happy v2.3.2 false-positive fixes (2026-10-29)
 
@@ -2299,10 +2339,10 @@ for dispositions and timing; leave unmeasured values unstated.
   [trial fixture record](../tests/fixtures/design_lint/cohort-stm32-pin-checker/README.md).
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 269 active rules. Each entry has a deterministic predicate, evidence
+contains 270 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-Of the 269 active rules, 214 default to `review`, 54 to `off`, and
+Of the 270 active rules, 215 default to `review`, 54 to `off`, and
 `pcb.required_fitted_reference` to `block`. Off-by-default checks include
 schematic geometry, generic peer assignment, selected component topology
 reviews such as the BJT base-bias and base/collector same-net prompts, and
@@ -2332,3 +2372,5 @@ it does not claim field validation or effectiveness against private boards.
 [happy-v232-release]: https://github.com/aklofas/kicad-happy/releases/tag/v2.3.2
 [usb2-hub-license]: <https://github.com/brainsmoke/usb2_hub/blob/a6288e2ffc4866b52eb5f64b998376bd619a7674/LICENSE>
 [usb2-hub-revision]: https://github.com/brainsmoke/usb2_hub/tree/a6288e2ffc4866b52eb5f64b998376bd619a7674
+[stickhub-license]: https://github.com/rbtsco/StickHub/blob/5f369a785bedc4b1d3b99222c841ac684e04f016/LICENSE.md
+[stickhub-schematic]: https://github.com/rbtsco/StickHub/blob/5f369a785bedc4b1d3b99222c841ac684e04f016/StickHub.kicad_sch

@@ -1,0 +1,21 @@
+"""Typed observations for USB PHY pairs attached to generic connector pins."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True, slots=True)
+class UsbGenericConnectorDataPair:
+    """Native connector-pin assignments matching one recognized USB PHY pair."""
+
+    connector_reference: str
+    phy_reference: str
+    port_group: str | None
+    positive_pins: tuple[str, ...]
+    positive_functions: tuple[str, ...]
+    positive_net: str
+    negative_pins: tuple[str, ...]
+    negative_functions: tuple[str, ...]
+    negative_net: str
+    connector_pin_count: int

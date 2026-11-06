@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 269 rules are implemented with synthetic regression coverage.
+The following 270 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 269 active rules.
+The catalog currently contains 270 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -617,6 +617,7 @@ skipped under prerelease policy.
 - `bus.usb_c_vbus_capacitance_review`
 - `bus.usb_data_path_mismatch`
 - `bus.usb_unmapped_multi_pin_topology`
+- `bus.usb_generic_connector_phy_pair_review`
 - `bus.usb_data_polarity_label_mismatch`
 - `bus.usb_c_superspeed_lane_label_mismatch`
 - `bus.usb_peer_data_pair_crossed`
@@ -3511,7 +3512,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 269 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 270 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -8193,6 +8194,15 @@ control are documented in the
   multiport fixture exercises these aliases at the exact-version native gate.
   The public source stays outside the repository; only its commit, hashes, and
   this bounded result are recorded here.
+  **Docker follow-up (2026-11-06):** With the digest-pinned KiCad 10.0.5 image,
+  repeated native exports of this same pinned public schematic produced equal
+  typed netlists (94 components, 45 nets). The earlier scanner recognized seven
+  PHY groups but no connector groups or supported paths. LINT-289 now emits
+  seven REVIEW candidates pairing J2–J8 with U1 ports 1–7 from generic
+  `Pin_N` evidence. This demonstrates a source applicability gap, not seven
+  confirmed wiring defects; no public source or export was copied into Tooling.
+  Full hashes and limits are recorded in the
+  [cohort trial register](DESIGN_LINT_COHORT_TRIALS.md#recorded-public-screen-stickhub-seven-port-usb-hub-2026-11-06).
 - **Bundled KiCad-demo root replay (2026-10-07):** Re-ran the bounded scanner
   on 35 retained root-project netlists from the pinned KiCad 10.0.5 demo image.
   Every first/repeat XML hash matched its earlier receipt, and all 35 pairs
@@ -18858,6 +18868,37 @@ acceptance threads while new lint features proceed:
    omitted, partially mapped, and fully mapped synthetic native cases repeat
    on those same KiCad versions. Reviewer effort and false-positive rates
    remain open for both rules.
+
+#### LINT-289 — Prompt review of generic connector pins assigned to USB PHY pairs
+
+- **Rule:** `bus.usb_generic_connector_phy_pair_review`, default `review`.
+- **Trigger:** A fitted connector candidate has a complete, unambiguous native
+  pin inventory, and generic `Pin_N` contacts on two distinct nets match the
+  exact positive and negative nets of one recognized USB 2.0 PHY port. A
+  source-matched USB map for that connector, PHY, and port suppresses the
+  coverage prompt; mapped connectivity faults remain with
+  `bus.usb_data_path_mismatch`.
+- **Purpose:** Generic connector symbols can hide their function in a schematic
+  netlist. This check asks the reviewer to confirm whether the connector is
+  part of the USB interface and, if so, author an exact connector-to-PHY map.
+  The prompt does not infer connector purpose or pinout and does not ask to
+  join any power or reference contacts.
+- **Evidence and limits:** The candidate retains exact connector and PHY pin
+  references, net names, generic function labels, and complete connector pin
+  count from native netlist evidence. Named connector data functions, DNP
+  endpoints, incomplete inventories, ambiguous assignments, and unmatched
+  one-sided pairs are outside this predicate. A netlist assignment does not
+  establish physical connectivity or PCB copper.
+- **Fixtures:** Synthetic generic `Pin_N` pair fault, explicit named-role,
+  incomplete-pair, DNP, missing-inventory, exact-map, policy override, ignore,
+  and ordering controls. Tooling-owned KiCad schematics are exported twice in
+  the digest-pinned USB data-path native lane; no public or project board files
+  are stored as fixtures.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_usb_generic_connector_pair_review.py -m 'design_lint and
+  interface_lint and design_lint_rule(rule_id="bus.usb_generic_connector_phy_pair_review")'`.
+  The exact native test uses the existing
+  `KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1` lane.
 
 ## Completion and release gate
 

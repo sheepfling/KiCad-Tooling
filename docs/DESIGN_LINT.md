@@ -780,7 +780,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 269 active rules.
+The catalog currently contains 270 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -2082,6 +2082,16 @@ intentionally isolated or integrated-protection design needs a clear
 board fixtures.
 
 ## Review a mapped USB connector-to-PHY data path
+
+`bus.usb_generic_connector_phy_pair_review` provides an additional coverage
+prompt when a complete generic connector pin inventory has generic `Pin_N`
+contacts on the exact positive and negative nets of one recognized USB 2.0 PHY
+port. It asks the reviewer to confirm the connector type and pinout and add an
+exact data-path map if the connector is part of that interface. A matching
+connector/PHY/port map suppresses the prompt. The rule does not infer USB from
+net names, decide that any contacts should be tied together, or prove a path or
+PCB copper; project policy can set it to `block` or `off`, and exact reviewed
+findings can be ignored.
 
 USB 2.0 data-line series components depend on the selected PHY. Do not treat a
 connector name or D+/D− labels as a universal resistor requirement. Add

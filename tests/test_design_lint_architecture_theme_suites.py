@@ -54,6 +54,10 @@ I2C_ADDRESS_THEME_SUITES = (
 USB_HOSTED_THEME_SUITES = (
     "test_hosted_usb_requirements.py",
     "test_usb_data_path_native_fixture_lane.py",
+    "test_usb_generic_connector_native_fixture_lane.py",
+    "test_design_lint_mcp_parity_usb_generic_connector_pair.py",
+    "test_usb_generic_connector_pair_review.py",
+    "test_usb_generic_connector_native_fixture_registry.py",
     "test_usb_superspeed_peer_reference_native_fixture_lane.py",
 )
 USB_INLINE_COMPONENT_THEME_SUITES = (

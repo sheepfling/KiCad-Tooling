@@ -123,6 +123,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_led_current_range.py",
                 "tests/test_design_lint_mcp_parity_led_current.py",
                 "tests/test_design_lint_mcp_parity_peer_pins.py",
+                "tests/test_design_lint_mcp_parity_usb_generic_connector_pair.py",
                 "tests/test_design_lint_mcp_parity_power_input.py",
                 "tests/test_connector_named_power_pin_fixture_lane.py",
                 "tests/test_design_lint_mcp_parity_power_paths.py",
