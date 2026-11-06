@@ -2340,15 +2340,16 @@ for dispositions and timing; leave unmeasured values unstated.
 
 ### Recorded public-source screen: USB SuperSpeed IC lane labels
 
-- **Pinned source:** [Antmicro Jetson Orin Baseboard](https://github.com/antmicro/jetson-orin-baseboard/tree/34f0e7f5fbca441191e20ed55d93cf8614e12bed), revision
-  `34f0e7f5fbca441191e20ed55d93cf8614e12bed`. Its README declares
+- **Pinned source:** [Antmicro Jetson Orin Baseboard][antmicro-orin-revision],
+  revision `34f0e7f5fbca441191e20ed55d93cf8614e12bed`. Its README declares
   Apache-2.0. The checkout and exports remained under `/private/tmp`; no source
   schematic, project file, or generated netlist was copied into this repo.
 - **Screen:** Exported the public top-level schematic twice using the
-  `ghcr.io/kicad/kicad:10.0.5@sha256:fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c`
-  container. The raw XML contains volatile metadata, while both exports
-  normalize to equal typed netlist contracts (669
-  components, 644 nets, and 1465 pin functions).
+  digest-pinned KiCad 10.0.5 container with digest
+  `fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c`.
+  The raw XML contains volatile metadata, while both exports normalize to
+  equal typed netlist contracts with 669 components, 644 nets, and 1465 pin
+  functions.
 - **Observed pattern:** U10 exposes exact `RX1_N/P`, `RX2_N/P`, `TX1_N/P`, and
   `TX2_N/P` pin functions on explicitly named `USB Debug, DP/USBC0_*` nets.
   LINT-256 previously considered only Standard-A/B connector functions, so its
@@ -2382,6 +2383,7 @@ it does not claim field validation or effectiveness against private boards.
 ## Source links
 
 [antmicro-cm4]: https://github.com/antmicro/cm4-baseboard/tree/d248c2921e8e7f4c9b30c96ea5f376d9b2780f1e
+[antmicro-orin-revision]: https://github.com/antmicro/jetson-orin-baseboard/commit/34f0e7f
 [calcumaker-design]: https://github.com/calcumaker/calcumaker/blob/113a283/DESIGN.md
 [calcumaker-display-floorplan]: <https://github.com/calcumaker/calcumaker/blob/113a283/hardware/calcumaker-display/FLOORPLAN.md>
 [calcumaker-hardware]: https://github.com/calcumaker/calcumaker/tree/113a283/hardware
