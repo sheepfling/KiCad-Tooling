@@ -17,6 +17,7 @@ from kicad_tooling.hwrepo.models import (
     ProjectTestContract,
     ValidationSummary,
 )
+from kicad_tooling.verify import format_report
 from tests.verify_design_lint_support import (
     check_ci_with_synthetic_connector_evidence,
     create_reference_project,
@@ -122,6 +123,9 @@ def test_empty_connectivity_expectations_still_raise_native_connector_review(
     assert ground_candidate.evidence == {"J1.7": ("GND1",), "J2.7": ("GND2",)}
     assert ground_candidate.mode == "review"
     assert ground_candidate.disposition == "OPEN"
+    assert "REVIEW connector.repeated_pin_function: Synthetic:Port: ground/return" in format_report(
+        result
+    )
     unchanged = read_model(contract_path, ProjectTestContract)
     assert unchanged.validation.components == {}
     assert unchanged.validation.nets == {}

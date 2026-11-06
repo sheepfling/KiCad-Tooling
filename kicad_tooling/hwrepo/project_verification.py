@@ -135,6 +135,21 @@ def format_report(
         lines.append(f"Runner: {result.runner}")
         lines.append(f"Native: {result.native.status if result.native is not None else 'NOT_RUN'}")
     lines.append(f"Design lint: {result.design_lint.status if result.design_lint else 'NOT_RUN'}")
+    if result.design_lint is not None:
+        open_findings = sorted(
+            (finding for finding in result.design_lint.findings if finding.disposition == "OPEN"),
+            key=lambda finding: (finding.rule_id, finding.subject.casefold(), finding.subject),
+        )
+        if open_findings:
+            lines.append(f"Open design-lint findings: {len(open_findings)}")
+            visible_findings = open_findings if detail == "full" else open_findings[:5]
+            for finding in visible_findings:
+                disposition = "BLOCK" if finding.mode == "block" else "REVIEW"
+                lines.append(f"  {disposition} {finding.rule_id}: {finding.subject}")
+            if len(visible_findings) < len(open_findings):
+                lines.append(
+                    f"  {len(open_findings) - len(visible_findings)} more; see design-lint.json."
+                )
     lines.append(
         f"Electrical analysis: {result.electrical.status if result.electrical else 'NOT_RUN'}"
     )
