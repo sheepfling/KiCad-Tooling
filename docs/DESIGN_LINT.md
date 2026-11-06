@@ -780,7 +780,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 273 active rules.
+The catalog currently contains 274 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -2465,6 +2465,37 @@ twice using digest-pinned KiCad 10.0.0 and 10.0.5 images; see the
 KICAD_RUN_NATIVE_SPI_GENERIC_CONNECTOR_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
   .venv/bin/python -I -m pytest tests/test_spi_generic_connector_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_generic_connector_triad_review")'
+```
+
+## Review generic connector contacts on a UART pair
+
+`bus.serial_generic_connector_pair_review` asks for pinout review when a
+complete connector has generic `Pin_N` contacts on both exact TX/RX nets of a
+fitted, completely inventoried U/IC endpoint. Native endpoint pin functions
+and supported electrical directions identify the pair, so neutral net labels
+still qualify. A source-matched TX/RX pin map or explicit `NOT_APPLICABLE`
+connector disposition suppresses the prompt. Named connector functions, DNP
+components, incomplete inventories, ambiguous assignments, duplicate roles,
+same-net endpoints, and one-sided matches stay quiet. The heuristic does not
+infer connector purpose or direction from labels, establish UART membership,
+require common grounds or power, or prove copper or off-board wiring. It can
+co-report with the separate label-based serial peer review when both patterns
+apply. Project policy can set it to `block` or `off`, or ignore one exact
+finding.
+
+Synthetic neutral-label fault, named-role control, source-matched map,
+not-applicable disposition, incomplete evidence, override, ignore, and
+mapping-order cases are covered. Tooling-owned KiCad schematics are exported
+twice using digest-pinned KiCad 10.0.0 and 10.0.5 images; see the
+[fixture record](../tests/fixtures/design_lint/serial-generic-connector-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_serial_generic_connector_pair_review.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.serial_generic_connector_pair_review")'
+
+KICAD_RUN_NATIVE_SERIAL_GENERIC_CONNECTOR_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
+  .venv/bin/python -I -m pytest tests/test_serial_generic_connector_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.serial_generic_connector_pair_review")'
 ```
 
 ## Review a mapped crystal load network

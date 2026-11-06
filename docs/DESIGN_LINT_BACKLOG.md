@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 273 rules are implemented with synthetic regression coverage.
+The following 274 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 273 active rules.
+The catalog currently contains 274 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -574,6 +574,7 @@ skipped under prerelease policy.
 - `bus.serial_endpoint_role_collision`
 - `bus.spi_unmapped_participant`
 - `bus.serial_unmapped_peer`
+- `bus.serial_generic_connector_pair_review`
 - `bus.serial_unconnected_pin`
 - `bus.serial_tx_rx_label_mismatch`
 - `bus.serial_signal_on_named_rail`
@@ -724,6 +725,17 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **LINT-293 generic UART connector pair review:** When native U/IC TX/RX
+  functions with compatible electrical directions share two distinct nets with
+  generic contacts on a complete connector, ask whether the connector belongs
+  to that serial interface and whether its pinout is documented. Neutral net
+  labels qualify because role recognition comes from native endpoint pin
+  functions. A source-matched role map or reviewed `NOT_APPLICABLE`
+  disposition suppresses the prompt. This review does not infer connector
+  purpose, common grounds or power, external wiring, or PCB continuity.
+  Synthetic fault/control cases, CLI/MCP parity, and repeated digest-pinned
+  KiCad 10.0.0/10.0.5 exports pass locally; field applicability and reviewer
+  value remain unmeasured.
 - **LINT-292 generic SPI connector triad review:** A complete connector with
   generic `Pin_N` contacts on the exact clock, controller-to-peripheral data,
   and peripheral-to-controller data nets of one fitted, completely inventoried
@@ -3545,7 +3557,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 273 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 274 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -19032,6 +19044,43 @@ acceptance threads while new lint features proceed:
   interface_lint and design_lint_rule(rule_id="bus.spi_generic_connector_triad_review")'`.
   The exact native test uses
   `KICAD_RUN_NATIVE_SPI_GENERIC_CONNECTOR_FIXTURES=1`.
+
+#### LINT-293 — Prompt review of generic connector pins assigned to UART pairs
+
+- **Rule:** `bus.serial_generic_connector_pair_review`, default `review`.
+- **Trigger:** A fitted U/IC endpoint has a complete, unique native pin
+  inventory and exactly one TX and RX pin in the same recognized UART/USART
+  channel, with supported electrical directions and distinct unambiguous
+  nets. A completely inventoried connector candidate has generic `Pin_N`
+  contacts on both exact nets. A source-matched connector map assigning those
+  contacts to TX/RX, or an explicit `NOT_APPLICABLE` connector disposition,
+  suppresses the prompt.
+- **Purpose:** Neutral net labels can hide a possible serial pair from a
+  connector pinout review. Native endpoint functions identify the possible
+  UART pair; generic contacts identify the review question. Connector identity
+  and intended wiring remain unknown.
+- **Evidence and limits:** Candidate evidence retains the connector pin count,
+  generic TX/RX contacts and functions, exact nets, and native endpoint pin
+  assignments. DNP components, named connector functions, incomplete or
+  inconsistent inventories, ambiguous assignments, duplicate roles, same-net
+  endpoints, and one-sided connector matches stay quiet. Label-based serial
+  peer review may also report when its separate label pattern applies; the
+  second prompt is not an independent confirmed defect. This rule does not
+  infer serial purpose or signal direction from labels, establish flow-control
+  requirements, require common grounds or power, or establish off-board wiring
+  or PCB copper continuity.
+- **Fixtures:** Synthetic neutral-label fault, named TXD/RXD control,
+  source-matched map, explicit not-applicable disposition, incomplete and
+  ambiguous evidence, DNP state, policy override, exact ignore, and
+  mapping-order cases. Tooling-owned fault/control schematics are hash-pinned
+  and exported twice with exact KiCad 10.0.0 and 10.0.5 container images.
+  These verify predicate behavior and export compatibility, not field
+  precision or reviewer value.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_serial_generic_connector_pair_review.py -m 'design_lint and
+  interface_lint and design_lint_rule(rule_id="bus.serial_generic_connector_pair_review")'`.
+  The exact native test uses
+  `KICAD_RUN_NATIVE_SERIAL_GENERIC_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate
 

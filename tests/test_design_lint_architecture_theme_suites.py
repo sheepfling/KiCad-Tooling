@@ -79,6 +79,13 @@ SPI_GENERIC_CONNECTOR_THEME_SUITES = (
     "test_design_lint_architecture_spi_generic_connector.py",
     "test_design_lint_mcp_parity_spi_generic_connector_triad.py",
 )
+SERIAL_GENERIC_CONNECTOR_THEME_SUITES = (
+    "test_serial_generic_connector_pair_review.py",
+    "test_serial_generic_connector_native_fixture_lane.py",
+    "test_serial_generic_connector_native_fixture_registry.py",
+    "test_design_lint_architecture_serial_generic_connector.py",
+    "test_design_lint_mcp_parity_serial_generic_connector_pair.py",
+)
 USB_INLINE_COMPONENT_THEME_SUITES = (
     "test_usb_inline_component_paths.py",
     "test_usb_inline_protection_shunts.py",
@@ -205,6 +212,7 @@ def test_design_lint_theme_suites_stay_below_review_limit() -> None:
                     *CAN_GENERIC_CONNECTOR_THEME_SUITES,
                     *I2C_GENERIC_CONNECTOR_THEME_SUITES,
                     *SPI_GENERIC_CONNECTOR_THEME_SUITES,
+                    *SERIAL_GENERIC_CONNECTOR_THEME_SUITES,
                     *USB_INLINE_COMPONENT_THEME_SUITES,
                     *POWER_PATH_HOSTED_THEME_SUITES,
                     *IC_RAIL_NATIVE_THEME_SUITES,

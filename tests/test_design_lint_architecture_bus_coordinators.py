@@ -99,6 +99,8 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "design_lint_spi_candidates.py",
         "design_lint_spi_bus_candidates.py",
         "design_lint_spi_generic_connector_candidates.py",
+        "design_lint_serial_bus_candidates.py",
+        "design_lint_serial_generic_connector_candidates.py",
         "design_lint_unconnected_interface_candidates.py",
         "design_lint_can_candidates.py",
         "design_lint_rs485_candidates.py",
@@ -145,7 +147,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
     assert [name for _, name in calls] == [
         "i2c_protocol_bus_candidates",
         "two_wire_signal_candidates",
-        "serial_signal_candidates",
+        "serial_protocol_bus_candidates",
         "spi_protocol_bus_candidates",
         "unconnected_interface_candidates",
         "can_candidates",
@@ -194,6 +196,7 @@ def test_generic_connector_protocols_share_pin_metadata_inventory_check() -> Non
         "can_generic_connector_candidates.py",
         "i2c_generic_connector_candidates.py",
         "spi_generic_connector_candidates.py",
+        "serial_generic_connector_candidates.py",
     )
     assert line_count(helper) < IMPLEMENTATION_MAX_LINES
     for name in modules:

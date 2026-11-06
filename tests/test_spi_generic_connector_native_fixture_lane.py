@@ -62,15 +62,15 @@ def test_native_generic_connector_fault_and_named_control(
         for item in (
             json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines()
         )
-        if item.get("stage", "").startswith("spi-generic-connector-fixture/")
+        if item.get("stage", "").startswith("generic-connector/spi/")
     }
 
     assert set(results) == {
-        "spi-generic-connector-fixture/fault",
-        "spi-generic-connector-fixture/control",
+        "generic-connector/spi/fault",
+        "generic-connector/spi/control",
     }
-    assert results["spi-generic-connector-fixture/fault"]["finding_count"] == 1
-    assert results["spi-generic-connector-fixture/control"]["finding_count"] == 0
+    assert results["generic-connector/spi/fault"]["finding_count"] == 1
+    assert results["generic-connector/spi/control"]["finding_count"] == 0
     for result in results.values():
         assert result["status"] == "PASS"
         assert result["kicad_version"] == version

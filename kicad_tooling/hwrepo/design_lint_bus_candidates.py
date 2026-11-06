@@ -14,7 +14,7 @@ from .design_lint_i2c_bus_candidates import i2c_protocol_bus_candidates
 from .design_lint_i2c_candidates import i2c_address_theme_candidates
 from .design_lint_interfaces_usb_data_polarity import usb_data_polarity_label_candidates
 from .design_lint_rs485_candidates import rs485_candidates
-from .design_lint_serial_signal_candidates import serial_signal_candidates
+from .design_lint_serial_bus_candidates import serial_protocol_bus_candidates
 from .design_lint_signal_pair_candidates import (
     complementary_signal_candidates,
     named_differential_pair_candidates,
@@ -51,7 +51,7 @@ def bus_candidates(inputs: BusCandidateInputs) -> tuple[Candidate, ...]:
     return (
         *i2c_protocol_bus_candidates(inputs),
         *two_wire_signal_candidates(observed),
-        *serial_signal_candidates(observed),
+        *serial_protocol_bus_candidates(inputs),
         *spi_protocol_bus_candidates(inputs),
         *unconnected_interface_candidates(observed),
         *can_candidates(
