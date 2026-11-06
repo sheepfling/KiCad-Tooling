@@ -13,6 +13,7 @@ MappedTopologyRuleId = Literal[
     "power.mapped_series_path_mismatch",
     "power.mapped_sequence_dependency_mismatch",
     "oscillator.output_load_path_mismatch",
+    "component.mapped_led_current_range_mismatch",
 ]
 MappedTopologyRuleMode = Literal["review", "block", "off"]
 

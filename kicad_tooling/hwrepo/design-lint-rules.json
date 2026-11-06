@@ -11573,6 +11573,55 @@
       "implementation_owner": "kicad_tooling/hwrepo/led_heuristics.py#leds_directly_driven_without_visible_series_resistor"
     },
     {
+      "rule_id": "component.mapped_led_current_range_mismatch",
+      "title": "Mapped LED series path falls outside its authored DC current window",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each project-authored two-pin LED path with one exact fitted series resistor, require matching native component identity, full pin inventory, pin functions and types, fitted state, and exact source, LED-side, and return net assignments. Parse the resistor's nominal value, check its authored nominal range, then estimate worst-case ideal DC current as max(0, (source_minimum - forward_voltage_maximum) / (resistance * (1 + tolerance))) through max(0, (source_maximum - forward_voltage_minimum) / (resistance * (1 - tolerance))). Report incomplete source/topology evidence or a current interval outside the authored inclusive window.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
+      ],
+      "limitations": [
+        "The source, forward-voltage, target-current, nominal-resistance, and tolerance limits and their bases must be authored by the project owner. Tooling records these assumptions but does not verify datasheet scope, operating conditions, or approval.",
+        "The estimate assumes one discrete series resistor and an ideal DC path. It does not model LED nonlinear behavior, resistor power, source impedance, temperature drift beyond the authored bounds, active or off-board current limiting, brightness, dynamic behavior, PCB copper continuity, or hardware population.",
+        "Only the exact mapped LED and resistor pins and their source/LED-side/return nets are evaluated. A missing map produces NOT_CONFIGURED coverage; names and observed values do not create requirements. Unmapped fitted resistors on the reviewed path make the result incomplete.",
+        "A current-window mismatch is a review prompt by default, not a universal LED design limit or electrical approval. Projects may select block, off, or an exact-fingerprint ignore with a reason."
+      ],
+      "fault_fixtures": [
+        "tests.test_led_current_range.test_wrong_resistor_value_exceeds_authored_current_window",
+        "tests.test_led_current_range.test_tolerance_corners_catch_a_window_failure_hidden_by_nominal_current",
+        "tests.test_led_current_range.test_incomplete_population_or_topology_requests_review",
+        "tests.test_led_current_range.test_review_block_off_and_exact_ignore_are_project_configurable",
+        "tests.test_design_lint_mcp_parity_led_current.test_led_current_map_findings_and_coverage_match_cli_and_mcp",
+        "tests.test_led_current_native_fixture_lane.test_native_led_current_envelope_fault_and_control_are_source_bound"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_led_current_range.test_authored_led_and_resistor_current_envelope_is_a_valid_control",
+        "tests.test_led_current_range.test_return_side_series_resistor_matches_the_same_authored_current_window",
+        "tests.test_design_lint_mcp_parity_led_current.test_led_current_map_findings_and_coverage_match_cli_and_mcp",
+        "tests.test_led_current_native_fixture_lane.test_native_led_current_envelope_fault_and_control_are_source_bound"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_led_current_range.test_requirement_hash_is_stable_when_led_entry_order_changes"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_LED_CURRENT_RANGE_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/led_current_range.py#evaluate_led_current_requirement",
+        "kicad_tooling/hwrepo/led_current_range.py#led_current_map_sha256",
+        "kicad_tooling/hwrepo/design_lint_led_current_candidates.py#led_current_range_candidates",
+        "kicad_tooling/hwrepo/design_lint_component_candidates.py#scan_component_candidates",
+        "kicad_tooling/hwrepo/design_lint_mapped_topology_coverage.py#mapped_topology_coverage_runs",
+        "kicad_tooling/hwrepo/led_current_models.py#LedCurrentMap"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/led_current_range.py#evaluate_led_current_requirement"
+    },
+    {
       "rule_id": "power.pin_function_net_role_conflict",
       "title": "Named power pin conflicts with a recognized net role",
       "status": "active",

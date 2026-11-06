@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from .component_role_models import ComponentRoleMap
 from .ic_decoupling_models import IcDecouplingMap
+from .led_current_models import LedCurrentMap
 from .oscillator_output_path_models import OscillatorOutputPathMap
 from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
@@ -22,3 +23,4 @@ class PowerCandidateInputs:
     oscillator_output_path_map: OscillatorOutputPathMap | None
     ic_decoupling_map: IcDecouplingMap | None
     regulator_passive_topology_map: RegulatorPassiveTopologyMap | None = None
+    led_current_map: LedCurrentMap | None = None

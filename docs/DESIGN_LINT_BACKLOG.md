@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 262 rules are implemented with synthetic regression coverage.
+The following 263 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 262 active rules.
+The catalog currently contains 263 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -538,6 +538,7 @@ skipped under prerelease policy.
 - `component.diode_anode_below_cathode_on_named_rails`
 - `component.led_directly_across_supply_and_return`
 - `component.led_directly_driven_from_output`
+- `component.mapped_led_current_range_mismatch`
 - `oscillator.output_load_path_mismatch`
 - `power.gpio_to_control_input_voltage_review`
 - `power.open_drain_control_input_pullup_voltage_review`
@@ -3479,7 +3480,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 262 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 263 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -14644,6 +14645,39 @@ control are documented in the
   value fault, and split tap; a focused CLI/MCP parity test checks report
   equality.
   The fixtures contain no product project data.
+
+#### LINT-282 — Compare mapped LED current window
+
+- **Status:** Implemented as `component.mapped_led_current_range_mismatch`,
+  default `review`. Projects can select `block`, `off`, or an
+  exact-fingerprint ignore. The mapped-check execution record reports whether
+  the rule was configured, evaluated against a source-bound netlist, or blocked
+  for missing source identity.
+- **Gap:** A visible series resistor and a valid schematic path do not show
+  whether the selected nominal value and tolerance keep expected LED current
+  inside the board owner's intended operating window.
+- **Predicate:** For each explicit project map, match the exact fitted two-pin
+  LED and resistor identities, pin functions and types, full pin inventories,
+  exact source/LED-side/return assignments, and resistor nominal range. Calculate
+  minimum and maximum ideal DC current from the authored source-voltage bounds,
+  LED forward-voltage bounds, nominal resistance, and maximum resistor
+  tolerance. Report incomplete identity/topology evidence or an interval outside
+  the authored inclusive target-current window.
+- **Boundary:** The rule never infers a supply voltage, LED forward voltage,
+  target current, resistor tolerance, or required limiting element. Each value
+  and its basis must be project-authored. Its simplified DC estimate does not
+  cover nonlinear/dynamic LED behavior, source impedance, thermal drift,
+  resistor power, active or off-board limiting, brightness, PCB copper, or
+  physical population. Extra unmapped resistors on the reviewed path make
+  evidence incomplete. This check is a configured regression prompt, not an
+  electrical approval.
+- **Evidence:** Tooling-owned unit regressions exercise resistor-value and
+  tolerance-corner faults, anode- and return-side series controls, DNP and
+  topology gaps, exact identity and pin evidence, configuration overrides,
+  missing source hashes, stable map hashes, and no-map behavior. Source-hashed
+  native schematics repeat on KiCad 10.0.0 and 10.0.5; a CLI/MCP test checks
+  matching finding evidence and mapped-check coverage. All schematics are
+  synthetic and include no product project data.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

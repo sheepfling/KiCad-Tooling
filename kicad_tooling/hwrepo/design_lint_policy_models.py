@@ -14,6 +14,7 @@ from .design_lint_finding_models import DesignLintIgnore, DesignLintRuleOverride
 from .external_protection_models import ExternalProtectionMap
 from .i2c_address_models import I2cAddressMap
 from .ic_decoupling_models import IcDecouplingMap
+from .led_current_models import LedCurrentMap
 from .model_primitives import StrictModel
 from .oscillator_output_path_models import OscillatorOutputPathMap
 from .pcb_decoupling_models import PcbDecouplingMap
@@ -57,6 +58,7 @@ class DesignLintPolicy(StrictModel):
     oscillator_output_path_map: OscillatorOutputPathMap | None = None
     regulator_feedback_map: RegulatorFeedbackMap | None = None
     signal_divider_map: SignalDividerMap | None = None
+    led_current_map: LedCurrentMap | None = None
     regulator_passive_topology_map: RegulatorPassiveTopologyMap | None = None
     rc_filter_map: RcFilterMap | None = None
     connector_return_distribution_map: ConnectorReturnDistributionMap | None = None

@@ -15,7 +15,7 @@ from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contract_coach_models import ContractCoachReport
 from .hwrepo.contracts import KiCadErcReport, read_kicad_erc_report, write_model
 from .hwrepo.design_lint import evaluate
-from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.design_lint_report_models import DesignLintFinding, DesignLintReport
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
 from .hwrepo.models import DesignLintPolicy
@@ -59,6 +59,24 @@ def _normalized_erc_digest(report: KiCadErcReport) -> str:
         ensure_ascii=False,
     ).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
+
+
+def _repeatable_findings(report: DesignLintReport) -> tuple[DesignLintFinding, ...]:
+    """Compare rule output independently of source-bound export digests."""
+    normalized: list[DesignLintFinding] = []
+    for finding in report.findings:
+        evidence = dict(finding.evidence)
+        if "netlist_sha256" in evidence:
+            evidence["netlist_sha256"] = ("<source-bound-netlist>",)
+        normalized.append(
+            finding.model_copy(
+                update={
+                    "fingerprint": "<source-bound-fingerprint>",
+                    "evidence": evidence,
+                }
+            )
+        )
+    return tuple(normalized)
 
 
 def component_lint_fixture_lane(
@@ -205,10 +223,9 @@ def component_lint_fixture_lane(
             raise ValueError(f"Native component lint {case} netlist differs after normalization")
         if hashes[(case, "first", "erc")] != hashes[(case, "repeat", "erc")]:
             raise ValueError(f"Native component lint {case} ERC differs after normalization")
-        if (
-            runs["first"].status != runs["repeat"].status
-            or runs["first"].findings != runs["repeat"].findings
-        ):
+        if runs["first"].status != runs["repeat"].status or _repeatable_findings(
+            runs["first"]
+        ) != _repeatable_findings(runs["repeat"]):
             raise ValueError(f"Native component lint {case} finding differs between repeats")
         findings = tuple(item for item in runs["first"].findings if item.rule_id == rule_id)
         expected = expected_subjects[case]

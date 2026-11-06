@@ -220,6 +220,7 @@ DesignLintRuleId = Literal[
     "protection.mapped_device_mismatch",
     "oscillator.crystal_load_network_mismatch",
     "oscillator.output_load_path_mismatch",
+    "component.mapped_led_current_range_mismatch",
     "power.regulator_feedback_mismatch",
     "power.regulator_required_passive_topology_mismatch",
     "filter.rc_corner_mismatch",

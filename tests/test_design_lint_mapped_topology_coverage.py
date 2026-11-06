@@ -27,6 +27,7 @@ _RULE_MODES = {
     "power.mapped_series_path_mismatch": "review",
     "power.mapped_sequence_dependency_mismatch": "review",
     "oscillator.output_load_path_mismatch": "review",
+    "component.mapped_led_current_range_mismatch": "review",
 }
 
 

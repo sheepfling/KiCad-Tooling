@@ -780,7 +780,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 262 active rules.
+The catalog currently contains 263 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -2712,6 +2712,87 @@ records each case and its intended result.
 KICAD_RUN_NATIVE_SIGNAL_DIVIDER_FIXTURES=1 \
   .venv/bin/python -I -m pytest -q tests/test_signal_divider_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="interface.signal_divider_input_range_mismatch")'
+```
+
+## Review a project-mapped LED current window
+
+`component.mapped_led_current_range_mismatch` evaluates only LED paths listed
+in `design_lint.led_current_map`. Each entry names one exact two-pin LED, one
+series resistor, the exact source, LED-side, and return pins/nets, authored
+source and LED forward-voltage bounds, the resistor nominal range and maximum
+tolerance, the target current window, and a basis for each requirement. A
+configured map produces a source-bound mapped-check run even when the path is
+within range. Without a map, the rule is `NOT_CONFIGURED`; it does not infer a
+required current or supply voltage from names or observed values.
+
+```json
+{
+  "design_lint": {
+    "led_current_map": {
+      "basis": "Synthetic reviewed indicator operating requirement",
+      "leds": [
+        {
+          "id": "status-indicator",
+          "led_reference": "D1",
+          "expected_led_value": "Synthetic green LED",
+          "expected_led_symbol": "Device:LED",
+          "expected_led_footprint": "Synthetic:LED_0603",
+          "anode_pin": "D1.1",
+          "cathode_pin": "D1.2",
+          "source_net": "+3V3",
+          "return_net": "GND",
+          "led_side_net": "LED_A",
+          "resistor_leg": "anode",
+          "resistor": {
+            "reference": "R1",
+            "expected_symbol": "Device:R",
+            "expected_footprint": "Synthetic:R_0603",
+            "outer_pin": "R1.1",
+            "led_side_pin": "R1.2",
+            "minimum_nominal_resistance_ohms": 450.0,
+            "maximum_nominal_resistance_ohms": 500.0,
+            "maximum_tolerance_percent": 5.0,
+            "tolerance_basis": "Reviewed resistor tolerance source and scope"
+          },
+          "minimum_source_voltage_v": 3.2,
+          "maximum_source_voltage_v": 3.4,
+          "minimum_forward_voltage_v": 1.8,
+          "maximum_forward_voltage_v": 2.2,
+          "minimum_target_current_ma": 2.0,
+          "maximum_target_current_ma": 3.5,
+          "source_voltage_basis": "Reviewed source operating range",
+          "forward_voltage_basis": "Reviewed LED forward-voltage bounds",
+          "target_current_basis": "Board-owner selected indicator-current window"
+        }
+      ]
+    }
+  }
+}
+```
+
+The evaluator checks exact component identity, fitted state, native pin
+inventory and type, and every mapped net assignment. It uses resistor
+tolerance corners to estimate
+`max(0, (Vsource_min - Vf_max) / Rmax)` through
+`max(0, (Vsource_max - Vf_min) / Rmin)`. Incomplete identity or path evidence
+requests review; missing source identity blocks the configured check. A current
+interval outside the authored inclusive window uses the rule's normal
+`review`, `block`, `off`, and exact-fingerprint ignore policy.
+
+This ideal DC estimate does not model nonlinear LED behavior, source impedance,
+resistor power, brightness, transient behavior, active or off-board limiting,
+PCB copper, or physical population. The project-authored bounds and their bases
+are recorded but not independently verified; the result is not electrical
+approval. The native fixtures are synthetic and run on digest-pinned KiCad
+10.0.0 and 10.0.5 images. CLI and MCP call the same typed service.
+
+```sh
+.venv/bin/python -I -m pytest -q tests/test_led_current_range.py \
+  -m 'design_lint and component_lint and design_lint_rule(rule_id="component.mapped_led_current_range_mismatch")'
+
+KICAD_RUN_NATIVE_LED_CURRENT_RANGE_FIXTURES=1 \
+  .venv/bin/python -I -m pytest -q tests/test_led_current_native_fixture_lane.py \
+  -m 'design_lint and component_lint and native_kicad and design_lint_rule(rule_id="component.mapped_led_current_range_mismatch")'
 ```
 
 ## Review a mapped first-order RC filter

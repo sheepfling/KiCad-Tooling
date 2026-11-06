@@ -351,6 +351,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_SIGNAL_DIVIDER_FIXTURES",
         ),
         (
+            "component.mapped_led_current_range_mismatch",
+            "KICAD_RUN_NATIVE_LED_CURRENT_RANGE_FIXTURES",
+        ),
+        (
             "power.regulator_required_passive_topology_mismatch",
             "KICAD_RUN_NATIVE_REGULATOR_REQUIRED_PASSIVE_FIXTURES",
         ),

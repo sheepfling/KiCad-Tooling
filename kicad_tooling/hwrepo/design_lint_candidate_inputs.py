@@ -17,6 +17,7 @@ from .design_lint_power_inputs import PowerCandidateInputs
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
 from .external_protection_models import ExternalProtectionCoverageReport
+from .model_primitives import Digest
 from .netlist_contract_models import NetlistContract
 from .rc_filter_models import RcFilterCoverageReport
 from .regulator_feedback_models import RegulatorFeedbackCoverageReport
@@ -70,6 +71,7 @@ class DesignLintCandidateInputs:
     mapped: MappedCandidateInputs
     pcb: PcbCandidateInputs
     usb_data_path: UsbDataPathCandidateInputs
+    netlist_sha256: Digest | None = None
 
     def __post_init__(self) -> None:
         if self.bus.observed is not self.observed and self.bus.observed != self.observed:

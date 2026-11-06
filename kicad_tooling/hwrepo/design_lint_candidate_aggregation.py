@@ -75,6 +75,7 @@ from .i2c_peer_reference_scan import I2cPeerReferenceScan
 from .i2c_pullup_inputs import I2cPullupSnifferInput
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .ic_decoupling_models import IcDecouplingMap
+from .led_current_models import LedCurrentMap
 from .netlist_contract_models import NetlistContract
 from .oscillator_output_path_models import OscillatorOutputPathMap
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
@@ -190,6 +191,8 @@ def candidates(
     ic_decoupling_map: IcDecouplingMap | None = None,
     oscillator_output_path_map: OscillatorOutputPathMap | None = None,
     connector_stateful_contact_map: ConnectorStatefulContactMap | None = None,
+    led_current_map: LedCurrentMap | None = None,
+    netlist_sha256: str | None = None,
 ) -> tuple[Candidate, ...]:
     """Adapt legacy inputs to the shared typed candidate scanner."""
     resolved_catalog = catalog if catalog is not None else rule_catalog()
@@ -219,6 +222,7 @@ def candidates(
                 power_sequence_map=power_sequence_map,
                 oscillator_output_path_map=oscillator_output_path_map,
                 ic_decoupling_map=ic_decoupling_map,
+                led_current_map=led_current_map,
             ),
             bus=BusCandidateInputs(
                 observed=observed,
@@ -267,6 +271,7 @@ def candidates(
                 stm32_pin_map=stm32_pin_map_coverage,
             ),
             usb_data_path=UsbDataPathCandidateInputs(authored_map=usb_data_path_map),
+            netlist_sha256=netlist_sha256,
         )
     )
 
@@ -286,6 +291,7 @@ def scan_candidate_result(
     component_role_map = inputs.power.component_role_map
     power_path_map = inputs.power.power_path_map
     oscillator_output_path_map = inputs.power.oscillator_output_path_map
+    led_current_map = inputs.power.led_current_map
     peer_pin_assignment_scans = inputs.component.peer_pin_assignment_scans
     peer_power_output_review_enabled = inputs.component.peer_power_output_review_enabled
     power_sequence_map = inputs.power.power_sequence_map
@@ -329,6 +335,8 @@ def scan_candidate_result(
             component_role_map=component_role_map,
             power_path_map=power_path_map,
             oscillator_output_path_map=oscillator_output_path_map,
+            led_current_map=led_current_map,
+            netlist_sha256=inputs.netlist_sha256,
             reviewed_connector_references=reviewed_connector_references,
         )
     )
@@ -398,6 +406,9 @@ def scan_candidate_result(
             power_series_path_mismatch=mapped_coverage_result.power_path_finding_count,
             power_sequence_dependency_mismatch=mapped_coverage_result.power_sequence_finding_count,
             oscillator_output_path_mismatch=component_result.oscillator_output_path_finding_count,
+            led_current_range_mismatch=sum(
+                item.rule_id == "component.mapped_led_current_range_mismatch" for item in items
+            ),
         ),
     )
 

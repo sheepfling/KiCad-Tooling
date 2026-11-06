@@ -71,6 +71,9 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
             {"component_lint", "native_kicad", "slow"}
         ),
         "test_design_lint_led_topology.py": frozenset({"component_lint", "power_lint"}),
+        "test_led_current_native_fixture_lane.py": frozenset(
+            {"component_lint", "native_kicad", "slow"}
+        ),
         "test_component_peer_pin_all_open.py": frozenset({"component_lint"}),
         "test_component_peer_pin_mixed_open.py": frozenset({"component_lint"}),
         "test_component_peer_pin_assignment_outlier.py": frozenset({"component_lint"}),

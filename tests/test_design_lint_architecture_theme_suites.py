@@ -100,7 +100,13 @@ COMPONENT_PEER_POWER_THEME_SUITES = (
     "test_peer_power_assignment_native.py",
 )
 COMPONENT_RATING_HOSTED_THEME_SUITES = ("test_component_rating_native_fixture_lane.py",)
-COMPONENT_LED_THEME_SUITES = ("test_led_rail_native_fixture_lane.py",)
+COMPONENT_LED_THEME_SUITES = (
+    "test_led_rail_native_fixture_lane.py",
+    "test_led_current_range.py",
+    "test_led_current_native_fixture_lane.py",
+    "test_design_lint_mcp_parity_led_current.py",
+    "test_design_lint_architecture_led_current_range.py",
+)
 COMPONENT_POWER_OUTPUT_THEME_SUITES = ("test_component_unconnected_power_output.py",)
 COMPONENT_POWER_DOMAIN_THEME_SUITES = (
     "test_component_same_voltage_power_input_domains.py",

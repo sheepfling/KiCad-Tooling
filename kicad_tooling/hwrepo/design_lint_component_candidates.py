@@ -40,11 +40,13 @@ from .design_lint_component_unconnected_pin_candidate_evidence import (
     UnconnectedComponentPinCandidate,
 )
 from .design_lint_led_candidate_evidence import LedTopologyCandidate
+from .design_lint_led_current_candidates import led_current_range_candidates
 from .design_lint_two_pin_candidate_evidence import (
     TwoPinComponentFindingEvidence,
     TwoPinSameNetCandidate,
 )
 from .design_lint_types import Candidate
+from .led_current_models import LedCurrentMap
 from .led_heuristics import (
     leds_directly_between_positive_and_return_nets,
     leds_directly_driven_without_visible_series_resistor,
@@ -75,6 +77,8 @@ class ComponentTopologyCandidateInputs:
     component_role_map: ComponentRoleMap | None
     power_path_map: PowerPathMap | None
     oscillator_output_path_map: OscillatorOutputPathMap | None
+    led_current_map: LedCurrentMap | None
+    netlist_sha256: str | None
     reviewed_connector_references: tuple[str, ...]
 
 
@@ -114,6 +118,8 @@ def component_candidates(
     component_role_map: ComponentRoleMap | None = None,
     power_path_map: PowerPathMap | None = None,
     oscillator_output_path_map: OscillatorOutputPathMap | None = None,
+    led_current_map: LedCurrentMap | None = None,
+    netlist_sha256: str | None = None,
     reviewed_connector_references: tuple[str, ...] = (),
 ) -> tuple[Candidate, ...]:
     """Preserve the keyword-based component candidate interface."""
@@ -123,6 +129,8 @@ def component_candidates(
             component_role_map=component_role_map,
             power_path_map=power_path_map,
             oscillator_output_path_map=oscillator_output_path_map,
+            led_current_map=led_current_map,
+            netlist_sha256=netlist_sha256,
             reviewed_connector_references=reviewed_connector_references,
         )
     ).candidates
@@ -136,6 +144,7 @@ def scan_component_candidates(
     component_role_map = inputs.component_role_map
     power_path_map = inputs.power_path_map
     oscillator_output_path_map = inputs.oscillator_output_path_map
+    led_current_map = inputs.led_current_map
     reviewed_connector_references = inputs.reviewed_connector_references
     found: list[Candidate] = []
     found.extend(mosfet_gates_without_peer(observed))
@@ -278,4 +287,5 @@ def scan_component_candidates(
             )
         )
     found.extend(oscillator_output_path_candidates(observed, oscillator_output_path_map))
+    found.extend(led_current_range_candidates(observed, led_current_map, inputs.netlist_sha256))
     return ComponentCandidateScanResult(tuple(found))

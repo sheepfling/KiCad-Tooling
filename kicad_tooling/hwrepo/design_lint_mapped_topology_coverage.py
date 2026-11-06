@@ -13,6 +13,8 @@ from .design_lint_mapped_topology_models import (
 from .design_lint_mapped_topology_results import MappedTopologyFindingCounts
 from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_rule_types import DesignLintRuleId
+from .led_current_models import LedCurrentMap
+from .led_current_range import led_current_map_sha256
 from .oscillator_output_path_models import OscillatorOutputPathMap
 from .power_path_models import PowerPathMap, power_path_map_sha256
 from .power_sequence_models import PowerSequenceMap, power_sequence_map_sha256
@@ -73,6 +75,7 @@ def mapped_topology_coverage_runs(
     power_path_map: PowerPathMap | None = policy.power_path_map
     power_sequence_map: PowerSequenceMap | None = policy.power_sequence_map
     oscillator_path_map: OscillatorOutputPathMap | None = policy.oscillator_output_path_map
+    led_current_map: LedCurrentMap | None = policy.led_current_map
     return (
         _mapped_check_run(
             usb_rule_id,
@@ -117,5 +120,15 @@ def mapped_topology_coverage_runs(
             default_modes["oscillator.output_load_path_mismatch"]
             if "oscillator.output_load_path_mismatch" not in overrides
             else overrides["oscillator.output_load_path_mismatch"].mode,
+        ),
+        _mapped_check_run(
+            "component.mapped_led_current_range_mismatch",
+            None if led_current_map is None else led_current_map_sha256(led_current_map),
+            0 if led_current_map is None else len(led_current_map.leds),
+            netlist_sha256,
+            finding_counts.led_current_range_mismatch,
+            default_modes["component.mapped_led_current_range_mismatch"]
+            if "component.mapped_led_current_range_mismatch" not in overrides
+            else overrides["component.mapped_led_current_range_mismatch"].mode,
         ),
     )
