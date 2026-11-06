@@ -7,7 +7,9 @@ import os
 import shutil
 import sys
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
+from types import MappingProxyType
 
 from .ci_hosted_kicad10_images import KICAD_10_NATIVE_TOOLCHAINS
 from .ci_hosted_support import HostedLog, normalized_netlist_bytes, tooling_checkout_root
@@ -21,10 +23,12 @@ from .hwrepo.models import DesignLintPolicy
 from .hwrepo.native_report_parsing import read_netlist
 
 _RULE_ID = "connector.return_pin_shares_protocol_signal_net"
-_FIXTURE_HASHES = {
-    "fault": "8ac8180b2d26c0352d4262cddb74e86c5f346c76b905d7d9b1a3b8300493f5a0",
-    "control": "675be8d054c2aad583f023362a77e1a90d36c5c56e2b29ed3e48b933c36966c8",
-}
+_FIXTURE_HASHES: Mapping[str, str] = MappingProxyType(
+    {
+        "fault": "8ac8180b2d26c0352d4262cddb74e86c5f346c76b905d7d9b1a3b8300493f5a0",
+        "control": "675be8d054c2aad583f023362a77e1a90d36c5c56e2b29ed3e48b933c36966c8",
+    }
+)
 
 
 def connector_return_signal_net_fixture_lane(

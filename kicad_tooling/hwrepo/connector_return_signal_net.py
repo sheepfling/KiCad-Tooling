@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Set as AbstractSet
 
 from .bus_signal_pairs import (
     ethernet_data_pair_function_role,
@@ -122,7 +123,7 @@ def _mapped_return_signal_nets(
 def _protocol_signal_role(
     function: str,
     reference: str,
-    connector_references: set[str],
+    connector_references: AbstractSet[str],
     observed: NetlistContract,
 ) -> str | None:
     """Use existing exact protocol-role recognizers instead of net-name guesses."""
