@@ -42,8 +42,7 @@ pytestmark = [
 
 RULE_ID = "connector.return_pin_shares_protocol_signal_net"
 OWNER = (
-    "kicad_tooling/hwrepo/connector_return_signal_net.py"
-    "#return_pin_protocol_signal_net_candidates"
+    "kicad_tooling/hwrepo/connector_return_signal_net.py#return_pin_protocol_signal_net_candidates"
 )
 
 
@@ -53,11 +52,7 @@ def _source(
     shared: bool = True,
     dnp: tuple[str, ...] = (),
 ) -> NetlistContract:
-    nets = (
-        {"SDA_BUS": ("J1.1", "J1.2")}
-        if shared
-        else {"GND": ("J1.1",), "SDA_BUS": ("J1.2",)}
-    )
+    nets = {"SDA_BUS": ("J1.1", "J1.2")} if shared else {"GND": ("J1.1",), "SDA_BUS": ("J1.2",)}
     return NetlistContract(
         components={"J1": ComponentContract(value="Synthetic two-pin port", footprint="")},
         nets=nets,

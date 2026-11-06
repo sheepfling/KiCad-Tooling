@@ -36,7 +36,9 @@ def connector_return_signal_net_fixture_lane(
     if config.image != image:
         raise ValueError(f"{project}: native fixture image differs from its toolchain")
     if (config.kicad_version, config.image) not in KICAD_10_NATIVE_TOOLCHAINS:
-        raise ValueError(f"Connector return/signal fixtures do not cover KiCad {config.kicad_version}")
+        raise ValueError(
+            f"Connector return/signal fixtures do not cover KiCad {config.kicad_version}"
+        )
 
     fixture_root = (
         tooling_checkout_root() / "tests/fixtures/design_lint/connector-return-signal-net"
@@ -159,8 +161,12 @@ def connector_return_signal_net_fixture_lane(
                 or observed.pin_functions.get("J1.2") != "GND"
             ):
                 raise ValueError(f"Native {case} connector pin/function inventory changed")
-            signal_nets = tuple(sorted(net for net, pins in observed.nets.items() if "J1.1" in pins))
-            return_nets = tuple(sorted(net for net, pins in observed.nets.items() if "J1.2" in pins))
+            signal_nets = tuple(
+                sorted(net for net, pins in observed.nets.items() if "J1.1" in pins)
+            )
+            return_nets = tuple(
+                sorted(net for net, pins in observed.nets.items() if "J1.2" in pins)
+            )
             if signal_nets != expected_signal_nets or return_nets != expected_return_nets:
                 raise ValueError(
                     f"Native {case} assignments changed: SDA={signal_nets}, GND={return_nets}"
