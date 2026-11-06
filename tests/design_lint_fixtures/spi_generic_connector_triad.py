@@ -14,7 +14,7 @@ def generic_spi_connector_triad_netlist(
     nets = {
         "SPI_SCK": ("J1.1", "U1.1"),
         "SPI_MOSI": ("J1.2", "U1.2"),
-        "SPI_MISO": ("U1.3", *(('J1.3',) if include_data_output_contact else ())),
+        "SPI_MISO": ("U1.3", *(("J1.3",) if include_data_output_contact else ())),
         "BOARD_GND": ("J1.4", "U1.4"),
         "+3V3": ("U1.5",),
     }

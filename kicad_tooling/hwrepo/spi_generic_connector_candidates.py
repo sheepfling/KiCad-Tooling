@@ -99,9 +99,7 @@ def generic_spi_connector_triads(
                 "data_input": endpoint.data_input_net,
                 "data_output": endpoint.data_output_net,
             }
-            pins_by_role: dict[str, list[tuple[str, str]]] = {
-                role: [] for role in _ROLE_ORDER
-            }
+            pins_by_role: dict[str, list[tuple[str, str]]] = {role: [] for role in _ROLE_ORDER}
             ambiguous = False
             for number, function in zip(numbers, connector_functions, strict=True):
                 pin = f"{references[connector_key]}.{number}"

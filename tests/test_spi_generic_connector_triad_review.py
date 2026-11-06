@@ -94,13 +94,9 @@ def test_generic_contacts_on_exact_spi_triad_emit_review() -> None:
     assert finding.evidence["clock_net"] == ("SPI_SCK",)
     assert finding.evidence["clock_generic_connector_pins"] == ("J1.1",)
     assert finding.evidence["controller-to-peripheral data_net"] == ("SPI_MOSI",)
-    assert finding.evidence["controller-to-peripheral data_generic_connector_pins"] == (
-        "J1.2",
-    )
+    assert finding.evidence["controller-to-peripheral data_generic_connector_pins"] == ("J1.2",)
     assert finding.evidence["peripheral-to-controller data_net"] == ("SPI_MISO",)
-    assert finding.evidence["peripheral-to-controller data_generic_connector_pins"] == (
-        "J1.3",
-    )
+    assert finding.evidence["peripheral-to-controller data_generic_connector_pins"] == ("J1.3",)
     assert finding.evidence["SPI_endpoint_triads"] == (
         "U1:default:clock=U1.1/SPI_SCK;data_input=U1.2/SPI_MOSI;data_output=U1.3/SPI_MISO",
     )
@@ -110,9 +106,7 @@ def test_generic_contacts_on_exact_spi_triad_emit_review() -> None:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_named_connector_roles_and_current_pin_map_suppress_review() -> None:
-    named = generic_spi_connector_triad_netlist(
-        connector_functions=("SCK", "MOSI", "MISO", "GND")
-    )
+    named = generic_spi_connector_triad_netlist(connector_functions=("SCK", "MOSI", "MISO", "GND"))
     stale_map = ConnectorCoverageReport(
         status="INCOMPLETE",
         scope="Synthetic stale connector review",
@@ -140,7 +134,11 @@ def test_partial_ambiguous_dnp_and_incomplete_cases_are_quiet() -> None:
         update={"component_pin_numbers": {**observed.component_pin_numbers, "J1": ("1", "2", "3")}}
     )
     missing_endpoint_metadata = observed.model_copy(
-        update={"pin_electrical_types": {key: value for key, value in observed.pin_electrical_types.items() if key != "U1.3"}}
+        update={
+            "pin_electrical_types": {
+                key: value for key, value in observed.pin_electrical_types.items() if key != "U1.3"
+            }
+        }
     )
     duplicate_clock = observed.model_copy(
         update={"pin_functions": {**observed.pin_functions, "U1.5": "SCK"}}

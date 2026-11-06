@@ -36,7 +36,9 @@ class SpiGenericConnectorTriad:
         object.__setattr__(
             self,
             "role_connector_pins",
-            MappingProxyType({key: tuple(value) for key, value in self.role_connector_pins.items()}),
+            MappingProxyType(
+                {key: tuple(value) for key, value in self.role_connector_pins.items()}
+            ),
         )
         object.__setattr__(
             self,
