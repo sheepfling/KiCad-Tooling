@@ -349,6 +349,9 @@ def catalog_reachability_rule_ids() -> set[str]:
 def protocol_peer_candidate_rule_ids() -> set[str]:
     """Reach protocol and control-input candidate rules from synthetic netlists."""
     from tests.can_peer_reference_support import can_peer_reference_netlist
+    from tests.design_lint_fixtures.can_generic_connector_pair import (
+        generic_can_connector_pair_netlist,
+    )
     from tests.design_lint_fixtures.usb_generic_connector_pair import (
         generic_usb_connector_pair_netlist,
     )
@@ -382,6 +385,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
             }
         ),
         can_peer_reference_netlist(),
+        generic_can_connector_pair_netlist(),
         i2c_netlist(),
         i2c_netlist_with_parallel_sda(),
         i2c_netlist_with_pullup_rails(("+3V3", "+5V"), ("+3V3",)),

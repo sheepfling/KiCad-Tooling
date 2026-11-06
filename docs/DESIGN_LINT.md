@@ -780,7 +780,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 270 active rules.
+The catalog currently contains 271 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -2381,6 +2381,34 @@ copper. See the [data-path fixture README] and the
 
 [data-path fixture README]: ../tests/fixtures/design_lint/usb-data-path-native/README.md
 [peer-reference fixture README]: ../tests/fixtures/design_lint/usb-peer-reference-native/README.md
+
+## Review generic connector contacts on a CAN transceiver pair
+
+`bus.can_generic_connector_pair_review` asks for connector pinout review when
+generic `Pin_N` contacts on a complete connector inventory appear on both exact
+CANH and CANL nets of a fitted, completely inventoried U/IC endpoint. A
+source-matched connector map assigning the contacts to CANH and CANL, or an
+explicit `NOT_APPLICABLE` connector disposition, suppresses the prompt. Named
+connector functions, DNP components, incomplete inventories, and ambiguous or
+one-sided assignments stay quiet. The heuristic does not infer connector
+identity, require power or return pins to be common, establish termination, or
+prove PCB copper or off-board wiring. Project policy can set it to `block` or
+`off`, or ignore an exact finding.
+
+Synthetic generic-pin fault, named-role control, source-matched map,
+incomplete-evidence, override, ignore, and mapping-order cases are covered.
+Tooling-owned KiCad schematics are exported twice using digest-pinned KiCad
+10.0.0 and 10.0.5 images; see the
+[fixture record](../tests/fixtures/design_lint/can-generic-connector-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_can_generic_connector_pair_review.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.can_generic_connector_pair_review")'
+
+KICAD_RUN_NATIVE_CAN_GENERIC_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_can_generic_connector_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_generic_connector_pair_review")'
+```
 
 ## Review a mapped crystal load network
 

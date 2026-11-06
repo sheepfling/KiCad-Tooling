@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 270 rules are implemented with synthetic regression coverage.
+The following 271 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 270 active rules.
+The catalog currently contains 271 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -630,6 +630,7 @@ skipped under prerelease policy.
 - `bus.can_peer_assignment_divergence`
 - `bus.can_peer_reference_review`
 - `bus.can_line_polarity_label_mismatch`
+- `bus.can_generic_connector_pair_review`
 - `bus.can_signal_on_named_rail`
 - `bus.can_line_on_named_rail`
 - `bus.ethernet_data_label_mismatch`
@@ -721,6 +722,16 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **LINT-290 generic CAN connector pair review:** A complete connector with
+  generic `Pin_N` contacts on both exact CANH/CANL nets of a fitted,
+  completely inventoried U/IC endpoint prompts for pinout review. A
+  source-matched map or reviewed `NOT_APPLICABLE` disposition suppresses it.
+  Named pins, DNP parts, incomplete metadata, and ambiguous or one-sided
+  assignments stay quiet. The finding does not infer connector identity,
+  require power or return pins to be common, or prove bus topology or PCB
+  continuity. Synthetic fault/control cases and repeatable, digest-pinned
+  KiCad 10.0.0/10.0.5 exports are registered; real-board applicability and
+  reviewer value remain unmeasured.
 - **LINT-288 USB-C VBUS capacitor review:** A likely fitted USB-C connector
   prompts `REVIEW` when native pin functions show unique CC1/CC2, VBUS, and
   return roles with unambiguous assignments, but no fitted, exactly inventoried
@@ -3512,7 +3523,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 270 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 271 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -18899,6 +18910,39 @@ acceptance threads while new lint features proceed:
   interface_lint and design_lint_rule(rule_id="bus.usb_generic_connector_phy_pair_review")'`.
   The exact native test uses the existing
   `KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1` lane.
+
+#### LINT-290 — Prompt review of generic connector pins assigned to CAN pairs
+
+- **Rule:** `bus.can_generic_connector_pair_review`, default `review`.
+- **Trigger:** A fitted U/IC endpoint has complete, unique native pin metadata
+  and exactly one CANH and CANL pin on distinct, unambiguous nets. A completely
+  inventoried connector candidate has generic `Pin_N` contacts on both exact
+  nets. A source-matched connector map assigning those contacts to CANH/CANL,
+  or an explicit `NOT_APPLICABLE` connector disposition, suppresses the prompt.
+- **Purpose:** Generic connector pins can conceal an external CAN interface in
+  the schematic netlist. The review prompt asks whether the connector belongs
+  to that bus and whether its exact pinout is documented. It does not infer
+  connector identity or intended contact connections, and it never declares
+  grounds or supply contacts common.
+- **Evidence and limits:** Candidate evidence retains the connector pin count,
+  generic contacts and functions, exact line nets, and the recognized native
+  CANH/CANL endpoint assignments. DNP components, named connector roles,
+  incomplete or inconsistent inventories, ambiguous assignments, same-net
+  endpoint pairs, and one-sided connector matches stay quiet. The heuristic
+  does not establish bus topology, termination, shield/return policy, off-board
+  wiring, or PCB copper continuity.
+- **Fixtures:** Synthetic generic-pin fault, named-role control, source-matched
+  connector map, explicit not-applicable disposition, incomplete metadata,
+  ambiguous assignment, override, exact ignore, and mapping-order cases.
+  Tooling-owned fault/control schematics are hash-pinned and exported twice
+  with the exact KiCad 10.0.0 and 10.0.5 container images. These establish
+  deterministic fixture behavior and export compatibility, not field
+  precision or reviewer value.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_can_generic_connector_pair_review.py -m 'design_lint and
+  interface_lint and design_lint_rule(rule_id="bus.can_generic_connector_pair_review")'`.
+  The exact native test uses
+  `KICAD_RUN_NATIVE_CAN_GENERIC_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate
 

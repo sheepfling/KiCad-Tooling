@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from .bus_signal_pairs import ComplementaryPinFunctionAliasResolution
 from .can_peer_reference_scan import CanPeerReferenceScan
+from .connector_coverage_models import ConnectorCoverageReport
 from .design_lint_types import Candidate
 from .i2c_address_inputs import I2cAddressCandidateInput
 from .i2c_peer_reference_scan import I2cPeerReferenceScan
@@ -33,6 +34,7 @@ class BusCandidateInputs:
     component_peer_findings: tuple[Candidate, ...] = ()
     pcb_differential_pair_rule_map: PcbDifferentialPairRuleMap | None = None
     reviewed_connector_references: tuple[str, ...] = ()
+    connector_coverage: ConnectorCoverageReport | None = None
 
     def __post_init__(self) -> None:
         for observed in (self.i2c_address.observed, self.i2c_pullup.observed):

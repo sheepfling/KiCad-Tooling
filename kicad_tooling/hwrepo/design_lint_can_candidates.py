@@ -17,6 +17,10 @@ from .can_termination_heuristics import (
 from .can_tx_output_sharing import can_tx_output_sharing_candidates
 from .can_tx_rx_label_mismatch import can_tx_rx_label_mismatch_candidates
 from .can_tx_rx_same_net import can_tx_rx_same_net_candidates
+from .connector_coverage_models import ConnectorCoverageReport
+from .design_lint_can_generic_connector_candidates import (
+    generic_can_connector_pair_review_candidates,
+)
 from .design_lint_can_peer_candidate_evidence import CanPeerCandidate
 from .design_lint_can_peer_reference_candidate_evidence import (
     CanPeerReferenceCandidate,
@@ -31,6 +35,8 @@ def can_candidates(
     observed: NetlistContract,
     peer_reference_scan: CanPeerReferenceScan | None = None,
     component_peer_findings: tuple[Candidate, ...] = (),
+    reviewed_connector_references: tuple[str, ...] = (),
+    connector_coverage: ConnectorCoverageReport | None = None,
 ) -> tuple[Candidate, ...]:
     """Build CAN termination and peer-assignment review prompts."""
     found: list[Candidate] = []
@@ -64,6 +70,13 @@ def can_candidates(
     found.extend(can_tx_rx_same_net_candidates(observed))
     found.extend(can_tx_rx_label_mismatch_candidates(observed))
     found.extend(can_tx_output_sharing_candidates(observed))
+    found.extend(
+        generic_can_connector_pair_review_candidates(
+            observed,
+            reviewed_connector_references,
+            connector_coverage,
+        )
+    )
     for divergence in can_peer_assignment_divergences(observed):
         found.append(
             CanPeerCandidate.from_source_evidence(

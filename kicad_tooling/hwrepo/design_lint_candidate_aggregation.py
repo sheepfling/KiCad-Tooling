@@ -263,7 +263,12 @@ def scan_candidate_result(
     component_peer_findings = component_peer_result.candidates
     found.extend(component_peer_findings)
     bus_result = scan_bus_candidates(
-        replace(inputs.bus, component_peer_findings=component_peer_findings)
+        replace(
+            inputs.bus,
+            component_peer_findings=component_peer_findings,
+            connector_coverage=inputs.connector.coverage,
+            reviewed_connector_references=reviewed_connector_references,
+        )
     )
     found.extend(bus_result.candidates)
     if schematic_geometry is not None:

@@ -185,6 +185,9 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_usb_generic_connector_native_fixture_lane.py": frozenset(
             {"interface_lint", "native_kicad", "slow"}
         ),
+        "test_can_generic_connector_native_fixture_lane.py": frozenset(
+            {"interface_lint", "native_kicad", "slow"}
+        ),
         "test_usb_superspeed_peer_reference_native_fixture_lane.py": frozenset({"interface_lint"}),
         "test_electrical_can_termination.py": frozenset({"interface_lint"}),
         "test_design_lint_i2c_missing_pullups.py": frozenset({"interface_lint"}),
