@@ -171,12 +171,18 @@ filename-family count lacks the route, ownership, and cohesion context needed
 to judge the group. It is not a new complaint or a line-split request.
 
 The pinned catalog still has 62 selectors and no `test-layout` selector. The
-live upstream refs remain on `main` at
-`c880093f7ccb73c2af78ffb5c7de8c15d2b75b0e`; `v0.0.3` remains the only
-compared tag adding a selector, `test-layout`, which remains unsuitable for
-behavior-organized tests. `file-size`, `package-boundaries`, and
-`source-test-coverage` remain deferred until their route, ownership, and
-source/test evidence contracts are defined. No new gate is ready to enable.
+live upstream `main` at
+`c880093f7ccb73c2af78ffb5c7de8c15d2b75b0e` has the same 62 selector contracts
+as `v0.0.2`; its catalog source hash is
+`7920cfc31dd9ea5a14e4b8d8800899061d9f7fc6879d281c85e53a3bbcdd799e`. The
+latest tag remains `v0.0.3`, which adds only `test-layout`; that selector
+remains unsuitable for behavior-organized tests. The untagged
+`release/v0.1.0` branch at `d25ded12d33a07858a34a784b9d9e73631dd249a` has 60
+selector contracts, adds none over `main`, and removes `repeated-numeric-limits`
+and `source-test-coverage`. No branch-only gate is ready for this consumer.
+`file-size`, `package-boundaries`, and `source-test-coverage` remain deferred
+until their route, ownership, and source/test evidence contracts are defined.
+No new gate is ready to enable.
 Raw profile reports, the catalog, upstream refs, and before/after inventories
 are under the ignored
 `build/alphus-v0.0.2/resniff-2026-11-06-release-board-variant-selection/`;

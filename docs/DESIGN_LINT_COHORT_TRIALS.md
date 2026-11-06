@@ -66,17 +66,17 @@ for dispositions and timing; leave unmeasured values unstated.
   passed in all runs. This does not establish that either condition expressed
   the intended design rule, but it disproves the proposed simple case-mismatch
   predicate for the versions tested.
-- **Disposition:** No item-type case lint was adopted. LINT-283 adds a
-  source-bound default-REVIEW prompt for named custom rules with no direct
-  `(constraint ...)` clauses. LINT-284 independently adds a default-REVIEW
-  prompt for exact repeated names, consistent with KiCad's unique-name
-  description. Its synthetic fault/control and native sentinel lane test the
-  same source property without adopting candidate implementation code. The
-  review prompt does not claim that either duplicate is a board defect or
-  determine which rule should be renamed. No cohort code, rule files, board,
-  or project data was copied. See the LINT-283 and LINT-284 entries in the
-  [design-lint backlog](DESIGN_LINT_BACKLOG.md#lint-284--review-duplicate-custom-drc-rule-names)
-  and the tooling-owned [negative case trial](../tests/test_pcb_dru_item_type_case_native.py).
+- **Disposition:** No item-type case lint was adopted. LINT-283 adds a source-bound default-REVIEW
+  prompt for named custom rules with no direct `(constraint ...)` clauses. LINT-284 independently
+  adds a default-REVIEW prompt for exact repeated names, consistent with KiCad's unique-name
+  description. Its synthetic fault/control and native sentinel lane test the same source property
+  without adopting candidate implementation code. The review prompt does not claim that either
+  duplicate is a board defect or determine which rule should be renamed. No cohort code, rule files,
+  board, or project data was copied. See the LINT-283 and LINT-284 entries in the
+  [design-lint backlog](DESIGN_LINT_BACKLOG.md#lint-284--review-duplicate-custom-drc-rule-names),
+  the tooling-owned
+  [negative case fixture record](../tests/fixtures/design_lint/pcb-dru-item-type-case/README.md),
+  and its [native test](../tests/test_pcb_dru_item_type_case_native.py).
 
 ### Native trial: conflicting custom DRC severities
 

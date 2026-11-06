@@ -3153,6 +3153,8 @@ mapping compatibility projection.
 
 Conflicting assignments, unselected-project mappings, and existing export
 requirements are unchanged. Release manifest JSON and report behavior are
-unchanged. Six focused route, architecture, release, and compatibility modules
-passed 38 tests and 19 subtests. Ruff and formatting passed; targeted Pyright
-reported zero diagnostics. No native KiCad lane or full CI run was required.
+unchanged. A fresh focused selection across board-variant selection, release,
+readiness, release-contract, release-operation, and capability-architecture
+suites passed 57 tests and 5 subtests. Ruff and formatting passed; targeted
+Pyright reported zero diagnostics. No native KiCad lane or full CI run was
+required.
