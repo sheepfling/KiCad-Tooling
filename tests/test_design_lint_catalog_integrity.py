@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import rule_catalog
-from tests.test_design_lint_catalog_fixtures import _PARITY_FIXTURES_BY_RULE
+from tests.design_lint_catalog_fixture_refs import _PARITY_FIXTURES_BY_RULE
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
