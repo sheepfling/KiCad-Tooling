@@ -747,16 +747,13 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-320):** Added a default-REVIEW prompt for fully
-  resolved, project-mapped pair routes whose ordered copper-layer sequences
-  differ, including equal-length synthetic fault/control boards generated and
-  inspected with digest-pinned KiCad 10.0.0 and 10.0.5. This is a routing
-  review cue; it does not claim the pair is electrically defective or require
-  a common layer profile. The exact prerelease selector passed 26 tests with
-  7,622 deselected, including both native Docker fixtures. GitHub Actions
-  run `42421534021` passed the tagged gate, package checks, and separate-project
-  wheel check.
-  Tag `v0.5.3rc537` points to lint commit `04ca57cf`.
+- **Latest progress (LINT-322):** The generic UART connector review now shows
+  every remaining inventoried connector contact with its native pin function
+  and assigned-net state. The focused synthetic/catalog/CLI-MCP gate passed
+  12 tests; exact native Docker fault/control exports passed on KiCad 10.0.0
+  and 10.0.5. The extra contacts remain review evidence, not inferred returns.
+  Tag `v0.5.3rc539` is the focused prerelease gate for this increment; its
+  hosted acceptance outcome is pending.
 - **LINT-300 two-pin serial connector return review (completed v0.5.3rc508):**
   The scoped local gate passed 39 tests, including the digest-pinned native
   fault/control lane; hosted acceptance passed in GitHub Actions run
@@ -20082,7 +20079,36 @@ acceptance threads while new lint features proceed:
   'design_lint and connector_lint and power_lint and native_kicad and
   design_lint_rule(rule_id="connector.unconnected_power_input")'`. Set
   `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` to run on the pinned KiCad 10.0.0 and
-  10.0.5 images.
+  10.0.5 images. Hosted acceptance for tag `v0.5.3rc538` passed in GitHub
+  Actions run `42425361277`, including its separate-project installed-wheel
+  check.
+
+#### LINT-322 — Include other connector contacts in generic UART review evidence
+
+- **Rule:** `bus.serial_generic_connector_pair_review`, default `review`; the
+  trigger and policy are unchanged.
+- **Gap:** When a generic connector carries the exact TX/RX nets of a recognized
+  native UART endpoint, the review prompt previously omitted its remaining
+  contacts. A reviewer could see that a connector pinout needed review without
+  seeing an open or assigned extra contact in the finding itself.
+- **Evidence:** The finding now records each remaining inventoried contact's
+  exact pin, native pin function, and assigned net state. A tooling-owned
+  synthetic case includes a generic open contact; the native fault fixture
+  proves that extra assigned contacts are retained on both KiCad 10.0.0 and
+  10.0.5. The named-role control stays quiet, and report output remains stable
+  when source mappings and connector pin order are reordered. Changing an
+  extra contact assignment changes the source-bound fingerprint, and CLI/MCP
+  results match through the shared typed service.
+- **Boundary:** Contact functions and net names are evidence only. The rule
+  does not infer that an open or ground-like contact is a required return,
+  decide whether a connector belongs to the serial interface, or establish
+  off-board wiring or PCB copper. Existing project map, not-applicable,
+  override, and ignore behavior remains available.
+- **Selection:** Run `tests/test_serial_generic_connector_pair_review.py` and
+  `tests/test_serial_generic_connector_native_fixture_lane.py` with
+  `design_lint_rule(rule_id="bus.serial_generic_connector_pair_review")`.
+  The native Docker lane uses
+  `KICAD_RUN_NATIVE_SERIAL_GENERIC_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate
 

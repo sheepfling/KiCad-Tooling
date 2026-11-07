@@ -2562,13 +2562,18 @@ same-net endpoints, and one-sided matches stay quiet. The heuristic does not
 infer connector purpose or direction from labels, establish UART membership,
 require common grounds or power, or prove copper or off-board wiring. It can
 co-report with the separate label-based serial peer review when both patterns
-apply. Project policy can set it to `block` or `off`, or ignore one exact
-finding.
+apply. The finding also lists every other inventoried connector contact with
+its native pin function and assigned-net state. Those extra contacts are
+review context only; an open or ground-like contact is not treated as a
+required return. Project policy can set it to `block` or `off`, or ignore one
+exact finding.
 
 Synthetic neutral-label fault, named-role control, source-matched map,
-not-applicable disposition, incomplete evidence, override, ignore, and
-mapping-order cases are covered. Tooling-owned KiCad schematics are exported
-twice using digest-pinned KiCad 10.0.0 and 10.0.5 images; see the
+not-applicable disposition, incomplete evidence, open extra contact, changed
+extra-contact assignment, override, ignore, and mapping-order cases are
+covered, with CLI/MCP parity. Tooling-owned KiCad schematics are exported
+twice using digest-pinned KiCad 10.0.0 and 10.0.5 images; the native finding
+asserts its extra-contact evidence. See the
 [fixture record](../tests/fixtures/design_lint/serial-generic-connector-native/README.md).
 An explicit label-only control confirms that `UART_TX` and `UART_RX` net names
 do not replace native endpoint pin functions for this rule.

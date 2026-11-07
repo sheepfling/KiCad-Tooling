@@ -6,6 +6,15 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)
+class SerialGenericConnectorContact:
+    """One connector contact outside the recognized generic UART pair."""
+
+    pin: str
+    function: str
+    nets: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class SerialGenericEndpointPair:
     """One fitted IC's exact native UART TX/RX assignments."""
 
@@ -30,3 +39,4 @@ class SerialGenericConnectorPair:
     rx_connector_functions: tuple[str, ...]
     rx_net: str
     endpoint_pairs: tuple[SerialGenericEndpointPair, ...]
+    other_connector_contacts: tuple[SerialGenericConnectorContact, ...] = ()

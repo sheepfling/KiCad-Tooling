@@ -49,6 +49,22 @@ def _finding(report: DesignLintReport) -> DesignLintFinding:
     return next(item for item in report.findings if item.rule_id == RULE_ID)
 
 
+def _connector_with_open_generic_extra_contact() -> NetlistContract:
+    observed = generic_serial_connector_pair_netlist(
+        connector_functions=("Pin_1", "Pin_2", "Pin_3", "Pin_4")
+    )
+    nets = {
+        name: tuple(pin for pin in pins if pin.casefold() != "j1.3")
+        for name, pins in observed.nets.items()
+    }
+    return observed.model_copy(
+        update={
+            "nets": {name: pins for name, pins in nets.items() if pins},
+            "unconnected_nets": {"unconnected-(J1-Pin_3-Pad3)": ("J1.3",)},
+        }
+    )
+
+
 def _source_matched_pin_map() -> ConnectorCoverageReport:
     signals = (
         ("1", "UART_TX", "LINE_A"),
@@ -94,9 +110,42 @@ def test_generic_contacts_on_exact_native_uart_pair_emit_review() -> None:
     assert finding.evidence["TX_generic_connector_pins"] == ("J1.1",)
     assert finding.evidence["RX_net"] == ("LINE_B",)
     assert finding.evidence["RX_generic_connector_pins"] == ("J1.2",)
+    assert finding.evidence["other_connector_contacts"] == (
+        "J1.3 function=GND nets=BOARD_GND",
+        "J1.4 function=3V3 nets=+3V3",
+    )
     assert finding.evidence["UART_endpoint_pairs"] == ("U1:default:TX=U1.1/LINE_A;RX=U1.2/LINE_B",)
     assert "does not infer connector purpose or signal direction from net labels" in finding.message
     assert "common grounds or power" in finding.message
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_unassigned_extra_generic_contact_is_visible_without_role_inference() -> None:
+    finding = _finding(_report(_connector_with_open_generic_extra_contact()))
+
+    assert finding.evidence["other_connector_contacts"] == (
+        "J1.3 function=Pin_3 nets=unassigned",
+        "J1.4 function=Pin_4 nets=+3V3",
+    )
+    assert "does not infer" in finding.message
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_other_contact_assignment_changes_source_bound_review_fingerprint() -> None:
+    unassigned = _connector_with_open_generic_extra_contact()
+    assigned = unassigned.model_copy(
+        update={
+            "nets": {**unassigned.nets, "AUXILIARY": ("J1.3",)},
+            "unconnected_nets": {},
+        }
+    )
+
+    unassigned_finding = _finding(_report(unassigned))
+    assigned_finding = _finding(_report(assigned))
+
+    assert unassigned_finding.evidence["other_connector_contacts"][0].endswith("nets=unassigned")
+    assert assigned_finding.evidence["other_connector_contacts"][0].endswith("nets=AUXILIARY")
+    assert unassigned_finding.fingerprint != assigned_finding.fingerprint
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -232,6 +281,10 @@ def test_report_is_stable_when_netlist_mappings_are_reordered() -> None:
             "nets": dict(reversed(tuple(observed.nets.items()))),
             "pin_functions": dict(reversed(tuple(observed.pin_functions.items()))),
             "pin_electrical_types": dict(reversed(tuple(observed.pin_electrical_types.items()))),
+            "component_pin_numbers": {
+                **observed.component_pin_numbers,
+                "J1": tuple(reversed(observed.component_pin_numbers["J1"])),
+            },
         }
     )
 

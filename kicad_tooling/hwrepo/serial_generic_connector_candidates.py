@@ -12,6 +12,7 @@ from .connector_identity import connector_candidate_references, pin_function_is_
 from .connector_pin_metadata import connector_pin_metadata_matches_inventory
 from .netlist_contract_models import ComponentContract, NetlistContract
 from .serial_generic_connector_models import (
+    SerialGenericConnectorContact,
     SerialGenericConnectorPair,
     SerialGenericEndpointPair,
 )
@@ -118,6 +119,31 @@ def serial_generic_connector_pairs(
                 tx_assignments, tx_net, "tx", mapped_by_pin
             ) and _source_map_covers_pair(rx_assignments, rx_net, "rx", mapped_by_pin):
                 continue
+            pair_pin_keys = {
+                pin.casefold() for pin, _function in (*tx_assignments, *rx_assignments)
+            }
+            other_contacts = tuple(
+                sorted(
+                    (
+                        SerialGenericConnectorContact(
+                            pin=f"{references[connector_key]}.{number}",
+                            function=function or "",
+                            nets=tuple(
+                                sorted(
+                                    assignments.get(
+                                        f"{references[connector_key]}.{number}".casefold(),
+                                        set(),
+                                    ),
+                                    key=lambda item: (item.casefold(), item),
+                                )
+                            ),
+                        )
+                        for number, function in zip(numbers, connector_functions, strict=True)
+                        if f"{references[connector_key]}.{number}".casefold() not in pair_pin_keys
+                    ),
+                    key=lambda item: (item.pin.casefold(), item.pin),
+                )
+            )
             findings.append(
                 SerialGenericConnectorPair(
                     connector_reference=references[connector_key],
@@ -138,6 +164,7 @@ def serial_generic_connector_pairs(
                             ),
                         )
                     ),
+                    other_connector_contacts=other_contacts,
                 )
             )
 

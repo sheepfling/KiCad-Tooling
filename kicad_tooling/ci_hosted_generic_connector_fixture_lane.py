@@ -38,11 +38,13 @@ def generic_connector_fixture_lane(
     fixture_sources: Mapping[str, Path],
     expected_subject: str,
     role_evidence: tuple[RoleEvidence, ...],
+    expected_evidence: tuple[tuple[str, tuple[str, ...]], ...] = (),
 ) -> dict[str, NetlistContract]:
     """Export each synthetic source twice, verify evidence, and retain typed observations.
 
     Each role tuple is ``(label, net_key, connector_pins_key, endpoint_pin,
-    connector_pin)``. Protocol wrappers own the rule and fixture identity.
+    connector_pin)``. ``expected_evidence`` requires additional exact native
+    finding fields. Protocol wrappers own the rule and fixture identity.
     """
     root = root.resolve()
     config = selected_config(root, project)
@@ -175,6 +177,12 @@ def generic_connector_fixture_lane(
                 raise ValueError(f"Native generic {protocol} finding omitted the exact pin group")
             evidence = dict(finding_signatures[0][0][1])
             observed = observations[0]
+            for evidence_key, expected_values in expected_evidence:
+                if evidence.get(evidence_key) != expected_values:
+                    raise ValueError(
+                        f"Native {protocol} candidate did not retain the expected "
+                        f"{evidence_key} evidence"
+                    )
             for label, net_key, pins_key, endpoint_pin, connector_pin in role_evidence:
                 matching_nets = tuple(
                     net

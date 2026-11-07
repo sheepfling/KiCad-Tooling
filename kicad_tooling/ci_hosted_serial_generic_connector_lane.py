@@ -36,4 +36,13 @@ def serial_generic_connector_fixture_lane(
             ("TX", "TX_net", "TX_generic_connector_pins", "U1.1", "J1.1"),
             ("RX", "RX_net", "RX_generic_connector_pins", "U1.2", "J1.2"),
         ),
+        expected_evidence=(
+            (
+                "other_connector_contacts",
+                (
+                    "J1.3 function=Pin_3 nets=SPI_MISO",
+                    "J1.4 function=Pin_4 nets=AUX",
+                ),
+            ),
+        ),
     )

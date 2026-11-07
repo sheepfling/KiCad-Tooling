@@ -8,8 +8,11 @@ net labels assigned to fitted U1 pins whose native functions and electrical
 types identify UART TXD/RXD. The heuristic should ask whether the connector
 belongs to that serial interface and whether its pinout is documented.
 `control.kicad_sch` gives the corresponding connector contacts explicit TXD/RXD
-functions; the generic-pin prompt should stay quiet. Other connector contacts
-and a separate board return remain outside this rule's inference.
+functions; the generic-pin prompt should stay quiet. On the fault, the report
+also retains the other connector contacts, their native pin functions, and
+their native net assignments. This is review context only: it does not infer
+that an extra contact is a return, require that it be connected, or connect it
+to board ground.
 
 The digest-pinned KiCad 10.0.0 and 10.0.5 lane exports each source twice, then
 compares normalized netlists and lint findings. Source hashes are registered in
