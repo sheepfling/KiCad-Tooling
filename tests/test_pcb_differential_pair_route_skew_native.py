@@ -40,6 +40,7 @@ from tests.synthetic_design_lint_project import PINNED_NATIVE_KICAD_IMAGES
 SOURCE_ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_ROOT = SOURCE_ROOT / "tests/fixtures/design_lint/differential-pair-route-skew-native"
 RULE_ID = "pcb.differential_pair_route_skew"
+LAYER_TRANSITION_RULE_ID = "pcb.differential_pair_route_layer_mismatch"
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -134,6 +135,7 @@ def _prepare_output(version: str) -> Path:
 
 
 @pytest.mark.parametrize(("version", "image"), tuple(PINNED_NATIVE_KICAD_IMAGES.items()))
+@pytest.mark.design_lint_rule(rule_id=LAYER_TRANSITION_RULE_ID)
 def test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots(
     version: str,
     image: str,
@@ -155,7 +157,7 @@ def test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots(
     netlist_sha256 = hashlib.sha256(source.model_dump_json().encode("utf-8")).hexdigest()
     probe_sha256 = expected_probe_sha256()
     reports: dict[str, PcbDifferentialPairRouteSkewReport] = {}
-    for case in ("control", "fault"):
+    for case in ("control", "fault", "layer-control", "layer-fault"):
         board = work / f"boards/{case}.kicad_pcb"
         raw_snapshot_path = work / f"boards/{case}.native.json"
         command = _container_python(
@@ -241,6 +243,32 @@ def test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots(
     assert findings[0].rule_id == RULE_ID
     assert findings[0].evidence["maximum_skew_nm"] == ("500000",)
 
+    layer_control = reports["layer-control"]
+    layer_fault = reports["layer-fault"]
+    for report in (layer_control, layer_fault):
+        assert report.status == "COMPLETE"
+        assert report.entries[0].status == "WITHIN_LIMIT"
+        assert report.entries[0].measured_skew_nm == 0
+
+    layer_control_candidates = pcb_requirement_coverage_candidates(
+        pcb_signal_path_coverage=PcbSignalPathRuleCoverageReport(route_skew=layer_control)
+    )
+    assert all(item.rule_id != LAYER_TRANSITION_RULE_ID for item in layer_control_candidates)
+    layer_fault_candidates = pcb_requirement_coverage_candidates(
+        pcb_signal_path_coverage=PcbSignalPathRuleCoverageReport(route_skew=layer_fault)
+    )
+    layer_findings = [
+        item for item in layer_fault_candidates if item.rule_id == LAYER_TRANSITION_RULE_ID
+    ]
+    assert len(layer_findings) == 1
+    assert layer_findings[0].evidence["route_layer_profiles"] == (
+        "negative-path: USB_DN J1.2 to U1.2; F.Cu -> B.Cu",
+        "positive-path: USB_DP J1.1 to U1.1; F.Cu",
+    )
+    layer_fault_paths = {item.path_id: item for item in layer_fault.entries[0].paths}
+    assert layer_fault_paths["positive-path"].track_layers == ("F.Cu",)
+    assert layer_fault_paths["negative-path"].track_layers == ("F.Cu", "B.Cu")
+
     manifest: dict[str, str | int | None] = {
         "kicad_version": version,
         "image": image,
@@ -254,6 +282,16 @@ def test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots(
         "fault_snapshot_sha256": digest(work / "boards/fault.snapshot.json"),
         "fault_command_sha256": digest(work / "boards/fault.command.json"),
         "fault_route_skew_sha256": digest(work / "boards/fault.route-skew.json"),
+        "layer_control_board_sha256": digest(work / "boards/layer-control.kicad_pcb"),
+        "layer_control_snapshot_sha256": digest(work / "boards/layer-control.snapshot.json"),
+        "layer_control_route_skew_sha256": digest(work / "boards/layer-control.route-skew.json"),
+        "layer_fault_board_sha256": digest(work / "boards/layer-fault.kicad_pcb"),
+        "layer_fault_snapshot_sha256": digest(work / "boards/layer-fault.snapshot.json"),
+        "layer_fault_route_skew_sha256": digest(work / "boards/layer-fault.route-skew.json"),
+        "layer_fault_route_profiles": (
+            f"negative={'->'.join(layer_fault_paths['negative-path'].track_layers)};"
+            f"positive={'->'.join(layer_fault_paths['positive-path'].track_layers)}"
+        ),
         "measured_skew_nm": fault_entry.measured_skew_nm,
         "maximum_skew_nm": fault_entry.max_skew_nm,
     }

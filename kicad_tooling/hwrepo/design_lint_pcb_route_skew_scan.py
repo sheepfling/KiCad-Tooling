@@ -30,6 +30,36 @@ def route_skew_enabled(policy: DesignLintPolicy) -> bool:
     return route_skew_requested(requirements) and mode != "off"
 
 
+def route_layer_transition_enabled(policy: DesignLintPolicy) -> bool:
+    """Return whether mapped pair layer-profile review is enabled by project policy."""
+    requirements = policy.pcb_signal_path_rule_map
+    override = next(
+        (
+            item
+            for item in policy.rules
+            if item.rule_id == "pcb.differential_pair_route_layer_mismatch"
+        ),
+        None,
+    )
+    mode: RouteSkewMode = "review" if override is None else override.mode
+    return route_skew_requested(requirements) and mode != "off"
+
+
+def route_measurement_enabled(policy: DesignLintPolicy) -> bool:
+    """Return whether either mapped pair-route rule needs native route geometry."""
+    return route_skew_enabled(policy) or route_layer_transition_enabled(policy)
+
+
+def route_measurement_mode(policy: DesignLintPolicy) -> RouteSkewMode:
+    """Keep shared route evidence available when only layer-profile review is active."""
+    override = next(
+        (item for item in policy.rules if item.rule_id == "pcb.differential_pair_route_skew"),
+        None,
+    )
+    mode: RouteSkewMode = "review" if override is None else override.mode
+    return "review" if mode == "off" and route_layer_transition_enabled(policy) else mode
+
+
 def measure_route_skew_for_geometry_scan(
     report: PcbSignalPathRuleCoverageReport,
     *,
@@ -40,13 +70,9 @@ def measure_route_skew_for_geometry_scan(
 ) -> PcbSignalPathRuleCoverageReport:
     """Measure route skew from the one native snapshot captured for PCB geometry."""
     requirements = policy.pcb_signal_path_rule_map
-    if not route_skew_enabled(policy) or requirements is None:
+    if not route_measurement_enabled(policy) or requirements is None:
         return report
-    override = next(
-        (item for item in policy.rules if item.rule_id == "pcb.differential_pair_route_skew"),
-        None,
-    )
-    mode: RouteSkewMode = "review" if override is None else override.mode
+    mode = route_measurement_mode(policy)
     if coach.observed is None:
         raise ValueError("Source-bound schematic netlist is unavailable for route-skew analysis")
     coverage = measure_differential_pair_route_skew(

@@ -15,6 +15,8 @@ from kicad_tooling.hwrepo.design_lint_pcb_route_skew_policy import (
 )
 from kicad_tooling.hwrepo.design_lint_pcb_route_skew_scan import (
     measure_route_skew_for_geometry_scan,
+    route_measurement_enabled,
+    route_measurement_mode,
     route_skew_enabled,
 )
 from kicad_tooling.hwrepo.models import (
@@ -37,6 +39,7 @@ from tests.design_lint_fixtures.pcb_differential_pair_route_skew import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint]
 
 RULE_ID = "pcb.differential_pair_route_skew"
+LAYER_TRANSITION_RULE_ID = "pcb.differential_pair_route_layer_mismatch"
 RouteSkewMode = Literal["review", "block", "off"]
 
 
@@ -103,6 +106,93 @@ def test_equal_routes_are_within_zero_skew_bound(tmp_path: Path) -> None:
 
     assert report.status == "COMPLETE"
     assert report.entries[0].measured_skew_nm == report.entries[0].max_skew_nm == 0
+
+
+@pytest.mark.design_lint_rule(rule_id=LAYER_TRANSITION_RULE_ID)
+def test_equal_length_pair_routes_with_different_layer_profiles_request_review(
+    tmp_path: Path,
+) -> None:
+    report = measure_differential_pair_route_skew(
+        route_map(maximum_skew_nm=0),
+        source_netlist(),
+        geometry_evidence(
+            tmp_path,
+            route_snapshot(
+                positive_length_nm=1_000_000,
+                negative_length_nm=1_000_000,
+                negative_layer_transition=True,
+            ),
+        ),
+        source_hashes(),
+        "d" * 64,
+        "review",
+    )
+
+    assert report.status == "COMPLETE"
+    assert report.entries[0].measured_skew_nm == 0
+    candidates = pcb_requirement_coverage_candidates(
+        pcb_signal_path_coverage=PcbSignalPathRuleCoverageReport(route_skew=report)
+    )
+    findings = [item for item in candidates if item.rule_id == LAYER_TRANSITION_RULE_ID]
+    assert len(findings) == 1
+    assert findings[0].evidence["route_layer_profiles"] == (
+        "negative-path: USB_DN J1.2 to U1.2; F.Cu -> B.Cu",
+        "positive-path: USB_DP J1.1 to U1.1; F.Cu",
+    )
+    assert "does not establish a signal-integrity defect" in findings[0].message
+
+
+@pytest.mark.design_lint_rule(rule_id=LAYER_TRANSITION_RULE_ID)
+def test_equal_pair_layer_profiles_are_quiet(tmp_path: Path) -> None:
+    report = _measure(
+        tmp_path,
+        maximum_skew_nm=0,
+        positive_length_nm=1_000_000,
+        negative_length_nm=1_000_000,
+    )
+
+    candidates = pcb_requirement_coverage_candidates(
+        pcb_signal_path_coverage=PcbSignalPathRuleCoverageReport(route_skew=report)
+    )
+    assert all(item.rule_id != LAYER_TRANSITION_RULE_ID for item in candidates)
+
+
+@pytest.mark.design_lint_rule(rule_id=LAYER_TRANSITION_RULE_ID)
+def test_pair_layer_profile_evidence_is_stable_when_native_items_are_reordered(
+    tmp_path: Path,
+) -> None:
+    requirements = route_map(maximum_skew_nm=0)
+    snapshot = route_snapshot(
+        positive_length_nm=1_000_000,
+        negative_length_nm=1_000_000,
+        negative_layer_transition=True,
+    )
+    reordered = snapshot.model_copy(
+        update={"pads": tuple(reversed(snapshot.pads)), "tracks": tuple(reversed(snapshot.tracks))}
+    )
+    reports = tuple(
+        measure_differential_pair_route_skew(
+            requirements,
+            source_netlist(),
+            geometry_evidence(tmp_path, current),
+            source_hashes(),
+            "d" * 64,
+            "review",
+        )
+        for current in (snapshot, reordered)
+    )
+
+    findings = tuple(
+        next(
+            item
+            for item in pcb_requirement_coverage_candidates(
+                pcb_signal_path_coverage=PcbSignalPathRuleCoverageReport(route_skew=report)
+            )
+            if item.rule_id == LAYER_TRANSITION_RULE_ID
+        )
+        for report in reports
+    )
+    assert findings[0].evidence == findings[1].evidence
 
 
 def test_route_lengths_remain_deterministic_when_maps_and_tracks_are_reordered(
@@ -273,18 +363,55 @@ def test_scan_uses_the_project_route_skew_override(tmp_path: Path, mode: RouteSk
         observed=source_netlist(),
         source_hashes=source_hashes(),
     )
+    snapshot = (
+        route_snapshot(
+            positive_length_nm=1_000_000,
+            negative_length_nm=1_000_000,
+            negative_layer_transition=True,
+        )
+        if mode == "off"
+        else route_snapshot()
+    )
     signal_path_report = measure_route_skew_for_geometry_scan(
         PcbSignalPathRuleCoverageReport(),
         policy=policy,
         coach=coach,
-        evidence=geometry_evidence(tmp_path, route_snapshot()),
+        evidence=geometry_evidence(tmp_path, snapshot),
         netlist_sha256="d" * 64,
     )
 
     assert route_skew_enabled(policy) is (mode != "off")
+    assert route_measurement_enabled(policy)
     if mode == "off":
-        assert signal_path_report.route_skew is None
+        assert route_measurement_mode(policy) == "review"
+        assert signal_path_report.route_skew is not None
+        layer_candidate = next(
+            item
+            for item in pcb_requirement_coverage_candidates(
+                pcb_signal_path_coverage=signal_path_report
+            )
+            if item.rule_id == LAYER_TRANSITION_RULE_ID
+        )
+        assert layer_candidate.evidence["route_layer_profiles"]
     else:
+        assert route_measurement_mode(policy) == mode
         assert signal_path_report.route_skew is not None
         assert signal_path_report.route_skew.mode == mode
         assert signal_path_report.route_skew.entries[0].status == "EXCEEDS_LIMIT"
+
+
+def test_both_pair_route_rules_can_be_disabled_without_capturing_route_evidence() -> None:
+    policy = DesignLintPolicy(
+        pcb_signal_path_rule_map=route_map(),
+        rules=tuple(
+            DesignLintRuleOverride(
+                rule_id=rule_id,
+                mode="off",
+                reason="Synthetic project rule suppression",
+            )
+            for rule_id in (RULE_ID, LAYER_TRANSITION_RULE_ID)
+        ),
+    )
+
+    assert not route_measurement_enabled(policy)
+    assert route_measurement_mode(policy) == "off"

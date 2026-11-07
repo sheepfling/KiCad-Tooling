@@ -20,7 +20,7 @@ from .design_lint_pcb_layout_coverage import layout_coverage_reports
 from .design_lint_pcb_measurement_coverage import measurement_coverage_reports
 from .design_lint_pcb_route_skew_scan import (
     measure_route_skew_for_geometry_scan,
-    route_skew_enabled,
+    route_measurement_enabled,
 )
 from .design_lint_pcb_thermal_via_scan import blocked_thermal_via_coverage
 from .design_lint_policy_models import DesignLintPolicy
@@ -132,7 +132,7 @@ def scan_pcb_geometry(
     )
     signal_path_override = overrides.get("pcb.signal_path_rule_coverage")
     signal_path_mode = "review" if signal_path_override is None else signal_path_override.mode
-    route_skew_active = route_skew_enabled(policy)
+    route_measurement_active = route_measurement_enabled(policy)
     keepout_override = overrides.get("pcb.keepout_intent_coverage")
     keepout_mode = "review" if keepout_override is None else keepout_override.mode
     rf_antenna_override = overrides.get("pcb.rf_module_antenna_keepout_coverage")
@@ -172,7 +172,7 @@ def scan_pcb_geometry(
         and touch_pad_clearance_disabled
         and thermal_via_disabled
         and inventory_disabled
-        and not route_skew_active
+        and not route_measurement_active
     ):
         return pcb_geometry_fast_path_reports(
             config, policy, inventory_mode=inventory_mode, mode="disabled"

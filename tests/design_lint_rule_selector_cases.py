@@ -8,6 +8,14 @@ RULE_NODE_CASES = (
         "tests/test_pcb_differential_pair_route_skew.py::test_excessive_routed_skew_is_reviewed_against_authored_bound",
     ),
     (
+        "pcb.differential_pair_route_layer_mismatch",
+        "tests/test_pcb_differential_pair_route_skew.py::test_equal_length_pair_routes_with_different_layer_profiles_request_review",
+    ),
+    (
+        "pcb.differential_pair_route_layer_mismatch",
+        "tests/test_pcb_differential_pair_route_skew_native.py::test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots",
+    ),
+    (
         "pcb.differential_pair_route_skew",
         "tests/test_pcb_differential_pair_route_skew_native.py::test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots",
     ),

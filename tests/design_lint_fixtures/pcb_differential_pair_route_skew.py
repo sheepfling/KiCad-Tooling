@@ -11,6 +11,7 @@ from kicad_tooling.hwrepo.netlist_contract_models import NetlistContract
 from kicad_tooling.hwrepo.pcb_connectivity_observations import (
     PcbPadConnectivityObservation,
     PcbTrackObservation,
+    PcbViaObservation,
 )
 from kicad_tooling.hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from kicad_tooling.hwrepo.pcb_drc_models import (
@@ -68,6 +69,7 @@ def route_snapshot(
     missing_nets: tuple[str, ...] = (),
     negative_branch: bool = False,
     negative_alternate_route: bool = False,
+    negative_layer_transition: bool = False,
 ) -> PcbConnectivitySnapshot:
     """Construct minimal native routes with optional negative-net ambiguity controls."""
     endpoints = (
@@ -76,6 +78,7 @@ def route_snapshot(
     )
     pads: list[PcbPadConnectivityObservation] = []
     tracks: list[PcbTrackObservation] = []
+    vias: list[PcbViaObservation] = []
     for index, (source, net, destination, start, end) in enumerate(endpoints, start=1):
         for reference, position in ((source, start), (destination, end)):
             pads.append(
@@ -94,7 +97,59 @@ def route_snapshot(
         if net in missing_nets:
             continue
         direct_id = f"00000000-0000-0000-0000-00000000010{index}"
-        if net == "USB_DN" and negative_branch:
+        if net == "USB_DN" and negative_layer_transition:
+            second_id = "00000000-0000-0000-0000-000000000103"
+            via_id = "0000000000000000000000000000000000000000000000000000000000000001"
+            junction = ((start[0] + end[0]) // 2, start[1])
+            tracks.extend(
+                (
+                    PcbTrackObservation(
+                        uuid=direct_id,
+                        net=net,
+                        layer="F.Cu",
+                        width_nm=180_000,
+                        start_nm=start,
+                        end_nm=junction,
+                        geometry_kind="segment",
+                        start_pads=(source,),
+                        end_pads=(),
+                        start_vias=(),
+                        end_vias=(via_id,),
+                        start_tracks=(),
+                        end_tracks=(second_id,),
+                    ),
+                    PcbTrackObservation(
+                        uuid=second_id,
+                        net=net,
+                        layer="B.Cu",
+                        width_nm=180_000,
+                        start_nm=junction,
+                        end_nm=end,
+                        geometry_kind="segment",
+                        start_pads=(),
+                        end_pads=(destination,),
+                        start_vias=(via_id,),
+                        end_vias=(),
+                        start_tracks=(direct_id,),
+                        end_tracks=(),
+                    ),
+                )
+            )
+            vias.append(
+                PcbViaObservation(
+                    id=via_id,
+                    net=net,
+                    x_nm=junction[0],
+                    y_nm=junction[1],
+                    start_layer="F.Cu",
+                    end_layer="B.Cu",
+                    diameter_nm=600_000,
+                    drill_nm=300_000,
+                    kind="through",
+                    multiplicity=1,
+                )
+            )
+        elif net == "USB_DN" and negative_branch:
             second_id = "00000000-0000-0000-0000-000000000103"
             spur_id = "00000000-0000-0000-0000-000000000104"
             junction = ((start[0] + end[0]) // 2, start[1])
@@ -247,7 +302,7 @@ def route_snapshot(
             "pads": tuple(pads),
             "net_ties": (),
             "zones": (),
-            "vias": (),
+            "vias": tuple(vias),
             "access_probe_observations": (),
             "access_probe_requests_sha256": None,
             "tracks": tuple(tracks),

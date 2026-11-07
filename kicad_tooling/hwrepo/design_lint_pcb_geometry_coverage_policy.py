@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from .design_lint_pcb_route_skew_policy import normalize_pcb_route_skew_policy
+from .design_lint_pcb_route_skew_scan import route_measurement_mode
 from .design_lint_policy_models import DesignLintPolicy
 from .pcb_board_source_binding import pcb_board_source_matches
 from .pcb_drc_models import PcbSignalPathRuleCoverageReport
@@ -56,13 +57,7 @@ def normalize_pcb_input_coverage_policy(
     pcb_touch_pad_clearance_coverage = inputs.touch_pad_clearance
     pcb_thermal_via_coverage = inputs.thermal_via
     signal_path_map = policy.pcb_signal_path_rule_map
-    route_skew_override = next(
-        (item for item in policy.rules if item.rule_id == "pcb.differential_pair_route_skew"),
-        None,
-    )
-    route_skew_mode: Literal["review", "block", "off"] = (
-        "review" if route_skew_override is None else route_skew_override.mode
-    )
+    route_skew_mode: Literal["review", "block", "off"] = route_measurement_mode(policy)
 
     signal_path_override = next(
         (item for item in policy.rules if item.rule_id == "pcb.signal_path_rule_coverage"),

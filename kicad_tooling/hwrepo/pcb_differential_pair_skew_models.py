@@ -20,7 +20,7 @@ from .model_primitives import (
 
 
 class PcbDifferentialPairRouteMeasurement(StrictModel):
-    """Native track-chain length for one authored exact pad path."""
+    """Native ordered track-layer and length evidence for one authored pad path."""
 
     path_id: Identifier
     net: NetName
@@ -28,13 +28,19 @@ class PcbDifferentialPairRouteMeasurement(StrictModel):
     to_pad: Reference
     status: Literal["RESOLVED", "INCOMPLETE"]
     track_uuids: tuple[NativePcbUuid, ...] = ()
+    track_layers: tuple[NonEmptyText, ...] = ()
     length_nm: NonNegativeCount | None = None
     issue: NonEmptyText | None = None
 
     @model_validator(mode="after")
     def route_measurement_state(self) -> PcbDifferentialPairRouteMeasurement:
         if self.status == "RESOLVED":
-            if not self.track_uuids or self.length_nm is None or self.issue is not None:
+            if (
+                not self.track_uuids
+                or self.length_nm is None
+                or self.issue is not None
+                or (self.track_layers and len(self.track_layers) != len(self.track_uuids))
+            ):
                 raise ValueError("Resolved pair routes need tracks and a measured length")
         elif self.length_nm is not None or self.issue is None:
             raise ValueError("Incomplete pair routes need an issue and no length")

@@ -797,7 +797,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 295 active rules.
+The catalog currently contains 296 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -4675,6 +4675,11 @@ only:
         "rule_id": "pcb.differential_pair_route_skew",
         "mode": "review",
         "reason": "Measure the mapped pair routes against the authored skew maximum"
+      },
+      {
+        "rule_id": "pcb.differential_pair_route_layer_mismatch",
+        "mode": "review",
+        "reason": "Review different native copper-layer sequences in mapped pair routes"
       }
     ]
   }
@@ -4697,6 +4702,11 @@ the authored maximum. It permits off-path branches only when the mapped path
 is unique; alternate paths between mapped pads remain incomplete. It does not
 infer pair membership, select a universal skew limit, measure via barrels, or
 establish propagation delay, impedance, coupling, or off-board geometry. The
+separate `pcb.differential_pair_route_layer_mismatch` prompt compares the
+ordered copper-layer sequence along each fully resolved mapped route. It can
+surface a layer-transition difference when measured centerline skew is zero;
+the difference is a review cue and does not establish a signal-integrity
+defect or require the routes to share a layer profile. The
 edge-clearance rule does not infer signal criticality or select a universal
 board-edge margin. Ignored native DRC
 severities and a matching custom rule with `(severity ignore)` do not count as

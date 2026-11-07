@@ -51,6 +51,7 @@ PCB_ROUTE_SKEW_MODULES = (
     "pcb_native_route_topology.py",
     "pcb_differential_pair_skew_models.py",
     "pcb_differential_pair_route_skew.py",
+    "pcb_differential_pair_layer_transitions.py",
     "design_lint_pcb_differential_pair_skew_candidate_evidence.py",
     "design_lint_pcb_route_skew_policy.py",
     "design_lint_pcb_route_skew_report.py",

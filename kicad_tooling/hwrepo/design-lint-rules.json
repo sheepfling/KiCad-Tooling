@@ -11238,6 +11238,45 @@
       "implementation_owner": "kicad_tooling/hwrepo/pcb_differential_pair_route_skew.py#measure_differential_pair_route_skew"
     },
     {
+      "rule_id": "pcb.differential_pair_route_layer_mismatch",
+      "title": "Mapped differential-pair routes use different copper-layer sequences",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_differential_pair_layer_transitions.py#differential_pair_route_layer_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Project-authored exact pair endpoints and source-bound native PCB track layers along each uniquely resolved route",
+      "predicate": "For each fully resolved project-mapped differential-pair bundle, collapse adjacent repeated native track-layer names on each exact route and emit one REVIEW candidate when the resulting ordered copper-layer sequences differ.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 native PCB probe snapshots"
+      ],
+      "limitations": [
+        "Only bundles declared in the project-authored pcb_signal_path_rule_map are compared; the rule does not infer pair membership or require a common layer sequence.",
+        "A layer-sequence difference is a review cue. It does not establish a signal-integrity defect, estimate via-barrel length, propagation delay, impedance, coupling, or routing quality.",
+        "The comparison uses the ordered copper layers of the exact mapped track chains. Unresolved routes and reports without complete per-track layer evidence do not produce this finding; the separate route-skew rule reports route coverage or skew concerns."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_differential_pair_route_skew.test_equal_length_pair_routes_with_different_layer_profiles_request_review",
+        "tests.test_pcb_differential_pair_route_skew_native.test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_differential_pair_route_skew.test_equal_pair_layer_profiles_are_quiet",
+        "tests.test_pcb_differential_pair_route_skew_native.test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_differential_pair_route_skew.test_pair_layer_profile_evidence_is_stable_when_native_items_are_reordered"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_differential_pair_layer_transitions.py#differential_pair_route_layer_candidates",
+        "kicad_tooling/hwrepo/pcb_differential_pair_route_skew.py#measure_differential_pair_route_skew",
+        "kicad_tooling/hwrepo/pcb_differential_pair_skew_models.py#PcbDifferentialPairRouteMeasurement"
+      ]
+    },
+    {
       "rule_id": "pcb.custom_drc_rule_without_constraint",
       "title": "Custom DRC rules without constraints need review",
       "theme": "pcb",

@@ -746,6 +746,14 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **Latest progress (LINT-320):** Added a default-REVIEW prompt for fully
+  resolved, project-mapped pair routes whose ordered copper-layer sequences
+  differ, including equal-length synthetic fault/control boards generated and
+  inspected with digest-pinned KiCad 10.0.0 and 10.0.5. This is a routing
+  review cue; it does not claim the pair is electrically defective or require
+  a common layer profile. The exact prerelease selector passed 26 tests with
+  7,621 deselected, including both native Docker fixtures. Hosted acceptance
+  and tag details will be recorded after the push.
 - **LINT-300 two-pin serial connector return review (completed v0.5.3rc508):**
   The scoped local gate passed 39 tests, including the digest-pinned native
   fault/control lane; hosted acceptance passed in GitHub Actions run
@@ -20021,6 +20029,31 @@ acceptance threads while new lint features proceed:
   does not infer which branch is electrically intended or measure branches outside
   the authored endpoint path.
 - **Selection:** Use the LINT-318 synthetic and native selectors above.
+
+#### LINT-320 — Review mapped differential-pair layer-sequence differences
+
+- **Rule:** `pcb.differential_pair_route_layer_mismatch`, default `review`.
+- **Trigger:** Every path in a project-mapped pair bundle has one resolved
+  source-bound native track chain between its exact endpoint pads, but the
+  ordered copper-layer sequence differs between members after consecutive
+  tracks on the same layer are collapsed.
+- **Purpose:** Surface a layer-transition difference that route-length skew
+  alone cannot identify. Equal centerline lengths can remain within the
+  authored skew maximum while still receiving this separate prompt.
+- **Fixtures:** Synthetic equal-length fault and matching-profile control;
+  deterministic report comparison when native tracks are reordered; and
+  source-generated fault/control boards exported from digest-pinned KiCad
+  10.0.0 and 10.0.5. The native fault differs only in its copper-layer
+  sequence; the control uses matching transitions.
+- **Boundary:** A difference is a review cue, not a signal-integrity defect or
+  requirement that all paths share one profile. The rule does not measure via
+  barrel length, propagation delay, impedance, coupling, or allowed-layer
+  intent. It runs only for a complete project-authored endpoint bundle; an
+  unresolved route remains covered by the route-skew completeness finding.
+- **Selection:** Run `tests/test_pcb_differential_pair_route_skew.py` and
+  `tests/test_pcb_differential_pair_route_skew_native.py` with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.differential_pair_route_layer_mismatch")`.
 
 ## Completion and release gate
 

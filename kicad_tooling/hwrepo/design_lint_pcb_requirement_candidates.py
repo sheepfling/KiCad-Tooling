@@ -31,6 +31,9 @@ from .design_lint_pcb_touch_pad_clearance_candidate_evidence import (
     touch_pad_clearance_violations,
 )
 from .design_lint_types import Candidate
+from .pcb_differential_pair_layer_transitions import (
+    differential_pair_route_layer_candidates,
+)
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
     PcbSignalPathRuleCoverageReport,
@@ -108,30 +111,32 @@ def pcb_requirement_coverage_candidates(
             )
     if pcb_signal_path_coverage is not None:
         route_skew = pcb_signal_path_coverage.route_skew
-        if route_skew is not None and route_skew.status == "INCOMPLETE":
-            for entry in route_skew.entries:
-                if entry.status == "WITHIN_LIMIT":
-                    continue
-                message = (
-                    f"Measured route-length skew {entry.measured_skew_nm} nm exceeds the "
-                    f"project-authored maximum {entry.max_skew_nm} nm. Review the mapped "
-                    "routes and the interface's reviewed skew requirement."
-                    if entry.status == "EXCEEDS_LIMIT"
-                    else (
-                        "The mapped bundle does not have one complete, unambiguous native "
-                        "track route for every member. Review the board snapshot, endpoint "
-                        "mapping, branches, vias, and source-to-board agreement."
+        if route_skew is not None:
+            if route_skew.status == "INCOMPLETE":
+                for entry in route_skew.entries:
+                    if entry.status == "WITHIN_LIMIT":
+                        continue
+                    message = (
+                        f"Measured route-length skew {entry.measured_skew_nm} nm exceeds the "
+                        f"project-authored maximum {entry.max_skew_nm} nm. Review the mapped "
+                        "routes and the interface's reviewed skew requirement."
+                        if entry.status == "EXCEEDS_LIMIT"
+                        else (
+                            "The mapped bundle does not have one complete, unambiguous native "
+                            "track route for every member. Review the board snapshot, endpoint "
+                            "mapping, branches, vias, and source-to-board agreement."
+                        )
                     )
-                )
-                found.append(
-                    PcbDifferentialPairRouteSkewCandidate.from_source_evidence(
-                        PcbDifferentialPairRouteSkewFindingEvidence(
-                            report=route_skew,
-                            entry=entry,
-                        ),
-                        message=message,
+                    found.append(
+                        PcbDifferentialPairRouteSkewCandidate.from_source_evidence(
+                            PcbDifferentialPairRouteSkewFindingEvidence(
+                                report=route_skew,
+                                entry=entry,
+                            ),
+                            message=message,
+                        )
                     )
-                )
+            found.extend(differential_pair_route_layer_candidates(route_skew))
         for entry in pcb_signal_path_coverage.entries:
             if entry.status != "INCOMPLETE":
                 continue

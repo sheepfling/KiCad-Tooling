@@ -65,6 +65,21 @@ def _route_measurement(
         pads=pads,
         require_branch_free=False,
     )
+    tracks_by_id = {item.uuid.casefold(): item for item in snapshot.snapshot.tracks}
+    track_layers = tuple(
+        tracks_by_id[track_id.casefold()].layer
+        for track_id in route.track_uuids
+        if track_id.casefold() in tracks_by_id
+    )
+    if len(track_layers) != len(route.track_uuids):
+        return PcbDifferentialPairRouteMeasurement(
+            path_id=path_id,
+            net=net,
+            from_pad=from_pad,
+            to_pad=to_pad,
+            status="INCOMPLETE",
+            issue="Resolved native route refers to a track absent from its snapshot",
+        )
     return PcbDifferentialPairRouteMeasurement(
         path_id=path_id,
         net=net,
@@ -72,6 +87,7 @@ def _route_measurement(
         to_pad=to_pad,
         status=route.status,
         track_uuids=route.track_uuids,
+        track_layers=track_layers,
         length_nm=route.length_nm,
         issue=route.issue,
     )

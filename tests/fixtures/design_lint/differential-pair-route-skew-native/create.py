@@ -43,14 +43,29 @@ def _add_track(
     start: pcbnew.VECTOR2I,
     end: pcbnew.VECTOR2I,
     net: pcbnew.NETINFO_ITEM,
+    layer: int = pcbnew.F_Cu,
 ) -> None:
     track = pcbnew.PCB_TRACK(board)
     track.SetStart(start)
     track.SetEnd(end)
     track.SetWidth(pcbnew.FromMM(0.18))
-    track.SetLayer(pcbnew.F_Cu)
+    track.SetLayer(layer)
     track.SetNet(net)
     board.Add(track)
+
+
+def _add_via(
+    board: pcbnew.BOARD,
+    position: pcbnew.VECTOR2I,
+    net: pcbnew.NETINFO_ITEM,
+) -> None:
+    via = pcbnew.PCB_VIA(board)
+    via.SetPosition(position)
+    via.SetWidth(pcbnew.FromMM(0.6))
+    via.SetDrill(pcbnew.FromMM(0.3))
+    via.SetLayerPair(pcbnew.F_Cu, pcbnew.B_Cu)
+    via.SetNet(net)
+    board.Add(via)
 
 
 def _points_on_grid(
@@ -68,41 +83,65 @@ def create(output: Path, expected_version: str) -> None:
     if not _FOOTPRINT_LIBRARY.is_dir():
         raise RuntimeError(f"Pinned KiCad image has no footprint library: {_FOOTPRINT_LIBRARY}")
     (output / "kicad-version.txt").write_text(f"{actual}\n", encoding="utf-8")
-    for case in ("control", "fault"):
+    for case in ("control", "fault", "layer-control", "layer-fault"):
         board = pcbnew.BOARD()
         nets = {name: pcbnew.NETINFO_ITEM(board, name) for name in ("USB_DP", "USB_DN")}
         for net in nets.values():
             board.Add(net)
         source_pads = _add_footprint(board, "J1", (10.0, 10.0), nets)
         receiver_pads = _add_footprint(board, "U1", (40.0, 10.0), nets)
-        _add_track(
-            board,
-            source_pads["1"].GetPosition(),
-            receiver_pads["1"].GetPosition(),
-            nets["USB_DP"],
-        )
+        positive_source = source_pads["1"].GetPosition()
+        positive_target = receiver_pads["1"].GetPosition()
+        negative_source = source_pads["2"].GetPosition()
+        negative_target = receiver_pads["2"].GetPosition()
+        if case in {"layer-control", "layer-fault"}:
+            midpoint_offset = pcbnew.FromMM(15.0)
+            positive_midpoint = pcbnew.VECTOR2I(
+                positive_source.x + midpoint_offset, positive_source.y
+            )
+            negative_midpoint = pcbnew.VECTOR2I(
+                negative_source.x + midpoint_offset, negative_source.y
+            )
+            pair_uses_vias = case == "layer-control"
+            if pair_uses_vias:
+                _add_via(board, positive_midpoint, nets["USB_DP"])
+            _add_track(
+                board,
+                positive_source,
+                positive_midpoint if pair_uses_vias else positive_target,
+                nets["USB_DP"],
+            )
+            if pair_uses_vias:
+                _add_track(
+                    board,
+                    positive_midpoint,
+                    positive_target,
+                    nets["USB_DP"],
+                    pcbnew.B_Cu,
+                )
+            _add_via(board, negative_midpoint, nets["USB_DN"])
+            _add_track(
+                board,
+                negative_source,
+                negative_midpoint,
+                nets["USB_DN"],
+            )
+            _add_track(
+                board,
+                negative_midpoint,
+                negative_target,
+                nets["USB_DN"],
+                pcbnew.B_Cu,
+            )
+        else:
+            _add_track(board, positive_source, positive_target, nets["USB_DP"])
         if case == "control":
             midpoint = pcbnew.VECTOR2I(pcbnew.FromMM(25.0), pcbnew.FromMM(12.54))
             spur_end = pcbnew.VECTOR2I(pcbnew.FromMM(25.0), pcbnew.FromMM(14.54))
-            _add_track(
-                board,
-                source_pads["2"].GetPosition(),
-                midpoint,
-                nets["USB_DN"],
-            )
-            _add_track(
-                board,
-                midpoint,
-                receiver_pads["2"].GetPosition(),
-                nets["USB_DN"],
-            )
-            _add_track(
-                board,
-                midpoint,
-                spur_end,
-                nets["USB_DN"],
-            )
-        else:
+            _add_track(board, negative_source, midpoint, nets["USB_DN"])
+            _add_track(board, midpoint, negative_target, nets["USB_DN"])
+            _add_track(board, midpoint, spur_end, nets["USB_DN"])
+        elif case == "fault":
             start_y_mm = 12.54
             points = _points_on_grid(
                 (
