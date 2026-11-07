@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 277 rules are implemented with synthetic regression coverage.
+The following 278 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 277 active rules.
+The catalog currently contains 278 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -645,6 +645,7 @@ skipped under prerelease policy.
 - `bus.ethernet_management_signal_on_named_rail`
 - `bus.ethernet_signal_on_named_rail`
 - `bus.ethernet_generic_connector_pair_review`
+- `bus.ethernet_management_generic_connector_pair_review`
 - `bus.can_tx_rx_same_net`
 - `bus.can_tx_rx_label_mismatch`
 - `bus.can_tx_outputs_share_net`
@@ -728,6 +729,16 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **LINT-297 generic Ethernet management connector pair review:** When a
+  fitted, completely inventoried U/IC exposes one native MDC and one MDIO
+  function on separate nets, and a complete connector has generic contacts on
+  both exact nets, ask for connector association and pinout review. A current,
+  source-matched role map or reviewed `NOT_APPLICABLE` disposition suppresses
+  the prompt. It does not infer connector identity, port topology, routing,
+  PCB copper, or power, return, shield, or off-board requirements. Synthetic
+  fault/control tests, CLI/MCP parity, and repeatable digest-pinned KiCad
+  10.0.0/10.0.5 exports are required; field applicability and reviewer value
+  remain unmeasured.
 - **LINT-296 generic Ethernet connector pair review:** When a fitted,
   completely inventoried Ethernet PHY has a uniquely recognized TX or RX pair
   on distinct nets, and a complete connector has generic contacts on both
@@ -3570,7 +3581,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 276 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 278 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -19203,6 +19214,35 @@ acceptance threads while new lint features proceed:
   design_lint_rule(rule_id="bus.ethernet_generic_connector_pair_review")'`.
   The native lane uses
   `KICAD_RUN_NATIVE_ETHERNET_GENERIC_CONNECTOR_FIXTURES=1`.
+
+#### LINT-297 — Prompt review of generic connector pins on Ethernet management nets
+
+- **Rule:** `bus.ethernet_management_generic_connector_pair_review`, default
+  `review`.
+- **Trigger:** A fitted U/IC has complete unique native pin metadata and exactly
+  one uniquely assigned MDC and MDIO function on distinct nets. A complete
+  generic connector has generic `Pin_N` contacts on both exact nets. A current,
+  source-matched map covering the exact management roles and nets, or
+  `NOT_APPLICABLE`, suppresses the prompt.
+- **Purpose:** Ask whether generic connector contacts belong to an Ethernet
+  management interface and whether an exact pinout is documented. The finding
+  does not decide the connector's purpose.
+- **Evidence and limits:** The candidate retains exact MDC/MDIO endpoint pins,
+  connector contacts, net names, and complete inventory evidence. DNP,
+  incomplete, duplicate-role, open, ambiguous, same-net, and one-sided cases
+  stay quiet. It does not establish an Ethernet port topology, routed path, PCB
+  copper, or power, return, shield, or off-board requirements.
+- **Fixtures:** Synthetic fault/control schematics, named roles, current/stale,
+  wrong-role and partial source map cases, `NOT_APPLICABLE`, DNP and incomplete
+  evidence, override/ignore, ordering stability, and CLI/MCP parity. Tooling-
+  owned native sources export twice with digest-pinned KiCad 10.0.0 and 10.0.5.
+  Field applicability and reviewer value remain unmeasured.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_ethernet_management_generic_connector_pair_review.py -m
+  'design_lint and interface_lint and
+  design_lint_rule(rule_id="bus.ethernet_management_generic_connector_pair_review")'`.
+  The native lane uses
+  `KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_GENERIC_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate
 

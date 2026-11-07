@@ -28,6 +28,7 @@ EthernetLabelFeature = Literal[
     "management_unconnected",
     "data_unconnected",
     "generic_connector",
+    "management_generic_connector",
 ]
 
 
@@ -363,6 +364,61 @@ ETHERNET_LABEL_FIXTURES: Mapping[EthernetLabelFeature, EthernetLabelFixtureExpec
                         ),
                         EthernetLabelPinExpectation(
                             reference="U1.4", function="RDN", net="ETH_RX_N"
+                        ),
+                    ),
+                ),
+            ),
+            "management_generic_connector": EthernetLabelFixtureExpectation(
+                directory="ethernet-management-generic-connector-native",
+                rule_id="bus.ethernet_management_generic_connector_pair_review",
+                stage_prefix="ethernet-management-generic-connector-fixture",
+                control=EthernetLabelCaseExpectation(
+                    source_sha256="4268403e707494a8f6a021920e442405c13e9217be6afac249b9ece93351ef7f",
+                    subjects=(),
+                    pins=(
+                        EthernetLabelPinExpectation(
+                            reference="J1.1", function="Pin_1", net="PORT_TX_POS"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="J1.2", function="Pin_2", net="PORT_TX_NEG"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="J1.3", function="Pin_3", net="PORT_RX_POS"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="J1.4", function="Pin_4", net="PORT_RX_NEG"
+                        ),
+                        EthernetLabelPinExpectation(reference="J1.5", function="GND", net="GND"),
+                        EthernetLabelPinExpectation(
+                            reference="U1.5", function="MDC", net="ETH_MDC"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.6", function="MDIO", net="ETH_MDIO"
+                        ),
+                    ),
+                ),
+                fault=EthernetLabelCaseExpectation(
+                    source_sha256="adcbc744dd2aa12981852f1472190f9a56015cd16e59d8a44305b48e80442a3f",
+                    subjects=("J1: generic pins match Ethernet MDC/MDIO management nets",),
+                    pins=(
+                        EthernetLabelPinExpectation(
+                            reference="J1.1", function="Pin_1", net="ETH_MDC"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="J1.2", function="Pin_2", net="ETH_MDIO"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="J1.3", function="Pin_3", net="PORT_RX_POS"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="J1.4", function="Pin_4", net="PORT_RX_NEG"
+                        ),
+                        EthernetLabelPinExpectation(reference="J1.5", function="GND", net="GND"),
+                        EthernetLabelPinExpectation(
+                            reference="U1.5", function="MDC", net="ETH_MDC"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.6", function="MDIO", net="ETH_MDIO"
                         ),
                     ),
                 ),
