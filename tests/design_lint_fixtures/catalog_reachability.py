@@ -382,6 +382,9 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
     from tests.design_lint_fixtures.swd_generic_connector_pair import (
         generic_swd_connector_netlist,
     )
+    from tests.design_lint_fixtures.usb_c_generic_connector_cc_pair import (
+        generic_usb_c_connector_cc_pair_netlist,
+    )
     from tests.design_lint_fixtures.usb_generic_connector_pair import (
         generic_usb_connector_pair_netlist,
     )
@@ -459,6 +462,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         usb_signal_on_named_rail_netlist(),
         usb_data_pair_crossing_netlist(),
         generic_usb_connector_pair_netlist(),
+        generic_usb_c_connector_cc_pair_netlist(),
         generic_usb_superspeed_connector_pair_netlist(),
     )
     return (

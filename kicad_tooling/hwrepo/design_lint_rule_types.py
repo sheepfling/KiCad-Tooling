@@ -186,6 +186,7 @@ DesignLintRuleId = Literal[
     "bus.usb_c_cc_signal_on_named_rail",
     "bus.usb_c_cc_same_net",
     "bus.usb_c_cc_controller_same_net",
+    "bus.usb_c_generic_connector_cc_pair_review",
     "bus.usb_c_cc_endpoint_crossed",
     "bus.usb_c_sbu_signal_on_named_rail",
     "bus.usb_c_sbu_unconnected_pin",

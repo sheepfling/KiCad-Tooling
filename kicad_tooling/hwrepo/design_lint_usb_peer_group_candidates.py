@@ -7,6 +7,9 @@ from .design_lint_usb_c_candidates import (
     usb_c_port_candidates,
     usb_c_vbus_capacitance_candidates,
 )
+from .design_lint_usb_c_generic_connector_candidates import (
+    generic_connector_usb_c_cc_pair_review_candidates,
+)
 from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
 from .design_lint_usb_generic_connector_candidates import (
     generic_usb_connector_phy_pair_review_candidates,
@@ -58,5 +61,10 @@ def usb_c_peer_candidates(
     """Return USB-C candidates at their established peer-report position."""
     return (
         *usb_c_port_candidates(observed, roster, reviewed_connector_references),
+        *generic_connector_usb_c_cc_pair_review_candidates(
+            observed,
+            roster,
+            reviewed_connector_references,
+        ),
         *usb_c_vbus_capacitance_candidates(observed, roster, reviewed_connector_references),
     )

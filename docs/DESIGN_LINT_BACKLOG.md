@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 286 rules are implemented with synthetic regression coverage.
+The following 287 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 286 active rules.
+The catalog currently contains 287 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -19556,6 +19556,37 @@ acceptance threads while new lint features proceed:
   The native lane uses
   `KICAD_RUN_NATIVE_USB_SUPERSPEED_CONNECTOR_RETURN_FIXTURES=1`.
 
+#### LINT-306 — Review generic connector contacts on a USB-C controller CC pair
+
+- **Rule:** `bus.usb_c_generic_connector_cc_pair_review`, default `review`.
+- **Trigger:** One fitted numeric U/IC has exactly one native CC1 and CC2
+  function in its complete unique pin inventory, each assigned directly to a
+  different native net; one fitted connector candidate has complete native
+  pin-function coverage and generic `Pin_N` contacts assigned to both exact
+  nets.
+- **Purpose:** Ask the project owner whether a generic connector is a USB-C
+  port, a test/bring-up connector, or another interface, then record the
+  reviewed pinout and relationship. An exact connector in the current USB-C
+  role map already has that coverage and suppresses this prompt.
+- **Evidence and limits:** The candidate carries the controller's native CC
+  pins and functions, both exact net names, generic connector contacts and
+  functions, native connector pin count, and optional USB-C map digest. DNP,
+  incomplete, duplicate, open, multiply assigned, and multiple-controller
+  matches are quiet. The heuristic does not identify connector purpose, infer
+  Rp/Rd or port role, say CC nets should be joined or separate, trace passive
+  paths, or establish PCB copper, continuity, USB-C compliance, or approval.
+- **Fixtures:** Tooling-owned synthetic direct-net fault and one-contact
+  control (see the [fixture notes][usb-c-generic-connector-fixtures]). Tests
+  cover named connector roles, exact USB-C map coverage, DNP, incomplete and
+  ambiguous endpoints, per-project block/off/exact-ignore policy, ordering
+  stability, CLI/MCP parity, and repeatable source-hash-bound exports on
+  digest-pinned KiCad 10.0.0 and 10.0.5.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_usb_c_generic_connector_cc_pair_review.py -m 'design_lint and
+  interface_lint and
+  design_lint_rule(rule_id="bus.usb_c_generic_connector_cc_pair_review")'`.
+  The native lane uses `KICAD_RUN_NATIVE_USB_C_GENERIC_CONNECTOR_FIXTURES=1`.
+
 [swd-symbol]: https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/master/MCU_ST_STM32WB.kicad_symdir/STM32WB15CCUx.kicad_sym
 [swd-rename]: https://gitlab.com/kicad/libraries/kicad-symbols/-/merge_requests/3929/reports
 
@@ -19592,6 +19623,7 @@ quality, or first-article continuity.
 [happy-pcb-methodology]: https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/methodology_pcb.md
 [happy-cross-verify]: https://github.com/aklofas/kicad-happy/blob/main/release-notes.md
 [kicad-skills-pcb]: <https://github.com/sabas0ba/kicad_skills/blob/main/docs/guides/kicad-pcb-review.md>
+[usb-c-generic-connector-fixtures]: ../tests/fixtures/design_lint/usb-c-generic-connector-native/README.md
 
 [calcumaker-hardware]: https://github.com/calcumaker/calcumaker/tree/113a283/hardware
 [antmicro-cm4]: https://github.com/antmicro/cm4-baseboard/tree/d248c2921e8e7f4c9b30c96ea5f376d9b2780f1e

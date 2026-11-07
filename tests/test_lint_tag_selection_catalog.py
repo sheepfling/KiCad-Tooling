@@ -104,6 +104,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_USB_C_CC_CONTROLLER_SAME_NET_FIXTURES",
         ),
         (
+            "bus.usb_c_generic_connector_cc_pair_review",
+            "KICAD_RUN_NATIVE_USB_C_GENERIC_CONNECTOR_FIXTURES",
+        ),
+        (
             "bus.usb_c_cc_endpoint_crossed",
             "KICAD_RUN_NATIVE_USB_C_CC_ENDPOINT_CROSSED_FIXTURES",
         ),

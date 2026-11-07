@@ -6466,6 +6466,56 @@
       "implementation_owner": "kicad_tooling/hwrepo/usb_c_cc_controller_same_net.py#usb_c_cc_controller_same_net_candidates"
     },
     {
+      "rule_id": "bus.usb_c_generic_connector_cc_pair_review",
+      "title": "Generic connector contacts match a USB-C controller CC1/CC2 pair",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad native XML netlist normalized by kicad_tooling.validate.read_netlist, including fitted state, complete pin inventories and native functions, connector identity, and exact direct net assignments",
+      "predicate": "For one fitted numeric U/IC with exactly one native CC1 and CC2 function in its complete unique pin inventory and two distinct direct net assignments, emit REVIEW when exactly one fitted connector candidate has one or more generic Pin_N contacts on each exact net and its complete unique pin inventory is represented by native functions.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
+      ],
+      "limitations": [
+        "The direct net match is a review clue only. It does not identify the generic connector as USB-C, prove a USB-C port or test function, infer Rp/Rd or port role, or say the CC nets should be joined or separated.",
+        "Recognition is limited to fitted numeric U/IC controller references, exact native CC1/CC2 roles, distinct single-net assignments, bounded connector candidate identity, complete unique pin inventories, and generic Pin_N contacts. DNP parts, duplicate roles, incomplete inventories, missing functions, open or multiply assigned pins, and multiple matching controllers stay quiet.",
+        "A current project USB-C role map that names the exact connector suppresses the candidate. Other connector intent must be documented through its project contract or an exact rule ignore; project policy may keep the rule at REVIEW, promote it to BLOCK, or turn it off.",
+        "The check observes schematic net assignments only. It does not trace passive paths or establish PCB copper, off-board wiring, physical continuity, USB-C compliance, or electrical approval."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_c_generic_connector_cc_pair_review.test_generic_connector_contacts_on_both_controller_cc_nets_request_review",
+        "tests.test_design_lint_mcp_parity_usb_c_generic_connector_cc_pair.test_generic_connector_cc_pair_review_cli_mcp_parity",
+        "tests.test_usb_c_generic_connector_native_fixture_lane.test_native_usb_c_generic_connector_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_c_generic_connector_cc_pair_review.test_named_pinout_and_single_cc_contact_are_controls",
+        "tests.test_usb_c_generic_connector_cc_pair_review.test_dnp_incomplete_duplicate_and_ambiguous_endpoints_are_quiet",
+        "tests.test_usb_c_generic_connector_cc_pair_review.test_exact_usb_c_map_resolves_prompt_and_other_connectors_remain_reviewable",
+        "tests.test_usb_c_generic_connector_native_fixture_lane.test_native_usb_c_generic_connector_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_c_generic_connector_cc_pair_review.test_evidence_is_stable_under_mapping_order"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_C_GENERIC_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_c_generic_connector.py#usb_c_generic_connector_pairs",
+        "kicad_tooling/hwrepo/design_lint_usb_c_generic_connector_candidate_evidence.py#UsbCGenericConnectorCandidate",
+        "kicad_tooling/hwrepo/design_lint_usb_c_generic_connector_candidate_evidence.py#project_usb_c_generic_connector_evidence",
+        "kicad_tooling/hwrepo/design_lint_usb_c_generic_connector_candidates.py#generic_connector_usb_c_cc_pair_review_candidates",
+        "kicad_tooling/hwrepo/bus_signal_roles.py#usb_c_cc_role",
+        "kicad_tooling/hwrepo/connector_identity.py#connector_candidate_references",
+        "kicad_tooling/hwrepo/connector_identity.py#pin_function_is_generic",
+        "kicad_tooling/hwrepo/casefold_mapping_lookup.py#casefolded_unique_index",
+        "kicad_tooling/hwrepo/netlist_pin_assignments.py#netlist_pin_net_index",
+        "kicad_tooling/hwrepo/design_lint_usb_peer_group_candidates.py#usb_c_peer_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_c_generic_connector.py#usb_c_generic_connector_pairs"
+    },
+    {
       "rule_id": "bus.usb_c_cc_endpoint_crossed",
       "title": "USB-C connector and controller CC1/CC2 nets appear crossed",
       "status": "active",

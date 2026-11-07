@@ -259,6 +259,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="usb-c-cc-controller-same-net",
     ),
     pytest.param(
+        "bus.usb_c_generic_connector_cc_pair_review",
+        "KICAD_RUN_NATIVE_USB_C_GENERIC_CONNECTOR_FIXTURES",
+        "tests.test_usb_c_generic_connector_native_fixture_lane."
+        "test_native_usb_c_generic_connector_fault_and_control_repeat",
+        id="usb-c-generic-connector-cc-pair",
+    ),
+    pytest.param(
         "bus.usb_c_cc_endpoint_crossed",
         "KICAD_RUN_NATIVE_USB_C_CC_ENDPOINT_CROSSED_FIXTURES",
         "tests.test_usb_c_cc_endpoint_crossed_native_fixture_lane."
