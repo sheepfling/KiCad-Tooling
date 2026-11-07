@@ -787,7 +787,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 284 active rules.
+The catalog currently contains 285 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -2641,6 +2641,40 @@ the [fixture record](../tests/fixtures/design_lint/rs485-connector-return-native
 KICAD_RUN_NATIVE_RS485_CONNECTOR_RETURN_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
   .venv/bin/python -I -m pytest tests/test_rs485_connector_return_native_fixture_lane.py \
   -m 'design_lint and connector_lint and return_path_lint and native_kicad and design_lint_rule(rule_id="connector.rs485_pair_without_return_review")'
+```
+
+## Review a two-pin USB 2.0 connector pair with no identified return
+
+`connector.usb2_pair_without_return_review` prompts when a complete connector
+with exactly two native pins is assigned one pin per exact D+/D- net of a
+recognized USB 2.0 PHY pair, and no native pin function or current
+source-matched connector role identifies a reference return. The predicate
+accepts generic or named data contact functions. An explicit
+`NOT_APPLICABLE` disposition or current source-matched return role suppresses
+the prompt. A USB data-path map alone does not declare the interface reference
+policy, so mapping D+ and D- does not suppress it. Connectors with additional
+contacts stay with the existing pinout and multiconductor return checks.
+
+This is a review question. The reference may be supplied by an approved cable,
+chassis, another connector, or an intentionally isolated interface. It does
+not require board ground or infer connector purpose, external wiring, USB
+compliance, PCB copper, or physical continuity. Project policy can set it to
+`block` or `off`, or ignore one exact finding.
+
+Synthetic tests cover generic and named data contacts, current data-only and
+return-role maps, stale maps, `NOT_APPLICABLE`, DNP, incomplete and ambiguous
+assignments, the exact two-contact scope, policy overrides, deterministic
+ordering, and CLI/MCP parity. Tooling-owned fault and GND-contact control
+schematics export twice with digest-pinned KiCad 10.0.0 and 10.0.5 images; see
+the [fixture record](../tests/fixtures/design_lint/usb2-connector-return-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_usb2_connector_return_review.py \
+  -m 'design_lint and connector_lint and interface_lint and return_path_lint and design_lint_rule(rule_id="connector.usb2_pair_without_return_review")'
+
+KICAD_RUN_NATIVE_USB_CONNECTOR_RETURN_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
+  .venv/bin/python -I -m pytest tests/test_usb2_connector_return_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and return_path_lint and native_kicad and design_lint_rule(rule_id="connector.usb2_pair_without_return_review")'
 ```
 
 ## Review generic connector contacts on Ethernet PHY data pairs

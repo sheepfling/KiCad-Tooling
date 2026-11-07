@@ -59,6 +59,9 @@ from tests.design_lint_fixtures.connector_coverage import (
     connector_supply_role_reviews,
     inventory_review,
 )
+from tests.design_lint_fixtures.connector_return_catalog_reachability import (
+    connector_return_catalog_rule_ids,
+)
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
 from tests.design_lint_fixtures.ethernet_data_labels import ethernet_data_label_netlist
 from tests.design_lint_fixtures.ethernet_data_unconnected import (
@@ -343,6 +346,7 @@ def catalog_reachability_rule_ids() -> set[str]:
         for coverage in peer_coverages
         for item in lint_report(peer_assignments, coverage).findings
     )
+    result.update(connector_return_catalog_rule_ids())
     return result
 
 

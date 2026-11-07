@@ -98,6 +98,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="rs485-connector-return-review",
     ),
     pytest.param(
+        "connector.usb2_pair_without_return_review",
+        "KICAD_RUN_NATIVE_USB_CONNECTOR_RETURN_FIXTURES",
+        "tests.test_usb2_connector_return_native_fixture_lane."
+        "test_native_two_pin_usb2_return_fault_and_control",
+        id="usb2-connector-return-review",
+    ),
+    pytest.param(
         "bus.spi_clock_control_data_same_net",
         "KICAD_RUN_NATIVE_SPI_CLOCK_CONTROL_SAME_NET_FIXTURES",
         "tests.test_spi_clock_control_same_net_native_fixture_lane."

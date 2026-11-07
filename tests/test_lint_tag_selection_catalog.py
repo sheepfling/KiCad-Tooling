@@ -390,6 +390,10 @@ from scripts.lint_gate_scope import (
             "connector.rs485_pair_without_return_review",
             "KICAD_RUN_NATIVE_RS485_CONNECTOR_RETURN_FIXTURES",
         ),
+        (
+            "connector.usb2_pair_without_return_review",
+            "KICAD_RUN_NATIVE_USB_CONNECTOR_RETURN_FIXTURES",
+        ),
     ),
 )
 def test_lint_tag_selects_rule_and_all_its_configured_native_fixtures(

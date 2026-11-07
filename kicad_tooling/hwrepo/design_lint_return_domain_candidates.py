@@ -15,6 +15,7 @@ from .connector_return_rs485_review import rs485_connector_missing_return_candid
 from .connector_return_serial_review import serial_connector_missing_return_candidates
 from .connector_return_signal_net import return_pin_protocol_signal_net_candidates
 from .connector_return_supply import return_pin_positive_rail_candidates
+from .connector_return_usb2_review import usb2_connector_missing_return_candidates
 from .design_lint_return_candidate_evidence import (
     ConnectorNoReturnEvidence,
     NumberedReturnEvidence,
@@ -71,6 +72,13 @@ def return_domain_candidates(
     )
     found.extend(
         rs485_connector_missing_return_candidates(
+            observed,
+            reviewed_connector_references,
+            connector_coverage,
+        )
+    )
+    found.extend(
+        usb2_connector_missing_return_candidates(
             observed,
             reviewed_connector_references,
             connector_coverage,
