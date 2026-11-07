@@ -69,6 +69,35 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_design_lint_architecture_usb2_connector_return.py": frozenset(
             {"connector_lint", "interface_lint", "return_path_lint"}
         ),
+        "test_usb_superspeed_connector_return_review.py": frozenset(
+            {"connector_lint", "interface_lint", "return_path_lint"}
+        ),
+        "test_usb_superspeed_connector_return_native_fixture_registry.py": frozenset(
+            {"connector_lint", "return_path_lint"}
+        ),
+        "test_usb_superspeed_connector_return_native_fixture_lane.py": frozenset(
+            {
+                "connector_lint",
+                "interface_lint",
+                "return_path_lint",
+                "native_kicad",
+                "slow",
+                "template_checkout",
+            }
+        ),
+        "test_design_lint_mcp_parity_usb_superspeed_connector_return.py": frozenset(
+            {
+                "connector_lint",
+                "interface_lint",
+                "parity_lint",
+                "return_path_lint",
+                "slow",
+                "template_checkout",
+            }
+        ),
+        "test_design_lint_architecture_usb_superspeed_connector_return.py": frozenset(
+            {"connector_lint", "interface_lint", "return_path_lint"}
+        ),
         "test_connector_supply_scope.py": frozenset({"connector_lint"}),
         "test_design_lint_policy.py": frozenset({"connector_lint", "return_path_lint"}),
         "test_electrical_connector_evidence.py": frozenset({"connector_lint", "evidence_lint"}),

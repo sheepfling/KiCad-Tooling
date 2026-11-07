@@ -9,7 +9,10 @@ from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_identity import connector_candidate_references
 from .connector_pin_metadata import connector_pin_metadata_matches_inventory
-from .connector_return_pins import connector_pin_group_has_return_role
+from .connector_return_pins import (
+    connector_pin_for_assigned_net,
+    connector_pin_group_has_return_role,
+)
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .netlist_contract_models import NetlistContract
@@ -179,8 +182,8 @@ def usb2_connector_missing_return_candidates(
 
         pair_findings: list[Candidate] = []
         for endpoint in endpoints:
-            positive = _pin_on_net(assigned, endpoint.positive_net)
-            negative = _pin_on_net(assigned, endpoint.negative_net)
+            positive = connector_pin_for_assigned_net(assigned, endpoint.positive_net)
+            negative = connector_pin_for_assigned_net(assigned, endpoint.negative_net)
             if (
                 positive is None
                 or negative is None
@@ -221,19 +224,4 @@ def usb2_connector_missing_return_candidates(
                 tuple(sorted((key, value) for key, value in item.evidence.items())),
             ),
         )
-    )
-
-
-def _pin_on_net(
-    assignments: dict[str, tuple[str, str]],
-    expected_net: str,
-) -> tuple[str, str] | None:
-    expected_key = expected_net.casefold()
-    return next(
-        (
-            (pin, function)
-            for pin, (net, function) in assignments.items()
-            if net.casefold() == expected_key
-        ),
-        None,
     )

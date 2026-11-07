@@ -787,7 +787,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 285 active rules.
+The catalog currently contains 286 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -2675,6 +2675,39 @@ the [fixture record](../tests/fixtures/design_lint/usb2-connector-return-native/
 KICAD_RUN_NATIVE_USB_CONNECTOR_RETURN_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
   .venv/bin/python -I -m pytest tests/test_usb2_connector_return_native_fixture_lane.py \
   -m 'design_lint and connector_lint and interface_lint and return_path_lint and native_kicad and design_lint_rule(rule_id="connector.usb2_pair_without_return_review")'
+```
+
+## Review a two-pin USB SuperSpeed connector pair with no identified return
+
+`connector.usb_superspeed_pair_without_return_review` prompts when a complete
+connector with exactly two native pins is assigned one pin per exact P/N net
+of one recognized USB SuperSpeed PHY TX or RX pair, and no native pin function
+or current source-matched connector role identifies a reference return. Generic
+or named data contacts qualify. An explicit `NOT_APPLICABLE` disposition or
+current source-matched return role suppresses the prompt. A USB data-pair map
+alone does not state external reference policy. Connectors with additional
+contacts remain covered by existing pinout and multiconductor return checks.
+
+This is a review question. The reference may be supplied by an approved cable,
+chassis, another connector, or an intentionally isolated interface. It does
+not require board ground or infer connector purpose, external wiring, USB
+compliance, PCB copper, or physical continuity. Project policy can set it to
+`block` or `off`, or ignore one exact finding.
+
+Synthetic tests cover TX and RX pairs, named data contacts, current data-only
+and return-role maps, `NOT_APPLICABLE`, DNP, incomplete and ambiguous
+assignments, exact two-contact scope, policy overrides, deterministic ordering,
+and CLI/MCP parity. Tooling-owned fault and three-pin GND control schematics
+export twice with digest-pinned KiCad 10.0.0 and 10.0.5 images; see the
+[fixture record](../tests/fixtures/design_lint/usb-superspeed-connector-return-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_usb_superspeed_connector_return_review.py \
+  -m 'design_lint and connector_lint and interface_lint and return_path_lint and design_lint_rule(rule_id="connector.usb_superspeed_pair_without_return_review")'
+
+KICAD_RUN_NATIVE_USB_SUPERSPEED_CONNECTOR_RETURN_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
+  .venv/bin/python -I -m pytest tests/test_usb_superspeed_connector_return_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and return_path_lint and native_kicad and design_lint_rule(rule_id="connector.usb_superspeed_pair_without_return_review")'
 ```
 
 ## Review generic connector contacts on Ethernet PHY data pairs

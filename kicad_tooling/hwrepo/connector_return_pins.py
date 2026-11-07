@@ -87,6 +87,19 @@ def connector_pin_group_has_return_role(
     return False
 
 
+def connector_pin_for_assigned_net(
+    assigned: Mapping[str, tuple[str, str]],
+    expected_net: str,
+) -> tuple[str, str] | None:
+    """Return one exact connector pin/function assignment for a net, if unique."""
+    matches = tuple(
+        (pin, function)
+        for pin, (net, function) in assigned.items()
+        if net.casefold() == expected_net.casefold()
+    )
+    return matches[0] if len(matches) == 1 else None
+
+
 def unconnected_named_connector_pins(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
