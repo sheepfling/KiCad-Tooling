@@ -8,6 +8,7 @@ from .connector_peer_pin_candidate_results import (
     ConnectorCandidateResult,
     ConnectorPeerPinFindingCounts,
 )
+from .connector_return_spi_review import spi_connector_missing_return_candidates
 from .connector_scope_coverage_candidates import connector_scope_singleton_candidates
 from .connector_stateful_contact_models import ConnectorStatefulContactMap
 from .connector_stateful_contacts import stateful_connector_contact_findings
@@ -31,7 +32,7 @@ def connector_candidates(
     power_output_review_enabled: bool = True,
     stateful_contact_map: ConnectorStatefulContactMap | None = None,
 ) -> tuple[Candidate, ...]:
-    """Collect connector pin findings followed by return-domain review prompts."""
+    """Collect connector pin, return-domain, and mapped SPI return candidates."""
     return (
         *connector_pin_candidates(
             observed,
@@ -51,6 +52,11 @@ def connector_candidates(
             observed,
             connector_coverage=connector_coverage,
             reviewed_connector_references=reviewed_connector_references,
+        ),
+        *spi_connector_missing_return_candidates(
+            observed,
+            connector_coverage,
+            reviewed_connector_references,
         ),
         *stateful_connector_contact_findings(observed, stateful_contact_map),
     )

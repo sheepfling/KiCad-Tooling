@@ -345,6 +345,8 @@ INTERFACE_LINT_TEST_MODULES = frozenset(
         "tests/test_spi_generic_connector_native_fixture_registry.py",
         "tests/test_design_lint_architecture_spi_generic_connector.py",
         "tests/test_design_lint_mcp_parity_spi_generic_connector_triad.py",
+        "tests/test_spi_connector_return_review.py",
+        "tests/test_design_lint_architecture_spi_connector_return.py",
         "tests/test_usb_generic_connector_native_fixture_lane.py",
         "tests/test_usb_generic_connector_native_fixture_registry.py",
         "tests/test_design_lint_architecture_usb_generic_connector.py",

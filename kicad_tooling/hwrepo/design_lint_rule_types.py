@@ -17,6 +17,7 @@ DesignLintRuleId = Literal[
     "connector.rs485_pair_without_return_review",
     "connector.usb2_pair_without_return_review",
     "connector.usb_superspeed_pair_without_return_review",
+    "connector.spi_triad_without_return_review",
     "connector.footprint_peer_pin_assignment_divergence",
     "connector.footprint_peer_pin_unanchored_assignment_divergence",
     "connector.footprint_peer_unanchored_scope_unreviewed",

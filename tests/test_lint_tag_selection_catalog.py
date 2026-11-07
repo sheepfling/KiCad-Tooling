@@ -402,6 +402,10 @@ from scripts.lint_gate_scope import (
             "connector.usb_superspeed_pair_without_return_review",
             "KICAD_RUN_NATIVE_USB_SUPERSPEED_CONNECTOR_RETURN_FIXTURES",
         ),
+        (
+            "connector.spi_triad_without_return_review",
+            "KICAD_RUN_NATIVE_SPI_GENERIC_CONNECTOR_FIXTURES",
+        ),
     ),
 )
 def test_lint_tag_selects_rule_and_all_its_configured_native_fixtures(

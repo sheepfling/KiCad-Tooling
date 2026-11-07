@@ -12,10 +12,13 @@ from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.electrical import selected_config
 
 RULE_ID = "bus.spi_generic_connector_triad_review"
+RETURN_RULE_ID = "connector.spi_triad_without_return_review"
 
 pytestmark = [
     pytest.mark.design_lint,
+    pytest.mark.connector_lint,
     pytest.mark.interface_lint,
+    pytest.mark.return_path_lint,
     pytest.mark.native_kicad,
     pytest.mark.slow,
     pytest.mark.template_checkout,
@@ -45,6 +48,7 @@ PROJECT_TOOLCHAINS = (
 )
 @pytest.mark.parametrize(("project", "version", "image"), PROJECT_TOOLCHAINS)
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=RETURN_RULE_ID)
 def test_native_generic_connector_fault_and_named_control(
     hosted_reference_root: Path, project: str, version: str, image: str
 ) -> None:
@@ -68,11 +72,20 @@ def test_native_generic_connector_fault_and_named_control(
     assert set(results) == {
         "generic-connector/spi/fault",
         "generic-connector/spi/control",
+        "generic-connector/spi/return/fault",
+        "generic-connector/spi/return/control",
     }
     assert results["generic-connector/spi/fault"]["finding_count"] == 1
     assert results["generic-connector/spi/control"]["finding_count"] == 0
-    for result in results.values():
+    assert results["generic-connector/spi/return/fault"]["finding_count"] == 1
+    assert results["generic-connector/spi/return/control"]["finding_count"] == 0
+    assert (
+        results["generic-connector/spi/return/fault"]["normalized_netlist_sha256"]
+        == results["generic-connector/spi/fault"]["normalized_netlist_sha256"]
+    )
+    for stage, result in results.items():
         assert result["status"] == "PASS"
         assert result["kicad_version"] == version
         assert result["image"] == image
-        assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
+        if stage in {"generic-connector/spi/fault", "generic-connector/spi/control"}:
+            assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]

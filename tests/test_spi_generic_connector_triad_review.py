@@ -75,6 +75,7 @@ def _source_matched_spi_pin_map() -> ConnectorCoverageReport:
                         interface_pin_number=signal,
                         interface_signal=signal,
                         component_pin=f"J1.{number}",
+                        role="return" if signal == "GND" else "signal",
                         symbol_function=f"Pin_{number}",
                         nets=(net,),
                     )

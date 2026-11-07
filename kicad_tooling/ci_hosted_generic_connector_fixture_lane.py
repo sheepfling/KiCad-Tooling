@@ -38,8 +38,8 @@ def generic_connector_fixture_lane(
     fixture_sources: Mapping[str, Path],
     expected_subject: str,
     role_evidence: tuple[RoleEvidence, ...],
-) -> None:
-    """Export each synthetic source twice and verify exact rule evidence.
+) -> dict[str, NetlistContract]:
+    """Export each synthetic source twice, verify evidence, and retain typed observations.
 
     Each role tuple is ``(label, net_key, connector_pins_key, endpoint_pin,
     connector_pin)``. Protocol wrappers own the rule and fixture identity.
@@ -77,6 +77,7 @@ def generic_connector_fixture_lane(
         'actual="$(kicad-cli version)"\n',
         f'printf "kicad_version=%s\\n" "$actual"\ntest "$actual" = "{config.kicad_version}"\n',
     ]
+    native_observations: dict[str, NetlistContract] = {}
     for case in sources:
         commands.append(
             "for run in first repeat; do kicad-cli sch export netlist --format kicadxml "
@@ -202,3 +203,5 @@ def generic_connector_fixture_lane(
             repeat_normalized_netlist_sha256=normalized_hashes[1],
             finding_count=expected_count,
         )
+        native_observations[case] = observations[0]
+    return native_observations

@@ -413,7 +413,7 @@ intended requirement.
 The following 287 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 287 active rules.
+The catalog currently contains 288 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -713,6 +713,7 @@ skipped under prerelease policy.
 - `connector.rs485_pair_without_return_review`
 - `connector.usb2_pair_without_return_review`
 - `connector.usb_superspeed_pair_without_return_review`
+- `connector.spi_triad_without_return_review`
 - `net.return_labels_without_pin_roles`
 - `mcu.stm32_cubemx_pin_map`
 
@@ -19586,6 +19587,38 @@ acceptance threads while new lint features proceed:
   interface_lint and
   design_lint_rule(rule_id="bus.usb_c_generic_connector_cc_pair_review")'`.
   The native lane uses `KICAD_RUN_NATIVE_USB_C_GENERIC_CONNECTOR_FIXTURES=1`.
+
+#### LINT-307 — Review a mapped SPI connector without an identified return role
+
+- **Rule:** `connector.spi_triad_without_return_review`, default `review`.
+- **Trigger:** A fitted generic connector has a complete, current, source-matched
+  map accounting for every contact. The map matches generic connector contacts
+  to the exact clock, controller-to-peripheral data, and
+  peripheral-to-controller data nets of exactly one fitted, completely
+  inventoried SPI endpoint. Neither a native connector function nor a mapped
+  connector role identifies a return contact.
+- **Purpose:** Prompt review of whether the reference is supplied elsewhere,
+  the interface is intentionally isolated, or the connector map lacks a return
+  role. A source-matched return role suppresses the prompt.
+- **Evidence and limits:** The finding retains the complete mapped pin roles,
+  exact connector and SPI endpoint pins, assigned net names, native connector
+  pin count, and interface-catalog digest. Net labels are evidence only. The
+  rule does not infer a return requirement, require board ground, identify
+  connector purpose, trace cable wiring, or establish PCB copper continuity.
+  Unmapped, stale, incomplete, DNP, named-function, ambiguous, and multiple
+  endpoint cases stay quiet.
+- **Fixtures:** Tooling-owned synthetic fault/control cases exercise the
+  generic connector with a complete SPI-only map and the same exact map with
+  an explicit return role. Additional tests cover stale map evidence, review
+  policy, exact ignores, and deterministic ordering. The native SPI fixture
+  lane checks both map dispositions against repeated digest-pinned KiCad
+  10.0.0 and 10.0.5 netlist exports.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_spi_connector_return_review.py -m 'design_lint and connector_lint
+  and interface_lint and return_path_lint and
+  design_lint_rule(rule_id="connector.spi_triad_without_return_review")'`.
+  The native lane uses
+  `KICAD_RUN_NATIVE_SPI_GENERIC_CONNECTOR_FIXTURES=1`.
 
 [swd-symbol]: https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/master/MCU_ST_STM32WB.kicad_symdir/STM32WB15CCUx.kicad_sym
 [swd-rename]: https://gitlab.com/kicad/libraries/kicad-symbols/-/merge_requests/3929/reports

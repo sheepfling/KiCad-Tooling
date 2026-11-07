@@ -22,12 +22,16 @@ def generic_spi_connector_triads(
     observed: NetlistContract,
     reviewed_connector_references: tuple[str, ...] = (),
     connector_coverage: ConnectorCoverageReport | None = None,
+    *,
+    include_source_mapped: bool = False,
 ) -> tuple[SpiGenericConnectorTriad, ...]:
     """Find complete generic connector groups on exact native SPI triad nets.
 
     Native pin functions establish the fitted IC role triad. Generic connector
     functions establish only a review clue; this predicate does not infer that
-    the connector belongs to SPI or establish an electrical requirement.
+    the connector belongs to SPI or establish an electrical requirement. The
+    optional source-mapped mode lets complementary checks inspect triads whose
+    connector-role coverage already suppresses this association prompt.
     """
     assignments: dict[str, set[str]] = {}
     for net, pins in observed.nets.items():
@@ -120,7 +124,9 @@ def generic_spi_connector_triads(
 
             if ambiguous or any(not pins_by_role[role] for role in _ROLE_ORDER):
                 continue
-            if _source_map_covers_triad(pins_by_role, nets_by_role, mapped_by_pin):
+            if not include_source_mapped and _source_map_covers_triad(
+                pins_by_role, nets_by_role, mapped_by_pin
+            ):
                 continue
             findings.append(
                 SpiGenericConnectorTriad(

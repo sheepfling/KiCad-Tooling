@@ -13487,6 +13487,47 @@
       ],
       "theme": "returns",
       "implementation_owner": "kicad_tooling/hwrepo/connector_return_usb_superspeed_review.py#usb_superspeed_connector_missing_return_candidates"
+    },
+    {
+      "rule_id": "connector.spi_triad_without_return_review",
+      "title": "Mapped SPI connector has no identified return role",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist and compared with a complete source-matched connector pin map",
+      "predicate": "For a fitted, completely inventoried generic connector whose current source-matched map accounts for every contact and maps the exact native SPI clock, controller-to-peripheral data, and peripheral-to-controller data contacts to one fitted, completely inventoried IC endpoint, emit REVIEW when no native connector function or mapped connector role identifies a return. A source-matched return role suppresses the prompt. Net names are evidence only and are not interpreted as return requirements.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native fixture exports; the selected project's exact version is checked before export"
+      ],
+      "limitations": [
+        "This review applies only to a complete, current connector map covering one uniquely recognized SPI clock/data triad and all connector contacts. Unmapped, stale, incomplete, DNP, ambiguous, named-native-role, and multiple-endpoint cases are outside the predicate.",
+        "An absent mapped return role does not prove an electrical defect. The signal reference may be supplied elsewhere or intentionally isolated; the prompt does not require board ground or infer intent from net names.",
+        "A schematic netlist and connector map do not establish off-board wiring, device behavior, PCB copper continuity, physical continuity, SPI compliance, or manufacturing readiness."
+      ],
+      "fault_fixtures": [
+        "tests.test_spi_connector_return_review.test_complete_spi_map_without_a_return_role_emits_review",
+        "tests.test_spi_connector_return_review.test_unreviewed_or_stale_connector_maps_do_not_claim_return_coverage",
+        "tests.test_spi_generic_connector_native_fixture_lane.test_native_generic_connector_fault_and_named_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_spi_connector_return_review.test_source_mapped_return_role_is_a_valid_control"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_spi_connector_return_review.test_finding_is_stable_when_native_mappings_are_reordered",
+        "tests.test_design_lint_architecture_spi_connector_return.test_rule_has_a_return_theme_predicate_owner"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SPI_GENERIC_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_return_spi_review.py#spi_connector_missing_return_candidates",
+        "kicad_tooling/hwrepo/spi_generic_connector_candidates.py#generic_spi_connector_triads",
+        "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_pin_evidence",
+        "kicad_tooling/hwrepo/spi_participants.py#spi_signal_role_and_channel"
+      ],
+      "theme": "returns",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_return_spi_review.py#spi_connector_missing_return_candidates"
     }
   ]
 }

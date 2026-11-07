@@ -787,7 +787,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 287 active rules.
+The catalog currently contains 288 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -2490,6 +2490,31 @@ twice using digest-pinned KiCad 10.0.0 and 10.0.5 images; see the
 KICAD_RUN_NATIVE_SPI_GENERIC_CONNECTOR_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
   .venv/bin/python -I -m pytest tests/test_spi_generic_connector_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_generic_connector_triad_review")'
+```
+
+## Review a mapped SPI connector without an identified return role
+
+`connector.spi_triad_without_return_review` prompts when a current,
+source-matched connector map accounts for every contact and maps generic
+connector contacts to the exact clock and both data roles of one native SPI
+endpoint, but no native function or mapped role identifies a return contact.
+A mapped return role suppresses the prompt. Net names remain evidence only;
+this review does not require board ground or infer that similar return names
+should be connected. An interface may be intentionally isolated or reference
+may be supplied elsewhere. Project policy can set the rule to `block` or
+`off`, or ignore one exact finding.
+
+Synthetic tests cover the mapped no-return prompt, an explicit return control,
+stale maps, policy overrides, stable evidence, and a tooling-owned schematic
+exported twice with digest-pinned KiCad 10.0.0 and 10.0.5 images.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_spi_connector_return_review.py \
+  -m 'design_lint and connector_lint and interface_lint and return_path_lint and design_lint_rule(rule_id="connector.spi_triad_without_return_review")'
+
+KICAD_RUN_NATIVE_SPI_GENERIC_CONNECTOR_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
+  .venv/bin/python -I -m pytest tests/test_spi_generic_connector_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and return_path_lint and native_kicad and design_lint_rule(rule_id="connector.spi_triad_without_return_review")'
 ```
 
 ## Review generic connector contacts on a UART pair
