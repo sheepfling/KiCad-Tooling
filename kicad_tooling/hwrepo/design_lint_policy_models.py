@@ -6,6 +6,7 @@ from typing import Literal
 
 from pydantic import model_validator
 
+from .capacitor_hold_up_models import CapacitorHoldUpMap
 from .component_role_models import ComponentRoleMap
 from .connector_return_distribution_models import ConnectorReturnDistributionMap
 from .connector_stateful_contact_models import ConnectorStatefulContactMap
@@ -60,6 +61,7 @@ class DesignLintPolicy(StrictModel):
     signal_divider_map: SignalDividerMap | None = None
     led_current_map: LedCurrentMap | None = None
     regulator_passive_topology_map: RegulatorPassiveTopologyMap | None = None
+    capacitor_hold_up_map: CapacitorHoldUpMap | None = None
     rc_filter_map: RcFilterMap | None = None
     connector_return_distribution_map: ConnectorReturnDistributionMap | None = None
     connector_stateful_contact_map: ConnectorStatefulContactMap | None = None

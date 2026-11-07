@@ -11,7 +11,15 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint, pytest.mark.p
 
 @pytest.mark.parametrize(
     ("value", "expected_pf"),
-    (("18 pF", 18), ("0.018 nF", 18), ("0.000018 uF", 18), ("18p", 18)),
+    (
+        ("18 pF", 18),
+        ("0.018 nF", 18),
+        ("0.000018 uF", 18),
+        ("18p", 18),
+        ("1 mF", 1_000_000_000),
+        ("1F", 1_000_000_000_000),
+        ("0.25 F", 250_000_000_000),
+    ),
 )
 def test_parser_accepts_explicit_units(value: str, expected_pf: int) -> None:
     assert parse_capacitance_pf(value) == expected_pf

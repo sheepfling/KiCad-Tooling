@@ -8,7 +8,7 @@ from types import MappingProxyType
 
 _CAPACITANCE_VALUE = re.compile(
     r"^\s*(?P<number>(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+))\s*"
-    r"(?P<unit>pf|nf|uf|μf|µf|p|n|u)\s*$",
+    r"(?P<unit>pf|nf|uf|μf|µf|mf|f|p|n|u)\s*$",
     re.IGNORECASE,
 )
 _PICO_FARADS_PER_UNIT = MappingProxyType(
@@ -18,6 +18,8 @@ _PICO_FARADS_PER_UNIT = MappingProxyType(
         "n": Decimal(1000),
         "nf": Decimal(1000),
         "u": Decimal(1000000),
+        "mf": Decimal(1000000000),
+        "f": Decimal(1000000000000),
         "uf": Decimal(1000000),
         "μf": Decimal(1000000),
         "µf": Decimal(1000000),

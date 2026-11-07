@@ -7795,3 +7795,66 @@ partial population remains reviewable. See the
 [LINT-270 backlog record](DESIGN_LINT_BACKLOG.md#lint-270--review-mapped-regulator-required-passive-topology-mismatches)
 and the
 [synthetic native fixtures](../tests/fixtures/design_lint/regulator-required-passive-native/README.md).
+
+## Review a mapped capacitor hold-up estimate
+
+`power.capacitor_hold_up_below_project_minimum` evaluates one exact,
+project-mapped capacitor using its native schematic value and pin assignments.
+The project supplies its PART_ID, symbol, footprint, pin-to-net map, starting
+and minimum load voltages, maximum constant-current load, and minimum hold-up
+time. The check reports source mismatches or a nominal estimate below that
+limit. It supports explicit `mF` and `F` capacitor values in addition to the
+existing `pF`, `nF`, and `uF` forms.
+
+For example, an authored 1 F capacitor discharged from 5 V to 3 V at no more
+than 1 A has a nominal ideal constant-current estimate of 2,000 ms. The rule
+can compare that value with a project-authored minimum. It does not model
+tolerance, voltage-dependent capacitance, ESR, leakage, load transients,
+capacitor banks, charge current, lifetime, ratings, or the wider power path.
+The result defaults to REVIEW and can be promoted or disabled through the
+existing design-lint policy. A passing estimate does not qualify actual
+hold-up or safety.
+
+For example, the project policy can map a specific 1 F storage part and
+declare the operating screen explicitly:
+
+```json
+{
+  "design_lint": {
+    "capacitor_hold_up_map": {
+      "basis": "Reviewed storage part and system hold-up requirement",
+      "requirements": [
+        {
+          "id": "backup-rail",
+          "basis": "Reviewed 5 V to 3 V discharge requirement",
+          "capacitor_reference": "C1",
+          "expected_value": "1F",
+          "expected_symbol": "Device:C",
+          "expected_footprint": "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm",
+          "expected_part_id": "EDLC-1F",
+          "positive_pin": "C1.1",
+          "return_pin": "C1.2",
+          "positive_net": "BACKUP_V",
+          "return_net": "RETURN",
+          "starting_voltage_v": 5.0,
+          "minimum_load_voltage_v": 3.0,
+          "maximum_load_current_ma": 1000.0,
+          "minimum_hold_up_ms": 2000.0
+        }
+      ]
+    }
+  }
+}
+```
+
+This is structural example data, not an approved component requirement. Replace
+the source, exact identities, nets, and operating bounds with project-reviewed
+values. If the check is promoted to `block`, the project owner must first
+approve how nominal capacitance, load current, voltage window, and the omitted
+electrical effects apply to that design.
+
+The project authors every operating assumption independently; the checker does not infer storage
+intent from a reference designator, symbol, or net name. See the
+[LINT-308 record](DESIGN_LINT_BACKLOG.md#lint-308--review-a-mapped-storage-capacitor-below-an-authored-hold-up-minimum)
+and the
+[synthetic native fixtures](../tests/fixtures/design_lint/capacitor-hold-up-native/README.md).

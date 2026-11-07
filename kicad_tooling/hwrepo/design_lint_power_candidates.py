@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .capacitor_hold_up_models import CapacitorHoldUpMap
 from .component_pin_patterns import (
     component_supply_pins_on_different_nets,
     unconnected_generic_power_input_component_pins,
@@ -14,6 +15,7 @@ from .design_lint_component_unconnected_pin_candidate_evidence import (
     UnconnectedComponentPinCandidate,
 )
 from .design_lint_power_candidate_evidence import PowerCandidate
+from .design_lint_power_capacitor_hold_up import capacitor_hold_up_candidates
 from .design_lint_power_decoupling import ic_decoupling_candidates
 from .design_lint_power_inputs import PowerCandidateInputs
 from .design_lint_power_regulator_passives import regulator_required_passive_candidates
@@ -38,6 +40,7 @@ def power_candidates(
     reviewed_connector_references: tuple[str, ...] = (),
     peer_unconnected_power_output_pins: frozenset[str] = frozenset(),
     ic_decoupling_map: IcDecouplingMap | None = None,
+    capacitor_hold_up_map: CapacitorHoldUpMap | None = None,
 ) -> tuple[Candidate, ...]:
     """Compatibility adapter for the named power candidate input group."""
     return scan_power_candidates(
@@ -48,6 +51,7 @@ def power_candidates(
             power_sequence_map=None,
             oscillator_output_path_map=None,
             ic_decoupling_map=ic_decoupling_map,
+            capacitor_hold_up_map=capacitor_hold_up_map,
         ),
         reviewed_connector_references=reviewed_connector_references,
         peer_unconnected_power_output_pins=peer_unconnected_power_output_pins,
@@ -69,6 +73,7 @@ def scan_power_candidates(
     found.extend(
         regulator_required_passive_candidates(observed, inputs.regulator_passive_topology_map)
     )
+    found.extend(capacitor_hold_up_candidates(observed, inputs.capacitor_hold_up_map))
     found.extend(
         named_power_pin_net_role_conflicts(
             observed,

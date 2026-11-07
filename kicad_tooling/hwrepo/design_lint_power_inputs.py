@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .capacitor_hold_up_models import CapacitorHoldUpMap
 from .component_role_models import ComponentRoleMap
 from .ic_decoupling_models import IcDecouplingMap
 from .led_current_models import LedCurrentMap
@@ -24,3 +25,4 @@ class PowerCandidateInputs:
     ic_decoupling_map: IcDecouplingMap | None
     regulator_passive_topology_map: RegulatorPassiveTopologyMap | None = None
     led_current_map: LedCurrentMap | None = None
+    capacitor_hold_up_map: CapacitorHoldUpMap | None = None

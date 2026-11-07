@@ -10572,6 +10572,52 @@
       ]
     },
     {
+      "rule_id": "power.capacitor_hold_up_below_project_minimum",
+      "title": "Mapped capacitor hold-up estimate is below the authored minimum",
+      "theme": "power",
+      "implementation_owner": "kicad_tooling/hwrepo/design_lint_power_capacitor_hold_up.py#capacitor_hold_up_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Exact project-authored capacitor identity and pin map compared with source-bound native netlist values and assignments",
+      "predicate": "For each mapped capacitor, report identity, fit, pin-inventory, pin-net, or supported-value mismatches, or a nominal constant-current estimate below the project-authored hold-up minimum. The estimate is C multiplied by the authored voltage window and divided by authored maximum load current.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The project-authored component identity, operating bounds, and minimum time are not independently verified by this check.",
+        "The estimate uses nominal schematic capacitance and a constant-current load; it does not model tolerance, voltage dependence, ESR, leakage, load transients, capacitor banks, or the wider power path.",
+        "A passing estimate is only a review screen and does not establish safe charge current, inrush, lifetime, voltage rating, actual hold-up, or manufacturing readiness."
+      ],
+      "fault_fixtures": [
+        "tests.test_capacitor_hold_up.test_nominal_hold_up_below_authored_requirement_is_reviewed",
+        "tests.test_capacitor_hold_up.test_replaced_disconnected_or_dnp_storage_part_is_reviewed",
+        "tests.test_capacitor_hold_up.test_project_can_promote_the_source_mismatch_to_block",
+        "tests.test_capacitor_hold_up_parity.test_project_authored_capacitor_hold_up_matches_cli_and_mcp",
+        "tests.test_capacitor_hold_up_native_fixture.test_native_capacitor_hold_up_faults_and_control_are_source_bound"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_capacitor_hold_up.test_exact_threshold_is_a_valid_control",
+        "tests.test_capacitor_hold_up_native_fixture.test_native_capacitor_hold_up_faults_and_control_are_source_bound"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_capacitor_hold_up.test_candidate_output_is_order_stable"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/design_lint_power_capacitor_hold_up.py#capacitor_hold_up_candidates",
+        "kicad_tooling/hwrepo/capacitor_hold_up_checks.py#assess_capacitor_hold_up",
+        "kicad_tooling/hwrepo/capacitor_hold_up_models.py#CapacitorHoldUpMap",
+        "kicad_tooling/hwrepo/design_lint_policy_models.py#DesignLintPolicy",
+        "kicad_tooling/hwrepo/design_lint_power_inputs.py#PowerCandidateInputs",
+        "kicad_tooling/hwrepo/design_lint_power_candidates.py#scan_power_candidates",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_design_lint_evaluation"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CAPACITOR_HOLD_UP_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "power.regulator_feedback_mismatch",
       "title": "Mapped regulator feedback divider differs from the authored output requirement",
       "status": "active",
