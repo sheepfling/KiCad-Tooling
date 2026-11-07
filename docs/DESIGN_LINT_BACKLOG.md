@@ -19965,7 +19965,8 @@ acceptance threads while new lint features proceed:
   with U1.2/CANL assigned, plus a control assigning both pins to separate
   signal nets. The native lane checks exact pin functions and the open-pin
   inventory, repeats exports with digest-pinned KiCad 10.0.0 and 10.0.5 images,
-  and requires zero ERC errors.
+  and requires zero ERC errors. See the
+  [native fixture note](../tests/fixtures/design_lint/can-unconnected-lines-native/README.md).
 - **Boundary:** This verifies schematic assignment for the bounded CANH/CANL
   aliases. It does not decide whether a line is required, infer vendor-specific
   aliases, prove off-board continuity, or verify PCB copper. The rule remains
