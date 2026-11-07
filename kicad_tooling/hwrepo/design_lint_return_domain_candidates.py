@@ -8,6 +8,7 @@ from .connector_coverage_models import ConnectorCoverageReport
 from .connector_return_can_review import can_connector_missing_return_candidates
 from .connector_return_i2c_review import i2c_connector_missing_return_candidates
 from .connector_return_i3c_review import i3c_connector_missing_return_candidates
+from .connector_return_jtag_review import jtag_connector_missing_return_candidates
 from .connector_return_pins import (
     connectors_without_connected_return,
     unconnected_named_connector_pins,
@@ -77,6 +78,13 @@ def return_domain_candidates(
     )
     found.extend(
         swd_connector_missing_return_candidates(
+            observed,
+            reviewed_connector_references,
+            connector_coverage,
+        )
+    )
+    found.extend(
+        jtag_connector_missing_return_candidates(
             observed,
             reviewed_connector_references,
             connector_coverage,

@@ -91,6 +91,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="i3c-connector-return-review",
     ),
     pytest.param(
+        "connector.jtag_pair_without_return_review",
+        "KICAD_RUN_NATIVE_JTAG_CONNECTOR_RETURN_FIXTURES",
+        "tests.test_jtag_connector_return_native_fixture_lane."
+        "test_native_jtag_connector_return_fault_and_control_repeat",
+        id="jtag-connector-return-review",
+    ),
+    pytest.param(
         "connector.can_pair_without_return_review",
         "KICAD_RUN_NATIVE_CAN_CONNECTOR_RETURN_FIXTURES",
         "tests.test_can_connector_return_native_fixture_lane."

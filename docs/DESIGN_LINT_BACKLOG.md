@@ -712,6 +712,7 @@ skipped under prerelease policy.
 - `connector.i2c_pair_without_return_review`
 - `connector.i3c_pair_without_return_review`
 - `connector.swd_pair_without_return_review`
+- `connector.jtag_pair_without_return_review`
 - `connector.can_pair_without_return_review`
 - `connector.rs485_pair_without_return_review`
 - `connector.usb2_pair_without_return_review`
@@ -19878,6 +19879,41 @@ acceptance threads while new lint features proceed:
   design_lint_rule(rule_id="connector.swd_pair_without_return_review")'`.
   The native lane uses `KICAD_RUN_NATIVE_SWD_GENERIC_CONNECTOR_FIXTURES=1`
   and `tests/test_swd_connector_return_native_fixture_lane.py`.
+
+#### LINT-315 — Review a JTAG connector without an identified return
+
+- **Rule:** `connector.jtag_pair_without_return_review`, default `review`.
+- **Trigger:** A complete connector candidate has generic contacts on both
+  exact, distinct TCK and TMS nets from a fitted U/IC with a complete, unique
+  native pin inventory; no connector pin function or current source-matched
+  pin map identifies a return. A reviewed `NOT_APPLICABLE` decision suppresses
+  the prompt. Mapping only the TCK/TMS contacts does not establish return-role
+  intent.
+- **Purpose:** Ask whether the JTAG signal reference is supplied elsewhere,
+  the interface is intentionally isolated, or the reviewed connector pinout
+  needs a return contact. This complements the generic JTAG association cue,
+  which does not assess return-role coverage.
+- **Evidence and limits:** Findings retain the exact JTAG endpoint pins and
+  functions, both native net assignments, generic connector contacts, and the
+  complete connector inventory. A `GND` net label without a connector return
+  function or current source-matched role does not count as a return. The cue
+  does not prove connector purpose, require local board ground, infer external
+  wiring, or establish PCB or physical continuity. Projects with an
+  independently authored return requirement can promote or ignore the rule
+  through standard policy.
+- **Fixtures:** The synthetic generic-return fault retains a `GND` net label.
+  Native and mapped return controls, current signal-map
+  coverage without return, reviewed `NOT_APPLICABLE`, stale evidence, policy,
+  stable fingerprint, CLI/MCP parity, and exact-version native exports on
+  KiCad 10.0.0 and 10.0.5. Field applicability and reviewer value remain
+  unmeasured. See the
+  [native fixture note](../tests/fixtures/design_lint/jtag-connector-return-native/README.md).
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_jtag_connector_return_review.py -m 'design_lint and
+  connector_lint and interface_lint and return_path_lint and
+  design_lint_rule(rule_id="connector.jtag_pair_without_return_review")'`.
+  The native lane uses `KICAD_RUN_NATIVE_JTAG_CONNECTOR_RETURN_FIXTURES=1`
+  and `tests/test_jtag_connector_return_native_fixture_lane.py`.
 
 ## Completion and release gate
 

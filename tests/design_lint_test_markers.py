@@ -327,6 +327,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_electrical_digital_peer_voltage_parity.py",
                 "tests/test_electrical_component_rating_parity.py",
                 "tests/test_electrical_connector_rating_parity.py",
+                "tests/test_design_lint_mcp_parity_jtag_connector_return.py",
                 "tests/test_electrical_serial_peer_parity.py",
                 "tests/test_electrical_parity.py",
                 "tests/test_electrical_i2c_parity.py",

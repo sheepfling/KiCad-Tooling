@@ -107,6 +107,13 @@ ETHERNET_GENERIC_CONNECTOR_THEME_SUITES = (
     "test_design_lint_mcp_parity_swd_generic_connector.py",
     "test_design_lint_architecture_swd_generic_connector.py",
 )
+JTAG_CONNECTOR_RETURN_THEME_SUITES = (
+    "test_jtag_connector_return_review.py",
+    "test_jtag_connector_return_native_fixture_lane.py",
+    "test_jtag_connector_return_native_fixture_registry.py",
+    "test_design_lint_architecture_jtag_connector_return.py",
+    "test_design_lint_mcp_parity_jtag_connector_return.py",
+)
 USB_INLINE_COMPONENT_THEME_SUITES = (
     "test_usb_inline_component_paths.py",
     "test_usb_inline_protection_shunts.py",
@@ -236,6 +243,7 @@ def test_design_lint_theme_suites_stay_below_review_limit() -> None:
                     *SPI_GENERIC_CONNECTOR_THEME_SUITES,
                     *SERIAL_GENERIC_CONNECTOR_THEME_SUITES,
                     *ETHERNET_GENERIC_CONNECTOR_THEME_SUITES,
+                    *JTAG_CONNECTOR_RETURN_THEME_SUITES,
                     *USB_INLINE_COMPONENT_THEME_SUITES,
                     *POWER_PATH_HOSTED_THEME_SUITES,
                     *IC_RAIL_NATIVE_THEME_SUITES,
