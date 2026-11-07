@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 293 rules are implemented with synthetic regression coverage.
+The following 294 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 293 active rules.
+The catalog currently contains 294 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -3665,7 +3665,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 293 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 294 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -19954,6 +19954,27 @@ acceptance threads while new lint features proceed:
   cases. The native lane is `tests/test_usb_c_cc_unconnected_native_fixture_lane.py`
   under `KICAD_RUN_NATIVE_USB_C_CC_UNCONNECTED_FIXTURES=1`; both are selectable
   with `design_lint_rule(rule_id="bus.usb_c_unconnected_cc_pin")`.
+
+#### LINT-317 — Add exact-native evidence for an unassigned CANH/CANL line
+
+- **Rule:** `bus.can_unconnected_line`, default `review`; this adds native
+  verification coverage for an existing heuristic.
+- **Gap:** Synthetic fault/control and order-stability checks existed, but the
+  catalog did not require a native KiCad fixture for the open-line predicate.
+- **Fixtures:** Tooling-owned schematics cover U1.1/CANH explicitly left open
+  with U1.2/CANL assigned, plus a control assigning both pins to separate
+  signal nets. The native lane checks exact pin functions and the open-pin
+  inventory, repeats exports with digest-pinned KiCad 10.0.0 and 10.0.5 images,
+  and requires zero ERC errors.
+- **Boundary:** This verifies schematic assignment for the bounded CANH/CANL
+  aliases. It does not decide whether a line is required, infer vendor-specific
+  aliases, prove off-board continuity, or verify PCB copper. The rule remains
+  configurable review guidance.
+- **Selection:** Run `tests/test_design_lint_unconnected_interfaces.py` for
+  synthetic cases. The native lane is
+  `tests/test_can_unconnected_line_native_fixture_lane.py` under
+  `KICAD_RUN_NATIVE_CAN_UNCONNECTED_LINE_FIXTURES=1`; both are selectable with
+  `design_lint_rule(rule_id="bus.can_unconnected_line")`.
 
 ## Completion and release gate
 

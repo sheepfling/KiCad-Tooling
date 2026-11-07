@@ -95,6 +95,9 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_can_line_named_rail_native_fixture_lane.py": frozenset(
             {"interface_lint", "native_kicad", "slow"}
         ),
+        "test_can_unconnected_line_native_fixture_lane.py": frozenset(
+            {"interface_lint", "native_kicad", "slow"}
+        ),
         "test_usb_c_cc_named_rail.py": frozenset({"interface_lint"}),
         "test_design_lint_determinism_usb_c_cc_named_rail.py": frozenset(
             {"interface_lint", "slow"}

@@ -154,6 +154,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="can-unconnected-direction-pin",
     ),
     pytest.param(
+        "bus.can_unconnected_line",
+        "KICAD_RUN_NATIVE_CAN_UNCONNECTED_LINE_FIXTURES",
+        "tests.test_can_unconnected_line_native_fixture_lane."
+        "test_native_can_unconnected_line_fault_and_control_repeat",
+        id="can-unconnected-line",
+    ),
+    pytest.param(
         "bus.ethernet_data_label_mismatch",
         "KICAD_RUN_NATIVE_ETHERNET_DATA_LABEL_FIXTURES",
         "tests.test_ethernet_data_label_native_fixture_lane."

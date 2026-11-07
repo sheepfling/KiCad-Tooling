@@ -6665,14 +6665,19 @@
         "It does not infer whether a local CAN line is required or prove off-board continuity."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_can.test_can_termination_hint_requires_a_direct_resistor_and_is_configurable"
+        "tests.test_design_lint_can.test_can_termination_hint_requires_a_direct_resistor_and_is_configurable",
+        "tests.test_can_unconnected_line_native_fixture_lane.test_native_can_unconnected_line_fault_and_control_repeat"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_can.test_can_termination_hint_requires_a_direct_resistor_and_is_configurable"
+        "tests.test_design_lint_can.test_can_termination_hint_requires_a_direct_resistor_and_is_configurable",
+        "tests.test_can_unconnected_line_native_fixture_lane.test_native_can_unconnected_line_fault_and_control_repeat"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_design_lint_unconnected_interfaces.test_unconnected_can_lines_are_order_stable_and_each_assignment_clears_one"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CAN_UNCONNECTED_LINE_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/bus_signal_roles.py#unconnected_interface_pins",
