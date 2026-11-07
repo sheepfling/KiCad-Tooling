@@ -364,6 +364,9 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
     from tests.design_lint_fixtures.rs485_generic_connector_pair import (
         generic_rs485_connector_pair_netlist,
     )
+    from tests.design_lint_fixtures.serial_connector_return import (
+        two_pin_uart_connector_netlist,
+    )
     from tests.design_lint_fixtures.serial_generic_connector_pair import (
         generic_serial_connector_pair_netlist,
     )
@@ -393,6 +396,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         spi_peer_voltage_netlist(),
         serial_peer_voltage_netlist(),
         generic_serial_connector_pair_netlist(),
+        two_pin_uart_connector_netlist(),
         generic_rs485_connector_pair_netlist(),
         serial_reference_netlist(),
         can_netlist(),

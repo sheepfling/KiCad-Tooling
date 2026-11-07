@@ -374,6 +374,10 @@ from scripts.lint_gate_scope import (
             "connector.return_pin_shares_protocol_signal_net",
             "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES",
         ),
+        (
+            "connector.serial_pair_without_return_review",
+            "KICAD_RUN_NATIVE_SERIAL_CONNECTOR_RETURN_FIXTURES",
+        ),
     ),
 )
 def test_lint_tag_selects_rule_and_all_its_configured_native_fixtures(

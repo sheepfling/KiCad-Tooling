@@ -9,6 +9,7 @@ from .connector_return_pins import (
     connectors_without_connected_return,
     unconnected_named_connector_pins,
 )
+from .connector_return_serial_review import serial_connector_missing_return_candidates
 from .connector_return_signal_net import return_pin_protocol_signal_net_candidates
 from .connector_return_supply import return_pin_positive_rail_candidates
 from .design_lint_return_candidate_evidence import (
@@ -44,6 +45,13 @@ def return_domain_candidates(
     )
     found: list[Candidate] = []
     found.extend(component_return_pin_net_divergences(observed, reviewed_connector_references))
+    found.extend(
+        serial_connector_missing_return_candidates(
+            observed,
+            reviewed_connector_references,
+            connector_coverage,
+        )
+    )
     found.extend(
         return_pin_positive_rail_candidates(
             observed,

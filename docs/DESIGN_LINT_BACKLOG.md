@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 280 rules are implemented with synthetic regression coverage.
+The following 281 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 280 active rules.
+The catalog currently contains 281 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -707,6 +707,7 @@ skipped under prerelease policy.
 - `pcb.required_fitted_reference`
 - `pcb.touch_pad_reference_clearance`
 - `connector.return_distribution`
+- `connector.serial_pair_without_return_review`
 - `net.return_labels_without_pin_roles`
 - `mcu.stm32_cubemx_pin_map`
 
@@ -731,7 +732,21 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **LINT-299 generic JTAG connector pair review:** When a fitted, completely
+- **LINT-300 two-pin serial connector return review:** A complete two-contact
+  generic connector on the exact native UART TX/RX pair prompts for review
+  when neither native connector function identifies a return. A current
+  source-matched map covering the UART pair, explicit `NOT_APPLICABLE`, named
+  contacts, and connectors with more native contacts stay quiet. The prompt
+  asks whether the reference is supplied elsewhere, intentionally isolated,
+  or missing from the pinout; it never requires connection to board ground.
+  Synthetic fault/control, policy, stability, CLI/MCP parity, and digest-pinned
+  KiCad 10.0.0/10.0.5 native cases are registered. Field applicability and
+  reviewer value remain unmeasured.
+- **LINT-299 generic JTAG connector pair review (completed v0.5.3rc507):**
+  The tagged focused gate and hosted prerelease lint gate passed. This review
+  association cue covers exact native TCK/TMS pairs and generic connector
+  contacts; it does not infer required ground, power, or all JTAG signals.
+  When a fitted, completely
   inventoried U/IC exposes unique TCK and TMS functions on distinct nets, and a
   complete connector has generic contacts on both exact nets, ask whether the
   connector belongs to the JTAG interface and whether its pinout is documented.
@@ -3595,7 +3610,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 280 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 281 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -19319,6 +19334,39 @@ acceptance threads while new lint features proceed:
   interface_lint and
   design_lint_rule(rule_id="bus.jtag_generic_connector_pair_review")'`.
   The native lane uses `KICAD_RUN_NATIVE_JTAG_GENERIC_CONNECTOR_FIXTURES=1`.
+
+#### LINT-300 — Prompt review of a two-pin UART connector without a return role
+
+- **Rule:** `connector.serial_pair_without_return_review`, default `review`.
+- **Trigger:** A fitted U/IC has a complete unique native UART TX/RX pair on
+  distinct exact nets. A fully inventoried connector has exactly two native
+  contacts, with one generic contact on each net and neither native connector
+  function identifies a return. A current source-matched return role, a map
+  covering the pair, or a reviewed `NOT_APPLICABLE` disposition suppresses it.
+- **Purpose:** Surface a return/reference question that the existing
+  multiconductor `connector.no_connected_return` threshold intentionally
+  leaves open for two-contact connectors. Ask whether the reference is
+  supplied elsewhere, intentionally isolated, or omitted from the connector
+  pinout.
+- **Evidence and limits:** The candidate retains the native UART endpoint
+  pairs, exact TX/RX nets, connector contacts, and complete native connector
+  pin count. Native or source-matched return roles and current maps covering
+  the UART contacts keep it quiet. Connectors with additional native contacts remain
+  covered by the existing multiconductor and named-role checks. The prompt
+  does not require local board ground, establish external wiring, or prove PCB
+  copper.
+- **Fixtures:** Tooling-owned synthetic two-pin generic fault and named-contact
+  control schematics; connected/open native return-role suppression; current
+  source map and `NOT_APPLICABLE` controls; larger connector scope; DNP,
+  incomplete, ambiguous and unsupported controls; policy, exact-ignore and
+  ordering cases; CLI/MCP parity; and repeated native exports on digest-pinned
+  KiCad 10.0.0 and 10.0.5 images. Field applicability and reviewer value
+  remain unmeasured.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_serial_connector_return_review.py -m 'design_lint and
+  connector_lint and return_path_lint and
+  design_lint_rule(rule_id="connector.serial_pair_without_return_review")'`.
+  The native lane uses `KICAD_RUN_NATIVE_SERIAL_CONNECTOR_RETURN_FIXTURES=1`.
 
 [swd-symbol]: https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/master/MCU_ST_STM32WB.kicad_symdir/STM32WB15CCUx.kicad_sym
 [swd-rename]: https://gitlab.com/kicad/libraries/kicad-symbols/-/merge_requests/3929/reports

@@ -4,6 +4,15 @@ from types import MappingProxyType
 
 PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
     {
+        "test_serial_connector_return_native_fixture_lane.py": frozenset(
+            {
+                "connector_lint",
+                "return_path_lint",
+                "native_kicad",
+                "slow",
+                "template_checkout",
+            }
+        ),
         "test_connector_supply_scope.py": frozenset({"connector_lint"}),
         "test_design_lint_policy.py": frozenset({"connector_lint", "return_path_lint"}),
         "test_electrical_connector_evidence.py": frozenset({"connector_lint", "evidence_lint"}),
