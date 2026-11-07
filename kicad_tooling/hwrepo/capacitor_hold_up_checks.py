@@ -9,7 +9,11 @@ from dataclasses import dataclass
 from decimal import Decimal, localcontext
 
 from .capacitance_values import parse_capacitance_pf
-from .capacitor_hold_up_models import CapacitorHoldUpMap, CapacitorHoldUpRequirement
+from .capacitor_hold_up_models import (
+    CapacitorHoldUpMap,
+    CapacitorHoldUpMember,
+    CapacitorHoldUpRequirement,
+)
 from .casefold_mapping_lookup import lookup_unique_casefold
 from .netlist_contract_models import NetlistContract
 from .netlist_pin_assignments import netlist_pin_net_index
@@ -47,82 +51,99 @@ def assess_capacitor_hold_up(
     observed: NetlistContract,
     requirement: CapacitorHoldUpRequirement,
 ) -> CapacitorHoldUpAssessment:
-    """Compare one exact capacitor identity and pin map with the current netlist."""
-    component = lookup_unique_casefold(observed.components, requirement.capacitor_reference)
-    symbol = lookup_unique_casefold(observed.component_symbols, requirement.capacitor_reference)
-    inventory = lookup_unique_casefold(
-        observed.component_pin_numbers, requirement.capacitor_reference
-    )
+    """Compare every declared parallel member with the current native netlist."""
+    assignments = netlist_pin_net_index(observed)
     issues: list[str] = []
-    capacitance_pf: Decimal | None = None
-    estimated_ms: Decimal | None = None
-    if component is None or symbol is None or inventory is None:
-        issues.append(
-            f"{requirement.capacitor_reference} is missing or ambiguous in the native component inventory"
-        )
-    else:
-        if requirement.capacitor_reference.casefold() in {
-            reference.casefold() for reference in observed.dnp_components
-        }:
-            issues.append(f"{requirement.capacitor_reference} is marked DNP")
-        if component.value != requirement.expected_value:
-            issues.append(
-                f"{requirement.capacitor_reference} value is {component.value!r}; "
-                f"expected {requirement.expected_value!r}"
-            )
-        if component.footprint != requirement.expected_footprint:
-            issues.append(
-                f"{requirement.capacitor_reference} footprint is {component.footprint!r}; "
-                f"expected {requirement.expected_footprint!r}"
-            )
-        if component.part_id != requirement.expected_part_id:
-            issues.append(
-                f"{requirement.capacitor_reference} PART_ID is {component.part_id!r}; "
-                f"expected {requirement.expected_part_id!r}"
-            )
-        if symbol != requirement.expected_symbol:
-            issues.append(
-                f"{requirement.capacitor_reference} symbol is {symbol!r}; "
-                f"expected {requirement.expected_symbol!r}"
-            )
-        expected_pins = {
-            requirement.positive_pin.rsplit(".", 1)[1].casefold(),
-            requirement.return_pin.rsplit(".", 1)[1].casefold(),
-        }
-        actual_pins = {pin.casefold() for pin in inventory}
-        if len(actual_pins) != 2 or actual_pins != expected_pins:
-            issues.append(
-                f"{requirement.capacitor_reference} pin inventory is {tuple(inventory)}; "
-                f"expected exactly {tuple(sorted(expected_pins))}"
-            )
-        assignments = netlist_pin_net_index(observed)
-        for pin, expected_net in (
-            (requirement.positive_pin, requirement.positive_net),
-            (requirement.return_pin, requirement.return_net),
-        ):
-            actual = _actual_net(assignments, pin)
-            if actual != (expected_net,):
-                rendered = ", ".join(actual) if actual else "unassigned"
-                issues.append(f"{pin} is assigned to {rendered}; expected only {expected_net}")
-        capacitance_pf = parse_capacitance_pf(component.value)
+    capacitances_pf: list[Decimal] = []
+    all_members_have_supported_values = True
+    for member in requirement.members:
+        member_issues, capacitance_pf = _assess_member(observed, member, requirement, assignments)
+        issues.extend(member_issues)
         if capacitance_pf is None:
-            issues.append(
-                f"{requirement.capacitor_reference} value {component.value!r} "
-                "is not a supported capacitance"
-            )
+            all_members_have_supported_values = False
         else:
-            estimated_ms = estimate_constant_current_hold_up_ms(
-                capacitance_pf,
-                requirement.starting_voltage_v,
-                requirement.minimum_load_voltage_v,
-                requirement.maximum_load_current_ma,
-            )
+            capacitances_pf.append(capacitance_pf)
+    capacitance_pf: Decimal | None = None
+    if all_members_have_supported_values and len(capacitances_pf) == len(requirement.members):
+        with localcontext() as context:
+            context.prec = 52
+            capacitance_pf = sum(capacitances_pf, Decimal(0))
+    estimated_ms: Decimal | None = None
+    if capacitance_pf is not None:
+        estimated_ms = estimate_constant_current_hold_up_ms(
+            capacitance_pf,
+            requirement.starting_voltage_v,
+            requirement.minimum_load_voltage_v,
+            requirement.maximum_load_current_ma,
+        )
     return CapacitorHoldUpAssessment(
         requirement_id=requirement.id,
         issues=tuple(issues),
         capacitance_pf=capacitance_pf,
         estimated_hold_up_ms=estimated_ms,
     )
+
+
+def _assess_member(
+    observed: NetlistContract,
+    member: CapacitorHoldUpMember,
+    requirement: CapacitorHoldUpRequirement,
+    assignments: Mapping[str, AbstractSet[str]],
+) -> tuple[tuple[str, ...], Decimal | None]:
+    """Return exact identity/connectivity mismatches and the observed value."""
+    reference = member.capacitor_reference
+    component = lookup_unique_casefold(observed.components, reference)
+    symbol = lookup_unique_casefold(observed.component_symbols, reference)
+    inventory = lookup_unique_casefold(observed.component_pin_numbers, reference)
+    issues: list[str] = []
+    if component is None or symbol is None or inventory is None:
+        issues.append(f"{reference} is missing or ambiguous in the native component inventory")
+        return tuple(issues), None
+
+    is_dnp = reference.casefold() in {item.casefold() for item in observed.dnp_components}
+    if is_dnp:
+        issues.append(f"{reference} is marked DNP")
+    if component.value != member.expected_value:
+        issues.append(
+            f"{reference} value is {component.value!r}; expected {member.expected_value!r}"
+        )
+    if component.footprint != member.expected_footprint:
+        issues.append(
+            f"{reference} footprint is {component.footprint!r}; "
+            f"expected {member.expected_footprint!r}"
+        )
+    if component.part_id != member.expected_part_id:
+        issues.append(
+            f"{reference} PART_ID is {component.part_id!r}; expected {member.expected_part_id!r}"
+        )
+    if symbol != member.expected_symbol:
+        issues.append(f"{reference} symbol is {symbol!r}; expected {member.expected_symbol!r}")
+
+    expected_pins = {
+        member.positive_pin.rsplit(".", 1)[1].casefold(),
+        member.return_pin.rsplit(".", 1)[1].casefold(),
+    }
+    actual_pins = {pin.casefold() for pin in inventory}
+    if len(actual_pins) != 2 or actual_pins != expected_pins:
+        issues.append(
+            f"{reference} pin inventory is {tuple(inventory)}; "
+            f"expected exactly {tuple(sorted(expected_pins))}"
+        )
+    for pin, expected_net in (
+        (member.positive_pin, requirement.positive_net),
+        (member.return_pin, requirement.return_net),
+    ):
+        actual = _actual_net(assignments, pin)
+        if actual != (expected_net,):
+            rendered = ", ".join(actual) if actual else "unassigned"
+            issues.append(f"{pin} is assigned to {rendered}; expected only {expected_net}")
+
+    capacitance_pf = parse_capacitance_pf(component.value)
+    if capacitance_pf is None:
+        issues.append(f"{reference} value {component.value!r} is not a supported capacitance")
+    if is_dnp:
+        capacitance_pf = None
+    return tuple(issues), capacitance_pf
 
 
 def capacitor_hold_up_map_sha256(requirements: CapacitorHoldUpMap) -> str:

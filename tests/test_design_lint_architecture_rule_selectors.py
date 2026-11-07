@@ -87,10 +87,6 @@ RULE_NODE_CASES = (
         "tests/test_regulator_required_passives.py::test_missing_required_compensation_passive_is_reviewed",
     ),
     (
-        "power.capacitor_hold_up_below_project_minimum",
-        "tests/test_capacitor_hold_up.py::test_nominal_hold_up_below_authored_requirement_is_reviewed",
-    ),
-    (
         "power.named_supply_pin_on_negative_rail",
         "tests/test_power_negative_rail.py::test_named_supply_pin_on_negative_rail_is_reviewed",
     ),

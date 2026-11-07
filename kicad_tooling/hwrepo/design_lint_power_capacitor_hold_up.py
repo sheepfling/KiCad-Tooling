@@ -57,10 +57,19 @@ class CapacitorHoldUpFindingEvidence:
     def projected_evidence(self) -> Mapping[str, tuple[str, ...]]:
         requirement = self.requirement
         assessment = self.assessment
+        members = requirement.members
         return MappingProxyType(
             {
                 "requirement_id": (requirement.id,),
                 "capacitor": (requirement.capacitor_reference,),
+                "parallel_capacitors": tuple(member.capacitor_reference for member in members[1:]),
+                "bank_members": tuple(
+                    f"{member.capacitor_reference}: PART_ID={member.expected_part_id}; "
+                    f"value={member.expected_value}; "
+                    f"positive={member.positive_pin}={requirement.positive_net}; "
+                    f"return={member.return_pin}={requirement.return_net}"
+                    for member in members
+                ),
                 "part_id": (requirement.expected_part_id,),
                 "capacitor_value": (requirement.expected_value,),
                 "positive_endpoint": (f"{requirement.positive_pin}={requirement.positive_net}",),
@@ -126,12 +135,13 @@ def capacitor_hold_up_candidates(
                 f"nominal constant-current estimate is {estimated_ms} ms, "
                 f"below the authored {minimum_ms} ms minimum"
             )
+        references = " + ".join(member.capacitor_reference for member in requirement.members)
         found.append(
             CapacitorHoldUpCandidate(
                 rule_id=RULE_ID,
-                subject=f"{requirement.id}: {requirement.capacitor_reference} hold-up review",
+                subject=f"{requirement.id}: {references} hold-up review",
                 message=(
-                    f"The exact mapped capacitor does not meet the project-authored "
+                    f"The exact mapped capacitor set does not meet the project-authored "
                     f"hold-up screen: {reason}. Review the cited source and operating bounds. "
                     "The estimate uses nominal capacitance and a constant-current load; it does "
                     "not model tolerance, voltage-dependent capacitance, ESR, leakage, load "

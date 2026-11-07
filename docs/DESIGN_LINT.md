@@ -7799,24 +7799,26 @@ and the
 ## Review a mapped capacitor hold-up estimate
 
 `power.capacitor_hold_up_below_project_minimum` evaluates one exact,
-project-mapped capacitor using its native schematic value and pin assignments.
-The project supplies its PART_ID, symbol, footprint, pin-to-net map, starting
-and minimum load voltages, maximum constant-current load, and minimum hold-up
-time. The check reports source mismatches or a nominal estimate below that
-limit. It supports explicit `mF` and `F` capacitor values in addition to the
-existing `pF`, `nF`, and `uF` forms.
+project-mapped capacitor or an explicitly mapped parallel bank using native
+schematic values and pin assignments. The project supplies each member's
+PART_ID, value, symbol, footprint, two pins, and the common positive and return
+nets, along with starting and minimum load voltages, maximum constant-current
+load, and minimum hold-up time. The check reports source mismatches or a
+nominal estimate below that limit. It supports explicit `mF` and `F` capacitor
+values in addition to the existing `pF`, `nF`, and `uF` forms.
 
-For example, an authored 1 F capacitor discharged from 5 V to 3 V at no more
-than 1 A has a nominal ideal constant-current estimate of 2,000 ms. The rule
-can compare that value with a project-authored minimum. It does not model
-tolerance, voltage-dependent capacitance, ESR, leakage, load transients,
-capacitor banks, charge current, lifetime, ratings, or the wider power path.
+For example, two mapped 0.5 F capacitors in parallel and discharged from 5 V
+to 3 V at no more than 1 A have a nominal ideal constant-current estimate of
+2,000 ms. The rule can compare that value with a project-authored minimum. It
+does not infer additional bank members from reference names or net similarity,
+and it does not model tolerance, voltage-dependent capacitance, ESR, leakage,
+load transients, charge current, lifetime, ratings, or the wider power path.
 The result defaults to REVIEW and can be promoted or disabled through the
 existing design-lint policy. A passing estimate does not qualify actual
 hold-up or safety.
 
-For example, the project policy can map a specific 1 F storage part and
-declare the operating screen explicitly:
+For example, the project policy can map two exact storage parts in parallel
+and declare the operating screen explicitly:
 
 ```json
 {
@@ -7828,12 +7830,23 @@ declare the operating screen explicitly:
           "id": "backup-rail",
           "basis": "Reviewed 5 V to 3 V discharge requirement",
           "capacitor_reference": "C1",
-          "expected_value": "1F",
+          "expected_value": "0.5F",
           "expected_symbol": "Device:C",
           "expected_footprint": "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm",
-          "expected_part_id": "EDLC-1F",
+          "expected_part_id": "EDLC-0.5F",
           "positive_pin": "C1.1",
           "return_pin": "C1.2",
+          "parallel_capacitors": [
+            {
+              "capacitor_reference": "C2",
+              "expected_value": "0.5F",
+              "expected_symbol": "Device:C",
+              "expected_footprint": "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm",
+              "expected_part_id": "EDLC-0.5F",
+              "positive_pin": "C2.1",
+              "return_pin": "C2.2"
+            }
+          ],
           "positive_net": "BACKUP_V",
           "return_net": "RETURN",
           "starting_voltage_v": 5.0,
@@ -7847,14 +7860,17 @@ declare the operating screen explicitly:
 }
 ```
 
-This is structural example data, not an approved component requirement. Replace
-the source, exact identities, nets, and operating bounds with project-reviewed
-values. If the check is promoted to `block`, the project owner must first
-approve how nominal capacitance, load current, voltage window, and the omitted
-electrical effects apply to that design.
+The primary capacitor and each `parallel_capacitors` member must be independently
+reviewed and wired between the same authored positive and return nets. A missing,
+DNP, misidentified, or miswired member remains reviewable; DNP members are not
+included in the numeric estimate. This is structural example data, not an
+approved component requirement. Replace the source, exact identities, nets, and
+operating bounds with project-reviewed values. If the check is promoted to
+`block`, the project owner must first approve how nominal capacitance, load
+current, voltage window, and the omitted electrical effects apply to that design.
 
 The project authors every operating assumption independently; the checker does not infer storage
 intent from a reference designator, symbol, or net name. See the
-[LINT-308 record](DESIGN_LINT_BACKLOG.md#lint-308--review-a-mapped-storage-capacitor-below-an-authored-hold-up-minimum)
-and the
+See the LINT-308 and LINT-309 records in the
+[design lint backlog](DESIGN_LINT_BACKLOG.md), plus the
 [synthetic native fixtures](../tests/fixtures/design_lint/capacitor-hold-up-native/README.md).

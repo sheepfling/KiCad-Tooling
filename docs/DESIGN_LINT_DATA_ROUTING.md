@@ -419,9 +419,10 @@ route does not change the report schema or fingerprint.
 ## Capacitor hold-up candidate route
 
 - **Project-authored intent:** `DesignLintPolicy.capacitor_hold_up_map` names
-  one exact capacitor, PART_ID, native value, symbol, footprint, complete
-  pin inventory, positive/return nets, operating voltage window, maximum
-  constant-current load, and minimum time.
+  one exact capacitor or a primary capacitor plus explicitly declared parallel
+  members. Each member has an exact PART_ID, native value, symbol, footprint,
+  and pin pair; all members must match the same authored positive/return nets,
+  operating voltage window, maximum constant-current load, and minimum time.
 - **Observed electrical data:** the native `NetlistContract` supplies the
   current component identity, DNP state, pin inventory, pin assignments, and
   nominal value. Shared `parse_capacitance_pf` handles the bounded capacitor
@@ -432,13 +433,14 @@ route does not change the report schema or fingerprint.
   intent or operating bounds.
 - **Candidate:** `design_lint_power_capacitor_hold_up` retains the current
   netlist, typed requirement map, measured nominal capacitance, estimate, and
-  map digest. Findings are REVIEW by default; the configured policy controls
-  promotion or suppression.
+  map digest. It sums supported values for all fitted mapped members; a missing
+  or DNP member leaves the numeric estimate unavailable. Findings are REVIEW
+  by default; the configured policy controls promotion or suppression.
 
-The model covers one mapped capacitor only. Tolerance, voltage dependence,
-ESR, leakage, load transients, parallel banks, charging, lifetime, ratings,
-and the upstream/downstream power path need separate reviewed inputs and
-checks.
+The model does not infer additional bank members and does not establish PCB
+copper continuity. Tolerance, voltage dependence, ESR, leakage, load
+transients, charging, lifetime, ratings, and the upstream/downstream power path
+need separate reviewed inputs and checks.
 
 ## PCB measurement and requirement candidate route
 
