@@ -77,6 +77,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="serial-connector-return-review",
     ),
     pytest.param(
+        "connector.i2c_pair_without_return_review",
+        "KICAD_RUN_NATIVE_I2C_CONNECTOR_RETURN_FIXTURES",
+        "tests.test_i2c_connector_return_native_fixture_lane."
+        "test_native_two_pin_i2c_return_fault_and_named_control",
+        id="i2c-connector-return-review",
+    ),
+    pytest.param(
         "bus.spi_clock_control_data_same_net",
         "KICAD_RUN_NATIVE_SPI_CLOCK_CONTROL_SAME_NET_FIXTURES",
         "tests.test_spi_clock_control_same_net_native_fixture_lane."

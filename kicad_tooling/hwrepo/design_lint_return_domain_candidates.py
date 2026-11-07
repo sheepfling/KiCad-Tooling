@@ -5,6 +5,7 @@ from __future__ import annotations
 from .component_return_pin_domains import component_return_pin_net_divergences
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageReport
+from .connector_return_i2c_review import i2c_connector_missing_return_candidates
 from .connector_return_pins import (
     connectors_without_connected_return,
     unconnected_named_connector_pins,
@@ -47,6 +48,13 @@ def return_domain_candidates(
     found.extend(component_return_pin_net_divergences(observed, reviewed_connector_references))
     found.extend(
         serial_connector_missing_return_candidates(
+            observed,
+            reviewed_connector_references,
+            connector_coverage,
+        )
+    )
+    found.extend(
+        i2c_connector_missing_return_candidates(
             observed,
             reviewed_connector_references,
             connector_coverage,

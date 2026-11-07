@@ -787,7 +787,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 281 active rules.
+The catalog currently contains 282 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -2552,6 +2552,36 @@ and 10.0.5 images; see the
 KICAD_RUN_NATIVE_SERIAL_CONNECTOR_RETURN_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
   .venv/bin/python -I -m pytest tests/test_serial_connector_return_native_fixture_lane.py \
   -m 'design_lint and connector_lint and return_path_lint and native_kicad and design_lint_rule(rule_id="connector.serial_pair_without_return_review")'
+```
+
+## Review a two-pin I2C connector with no identified return
+
+`connector.i2c_pair_without_return_review` prompts when a complete,
+two-contact generic connector carries the exact native SDA/SCL nets of a fitted
+U/IC endpoint, but neither connector function nor current source-matched role
+map identifies a return contact. A reviewed map covering both I2C contacts or
+an explicit `NOT_APPLICABLE` disposition stays quiet. Named contacts and
+connectors with additional native contacts stay with the existing pinout and
+multiconductor return checks. This is a review question: reference may be
+provided elsewhere or the interface may be intentionally isolated. It does
+not require a local board-ground contact or prove off-board or PCB
+connectivity. Project policy can set it to `block` or `off`, or ignore one
+exact finding.
+
+Synthetic tests cover the two-pin fault, named-contact control, current and
+stale maps, a return role on a signal contact, additional return-pin scope,
+incomplete or ambiguous evidence, policy overrides, deterministic ordering,
+and CLI/MCP parity. Tooling-owned schematics export twice with digest-pinned
+KiCad 10.0.0 and 10.0.5 images; see the
+[fixture record](../tests/fixtures/design_lint/i2c-connector-return-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_i2c_connector_return_review.py \
+  -m 'design_lint and connector_lint and return_path_lint and design_lint_rule(rule_id="connector.i2c_pair_without_return_review")'
+
+KICAD_RUN_NATIVE_I2C_CONNECTOR_RETURN_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
+  .venv/bin/python -I -m pytest tests/test_i2c_connector_return_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and return_path_lint and native_kicad and design_lint_rule(rule_id="connector.i2c_pair_without_return_review")'
 ```
 
 ## Review generic connector contacts on Ethernet PHY data pairs
