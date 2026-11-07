@@ -4,6 +4,18 @@ from __future__ import annotations
 
 RULE_NODE_CASES = (
     (
+        "pcb.differential_pair_route_skew",
+        "tests/test_pcb_differential_pair_route_skew.py::test_excessive_routed_skew_is_reviewed_against_authored_bound",
+    ),
+    (
+        "pcb.differential_pair_route_skew",
+        "tests/test_pcb_differential_pair_route_skew_native.py::test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots",
+    ),
+    (
+        "pcb.differential_pair_route_skew",
+        "tests/test_pcb_signal_path_mcp_parity.py::test_disabled_signal_path_coverage_matches_cli_and_mcp",
+    ),
+    (
         "pcb.custom_drc_text_variable_review",
         "tests/test_pcb_dru_text_variable_review.py::test_variable_severity_is_reviewed_without_an_authored_map",
     ),

@@ -6,6 +6,7 @@ import hashlib
 from dataclasses import dataclass
 from typing import Literal
 
+from .design_lint_pcb_route_skew_policy import normalize_pcb_route_skew_policy
 from .design_lint_policy_models import DesignLintPolicy
 from .pcb_board_source_binding import pcb_board_source_matches
 from .pcb_drc_models import PcbSignalPathRuleCoverageReport
@@ -47,11 +48,21 @@ def normalize_pcb_input_coverage_policy(
 ) -> PcbInputCoveragePolicyState:
     """Apply modes and map identity to signal-path, keepout, and antenna coverage."""
     pcb_signal_path_coverage = inputs.signal_path
+    route_skew_input = (
+        None if pcb_signal_path_coverage is None else pcb_signal_path_coverage.route_skew
+    )
     pcb_keepout_coverage = inputs.keepout
     pcb_rf_module_antenna_coverage = inputs.rf_antenna
     pcb_touch_pad_clearance_coverage = inputs.touch_pad_clearance
     pcb_thermal_via_coverage = inputs.thermal_via
     signal_path_map = policy.pcb_signal_path_rule_map
+    route_skew_override = next(
+        (item for item in policy.rules if item.rule_id == "pcb.differential_pair_route_skew"),
+        None,
+    )
+    route_skew_mode: Literal["review", "block", "off"] = (
+        "review" if route_skew_override is None else route_skew_override.mode
+    )
 
     signal_path_override = next(
         (item for item in policy.rules if item.rule_id == "pcb.signal_path_rule_coverage"),
@@ -112,6 +123,16 @@ def normalize_pcb_input_coverage_policy(
         pcb_signal_path_coverage = pcb_signal_path_coverage.model_copy(
             update={"mode": signal_path_mode}
         )
+
+    route_skew_coverage = normalize_pcb_route_skew_policy(
+        route_skew_input,
+        requirements=signal_path_map,
+        mode=route_skew_mode,
+        source_hashes=source_hashes,
+    )
+    pcb_signal_path_coverage = pcb_signal_path_coverage.model_copy(
+        update={"route_skew": route_skew_coverage}
+    )
 
     keepout_map = policy.pcb_keepout_map
 

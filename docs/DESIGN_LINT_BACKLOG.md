@@ -19977,6 +19977,32 @@ acceptance threads while new lint features proceed:
   `KICAD_RUN_NATIVE_CAN_UNCONNECTED_LINE_FIXTURES=1`; both are selectable with
   `design_lint_rule(rule_id="bus.can_unconnected_line")`.
 
+#### LINT-318 — Measure routed skew for authored differential-pair bundles
+
+- **Rule:** `pcb.differential_pair_route_skew`, default `review`; the project
+  must explicitly map exact path endpoints and approve a maximum skew.
+- **Gap:** KiCad DRC rule-coverage checks verify that an authored skew rule is
+  present, but that does not independently expose the measured copper-route
+  length difference in design-lint evidence.
+- **Fixtures:** Synthetic schemas cover exact route resolution, authored-limit
+  boundaries, missing source-netlist endpoints, missing routes, order
+  determinism, source changes, and an explicit `off` override. The native lane
+  generates matched and detoured boards inside digest-pinned KiCad 10.0.0 and
+  10.0.5 containers, runs the source-bound PCB probe, then checks the measured
+  route chains against the authored maximum. See the
+  [native fixture note](../tests/fixtures/design_lint/differential-pair-route-skew-native/README.md).
+- **Boundary:** Only project-mapped bundles are measured. The rule does not
+  infer pair membership or select a universal skew limit. It sums copper-track
+  centerline lengths and does not include via-barrel length, zone-only copper,
+  propagation delay, impedance, coupling, or off-board paths. Ambiguous route
+  topology stays incomplete; a within-limit result does not approve the map or
+  interface requirement.
+- **Selection:** Run `tests/test_pcb_differential_pair_route_skew.py` with
+  `design_lint and pcb_lint`. The exact-version native lane is
+  `tests/test_pcb_differential_pair_route_skew_native.py` under
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`; select both with
+  `design_lint_rule(rule_id="pcb.differential_pair_route_skew")`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from kicad_tooling.hwrepo.design_lint import candidates, evaluate
+from kicad_tooling.hwrepo.design_lint_pcb_requirement_candidates import (
+    pcb_requirement_coverage_candidates,
+)
+from kicad_tooling.hwrepo.design_lint_return_domain_candidates import return_domain_candidates
 from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.models import (
     ContractCoachReport,
@@ -20,6 +26,10 @@ from kicad_tooling.hwrepo.pcb_component_inventory_models import (
     PcbMissingFootprintPlacement,
     PcbPopulationMismatch,
 )
+from kicad_tooling.hwrepo.pcb_differential_pair_route_skew import (
+    measure_differential_pair_route_skew,
+)
+from kicad_tooling.hwrepo.pcb_drc_models import PcbSignalPathRuleCoverageReport
 from kicad_tooling.hwrepo.pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
 from kicad_tooling.hwrepo.pcb_required_fitted_reference_models import (
     PcbRequiredFittedReferenceCoverage,
@@ -33,6 +43,22 @@ from tests import pcb_rf_antenna_support as _pcb_rf_antenna_support
 from tests.design_lint_fixtures import observed as observed_netlist
 from tests.design_lint_fixtures import pcb_reference_planes as _pcb_reference_plane_fixtures
 from tests.design_lint_fixtures import pcb_switching_loop as _pcb_switching_loop_fixtures
+from tests.design_lint_fixtures.jtag_generic_connector_pair import generic_jtag_connector_netlist
+from tests.design_lint_fixtures.pcb_differential_pair_route_skew import (
+    geometry_evidence as pair_route_geometry_evidence,
+)
+from tests.design_lint_fixtures.pcb_differential_pair_route_skew import (
+    route_map as pair_route_map,
+)
+from tests.design_lint_fixtures.pcb_differential_pair_route_skew import (
+    route_snapshot as pair_route_snapshot,
+)
+from tests.design_lint_fixtures.pcb_differential_pair_route_skew import (
+    source_hashes as pair_route_source_hashes,
+)
+from tests.design_lint_fixtures.pcb_differential_pair_route_skew import (
+    source_netlist as pair_route_netlist,
+)
 from tests.design_lint_fixtures.pcb_signal_path import incomplete_signal_report, path_map
 from tests.test_pcb_drc_coverage import incomplete_report as incomplete_pair_report
 from tests.test_pcb_drc_coverage import pair_map, pair_source_hashes
@@ -360,6 +386,15 @@ def pcb_rule_ids() -> set[str]:
     )
     result.update(item.rule_id for item in switching_loop_result.findings)
 
+    result.update(
+        item.rule_id
+        for item in return_domain_candidates(
+            generic_jtag_connector_netlist(
+                connector_functions=("Pin_1", "Pin_2", "Pin_3", "Pin_4", "Pin_5")
+            )
+        )
+    )
+
     pair_result = evaluate(
         "synthetic-differential-pair",
         empty_coach.model_copy(
@@ -377,6 +412,22 @@ def pcb_rule_ids() -> set[str]:
         for item in candidates(
             observed_netlist(),
             pcb_signal_path_coverage=incomplete_signal_report(path_map()),
+        )
+    )
+
+    pair_route_requirements = pair_route_map()
+    pair_route_report = measure_differential_pair_route_skew(
+        pair_route_requirements,
+        pair_route_netlist(),
+        pair_route_geometry_evidence(Path("build"), pair_route_snapshot()),
+        pair_route_source_hashes(),
+        netlist_sha256,
+        "review",
+    )
+    result.update(
+        item.rule_id
+        for item in pcb_requirement_coverage_candidates(
+            pcb_signal_path_coverage=PcbSignalPathRuleCoverageReport(route_skew=pair_route_report)
         )
     )
 

@@ -31,6 +31,7 @@ from tests.synthetic_design_lint_project import (
 
 
 @pytest.mark.parametrize("edge_only", (False, True))
+@pytest.mark.design_lint_rule(rule_id="pcb.differential_pair_route_skew")
 def test_disabled_signal_path_coverage_matches_cli_and_mcp(tmp_path: Path, edge_only: bool) -> None:
     requirements = (
         PcbSignalPathRuleMap(
@@ -57,6 +58,11 @@ def test_disabled_signal_path_coverage_matches_cli_and_mcp(tmp_path: Path, edge_
                 mode="off",
                 reason="Synthetic parity fixture disables route review",
             ),
+            DesignLintRuleOverride(
+                rule_id="pcb.differential_pair_route_skew",
+                mode="off",
+                reason="Synthetic parity fixture disables route-skew review",
+            ),
         ),
     )
     root, native = synthetic_design_lint_project(tmp_path, policy)
@@ -80,6 +86,9 @@ def test_disabled_signal_path_coverage_matches_cli_and_mcp(tmp_path: Path, edge_
     mcp_report = asyncio.run(inspect_mcp())
     assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(mcp_report)
     assert mcp_report.pcb_signal_path_rules.status == "DISABLED"
+    route_skew = mcp_report.pcb_signal_path_rules.route_skew
+    assert route_skew is not None
+    assert route_skew.status == ("NOT_REQUESTED" if edge_only else "DISABLED")
     assert (
         mcp_report.pcb_signal_path_rules.map_sha256
         == hashlib.sha256(requirements.model_dump_json().encode("utf-8")).hexdigest()

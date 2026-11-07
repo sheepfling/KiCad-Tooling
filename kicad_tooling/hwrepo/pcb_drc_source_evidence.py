@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path, PureWindowsPath
@@ -17,6 +16,7 @@ from .native_summary_binding import validate_native_summary_binding
 from .pcb_drc_models import PcbDifferentialPairRuleCoverageReport, PcbSignalPathRuleCoverageReport
 from .project_models import ProjectConfig
 from .project_source_hashes import hash_project_sources as hashes
+from .source_inventory_fingerprint import source_inventory_sha256
 from .source_state_models import SourceHashInventory
 
 
@@ -169,14 +169,6 @@ def source_bound_drc_evidence(
     )
     _verify_native_drc_unchanged(evidence)
     return evidence
-
-
-def source_inventory_sha256(source_hashes: SourceHashInventory) -> str:
-    return hashlib.sha256(
-        "\n".join(f"{name}\0{value}" for name, value in sorted(source_hashes.items())).encode(
-            "utf-8"
-        )
-    ).hexdigest()
 
 
 def drc_coverage_matches_sources(

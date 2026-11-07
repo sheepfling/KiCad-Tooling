@@ -29,6 +29,8 @@ PCB_LINT_TEST_MODULES = frozenset(
         "tests/test_pcb_drc_text_variables_native.py",
         "tests/test_pcb_drc_severity_text_variable_native.py",
         "tests/test_pcb_differential_pair_edge_clearance_native.py",
+        "tests/test_pcb_differential_pair_route_skew.py",
+        "tests/test_pcb_differential_pair_route_skew_native.py",
         "tests/test_pcb_mechanical_edge_clearance.py",
         "tests/test_pcb_mechanical_edge_clearance_native.py",
         "tests/test_design_lint_architecture_pcb_mechanical_edge.py",

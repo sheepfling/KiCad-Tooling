@@ -45,6 +45,17 @@ PCB_RETURN_PATH_MODULES = (
     "pcb_return_path_capture.py",
 )
 PCB_SHARED_PAD_MODULES = ("pcb_pad_review.py", "pcb_pad_union_find.py")
+PCB_ROUTE_SKEW_MODULES = (
+    "design_lint_pcb_geometry_fast_paths.py",
+    "pcb_native_route_models.py",
+    "pcb_native_route_topology.py",
+    "pcb_differential_pair_skew_models.py",
+    "pcb_differential_pair_route_skew.py",
+    "design_lint_pcb_differential_pair_skew_candidate_evidence.py",
+    "design_lint_pcb_route_skew_policy.py",
+    "design_lint_pcb_route_skew_report.py",
+    "design_lint_pcb_route_skew_scan.py",
+)
 # Lower this baseline alongside each registry extraction; never raise it.
 
 
@@ -205,3 +216,24 @@ def test_shared_pcb_pad_services_stay_small_and_are_reused() -> None:
         for tree in parsed.values()
         for node in ast.walk(tree)
     )
+
+
+def test_differential_pair_route_skew_owners_stay_reviewable_and_theme_owned() -> None:
+    modules = [HWREPO / name for name in PCB_ROUTE_SKEW_MODULES]
+    assert all(path.is_file() for path in modules)
+    oversized = {path.name: _line_count(path) for path in modules if _line_count(path) >= 500}
+    assert not oversized, f"Keep pair route-skew services in small modules: {oversized}"
+
+    route_owner = HWREPO / "pcb_differential_pair_route_skew.py"
+    route_tree = ast.parse(route_owner.read_text(encoding="utf-8"), filename=str(route_owner))
+    assert any(
+        isinstance(node, ast.FunctionDef) and node.name == "measure_differential_pair_route_skew"
+        for node in route_tree.body
+    )
+    catalog = (HWREPO / "design-lint-rules.json").read_text(encoding="utf-8")
+    assert (
+        '"implementation_owner": '
+        '"kicad_tooling/hwrepo/pcb_differential_pair_route_skew.py#'
+        'measure_differential_pair_route_skew"'
+    ) in catalog
+    assert '"kicad_tooling/hwrepo/pcb_native_route_topology.py#resolve_native_pad_route"' in catalog

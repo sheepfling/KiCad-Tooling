@@ -39,6 +39,12 @@ from tests.design_lint_fixtures.pcb_signal_path import (
     source_netlist,
 )
 
+ROUTE_SKEW_OFF = DesignLintRuleOverride(
+    rule_id="pcb.differential_pair_route_skew",
+    mode="off",
+    reason="Synthetic test isolates signal-path DRC coverage",
+)
+
 
 def test_later_path_rule_leaves_first_path_coverage_incomplete() -> None:
     entries = compare()
@@ -342,7 +348,7 @@ def test_signal_path_coverage_has_review_block_off_ignore_and_missing_evidence_m
     report = evaluate(
         "synthetic-paths",
         coach,
-        DesignLintPolicy(pcb_signal_path_rule_map=requirements),
+        DesignLintPolicy(pcb_signal_path_rule_map=requirements, rules=(ROUTE_SKEW_OFF,)),
         pcb_signal_path_coverage=incomplete_signal_report(requirements),
     )
     finding = next(
@@ -362,6 +368,7 @@ def test_signal_path_coverage_has_review_block_off_ignore_and_missing_evidence_m
                     mode="block",
                     reason="Synthetic project policy",
                 ),
+                ROUTE_SKEW_OFF,
             ),
         ),
         pcb_signal_path_coverage=incomplete_signal_report(requirements),
@@ -379,6 +386,7 @@ def test_signal_path_coverage_has_review_block_off_ignore_and_missing_evidence_m
                     mode="off",
                     reason="Synthetic project policy",
                 ),
+                ROUTE_SKEW_OFF,
             ),
         ),
         pcb_signal_path_coverage=incomplete_signal_report(requirements),
@@ -398,6 +406,7 @@ def test_signal_path_coverage_has_review_block_off_ignore_and_missing_evidence_m
                     reason="Synthetic exact review disposition",
                 ),
             ),
+            rules=(ROUTE_SKEW_OFF,),
         ),
         pcb_signal_path_coverage=incomplete_signal_report(requirements),
     )

@@ -6,6 +6,10 @@ from .design_lint_pcb_differential_pair_coverage_evidence import (
     PcbDifferentialPairCoverageCandidate,
     PcbDifferentialPairCoverageFindingEvidence,
 )
+from .design_lint_pcb_differential_pair_skew_candidate_evidence import (
+    PcbDifferentialPairRouteSkewCandidate,
+    PcbDifferentialPairRouteSkewFindingEvidence,
+)
 from .design_lint_pcb_inputs import PcbCandidateInputs
 from .design_lint_pcb_keepout_candidate_evidence import (
     PcbKeepoutCandidate,
@@ -103,6 +107,31 @@ def pcb_requirement_coverage_candidates(
                 )
             )
     if pcb_signal_path_coverage is not None:
+        route_skew = pcb_signal_path_coverage.route_skew
+        if route_skew is not None and route_skew.status == "INCOMPLETE":
+            for entry in route_skew.entries:
+                if entry.status == "WITHIN_LIMIT":
+                    continue
+                message = (
+                    f"Measured route-length skew {entry.measured_skew_nm} nm exceeds the "
+                    f"project-authored maximum {entry.max_skew_nm} nm. Review the mapped "
+                    "routes and the interface's reviewed skew requirement."
+                    if entry.status == "EXCEEDS_LIMIT"
+                    else (
+                        "The mapped bundle does not have one complete, unambiguous native "
+                        "track route for every member. Review the board snapshot, endpoint "
+                        "mapping, branches, vias, and source-to-board agreement."
+                    )
+                )
+                found.append(
+                    PcbDifferentialPairRouteSkewCandidate.from_source_evidence(
+                        PcbDifferentialPairRouteSkewFindingEvidence(
+                            report=route_skew,
+                            entry=entry,
+                        ),
+                        message=message,
+                    )
+                )
         for entry in pcb_signal_path_coverage.entries:
             if entry.status != "INCOMPLETE":
                 continue

@@ -27,6 +27,7 @@ from .design_lint_report_connector_coverage_validation import (
 )
 from .design_lint_report_evidence_validation import validate_source_bound_evidence
 from .design_lint_report_pcb_evidence_validation import validate_pcb_source_consistency
+from .design_lint_report_pcb_route_skew_validation import validate_pcb_route_skew_source
 from .design_lint_report_peer_coverage_validation import validate_peer_coverage
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
@@ -228,6 +229,11 @@ class DesignLintReport(StrictModel):
                 self.pcb_track_width,
                 self.pcb_thermal_via_coverage,
             ),
+        )
+        validate_pcb_route_skew_source(
+            self.pcb_signal_path_rules.route_skew,
+            source_hashes=self.source_hashes,
+            netlist_sha256=self.netlist_sha256,
         )
         validate_catalogued_findings(
             rule_catalog=self.rule_catalog,

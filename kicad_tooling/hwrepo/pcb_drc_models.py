@@ -13,11 +13,13 @@ from .model_primitives import (
     Identifier,
     NetName,
     NonEmptyText,
+    NonNegativeCount,
     PositiveCount,
     Reference,
     RepositoryPath,
     StrictModel,
 )
+from .pcb_differential_pair_skew_models import PcbDifferentialPairRouteSkewReport
 
 
 class PcbDrcMinMaxRequirement(StrictModel):
@@ -38,7 +40,7 @@ class PcbDrcMinMaxRequirement(StrictModel):
 class PcbDrcMaximumRequirement(StrictModel):
     """Explicit upper bound for a native DRC geometry constraint."""
 
-    max_nm: PositiveCount
+    max_nm: NonNegativeCount
 
 
 PcbDrcPadSelectorPattern = Annotated[
@@ -425,6 +427,7 @@ class PcbSignalPathRuleCoverageReport(StrictModel):
     kicad_version: NonEmptyText | None = None
     image: NonEmptyText | None = None
     entries: tuple[PcbSignalPathRuleCoverageEntry, ...] = ()
+    route_skew: PcbDifferentialPairRouteSkewReport | None = None
     issue: NonEmptyText | None = None
 
     @model_validator(mode="after")
@@ -463,4 +466,23 @@ class PcbSignalPathRuleCoverageReport(StrictModel):
                 raise ValueError("Signal-path report status must match its mapped entries")
         if self.status == "BLOCKED" and self.issue is None:
             raise ValueError("Blocked signal-path rule coverage must explain the evidence gap")
+        if self.route_skew is not None:
+            if self.map_sha256 is not None and self.route_skew.map_sha256 != self.map_sha256:
+                raise ValueError("Signal-path route skew must bind the same authored path map")
+            if (
+                self.status in {"COMPLETE", "INCOMPLETE"}
+                and self.route_skew.status
+                in {
+                    "COMPLETE",
+                    "INCOMPLETE",
+                }
+                and (
+                    self.board_path != self.route_skew.board_path
+                    or self.board_sha256 != self.route_skew.board_sha256
+                    or self.pcb_snapshot_path != self.route_skew.snapshot_path
+                    or self.pcb_snapshot_sha256 != self.route_skew.snapshot_sha256
+                    or self.source_inventory_sha256 != self.route_skew.source_inventory_sha256
+                )
+            ):
+                raise ValueError("Signal-path and measured route skew use different PCB evidence")
         return self

@@ -413,6 +413,20 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
                 ),
             }
         ),
+        "pcb.differential_pair_route_skew": MappingProxyType(
+            {
+                "fault_fixtures": _refs(
+                    "tests.test_pcb_differential_pair_route_skew",
+                    "test_excessive_routed_skew_is_reviewed_against_authored_bound",
+                    "test_missing_member_route_is_incomplete_not_clean",
+                ),
+                "valid_control_fixtures": _refs(
+                    "tests.test_pcb_differential_pair_route_skew",
+                    "test_route_skew_at_authored_boundary_is_within_limit",
+                    "test_equal_routes_are_within_zero_skew_bound",
+                ),
+            }
+        ),
         "oscillator.output_load_path_mismatch": MappingProxyType(
             {
                 "fault_fixtures": _refs(

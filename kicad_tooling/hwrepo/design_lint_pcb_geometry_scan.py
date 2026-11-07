@@ -15,8 +15,13 @@ from .design_lint_pcb_coverage_common import (
     map_sha256,
 )
 from .design_lint_pcb_geometry_capture import capture_pcb_geometry_source
+from .design_lint_pcb_geometry_fast_paths import pcb_geometry_fast_path_reports
 from .design_lint_pcb_layout_coverage import layout_coverage_reports
 from .design_lint_pcb_measurement_coverage import measurement_coverage_reports
+from .design_lint_pcb_route_skew_scan import (
+    measure_route_skew_for_geometry_scan,
+    route_skew_enabled,
+)
 from .design_lint_pcb_thermal_via_scan import blocked_thermal_via_coverage
 from .design_lint_policy_models import DesignLintPolicy
 from .discovery import ProjectConfig
@@ -110,21 +115,8 @@ def scan_pcb_geometry(
         and thermal_via_map is None
         and not inventory_required
     ):
-        return (
-            PcbDecouplingCoverageReport(),
-            PcbProtectionPathCoverageReport(),
-            PcbTrackWidthCoverageReport(),
-            PcbReferencePlaneCoverageReport(),
-            PcbSwitchingLoopCoverageReport(),
-            PcbSignalPathRuleCoverageReport(),
-            PcbKeepoutCoverageReport(),
-            PcbRfModuleAntennaCoverageReport(),
-            PcbTouchPadClearanceCoverageReport(),
-            PcbComponentInventoryCoverageReport(
-                status="DISABLED" if config.kind is ProjectKind.PCB else "NOT_APPLICABLE",
-                mode=inventory_mode if config.kind is ProjectKind.PCB else None,
-            ),
-            PcbThermalViaCoverageReport(),
+        return pcb_geometry_fast_path_reports(
+            config, policy, inventory_mode=inventory_mode, mode="not_requested"
         )
     decoupling_override = overrides.get("pcb.decoupling_proximity")
     decoupling_mode = "review" if decoupling_override is None else decoupling_override.mode
@@ -140,6 +132,7 @@ def scan_pcb_geometry(
     )
     signal_path_override = overrides.get("pcb.signal_path_rule_coverage")
     signal_path_mode = "review" if signal_path_override is None else signal_path_override.mode
+    route_skew_active = route_skew_enabled(policy)
     keepout_override = overrides.get("pcb.keepout_intent_coverage")
     keepout_mode = "review" if keepout_override is None else keepout_override.mode
     rf_antenna_override = overrides.get("pcb.rf_module_antenna_keepout_coverage")
@@ -179,42 +172,10 @@ def scan_pcb_geometry(
         and touch_pad_clearance_disabled
         and thermal_via_disabled
         and inventory_disabled
+        and not route_skew_active
     ):
-        return (
-            PcbDecouplingCoverageReport(status="DISABLED", mode=decoupling_mode)
-            if decoupling_map is not None
-            else PcbDecouplingCoverageReport(),
-            PcbProtectionPathCoverageReport(status="DISABLED", mode=protection_path_mode)
-            if protection_path_map is not None
-            else PcbProtectionPathCoverageReport(),
-            PcbTrackWidthCoverageReport(status="DISABLED", mode=track_width_mode)
-            if track_width_map is not None
-            else PcbTrackWidthCoverageReport(),
-            PcbReferencePlaneCoverageReport(status="DISABLED", mode=reference_plane_mode)
-            if reference_plane_map is not None
-            else PcbReferencePlaneCoverageReport(),
-            PcbSwitchingLoopCoverageReport(status="DISABLED", mode=switching_loop_mode)
-            if switching_loop_map is not None
-            else PcbSwitchingLoopCoverageReport(),
-            PcbSignalPathRuleCoverageReport(status="DISABLED", mode=signal_path_mode)
-            if signal_path_map is not None
-            else PcbSignalPathRuleCoverageReport(),
-            PcbKeepoutCoverageReport(status="DISABLED", mode=keepout_mode)
-            if keepout_map is not None
-            else PcbKeepoutCoverageReport(),
-            PcbRfModuleAntennaCoverageReport(status="DISABLED", mode=rf_antenna_mode)
-            if rf_antenna_map is not None
-            else PcbRfModuleAntennaCoverageReport(),
-            PcbTouchPadClearanceCoverageReport(status="DISABLED", mode=touch_pad_clearance_mode)
-            if touch_pad_clearance_map is not None
-            else PcbTouchPadClearanceCoverageReport(),
-            PcbComponentInventoryCoverageReport(
-                status="DISABLED" if config.kind is ProjectKind.PCB else "NOT_APPLICABLE",
-                mode=inventory_mode if config.kind is ProjectKind.PCB else None,
-            ),
-            PcbThermalViaCoverageReport(status="DISABLED", mode=thermal_via_mode)
-            if thermal_via_map is not None
-            else PcbThermalViaCoverageReport(),
+        return pcb_geometry_fast_path_reports(
+            config, policy, inventory_mode=inventory_mode, mode="disabled"
         )
     board_relative = Path(config.project).with_suffix(".kicad_pcb").as_posix()
     output = root / "build" / "design-lint" / f"pcb-geometry-{uuid4().hex[:12]}"
@@ -307,6 +268,13 @@ def scan_pcb_geometry(
             touch_pad_clearance_map=touch_pad_clearance_map,
             modes=modes,
             evidence=evidence,
+        )
+        signal_path_report = measure_route_skew_for_geometry_scan(
+            signal_path_report,
+            policy=policy,
+            coach=coach,
+            evidence=evidence,
+            netlist_sha256=netlist_sha256,
         )
         verify_pcb_geometry_receipts(
             evidence.snapshot,

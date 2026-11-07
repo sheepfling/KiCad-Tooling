@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .design_lint_pcb_route_skew_report import pcb_route_skew_report_lines
 from .design_lint_report_models import DesignLintReport
 
 
@@ -126,5 +127,7 @@ def pcb_drc_rule_coverage_report_lines(report: DesignLintReport) -> list[str]:
 
     if signal_paths.issue is not None:
         lines.append(f"  Coverage issue: {signal_paths.issue}")
+
+    lines.extend(pcb_route_skew_report_lines(signal_paths.route_skew))
 
     return lines

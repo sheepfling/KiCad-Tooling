@@ -46,6 +46,7 @@ def assemble_design_lint_report(
     pcb_switching_loop_coverage = context.pcb_switching_loop_coverage
     pcb_differential_pair_coverage = context.pcb_differential_pair_coverage
     pcb_signal_path_coverage = context.pcb_signal_path_coverage
+    pcb_route_skew_coverage = pcb_signal_path_coverage.route_skew
     pcb_keepout_coverage = context.pcb_keepout_coverage
     pcb_rf_module_antenna_coverage = context.pcb_rf_module_antenna_coverage
     pcb_touch_pad_clearance_coverage = context.pcb_touch_pad_clearance_coverage
@@ -88,6 +89,7 @@ def assemble_design_lint_report(
         or pcb_switching_loop_coverage.status == "BLOCKED"
         or pcb_differential_pair_coverage.status == "BLOCKED"
         or pcb_signal_path_coverage.status == "BLOCKED"
+        or (pcb_route_skew_coverage is not None and pcb_route_skew_coverage.status == "BLOCKED")
         or pcb_keepout_coverage.status == "BLOCKED"
         or pcb_rf_module_antenna_coverage.status == "BLOCKED"
         or pcb_touch_pad_clearance_coverage.status == "BLOCKED"
@@ -114,6 +116,7 @@ def assemble_design_lint_report(
         or pcb_switching_loop_coverage.status == "INCOMPLETE"
         or pcb_differential_pair_coverage.status == "INCOMPLETE"
         or pcb_signal_path_coverage.status == "INCOMPLETE"
+        or (pcb_route_skew_coverage is not None and pcb_route_skew_coverage.status == "INCOMPLETE")
         or pcb_keepout_coverage.status == "INCOMPLETE"
         or pcb_rf_module_antenna_coverage.status == "INCOMPLETE"
         or pcb_touch_pad_clearance_coverage.status == "INCOMPLETE"
@@ -183,6 +186,11 @@ def assemble_design_lint_report(
             else (pcb_differential_pair_coverage.issue,)
         )
         + (() if pcb_signal_path_coverage.issue is None else (pcb_signal_path_coverage.issue,))
+        + (
+            ()
+            if pcb_route_skew_coverage is None or pcb_route_skew_coverage.issue is None
+            else (pcb_route_skew_coverage.issue,)
+        )
         + (
             ()
             if pcb_touch_pad_clearance_coverage.issue is None
@@ -329,6 +337,10 @@ def assemble_design_lint_report(
     if pcb_signal_path_coverage.status == "INCOMPLETE":
         actions += (
             "Review each mapped signal path against its source-netlist endpoints, native copper component, and exact active KiCad DRC length or skew rule.",
+        )
+    if pcb_route_skew_coverage is not None and pcb_route_skew_coverage.status == "BLOCKED":
+        actions += (
+            "Restore source-matched native route measurements for each authored differential-pair bundle, then rerun design lint.",
         )
     if pcb_keepout_coverage.status == "BLOCKED":
         actions += ("Repair source-bound PCB keepout evidence, then rerun design lint.",)
