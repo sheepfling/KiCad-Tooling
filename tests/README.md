@@ -487,7 +487,15 @@ theme slice without collecting unrelated tests:
 .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint and design_lint_rule(rule_id="connector.jtag_pair_without_return_review")' \
   tests/test_design_lint_determinism_jtag_connector_return.py --durations=10
+.venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint and design_lint_rule(rule_id="connector.usb_superspeed_pair_without_return_review")' \
+  tests/test_design_lint_determinism_connector_returns.py --durations=10
 ```
+
+The same shared report module covers the serial, I2C, I3C, SWD, CAN, RS-485,
+USB 2.0, and SPI connector-return review rules. Replace the rule ID above to
+select one of those cases; each compares complete fault/control reports across
+independent Python processes.
 
 The marker and collection architecture tests run in the focused `catalog_lint`
 gate, so CI checks both catalog reachability and the selectors used to keep

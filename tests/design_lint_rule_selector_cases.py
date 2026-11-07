@@ -112,6 +112,42 @@ RULE_NODE_CASES = (
         "tests/test_design_lint_determinism_jtag_connector_return.py::test_jtag_connector_return_reports_are_stable_across_hash_seeds",
     ),
     (
+        "connector.serial_pair_without_return_review",
+        "tests/test_design_lint_determinism_connector_returns.py::test_serial_connector_return_reports_are_stable_across_hash_seeds",
+    ),
+    (
+        "connector.i2c_pair_without_return_review",
+        "tests/test_design_lint_determinism_connector_returns.py::test_i2c_connector_return_reports_are_stable_across_hash_seeds",
+    ),
+    (
+        "connector.i3c_pair_without_return_review",
+        "tests/test_design_lint_determinism_connector_returns.py::test_i3c_connector_return_reports_are_stable_across_hash_seeds",
+    ),
+    (
+        "connector.swd_pair_without_return_review",
+        "tests/test_design_lint_determinism_connector_returns.py::test_swd_connector_return_reports_are_stable_across_hash_seeds",
+    ),
+    (
+        "connector.can_pair_without_return_review",
+        "tests/test_design_lint_determinism_connector_returns.py::test_can_connector_return_reports_are_stable_across_hash_seeds",
+    ),
+    (
+        "connector.rs485_pair_without_return_review",
+        "tests/test_design_lint_determinism_connector_returns.py::test_rs485_connector_return_reports_are_stable_across_hash_seeds",
+    ),
+    (
+        "connector.usb2_pair_without_return_review",
+        "tests/test_design_lint_determinism_connector_returns.py::test_usb2_connector_return_reports_are_stable_across_hash_seeds",
+    ),
+    (
+        "connector.usb_superspeed_pair_without_return_review",
+        "tests/test_design_lint_determinism_connector_returns.py::test_usb_superspeed_connector_return_reports_are_stable_across_hash_seeds",
+    ),
+    (
+        "connector.spi_triad_without_return_review",
+        "tests/test_design_lint_determinism_connector_returns.py::test_spi_connector_return_reports_are_stable_across_hash_seeds",
+    ),
+    (
         "connector.unconnected_supply_pin",
         "tests/test_design_lint_power_pin_patterns.py::TestDesignLintPowerPinPatterns::test_unconnected_supply_and_return_pins_without_a_peer_are_reported",
     ),

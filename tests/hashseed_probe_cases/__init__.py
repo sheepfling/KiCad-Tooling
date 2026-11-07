@@ -4,6 +4,7 @@ HASHSEED_REPORT_FAMILIES = (
     "returns",
     "connectors",
     "jtag_connector_return",
+    "connector_return_protocols",
     "connector_named_power_aliases",
     "component_peers",
     "components",

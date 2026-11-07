@@ -3843,8 +3843,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v87. The cross-process probe supports themed report
-  selectors and retains the complete 309-report inventory gate. Fault/control
+- **Status:** Implemented v88. The cross-process probe supports themed report
+  selectors and retains the complete 327-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -3953,6 +3953,13 @@ is not a reason by itself to expand its scope or change its default policy.
   hash-seeded Python processes. The complete report inventory now contains 309
   reports; this extends determinism evidence without claiming the missing role
   is an electrical defect.
+  The v88 extension adds complete fault/control reports for the serial, I2C,
+  I3C, SWD, CAN, RS-485, USB 2.0, USB SuperSpeed, and SPI connector-return
+  review rules. Each target finding appears only in its fault report, and the
+  complete reports are compared across three independently hash-seeded Python
+  processes. Catalog selectors and marker architecture checks keep each case
+  individually selectable. The inventory now contains 327 reports; this adds
+  process-stability coverage without changing any heuristic's review meaning.
   This tests typed-report serialization, separate from the digest-pinned
   native schematic lane.
   The test

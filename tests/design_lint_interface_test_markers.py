@@ -179,6 +179,7 @@ INTERFACE_LINT_TEST_MODULES = frozenset(
         "tests/test_jtag_connector_return_native_fixture_lane.py",
         "tests/test_jtag_connector_return_native_fixture_registry.py",
         "tests/test_design_lint_determinism_jtag_connector_return.py",
+        "tests/test_design_lint_determinism_connector_returns.py",
         "tests/test_design_lint_architecture_jtag_connector_return.py",
         "tests/test_design_lint_mcp_parity_jtag_connector_return.py",
         "tests/test_rs485_signal_named_rail.py",
