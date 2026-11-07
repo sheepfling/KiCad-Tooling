@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageReport
-from .connector_identity import is_return_function
+from .connector_return_pins import connector_pin_group_has_return_role
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .netlist_contract_models import NetlistContract
@@ -96,7 +96,6 @@ def serial_connector_missing_return_candidates(
     ground, infer external wiring, or convert the observation into a contract.
     """
     mapped = source_matched_connector_pin_evidence(observed, connector_coverage)
-    functions = {pin.casefold(): value for pin, value in observed.pin_functions.items()}
     inventory = {
         reference.casefold(): (reference, tuple(numbers))
         for reference, numbers in observed.component_pin_numbers.items()
@@ -120,12 +119,10 @@ def serial_connector_missing_return_candidates(
         if len(numbers) != 2:
             continue
         connector_pins = tuple(f"{reference}.{number}" for number in numbers)
-        if any(is_return_function(functions.get(pin.casefold(), "")) for pin in connector_pins):
-            continue
-        if any(
-            evidence.role == "return"
-            for pin in connector_pins
-            if (evidence := mapped.get(pin)) is not None
+        if connector_pin_group_has_return_role(
+            connector_pins,
+            observed.pin_functions,
+            mapped,
         ):
             continue
         found.append(

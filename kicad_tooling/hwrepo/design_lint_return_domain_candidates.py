@@ -11,6 +11,7 @@ from .connector_return_pins import (
     connectors_without_connected_return,
     unconnected_named_connector_pins,
 )
+from .connector_return_rs485_review import rs485_connector_missing_return_candidates
 from .connector_return_serial_review import serial_connector_missing_return_candidates
 from .connector_return_signal_net import return_pin_protocol_signal_net_candidates
 from .connector_return_supply import return_pin_positive_rail_candidates
@@ -63,6 +64,13 @@ def return_domain_candidates(
     )
     found.extend(
         can_connector_missing_return_candidates(
+            observed,
+            reviewed_connector_references,
+            connector_coverage,
+        )
+    )
+    found.extend(
+        rs485_connector_missing_return_candidates(
             observed,
             reviewed_connector_references,
             connector_coverage,

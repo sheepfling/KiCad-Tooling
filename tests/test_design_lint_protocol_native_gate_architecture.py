@@ -91,6 +91,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="can-connector-return-review",
     ),
     pytest.param(
+        "connector.rs485_pair_without_return_review",
+        "KICAD_RUN_NATIVE_RS485_CONNECTOR_RETURN_FIXTURES",
+        "tests.test_rs485_connector_return_native_fixture_lane."
+        "test_native_two_pin_rs485_return_fault_and_named_control",
+        id="rs485-connector-return-review",
+    ),
+    pytest.param(
         "bus.spi_clock_control_data_same_net",
         "KICAD_RUN_NATIVE_SPI_CLOCK_CONTROL_SAME_NET_FIXTURES",
         "tests.test_spi_clock_control_same_net_native_fixture_lane."

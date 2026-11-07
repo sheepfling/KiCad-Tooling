@@ -8,7 +8,7 @@ from .can_generic_connector_candidates import generic_can_connector_pairs
 from .can_generic_connector_models import CanGenericConnectorPair
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageReport
-from .connector_identity import is_return_function
+from .connector_return_pins import connector_pin_group_has_return_role
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .netlist_contract_models import NetlistContract
@@ -95,8 +95,6 @@ def can_connector_missing_return_candidates(
     the connector's purpose, off-board wiring, or PCB continuity.
     """
     mapped = source_matched_connector_pin_evidence(observed, connector_coverage)
-    mapped_by_pin = {pin.casefold(): evidence for pin, evidence in mapped.items()}
-    functions = {pin.casefold(): function for pin, function in observed.pin_functions.items()}
     found: list[Candidate] = []
     for pair in generic_can_connector_pairs(
         observed,
@@ -110,12 +108,10 @@ def can_connector_missing_return_candidates(
         ):
             continue
         connector_pins = (*pair.canh_connector_pins, *pair.canl_connector_pins)
-        if any(is_return_function(functions.get(pin.casefold(), "")) for pin in connector_pins):
-            continue
-        if any(
-            evidence.role == "return"
-            for pin in connector_pins
-            if (evidence := mapped_by_pin.get(pin.casefold())) is not None
+        if connector_pin_group_has_return_role(
+            connector_pins,
+            observed.pin_functions,
+            mapped,
         ):
             continue
         found.append(

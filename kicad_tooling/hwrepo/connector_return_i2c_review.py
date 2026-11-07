@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageReport
+from .connector_return_pins import connector_pin_group_has_return_role
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .i2c_generic_connector_candidates import generic_i2c_connector_pairs
@@ -92,7 +93,6 @@ def i2c_connector_missing_return_candidates(
     local ground or infer external wiring, isolation, or PCB continuity.
     """
     mapped = source_matched_connector_pin_evidence(observed, connector_coverage)
-    mapped_by_pin = {pin.casefold(): evidence for pin, evidence in mapped.items()}
     found: list[Candidate] = []
     for pair in generic_i2c_connector_pairs(
         observed,
@@ -106,10 +106,10 @@ def i2c_connector_missing_return_candidates(
         ):
             continue
         connector_pins = (*pair.sda_connector_pins, *pair.scl_connector_pins)
-        if any(
-            evidence.role == "return"
-            for pin in connector_pins
-            if (evidence := mapped_by_pin.get(pin.casefold())) is not None
+        if connector_pin_group_has_return_role(
+            connector_pins,
+            observed.pin_functions,
+            mapped,
         ):
             continue
         found.append(

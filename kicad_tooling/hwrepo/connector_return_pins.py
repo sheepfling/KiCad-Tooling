@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Literal, TypeAlias
@@ -67,6 +67,24 @@ class _UnconnectedGenericPowerConnectorPin:
     symbol: str
     function: str | None
     electrical_type: str
+
+
+def connector_pin_group_has_return_role(
+    connector_pins: Iterable[str],
+    native_functions: Mapping[str, str],
+    mapped_pins: ConnectorMappedPinEvidenceByComponentPin | None = None,
+) -> bool:
+    """Return whether any contact has a native or source-matched return role."""
+    functions_by_pin = {pin.casefold(): function for pin, function in native_functions.items()}
+    mapped_by_pin = {pin.casefold(): evidence for pin, evidence in (mapped_pins or {}).items()}
+    for pin in connector_pins:
+        pin_key = pin.casefold()
+        if is_return_function(functions_by_pin.get(pin_key, "")):
+            return True
+        mapped = mapped_by_pin.get(pin_key)
+        if mapped is not None and mapped.role == "return" and mapped.unconnected_reason is None:
+            return True
+    return False
 
 
 def unconnected_named_connector_pins(
