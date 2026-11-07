@@ -115,9 +115,7 @@ def _usb_named_rail_fixture_lane(
     version: str,
     image: str,
     log: HostedLog,
-    feature: Literal[
-        "signal", "cc", "sbu", "sbu-unconnected", "cc-unconnected", "sbu-same-net"
-    ],
+    feature: Literal["signal", "cc", "sbu", "sbu-unconnected", "cc-unconnected", "sbu-same-net"],
 ) -> None:
     expected_unconnected_pins = None
     if feature == "signal":
