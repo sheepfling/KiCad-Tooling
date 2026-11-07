@@ -484,6 +484,9 @@ theme slice without collecting unrelated tests:
 .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint and connector_lint and slow' \
   tests/test_design_lint_determinism_component_peers.py --durations=10
+.venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint and design_lint_rule(rule_id="connector.jtag_pair_without_return_review")' \
+  tests/test_design_lint_determinism_jtag_connector_return.py --durations=10
 ```
 
 The marker and collection architecture tests run in the focused `catalog_lint`

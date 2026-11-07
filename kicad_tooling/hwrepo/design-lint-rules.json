@@ -13572,6 +13572,7 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_jtag_connector_return_review.test_policy_override_exact_ignore_and_mapping_order_are_deterministic",
+        "tests.test_design_lint_determinism_jtag_connector_return.test_jtag_connector_return_reports_are_stable_across_hash_seeds",
         "tests.test_jtag_connector_return_native_fixture_registry.test_native_source_registry_is_hash_pinned_and_tooling_local",
         "tests.test_design_lint_architecture_jtag_connector_return.test_jtag_return_rule_has_a_focused_return_theme_owner"
       ],

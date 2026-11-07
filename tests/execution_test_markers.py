@@ -82,6 +82,7 @@ _SLOW_MODULES = frozenset(
     {
         "tests/test_design_lint_determinism.py",
         "tests/test_design_lint_determinism_generic_peer_pins.py",
+        "tests/test_design_lint_determinism_jtag_connector_return.py",
         "tests/test_design_lint_determinism_power_input_peers.py",
         "tests/test_design_lint_determinism_spi_signal_named_rail.py",
         "tests/test_design_lint_determinism_can_signal_named_rail.py",

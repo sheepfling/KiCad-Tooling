@@ -3843,8 +3843,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v86. The cross-process probe supports themed report
-  selectors and retains the complete 307-report inventory gate. Fault/control
+- **Status:** Implemented v87. The cross-process probe supports themed report
+  selectors and retains the complete 309-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -3946,7 +3946,13 @@ is not a reason by itself to expand its scope or change its default policy.
   randomized processes. Its native fault and mapped-return control reuse the
   same source-hashed tooling-owned DB9 schematic; the exported netlist is
   unchanged while only the synthetic interface map changes. The complete
-  inventory now contains 291 reports.
+  inventory then contained 291 reports.
+  The v87 extension adds LINT-315's missing-connector-return fault and native
+  return-function control as complete typed reports. The target rule is present
+  only in the fault, and both reports match across three independently
+  hash-seeded Python processes. The complete report inventory now contains 309
+  reports; this extends determinism evidence without claiming the missing role
+  is an electrical defect.
   This tests typed-report serialization, separate from the digest-pinned
   native schematic lane.
   The test
@@ -19908,10 +19914,18 @@ acceptance threads while new lint features proceed:
   KiCad 10.0.0 and 10.0.5. Field applicability and reviewer value remain
   unmeasured. See the
   [native fixture note](../tests/fixtures/design_lint/jtag-connector-return-native/README.md).
-- **Selection:** `.venv/bin/python -I -m pytest -q
-  tests/test_jtag_connector_return_review.py -m 'design_lint and
-  connector_lint and interface_lint and return_path_lint and
-  design_lint_rule(rule_id="connector.jtag_pair_without_return_review")'`.
+- **Process determinism:** The complete synthetic fault and native-return
+  control reports are compared across three independently hash-seeded Python
+  processes; the test is registered in this rule's metamorphic fixtures.
+- **Selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest -q \
+    tests/test_jtag_connector_return_review.py \
+    tests/test_design_lint_determinism_jtag_connector_return.py \
+    -m 'design_lint_rule(rule_id="connector.jtag_pair_without_return_review")'
+  ```
+
   The native lane uses `KICAD_RUN_NATIVE_JTAG_CONNECTOR_RETURN_FIXTURES=1`
   and `tests/test_jtag_connector_return_native_fixture_lane.py`.
 

@@ -290,6 +290,8 @@ REPORT_ORDER = (
     "pcb_mechanical_edge_coverage_control",
     "connector_return_scope_singleton_fault",
     "connector_return_scope_singleton_control",
+    "jtag_connector_return_fault",
+    "jtag_connector_return_control",
     "mapped_interface_other_fault",
     "mapped_interface_other_control",
     "mapped_other_named_rail_fault",
@@ -328,6 +330,7 @@ REPORT_BUILDERS = MappingProxyType(
     {
         "returns": "tests.hashseed_probe_cases.returns",
         "connectors": "tests.hashseed_probe_cases.connectors",
+        "jtag_connector_return": "tests.hashseed_probe_cases.jtag_connector_return",
         "connector_named_power_aliases": "tests.hashseed_probe_cases.connector_named_power_aliases",
         "component_peers": "tests.hashseed_probe_cases.component_peers",
         "components": "tests.hashseed_probe_cases.components",
