@@ -34,6 +34,7 @@ from kicad_tooling.hwrepo.models import (
 from kicad_tooling.hwrepo.pcb_component_inventory_models import (
     PcbComponentInventoryCoverageReport,
 )
+from kicad_tooling.hwrepo.pcb_thermal_via_models import PcbThermalViaCoverageReport
 from kicad_tooling.hwrepo.pcb_touch_pad_clearance_models import (
     PcbTouchPadClearanceCoverageEntry,
     PcbTouchPadClearanceCoverageReport,
@@ -150,6 +151,7 @@ def _install_geometry_scan(monkeypatch, *, measured_clearance_nm: int) -> None:
                 mode=mode,
             ),
             PcbComponentInventoryCoverageReport(),
+            PcbThermalViaCoverageReport(),
         )
 
     monkeypatch.setattr(design_lint_project_inspection, "scan_pcb_geometry", scan)

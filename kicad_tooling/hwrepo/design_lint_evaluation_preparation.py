@@ -66,6 +66,7 @@ from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,
 )
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
+from .project_models import ProjectKind
 from .schematic_geometry_models import SchematicGeometryCoverage, SchematicGeometryRuleId
 
 
@@ -311,6 +312,7 @@ def prepare_evaluation(
         pcb_keepout=input_pcb_coverage.keepout,
         pcb_rf_module_antenna=input_pcb_coverage.rf_antenna,
         pcb_touch_pad_clearance=input_pcb_coverage.touch_pad_clearance,
+        pcb_thermal_via=input_pcb_coverage.thermal_via,
         stm32_pin_map=stm32_pin_map_coverage,
         control_input_bias=control_coverage,
         i2c_pullup_heuristic=i2c_coverage,
@@ -327,7 +329,10 @@ def prepare_evaluation(
         keepout=coverage.pcb_keepout,
         rf_antenna=coverage.pcb_rf_module_antenna,
         touch_pad_clearance=coverage.pcb_touch_pad_clearance,
+        thermal_via=coverage.pcb_thermal_via,
         stm32_pin_map=coverage.stm32_pin_map,
+        is_pcb_project=coach.project_kind in {ProjectKind.PCB, ProjectKind.PCB_ONLY},
+        thermal_via_map=policy.pcb_thermal_via_map,
         dru_rule_candidates=request.pcb_dru_rule_candidates,
         native_drc_candidates=request.pcb_native_drc_candidates,
     )

@@ -17,6 +17,7 @@ from .design_lint_pcb_coverage_common import (
 from .design_lint_pcb_geometry_capture import capture_pcb_geometry_source
 from .design_lint_pcb_layout_coverage import layout_coverage_reports
 from .design_lint_pcb_measurement_coverage import measurement_coverage_reports
+from .design_lint_pcb_thermal_via_scan import blocked_thermal_via_coverage
 from .design_lint_policy_models import DesignLintPolicy
 from .discovery import ProjectConfig
 from .pcb_board_only_footprint_models import PcbBoardOnlyFootprintCoverage
@@ -44,6 +45,7 @@ from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,
     PcbSwitchingLoopMap,
 )
+from .pcb_thermal_via_models import PcbThermalViaCoverageReport, PcbThermalViaMap
 from .pcb_touch_pad_clearance_models import (
     PcbTouchPadClearanceCoverageReport,
     PcbTouchPadClearanceMap,
@@ -73,6 +75,7 @@ def scan_pcb_geometry(
     PcbRfModuleAntennaCoverageReport,
     PcbTouchPadClearanceCoverageReport,
     PcbComponentInventoryCoverageReport,
+    PcbThermalViaCoverageReport,
 ]:
     """Capture one native PCB snapshot for all configured geometry review maps."""
     decoupling_map: PcbDecouplingMap | None = policy.pcb_decoupling_map
@@ -84,6 +87,7 @@ def scan_pcb_geometry(
     keepout_map: PcbKeepoutMap | None = policy.pcb_keepout_map
     rf_antenna_map: PcbRfModuleAntennaMap | None = policy.pcb_rf_module_antenna_map
     touch_pad_clearance_map: PcbTouchPadClearanceMap | None = policy.pcb_touch_pad_clearance_map
+    thermal_via_map: PcbThermalViaMap | None = policy.pcb_thermal_via_map
     inventory_modes = resolve_pcb_component_inventory_modes(policy)
     inventory_mode = inventory_modes.inventory
     population_mode = inventory_modes.population
@@ -103,6 +107,7 @@ def scan_pcb_geometry(
         and keepout_map is None
         and rf_antenna_map is None
         and touch_pad_clearance_map is None
+        and thermal_via_map is None
         and not inventory_required
     ):
         return (
@@ -119,6 +124,7 @@ def scan_pcb_geometry(
                 status="DISABLED" if config.kind is ProjectKind.PCB else "NOT_APPLICABLE",
                 mode=inventory_mode if config.kind is ProjectKind.PCB else None,
             ),
+            PcbThermalViaCoverageReport(),
         )
     decoupling_override = overrides.get("pcb.decoupling_proximity")
     decoupling_mode = "review" if decoupling_override is None else decoupling_override.mode
@@ -142,6 +148,8 @@ def scan_pcb_geometry(
     touch_pad_clearance_mode = (
         "review" if touch_pad_clearance_override is None else touch_pad_clearance_override.mode
     )
+    thermal_via_override = overrides.get("pcb.thermal_via_coverage")
+    thermal_via_mode = "review" if thermal_via_override is None else thermal_via_override.mode
     reference_plane_override = overrides.get("pcb.reference_plane_coverage")
     reference_plane_mode = (
         "review" if reference_plane_override is None else reference_plane_override.mode
@@ -157,6 +165,7 @@ def scan_pcb_geometry(
     touch_pad_clearance_disabled = (
         touch_pad_clearance_map is None or touch_pad_clearance_mode == "off"
     )
+    thermal_via_disabled = thermal_via_map is None or thermal_via_mode == "off"
     inventory_disabled = not inventory_required
     if (
         decoupling_disabled
@@ -168,6 +177,7 @@ def scan_pcb_geometry(
         and keepout_disabled
         and rf_antenna_disabled
         and touch_pad_clearance_disabled
+        and thermal_via_disabled
         and inventory_disabled
     ):
         return (
@@ -202,6 +212,9 @@ def scan_pcb_geometry(
                 status="DISABLED" if config.kind is ProjectKind.PCB else "NOT_APPLICABLE",
                 mode=inventory_mode if config.kind is ProjectKind.PCB else None,
             ),
+            PcbThermalViaCoverageReport(status="DISABLED", mode=thermal_via_mode)
+            if thermal_via_map is not None
+            else PcbThermalViaCoverageReport(),
         )
     board_relative = Path(config.project).with_suffix(".kicad_pcb").as_posix()
     output = root / "build" / "design-lint" / f"pcb-geometry-{uuid4().hex[:12]}"
@@ -252,6 +265,7 @@ def scan_pcb_geometry(
             "pcb.keepout_intent_coverage": keepout_mode,
             "pcb.rf_module_antenna_keepout_coverage": rf_antenna_mode,
             "pcb.touch_pad_reference_clearance": touch_pad_clearance_mode,
+            "pcb.thermal_via_coverage": thermal_via_mode,
             "pcb.schematic_component_inventory": inventory_mode,
             "pcb.schematic_pcb_dnp_mismatch": population_mode,
             "pcb.schematic_pcb_value_mismatch": value_mode,
@@ -265,12 +279,14 @@ def scan_pcb_geometry(
             track_width_report,
             reference_plane_report,
             switching_loop_report,
+            thermal_via_report,
         ) = measurement_coverage_reports(
             decoupling_map=decoupling_map,
             protection_path_map=protection_path_map,
             track_width_map=track_width_map,
             reference_plane_map=reference_plane_map,
             switching_loop_map=switching_loop_map,
+            thermal_via_map=thermal_via_map,
             modes=modes,
             evidence=evidence,
             netlist_sha256=netlist_sha256,
@@ -311,6 +327,7 @@ def scan_pcb_geometry(
             rf_antenna_report,
             touch_pad_clearance_report,
             inventory_report,
+            thermal_via_report,
         )
     except (OSError, ValueError, TypeError) as exc:
         issue = f"Could not bind native PCB geometry evidence: {exc}"
@@ -432,6 +449,9 @@ def scan_pcb_geometry(
             if touch_pad_clearance_map is not None
             else PcbTouchPadClearanceCoverageReport()
         )
+        thermal_via_report = blocked_thermal_via_coverage(
+            thermal_via_map, thermal_via_mode, board_relative, issue
+        )
         inventory_report = (
             PcbComponentInventoryCoverageReport(
                 status="BLOCKED",
@@ -471,4 +491,5 @@ def scan_pcb_geometry(
         rf_antenna_report,
         touch_pad_clearance_report,
         inventory_report,
+        thermal_via_report,
     )

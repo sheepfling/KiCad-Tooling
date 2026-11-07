@@ -129,6 +129,7 @@ def evaluate(
             keepout=pcb_keepout_coverage,
             rf_antenna=pcb_rf_module_antenna_coverage,
             touch_pad_clearance=pcb_touch_pad_clearance_coverage,
+            thermal_via=pcb_candidates.get("pcb_thermal_via_coverage"),
         ),
         pcb_mapped_coverage=PcbMappedCoverageInputs(
             differential_pair=pcb_differential_pair_coverage,

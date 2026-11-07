@@ -236,6 +236,7 @@ class ProjectConfig(StrictModel):
                 or self.design_lint.pcb_keepout_map is not None
                 or self.design_lint.pcb_rf_module_antenna_map is not None
                 or self.design_lint.pcb_touch_pad_clearance_map is not None
+                or self.design_lint.pcb_thermal_via_map is not None
             )
             and self.kind is not ProjectKind.PCB
         ):
@@ -341,6 +342,7 @@ class ProjectTestContract(StrictModel):
                 or self.design_lint.pcb_keepout_map is not None
                 or self.design_lint.pcb_rf_module_antenna_map is not None
                 or self.design_lint.pcb_touch_pad_clearance_map is not None
+                or self.design_lint.pcb_thermal_via_map is not None
             )
             and self.validation.kind is not ProjectKind.PCB
         ):

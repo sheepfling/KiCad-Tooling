@@ -71,6 +71,7 @@ from .ci_hosted_pcb_signal_path_drc import pcb_signal_path_drc_fixture_lane
 from .ci_hosted_pcb_switching_loop_lane import (
     run_switching_loop_fixture_lane as _run_switching_loop_fixture_lane,
 )
+from .ci_hosted_pcb_thermal_vias import pcb_thermal_via_fixture_lane
 from .ci_hosted_planning import plan_scope, write_action_outputs
 from .ci_hosted_power_paths import power_path_fixture_lane
 from .ci_hosted_power_pin_net_roles import power_pin_net_role_fixture_lane
@@ -171,6 +172,7 @@ __all__ = (
     "pcb_return_fixture_lane",
     "pcb_signal_path_drc_fixture_lane",
     "pcb_switching_loop_fixture_lane",
+    "pcb_thermal_via_fixture_lane",
     "plan_lane",
     "plan_scope",
     "portable_lane",
@@ -463,6 +465,7 @@ def native_lane(
         pcb_decoupling_fixture_lane(root, project=project, image=image, log=log)
         pcb_switching_loop_fixture_lane(root, project=project, image=image, log=log)
         pcb_reference_plane_via_fixture_lane(root, project=project, image=image, log=log)
+        pcb_thermal_via_fixture_lane(root, project=project, image=image, log=log)
         pcb_reference_plane_narrow_void_fixture_lane(root, project=project, image=image, log=log)
         log.run(
             "native-check",

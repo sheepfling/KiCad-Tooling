@@ -47,6 +47,7 @@ class LegacyPcbCandidateArguments(TypedDict, total=False):
 
     pcb_dru_rule_candidates: tuple[Candidate, ...]
     pcb_native_drc_candidates: tuple[Candidate, ...]
+    pcb_thermal_via_coverage: PcbThermalViaCoverageReport | None
 
 
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
@@ -73,6 +74,7 @@ from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,
 )
+from .pcb_thermal_via_models import PcbThermalViaCoverageReport
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
 from .rc_filter_models import RcFilterCoverageReport
@@ -138,6 +140,7 @@ class DesignLintResolvedCoverage:
     pcb_keepout: PcbKeepoutCoverageReport
     pcb_rf_module_antenna: PcbRfModuleAntennaCoverageReport
     pcb_touch_pad_clearance: PcbTouchPadClearanceCoverageReport
+    pcb_thermal_via: PcbThermalViaCoverageReport
     stm32_pin_map: Stm32PinMapCoverageReport
     control_input_bias: ControlInputBiasHeuristicCoverage | None
     i2c_pullup_heuristic: I2cPullupHeuristicCoverage | None
@@ -228,6 +231,7 @@ class DesignLintEvaluationReportInput:
     pcb_keepout_coverage: PcbKeepoutCoverageReport
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport
     pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport
+    pcb_thermal_via_coverage: PcbThermalViaCoverageReport
     stm32_pin_map_coverage: Stm32PinMapCoverageReport
     mapped_check_runs: tuple[DesignLintMappedCheckRun, ...]
     connector_coverage: ConnectorCoverageReport | None

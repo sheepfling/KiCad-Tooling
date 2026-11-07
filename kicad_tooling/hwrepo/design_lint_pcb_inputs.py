@@ -13,6 +13,7 @@ from .pcb_protection_path_models import PcbProtectionPathCoverageReport
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_switching_loop_models import PcbSwitchingLoopCoverageReport
+from .pcb_thermal_via_models import PcbThermalViaCoverageReport, PcbThermalViaMap
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
 from .stm32_pin_map_models import Stm32PinMapCoverageReport
@@ -33,6 +34,9 @@ class PcbCandidateInputs:
     keepout: PcbKeepoutCoverageReport | None
     rf_antenna: PcbRfModuleAntennaCoverageReport | None
     touch_pad_clearance: PcbTouchPadClearanceCoverageReport | None
+    thermal_via: PcbThermalViaCoverageReport | None
     stm32_pin_map: Stm32PinMapCoverageReport | None
+    is_pcb_project: bool = False
     dru_rule_candidates: tuple[Candidate, ...] = ()
     native_drc_candidates: tuple[Candidate, ...] = ()
+    thermal_via_map: PcbThermalViaMap | None = None

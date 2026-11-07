@@ -34,6 +34,7 @@ from kicad_tooling.hwrepo.pcb_component_inventory_models import (
 )
 from kicad_tooling.hwrepo.pcb_decoupling_models import PcbDecouplingCoverageReport
 from kicad_tooling.hwrepo.pcb_rf_antenna import pcb_rf_module_antenna_entries
+from kicad_tooling.hwrepo.pcb_thermal_via_models import PcbThermalViaCoverageReport
 from kicad_tooling.hwrepo.pcb_touch_pad_clearance_models import (
     PcbTouchPadClearanceCoverageReport,
 )
@@ -195,6 +196,7 @@ def test_enabled_rf_antenna_fault_and_control_match_cli_and_mcp(
             coverage,
             PcbTouchPadClearanceCoverageReport(),
             PcbComponentInventoryCoverageReport(),
+            PcbThermalViaCoverageReport(),
         )
 
     monkeypatch.setattr(

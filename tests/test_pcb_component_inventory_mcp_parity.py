@@ -49,6 +49,7 @@ from kicad_tooling.hwrepo.pcb_required_fitted_reference_models import (
 )
 from kicad_tooling.hwrepo.pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from kicad_tooling.hwrepo.pcb_switching_loop_models import PcbSwitchingLoopCoverageReport
+from kicad_tooling.hwrepo.pcb_thermal_via_models import PcbThermalViaCoverageReport
 from kicad_tooling.hwrepo.pcb_touch_pad_clearance_models import (
     PcbTouchPadClearanceCoverageReport,
 )
@@ -256,6 +257,7 @@ def test_component_inventory_findings_match_cli_and_mcp(
                     ),
                 ),
             ),
+            PcbThermalViaCoverageReport(),
         )
 
     monkeypatch.setattr(

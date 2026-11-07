@@ -2178,3 +2178,21 @@ source identity, disposition, or serialized field changed.
 The focused LED/two-pin source and architecture selection passed 34 tests.
 Targeted Pyright, Ruff, formatting, and scoped `git diff --check` passed. No
 exact native KiCad lane was required for this mapping projection.
+
+## Mapped thermal-pad via coverage route
+
+`pcb_thermal_vias.py#pcb_thermal_via_entries` compares each project-authored exact
+pad/footprint/net, fitted state, center-distance bound, layer span, and minimum
+via multiplicity with one source-bound native PCB connectivity snapshot. It
+counts only vias in the pad's KiCad-reported connectivity component, within the
+reviewed radius and on the exact required span. The finding projection retains
+the typed report and its source digests; scan coordination and project policy
+remain in the existing PCB geometry and design-lint evaluation services.
+
+`pcb.explicit_thermal_pad_scope_unreviewed` is a separate review prompt owned by
+`design_lint_pcb_thermal_pad_scope.py`. It matches only exact exported `EP`,
+`EPAD`, `EXPOSED PAD`, and `THERMAL PAD` functions on fitted PCB endpoints with
+assigned footprints, then asks whether an independently authored map entry is
+needed. It does not infer that the pad needs vias. Both rules use the shared
+typed CLI/MCP design-lint report and default to review. Native fixtures use
+source-hashed synthetic inputs and exact KiCad 10.0.0/10.0.5 image pins.

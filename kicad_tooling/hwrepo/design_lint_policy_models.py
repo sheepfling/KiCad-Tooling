@@ -27,6 +27,7 @@ from .pcb_reference_plane_models import PcbReferencePlaneMap
 from .pcb_required_fitted_reference_models import PcbRequiredFittedReferenceMap
 from .pcb_rf_antenna_models import PcbRfModuleAntennaMap
 from .pcb_switching_loop_models import PcbSwitchingLoopMap
+from .pcb_thermal_via_models import PcbThermalViaMap
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceMap
 from .pcb_track_width_models import PcbTrackWidthMap
 from .power_path_models import PowerPathMap
@@ -76,6 +77,7 @@ class DesignLintPolicy(StrictModel):
     pcb_mechanical_edge_clearance_map: PcbMechanicalEdgeClearanceMap | None = None
     pcb_rf_module_antenna_map: PcbRfModuleAntennaMap | None = None
     pcb_touch_pad_clearance_map: PcbTouchPadClearanceMap | None = None
+    pcb_thermal_via_map: PcbThermalViaMap | None = None
     pcb_required_fitted_reference_map: PcbRequiredFittedReferenceMap | None = None
 
     @model_validator(mode="after")

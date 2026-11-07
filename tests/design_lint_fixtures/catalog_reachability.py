@@ -100,6 +100,7 @@ from tests.design_lint_fixtures.spi_data_same_net import spi_data_same_net_netli
 from tests.design_lint_fixtures.spi_shared_chip_select import spi_shared_chip_select_netlist
 from tests.design_lint_fixtures.spi_shared_data_outputs import spi_shared_data_output_netlist
 from tests.design_lint_fixtures.spi_signal_named_rail import spi_signal_on_named_rail_netlist
+from tests.design_lint_fixtures.thermal_pad_catalog_reachability import thermal_pad_catalog_rule_ids
 from tests.design_lint_fixtures.usb_data_pair_crossing import usb_data_pair_crossing_netlist
 from tests.design_lint_fixtures.usb_signal_named_rail import usb_signal_on_named_rail_netlist
 from tests.serial_participant_support import (
@@ -470,4 +471,5 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         | catalog_reachable_rule_ids()
         | same_voltage_power_input_split_rule_ids()
         | same_voltage_connector_power_input_rule_ids()
+        | thermal_pad_catalog_rule_ids()
     )

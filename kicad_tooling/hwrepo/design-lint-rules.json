@@ -10620,7 +10620,7 @@
         "kicad_tooling/hwrepo/design_lint_policy_models.py#DesignLintPolicy",
         "kicad_tooling/hwrepo/design_lint_power_inputs.py#PowerCandidateInputs",
         "kicad_tooling/hwrepo/design_lint_power_candidates.py#scan_power_candidates",
-        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_design_lint_evaluation"
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_CAPACITOR_HOLD_UP_FIXTURES"
@@ -12001,6 +12001,101 @@
       ],
       "theme": "pcb",
       "implementation_owner": "kicad_tooling/hwrepo/pcb_touch_pad_clearance.py#touch_pad_clearance_violations"
+    },
+    {
+      "rule_id": "pcb.explicit_thermal_pad_scope_unreviewed",
+      "title": "Explicit exposed-pad pin has no reviewed PCB thermal-via scope",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Source-bound KiCad native netlist component footprint, DNP state, and exact exported pin function compared with project-authored exact PCB thermal-via map scopes",
+      "predicate": "For PCB and PCB-only project kinds, recognize only exact exported pin functions EP, EPAD, EXPOSED PAD, or THERMAL PAD after case folding and separator removal on fitted schematic components with an assigned footprint. Emit a review candidate when no exact reference.pad entry in the project-authored PCB thermal-via map covers that pin. Ignore DNP components and pins without an assigned footprint; a matching map entry suppresses only that exact pin prompt. Unknown or non-PCB project kinds produce no candidate.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned CLI images; native pin-function export is repeated and normalized"
+      ],
+      "limitations": [
+        "The exact pin-function allowlist is a conservative naming heuristic. It can miss packages named with other conventions and can prompt when a symbol label is stale or does not represent an exposed PCB pad.",
+        "A finding asks the reviewer whether an independent thermal or layout requirement applies. It does not assert that vias are required, choose via count or geometry, calculate thermal adequacy, or replace native PCB evidence.",
+        "Only PCB and PCB-only project kinds with assigned footprints are considered; DNP components are skipped. An absent or unrecognized pin function is not treated as evidence that no thermal pad exists."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_thermal_pad_scope.test_unmapped_explicit_exposed_pads_prompt_review_but_do_not_infer_vias",
+        "tests.test_pcb_thermal_pad_scope.test_exact_project_map_scope_suppresses_only_the_mapped_pin",
+        "tests.test_pcb_thermal_pad_scope_native.test_native_pin_functions_trigger_only_the_fitted_exposed_pad_prompt",
+        "tests.test_pcb_thermal_pad_scope_mcp_parity.test_explicit_thermal_pad_scope_matches_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_thermal_pad_scope.test_function_matching_is_exact_after_separator_and_case_normalization",
+        "tests.test_pcb_thermal_pad_scope.test_dnp_and_unassigned_footprints_are_controls",
+        "tests.test_pcb_thermal_pad_scope_native.test_native_pin_functions_trigger_only_the_fitted_exposed_pad_prompt",
+        "tests.test_pcb_thermal_pad_scope_mcp_parity.test_explicit_thermal_pad_scope_matches_cli_and_mcp"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_thermal_pad_scope.test_exact_project_map_scope_suppresses_only_the_mapped_pin",
+        "tests.test_pcb_thermal_pad_scope.test_candidate_scanner_routes_the_prompt_and_is_order_independent"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_THERMAL_PAD_SCOPE"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/design_lint_pcb_thermal_pad_scope.py#explicit_thermal_pad_scope_candidates",
+        "kicad_tooling/hwrepo/design_lint_pcb_thermal_pad_scope_evidence.py#project_explicit_thermal_pad_scope_evidence",
+        "kicad_tooling/hwrepo/design_lint_pcb_thermal_pad_scope_evidence.py#is_explicit_thermal_pad_function",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#scan_candidate_result",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation",
+        "kicad_tooling/hwrepo/native_report_parsing.py#read_netlist",
+        "kicad_tooling/hwrepo/pcb_thermal_via_models.py#PcbThermalViaMap"
+      ],
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/design_lint_pcb_thermal_pad_scope.py#explicit_thermal_pad_scope_candidates"
+    },
+    {
+      "rule_id": "pcb.thermal_via_coverage",
+      "title": "Mapped thermal-pad via coverage is incomplete",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Project-authored exact PCB pad, footprint, net, center-distance radius, layer-span via counts, and source-bound KiCad connectivity snapshot",
+      "predicate": "For each explicitly mapped PCB pad, require the exact native pad reference, footprint, expected net, fitted state, and copper stack. Count via multiplicity only when KiCad reports the via in that pad's native copper-connectivity component, the via's exact layer span matches a required span without regard to endpoint order, and the via center is within the project-authored Euclidean radius of a native pad center. Emit a review candidate for missing identity, mismatched identity, unavailable layers, or a count below any authored minimum.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned pcbnew profiles; exact project version and image are checked"
+      ],
+      "limitations": [
+        "The project owner must identify the exact pad, footprint, net, maximum center distance, required layer spans, minimum via multiplicities, and independent requirement basis. The check does not infer that a package pad dissipates heat or decide which pads require vias.",
+        "A completed result establishes native connectivity membership, layer transitions, via multiplicity, and distance from the pad center only. It does not establish that vias lie inside the pad shape, calculate thermal resistance or temperature, prove solderability, or establish thermal adequacy or fabrication readiness.",
+        "The check uses the current KiCad PCB connectivity snapshot and exact project-authored thresholds. Missing pads, DNP footprints, wrong pad identity/net, missing stack layers, or unavailable native connectivity remain incomplete; nearby disconnected vias and connected vias outside the radius are not credited."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_thermal_vias.test_disconnected_nearby_and_connected_out_of_radius_vias_do_not_count",
+        "tests.test_pcb_thermal_vias.test_identity_or_population_mismatch_is_incomplete",
+        "tests.test_pcb_thermal_vias.test_absent_pad_and_unavailable_copper_layer_are_incomplete",
+        "tests.test_pcb_thermal_via_native_fixture_lane.test_native_fault_and_control_are_source_bound",
+        "tests.test_pcb_thermal_via_mcp_parity.test_enabled_thermal_via_fault_and_control_match_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_thermal_vias.test_local_connected_required_span_passes_and_nearby_open_via_is_excluded",
+        "tests.test_pcb_thermal_vias.test_radius_boundary_is_inclusive_and_reordering_is_deterministic",
+        "tests.test_pcb_thermal_via_native_fixture_lane.test_native_fault_and_control_are_source_bound",
+        "tests.test_pcb_thermal_via_mcp_parity.test_disabled_thermal_via_coverage_matches_cli_and_mcp"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_thermal_vias.test_radius_boundary_is_inclusive_and_reordering_is_deterministic",
+        "tests.test_pcb_thermal_vias.test_authored_radius_change_changes_coverage"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_thermal_vias.py#pcb_thermal_via_entries",
+        "kicad_tooling/hwrepo/design_lint_pcb_thermal_via_candidate_evidence.py#PcbThermalViaCandidate",
+        "kicad_tooling/hwrepo/design_lint_pcb_measurement_coverage.py#measurement_coverage_reports",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
+        "kicad_tooling/ci_hosted_pcb_thermal_vias.py#pcb_thermal_via_fixture_lane"
+      ],
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_thermal_vias.py#pcb_thermal_via_entries"
     },
     {
       "rule_id": "pcb.schematic_component_inventory",

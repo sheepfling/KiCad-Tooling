@@ -82,6 +82,7 @@ def candidate_inputs(
             keepout=None,
             rf_antenna=None,
             touch_pad_clearance=None,
+            thermal_via=None,
             stm32_pin_map=None,
         ),
         usb_data_path=UsbDataPathCandidateInputs(authored_map=usb_map),

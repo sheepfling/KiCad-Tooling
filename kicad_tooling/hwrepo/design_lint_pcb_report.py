@@ -352,6 +352,48 @@ def pcb_coverage_report_lines(report: DesignLintReport) -> list[str]:
         if touch_clearance.issue is not None:
             lines.append(f"  Coverage issue: {touch_clearance.issue}")
 
+    thermal_via = report.pcb_thermal_via_coverage
+    if thermal_via.status != "NOT_REQUESTED":
+        lines.append(
+            f"PCB thermal-pad via coverage: {thermal_via.status} "
+            f"(mode: {thermal_via.mode or 'not configured'}; geometry/connectivity only)"
+        )
+        if thermal_via.board_path is not None:
+            lines.append(
+                f"  Board: {thermal_via.board_path} "
+                f"(SHA-256 {thermal_via.board_sha256 or 'unavailable'})"
+            )
+        if thermal_via.snapshot_path is not None:
+            lines.append(
+                f"  Native PCB snapshot: {thermal_via.snapshot_path} "
+                f"(SHA-256 {thermal_via.snapshot_sha256 or 'unavailable'})"
+            )
+        for entry in thermal_via.entries:
+            lines.append(
+                f"  {entry.id}: {entry.status}; pad {entry.pad}; net "
+                f"{entry.observed_net or 'unassigned'}; footprint "
+                f"{entry.observed_footprint or 'missing'}; radius "
+                f"{entry.maximum_center_distance_um} um"
+            )
+            for span in entry.required_layer_spans:
+                count = sum(
+                    item.multiplicity
+                    for item in entry.measurements
+                    if item.connected_to_pad_component
+                    and item.within_authored_radius
+                    and {item.start_layer.casefold(), item.end_layer.casefold()}
+                    == {span.start_layer.casefold(), span.end_layer.casefold()}
+                )
+                lines.append(
+                    f"    {span.start_layer} to {span.end_layer}: {count} connected within radius; "
+                    f"{span.minimum_vias} required"
+                )
+            for issue in entry.issues:
+                lines.append(f"    Coverage issue: {issue}")
+        if thermal_via.issue is not None:
+            lines.append(f"  Coverage issue: {thermal_via.issue}")
+        lines.append("  Via coverage does not calculate temperature or establish thermal adequacy.")
+
     inventory = report.pcb_component_inventory
     if inventory.status != "NOT_APPLICABLE":
         lines.append(

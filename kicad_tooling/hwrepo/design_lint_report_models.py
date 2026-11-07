@@ -45,6 +45,7 @@ from .pcb_protection_path_models import PcbProtectionPathCoverageReport
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_switching_loop_models import PcbSwitchingLoopCoverageReport
+from .pcb_thermal_via_models import PcbThermalViaCoverageReport
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
 from .rc_filter_models import RcFilterCoverageReport
@@ -144,6 +145,9 @@ class DesignLintReport(StrictModel):
     pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport = Field(
         default_factory=PcbTouchPadClearanceCoverageReport
     )
+    pcb_thermal_via_coverage: PcbThermalViaCoverageReport = Field(
+        default_factory=PcbThermalViaCoverageReport
+    )
     stale_ignores: tuple[DesignLintIgnore, ...] = ()
     rule_overrides: tuple[DesignLintRuleOverride, ...] = ()
     issues: tuple[NonEmptyText, ...] = ()
@@ -209,6 +213,7 @@ class DesignLintReport(StrictModel):
                 self.pcb_switching_loop,
                 self.pcb_touch_pad_clearance_coverage,
                 self.pcb_track_width,
+                self.pcb_thermal_via_coverage,
             ),
             report_netlist_sha256=self.netlist_sha256,
             netlist_reports=(
@@ -221,6 +226,7 @@ class DesignLintReport(StrictModel):
                 self.pcb_switching_loop,
                 self.pcb_touch_pad_clearance_coverage,
                 self.pcb_track_width,
+                self.pcb_thermal_via_coverage,
             ),
         )
         validate_catalogued_findings(

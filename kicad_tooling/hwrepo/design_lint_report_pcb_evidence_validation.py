@@ -13,6 +13,7 @@ from .pcb_protection_path_models import PcbProtectionPathCoverageReport
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_switching_loop_models import PcbSwitchingLoopCoverageReport
+from .pcb_thermal_via_models import PcbThermalViaCoverageReport
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
 
@@ -27,6 +28,7 @@ PcbSourceCoverage: TypeAlias = (
     | PcbSignalPathRuleCoverageReport
     | PcbSwitchingLoopCoverageReport
     | PcbTouchPadClearanceCoverageReport
+    | PcbThermalViaCoverageReport
     | PcbTrackWidthCoverageReport
 )
 
@@ -39,6 +41,7 @@ PcbNetlistSourceCoverage: TypeAlias = (
     | PcbRfModuleAntennaCoverageReport
     | PcbSwitchingLoopCoverageReport
     | PcbTouchPadClearanceCoverageReport
+    | PcbThermalViaCoverageReport
     | PcbTrackWidthCoverageReport
 )
 
@@ -69,6 +72,7 @@ def validate_pcb_source_consistency(
             "PCB RF antenna",
             "PCB switching-loop",
             "PCB touch-clearance",
+            "PCB thermal-via",
             "PCB track-width",
         ),
         netlist_reports,

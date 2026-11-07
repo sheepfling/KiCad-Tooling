@@ -787,7 +787,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 288 active rules.
+The catalog currently contains 291 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -7874,3 +7874,71 @@ intent from a reference designator, symbol, or net name. See the
 See the LINT-308 and LINT-309 records in the
 [design lint backlog](DESIGN_LINT_BACKLOG.md), plus the
 [synthetic native fixtures](../tests/fixtures/design_lint/capacitor-hold-up-native/README.md).
+
+## Review unscoped exposed-pad pin functions
+
+The `pcb.explicit_thermal_pad_scope_unreviewed` rule prompts for review when a
+fitted component with an assigned footprint has an exact exported pin function
+of `EP`, `EPAD`, `EXPOSED PAD`, or `THERMAL PAD`, and the project has no exact
+`reference.pad` entry for that pin in `design_lint.pcb_thermal_via_map`.
+Matching ignores case and spaces, underscores, or hyphens between words. The
+rule skips DNP components and components without an assigned footprint, and
+only runs for PCB or PCB-only project kinds. An unknown project kind produces
+no finding. It does not search arbitrary function substrings: for example,
+`THERMAL_ALERT` does not match.
+
+This is a review prompt that asks whether an independently reviewed thermal or
+layout requirement applies. It does not claim that a pad needs vias, infer a
+via count or geometry, or assess thermal performance. If no via requirement
+applies, retain a reviewed exact fingerprint ignore or turn the rule off in
+project policy. If a requirement does apply, map the exact pad and its
+independent basis using the coverage contract below. The default mode is
+`review`.
+
+## Review mapped thermal-pad via coverage
+
+Use `design_lint.pcb_thermal_via_map` only when an independently reviewed
+thermal or layout requirement identifies the exact PCB pad, footprint, net,
+via layer spans, minimum via multiplicities, and maximum via-center distance
+from that pad's native center. The values below are synthetic examples, not
+thermal design guidance:
+
+```json
+{
+  "design_lint": {
+    "pcb_thermal_via_map": {
+      "schema_version": "1",
+      "basis": "Synthetic exposed-pad layout requirement",
+      "requirements": [
+        {
+          "id": "synthetic-u1-thermal-pad",
+          "basis": "Synthetic package-pad and stackup requirement",
+          "pad": "U1.1",
+          "footprint": "Package:QFN_Thermal",
+          "net": "GND",
+          "maximum_center_distance_um": 600,
+          "required_layer_spans": [
+            {
+              "start_layer": "F.Cu",
+              "end_layer": "B.Cu",
+              "minimum_vias": 4
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+The check requires the exact fitted pad identity, expected net, copper stack,
+native via membership in the pad's connectivity component, required layer
+spans, and authored center-distance limit. A nearby unconnected via, a via on
+the wrong layer span, or a connected via outside the authored radius does not
+count. The default rule mode is `review`; a project can select `block` or `off`
+with its ordinary rule override.
+
+This is geometry and connectivity coverage only. It does not prove that a via
+lies within the pad's copper shape, estimate thermal resistance or temperature,
+validate solderability, or establish thermal adequacy or fabrication readiness.
+The project owner must provide and review the independent requirement basis.

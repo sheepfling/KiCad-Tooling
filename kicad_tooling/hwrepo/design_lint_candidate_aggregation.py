@@ -46,6 +46,7 @@ from .design_lint_pcb_required_fitted_reference_candidates import (
     pcb_required_fitted_reference_candidates,
 )
 from .design_lint_pcb_requirement_candidates import scan_pcb_requirement_candidates
+from .design_lint_pcb_thermal_pad_scope import explicit_thermal_pad_scope_candidates
 from .design_lint_peer_candidates import scan_peer_candidates
 from .design_lint_peer_inputs import PeerCandidateInputs, PeerCandidateScanInputs
 from .design_lint_power_candidates import scan_power_candidates
@@ -171,7 +172,10 @@ def candidates(
                 keepout=legacy.get("pcb_keepout_coverage"),
                 rf_antenna=legacy.get("pcb_rf_module_antenna_coverage"),
                 touch_pad_clearance=legacy.get("pcb_touch_pad_clearance_coverage"),
+                thermal_via=legacy.get("pcb_thermal_via_coverage"),
                 stm32_pin_map=legacy.get("stm32_pin_map_coverage"),
+                is_pcb_project=legacy.get("is_pcb_project", False),
+                thermal_via_map=legacy.get("pcb_thermal_via_map"),
             ),
             usb_data_path=UsbDataPathCandidateInputs(authored_map=legacy.get("usb_data_path_map")),
             netlist_sha256=legacy.get("netlist_sha256"),
@@ -296,6 +300,13 @@ def scan_candidate_result(
     found.extend(mapped_coverage_result.candidates)
     found.extend(scan_pcb_measurement_candidates(inputs.pcb))
     found.extend(scan_pcb_requirement_candidates(inputs.pcb))
+    if inputs.pcb.is_pcb_project:
+        found.extend(
+            explicit_thermal_pad_scope_candidates(
+                observed,
+                inputs.pcb.thermal_via_map,
+            )
+        )
     found.extend(stm32_candidates(stm32_pin_map_coverage))
     found.extend(inputs.pcb.dru_rule_candidates)
     found.extend(inputs.pcb.native_drc_candidates)

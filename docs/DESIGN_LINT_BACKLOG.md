@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 287 rules are implemented with synthetic regression coverage.
+The following 291 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 288 active rules.
+The catalog currently contains 291 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -717,6 +717,9 @@ skipped under prerelease policy.
 - `connector.spi_triad_without_return_review`
 - `net.return_labels_without_pin_roles`
 - `mcu.stm32_cubemx_pin_map`
+- `bus.usb_c_generic_connector_cc_pair_review`
+- `pcb.explicit_thermal_pad_scope_unreviewed`
+- `pcb.thermal_via_coverage`
 
 This baseline catches suspicious connector symmetry and missing named pins,
 plus narrow netlist patterns for I2C, SPI, USB-C, and CAN. It does not know that
@@ -3628,23 +3631,23 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for every active rule; CI requires each new
-  active rule to add metamorphic fixtures or a reasoned not-applicable basis.
-  The package catalog tracks `metamorphic_status`
-  (`unreviewed`, `covered`, or `not_applicable`), registered
-  `metamorphic_fixtures`, and a required basis for a not-applicable decision.
-  This additive catalog change advances its schema to version 2 while report
-  readers continue accepting version 1 as unreviewed. Catalog validation
-  resolves and runs registered cases; the catalog suite rejects an unreviewed
-  active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 286 covered, 0 not applicable, 0 unreviewed. The connector-peer
-  hash-seed regression is linked to the named-complementary-pair rule it also
-  asserts, so catalog metadata covers every finding checked by that report.
-  Control-input metamorphic coverage now relabels both nets, reverses net and
-  pin-map order, and reverses capacitor pin inventory order; the recognized
-  BOOT/switch-capacitor topology stays quiet, while its unproven same-device
-  control retains the same review finding. The comparison uses rule and subject
-  identity, not source-bound evidence that must change with the input.
+- **Status:** Baseline complete for every active rule; CI requires each new active rule to add
+  metamorphic fixtures or a reasoned not-applicable basis. The package catalog tracks
+  `metamorphic_status` (`unreviewed`, `covered`, or `not_applicable`), registered
+  `metamorphic_fixtures`, and a required basis for a not-applicable decision. This additive catalog
+  change advances its schema to version 2 while report readers continue accepting version 1 as
+  unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
+  unreviewed active rule and keeps the backlog inventory synchronized.
+
+  Current catalog audit: 291 covered, 0 not applicable, 0 unreviewed.
+
+  The connector-peer hash-seed regression is linked to the
+  named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
+  that report. Control-input metamorphic coverage now relabels both nets, reverses net and pin-map
+  order, and reverses capacitor pin inventory order; the recognized BOOT/switch-capacitor topology
+  stays quiet, while its unproven same-device control retains the same review finding. The
+  comparison uses rule and subject identity, not source-bound evidence that must change with the
+  input.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -19688,6 +19691,73 @@ acceptance threads while new lint features proceed:
 
 [swd-symbol]: https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/master/MCU_ST_STM32WB.kicad_symdir/STM32WB15CCUx.kicad_sym
 [swd-rename]: https://gitlab.com/kicad/libraries/kicad-symbols/-/merge_requests/3929/reports
+
+#### LINT-310 — Project-authored thermal-pad via count coverage
+
+- **Status:** Implemented as opt-in `pcb.thermal_via_coverage`, defaulting to
+  `review` when a project authors `design_lint.pcb_thermal_via_map`.
+- **Predicate:** For each exact reference.pad, require the reviewed footprint,
+  net, fitted state, copper stack, maximum via-center distance, layer spans,
+  and minimum via multiplicity. Count only vias in KiCad's native connected
+  component for the mapped pad, within the authored radius and on the required
+  span. Source-bound output retains native snapshot, probe, board, netlist, and
+  map digests. CLI and MCP use the same typed report and finding service.
+- **Boundary:** This deterministic geometry/connectivity screen does not infer
+  which packages need thermal vias, whether a via lies inside the pad outline,
+  thermal resistance, temperature, solderability, or thermal adequacy. Each
+  threshold needs an independent project basis. It does not prove fabrication
+  readiness.
+- **Fixtures:** Synthetic fault/control and threshold metamorphic checks,
+  candidate source-evidence validation, CLI/MCP parity, and exact-version
+  KiCad 10.0.0/10.0.5 native fault/control fixtures pass. The focused catalog,
+  architecture, CLI/MCP, and surface selection passed (90 tests); the native
+  Docker selection passed both version cases. Scoped Ruff check/format and the
+  full configured Pyright package check pass. No proprietary board source is
+  included.
+- **Selection:** Synthetic and CLI/MCP cases can be selected with
+  `.venv/bin/python -I -m pytest -q tests/test_pcb_thermal_vias.py
+  tests/test_pcb_thermal_via_mcp_parity.py -m 'design_lint and pcb_lint'`.
+  Exact native checks use
+  `KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_PCB_FIXTURES=1
+  .venv/bin/python -I -m pytest -q tests/test_pcb_thermal_via_native_fixture_lane.py
+  -m 'design_lint and pcb_lint and native_kicad'`.
+
+#### LINT-311 — Explicit exposed-pad scope review
+
+- **Status:** Implemented as `pcb.explicit_thermal_pad_scope_unreviewed`,
+  default `review`. Candidate generation is limited to PCB and PCB-only
+  project kinds, as reported by the source-bound contract coach.
+- **Predicate:** Match only exact exported pin functions `EP`, `EPAD`,
+  `EXPOSED PAD`, or `THERMAL PAD` after case folding and separator removal.
+  Prompt when a fitted component with an assigned footprint lacks an exact
+  reference.pad entry in the project thermal-via map. A mapped pin is covered;
+  other unmapped pins are still prompted. DNP and footprint-less components
+  are excluded. Unknown project kind is not treated as a PCB.
+- **Boundary:** This finds explicit symbol metadata that may deserve an
+  independently reviewed layout requirement. It does not infer that an exposed
+  pad needs vias, set geometry or count, establish thermal performance, or
+  certify a board. Rule `off` and exact fingerprint ignores are available when
+  the review establishes that no via requirement applies.
+- **Fixtures:** Synthetic controls cover exact labels, near-match suppression,
+  map matching, deterministic ordering, DNP and missing-footprint exclusions,
+  and project kind. Project `review`, `block`, `off`, and exact-ignore outcomes
+  are checked. The CLI/MCP reports match. A tooling-owned 2-pin symbol fixture
+  (SHA-256 `7473c405de142ff363699b1953d3b39cfbfcdcfd68733ff67e65a781d92ac754`)
+  was exported twice in digest-pinned KiCad 10.0.0 and 10.0.5 Docker images;
+  the normalized component, function, and DNP evidence matched and the scope
+  prompt identified only fitted U1.9. The final focused catalog, marker,
+  architecture, functional, parity, and native selection passed 62 tests.
+  Ruff, formatting, project-configured Pyright (0 errors), and Markdown checks
+  also passed; the full test suite was not run.
+- **Selection:**
+  `.venv/bin/python -I -m pytest -q tests/test_pcb_thermal_pad_scope.py
+  tests/test_design_lint_architecture_thermal_pad_scope.py
+  -m 'design_lint and pcb_lint'`; CLI/MCP parity uses
+  `tests/test_pcb_thermal_pad_scope_mcp_parity.py -m 'design_lint and pcb_lint and parity_lint'`.
+  Exact native exports use
+  `KICAD_RUN_NATIVE_THERMAL_PAD_SCOPE=1 .venv/bin/python -I -m pytest -q
+  tests/test_pcb_thermal_pad_scope_native.py
+  -m 'design_lint and pcb_lint and native_kicad'`.
 
 ## Completion and release gate
 

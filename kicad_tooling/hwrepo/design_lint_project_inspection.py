@@ -189,6 +189,7 @@ def inspect_design_lint_request(
             pcb_rf_module_antenna_coverage,
             pcb_touch_pad_clearance_coverage,
             pcb_component_inventory_coverage,
+            pcb_thermal_via_coverage,
         ) = scan_pcb_geometry(root, config, coach, policy, native_summary)
         pair_map: PcbDifferentialPairRuleMap | None = policy.pcb_differential_pair_rule_map
         pair_override = next(
@@ -286,6 +287,7 @@ def inspect_design_lint_request(
                     keepout=pcb_keepout_coverage,
                     rf_antenna=pcb_rf_module_antenna_coverage,
                     touch_pad_clearance=pcb_touch_pad_clearance_coverage,
+                    thermal_via=pcb_thermal_via_coverage,
                 ),
                 pcb_mapped_coverage=PcbMappedCoverageInputs(
                     differential_pair=pair_rule_coverage,

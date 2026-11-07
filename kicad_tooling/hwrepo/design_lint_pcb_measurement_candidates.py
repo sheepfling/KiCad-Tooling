@@ -16,6 +16,10 @@ from .design_lint_pcb_reference_plane_candidate_evidence import (
     PcbReferencePlaneFindingEvidence,
     reference_plane_below_threshold_track_uuids,
 )
+from .design_lint_pcb_thermal_via_candidate_evidence import (
+    PcbThermalViaCandidate,
+    PcbThermalViaFindingEvidence,
+)
 from .design_lint_pcb_track_width_candidate_evidence import (
     PcbTrackWidthCandidate,
     PcbTrackWidthFindingEvidence,
@@ -24,6 +28,7 @@ from .design_lint_types import Candidate
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_protection_path_models import PcbProtectionPathCoverageReport
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport
+from .pcb_thermal_via_models import PcbThermalViaCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
 
 
@@ -34,6 +39,7 @@ def scan_pcb_measurement_candidates(inputs: PcbCandidateInputs) -> tuple[Candida
         pcb_protection_path_coverage=inputs.protection_path,
         pcb_track_width_coverage=inputs.track_width,
         pcb_reference_plane_coverage=inputs.reference_plane,
+        pcb_thermal_via_coverage=inputs.thermal_via,
     )
 
 
@@ -43,6 +49,7 @@ def pcb_measurement_coverage_candidates(
     pcb_protection_path_coverage: PcbProtectionPathCoverageReport | None = None,
     pcb_track_width_coverage: PcbTrackWidthCoverageReport | None = None,
     pcb_reference_plane_coverage: PcbReferencePlaneCoverageReport | None = None,
+    pcb_thermal_via_coverage: PcbThermalViaCoverageReport | None = None,
 ) -> tuple[Candidate, ...]:
     """Translate PCB measurement coverage gaps into review candidates."""
     found: list[Candidate] = []
@@ -145,6 +152,25 @@ def pcb_measurement_coverage_candidates(
                         f"{', '.join(entry.signal_layers)} / {entry.reference_net}"
                     ),
                     message=message,
+                )
+            )
+    if pcb_thermal_via_coverage is not None:
+        for entry in pcb_thermal_via_coverage.entries:
+            if entry.status == "COMPLETE":
+                continue
+            found.append(
+                PcbThermalViaCandidate.from_source_evidence(
+                    PcbThermalViaFindingEvidence(
+                        report=pcb_thermal_via_coverage,
+                        entry=entry,
+                    ),
+                    subject=f"{entry.id}: thermal pad {entry.pad}",
+                    message=(
+                        "Review native-connected via count and via-center distance for the exact "
+                        "mapped thermal pad and copper-layer spans. This is a project-authored "
+                        "geometry/connectivity screen; it does not estimate temperature or establish "
+                        "thermal adequacy."
+                    ),
                 )
             )
     return tuple(found)

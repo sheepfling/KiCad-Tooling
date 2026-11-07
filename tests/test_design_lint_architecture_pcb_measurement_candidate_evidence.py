@@ -10,6 +10,7 @@ from kicad_tooling.hwrepo import (
     design_lint_pcb_decoupling_candidate_evidence,
     design_lint_pcb_protection_path_candidate_evidence,
     design_lint_pcb_reference_plane_candidate_evidence,
+    design_lint_pcb_thermal_via_candidate_evidence,
     design_lint_pcb_track_width_candidate_evidence,
 )
 from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, line_count
@@ -27,6 +28,7 @@ _OWNER_MODULES = (
     "design_lint_pcb_protection_path_candidate_evidence.py",
     "design_lint_pcb_track_width_candidate_evidence.py",
     "design_lint_pcb_reference_plane_candidate_evidence.py",
+    "design_lint_pcb_thermal_via_candidate_evidence.py",
 )
 
 
@@ -52,6 +54,7 @@ def test_measurement_candidate_translator_routes_each_rule_to_its_theme_owner() 
         "PcbProtectionPathCandidate",
         "PcbTrackWidthCandidate",
         "PcbReferencePlaneCandidate",
+        "PcbThermalViaCandidate",
     }
     assert not any(
         isinstance(node, ast.Call)
@@ -84,6 +87,11 @@ def test_measurement_candidate_types_and_projectors_have_theme_owned_modules() -
             design_lint_pcb_reference_plane_candidate_evidence,
             design_lint_pcb_reference_plane_candidate_evidence.PcbReferencePlaneCandidate,
             "project_pcb_reference_plane_evidence",
+        ),
+        (
+            design_lint_pcb_thermal_via_candidate_evidence,
+            design_lint_pcb_thermal_via_candidate_evidence.PcbThermalViaCandidate,
+            "project_pcb_thermal_via_evidence",
         ),
     )
 

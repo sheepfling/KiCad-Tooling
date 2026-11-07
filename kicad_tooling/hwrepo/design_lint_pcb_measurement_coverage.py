@@ -29,6 +29,8 @@ from .pcb_switching_loop_models import (
     PcbSwitchingLoopMap,
 )
 from .pcb_switching_loop_review import pcb_switching_loop_entries
+from .pcb_thermal_via_models import PcbThermalViaCoverageReport, PcbThermalViaMap
+from .pcb_thermal_vias import pcb_thermal_via_entries
 from .pcb_track_width import pcb_track_width_entries
 from .pcb_track_width_models import PcbTrackWidthCoverageReport, PcbTrackWidthMap
 
@@ -61,6 +63,7 @@ def measurement_coverage_reports(
     track_width_map: PcbTrackWidthMap | None,
     reference_plane_map: PcbReferencePlaneMap | None,
     switching_loop_map: PcbSwitchingLoopMap | None,
+    thermal_via_map: PcbThermalViaMap | None,
     modes: Mapping[str, PcbRuleMode],
     evidence: PcbGeometrySourceEvidence,
     netlist_sha256: Digest,
@@ -70,6 +73,7 @@ def measurement_coverage_reports(
     PcbTrackWidthCoverageReport,
     PcbReferencePlaneCoverageReport,
     PcbSwitchingLoopCoverageReport,
+    PcbThermalViaCoverageReport,
 ]:
     """Build coverage for the measured PCB geometry requirement maps."""
     return (
@@ -110,6 +114,14 @@ def measurement_coverage_reports(
             switching_loop_map,
             modes["pcb.switching_loop_geometry"],
             pcb_switching_loop_entries,
+            evidence,
+            netlist_sha256,
+        ),
+        _coverage(
+            PcbThermalViaCoverageReport,
+            thermal_via_map,
+            modes["pcb.thermal_via_coverage"],
+            pcb_thermal_via_entries,
             evidence,
             netlist_sha256,
         ),

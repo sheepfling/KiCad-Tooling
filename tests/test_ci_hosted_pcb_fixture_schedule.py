@@ -19,6 +19,7 @@ from kicad_tooling import (
 from kicad_tooling import (
     ci_hosted_pcb_switching_loop_context as switching_loop_lane,
 )
+from kicad_tooling import ci_hosted_pcb_thermal_vias as thermal_via_lane
 from kicad_tooling.ci_hosted import (
     HostedLog,
     pcb_access_fixture_lane,
@@ -26,6 +27,7 @@ from kicad_tooling.ci_hosted import (
     pcb_reference_plane_via_fixture_lane,
     pcb_return_fixture_lane,
     pcb_switching_loop_fixture_lane,
+    pcb_thermal_via_fixture_lane,
 )
 from kicad_tooling.hwrepo import electrical
 
@@ -47,7 +49,13 @@ def _assert_unsupported_version_stops_before_capture(
 ) -> None:
     config = electrical.selected_config(root, "controller")
     unsupported = config.model_copy(update={"kicad_version": "10.0.6"})
-    for owner in (access_lane, return_lane, switching_loop_lane, reference_plane_lane):
+    for owner in (
+        access_lane,
+        return_lane,
+        switching_loop_lane,
+        reference_plane_lane,
+        thermal_via_lane,
+    ):
         monkeypatch.setattr(owner, "selected_config", lambda *_args: unsupported)
 
     with pytest.raises(ValueError, match="do not cover KiCad 10.0.6"):
@@ -112,4 +120,16 @@ def test_reference_plane_fixture_rejects_an_untested_kicad_minor(
         monkeypatch,
         lane,
         "native-pcb-reference-plane-fixture-version",
+    )
+
+
+def test_thermal_via_fixture_rejects_an_untested_kicad_minor(
+    hosted_reference_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _assert_unsupported_version_stops_before_capture(
+        hosted_reference_root,
+        monkeypatch,
+        pcb_thermal_via_fixture_lane,
+        "native-pcb-thermal-via-fixture-version",
     )

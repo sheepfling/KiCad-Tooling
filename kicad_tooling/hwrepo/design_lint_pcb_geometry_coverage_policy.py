@@ -12,6 +12,7 @@ from .pcb_drc_models import PcbSignalPathRuleCoverageReport
 from .pcb_drc_source_evidence import drc_coverage_matches_sources
 from .pcb_keepout_models import PcbKeepoutCoverageReport
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
+from .pcb_thermal_via_models import PcbThermalViaCoverageReport
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 from .source_state_models import SourceHashInventory
 
@@ -24,6 +25,7 @@ class PcbInputCoverageInputs:
     keepout: PcbKeepoutCoverageReport | None = None
     rf_antenna: PcbRfModuleAntennaCoverageReport | None = None
     touch_pad_clearance: PcbTouchPadClearanceCoverageReport | None = None
+    thermal_via: PcbThermalViaCoverageReport | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,6 +36,7 @@ class PcbInputCoveragePolicyState:
     keepout: PcbKeepoutCoverageReport
     rf_antenna: PcbRfModuleAntennaCoverageReport
     touch_pad_clearance: PcbTouchPadClearanceCoverageReport
+    thermal_via: PcbThermalViaCoverageReport
 
 
 def normalize_pcb_input_coverage_policy(
@@ -47,6 +50,7 @@ def normalize_pcb_input_coverage_policy(
     pcb_keepout_coverage = inputs.keepout
     pcb_rf_module_antenna_coverage = inputs.rf_antenna
     pcb_touch_pad_clearance_coverage = inputs.touch_pad_clearance
+    pcb_thermal_via_coverage = inputs.thermal_via
     signal_path_map = policy.pcb_signal_path_rule_map
 
     signal_path_override = next(
@@ -305,9 +309,71 @@ def normalize_pcb_input_coverage_policy(
         pcb_touch_pad_clearance_coverage = pcb_touch_pad_clearance_coverage.model_copy(
             update={"mode": touch_pad_clearance_mode}
         )
+    thermal_via_map = policy.pcb_thermal_via_map
+    thermal_via_override = next(
+        (item for item in policy.rules if item.rule_id == "pcb.thermal_via_coverage"),
+        None,
+    )
+    thermal_via_mode: Literal["review", "block", "off"] = (
+        "review" if thermal_via_override is None else thermal_via_override.mode
+    )
+    thermal_via_map_sha256 = (
+        hashlib.sha256(thermal_via_map.model_dump_json().encode("utf-8")).hexdigest()
+        if thermal_via_map is not None
+        else None
+    )
+    if thermal_via_mode == "off":
+        pcb_thermal_via_coverage = PcbThermalViaCoverageReport(
+            status="DISABLED", mode="off", map_sha256=thermal_via_map_sha256
+        )
+    elif (
+        thermal_via_map is None
+        and pcb_thermal_via_coverage is not None
+        and pcb_thermal_via_coverage.status in {"COMPLETE", "INCOMPLETE"}
+    ):
+        pcb_thermal_via_coverage = PcbThermalViaCoverageReport(
+            status="BLOCKED", issue="Thermal-via coverage has no current project-authored map"
+        )
+    elif thermal_via_map is None:
+        pcb_thermal_via_coverage = pcb_thermal_via_coverage or PcbThermalViaCoverageReport()
+    elif pcb_thermal_via_coverage is None:
+        pcb_thermal_via_coverage = PcbThermalViaCoverageReport(
+            status="BLOCKED",
+            mode=thermal_via_mode,
+            map_sha256=thermal_via_map_sha256,
+            issue="Source-bound native PCB geometry was not supplied for the thermal-via map",
+        )
+    elif pcb_thermal_via_coverage.status in {"NOT_REQUESTED", "DISABLED"} or (
+        pcb_thermal_via_coverage.status in {"COMPLETE", "INCOMPLETE"}
+        and pcb_thermal_via_coverage.map_sha256 != thermal_via_map_sha256
+    ):
+        pcb_thermal_via_coverage = PcbThermalViaCoverageReport(
+            status="BLOCKED",
+            mode=thermal_via_mode,
+            map_sha256=thermal_via_map_sha256,
+            issue="Thermal-via coverage does not bind the current project-authored map",
+        )
+    elif pcb_thermal_via_coverage.status in {"COMPLETE", "INCOMPLETE"} and not (
+        pcb_board_source_matches(
+            pcb_thermal_via_coverage.board_path,
+            pcb_thermal_via_coverage.board_sha256,
+            source_hashes,
+        )
+    ):
+        pcb_thermal_via_coverage = PcbThermalViaCoverageReport(
+            status="BLOCKED",
+            mode=thermal_via_mode,
+            map_sha256=thermal_via_map_sha256,
+            issue="Thermal-via coverage differs from the current PCB source",
+        )
+    else:
+        pcb_thermal_via_coverage = pcb_thermal_via_coverage.model_copy(
+            update={"mode": thermal_via_mode}
+        )
     return PcbInputCoveragePolicyState(
         signal_path=pcb_signal_path_coverage,
         keepout=pcb_keepout_coverage,
         rf_antenna=pcb_rf_module_antenna_coverage,
         touch_pad_clearance=pcb_touch_pad_clearance_coverage,
+        thermal_via=pcb_thermal_via_coverage,
     )
