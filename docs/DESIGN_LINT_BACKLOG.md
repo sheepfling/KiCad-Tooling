@@ -752,8 +752,10 @@ standalone parity work when it closes a demonstrated feature regression.
   inspected with digest-pinned KiCad 10.0.0 and 10.0.5. This is a routing
   review cue; it does not claim the pair is electrically defective or require
   a common layer profile. The exact prerelease selector passed 26 tests with
-  7,621 deselected, including both native Docker fixtures. Hosted acceptance
-  and tag details will be recorded after the push.
+  7,622 deselected, including both native Docker fixtures. GitHub Actions
+  run `42421534021` passed the tagged gate, package checks, and separate-project
+  wheel check.
+  Tag `v0.5.3rc537` points to lint commit `04ca57cf`.
 - **LINT-300 two-pin serial connector return review (completed v0.5.3rc508):**
   The scoped local gate passed 39 tests, including the digest-pinned native
   fault/control lane; hosted acceptance passed in GitHub Actions run
