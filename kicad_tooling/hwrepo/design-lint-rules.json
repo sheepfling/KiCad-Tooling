@@ -5802,14 +5802,22 @@
         "Unusual library naming and off-board CC circuitry are outside the evidence."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_unconnected_interfaces.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules"
+        "tests.test_design_lint_unconnected_interfaces.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules",
+        "tests.test_usb_c_cc_unconnected_pin.test_unassigned_usb_c_cc_pins_emit_review",
+        "tests.test_usb_c_cc_unconnected_native_fixture_lane.test_native_usb_c_cc_unconnected_fault_and_control_repeat"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_unconnected_interfaces.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules"
+        "tests.test_design_lint_unconnected_interfaces.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules",
+        "tests.test_usb_c_cc_unconnected_pin.test_assigned_usb_c_cc_pins_are_quiet_for_this_rule",
+        "tests.test_usb_c_cc_unconnected_native_fixture_lane.test_native_usb_c_cc_unconnected_fault_and_control_repeat"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_unconnected_interfaces.test_unconnected_protocol_pin_candidates_are_order_stable_and_clear_individually"
+        "tests.test_design_lint_unconnected_interfaces.test_unconnected_protocol_pin_candidates_are_order_stable_and_clear_individually",
+        "tests.test_usb_c_cc_unconnected_native_fixture_lane.test_native_usb_c_cc_unconnected_fault_and_control_repeat"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_C_CC_UNCONNECTED_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/bus_signal_roles.py#unconnected_interface_pins",

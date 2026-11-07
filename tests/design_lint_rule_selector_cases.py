@@ -248,6 +248,18 @@ RULE_NODE_CASES = (
         "tests/test_usb_c_sbu_unconnected_pin.py::test_both_connected_and_both_open_pairs_are_quiet",
     ),
     (
+        "bus.usb_c_unconnected_cc_pin",
+        "tests/test_usb_c_cc_unconnected_pin.py::test_unassigned_usb_c_cc_pins_emit_review",
+    ),
+    (
+        "bus.usb_c_unconnected_cc_pin",
+        "tests/test_usb_c_cc_unconnected_pin.py::test_assigned_usb_c_cc_pins_are_quiet_for_this_rule",
+    ),
+    (
+        "bus.usb_c_unconnected_cc_pin",
+        "tests/test_usb_c_cc_unconnected_native_fixture_lane.py::test_native_usb_c_cc_unconnected_fault_and_control_repeat",
+    ),
+    (
         "bus.usb_c_sbu_same_net",
         "tests/test_usb_c_sbu_unconnected_pin.py::test_distinct_nets_dnp_connector_duplicate_and_incomplete_inputs_are_quiet",
     ),

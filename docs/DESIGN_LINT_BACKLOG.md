@@ -19936,6 +19936,25 @@ acceptance threads while new lint features proceed:
   The native lane uses `KICAD_RUN_NATIVE_JTAG_CONNECTOR_RETURN_FIXTURES=1`
   and `tests/test_jtag_connector_return_native_fixture_lane.py`.
 
+#### LINT-316 — Add exact-native evidence for an unassigned USB-C CC pin
+
+- **Rule:** `bus.usb_c_unconnected_cc_pin`, default `review`; this is a
+  verification-coverage improvement for the existing rule, not a new detector.
+- **Gap:** The rule had synthetic fault/control and order-stability coverage,
+  but no catalog-required exact-version native export fixture.
+- **Fixtures:** Tooling-owned synthetic schematics exercise an open controller
+  U1.1/CC1 fault and an assigned CC1/CC2 control. The native lane checks both
+  sources with digest-pinned KiCad 10.0.0 and 10.0.5 images, verifies netlist
+  assignments and the explicit unconnected-pin inventory, repeats exports,
+  and requires zero ERC errors. No project or product-board sources are used.
+- **Boundary:** This covers schematic assignment only. It does not infer
+  USB-C role, required Rp/Rd circuitry, off-board behavior, PCB copper, or
+  physical continuity. The rule remains configurable by project policy.
+- **Selection:** Run `tests/test_usb_c_cc_unconnected_pin.py` for synthetic
+  cases. The native lane is `tests/test_usb_c_cc_unconnected_native_fixture_lane.py`
+  under `KICAD_RUN_NATIVE_USB_C_CC_UNCONNECTED_FIXTURES=1`; both are selectable
+  with `design_lint_rule(rule_id="bus.usb_c_unconnected_cc_pin")`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

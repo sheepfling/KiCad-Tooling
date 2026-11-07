@@ -231,6 +231,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="usb-c-sbu-unconnected",
     ),
     pytest.param(
+        "bus.usb_c_unconnected_cc_pin",
+        "KICAD_RUN_NATIVE_USB_C_CC_UNCONNECTED_FIXTURES",
+        "tests.test_usb_c_cc_unconnected_native_fixture_lane."
+        "test_native_usb_c_cc_unconnected_fault_and_control_repeat",
+        id="usb-c-cc-unconnected",
+    ),
+    pytest.param(
         "bus.usb_c_sbu_same_net",
         "KICAD_RUN_NATIVE_USB_C_SBU_SAME_NET_FIXTURES",
         "tests.test_usb_c_sbu_named_rail_native_fixture_lane."

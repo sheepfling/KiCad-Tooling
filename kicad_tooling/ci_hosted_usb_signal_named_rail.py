@@ -41,6 +41,13 @@ _SBU_UNCONNECTED_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
         "control": "9b16bfcbc1efff9a72db1ac636a3decdb069f0136b827d03b6aed72ea66128d7",
     }
 )
+_CC_UNCONNECTED_RULE_ID = "bus.usb_c_unconnected_cc_pin"
+_CC_UNCONNECTED_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
+    {
+        "fault": "ff96866e1820471c9f71f048f4a88bab8000e65126f5ea19a03bfad86d7fe756",
+        "control": "294c6944f5613a5364a6d5a5b275f8c81344a1c2d8c8b097b208393b8a7562a9",
+    }
+)
 _SBU_SAME_NET_RULE_ID = "bus.usb_c_sbu_same_net"
 _SBU_SAME_NET_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
     {
@@ -80,6 +87,19 @@ def usb_c_sbu_unconnected_fixture_lane(
     )
 
 
+def usb_c_cc_unconnected_fixture_lane(
+    root: Path, *, version: str, image: str, log: HostedLog
+) -> None:
+    """Repeat native exports for one unassigned USB-C CC controller pin."""
+    _usb_named_rail_fixture_lane(
+        root,
+        version=version,
+        image=image,
+        log=log,
+        feature="cc-unconnected",
+    )
+
+
 def usb_c_sbu_same_net_fixture_lane(
     root: Path, *, version: str, image: str, log: HostedLog
 ) -> None:
@@ -95,7 +115,9 @@ def _usb_named_rail_fixture_lane(
     version: str,
     image: str,
     log: HostedLog,
-    feature: Literal["signal", "cc", "sbu", "sbu-unconnected", "sbu-same-net"],
+    feature: Literal[
+        "signal", "cc", "sbu", "sbu-unconnected", "cc-unconnected", "sbu-same-net"
+    ],
 ) -> None:
     expected_unconnected_pins = None
     if feature == "signal":
@@ -190,6 +212,26 @@ def _usb_named_rail_fixture_lane(
             "control": (),
         }
         expected_unconnected_pins = {"fault": ("U1.1",), "control": ()}
+    elif feature == "cc-unconnected":
+        protocol = "usb-c"
+        rule_id = _CC_UNCONNECTED_RULE_ID
+        fixture_directory = "usb-c-cc-unconnected-pin"
+        source_hashes = _CC_UNCONNECTED_SOURCE_HASHES
+        expected_pin_functions = {
+            "J1.1": "CC1",
+            "J1.2": "CC2",
+            "U1.1": "CC1",
+            "U1.2": "CC2",
+        }
+        expected_nets = {
+            "fault": {"CC1_BUS": ("J1.1",), "CC2_BUS": ("J1.2", "U1.2")},
+            "control": {
+                "CC1_BUS": ("J1.1", "U1.1"),
+                "CC2_BUS": ("J1.2", "U1.2"),
+            },
+        }
+        expected_subjects = {"fault": ("U1.1: CC1",), "control": ()}
+        expected_unconnected_pins = {"fault": ("U1.1",), "control": ()}
     else:
         protocol = "usb-c"
         rule_id = _SBU_SAME_NET_RULE_ID
@@ -228,4 +270,7 @@ def _usb_named_rail_fixture_lane(
         expected_nets=expected_nets,
         expected_subjects=expected_subjects,
         expected_unconnected_pins=expected_unconnected_pins,
+        stage_prefix_override=(
+            "usb-c-cc-unconnected-fixture" if feature == "cc-unconnected" else None
+        ),
     )

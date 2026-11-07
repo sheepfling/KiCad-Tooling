@@ -1519,6 +1519,28 @@ KICAD_RUN_NATIVE_USB_C_SBU_UNCONNECTED_FIXTURES=1 .venv/bin/python -I -m pytest 
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_unconnected_pin")'
 ```
 
+### Unassigned USB-C CC pin
+
+`bus.usb_c_unconnected_cc_pin` reviews a pin with the exact `CC1` or `CC2`
+function when that pin is absent from every native net assignment. An open CC
+pin can be intentional for a particular connector or controller, so the
+default is `review`; project policy can promote it to `block`, turn it off, or
+ignore an exact fingerprint. The check establishes only schematic assignment:
+it does not infer USB-C port role, required Rp/Rd circuitry, off-board wiring,
+PCB copper, or physical continuity. Synthetic fault/control checks and
+digest-pinned KiCad 10.0.0 and 10.0.5 native exports cover an open U1.1/CC1
+fault and fully assigned control. See the
+[fixture notes](../tests/fixtures/design_lint/usb-c-cc-unconnected-pin/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_usb_c_cc_unconnected_pin.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_unconnected_cc_pin")'
+
+KICAD_RUN_NATIVE_USB_C_CC_UNCONNECTED_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_usb_c_cc_unconnected_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_unconnected_cc_pin")'
+```
+
 ### USB-C controller CC1/CC2 pins sharing one net
 
 `bus.usb_c_cc_controller_same_net` reviews a fitted numeric U/IC reference

@@ -120,6 +120,19 @@ The BJT base-drive review has synthetic rule/policy tests and an exact-version
 native source-export lane. Its native cases use only tooling-owned schematics:
 direct NPN/PNP drive faults and a series-resistor control.
 
+USB-C controller CC1/CC2 assignment has focused synthetic fault/control tests
+and digest-pinned native exports for KiCad 10.0.0 and 10.0.5. The fixture leaves
+U1.1 (CC1) open in the fault case and assigns both CC pins in the control:
+
+```sh
+.venv/bin/python -I -m pytest -q tests/test_usb_c_cc_unconnected_pin.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_unconnected_cc_pin")'
+
+KICAD_RUN_NATIVE_USB_C_CC_UNCONNECTED_FIXTURES=1 \
+  .venv/bin/python -I -m pytest -q tests/test_usb_c_cc_unconnected_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_unconnected_cc_pin")'
+```
+
 ```sh
 .venv/bin/python -I -B -m pytest -q tests/test_bjt_base_drive.py \
   -m 'design_lint and component_lint and design_lint_rule(rule_id="component.bjt_base_direct_drive")'

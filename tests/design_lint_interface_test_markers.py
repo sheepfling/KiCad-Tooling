@@ -216,6 +216,8 @@ INTERFACE_LINT_TEST_MODULES = frozenset(
         "tests/test_usb_c_sbu_unconnected_pin.py",
         "tests/test_design_lint_determinism_usb_c_sbu_unconnected_pin.py",
         "tests/test_usb_c_sbu_unconnected_native_fixture_lane.py",
+        "tests/test_usb_c_cc_unconnected_pin.py",
+        "tests/test_usb_c_cc_unconnected_native_fixture_lane.py",
         "tests/test_serial_tx_rx_same_net.py",
         "tests/test_serial_tx_rx_same_net_native_fixture_lane.py",
         "tests/test_serial_tx_rx_label_mismatch.py",
