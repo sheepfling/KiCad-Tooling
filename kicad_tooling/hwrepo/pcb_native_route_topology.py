@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from math import isqrt
 
@@ -70,6 +70,56 @@ def _rounded_segment_length_nm(first: tuple[int, int], second: tuple[int, int]) 
     return floor + (4 * squared >= (2 * floor + 1) ** 2)
 
 
+def _bridge_track_ids(graph: Mapping[str, list[tuple[str, str]]]) -> set[str]:
+    """Return route edges whose removal disconnects their endpoint vertices."""
+    discovery: dict[str, int] = {}
+    low: dict[str, int] = {}
+    parents: dict[str, tuple[str, str] | None] = {}
+    bridges: set[str] = set()
+    next_order = 0
+
+    for root in sorted(graph):
+        if root in discovery:
+            continue
+        discovery[root] = next_order
+        low[root] = next_order
+        next_order += 1
+        parents[root] = None
+        pending: list[tuple[str, str | None, Iterator[tuple[str, str]]]] = [
+            (root, None, iter(sorted(graph[root], key=lambda edge: (edge[1], edge[0]))))
+        ]
+        while pending:
+            node, parent_edge, neighbors = pending[-1]
+            try:
+                neighbor, track_id = next(neighbors)
+            except StopIteration:
+                pending.pop()
+                parent = parents[node]
+                if parent is not None:
+                    parent_node, parent_track = parent
+                    low[parent_node] = min(low[parent_node], low[node])
+                    if low[node] > discovery[parent_node]:
+                        bridges.add(parent_track)
+                continue
+            if track_id == parent_edge:
+                continue
+            if neighbor not in discovery:
+                parents[neighbor] = (node, track_id)
+                discovery[neighbor] = next_order
+                low[neighbor] = next_order
+                next_order += 1
+                pending.append(
+                    (
+                        neighbor,
+                        track_id,
+                        iter(sorted(graph.get(neighbor, ()), key=lambda edge: (edge[1], edge[0]))),
+                    )
+                )
+            else:
+                low[node] = min(low[node], discovery[neighbor])
+    return bridges
+
+
 def _incomplete(issue: str, tracks: tuple[str, ...] = ()) -> PcbNativeRoutePath:
     return PcbNativeRoutePath(status="INCOMPLETE", track_uuids=tracks, issue=issue)
 
@@ -83,8 +133,14 @@ def resolve_native_pad_route(
     snapshot: PcbConnectivitySnapshot,
     pads: Mapping[str, PcbPadConnectivityObservation] | None = None,
     expected_footprints: Mapping[str, str] | None = None,
+    require_branch_free: bool = True,
 ) -> PcbNativeRoutePath:
-    """Measure a single branch-free route, preserving ambiguity as incomplete evidence."""
+    """Measure a unique mapped route, preserving ambiguous topology as incomplete evidence.
+
+    ``require_branch_free`` retains the stricter component-wide topology policy used by
+    checks that need a branch-free network. When false, off-path branches are allowed
+    only if every edge on the mapped endpoint path is a graph bridge.
+    """
     pad_map = pads or {item.pad.casefold(): item for item in snapshot.pads}
     expected = {key.casefold(): value for key, value in (expected_footprints or {}).items()}
     for reference in (from_pad, to_pad):
@@ -210,21 +266,26 @@ def resolve_native_pad_route(
     while pending:
         node = pending.popleft()
         neighbors = sorted(graph.get(node, ()), key=lambda row: (row[1], row[0]))
-        has_branch = has_branch or len(neighbors) > 2
+        if require_branch_free:
+            has_branch = has_branch or len(neighbors) > 2
         for neighbor, track_id in neighbors:
             if neighbor not in parents:
                 parents[neighbor] = node
                 parent_tracks[neighbor] = track_id
                 pending.append(neighbor)
-            elif parent_tracks.get(node) != track_id and parent_tracks.get(neighbor) != track_id:
+            elif (
+                require_branch_free
+                and parent_tracks.get(node) != track_id
+                and parent_tracks.get(neighbor) != track_id
+            ):
                 has_cycle = True
     if target_root not in parents:
         return _incomplete("No native track chain connects the exact mapped pads")
-    if has_branch:
+    if require_branch_free and has_branch:
         return _incomplete(
             "The mapped net/layer component has a connected branch; route selection is ambiguous"
         )
-    if has_cycle:
+    if require_branch_free and has_cycle:
         return _incomplete("More than one native track chain connects the mapped pads")
     node_path_reversed = [target_root]
     track_path_reversed: list[str] = []
@@ -238,6 +299,12 @@ def resolve_native_pad_route(
         current = parent
     node_path = tuple(reversed(node_path_reversed))
     track_path = tuple(reversed(track_path_reversed))
+    if not require_branch_free:
+        bridges = _bridge_track_ids(graph)
+        if any(track_id not in bridges for track_id in track_path):
+            return _incomplete(
+                "More than one native track chain connects the mapped pads", track_path
+            )
     for node in node_path:
         connected_pads = {
             reference.casefold()

@@ -11200,18 +11200,20 @@
       "limitations": [
         "Only path bundles declared in the project-authored pcb_signal_path_rule_map are measured; this rule does not infer which nets form a pair or choose a universal skew limit.",
         "The measurement sums native track centerline lengths along exact endpoint chains. It does not include vertical via-barrel length, zone-only copper, off-board cable geometry, dielectric effects, propagation delay, impedance, or coupling.",
-        "Branches, cycles, missing endpoints, missing routes, and other ambiguous topology remain incomplete rather than being treated as within limit.",
+        "An off-path branch is allowed only when every track on the exact mapped endpoint path is a graph bridge; an alternate route between mapped pads, missing endpoints, missing routes, or other unresolved topology remains incomplete.",
         "A measured skew checks geometry against the authored maximum only. It does not establish that the endpoint map, maximum, timing budget, or interface requirement is appropriate, and it does not certify signal integrity or fabrication readiness."
       ],
       "fault_fixtures": [
         "tests.test_pcb_differential_pair_route_skew.test_excessive_routed_skew_is_reviewed_against_authored_bound",
         "tests.test_pcb_differential_pair_route_skew.test_route_measurement_rejects_endpoints_missing_from_source_netlist",
         "tests.test_pcb_differential_pair_route_skew.test_missing_member_route_is_incomplete_not_clean",
+        "tests.test_pcb_differential_pair_route_skew.test_alternate_route_between_mapped_pads_stays_incomplete",
         "tests.test_pcb_differential_pair_route_skew_native.test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_differential_pair_route_skew.test_route_skew_at_authored_boundary_is_within_limit",
         "tests.test_pcb_differential_pair_route_skew.test_equal_routes_are_within_zero_skew_bound",
+        "tests.test_pcb_differential_pair_route_skew.test_unique_mapped_route_resolves_with_an_off_path_branch",
         "tests.test_pcb_differential_pair_route_skew.test_absent_pair_bundle_is_not_requested",
         "tests.test_pcb_signal_path_mcp_parity.test_disabled_signal_path_coverage_matches_cli_and_mcp",
         "tests.test_pcb_differential_pair_route_skew_native.test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots"

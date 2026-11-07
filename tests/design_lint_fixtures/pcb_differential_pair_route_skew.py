@@ -66,8 +66,10 @@ def route_snapshot(
     positive_length_nm: int = 1_000_000,
     negative_length_nm: int = 2_000_000,
     missing_nets: tuple[str, ...] = (),
+    negative_branch: bool = False,
+    negative_alternate_route: bool = False,
 ) -> PcbConnectivitySnapshot:
-    """Construct a minimal native schema-8 board with two exact straight routes."""
+    """Construct minimal native routes with optional negative-net ambiguity controls."""
     endpoints = (
         ("J1.1", "USB_DP", "U1.1", (0, 0), (positive_length_nm, 0)),
         ("J1.2", "USB_DN", "U1.2", (0, 100_000), (negative_length_nm, 100_000)),
@@ -89,10 +91,137 @@ def route_snapshot(
                     positions_nm=(position,),
                 )
             )
-        if net not in missing_nets:
+        if net in missing_nets:
+            continue
+        direct_id = f"00000000-0000-0000-0000-00000000010{index}"
+        if net == "USB_DN" and negative_branch:
+            second_id = "00000000-0000-0000-0000-000000000103"
+            spur_id = "00000000-0000-0000-0000-000000000104"
+            junction = ((start[0] + end[0]) // 2, start[1])
+            spur_end = (junction[0], junction[1] + 200_000)
+            tracks.extend(
+                (
+                    PcbTrackObservation(
+                        uuid=direct_id,
+                        net=net,
+                        layer="F.Cu",
+                        width_nm=180_000,
+                        start_nm=start,
+                        end_nm=junction,
+                        geometry_kind="segment",
+                        start_pads=(source,),
+                        end_pads=(),
+                        start_vias=(),
+                        end_vias=(),
+                        start_tracks=(),
+                        end_tracks=(second_id, spur_id),
+                    ),
+                    PcbTrackObservation(
+                        uuid=second_id,
+                        net=net,
+                        layer="F.Cu",
+                        width_nm=180_000,
+                        start_nm=junction,
+                        end_nm=end,
+                        geometry_kind="segment",
+                        start_pads=(),
+                        end_pads=(destination,),
+                        start_vias=(),
+                        end_vias=(),
+                        start_tracks=(direct_id, spur_id),
+                        end_tracks=(),
+                    ),
+                    PcbTrackObservation(
+                        uuid=spur_id,
+                        net=net,
+                        layer="F.Cu",
+                        width_nm=180_000,
+                        start_nm=junction,
+                        end_nm=spur_end,
+                        geometry_kind="segment",
+                        start_pads=(),
+                        end_pads=(),
+                        start_vias=(),
+                        end_vias=(),
+                        start_tracks=(direct_id, second_id),
+                        end_tracks=(),
+                    ),
+                )
+            )
+        elif net == "USB_DN" and negative_alternate_route:
+            first_alt = "00000000-0000-0000-0000-000000000103"
+            second_alt = "00000000-0000-0000-0000-000000000104"
+            last_alt = "00000000-0000-0000-0000-000000000105"
+            first_turn = (end[0] // 4, start[1] + 100_000)
+            second_turn = (end[0] * 3 // 4, start[1] + 100_000)
+            tracks.extend(
+                (
+                    PcbTrackObservation(
+                        uuid=direct_id,
+                        net=net,
+                        layer="F.Cu",
+                        width_nm=180_000,
+                        start_nm=start,
+                        end_nm=end,
+                        geometry_kind="segment",
+                        start_pads=(source,),
+                        end_pads=(destination,),
+                        start_vias=(),
+                        end_vias=(),
+                        start_tracks=(first_alt,),
+                        end_tracks=(last_alt,),
+                    ),
+                    PcbTrackObservation(
+                        uuid=first_alt,
+                        net=net,
+                        layer="F.Cu",
+                        width_nm=180_000,
+                        start_nm=start,
+                        end_nm=first_turn,
+                        geometry_kind="segment",
+                        start_pads=(source,),
+                        end_pads=(),
+                        start_vias=(),
+                        end_vias=(),
+                        start_tracks=(direct_id,),
+                        end_tracks=(second_alt,),
+                    ),
+                    PcbTrackObservation(
+                        uuid=second_alt,
+                        net=net,
+                        layer="F.Cu",
+                        width_nm=180_000,
+                        start_nm=first_turn,
+                        end_nm=second_turn,
+                        geometry_kind="segment",
+                        start_pads=(),
+                        end_pads=(),
+                        start_vias=(),
+                        end_vias=(),
+                        start_tracks=(first_alt,),
+                        end_tracks=(last_alt,),
+                    ),
+                    PcbTrackObservation(
+                        uuid=last_alt,
+                        net=net,
+                        layer="F.Cu",
+                        width_nm=180_000,
+                        start_nm=second_turn,
+                        end_nm=end,
+                        geometry_kind="segment",
+                        start_pads=(),
+                        end_pads=(destination,),
+                        start_vias=(),
+                        end_vias=(),
+                        start_tracks=(second_alt,),
+                        end_tracks=(direct_id,),
+                    ),
+                )
+            )
+        else:
             tracks.append(
                 PcbTrackObservation(
-                    uuid=f"00000000-0000-0000-0000-00000000010{index}",
+                    uuid=direct_id,
                     net=net,
                     layer="F.Cu",
                     width_nm=180_000,

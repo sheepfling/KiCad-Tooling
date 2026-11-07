@@ -2,9 +2,10 @@
 
 `create.py` makes two synthetic KiCad boards inside the digest-pinned native
 container. Each board has exact USB_DP and USB_DN pad-to-pad routes and no
-custom `.kicad_dru` skew rule. The control routes have equal centerline length;
-the fault board adds a rectangular detour to USB_DN beyond the test's authored
-500,000 nm maximum skew.
+custom `.kicad_dru` skew rule. The equal-length control has an off-path USB_DN
+stub at a route junction, verifying that a harmless spur does not hide the
+unique mapped path. The fault board adds a rectangular detour to USB_DN beyond
+the test's authored 500,000 nm maximum skew.
 
 The fixture lane runs the tooling's native PCB probe on both boards, then checks
 that the deterministic analyzer reports the fault and accepts the control from

@@ -797,7 +797,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 294 active rules.
+The catalog currently contains 295 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -4670,6 +4670,11 @@ only:
         "rule_id": "pcb.signal_path_rule_coverage",
         "mode": "review",
         "reason": "Review native route rules against approved interface limits"
+      },
+      {
+        "rule_id": "pcb.differential_pair_route_skew",
+        "mode": "review",
+        "reason": "Measure the mapped pair routes against the authored skew maximum"
       }
     ]
   }
@@ -4685,8 +4690,14 @@ project's `.kicad_dru` must contain exactly one matching `A.fromTo()` rule
 with each authored length or skew bound. An edge-clearance minimum requires
 one rule with the exact `A.NetName` selector for the mapped net; that native
 rule applies to all copper on the net, including branches. KiCad DRC measures
-the route geometry; the tooling only checks the authored minimum and exact
-rule coverage. It does not infer signal criticality or select a universal
+route geometry; the coverage audit checks authored bounds and exact rule
+coverage. Separately, `pcb.differential_pair_route_skew` measures track
+centerline lengths along exact mapped endpoints and compares bundle skew with
+the authored maximum. It permits off-path branches only when the mapped path
+is unique; alternate paths between mapped pads remain incomplete. It does not
+infer pair membership, select a universal skew limit, measure via barrels, or
+establish propagation delay, impedance, coupling, or off-board geometry. The
+edge-clearance rule does not infer signal criticality or select a universal
 board-edge margin. Ignored native DRC
 severities and a matching custom rule with `(severity ignore)` do not count as
 coverage. Absent or duplicate rules, changed bounds, unsupported syntax, stale
@@ -4714,11 +4725,12 @@ The report binds the project and board, optional rule file, native DRC receipt,
 native PCB snapshot and command, KiCad version, and source inventory. Projects
 can select `review`, `block`, `off`, or an exact fingerprint ignore. Missing
 maps stay `NOT_REQUESTED`; net-name patterns do not create endpoint or timing
-requirements. KiCad native DRC measures actual route length and skew. This
-audit checks that the reviewed requirements are represented by active native
-rules and that mapped endpoints agree with source and copper evidence; it does
-not establish that a chosen limit is electrically appropriate, nor prove
-off-board wiring or physical continuity.
+requirements. KiCad native DRC evaluates its authored length and skew
+constraints; the separate routed-skew check measures mapped copper centerlines.
+This audit checks that the reviewed requirements are represented by active
+native rules and that mapped endpoints agree with source and copper evidence;
+it does not establish that a chosen limit is electrically appropriate, nor
+prove off-board wiring or physical continuity.
 
 ## Review schematic and PCB component-inventory differences
 

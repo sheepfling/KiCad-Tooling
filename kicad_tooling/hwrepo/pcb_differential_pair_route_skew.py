@@ -63,6 +63,7 @@ def _route_measurement(
         layers=snapshot.snapshot.copper_layers,
         snapshot=snapshot.snapshot,
         pads=pads,
+        require_branch_free=False,
     )
     return PcbDifferentialPairRouteMeasurement(
         path_id=path_id,

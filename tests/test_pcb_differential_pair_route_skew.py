@@ -40,8 +40,21 @@ RULE_ID = "pcb.differential_pair_route_skew"
 RouteSkewMode = Literal["review", "block", "off"]
 
 
-def _measure(tmp_path: Path, *, maximum_skew_nm: int, negative_length_nm: int):
-    snapshot = route_snapshot(negative_length_nm=negative_length_nm)
+def _measure(
+    tmp_path: Path,
+    *,
+    maximum_skew_nm: int,
+    positive_length_nm: int = 1_000_000,
+    negative_length_nm: int,
+    negative_branch: bool = False,
+    negative_alternate_route: bool = False,
+):
+    snapshot = route_snapshot(
+        positive_length_nm=positive_length_nm,
+        negative_length_nm=negative_length_nm,
+        negative_branch=negative_branch,
+        negative_alternate_route=negative_alternate_route,
+    )
     return measure_differential_pair_route_skew(
         route_map(maximum_skew_nm=maximum_skew_nm),
         source_netlist(),
@@ -160,6 +173,36 @@ def test_missing_member_route_is_incomplete_not_clean(tmp_path: Path) -> None:
     assert report.entries[0].status == "INCOMPLETE"
     issue = report.entries[0].paths[0].issue
     assert issue is not None and "No native track is observed" in issue
+
+
+def test_unique_mapped_route_resolves_with_an_off_path_branch(tmp_path: Path) -> None:
+    report = _measure(
+        tmp_path,
+        maximum_skew_nm=500_000,
+        negative_length_nm=1_500_000,
+        negative_branch=True,
+    )
+
+    assert report.status == "COMPLETE"
+    assert report.entries[0].status == "WITHIN_LIMIT"
+    assert report.entries[0].measured_skew_nm == 500_000
+    assert report.entries[0].paths[0].status == "RESOLVED"
+    assert report.entries[0].paths[0].length_nm == 1_500_000
+
+
+def test_alternate_route_between_mapped_pads_stays_incomplete(tmp_path: Path) -> None:
+    report = _measure(
+        tmp_path,
+        maximum_skew_nm=500_000,
+        negative_length_nm=2_000_000,
+        negative_alternate_route=True,
+    )
+
+    assert report.status == "INCOMPLETE"
+    assert report.entries[0].status == "INCOMPLETE"
+    route = report.entries[0].paths[0]
+    assert route.status == "INCOMPLETE"
+    assert route.issue is not None and "More than one native track chain" in route.issue
 
 
 def test_route_skew_can_be_disabled_by_the_project_rule_override(tmp_path: Path) -> None:

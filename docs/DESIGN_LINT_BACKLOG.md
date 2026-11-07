@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 294 rules are implemented with synthetic regression coverage.
+The following 295 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 294 active rules.
+The catalog currently contains 295 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -723,6 +723,7 @@ skipped under prerelease policy.
 - `bus.usb_c_generic_connector_cc_pair_review`
 - `pcb.explicit_thermal_pad_scope_unreviewed`
 - `pcb.thermal_via_coverage`
+- `pcb.differential_pair_route_skew`
 
 This baseline catches suspicious connector symmetry and missing named pins,
 plus narrow netlist patterns for I2C, SPI, USB-C, and CAN. It does not know that
@@ -3665,7 +3666,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 294 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 295 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -20002,6 +20003,24 @@ acceptance threads while new lint features proceed:
   `tests/test_pcb_differential_pair_route_skew_native.py` under
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`; select both with
   `design_lint_rule(rule_id="pcb.differential_pair_route_skew")`.
+
+#### LINT-319 — Preserve mapped route evidence with off-path branches
+
+- **Status:** Implemented as a precision refinement to the active skew rule; it
+  adds no catalog rule ID.
+- **Scope:** Refine `pcb.differential_pair_route_skew` route resolution. A side
+  spur away from the exact endpoint-to-endpoint path must not hide an otherwise
+  unique mapped route. Every edge on that path must be a graph bridge; alternate
+  paths between the mapped pads remain incomplete. Other route consumers retain
+  their existing branch-free policy.
+- **Evidence:** Synthetic fixtures cover an off-path spur and a genuine alternate
+  endpoint route. The exact-version native control adds a USB_DN spur to generated
+  KiCad 10.0.0 and 10.0.5 boards, then resolves the endpoint path from the native
+  snapshot. The detoured fault remains unchanged.
+- **Boundary:** This improves coverage for uniquely resolvable mapped paths; it
+  does not infer which branch is electrically intended or measure branches outside
+  the authored endpoint path.
+- **Selection:** Use the LINT-318 synthetic and native selectors above.
 
 ## Completion and release gate
 

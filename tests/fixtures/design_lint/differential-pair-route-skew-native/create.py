@@ -82,10 +82,24 @@ def create(output: Path, expected_version: str) -> None:
             nets["USB_DP"],
         )
         if case == "control":
+            midpoint = pcbnew.VECTOR2I(pcbnew.FromMM(25.0), pcbnew.FromMM(12.54))
+            spur_end = pcbnew.VECTOR2I(pcbnew.FromMM(25.0), pcbnew.FromMM(14.54))
             _add_track(
                 board,
                 source_pads["2"].GetPosition(),
+                midpoint,
+                nets["USB_DN"],
+            )
+            _add_track(
+                board,
+                midpoint,
                 receiver_pads["2"].GetPosition(),
+                nets["USB_DN"],
+            )
+            _add_track(
+                board,
+                midpoint,
+                spur_end,
                 nets["USB_DN"],
             )
         else:
