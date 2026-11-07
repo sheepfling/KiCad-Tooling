@@ -797,7 +797,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 292 active rules.
+The catalog currently contains 293 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -2870,6 +2870,36 @@ for source hashes and the native export boundary.
 KICAD_RUN_NATIVE_SWD_GENERIC_CONNECTOR_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
   .venv/bin/python -I -m pytest -q tests/test_swd_generic_connector_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.swd_generic_connector_pair_review")'
+```
+
+## Review an SWD connector without an identified return
+
+`connector.swd_pair_without_return_review` asks for review when generic
+connector contacts map to both exact native SWDIO and SWCLK/SWDCLK nets, but
+no connector pin function or current source-matched map identifies a return
+contact. The connector inventory must be complete. A named return contact, a
+current map covering the SWD pair, or an explicit `NOT_APPLICABLE` disposition
+suppresses the prompt. A `GND` net name without a return role does not identify
+the connector contact as a return. The interface may be intentionally
+isolated or receive its reference elsewhere; this rule does not require board
+ground or prove external wiring or PCB continuity. Project policy can set it
+to `block` or `off`, or ignore one exact finding.
+
+Synthetic tests cover the missing-role fault, native and mapped return
+controls, stale and not-applicable maps, policy overrides, stable ordering,
+and CLI/MCP parity. The native source keeps the SWD assignments but changes
+the contact function to generic `Pin_5` while retaining the `GND` net label;
+the control has an explicit `GND` function. Both export twice with
+digest-pinned KiCad 10.0.0 and 10.0.5 images. See the
+[fixture record](../tests/fixtures/design_lint/swd-connector-return-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest -q tests/test_swd_connector_return_review.py \
+  -m 'design_lint and connector_lint and interface_lint and return_path_lint and design_lint_rule(rule_id="connector.swd_pair_without_return_review")'
+
+KICAD_RUN_NATIVE_SWD_GENERIC_CONNECTOR_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
+  .venv/bin/python -I -m pytest -q tests/test_swd_connector_return_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and return_path_lint and native_kicad and design_lint_rule(rule_id="connector.swd_pair_without_return_review")'
 ```
 
 ## Review generic connector contacts on JTAG nets

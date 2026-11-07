@@ -13496,6 +13496,53 @@
       "implementation_owner": "kicad_tooling/hwrepo/connector_return_i3c_review.py#i3c_connector_missing_return_candidates"
     },
     {
+      "rule_id": "connector.swd_pair_without_return_review",
+      "title": "SWD connector has no identified reference return",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete connector and U/IC pin inventories, native pin functions, exact net membership, and source-matched connector-role evidence",
+      "predicate": "For each complete, uniquely inventoried connector candidate with generic contacts on both exact, distinct SWDIO and SWCLK/SWDCLK nets of a fitted U/IC with complete unique native pin metadata, emit a REVIEW prompt when no native connector function or current source-matched connector map identifies a return contact. A current source-matched map covering both SWD contacts or a reviewed NOT_APPLICABLE disposition suppresses the prompt.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native fixture exports; the selected project exact version is checked before export"
+      ],
+      "limitations": [
+        "This is a review cue for a complete connector carrying a recognized SWDIO/SWCLK pair. It does not infer connector purpose or require every SWD header to expose a return contact.",
+        "An SWD interface may be intentionally isolated or receive its signal reference elsewhere. The finding does not require a local board-ground contact or infer off-board wiring.",
+        "Generic connector contacts and native endpoint functions identify a possible interface association only. A net name such as GND without a connector pin role does not establish the contact's return role.",
+        "The schematic netlist does not establish PCB copper continuity or physical continuity. Use an authored interface/reference requirement for a blocking regression gate."
+      ],
+      "fault_fixtures": [
+        "tests.test_swd_connector_return_review.test_generic_contacts_on_swd_pair_without_return_emit_review",
+        "tests.test_design_lint_mcp_parity_swd_generic_connector.test_swd_connector_return_review_cli_mcp_parity",
+        "tests.test_swd_connector_return_native_fixture_lane.test_native_swd_connector_return_fault_and_ground_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_swd_connector_return_review.test_native_return_role_and_current_mapped_return_suppress_prompt",
+        "tests.test_swd_connector_return_review.test_reviewed_not_applicable_and_stale_return_maps_are_handled",
+        "tests.test_design_lint_mcp_parity_swd_generic_connector.test_swd_connector_return_control_cli_mcp_parity",
+        "tests.test_swd_connector_return_native_fixture_lane.test_native_swd_connector_return_fault_and_ground_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_swd_connector_return_review.test_rule_policy_and_finding_order_are_deterministic",
+        "tests.test_swd_connector_return_native_fixture_registry.test_native_source_registry_is_hash_pinned_and_local",
+        "tests.test_design_lint_architecture_swd_connector_return.test_swd_return_rule_has_a_focused_return_theme_owner"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SWD_GENERIC_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_return_swd_review.py#swd_connector_missing_return_candidates",
+        "kicad_tooling/hwrepo/bus_swd_generic_connector.py#generic_swd_connector_pairs",
+        "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_pin_evidence",
+        "kicad_tooling/hwrepo/connector_return_pins.py#connector_pin_group_has_return_role",
+        "kicad_tooling/hwrepo/design_lint_return_domain_candidates.py#return_domain_candidates"
+      ],
+      "theme": "returns",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_return_swd_review.py#swd_connector_missing_return_candidates"
+    },
+    {
       "rule_id": "connector.can_pair_without_return_review",
       "title": "Two-pin generic CAN connector has no identified return",
       "status": "active",

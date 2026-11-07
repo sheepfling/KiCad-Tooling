@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 292 rules are implemented with synthetic regression coverage.
+The following 293 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 292 active rules.
+The catalog currently contains 293 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -711,6 +711,7 @@ skipped under prerelease policy.
 - `connector.serial_pair_without_return_review`
 - `connector.i2c_pair_without_return_review`
 - `connector.i3c_pair_without_return_review`
+- `connector.swd_pair_without_return_review`
 - `connector.can_pair_without_return_review`
 - `connector.rs485_pair_without_return_review`
 - `connector.usb2_pair_without_return_review`
@@ -784,6 +785,18 @@ standalone parity work when it closes a demonstrated feature regression.
   wiring or PCB continuity. Fault/control, policy, stability, CLI/MCP parity,
   and exact-version KiCad 10.0.0/10.0.5 native cases are registered. Field
   applicability and reviewer value remain unmeasured.
+- **LINT-314 SWD connector return review:** A complete connector with generic
+  contacts on the exact native SWDIO/SWCLK pair prompts for review when no
+  native pin function or current source-matched map identifies a return.
+  Named return contacts, a current map for the SWD pair, and explicit
+  `NOT_APPLICABLE` decisions stay quiet. The rule treats a `GND` net label
+  without a connector return role as insufficient evidence. It asks whether
+  the reference is provided elsewhere, the interface is intentionally
+  isolated, or the connector pinout needs review; it does not require board
+  ground or prove copper continuity. Synthetic fault/control, policy,
+  deterministic ordering, CLI/MCP parity, and digest-pinned KiCad 10.0.0/10.0.5
+  native exports are registered. Field applicability and reviewer value
+  remain unmeasured.
 - **LINT-299 generic JTAG connector pair review (completed v0.5.3rc507):**
   The tagged focused gate and hosted prerelease lint gate passed. This review
   association cue covers exact native TCK/TMS pairs and generic connector
@@ -3651,7 +3664,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 292 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 293 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -19832,6 +19845,39 @@ acceptance threads while new lint features proceed:
   design_lint_rule(rule_id="connector.i3c_pair_without_return_review")'`.
   Exact native exports use `KICAD_RUN_NATIVE_I3C_CONNECTOR_RETURN_FIXTURES=1`
   and `tests/test_i3c_connector_return_native_fixture_lane.py`.
+
+#### LINT-314 — Review an SWD connector without an identified return
+
+- **Rule:** `connector.swd_pair_without_return_review`, default `review`.
+- **Trigger:** A complete connector candidate has generic contacts on both
+  exact, distinct SWDIO and SWCLK/SWDCLK nets from a fitted U/IC with a
+  complete, unique native pin inventory; no connector pin function or current
+  source-matched map identifies a return. A current connector map covering
+  both SWD contacts or an explicit `NOT_APPLICABLE` disposition suppresses the
+  prompt.
+- **Purpose:** Ask whether the SWD reference is provided elsewhere, isolation
+  is intentional, or the connector pinout needs review. This is distinct from
+  the existing SWD association prompt, which does not assess return-role
+  coverage. A net label such as `GND` does not identify an otherwise generic
+  connector contact as a return.
+- **Evidence and limits:** Findings retain the exact SWD endpoint pins and
+  functions, both native net assignments, generic connector contacts, and the
+  complete connector pin inventory. The cue does not establish connector
+  purpose, require a local board-ground contact, infer external wiring, or
+  prove PCB copper or physical continuity. It remains review-only by default;
+  projects with an independent reference requirement can promote or ignore it
+  through standard policy.
+- **Fixtures:** Synthetic return-role fault, native and mapped return
+  controls, current/stale/`NOT_APPLICABLE` handling, policy, stable evidence,
+  CLI/MCP parity, and exact-version native exports on KiCad 10.0.0 and 10.0.5.
+  The native fault retains the `GND` net label but removes the pin's return
+  function; the native control uses an explicit `GND` function.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_swd_connector_return_review.py -m 'design_lint and
+  connector_lint and interface_lint and return_path_lint and
+  design_lint_rule(rule_id="connector.swd_pair_without_return_review")'`.
+  The native lane uses `KICAD_RUN_NATIVE_SWD_GENERIC_CONNECTOR_FIXTURES=1`
+  and `tests/test_swd_connector_return_native_fixture_lane.py`.
 
 ## Completion and release gate
 
