@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 295 rules are implemented with synthetic regression coverage.
+The following 296 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 295 active rules.
+The catalog currently contains 296 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -724,6 +724,7 @@ skipped under prerelease policy.
 - `pcb.explicit_thermal_pad_scope_unreviewed`
 - `pcb.thermal_via_coverage`
 - `pcb.differential_pair_route_skew`
+- `pcb.differential_pair_route_layer_mismatch`
 
 This baseline catches suspicious connector symmetry and missing named pins,
 plus narrow netlist patterns for I2C, SPI, USB-C, and CAN. It does not know that
@@ -3676,7 +3677,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 295 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 296 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -20056,6 +20057,32 @@ acceptance threads while new lint features proceed:
   `tests/test_pcb_differential_pair_route_skew_native.py` with
   `design_lint and pcb_lint and
   design_lint_rule(rule_id="pcb.differential_pair_route_layer_mismatch")`.
+
+#### LINT-321 — Add a focused native lane for generic connector power inputs
+
+- **Status:** Implemented as a narrow exact-version verification lane for the
+  existing `connector.unconnected_power_input` rule; the predicate and default
+  policy are unchanged.
+- **Gap:** Selecting the existing power-input case from the broad connector
+  return native module initializes its full cross-theme fixture matrix. That
+  makes a single rule check expensive and leaves no direct selector for its
+  dedicated two-contact fault/control source pair.
+- **Lane:** `connector_unconnected_power_input_fixture_lane` exports only the
+  source-hashed generic power-input fault and assigned common-supply control,
+  repeats each KiCad 10 netlist export, and verifies the exact pin types,
+  assignments, findings, and stable normalized report evidence. The rule
+  catalog now points to this focused fault/control lane rather than initializing
+  the broad connector return matrix for this rule's native regression.
+- **Boundary:** The finding remains a REVIEW prompt. Native `power_in` does not
+  identify whether a generic connector contact is supply or reference, or
+  establish that it must be connected. This test does not establish PCB copper
+  or physical continuity.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_connector_unconnected_power_input_native_fixture_lane.py -m
+  'design_lint and connector_lint and power_lint and native_kicad and
+  design_lint_rule(rule_id="connector.unconnected_power_input")'`. Set
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` to run on the pinned KiCad 10.0.0 and
+  10.0.5 images.
 
 ## Completion and release gate
 

@@ -6,8 +6,8 @@ from .ci_hosted_component_power_input import verify_generic_component_power_inpu
 from .ci_hosted_connector_return_context import ConnectorReturnFixtureContext
 
 
-def verify_connector_power_inputs(ctx: ConnectorReturnFixtureContext):
-    """Verify connector power input and numbered channel rail fixtures."""
+def verify_generic_connector_power_input(ctx: ConnectorReturnFixtureContext) -> None:
+    """Verify the focused generic connector power-input fault and control."""
     generic_power_fault = ctx.reports["unconnected-generic-power-input-fault", "first"]
     generic_power_control = ctx.reports["unconnected-generic-power-input-control", "first"]
     expected_generic_power_subjects = {
@@ -38,6 +38,11 @@ def verify_connector_power_inputs(ctx: ConnectorReturnFixtureContext):
         raise ValueError(
             "Generic connector power-input fixture lost its exact native fault/control result"
         )
+
+
+def verify_connector_power_inputs(ctx: ConnectorReturnFixtureContext) -> None:
+    """Verify connector power input and numbered channel rail fixtures."""
+    verify_generic_connector_power_input(ctx)
     verify_generic_component_power_input_cases(ctx)
     channel_fault = ctx.reports["channel-power-fault", "first"]
     channel_fault_rails = next(

@@ -341,10 +341,18 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
                 + _refs(
                     "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns",
                     "test_power_input_aliases_use_typed_rule_instead_of_generic_all_open_hint",
+                )
+                + _refs(
+                    "tests.test_connector_unconnected_power_input_native_fixture_lane",
+                    "test_generic_connector_power_input_fault_and_control_are_focused_and_repeatable",
                 ),
                 "valid_control_fixtures": _refs(
                     "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns",
                     "test_power_input_aliases_use_typed_rule_instead_of_generic_all_open_hint",
+                )
+                + _refs(
+                    "tests.test_connector_unconnected_power_input_native_fixture_lane",
+                    "test_generic_connector_power_input_fault_and_control_are_focused_and_repeatable",
                 ),
             }
         ),
