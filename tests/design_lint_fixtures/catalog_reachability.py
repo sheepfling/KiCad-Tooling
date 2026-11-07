@@ -350,6 +350,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
     """Reach protocol and control-input candidate rules from synthetic netlists."""
     from tests.can_peer_reference_support import can_peer_reference_netlist
     from tests.design_lint_fixtures.can_generic_connector_pair import (
+        can_connector_return_netlist,
         generic_can_connector_pair_netlist,
     )
     from tests.design_lint_fixtures.ethernet_generic_connector import (
@@ -418,6 +419,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         ),
         can_peer_reference_netlist(),
         generic_can_connector_pair_netlist(),
+        can_connector_return_netlist(),
         generic_ethernet_connector_netlist(),
         generic_ethernet_management_connector_netlist(),
         generic_swd_connector_netlist(),

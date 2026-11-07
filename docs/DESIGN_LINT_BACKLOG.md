@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 282 rules are implemented with synthetic regression coverage.
+The following 283 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 282 active rules.
+The catalog currently contains 283 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -709,6 +709,7 @@ skipped under prerelease policy.
 - `connector.return_distribution`
 - `connector.serial_pair_without_return_review`
 - `connector.i2c_pair_without_return_review`
+- `connector.can_pair_without_return_review`
 - `net.return_labels_without_pin_roles`
 - `mcu.stm32_cubemx_pin_map`
 
@@ -740,7 +741,7 @@ standalone parity work when it closes a demonstrated feature regression.
   intentionally isolated, or missing from the pinout; it never requires
   connection to board ground. Field applicability and reviewer value remain
   unmeasured.
-- **LINT-301 two-pin I2C connector return review:** A complete two-contact
+- **LINT-301 two-pin I2C connector return review (completed v0.5.3rc509):** A complete two-contact
   generic connector on the exact native SDA/SCL pair prompts for review when
   neither native connector function nor a current source-matched map identifies
   a return. A reviewed map covering both I2C contacts, explicit
@@ -749,7 +750,20 @@ standalone parity work when it closes a demonstrated feature regression.
   isolation is intentional, or the pinout needs a return; it does not require
   connection to board ground. Synthetic fault/control, policy, stability,
   CLI/MCP parity, and digest-pinned KiCad 10.0.0/10.0.5 native cases are
-  registered. Field applicability and reviewer value remain unmeasured.
+  registered. Field applicability and reviewer value remain unmeasured. The
+  focused tagged gate passed locally as 35 tests with the native lane enabled;
+  hosted acceptance passed in GitHub Actions run `42335248785`.
+- **LINT-302 two-pin CAN connector return review:** A complete generic
+  two-contact connector carrying the exact native CANH/CANL pair prompts for
+  review when no connector contact role identifies a return. A current
+  source-matched CAN pin map, explicit `NOT_APPLICABLE`, named native roles,
+  DNP parts, incomplete evidence, and connectors with extra contacts stay
+  quiet. The prompt asks whether the reference is provided elsewhere, the
+  interface is intentionally isolated, or a return contact should be
+  documented; it does not require board ground. Synthetic fault/control,
+  policy, stability, CLI/MCP parity, and digest-pinned KiCad 10.0.0/10.0.5
+  native fixtures are registered. Field applicability and reviewer value
+  remain unmeasured.
 - **LINT-299 generic JTAG connector pair review (completed v0.5.3rc507):**
   The tagged focused gate and hosted prerelease lint gate passed. This review
   association cue covers exact native TCK/TMS pairs and generic connector
@@ -3618,7 +3632,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 282 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 283 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -19410,6 +19424,38 @@ acceptance threads while new lint features proceed:
   connector_lint and return_path_lint and
   design_lint_rule(rule_id="connector.i2c_pair_without_return_review")'`.
   The native lane uses `KICAD_RUN_NATIVE_I2C_CONNECTOR_RETURN_FIXTURES=1`.
+
+#### LINT-302 — Prompt review of a two-pin CAN connector without a return role
+
+- **Rule:** `connector.can_pair_without_return_review`, default `review`.
+- **Trigger:** A fitted U/IC has complete unique native pin metadata and one
+  uniquely assigned CANH/CANL pair on distinct nets. A completely inventoried
+  connector has exactly two native contacts, with one generic contact on each
+  exact bus net, and no native connector function or current source-matched
+  connector role identifies a return. A source-matched map covering the exact
+  CAN contacts or a reviewed `NOT_APPLICABLE` disposition suppresses the cue.
+- **Purpose:** The existing multiconductor missing-return review does not ask
+  about a two-contact connector. This question asks whether the reference is
+  provided elsewhere, the interface is intentionally isolated, or the approved
+  connector pinout needs a documented return contact.
+- **Evidence and limits:** The candidate retains the exact CAN endpoint pins,
+  CANH/CANL nets, generic connector contacts, and native connector pin count.
+  Named connector contacts, extra contacts, DNP, incomplete or ambiguous
+  inventories, and one-sided pair assignments stay quiet. The heuristic does
+  not infer connector purpose, a required local ground, bus termination,
+  off-board wiring, or PCB copper/physical continuity.
+- **Fixtures:** Synthetic two-pin generic fault and three-contact return
+  control; named signal and source-matched map controls; stale maps, DNP,
+  incomplete inventory, one-sided and ambiguous pairs, `NOT_APPLICABLE`,
+  policy, exact-ignore, ordering stability, CLI/MCP parity, and repeated native
+  exports on digest-pinned KiCad 10.0.0 and 10.0.5. The native control reuses a
+  tooling-owned synthetic CAN schematic. Field applicability and reviewer
+  value remain unmeasured.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_can_connector_return_review.py -m 'design_lint and
+  connector_lint and return_path_lint and
+  design_lint_rule(rule_id="connector.can_pair_without_return_review")'`.
+  The native lane uses `KICAD_RUN_NATIVE_CAN_CONNECTOR_RETURN_FIXTURES=1`.
 
 [swd-symbol]: https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/master/MCU_ST_STM32WB.kicad_symdir/STM32WB15CCUx.kicad_sym
 [swd-rename]: https://gitlab.com/kicad/libraries/kicad-symbols/-/merge_requests/3929/reports
