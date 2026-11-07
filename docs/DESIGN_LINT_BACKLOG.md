@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 278 rules are implemented with synthetic regression coverage.
+The following 279 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 278 active rules.
+The catalog currently contains 279 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -19243,6 +19243,40 @@ acceptance threads while new lint features proceed:
   design_lint_rule(rule_id="bus.ethernet_management_generic_connector_pair_review")'`.
   The native lane uses
   `KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_GENERIC_CONNECTOR_FIXTURES=1`.
+
+#### LINT-298 — Prompt review of generic connector pins on SWD nets
+
+- **Rule:** `bus.swd_generic_connector_pair_review`, default `review`.
+- **Trigger:** A fitted U/IC has complete unique native pin metadata and one
+  uniquely assigned SWDIO pin plus one SWCLK or SWDCLK pin on distinct nets. A
+  complete generic connector has generic `Pin_N` contacts on both exact nets.
+  A current source-matched connector map covering the exact roles and nets, or
+  a reviewed `NOT_APPLICABLE`, suppresses the prompt.
+- **Purpose:** Ask whether the generic contacts belong to an SWD debug
+  interface and whether its pinout is documented. Native composite function
+  tokens such as `SYS_JTMS-SWDIO` and `SYS_JTCK-SWCLK` are recognized. JTMS/JTCK
+  alone do not imply SWD; SWDCLK is supported as a historical alias. These
+  aliases match examples in the [official KiCad STM32WB library][swd-symbol]
+  and its [SWDCLK to SWCLK rename report][swd-rename].
+- **Evidence and limits:** The candidate retains exact endpoint pins, native
+  function strings, electrical types, nets, generic connector contacts, and
+  full native inventory counts. DNP, incomplete, duplicate-role, open,
+  ambiguous, same-net, and one-sided cases remain quiet. It does not infer
+  connector purpose, board debug-access policy, power or return requirements,
+  or PCB copper continuity.
+- **Fixtures:** Synthetic fault/control schematics, named roles, current/stale,
+  wrong-role and partial map cases, `NOT_APPLICABLE`, DNP and incomplete
+  evidence, override/ignore, ordering stability, and CLI/MCP parity.
+  Tooling-owned native sources export twice with digest-pinned KiCad 10.0.0 and
+  10.0.5. Field applicability and reviewer value remain unmeasured.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_swd_generic_connector_pair_review.py -m 'design_lint and
+  interface_lint and
+  design_lint_rule(rule_id="bus.swd_generic_connector_pair_review")'`.
+  The native lane uses `KICAD_RUN_NATIVE_SWD_GENERIC_CONNECTOR_FIXTURES=1`.
+
+[swd-symbol]: https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/master/MCU_ST_STM32WB.kicad_symdir/STM32WB15CCUx.kicad_sym
+[swd-rename]: https://gitlab.com/kicad/libraries/kicad-symbols/-/merge_requests/3929/reports
 
 ## Completion and release gate
 

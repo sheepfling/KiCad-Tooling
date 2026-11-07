@@ -26,6 +26,9 @@ from .design_lint_signal_pair_candidates import (
     named_differential_pair_candidates,
 )
 from .design_lint_spi_bus_candidates import spi_protocol_bus_candidates
+from .design_lint_swd_generic_connector_candidates import (
+    swd_generic_connector_pair_review_candidates,
+)
 from .design_lint_two_wire_signal_candidates import two_wire_signal_candidates
 from .design_lint_types import Candidate
 from .design_lint_unconnected_interface_candidates import unconnected_interface_candidates
@@ -83,6 +86,11 @@ def bus_candidates(inputs: BusCandidateInputs) -> tuple[Candidate, ...]:
             inputs.connector_coverage,
         ),
         *ethernet_management_generic_connector_pair_review_candidates(
+            observed,
+            inputs.reviewed_connector_references,
+            inputs.connector_coverage,
+        ),
+        *swd_generic_connector_pair_review_candidates(
             observed,
             inputs.reviewed_connector_references,
             inputs.connector_coverage,

@@ -31,6 +31,9 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_ethernet_management_generic_connector_native_fixture_lane.py": frozenset(
             {"interface_lint", "native_kicad", "slow", "template_checkout"}
         ),
+        "test_swd_generic_connector_native_fixture_lane.py": frozenset(
+            {"interface_lint", "native_kicad", "slow", "template_checkout"}
+        ),
         "test_design_lint_mcp_parity_ethernet_data_unconnected.py": frozenset(
             {"interface_lint", "parity_lint", "slow"}
         ),

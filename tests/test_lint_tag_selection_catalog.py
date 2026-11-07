@@ -196,6 +196,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_GENERIC_CONNECTOR_FIXTURES",
         ),
         (
+            "bus.swd_generic_connector_pair_review",
+            "KICAD_RUN_NATIVE_SWD_GENERIC_CONNECTOR_FIXTURES",
+        ),
+        (
             "bus.i2c_signal_label_role_mismatch",
             "KICAD_RUN_NATIVE_I2C_SIGNAL_LABEL_FIXTURES",
         ),

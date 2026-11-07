@@ -370,6 +370,9 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
     from tests.design_lint_fixtures.spi_generic_connector_triad import (
         generic_spi_connector_triad_netlist,
     )
+    from tests.design_lint_fixtures.swd_generic_connector_pair import (
+        generic_swd_connector_netlist,
+    )
     from tests.design_lint_fixtures.usb_generic_connector_pair import (
         generic_usb_connector_pair_netlist,
     )
@@ -412,6 +415,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         generic_can_connector_pair_netlist(),
         generic_ethernet_connector_netlist(),
         generic_ethernet_management_connector_netlist(),
+        generic_swd_connector_netlist(),
         generic_i2c_connector_pair_netlist(),
         i2c_netlist(),
         i2c_netlist_with_parallel_sda(),

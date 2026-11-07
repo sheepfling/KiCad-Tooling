@@ -95,6 +95,10 @@ ETHERNET_GENERIC_CONNECTOR_THEME_SUITES = (
     "test_ethernet_management_generic_connector_native_fixture_lane.py",
     "test_design_lint_mcp_parity_ethernet_management_generic_connector.py",
     "test_design_lint_architecture_ethernet_management_generic_connector.py",
+    "test_swd_generic_connector_pair_review.py",
+    "test_swd_generic_connector_native_fixture_lane.py",
+    "test_design_lint_mcp_parity_swd_generic_connector.py",
+    "test_design_lint_architecture_swd_generic_connector.py",
 )
 USB_INLINE_COMPONENT_THEME_SUITES = (
     "test_usb_inline_component_paths.py",

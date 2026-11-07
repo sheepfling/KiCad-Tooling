@@ -75,6 +75,14 @@ I2C_GENERIC_CONNECTOR_MODULES = (
     "design_lint_i2c_generic_connector_candidates.py",
 )
 
+SWD_GENERIC_CONNECTOR_MODULES = (
+    "bus_swd_generic_connector.py",
+    "swd_generic_connector_models.py",
+    "design_lint_swd_generic_connector_candidate_evidence.py",
+    "design_lint_swd_generic_connector_candidates.py",
+    "design_lint_bus_candidates.py",
+)
+
 SERIAL_PEER_ANALYSIS_MODULES = (
     "serial_peer_reference_types.py",
     "serial_peer_reference_domains.py",
@@ -126,6 +134,27 @@ def test_i2c_generic_connector_pair_rule_stays_in_focused_modules() -> None:
     assert rule.theme == "interfaces"
     assert rule.implementation_owner == (
         "kicad_tooling/hwrepo/i2c_generic_connector_candidates.py#generic_i2c_connector_pairs"
+    )
+    assert rule.implementation_owner in rule.implementation_refs
+
+
+def test_swd_generic_connector_pair_rule_stays_in_focused_modules() -> None:
+    modules = [HWREPO / name for name in SWD_GENERIC_CONNECTOR_MODULES]
+    rule = next(
+        item
+        for item in rule_catalog().rules
+        if item.rule_id == "bus.swd_generic_connector_pair_review"
+    )
+    module_sizes = {path.name: _line_count(path) for path in modules if path.is_file()}
+    oversized = {
+        name: lines for name, lines in module_sizes.items() if lines >= IMPLEMENTATION_MAX_LINES
+    }
+
+    assert len(module_sizes) == len(SWD_GENERIC_CONNECTOR_MODULES)
+    assert not oversized, f"SWD connector-pair modules reached the review limit: {oversized}"
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == (
+        "kicad_tooling/hwrepo/bus_swd_generic_connector.py#generic_swd_connector_pairs"
     )
     assert rule.implementation_owner in rule.implementation_refs
 

@@ -7096,6 +7096,51 @@
       "implementation_owner": "kicad_tooling/hwrepo/bus_ethernet_management_generic_connector.py#generic_ethernet_management_connector_pairs"
     },
     {
+      "rule_id": "bus.swd_generic_connector_pair_review",
+      "title": "Generic connector contacts match native SWDIO/SWCLK nets",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete connector and IC pin inventories, native pin functions, electrical types, and exact net membership",
+      "predicate": "For each fitted U/IC endpoint with complete unique native pin metadata and exactly one uniquely assigned SWDIO function and one SWCLK or historical SWDCLK function on distinct nets, emit a REVIEW prompt when a fully inventoried generic connector has generic Pin_N contacts on both exact nets. A source-matched connector pin map covering each exact role and current net, or a reviewed NOT_APPLICABLE disposition, suppresses the prompt.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native fixture exports; the selected project exact version is checked before export"
+      ],
+      "limitations": [
+        "Recognition is limited to fitted U/IC references with exactly one SWDIO and one SWCLK/SWDCLK role accepted by swd_function_role. Composite native functions such as SYS_JTMS-SWDIO and SYS_JTCK-SWCLK are recognized by exact role tokens; JTMS or JTCK alone do not establish SWD. Endpoint and connector inventories must be complete and unique, every pin must have native function and electrical-type metadata, endpoint roles must be on distinct unambiguous nets, and each generic connector contact must have one exact net assignment. DNP, duplicate-role, open, incomplete, same-net, ambiguous, and one-sided cases remain quiet.",
+        "This is a connector-association review prompt. It does not infer connector identity or purpose, establish debug-access policy, decide connector power or return requirements, prove PCB copper continuity, or establish board intent.",
+        "A source-matched connector pin map must identify the observed generic contacts as the exact SWDIO/SWCLK roles and match their current native nets to suppress the prompt. Stale or partial maps do not count as review evidence; exact rule override and fingerprint-ignore controls remain available."
+      ],
+      "fault_fixtures": [
+        "tests.test_swd_generic_connector_pair_review.test_generic_contacts_on_exact_native_swd_pair_emit_review",
+        "tests.test_design_lint_mcp_parity_swd_generic_connector.test_swd_generic_connector_review_cli_mcp_parity",
+        "tests.test_swd_generic_connector_native_fixture_lane.test_native_generic_swd_connector_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_swd_generic_connector_pair_review.test_named_contacts_and_current_reviewed_pinout_are_quiet",
+        "tests.test_swd_generic_connector_pair_review.test_incomplete_one_sided_dnp_ambiguous_and_endpoint_controls_are_quiet",
+        "tests.test_swd_generic_connector_pair_review.test_not_applicable_and_only_current_source_matched_maps_suppress",
+        "tests.test_swd_generic_connector_native_fixture_lane.test_native_generic_swd_connector_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_swd_generic_connector_pair_review.test_report_is_stable_when_native_mappings_are_reordered"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SWD_GENERIC_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/bus_swd_generic_connector.py#generic_swd_connector_pairs",
+        "kicad_tooling/hwrepo/bus_swd_generic_connector.py#swd_function_role",
+        "kicad_tooling/hwrepo/swd_generic_connector_models.py#SwdGenericConnector",
+        "kicad_tooling/hwrepo/design_lint_swd_generic_connector_candidates.py#swd_generic_connector_pair_review_candidates",
+        "kicad_tooling/hwrepo/design_lint_swd_generic_connector_candidate_evidence.py#SwdGenericConnectorCandidate",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/bus_swd_generic_connector.py#generic_swd_connector_pairs"
+    },
+    {
       "rule_id": "bus.ethernet_management_signal_on_named_rail",
       "title": "Ethernet MDC/MDIO pins assigned to named rails",
       "status": "active",

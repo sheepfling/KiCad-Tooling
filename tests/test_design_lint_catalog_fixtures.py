@@ -19,6 +19,9 @@ from tests.design_lint_footprint_peer_fixture_refs import (
     FOOTPRINT_PEER_PARITY_FIXTURES,
 )
 from tests.design_lint_power_fixture_refs import OPEN_DRAIN_CONTROL_PARITY_FIXTURES
+from tests.design_lint_swd_generic_connector_parity_fixtures import (
+    SWD_GENERIC_CONNECTOR_PARITY_FIXTURES,
+)
 
 pytestmark = pytest.mark.design_lint
 
@@ -33,6 +36,7 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
         **OPEN_DRAIN_CONTROL_PARITY_FIXTURES,
         **CONNECTOR_RETURN_PARITY_FIXTURES,
         **ETHERNET_CONNECTOR_PARITY_FIXTURES,
+        **SWD_GENERIC_CONNECTOR_PARITY_FIXTURES,
         "bus.i2c_missing_pullup": MappingProxyType(
             {
                 "fault_fixtures": _refs(
