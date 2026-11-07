@@ -72,6 +72,13 @@ I2C_GENERIC_CONNECTOR_THEME_SUITES = (
     "test_i2c_generic_connector_native_fixture_registry.py",
     "test_design_lint_mcp_parity_i2c_generic_connector_pair.py",
 )
+I3C_CONNECTOR_RETURN_THEME_SUITES = (
+    "test_i3c_connector_return_review.py",
+    "test_i3c_connector_return_native_fixture_lane.py",
+    "test_i3c_connector_return_native_fixture_registry.py",
+    "test_design_lint_architecture_i3c_connector_return.py",
+    "test_design_lint_mcp_parity_i3c_connector_return.py",
+)
 SPI_GENERIC_CONNECTOR_THEME_SUITES = (
     "test_spi_generic_connector_triad_review.py",
     "test_spi_generic_connector_native_fixture_lane.py",
@@ -225,6 +232,7 @@ def test_design_lint_theme_suites_stay_below_review_limit() -> None:
                     *USB_HOSTED_THEME_SUITES,
                     *CAN_GENERIC_CONNECTOR_THEME_SUITES,
                     *I2C_GENERIC_CONNECTOR_THEME_SUITES,
+                    *I3C_CONNECTOR_RETURN_THEME_SUITES,
                     *SPI_GENERIC_CONNECTOR_THEME_SUITES,
                     *SERIAL_GENERIC_CONNECTOR_THEME_SUITES,
                     *ETHERNET_GENERIC_CONNECTOR_THEME_SUITES,

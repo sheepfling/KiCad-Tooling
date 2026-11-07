@@ -795,7 +795,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 291 active rules.
+The catalog currently contains 292 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -2615,6 +2615,37 @@ KiCad 10.0.0 and 10.0.5 images; see the
 KICAD_RUN_NATIVE_I2C_CONNECTOR_RETURN_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
   .venv/bin/python -I -m pytest tests/test_i2c_connector_return_native_fixture_lane.py \
   -m 'design_lint and connector_lint and return_path_lint and native_kicad and design_lint_rule(rule_id="connector.i2c_pair_without_return_review")'
+```
+
+## Review a two-pin I3C connector with no identified return
+
+`connector.i3c_pair_without_return_review` prompts when a complete,
+two-contact generic connector carries the exact SDA/SCL nets of a fitted IC
+with a unique native I3C SDA/SCL function pair on matching channel identifiers,
+but neither connector functions nor a current source-matched pin map identifies
+a return. A reviewed map covering both I3C contacts or an explicit
+`NOT_APPLICABLE` disposition stays quiet. Named connector contacts and
+connectors with additional pins stay with the existing pinout and
+multiconductor return checks. The prompt asks whether reference is provided
+elsewhere, the interface is intentionally isolated, or the pinout needs a
+return contact. It does not require board ground or establish external wiring,
+PCB copper, or physical continuity. Project policy can set it to `block` or
+`off`, or ignore one exact finding.
+
+Synthetic controls cover named contacts, current and stale maps, an explicit
+return role, larger connectors, DNP, incomplete and ambiguous inventories,
+channel matching, deterministic ordering, policy overrides, and CLI/MCP
+parity. Tooling-owned schematics export twice with digest-pinned KiCad 10.0.0
+and 10.0.5 images; see the
+[fixture record](../tests/fixtures/design_lint/i3c-connector-return-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_i3c_connector_return_review.py \
+  -m 'design_lint and connector_lint and interface_lint and return_path_lint and design_lint_rule(rule_id="connector.i3c_pair_without_return_review")'
+
+KICAD_RUN_NATIVE_I3C_CONNECTOR_RETURN_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
+  .venv/bin/python -I -m pytest tests/test_i3c_connector_return_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and return_path_lint and native_kicad and design_lint_rule(rule_id="connector.i3c_pair_without_return_review")'
 ```
 
 ## Review a two-pin CAN connector with no identified return

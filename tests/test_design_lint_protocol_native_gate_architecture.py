@@ -84,6 +84,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="i2c-connector-return-review",
     ),
     pytest.param(
+        "connector.i3c_pair_without_return_review",
+        "KICAD_RUN_NATIVE_I3C_CONNECTOR_RETURN_FIXTURES",
+        "tests.test_i3c_connector_return_native_fixture_lane."
+        "test_native_two_pin_i3c_return_fault_and_named_control",
+        id="i3c-connector-return-review",
+    ),
+    pytest.param(
         "connector.can_pair_without_return_review",
         "KICAD_RUN_NATIVE_CAN_CONNECTOR_RETURN_FIXTURES",
         "tests.test_can_connector_return_native_fixture_lane."

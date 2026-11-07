@@ -13,6 +13,7 @@ DesignLintRuleId = Literal[
     "connector.peer_pin_assignment_divergence",
     "connector.serial_pair_without_return_review",
     "connector.i2c_pair_without_return_review",
+    "connector.i3c_pair_without_return_review",
     "connector.can_pair_without_return_review",
     "connector.rs485_pair_without_return_review",
     "connector.usb2_pair_without_return_review",

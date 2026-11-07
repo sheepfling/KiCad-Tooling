@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 291 rules are implemented with synthetic regression coverage.
+The following 292 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 291 active rules.
+The catalog currently contains 292 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -710,6 +710,7 @@ skipped under prerelease policy.
 - `connector.return_distribution`
 - `connector.serial_pair_without_return_review`
 - `connector.i2c_pair_without_return_review`
+- `connector.i3c_pair_without_return_review`
 - `connector.can_pair_without_return_review`
 - `connector.rs485_pair_without_return_review`
 - `connector.usb2_pair_without_return_review`
@@ -772,6 +773,17 @@ standalone parity work when it closes a demonstrated feature regression.
   policy, stability, CLI/MCP parity, and digest-pinned KiCad 10.0.0/10.0.5
   native fixtures are registered. Field applicability and reviewer value
   remain unmeasured.
+- **LINT-313 two-pin I3C connector return review:** A complete generic
+  two-contact connector on a uniquely recognized native I3C SDA/SCL pair
+  prompts for review when no native or current source-matched connector role
+  identifies a return. Channel identifiers must match; named contacts, a
+  current I3C pinout map, explicit `NOT_APPLICABLE`, DNP, incomplete or
+  ambiguous evidence, and connectors with extra contacts stay quiet. The cue
+  asks whether reference is supplied elsewhere, isolation is intentional, or
+  the pinout needs a return. It does not require board ground or prove external
+  wiring or PCB continuity. Fault/control, policy, stability, CLI/MCP parity,
+  and exact-version KiCad 10.0.0/10.0.5 native cases are registered. Field
+  applicability and reviewer value remain unmeasured.
 - **LINT-299 generic JTAG connector pair review (completed v0.5.3rc507):**
   The tagged focused gate and hosted prerelease lint gate passed. This review
   association cue covers exact native TCK/TMS pairs and generic connector
@@ -3639,7 +3651,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 291 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 292 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -19786,6 +19798,40 @@ acceptance threads while new lint features proceed:
   design_lint_rule(rule_id="bus.complementary_pair_assignment")'`.
   Rule-scoped lint tags require this fixture alongside the existing
   complementary-pair native fixture.
+
+#### LINT-313 — Review a two-pin I3C connector without an identified return
+
+- **Rule:** `connector.i3c_pair_without_return_review`, default `review`.
+- **Trigger:** A fitted U/IC has complete unique native pin metadata and one
+  uniquely assigned I3C SDA/SCL pair whose optional channel identifiers match
+  and whose nets are distinct. A fully inventoried connector has exactly two
+  native contacts, one generic contact on each exact net, and no native
+  connector function or current source-matched role identifies a return.
+  A current map covering both contacts or a reviewed `NOT_APPLICABLE`
+  disposition suppresses the prompt.
+- **Purpose:** Ask whether the reference is provided elsewhere, the interface
+  is intentionally isolated, or the reviewed connector pinout needs a return
+  contact. This extends the existing two-pin review family to explicitly
+  identified I3C pairs; it does not infer the connector's purpose.
+- **Evidence and limits:** The finding retains both generic connector pins,
+  exact net assignments, connector pin count, and complete I3C endpoint pair
+  evidence. Named contacts, extra pins, DNP, stale maps, incomplete or
+  ambiguous inventories, split channel identifiers, same-net SDA/SCL, and
+  unsupported endpoint functions stay quiet. The prompt never requires local
+  board ground, determines external wiring, or proves PCB copper or physical
+  continuity.
+- **Fixtures:** Tooling-owned synthetic generic two-pin fault and named-contact
+  control; current and stale maps; explicit return role; extra return pin;
+  DNP, incomplete, ambiguous, and mismatched channel controls; review/block/
+  off/exact-ignore policy; stable report ordering; CLI/MCP parity; and repeated
+  native exports on digest-pinned KiCad 10.0.0 and 10.0.5 images. Field
+  applicability and reviewer value remain unmeasured.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_i3c_connector_return_review.py -m 'design_lint and connector_lint
+  and interface_lint and return_path_lint and
+  design_lint_rule(rule_id="connector.i3c_pair_without_return_review")'`.
+  Exact native exports use `KICAD_RUN_NATIVE_I3C_CONNECTOR_RETURN_FIXTURES=1`
+  and `tests/test_i3c_connector_return_native_fixture_lane.py`.
 
 ## Completion and release gate
 

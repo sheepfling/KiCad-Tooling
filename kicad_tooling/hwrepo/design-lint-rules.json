@@ -13450,6 +13450,52 @@
       "implementation_owner": "kicad_tooling/hwrepo/connector_return_i2c_review.py#i2c_connector_missing_return_candidates"
     },
     {
+      "rule_id": "connector.i3c_pair_without_return_review",
+      "title": "Two-pin generic I3C connector has no identified return",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete connector and I3C endpoint pin inventories, native pin functions, exact net membership, and current source-matched connector-role evidence",
+      "predicate": "For each fitted U/IC with complete unique native pin metadata and one uniquely assigned, channel-matched I3C SDA/SCL pair on distinct nets, emit a REVIEW prompt when a completely inventoried connector candidate has exactly two native pins, one generic contact on each exact I3C net, and no native connector function or current source-matched connector role identifies a return contact. A current source-matched map that covers both exact I3C contacts or a reviewed NOT_APPLICABLE disposition suppresses the prompt.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native fixture exports; the selected project's exact version is checked before export"
+      ],
+      "limitations": [
+        "This is a review cue for a complete two-pin connector only. Connectors with additional native contacts are left to the multiconductor connector and pin-role rules.",
+        "An I3C interface may be intentionally isolated or receive its signal reference elsewhere. The finding does not require a local board-ground contact or infer off-board wiring.",
+        "The predicate recognizes explicit native I3C SDA/SCL endpoint functions with matching channel identifiers. Generic connector contacts are association clues only; the finding does not establish connector identity or required pinout.",
+        "The schematic netlist does not establish PCB copper continuity or physical continuity. Use an authored interface/reference requirement for a blocking regression gate."
+      ],
+      "fault_fixtures": [
+        "tests.test_i3c_connector_return_review.test_two_pin_generic_i3c_connector_without_return_emits_review",
+        "tests.test_design_lint_mcp_parity_i3c_connector_return.test_two_pin_i3c_return_cli_mcp_parity",
+        "tests.test_i3c_connector_return_native_fixture_lane.test_native_two_pin_i3c_return_fault_and_named_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_i3c_connector_return_review.test_named_contacts_and_reviewed_pinout_or_disposition_suppress_prompt",
+        "tests.test_i3c_connector_return_review.test_three_contact_connector_stays_with_existing_return_checks",
+        "tests.test_i3c_connector_return_native_fixture_lane.test_native_two_pin_i3c_return_fault_and_named_control"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_i3c_connector_return_review.test_findings_are_stable_when_netlist_mappings_are_reordered",
+        "tests.test_i3c_connector_return_review.test_rule_override_and_exact_ignore_remain_available",
+        "tests.test_i3c_connector_return_native_fixture_registry.test_native_source_registry_is_hash_pinned_and_local",
+        "tests.test_design_lint_architecture_i3c_connector_return.test_rule_has_a_return_theme_predicate_owner"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I3C_CONNECTOR_RETURN_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_return_i3c_review.py#i3c_connector_missing_return_candidates",
+        "kicad_tooling/hwrepo/bus_signal_roles.py#i3c_signal_identity",
+        "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_pin_evidence",
+        "kicad_tooling/hwrepo/design_lint_return_domain_candidates.py#return_domain_candidates"
+      ],
+      "theme": "returns",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_return_i3c_review.py#i3c_connector_missing_return_candidates"
+    },
+    {
       "rule_id": "connector.can_pair_without_return_review",
       "title": "Two-pin generic CAN connector has no identified return",
       "status": "active",

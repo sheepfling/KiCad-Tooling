@@ -75,6 +75,8 @@ I2C_GENERIC_CONNECTOR_MODULES = (
     "design_lint_i2c_generic_connector_candidates.py",
 )
 
+I3C_CONNECTOR_RETURN_MODULES = ("connector_return_i3c_review.py",)
+
 SWD_GENERIC_CONNECTOR_MODULES = (
     "bus_swd_generic_connector.py",
     "swd_generic_connector_models.py",
@@ -134,6 +136,29 @@ def test_i2c_generic_connector_pair_rule_stays_in_focused_modules() -> None:
     assert rule.theme == "interfaces"
     assert rule.implementation_owner == (
         "kicad_tooling/hwrepo/i2c_generic_connector_candidates.py#generic_i2c_connector_pairs"
+    )
+    assert rule.implementation_owner in rule.implementation_refs
+
+
+@pytest.mark.design_lint
+@pytest.mark.return_path_lint
+def test_i3c_connector_return_rule_stays_in_a_focused_protocol_module() -> None:
+    modules = [HWREPO / name for name in I3C_CONNECTOR_RETURN_MODULES]
+    rule = next(
+        item
+        for item in rule_catalog().rules
+        if item.rule_id == "connector.i3c_pair_without_return_review"
+    )
+    module_sizes = {path.name: _line_count(path) for path in modules if path.is_file()}
+    oversized = {
+        name: lines for name, lines in module_sizes.items() if lines >= IMPLEMENTATION_MAX_LINES
+    }
+
+    assert len(module_sizes) == len(I3C_CONNECTOR_RETURN_MODULES)
+    assert not oversized, f"I3C connector-return module reached the review limit: {oversized}"
+    assert rule.theme == "returns"
+    assert rule.implementation_owner == (
+        "kicad_tooling/hwrepo/connector_return_i3c_review.py#i3c_connector_missing_return_candidates"
     )
     assert rule.implementation_owner in rule.implementation_refs
 

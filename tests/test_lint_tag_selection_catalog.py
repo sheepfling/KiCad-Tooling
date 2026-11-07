@@ -395,6 +395,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_I2C_CONNECTOR_RETURN_FIXTURES",
         ),
         (
+            "connector.i3c_pair_without_return_review",
+            "KICAD_RUN_NATIVE_I3C_CONNECTOR_RETURN_FIXTURES",
+        ),
+        (
             "connector.can_pair_without_return_review",
             "KICAD_RUN_NATIVE_CAN_CONNECTOR_RETURN_FIXTURES",
         ),
