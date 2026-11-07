@@ -3,10 +3,10 @@
 This tooling-owned synthetic pair checks the `connector.rs485_pair_without_return_review`
 prompt. It is not a product design and is not for manufacture.
 
-| Case | Source | Expected result |
-| --- | --- | --- |
-| Fault | `fault.kicad_sch` | Review a complete generic two-contact connector on the exact native A/B pair with no identified reference return. |
-| Control | `control.kicad_sch` | Keep quiet when the two connector contacts have explicit native A/B roles. |
+| Case    | Source              | Expected result                                                                                                   |
+| ------- | ------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Fault   | `fault.kicad_sch`   | Review a complete generic two-contact connector on the exact native A/B pair with no identified reference return. |
+| Control | `control.kicad_sch` | Keep quiet when the two connector contacts have explicit native A/B roles.                                        |
 
 Both schematics retain a complete synthetic SN65HVD485 endpoint pin inventory and
 the same exact A/B net assignments. The fault/control mutation changes only the
