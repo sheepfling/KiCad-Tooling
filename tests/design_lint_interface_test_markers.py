@@ -112,6 +112,7 @@ INTERFACE_LINT_TEST_MODULES = frozenset(
         "tests/test_ethernet_data_unconnected_pins.py",
         "tests/test_ethernet_data_unconnected_native_fixture_lane.py",
         "tests/test_design_lint_mcp_parity_ethernet_data_unconnected.py",
+        "tests/test_ethernet_data_pair_same_net_native_fixture_lane.py",
         "tests/test_ethernet_management_unconnected_native_fixture_lane.py",
         "tests/test_design_lint_architecture_ethernet.py",
         "tests/test_can_tx_rx_same_net.py",

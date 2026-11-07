@@ -316,6 +316,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES",
         ),
         (
+            "bus.complementary_pair_assignment",
+            "KICAD_RUN_NATIVE_ETHERNET_DATA_SAME_NET_FIXTURES",
+        ),
+        (
             "power.ic_decoupling_below_project_minimum",
             "KICAD_RUN_NATIVE_IC_RAIL_CAPACITOR_FIXTURES",
         ),

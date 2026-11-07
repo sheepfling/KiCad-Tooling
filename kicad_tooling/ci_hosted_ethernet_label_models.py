@@ -27,6 +27,7 @@ EthernetLabelFeature = Literal[
     "management_named_rail",
     "management_unconnected",
     "data_unconnected",
+    "data_same_net",
     "generic_connector",
     "management_generic_connector",
 ]
@@ -249,6 +250,47 @@ ETHERNET_LABEL_FIXTURES: Mapping[EthernetLabelFeature, EthernetLabelFixtureExpec
                         EthernetLabelPinExpectation(reference="U1.1", function="TDP", net=None),
                         EthernetLabelPinExpectation(
                             reference="U1.2", function="TDN", net="ETH_TX_N"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.3", function="RDP", net="ETH_RX_P"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.4", function="RDN", net="ETH_RX_N"
+                        ),
+                    ),
+                ),
+            ),
+            "data_same_net": EthernetLabelFixtureExpectation(
+                directory="ethernet-data-pair-same-net-native",
+                rule_id="bus.complementary_pair_assignment",
+                stage_prefix="ethernet-data-pair-same-net-fixture",
+                control=EthernetLabelCaseExpectation(
+                    source_sha256="c7de8bed0c71b555339b9c9d974c742b5abd26bd45200fa6b902b4ad82417140",
+                    subjects=(),
+                    pins=(
+                        EthernetLabelPinExpectation(
+                            reference="U1.1", function="TDP", net="ETH_TX_P"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.2", function="TDN", net="ETH_TX_N"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.3", function="RDP", net="ETH_RX_P"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.4", function="RDN", net="ETH_RX_N"
+                        ),
+                    ),
+                ),
+                fault=EthernetLabelCaseExpectation(
+                    source_sha256="a386e542222c09c5142ed4cee6e16d90a5c815c966609d59dac5958a9681125b",
+                    subjects=("U1: Ethernet TX pair",),
+                    pins=(
+                        EthernetLabelPinExpectation(
+                            reference="U1.1", function="TDP", net="ETH_TX_SHARED"
+                        ),
+                        EthernetLabelPinExpectation(
+                            reference="U1.2", function="TDN", net="ETH_TX_SHARED"
                         ),
                         EthernetLabelPinExpectation(
                             reference="U1.3", function="RDP", net="ETH_RX_P"

@@ -97,6 +97,7 @@ def test_neutral_indexed_dnp_and_ambiguous_net_labels_are_not_classified() -> No
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.design_lint_rule(rule_id="bus.complementary_pair_assignment")
 def test_pair_short_remains_with_complementary_pair_rule() -> None:
     source = _ethernet_netlist(
         ("TDP", "TDN", "RDP", "RDN"),
@@ -113,7 +114,17 @@ def test_pair_short_remains_with_complementary_pair_rule() -> None:
     )
 
     assert not _findings(shorted)
-    assert any(item.rule_id == "bus.complementary_pair_assignment" for item in candidates(shorted))
+    (finding,) = tuple(
+        item for item in candidates(shorted) if item.rule_id == "bus.complementary_pair_assignment"
+    )
+    assert finding.subject == "U1: Ethernet TX pair"
+    assert "both pair functions share one schematic net" in finding.message
+    assert finding.evidence == {
+        "positive_pins": ("U1.1",),
+        "negative_pins": ("U1.2",),
+        "positive_nets": ("ETH_TX_P",),
+        "negative_nets": ("ETH_TX_P",),
+    }
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

@@ -187,6 +187,14 @@ RULE_NODE_CASES = (
         "tests/test_ethernet_data_unconnected_pins.py::test_open_data_pair_pin_is_localized_beside_assigned_mate",
     ),
     (
+        "bus.complementary_pair_assignment",
+        "tests/test_ethernet_data_labels.py::test_pair_short_remains_with_complementary_pair_rule",
+    ),
+    (
+        "bus.complementary_pair_assignment",
+        "tests/test_ethernet_data_pair_same_net_native_fixture_lane.py::test_native_ethernet_data_pair_same_net_fault_and_control_repeat",
+    ),
+    (
         "bus.usb_signal_on_named_rail",
         "tests/test_usb_signal_named_rail.py::test_neutral_net_labels_do_not_request_review",
     ),

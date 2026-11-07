@@ -19759,6 +19759,34 @@ acceptance threads while new lint features proceed:
   tests/test_pcb_thermal_pad_scope_native.py
   -m 'design_lint and pcb_lint and native_kicad'`.
 
+#### LINT-312 — Native regression for Ethernet same-net pair assignments
+
+- **Status:** Added exact-version native fault/control evidence for the existing
+  `bus.complementary_pair_assignment` rule; no new lint rule was needed because
+  the existing deterministic heuristic already reports this pattern.
+- **Predicate under test:** A fitted Ethernet PHY's recognized `TDP` and `TDN`
+  pin functions assigned to one schematic net produce the existing generic
+  complementary-pair review. A control keeps TX positive and negative pins on
+  distinct nets. The source-bound export is evaluated through the shared
+  design-lint service.
+- **Boundary:** Native evidence confirms KiCad exports and the current
+  rule's behavior for the synthetic source. It does not establish that any
+  particular Ethernet pair is required, that a same-net assignment is always
+  incorrect, or that the PCB routes or behaves as intended. Project intent,
+  physical copper, and signal integrity remain outside this check.
+- **Fixtures:** The tooling-owned fault/control schematics are hashed and
+  exported twice with digest-pinned KiCad 10.0.0 and 10.0.5 Docker images. The
+  lane checks stable normalized netlists, exact pin functions and assignments,
+  a fault-only finding, and report details from the existing generic rule.
+  The fixture contains no external board source.
+- **Selection:** `KICAD_RUN_NATIVE_ETHERNET_DATA_SAME_NET_FIXTURES=1
+  .venv/bin/python -I -m pytest -q
+  tests/test_ethernet_data_pair_same_net_native_fixture_lane.py
+  -m 'design_lint and interface_lint and native_kicad and
+  design_lint_rule(rule_id="bus.complementary_pair_assignment")'`.
+  Rule-scoped lint tags require this fixture alongside the existing
+  complementary-pair native fixture.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

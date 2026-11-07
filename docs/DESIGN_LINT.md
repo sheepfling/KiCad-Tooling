@@ -38,6 +38,14 @@ The same native gate also checks all four indexed USB-C SuperSpeed pairs, with
 a TX1 same-net fault and a distinct-net control. Generic `TX1+/TX1-` names and
 lane indices outside 1 and 2 remain unclassified.
 
+A separate native fixture now checks the same-net Ethernet TX case against
+this existing rule. It exports a distinct-net control and a `TDP`/`TDN`
+same-net fault twice on KiCad 10.0.0 and 10.0.5; the finding retains the PHY
+reference, recognized pair, and assigned net. Run it with
+`KICAD_RUN_NATIVE_ETHERNET_DATA_SAME_NET_FIXTURES=1` and
+`tests/test_ethernet_data_pair_same_net_native_fixture_lane.py` under
+`design_lint and interface_lint and native_kicad`.
+
 ## Review USB SuperSpeed pin and net-label mismatches
 
 `bus.usb_c_superspeed_lane_label_mismatch` compares explicit `StdA_` and
