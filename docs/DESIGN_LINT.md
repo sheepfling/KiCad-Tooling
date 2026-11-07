@@ -44,7 +44,9 @@ same-net fault twice on KiCad 10.0.0 and 10.0.5; the finding retains the PHY
 reference, recognized pair, and assigned net. Run it with
 `KICAD_RUN_NATIVE_ETHERNET_DATA_SAME_NET_FIXTURES=1` and
 `tests/test_ethernet_data_pair_same_net_native_fixture_lane.py` under
-`design_lint and interface_lint and native_kicad`.
+`design_lint and interface_lint and native_kicad`. The tooling-owned fault and
+control are described in the
+[fixture README](../tests/fixtures/design_lint/ethernet-data-pair-same-net-native/README.md).
 
 ## Review USB SuperSpeed pin and net-label mismatches
 
@@ -7933,6 +7935,8 @@ applies, retain a reviewed exact fingerprint ignore or turn the rule off in
 project policy. If a requirement does apply, map the exact pad and its
 independent basis using the coverage contract below. The default mode is
 `review`.
+The synthetic native symbol-export fixture is documented in the
+[thermal-pad scope fixture README](../tests/fixtures/design_lint/thermal-pad-scope/README.md).
 
 ## Review mapped thermal-pad via coverage
 
@@ -7976,6 +7980,8 @@ spans, and authored center-distance limit. A nearby unconnected via, a via on
 the wrong layer span, or a connected via outside the authored radius does not
 count. The default rule mode is `review`; a project can select `block` or `off`
 with its ordinary rule override.
+The mapped-pad native board fixture is described in the
+[thermal-via fixture README](../kicad_tooling/hwrepo/fixtures/pcb-thermal-via-pad-README.md).
 
 This is geometry and connectivity coverage only. It does not prove that a via
 lies within the pad's copper shape, estimate thermal resistance or temperature,
