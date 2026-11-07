@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 279 rules are implemented with synthetic regression coverage.
+The following 280 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 279 active rules.
+The catalog currently contains 280 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -646,6 +646,8 @@ skipped under prerelease policy.
 - `bus.ethernet_signal_on_named_rail`
 - `bus.ethernet_generic_connector_pair_review`
 - `bus.ethernet_management_generic_connector_pair_review`
+- `bus.swd_generic_connector_pair_review`
+- `bus.jtag_generic_connector_pair_review`
 - `bus.can_tx_rx_same_net`
 - `bus.can_tx_rx_label_mismatch`
 - `bus.can_tx_outputs_share_net`
@@ -729,6 +731,18 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **LINT-299 generic JTAG connector pair review:** When a fitted, completely
+  inventoried U/IC exposes unique TCK and TMS functions on distinct nets, and a
+  complete connector has generic contacts on both exact nets, ask whether the
+  connector belongs to the JTAG interface and whether its pinout is documented.
+  Explicit TCK/TMS tokens qualify; JTCK/JTMS-only functions do not because they
+  may describe SWD aliases. A current source-matched role map or reviewed
+  `NOT_APPLICABLE` disposition suppresses the prompt. This is an association
+  cue only: it does not require every JTAG signal, return, or power contact to
+  be exposed and does not prove PCB continuity. Synthetic fault/control,
+  policy, evidence-stability, and CLI/MCP parity coverage are registered.
+  Digest-pinned KiCad 10.0.0/10.0.5 native exports are required; field
+  applicability and reviewer value remain unmeasured.
 - **LINT-297 generic Ethernet management connector pair review:** When a
   fitted, completely inventoried U/IC exposes one native MDC and one MDIO
   function on separate nets, and a complete connector has generic contacts on
@@ -3581,7 +3595,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 278 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 280 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -19274,6 +19288,37 @@ acceptance threads while new lint features proceed:
   interface_lint and
   design_lint_rule(rule_id="bus.swd_generic_connector_pair_review")'`.
   The native lane uses `KICAD_RUN_NATIVE_SWD_GENERIC_CONNECTOR_FIXTURES=1`.
+
+#### LINT-299 — Prompt review of generic connector pins on JTAG nets
+
+- **Rule:** `bus.jtag_generic_connector_pair_review`, default `review`.
+- **Trigger:** A fitted U/IC has complete unique native pin metadata and one
+  uniquely assigned TCK function plus one TMS function on distinct nets. A
+  complete connector has generic `Pin_N` contacts on both exact nets. A current
+  source-matched connector map covering the exact roles and nets, or a reviewed
+  `NOT_APPLICABLE`, suppresses the prompt.
+- **Purpose:** Ask whether generic contacts belong to a JTAG interface and
+  whether its pinout is documented. Only explicit TCK/TMS tokens are
+  recognized; JTCK/JTMS alone are excluded because they can describe SWD
+  functions. The paired signals provide a conservative discovery cue, not an
+  electrical requirement.
+- **Evidence and limits:** The candidate retains exact connector and endpoint
+  pins, native function strings, electrical types, nets, and complete pin
+  inventory. DNP, incomplete, duplicate-role, open, ambiguous, same-net, and
+  one-sided cases remain quiet. It does not infer connector identity, require
+  all JTAG signals or any ground/power contact, or establish PCB copper.
+- **Fixtures:** Synthetic fault/control schematics, named contacts, current,
+  stale, wrong-role and partial maps, `NOT_APPLICABLE`, DNP and incomplete
+  evidence, exact override/ignore, mapping-order stability, and CLI/MCP parity.
+  Tooling-owned native sources export twice with digest-pinned KiCad 10.0.0 and
+  10.0.5; source hashes and limits are recorded in the [fixture
+  note](../tests/fixtures/design_lint/jtag-generic-connector-native/README.md).
+  Reviewer value and field applicability remain unmeasured.
+- **Selection:** `.venv/bin/python -I -m pytest -q
+  tests/test_jtag_generic_connector_pair_review.py -m 'design_lint and
+  interface_lint and
+  design_lint_rule(rule_id="bus.jtag_generic_connector_pair_review")'`.
+  The native lane uses `KICAD_RUN_NATIVE_JTAG_GENERIC_CONNECTOR_FIXTURES=1`.
 
 [swd-symbol]: https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/master/MCU_ST_STM32WB.kicad_symdir/STM32WB15CCUx.kicad_sym
 [swd-rename]: https://gitlab.com/kicad/libraries/kicad-symbols/-/merge_requests/3929/reports

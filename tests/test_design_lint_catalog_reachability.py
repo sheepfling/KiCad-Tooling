@@ -25,6 +25,7 @@ import tests.design_lint_fixtures.i2c_signal_label as _i2c_signal_label_fixtures
 import tests.design_lint_fixtures.i3c_same_net as _i3c_same_net_fixtures
 import tests.design_lint_fixtures.i3c_signal_named_rail as _i3c_signal_named_rail_fixtures
 import tests.design_lint_fixtures.ic_decoupling as _ic_decoupling_fixtures
+import tests.design_lint_fixtures.jtag_generic_connector_pair as _jtag_fixtures
 import tests.design_lint_fixtures.mosfet_gate_source_bias as _mosfet_gate_source_bias_fixtures
 import tests.design_lint_fixtures.mosfet_terminal_same_net as _mosfet_terminal_same_net_fixtures
 import tests.design_lint_fixtures.open_drain_control_voltage as _open_drain_control_voltage_fixtures
@@ -116,6 +117,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     no_can_assignments = _tests_design_lint_fixtures.can_netlist().model_copy(update={"nets": {}})
     cases = (
         _tests_design_lint_fixtures.observed(),
+        _jtag_fixtures.generic_jtag_connector_netlist(),
         _tests_design_lint_fixtures.generic_connector_power_input_netlist(),
         _tests_design_lint_fixtures.generic_connector_power_output_netlist(),
         _tests_design_lint_fixtures.connector_capacitor_only_netlist(),
