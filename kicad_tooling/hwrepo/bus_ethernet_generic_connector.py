@@ -9,6 +9,7 @@ from typing import Literal, cast
 
 from .bus_signal_pairs import ethernet_data_pair_function_role
 from .casefold_mapping_lookup import casefolded_unique_index
+from .connector_contact_evidence import collect_other_connector_contacts
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import (
     ConnectorCoverageReport,
@@ -146,6 +147,19 @@ def generic_ethernet_connector_pairs(
                             endpoints,
                             key=lambda item: (item.reference.casefold(), item.reference),
                         )
+                    ),
+                    other_connector_contacts=collect_other_connector_contacts(
+                        connector_reference,
+                        numbers,
+                        connector_functions,
+                        assignments,
+                        (
+                            pin
+                            for pin, _function in (
+                                *positive_assignments,
+                                *negative_assignments,
+                            )
+                        ),
                     ),
                 )
             )

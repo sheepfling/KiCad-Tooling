@@ -747,7 +747,16 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-325):** Generic SPI connector review evidence now
+- **Latest progress (LINT-326):** Generic Ethernet TX/RX connector review
+  findings now include every other inventoried pin's native function and
+  assigned-net state. Synthetic tests show the opposite data pair and GND;
+  changing the GND contact assignment changes the finding fingerprint. The
+  native Docker fault/control lane confirms the exported GND contact appears
+  in both findings and the control stays quiet. This evidence does not infer
+  that GND or another contact must be connected. The exact rule-tag selector
+  passed 34 tests with 7,621 deselected; native exports passed on KiCad 10.0.0
+  and 10.0.5. Hosted acceptance is pending for the planned `v0.5.3rc544` tag.
+- **Previous progress (LINT-325):** Generic SPI connector review evidence now
   includes every other inventoried contact's native pin function and assigned
   net state. Synthetic and native cases show a VCC contact left open beside
   other connector contacts; the named SPI control stays quiet. The SPI rule's
@@ -20145,6 +20154,33 @@ acceptance threads while new lint features proceed:
   `design_lint_rule(rule_id="bus.serial_generic_connector_pair_review")`.
   The native Docker lane uses
   `KICAD_RUN_NATIVE_SERIAL_GENERIC_CONNECTOR_FIXTURES=1`.
+
+#### LINT-326 — Preserve other contacts in generic Ethernet connector review evidence
+
+- **Status:** Implemented as an evidence refinement to the existing
+  `bus.ethernet_generic_connector_pair_review` rule; its trigger and default
+  review policy are unchanged. Hosted prerelease acceptance is pending for
+  the planned `v0.5.3rc544` tag.
+- **Gap:** Ethernet TX/RX pair findings recorded only the pair-specific
+  connector contacts. Reviewers could not see the opposite data pair or other
+  connector contacts, including reference pins, from the same finding.
+- **Evidence:** Each finding now reports all other inventoried contacts with
+  native pin functions and assigned nets or `unassigned` state. Synthetic
+  coverage checks the opposite pair and J1.5 `BOARD_GND`, and verifies that
+  changing the J1.5 net changes the source-bound fingerprint. The native
+  fault/control lane verifies the opposite pair and J1.5 GND assignment on
+  both TX/RX findings; the control remains quiet. The exact rule-tag selector
+  passed 34 tests with 7,621 deselected, and digest-pinned Docker exports
+  passed on KiCad 10.0.0 and 10.0.5.
+- **Boundary:** This is native connector evidence only. It does not infer
+  connector identity, require GND or other contacts to be connected, decide
+  Ethernet power/return/shield policy, prove PHY-to-port routing, or establish
+  PCB copper or off-board continuity.
+- **Selection:** Run `tests/test_ethernet_generic_connector_pair_review.py`
+  and `tests/test_ethernet_generic_connector_native_fixture_lane.py` with
+  `design_lint_rule(rule_id="bus.ethernet_generic_connector_pair_review")`.
+  The native Docker lane uses
+  `KICAD_RUN_NATIVE_ETHERNET_GENERIC_CONNECTOR_FIXTURES=1`.
 
 #### LINT-325 — Preserve other contacts in generic SPI connector review evidence
 

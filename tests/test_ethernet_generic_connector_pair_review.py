@@ -10,12 +10,15 @@ from kicad_tooling.hwrepo.connector_coverage_models import (
     ConnectorMappedPinEvidence,
 )
 from kicad_tooling.hwrepo.design_lint import evaluate
+from kicad_tooling.hwrepo.design_lint_finding_models import DesignLintFinding
+from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.models import (
     ContractCoachReport,
     DesignLintIgnore,
     DesignLintPolicy,
     DesignLintRuleOverride,
 )
+from kicad_tooling.hwrepo.netlist_contract_models import NetlistContract
 from tests.design_lint_fixtures.ethernet_generic_connector import (
     generic_ethernet_connector_netlist,
 )
@@ -26,13 +29,13 @@ RULE_ID = "bus.ethernet_generic_connector_pair_review"
 
 
 def _report(
-    observed=None,
+    observed: NetlistContract | None = None,
     *,
     connector_coverage: ConnectorCoverageReport | None = None,
     override: DesignLintRuleOverride | None = None,
     ignore: DesignLintIgnore | None = None,
-):
-    netlist = observed or generic_ethernet_connector_netlist()
+) -> DesignLintReport:
+    netlist: NetlistContract = observed or generic_ethernet_connector_netlist()
     coach = ContractCoachReport(
         status="READY_FOR_REVIEW",
         project_id="synthetic-ethernet-generic-connector",
@@ -46,7 +49,7 @@ def _report(
     return evaluate(coach.project_id, coach, policy, connector_coverage)
 
 
-def _findings(report):
+def _findings(report: DesignLintReport) -> tuple[DesignLintFinding, ...]:
     return tuple(item for item in report.findings if item.rule_id == RULE_ID)
 
 
@@ -101,6 +104,38 @@ def test_generic_contacts_on_exact_ethernet_tx_and_rx_pairs_emit_review() -> Non
     assert tx.mode == "review"
     assert "does not identify the connector as Ethernet" in tx.message
     assert "determine whether magnetics or termination are required" in tx.message
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_generic_connector_findings_include_other_contacts_and_assignment_changes() -> None:
+    baseline = _findings(_report())
+    tx = next(item for item in baseline if item.evidence["Ethernet_pair_direction"] == ("TX",))
+
+    assert tx.evidence["other_connector_contacts"] == (
+        "J1.3 function=Pin_3 nets=ETH_RX_P",
+        "J1.4 function=Pin_4 nets=ETH_RX_N",
+        "J1.5 function=Pin_5 nets=BOARD_GND",
+    )
+
+    changed = generic_ethernet_connector_netlist(
+        connector_assignments={
+            "1": "ETH_TX_P",
+            "2": "ETH_TX_N",
+            "3": "ETH_RX_P",
+            "4": "ETH_RX_N",
+            "5": "AUX_RETURN",
+        }
+    )
+    changed_tx = next(
+        item
+        for item in _findings(_report(changed))
+        if item.evidence["Ethernet_pair_direction"] == ("TX",)
+    )
+
+    assert changed_tx.evidence["other_connector_contacts"][-1] == (
+        "J1.5 function=Pin_5 nets=AUX_RETURN"
+    )
+    assert changed_tx.fingerprint != tx.fingerprint
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

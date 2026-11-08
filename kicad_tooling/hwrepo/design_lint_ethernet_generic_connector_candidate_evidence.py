@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .connector_contact_evidence import format_other_connector_contacts
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .ethernet_generic_connector_models import EthernetGenericConnectorPair
@@ -43,6 +44,9 @@ def project_ethernet_generic_connector_evidence(
                 f"{item.reference}:{item.positive_pin}={direction}+/{item.positive_net};"
                 f"{item.negative_pin}={direction}-/{item.negative_net}"
                 for item in pair.endpoint_pairs
+            ),
+            "other_connector_contacts": format_other_connector_contacts(
+                pair.other_connector_contacts
             ),
             "Ethernet_pair_direction": (direction,),
             "connector_map_state": (

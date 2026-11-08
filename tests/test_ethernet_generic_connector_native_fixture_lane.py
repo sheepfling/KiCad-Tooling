@@ -80,10 +80,26 @@ def test_native_ethernet_generic_connector_fault_and_control_repeat(
     native_export = results["ethernet-generic-connector-fixture/native-export"]
     assert_native_fixture_mounts(root, native_export["command_receipt"])
     assert results["ethernet-generic-connector-fixture/control"]["findings"] == "none"
+    control_contacts = json.loads(
+        results["ethernet-generic-connector-fixture/control"]["other_connector_contacts"]
+    )
+    assert control_contacts == {}
     fault = results["ethernet-generic-connector-fixture/fault"]
     assert fault["findings"] == (
         "J1: generic pins match Ethernet RX pair nets;J1: generic pins match Ethernet TX pair nets"
     )
+    assert json.loads(fault["other_connector_contacts"]) == {
+        "J1: generic pins match Ethernet RX pair nets": [
+            "J1.1 function=Pin_1 nets=ETH_TX_P",
+            "J1.2 function=Pin_2 nets=ETH_TX_N",
+            "J1.5 function=GND nets=GND",
+        ],
+        "J1: generic pins match Ethernet TX pair nets": [
+            "J1.3 function=Pin_3 nets=ETH_RX_P",
+            "J1.4 function=Pin_4 nets=ETH_RX_N",
+            "J1.5 function=GND nets=GND",
+        ],
+    }
     for result in (results["ethernet-generic-connector-fixture/control"], fault):
         assert result["status"] == "PASS"
         assert result["kicad_version"] == version

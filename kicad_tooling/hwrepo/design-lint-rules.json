@@ -7080,11 +7080,12 @@
       ],
       "limitations": [
         "Recognition is limited to the exact Ethernet data-pair aliases accepted by ethernet_data_pair_function_role. The fitted U/IC endpoint and connector inventories must be complete and unique, every pin must have native function and electrical-type metadata, pair pins need one unambiguous net each, and generic connector contacts need one exact net assignment. DNP, same-net, duplicate-role, incomplete, open, and ambiguous cases remain quiet.",
-        "This is a connector-association review prompt. It does not infer connector identity, establish a PHY-to-port route, determine whether magnetics or termination are required, prove signal integrity or PCB copper continuity, or decide power, return, shield, or off-board wiring policy.",
+        "This is a connector-association review prompt. It does not infer connector identity, establish a PHY-to-port route, determine whether magnetics or termination are required, prove signal integrity or PCB copper continuity, or decide power, return, shield, or off-board wiring policy. Other native connector contacts and assignments are shown for review; their required connections are not inferred.",
         "A source-matched connector pin map must identify the observed generic contacts as the exact Ethernet TX or RX pair roles and match their current native nets to suppress the prompt. Stale or partial maps do not count as review evidence; exact rule override and fingerprint-ignore controls remain available."
       ],
       "fault_fixtures": [
         "tests.test_ethernet_generic_connector_pair_review.test_generic_contacts_on_exact_ethernet_tx_and_rx_pairs_emit_review",
+        "tests.test_ethernet_generic_connector_pair_review.test_generic_connector_findings_include_other_contacts_and_assignment_changes",
         "tests.test_ethernet_generic_connector_pair_review.test_rule_override_and_exact_ignore_remain_available",
         "tests.test_design_lint_mcp_parity_ethernet_generic_connector.test_ethernet_generic_connector_review_cli_mcp_parity",
         "tests.test_ethernet_generic_connector_native_fixture_lane.test_native_ethernet_generic_connector_fault_and_control_repeat"

@@ -14,6 +14,9 @@ assigns the generic connector contacts to the PHY data-pair nets; the control
 leaves them on separate connector-port nets. The expected findings are
 review prompts and do not establish that the connector is Ethernet, that
 magnetics or termination are correct, or that PCB copper is continuous.
+Each fault finding also reports the other native connector contacts, including
+the opposite data pair and J1.5 GND assignment. This evidence does not require
+those contacts to be connected or establish a return path.
 
 The native lane uses digest-pinned KiCad 10.0.0 and 10.0.5 images, exports each
 case twice, checks the normalized netlist hashes for repeatability, and runs

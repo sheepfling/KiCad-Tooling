@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
+from .connector_contact_evidence import ConnectorContactEvidence
+
 EthernetPairDirection = Literal["TX", "RX"]
 
 
@@ -34,3 +36,4 @@ class EthernetGenericConnectorPair:
     negative_connector_functions: tuple[str, ...]
     negative_net: str
     endpoint_pairs: tuple[EthernetGenericEndpointPair, ...]
+    other_connector_contacts: tuple[ConnectorContactEvidence, ...] = ()
