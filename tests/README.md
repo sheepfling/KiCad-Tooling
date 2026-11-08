@@ -364,6 +364,12 @@ python -I -B -m pytest -q \
 KICAD_RUN_NATIVE_REGULATOR_REQUIRED_PASSIVE_FIXTURES=1 \
   python -I -B -m pytest -q tests/test_regulator_required_passives_native_fixture.py \
   -m 'design_lint and power_lint and native_kicad and design_lint_rule(rule_id="power.regulator_required_passive_topology_mismatch")'
+python -I -B -m pytest -q tests/test_regulator_passive_pin_roles.py \
+  tests/test_regulator_required_passives_parity.py \
+  -m 'design_lint and power_lint and design_lint_rule(rule_id="power.regulator_pin_role_mismatch")'
+KICAD_RUN_NATIVE_REGULATOR_REQUIRED_PASSIVE_FIXTURES=1 \
+  python -I -B -m pytest -q tests/test_regulator_passive_pin_roles_native_fixture.py \
+  -m 'design_lint and power_lint and native_kicad and design_lint_rule(rule_id="power.regulator_pin_role_mismatch")'
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Team-Workflow-Template \
   python -I -B -m pytest -q -m "component_lint and evidence_lint and template_checkout" \
   tests/test_electrical_component_evidence.py

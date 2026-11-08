@@ -14,6 +14,7 @@ from .design_lint_power_pin_role_evidence import (
     NamedSupplyPinNegativeRailEvidence,
 )
 from .design_lint_regulator_passive_candidate_evidence import (
+    RegulatorPassivePinRoleFindingEvidence,
     RegulatorPassiveTopologyFindingEvidence,
 )
 from .design_lint_rule_types import DesignLintRuleId
@@ -34,6 +35,7 @@ PowerCandidateSource: TypeAlias = (
     | NamedSupplyPinNegativeRailEvidence
     | IcDecouplingFindingEvidence
     | RegulatorPassiveTopologyFindingEvidence
+    | RegulatorPassivePinRoleFindingEvidence
 )
 
 _SAME_VOLTAGE_POWER_INPUTS: DesignLintRuleId = "component.same_voltage_power_inputs_split"
@@ -48,6 +50,7 @@ _IC_DECOUPLING_BELOW_MINIMUM: DesignLintRuleId = "power.ic_decoupling_below_proj
 _REGULATOR_PASSIVE_TOPOLOGY_MISMATCH: DesignLintRuleId = (
     "power.regulator_required_passive_topology_mismatch"
 )
+_REGULATOR_PIN_ROLE_MISMATCH: DesignLintRuleId = "power.regulator_pin_role_mismatch"
 
 
 def _string_tuples(values: Mapping[str, tuple[str, ...]]) -> dict[str, tuple[str, ...]]:
@@ -160,6 +163,18 @@ def project_power_candidate_evidence(
         return CandidateEvidenceProjection(
             rule_id=_REGULATOR_PASSIVE_TOPOLOGY_MISMATCH,
             evidence=evidence,
+        )
+    if isinstance(source, RegulatorPassivePinRoleFindingEvidence):
+        requirement = source.requirement
+        return CandidateEvidenceProjection(
+            rule_id=_REGULATOR_PIN_ROLE_MISMATCH,
+            evidence={
+                "topology_id": (requirement.id,),
+                "regulator": (requirement.regulator.reference,),
+                "components": source.component_references,
+                "issues": source.issues,
+                "map_sha256": (source.map_sha256,),
+            },
         )
     return CandidateEvidenceProjection(
         rule_id=_NUMBERED_POWER_RAILS,

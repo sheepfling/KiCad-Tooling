@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 300 rules are implemented with synthetic regression coverage.
+The following 301 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 300 active rules.
+The catalog currently contains 301 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -673,6 +673,7 @@ skipped under prerelease policy.
 - `oscillator.crystal_load_network_mismatch`
 - `power.regulator_feedback_mismatch`
 - `power.regulator_required_passive_topology_mismatch`
+- `power.regulator_pin_role_mismatch`
 - `power.capacitor_hold_up_below_project_minimum`
 - `interface.signal_divider_input_range_mismatch`
 - `filter.rc_corner_mismatch`
@@ -3818,7 +3819,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 300 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 301 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -18875,7 +18876,7 @@ design.
 | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Wireless module antenna and RF feed review           | Covered by implemented opt-in LINT-097                                                                                                                                                                                                  | No extra check from KO-001 review; keep its project map and synthetic fault/control suite. Reconsider only if a runtime trial shows a distinct, bounded gap.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Defer if exact module identity, vendor-backed geometry, or module-versus-external-antenna distinction is unavailable.                                                                                                                                                                                                                                                                                                                                                                                    |
 | Critical signal routes near the board edge           | LINT-095 now binds exact source and PCB endpoints, copper connectivity, authored length/skew limits, and an optional authored net-wide minimum edge clearance to active native DRC rules.                                               | The LINT-095 extension in v0.5.3rc302-304 requires an exact mapped net and project-authored minimum, then verifies the exact A.NetName edge_clearance rule. Synthetic near-edge fault and interior control pass native DRC on KiCad 10.0.0/10.0.5. This improves requirement-to-rule coverage; KiCad DRC remains the geometry detector. NR-001 source review found fixed 1 mm/2 mm bands and segment-midpoint sampling, with endpoint/short-excursion misses and unsupported outline types. No cohort implementation or runtime was adopted or benchmarked.                                                                                                                                                            | Do not infer criticality from net names or choose universal edge distances. Treat the native fault/control as synthetic evidence only. Reopen a cohort runtime trial only if it demonstrates clearer review evidence or distinct detection beyond the source-bound native DRC lane without flagging valid controls.                                                                                                                                                                                      |
-| Transformer-isolated converter feedback topology     | LINT-036 regulator feedback and LINT-034 interface/protection contracts                                                                                                                                                                 | Trial an authored map for exact controller feedback pins, optocoupler/secondary reference parts, and expected connectivity. Use source-bound device limits only for explicit comparisons; do not label topology matching as loop-stability proof.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | The candidate depends on generic component-name guesses, copied reference designs, or undocumented compensation assumptions; the local check duplicates a source-bound feedback contract without clearer findings.                                                                                                                                                                                                                                                                                       |
+| Transformer-isolated converter feedback topology     | LINT-036 regulator feedback, LINT-034 interface/protection contracts, and LINT-270 exact regulator/passive pin-to-net maps                                                                                                              | LINT-338 adds optional project-authored native pin-function and electrical-type expectations to mapped regulator topology pins. A same-pin/same-net function change and an electrical-type change now produce deterministic REVIEW findings on exact KiCad 10.0.0/10.0.5 synthetic exports. This addresses the role-agnostic failure seen in TF-001 without adopting its detector. It does not yet map active optocoupler or secondary-reference components as a full isolated feedback topology.                                                                                                                                                                                                                      | Defer automatic topology recognition. Do not infer isolation, compensation, stability, device roles, or acceptable topology from component names, copied reference designs, or undocumented assumptions. Any broader authored map must add distinct coverage beyond LINT-270 and LINT-338 and must identify active component roles without calling them passives.                                                                                                                                        |
 | Supercapacitor and energy-storage operating envelope | LINT-064 voltage ratings, LINT-071 power ratings, and power-path maps                                                                                                                                                                   | LINT-308 adds the exact project-authored single-capacitor nominal hold-up screen; LINT-309 extends it to explicitly mapped parallel members. Synthetic KiCad 10.0.0/10.0.5 native fixtures cover single-part and two-member fault/control cases; the estimate remains REVIEW unless a project promotes it.                                                                                                                                                                                                                                                                                                                                                                                                             | Safe charge current, inrush, lifetime, voltage rating, or real hold-up would be inferred from nominal schematic capacitance without part-specific ratings, state assumptions, tolerance/derating, and a reviewed load model. Unlisted bank members are outside the map.                                                                                                                                                                                                                                  |
 | Regulator-required passive topology                  | LINT-046 reviews capacitor presence; LINT-136 checks an authored decoupling minimum; LINT-036 checks adjustable feedback; LINT-055 recognizes a narrow bootstrap topology; mapped series paths already have exact component/pin checks. | LINT-270 now compares a project-authored exact regulator and required-passive map against native-netlist component identity, complete pin inventory, DNP state, and pin-to-net assignments. A synthetic missing-compensation-capacitor case is quiet under LINT-036 but reported by the new rule. The external [kicad-happy datasheet-verification notes](https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md) motivated the gap; no cohort runtime or reviewer-value trial is claimed. The local gate has synthetic fault/control coverage, an explicitly authored alternate-population control, exact-version KiCad 10.0.0/10.0.5 source-hashed native exports, and tooling-owned CLI/MCP parity coverage. | Do not import extracted facts as requirements or infer passives from regulator names, reference circuits, or pin labels. The authored basis is not independently verified. Keep the rule at REVIEW until part-specific evidence is reviewed; do not claim electrical adequacy, placement, or copper continuity. An explicitly approved alternate topology now has synthetic and exact-version native control coverage; independent source review remains necessary before any project relies on the map. |
 | PWM LED driver-to-load topology                      | LINT-048 direct LED assignment and LINT-063 output-driven LED path review                                                                                                                                                               | The explicit power map now covers two synthetic channels: both exact A-to-K paths suppress their prompts, while a partial map leaves the unmatched channel reviewable. One- and two-channel native source fixtures are registered for KiCad 10.0.0/10.0.5.                                                                                                                                                                                                                                                                                                                                                                                                                                                             | The proposal merely rediscovers a directly driven LED, assumes PWM means a missing resistor, or needs current/brightness limits that the project has not supplied. The mapped role does not establish current regulation or adequacy.                                                                                                                                                                                                                                                                    |
@@ -20719,6 +20720,45 @@ acceptance threads while new lint features proceed:
   `KICAD_RUN_NATIVE_RS485_GENERIC_CONNECTOR_FIXTURES=1` and
   `tests/test_rs485_generic_connector_native_fixture_lane.py` with
   `native_kicad`.
+
+#### LINT-338 — Review mapped regulator pin-role metadata
+
+- **Rule:** `power.regulator_pin_role_mismatch`, default `review`.
+- **Cohort evidence:** The pinned TF-001 source trial returned deterministic
+  isolated-feedback findings when no transformer existed and when the
+  optocoupler/TL431 pin roles did not match the report. LINT-270 already checks
+  project-authored regulator/supporting-part identities, full pin inventory,
+  and pin-to-net assignments; it did not compare optional native function or
+  electrical-type expectations.
+- **Predicate:** For each exact mapped component whose value, symbol,
+  footprint, optional PART_ID, fitted state, and complete pin inventory match,
+  compare only `expected_function` and `expected_electrical_type` fields that
+  the project supplied on its pin entries. A mismatch or unavailable native
+  value produces one source-bound review finding. Unmapped roles are not
+  guessed.
+- **Incremental value:** A synthetic same-pin/same-net function fault remains
+  quiet under LINT-270 but is reported by LINT-338. A separate native fixture
+  changes the electrical type while preserving pin number, function, and net.
+  These are distinct deterministic checks, not a measured field-precision
+  result.
+- **Boundaries:** The expected roles and their basis are project-authored and
+  not validated against a datasheet. Native symbol metadata does not establish
+  physical pinout, galvanic isolation, loop stability, analog performance,
+  copper continuity, or manufacturing readiness. This is not a full
+  isolated-feedback topology map; active optocoupler/reference component maps
+  remain deferred.
+- **Evidence:** Synthetic function/type faults, missing-metadata cases,
+  optional-field control, policy overrides, output ordering, CLI/MCP semantic
+  parity, and source-hashed native fault/control schematics on digest-pinned
+  KiCad 10.0.0 and 10.0.5. The fixtures are tooling-owned and contain no
+  product-board source.
+- **Selection:** Run
+  `tests/test_regulator_passive_pin_roles.py` and
+  `tests/test_regulator_required_passives_parity.py` with
+  `design_lint_rule(rule_id="power.regulator_pin_role_mismatch")`. The exact
+  native lane uses
+  `tests/test_regulator_passive_pin_roles_native_fixture.py` with
+  `KICAD_RUN_NATIVE_REGULATOR_REQUIRED_PASSIVE_FIXTURES=1` and `native_kicad`.
 
 ## Completion and release gate
 

@@ -19,6 +19,7 @@ from tests.synthetic_design_lint_project import (
     synthetic_design_lint_project,
 )
 from tests.test_regulator_feedback import regulator_netlist
+from tests.test_regulator_passive_pin_roles import RULE_ID as PIN_ROLE_RULE_ID
 from tests.test_regulator_required_passives import RULE_ID, topology_map
 
 pytestmark = [
@@ -29,8 +30,7 @@ pytestmark = [
 ]
 
 
-def test_authored_regulator_passive_rule_matches_cli_and_mcp(tmp_path: Path) -> None:
-    source = regulator_netlist()
+def _assert_cli_mcp_parity(tmp_path: Path, source, expected_rule_id: str) -> None:
     policy = DesignLintPolicy(regulator_passive_topology_map=topology_map())
     root, native = synthetic_design_lint_project(tmp_path, policy)
     install_synthetic_netlist(native, contract_netlist_xml(source))
@@ -52,8 +52,26 @@ def test_authored_regulator_passive_rule_matches_cli_and_mcp(tmp_path: Path) -> 
             mcp = DesignLintReport.model_validate_json(json.dumps(result.structured_content))
             assert semantic_design_lint_report(cli) == semantic_design_lint_report(mcp)
             assert process.returncode == (0 if cli.status == "PASS" else 1)
-            finding = next(item for item in mcp.findings if item.rule_id == RULE_ID)
-            assert finding.mode == "review"
-            assert "not verified by this check" in finding.message
+            if expected_rule_id == RULE_ID:
+                finding = next(item for item in mcp.findings if item.rule_id == RULE_ID)
+                assert finding.mode == "review"
+                assert "not verified by this check" in finding.message
+            else:
+                finding = next(item for item in mcp.findings if item.rule_id == expected_rule_id)
+                assert finding.mode == "review"
 
     asyncio.run(exercise())
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_authored_regulator_passive_rule_matches_cli_and_mcp(tmp_path: Path) -> None:
+    _assert_cli_mcp_parity(tmp_path, regulator_netlist(), RULE_ID)
+
+
+@pytest.mark.design_lint_rule(rule_id=PIN_ROLE_RULE_ID)
+def test_authored_regulator_pin_role_rule_matches_cli_and_mcp(tmp_path: Path) -> None:
+    _assert_cli_mcp_parity(
+        tmp_path,
+        regulator_netlist(fault="wrong-feedback-function", with_compensation_capacitor=True),
+        PIN_ROLE_RULE_ID,
+    )

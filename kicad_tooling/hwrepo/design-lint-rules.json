@@ -10738,6 +10738,55 @@
       ]
     },
     {
+      "rule_id": "power.regulator_pin_role_mismatch",
+      "title": "Mapped regulator pin roles differ from authored native metadata",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Project-authored component pin-function and electrical-type expectations compared with source-bound native netlist metadata",
+      "predicate": "For each mapped regulator topology, compare only pins with an explicitly authored expected_function or expected_electrical_type. A fitted component with matching mapped identity and complete pin inventory produces a REVIEW finding when native pin metadata is missing, ambiguous, or differs from the expected value. Pins without role expectations are not checked by this rule.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; exact project catalog version is enforced by native export"
+      ],
+      "limitations": [
+        "The project-authored expected function and electrical type are not independently verified against a datasheet or application note.",
+        "Native pin metadata comes from the selected schematic symbol and does not establish the physical component pinout, electrical behavior, loop stability, galvanic isolation, PCB copper, or manufacturing readiness.",
+        "The rule does not infer pin roles or requirements from component references, values, symbol descriptions, or cohort heuristics. Missing expected native metadata remains reviewable rather than clean."
+      ],
+      "fault_fixtures": [
+        "tests.test_regulator_passive_pin_roles.test_same_pin_and_net_with_a_different_function_is_reviewed",
+        "tests.test_regulator_passive_pin_roles.test_same_pin_and_net_with_a_different_electrical_type_is_reviewed",
+        "tests.test_regulator_passive_pin_roles.test_missing_expected_native_metadata_is_not_reported_as_coverage",
+        "tests.test_regulator_required_passives_parity.test_authored_regulator_pin_role_rule_matches_cli_and_mcp",
+        "tests.test_regulator_passive_pin_roles_native_fixture.test_native_regulator_pin_role_faults_and_control_are_source_bound"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_regulator_passive_pin_roles.test_exact_authored_native_function_and_type_are_a_valid_control",
+        "tests.test_regulator_passive_pin_roles.test_unmapped_pin_roles_keep_existing_topology_behavior",
+        "tests.test_regulator_passive_pin_roles_native_fixture.test_native_regulator_pin_role_faults_and_control_are_source_bound"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_regulator_passive_pin_roles.test_candidate_order_is_stable_for_mapping_order_changes",
+        "tests.test_regulator_passive_pin_roles.test_changed_native_function_changes_source_bound_fingerprint"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/design_lint_power_regulator_pin_roles.py#regulator_pin_role_candidates",
+        "kicad_tooling/hwrepo/design_lint_regulator_passive_candidate_evidence.py#RegulatorPassivePinRoleFindingEvidence",
+        "kicad_tooling/hwrepo/design_lint_power_candidate_evidence.py#project_power_candidate_evidence",
+        "kicad_tooling/hwrepo/design_lint_power_candidate_evidence.py#PowerCandidate",
+        "kicad_tooling/hwrepo/regulator_passive_checks.py#regulator_passive_pin_role_issues",
+        "kicad_tooling/hwrepo/regulator_passive_models.py#RegulatorPassivePinRequirement",
+        "kicad_tooling/hwrepo/design_lint_policy_models.py#DesignLintPolicy",
+        "kicad_tooling/hwrepo/design_lint_evaluation_candidates.py#scan_evaluation_candidates"
+      ],
+      "theme": "power",
+      "implementation_owner": "kicad_tooling/hwrepo/design_lint_power_regulator_pin_roles.py#regulator_pin_role_candidates",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_REGULATOR_REQUIRED_PASSIVE_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "power.capacitor_hold_up_below_project_minimum",
       "title": "Mapped capacitor hold-up estimate is below the authored minimum",
       "theme": "power",

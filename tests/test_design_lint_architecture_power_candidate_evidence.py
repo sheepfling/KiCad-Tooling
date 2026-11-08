@@ -141,6 +141,11 @@ def test_authored_power_map_rules_use_bounded_source_evidence() -> None:
             "power.regulator_required_passive_topology_mismatch",
             "kicad_tooling/hwrepo/design_lint_regulator_passive_candidate_evidence.py#RegulatorPassiveTopologyFindingEvidence",
         ),
+        "design_lint_power_regulator_pin_roles.py": (
+            "regulator_pin_role_candidates",
+            "power.regulator_pin_role_mismatch",
+            "kicad_tooling/hwrepo/design_lint_regulator_passive_candidate_evidence.py#RegulatorPassivePinRoleFindingEvidence",
+        ),
     }
     source_owners = (
         "design_lint_ic_decoupling_candidate_evidence.py",
@@ -175,9 +180,15 @@ def test_authored_power_map_rules_use_bounded_source_evidence() -> None:
             "kicad_tooling/hwrepo/design_lint_power_candidate_evidence.py#project_power_candidate_evidence"
             in rule.implementation_refs
         )
-        expected_validation_owner = (
-            "kicad_tooling/hwrepo/design_lint_ic_decoupling_candidate_evidence.py#review_ic_decoupling_requirement"
-            if rule_id == "power.ic_decoupling_below_project_minimum"
-            else "kicad_tooling/hwrepo/regulator_passive_checks.py#regulator_passive_topology_issues"
-        )
+        expected_validation_owner = {
+            "power.ic_decoupling_below_project_minimum": (
+                "kicad_tooling/hwrepo/design_lint_ic_decoupling_candidate_evidence.py#review_ic_decoupling_requirement"
+            ),
+            "power.regulator_required_passive_topology_mismatch": (
+                "kicad_tooling/hwrepo/regulator_passive_checks.py#regulator_passive_topology_issues"
+            ),
+            "power.regulator_pin_role_mismatch": (
+                "kicad_tooling/hwrepo/regulator_passive_checks.py#regulator_passive_pin_role_issues"
+            ),
+        }[rule_id]
         assert expected_validation_owner in rule.implementation_refs

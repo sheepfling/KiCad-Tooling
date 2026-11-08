@@ -19,6 +19,7 @@ from .design_lint_power_capacitor_hold_up import capacitor_hold_up_candidates
 from .design_lint_power_decoupling import ic_decoupling_candidates
 from .design_lint_power_inputs import PowerCandidateInputs
 from .design_lint_power_regulator_passives import regulator_required_passive_candidates
+from .design_lint_power_regulator_pin_roles import regulator_pin_role_candidates
 from .design_lint_types import Candidate
 from .ic_decoupling_models import IcDecouplingMap
 from .net_dc_reference import connector_capacitor_only_nets
@@ -73,6 +74,7 @@ def scan_power_candidates(
     found.extend(
         regulator_required_passive_candidates(observed, inputs.regulator_passive_topology_map)
     )
+    found.extend(regulator_pin_role_candidates(observed, inputs.regulator_passive_topology_map))
     found.extend(capacitor_hold_up_candidates(observed, inputs.capacitor_hold_up_map))
     found.extend(
         named_power_pin_net_role_conflicts(

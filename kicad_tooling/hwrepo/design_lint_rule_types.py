@@ -249,6 +249,7 @@ DesignLintRuleId = Literal[
     "component.mapped_led_current_range_mismatch",
     "power.regulator_feedback_mismatch",
     "power.regulator_required_passive_topology_mismatch",
+    "power.regulator_pin_role_mismatch",
     "power.capacitor_hold_up_below_project_minimum",
     "filter.rc_corner_mismatch",
     "pcb.decoupling_proximity",

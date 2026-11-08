@@ -116,3 +116,89 @@ def regulator_passive_topology_issues(
         if not matched_variant:
             results.append((item.id, tuple(sorted(set(variant_issues)))))
     return tuple(results)
+
+
+def regulator_passive_pin_role_issues(
+    requirements: RegulatorPassiveTopologyMap,
+    observed: NetlistContract,
+) -> tuple[tuple[str, tuple[str, ...]], ...]:
+    """Compare only pin functions and electrical types explicitly named in the map."""
+    results: list[tuple[str, tuple[str, ...]]] = []
+    dnp = {reference.casefold() for reference in observed.dnp_components}
+    for topology in requirements.requirements:
+        mapped_components = (
+            topology.regulator,
+            *(item.component for item in topology.required_passives),
+            *(
+                passive.component
+                for alternative in topology.approved_alternatives
+                for passive in alternative.required_passives
+            ),
+        )
+        seen: set[tuple[str, str, str]] = set()
+        issues: set[str] = set()
+        for component_requirement in mapped_components:
+            component_key = component_requirement.reference.casefold()
+            component = lookup_unique_casefold(observed.components, component_requirement.reference)
+            symbol = lookup_unique_casefold(
+                observed.component_symbols, component_requirement.reference
+            )
+            if (
+                component is None
+                or symbol != component_requirement.symbol
+                or component.value != component_requirement.value
+                or component.footprint != component_requirement.footprint
+                or (
+                    component_requirement.part_id is not None
+                    and (
+                        component.part_id is None
+                        or component.part_id.casefold() != component_requirement.part_id.casefold()
+                    )
+                )
+                or component_key in dnp
+            ):
+                continue
+            actual_numbers = lookup_unique_casefold(
+                observed.component_pin_numbers, component_requirement.reference
+            )
+            expected_numbers = {
+                pin.pin.rsplit(".", 1)[1].casefold() for pin in component_requirement.pins
+            }
+            if actual_numbers is None or {str(item).casefold() for item in actual_numbers} != (
+                expected_numbers
+            ):
+                continue
+            for pin in component_requirement.pins:
+                expected_function = pin.expected_function
+                expected_type = pin.expected_electrical_type
+                if expected_function is None and expected_type is None:
+                    continue
+                signature = (
+                    pin.pin.casefold(),
+                    expected_function.casefold() if expected_function else "",
+                    expected_type.casefold() if expected_type else "",
+                )
+                if signature in seen:
+                    continue
+                seen.add(signature)
+                if expected_function is not None:
+                    actual_function = lookup_unique_casefold(observed.pin_functions, pin.pin)
+                    if actual_function is None:
+                        issues.add(f"{pin.pin} native pin function is unavailable or ambiguous")
+                    elif actual_function.casefold() != expected_function.casefold():
+                        issues.add(
+                            f"{pin.pin} native function is {actual_function!r}; "
+                            f"expected {expected_function!r}"
+                        )
+                if expected_type is not None:
+                    actual_type = lookup_unique_casefold(observed.pin_electrical_types, pin.pin)
+                    if actual_type is None:
+                        issues.add(f"{pin.pin} native electrical type is unavailable or ambiguous")
+                    elif actual_type.casefold() != expected_type.casefold():
+                        issues.add(
+                            f"{pin.pin} native electrical type is {actual_type!r}; "
+                            f"expected {expected_type!r}"
+                        )
+        if issues:
+            results.append((topology.id, tuple(sorted(issues, key=str.casefold))))
+    return tuple(results)

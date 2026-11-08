@@ -10,10 +10,12 @@ from .model_primitives import Identifier, NetName, NonEmptyText, Reference, Stri
 
 
 class RegulatorPassivePinRequirement(StrictModel):
-    """One exact component pin; a missing net value explicitly requires no assignment."""
+    """One exact component pin and any explicitly reviewed native pin roles."""
 
     pin: Reference
     net: NetName | None = None
+    expected_function: NonEmptyText | None = None
+    expected_electrical_type: NonEmptyText | None = None
 
 
 class RegulatorPassiveComponentRequirement(StrictModel):

@@ -797,7 +797,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 300 active rules.
+The catalog currently contains 301 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -3261,6 +3261,31 @@ findings, so this gate does not require the aggregate design-lint report to be
 PASS. The fixtures do not validate an actual regulator, datasheet, or analog
 performance. See the native fixture README and its case table:
 [README](../tests/fixtures/design_lint/regulator-feedback-native/README.md).
+
+## Review mapped regulator pin roles
+
+`power.regulator_pin_role_mismatch` checks optional `expected_function` and
+`expected_electrical_type` values on pin entries in the existing
+`design_lint.regulator_passive_topology_map`. For example:
+
+```json
+{"pin": "U1.2", "net": "FB", "expected_function": "FB", "expected_electrical_type": "input"}
+```
+
+The rule compares only fields the project supplies, and only after the exact
+mapped component identity and complete pin inventory match. A missing or
+different native function/type produces a `REVIEW` finding. If neither field
+is present, the pin-role rule is quiet and the existing component/net topology
+check behaves as before. Project policy can promote this rule to `block`, turn
+it `off`, or ignore one exact finding.
+
+These fields describe the selected schematic symbol's native metadata. The
+project owner must review their basis independently; the checker does not
+verify them against a datasheet or the physical component. This check does not
+infer an isolated converter, validate an optocoupler feedback loop, establish
+galvanic isolation, or assess PCB copper or analog performance. The synthetic
+fault/control source files are documented in the
+[regulator topology fixture README](../tests/fixtures/design_lint/regulator-required-passive-native/README.md).
 
 ## Review a mapped signal-input divider
 

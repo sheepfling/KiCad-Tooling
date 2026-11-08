@@ -9,7 +9,12 @@ import pytest
 
 from tests.lint_architecture_support import IMPLEMENTATION_MAX_LINES, REPO_ROOT, line_count
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint, pytest.mark.return_path_lint]
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.architecture,
+    pytest.mark.pcb_lint,
+    pytest.mark.return_path_lint,
+]
 
 RULE_ID = "pcb.alternate_reference_plane_run"
 OWNER = (

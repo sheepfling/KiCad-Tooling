@@ -13,6 +13,9 @@ from kicad_tooling.hwrepo.design_lint_power_inputs import PowerCandidateInputs
 from kicad_tooling.hwrepo.design_lint_power_regulator_passives import (
     regulator_required_passive_candidates,
 )
+from kicad_tooling.hwrepo.design_lint_power_regulator_pin_roles import (
+    regulator_pin_role_candidates,
+)
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     ContractCoachReport,
@@ -49,7 +52,12 @@ def topology_map(*, include_alternative: bool = False) -> RegulatorPassiveTopolo
                     footprint="Synthetic:SOIC-8",
                     pins=(
                         RegulatorPassivePinRequirement(pin="U1.1", net="REG_OUT"),
-                        RegulatorPassivePinRequirement(pin="U1.2", net="FB"),
+                        RegulatorPassivePinRequirement(
+                            pin="U1.2",
+                            net="FB",
+                            expected_function="FB",
+                            expected_electrical_type="input",
+                        ),
                         RegulatorPassivePinRequirement(pin="U1.3", net="VIN"),
                         RegulatorPassivePinRequirement(pin="U1.4", net="GND"),
                         *(
@@ -128,10 +136,18 @@ def lint(netlist, *, mode: str | None = None):
 
 
 def catalog_reachable_rule_ids() -> set[str]:
-    return {
+    passive_rule_ids = {
         item.rule_id
         for item in regulator_required_passive_candidates(regulator_netlist(), topology_map())
     }
+    pin_role_rule_ids = {
+        item.rule_id
+        for item in regulator_pin_role_candidates(
+            regulator_netlist(fault="wrong-feedback-function", with_compensation_capacitor=True),
+            topology_map(),
+        )
+    }
+    return passive_rule_ids | pin_role_rule_ids
 
 
 @pytest.mark.architecture

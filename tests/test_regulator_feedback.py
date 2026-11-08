@@ -110,6 +110,20 @@ def regulator_netlist(
         "R2.1": "passive",
         "R2.2": "passive",
     }
+    pin_electrical_types = {
+        "U1.1": "output",
+        "U1.2": "input",
+        "U1.3": "passive",
+        "U1.4": "passive",
+        "U1.5": "passive",
+        "U1.6": "passive",
+        "U1.7": "passive",
+        "U1.8": "passive",
+        "R1.1": "passive",
+        "R1.2": "passive",
+        "R2.1": "passive",
+        "R2.2": "passive",
+    }
     nets: dict[str, tuple[str, ...]] = {
         "VIN": ("J1.1", "U1.3"),
         "REG_OUT": ("U1.1", "R1.1", "J1.2"),
@@ -156,6 +170,7 @@ def regulator_netlist(
         dnp_components=dnp,
         component_symbols=symbols,
         pin_functions=pin_functions,
+        pin_electrical_types=pin_electrical_types,
         component_pin_numbers={
             "J1": ("1", "2"),
             "U1": tuple(str(number) for number in range(1, 9)),
