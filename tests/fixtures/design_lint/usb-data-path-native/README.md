@@ -27,8 +27,8 @@ regression.
 | `protection-shunt-pin-fault.kicad_sch`                       | Shunt pin U6.2 is incorrectly assigned to USB_DP                                             | One exact mapped shunt-pin finding; no duplicate peer review              |
 | `inline-protection-shunt-control.kicad_sch`                  | Mapped inline path with U6 taps on USB_DP_PORT and USB_DM_PHY                                | One supported path; no path or peer-reference finding                     |
 | `inline-protection-shunt-fault.kicad_sch`                    | U6.3 D− tap is assigned to USB_DM_SHUNT_FAULT                                                | One exact shunt-pin finding; no supported peer path                       |
-| `series-protection-shunt-control.kicad_sch`                  | 27 Ω on each line; U6 taps D+ at connector side and D− at PHY side                          | One supported path; no path or peer-reference finding                     |
-| `series-protection-shunt-pin-fault.kicad_sch`                | Same series paths; U6.2 is assigned to USB_DP_PORT                                          | One exact shunt-pin finding; no supported peer path                       |
+| `series-protection-shunt-control.kicad_sch`                  | 27 Ω on each line; U6 taps D+ at connector side and D− at PHY side                           | One supported path; no path or peer-reference finding                     |
+| `series-protection-shunt-pin-fault.kicad_sch`                | Same series paths; U6.2 is assigned to USB_DP_PORT                                           | One exact shunt-pin finding; no supported peer path                       |
 
 SHA-256 hashes of the version-controlled schematic inputs:
 
