@@ -3,9 +3,10 @@
 These tooling-owned schematics exercise
 `bus.rs485_generic_connector_pair_review`. The fault uses generic connector
 contacts J1.1 and J1.2 on the exact A/B nets of an explicitly identified
-SN65HVD485 transceiver. The control uses named connector functions on those
-same nets. The prompt asks for a reviewed connector pinout; it does not infer
-connector purpose or common return/power intent.
+SN65HVD485 transceiver. Both fixtures leave J1.4, whose native function is
+`GND`, unassigned. The fault finding must show that state as evidence; the
+named A/B control stays quiet despite the same open contact. This tests
+visibility without inferring that the ground contact must be connected.
 
 The source files are hash-pinned in
 `kicad_tooling/ci_hosted_rs485_generic_connector_cases.py` and exported twice

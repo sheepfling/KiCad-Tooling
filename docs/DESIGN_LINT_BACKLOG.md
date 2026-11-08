@@ -751,6 +751,18 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **LINT-337 focused gate (local):** The RS-485 generic-connector finding now
+  includes every other inventoried contact's function and assigned-net state.
+  A synthetic J1.4 GND change from `BOARD_GND` to `unassigned` changes its
+  source-bound fingerprint; the native generic-pair fault reports the same
+  open GND evidence while a named-pair control stays quiet. The focused
+  synthetic, CLI/MCP, catalog, tagging, and architecture selection passed 243
+  tests. Its digest-pinned Docker fault/control lane passed on KiCad 10.0.0 and
+  10.0.5. Strict package Pyright reported zero errors; scoped Ruff, Markdown,
+  JSON, and whitespace checks passed. The architecture run also found and
+  closed a missing thermal-pad native switch in the package workflow; both of
+  that lane's pinned Docker cases passed. This adds reviewer context only and
+  does not make common grounding a rule.
 - **Latest progress (LINT-336, prerelease checkpoint):** Added the opt-in
   `pcb.reference_plane_unanchored_island` review cue for native filled
   reference-zone islands without direct pad anchors. The fault/control pair is
@@ -19380,17 +19392,23 @@ acceptance threads while new lint features proceed:
   contacts to be common.
 - **Evidence and limits:** Candidate evidence retains the connector pin count,
   generic contacts and functions, exact line nets, and fitted native endpoint
-  pins. DNP components, incomplete or inconsistent inventories, ambiguous
+  pins, plus every other inventoried connector contact's native function and
+  assigned-net state, including `unassigned`. This is review context only; it
+  does not assert that an open return, supply, shield, or other contact must be
+  connected. DNP components, incomplete or inconsistent inventories, ambiguous
   assignments, duplicate roles, same-net endpoints, and one-sided connector
   matches stay quiet. The rule does not establish off-board wiring or PCB
   copper continuity.
 - **Fixtures:** Synthetic generic-pin fault, named-role control,
   source-matched map, explicit not-applicable disposition, incomplete metadata,
   ambiguous assignment, DNP state, policy override, exact ignore, and
-  mapping-order cases. Tooling-owned fault/control schematics are hash-pinned
-  and exported twice with digest-pinned KiCad 10.0.0 and 10.0.5 images. These
-  establish deterministic fixture behavior and export compatibility, not field
-  precision or reviewer value.
+  mapping-order cases. A synthetic unconnected-GND variant changes the exact
+  other-contact evidence and finding fingerprint. Tooling-owned fault/control
+  schematics leave a native GND contact unassigned; the generic-pair finding
+  records that state while the named-pair control stays quiet. Their hashes
+  are pinned and exports repeat with digest-pinned KiCad 10.0.0 and 10.0.5
+  images. This establishes deterministic visibility and export compatibility,
+  not a requirement to connect GND or a measurement of reviewer value.
 - **Selection:** `.venv/bin/python -I -m pytest -q
   tests/test_rs485_generic_connector_pair_review.py -m 'design_lint and
   interface_lint and design_lint_rule(rule_id="bus.rs485_generic_connector_pair_review")'`.
@@ -20673,6 +20691,34 @@ acceptance threads while new lint features proceed:
   `design_lint_rule(rule_id="pcb.reference_plane_unanchored_island")`.
   Fixture boundaries are documented in the
   [fault/control fixture README](../tests/fixtures/design_lint/pcb-reference-zone-island/README.md).
+
+#### LINT-337 — Preserve other contacts in RS-485 connector review evidence
+
+- **Status:** Evidence refinement to the existing default-REVIEW rule
+  `bus.rs485_generic_connector_pair_review`; its trigger and policy are
+  unchanged.
+- **Gap:** The pair finding showed the A/B contacts but omitted other connector
+  pins. A reviewer could not see an unassigned GND contact from that finding.
+- **Evidence:** Findings now retain every other inventoried connector
+  contact's native function and assigned nets, including the explicit
+  `unassigned` state. Changing J1.4 GND from `BOARD_GND` to open changes the
+  exact source-bound evidence and fingerprint.
+- **Boundary:** Contact state is review context, not inferred intent. The rule
+  does not decide whether GND, supply, shield, or any other contact must be
+  connected, and it does not establish PCB copper or off-board wiring.
+- **Fixtures:** Synthetic coverage compares assigned and unassigned GND
+  variants. The hash-pinned native fault and named-pair control both leave
+  J1.4 GND unassigned; the fault finding retains that evidence, while the
+  named-pair control stays quiet. Repeated exports use digest-pinned KiCad
+  10.0.0 and 10.0.5 images. These tests validate stable evidence, not a
+  universal grounding requirement or field reviewer value.
+- **Selection:** Use
+  `tests/test_rs485_generic_connector_pair_review.py` with
+  `design_lint_rule(rule_id="bus.rs485_generic_connector_pair_review")`.
+  Exact native checks use
+  `KICAD_RUN_NATIVE_RS485_GENERIC_CONNECTOR_FIXTURES=1` and
+  `tests/test_rs485_generic_connector_native_fixture_lane.py` with
+  `native_kicad`.
 
 ## Completion and release gate
 

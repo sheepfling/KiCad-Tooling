@@ -7,6 +7,7 @@ from collections.abc import Mapping, Sequence
 from collections.abc import Set as AbstractSet
 
 from .casefold_mapping_lookup import casefolded_unique_index
+from .connector_contact_evidence import collect_other_connector_contacts
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageReport, ConnectorMappedPinEvidence
 from .connector_identity import connector_candidate_references, pin_function_is_generic
@@ -120,9 +121,18 @@ def rs485_generic_connector_pairs(
                 continue
             ordered_a = _ordered(a_assignments)
             ordered_b = _ordered(b_assignments)
+            connector_reference_spelling = reference_spellings[connector_key]
+            interface_pins = tuple(pin for pin, _function in (*ordered_a, *ordered_b))
+            other_contacts = collect_other_connector_contacts(
+                connector_reference=connector_reference_spelling,
+                pin_numbers=numbers,
+                pin_functions=connector_functions,
+                assigned_nets_by_pin=assignments,
+                interface_pins=interface_pins,
+            )
             findings.append(
                 Rs485GenericConnectorPair(
-                    connector_reference=reference_spellings[connector_key],
+                    connector_reference=connector_reference_spelling,
                     connector_pin_count=len(numbers),
                     a_connector_pins=tuple(pin for pin, _function in ordered_a),
                     a_connector_functions=tuple(function for _pin, function in ordered_a),
@@ -136,6 +146,7 @@ def rs485_generic_connector_pairs(
                             key=lambda item: (item.reference.casefold(), item.reference),
                         )
                     ),
+                    other_connector_contacts=other_contacts,
                 )
             )
 

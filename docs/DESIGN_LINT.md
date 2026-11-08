@@ -7243,8 +7243,11 @@ RS-485 transceiver have a reviewed pinout. It requires complete native
 connector and endpoint inventories and distinct A/B assignments. A current
 source-matched A/B pin map or `NOT_APPLICABLE` disposition suppresses the
 prompt. The check does not infer connector purpose, common return or supply
-intent, off-board wiring, or PCB copper. Its default is `review`; see the
-[synthetic fixture record](../tests/fixtures/design_lint/rs485-generic-connector-native/README.md).
+intent, off-board wiring, or PCB copper. Findings also show every other
+inventoried contact's native function and assigned net, including `unassigned`
+contacts. This is review context; it does not say those contacts should be
+connected. Its default is `review`; see the [synthetic fixture
+record](../tests/fixtures/design_lint/rs485-generic-connector-native/README.md).
 
 When the reviewed bus design identifies the duplex arrangement and local
 electrical strategy, record each differential pair, endpoint pin map,

@@ -10,8 +10,8 @@ from .ci_hosted_support import tooling_checkout_root
 
 RS485_GENERIC_CONNECTOR_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
     {
-        "fault": "069f999ac8917ea2e78a0e9b0613024a146288ea8cba88c225caab158c3976bb",
-        "control": "a401ca5ec9bbc1ddbaece6a3522eb1af82ada57c34ce6eab235b14d85e474b42",
+        "fault": "f02d67f4dc6f8e4cef05cadb35f76775eeb3bbd8ed8f79a9cc40234d6d0fc9d8",
+        "control": "e4c3fb8385e5967599117d4eac47dbd98a8f37db0e32778cf9e1499bfe038503",
     }
 )
 

@@ -14,8 +14,20 @@ def generic_rs485_connector_pair_netlist(
     include_b_contact: bool = True,
     connector_dnp: bool = False,
     endpoint_dnp: bool = False,
+    unconnected_connector_pins: tuple[str, ...] = (),
 ) -> NetlistContract:
     """Return a fully inventoried synthetic connector and RS-485 endpoint."""
+    disconnected = {pin.casefold() for pin in unconnected_connector_pins}
+    nets = {
+        "LINE_A": ("J1.1", "U1.1"),
+        "LINE_B": ("U1.2", *(("J1.2",) if include_b_contact else ())),
+        "BOARD_GND": ("J1.4", "U1.4"),
+        "+3V3": ("J1.3", "U1.3"),
+    }
+    nets = {
+        name: tuple(pin for pin in pins if pin.casefold() not in disconnected)
+        for name, pins in nets.items()
+    }
     return NetlistContract(
         components={
             "J1": ComponentContract(
@@ -23,12 +35,7 @@ def generic_rs485_connector_pair_netlist(
             ),
             "U1": ComponentContract(value=identity, footprint="Synthetic:SOIC"),
         },
-        nets={
-            "LINE_A": ("J1.1", "U1.1"),
-            "LINE_B": ("U1.2", *(("J1.2",) if include_b_contact else ())),
-            "BOARD_GND": ("J1.4", "U1.4"),
-            "+3V3": ("J1.3", "U1.3"),
-        },
+        nets=nets,
         dnp_components=tuple(
             reference
             for reference, selected in (("J1", connector_dnp), ("U1", endpoint_dnp))

@@ -98,6 +98,24 @@ def test_generic_contacts_on_exact_identified_rs485_pair_emit_review() -> None:
     assert finding.evidence["RS485_endpoint_pairs"] == ("U1:A=U1.1/LINE_A;B=U1.2/LINE_B",)
     assert "does not infer connector identity" in finding.message
     assert "require any return, shield, or supply contacts to be common" in finding.message
+    assert finding.evidence["other_connector_contacts"] == (
+        "J1.3 function=Pin_3 nets=+3V3",
+        "J1.4 function=Pin_4 nets=BOARD_GND",
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_other_connector_contact_assignment_is_visible_and_source_bound() -> None:
+    connected = _finding(_report())
+    disconnected_ground = _finding(
+        _report(generic_rs485_connector_pair_netlist(unconnected_connector_pins=("J1.4",)))
+    )
+
+    assert disconnected_ground.evidence["other_connector_contacts"] == (
+        "J1.3 function=Pin_3 nets=+3V3",
+        "J1.4 function=Pin_4 nets=unassigned",
+    )
+    assert disconnected_ground.fingerprint != connected.fingerprint
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

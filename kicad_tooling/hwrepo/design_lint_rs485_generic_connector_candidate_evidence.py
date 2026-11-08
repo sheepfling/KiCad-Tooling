@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .connector_contact_evidence import format_other_connector_contacts
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .rs485_generic_connector_models import Rs485GenericConnectorPair
@@ -37,6 +38,9 @@ def project_rs485_generic_connector_evidence(
             "RS485_endpoint_pairs": tuple(
                 f"{item.reference}:A={item.a_pin}/{item.a_net};B={item.b_pin}/{item.b_net}"
                 for item in pair.endpoint_pairs
+            ),
+            "other_connector_contacts": format_other_connector_contacts(
+                pair.other_connector_contacts
             ),
             "connector_map_state": (
                 "no source-matched RS-485 A/B connector pin map covers this pair",

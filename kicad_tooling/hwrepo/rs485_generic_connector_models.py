@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .connector_contact_evidence import ConnectorContactEvidence
+
 
 @dataclass(frozen=True, slots=True)
 class Rs485GenericEndpointPair:
@@ -29,3 +31,4 @@ class Rs485GenericConnectorPair:
     b_connector_functions: tuple[str, ...]
     b_net: str
     endpoint_pairs: tuple[Rs485GenericEndpointPair, ...]
+    other_connector_contacts: tuple[ConnectorContactEvidence, ...] = ()
