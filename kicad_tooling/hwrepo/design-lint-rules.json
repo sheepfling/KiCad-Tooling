@@ -2032,6 +2032,60 @@
       ]
     },
     {
+      "rule_id": "connector.generic_peer_pin_open_outlier",
+      "title": "Numeric-only generic connector contact is open on a peer",
+      "theme": "connectors",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Compare fitted peers that either use one exact native connector symbol or have the same nonempty native PART_ID across distinct symbols. Require a complete matching native pin inventory and complete identical per-pin function and electrical-type metadata; PART_ID peers must also have the same nonempty value and footprint. For a target pin whose native function is numeric-only on every peer and whose native electrical type is passive or a supported signal type, compare only peers in current source-matched peer_assignment_group partitions. A REVIEW candidate requires at least one open pin and one assigned pin, every assigned peer on the same single exact net, no source-matched project pin mapping for the target contact, and another pin assigned to one exact common net on every peer in the same scope. Explicitly not-applicable connector references are excluded.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Numeric-only pin functions identify no signal, return, or power role. Exact symbol identity or matching native PART_ID plus a shared anchor provide comparison context only; they do not establish that an open contact must connect.",
+        "Cross-symbol PART_ID peers are compared only when the identifier, value, footprint, pin inventory, and complete function/electrical-type metadata agree. A PART_ID is an identity clue, not proof that two connector placements have the same required wiring.",
+        "The rule reports schematic net assignments only. It does not prove PCB copper continuity, connector fit, off-board wiring, or electrical compatibility.",
+        "DNP instances, source-matched connector pin maps, explicit not-applicable connector reviews, incomplete inventories or metadata, named pin functions, ambiguous assignments, split assigned nets, and scopes without a common anchor are excluded. KiCad's native netlist normalizes an ordinary open and an explicit no-connect to the same unconnected representation, so an explicit no-connect can still produce a review prompt unless separately dispositioned by project evidence or an exact reviewed ignore.",
+        "The default is REVIEW. Projects can turn the rule off, require block disposition, or ignore an exact reviewed finding. A source-authored connector pinout remains the authority for required connections."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_numeric_peer_open_outlier.test_numeric_generic_contact_open_on_one_exact_symbol_peer_is_reviewed",
+        "tests.test_connector_numeric_peer_open_outlier.test_numeric_contact_open_across_exact_part_id_aliases_is_reviewed_once",
+        "tests.test_design_lint_mcp_parity_connector_numeric_peer_open.test_numeric_peer_open_lint_matches_between_cli_and_mcp",
+        "tests.test_connector_numeric_peer_open_native_fixture_lane.test_native_numeric_peer_open_fault_control_and_no_connect_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_numeric_peer_open_outlier.test_common_and_incomplete_context_controls_are_quiet",
+        "tests.test_connector_numeric_peer_open_outlier.test_part_id_alias_controls_are_quiet",
+        "tests.test_connector_numeric_peer_open_outlier.test_part_id_aliases_obey_reviewed_peer_scopes_and_exclusions",
+        "tests.test_connector_numeric_peer_open_outlier.test_no_connect_marker_still_prompts_but_mapping_and_not_applicable_suppress",
+        "tests.test_design_lint_mcp_parity_connector_numeric_peer_open.test_numeric_peer_open_lint_matches_between_cli_and_mcp",
+        "tests.test_connector_numeric_peer_open_native_fixture_lane.test_native_numeric_peer_open_fault_control_and_no_connect_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_numeric_peer_open_outlier.test_numeric_peer_open_candidate_is_stable_under_input_reordering",
+        "tests.test_connector_numeric_peer_open_outlier.test_part_id_alias_candidate_is_stable_under_input_reordering",
+        "tests.test_connector_numeric_peer_open_native_fixture_lane.test_native_numeric_peer_open_fault_control_and_no_connect_are_repeatable"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_numeric_peer_open_outliers.py#generic_numeric_connector_peer_pin_open_outliers",
+        "kicad_tooling/hwrepo/connector_numeric_peer_open_evidence.py#project_connector_numeric_peer_open_evidence",
+        "kicad_tooling/hwrepo/connector_numeric_peer_open_evidence.py#complete_connector_numeric_peer_pin_metadata",
+        "kicad_tooling/hwrepo/connector_peer_pin_scan.py#scan_connector_part_id_peer_pins",
+        "kicad_tooling/hwrepo/connector_footprint_peer_groups.py#complete_connector_footprint_peer_pin_inventory",
+        "kicad_tooling/hwrepo/connector_identity.py#partition_peer_assignments",
+        "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "implementation_owner": "kicad_tooling/hwrepo/connector_numeric_peer_open_outliers.py#generic_numeric_connector_peer_pin_open_outliers",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "component.repeated_supply_pin_function",
       "title": "Repeated component supply pins use different nets",
       "status": "active",

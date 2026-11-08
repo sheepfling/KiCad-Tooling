@@ -168,6 +168,18 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
                 ),
             }
         ),
+        "connector.generic_peer_pin_open_outlier": MappingProxyType(
+            {
+                "fault_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_connector_numeric_peer_open",
+                    "test_numeric_peer_open_lint_matches_between_cli_and_mcp",
+                ),
+                "valid_control_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_connector_numeric_peer_open",
+                    "test_numeric_peer_open_lint_matches_between_cli_and_mcp",
+                ),
+            }
+        ),
         "connector.footprint_peer_pin_all_open": MappingProxyType(
             {
                 "fault_fixtures": _refs(

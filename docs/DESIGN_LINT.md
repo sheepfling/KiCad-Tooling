@@ -797,7 +797,31 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 297 active rules.
+The catalog currently contains 298 active rules.
+
+### Numeric-only generic contacts open across connector peers
+
+`connector.generic_peer_pin_open_outlier` asks for review when a fitted
+connector peer has a numeric-only contact open while comparable peers assign
+that pin to one common net, and another contact provides a shared-net anchor.
+Peers may use one exact symbol or distinct symbol aliases with the same native
+`PART_ID`; alias comparisons also require matching nonempty value and
+footprint. Both forms require complete matching native pin inventories and
+function/electrical-type metadata. Source-matched pin maps,
+not-applicable connector decisions, DNP parts, separate reviewed peer groups,
+and groups without a shared anchor stay quiet. KiCad's native netlist represents
+an explicit no-connect and an ordinary open identically, so either can prompt;
+use a source-matched connector map or an exact reviewed ignore to record an
+intentional open. The evidence does not identify the contact's role or require
+it to connect. Projects can set the rule to `review`, `block`, or `off`.
+
+Select the synthetic and architecture regressions with:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_numeric_peer_open_outlier.py \
+  tests/test_design_lint_architecture_numeric_peer_open_outliers.py \
+  -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.generic_peer_pin_open_outlier")'
+```
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 297 rules are implemented with synthetic regression coverage.
+The following 298 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 297 active rules.
+The catalog currently contains 298 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -462,6 +462,7 @@ skipped under prerelease policy.
 - `connector.footprint_named_signal_all_open`
 - `connector.footprint_peer_pin_all_open`
 - `connector.generic_peer_pin_all_open`
+- `connector.generic_peer_pin_open_outlier`
 - `connector.peer_power_input_named_all_open`
 - `connector.peer_power_input_open_assignment`
 - `connector.peer_power_output_open_assignment`
@@ -3770,7 +3771,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 297 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 298 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -20542,6 +20543,40 @@ acceptance threads while new lint features proceed:
   Exact native validation uses
   `tests/test_connector_peer_reviewed_scope_all_open_native.py` with
   `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-334 — Review a numeric-only generic connector contact open on a peer
+
+- **Status:** Implemented as the default-review rule
+  `connector.generic_peer_pin_open_outlier`.
+- **Predicate:** Compare fitted peers that use one exact native symbol or share
+  a nonempty native `PART_ID` across distinct symbols. PART_ID peers also need
+  the same nonempty value and footprint. Require a complete identical pin
+  inventory and matching function and electrical-type metadata. A numeric-only
+  passive or supported signal contact is reviewed when at least one peer is
+  open, every assigned peer uses the same exact net, and another pin provides
+  a common exact-net anchor in that peer scope. Current source-matched peer
+  groups partition comparisons; source-matched pin maps, not-applicable
+  dispositions, and DNP instances suppress them.
+- **Boundary:** Numeric pin functions and matching peers provide comparison
+  context only. They do not identify the contact's role or require a common
+  net. KiCad's netlist cannot distinguish a normal open from an explicit
+  no-connect, so either may prompt. The rule does not establish PCB continuity
+  or off-board wiring; project-authored pinouts remain authoritative.
+- **Evidence:** Tooling-owned synthetic cases cover exact-symbol and PART_ID
+  faults, connected controls, unanchored peers, split or ambiguous assignments,
+  incomplete metadata and inventory, DNP, source maps, not-applicable scope,
+  peer-scope partitioning, policy overrides, ignores, and deterministic
+  ordering. Source-hashed native fault, control, and no-connect schematics
+  passed repeatably on digest-pinned KiCad 10.0.0 and 10.0.5. No product-board
+  source is stored.
+- **Selection:** Select synthetic and parity regressions with
+  `tests/test_connector_numeric_peer_open_outlier.py`,
+  `tests/test_design_lint_mcp_parity_connector_numeric_peer_open.py`, and
+  `tests/test_design_lint_architecture_numeric_peer_open_outliers.py` using
+  `design_lint_rule(rule_id="connector.generic_peer_pin_open_outlier")`.
+  The native lane is
+  `tests/test_connector_numeric_peer_open_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` and `native_kicad` selection.
 
 ## Completion and release gate
 

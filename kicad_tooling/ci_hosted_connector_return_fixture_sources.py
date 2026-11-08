@@ -273,6 +273,16 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         / "mapped-interface-shield-native/control.kicad_sch",
         "stateful-contact-fault": fixture_root / "stateful-connector-contacts/fault.kicad_sch",
         "stateful-contact-control": fixture_root / "stateful-connector-contacts/control.kicad_sch",
+        "numeric-peer-open-fault": fixture_root
+        / "connector-numeric-peer-open-native/fault.kicad_sch",
+        "numeric-peer-open-control": fixture_root
+        / "connector-numeric-peer-open-native/control.kicad_sch",
+        "numeric-peer-open-no-connect-ambiguity": fixture_root
+        / "connector-numeric-peer-open-native/no-connect-ambiguity.kicad_sch",
+        "numeric-peer-open-part-id-fault": fixture_root
+        / "connector-numeric-peer-open-native/part-id-fault.kicad_sch",
+        "numeric-peer-open-part-id-control": fixture_root
+        / "connector-numeric-peer-open-native/part-id-control.kicad_sch",
     }
 
 
@@ -420,5 +430,10 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = MappingProxyType(
         "mapped-interface-shield-unassigned-control": "1cf322d88271b585ae9e97e356f1078b8573a9a2cd25122caf3352a28ed3cd9d",
         "stateful-contact-fault": "131715fd0c9d4b746a2dc3fe651356e775cfd9c5d5dcea8a98676bb741d881ff",
         "stateful-contact-control": "0d44469c1e8d5284289688e7f95154a600b43393cff13c7c2bf8ff9b129ac652",
+        "numeric-peer-open-fault": "fecaec12fc64b0cbc9bbe8c90a0a604868782128b2ae206b71f52ad3e8d3496d",
+        "numeric-peer-open-control": "9db45f6376dc7c10e7dea042a3912ab4afca4ae3e7554b10a6ab847dd96701eb",
+        "numeric-peer-open-no-connect-ambiguity": "2abc2eb0203e003e91fb42e1be6a9975a53d1387fc26752ed16c232ac4757847",
+        "numeric-peer-open-part-id-fault": "ad5df0aaf379b4db0386be2ed632c4c197b39c68db75d0028f05dc0b4c68387f",
+        "numeric-peer-open-part-id-control": "329fdda52919463f4a3788f27353ae3510e51aaa48dcba93f3ac1dcc7d010115",
     }
 )

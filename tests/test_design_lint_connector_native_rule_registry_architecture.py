@@ -34,6 +34,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.generic_peer_pin_all_open": {
             "tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope",
         },
+        "connector.generic_peer_pin_open_outlier": {
+            "tests.test_connector_numeric_peer_open_native_fixture_lane.test_native_numeric_peer_open_fault_control_and_no_connect_are_repeatable",
+        },
         "connector.return_pin_on_positive_rail": {
             "tests.test_ci_hosted_connector_returns.test_return_pin_on_positive_rail",
         },

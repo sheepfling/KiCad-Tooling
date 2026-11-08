@@ -410,4 +410,7 @@ def connector_peer_pin_heuristic_coverage(
         generic_peer_pin_all_open_finding_count=(
             finding_counts.generic_peer_pin_all_open_finding_count
         ),
+        generic_peer_pin_open_outlier_finding_count=(
+            finding_counts.generic_peer_pin_open_outlier_finding_count
+        ),
     )

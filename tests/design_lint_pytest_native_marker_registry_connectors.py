@@ -135,6 +135,16 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         ),
         "test_pin_connectivity_acceptance.py": frozenset({"connector_lint"}),
         "test_connector_peer_pin_all_open.py": frozenset({"connector_lint"}),
+        "test_connector_numeric_peer_open_outlier.py": frozenset({"connector_lint"}),
+        "test_connector_numeric_peer_open_native_fixture_lane.py": frozenset(
+            {"connector_lint", "interface_lint"}
+        ),
+        "test_design_lint_mcp_parity_connector_numeric_peer_open.py": frozenset(
+            {"connector_lint", "interface_lint", "parity_lint"}
+        ),
+        "test_design_lint_architecture_numeric_peer_open_outliers.py": frozenset(
+            {"connector_lint", "evidence_lint"}
+        ),
         "test_design_lint_architecture_connector_all_open_candidate_evidence.py": frozenset(
             {"connector_lint", "evidence_lint"}
         ),

@@ -27,6 +27,9 @@ from .connector_mapped_shield_signal_sharing import (
 )
 from .connector_mapped_signal_sharing import mapped_distinct_signal_contacts_sharing_net
 from .connector_mapped_signal_split_nets import mapped_repeated_signal_contacts_split_nets
+from .connector_numeric_peer_open_outliers import (
+    generic_numeric_connector_peer_pin_open_outliers,
+)
 from .connector_peer_candidate_evidence import (
     ConnectorPeerPinAssignmentCandidate,
     RepeatedConnectorPinCandidate,
@@ -312,6 +315,21 @@ def connector_pin_candidates(
             reviewed_connector_references,
             reviewed_connector_pins,
             reviewed_connector_peer_assignment_groups,
+        )
+    )
+    found.extend(
+        generic_numeric_connector_peer_pin_open_outliers(
+            observed,
+            reviewed_connector_references,
+            reviewed_connector_pins,
+            reviewed_connector_peer_assignment_groups,
+            tuple(
+                entry.reference
+                for entry in connector_coverage.entries
+                if entry.status == "NOT_APPLICABLE"
+            )
+            if connector_coverage is not None
+            else (),
         )
     )
     found.extend(

@@ -59,6 +59,9 @@ from tests.design_lint_fixtures.connector_coverage import (
     connector_supply_role_reviews,
     inventory_review,
 )
+from tests.design_lint_fixtures.connector_numeric_peer_open import (
+    numeric_open_connector_part_id_aliases,
+)
 from tests.design_lint_fixtures.connector_return_catalog_reachability import (
     connector_return_catalog_rule_ids,
 )
@@ -473,6 +476,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
     return (
         {item.rule_id for source in cases for item in candidates(source)}
         | catalog_reachable_rule_ids()
+        | {item.rule_id for item in candidates(numeric_open_connector_part_id_aliases())}
         | same_voltage_power_input_split_rule_ids()
         | same_voltage_connector_power_input_rule_ids()
         | thermal_pad_catalog_rule_ids()

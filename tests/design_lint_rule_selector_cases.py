@@ -176,6 +176,14 @@ RULE_NODE_CASES = (
         "tests/test_connector_peer_pin_all_open.py::test_all_open_generic_passive_peer_pin_is_opt_in_review",
     ),
     (
+        "connector.generic_peer_pin_open_outlier",
+        "tests/test_connector_numeric_peer_open_outlier.py::test_numeric_generic_contact_open_on_one_exact_symbol_peer_is_reviewed",
+    ),
+    (
+        "connector.generic_peer_pin_open_outlier",
+        "tests/test_design_lint_mcp_parity_connector_numeric_peer_open.py::test_numeric_peer_open_lint_matches_between_cli_and_mcp",
+    ),
+    (
         "connector.peer_pin_assignment_divergence",
         "tests/test_connector_split_return_peers_native.py::test_native_four_peer_db9_split_returns_review_and_common_returns_clear",
     ),

@@ -11,6 +11,7 @@ DesignLintRuleId = Literal[
     "connector.stateful_contact_topology_mismatch",
     "connector.peer_pin_assignment_outlier",
     "connector.peer_pin_assignment_divergence",
+    "connector.generic_peer_pin_open_outlier",
     "connector.serial_pair_without_return_review",
     "connector.i2c_pair_without_return_review",
     "connector.i3c_pair_without_return_review",

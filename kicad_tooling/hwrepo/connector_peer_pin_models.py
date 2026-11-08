@@ -349,6 +349,7 @@ class ConnectorPeerPinHeuristicCoverage(StrictModel):
     peer_pin_outlier_finding_count: NonNegativeCount
     peer_pin_divergence_finding_count: NonNegativeCount
     generic_peer_pin_all_open_finding_count: NonNegativeCount = 0
+    generic_peer_pin_open_outlier_finding_count: NonNegativeCount = 0
 
     @model_validator(mode="after")
     def consistent_connector_peer_coverage(self) -> ConnectorPeerPinHeuristicCoverage:
@@ -424,6 +425,13 @@ class ConnectorPeerPinHeuristicCoverage(StrictModel):
         ):
             raise ValueError(
                 "All-open generic findings cannot exceed all-unassigned exact-symbol and PART_ID groups"
+            )
+        if self.generic_peer_pin_open_outlier_finding_count > (
+            self.exact_symbol_pin_groups_with_open_assignment_count
+            + self.part_id_alias_coverage.open_assignment_pin_group_count
+        ):
+            raise ValueError(
+                "Numeric generic open-outlier findings cannot exceed open exact-symbol and PART_ID groups"
             )
         if self.status == "NO_CONNECTOR_CANDIDATES" and self.connector_candidate_count:
             raise ValueError("No-connector coverage cannot contain connector candidates")

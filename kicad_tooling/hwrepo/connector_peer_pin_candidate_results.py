@@ -30,6 +30,7 @@ class ConnectorPeerPinFindingCounts:
     peer_pin_outlier_finding_count: int = 0
     peer_pin_divergence_finding_count: int = 0
     generic_peer_pin_all_open_finding_count: int = 0
+    generic_peer_pin_open_outlier_finding_count: int = 0
     part_id_peer_pin_outlier_finding_count: int = 0
     part_id_peer_pin_divergence_finding_count: int = 0
     footprint_peer_pin_divergence_finding_count: int = 0
@@ -59,6 +60,9 @@ class ConnectorPeerPinFindingCounts:
             peer_pin_outlier_finding_count=counts["connector.peer_pin_assignment_outlier"],
             peer_pin_divergence_finding_count=counts["connector.peer_pin_assignment_divergence"],
             generic_peer_pin_all_open_finding_count=counts["connector.generic_peer_pin_all_open"],
+            generic_peer_pin_open_outlier_finding_count=counts[
+                "connector.generic_peer_pin_open_outlier"
+            ],
             part_id_peer_pin_outlier_finding_count=sum(
                 item.rule_id == "connector.peer_pin_assignment_outlier"
                 and item.evidence.get("peer_identity_basis") == ("part_id",)
