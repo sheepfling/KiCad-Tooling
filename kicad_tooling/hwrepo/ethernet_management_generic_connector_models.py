@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .connector_contact_evidence import ConnectorContactEvidence
+
 
 @dataclass(frozen=True, slots=True)
 class EthernetManagementEndpoint:
@@ -29,3 +31,4 @@ class EthernetManagementGenericConnector:
     mdio_connector_functions: tuple[str, ...]
     mdio_net: str
     endpoint_pairs: tuple[EthernetManagementEndpoint, ...]
+    other_connector_contacts: tuple[ConnectorContactEvidence, ...] = ()

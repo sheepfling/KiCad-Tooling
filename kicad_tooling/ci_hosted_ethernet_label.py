@@ -253,7 +253,7 @@ def ethernet_label_fixture_lane(
                         f"Native Ethernet {feature} {case} omitted the open-pin evidence for {pin}"
                     )
         event_evidence: dict[str, str] = {}
-        if feature == "generic_connector":
+        if feature in {"generic_connector", "management_generic_connector"}:
             event_evidence["other_connector_contacts"] = json.dumps(
                 {item.subject: item.evidence["other_connector_contacts"] for item in findings},
                 sort_keys=True,

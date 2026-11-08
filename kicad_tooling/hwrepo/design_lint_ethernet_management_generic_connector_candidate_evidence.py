@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .connector_contact_evidence import format_other_connector_contacts
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .ethernet_management_generic_connector_models import EthernetManagementGenericConnector
@@ -40,6 +41,9 @@ def project_ethernet_management_generic_connector_evidence(
                 f"{item.reference}:{item.mdc_pin}=MDC/{item.mdc_net};"
                 f"{item.mdio_pin}=MDIO/{item.mdio_net}"
                 for item in pair.endpoint_pairs
+            ),
+            "other_connector_contacts": format_other_connector_contacts(
+                pair.other_connector_contacts
             ),
             "connector_map_state": (
                 "no source-matched MDC/MDIO connector pin map covers both exact roles",

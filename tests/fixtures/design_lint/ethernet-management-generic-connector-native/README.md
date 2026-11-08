@@ -9,6 +9,9 @@ functions. They are independent of customer or project source data.
 - `fault.kicad_sch` assigns generic connector pins J1.1 and J1.2 to the exact
   PHY `ETH_MDC` and `ETH_MDIO` nets. The resulting candidate asks for connector
   association and pinout review; it does not infer intended use.
+The fault finding also reports the remaining native contacts, including the
+two AUX pins and J1.5 GND assignment. This is evidence only; it does not require
+GND or the AUX pins to be connected in any particular way.
 
 Reviewed SHA-256 values:
 

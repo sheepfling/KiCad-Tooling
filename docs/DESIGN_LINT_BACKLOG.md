@@ -747,7 +747,15 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-326):** Generic Ethernet TX/RX connector review
+- **Latest progress (LINT-327):** Ethernet MDC/MDIO connector review evidence
+  now includes every other inventoried pin's native function and assigned-net
+  state. Synthetic and native fault findings show the AUX pins and J1.5 GND;
+  changing the GND contact assignment changes the finding fingerprint. The
+  control remains quiet, and no connection requirements are inferred. The
+  exact rule-tag selector passed 34 tests with 7,622 deselected; digest-pinned
+  Docker exports passed on KiCad 10.0.0 and 10.0.5. Hosted acceptance is
+  pending for the planned `v0.5.3rc545` tag.
+- **Previous progress (LINT-326):** Generic Ethernet TX/RX connector review
   findings now include every other inventoried pin's native function and
   assigned-net state. Synthetic tests show the opposite data pair and GND;
   changing the GND contact assignment changes the finding fingerprint. The
@@ -757,7 +765,7 @@ standalone parity work when it closes a demonstrated feature regression.
   passed 34 tests with 7,621 deselected; native exports passed on KiCad 10.0.0
   and 10.0.5. Tag `v0.5.3rc544` passed the hosted prerelease gate, including
   its scoped lint and installed-wheel check (workflow run `42434944354`).
-- **Previous progress (LINT-325):** Generic SPI connector review evidence now
+- **Earlier progress (LINT-325):** Generic SPI connector review evidence now
   includes every other inventoried contact's native pin function and assigned
   net state. Synthetic and native cases show a VCC contact left open beside
   other connector contacts; the named SPI control stays quiet. The SPI rule's
@@ -769,7 +777,7 @@ standalone parity work when it closes a demonstrated feature regression.
   fault/control exports passed for KiCad 10.0.0 and 10.0.5. Tag
   `v0.5.3rc543` passed the hosted prerelease gate, including its scoped lint and
   installed-wheel check (workflow run `42433764449`).
-- **Previous progress (LINT-324):** Generic CAN connector review evidence now
+- **Earlier progress (LINT-324):** Generic CAN connector review evidence now
   includes every other inventoried contact's native pin function and assigned
   net state, including open VCC and GND assigned to `BOARD_GND` in the native
   fault fixture. The named-role control stays quiet; the rule does not infer
@@ -20155,6 +20163,33 @@ acceptance threads while new lint features proceed:
   `design_lint_rule(rule_id="bus.serial_generic_connector_pair_review")`.
   The native Docker lane uses
   `KICAD_RUN_NATIVE_SERIAL_GENERIC_CONNECTOR_FIXTURES=1`.
+
+#### LINT-327 — Preserve other contacts in generic Ethernet management connector review evidence
+
+- **Status:** Implemented as an evidence refinement to the existing
+  `bus.ethernet_management_generic_connector_pair_review` rule; its trigger and
+  default review policy are unchanged. Hosted prerelease acceptance is pending
+  for the planned `v0.5.3rc545` tag.
+- **Gap:** The MDC/MDIO connector review showed only the management-role pins.
+  Reviewers could not inspect the connector's other contacts, including AUX
+  pins and GND, from the same finding.
+- **Evidence:** Findings now report all other inventoried contacts with native
+  pin functions and assigned-net names or `unassigned` state. Synthetic tests
+  check J1.3/J1.4 AUX assignments and J1.5 `BOARD_GND`, and verify that
+  changing J1.5 changes the source-bound fingerprint. The native fault/control
+  lane confirms J1.3/J1.4 and GND evidence from KiCad exports; the control is
+  quiet. The exact rule-tag selector passed 34 tests with 7,622 deselected;
+  digest-pinned Docker exports passed on KiCad 10.0.0 and 10.0.5.
+- **Boundary:** This reports native contact evidence only. It does not infer
+  connector identity, require GND or AUX contacts to be connected, decide
+  power/return/shield policy, prove a PHY route, or establish PCB copper or
+  off-board continuity.
+- **Selection:** Run `tests/test_ethernet_management_generic_connector_pair_review.py`
+  and `tests/test_ethernet_management_generic_connector_native_fixture_lane.py`
+  with
+  `design_lint_rule(rule_id="bus.ethernet_management_generic_connector_pair_review")`.
+  The native Docker lane uses
+  `KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_GENERIC_CONNECTOR_FIXTURES=1`.
 
 #### LINT-326 — Preserve other contacts in generic Ethernet connector review evidence
 

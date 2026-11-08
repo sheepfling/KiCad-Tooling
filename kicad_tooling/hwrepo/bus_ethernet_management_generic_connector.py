@@ -8,6 +8,7 @@ from collections.abc import Set as AbstractSet
 
 from .bus_signal_pairs import ethernet_management_function_role
 from .casefold_mapping_lookup import casefolded_unique_index
+from .connector_contact_evidence import collect_other_connector_contacts
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageReport, ConnectorMappedPinEvidence
 from .connector_identity import connector_candidate_references, pin_function_is_generic
@@ -135,6 +136,13 @@ def generic_ethernet_management_connector_pairs(
                             endpoint_group,
                             key=lambda item: (item.reference.casefold(), item.reference),
                         )
+                    ),
+                    other_connector_contacts=collect_other_connector_contacts(
+                        connector_reference,
+                        numbers,
+                        connector_functions,
+                        assignments,
+                        (pin for pin, _function in (*mdc_assignments, *mdio_assignments)),
                     ),
                 )
             )

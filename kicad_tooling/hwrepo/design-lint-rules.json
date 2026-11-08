@@ -7128,11 +7128,12 @@
       ],
       "limitations": [
         "Recognition is limited to fitted U/IC references with exactly one MDC/MDIO function pair accepted by ethernet_management_function_role. Endpoint and connector inventories must be complete and unique, every pin must have native function and electrical-type metadata, the endpoint roles must be on distinct unambiguous nets, and each generic connector contact must have one exact net assignment. DNP, duplicate-role, open, incomplete, same-net, ambiguous, and one-sided cases remain quiet.",
-        "This is a connector-association review prompt. It does not infer connector identity or purpose, establish an Ethernet port topology or routed path, prove PCB copper continuity, or decide power, return, shield, or off-board wiring policy.",
+        "This is a connector-association review prompt. It does not infer connector identity or purpose, establish an Ethernet port topology or routed path, prove PCB copper continuity, or decide power, return, shield, or off-board wiring policy. Other native connector contacts and assignments are shown for review; their required connections are not inferred.",
         "A source-matched connector pin map must identify the observed generic contacts as the exact MDC/MDIO roles and match their current native nets to suppress the prompt. Stale or partial maps do not count as review evidence; exact rule override and fingerprint-ignore controls remain available."
       ],
       "fault_fixtures": [
         "tests.test_ethernet_management_generic_connector_pair_review.test_generic_contacts_on_exact_mdc_mdio_nets_emit_review",
+        "tests.test_ethernet_management_generic_connector_pair_review.test_generic_connector_finding_includes_other_contacts_and_assignment_changes",
         "tests.test_design_lint_mcp_parity_ethernet_management_generic_connector.test_ethernet_management_generic_connector_review_cli_mcp_parity",
         "tests.test_ethernet_management_generic_connector_native_fixture_lane.test_native_ethernet_management_generic_connector_fault_and_control_repeat"
       ],
