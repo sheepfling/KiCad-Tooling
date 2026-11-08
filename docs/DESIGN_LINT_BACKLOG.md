@@ -10840,20 +10840,25 @@ control are documented in the
   matching nonempty native function and electrical-type metadata. Within the
   source-matched peer scope when available, identify a generic passive or
   signal pin left unassigned on every peer only when another pin has one exact
-  shared net assignment. This finding is disabled by default.
-- **Boundary:** Similar metadata and a common anchor are review clues, not
-  proof of identical roles or a requirement to connect the open contact. The
+  shared net assignment. An unanchored group is eligible only when a current,
+  source-matched connector map explicitly groups every compared peer. This
+  finding is disabled by default.
+- **Boundary:** Similar metadata, a common anchor, and a reviewed peer group
+  are review clues, not proof of identical roles or a requirement to connect
+  the open contact. The
   rule excludes named functions, power/free/unspecified electrical types,
-  ambiguous or incomplete evidence, unanchored groups, DNP parts, and
-  PART_ID-bearing components. It cannot establish PCB copper continuity or
+  ambiguous or incomplete evidence, unanchored groups without one current
+  shared peer assignment, DNP parts, and PART_ID-bearing components. Stale or
+  separate peer maps do not create a group. It cannot establish PCB copper continuity or
   off-board wiring. An independently approved pinout or connector contract is
   still needed to turn the prompt into a project requirement. Pins explicitly
   typed `power_in` or `power_out` remain with the dedicated unconnected-power
   rules rather than this generic-contact prompt.
 - **Evidence:** Tooling-owned synthetic tests cover the anchored all-open
-  fault, assigned and unanchored controls, unsupported pin roles, deterministic
-  ordering, policy/ignore behavior, CLI/MCP parity, and the source-bound native
-  fixture. A cross-rule regression confirms that a power-input pin left open
+  fault, source-matched unanchored peer-scope fault, separate/no/stale-map
+  controls, unsupported pin roles, deterministic ordering, policy/ignore
+  behavior, CLI/MCP parity, and the source-bound native fixture. A cross-rule
+  regression confirms that a power-input pin left open
   across footprint aliases is reported by `connector.unconnected_power_input`,
   while the generic all-open rule stays out of that classification. The
   exact-version native lane exports the all-open fault and
@@ -10864,6 +10869,7 @@ control are documented in the
 
   ```sh
   python -I -m pytest tests/test_connector_footprint_peer_open.py \
+    tests/test_connector_footprint_peer_unanchored_all_open.py \
     -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.footprint_peer_pin_all_open")'
   ```
 

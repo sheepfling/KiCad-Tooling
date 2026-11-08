@@ -126,7 +126,8 @@ def connector_peer_report_lines(report: DesignLintReport) -> list[str]:
             f"{footprint_coverage.unanchored_open_peer_pin_group_count}/"
             f"{footprint_coverage.open_outlier_finding_count}; all-open generic peer pins: "
             f"{footprint_coverage.all_open_finding_count} "
-            f"({footprint_coverage.unanchored_all_open_peer_pin_group_count} unanchored)"
+            f"({footprint_coverage.unanchored_all_open_peer_pin_group_count} unanchored groups, "
+            f"{footprint_coverage.unanchored_all_open_finding_count} scoped findings)"
         )
         lines.append(
             "  Footprint-alias pin metadata groups: incomplete "

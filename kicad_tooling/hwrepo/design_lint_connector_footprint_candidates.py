@@ -205,10 +205,15 @@ def _footprint_peer_pin_all_open_candidates(
             message=(
                 "Fitted connector instances with distinct native symbols share the same value, "
                 "footprint, complete pin inventory, and matching pin-function and electrical-type "
-                "metadata. This generic contact is unassigned on every compared peer, while a "
-                "separate contact has one common assigned net. Review the approved pinout for an "
-                "intentionally unused contact or a missing connection; these similarity clues do "
-                "not establish that the contact must connect."
+                "metadata. This generic contact is unassigned on every compared peer. "
+                + (
+                    "A separate contact has one common assigned net. "
+                    if item.common_anchor_pin_numbers
+                    else "No common-net anchor exists; a current source-matched peer group scopes the comparison. "
+                )
+                + "Review the approved pinout for an intentionally unused contact or a missing "
+                "connection; similarity and comparison scope do not establish that the contact "
+                "must connect."
                 + (
                     " The comparison is scoped to a source-reviewed peer-assignment group."
                     if item.peer_assignment_group is not None

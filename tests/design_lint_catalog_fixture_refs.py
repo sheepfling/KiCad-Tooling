@@ -177,6 +177,10 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
                 + _refs(
                     "tests.test_connector_footprint_peer_parity",
                     "test_footprint_alias_review_matches_cli_and_mcp",
+                )
+                + _refs(
+                    "tests.test_design_lint_mcp_parity_connector_all_open",
+                    "test_unanchored_footprint_alias_prompt_matches_cli_and_mcp",
                 ),
                 "valid_control_fixtures": _refs(
                     "tests.test_connector_footprint_peer_open",

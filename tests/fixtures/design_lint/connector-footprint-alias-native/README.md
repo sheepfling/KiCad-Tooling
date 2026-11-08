@@ -13,6 +13,7 @@ anchor.
 | `control.kicad_sch`                       | `Pin_1` / `Pin_2`   | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_2` | No footprint-alias divergence                                                                      |
 | `open-fault.kicad_sch`                    | `Pin_1` / `Pin_2`   | `SYNTHETIC_NET_2` | unassigned        | `REVIEW` for `connector.footprint_peer_pin_open_outlier`                                           |
 | `all-open-fault.kicad_sch`                | `Pin_1` / `Pin_2`   | unassigned        | unassigned        | `REVIEW` for `connector.footprint_peer_pin_all_open`                                               |
+| `unanchored-all-open-fault.kicad_sch`     | `Pin_1` / `Pin_2`   | unassigned        | unassigned        | `REVIEW` only with a current source-matched shared peer group                                      |
 | `numeric-fault.kicad_sch`                 | `1` / `7`           | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_3` | `REVIEW` for `connector.footprint_peer_pin_assignment_divergence`                                  |
 | `numeric-control.kicad_sch`               | `1` / `7`           | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_2` | No footprint-alias divergence                                                                      |
 | `numeric-open-fault.kicad_sch`            | `1` / `7`           | `SYNTHETIC_NET_2` | unassigned        | `REVIEW` for `connector.footprint_peer_pin_open_outlier`                                           |
@@ -50,6 +51,13 @@ The hosted native lane exports each schematic twice with pinned KiCad 10.0.0
 and 10.0.5, then verifies source hashes, normalized-netlist repeatability, and
 review outcomes.
 
+`unanchored-all-open-fault.kicad_sch` leaves both generic contacts open on
+both distinct-symbol footprint aliases. It is a source-bound native fixture
+for the narrower case where a current connector map explicitly puts both
+aliases in one reviewed peer-assignment group. That group only scopes review;
+it does not declare that either open pin must connect. Separate groups, no
+map, and stale maps remain controls that must not prompt.
+
 Hosted acceptance passed on 2026-10-19 in tag `v0.5.1rc25` (GitHub Actions run
 `39297613246`). The tag-selected connector lint gate enabled native fixtures and
 exercised the numeric fault/control and open-fault cases on both pinned KiCad
@@ -84,3 +92,5 @@ SHA-256 source digests:
   `4f808c6119974d3ab31d5948c187f7d20406fb80a75864087d80c630b96c8b42`
 - `unanchored-split-open-anchor-control.kicad_sch`:
   `ce3cdb9c0e3437df94f97903be3fc21f47836782bcc39a522882d7cf9c4be6a1`
+- `unanchored-all-open-fault.kicad_sch`:
+  `6fef8dab77b5ebab8459a8bf4456152a87c29fd60cd02b229e92b35119c5363f`

@@ -74,6 +74,7 @@ def test_version_three_report_defaults_new_footprint_coverage_counts() -> None:
     for field in (
         "all_open_peer_pin_group_count",
         "unanchored_all_open_peer_pin_group_count",
+        "unanchored_all_open_finding_count",
         "all_open_finding_count",
     ):
         alias.pop(field)

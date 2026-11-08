@@ -94,6 +94,7 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
     open_outlier_finding_count: NonNegativeCount
     all_open_peer_pin_group_count: NonNegativeCount = 0
     unanchored_all_open_peer_pin_group_count: NonNegativeCount = 0
+    unanchored_all_open_finding_count: NonNegativeCount = 0
     all_open_finding_count: NonNegativeCount = 0
     named_signal_different_assignment_pin_group_count: NonNegativeCount = 0
     unanchored_named_signal_divergence_pin_group_count: NonNegativeCount = 0
@@ -260,8 +261,14 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
             raise ValueError("All-open footprint alias peers must be unassigned pin groups")
         if self.unanchored_all_open_peer_pin_group_count > self.all_open_peer_pin_group_count:
             raise ValueError("Unanchored all-open peers cannot exceed all-open peer pin groups")
+        if self.unanchored_all_open_finding_count > (self.unanchored_all_open_peer_pin_group_count):
+            raise ValueError("Unanchored all-open findings cannot exceed unanchored peer groups")
+        if self.unanchored_all_open_finding_count > self.all_open_finding_count:
+            raise ValueError("Unanchored all-open findings must be all-open findings")
         if (
-            self.all_open_finding_count + self.unanchored_all_open_peer_pin_group_count
+            self.all_open_finding_count
+            + self.unanchored_all_open_peer_pin_group_count
+            - self.unanchored_all_open_finding_count
             != self.all_open_peer_pin_group_count
         ):
             raise ValueError("All-open footprint aliases must be anchored or unanchored")

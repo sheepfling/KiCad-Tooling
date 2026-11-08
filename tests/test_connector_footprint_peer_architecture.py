@@ -24,6 +24,8 @@ PEER_MODULES = (
     "connector_footprint_peer_missing_metadata_open.py",
 )
 
+ALL_OPEN_MODULES = ("connector_footprint_peer_all_open.py",)
+
 ANCHOR_MODULES = ("connector_footprint_peer_anchors.py",)
 OPEN_OUTLIER_MODULES = (
     "connector_footprint_peer_open_outliers.py",
@@ -46,6 +48,7 @@ def test_connector_footprint_peer_modules_stay_below_review_limit() -> None:
         name: line_count(HWREPO / name)
         for name in (
             *PEER_MODULES,
+            *ALL_OPEN_MODULES,
             *ANCHOR_MODULES,
             *OPEN_OUTLIER_MODULES,
             *UNANCHORED_MODULES,
@@ -148,3 +151,22 @@ def test_peer_pin_net_index_uses_the_canonical_netlist_owner() -> None:
     assert "NetlistPinNetIndex" in (HWREPO / "connector_footprint_peer_assignments.py").read_text(
         encoding="utf-8"
     )
+
+
+def test_all_open_footprint_candidate_owns_anchor_or_reviewed_scope_predicate() -> None:
+    owner = HWREPO / "connector_footprint_peer_all_open.py"
+    scanner = HWREPO / "connector_footprint_peer_pins.py"
+    owner_tree = ast.parse(owner.read_text(encoding="utf-8"), filename=owner.name)
+    scanner_tree = ast.parse(scanner.read_text(encoding="utf-8"), filename=scanner.name)
+    functions = {node.name for node in owner_tree.body if isinstance(node, ast.FunctionDef)}
+    imported = {
+        alias.name
+        for node in scanner_tree.body
+        if isinstance(node, ast.ImportFrom) and node.module == "connector_footprint_peer_all_open"
+        for alias in node.names
+    }
+
+    assert "generic_footprint_peer_all_open_candidate" in functions
+    assert "generic_footprint_peer_all_open_candidate" in imported
+    assert line_count(owner) < IMPLEMENTATION_MAX_LINES
+    assert line_count(scanner) < IMPLEMENTATION_MAX_LINES
