@@ -3500,6 +3500,9 @@ pinout. Project policy can enable `review`, promote it to `block`, turn it off,
 or ignore one exact finding. The schematic report does not establish PCB
 copper continuity or off-board wiring.
 
+The tooling-owned native schematic and its source digest are documented in the
+[reviewed peer-group fixture README](../tests/fixtures/design_lint/generic-peer-reviewed-scope-all-open-native/README.md).
+
 ```sh
 .venv/bin/python -I -m pytest tests/test_connector_peer_pin_all_open.py \
   tests/test_connector_peer_reviewed_scope_all_open.py \
