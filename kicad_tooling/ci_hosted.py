@@ -64,6 +64,7 @@ from .ci_hosted_open_drain_control_voltage import (
 from .ci_hosted_pcb_access import pcb_access_fixture_lane
 from .ci_hosted_pcb_component_inventory_fixture import pcb_component_inventory_fixture_lane
 from .ci_hosted_pcb_geometry_fixtures import pcb_decoupling_fixture_lane
+from .ci_hosted_pcb_reference_islands import pcb_reference_zone_island_fixture_lane
 from .ci_hosted_pcb_reference_planes import (
     pcb_reference_plane_narrow_void_fixture_lane,
     pcb_reference_plane_via_fixture_lane,
@@ -175,6 +176,7 @@ __all__ = (
     "pcb_decoupling_fixture_lane",
     "pcb_reference_plane_narrow_void_fixture_lane",
     "pcb_reference_plane_via_fixture_lane",
+    "pcb_reference_zone_island_fixture_lane",
     "pcb_return_fixture_lane",
     "pcb_signal_path_drc_fixture_lane",
     "pcb_switching_loop_fixture_lane",
@@ -471,6 +473,7 @@ def native_lane(
         pcb_decoupling_fixture_lane(root, project=project, image=image, log=log)
         pcb_switching_loop_fixture_lane(root, project=project, image=image, log=log)
         pcb_reference_plane_via_fixture_lane(root, project=project, image=image, log=log)
+        pcb_reference_zone_island_fixture_lane(root, project=project, image=image, log=log)
         pcb_thermal_via_fixture_lane(root, project=project, image=image, log=log)
         pcb_reference_plane_narrow_void_fixture_lane(root, project=project, image=image, log=log)
         pcb_alternate_reference_plane_fixture_lane(

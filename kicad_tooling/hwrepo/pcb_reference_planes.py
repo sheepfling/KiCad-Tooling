@@ -19,6 +19,7 @@ from .pcb_reference_plane_models import (
     PcbReferencePlaneNetCoverage,
     PcbReferencePlaneRequirement,
     PcbReferencePlaneTrackMeasurement,
+    PcbReferencePlaneUnanchoredIsland,
 )
 
 Point = tuple[int, int]
@@ -152,6 +153,54 @@ def _via_spans_layer(
     return min(start, end) <= target <= max(start, end)
 
 
+def _unanchored_reference_islands(
+    requirement: PcbReferencePlaneRequirement,
+    snapshot: PcbConnectivitySnapshot,
+) -> tuple[tuple[PcbReferencePlaneUnanchoredIsland, ...], tuple[str, ...]]:
+    """Capture explicitly requested, directly pad-unanchored reference islands."""
+    if not requirement.review_unanchored_islands:
+        return (), ()
+    reference_layers = {
+        layer.casefold(): layer
+        for signal_layer in requirement.signal_layers
+        for layer in _adjacent_layers(snapshot.copper_layers, signal_layer)
+    }
+    findings: list[PcbReferencePlaneUnanchoredIsland] = []
+    issues: list[str] = []
+    for zone in snapshot.zones:
+        if (
+            zone.net is None
+            or zone.net.casefold() != requirement.reference_net.casefold()
+            or zone.layer.casefold() not in reference_layers
+        ):
+            continue
+        islands_by_index = {item.island_index: item for item in zone.filled_islands}
+        for island_index in zone.unanchored_pad_island_indexes:
+            island = islands_by_index.get(island_index)
+            if island is None:
+                issues.append(
+                    f"Reference zone {zone.uuid} on {zone.layer} omits contour evidence for "
+                    f"unanchored island {island_index}"
+                )
+                continue
+            findings.append(
+                PcbReferencePlaneUnanchoredIsland(
+                    zone_uuid=zone.uuid,
+                    layer=zone.layer,
+                    net=zone.net,
+                    island=island,
+                )
+            )
+    findings.sort(
+        key=lambda item: (
+            item.layer.casefold(),
+            item.zone_uuid.casefold(),
+            item.island.island_index,
+        )
+    )
+    return tuple(findings), tuple(sorted(issues))
+
+
 def _alternate_net_coverages(
     track: PcbTrackObservation,
     reference_layer: str,
@@ -203,6 +252,8 @@ def pcb_reference_plane_entries(
         issues: list[str] = []
         measurements: list[PcbReferencePlaneTrackMeasurement] = []
         excluded_short: list[str] = []
+        unanchored_islands, island_issues = _unanchored_reference_islands(requirement, snapshot)
+        issues.extend(island_issues)
         selected_tracks = tuple(
             item
             for item in snapshot.tracks
@@ -322,7 +373,9 @@ def pcb_reference_plane_entries(
                 minimum_alternate_reference_length_um=(
                     requirement.minimum_alternate_reference_length_um
                 ),
+                review_unanchored_islands=requirement.review_unanchored_islands,
                 tracks=tuple(measurements),
+                unanchored_reference_islands=unanchored_islands,
                 excluded_short_track_uuids=tuple(sorted(excluded_short, key=str.casefold)),
                 issues=tuple(issues),
             )

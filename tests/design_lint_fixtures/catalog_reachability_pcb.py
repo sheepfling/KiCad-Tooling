@@ -346,6 +346,45 @@ def pcb_rule_ids() -> set[str]:
     )
     result.update(item.rule_id for item in reference_result.findings)
 
+    reference_review_requirement = _pcb_reference_plane_fixtures.requirement(
+        minimum_fraction=0.4,
+        minimum_alternate_reference_length_um=1_000,
+        review_unanchored_islands=True,
+    )
+    reference_review_map = _pcb_reference_plane_fixtures.mapping(reference_review_requirement)
+    reference_review_snapshot = _pcb_reference_plane_fixtures.snapshot(
+        _pcb_reference_plane_fixtures.track(),
+        zones=(
+            _pcb_reference_plane_fixtures.zone(
+                "00000000-0000-0000-0000-000000000010",
+                net="GND",
+                outline=((0, 0), (4_000_000, 0), (4_000_000, 10_000_000), (0, 10_000_000)),
+            ),
+            _pcb_reference_plane_fixtures.zone(
+                "00000000-0000-0000-0000-000000000011",
+                net="VCC",
+                outline=(
+                    (4_000_000, 0),
+                    (8_000_000, 0),
+                    (8_000_000, 10_000_000),
+                    (4_000_000, 10_000_000),
+                ),
+            ),
+        ),
+    )
+    reference_review_result = evaluate(
+        "synthetic-reference-plane-island-and-alternate-net",
+        empty_coach.model_copy(
+            update={"project_id": "synthetic-reference-plane-island-and-alternate-net"}
+        ),
+        DesignLintPolicy(pcb_reference_plane_map=reference_review_map),
+        pcb_reference_plane_coverage=_pcb_reference_plane_fixtures.report(
+            reference_review_map,
+            reference_review_snapshot,
+        ),
+    )
+    result.update(item.rule_id for item in reference_review_result.findings)
+
     switching_loop_map = _pcb_switching_loop_fixtures.mapping()
     switching_loop_result = evaluate(
         "synthetic-switching-loop",

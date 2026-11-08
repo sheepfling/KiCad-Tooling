@@ -9,6 +9,7 @@ from kicad_tooling.hwrepo.models import (
     ContractCoachReport,
     NetlistContract,
     PcbConnectivitySnapshot,
+    PcbPadConnectivityObservation,
     PcbReferencePlaneCoverageReport,
     PcbReferencePlaneMap,
     PcbReferencePlaneRequirement,
@@ -49,6 +50,7 @@ def requirement(
     minimum_fraction: float = 0.9,
     review_excluded_short_tracks: bool = False,
     minimum_alternate_reference_length_um: int | None = None,
+    review_unanchored_islands: bool = False,
     id: str = "data-reference",
 ) -> PcbReferencePlaneRequirement:
     return PcbReferencePlaneRequirement(
@@ -61,6 +63,7 @@ def requirement(
         minimum_referenced_fraction=minimum_fraction,
         review_excluded_short_tracks=review_excluded_short_tracks,
         minimum_alternate_reference_length_um=minimum_alternate_reference_length_um,
+        review_unanchored_islands=review_unanchored_islands,
     )
 
 
@@ -83,6 +86,7 @@ def zone(
         (0, 10_000_000),
     ),
     holes: tuple[tuple[tuple[int, int], ...], ...] = (),
+    unanchored_pad_island_indexes: tuple[int, ...] = (0,),
 ) -> PcbZoneObservation:
     return PcbZoneObservation(
         uuid=uuid,
@@ -90,7 +94,7 @@ def zone(
         name=f"Synthetic {net} zone",
         net=net,
         filled_island_count=1,
-        unanchored_pad_island_indexes=(0,),
+        unanchored_pad_island_indexes=unanchored_pad_island_indexes,
         filled_islands=(
             PcbZoneFilledIslandObservation(
                 island_index=0,
@@ -135,6 +139,7 @@ def snapshot(
     *tracks: PcbTrackObservation,
     zones: tuple[PcbZoneObservation, ...] | None = None,
     vias: tuple[PcbViaObservation, ...] = (),
+    pads: tuple[PcbPadConnectivityObservation, ...] = (),
     copper_layers: tuple[str, ...] = ("F.Cu", "In1.Cu", "B.Cu"),
 ) -> PcbConnectivitySnapshot:
     return PcbConnectivitySnapshot(
@@ -144,7 +149,7 @@ def snapshot(
         image=IMAGE,
         probe_sha256=PROBE,
         zones_refilled=True,
-        pads=(),
+        pads=pads,
         net_ties=(),
         zones=(zone(ZONE_GND),) if zones is None else zones,
         vias=vias,

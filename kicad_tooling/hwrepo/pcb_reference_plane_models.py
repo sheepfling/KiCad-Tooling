@@ -18,6 +18,7 @@ from .model_primitives import (
     RepositoryPath,
     StrictModel,
 )
+from .pcb_connectivity_observations import PcbZoneFilledIslandObservation
 
 
 class PcbReferencePlaneRequirement(StrictModel):
@@ -32,6 +33,7 @@ class PcbReferencePlaneRequirement(StrictModel):
     minimum_referenced_fraction: Annotated[float, Field(ge=0, le=1, allow_inf_nan=False)]
     review_excluded_short_tracks: bool = False
     minimum_alternate_reference_length_um: PositiveCount | None = None
+    review_unanchored_islands: bool = False
 
     @model_validator(mode="after")
     def exact_reference_scope(self) -> PcbReferencePlaneRequirement:
@@ -87,6 +89,15 @@ class PcbReferencePlaneNetCoverage(StrictModel):
         if len({item.casefold() for item in self.zone_uuids}) != len(self.zone_uuids):
             raise ValueError("Alternate reference coverage repeats a zone identity")
         return self
+
+
+class PcbReferencePlaneUnanchoredIsland(StrictModel):
+    """A native filled reference island with no direct pad anchor."""
+
+    zone_uuid: NativePcbUuid
+    layer: NonEmptyText
+    net: NetName
+    island: PcbZoneFilledIslandObservation
 
 
 class PcbReferencePlaneTrackMeasurement(StrictModel):
@@ -148,7 +159,9 @@ class PcbReferencePlaneCoverageEntry(StrictModel):
     minimum_referenced_fraction: Annotated[float, Field(ge=0, le=1, allow_inf_nan=False)]
     review_excluded_short_tracks: bool = False
     minimum_alternate_reference_length_um: PositiveCount | None = None
+    review_unanchored_islands: bool = False
     tracks: tuple[PcbReferencePlaneTrackMeasurement, ...]
+    unanchored_reference_islands: tuple[PcbReferencePlaneUnanchoredIsland, ...] = ()
     excluded_short_track_uuids: tuple[NativePcbUuid, ...] = ()
     issues: tuple[NonEmptyText, ...] = ()
 
@@ -170,6 +183,19 @@ class PcbReferencePlaneCoverageEntry(StrictModel):
             raise ValueError("A reference-plane track cannot be measured and excluded")
         if self.review_excluded_short_tracks and excluded_ids and self.status != "INCOMPLETE":
             raise ValueError("Reviewed short reference-plane tracks must leave coverage incomplete")
+        island_keys = tuple(
+            (item.zone_uuid.casefold(), item.layer.casefold(), item.island.island_index)
+            for item in self.unanchored_reference_islands
+        )
+        if len(set(island_keys)) != len(island_keys):
+            raise ValueError("Reference-plane coverage repeats an unanchored zone island")
+        if not self.review_unanchored_islands and self.unanchored_reference_islands:
+            raise ValueError("Unanchored reference islands require an explicit project review map")
+        if any(
+            item.net.casefold() != self.reference_net.casefold()
+            for item in self.unanchored_reference_islands
+        ):
+            raise ValueError("Unanchored reference-island evidence must match its mapped net")
         minimum = Fraction(str(self.minimum_referenced_fraction))
         for item in self.tracks:
             if item.segment_length_nm < self.minimum_track_length_um * 1000:

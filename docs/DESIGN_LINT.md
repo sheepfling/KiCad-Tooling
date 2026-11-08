@@ -797,7 +797,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 299 active rules.
+The catalog currently contains 300 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -4116,7 +4116,8 @@ synthetic; set them only from a reviewed interface or layout requirement.
           "minimum_track_length_um": 1000,
           "minimum_referenced_fraction": 0.9,
           "review_excluded_short_tracks": true,
-          "minimum_alternate_reference_length_um": 1500
+          "minimum_alternate_reference_length_um": 1500,
+          "review_unanchored_islands": true
         }
       ]
     }
@@ -4166,11 +4167,30 @@ samples used by a cohort analyzer; the first-party exact centerline geometry
 must review the fault while keeping the intact control quiet. This fixture
 tests geometric coverage only and does not imply a universal threshold.
 
+`review_unanchored_islands` is an independent, opt-in review switch. When it is `true`, the separate
+`pcb.reference_plane_unanchored_island` rule reports a filled island of the mapped reference net on
+an immediately adjacent copper layer when the native snapshot finds no direct pad anchor and
+includes its contour. A project can leave this switch unset for quiet behavior. This is a candidate
+for inspection: tracks or vias may still connect an island, so the finding does not establish
+electrical isolation, a missing ground bond, or a design defect. Review the source-bound geometry
+and connectivity before changing the board. The synthetic fault/control boards and DRC comparison
+are described in the
+[fixture README](../tests/fixtures/design_lint/pcb-reference-zone-island/README.md).
+
 Run the focused synthetic check with:
 
 ```sh
 .venv/bin/python -I -m pytest tests/test_pcb_alternate_reference_plane_run.py \
   -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.alternate_reference_plane_run")'
+```
+
+Select the unanchored-island rule with its synthetic and CLI/MCP regressions:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_pcb_reference_plane_unanchored_island.py \
+  tests/test_design_lint_mcp_parity_pcb_reference_plane_island.py \
+  -m 'design_lint and pcb_lint and return_path_lint and design_lint_rule(rule_id="pcb.reference_plane_unanchored_island")'
 ```
 
 Run the exact-native fault/control lane on KiCad 10.0.0 and 10.0.5 with:

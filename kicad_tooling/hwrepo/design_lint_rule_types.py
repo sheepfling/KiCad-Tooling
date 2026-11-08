@@ -255,6 +255,7 @@ DesignLintRuleId = Literal[
     "pcb.protection_entry_path",
     "pcb.minimum_track_width",
     "pcb.reference_plane_coverage",
+    "pcb.reference_plane_unanchored_island",
     "pcb.alternate_reference_plane_run",
     "pcb.switching_loop_geometry",
     "pcb.differential_pair_rule_coverage",

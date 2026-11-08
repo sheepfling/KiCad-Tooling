@@ -250,5 +250,69 @@ if os.environ.get("KICAD_TEST_ALTERNATE_REFERENCE_PLANE") == "1":
             ],
         }
     )
+if os.environ.get("KICAD_TEST_REFERENCE_PLANE_ISLAND") == "1":
+    snapshot = {
+        "schema_version": "10",
+        "board_sha256": hashlib.sha256(board.read_bytes()).hexdigest(),
+        "kicad_version": version,
+        "zones_refilled": True,
+        "pads": [
+            {
+                "pad": "J1.1",
+                "net": "RETURN",
+                "footprint": "Synthetic:TestPad",
+                "dnp": False,
+                "connected_pads": ["J1.1"],
+                "connected_vias": [],
+                "connected_zones": [],
+                "connected_islands": [],
+                "positions_nm": [[5000000, 5000000]],
+            }
+        ],
+        "net_ties": [],
+        "zones": [
+            {
+                "uuid": "00000000-0000-0000-0000-000000000001",
+                "layer": "F.Cu",
+                "name": "Synthetic RETURN reference zone",
+                "net": "RETURN",
+                "filled_island_count": 1,
+                "unanchored_pad_island_indexes": [0],
+                "filled_islands": [
+                    {
+                        "island_index": 0,
+                        "outline_nm": [
+                            [1000000, 1000000],
+                            [19000000, 1000000],
+                            [19000000, 19000000],
+                            [1000000, 19000000],
+                        ],
+                        "holes_nm": [],
+                    }
+                ],
+            }
+        ],
+        "vias": [],
+        "access_probe_observations": [],
+        "access_probe_requests_sha256": None,
+        "tracks": [
+            {
+                "uuid": "00000000-0000-0000-0000-000000000101",
+                "net": "DATA",
+                "layer": "B.Cu",
+                "width_nm": 250000,
+                "start_nm": [2000000, 15000000],
+                "end_nm": [18000000, 15000000],
+                "geometry_kind": "segment",
+                "start_pads": [],
+                "end_pads": [],
+                "start_vias": [],
+                "end_vias": [],
+                "start_tracks": [],
+                "end_tracks": [],
+            }
+        ],
+        "copper_layers": ["F.Cu", "B.Cu"],
+    }
 destination = output_root / arguments[-1].removeprefix("/output/")
 destination.write_text(json.dumps(snapshot), encoding="utf-8")

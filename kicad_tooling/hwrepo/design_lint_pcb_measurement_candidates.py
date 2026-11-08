@@ -27,6 +27,7 @@ from .design_lint_pcb_track_width_candidate_evidence import (
 from .design_lint_types import Candidate
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_protection_path_models import PcbProtectionPathCoverageReport
+from .pcb_reference_plane_islands import unanchored_reference_zone_island_candidates
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport
 from .pcb_reference_plane_transitions import alternate_reference_plane_run_candidates
 from .pcb_thermal_via_models import PcbThermalViaCoverageReport
@@ -156,6 +157,7 @@ def pcb_measurement_coverage_candidates(
                 )
             )
         found.extend(alternate_reference_plane_run_candidates(pcb_reference_plane_coverage))
+        found.extend(unanchored_reference_zone_island_candidates(pcb_reference_plane_coverage))
     if pcb_thermal_via_coverage is not None:
         for entry in pcb_thermal_via_coverage.entries:
             if entry.status == "COMPLETE":

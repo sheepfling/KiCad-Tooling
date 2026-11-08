@@ -4,6 +4,18 @@ from __future__ import annotations
 
 PCB_RULE_NODE_CASES = (
     (
+        "pcb.reference_plane_unanchored_island",
+        "tests/test_pcb_reference_plane_unanchored_island.py::test_mapped_unanchored_island_emits_source_bound_review_candidate",
+    ),
+    (
+        "pcb.reference_plane_unanchored_island",
+        "tests/test_design_lint_mcp_parity_pcb_reference_plane_island.py::test_unanchored_reference_island_rule_matches_cli_and_mcp",
+    ),
+    (
+        "pcb.reference_plane_unanchored_island",
+        "tests/test_pcb_reference_plane_unanchored_island_native.py::test_native_unanchored_reference_island_fault_control_repeats",
+    ),
+    (
         "pcb.alternate_reference_plane_run",
         "tests/test_pcb_alternate_reference_plane_run.py::test_authored_alternate_net_threshold_emits_exact_review_candidate",
     ),

@@ -11190,6 +11190,50 @@
       "implementation_owner": "kicad_tooling/hwrepo/pcb_reference_plane_transitions.py#alternate_reference_plane_run_candidates"
     },
     {
+      "rule_id": "pcb.reference_plane_unanchored_island",
+      "title": "Mapped reference-plane filled island lacks a direct pad anchor",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Project-authored adjacent reference-plane map compared with source-bound native filled-island contours and direct pad-to-island connectivity evidence",
+      "predicate": "For each explicitly mapped signal/reference requirement that opts into review_unanchored_islands, inspect filled islands on copper layers immediately adjacent to the mapped signal layers. Emit one REVIEW candidate for each reference-net island that the native snapshot records without a direct pad anchor and whose contour is present.",
+      "supported_kicad_versions": [
+        "KiCad 10 native pcbnew API; each configured project's exact version and digest-pinned image are checked"
+      ],
+      "limitations": [
+        "The rule is opt-in and requires an exact project-authored reference-plane map; it does not infer a ground domain or connect nets from their names.",
+        "No direct pad anchor does not establish electrical isolation: tracks or vias may connect the island. The rule does not prove return-current adequacy, electrical failure, or manufacturing readiness.",
+        "Only the mapped reference net on copper layers immediately adjacent to the mapped signal layers is considered. Other layers, pad-to-pad intent, through-copper continuity, and unfilled or unsupported geometry are outside this rule.",
+        "A directly pad-anchored island is a quiet control. Projects can disable the rule or ignore an exact fingerprint; findings require engineering review."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_reference_plane_unanchored_island.test_mapped_unanchored_island_emits_source_bound_review_candidate",
+        "tests.test_design_lint_mcp_parity_pcb_reference_plane_island.test_unanchored_reference_island_rule_matches_cli_and_mcp",
+        "tests.test_pcb_reference_plane_unanchored_island_native.test_native_unanchored_reference_island_fault_control_repeats"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_reference_plane_unanchored_island.test_review_requires_map_opt_in_and_direct_pad_anchor_is_a_control",
+        "tests.test_pcb_reference_plane_unanchored_island_native.test_native_unanchored_reference_island_fault_control_repeats"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_reference_plane_unanchored_island.test_island_review_order_is_stable_and_policy_can_disable_or_block"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_reference_planes.py#_unanchored_reference_islands",
+        "kicad_tooling/hwrepo/pcb_reference_plane_islands.py#unanchored_reference_zone_island_candidates",
+        "kicad_tooling/hwrepo/design_lint_pcb_reference_plane_island_candidate_evidence.py#PcbReferencePlaneIslandCandidate",
+        "kicad_tooling/ci_hosted_pcb_reference_islands.py#pcb_reference_zone_island_fixture_lane",
+        "tests/fixtures/design_lint/pcb-reference-zone-island/fault.kicad_pcb",
+        "tests/fixtures/design_lint/pcb-reference-zone-island/control.kicad_pcb"
+      ],
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_reference_plane_islands.py#unanchored_reference_zone_island_candidates"
+    },
+    {
       "rule_id": "pcb.switching_loop_geometry",
       "title": "Mapped switching-current loop and return plane need review",
       "status": "active",

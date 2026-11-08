@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 299 rules are implemented with synthetic regression coverage.
+The following 300 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 299 active rules.
+The catalog currently contains 300 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -680,6 +680,7 @@ skipped under prerelease policy.
 - `pcb.protection_entry_path`
 - `pcb.minimum_track_width`
 - `pcb.reference_plane_coverage`
+- `pcb.reference_plane_unanchored_island`
 - `pcb.alternate_reference_plane_run`
 - `pcb.switching_loop_geometry`
 - `pcb.differential_pair_rule_coverage`
@@ -750,7 +751,18 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-334, tag `v0.5.3rc560`):** Added the default-REVIEW
+- **Latest progress (LINT-336, prerelease checkpoint):** Added the opt-in
+  `pcb.reference_plane_unanchored_island` review cue for native filled
+  reference-zone islands without direct pad anchors. The fault/control pair is
+  synthetic and source-hashed; exact KiCad 10.0.0 and 10.0.5 captures repeat,
+  while DRC reports zero unconnected items and the same two warning types for
+  both boards. The scoped selector passed 27 tests with 7,705 deselected,
+  including CLI/MCP parity and both native versions. The repository acceptance
+  workflow also passed strict and Windows Pyright, packaging, installed-wheel
+  checks against the public template and its relocated layout, and external
+  playtest. This evidence validates the configured review cue; it does not
+  prove electrical isolation or establish a board defect.
+- **Earlier progress (LINT-334, tag `v0.5.3rc560`):** Added the default-REVIEW
   `connector.generic_peer_pin_open_outlier` heuristic for a numeric-only
   contact that is open on one fitted connector peer. It requires a complete
   matching pin inventory, supported pin metadata, a common-net anchor, and
@@ -3790,7 +3802,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 299 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 300 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -20624,6 +20636,39 @@ acceptance threads while new lint features proceed:
   `tests/test_pcb_reference_plane_native_fixture_lane.py` with
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1` and
   `design_lint_rule(rule_id="pcb.alternate_reference_plane_run")`.
+
+#### LINT-336 — Review mapped reference-zone islands without direct pad anchors
+
+- **Status:** Added the opt-in default-REVIEW rule
+  `pcb.reference_plane_unanchored_island`. It extends the existing
+  project-authored reference-plane requirement with
+  `review_unanchored_islands`; an unset or false switch stays quiet.
+- **Predicate:** On copper layers immediately adjacent to the mapped signal
+  layers, select filled islands matching the exact mapped reference net whose
+  source-bound native snapshot records no direct pad anchor. Emit one candidate
+  per such island only when its native contour is retained.
+- **Boundary:** This finding only says that the island has no direct pad anchor
+  in the native snapshot. Tracks or vias may still connect it. The rule does
+  not infer ground intent, prove electrical isolation, determine return-current
+  adequacy, or call a design defective. A pad-anchored island and a map with
+  the opt-in unset are quiet controls; project policy can disable or block the
+  review rule.
+- **Evidence:** Tooling-owned synthetic fault/control boards differ only in
+  whether the RETURN pad is on B.Cu or directly touches the F.Cu zone. Native
+  snapshots on pinned KiCad 10.0.0 and 10.0.5 images report one unanchored
+  island for the fault and none for the control. Native DRC reports zero
+  unconnected items and the same issue types for both. The fixture notes record
+  source hashes and the limits of that comparison; no external project design
+  data is used.
+- **Selection:** Synthetic, policy and zone-order coverage uses
+  `tests/test_pcb_reference_plane_unanchored_island.py`; public-surface parity
+  uses `tests/test_design_lint_mcp_parity_pcb_reference_plane_island.py`; exact
+  native checks use
+  `tests/test_pcb_reference_plane_unanchored_island_native.py` with
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1` and
+  `design_lint_rule(rule_id="pcb.reference_plane_unanchored_island")`.
+  Fixture boundaries are documented in the
+  [fault/control fixture README](../tests/fixtures/design_lint/pcb-reference-zone-island/README.md).
 
 ## Completion and release gate
 
