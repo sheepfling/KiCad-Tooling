@@ -15,7 +15,11 @@ from .connector_coverage_models import (
 )
 from .connector_identity import connector_candidate_references, pin_function_is_generic
 from .connector_pin_metadata import connector_pin_metadata_matches_inventory
-from .i2c_generic_connector_models import I2cGenericConnectorPair, I2cGenericEndpointPair
+from .i2c_generic_connector_models import (
+    I2cGenericConnectorContact,
+    I2cGenericConnectorPair,
+    I2cGenericEndpointPair,
+)
 from .netlist_contract_models import ComponentContract, NetlistContract
 
 _IC_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)
@@ -118,6 +122,30 @@ def generic_i2c_connector_pairs(
                 _source_map_covers_role(scl_assignments, scl_net, "SCL", mapped_by_pin)
             ):
                 continue
+            pair_pin_keys = {
+                pin.casefold() for pin, _function in (*sda_assignments, *scl_assignments)
+            }
+            other_contacts = tuple(
+                sorted(
+                    (
+                        I2cGenericConnectorContact(
+                            pin=f"{connector_reference}.{number}",
+                            function=function or "",
+                            nets=tuple(
+                                sorted(
+                                    assignments.get(
+                                        f"{connector_reference}.{number}".casefold(), set()
+                                    ),
+                                    key=lambda item: (item.casefold(), item),
+                                )
+                            ),
+                        )
+                        for number, function in zip(numbers, connector_functions, strict=True)
+                        if f"{connector_reference}.{number}".casefold() not in pair_pin_keys
+                    ),
+                    key=lambda item: (item.pin.casefold(), item.pin),
+                )
+            )
             findings.append(
                 I2cGenericConnectorPair(
                     connector_reference=connector_reference,
@@ -134,6 +162,7 @@ def generic_i2c_connector_pairs(
                             key=lambda item: (item.reference.casefold(), item.reference),
                         )
                     ),
+                    other_connector_contacts=other_contacts,
                 )
             )
 

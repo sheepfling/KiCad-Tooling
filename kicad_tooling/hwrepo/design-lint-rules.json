@@ -7523,7 +7523,7 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
-      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete connector and IC pin inventories, native pin functions, pin electrical types, and exact net membership",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete connector and IC pin inventories, native pin functions, pin electrical types, and exact net membership; review evidence includes every other inventoried connector contact with its assigned-net state",
       "predicate": "For each fitted U/IC endpoint with a complete, unique native pin inventory and exactly one uniquely assigned SDA function and one uniquely assigned SCL function on distinct nets, emit a REVIEW prompt when a fully inventoried connector candidate has one or more generic Pin_N contacts on each exact bus net. The prompt asks whether the connector is part of that I2C interface and whether its exact pinout is documented; it does not infer connector identity or intended electrical connections.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
@@ -7556,6 +7556,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_generic_connector_candidates.py#generic_i2c_connector_pairs",
         "kicad_tooling/hwrepo/i2c_generic_connector_models.py#I2cGenericConnectorPair",
+        "kicad_tooling/hwrepo/i2c_generic_connector_models.py#I2cGenericConnectorContact",
         "kicad_tooling/hwrepo/design_lint_i2c_generic_connector_candidates.py#generic_i2c_connector_pair_review_candidates",
         "kicad_tooling/hwrepo/design_lint_i2c_generic_connector_candidate_evidence.py#I2cGenericConnectorCandidate",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"

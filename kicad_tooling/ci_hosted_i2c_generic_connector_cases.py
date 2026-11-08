@@ -7,8 +7,8 @@ from pathlib import Path
 from .ci_hosted_support import tooling_checkout_root
 
 I2C_GENERIC_CONNECTOR_SOURCE_HASHES = {
-    "control": "506e1b9da8c2479d6c97155247a0bbd7d0b61af062b078c4cb904a3cb1e19459",
-    "fault": "c05bc388870ce536d9607ef244e1ae1f91614585682c35d273afd47a4ad39e46",
+    "control": "096da82167af4feb73c8e69d2d758c55b5f204214b85f367e3ed69e91a7f8e2d",
+    "fault": "0d8292071410762c81dd447e48e6456d3bf5feb3701c00d2afd74cf91c45f587",
 }
 
 

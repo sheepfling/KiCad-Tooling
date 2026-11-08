@@ -56,6 +56,7 @@ def _source_matched_i2c_pin_map() -> ConnectorCoverageReport:
         ("2", "SCL", "I2C_SCL"),
         ("3", "3V3", "+3V3"),
         ("4", "GND", "BOARD_GND"),
+        ("5", "AUX", ""),
     )
     return ConnectorCoverageReport(
         status="COMPLETE",
@@ -76,7 +77,7 @@ def _source_matched_i2c_pin_map() -> ConnectorCoverageReport:
                         interface_signal=signal,
                         component_pin=f"J1.{number}",
                         symbol_function=f"Pin_{number}",
-                        nets=(net,),
+                        nets=() if not net else (net,),
                     )
                     for number, signal, net in signals
                 ),
@@ -93,6 +94,11 @@ def test_generic_contacts_on_exact_i2c_pair_emit_review() -> None:
     assert finding.subject == "J1: generic pins match SDA/SCL bus nets"
     assert finding.evidence["SDA_generic_connector_pins"] == ("J1.1",)
     assert finding.evidence["SCL_generic_connector_pins"] == ("J1.2",)
+    assert finding.evidence["other_connector_contacts"] == (
+        "J1.3 function=Pin_3 nets=+3V3",
+        "J1.4 function=Pin_4 nets=BOARD_GND",
+        "J1.5 function=Pin_5 nets=unassigned",
+    )
     assert finding.evidence["SDA_net"] == ("I2C_SDA",)
     assert finding.evidence["SCL_net"] == ("I2C_SCL",)
     assert finding.evidence["I2C_endpoint_pairs"] == ("U1:U1.1=SDA/I2C_SDA;U1.2=SCL/I2C_SCL",)
@@ -102,7 +108,9 @@ def test_generic_contacts_on_exact_i2c_pair_emit_review() -> None:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_named_roles_and_source_matched_pin_map_suppress_review() -> None:
-    named = generic_i2c_connector_pair_netlist(connector_functions=("SDA", "SCL", "3V3", "GND"))
+    named = generic_i2c_connector_pair_netlist(
+        connector_functions=("SDA", "SCL", "3V3", "GND", "AUX")
+    )
     stale_map = ConnectorCoverageReport(
         status="INCOMPLETE",
         scope="Synthetic stale connector review",
@@ -228,3 +236,12 @@ def test_report_is_stable_when_netlist_mappings_are_reordered() -> None:
     reordered_finding = _finding(_report(reordered))
     assert baseline.evidence == reordered_finding.evidence
     assert baseline.fingerprint == reordered_finding.fingerprint
+
+    disconnected_reference_contact = observed.model_copy(
+        update={"nets": {**observed.nets, "BOARD_GND": ("U1.3",)}}
+    )
+    changed_finding = _finding(_report(disconnected_reference_contact))
+    assert changed_finding.evidence["other_connector_contacts"][-2] == (
+        "J1.4 function=Pin_4 nets=unassigned"
+    )
+    assert changed_finding.fingerprint != baseline.fingerprint

@@ -747,14 +747,22 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-322):** The generic UART connector review now shows
-  every remaining inventoried connector contact with its native pin function
-  and assigned-net state. The focused synthetic/catalog/CLI-MCP gate passed
-  12 tests; exact native Docker fault/control exports passed on KiCad 10.0.0
-  and 10.0.5. The extra contacts remain review evidence, not inferred returns.
-  Tag `v0.5.3rc539` is the focused prerelease gate for this increment. Hosted
-  acceptance, including the separate-project installed-wheel check, passed in
-  GitHub Actions run `42427409899`.
+- **Latest progress (LINT-323):** Generic I2C connector review evidence now
+  includes every other inventoried contact's pin function and assigned-net
+  state, including an open VCC pin beside a ground contact assigned to
+  `BOARD_GND` in the native fault fixture. The named-role control remains quiet;
+  the heuristic does not infer that either contact must be connected or common.
+  The focused I2C, neighboring return, parity, architecture, and catalog gate
+  passed 45 tests; digest-pinned Docker fault/control exports passed on KiCad
+  10.0.0 and 10.0.5. The tool changes will be tagged `v0.5.3rc540`; hosted
+  acceptance is pending.
+- **Catalog reachability maintenance:** The all-active-rule reachability sweep
+  now exercises the existing differential-pair layer-profile fault fixture
+  from LINT-320. This corrects a stale test index; it does not change the rule.
+- **Previous progress (LINT-322):** The generic UART connector review also
+  shows every other inventoried contact's native pin function and assigned-net
+  state. Tag `v0.5.3rc539` passed hosted acceptance, including the
+  separate-project installed-wheel check, in GitHub Actions run `42427409899`.
 - **LINT-300 two-pin serial connector return review (completed v0.5.3rc508):**
   The scoped local gate passed 39 tests, including the digest-pinned native
   fault/control lane; hosted acceptance passed in GitHub Actions run
@@ -19129,8 +19137,9 @@ acceptance threads while new lint features proceed:
   identity or intended contact connections and does not declare grounds or
   supply contacts common.
 - **Evidence and limits:** Candidate evidence retains the connector pin count,
-  generic contacts and functions, exact line nets, and recognized native SDA/
-  SCL endpoint assignments. DNP components, named connector roles, incomplete
+  generic contacts and functions, exact line nets, recognized native SDA/SCL
+  endpoint assignments, and every other inventoried connector contact's native
+  function and assigned-net state. DNP components, named connector roles, incomplete
   or inconsistent inventories, ambiguous assignments, same-net endpoint
   pairs, and one-sided connector matches stay quiet. The heuristic does not
   establish bus topology, shield/return policy, off-board wiring, or PCB copper
@@ -20110,6 +20119,33 @@ acceptance threads while new lint features proceed:
   `design_lint_rule(rule_id="bus.serial_generic_connector_pair_review")`.
   The native Docker lane uses
   `KICAD_RUN_NATIVE_SERIAL_GENERIC_CONNECTOR_FIXTURES=1`.
+
+#### LINT-323 — Preserve other contacts in generic I2C connector review evidence
+
+- **Status:** Implemented as an evidence refinement to the existing
+  `bus.i2c_generic_connector_pair_review` rule; its trigger and default policy
+  are unchanged.
+- **Gap:** The review prompt showed only the generic SDA/SCL contacts even when
+  the connector had additional assigned or open pins. A reviewer could not see
+  a possible power or reference contact from the same finding.
+- **Evidence:** Candidate reports now include every other inventoried contact,
+  with its native pin function and assigned net names or `unassigned` state.
+  Synthetic coverage checks assigned power and reference contacts, an open
+  auxiliary contact, stable mapping-order output, and a changed source-bound
+  fingerprint when a contact assignment changes. The tooling-owned native
+  fault/control pair includes an unassigned `VCC` contact; the fault finding
+  also shows `GND` assigned to `BOARD_GND`, while the named-role control remains
+  quiet. Exact exports repeat on digest-pinned KiCad 10.0.0 and 10.0.5.
+- **Boundary:** Contact names and assignments are evidence only. The rule does
+  not infer that VCC or ground must be connected, establish common reference,
+  identify a connector's intended role, or prove PCB copper or off-board
+  continuity.
+- **Selection:** Run
+  `tests/test_i2c_generic_connector_pair_review.py` and
+  `tests/test_i2c_generic_connector_native_fixture_lane.py` with
+  `design_lint_rule(rule_id="bus.i2c_generic_connector_pair_review")`.
+  The native Docker lane uses
+  `KICAD_RUN_NATIVE_I2C_GENERIC_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate
 

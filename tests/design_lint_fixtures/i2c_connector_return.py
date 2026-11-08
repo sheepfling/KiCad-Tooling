@@ -20,7 +20,7 @@ def two_pin_i2c_connector_netlist(
 ) -> NetlistContract:
     """Build an exact native SDA/SCL pair on a two-contact generic connector."""
     source = generic_i2c_connector_pair_netlist()
-    removed = {"j1.3", "j1.4"}
+    removed = {"j1.3", "j1.4", "j1.5"}
     nets = {
         name: tuple(pin for pin in pins if pin.casefold() not in removed)
         for name, pins in source.nets.items()

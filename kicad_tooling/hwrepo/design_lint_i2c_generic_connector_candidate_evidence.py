@@ -39,6 +39,11 @@ def project_i2c_generic_connector_evidence(
                 f"{item.scl_pin}=SCL/{item.scl_net}"
                 for item in pair.endpoint_pairs
             ),
+            "other_connector_contacts": tuple(
+                f"{item.pin} function={item.function} "
+                f"nets={','.join(item.nets) if item.nets else 'unassigned'}"
+                for item in pair.other_connector_contacts
+            ),
             "connector_map_state": (
                 "no source-matched SDA/SCL connector pin map covers this pair",
             ),

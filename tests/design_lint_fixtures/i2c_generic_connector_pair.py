@@ -7,7 +7,7 @@ from kicad_tooling.hwrepo.netlist_contract_models import ComponentContract, Netl
 
 def generic_i2c_connector_pair_netlist(
     *,
-    connector_functions: tuple[str, ...] = ("Pin_1", "Pin_2", "Pin_3", "Pin_4"),
+    connector_functions: tuple[str, ...] = ("Pin_1", "Pin_2", "Pin_3", "Pin_4", "Pin_5"),
     include_scl_contact: bool = True,
 ) -> NetlistContract:
     """Return a fully inventoried synthetic connector and I2C endpoint."""
@@ -20,13 +20,13 @@ def generic_i2c_connector_pair_netlist(
     return NetlistContract(
         components={
             "J1": ComponentContract(
-                value="Synthetic generic connector", footprint="Synthetic:Conn_01x04"
+                value="Synthetic generic connector", footprint="Synthetic:Conn_01x05"
             ),
             "U1": ComponentContract(value="Synthetic I2C endpoint", footprint="Synthetic:SOIC"),
         },
         nets=nets,
         component_symbols={
-            "J1": "Connector_Generic:Conn_01x04",
+            "J1": "Connector_Generic:Conn_01x05",
             "U1": "Synthetic:I2cEndpoint",
         },
         pin_functions={
@@ -41,10 +41,11 @@ def generic_i2c_connector_pair_netlist(
             "J1.2": "passive",
             "J1.3": "passive",
             "J1.4": "passive",
+            "J1.5": "passive",
             "U1.1": "bidirectional",
             "U1.2": "bidirectional",
             "U1.3": "power_in",
             "U1.4": "power_in",
         },
-        component_pin_numbers={"J1": ("1", "2", "3", "4"), "U1": ("1", "2", "3", "4")},
+        component_pin_numbers={"J1": ("1", "2", "3", "4", "5"), "U1": ("1", "2", "3", "4")},
     )
