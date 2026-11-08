@@ -756,7 +756,9 @@ standalone parity work when it closes a demonstrated feature regression.
   architecture, parity, registry, and rule gate passed 62 tests; the exact
   digest-pinned Docker fault/control lanes passed eight cases across KiCad
   10.0.0 and 10.0.5, including the existing CAN return-review control that
-  reuses this schematic. Hosted acceptance is pending.
+  reuses this schematic. Tag `v0.5.3rc542` passed hosted acceptance, including
+  the separate-project installed-wheel check, in GitHub Actions run
+  `42432319928`.
 - **Previous progress (LINT-323):** Generic I2C connector review evidence now
   includes every other inventoried contact's pin function and assigned-net
   state, including an open VCC pin beside a ground contact assigned to
