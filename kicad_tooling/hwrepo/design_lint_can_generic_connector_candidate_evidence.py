@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .can_generic_connector_models import CanGenericConnectorPair
+from .connector_contact_evidence import format_other_connector_contacts
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 
@@ -38,6 +39,9 @@ def project_can_generic_connector_evidence(
                 f"{item.reference}:{item.canh_pin}=CANH/{item.canh_net};"
                 f"{item.canl_pin}=CANL/{item.canl_net}"
                 for item in pair.endpoint_pairs
+            ),
+            "other_connector_contacts": format_other_connector_contacts(
+                pair.other_connector_contacts
             ),
             "connector_map_state": (
                 "no source-matched CANH/CANL connector pin map covers this pair",

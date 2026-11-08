@@ -56,6 +56,7 @@ def _source_matched_can_pin_map() -> ConnectorCoverageReport:
         ("2", "CANH", "CAN_H"),
         ("3", "CANL", "CAN_L"),
         ("4", "GND", "BOARD_GND"),
+        ("5", "VCC", ""),
     )
     return ConnectorCoverageReport(
         status="COMPLETE",
@@ -76,7 +77,7 @@ def _source_matched_can_pin_map() -> ConnectorCoverageReport:
                         interface_signal=signal,
                         component_pin=f"J1.{number}",
                         symbol_function=f"Pin_{number}",
-                        nets=(net,),
+                        nets=() if not net else (net,),
                     )
                     for number, signal, net in signals
                 ),
@@ -95,13 +96,20 @@ def test_generic_contacts_on_exact_fitted_can_pair_emit_review() -> None:
     assert finding.evidence["CANL_generic_connector_pins"] == ("J1.3",)
     assert finding.evidence["CANH_net"] == ("CAN_H",)
     assert finding.evidence["CANL_net"] == ("CAN_L",)
+    assert finding.evidence["other_connector_contacts"] == (
+        "J1.1 function=Pin_1 nets=+3V3",
+        "J1.4 function=Pin_4 nets=BOARD_GND",
+        "J1.5 function=Pin_5 nets=unassigned",
+    )
     assert "does not infer connector identity" in finding.message
     assert "does not infer" in finding.message
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_named_connector_roles_and_source_matched_maps_suppress_review() -> None:
-    named = generic_can_connector_pair_netlist(connector_functions=("VBUS", "CANH", "CANL", "GND"))
+    named = generic_can_connector_pair_netlist(
+        connector_functions=("VBUS", "CANH", "CANL", "GND", "VCC")
+    )
     stale_map = ConnectorCoverageReport(
         status="INCOMPLETE",
         scope="Synthetic stale connector review",
@@ -208,3 +216,12 @@ def test_report_is_stable_when_netlist_mappings_are_reordered() -> None:
     first = _finding(_report(observed))
     second = _finding(_report(reordered))
     assert (second.fingerprint, second.evidence) == (first.fingerprint, first.evidence)
+
+    disconnected_reference_contact = observed.model_copy(
+        update={"nets": {**observed.nets, "BOARD_GND": ("U1.3",)}}
+    )
+    changed = _finding(_report(disconnected_reference_contact))
+    assert changed.evidence["other_connector_contacts"][1] == (
+        "J1.4 function=Pin_4 nets=unassigned"
+    )
+    assert changed.fingerprint != first.fingerprint

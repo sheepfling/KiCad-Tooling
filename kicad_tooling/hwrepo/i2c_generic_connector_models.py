@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .connector_contact_evidence import ConnectorContactEvidence
+
 
 @dataclass(frozen=True, slots=True)
 class I2cGenericEndpointPair:
@@ -14,15 +16,6 @@ class I2cGenericEndpointPair:
     sda_net: str
     scl_pin: str
     scl_net: str
-
-
-@dataclass(frozen=True, slots=True)
-class I2cGenericConnectorContact:
-    """One inventoried connector contact outside the recognized SDA/SCL pair."""
-
-    pin: str
-    function: str
-    nets: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,4 +31,4 @@ class I2cGenericConnectorPair:
     scl_connector_functions: tuple[str, ...]
     scl_net: str
     endpoint_pairs: tuple[I2cGenericEndpointPair, ...]
-    other_connector_contacts: tuple[I2cGenericConnectorContact, ...] = ()
+    other_connector_contacts: tuple[ConnectorContactEvidence, ...] = ()

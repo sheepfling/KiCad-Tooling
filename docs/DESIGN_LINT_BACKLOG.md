@@ -747,7 +747,17 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-323):** Generic I2C connector review evidence now
+- **Latest progress (LINT-324):** Generic CAN connector review evidence now
+  includes every other inventoried contact's native pin function and assigned
+  net state, including open VCC and GND assigned to `BOARD_GND` in the native
+  fault fixture. The named-role control stays quiet; the rule does not infer
+  required connections, common returns, or connector identity. UART, I2C, and
+  CAN now share one connector-contact evidence service. The focused catalog,
+  architecture, parity, registry, and rule gate passed 62 tests; the exact
+  digest-pinned Docker fault/control lanes passed eight cases across KiCad
+  10.0.0 and 10.0.5, including the existing CAN return-review control that
+  reuses this schematic. Hosted acceptance is pending.
+- **Previous progress (LINT-323):** Generic I2C connector review evidence now
   includes every other inventoried contact's pin function and assigned-net
   state, including an open VCC pin beside a ground contact assigned to
   `BOARD_GND` in the native fault fixture. The named-role control remains quiet;
@@ -20121,6 +20131,34 @@ acceptance threads while new lint features proceed:
   `design_lint_rule(rule_id="bus.serial_generic_connector_pair_review")`.
   The native Docker lane uses
   `KICAD_RUN_NATIVE_SERIAL_GENERIC_CONNECTOR_FIXTURES=1`.
+
+#### LINT-324 — Preserve other contacts in generic CAN connector review evidence
+
+- **Status:** Implemented as an evidence refinement to the existing
+  `bus.can_generic_connector_pair_review` rule; its trigger and default policy
+  are unchanged.
+- **Gap:** The review prompt showed the generic CANH/CANL connector contacts
+  without the connector's remaining inventoried pins. An open supply contact
+  or assigned reference contact could not be inspected from the same finding.
+- **Evidence:** Candidate reports now include each other inventoried contact's
+  native pin function and assigned net names or `unassigned` state. Synthetic
+  coverage exercises assigned supply and reference contacts, an open auxiliary
+  contact, stable ordering, and a changed source-bound fingerprint when an
+  assignment changes. The native fault/control pair includes open VCC and
+  GND assigned to `BOARD_GND`; the named CANH/CANL control remains quiet. A
+  shared connector-contact evidence service now owns this capture and rendering
+  for CAN, I2C, and UART. Exact Docker exports passed on digest-pinned KiCad
+  10.0.0 and 10.0.5.
+- **Boundary:** The rule reports native connector evidence only. It does not
+  infer that VCC or GND must be connected, that returns must be common, or that
+  the connector belongs to the CAN interface. It does not prove PCB copper,
+  off-board wiring, or physical continuity. The shared service does not change
+  the UART or I2C rule triggers.
+- **Selection:** Run `tests/test_can_generic_connector_pair_review.py` and
+  `tests/test_can_generic_connector_native_fixture_lane.py` with
+  `design_lint_rule(rule_id="bus.can_generic_connector_pair_review")`.
+  The native Docker lane uses
+  `KICAD_RUN_NATIVE_CAN_GENERIC_CONNECTOR_FIXTURES=1`.
 
 #### LINT-323 — Preserve other contacts in generic I2C connector review evidence
 

@@ -12,6 +12,7 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint, pytest.mark.a
 
 RULE_ID = "bus.can_generic_connector_pair_review"
 MODULES = (
+    "connector_contact_evidence.py",
     "can_generic_connector_models.py",
     "can_generic_connector_candidates.py",
     "design_lint_can_generic_connector_candidates.py",
@@ -27,6 +28,14 @@ def test_rule_predicate_has_a_protocol_owned_implementation() -> None:
         "kicad_tooling/hwrepo/can_generic_connector_candidates.py#generic_can_connector_pairs"
     )
     assert rule.implementation_owner in rule.implementation_refs
+    assert (
+        "kicad_tooling/hwrepo/connector_contact_evidence.py#collect_other_connector_contacts"
+        in rule.implementation_refs
+    )
+    assert (
+        "kicad_tooling/hwrepo/connector_contact_evidence.py#format_other_connector_contacts"
+        in rule.implementation_refs
+    )
 
 
 def test_can_generic_connector_modules_stay_below_review_limit() -> None:

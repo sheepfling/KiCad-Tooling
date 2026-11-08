@@ -7,8 +7,12 @@ from collections.abc import Iterable, Mapping, Sequence
 from collections.abc import Set as AbstractSet
 
 from .bus_signal_roles import can_function_role
-from .can_generic_connector_models import CanGenericConnectorPair, CanGenericEndpointPair
+from .can_generic_connector_models import (
+    CanGenericConnectorPair,
+    CanGenericEndpointPair,
+)
 from .casefold_mapping_lookup import casefolded_unique_index
+from .connector_contact_evidence import collect_other_connector_contacts
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import (
     ConnectorCoverageReport,
@@ -133,6 +137,13 @@ def generic_can_connector_pairs(
                 mapped_by_pin,
             ):
                 continue
+            other_contacts = collect_other_connector_contacts(
+                connector_reference,
+                numbers,
+                connector_functions,
+                assignments,
+                (pin for pin, _function in (*canh_assignments, *canl_assignments)),
+            )
             findings.append(
                 CanGenericConnectorPair(
                     connector_reference=connector_reference,
@@ -148,6 +159,7 @@ def generic_can_connector_pairs(
                             endpoints, key=lambda item: (item.reference.casefold(), item.reference)
                         )
                     ),
+                    other_connector_contacts=other_contacts,
                 )
             )
 

@@ -69,6 +69,7 @@ I2C_PEER_REFERENCE_MODELS = frozenset(
 )
 
 I2C_GENERIC_CONNECTOR_MODULES = (
+    "connector_contact_evidence.py",
     "i2c_generic_connector_models.py",
     "i2c_generic_connector_candidates.py",
     "design_lint_i2c_generic_connector_candidate_evidence.py",
@@ -138,6 +139,14 @@ def test_i2c_generic_connector_pair_rule_stays_in_focused_modules() -> None:
         "kicad_tooling/hwrepo/i2c_generic_connector_candidates.py#generic_i2c_connector_pairs"
     )
     assert rule.implementation_owner in rule.implementation_refs
+    assert (
+        "kicad_tooling/hwrepo/connector_contact_evidence.py#collect_other_connector_contacts"
+        in rule.implementation_refs
+    )
+    assert (
+        "kicad_tooling/hwrepo/connector_contact_evidence.py#format_other_connector_contacts"
+        in rule.implementation_refs
+    )
 
 
 @pytest.mark.design_lint

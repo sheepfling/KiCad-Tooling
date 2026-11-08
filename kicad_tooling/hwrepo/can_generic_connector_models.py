@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .connector_contact_evidence import ConnectorContactEvidence
+
 
 @dataclass(frozen=True, slots=True)
 class CanGenericEndpointPair:
@@ -29,3 +31,4 @@ class CanGenericConnectorPair:
     canl_connector_functions: tuple[str, ...]
     canl_net: str
     endpoint_pairs: tuple[CanGenericEndpointPair, ...]
+    other_connector_contacts: tuple[ConnectorContactEvidence, ...] = ()

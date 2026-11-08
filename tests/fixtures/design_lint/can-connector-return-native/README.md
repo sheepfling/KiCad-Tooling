@@ -20,4 +20,4 @@ registered in `kicad_tooling/ci_hosted_can_connector_return_cases.py`.
 | Case    | Tooling-owned source                           | SHA-256                                                            |
 | ------- | ---------------------------------------------- | ------------------------------------------------------------------ |
 | Fault   | `can-connector-return-native/fault.kicad_sch`  | `14f85d29d81211f217d520b44057c94fd42b5249b3e243ec284238194be37618` |
-| Control | `can-generic-connector-native/fault.kicad_sch` | `b2b88fe7275b176ce214b3723d83844bc71549770ebcdfc3f278ba5792a4cc13` |
+| Control | `can-generic-connector-native/fault.kicad_sch` | `b70560940aeec2baf120bea51ffbc5bd45ea7bed65b5c285e45f218602dc6112` |

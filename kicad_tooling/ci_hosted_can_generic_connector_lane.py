@@ -157,6 +157,15 @@ def can_generic_connector_fixture_lane(
             "J1: generic pins match CANH/CANL bus nets"
         ):
             raise ValueError("Native generic connector finding omitted the exact endpoint pair")
+        if case == "fault":
+            evidence = dict(finding_signatures[0][0][1])
+            if evidence.get("other_connector_contacts") != (
+                "J1.3 function=VCC nets=unassigned",
+                "J1.4 function=GND nets=BOARD_GND",
+            ):
+                raise ValueError(
+                    "Native generic connector finding omitted open VCC or assigned ground evidence"
+                )
         log.event(
             f"can-generic-connector-fixture/{case}",
             "PASS",

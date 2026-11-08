@@ -7,7 +7,7 @@ from pathlib import Path
 from .ci_hosted_support import tooling_checkout_root
 
 CAN_CONNECTOR_RETURN_SOURCE_HASHES = {
-    "control": "b2b88fe7275b176ce214b3723d83844bc71549770ebcdfc3f278ba5792a4cc13",
+    "control": "b70560940aeec2baf120bea51ffbc5bd45ea7bed65b5c285e45f218602dc6112",
     "fault": "14f85d29d81211f217d520b44057c94fd42b5249b3e243ec284238194be37618",
 }
 

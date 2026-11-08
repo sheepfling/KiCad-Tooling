@@ -13,6 +13,7 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint, pytest.mark.a
 
 RULE_ID = "bus.serial_generic_connector_pair_review"
 MODULES = (
+    "connector_contact_evidence.py",
     "serial_generic_connector_models.py",
     "serial_generic_connector_candidates.py",
     "design_lint_serial_generic_connector_candidates.py",
@@ -30,6 +31,14 @@ def test_rule_predicate_has_a_serial_owned_implementation() -> None:
         "kicad_tooling/hwrepo/serial_generic_connector_candidates.py#serial_generic_connector_pairs"
     )
     assert rule.implementation_owner in rule.implementation_refs
+    assert (
+        "kicad_tooling/hwrepo/connector_contact_evidence.py#collect_other_connector_contacts"
+        in rule.implementation_refs
+    )
+    assert (
+        "kicad_tooling/hwrepo/connector_contact_evidence.py#format_other_connector_contacts"
+        in rule.implementation_refs
+    )
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
