@@ -81,17 +81,21 @@ def validate_usb_protection_shunt_fixture_reports(
 
     series_control = reports[("series-protection-shunt-control", "first")]
     series_coverage = series_control.usb_peer_reference_coverage
+    if series_coverage is None:
+        raise ValueError("Native series-resistor and protection-shunt control had no coverage")
     if (
-        series_coverage is None
-        or series_coverage.supported_data_path_count != 1
+        series_coverage.supported_data_path_count != 1
         or series_coverage.common_reference_path_count != 1
-        or len(series_coverage.path_entries) != 1
-        or series_coverage.path_entries[0].data_path.positive.series_resistor is None
-        or series_coverage.path_entries[0].data_path.negative.series_resistor is None
-        or tuple(
-            item.reference for item in series_coverage.path_entries[0].data_path.protection_shunts
-        )
-        != ("U6",)
+    ):
+        raise ValueError("Native series-resistor and protection-shunt control was not supported")
+    series_entries = series_coverage.path_entries
+    if series_entries is None or len(series_entries) != 1:
+        raise ValueError("Native series-resistor and protection-shunt path entry was not recorded")
+    series_path = series_entries[0].data_path
+    if (
+        series_path.positive.series_resistor is None
+        or series_path.negative.series_resistor is None
+        or tuple(item.reference for item in series_path.protection_shunts) != ("U6",)
         or any(
             item.rule_id in {"bus.usb_peer_reference_review", "bus.usb_data_path_mismatch"}
             for item in series_control.findings
