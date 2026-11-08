@@ -20250,6 +20250,14 @@ acceptance threads while new lint features proceed:
   `tests/test_design_lint_mcp_parity_usb_protection_shunts.py` with
   `design_lint_rule(rule_id="bus.usb_data_path_mismatch")`. The exact native
   cases are included in the `KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1` lane.
+- **Hosted acceptance (2026-11-08):** Corrected tag `v0.5.3rc552` passed
+  GitHub Actions run `42445650892`. The focused unit gate, Ruff, Pyright,
+  Windows typing, wheel and source builds, installed-wheel checks, and the
+  external-template playtest passed. Package and preview jobs were skipped by
+  prerelease policy. The earlier `v0.5.3rc550` attempt found Markdown table
+  alignment issues; `v0.5.3rc551` then exposed typing errors in the native
+  acceptance assertions. Both were corrected before the passing tag. The
+  local exact native lane passed on KiCad 10.0.0 and 10.0.5.
 
 #### LINT-330 — Preserve other contacts in generic USB SuperSpeed connector review evidence
 
