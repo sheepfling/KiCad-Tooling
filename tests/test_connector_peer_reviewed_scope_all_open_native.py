@@ -125,9 +125,12 @@ def test_native_peer_group_scope_reviews_all_open_generic_contact(
         "J1": ConnectorComparisonScope("serial-1", "Reviewed J1 as a separate port"),
         "J2": ConnectorComparisonScope("serial-2", "Reviewed J2 as a separate port"),
     }
-    assert all_open_generic_connector_peer_pin_candidates(
-        observed,
-        peer_assignment_groups=separate_scopes,
-    ) == ()
+    assert (
+        all_open_generic_connector_peer_pin_candidates(
+            observed,
+            peer_assignment_groups=separate_scopes,
+        )
+        == ()
+    )
     assert all_open_generic_connector_peer_pin_candidates(observed) == ()
     assert_native_fixture_mounts(tmp_path, "receipts/repeat.command.json")

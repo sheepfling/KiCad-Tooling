@@ -147,9 +147,7 @@ def generic_open_peer_coverage(
             peer_assignment_group=group,
             peer_assignment_basis=f"Reviewed {reference} in peer group {group}",
         )
-        for reference, interface_id, group in zip(
-            references, interface_ids, groups, strict=True
-        )
+        for reference, interface_id, group in zip(references, interface_ids, groups, strict=True)
     )
     return evaluate_connector_coverage(
         observed,

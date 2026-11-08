@@ -34,12 +34,16 @@ def execute_kicad_cli(
     output_root = output_directory.resolve() if output_directory is not None else None
     for argument in argv[1:]:
         candidate = Path(argument)
-        if fixture_root is not None and candidate.is_absolute() and candidate.is_relative_to(
-            fixture_root
+        if (
+            fixture_root is not None
+            and candidate.is_absolute()
+            and candidate.is_relative_to(fixture_root)
         ):
             mapped.append(f"/fixtures/{candidate.relative_to(fixture_root).as_posix()}")
-        elif output_root is not None and candidate.is_absolute() and candidate.is_relative_to(
-            output_root
+        elif (
+            output_root is not None
+            and candidate.is_absolute()
+            and candidate.is_relative_to(output_root)
         ):
             mapped.append(f"/output/{candidate.relative_to(output_root).as_posix()}")
         elif candidate.is_absolute() and candidate.is_relative_to(work):

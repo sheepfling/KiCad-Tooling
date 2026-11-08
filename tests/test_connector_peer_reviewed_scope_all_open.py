@@ -95,13 +95,16 @@ def test_reviewed_part_id_peer_group_can_scope_unanchored_contacts() -> None:
     assert candidate.source_evidence.shared_anchors == ()
     assert candidate.evidence["peer_assignment_group"] == ("reviewed-serial-peers",)
     assert all_open_generic_connector_peer_pin_candidates(source) == ()
-    assert all_open_generic_connector_peer_pin_candidates(
-        source,
-        peer_assignment_groups={
-            "J1": ConnectorComparisonScope("port-1", "Reviewed separate port"),
-            "J2": ConnectorComparisonScope("port-2", "Reviewed separate port"),
-        },
-    ) == ()
+    assert (
+        all_open_generic_connector_peer_pin_candidates(
+            source,
+            peer_assignment_groups={
+                "J1": ConnectorComparisonScope("port-1", "Reviewed separate port"),
+                "J2": ConnectorComparisonScope("port-2", "Reviewed separate port"),
+            },
+        )
+        == ()
+    )
 
     coverage = generic_open_peer_coverage(source, groups=("serial-peers", "serial-peers"))
     report = evaluate(
@@ -129,9 +132,7 @@ def test_reviewed_peer_group_candidate_is_stable_under_input_reordering() -> Non
         update={
             "nets": dict(reversed(tuple(source.nets.items()))),
             "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
-            "component_pin_numbers": dict(
-                reversed(tuple(source.component_pin_numbers.items()))
-            ),
+            "component_pin_numbers": dict(reversed(tuple(source.component_pin_numbers.items()))),
             "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
             "pin_electrical_types": dict(reversed(tuple(source.pin_electrical_types.items()))),
         }
