@@ -756,7 +756,10 @@ standalone parity work when it closes a demonstrated feature regression.
   and the digest-pinned Docker fault/control lane passed on KiCad 10.0.0 and
   10.0.5. The existing I3C missing-return native regressions also passed on
   both projects. Catalog, architecture, and marker checks passed; hosted
-  acceptance is pending publication of this feature gate.
+  acceptance on `v0.5.3rc553` found the existing interface architecture test
+  file had grown past the 500-line ceiling. Its duplicate I3C module entries
+  were removed because the new focused I3C architecture suite owns those
+  checks. The follow-up `v0.5.3rc554` hosted acceptance is pending.
 - **Previous progress (LINT-330):** The generic USB SuperSpeed connector prompt
   now retains every other inventoried contact's native function and assigned
   net state. Synthetic coverage shows J1.3 GND on `USB_GND` and open J1.4

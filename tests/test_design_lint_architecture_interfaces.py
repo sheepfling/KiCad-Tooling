@@ -76,11 +76,7 @@ I2C_GENERIC_CONNECTOR_MODULES = (
     "design_lint_i2c_generic_connector_candidates.py",
 )
 
-I3C_CONNECTOR_RETURN_MODULES = (
-    "connector_return_i3c_review.py",
-    "i3c_endpoint_pairs.py",
-    "i3c_connector_map.py",
-)
+I3C_CONNECTOR_RETURN_MODULES = ("connector_return_i3c_review.py",)
 
 SWD_GENERIC_CONNECTOR_MODULES = (
     "bus_swd_generic_connector.py",
