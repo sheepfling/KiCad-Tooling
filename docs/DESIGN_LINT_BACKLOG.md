@@ -755,7 +755,8 @@ standalone parity work when it closes a demonstrated feature regression.
   in both findings and the control stays quiet. This evidence does not infer
   that GND or another contact must be connected. The exact rule-tag selector
   passed 34 tests with 7,621 deselected; native exports passed on KiCad 10.0.0
-  and 10.0.5. Hosted acceptance is pending for the planned `v0.5.3rc544` tag.
+  and 10.0.5. Tag `v0.5.3rc544` passed the hosted prerelease gate, including
+  its scoped lint and installed-wheel check (workflow run `42434944354`).
 - **Previous progress (LINT-325):** Generic SPI connector review evidence now
   includes every other inventoried contact's native pin function and assigned
   net state. Synthetic and native cases show a VCC contact left open beside
@@ -20159,8 +20160,9 @@ acceptance threads while new lint features proceed:
 
 - **Status:** Implemented as an evidence refinement to the existing
   `bus.ethernet_generic_connector_pair_review` rule; its trigger and default
-  review policy are unchanged. Hosted prerelease acceptance is pending for
-  the planned `v0.5.3rc544` tag.
+  review policy are unchanged. Tag `v0.5.3rc544` passed hosted acceptance,
+  including the scoped lint gate and installed-wheel check in workflow run
+  `42434944354`.
 - **Gap:** Ethernet TX/RX pair findings recorded only the pair-specific
   connector contacts. Reviewers could not see the opposite data pair or other
   connector contacts, including reference pins, from the same finding.
