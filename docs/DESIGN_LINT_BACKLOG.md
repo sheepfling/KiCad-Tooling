@@ -747,14 +747,23 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **Latest progress (LINT-328):** Generic USB 2.0 connector review evidence
+  now includes every other inventoried contact's native function and assigned
+  net state. The synthetic and native fault cases show an open VBUS contact
+  beside USB_GND; the named USB data-pair control remains quiet. The rule does
+  not infer that VBUS or GND must be connected. The exact rule-tag selector
+  passed 32 tests with 7,625 deselected; digest-pinned Docker exports passed on
+  KiCad 10.0.0 and 10.0.5. Hosted acceptance is pending for planned tag
+  `v0.5.3rc546`.
 - **Latest progress (LINT-327):** Ethernet MDC/MDIO connector review evidence
   now includes every other inventoried pin's native function and assigned-net
   state. Synthetic and native fault findings show the AUX pins and J1.5 GND;
   changing the GND contact assignment changes the finding fingerprint. The
   control remains quiet, and no connection requirements are inferred. The
   exact rule-tag selector passed 34 tests with 7,622 deselected; digest-pinned
-  Docker exports passed on KiCad 10.0.0 and 10.0.5. Hosted acceptance is
-  pending for the planned `v0.5.3rc545` tag.
+  Docker exports passed on KiCad 10.0.0 and 10.0.5. Tag `v0.5.3rc545` passed
+  hosted acceptance, including its scoped lint and installed-wheel check
+  (workflow run `42435690383`).
 - **Previous progress (LINT-326):** Generic Ethernet TX/RX connector review
   findings now include every other inventoried pin's native function and
   assigned-net state. Synthetic tests show the opposite data pair and GND;
@@ -20164,12 +20173,39 @@ acceptance threads while new lint features proceed:
   The native Docker lane uses
   `KICAD_RUN_NATIVE_SERIAL_GENERIC_CONNECTOR_FIXTURES=1`.
 
+#### LINT-328 — Preserve other contacts in generic USB 2.0 connector review evidence
+
+- **Status:** Implemented as an evidence refinement to the existing
+  `bus.usb_generic_connector_phy_pair_review` rule; its trigger and default
+  review policy are unchanged. Hosted prerelease acceptance is pending for
+  planned tag `v0.5.3rc546`.
+- **Gap:** Generic USB 2.0 D+/D− findings recorded only the data-pair
+  contacts. Reviewers could not see the connector's other contacts, including
+  an open VBUS contact or a separately assigned ground contact, from the same
+  finding.
+- **Evidence:** Findings now report the other inventoried contacts with their
+  native pin functions and assigned-net names or `unassigned` state. Synthetic
+  coverage checks an open J2.1 VBUS pin beside J2.4 `BOARD_GND`, and changing
+  the contact assignment changes the source-bound fingerprint. The native
+  fault/control lane confirms open J1.3 VBUS beside J1.4 `USB_GND` in KiCad
+  exports on 10.0.0 and 10.0.5; the control stays quiet. The exact rule-tag
+  selector passed 32 tests with 7,625 deselected.
+- **Boundary:** This reports native connector evidence only. It does not infer
+  that VBUS or GND must be connected, require common returns, decide connector
+  identity or USB power policy, prove data routing, or establish PCB copper or
+  off-board continuity.
+- **Selection:** Run `tests/test_usb_generic_connector_pair_review.py` and
+  `tests/test_usb_generic_connector_native_fixture_lane.py` with
+  `design_lint_rule(rule_id="bus.usb_generic_connector_phy_pair_review")`.
+  The native Docker lane uses `KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1`.
+
 #### LINT-327 — Preserve other contacts in generic Ethernet management connector review evidence
 
 - **Status:** Implemented as an evidence refinement to the existing
   `bus.ethernet_management_generic_connector_pair_review` rule; its trigger and
-  default review policy are unchanged. Hosted prerelease acceptance is pending
-  for the planned `v0.5.3rc545` tag.
+  default review policy are unchanged. Tag `v0.5.3rc545` passed hosted
+  acceptance, including its scoped lint gate and installed-wheel check in
+  workflow run `42435690383`.
 - **Gap:** The MDC/MDIO connector review showed only the management-role pins.
   Reviewers could not inspect the connector's other contacts, including AUX
   pins and GND, from the same finding.

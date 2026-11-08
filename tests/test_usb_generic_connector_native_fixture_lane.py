@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 
@@ -41,3 +42,11 @@ def test_native_generic_connector_fault_and_named_control(
     assert config.kicad_version == version
     log = HostedLog(root, f"native-usb-generic-connector-{project}")
     generic_usb_connector_fixture_lane(root, project=project, image=config.image, log=log)
+    events = tuple(json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines())
+    fault = next(
+        item for item in events if item.get("stage") == "usb-generic-connector-fixture/fault"
+    )
+    assert json.loads(fault["other_connector_contacts"]) == [
+        "J1.3 function=VBUS nets=unassigned",
+        "J1.4 function=GND nets=USB_GND",
+    ]

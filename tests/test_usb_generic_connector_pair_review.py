@@ -5,6 +5,8 @@ from __future__ import annotations
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import evaluate
+from kicad_tooling.hwrepo.design_lint_finding_models import DesignLintFinding
+from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.models import (
     ContractCoachReport,
     DesignLintIgnore,
@@ -15,6 +17,7 @@ from kicad_tooling.hwrepo.models import (
     UsbDataPathMap,
     UsbReferencePinRequirement,
 )
+from kicad_tooling.hwrepo.netlist_contract_models import NetlistContract
 from tests.design_lint_fixtures.usb_generic_connector_pair import (
     generic_usb_connector_pair_netlist,
 )
@@ -25,13 +28,13 @@ RULE_ID = "bus.usb_generic_connector_phy_pair_review"
 
 
 def _report(
-    observed=None,
+    observed: NetlistContract | None = None,
     *,
     path_map: UsbDataPathMap | None = None,
     override: DesignLintRuleOverride | None = None,
     ignore: DesignLintIgnore | None = None,
-):
-    netlist = observed or generic_usb_connector_pair_netlist()
+) -> DesignLintReport:
+    netlist: NetlistContract = observed or generic_usb_connector_pair_netlist()
     coach = ContractCoachReport(
         status="READY_FOR_REVIEW",
         project_id="synthetic-usb-generic-connector",
@@ -49,7 +52,7 @@ def _report(
     )
 
 
-def _finding(report):
+def _finding(report: DesignLintReport) -> DesignLintFinding:
     return next(item for item in report.findings if item.rule_id == RULE_ID)
 
 
@@ -102,6 +105,28 @@ def test_generic_connector_pair_emits_bounded_port_review() -> None:
     assert finding.evidence["USB_port_group"] == ("1",)
     assert "does not identify the connector as USB" in finding.message
     assert "determine how power or reference pins should be connected" in finding.message
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_finding_reports_open_vbus_and_board_ground_contact() -> None:
+    observed = generic_usb_connector_pair_netlist()
+    changed_nets = {
+        net: tuple(pin for pin in pins if pin != "J2.1") for net, pins in observed.nets.items()
+    }
+    changed_nets = {net: pins for net, pins in changed_nets.items() if pins}
+    opened_vbus = observed.model_copy(
+        update={
+            "nets": changed_nets,
+            "pin_functions": {**observed.pin_functions, "J2.1": "VBUS"},
+        }
+    )
+    finding = _finding(_report(opened_vbus))
+
+    assert finding.evidence["other_connector_contacts"] == (
+        "J2.1 function=VBUS nets=unassigned",
+        "J2.4 function=Pin_4 nets=BOARD_GND",
+    )
+    assert finding.fingerprint != _finding(_report()).fingerprint
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
+from .connector_contact_evidence import ConnectorContactEvidence
+
 
 @dataclass(frozen=True, slots=True)
 class UsbGenericConnectorDataPair:
@@ -20,6 +22,7 @@ class UsbGenericConnectorDataPair:
     negative_functions: tuple[str, ...]
     negative_net: str
     connector_pin_count: int
+    other_connector_contacts: tuple[ConnectorContactEvidence, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

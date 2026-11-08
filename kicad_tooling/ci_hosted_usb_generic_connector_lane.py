@@ -185,6 +185,22 @@ def generic_usb_connector_fixture_lane(
                 raise ValueError(
                     f"Native {rule_id} finding omitted the expected endpoint pair for {case}"
                 )
+        event_evidence: dict[str, str] = {}
+        if case == "fault":
+            _, evidence_items = first_findings[RULE_ID][0]
+            other_contacts = dict(evidence_items).get("other_connector_contacts", ())
+            expected_other_contacts = (
+                "J1.3 function=VBUS nets=unassigned",
+                "J1.4 function=GND nets=USB_GND",
+            )
+            if other_contacts != expected_other_contacts:
+                raise ValueError(
+                    "Native generic USB fault omitted the exact open VBUS and GND contacts"
+                )
+            event_evidence["other_connector_contacts"] = json.dumps(
+                other_contacts,
+                separators=(",", ":"),
+            )
         log.event(
             f"usb-generic-connector-fixture/{case}",
             "PASS",
@@ -198,4 +214,5 @@ def generic_usb_connector_fixture_lane(
             repeat_normalized_netlist_sha256=normalized_hashes[1],
             usb2_finding_count=expected_counts[RULE_ID],
             superspeed_finding_count=expected_counts[SUPERSPEED_RULE_ID],
+            **event_evidence,
         )

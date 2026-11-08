@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .connector_contact_evidence import format_other_connector_contacts
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
@@ -36,6 +37,7 @@ def project_usb_generic_connector_evidence(
         "USB_D-_generic_pin_functions": pair.negative_functions,
         "connector_native_pin_count": (str(pair.connector_pin_count),),
         "USB_data_map_state": ("no map matches this connector/PHY port group",),
+        "other_connector_contacts": format_other_connector_contacts(pair.other_connector_contacts),
     }
     if pair.port_group is not None:
         evidence["USB_port_group"] = (pair.port_group,)

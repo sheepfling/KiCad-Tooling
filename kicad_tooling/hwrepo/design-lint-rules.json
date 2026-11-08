@@ -10377,7 +10377,7 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
-      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete connector pin inventory, generic pin-function metadata, and exact net membership",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete connector pin inventory, generic pin-function metadata, all other connector contacts, and exact net membership",
       "predicate": "For a fitted, completely inventoried connector candidate, emit a REVIEW prompt when two or more generic Pin_N contacts on distinct native nets share the exact positive and negative USB 2.0 data nets of one recognized PHY port group. The prompt requests connector/interface review and an exact project-authored USB data-path map where applicable; it does not classify the connector or assert that the observed assignments are correct.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
@@ -10385,11 +10385,12 @@
       "limitations": [
         "Only connector candidates with complete, unique pin-number inventories and native function/electrical-type metadata are considered. Each candidate contact must have one unambiguous net assignment and a generic Pin_N function.",
         "Both contacts must match the exact positive and negative nets for one recognized USB 2.0 PHY port. The rule does not infer USB from net names, connector references, or power/return pins; it ignores connectors with named data roles, DNP connectors, incomplete pairs, and multi-net pin assignments.",
-        "The prompt identifies only native net membership. It does not establish that the connector carries USB, confirm its physical pinout, prove a data path or PCB copper, or determine whether power, signal-reference, shield, or other contacts should connect.",
+        "The prompt identifies native net membership and reports other inventoried connector contacts for review. It does not establish that the connector carries USB, confirm its physical pinout, prove a data path or PCB copper, or infer whether VBUS, signal-reference, shield, or other contacts should connect.",
         "A project-authored map for the exact connector, PHY, and port group suppresses this coverage prompt; stale mapped connectivity remains the responsibility of bus.usb_data_path_mismatch."
       ],
       "fault_fixtures": [
         "tests.test_usb_generic_connector_pair_review.test_generic_connector_pair_emits_bounded_port_review",
+        "tests.test_usb_generic_connector_pair_review.test_finding_reports_open_vbus_and_board_ground_contact",
         "tests.test_usb_generic_connector_pair_review.test_rule_override_and_exact_ignore_remain_available",
         "tests.test_design_lint_mcp_parity_usb_generic_connector_pair.test_generic_connector_review_cli_mcp_parity",
         "tests.test_usb_generic_connector_native_fixture_lane.test_native_generic_connector_fault_and_named_control"

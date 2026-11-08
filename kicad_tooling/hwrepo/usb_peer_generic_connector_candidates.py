@@ -6,6 +6,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 from .casefold_mapping_lookup import casefolded_unique_index
+from .connector_contact_evidence import ConnectorContactEvidence, collect_other_connector_contacts
 from .connector_identity import connector_candidate_references, pin_function_is_generic
 from .netlist_contract_models import NetlistContract
 from .usb_data_path_models import UsbDataPathMap
@@ -63,6 +64,7 @@ def generic_usb_connector_data_pair_candidates(
                     negative_functions=contacts.negative_functions,
                     negative_net=endpoint.negative_net,
                     connector_pin_count=contacts.connector_pin_count,
+                    other_connector_contacts=contacts.other_connector_contacts,
                 )
             )
 
@@ -259,6 +261,7 @@ class _GenericConnectorContacts:
     negative_pins: tuple[str, ...]
     negative_functions: tuple[str, ...]
     connector_pin_count: int
+    other_connector_contacts: tuple[ConnectorContactEvidence, ...]
 
 
 class _GenericConnectorPinIndex:
@@ -326,6 +329,13 @@ class _GenericConnectorPinIndex:
             negative_pins=negative_pins,
             negative_functions=_functions_for(negative_pins, negative),
             connector_pin_count=len(numbers),
+            other_connector_contacts=collect_other_connector_contacts(
+                connector_reference,
+                numbers,
+                pin_functions,
+                self.assignments.nets_by_pin_key,
+                (*positive_pins, *negative_pins),
+            ),
         )
 
 
