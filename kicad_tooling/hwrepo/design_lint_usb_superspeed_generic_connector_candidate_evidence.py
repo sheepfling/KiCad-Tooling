@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .connector_contact_evidence import format_other_connector_contacts
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
@@ -41,6 +42,7 @@ def project_usb_superspeed_generic_connector_evidence(
         f"{prefix}_negative_generic_connector_pins": pair.negative_pins,
         f"{prefix}_negative_generic_pin_functions": pair.negative_functions,
         "connector_native_pin_count": (str(pair.connector_pin_count),),
+        "other_connector_contacts": format_other_connector_contacts(pair.other_connector_contacts),
         "USB_SuperSpeed_map_state": (
             "no source-matched SuperSpeed connector/PHY map covers this pair",
         ),

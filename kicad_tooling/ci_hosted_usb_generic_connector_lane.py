@@ -201,6 +201,21 @@ def generic_usb_connector_fixture_lane(
                 other_contacts,
                 separators=(",", ":"),
             )
+        elif case == "superspeed_fault":
+            _, evidence_items = first_findings[SUPERSPEED_RULE_ID][0]
+            other_contacts = dict(evidence_items).get("other_connector_contacts", ())
+            expected_other_contacts = (
+                "J1.3 function=GND nets=USB_GND",
+                "J1.4 function=VBUS nets=unassigned",
+            )
+            if other_contacts != expected_other_contacts:
+                raise ValueError(
+                    "Native USB SuperSpeed fault omitted the exact open VBUS and GND contacts"
+                )
+            event_evidence["other_connector_contacts"] = json.dumps(
+                other_contacts,
+                separators=(",", ":"),
+            )
         log.event(
             f"usb-generic-connector-fixture/{case}",
             "PASS",

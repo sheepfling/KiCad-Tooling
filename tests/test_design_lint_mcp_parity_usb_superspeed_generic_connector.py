@@ -59,6 +59,10 @@ class _GenericUsbSuperspeedConnectorParity(McpParityHarness):
         findings = tuple(item for item in cli.findings if item.rule_id == RULE_ID)
         assert len(findings) == 1
         assert findings[0].subject == "J1 / U1: generic pins match USB SuperSpeed TX pair"
+        assert findings[0].evidence["other_connector_contacts"] == (
+            "J1.3 function=GND nets=USB_GND",
+            "J1.4 function=VBUS nets=unassigned",
+        )
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

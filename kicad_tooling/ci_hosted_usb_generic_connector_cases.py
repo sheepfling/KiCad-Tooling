@@ -9,8 +9,8 @@ from .ci_hosted_support import tooling_checkout_root
 USB_GENERIC_CONNECTOR_SOURCE_HASHES = {
     "fault": "26940f23b66b4660365bd4a3c4e0cd821a29dcf8739c61d2f9277c262e1ffcc5",
     "control": "a4805756125893183c61278af060ba0cdcadf42180096335340431d0eef89a82",
-    "superspeed_fault": "d630e21b270a371aa9674c7021f04b1dde1a449c481ec4216811b4d447a57f57",
-    "superspeed_control": "aa5c774319c88e32162462a0a32d8859a47a475b2bc75d1ede84f21d08087522",
+    "superspeed_fault": "b8d9f784e7aee88355510f62d402e2a706823085ab3a98822ae861d20b6a1b21",
+    "superspeed_control": "9997264ed1266c61e3012553fea8e25d3b50957548d35d5af706aea1e3cba1f1",
 }
 
 

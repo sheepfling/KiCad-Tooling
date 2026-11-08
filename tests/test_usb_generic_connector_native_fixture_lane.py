@@ -30,6 +30,7 @@ pytestmark = [
     (("controller", "10.0.0"), ("raspberry-pi-status-led", "10.0.5")),
 )
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.design_lint_rule(rule_id="bus.usb_superspeed_generic_connector_pair_review")
 def test_native_generic_connector_fault_and_named_control(
     hosted_reference_root: Path,
     project: str,
@@ -49,4 +50,13 @@ def test_native_generic_connector_fault_and_named_control(
     assert json.loads(fault["other_connector_contacts"]) == [
         "J1.3 function=VBUS nets=unassigned",
         "J1.4 function=GND nets=USB_GND",
+    ]
+    superspeed_fault = next(
+        item
+        for item in events
+        if item.get("stage") == "usb-generic-connector-fixture/superspeed_fault"
+    )
+    assert json.loads(superspeed_fault["other_connector_contacts"]) == [
+        "J1.3 function=GND nets=USB_GND",
+        "J1.4 function=VBUS nets=unassigned",
     ]

@@ -10429,14 +10429,14 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
-      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete connector pin inventory, generic pin-function metadata, exact PHY pair assignments, and exact net membership",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete connector pin inventory, generic pin-function metadata, exact PHY pair assignments, exact net membership, and all other connector-contact functions and assignments",
       "predicate": "For a fitted, completely inventoried connector candidate, emit REVIEW when generic Pin_N contacts on both distinct native nets of one recognized USB SuperSpeed TX or RX PHY pair share the exact positive and negative nets. A project-authored superspeed_interfaces entry for the exact connector, PHY, and complementary signal families suppresses the prompt. For mapped generic connectors, the existing USB data-path checker compares authored pins, identities, nets, reference pins, and reference policy with current native evidence.",
       "supported_kicad_versions": [
         "KiCad 10.0.0 and 10.0.5 digest-pinned native fixture exports; the selected project exact version is checked before export"
       ],
       "limitations": [
         "Only a fitted U/IC endpoint with complete native pin metadata, an explicitly recognized SSTX+/SSTX- or SSRX+/SSRX- pair, and distinct unambiguous nets is considered. Connector candidates need complete unique pin inventories and function/electrical-type metadata; each counted contact needs one exact net and a generic Pin_N function.",
-        "The prompt requires generic connector contacts on both exact pair nets. It does not infer connector identity or USB participation from names, prove data-path topology or PCB copper, determine lane-indexed USB-C orientation, or require power, reference, return, or shield contacts to be common.",
+        "The prompt requires generic connector contacts on both exact pair nets. Its other-contact evidence reports native pin functions and assigned-net state only; it does not infer connector identity or USB participation from names, prove data-path topology or PCB copper, determine lane-indexed USB-C orientation, or require power, reference, return, or shield contacts to be common.",
         "A source-matched superspeed_interfaces entry for the exact connector/PHY pair and complementary signal families suppresses the prompt. The USB data-path mismatch rule remains responsible for stale pin, identity, net, reference-pin, and reference-policy expectations; incomplete or unsupported maps do not establish coverage."
       ],
       "fault_fixtures": [
@@ -10453,12 +10453,14 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_usb_superspeed_generic_connector_pair_review.test_candidate_fingerprint_is_stable_when_netlist_mappings_are_reordered",
+        "tests.test_usb_superspeed_generic_connector_pair_review.test_other_contact_assignment_changes_source_bound_finding",
         "tests.test_usb_generic_connector_native_fixture_registry.test_native_source_registry_is_hash_pinned_and_local"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES"
       ],
       "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_contact_evidence.py#format_other_connector_contacts",
         "kicad_tooling/hwrepo/usb_peer_generic_connector_candidates.py#generic_usb_connector_superspeed_pair_candidates",
         "kicad_tooling/hwrepo/usb_peer_generic_connector_candidates.py#mapped_generic_usb_superspeed_connector_endpoints",
         "kicad_tooling/hwrepo/usb_peer_generic_connector_models.py#UsbGenericConnectorSuperspeedPair",

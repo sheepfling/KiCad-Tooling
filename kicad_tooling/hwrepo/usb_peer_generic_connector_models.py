@@ -41,3 +41,4 @@ class UsbGenericConnectorSuperspeedPair:
     negative_net: str
     phy_negative_pin: str
     connector_pin_count: int
+    other_connector_contacts: tuple[ConnectorContactEvidence, ...] = ()

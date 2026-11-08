@@ -127,6 +127,7 @@ def generic_usb_connector_superspeed_pair_candidates(
                     negative_net=endpoint.negative_net,
                     phy_negative_pin=endpoint.negative_pins[0],
                     connector_pin_count=contacts.connector_pin_count,
+                    other_connector_contacts=contacts.other_connector_contacts,
                 )
             )
     return tuple(

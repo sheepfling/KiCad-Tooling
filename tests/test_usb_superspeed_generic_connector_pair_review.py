@@ -104,6 +104,10 @@ def test_generic_connector_contacts_on_exact_superspeed_pair_emit_review() -> No
     assert finding.evidence["USB_SuperSpeed_TX_negative_PHY_pin"] == ("U1.2",)
     assert finding.evidence["USB_SuperSpeed_TX_positive_generic_connector_pins"] == ("J1.1",)
     assert finding.evidence["USB_SuperSpeed_TX_negative_generic_connector_pins"] == ("J1.2",)
+    assert finding.evidence["other_connector_contacts"] == (
+        "J1.3 function=GND nets=USB_GND",
+        "J1.4 function=VBUS nets=unassigned",
+    )
     assert "does not identify the connector as USB" in finding.message
     assert "determine how power or reference pins should be connected" in finding.message
 
@@ -232,3 +236,18 @@ def test_candidate_fingerprint_is_stable_when_netlist_mappings_are_reordered() -
     first = _finding(_report(observed))
     second = _finding(_report(reordered))
     assert (second.fingerprint, second.evidence) == (first.fingerprint, first.evidence)
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_other_contact_assignment_changes_source_bound_finding() -> None:
+    observed = generic_usb_superspeed_connector_pair_netlist()
+    reassigned = observed.model_copy(
+        update={"nets": {**observed.nets, "AUX_5V": (*observed.nets.get("AUX_5V", ()), "J1.4")}}
+    )
+
+    first = _finding(_report(observed))
+    second = _finding(_report(reassigned))
+
+    assert first.evidence["other_connector_contacts"][-1] == "J1.4 function=VBUS nets=unassigned"
+    assert second.evidence["other_connector_contacts"][-1] == "J1.4 function=VBUS nets=AUX_5V"
+    assert first.fingerprint != second.fingerprint

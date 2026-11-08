@@ -747,7 +747,16 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-329):** Generic USB-C CC connector review evidence
+- **Latest progress (LINT-330):** The generic USB SuperSpeed connector prompt
+  now retains every other inventoried contact's native function and assigned
+  net state. Synthetic coverage shows J1.3 GND on `USB_GND` and open J1.4
+  VBUS; changing the VBUS assignment changes the source-bound fingerprint.
+  The hashed native fault/control pair carries the same four-contact pinout,
+  and the digest-pinned Docker lane passed on KiCad 10.0.0 and 10.0.5. The
+  exact rule-tag selector passed 11 tests with 2 native cases skipped in that
+  synthetic run; the native selector passed 2 tests. This is a review-evidence
+  refinement; it does not infer that either contact must be connected.
+- **Previous progress (LINT-329):** Generic USB-C CC connector review evidence
   now includes all other inventoried contacts. Synthetic and native fault
   cases report J1.4's native GND function with no assigned net; the native
   fault/control lane passed on KiCad 10.0.0 and 10.0.5. This is review evidence
@@ -20207,6 +20216,33 @@ acceptance threads while new lint features proceed:
   `design_lint_rule(rule_id="bus.usb_c_generic_connector_cc_pair_review")`.
   The native Docker lane uses
   `KICAD_RUN_NATIVE_USB_C_GENERIC_CONNECTOR_FIXTURES=1`.
+
+#### LINT-330 — Preserve other contacts in generic USB SuperSpeed connector review evidence
+
+- **Status:** Implemented as an evidence refinement to the existing
+  `bus.usb_superspeed_generic_connector_pair_review` rule. Its trigger and
+  default REVIEW policy are unchanged.
+- **Gap:** The generic connector prompt showed the SuperSpeed P/N contacts but
+  omitted the same connector's other pins. Reviewers could not see an open
+  VBUS contact or the assigned state of a GND contact from this finding.
+- **Evidence:** Findings now include every other inventoried connector
+  contact's native function and assigned-net state. Synthetic coverage shows
+  J1.3 GND assigned to `USB_GND` and J1.4 VBUS unassigned; assigning J1.4
+  changes the source-bound finding fingerprint. The hashed native fault and
+  control schematics now carry the matching four-contact connector. The native
+  lane checks those contact values after repeated KiCad exports, while the
+  named-pair control stays quiet. Docker acceptance passed on KiCad 10.0.0 and
+  10.0.5. The focused selector passed 11 tests with 2 native cases skipped;
+  the exact native selector passed 2 tests.
+- **Boundary:** This reports native contact evidence only. It does not infer
+  that VBUS or GND must be connected, identify the connector as USB, establish
+  a data path or PCB copper, or prove physical continuity.
+- **Selection:** Run
+  `tests/test_usb_superspeed_generic_connector_pair_review.py`,
+  `tests/test_usb_generic_connector_native_fixture_lane.py`, and
+  `tests/test_usb_generic_connector_native_fixture_registry.py` with
+  `design_lint_rule(rule_id="bus.usb_superspeed_generic_connector_pair_review")`.
+  The native Docker lane uses `KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1`.
 
 #### LINT-328 — Preserve other contacts in generic USB 2.0 connector review evidence
 
