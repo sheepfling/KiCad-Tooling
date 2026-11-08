@@ -756,8 +756,9 @@ standalone parity work when it closes a demonstrated feature regression.
   connector-contact evidence service. The focused SPI, return-review, parity,
   architecture, registry, and catalog slice passed 28 tests; the exact tagged
   selector including native fixtures passed 36 tests. Digest-pinned Docker
-  fault/control exports passed for KiCad 10.0.0 and 10.0.5. Hosted acceptance
-  is pending.
+  fault/control exports passed for KiCad 10.0.0 and 10.0.5. Tag
+  `v0.5.3rc543` passed the hosted prerelease gate, including its scoped lint and
+  installed-wheel check (workflow run `42433764449`).
 - **Previous progress (LINT-324):** Generic CAN connector review evidence now
   includes every other inventoried contact's native pin function and assigned
   net state, including open VCC and GND assigned to `BOARD_GND` in the native
@@ -20149,7 +20150,8 @@ acceptance threads while new lint features proceed:
 
 - **Status:** Implemented as an evidence refinement to the existing
   `bus.spi_generic_connector_triad_review` rule; its trigger and default review
-  policy are unchanged.
+  policy are unchanged. Tag `v0.5.3rc543` passed hosted acceptance, including
+  the scoped lint gate and installed-wheel check.
 - **Gap:** The SPI triad prompt recorded clock and data-role contacts but omitted
   all remaining connector pins. A reviewer could not inspect an open VCC pin or
   a separately assigned reference contact from the same finding.
