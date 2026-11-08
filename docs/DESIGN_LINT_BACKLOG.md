@@ -752,8 +752,9 @@ standalone parity work when it closes a demonstrated feature regression.
   and assigned-net state. The focused synthetic/catalog/CLI-MCP gate passed
   12 tests; exact native Docker fault/control exports passed on KiCad 10.0.0
   and 10.0.5. The extra contacts remain review evidence, not inferred returns.
-  Tag `v0.5.3rc539` is the focused prerelease gate for this increment; its
-  hosted acceptance outcome is pending.
+  Tag `v0.5.3rc539` is the focused prerelease gate for this increment. Hosted
+  acceptance, including the separate-project installed-wheel check, passed in
+  GitHub Actions run `42427409899`.
 - **LINT-300 two-pin serial connector return review (completed v0.5.3rc508):**
   The scoped local gate passed 39 tests, including the digest-pinned native
   fault/control lane; hosted acceptance passed in GitHub Actions run
