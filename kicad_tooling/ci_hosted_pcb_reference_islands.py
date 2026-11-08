@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
+import sys
 import tempfile
 from pathlib import Path
 
@@ -69,12 +71,16 @@ def _drc_summary(
     relative_board = board.relative_to(root).as_posix()
     output_path = output.resolve()
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    user: tuple[str, ...] = ()
+    if sys.platform != "win32":
+        user = ("--user", f"{os.getuid()}:{os.getgid()}")
     log.run(
         f"pcb-reference-island-drc-{case}",
         (
             "docker",
             "run",
             "--rm",
+            *user,
             "-v",
             f"{root.resolve()}:/work:ro",
             "-v",

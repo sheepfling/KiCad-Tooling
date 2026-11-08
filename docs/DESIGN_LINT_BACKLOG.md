@@ -760,7 +760,11 @@ standalone parity work when it closes a demonstrated feature regression.
   including CLI/MCP parity and both native versions. The repository acceptance
   workflow also passed strict and Windows Pyright, packaging, installed-wheel
   checks against the public template and its relocated layout, and external
-  playtest. This evidence validates the configured review cue; it does not
+  playtest. The first GitHub prerelease run exposed a Docker read-permission
+  failure because pytest creates private fixture directories; the DRC container
+  now runs as the invoking user, matching the native snapshot lane. Both native
+  fixtures passed again locally with Docker access; the corrective tagged run
+  is pending. This evidence validates the configured review cue; it does not
   prove electrical isolation or establish a board defect.
 - **Earlier progress (LINT-334, tag `v0.5.3rc560`):** Added the default-REVIEW
   `connector.generic_peer_pin_open_outlier` heuristic for a numeric-only
