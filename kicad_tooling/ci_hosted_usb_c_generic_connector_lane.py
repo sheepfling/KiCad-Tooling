@@ -48,4 +48,5 @@ def usb_c_generic_connector_fixture_lane(
                 "J1.2",
             ),
         ),
+        expected_evidence=(("other_connector_contacts", ("J1.4 function=GND nets=unassigned",)),),
     )

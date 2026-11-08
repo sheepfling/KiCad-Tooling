@@ -8,7 +8,7 @@ from .ci_hosted_support import tooling_checkout_root
 
 USB_C_GENERIC_CONNECTOR_SOURCE_HASHES = {
     "control": "b396c89fce7f50cc7d895e616499a602ef6928c9b826e1cc801d8b53ab8fe4b4",
-    "fault": "4f4780115f91f5ccd4e4c196a6799c93d00e354538112636d83953ce1bab4830",
+    "fault": "931f30569224f49daf1737eec02dec5d4060cf1497c1db4ab7f28d49d721c017",
 }
 
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .connector_contact_evidence import format_other_connector_contacts
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .usb_c_generic_connector import UsbCGenericConnectorPair
@@ -39,6 +40,7 @@ def project_usb_c_generic_connector_evidence(
         "USB_C_CC2_generic_connector_pins": pair.connector_cc2_pins,
         "USB_C_CC2_generic_pin_functions": pair.connector_cc2_functions,
         "connector_native_pin_count": (str(pair.connector_pin_count),),
+        "other_connector_contacts": format_other_connector_contacts(pair.other_connector_contacts),
         "USB_C_port_map_state": ("no USB-C port map names this connector",),
     }
     if source.roster.source_sha256 is not None:

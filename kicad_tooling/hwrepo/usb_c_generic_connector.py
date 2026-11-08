@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 from .bus_signal_roles import usb_c_cc_role
 from .casefold_mapping_lookup import casefolded_unique_index
+from .connector_contact_evidence import ConnectorContactEvidence, collect_other_connector_contacts
 from .connector_identity import connector_candidate_references, pin_function_is_generic
 from .netlist_contract_models import NetlistContract
 from .netlist_pin_assignments import NetlistPinNetIndex, netlist_pin_net_index
@@ -32,6 +33,7 @@ class UsbCGenericConnectorPair:
     connector_cc2_pins: tuple[str, ...]
     connector_cc2_functions: tuple[str, ...]
     connector_pin_count: int
+    other_connector_contacts: tuple[ConnectorContactEvidence, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,6 +136,16 @@ def usb_c_generic_connector_pairs(
                 connector_cc2_pins=tuple(pin for pin, _function in cc2_contacts),
                 connector_cc2_functions=tuple(function for _pin, function in cc2_contacts),
                 connector_pin_count=len(inventory),
+                other_connector_contacts=collect_other_connector_contacts(
+                    connector,
+                    inventory,
+                    tuple(pin_functions[f"{connector}.{number}"] for number in inventory),
+                    assignments,
+                    (
+                        *(pin for pin, _function in cc1_contacts),
+                        *(pin for pin, _function in cc2_contacts),
+                    ),
+                ),
             )
         )
     return tuple(

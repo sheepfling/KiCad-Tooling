@@ -80,6 +80,21 @@ def test_generic_connector_contacts_on_both_controller_cc_nets_request_review() 
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_finding_reports_unassigned_ground_contact() -> None:
+    observed = generic_usb_c_connector_cc_pair_netlist()
+    changed_nets = {
+        net: tuple(pin for pin in pins if pin != "J1.4") for net, pins in observed.nets.items()
+    }
+    changed_nets = {net: pins for net, pins in changed_nets.items() if pins}
+    open_ground = observed.model_copy(update={"nets": changed_nets})
+
+    finding = _finding(_report(open_ground))
+
+    assert finding.evidence["other_connector_contacts"] == ("J1.4 function=GND nets=unassigned",)
+    assert finding.fingerprint != _finding(_report()).fingerprint
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_named_pinout_and_single_cc_contact_are_controls() -> None:
     named = generic_usb_c_connector_cc_pair_netlist(connector_functions=("CC1", "CC2", "GND"))
     single_contact = generic_usb_c_connector_cc_pair_netlist(include_cc2_contact=False)

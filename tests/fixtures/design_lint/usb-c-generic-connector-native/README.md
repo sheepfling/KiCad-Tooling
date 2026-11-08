@@ -10,6 +10,10 @@ nets.
 - `control.kicad_sch` keeps only the first connector contact on a controller CC
   net; the second is assigned to an unrelated net and should stay quiet.
 
+The fault fixture leaves connector J1.4, whose native function is GND,
+unassigned. Its finding reports that open contact for review without deciding
+whether the connector's ground contact must be connected.
+
 The native lane exports each source twice with digest-pinned KiCad 10.0.0 and
 10.0.5 containers. The source hashes are registered in
 `kicad_tooling/ci_hosted_usb_c_generic_connector_cases.py`. No external board,
