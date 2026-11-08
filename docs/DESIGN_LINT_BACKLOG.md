@@ -10847,13 +10847,14 @@ control are documented in the
   are review clues, not proof of identical roles or a requirement to connect
   the open contact. The
   rule excludes named functions, power/free/unspecified electrical types,
-  ambiguous or incomplete evidence, unanchored groups without one current
-  shared peer assignment, DNP parts, and PART_ID-bearing components. Stale or
-  separate peer maps do not create a group. It cannot establish PCB copper continuity or
-  off-board wiring. An independently approved pinout or connector contract is
-  still needed to turn the prompt into a project requirement. Pins explicitly
-  typed `power_in` or `power_out` remain with the dedicated unconnected-power
-  rules rather than this generic-contact prompt.
+  ambiguous or incomplete evidence, DNP parts, and PART_ID-bearing components.
+  Without a common-net anchor, every compared peer must have one current,
+  source-matched `peer_assignment_group`; stale, incomplete, missing, or
+  separate groups do not create an unanchored comparison. It cannot establish
+  PCB copper continuity or off-board wiring. An independently approved pinout
+  or connector contract is still needed to turn the prompt into a project
+  requirement. Pins explicitly typed `power_in` or `power_out` remain with the
+  dedicated unconnected-power rules rather than this generic-contact prompt.
 - **Evidence:** Tooling-owned synthetic tests cover the anchored all-open
   fault, source-matched unanchored peer-scope fault, separate/no/stale-map
   controls, unsupported pin roles, deterministic ordering, policy/ignore
@@ -10865,6 +10866,10 @@ control are documented in the
   connected control twice on KiCad 10.0.0 and 10.0.5. The catalog requires the
   pinned native connector lane on rule-scoped prerelease tags; synthetic tests
   do not claim that native result. No project source or private fixture is used.
+- **Tagged acceptance (2026-11-08):** `v0.5.3rc559` passed the rule-scoped
+  hosted acceptance in GitHub Actions run `42459473559`, including the pinned
+  native connector fixture lane and installed-wheel rehearsal against a
+  separate project checkout.
 - **Focused selection:**
 
   ```sh
