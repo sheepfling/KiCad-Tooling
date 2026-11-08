@@ -755,7 +755,9 @@ standalone parity work when it closes a demonstrated feature regression.
   and the digest-pinned Docker lane passed on KiCad 10.0.0 and 10.0.5. The
   exact rule-tag selector passed 11 tests with 2 native cases skipped in that
   synthetic run; the native selector passed 2 tests. This is a review-evidence
-  refinement; it does not infer that either contact must be connected.
+  refinement; it does not infer that either contact must be connected. Tag
+  `v0.5.3rc549` passed hosted acceptance, including the focused lint and
+  installed-wheel check (workflow run `42440220684`).
 - **Previous progress (LINT-329):** Generic USB-C CC connector review evidence
   now includes all other inventoried contacts. Synthetic and native fault
   cases report J1.4's native GND function with no assigned net; the native
@@ -20233,7 +20235,11 @@ acceptance threads while new lint features proceed:
   lane checks those contact values after repeated KiCad exports, while the
   named-pair control stays quiet. Docker acceptance passed on KiCad 10.0.0 and
   10.0.5. The focused selector passed 11 tests with 2 native cases skipped;
-  the exact native selector passed 2 tests.
+  the exact native selector passed 2 tests. Hosted acceptance passed for
+  corrected tag `v0.5.3rc549` (run `42440220684`), including the focused lint
+  and installed-wheel check. The first tag, `v0.5.3rc548`, omitted the required
+  lint-rule and native-fixture scope declarations, so scope resolution failed
+  before the acceptance checks; the corrected tag reuses the same commit.
 - **Boundary:** This reports native contact evidence only. It does not infer
   that VBUS or GND must be connected, identify the connector as USB, establish
   a data path or PCB copper, or prove physical continuity.
