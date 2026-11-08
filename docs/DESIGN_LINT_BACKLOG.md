@@ -754,8 +754,10 @@ standalone parity work when it closes a demonstrated feature regression.
   the heuristic does not infer that either contact must be connected or common.
   The focused I2C, neighboring return, parity, architecture, and catalog gate
   passed 45 tests; digest-pinned Docker fault/control exports passed on KiCad
-  10.0.0 and 10.0.5. The tool changes will be tagged `v0.5.3rc540`; hosted
-  acceptance is pending.
+  10.0.0 and 10.0.5. Tag `v0.5.3rc540` lacked the required lint selector, so
+  hosted scope resolution stopped before tests. Corrected tag `v0.5.3rc541`
+  passed hosted acceptance, including the separate-project installed-wheel
+  check, in GitHub Actions run `42429850224`.
 - **Catalog reachability maintenance:** The all-active-rule reachability sweep
   now exercises the existing differential-pair layer-profile fault fixture
   from LINT-320. This corrects a stale test index; it does not change the rule.
