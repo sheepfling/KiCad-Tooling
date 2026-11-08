@@ -20581,13 +20581,12 @@ acceptance threads while new lint features proceed:
   net. KiCad's netlist cannot distinguish a normal open from an explicit
   no-connect, so either may prompt. The rule does not establish PCB continuity
   or off-board wiring; project-authored pinouts remain authoritative.
-- **Evidence:** Tooling-owned synthetic cases cover exact-symbol and PART_ID
-  faults, connected controls, unanchored peers, split or ambiguous assignments,
-  incomplete metadata and inventory, DNP, source maps, not-applicable scope,
-  peer-scope partitioning, policy overrides, ignores, and deterministic
-  ordering. Source-hashed native fault, control, and no-connect schematics
-  passed repeatably on digest-pinned KiCad 10.0.0 and 10.0.5. No product-board
-  source is stored.
+- **Evidence:** Tooling-owned synthetic cases cover exact-symbol and PART_ID faults, connected
+  controls, unanchored peers, split or ambiguous assignments, incomplete metadata and inventory,
+  DNP, source maps, not-applicable scope, peer-scope partitioning, policy overrides, ignores, and
+  deterministic ordering. Source-hashed native fault, control, and no-connect schematics passed
+  repeatably on digest-pinned KiCad 10.0.0 and 10.0.5. No product-board source is stored. See the
+  [synthetic fixture notes](../tests/fixtures/design_lint/connector-numeric-peer-open-native/README.md).
 - **Selection:** Select synthetic and parity regressions with
   `tests/test_connector_numeric_peer_open_outlier.py`,
   `tests/test_design_lint_mcp_parity_connector_numeric_peer_open.py`, and

@@ -4181,6 +4181,9 @@ KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
   -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.alternate_reference_plane_run")'
 ```
 
+The exact source and boundaries of the tooling-owned native board are in the
+[alternate-net fixture notes](../kicad_tooling/hwrepo/fixtures/pcb-reference-alternate-net-README.md).
+
 ## Review switching-current loop geometry
 
 Use `design_lint.pcb_switching_loop_map` only when the project has an
