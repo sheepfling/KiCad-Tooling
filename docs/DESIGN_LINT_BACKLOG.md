@@ -2027,9 +2027,13 @@ standalone parity work when it closes a demonstrated feature regression.
   parity, and digest-pinned native fixture cases exercise this composition.
   The focused selection passed nine tests; the local Docker-native lane passed
   its two cases on the pinned KiCad 10.0.0 and 10.0.5 images (2026-11-05).
-  A current exact map can establish schematic assignments for LINT-086; it does
-  not infer protection behavior, datasheet truth, or PCB continuity. Series
-  resistor plus protection-array combinations and multi-hop paths remain
+  A current exact map can establish schematic assignments for LINT-086. The
+  exact-map boundary now also supports one mapped series resistor per data line
+  together with multi-pin protection shunts on either mapped endpoint-side
+  data net. Synthetic tests cover a common-reference control, wrong shunt-pin
+  assignment, stable ordering, CLI/MCP equality, and repeated native exports.
+  This composition does not infer protection behavior, datasheet truth, or PCB
+  continuity. Multiple inline devices and other multi-hop paths remain
   unsupported.
 
 - **LINT-094 — Open native power output on comparable peers.** The original
@@ -20218,6 +20222,34 @@ acceptance threads while new lint features proceed:
   `design_lint_rule(rule_id="bus.usb_c_generic_connector_cc_pair_review")`.
   The native Docker lane uses
   `KICAD_RUN_NATIVE_USB_C_GENERIC_CONNECTOR_FIXTURES=1`.
+
+#### LINT-331 — Map USB series resistors with multi-pin protection shunts
+
+- **Status:** Implemented as an exact project-authored path-map composition for
+  `bus.usb_data_path_mismatch` and LINT-086 path coverage. Existing rule
+  triggers and default REVIEW policy are unchanged.
+- **Gap:** A complete multi-pin protection-shunt map could attach to direct or
+  exact inline USB data paths, but the same valid map was rejected when each
+  D+/D− path had one independently mapped series resistor. The coverage model
+  also excluded this combination, so an exact common-reference map could not
+  count the path as supported.
+- **Evidence:** Tooling-owned synthetic cases place the D+ shunt on the
+  connector-side net and the D− shunt on the PHY-side net. They check a valid
+  control, a wrong resistor value, a misassigned shunt ground pin, deterministic
+  mapping order, CLI/MCP equality, and repeated KiCad netlist exports. Exact
+  component identities, each two-net resistor topology, the shunt's complete
+  native pin inventory, and every expected net or no-connect assignment must
+  match.
+- **Boundary:** This is a project-authored schematic assignment check. It does
+  not infer a pinout, resistor suitability, protection function, component
+  conduction, board copper, or physical continuity. It supports one series
+  resistor per data line and separately mapped shunts; multi-hop paths and
+  multiple inline components remain outside the contract.
+- **Selection:** Run
+  `tests/test_usb_data_path_protection_shunts.py` and
+  `tests/test_design_lint_mcp_parity_usb_protection_shunts.py` with
+  `design_lint_rule(rule_id="bus.usb_data_path_mismatch")`. The exact native
+  cases are included in the `KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1` lane.
 
 #### LINT-330 — Preserve other contacts in generic USB SuperSpeed connector review evidence
 

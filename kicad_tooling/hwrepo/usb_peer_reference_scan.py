@@ -55,7 +55,7 @@ def scan_usb_peer_reference_reviews(
     USB 2.0 lines may also use one fitted two-pin Device:R or an exact current
     project-authored inline-component map; complete two-pin passive diode-designated
     shunts may appear on those nets. A project map can also bind a complete
-    multi-pin protection array to a direct or exact inline path. DNP parts, incomplete pin metadata,
+    multi-pin protection array to a direct, exact series-resistor, or inline path. DNP parts, incomplete pin metadata,
     unexplained signal-net peers, multi-hop topologies, and mixed reference domains
     remain outside this bounded topology check.
     """

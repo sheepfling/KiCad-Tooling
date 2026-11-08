@@ -27,6 +27,8 @@ regression.
 | `protection-shunt-pin-fault.kicad_sch`                       | Shunt pin U6.2 is incorrectly assigned to USB_DP                                             | One exact mapped shunt-pin finding; no duplicate peer review              |
 | `inline-protection-shunt-control.kicad_sch`                  | Mapped inline path with U6 taps on USB_DP_PORT and USB_DM_PHY                                | One supported path; no path or peer-reference finding                     |
 | `inline-protection-shunt-fault.kicad_sch`                    | U6.3 D− tap is assigned to USB_DM_SHUNT_FAULT                                                | One exact shunt-pin finding; no supported peer path                       |
+| `series-protection-shunt-control.kicad_sch`                  | 27 Ω on each line; U6 taps D+ at connector side and D− at PHY side                          | One supported path; no path or peer-reference finding                     |
+| `series-protection-shunt-pin-fault.kicad_sch`                | Same series paths; U6.2 is assigned to USB_DP_PORT                                          | One exact shunt-pin finding; no supported peer path                       |
 
 SHA-256 hashes of the version-controlled schematic inputs:
 
@@ -47,10 +49,15 @@ SHA-256 hashes of the version-controlled schematic inputs:
 | `protection-shunt-pin-fault.kicad_sch`                 | `27a95acc910f2b379a3c1158c0dcb3bf7ca1faf644564d6d8b7811433838cc61` |
 | `inline-protection-shunt-control.kicad_sch`            | `d8ff88b4adbfec21bf369b11cd9171c7fba5cf8573b93b1de6bf3dcff1ce60a0` |
 | `inline-protection-shunt-fault.kicad_sch`              | `c86bcce0c3accc02257e7a5f92479945d1a4f8bb0d87d2b452c2643f0d4ab67f` |
+| `series-protection-shunt-control.kicad_sch`            | `ecef04a5417f0f9c028e6e350539d80fc450ba4573d87470b9e8c9e57920a964` |
+| `series-protection-shunt-pin-fault.kicad_sch`          | `a087ba2384d2e4a9bac88d8a642a9439694073ecdd7e02f3c026a6fbe0361874` |
 
-The CLI/MCP parity regression also reads this synthetic native export:
+The CLI/MCP parity regression also reads these synthetic native exports:
 `inline-protection-shunt-control.netlist.xml`
 (`fdf813c9ea6a29a2ad521e4407c0ddc29bdb04ef11a09857b0086daa02693583`).
+`series-protection-shunt-control.netlist.xml` was exported with KiCad 10.0.0
+from the matching schematic and has SHA-256
+`b80c2370182749f4e849cabf4ab2df40a2ce3a29d652356d4db5615147d606e`.
 The native fixture lane re-exports both schematics twice on each pinned KiCad
 version and checks the normalized typed contracts before evaluating the maps.
 
@@ -139,3 +146,11 @@ This is source-to-netlist regression evidence only. The lane does not run ERC,
 DRC, PCB copper continuity, component placement, signal-integrity analysis,
 or hardware qualification. The controls demonstrate the configured rule's
 behavior; they do not determine which topology a real product requires.
+
+The series-resistor composition uses one exact 27 Ω resistor per D+/D− line.
+U6.1 taps the D+ connector-side net and U6.3 taps the D− PHY-side net; the
+remaining pins retain explicit board-reference or no-connect assignments. The
+control is supported with a common-reference map. The fault assigns U6.2 to
+USB_DP_PORT and must produce one `bus.usb_data_path_mismatch` finding naming
+that pin. This checks schematic assignments only; it does not establish
+resistor suitability, protection behavior, or PCB continuity.

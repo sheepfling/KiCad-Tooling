@@ -179,6 +179,7 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
             elif mismatches and case not in {
                 "protection-shunt-pin-fault",
                 "inline-protection-shunt-fault",
+                "series-protection-shunt-pin-fault",
             }:
                 raise ValueError(
                     f"Native {case} USB control mismatched the authored topology: {mismatches}"

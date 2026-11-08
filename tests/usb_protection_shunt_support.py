@@ -14,6 +14,7 @@ from kicad_tooling.hwrepo.usb_data_path_models import (
     UsbDataInterfaceRequirement,
     UsbDataPathLineRequirement,
     UsbDataPathMap,
+    UsbDataSeriesResistorRequirement,
 )
 from kicad_tooling.hwrepo.usb_reference_pin_models import UsbReferencePinRequirement
 
@@ -148,4 +149,122 @@ def protection_shunt_netlist(*, common_reference: bool = False) -> NetlistContra
             "U6.5": "power_in",
             "U6.6": "passive",
         },
+    )
+
+
+def series_protection_shunt_map() -> UsbDataPathMap:
+    shunt = UsbDataPathProtectionShuntRequirement(
+        reference="U6",
+        expected_symbol="Synthetic:UsbProtectionArray",
+        expected_footprint="Synthetic:DFN-6",
+        data_pins=(
+            UsbDataPathProtectionShuntDataPinRequirement(pin="U6.1", line="D+", net="USB_DP_PORT"),
+            UsbDataPathProtectionShuntDataPinRequirement(pin="U6.3", line="D-", net="USB_DM_PHY"),
+        ),
+        pins=(
+            UsbDataPathInlinePinRequirement(pin="U6.1", disposition="net", net="USB_DP_PORT"),
+            UsbDataPathInlinePinRequirement(pin="U6.2", disposition="net", net="BOARD_GND"),
+            UsbDataPathInlinePinRequirement(pin="U6.3", disposition="net", net="USB_DM_PHY"),
+            UsbDataPathInlinePinRequirement(pin="U6.4", disposition="net", net="BOARD_GND"),
+            UsbDataPathInlinePinRequirement(pin="U6.5", disposition="net", net="BOARD_GND"),
+            UsbDataPathInlinePinRequirement(pin="U6.6", disposition="unconnected"),
+        ),
+    )
+    return UsbDataPathMap(
+        basis="Synthetic exact USB series-resistor paths with mapped protection taps",
+        interfaces=(
+            UsbDataInterfaceRequirement(
+                id="usb-series-shunt-port-1",
+                basis="Synthetic exact two-resistor path and complete protection pin map",
+                connector_reference="J1",
+                expected_connector_symbol="Connector:USB_A",
+                expected_connector_footprint="Synthetic:USB-A",
+                phy_reference="U1",
+                expected_phy_symbol="Synthetic:TUSB2036",
+                expected_phy_footprint="Synthetic:QFN",
+                positive=UsbDataPathLineRequirement(
+                    line="D+",
+                    connector_pin="J1.1",
+                    phy_pin="U1.1",
+                    connector_net="USB_DP_PORT",
+                    phy_net="USB_DP_PHY",
+                    topology="series_resistor",
+                    series_resistor=UsbDataSeriesResistorRequirement(
+                        reference="R1",
+                        expected_symbol="Device:R",
+                        expected_footprint="Synthetic:0603",
+                        minimum_ohms=27,
+                        maximum_ohms=27,
+                    ),
+                ),
+                negative=UsbDataPathLineRequirement(
+                    line="D-",
+                    connector_pin="J1.2",
+                    phy_pin="U1.2",
+                    connector_net="USB_DM_PORT",
+                    phy_net="USB_DM_PHY",
+                    topology="series_resistor",
+                    series_resistor=UsbDataSeriesResistorRequirement(
+                        reference="R2",
+                        expected_symbol="Device:R",
+                        expected_footprint="Synthetic:0603",
+                        minimum_ohms=27,
+                        maximum_ohms=27,
+                    ),
+                ),
+                protection_shunts=(shunt,),
+                connector_reference_pins=(UsbReferencePinRequirement(pin="J1.4", net="BOARD_GND"),),
+                phy_reference_pins=(UsbReferencePinRequirement(pin="U1.3", net="BOARD_GND"),),
+                reference_policy="common_net",
+            ),
+        ),
+    )
+
+
+def series_protection_shunt_netlist(*, fault: str | None = None) -> NetlistContract:
+    observed = protection_shunt_netlist(common_reference=True)
+    nets = {
+        "USB_DP_PORT": ("J1.1", "R1.1", "U6.1"),
+        "USB_DP_PHY": ("R1.2", "U1.1"),
+        "USB_DM_PORT": ("J1.2", "R2.1"),
+        "USB_DM_PHY": ("R2.2", "U1.2", "U6.3"),
+        "BOARD_GND": ("J1.4", "U1.3", "U6.2", "U6.4", "U6.5"),
+        "+3V3": ("U1.4",),
+    }
+    if fault == "wrong-shunt-pin-net":
+        nets["BOARD_GND"] = tuple(pin for pin in nets["BOARD_GND"] if pin != "U6.2")
+        nets["USB_DP_PORT"] = (*nets["USB_DP_PORT"], "U6.2")
+    components = dict(observed.components)
+    components.update(
+        {
+            "R1": ComponentContract(
+                value="22R" if fault == "wrong-resistor-value" else "27R",
+                footprint="Synthetic:0603",
+            ),
+            "R2": ComponentContract(value="27R", footprint="Synthetic:0603"),
+        }
+    )
+    return observed.model_copy(
+        update={
+            "components": components,
+            "component_symbols": {
+                **observed.component_symbols,
+                "U1": "Synthetic:TUSB2036",
+                "R1": "Device:R",
+                "R2": "Device:R",
+            },
+            "component_pin_numbers": {
+                **observed.component_pin_numbers,
+                "R1": ("1", "2"),
+                "R2": ("1", "2"),
+            },
+            "pin_electrical_types": {
+                **observed.pin_electrical_types,
+                "R1.1": "passive",
+                "R1.2": "passive",
+                "R2.1": "passive",
+                "R2.2": "passive",
+            },
+            "nets": nets,
+        }
     )

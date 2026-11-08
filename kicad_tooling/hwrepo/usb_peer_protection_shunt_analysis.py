@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from .netlist_contract_models import NetlistContract
 from .usb_data_path_models import UsbDataInterfaceRequirement, UsbDataPathMap
 from .usb_data_paths import usb_data_path_mismatches
 from .usb_peer_endpoint_analysis import pin_net_index
 from .usb_peer_mapped_protection_evidence import mapped_protection_shunt_evidence
-from .usb_peer_path_analysis import d_designated_shunt_branches
+from .usb_peer_path_analysis import d_designated_shunt_branches, usb_data_link
 from .usb_peer_reference_types import UsbEndpoint, UsbPeerDataLink, UsbPeerDataShuntBranch
 
 
@@ -28,14 +30,14 @@ def _interface_matches(
     ):
         return False
     return (
-        interface.positive.topology == "direct"
+        interface.positive.topology in {"direct", "series_resistor"}
         and interface.positive.connector_net.casefold() == connector.positive_net.casefold()
         and interface.positive.phy_net.casefold() == phy.positive_net.casefold()
         and {pin.casefold() for pin in interface.positive.connector_pins}
         == {pin.casefold() for pin in connector.positive_pins}
         and {pin.casefold() for pin in interface.positive.phy_pins}
         == {pin.casefold() for pin in phy.positive_pins}
-        and interface.negative.topology == "direct"
+        and interface.negative.topology in {"direct", "series_resistor"}
         and interface.negative.connector_net.casefold() == connector.negative_net.casefold()
         and interface.negative.phy_net.casefold() == phy.negative_net.casefold()
         and {pin.casefold() for pin in interface.negative.connector_pins}
@@ -104,6 +106,29 @@ def _direct_shunt_path(
     )
 
 
+def _series_shunt_path(
+    connector: UsbEndpoint,
+    phy: UsbEndpoint,
+    observed: NetlistContract,
+    interface: UsbDataInterfaceRequirement,
+) -> UsbPeerDataLink | None:
+    """Use the exact map to exclude mapped shunt pins from series-path tracing."""
+    assignments = pin_net_index(observed)
+    mapped_pins = frozenset(
+        item.pin.casefold()
+        for shunt in interface.protection_shunts
+        for item in shunt.pins
+        if item.disposition == "net"
+    )
+    path_members = {
+        net: members - mapped_pins for net, members in assignments.pin_keys_by_net_key.items()
+    }
+    data_link = usb_data_link(connector, phy, path_members, observed)
+    if data_link is None:
+        return None
+    return replace(data_link, protection_shunts=mapped_protection_shunt_evidence(interface))
+
+
 def mapped_protection_shunt_usb_data_link(
     connector: UsbEndpoint,
     phy: UsbEndpoint,
@@ -131,4 +156,7 @@ def mapped_protection_shunt_usb_data_link(
     ]
     if len(matches) != 1:
         return None
-    return _direct_shunt_path(connector, phy, observed, matches[0])
+    interface = matches[0]
+    if any(line.topology == "series_resistor" for line in (interface.positive, interface.negative)):
+        return _series_shunt_path(connector, phy, observed, interface)
+    return _direct_shunt_path(connector, phy, observed, interface)

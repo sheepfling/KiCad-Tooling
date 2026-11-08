@@ -41,6 +41,8 @@ def test_hosted_usb_topology_maps_cover_native_fixture_cases() -> None:
         "protection-shunt-pin-fault",
         "inline-protection-shunt-control",
         "inline-protection-shunt-fault",
+        "series-protection-shunt-control",
+        "series-protection-shunt-pin-fault",
     }
 
     bonded = requirements["external-series-reference-bond-control"].interfaces[0]
@@ -92,6 +94,14 @@ def test_hosted_usb_topology_maps_cover_native_fixture_cases() -> None:
         requirements["protection-shunt-pin-fault"]
         == requirements["protection-shunt-split-reference"]
     )
+    series_shunt = requirements["series-protection-shunt-control"].interfaces[0]
+    assert series_shunt.positive.topology == "series_resistor"
+    assert series_shunt.positive.series_resistor.reference == "R1"
+    assert series_shunt.negative.series_resistor.reference == "R2"
+    assert tuple(
+        (item.pin, item.line, item.net) for item in series_shunt.protection_shunts[0].data_pins
+    ) == (("U6.1", "D+", "USB_DP_PORT"), ("U6.3", "D-", "USB_DM_PHY"))
+    assert series_shunt.reference_policy == "common_net"
 
 
 def test_protection_shunt_native_fixture_sources_match_pinned_hashes() -> None:
@@ -100,6 +110,8 @@ def test_protection_shunt_native_fixture_sources_match_pinned_hashes() -> None:
         "protection-shunt-split-reference.kicad_sch": "315b0318669d9cadeb28fcfe2ec549100f9ac5c10555e3828619e379770d287b",
         "protection-shunt-common-reference.kicad_sch": "0d2d087d73bc68cae85b2446cf2f8432ed07296d999fd4a588d53a7470b43ec5",
         "protection-shunt-pin-fault.kicad_sch": "27a95acc910f2b379a3c1158c0dcb3bf7ca1faf644564d6d8b7811433838cc61",
+        "series-protection-shunt-control.kicad_sch": "ecef04a5417f0f9c028e6e350539d80fc450ba4573d87470b9e8c9e57920a964",
+        "series-protection-shunt-pin-fault.kicad_sch": "a087ba2384d2e4a9bac88d8a642a9439694073ecdd7e02f3c026a6fbe0361874",
     }
 
     assert {

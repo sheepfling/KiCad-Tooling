@@ -13,7 +13,12 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.usb_data_path_models import UsbDataPathMap
 from kicad_tooling.hwrepo.usb_data_paths import usb_data_path_mismatches
-from tests.usb_protection_shunt_support import protection_shunt_map, protection_shunt_netlist
+from tests.usb_protection_shunt_support import (
+    protection_shunt_map,
+    protection_shunt_netlist,
+    series_protection_shunt_map,
+    series_protection_shunt_netlist,
+)
 
 RULE_ID = "bus.usb_peer_reference_review"
 PATH_RULE_ID = "bus.usb_data_path_mismatch"
@@ -172,6 +177,44 @@ def test_explicit_common_reference_policy_suppresses_the_review() -> None:
     )
 
 
+def test_exact_series_resistor_paths_support_protection_taps_on_each_side() -> None:
+    observed = series_protection_shunt_netlist()
+    path_map = series_protection_shunt_map()
+
+    assert usb_data_path_mismatches(path_map, observed) == ()
+    report = lint_report(observed, path_map)
+    assert PATH_RULE_ID not in {item.rule_id for item in report.findings}
+    assert RULE_ID not in {item.rule_id for item in report.findings}
+    assert report.usb_peer_reference_coverage.supported_data_path_count == 1
+    shunt = report.usb_peer_reference_coverage.path_entries[0].data_path.protection_shunts[0]
+    assert tuple((item.line, item.net) for item in shunt.data_pins) == (
+        ("D+", "USB_DP_PORT"),
+        ("D-", "USB_DM_PHY"),
+    )
+
+
+@pytest.mark.parametrize(
+    ("fault", "expected_line", "expected_issue"),
+    (
+        ("wrong-resistor-value", "D+", "R1 is 22 Ω; expected 27–27 Ω"),
+        ("wrong-shunt-pin-net", "protection_shunt", "U6.2 is on USB_DP_PORT; expected BOARD_GND"),
+    ),
+)
+def test_series_path_composition_reports_the_exact_changed_requirement(
+    fault: str, expected_line: str, expected_issue: str
+) -> None:
+    report = lint_report(
+        series_protection_shunt_netlist(fault=fault), series_protection_shunt_map()
+    )
+    findings = tuple(item for item in report.findings if item.rule_id == PATH_RULE_ID)
+
+    assert len(findings) == 1
+    assert findings[0].evidence["line"] == (expected_line,)
+    assert expected_issue in findings[0].evidence["issues"]
+    assert RULE_ID not in {item.rule_id for item in report.findings}
+    assert report.usb_peer_reference_coverage.supported_data_path_count == 0
+
+
 def test_shunt_path_evidence_is_stable_under_native_mapping_order() -> None:
     observed = protection_shunt_netlist()
     reordered = observed.model_copy(
@@ -220,3 +263,28 @@ def test_shunt_path_evidence_is_stable_under_native_mapping_order() -> None:
             if item.rule_id == rule_id
         )
         assert first_findings == second_findings
+
+
+def test_series_shunt_fault_is_stable_under_component_and_net_order() -> None:
+    observed = series_protection_shunt_netlist(fault="wrong-shunt-pin-net")
+    reordered = observed.model_copy(
+        update={
+            "components": dict(reversed(tuple(observed.components.items()))),
+            "component_symbols": dict(reversed(tuple(observed.component_symbols.items()))),
+            "component_pin_numbers": dict(reversed(tuple(observed.component_pin_numbers.items()))),
+            "nets": dict(reversed(tuple(observed.nets.items()))),
+        }
+    )
+    path_map = series_protection_shunt_map()
+    first = lint_report(observed, path_map)
+    second = lint_report(reordered, path_map)
+    first_findings = tuple(
+        (item.fingerprint, item.evidence) for item in first.findings if item.rule_id == PATH_RULE_ID
+    )
+    second_findings = tuple(
+        (item.fingerprint, item.evidence)
+        for item in second.findings
+        if item.rule_id == PATH_RULE_ID
+    )
+    assert first_findings == second_findings
+    assert first.usb_peer_reference_coverage == second.usb_peer_reference_coverage

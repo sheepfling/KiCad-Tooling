@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
+from .ci_hosted_usb_series_shunt_requirements import series_shunt_path_map
 from .hwrepo.reference_bond_models import ReferenceBondRequirement
 from .hwrepo.usb_data_path_component_models import (
     UsbDataPathInlineComponentRequirement,
@@ -429,6 +430,7 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
     inline_protection_shunt_map = UsbDataPathMap.model_validate(
         {**inline_component_map.model_dump(), "interfaces": (inline_combined_interface,)}
     )
+    series_shunt_map = series_shunt_path_map(series_map, protection_shunt)
     requirements = {
         "integrated-direct": direct_map,
         "external-series": series_map,
@@ -455,6 +457,8 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
         "protection-shunt-pin-fault": protection_shunt_split_map,
         "inline-protection-shunt-control": inline_protection_shunt_map,
         "inline-protection-shunt-fault": inline_protection_shunt_map,
+        "series-protection-shunt-control": series_shunt_map,
+        "series-protection-shunt-pin-fault": series_shunt_map,
     }
 
     return requirements

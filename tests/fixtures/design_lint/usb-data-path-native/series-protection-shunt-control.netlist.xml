@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="E">
+  <design>
+    <source>/fixtures/series-protection-shunt-control.kicad_sch</source>
+    <date>2026-11-08T03:31:29</date>
+    <tool>Eeschema 10.0.0</tool>
+    <sheet number="1" name="/" tstamps="/">
+      <title_block>
+        <title>Synthetic series-resistor USB path with exact protection shunt</title>
+        <company/>
+        <rev/>
+        <date/>
+        <source>series-protection-shunt-control.kicad_sch</source>
+        <comment number="1" value="NOT FOR MANUFACTURE - tooling regression fixture"/>
+        <comment number="2" value=""/>
+        <comment number="3" value=""/>
+        <comment number="4" value=""/>
+        <comment number="5" value=""/>
+        <comment number="6" value=""/>
+        <comment number="7" value=""/>
+        <comment number="8" value=""/>
+        <comment number="9" value=""/>
+      </title_block>
+    </sheet>
+  </design>
+  <components>
+    <comp ref="J1">
+      <value>USB_A</value>
+      <footprint>Synthetic:USB-A</footprint>
+      <fields>
+        <field name="Footprint">Synthetic:USB-A</field>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <libsource lib="Connector" part="USB_A" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="series-protection-shunt-control.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>53000000-0000-4000-8000-000000000410</tstamps>
+      <units>
+        <unit name="A">
+          <pins>
+            <pin num="1"/>
+            <pin num="4"/>
+            <pin num="2"/>
+          </pins>
+        </unit>
+      </units>
+    </comp>
+    <comp ref="R1">
+      <value>27R</value>
+      <footprint>Synthetic:0603</footprint>
+      <fields>
+        <field name="Footprint">Synthetic:0603</field>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <libsource lib="Device" part="R" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="series-protection-shunt-control.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>53000000-0000-4000-8000-000000000420</tstamps>
+      <units>
+        <unit name="A">
+          <pins>
+            <pin num="1"/>
+            <pin num="2"/>
+          </pins>
+        </unit>
+      </units>
+    </comp>
+    <comp ref="R2">
+      <value>27R</value>
+      <footprint>Synthetic:0603</footprint>
+      <fields>
+        <field name="Footprint">Synthetic:0603</field>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <libsource lib="Device" part="R" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="series-protection-shunt-control.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>53000000-0000-4000-8000-000000000430</tstamps>
+      <units>
+        <unit name="A">
+          <pins>
+            <pin num="1"/>
+            <pin num="2"/>
+          </pins>
+        </unit>
+      </units>
+    </comp>
+    <comp ref="U1">
+      <value>TUSB2036</value>
+      <footprint>Synthetic:QFN</footprint>
+      <fields>
+        <field name="Footprint">Synthetic:QFN</field>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <libsource lib="Synthetic" part="TUSB2036" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="series-protection-shunt-control.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>53000000-0000-4000-8000-000000000440</tstamps>
+      <units>
+        <unit name="A">
+          <pins>
+            <pin num="1"/>
+            <pin num="3"/>
+            <pin num="2"/>
+          </pins>
+        </unit>
+      </units>
+    </comp>
+    <comp ref="U6">
+      <value>UsbProtectionArray</value>
+      <footprint>Synthetic:DFN-6</footprint>
+      <fields>
+        <field name="Footprint">Synthetic:DFN-6</field>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <libsource lib="Synthetic" part="UsbProtectionArray" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="series-protection-shunt-control.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>53000000-0000-4000-8000-000000000510</tstamps>
+      <units>
+        <unit name="A">
+          <pins>
+            <pin num="1"/>
+            <pin num="3"/>
+            <pin num="6"/>
+            <pin num="5"/>
+            <pin num="2"/>
+            <pin num="4"/>
+          </pins>
+        </unit>
+      </units>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="Connector" part="USB_A">
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">USB_A</field>
+        <field name="Footprint"/>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <pins>
+        <pin num="1" name="D+" type="passive"/>
+        <pin num="2" name="D-" type="passive"/>
+        <pin num="4" name="GND" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="R">
+      <fields>
+        <field name="Reference">R</field>
+        <field name="Value">R</field>
+        <field name="Footprint"/>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="TUSB2036">
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">TUSB2036</field>
+        <field name="Footprint"/>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <pins>
+        <pin num="1" name="DP1" type="input"/>
+        <pin num="2" name="DM1" type="input"/>
+        <pin num="3" name="AGND" type="power_in"/>
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="UsbProtectionArray">
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">UsbProtectionArray</field>
+        <field name="Footprint"/>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <pins>
+        <pin num="1" name="D+" type="passive"/>
+        <pin num="2" name="GND" type="power_in"/>
+        <pin num="3" name="D-" type="passive"/>
+        <pin num="4" name="GND" type="power_in"/>
+        <pin num="5" name="GND" type="power_in"/>
+        <pin num="6" name="NC" type="passive"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <libraries/>
+  <nets>
+    <net code="1" name="/BOARD_GND" class="Default">
+      <node ref="J1" pin="4" pinfunction="GND_4" pintype="passive"/>
+      <node ref="U1" pin="3" pinfunction="AGND_3" pintype="power_in"/>
+      <node ref="U6" pin="2" pinfunction="GND_2" pintype="power_in"/>
+      <node ref="U6" pin="4" pinfunction="GND_4" pintype="power_in"/>
+      <node ref="U6" pin="5" pinfunction="GND_5" pintype="power_in"/>
+    </net>
+    <net code="2" name="/USB_DM_PHY" class="Default">
+      <node ref="R2" pin="2" pintype="passive"/>
+      <node ref="U1" pin="2" pinfunction="DM1_2" pintype="input"/>
+      <node ref="U6" pin="3" pinfunction="D-_3" pintype="passive"/>
+    </net>
+    <net code="3" name="/USB_DM_PORT" class="Default">
+      <node ref="J1" pin="2" pinfunction="D-_2" pintype="passive"/>
+      <node ref="R2" pin="1" pintype="passive"/>
+    </net>
+    <net code="4" name="/USB_DP_PHY" class="Default">
+      <node ref="R1" pin="2" pintype="passive"/>
+      <node ref="U1" pin="1" pinfunction="DP1_1" pintype="input"/>
+    </net>
+    <net code="5" name="/USB_DP_PORT" class="Default">
+      <node ref="J1" pin="1" pinfunction="D+_1" pintype="passive"/>
+      <node ref="R1" pin="1" pintype="passive"/>
+      <node ref="U6" pin="1" pinfunction="D+_1" pintype="passive"/>
+    </net>
+    <net code="6" name="unconnected-(U6-NC-Pad6)" class="Default">
+      <node ref="U6" pin="6" pinfunction="NC_6" pintype="passive+no_connect"/>
+    </net>
+  </nets>
+</export>

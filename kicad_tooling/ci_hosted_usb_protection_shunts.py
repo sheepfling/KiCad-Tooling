@@ -78,3 +78,41 @@ def validate_usb_protection_shunt_fixture_reports(
         or inline_fault.usb_peer_reference_coverage.supported_data_path_count != 0
     ):
         raise ValueError("Native combined inline-path and mapped-shunt fault was not localized")
+
+    series_control = reports[("series-protection-shunt-control", "first")]
+    series_coverage = series_control.usb_peer_reference_coverage
+    if (
+        series_coverage is None
+        or series_coverage.supported_data_path_count != 1
+        or series_coverage.common_reference_path_count != 1
+        or len(series_coverage.path_entries) != 1
+        or series_coverage.path_entries[0].data_path.positive.series_resistor is None
+        or series_coverage.path_entries[0].data_path.negative.series_resistor is None
+        or tuple(
+            item.reference for item in series_coverage.path_entries[0].data_path.protection_shunts
+        )
+        != ("U6",)
+        or any(
+            item.rule_id in {"bus.usb_peer_reference_review", "bus.usb_data_path_mismatch"}
+            for item in series_control.findings
+        )
+    ):
+        raise ValueError("Native series-resistor and protection-shunt control was not supported")
+
+    series_fault = reports[("series-protection-shunt-pin-fault", "first")]
+    series_faults = tuple(
+        item for item in series_fault.findings if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    if (
+        series_fault.status != "REVIEW"
+        or len(series_faults) != 1
+        or series_faults[0].evidence.get("line") != ("protection_shunt",)
+        or not any(
+            "U6.2 is on USB_DP_PORT; expected BOARD_GND" in issue
+            for issue in series_faults[0].evidence.get("issues", ())
+        )
+        or any(item.rule_id == "bus.usb_peer_reference_review" for item in series_fault.findings)
+        or series_fault.usb_peer_reference_coverage is None
+        or series_fault.usb_peer_reference_coverage.supported_data_path_count != 0
+    ):
+        raise ValueError("Native series/shunt pin fault was not localized to the exact mapped pin")

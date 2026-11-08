@@ -5958,13 +5958,13 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For a project-authored connector-to-PHY interface, exact connector and PHY symbol/footprint identities, endpoint pin inventory and net assignments, and the declared direct path, fitted series-resistor identity/value/two-net topology, or one exact multi-pin inline-component identity and full pin-to-net/no-connect map must match. Inline-component paths also map the component pins that connect each connector-side D+/D- net to its PHY-side net. An optional multi-pin protection-shunt map names the exact component identity, one D+ and one D- tap on either side of a direct or inline path, and every native pin's expected net or explicit no-connect state; all those assignments and the complete native pin inventory must match. A common_net or separate_nets reference policy checks the mapped endpoint reference pins; a bonded policy additionally requires one exact passive two-pin component identity, value, footprint, and side-pin net assignment between the two declared reference nets. A superspeed_interfaces entry checks one exact direct complementary SuperSpeed P/N path, endpoint identities, reference-pin inventories, and reviewed common_net, separate_nets, or bonded policy; stale expectations emit this mismatch finding.",
+      "predicate": "For a project-authored connector-to-PHY interface, exact connector and PHY symbol/footprint identities, endpoint pin inventory and net assignments, and the declared direct path, fitted series-resistor identity/value/two-net topology, or one exact multi-pin inline-component identity and full pin-to-net/no-connect map must match. Inline-component paths also map the component pins that connect each connector-side D+/D- net to its PHY-side net. An optional multi-pin protection-shunt map names the exact component identity, one D+ and one D- tap on the mapped direct, series-resistor, or inline path, and every native pin's expected net or explicit no-connect state; all those assignments and the complete native pin inventory must match. A common_net or separate_nets reference policy checks the mapped endpoint reference pins; a bonded policy additionally requires one exact passive two-pin component identity, value, footprint, and side-pin net assignment between the two declared reference nets. A superspeed_interfaces entry checks one exact direct complementary SuperSpeed P/N path, endpoint identities, reference-pin inventories, and reviewed common_net, separate_nets, or bonded policy; stale expectations emit this mismatch finding.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The project must author the PHY-specific topology and cite its engineering basis; this rule does not infer that every USB PHY needs or forbids an external resistor.",
-        "Direct USB 2.0 paths, one mapped conventional two-terminal resistor per data line, and one explicitly mapped multi-pin inline component are supported. The inline map must account for the component's complete native pin inventory and each pin's expected net or explicit no-connect state. A direct path may map exact multi-pin protection shunts, and an inline path may combine with separate mapped shunt components attached to either mapped data net. Each map accounts for the complete native pin inventory, D+/D- tap pins, and every expected net or explicit no-connect state. Series-resistor paths cannot be combined with these shunt maps. SuperSpeed entries cover only exact direct complementary P/N endpoint and reference-pin assignments; lane-indexed USB-C, muxes, retimers, multiple inline devices, additional series components, signal integrity, PCB placement, and copper continuity need separate requirements or evidence.",
+        "Direct USB 2.0 paths, one mapped conventional two-terminal resistor per data line, and one explicitly mapped multi-pin inline component are supported. The inline map must account for the component's complete native pin inventory and each pin's expected net or explicit no-connect state. Exact multi-pin protection shunts may attach to either endpoint-side data net of a direct path, one mapped series resistor per data line, or one inline component. Each shunt map accounts for its complete native pin inventory, D+/D- tap pins, and every expected net or explicit no-connect state. SuperSpeed entries cover only exact direct complementary P/N endpoint and reference-pin assignments; lane-indexed USB-C, muxes, retimers, multiple inline devices, additional series components, signal integrity, PCB placement, and copper continuity need separate requirements or evidence.",
         "An inline component map records project-reviewed schematic connectivity. It does not establish that the selected symbol pin mapping matches the manufacturer's datasheet, that the device conducts or protects as intended, or that PCB copper completes the path.",
         "A passing schematic netlist comparison does not validate the selected resistor range against a datasheet or prove electrical or manufacturing suitability.",
         "A mapped reference bond checks native schematic symbol, footprint, value, DNP state, passive pin types, and net assignments; it does not prove component conduction, board copper continuity, or off-board grounding."
@@ -5977,6 +5977,7 @@
         "tests.test_usb_inline_component_paths.test_inline_component_faults_report_exact_pin_evidence",
         "tests.test_usb_inline_component_paths.test_missing_inline_component_reports_both_data_lines",
         "tests.test_usb_data_path_protection_shunts.test_stale_or_faulty_shunt_map_fails_closed",
+        "tests.test_usb_data_path_protection_shunts.test_series_path_composition_reports_the_exact_changed_requirement",
         "tests.test_usb_peer_reference_superspeed.test_stale_superspeed_reference_map_reports_mismatch_and_keeps_review",
         "tests.test_usb_peer_reference_superspeed.test_stale_superspeed_pin_net_or_identity_map_is_reported",
         "tests.test_usb_peer_reference_superspeed.test_stale_superspeed_reference_pin_map_is_reported",
@@ -5985,7 +5986,8 @@
         "tests.test_design_lint_mcp_parity_usb_protection_shunts.test_usb_protection_shunt_review_cli_mcp_parity",
         "tests.test_design_lint_mcp_parity_usb_data.test_usb_inline_component_map_parity",
         "tests.test_usb_inline_protection_shunts.test_misassigned_inline_path_shunt_fails_the_exact_map_closed",
-        "tests.test_design_lint_mcp_parity_usb_inline_protection_shunts.test_combined_inline_path_and_shunt_parity"
+        "tests.test_design_lint_mcp_parity_usb_inline_protection_shunts.test_combined_inline_path_and_shunt_parity",
+        "tests.test_design_lint_mcp_parity_usb_protection_shunts.test_usb_series_resistor_shunt_map_cli_mcp_parity"
       ],
       "valid_control_fixtures": [
         "tests.test_usb_data_paths.test_documented_integrated_phy_direct_path_is_a_valid_control",
@@ -5994,6 +5996,7 @@
         "tests.test_usb_inline_bonded_reference_paths.test_exact_inline_protection_and_reference_ferrite_map_is_a_valid_control",
         "tests.test_usb_inline_component_paths.test_exact_multi_pin_protection_path_is_a_valid_control",
         "tests.test_usb_data_path_protection_shunts.test_exact_mapped_protection_array_supports_split_reference_review",
+        "tests.test_usb_data_path_protection_shunts.test_exact_series_resistor_paths_support_protection_taps_on_each_side",
         "tests.test_usb_peer_reference_superspeed.test_exact_separate_superspeed_map_covers_the_review_and_mismatch_check",
         "tests.test_usb_peer_reference_superspeed.test_full_duplex_superspeed_map_covers_both_exact_directions",
         "tests.test_usb_peer_reference_superspeed.test_exact_bonded_superspeed_map_is_checked_and_covers_the_review",
@@ -6002,13 +6005,15 @@
         "tests.test_design_lint_mcp_parity_usb_protection_shunts.test_usb_protection_shunt_review_cli_mcp_parity",
         "tests.test_design_lint_mcp_parity_usb_data.test_usb_inline_component_map_parity",
         "tests.test_usb_inline_protection_shunts.test_mapped_inline_path_can_include_shunts_on_either_data_net",
-        "tests.test_design_lint_mcp_parity_usb_inline_protection_shunts.test_combined_inline_path_and_shunt_parity"
+        "tests.test_design_lint_mcp_parity_usb_inline_protection_shunts.test_combined_inline_path_and_shunt_parity",
+        "tests.test_design_lint_mcp_parity_usb_protection_shunts.test_usb_series_resistor_shunt_map_cli_mcp_parity"
       ],
       "metamorphic_fixtures": [
         "tests.test_usb_data_paths.test_missing_path_evidence_is_order_stable_and_repair_clears_it",
         "tests.test_usb_data_path_reference_bonds.test_bonded_reference_fault_evidence_is_order_stable",
         "tests.test_usb_inline_component_paths.test_inline_component_findings_are_order_stable_and_repair_clears_them",
         "tests.test_usb_data_path_protection_shunts.test_shunt_path_evidence_is_stable_under_native_mapping_order",
+        "tests.test_usb_data_path_protection_shunts.test_series_shunt_fault_is_stable_under_component_and_net_order",
         "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic",
         "tests.test_usb_inline_protection_shunts.test_inline_shunt_fault_evidence_is_stable_under_netlist_order"
       ],

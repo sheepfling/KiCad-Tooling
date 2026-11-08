@@ -2367,10 +2367,11 @@ authored; adding common_net, separate_nets, or bonded requires the separately
 reviewed endpoint reference-pin decision above. The lint does not decide that
 the protection ground must join either endpoint, and the schematic map does not
 prove the device's datasheet pinout, protection performance, or PCB copper
-continuity. A combined map supports exactly one inline-component path with a
-mapped protection shunt on the direct connector-side or PHY-side nets. Series
-resistor paths, multiple inline devices, and other multi-hop paths remain
-unsupported.
+continuity. A direct path, one mapped series resistor per data line, or one
+exact inline-component path can include separately mapped protection shunts on
+the connector-side or PHY-side data nets. Each shunt still requires its complete
+native pin inventory and exact net or no-connect assignments. Multiple inline
+devices and other multi-hop paths remain unsupported.
 
 For a direct D+/D− interface whose reference decision has also been reviewed,
 add the endpoint pin and net assignments to the same interface entry. Both
