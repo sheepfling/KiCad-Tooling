@@ -749,7 +749,24 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-332):** Added a configurable I3C connector review
+- **Latest progress (LINT-334, tag `v0.5.3rc560`):** Added the default-REVIEW
+  `connector.generic_peer_pin_open_outlier` heuristic for a numeric-only
+  contact that is open on one fitted connector peer. It requires a complete
+  matching pin inventory, supported pin metadata, a common-net anchor, and
+  exact or guarded PART_ID peer identity; it does not infer the contact's
+  purpose. The rule-tag selector passed 17 focused tests with 8 deselected.
+  Its source-hashed Docker fault/control/no-connect lane passed 3 tests across
+  KiCad 10.0.0 and 10.0.5. The remote commit-status endpoint reported no
+  checks as of 2026-11-08, so hosted acceptance is unverified.
+- **Return-heuristic baseline recheck (2026-11-08):** The synthetic four-port
+  DB9 PWM fault assigns returns to `0V PWM 1` through `0V PWM 4`. Its common
+  return control and fault both passed source-hashed Docker exports on exact
+  KiCad 10.0.0 and 10.0.5 (`4 passed, 2 deselected`). The fault reports
+  `connector.repeated_pin_function` and `net.numbered_returns`; the control
+  stays quiet. This confirms the existing review heuristic covers this
+  synthetic failure class without importing product-board source. It remains
+  a review signal and does not assert that the returns must be joined.
+- **Earlier progress (LINT-332):** Added a configurable I3C connector review
   cue for complete generic connectors assigned to both exact nets of a
   recognized I3C SDA/SCL pair. Two-contact connectors remain covered by the
   existing return prompt; the new cue does not infer common ground or power.
@@ -760,7 +777,8 @@ standalone parity work when it closes a demonstrated feature regression.
   acceptance on `v0.5.3rc553` found the existing interface architecture test
   file had grown past the 500-line ceiling. Its duplicate I3C module entries
   were removed because the new focused I3C architecture suite owns those
-  checks. The follow-up `v0.5.3rc554` hosted acceptance is pending.
+  checks. At the time this entry was written, follow-up `v0.5.3rc554` hosted
+  acceptance was pending.
 - **Previous progress (LINT-330):** The generic USB SuperSpeed connector prompt
   now retains every other inventoried contact's native function and assigned
   net state. Synthetic coverage shows J1.3 GND on `USB_GND` and open J1.4
