@@ -61,6 +61,17 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_i3c_signal_named_rail_native_fixture_lane.py": frozenset(
             {"interface_lint", "native_kicad", "slow"}
         ),
+        "test_i3c_generic_connector_pair_review.py": frozenset({"interface_lint"}),
+        "test_i3c_generic_connector_native_fixture_lane.py": frozenset(
+            {"interface_lint", "native_kicad", "slow"}
+        ),
+        "test_i3c_generic_connector_native_fixture_registry.py": frozenset({"interface_lint"}),
+        "test_design_lint_architecture_i3c_generic_connector.py": frozenset(
+            {"architecture", "interface_lint"}
+        ),
+        "test_design_lint_mcp_parity_i3c_generic_connector.py": frozenset(
+            {"interface_lint", "parity_lint", "slow", "template_checkout"}
+        ),
         "test_usb_data_same_net_native_fixture_lane.py": frozenset(
             {"interface_lint", "native_kicad", "slow"}
         ),

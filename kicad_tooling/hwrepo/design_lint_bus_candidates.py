@@ -18,6 +18,7 @@ from .design_lint_ethernet_management_generic_connector_candidates import (
 from .design_lint_ethernet_unconnected_candidates import ethernet_unconnected_pin_candidates
 from .design_lint_i2c_bus_candidates import i2c_protocol_bus_candidates
 from .design_lint_i2c_candidates import i2c_address_theme_candidates
+from .design_lint_i3c_bus_candidates import i3c_protocol_bus_candidates
 from .design_lint_interfaces_usb_data_polarity import usb_data_polarity_label_candidates
 from .design_lint_jtag_generic_connector_candidates import (
     jtag_generic_connector_pair_review_candidates,
@@ -62,6 +63,7 @@ def bus_candidates(inputs: BusCandidateInputs) -> tuple[Candidate, ...]:
     component_peer_findings = inputs.component_peer_findings
     return (
         *i2c_protocol_bus_candidates(inputs),
+        *i3c_protocol_bus_candidates(inputs),
         *two_wire_signal_candidates(observed),
         *serial_protocol_bus_candidates(inputs),
         *spi_protocol_bus_candidates(inputs),

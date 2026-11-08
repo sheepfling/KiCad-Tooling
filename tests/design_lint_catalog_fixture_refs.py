@@ -64,6 +64,18 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
                 ),
             }
         ),
+        "bus.i3c_generic_connector_pair_review": MappingProxyType(
+            {
+                "fault_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_i3c_generic_connector",
+                    "test_generic_i3c_connector_cli_mcp_parity",
+                ),
+                "valid_control_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_i3c_generic_connector",
+                    "test_generic_i3c_connector_cli_mcp_parity",
+                ),
+            }
+        ),
         "component.peer_power_output_unconnected": MappingProxyType(
             {
                 "fault_fixtures": _refs(

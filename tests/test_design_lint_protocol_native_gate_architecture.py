@@ -147,6 +147,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="i3c-unconnected-pin",
     ),
     pytest.param(
+        "bus.i3c_generic_connector_pair_review",
+        "KICAD_RUN_NATIVE_I3C_GENERIC_CONNECTOR_FIXTURES",
+        "tests.test_i3c_generic_connector_native_fixture_lane."
+        "test_native_generic_connector_fault_and_named_control",
+        id="i3c-generic-connector-pair-review",
+    ),
+    pytest.param(
         "bus.can_unconnected_direction_pin",
         "KICAD_RUN_NATIVE_CAN_UNCONNECTED_DIRECTION_PIN_FIXTURES",
         "tests.test_can_unconnected_direction_pins_native_fixture_lane."

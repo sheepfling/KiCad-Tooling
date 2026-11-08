@@ -5397,6 +5397,60 @@
       "implementation_owner": "kicad_tooling/hwrepo/i3c_unconnected_pins.py#unconnected_i3c_signal_pins"
     },
     {
+      "rule_id": "bus.i3c_generic_connector_pair_review",
+      "title": "Generic connector contacts match a recognized I3C pair",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete connector and endpoint pin inventories, generic contact functions, exact net assignments, I3C channel identity, and all other connector-contact functions and assignments",
+      "predicate": "For a fitted U/IC with a complete native pin inventory and one unique I3C SDA/SCL pair on distinct exact nets, emit REVIEW when a completely inventoried connector with more than two pins has generic Pin_N contacts assigned to both exact nets. A current source-matched connector map must assign every reported generic contact to the corresponding I3C role and exact net to suppress the prompt. Two-contact connectors remain with the existing missing-return review.",
+      "supported_kicad_versions": [
+        "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixture exports; the selected project exact version is checked before export"
+      ],
+      "limitations": [
+        "This is a deterministic review cue, not proof that the connector belongs to the I3C interface. Native function and generic Pin_N contact names do not replace an approved connector pinout.",
+        "Only fitted connectors with complete unique pin inventories and matching function/electrical-type metadata, plus fitted U/IC endpoints with one unique channel-matched I3C SDA/SCL pair on distinct unambiguous nets, are considered. Two-pin connectors, named connector roles, DNP parts, one-sided assignments, duplicate roles, open or multiply assigned pins, and incomplete inventories are outside the predicate.",
+        "The prompt does not infer that ground, power, shield, or any other connector contact must exist or be common. The schematic netlist does not establish PCB copper, off-board wiring, firmware use, or physical continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_i3c_generic_connector_pair_review.test_generic_contacts_on_exact_i3c_channel_emit_review",
+        "tests.test_i3c_generic_connector_pair_review.test_rule_override_and_exact_ignore_remain_available",
+        "tests.test_design_lint_mcp_parity_i3c_generic_connector.test_generic_i3c_connector_cli_mcp_parity",
+        "tests.test_i3c_generic_connector_native_fixture_lane.test_native_generic_connector_fault_and_named_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_i3c_generic_connector_pair_review.test_named_roles_and_exact_source_matched_map_suppress_review",
+        "tests.test_i3c_generic_connector_pair_review.test_two_contact_connector_is_left_to_missing_return_review",
+        "tests.test_i3c_generic_connector_pair_review.test_one_sided_pair_dnp_and_incomplete_inventories_are_quiet",
+        "tests.test_i3c_generic_connector_pair_review.test_ambiguous_assignments_same_net_endpoints_and_not_applicable_are_quiet",
+        "tests.test_i3c_generic_connector_native_fixture_lane.test_native_generic_connector_fault_and_named_control",
+        "tests.test_design_lint_mcp_parity_i3c_generic_connector.test_generic_i3c_connector_cli_mcp_parity"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_i3c_generic_connector_pair_review.test_report_is_order_independent_and_source_map_requires_exact_nets",
+        "tests.test_i3c_generic_connector_pair_review.test_other_contact_assignment_is_part_of_source_bound_finding",
+        "tests.test_i3c_generic_connector_native_fixture_registry.test_native_source_registry_is_hash_pinned_and_local"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I3C_GENERIC_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/i3c_generic_connector_candidates.py#generic_i3c_connector_pairs",
+        "kicad_tooling/hwrepo/i3c_endpoint_pairs.py#i3c_endpoint_pairs",
+        "kicad_tooling/hwrepo/i3c_connector_map.py#i3c_source_map_covers_role",
+        "kicad_tooling/hwrepo/connector_contact_evidence.py#collect_other_connector_contacts",
+        "kicad_tooling/hwrepo/connector_contact_evidence.py#format_other_connector_contacts",
+        "kicad_tooling/hwrepo/i3c_generic_connector_models.py#I3cGenericConnectorPair",
+        "kicad_tooling/hwrepo/design_lint_i3c_generic_connector_candidate_evidence.py#I3cGenericConnectorCandidate",
+        "kicad_tooling/hwrepo/design_lint_i3c_generic_connector_candidates.py#generic_i3c_connector_pair_review_candidates",
+        "kicad_tooling/hwrepo/design_lint_i3c_bus_candidates.py#i3c_protocol_bus_candidates",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/i3c_generic_connector_candidates.py#generic_i3c_connector_pairs"
+    },
+    {
       "rule_id": "bus.i2c_missing_pullup",
       "title": "Named I2C bus lacks visible local pull-up path",
       "status": "active",

@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 296 rules are implemented with synthetic regression coverage.
+The following 297 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 296 active rules.
+The catalog currently contains 297 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -570,6 +570,7 @@ skipped under prerelease policy.
 - `bus.i3c_signal_on_named_rail`
 - `bus.i3c_sda_scl_same_net`
 - `bus.i3c_unconnected_pin`
+- `bus.i3c_generic_connector_pair_review`
 - `bus.i2c_sda_scl_same_net`
 - `bus.serial_endpoint_role_collision`
 - `bus.spi_unmapped_participant`
@@ -727,8 +728,8 @@ skipped under prerelease policy.
 - `pcb.differential_pair_route_layer_mismatch`
 
 This baseline catches suspicious connector symmetry and missing named pins,
-plus narrow netlist patterns for I2C, SPI, USB-C, and CAN. It does not know that
-several similarly named connector returns must be common unless a project
+plus narrow netlist patterns for I2C, I3C, SPI, USB-C, and CAN. It does not
+know that several similarly named connector returns must be common unless a project
 states that requirement. It also cannot establish PCB copper connectivity,
 placement, off-board circuitry, or physical continuity from a schematic
 netlist.
@@ -747,15 +748,21 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-330):** The generic USB SuperSpeed connector prompt
+- **Latest progress (LINT-332):** Added a configurable I3C connector review
+  cue for complete generic connectors assigned to both exact nets of a
+  recognized I3C SDA/SCL pair. Two-contact connectors remain covered by the
+  existing return prompt; the new cue does not infer common ground or power.
+  The rule-tag selector passed 13 tests with the 2 opt-in native cases skipped,
+  and the digest-pinned Docker fault/control lane passed on KiCad 10.0.0 and
+  10.0.5. The existing I3C missing-return native regressions also passed on
+  both projects. Catalog, architecture, and marker checks passed; hosted
+  acceptance is pending publication of this feature gate.
+- **Previous progress (LINT-330):** The generic USB SuperSpeed connector prompt
   now retains every other inventoried contact's native function and assigned
   net state. Synthetic coverage shows J1.3 GND on `USB_GND` and open J1.4
   VBUS; changing the VBUS assignment changes the source-bound fingerprint.
   The hashed native fault/control pair carries the same four-contact pinout,
-  and the digest-pinned Docker lane passed on KiCad 10.0.0 and 10.0.5. The
-  exact rule-tag selector passed 11 tests with 2 native cases skipped in that
-  synthetic run; the native selector passed 2 tests. This is a review-evidence
-  refinement; it does not infer that either contact must be connected. Tag
+  and the digest-pinned Docker lane passed on KiCad 10.0.0 and 10.0.5. Tag
   `v0.5.3rc549` passed hosted acceptance, including the focused lint and
   installed-wheel check (workflow run `42440220684`).
 - **Previous progress (LINT-329):** Generic USB-C CC connector review evidence
@@ -3760,7 +3767,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 296 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 297 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -20258,6 +20265,35 @@ acceptance threads while new lint features proceed:
   alignment issues; `v0.5.3rc551` then exposed typing errors in the native
   acceptance assertions. Both were corrected before the passing tag. The
   local exact native lane passed on KiCad 10.0.0 and 10.0.5.
+
+#### LINT-332 — Review generic connector contacts on an I3C pair
+
+- **Status:** Implemented as a configurable `review` heuristic with exact
+  source-bound connector and endpoint evidence. Projects can promote it to
+  `block`, turn it `off`, or ignore one exact finding.
+- **Gap:** Native I3C SDA/SCL endpoint pins and generic contacts on both exact
+  nets can identify a connector that deserves pinout review, but neither ERC
+  nor a net-name check establishes whether the connector is part of that bus.
+- **Evidence:** The source-bound check requires complete unique connector and
+  U/IC pin inventories, one channel-matched I3C SDA/SCL pair on distinct nets,
+  generic `Pin_N` connector contacts on both exact nets, and exact current map
+  evidence to suppress the prompt. Synthetic cases cover named and mapped
+  controls, incomplete or ambiguous inventories, DNP, one-sided pairs,
+  two-contact scope, deterministic ordering, other-contact evidence, policy,
+  and CLI/MCP parity. Hash-pinned synthetic schematics export repeatedly in
+  digest-pinned KiCad 10.0.0 and 10.0.5 Docker images.
+- **Boundary:** This is an association cue for review. It does not infer
+  connector identity or require ground, power, shield, or other contacts to
+  exist or be common. Two-contact connectors remain with the existing I3C
+  missing-return prompt. Schematic netlists do not establish PCB copper,
+  off-board wiring, or physical continuity.
+- **Selection:** Run `tests/test_i3c_generic_connector_pair_review.py`,
+  `tests/test_i3c_generic_connector_native_fixture_lane.py`, and
+  `tests/test_design_lint_mcp_parity_i3c_generic_connector.py` with
+  `design_lint_rule(rule_id="bus.i3c_generic_connector_pair_review")`. The
+  parity case requires `KICAD_TEMPLATE_ROOT` to point to the public template
+  checkout. The native lane uses
+  `KICAD_RUN_NATIVE_I3C_GENERIC_CONNECTOR_FIXTURES=1`.
 
 #### LINT-330 — Preserve other contacts in generic USB SuperSpeed connector review evidence
 

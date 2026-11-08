@@ -797,7 +797,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 296 active rules.
+The catalog currently contains 297 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -2645,6 +2645,43 @@ KiCad 10.0.0 and 10.0.5 images; see the
 KICAD_RUN_NATIVE_I2C_CONNECTOR_RETURN_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
   .venv/bin/python -I -m pytest tests/test_i2c_connector_return_native_fixture_lane.py \
   -m 'design_lint and connector_lint and return_path_lint and native_kicad and design_lint_rule(rule_id="connector.i2c_pair_without_return_review")'
+```
+
+## Review generic connector contacts on an I3C pair
+
+`bus.i3c_generic_connector_pair_review` requests pinout review when a fitted
+U/IC exposes one unique, completely inventoried native I3C SDA/SCL pair on
+distinct nets and a completely inventoried connector has generic `Pin_N`
+contacts assigned to both exact nets. A current source-matched connector map
+that assigns those contacts to SDA and SCL suppresses the prompt. Named
+connector roles, DNP parts, ambiguous or incomplete inventories, and one-sided
+connector assignments stay quiet. Two-contact connectors remain with the
+existing `connector.i3c_pair_without_return_review` rule.
+
+The finding is a deterministic association clue, not proof the connector is
+part of that I3C interface. It does not infer that GND, power, shield, or any
+other contacts must be present or common, and it does not establish PCB copper
+or off-board wiring. It defaults to `review`; project policy can change it to
+`block` or `off`, or ignore one exact finding.
+
+Synthetic coverage checks exact net matching, map suppression, named-role and
+two-contact controls, DNP and ambiguity boundaries, deterministic ordering,
+other-contact evidence, policy, and CLI/MCP parity. Tooling-owned fault and
+named-role control schematics export repeatedly with digest-pinned KiCad
+10.0.0 and 10.0.5 images; see the
+[fixture record](../tests/fixtures/design_lint/i3c-generic-connector-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_i3c_generic_connector_pair_review.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i3c_generic_connector_pair_review")'
+
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test .venv/bin/python -I -m pytest \
+  tests/test_design_lint_mcp_parity_i3c_generic_connector.py \
+  -m 'parity_lint and design_lint and interface_lint and design_lint_rule(rule_id="bus.i3c_generic_connector_pair_review")'
+
+KICAD_RUN_NATIVE_I3C_GENERIC_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_i3c_generic_connector_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i3c_generic_connector_pair_review")'
 ```
 
 ## Review a two-pin I3C connector with no identified return
