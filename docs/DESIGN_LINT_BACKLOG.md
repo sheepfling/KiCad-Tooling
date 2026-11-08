@@ -752,16 +752,18 @@ standalone parity work when it closes a demonstrated feature regression.
   cases report J1.4's native GND function with no assigned net; the native
   fault/control lane passed on KiCad 10.0.0 and 10.0.5. This is review evidence
   only and does not infer that the ground contact must be connected. The exact
-  rule-tag selector passed 34 tests with 7,624 deselected. Hosted acceptance
-  is pending for planned tag `v0.5.3rc547`.
+  rule-tag selector passed 34 tests with 7,624 deselected. Tag `v0.5.3rc547`
+  passed hosted acceptance, including the scoped lint and installed-wheel
+  check (workflow run `42437465886`).
 - **Previous progress (LINT-328):** Generic USB 2.0 connector review evidence
   now includes every other inventoried contact's native function and assigned
   net state. The synthetic and native fault cases show an open VBUS contact
   beside USB_GND; the named USB data-pair control remains quiet. The rule does
   not infer that VBUS or GND must be connected. The exact rule-tag selector
   passed 32 tests with 7,625 deselected; digest-pinned Docker exports passed on
-  KiCad 10.0.0 and 10.0.5. Hosted acceptance is pending for planned tag
-  `v0.5.3rc546`.
+  KiCad 10.0.0 and 10.0.5. Tag `v0.5.3rc546` passed hosted acceptance,
+  including its scoped lint and installed-wheel check (workflow run
+  `42436768470`).
 - **Earlier progress (LINT-327):** Ethernet MDC/MDIO connector review evidence
   now includes every other inventoried pin's native function and assigned-net
   state. Synthetic and native fault findings show the AUX pins and J1.5 GND;
@@ -20184,8 +20186,9 @@ acceptance threads while new lint features proceed:
 
 - **Status:** Implemented as an evidence refinement to the existing
   `bus.usb_c_generic_connector_cc_pair_review` rule; its trigger and default
-  review policy are unchanged. Hosted prerelease acceptance is pending for
-  planned tag `v0.5.3rc547`.
+  review policy are unchanged. Tag `v0.5.3rc547` passed hosted acceptance,
+  including its scoped lint gate and installed-wheel check in workflow run
+  `42437465886`.
 - **Gap:** The generic USB-C CC1/CC2 prompt omitted connector contacts outside
   those CC nets. A reviewer could not see the same connector's GND contact or
   whether KiCad assigned it to a net.
@@ -20209,8 +20212,9 @@ acceptance threads while new lint features proceed:
 
 - **Status:** Implemented as an evidence refinement to the existing
   `bus.usb_generic_connector_phy_pair_review` rule; its trigger and default
-  review policy are unchanged. Hosted prerelease acceptance is pending for
-  planned tag `v0.5.3rc546`.
+  review policy are unchanged. Tag `v0.5.3rc546` passed hosted acceptance,
+  including its scoped lint gate and installed-wheel check in workflow run
+  `42436768470`.
 - **Gap:** Generic USB 2.0 D+/D− findings recorded only the data-pair
   contacts. Reviewers could not see the connector's other contacts, including
   an open VBUS contact or a separately assigned ground contact, from the same
