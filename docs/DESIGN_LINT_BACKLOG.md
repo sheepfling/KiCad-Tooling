@@ -759,7 +759,10 @@ standalone parity work when it closes a demonstrated feature regression.
   acceptance on `v0.5.3rc553` found the existing interface architecture test
   file had grown past the 500-line ceiling. Its duplicate I3C module entries
   were removed because the new focused I3C architecture suite owns those
-  checks. The follow-up `v0.5.3rc554` hosted acceptance is pending.
+  checks. Tag `v0.5.3rc554` passed hosted acceptance in GitHub Actions run
+  `42451678859`; its focused lint and installed-wheel check against a separate
+  project passed. Package and preview jobs were skipped by the prerelease
+  workflow conditions.
 - **Previous progress (LINT-330):** The generic USB SuperSpeed connector prompt
   now retains every other inventoried contact's native function and assigned
   net state. Synthetic coverage shows J1.3 GND on `USB_GND` and open J1.4
@@ -20297,6 +20300,9 @@ acceptance threads while new lint features proceed:
   parity case requires `KICAD_TEMPLATE_ROOT` to point to the public template
   checkout. The native lane uses
   `KICAD_RUN_NATIVE_I3C_GENERIC_CONNECTOR_FIXTURES=1`.
+- **Hosted acceptance:** Tagged `v0.5.3rc554` passed the focused lint and
+  installed-wheel check against the separate project in GitHub Actions run
+  `42451678859`. The prerelease workflow skipped its package and preview jobs.
 
 #### LINT-330 — Preserve other contacts in generic USB SuperSpeed connector review evidence
 
