@@ -4,10 +4,16 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from kicad_tooling.hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
+    ConnectorCoverageReport,
+    ConnectorInterfaceReview,
+    ConnectorInventoryReview,
     DesignLintPolicy,
     DesignLintRuleOverride,
+    InterfacePin,
+    InterfaceRecord,
     NetlistContract,
 )
 
@@ -57,6 +63,7 @@ def generic_open_part_id_peer_netlist(
     references: tuple[str, ...] = ("J1", "J2", "J3", "J4"),
     symbols: Mapping[str, str] | None = None,
     target_pin_type: str = "passive",
+    anchor_nets: tuple[str, ...] | None = None,
 ) -> NetlistContract:
     """Create cross-symbol peers with one guarded native PART_ID."""
     left_symbol_count = max(1, (len(references) + 1) // 2)
@@ -69,6 +76,7 @@ def generic_open_part_id_peer_netlist(
     }
     source = generic_open_peer_netlist(
         references=references,
+        anchor_nets=anchor_nets,
         target_pin_type=target_pin_type,
     )
     return source.model_copy(
@@ -87,6 +95,72 @@ def generic_open_part_id_peer_netlist(
             },
             "component_symbols": symbols,
         }
+    )
+
+
+def generic_open_peer_coverage(
+    observed: NetlistContract,
+    *,
+    groups: tuple[str, ...],
+) -> ConnectorCoverageReport:
+    """Build current connector-map evidence for generic peer-pin tests."""
+    references = tuple(observed.component_symbols)
+    if len(references) != len(groups):
+        raise ValueError("Each synthetic connector needs one peer-assignment group")
+    interface_ids = tuple(f"synthetic-port-{index}" for index in range(len(references)))
+    interfaces = {
+        interface_id: InterfaceRecord(
+            id=interface_id,
+            revision="synthetic-1",
+            pins=(
+                InterfacePin(
+                    number="1",
+                    signal="GND",
+                    role="return",
+                    direction="passive",
+                    voltage_domain="signal-return",
+                    mating="GND",
+                    orientation="straight",
+                    mechanical_clearance="synthetic",
+                ),
+                InterfacePin(
+                    number="2",
+                    signal="AUX",
+                    role="signal",
+                    direction="bidirectional",
+                    voltage_domain="logic-signal",
+                    mating="AUX",
+                    orientation="straight",
+                    mechanical_clearance="synthetic",
+                ),
+            ),
+        )
+        for interface_id in interface_ids
+    }
+    reviews = tuple(
+        ConnectorInterfaceReview(
+            reference=reference,
+            disposition="interface",
+            basis=f"Reviewed synthetic interface {interface_id}",
+            interface_id=interface_id,
+            pin_map={"1": "1", "2": "2"},
+            peer_assignment_group=group,
+            peer_assignment_basis=f"Reviewed {reference} in peer group {group}",
+        )
+        for reference, interface_id, group in zip(
+            references, interface_ids, groups, strict=True
+        )
+    )
+    return evaluate_connector_coverage(
+        observed,
+        interface_ids,
+        reviews,
+        interfaces=interfaces,
+        interface_catalog_path="catalog/interfaces.json",
+        interface_catalog_sha256="a" * 64,
+        inventory_review=ConnectorInventoryReview(
+            basis="Reviewed all synthetic connector inventory entries"
+        ),
     )
 
 

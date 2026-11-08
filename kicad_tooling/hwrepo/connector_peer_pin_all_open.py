@@ -54,33 +54,33 @@ def _contact_description(pin_type: str) -> str:
     return f"generic {pin_type} signal contact"
 
 
-def _contact_message(pin_type: str, *, scoped: bool, part_id: bool = False) -> str:
+def _contact_message(
+    pin_type: str,
+    *,
+    scoped: bool,
+    anchor_present: bool,
+    part_id: bool = False,
+) -> str:
     group_note = (
         " The comparison is scoped by a source-reviewed peer-assignment group." if scoped else ""
     )
     peer_description = "with the same reviewed PART_ID" if part_id else "of the exact symbol"
+    anchor_context = (
+        "while another pin has the same exact assigned net across those peers"
+        if anchor_present
+        else "and this reviewed peer group has no other shared-net anchor"
+    )
     if pin_type == "passive":
-        if part_id:
-            return (
-                "This generic passive connector pin is unassigned on every fitted peer "
-                "with the same reviewed PART_ID, while another pin has the same exact "
-                "assigned net across those peers. Review the approved pinout for an "
-                "intentionally unused contact or a missing connection. The generic pin "
-                "metadata does not identify this contact as signal, return, or power, and "
-                "peer similarity does not establish that it must connect." + group_note
-            )
         return (
             "This generic passive connector pin is unassigned on every fitted peer "
-            f"{peer_description}, while another pin has the same assigned net "
-            "across those peers. Review the approved pinout for an intentionally "
+            f"{peer_description}, {anchor_context}. Review the approved pinout for an intentionally "
             "unused contact or a missing connection. The generic pin metadata does "
             "not identify this contact as signal, return, or power, and peer "
             "similarity does not establish that it must connect." + group_note
         )
     return (
         f"This generic {pin_type} connector pin is unassigned on every fitted peer "
-        f"{peer_description}, while another pin has the same assigned "
-        "net across those peers. Review the approved pinout for an intentionally "
+        f"{peer_description}, {anchor_context}. Review the approved pinout for an intentionally "
         "unused contact or a missing connection. The native electrical type and "
         "generic pin label do not identify its interface function or required net, "
         "and peer similarity does not establish that it must connect." + group_note
@@ -256,7 +256,7 @@ def all_open_generic_connector_peer_pin_candidates(
                                 net=anchor_assignments[0][0],
                             )
                         )
-                if not exact_shared_anchors:
+                if not exact_shared_anchors and peer_group is None:
                     continue
 
                 symbol = peers[0][1]
@@ -294,7 +294,11 @@ def all_open_generic_connector_peer_pin_candidates(
                             f"{symbol} pin {pin_number}: "
                             f"{_contact_description(pin_type)} is open on every peer"
                         ),
-                        message=_contact_message(pin_type, scoped=peer_group is not None),
+                        message=_contact_message(
+                            pin_type,
+                            scoped=peer_group is not None,
+                            anchor_present=bool(exact_shared_anchors),
+                        ),
                     )
                 )
 
@@ -341,7 +345,7 @@ def all_open_generic_connector_peer_pin_candidates(
                 and len(set(anchor.assignments.values())) == 1
                 and len(next(iter(anchor.assignments.values()))) == 1
             )
-            if not shared_anchor_groups:
+            if not shared_anchor_groups and group.peer_assignment_group is None:
                 continue
 
             part_id_shared_anchors = tuple(
@@ -389,6 +393,7 @@ def all_open_generic_connector_peer_pin_candidates(
                     message=_contact_message(
                         pin_type,
                         scoped=group.peer_assignment_group is not None,
+                        anchor_present=bool(shared_anchor_groups),
                         part_id=True,
                     ),
                 )

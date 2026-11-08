@@ -26,6 +26,9 @@ from kicad_tooling.hwrepo.models import (
     ConnectorInventoryReview,
     DesignLintPolicy,
     DesignLintRuleOverride,
+    InterfacePin,
+    InterfaceRecord,
+    InterfacesCatalog,
     ProjectManifest,
     ValidationSummary,
 )
@@ -41,10 +44,15 @@ RULE_ID = "connector.generic_peer_pin_all_open"
 def _netlist_xml(
     *,
     fault: bool,
+    common_anchor: bool = True,
     part_id_aliases: bool = False,
     signal_pin_type: str = "passive",
 ) -> str:
-    power_nodes = "".join(f'<node ref="J{reference}" pin="1"/>' for reference in (1, 2))
+    power_nodes = (
+        "".join(f'<node ref="J{reference}" pin="1"/>' for reference in (1, 2))
+        if common_anchor
+        else ""
+    )
     return_nodes = (
         "" if fault else '<net name="GND"><node ref="J1" pin="2"/><node ref="J2" pin="2"/></net>'
     )
@@ -140,12 +148,14 @@ def test_all_open_generic_peer_pin_lint_cli_mcp_parity(tmp_path: Path) -> None:
     def write_netlist(
         *,
         fault: bool,
+        common_anchor: bool = True,
         part_id_aliases: bool = False,
         signal_pin_type: str = "passive",
     ) -> None:
         netlist.write_text(
             _netlist_xml(
                 fault=fault,
+                common_anchor=common_anchor,
                 part_id_aliases=part_id_aliases,
                 signal_pin_type=signal_pin_type,
             ),
@@ -213,3 +223,75 @@ def test_all_open_generic_peer_pin_lint_cli_mcp_parity(tmp_path: Path) -> None:
             if part_id_aliases and fault:
                 assert findings[0].evidence["peer_identity_basis"] == ("part_id",)
                 assert findings[0].evidence["peer_identity"] == ("SYNTHETIC-PASSIVE-PORT-001",)
+
+    peer_interface = InterfaceRecord(
+        id="synthetic-peer-port",
+        revision="synthetic-1",
+        pins=(
+            InterfacePin(
+                number="1",
+                signal="GND",
+                role="return",
+                direction="passive",
+                voltage_domain="signal-return",
+                mating="GND",
+                orientation="straight",
+                mechanical_clearance="synthetic",
+            ),
+        ),
+    )
+    write_model(
+        root / "catalog/interfaces.json",
+        InterfacesCatalog(schema_version="1", interfaces=(peer_interface,)),
+    )
+    manifest = read_model(manifest_path, ProjectManifest)
+    write_model(
+        manifest_path,
+        manifest.model_copy(
+            update={
+                "interfaces": (peer_interface.id,),
+                "connector_reviews": tuple(
+                    ConnectorInterfaceReview(
+                        reference=reference,
+                        disposition="interface",
+                        basis=f"Synthetic reviewed pinout for {reference}",
+                        interface_id=peer_interface.id,
+                        pin_map={"1": "1"},
+                        unlisted_pin_reasons={
+                            "2": "Generic passive contact is outside this reviewed interface map"
+                        },
+                        peer_assignment_group="reviewed-serial-peers",
+                        peer_assignment_basis=f"Reviewed {reference} in the same serial peer group",
+                    )
+                    for reference in ("J1", "J2")
+                ),
+                "connector_inventory_review": ConnectorInventoryReview(
+                    basis="Synthetic parity fixture reviews both generic connector peers"
+                ),
+            }
+        ),
+    )
+    write_netlist(fault=True, common_anchor=False)
+    process = run_design_lint_cli(tmp_path, root, native)
+    assert process.returncode in {0, 1}, process.stderr + process.stdout
+    cli = DesignLintReport.model_validate_json(process.stdout)
+    mcp = asyncio.run(inspect_mcp())
+    assert semantic_design_lint_report(cli) == semantic_design_lint_report(mcp)
+    findings = tuple(item for item in cli.findings if item.rule_id == RULE_ID)
+    assert len(findings) == 1
+    assert findings[0].evidence["peer_assignment_group"] == ("reviewed-serial-peers",)
+    assert findings[0].evidence["shared_anchor_contacts"] == ()
+    assert cli.connector_coverage is not None
+    assert cli.connector_coverage.status == "COMPLETE"
+    assert {
+        entry.reference: entry.unlisted_pin_reasons for entry in cli.connector_coverage.entries
+    } == {
+        "J1": {"2": "Generic passive contact is outside this reviewed interface map"},
+        "J2": {"2": "Generic passive contact is outside this reviewed interface map"},
+    }
+    assert not {
+        "connector.mapped_interface_signal_unassigned",
+        "connector.mapped_interface_other_unassigned",
+    } & {item.rule_id for item in cli.findings}
+    assert cli.connector_peer_pin_coverage is not None
+    assert cli.connector_peer_pin_coverage.generic_peer_pin_all_open_finding_count == 1

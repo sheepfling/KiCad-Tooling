@@ -20494,6 +20494,44 @@ acceptance threads while new lint features proceed:
   The native Docker lane uses
   `KICAD_RUN_NATIVE_I2C_GENERIC_CONNECTOR_FIXTURES=1`.
 
+#### LINT-333 — Review an all-open generic connector contact with authored peer scope
+
+- **Status:** Implemented in the existing default-off
+  `connector.generic_peer_pin_all_open` rule. An all-open generic pin still
+  needs a common exact-net anchor unless the current connector map supplies a
+  source-matched `peer_assignment_group` for the comparison.
+- **Gap:** The existing all-open heuristic stayed quiet when similar
+  connectors had no shared assigned pin, even when a project had explicitly
+  reviewed them as one peer group. That left an all-open generic contact
+  outside both the anchored heuristic and an exact pinout contract.
+- **Predicate:** Preserve the existing fitted-peer, full-inventory, matching
+  pin-function/type, generic-contact, and DNP checks. Emit the default-off
+  review when every peer leaves the target generic passive or supported signal
+  pin open and either another pin is assigned to the same exact net across the
+  group or the current connector map supplies one exact source-matched peer
+  group. Different reviewed groups are not compared. The finding retains an
+  empty anchor list when group scope is the only context.
+- **Boundary:** Peer grouping is comparison scope, not a required common-net
+  relationship. Generic function/type evidence does not identify signal,
+  return, or power intent and does not establish that an open pin is defective.
+  The rule remains `off` by default; reviewers can enable it, promote a
+  finding, turn it off, or ignore one exact fingerprint. It does not prove PCB
+  copper or off-board continuity.
+- **Evidence:** Tooling-owned synthetic cases exercise a current shared group
+  with no common-net anchor for exact-symbol and reviewed PART_ID peers,
+  separate-group and unscoped controls, current connector coverage, policy
+  behavior, deterministic ordering, typed evidence validation, and CLI/MCP
+  semantic parity. The source-hashed schematic exported repeatably in Docker
+  on exact KiCad 10.0.0 and 10.0.5; hosted acceptance is pending.
+- **Selection:** Run `tests/test_connector_peer_pin_all_open.py`,
+  `tests/test_connector_peer_reviewed_scope_all_open.py`,
+  `tests/test_design_lint_architecture_connector_all_open_candidate_evidence.py`
+  and `tests/test_design_lint_mcp_parity_connector_all_open.py` with
+  `design_lint_rule(rule_id="connector.generic_peer_pin_all_open")`.
+  Exact native validation uses
+  `tests/test_connector_peer_reviewed_scope_all_open_native.py` with
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

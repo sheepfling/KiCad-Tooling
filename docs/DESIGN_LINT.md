@@ -3482,6 +3482,34 @@ tolerance, transient response, analog safety, or PCB copper. Extra-part
 recognition is limited to supported two-pin passive reference patterns. These
 synthetic checks use no private board fixtures.
 
+## Review all-open generic contacts in connector peer groups
+
+`connector.generic_peer_pin_all_open` is a default-off prompt for an unassigned
+generic passive or signal contact on every comparable connector. Comparison
+uses exact native-symbol peers, or cross-symbol peers with matching native
+`PART_ID`, value, footprint, full pin inventory, pin functions, and electrical
+types. The prompt normally requires a different pin to share one exact net
+across the peers. A current source-matched `peer_assignment_group` can provide
+the comparison scope when no such shared-net anchor exists. Without either
+that anchor or a current reviewed group, the all-open contact remains quiet.
+
+The group defines which connectors to compare; it does not say their contacts
+should be common or that an open contact is a defect. Native generic pin
+metadata does not identify signal, return, or power intent. Review the approved
+pinout. Project policy can enable `review`, promote it to `block`, turn it off,
+or ignore one exact finding. The schematic report does not establish PCB
+copper continuity or off-board wiring.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_peer_pin_all_open.py \
+  tests/test_connector_peer_reviewed_scope_all_open.py \
+  -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.generic_peer_pin_all_open")'
+
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_connector_peer_reviewed_scope_all_open_native.py \
+  -m 'design_lint and connector_lint and native_kicad and design_lint_rule(rule_id="connector.generic_peer_pin_all_open")'
+```
+
 ## Review connector return-contact distribution
 
 `connector.return_distribution` runs only for an interface that has an

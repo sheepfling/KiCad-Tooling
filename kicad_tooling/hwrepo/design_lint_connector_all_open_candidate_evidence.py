@@ -176,8 +176,10 @@ class ConnectorAllOpenPeerPinEvidence:
             ):
                 raise ValueError("PART_ID peer pin functions must match across the source group")
 
-        if not self.shared_anchors:
-            raise ValueError("All-open connector findings require at least one shared anchor")
+        if not self.shared_anchors and self.peer_assignment_group is None:
+            raise ValueError(
+                "All-open connector findings require a shared anchor or reviewed peer group"
+            )
         anchor_displays = tuple(anchor.display for anchor in self.shared_anchors)
         expected_anchor_order = (
             sorted(anchor_displays)

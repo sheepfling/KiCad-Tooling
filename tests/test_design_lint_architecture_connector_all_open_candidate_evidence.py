@@ -12,6 +12,7 @@ from kicad_tooling.hwrepo import (
     connector_peer_pin_all_open,
     design_lint_connector_all_open_candidate_evidence,
 )
+from kicad_tooling.hwrepo.connector_comparison_scope_types import ConnectorComparisonScope
 from kicad_tooling.hwrepo.connector_peer_pin_all_open import (
     all_open_generic_connector_peer_pin_candidates,
 )
@@ -79,6 +80,34 @@ def test_all_open_source_rejects_a_stale_shared_anchor() -> None:
 
     with pytest.raises(ValueError, match="current native net"):
         replace(source, shared_anchors=(stale_anchor,))
+
+
+def test_reviewed_peer_group_can_replace_the_shared_anchor_evidence() -> None:
+    observed = generic_open_peer_netlist(
+        references=("J1", "J2"),
+        anchor_nets=("PORT_A", "PORT_B"),
+    )
+    groups = {
+        reference: ConnectorComparisonScope(
+            "reviewed-serial-peers",
+            f"Reviewed {reference} as a serial peer",
+        )
+        for reference in ("J1", "J2")
+    }
+    (candidate,) = all_open_generic_connector_peer_pin_candidates(
+        observed,
+        peer_assignment_groups=groups,
+    )
+
+    assert candidate.source_evidence.shared_anchors == ()
+    assert candidate.source_evidence.peer_assignment_group == "reviewed-serial-peers"
+    assert candidate.evidence["shared_anchor_contacts"] == ()
+    with pytest.raises(ValueError, match="shared anchor or reviewed peer group"):
+        replace(
+            candidate.source_evidence,
+            peer_assignment_group=None,
+            peer_assignment_basis=(),
+        )
 
 
 def test_all_open_candidate_evidence_has_one_focused_owner() -> None:

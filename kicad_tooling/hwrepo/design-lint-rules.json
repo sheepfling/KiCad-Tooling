@@ -1965,19 +1965,22 @@
       "default_mode": "off",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Among at least two fitted connector instances, compare exact native-symbol peers or cross-symbol peers only when they share native PART_ID plus matching nonempty value, footprint, complete pin inventory, per-pin function, and electrical-type metadata. Require a target pin with absent or generic Pin_N function metadata, native passive or signal electrical type (input, output, bidirectional, tri_state, open_collector, or open_emitter), no assigned net on that pin for every peer in the comparison group, and at least one other pin assigned to the same exact single net on every peer. Current source-matched peer_assignment_group evidence partitions the comparison; stale or incomplete group evidence retains the unscoped comparison.",
+      "predicate": "Among at least two fitted connector instances, compare exact native-symbol peers or cross-symbol peers only when they share native PART_ID plus matching nonempty value, footprint, complete pin inventory, per-pin function, and electrical-type metadata. Require a target pin with absent or generic Pin_N function metadata, native passive or signal electrical type (input, output, bidirectional, tri_state, open_collector, or open_emitter), and no assigned net on that pin for every peer in the comparison group. The group must have either another pin assigned to the same exact single net on every peer, or current source-matched peer_assignment_group evidence that identifies the comparison scope. Stale or incomplete group evidence retains the unscoped comparison.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The prompt is default-off because an all-open generic contact may be intentionally unused; project owners must review an approved pinout before treating it as a defect.",
-        "A shared assignment on another pin provides peer context only. A native signal pin type describes KiCad electrical behavior but does not identify the interface function, required net, or establish that the contact must be connected.",
+        "A shared assignment on another pin or a current source-reviewed peer group provides comparison context only. Neither identifies the interface function, required net, nor establishes that the contact must be connected.",
         "Exact-symbol peers require complete matching pin inventories. Cross-symbol aliases participate only with matching nonempty native PART_ID, component value, footprint, complete pin inventory, and complete nonempty function and electrical-type metadata on every pin. Incomplete evidence and DNP instances are excluded.",
         "Supported native signal pin types describe KiCad electrical behavior only; they do not identify the interface function or establish a required connection. Native power_in/power_out/free/unspecified contacts and named or source-mapped supply/return roles stay with their more specific rules.",
         "The result concerns schematic net assignments only; it does not establish PCB copper continuity or off-board wiring."
       ],
       "fault_fixtures": [
         "tests.test_connector_peer_pin_all_open.test_all_open_generic_passive_peer_pin_is_opt_in_review",
+        "tests.test_connector_peer_reviewed_scope_all_open.test_reviewed_peer_group_prompts_without_a_shared_anchor_and_stays_opt_in",
+        "tests.test_connector_peer_reviewed_scope_all_open.test_reviewed_part_id_peer_group_can_scope_unanchored_contacts",
+        "tests.test_connector_peer_reviewed_scope_all_open_native.test_native_peer_group_scope_reviews_all_open_generic_contact",
         "tests.test_connector_signal_peer_pin_all_open.test_all_open_generic_signal_peer_pin_is_opt_in_review",
         "tests.test_connector_signal_peer_pin_all_open.test_signal_peer_can_use_absent_native_pin_function_metadata",
         "tests.test_connector_signal_peer_pin_all_open.test_cross_symbol_signal_peers_require_matching_part_identity_and_pin_type",
@@ -1989,6 +1992,9 @@
       "valid_control_fixtures": [
         "tests.test_connector_peer_pin_all_open.test_common_assignment_clears_the_all_open_prompt",
         "tests.test_connector_peer_pin_all_open.test_unassigned_peers_without_a_shared_anchor_are_quiet",
+        "tests.test_connector_peer_reviewed_scope_all_open.test_reviewed_peer_group_prompts_without_a_shared_anchor_and_stays_opt_in",
+        "tests.test_connector_peer_reviewed_scope_all_open.test_reviewed_part_id_peer_group_can_scope_unanchored_contacts",
+        "tests.test_connector_peer_reviewed_scope_all_open_native.test_native_peer_group_scope_reviews_all_open_generic_contact",
         "tests.test_connector_peer_pin_all_open.test_distinct_reviewed_peer_groups_are_not_compared",
         "tests.test_connector_peer_pin_all_open.test_part_id_all_open_prompt_requires_matching_identity_and_peer_scope",
         "tests.test_connector_peer_pin_all_open.test_specific_roles_and_population_controls_stay_out_of_generic_rule",
@@ -2002,6 +2008,7 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_connector_peer_pin_all_open.test_candidate_fingerprint_is_stable_under_input_reordering",
+        "tests.test_connector_peer_reviewed_scope_all_open.test_reviewed_peer_group_candidate_is_stable_under_input_reordering",
         "tests.test_connector_peer_pin_all_open.test_part_id_candidate_fingerprint_is_stable_under_input_reordering",
         "tests.test_connector_signal_peer_pin_all_open.test_signal_candidate_fingerprint_is_stable_under_input_reordering",
         "tests.test_design_lint_determinism_connector_all_open.test_generic_connector_all_open_reports_are_source_bound_and_deterministic"
