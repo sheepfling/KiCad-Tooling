@@ -6,6 +6,7 @@ from collections.abc import Iterable, Mapping
 from collections.abc import Set as AbstractSet
 
 from .casefold_mapping_lookup import casefolded_unique_index
+from .connector_contact_evidence import collect_other_connector_contacts
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageReport, ConnectorMappedPinEvidence
 from .connector_identity import connector_candidate_references, pin_function_is_generic
@@ -128,6 +129,13 @@ def generic_spi_connector_triads(
                 pins_by_role, nets_by_role, mapped_by_pin
             ):
                 continue
+            other_contacts = collect_other_connector_contacts(
+                references[connector_key],
+                numbers,
+                connector_functions,
+                assignments,
+                (pin for role in _ROLE_ORDER for pin, _function in pins_by_role[role]),
+            )
             findings.append(
                 SpiGenericConnectorTriad(
                     connector_reference=references[connector_key],
@@ -147,6 +155,7 @@ def generic_spi_connector_triads(
                             key=lambda item: (item.reference.casefold(), item.reference),
                         )
                     ),
+                    other_connector_contacts=other_contacts,
                 )
             )
 

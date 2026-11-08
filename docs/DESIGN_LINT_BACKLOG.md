@@ -747,7 +747,18 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-324):** Generic CAN connector review evidence now
+- **Latest progress (LINT-325):** Generic SPI connector review evidence now
+  includes every other inventoried contact's native pin function and assigned
+  net state. Synthetic and native cases show a VCC contact left open beside
+  other connector contacts; the named SPI control stays quiet. The SPI rule's
+  trigger and review policy are unchanged, and the evidence does not infer
+  supply or return requirements. UART, I2C, CAN, and SPI now share one
+  connector-contact evidence service. The focused SPI, return-review, parity,
+  architecture, registry, and catalog slice passed 28 tests; the exact tagged
+  selector including native fixtures passed 36 tests. Digest-pinned Docker
+  fault/control exports passed for KiCad 10.0.0 and 10.0.5. Hosted acceptance
+  is pending.
+- **Previous progress (LINT-324):** Generic CAN connector review evidence now
   includes every other inventoried contact's native pin function and assigned
   net state, including open VCC and GND assigned to `BOARD_GND` in the native
   fault fixture. The named-role control stays quiet; the rule does not infer
@@ -759,7 +770,7 @@ standalone parity work when it closes a demonstrated feature regression.
   reuses this schematic. Tag `v0.5.3rc542` passed hosted acceptance, including
   the separate-project installed-wheel check, in GitHub Actions run
   `42432319928`.
-- **Previous progress (LINT-323):** Generic I2C connector review evidence now
+- **Earlier progress (LINT-323):** Generic I2C connector review evidence now
   includes every other inventoried contact's pin function and assigned-net
   state, including an open VCC pin beside a ground contact assigned to
   `BOARD_GND` in the native fault fixture. The named-role control remains quiet;
@@ -20133,6 +20144,32 @@ acceptance threads while new lint features proceed:
   `design_lint_rule(rule_id="bus.serial_generic_connector_pair_review")`.
   The native Docker lane uses
   `KICAD_RUN_NATIVE_SERIAL_GENERIC_CONNECTOR_FIXTURES=1`.
+
+#### LINT-325 — Preserve other contacts in generic SPI connector review evidence
+
+- **Status:** Implemented as an evidence refinement to the existing
+  `bus.spi_generic_connector_triad_review` rule; its trigger and default review
+  policy are unchanged.
+- **Gap:** The SPI triad prompt recorded clock and data-role contacts but omitted
+  all remaining connector pins. A reviewer could not inspect an open VCC pin or
+  a separately assigned reference contact from the same finding.
+- **Evidence:** Candidate reports now include each other inventoried contact's
+  native pin function and exact assigned-net state. The synthetic case shows
+  J1.4 assigned to `BOARD_GND` and J1.5 VCC open; assigning J1.5 changes the
+  source-bound finding fingerprint. Native fault/control fixtures retain an
+  AUX contact on a separate net and open VCC; the named SCK/MOSI/MISO control
+  stays quiet. The shared connector-contact service now supports SPI alongside
+  UART, I2C, and CAN. The native lane also exercises the existing SPI return
+  review against the expanded connector inventory.
+- **Boundary:** The rule reports native evidence only. It does not infer that
+  the connector participates in SPI, that VCC must be connected, that return
+  contacts must be common, or that the SPI interface needs a return. It does
+  not establish off-board wiring, PCB copper, or physical continuity.
+- **Selection:** Run `tests/test_spi_generic_connector_triad_review.py` and
+  `tests/test_spi_generic_connector_native_fixture_lane.py` with
+  `design_lint_rule(rule_id="bus.spi_generic_connector_triad_review")`.
+  The native Docker lane uses
+  `KICAD_RUN_NATIVE_SPI_GENERIC_CONNECTOR_FIXTURES=1`.
 
 #### LINT-324 — Preserve other contacts in generic CAN connector review evidence
 

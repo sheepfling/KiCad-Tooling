@@ -6,6 +6,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from .connector_contact_evidence import ConnectorContactEvidence
+
 
 @dataclass(frozen=True, slots=True)
 class SpiGenericEndpointTriad:
@@ -31,6 +33,7 @@ class SpiGenericConnectorTriad:
     role_connector_functions: Mapping[str, tuple[str, ...]]
     role_nets: Mapping[str, str]
     endpoint_triads: tuple[SpiGenericEndpointTriad, ...]
+    other_connector_contacts: tuple[ConnectorContactEvidence, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(

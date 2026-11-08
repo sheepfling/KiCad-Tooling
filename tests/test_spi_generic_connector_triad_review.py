@@ -56,6 +56,7 @@ def _source_matched_spi_pin_map() -> ConnectorCoverageReport:
         ("2", "MOSI", "SPI_MOSI"),
         ("3", "MISO", "SPI_MISO"),
         ("4", "GND", "BOARD_GND"),
+        ("5", "VCC", ""),
     )
     return ConnectorCoverageReport(
         status="COMPLETE",
@@ -76,8 +77,8 @@ def _source_matched_spi_pin_map() -> ConnectorCoverageReport:
                         interface_signal=signal,
                         component_pin=f"J1.{number}",
                         role="return" if signal == "GND" else "signal",
-                        symbol_function=f"Pin_{number}",
-                        nets=(net,),
+                        symbol_function="VCC" if signal == "VCC" else f"Pin_{number}",
+                        nets=() if not net else (net,),
                     )
                     for number, signal, net in signals
                 ),
@@ -98,6 +99,10 @@ def test_generic_contacts_on_exact_spi_triad_emit_review() -> None:
     assert finding.evidence["controller-to-peripheral data_generic_connector_pins"] == ("J1.2",)
     assert finding.evidence["peripheral-to-controller data_net"] == ("SPI_MISO",)
     assert finding.evidence["peripheral-to-controller data_generic_connector_pins"] == ("J1.3",)
+    assert finding.evidence["other_connector_contacts"] == (
+        "J1.4 function=Pin_4 nets=BOARD_GND",
+        "J1.5 function=VCC nets=unassigned",
+    )
     assert finding.evidence["SPI_endpoint_triads"] == (
         "U1:default:clock=U1.1/SPI_SCK;data_input=U1.2/SPI_MOSI;data_output=U1.3/SPI_MISO",
     )
@@ -107,7 +112,9 @@ def test_generic_contacts_on_exact_spi_triad_emit_review() -> None:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_named_connector_roles_and_current_pin_map_suppress_review() -> None:
-    named = generic_spi_connector_triad_netlist(connector_functions=("SCK", "MOSI", "MISO", "GND"))
+    named = generic_spi_connector_triad_netlist(
+        connector_functions=("SCK", "MOSI", "MISO", "GND", "VCC")
+    )
     stale_map = ConnectorCoverageReport(
         status="INCOMPLETE",
         scope="Synthetic stale connector review",
@@ -229,3 +236,12 @@ def test_report_is_stable_when_netlist_mappings_are_reordered() -> None:
     original = _finding(_report(observed))
     permuted = _finding(_report(reordered))
     assert (original.subject, original.evidence) == (permuted.subject, permuted.evidence)
+
+    assigned_vcc = observed.model_copy(
+        update={"nets": {**observed.nets, "+3V3": (*observed.nets["+3V3"], "J1.5")}}
+    )
+    assigned_finding = _finding(_report(assigned_vcc))
+    assert assigned_finding.evidence["other_connector_contacts"][-1] == (
+        "J1.5 function=VCC nets=+3V3"
+    )
+    assert assigned_finding.fingerprint != original.fingerprint

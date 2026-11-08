@@ -59,8 +59,11 @@ def test_complete_spi_map_without_a_return_role_emits_review() -> None:
     assert findings[0].mode == "review"
     assert findings[0].subject == "J1: mapped SPI connector has no identified return role"
     assert findings[0].evidence["identified_return_contacts"] == ()
-    assert findings[0].evidence["mapped_connector_pins"][-1].startswith("J1.4:AUX:role=other")
-    assert "BOARD_GND" in findings[0].evidence["mapped_connector_pins"][-1]
+    mapped_pins = findings[0].evidence["mapped_connector_pins"]
+    assert mapped_pins[-2].startswith("J1.4:AUX:role=other")
+    assert "BOARD_GND" in mapped_pins[-2]
+    assert mapped_pins[-1].startswith("J1.5:VCC:role=other")
+    assert mapped_pins[-1].endswith(":nets=")
     assert "does not require connection to board ground" in findings[0].message
 
 

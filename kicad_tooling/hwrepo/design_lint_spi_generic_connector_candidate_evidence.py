@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .connector_contact_evidence import format_other_connector_contacts
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .spi_generic_connector_models import SpiGenericConnectorTriad
@@ -37,6 +38,9 @@ def project_spi_generic_connector_evidence(
         evidence[f"{label}_net"] = (triad.role_nets[role],)
         evidence[f"{label}_generic_connector_pins"] = triad.role_connector_pins[role]
         evidence[f"{label}_generic_pin_functions"] = triad.role_connector_functions[role]
+    evidence["other_connector_contacts"] = format_other_connector_contacts(
+        triad.other_connector_contacts
+    )
     evidence["SPI_endpoint_triads"] = tuple(
         f"{item.reference}:{item.channel}:clock={item.clock_pin}/{item.clock_net};"
         f"data_input={item.data_input_pin}/{item.data_input_net};"

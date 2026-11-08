@@ -7,7 +7,7 @@ from kicad_tooling.hwrepo.netlist_contract_models import ComponentContract, Netl
 
 def generic_spi_connector_triad_netlist(
     *,
-    connector_functions: tuple[str, ...] = ("Pin_1", "Pin_2", "Pin_3", "Pin_4"),
+    connector_functions: tuple[str, ...] = ("Pin_1", "Pin_2", "Pin_3", "Pin_4", "VCC"),
     include_data_output_contact: bool = True,
 ) -> NetlistContract:
     """Return a completely inventoried synthetic connector and SPI endpoint."""
@@ -21,7 +21,7 @@ def generic_spi_connector_triad_netlist(
     return NetlistContract(
         components={
             "J1": ComponentContract(
-                value="Synthetic generic connector", footprint="Synthetic:Conn_01x04"
+                value="Synthetic generic connector", footprint="Synthetic:Conn_01x05"
             ),
             "U1": ComponentContract(value="Synthetic SPI endpoint", footprint="Synthetic:SOIC"),
         },
@@ -36,15 +36,17 @@ def generic_spi_connector_triad_netlist(
             "U1.2": "MOSI",
             "U1.3": "MISO",
             "U1.4": "VSS",
+            "J1.5": "VCC",
             "U1.5": "VDD",
         },
         pin_electrical_types={
             **{f"J1.{index + 1}": "passive" for index in range(4)},
+            "J1.5": "power_in",
             "U1.1": "input",
             "U1.2": "output",
             "U1.3": "input",
             "U1.4": "power_in",
             "U1.5": "power_in",
         },
-        component_pin_numbers={"J1": ("1", "2", "3", "4"), "U1": ("1", "2", "3", "4", "5")},
+        component_pin_numbers={"J1": ("1", "2", "3", "4", "5"), "U1": ("1", "2", "3", "4", "5")},
     )

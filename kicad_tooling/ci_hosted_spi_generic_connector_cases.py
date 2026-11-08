@@ -14,8 +14,8 @@ from .hwrepo.connector_peer_pin_models import ConnectorPinRole
 from .hwrepo.netlist_contract_models import NetlistContract
 
 SPI_GENERIC_CONNECTOR_SOURCE_HASHES = {
-    "control": "e11144f442f5d727753a010bc3bb22fb2cfcc2662efa263ea1e291f90f51699a",
-    "fault": "9b5eabbcc50ab7e9b19557d438e917f64ffb81ecdf3bdb151ea8087ffa53e538",
+    "control": "030cffc1bd67e6b3eaf925e02009b52db2a2382eba4d7ab548bb13543296d8f7",
+    "fault": "713ff06b7497f9f57287324ca916c567243580e46e6c60239bf28049c865dda7",
 }
 
 
@@ -41,6 +41,7 @@ def spi_connector_role_map(
         ("2", "MOSI", "signal"),
         ("3", "MISO", "signal"),
         ("4", "GND" if has_return_role else "AUX", "return" if has_return_role else "other"),
+        ("5", "VCC", "other"),
     )
     nets_by_pin = {
         f"J1.{number}": tuple(

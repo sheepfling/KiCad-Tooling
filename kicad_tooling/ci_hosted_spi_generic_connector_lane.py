@@ -42,6 +42,15 @@ def spi_generic_connector_fixture_lane(
         source_hashes=SPI_GENERIC_CONNECTOR_SOURCE_HASHES,
         fixture_sources=spi_generic_connector_fixture_sources(),
         expected_subject="J1: generic pins match SPI clock and both data roles",
+        expected_evidence=(
+            (
+                "other_connector_contacts",
+                (
+                    "J1.4 function=Pin_4 nets=AUX",
+                    "J1.5 function=VCC nets=unassigned",
+                ),
+            ),
+        ),
         role_evidence=(
             (
                 "clock",
