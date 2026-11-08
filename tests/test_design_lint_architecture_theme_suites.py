@@ -27,6 +27,8 @@ SCHEMATIC_GEOMETRY_THEME_SUITES = (
     "test_schematic_geometry_native_wire_topology.py",
 )
 PCB_REFERENCE_PLANE_THEME_SUITES = (
+    "test_pcb_alternate_reference_plane_run.py",
+    "test_design_lint_mcp_parity_pcb_alternate_reference_plane.py",
     "test_pcb_reference_plane_geometry.py",
     "test_pcb_reference_plane_layers.py",
     "test_pcb_reference_plane_contract.py",

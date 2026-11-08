@@ -2364,11 +2364,46 @@ for dispositions and timing; leave unmeasured values unstated.
   source screen did not measure field precision, reviewer effort, or external
   maintenance cost. No cohort implementation or board data was adopted.
 
+### Alternate adjacent-plane coverage: kicad-happy GP-001 source screen
+
+- **Pinned source:**
+  [kicad-happy v3.0.1 release](https://github.com/aklofas/kicad-happy/releases/tag/v3.0.1), source
+  commit
+  [`7d9d4d9fef87ac2d3eb16cfc5cdc9a0869f417f4`](https://github.com/aklofas/kicad-happy/tree/7d9d4d9fef87ac2d3eb16cfc5cdc9a0869f417f4),
+  rule implementation
+  [`emc_rules.py`](https://github.com/aklofas/kicad-happy/blob/7d9d4d9fef87ac2d3eb16cfc5cdc9a0869f417f4/skills/emc/scripts/emc_rules.py)
+  and EMC rule notes
+  [`pcb-emc-rules.md`](https://github.com/aklofas/kicad-happy/blob/7d9d4d9fef87ac2d3eb16cfc5cdc9a0869f417f4/skills/emc/references/pcb-emc-rules.md).
+- **Source observation:** GP-001 calls for review when a mapped high-speed/clock route moves across
+  adjacent copper planes on different nets, with upstream distance and nearby-capacitor suppression
+  heuristics. Those generic distance/suppression assumptions are not adopted.
+- **Local gap:** `pcb.reference_plane_coverage` measures the mapped expected reference net. A
+  project may intentionally allow a low same-net fraction while still wanting a prompt when
+  appreciable route centerline coverage sits over another adjacent filled-zone net.
+- **Local implementation:** LINT-335 (`pcb.alternate_reference_plane_run`) adds an optional
+  project-authored `minimum_alternate_reference_length_um` to an existing exact signal/reference
+  map. It groups native filled-zone coverage by alternate net and adjacent layer, then compares
+  summed per-track centerline length with the authored threshold. It defaults to `review`; no net
+  names, high-speed roles, universal distances, continuity, or required ground bonds are inferred.
+- **Synthetic evidence:** Tooling-owned fault/control geometry uses one mapped `DATA` route with
+  adjacent `GND` and `VCC` zones. Fault and above-threshold control cases share the native geometry
+  and differ only in their authored minimum. Zone order is permuted to verify stable findings;
+  missing opt-in, non-adjacent copper, an above-observation threshold, and an exact-threshold
+  boundary are controlled.
+- **Native evidence:** The dedicated synthetic board was refilled and captured twice per case by
+  the digest-pinned KiCad 10.0.0 and 10.0.5 lanes. Both versions measured 1,200,000 nm of DATA
+  centerline over VCC on B.Cu; the 500 µm fault threshold requested review and the 3,000 µm control
+  stayed quiet. Repeated evidence was identical. These synthetic results do not establish field
+  precision or reviewer value.
+- **Disposition:** Retain the narrow opt-in predicate as a complementary first-party rule. Do not
+  install or copy cohort code or board data. Keep it at `review` until independent project reviews
+  establish useful thresholds and applicability.
+
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 298 active rules. Each entry has a deterministic predicate, evidence
+contains 299 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-Of the 298 active rules, 243 default to `review`, 54 to `off`, and
+Of the 299 active rules, 244 default to `review`, 54 to `off`, and
 `pcb.required_fitted_reference` to `block`. Off-by-default checks include
 schematic geometry, generic peer assignment, selected component topology
 reviews such as the BJT base-bias and base/collector same-net prompts, and

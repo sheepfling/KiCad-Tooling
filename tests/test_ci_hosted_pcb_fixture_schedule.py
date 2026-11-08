@@ -14,6 +14,9 @@ from kicad_tooling import (
     ci_hosted_pcb_reference_planes as reference_plane_lane,
 )
 from kicad_tooling import (
+    ci_hosted_pcb_reference_transitions as reference_transition_lane,
+)
+from kicad_tooling import (
     ci_hosted_pcb_return_context as return_lane,
 )
 from kicad_tooling import (
@@ -23,6 +26,7 @@ from kicad_tooling import ci_hosted_pcb_thermal_vias as thermal_via_lane
 from kicad_tooling.ci_hosted import (
     HostedLog,
     pcb_access_fixture_lane,
+    pcb_alternate_reference_plane_fixture_lane,
     pcb_reference_plane_narrow_void_fixture_lane,
     pcb_reference_plane_via_fixture_lane,
     pcb_return_fixture_lane,
@@ -54,6 +58,7 @@ def _assert_unsupported_version_stops_before_capture(
         return_lane,
         switching_loop_lane,
         reference_plane_lane,
+        reference_transition_lane,
         thermal_via_lane,
     ):
         monkeypatch.setattr(owner, "selected_config", lambda *_args: unsupported)
@@ -108,6 +113,7 @@ def test_pcb_switching_loop_fixture_rejects_an_untested_kicad_minor(
     [
         pytest.param(pcb_reference_plane_via_fixture_lane, id="via-antipad"),
         pytest.param(pcb_reference_plane_narrow_void_fixture_lane, id="narrow-void"),
+        pytest.param(pcb_alternate_reference_plane_fixture_lane, id="alternate-net"),
     ],
 )
 def test_reference_plane_fixture_rejects_an_untested_kicad_minor(

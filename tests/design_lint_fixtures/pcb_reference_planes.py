@@ -48,6 +48,7 @@ def requirement(
     minimum_length_um: int = 1,
     minimum_fraction: float = 0.9,
     review_excluded_short_tracks: bool = False,
+    minimum_alternate_reference_length_um: int | None = None,
     id: str = "data-reference",
 ) -> PcbReferencePlaneRequirement:
     return PcbReferencePlaneRequirement(
@@ -59,6 +60,7 @@ def requirement(
         minimum_track_length_um=minimum_length_um,
         minimum_referenced_fraction=minimum_fraction,
         review_excluded_short_tracks=review_excluded_short_tracks,
+        minimum_alternate_reference_length_um=minimum_alternate_reference_length_um,
     )
 
 

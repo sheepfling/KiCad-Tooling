@@ -31,6 +31,7 @@ class PcbReferencePlaneRequirement(StrictModel):
     minimum_track_length_um: PositiveCount
     minimum_referenced_fraction: Annotated[float, Field(ge=0, le=1, allow_inf_nan=False)]
     review_excluded_short_tracks: bool = False
+    minimum_alternate_reference_length_um: PositiveCount | None = None
 
     @model_validator(mode="after")
     def exact_reference_scope(self) -> PcbReferencePlaneRequirement:
@@ -62,6 +63,32 @@ class PcbReferencePlaneMap(StrictModel):
         return self
 
 
+class PcbReferencePlaneNetCoverage(StrictModel):
+    """Native filled copper coverage by one non-required net under a signal track."""
+
+    net: NetName
+    zone_uuids: tuple[NativePcbUuid, ...]
+    covered_fraction_numerator: PositiveCount
+    covered_fraction_denominator: PositiveCount
+
+    @model_validator(mode="after")
+    def canonical_alternate_fraction(self) -> PcbReferencePlaneNetCoverage:
+        if self.covered_fraction_numerator > self.covered_fraction_denominator:
+            raise ValueError("Alternate reference coverage fraction cannot exceed one")
+        fraction = Fraction(
+            self.covered_fraction_numerator,
+            self.covered_fraction_denominator,
+        )
+        if (
+            fraction.numerator != self.covered_fraction_numerator
+            or fraction.denominator != self.covered_fraction_denominator
+        ):
+            raise ValueError("Alternate reference coverage fraction must be reduced")
+        if len({item.casefold() for item in self.zone_uuids}) != len(self.zone_uuids):
+            raise ValueError("Alternate reference coverage repeats a zone identity")
+        return self
+
+
 class PcbReferencePlaneTrackMeasurement(StrictModel):
     """Centerline fraction over native filled reference copper for one track."""
 
@@ -75,6 +102,7 @@ class PcbReferencePlaneTrackMeasurement(StrictModel):
     covered_fraction_numerator: NonNegativeCount
     covered_fraction_denominator: PositiveCount
     below_minimum: bool
+    alternate_reference_coverages: tuple[PcbReferencePlaneNetCoverage, ...] = ()
 
     @model_validator(mode="after")
     def canonical_coverage_fraction(self) -> PcbReferencePlaneTrackMeasurement:
@@ -89,6 +117,9 @@ class PcbReferencePlaneTrackMeasurement(StrictModel):
             or fraction.denominator != self.covered_fraction_denominator
         ):
             raise ValueError("PCB reference-plane coverage fraction must be reduced")
+        alternate_nets = tuple(item.net.casefold() for item in self.alternate_reference_coverages)
+        if len(set(alternate_nets)) != len(alternate_nets):
+            raise ValueError("PCB track measurement repeats an alternate reference net")
         if len({item.casefold() for item in self.reference_zone_uuids}) != len(
             self.reference_zone_uuids
         ):
@@ -116,6 +147,7 @@ class PcbReferencePlaneCoverageEntry(StrictModel):
     minimum_track_length_um: PositiveCount
     minimum_referenced_fraction: Annotated[float, Field(ge=0, le=1, allow_inf_nan=False)]
     review_excluded_short_tracks: bool = False
+    minimum_alternate_reference_length_um: PositiveCount | None = None
     tracks: tuple[PcbReferencePlaneTrackMeasurement, ...]
     excluded_short_track_uuids: tuple[NativePcbUuid, ...] = ()
     issues: tuple[NonEmptyText, ...] = ()
@@ -153,6 +185,20 @@ class PcbReferencePlaneCoverageEntry(StrictModel):
             if item.below_minimum != (measured < minimum):
                 raise ValueError(
                     "Reference-plane result does not match its exact authored fraction"
+                )
+            if self.minimum_alternate_reference_length_um is None and (
+                item.alternate_reference_coverages
+            ):
+                raise ValueError(
+                    "Alternate reference-net coverage requires an authored review threshold"
+                )
+            excluded_nets = {self.signal_net.casefold(), self.reference_net.casefold()}
+            if any(
+                coverage.net.casefold() in excluded_nets
+                for coverage in item.alternate_reference_coverages
+            ):
+                raise ValueError(
+                    "Alternate reference-net coverage cannot use the mapped signal/reference net"
                 )
         return self
 

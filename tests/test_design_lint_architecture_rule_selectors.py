@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from tests.design_lint_rule_selector_cases import RULE_NODE_CASES
+from tests.design_lint_pcb_rule_selector_cases import PCB_RULE_NODE_CASES
+from tests.design_lint_rule_selector_cases import RULE_NODE_CASES as NON_PCB_RULE_NODE_CASES
 from tests.design_lint_rule_selector_support import collect_rule_nodes
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
+RULE_NODE_CASES = (*NON_PCB_RULE_NODE_CASES, *PCB_RULE_NODE_CASES)
 
 
 def test_rule_markers_select_catalogued_cases_without_external_checkout() -> None:
@@ -66,6 +68,30 @@ def test_rule_selector_filters_parametrized_peer_identity_cases() -> None:
         "tests/test_peer_component_pin_identity.py::test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp[signal-input]",
         "tests/test_peer_component_pin_identity.py::test_shared_part_id_aliases_accept_identical_generic_pin_metadata[input-component.peer_signal_input_unconnected]",
         "tests/test_peer_component_pin_identity.py::test_shared_part_id_aliases_skip_mismatched_pin_functions[input-IN-component.peer_signal_input_unconnected]",
+    }
+
+
+def test_alternate_reference_plane_selector_stays_with_its_fault_control_and_parity_cases() -> None:
+    result = collect_rule_nodes("pcb.alternate_reference_plane_run")
+    assert result.returncode == 0, result.stdout + result.stderr
+    selected = {
+        line
+        for line in result.stdout.splitlines()
+        if line.startswith(
+            (
+                "tests/test_pcb_alternate_reference_plane_run.py::",
+                "tests/test_pcb_reference_plane_native_fixture_lane.py::",
+                "tests/test_design_lint_mcp_parity_pcb_alternate_reference_plane.py::",
+            )
+        )
+    }
+    assert selected == {
+        "tests/test_pcb_alternate_reference_plane_run.py::test_authored_alternate_net_threshold_emits_exact_review_candidate",
+        "tests/test_pcb_alternate_reference_plane_run.py::test_alternate_net_review_is_opt_in_and_threshold_boundary_is_exact",
+        "tests/test_pcb_alternate_reference_plane_run.py::test_alternate_plane_evidence_is_stable_under_zone_order_and_policy_can_disable",
+        "tests/test_pcb_reference_plane_native_fixture_lane.py::test_native_alternate_reference_net_fault_control_repeats[controller-10.0.0]",
+        "tests/test_pcb_reference_plane_native_fixture_lane.py::test_native_alternate_reference_net_fault_control_repeats[raspberry-pi-status-led-10.0.5]",
+        "tests/test_design_lint_mcp_parity_pcb_alternate_reference_plane.py::test_alternate_reference_plane_rule_matches_cli_and_mcp",
     }
 
 

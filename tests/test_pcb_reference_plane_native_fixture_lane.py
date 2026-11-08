@@ -10,6 +10,7 @@ import pytest
 
 from kicad_tooling.ci_hosted import (
     HostedLog,
+    pcb_alternate_reference_plane_fixture_lane,
     pcb_reference_plane_narrow_void_fixture_lane,
     pcb_reference_plane_via_fixture_lane,
 )
@@ -82,3 +83,31 @@ def test_native_narrow_void_fault_control_repeats(
     assert result["repeatable"] == "true"
     assert (root / result["control_receipt"]).exists()
     assert (root / result["fault_receipt"]).exists()
+
+
+@pytest.mark.design_lint_rule(rule_id="pcb.alternate_reference_plane_run")
+@pytest.mark.parametrize("project,version", NATIVE_KICAD_PROJECTS, ids=lambda value: value)
+def test_native_alternate_reference_net_fault_control_repeats(
+    tmp_path: Path, project: str, version: str
+) -> None:
+    root = copy_reference_checkout(tmp_path / "repository")
+    config = selected_config(root, project)
+    assert config.kicad_version == version
+    log = HostedLog(root, f"native-pcb-reference-alternate-net-{project}")
+
+    pcb_alternate_reference_plane_fixture_lane(root, project=project, image=config.image, log=log)
+
+    result = lane_event(log, "pcb-reference-plane-fixture/alternate-net")
+    coverage_nm = int(result["observed_coverage_nm"])
+    assert result["status"] == "PASS"
+    assert result["kicad_version"] == version
+    assert result["alternate_net"] == "VCC"
+    assert result["adjacent_layer"] == "B.Cu"
+    assert result["fault_threshold_um"] == 500
+    assert result["control_threshold_um"] == 3_000
+    assert 500_000 <= coverage_nm < 3_000_000
+    assert result["fault_review"] == "true"
+    assert result["control_review"] == "false"
+    assert result["repeatable"] == "true"
+    assert (root / result["fault_receipt"]).exists()
+    assert (root / result["control_receipt"]).exists()

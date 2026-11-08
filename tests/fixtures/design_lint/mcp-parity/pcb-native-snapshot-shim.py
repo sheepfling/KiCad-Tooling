@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import hashlib
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -218,5 +219,36 @@ snapshot = {
     ],
     "copper_layers": ["F.Cu", "In1.Cu", "B.Cu"],
 }
+if os.environ.get("KICAD_TEST_ALTERNATE_REFERENCE_PLANE") == "1":
+    ground_zone = snapshot["zones"][1]
+    ground_zone["filled_islands"][0]["outline_nm"] = [
+        [1000000, 1000000],
+        [2500000, 1000000],
+        [2500000, 4000000],
+        [1000000, 4000000],
+    ]
+    ground_zone["filled_islands"][0]["holes_nm"] = []
+    snapshot["zones"].append(
+        {
+            "uuid": "00000000-0000-0000-0000-0000000000a3",
+            "layer": "In1.Cu",
+            "name": "Synthetic alternate VCC zone",
+            "net": "VCC",
+            "filled_island_count": 1,
+            "unanchored_pad_island_indexes": [0],
+            "filled_islands": [
+                {
+                    "island_index": 0,
+                    "outline_nm": [
+                        [2500000, 1000000],
+                        [4000000, 1000000],
+                        [4000000, 4000000],
+                        [2500000, 4000000],
+                    ],
+                    "holes_nm": [],
+                }
+            ],
+        }
+    )
 destination = output_root / arguments[-1].removeprefix("/output/")
 destination.write_text(json.dumps(snapshot), encoding="utf-8")

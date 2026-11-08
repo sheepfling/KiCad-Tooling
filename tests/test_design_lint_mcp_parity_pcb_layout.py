@@ -10,6 +10,7 @@ pytestmark = [
     pytest.mark.template_checkout,
     pytest.mark.design_lint,
     pytest.mark.pcb_lint,
+    pytest.mark.return_path_lint,
 ]
 
 import os

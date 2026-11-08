@@ -99,6 +99,7 @@ PCB_TRACK_WIDTH_MODEL_NAMES = (
 PCB_REFERENCE_PLANE_MODEL_NAMES = (
     "PcbReferencePlaneRequirement",
     "PcbReferencePlaneMap",
+    "PcbReferencePlaneNetCoverage",
     "PcbReferencePlaneTrackMeasurement",
     "PcbReferencePlaneCoverageEntry",
     "PcbReferencePlaneCoverageReport",

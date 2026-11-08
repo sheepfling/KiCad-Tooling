@@ -86,6 +86,7 @@ def test_native_lane_schedules_pcb_signal_path_fixture(
         "pcb_reference_plane_via_fixture_lane",
         "pcb_thermal_via_fixture_lane",
         "pcb_reference_plane_narrow_void_fixture_lane",
+        "pcb_alternate_reference_plane_fixture_lane",
         "pcb_component_inventory_fixture_lane",
     )
     for name in fixture_names:

@@ -71,6 +71,7 @@ def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) 
         "pcb_reference_plane_via_fixture_lane",
         "pcb_thermal_via_fixture_lane",
         "pcb_reference_plane_narrow_void_fixture_lane",
+        "pcb_alternate_reference_plane_fixture_lane",
     )
     with ExitStack() as stack:
         run = stack.enter_context(patch.object(log, "run"))

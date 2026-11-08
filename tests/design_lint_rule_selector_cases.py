@@ -4,74 +4,6 @@ from __future__ import annotations
 
 RULE_NODE_CASES = (
     (
-        "pcb.differential_pair_route_skew",
-        "tests/test_pcb_differential_pair_route_skew.py::test_excessive_routed_skew_is_reviewed_against_authored_bound",
-    ),
-    (
-        "pcb.differential_pair_route_layer_mismatch",
-        "tests/test_pcb_differential_pair_route_skew.py::test_equal_length_pair_routes_with_different_layer_profiles_request_review",
-    ),
-    (
-        "pcb.differential_pair_route_layer_mismatch",
-        "tests/test_pcb_differential_pair_route_skew_native.py::test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots",
-    ),
-    (
-        "pcb.differential_pair_route_skew",
-        "tests/test_pcb_differential_pair_route_skew_native.py::test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots",
-    ),
-    (
-        "pcb.differential_pair_route_skew",
-        "tests/test_pcb_signal_path_mcp_parity.py::test_disabled_signal_path_coverage_matches_cli_and_mcp",
-    ),
-    (
-        "pcb.custom_drc_text_variable_review",
-        "tests/test_pcb_dru_text_variable_review.py::test_variable_severity_is_reviewed_without_an_authored_map",
-    ),
-    (
-        "pcb.custom_drc_text_variable_review",
-        "tests/test_design_lint_mcp_parity_pcb_dru_text_variable.py::test_custom_drc_substitution_review_matches_cli_and_mcp",
-    ),
-    (
-        "pcb.custom_drc_rule_without_constraint",
-        "tests/test_pcb_dru_rule_without_constraint.py::test_rule_without_direct_constraint_requests_source_bound_review",
-    ),
-    (
-        "pcb.custom_drc_rule_without_constraint",
-        "tests/test_design_lint_mcp_parity_pcb_dru_rule_without_constraint.py::test_unconstrained_custom_rule_review_matches_cli_and_mcp",
-    ),
-    (
-        "pcb.custom_drc_rule_without_constraint",
-        "tests/test_pcb_dru_rule_without_constraint_native.py::test_unconstrained_rule_does_not_prevent_terminal_sentinel",
-    ),
-    (
-        "pcb.custom_drc_duplicate_rule_name",
-        "tests/test_pcb_dru_duplicate_rule_names.py::test_duplicate_rule_names_request_source_bound_review_per_exact_name",
-    ),
-    (
-        "pcb.custom_drc_duplicate_rule_name",
-        "tests/test_pcb_dru_duplicate_rule_names.py::test_unique_names_case_variants_and_comments_are_quiet",
-    ),
-    (
-        "pcb.custom_drc_duplicate_rule_name",
-        "tests/test_design_lint_mcp_parity_pcb_dru_duplicate_rule_names.py::test_duplicate_custom_rule_name_review_matches_cli_and_mcp",
-    ),
-    (
-        "pcb.custom_drc_duplicate_rule_name",
-        "tests/test_pcb_dru_duplicate_rule_names_native.py::test_duplicate_and_unique_rule_names_reach_native_sentinel",
-    ),
-    (
-        "pcb.custom_drc_casefold_rule_name_collision",
-        "tests/test_pcb_dru_casefold_rule_name_collisions.py::test_distinct_casefolded_names_request_source_bound_review_per_group",
-    ),
-    (
-        "pcb.custom_drc_casefold_rule_name_collision",
-        "tests/test_pcb_dru_casefold_rule_name_collisions.py::test_distinct_names_and_comment_text_are_a_control",
-    ),
-    (
-        "pcb.custom_drc_casefold_rule_name_collision",
-        "tests/test_design_lint_mcp_parity_pcb_dru_casefold_rule_name.py::test_casefold_rule_name_review_matches_cli_and_mcp",
-    ),
-    (
         "connector.footprint_same_voltage_power_input_unanchored",
         "tests/test_connector_footprint_same_voltage_power_input.py::test_unanchored_peer_power_inputs_with_equal_voltage_labels_are_reviewed",
     ),
@@ -487,10 +419,6 @@ RULE_NODE_CASES = (
     (
         "component.mosfet_gate_direct_drive",
         "tests/test_mosfet_gate_direct_drive.py::test_output_capable_pin_directly_sharing_gate_net_is_reviewed",
-    ),
-    (
-        "pcb.mechanical_edge_clearance_rule_coverage",
-        "tests/test_design_lint_determinism_pcb_mechanical_edge.py::test_mechanical_edge_fault_and_control_reports_are_source_bound_and_deterministic",
     ),
     (
         "connector.return_supply_scope_singleton",

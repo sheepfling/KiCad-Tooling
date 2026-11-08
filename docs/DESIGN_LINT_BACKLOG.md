@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 298 rules are implemented with synthetic regression coverage.
+The following 299 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 298 active rules.
+The catalog currently contains 299 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -680,6 +680,7 @@ skipped under prerelease policy.
 - `pcb.protection_entry_path`
 - `pcb.minimum_track_width`
 - `pcb.reference_plane_coverage`
+- `pcb.alternate_reference_plane_run`
 - `pcb.switching_loop_geometry`
 - `pcb.differential_pair_rule_coverage`
 - `pcb.signal_path_rule_coverage`
@@ -3789,7 +3790,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 298 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 299 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -20595,6 +20596,35 @@ acceptance threads while new lint features proceed:
   The native lane is
   `tests/test_connector_numeric_peer_open_native_fixture_lane.py` with
   `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` and `native_kicad` selection.
+
+#### LINT-335 — Review mapped PCB routes over alternate adjacent copper nets
+
+- **Status:** Added the opt-in default-REVIEW rule
+  `pcb.alternate_reference_plane_run`, informed by a pinned kicad-happy GP-001
+  source screen. It extends the existing project-authored reference-plane map
+  with `minimum_alternate_reference_length_um`; it does not add an upstream
+  dependency or infer a requirement from net names.
+- **Predicate:** For mapped native straight tracks that meet the authored
+  minimum track length, measure exact centerline fraction under each filled
+  zone net other than the mapped signal and expected reference net. Group by
+  alternate net and immediately adjacent copper layer, sum segment-length
+  contributions, and prompt when the authored minimum is reached.
+- **Boundary:** The summed coverage can be disjoint or span separate track
+  items. The check does not prove a continuous transition, copper island
+  connectivity, return adequacy, an electrical defect, or intent. A designed
+  plane change can be valid. Projects can disable the rule or ignore an exact
+  finding; no rule joins nets.
+- **Evidence:** A synthetic fault/control shares one geometry and varies the
+  authored threshold; controls cover no opt-in, a threshold just above observed
+  coverage, exact-threshold inclusion, zone ordering, and a non-adjacent layer.
+  The source-hashed fixture `pcb-reference-alternate-net.kicad_pcb` is a
+  tooling-owned board with synthetic `DATA`, `GND`, and `VCC` geometry. Its
+  native refill and capture must repeat on exact KiCad 10.0.0 and 10.0.5.
+- **Selection:** Synthetic coverage uses
+  `tests/test_pcb_alternate_reference_plane_run.py`; exact native coverage uses
+  `tests/test_pcb_reference_plane_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1` and
+  `design_lint_rule(rule_id="pcb.alternate_reference_plane_run")`.
 
 ## Completion and release gate
 

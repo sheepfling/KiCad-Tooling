@@ -797,7 +797,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 298 active rules.
+The catalog currently contains 299 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -4115,7 +4115,8 @@ synthetic; set them only from a reviewed interface or layout requirement.
           "reference_net": "GND",
           "minimum_track_length_um": 1000,
           "minimum_referenced_fraction": 0.9,
-          "review_excluded_short_tracks": true
+          "review_excluded_short_tracks": true,
+          "minimum_alternate_reference_length_um": 1500
         }
       ]
     }
@@ -4136,6 +4137,16 @@ arcs, absent mapped layers, missing tracks, or tracks without an adjacent copper
 layer also leave coverage incomplete. Copper clearances around pads and vias
 count as uncovered centerline length.
 
+`minimum_alternate_reference_length_um` is optional. When present, the separate
+`pcb.alternate_reference_plane_run` rule groups exact centerline coverage by
+alternate filled-zone net and immediately adjacent copper layer. It sums each
+mapped straight segment's length multiplied by its covered fraction and asks
+for review when that total reaches the project-authored minimum. The total can
+include separated intervals or multiple track items; it does not prove one
+continuous run. This heuristic defaults to `review`, and projects can turn it
+off or ignore an exact finding. Alternate planes and reference transitions may
+be intentional, so the rule does not label them as defects or join their nets.
+
 This is a review screen for likely reference-plane gaps. It does not infer
 design intent or ground domains, measure trace-width overlap or return-current
 fields, prove that a zone island connects to endpoint pads, or establish return
@@ -4154,6 +4165,21 @@ second native fault/control pair places a 0.2 mm void between the 2 mm-spaced
 samples used by a cohort analyzer; the first-party exact centerline geometry
 must review the fault while keeping the intact control quiet. This fixture
 tests geometric coverage only and does not imply a universal threshold.
+
+Run the focused synthetic check with:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_pcb_alternate_reference_plane_run.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.alternate_reference_plane_run")'
+```
+
+Run the exact-native fault/control lane on KiCad 10.0.0 and 10.0.5 with:
+
+```sh
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_reference_plane_native_fixture_lane.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.alternate_reference_plane_run")'
+```
 
 ## Review switching-current loop geometry
 

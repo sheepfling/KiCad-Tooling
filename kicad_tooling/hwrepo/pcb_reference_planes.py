@@ -7,13 +7,17 @@ from itertools import pairwise
 from math import isqrt
 
 from .pcb_connectivity_observations import (
+    PcbTrackObservation,
     PcbViaObservation,
     PcbZoneFilledIslandObservation,
+    PcbZoneObservation,
 )
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_reference_plane_models import (
     PcbReferencePlaneCoverageEntry,
     PcbReferencePlaneMap,
+    PcbReferencePlaneNetCoverage,
+    PcbReferencePlaneRequirement,
     PcbReferencePlaneTrackMeasurement,
 )
 
@@ -148,6 +152,45 @@ def _via_spans_layer(
     return min(start, end) <= target <= max(start, end)
 
 
+def _alternate_net_coverages(
+    track: PcbTrackObservation,
+    reference_layer: str,
+    requirement: PcbReferencePlaneRequirement,
+    zones: tuple[PcbZoneObservation, ...],
+) -> tuple[PcbReferencePlaneNetCoverage, ...]:
+    """Measure opt-in copper coverage by each non-signal, non-required zone net."""
+    excluded_nets = {requirement.signal_net.casefold(), requirement.reference_net.casefold()}
+    zones_by_net: dict[str, list[PcbZoneObservation]] = {}
+    for zone in zones:
+        if (
+            zone.net is not None
+            and zone.net.casefold() not in excluded_nets
+            and zone.layer.casefold() == reference_layer.casefold()
+        ):
+            zones_by_net.setdefault(zone.net.casefold(), []).append(zone)
+
+    coverages: list[PcbReferencePlaneNetCoverage] = []
+    for alternate_zones in zones_by_net.values():
+        alternate_net = min(
+            (zone.net for zone in alternate_zones if zone.net is not None),
+            key=lambda net: (net.casefold(), net),
+        )
+        islands = tuple(island for zone in alternate_zones for island in zone.filled_islands)
+        fraction = _covered_fraction(track.start_nm, track.end_nm, islands)
+        if fraction:
+            coverages.append(
+                PcbReferencePlaneNetCoverage(
+                    net=alternate_net,
+                    zone_uuids=tuple(
+                        sorted((zone.uuid for zone in alternate_zones), key=str.casefold)
+                    ),
+                    covered_fraction_numerator=fraction.numerator,
+                    covered_fraction_denominator=fraction.denominator,
+                )
+            )
+    return tuple(sorted(coverages, key=lambda item: (item.net.casefold(), item.net)))
+
+
 def pcb_reference_plane_entries(
     specification: PcbReferencePlaneMap,
     snapshot: PcbConnectivitySnapshot,
@@ -205,6 +248,16 @@ def pcb_reference_plane_entries(
                 )
                 islands = tuple(island for zone in zones for island in zone.filled_islands)
                 fraction = _covered_fraction(track.start_nm, track.end_nm, islands)
+                alternate_coverages = (
+                    _alternate_net_coverages(
+                        track,
+                        reference_layer,
+                        requirement,
+                        snapshot.zones,
+                    )
+                    if requirement.minimum_alternate_reference_length_um is not None
+                    else ()
+                )
                 endpoint_via_ids = tuple(
                     sorted(
                         {*track.start_vias, *track.end_vias},
@@ -244,6 +297,7 @@ def pcb_reference_plane_entries(
                         covered_fraction_numerator=fraction.numerator,
                         covered_fraction_denominator=fraction.denominator,
                         below_minimum=fraction < threshold,
+                        alternate_reference_coverages=alternate_coverages,
                     )
                 )
 
@@ -265,6 +319,9 @@ def pcb_reference_plane_entries(
                 minimum_track_length_um=requirement.minimum_track_length_um,
                 minimum_referenced_fraction=requirement.minimum_referenced_fraction,
                 review_excluded_short_tracks=requirement.review_excluded_short_tracks,
+                minimum_alternate_reference_length_um=(
+                    requirement.minimum_alternate_reference_length_um
+                ),
                 tracks=tuple(measurements),
                 excluded_short_track_uuids=tuple(sorted(excluded_short, key=str.casefold)),
                 issues=tuple(issues),

@@ -11147,6 +11147,49 @@
       "implementation_owner": "kicad_tooling/hwrepo/pcb_reference_planes.py#pcb_reference_plane_entries"
     },
     {
+      "rule_id": "pcb.alternate_reference_plane_run",
+      "title": "Mapped PCB route spends substantial centerline length over an alternate adjacent copper net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Project-authored alternate-net coverage threshold compared with source-bound KiCad 10 pcbnew track and filled-zone contours in the reference-plane coverage report",
+      "predicate": "When a mapped signal/reference requirement opts in with minimum_alternate_reference_length_um, group exact straight-track centerline coverage by alternate filled-zone net and immediately adjacent copper layer. Sum segment length multiplied by the exact covered fraction across mapped tracks; emit REVIEW when the project-authored threshold is met. The sum can include disjoint intervals and segments.",
+      "supported_kicad_versions": [
+        "KiCad 10 native pcbnew API; each configured project's exact version and digest-pinned image are checked"
+      ],
+      "limitations": [
+        "The check is opt-in and requires an exact project-authored signal/reference map and minimum alternate-net coverage; it does not infer intent or signal criticality from names.",
+        "The metric measures track centerlines over native filled zones and sums contributions by alternate net and adjacent layer. Contributions can be disjoint and do not prove one continuous run, zone connectivity, return-current adequacy, coupling, emissions, or electrical failure.",
+        "An alternate plane can be intentional, including a designed transition, chassis/shield region, or return strategy. Findings require engineering review and can be set to off or ignored by exact fingerprint.",
+        "Short unmapped routes, unsupported arc geometry, trace width, pad and via connections, and return paths beyond immediate adjacent copper are outside this metric."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_alternate_reference_plane_run.test_authored_alternate_net_threshold_emits_exact_review_candidate",
+        "tests.test_design_lint_mcp_parity_pcb_alternate_reference_plane.test_alternate_reference_plane_rule_matches_cli_and_mcp",
+        "tests.test_pcb_reference_plane_native_fixture_lane.test_native_alternate_reference_net_fault_control_repeats"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_alternate_reference_plane_run.test_alternate_net_review_is_opt_in_and_threshold_boundary_is_exact",
+        "tests.test_pcb_alternate_reference_plane_run.test_alternate_plane_evidence_is_stable_under_zone_order_and_policy_can_disable",
+        "tests.test_pcb_reference_plane_native_fixture_lane.test_native_alternate_reference_net_fault_control_repeats"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_alternate_reference_plane_run.test_alternate_plane_evidence_is_stable_under_zone_order_and_policy_can_disable"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_reference_planes.py#_alternate_net_coverages",
+        "kicad_tooling/hwrepo/pcb_reference_plane_transitions.py#alternate_reference_plane_run_candidates",
+        "kicad_tooling/ci_hosted_pcb_reference_transitions.py#pcb_alternate_reference_plane_fixture_lane",
+        "kicad_tooling/hwrepo/fixtures/pcb-reference-alternate-net.kicad_pcb"
+      ],
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_reference_plane_transitions.py#alternate_reference_plane_run_candidates"
+    },
+    {
       "rule_id": "pcb.switching_loop_geometry",
       "title": "Mapped switching-current loop and return plane need review",
       "status": "active",

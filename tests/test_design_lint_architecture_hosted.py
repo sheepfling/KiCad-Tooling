@@ -35,6 +35,7 @@ def test_hosted_lint_suites_stay_theme_sized() -> None:
 
 
 HOSTED_PCB_REFERENCE_PLANE_MODULE = "ci_hosted_pcb_reference_planes.py"
+HOSTED_PCB_REFERENCE_TRANSITION_MODULE = "ci_hosted_pcb_reference_transitions.py"
 HOSTED_PCB_ACCESS_MODULE = "ci_hosted_pcb_access.py"
 HOSTED_PCB_THERMAL_VIA_MODULE = "ci_hosted_pcb_thermal_vias.py"
 HOSTED_PCB_GEOMETRY_MODULES = (
@@ -81,6 +82,23 @@ def test_pcb_reference_plane_hosted_lanes_stay_theme_scoped() -> None:
     assert (
         "kicad_tooling/ci_hosted_pcb_reference_planes.py#"
         "pcb_reference_plane_narrow_void_fixture_lane"
+    ) in catalog_text
+
+
+def test_alternate_reference_plane_hosted_lane_stays_theme_scoped() -> None:
+    module = REPO_ROOT / "kicad_tooling" / HOSTED_PCB_REFERENCE_TRANSITION_MODULE
+    coordinator_text = (REPO_ROOT / "kicad_tooling" / "ci_hosted.py").read_text(encoding="utf-8")
+    catalog_text = (HWREPO / "design-lint-rules.json").read_text(encoding="utf-8")
+
+    assert _line_count(module) < IMPLEMENTATION_MAX_LINES
+    assert "def pcb_alternate_reference_plane_fixture_lane(" not in coordinator_text
+    assert (
+        "from .ci_hosted_pcb_reference_transitions import "
+        "pcb_alternate_reference_plane_fixture_lane"
+    ) in coordinator_text
+    assert (
+        "kicad_tooling/ci_hosted_pcb_reference_transitions.py#"
+        "pcb_alternate_reference_plane_fixture_lane"
     ) in catalog_text
 
 
