@@ -1,4 +1,4 @@
-"""Digest-pinned KiCad source exports for I2C address collision review."""
+"""Digest-pinned KiCad source exports for mapped I2C address review."""
 
 from __future__ import annotations
 
@@ -23,7 +23,8 @@ from .hwrepo.models import DesignLintPolicy
 from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.netlist_contract_models import NetlistContract
 
-RULE_ID = "bus.i2c_address_collision"
+COLLISION_RULE_ID = "bus.i2c_address_collision"
+MISMATCH_RULE_ID = "bus.i2c_address_mismatch"
 _CASES = ("control", "fault")
 _SOURCE_HASHES = {
     "control": "109b7699426f756fbf1b592e2950547b8fbbb145e338e2accbd52841d8bcbb1f",
@@ -67,24 +68,25 @@ def _check_native_netlist(case: str, observed: NetlistContract) -> None:
         raise ValueError(f"Native I2C {case} unexpectedly marks a responder DNP")
 
 
-def i2c_address_collision_fixture_lane(
+def i2c_address_map_fixture_lane(
     root: Path,
     *,
     version: str,
     image: str,
     log: HostedLog,
     specifications: Mapping[str, I2cAddressMap],
+    mismatch_specifications: Mapping[str, I2cAddressMap],
 ) -> None:
-    """Export fault/control schematics twice and evaluate their authored maps."""
+    """Export sources twice and evaluate collision and authored-address maps."""
     if (version, image) not in I2C_NATIVE_TOOLCHAINS:
         raise ValueError(f"I2C address fixtures do not cover KiCad {version} with this image")
     if set(specifications) != set(_CASES):
         raise ValueError("I2C address fixtures require one map for each fault/control source")
+    if set(mismatch_specifications) != set(_CASES):
+        raise ValueError("I2C mismatch fixtures require fault and corrected control maps")
 
     root = root.resolve()
-    fixture_root = (
-        tooling_checkout_root() / "tests/fixtures/design_lint/i2c-address-collision-native"
-    )
+    fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/i2c-address-map-native"
     sources = {case: fixture_root / f"{case}.kicad_sch" for case in _CASES}
     source_hashes = {case: digest(path) for case, path in sources.items()}
     if source_hashes != _SOURCE_HASHES:
@@ -129,7 +131,7 @@ def i2c_address_collision_fixture_lane(
         "/tmp:rw,nosuid,nodev,size=64m",
         *user,
         "-e",
-        "HOME=/tmp/kicad-i2c-address-collision",
+        "HOME=/tmp/kicad-i2c-address-map",
         "-v",
         f"{inputs}:/fixtures:ro",
         "-v",
@@ -143,7 +145,7 @@ def i2c_address_collision_fixture_lane(
         script,
     )
     log.event(
-        "i2c-address-collision-fixture/native-export",
+        "i2c-address-map/native-export",
         "START",
         project=f"kicad-{version}",
         kicad_version=version,
@@ -156,7 +158,7 @@ def i2c_address_collision_fixture_lane(
     if command.returncode != 0 or command.error is not None:
         error = command.stderr or command.error or f"exit {command.returncode}"
         log.event(
-            "i2c-address-collision-fixture/native-export",
+            "i2c-address-map/native-export",
             "FAIL",
             project=f"kicad-{version}",
             kicad_version=version,
@@ -164,9 +166,11 @@ def i2c_address_collision_fixture_lane(
             command_receipt=receipt_path,
             error=error,
         )
-        raise ValueError(f"Native I2C address export failed: {error}")
+        raise ValueError(f"Native I2C address-map export failed: {error}")
 
     case_results: dict[str, tuple[str, str, str]] = {}
+    control_netlist: NetlistContract | None = None
+    control_raw_netlist_sha256: str | None = None
     for case in _CASES:
         if digest(sources[case]) != source_hashes[case]:
             raise ValueError(f"Synthetic I2C {case} source changed during native export")
@@ -189,7 +193,7 @@ def i2c_address_collision_fixture_lane(
             raise ValueError(f"Native I2C {case} netlist did not repeat identically")
         assert observed is not None
 
-        project_id = f"synthetic-i2c-address-collision-{case}"
+        project_id = f"synthetic-i2c-address-{case}"
         report = evaluate(
             project_id,
             ContractCoachReport(
@@ -202,7 +206,7 @@ def i2c_address_collision_fixture_lane(
         )
         if report.i2c_address_coverage.status != "COMPLETE":
             raise ValueError(f"Native I2C {case} address map is not complete")
-        findings = tuple(item for item in report.findings if item.rule_id == RULE_ID)
+        findings = tuple(item for item in report.findings if item.rule_id == COLLISION_RULE_ID)
         expected_subjects = ("MAIN: U1, U2 at 0x50",) if case == "fault" else ()
         if tuple(item.subject for item in findings) != expected_subjects:
             raise ValueError(f"Native I2C {case} rule evidence changed")
@@ -211,9 +215,9 @@ def i2c_address_collision_fixture_lane(
         case_results[case] = (run_hashes[0], raw_hashes[0], report.status)
 
         log.event(
-            f"i2c-address-collision-fixture/{case}",
+            f"i2c-address-map/collision/{case}",
             "PASS",
-            project=f"synthetic-i2c-address-collision-{case}",
+            project=project_id,
             kicad_version=version,
             image=pinned_image(image),
             source_sha256=source_hashes[case],
@@ -224,9 +228,56 @@ def i2c_address_collision_fixture_lane(
             repeatable="true",
             command_receipt=receipt_path,
         )
+        if case == "control":
+            control_netlist = observed
+            control_raw_netlist_sha256 = raw_hashes[0]
+
+    if control_netlist is None or control_raw_netlist_sha256 is None:
+        raise ValueError("Native I2C address-map control evidence was not retained")
+
+    for case in _CASES:
+        project_id = f"synthetic-i2c-address-mismatch-{case}"
+        report = evaluate(
+            project_id,
+            ContractCoachReport(
+                status="READY_FOR_REVIEW",
+                project_id=project_id,
+                observed=control_netlist,
+                netlist_sha256=control_raw_netlist_sha256,
+            ),
+            DesignLintPolicy(i2c_address_map=mismatch_specifications[case]),
+        )
+        if report.i2c_address_coverage.status != "COMPLETE":
+            raise ValueError(f"Native I2C mismatch {case} map is not complete")
+        mismatch_findings = tuple(
+            item for item in report.findings if item.rule_id == MISMATCH_RULE_ID
+        )
+        expected_subjects = ("U2 on MAIN: 0x51",) if case == "fault" else ()
+        if tuple(item.subject for item in mismatch_findings) != expected_subjects:
+            raise ValueError(f"Native I2C address-mismatch {case} evidence changed")
+        if case == "fault" and (
+            len(mismatch_findings) != 1 or mismatch_findings[0].mode != "review"
+        ):
+            raise ValueError("Native I2C address mismatch no longer defaults to review")
+        if any(item.rule_id == COLLISION_RULE_ID for item in report.findings):
+            raise ValueError("Native I2C address mismatch unexpectedly creates a collision")
+        log.event(
+            f"i2c-address-map/strap-mismatch/{case}",
+            "PASS",
+            project=project_id,
+            kicad_version=version,
+            image=pinned_image(image),
+            source_sha256=source_hashes["control"],
+            raw_netlist_sha256=control_raw_netlist_sha256,
+            normalized_netlist_sha256=case_results["control"][0],
+            findings=";".join(item.subject for item in mismatch_findings) or "none",
+            address_coverage=report.i2c_address_coverage.status,
+            repeatable="true",
+            command_receipt=receipt_path,
+        )
 
     log.event(
-        "i2c-address-collision-fixture/native-export",
+        "i2c-address-map/native-export",
         "PASS",
         project=f"kicad-{version}",
         kicad_version=version,

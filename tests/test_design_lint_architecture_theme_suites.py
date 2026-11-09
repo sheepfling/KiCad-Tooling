@@ -50,7 +50,7 @@ OPEN_DRAIN_THEME_SUITES = ("test_open_drain_bias_fixture_lane.py",)
 I2C_ADDRESS_THEME_SUITES = (
     "test_i2c_address_coverage.py",
     "test_i2c_address_collisions.py",
-    "test_i2c_address_collision_native_fixture_lane.py",
+    "test_i2c_address_map_native_fixture_lane.py",
     "test_i2c_address_straps.py",
     "test_i2c_address_contract.py",
 )

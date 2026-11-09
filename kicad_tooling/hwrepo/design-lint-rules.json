@@ -9810,15 +9810,20 @@
         "A mapped symbol function is library metadata; correctness of the part pinout and project-authored address basis still requires review."
       ],
       "fault_fixtures": [
-        "tests.test_i2c_address_straps.test_address_strap_mismatch_is_reported"
+        "tests.test_i2c_address_straps.test_address_strap_mismatch_is_reported",
+        "tests.test_i2c_address_map_native_fixture_lane.test_native_i2c_address_map_faults_and_controls_repeat"
       ],
       "valid_control_fixtures": [
-        "tests.test_i2c_address_straps.test_distinct_straps_and_same_addresses_on_isolated_segments_are_valid"
+        "tests.test_i2c_address_straps.test_distinct_straps_and_same_addresses_on_isolated_segments_are_valid",
+        "tests.test_i2c_address_map_native_fixture_lane.test_native_i2c_address_map_faults_and_controls_repeat"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_i2c_address_straps.test_strap_mismatch_is_order_stable_and_corrected_strap_clears_it",
         "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I2C_ADDRESS_MAP_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_addressing.py#scan_i2c_address_map",
@@ -9846,12 +9851,12 @@
       ],
       "fault_fixtures": [
         "tests.test_i2c_address_collisions.test_same_segment_static_address_collision_is_reported",
-        "tests.test_i2c_address_collision_native_fixture_lane.test_native_i2c_address_collision_fault_and_control_repeat"
+        "tests.test_i2c_address_map_native_fixture_lane.test_native_i2c_address_map_faults_and_controls_repeat"
       ],
       "valid_control_fixtures": [
         "tests.test_i2c_address_straps.test_distinct_straps_and_same_addresses_on_isolated_segments_are_valid",
         "tests.test_i2c_address_collisions.test_not_fitted_responder_does_not_create_a_collision",
-        "tests.test_i2c_address_collision_native_fixture_lane.test_native_i2c_address_collision_fault_and_control_repeat"
+        "tests.test_i2c_address_map_native_fixture_lane.test_native_i2c_address_map_faults_and_controls_repeat"
       ],
       "metamorphic_fixtures": [
         "tests.test_i2c_address_collisions.test_collision_order_is_stable_and_separate_segments_clear_it",
@@ -9864,7 +9869,7 @@
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/i2c_addressing.py#scan_i2c_address_map",
       "required_native_fixtures": [
-        "KICAD_RUN_NATIVE_I2C_ADDRESS_COLLISION_FIXTURES"
+        "KICAD_RUN_NATIVE_I2C_ADDRESS_MAP_FIXTURES"
       ]
     },
     {

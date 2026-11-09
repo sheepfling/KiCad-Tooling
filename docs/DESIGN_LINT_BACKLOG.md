@@ -762,6 +762,14 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **Latest progress (LINT-351, local native acceptance):** Extended the
+  tooling-owned I2C address-map lane to cover `bus.i2c_address_mismatch` with
+  real KiCad 10.0.0 and 10.0.5 exports. The control source assigns U2 A0 to
+  `+3V3`; an authored map expecting `0x50` must prompt for observed `0x51`,
+  while the corrected map stays clear. The same native source evidence also
+  retains the LINT-350 collision fault/control. Hosted acceptance is pending.
+  The map is explicit project intent; no address is inferred from a reference
+  or symbol name.
 - **Latest progress (LINT-350, hosted acceptance):** Added exact native
   KiCad source-to-netlist fault/control coverage to the existing mapped
   `bus.i2c_address_collision` review heuristic. The fault resolves two fitted
@@ -3902,7 +3910,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 310 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 311 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -16451,7 +16459,7 @@ control are documented in the
   address; exact ignore and blocking override; DNP exclusion; invalid shared
   signal segment; CLI/MCP semantic parity. All fixtures are synthetic.
 - **Exact native fixtures:** See the
-  [native fixture guide](../tests/fixtures/design_lint/i2c-address-collision-native/README.md).
+  [native fixture guide](../tests/fixtures/design_lint/i2c-address-map-native/README.md).
   Two synthetic fitted targets share the same
   authored `MAIN_SDA`/`MAIN_SCL` segment. The fault assigns both A0 pins to
   `GND`, resolving both maps to `0x50`; the control assigns U2 A0 to `+3V3`,
@@ -21309,10 +21317,38 @@ acceptance threads while new lint features proceed:
   LINT-033.
 - **Selection:** Run
   `tests/test_i2c_address_collisions.py` and
-  `tests/test_i2c_address_collision_native_fixture_lane.py` with
+  `tests/test_i2c_address_map_native_fixture_lane.py` with
   `design_lint_rule(rule_id="bus.i2c_address_collision")`. The exact native
-  lane requires `KICAD_RUN_NATIVE_I2C_ADDRESS_COLLISION_FIXTURES=1` and
+  lane requires `KICAD_RUN_NATIVE_I2C_ADDRESS_MAP_FIXTURES=1` and
   `native_kicad`.
+
+#### LINT-351 — Validate mapped I2C strap mismatches through native export
+
+- **Rule:** Existing `bus.i2c_address_mismatch`, default `review`; the project
+  map remains the independent source of the expected responder address.
+- **Gap:** The source-bound address evaluator had synthetic mismatch coverage,
+  while the exact-version native lane exercised collisions only. A native
+  strap-to-map regression closes that export boundary for the second address
+  rule without inventing a universal address expectation.
+- **Behavior:** Reuse the fitted synthetic I2C control schematic from LINT-350,
+  whose U2 A0 pin is assigned to `+3V3` and resolves to `0x51`. Under a fault
+  map that expects U2 at `0x50`, require exactly one default-REVIEW mismatch
+  for U2; under the corrected `0x51` map, require no mismatch. Both runs bind
+  the same repeated native netlist hash and complete address coverage.
+- **Controls and boundaries:** The source remains synthetic and the map is
+  explicitly authored. The check does not infer device identity, datasheet
+  correctness, firmware selection, mux isolation, or successful communication.
+  The collision fault and control remain in the same lane to preserve their
+  prior native regression.
+- **Evidence:** Local acceptance is pending. The exact native selection uses
+  `tests/test_i2c_address_map_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_I2C_ADDRESS_MAP_FIXTURES=1`, marker
+  `design_lint_rule(rule_id="bus.i2c_address_mismatch")`, and digest-pinned
+  KiCad 10.0.0/10.0.5. Hosted acceptance will be recorded after the tagged
+  focused gate completes.
+- **Selection:** Run `tests/test_i2c_address_straps.py` and
+  `tests/test_i2c_address_map_native_fixture_lane.py` with
+  `design_lint_rule(rule_id="bus.i2c_address_mismatch")`.
 
 ## Completion and release gate
 
