@@ -762,12 +762,14 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-352, local native validation):** The shared
+- **Latest progress (LINT-352, hosted native acceptance):** The shared
   digest-pinned I2C address-map lane now covers
   `bus.i2c_unmapped_responder`. On the same native control schematic, the map
   listing only U1 produces one rule review for U2; the complete U1/U2 map
   produces no finding from this rule. Exact KiCad 10.0.0 and 10.0.5 Docker
-  fixtures pass. Hosted acceptance is pending.
+  fixtures pass locally. Tagged acceptance passed in GitHub Actions run
+  `42658760628` from `v0.5.3rc594`, including the focused gate and external
+  template playtest.
 - **Latest progress (LINT-351, hosted native acceptance):** Extended the
   tooling-owned I2C address-map lane to cover `bus.i2c_address_mismatch` with
   real KiCad 10.0.0 and 10.0.5 exports. The control source assigns U2 A0 to
@@ -21384,8 +21386,13 @@ acceptance threads while new lint features proceed:
   10.0.5 Docker fixtures. Both retain the same control schematic hash
   `109b7699426f756fbf1b592e2950547b8fbbb145e338e2accbd52841d8bcbb1f` and
   normalized native netlist hash
-  `543c29b38c5db76c446d687ebac49c2ee647e9c7f60062bad3ec7fa0484e9643`. Local
-  catalog and architecture checks passed; hosted acceptance is pending.
+  `543c29b38c5db76c446d687ebac49c2ee647e9c7f60062bad3ec7fa0484e9643`. The
+  focused rule gate passed 27 tests with 2 native tests skipped when the
+  Docker switch was unset; the selected I2C/catalog suites passed 12 tests
+  with 2 native tests skipped. The exact native lane passed both KiCad
+  versions. Tagged acceptance passed in GitHub Actions run `42658760628` for
+  `v0.5.3rc594`, including lint, typing, wheel/sdist, installed-wheel, and
+  separate-template playtest stages.
 - **Selection:** Run `tests/test_i2c_address_coverage.py` and
   `tests/test_i2c_address_map_native_fixture_lane.py` with
   `design_lint_rule(rule_id="bus.i2c_unmapped_responder")`. The native lane
