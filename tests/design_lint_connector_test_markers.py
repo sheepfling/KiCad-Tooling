@@ -96,6 +96,8 @@ CONNECTOR_LINT_TEST_MODULES = frozenset(
         "tests/test_connector_reviewed_peer_signal_split_native.py",
         "tests/test_connector_reviewed_peer_signal_domains.py",
         "tests/test_connector_reviewed_peer_signal_domains_native.py",
+        "tests/test_connector_reviewed_peer_distinct_signals.py",
+        "tests/test_connector_reviewed_peer_distinct_signals_native.py",
         "tests/test_design_lint_mcp_parity_reviewed_peer_signal_domains.py",
         "tests/test_design_lint_mcp_parity_reviewed_peer_signal_split.py",
         "tests/test_connector_mapped_interface_shield_on_return_net.py",

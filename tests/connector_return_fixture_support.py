@@ -72,6 +72,9 @@ def connector_return_fixture_contracts() -> dict[str, NetlistContract]:
             "reviewed-peer-signal-domain-shared-net": peer_signal_netlist(
                 nets=("SHARED_RX_NET", "SHARED_RX_NET")
             ),
+            "reviewed-peer-distinct-signals-shared-net": peer_signal_netlist(
+                nets=("SHARED_RX_NET", "SHARED_RX_NET")
+            ),
             "numeric-peer-open-fault": numeric_open_connector_peers(),
             "numeric-peer-open-control": numeric_open_connector_peers(open_references=()),
             "numeric-peer-open-no-connect-ambiguity": numeric_open_connector_peers().model_copy(

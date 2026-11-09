@@ -270,6 +270,8 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         "reviewed-peer-signal-split": fixture_root / "reviewed-peer-signal-split/peers.kicad_sch",
         "reviewed-peer-signal-domain-shared-net": fixture_root
         / "reviewed-peer-signal-domain-shared-net/shared-net.kicad_sch",
+        "reviewed-peer-distinct-signals-shared-net": fixture_root
+        / "reviewed-peer-signal-domain-shared-net/shared-net.kicad_sch",
         "mapped-interface-shield-unassigned-fault": fixture_root
         / "mapped-interface-shield-native/fault.kicad_sch",
         "mapped-interface-shield-unassigned-control": fixture_root
@@ -431,6 +433,7 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = MappingProxyType(
         "mapped-same-signal-split-nets": "fa11e55fe8cc046fd093eb3cb6fdd1c9a6cfc2c75a838320ea8ff720fa3c512e",
         "reviewed-peer-signal-split": "1f755fc59dfd41d6e337f8e58f64cb605e351fe862035b91893a9c5827302193",
         "reviewed-peer-signal-domain-shared-net": "0bb12e09a610f4e3255a0c84e7f7c6cdd2dd8ae41d9cc39a30537800bf37a36d",
+        "reviewed-peer-distinct-signals-shared-net": "0bb12e09a610f4e3255a0c84e7f7c6cdd2dd8ae41d9cc39a30537800bf37a36d",
         "mapped-interface-shield-unassigned-fault": "ef64edfafefdc9e724474c5686d8638577ec1c1719883f3f34f8b365de068821",
         "mapped-interface-shield-unassigned-control": "1cf322d88271b585ae9e97e356f1078b8573a9a2cd25122caf3352a28ed3cd9d",
         "stateful-contact-fault": "131715fd0c9d4b746a2dc3fe651356e775cfd9c5d5dcea8a98676bb741d881ff",

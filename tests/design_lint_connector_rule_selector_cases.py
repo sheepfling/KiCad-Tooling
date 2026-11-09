@@ -83,4 +83,36 @@ CONNECTOR_RULE_NODE_CASES = (
         "connector.reviewed_peer_signal_domain_shared_net",
         "tests/test_connector_reviewed_peer_signal_domains_native.py::test_native_reviewed_peer_signal_domains_fault_and_control_repeat",
     ),
+    (
+        "connector.reviewed_peer_distinct_signals_shared_net",
+        "tests/test_connector_reviewed_peer_distinct_signals.py::test_distinct_mapped_signals_on_separate_reviewed_peers_need_review",
+    ),
+    (
+        "connector.reviewed_peer_distinct_signals_shared_net",
+        "tests/test_connector_reviewed_peer_distinct_signals.py::test_same_signal_distinct_nets_and_separate_peer_groups_stay_quiet",
+    ),
+    (
+        "connector.reviewed_peer_distinct_signals_shared_net",
+        "tests/test_connector_reviewed_peer_distinct_signals.py::test_named_dnp_and_non_signal_contacts_are_controls",
+    ),
+    (
+        "connector.reviewed_peer_distinct_signals_shared_net",
+        "tests/test_connector_reviewed_peer_distinct_signals.py::test_incomplete_stale_and_digestless_maps_are_controls",
+    ),
+    (
+        "connector.reviewed_peer_distinct_signals_shared_net",
+        "tests/test_connector_reviewed_peer_distinct_signals.py::test_policy_can_block_disable_or_exactly_ignore_review",
+    ),
+    (
+        "connector.reviewed_peer_distinct_signals_shared_net",
+        "tests/test_connector_reviewed_peer_distinct_signals.py::test_finding_is_stable_under_net_and_mapping_order",
+    ),
+    (
+        "connector.reviewed_peer_distinct_signals_shared_net",
+        "tests/test_design_lint_mcp_parity_reviewed_peer_signal_domains.py::test_distinct_reviewed_peer_signal_names_match_between_cli_and_mcp",
+    ),
+    (
+        "connector.reviewed_peer_distinct_signals_shared_net",
+        "tests/test_connector_reviewed_peer_distinct_signals_native.py::test_native_distinct_peer_signals_fault_and_control_repeat",
+    ),
 )

@@ -19,3 +19,11 @@ Source SHA-256:
 
 The exact-version lane repeats the native netlist export with digest-pinned
 KiCad 10.0.0 and 10.0.5 images and checks the normalized typed-netlist hash.
+
+The same generic two-contact source also controls the separate
+`connector.reviewed_peer_distinct_signals_shared_net` heuristic. Its synthetic
+map assigns `UART_TX` and `UART_RX` to the two contacts in one reviewed peer
+group and one exact voltage domain; because the native fixture joins them to
+one net, the distinct-signal rule requests review. Assigning both contacts the
+same mapped signal is the valid peer-sharing control. This reuses the native
+source with a different authored map interpretation.

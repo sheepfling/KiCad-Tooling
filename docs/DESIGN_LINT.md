@@ -834,7 +834,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 308 active rules.
+The catalog currently contains 309 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -4116,6 +4116,44 @@ Run the exact-native lane with:
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_connector_reviewed_peer_signal_domains_native.py \
   -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.reviewed_peer_signal_domain_shared_net")'
+```
+
+## Review distinct mapped peer signals sharing a net
+
+`connector.reviewed_peer_distinct_signals_shared_net` prompts when two or more
+current, source-matched connector maps in one authored peer group assign
+different generic signal contacts to the same exact native net across separate
+connector references. It leaves contacts on one connector to
+`connector.mapped_signals_share_net`. Each contact must have one exact net,
+signal role, domain label, and complete source-matched peer scope.
+
+Different mapped signal names sharing a net are a review clue. Aliases,
+loopback wiring, or another intentional cross-connection may be valid. The
+check does not infer an electrical conflict, validate maps against datasheets,
+or establish PCB continuity. Policy can promote the cue to `block`, turn it
+`off`, or ignore an exact fingerprint.
+
+Synthetic controls cover same-signal peer sharing, separate nets, separate
+peer groups, named and DNP contacts, non-signal roles, stale or incomplete
+maps, policy overrides, and stable ordering. The native fault/control lane
+reuses a tooling-owned generic two-contact schematic under two source-matched
+map interpretations and repeats its export on digest-pinned KiCad 10.0.0 and
+10.0.5. See the
+[fixture record](../tests/fixtures/design_lint/reviewed-peer-signal-domain-shared-net/README.md).
+
+Select its synthetic, CLI/MCP, and native regressions with:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_connector_reviewed_peer_distinct_signals.py \
+  tests/test_design_lint_mcp_parity_reviewed_peer_signal_domains.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.reviewed_peer_distinct_signals_shared_net")'
+```
+
+```sh
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_connector_reviewed_peer_distinct_signals_native.py \
+  -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.reviewed_peer_distinct_signals_shared_net")'
 ```
 
 ## Review a mapped connector signal sharing a return net

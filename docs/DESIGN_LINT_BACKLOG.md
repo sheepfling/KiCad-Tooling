@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 308 rules are implemented with synthetic regression coverage.
+The following 309 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 308 active rules.
+The catalog currently contains 309 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -517,6 +517,8 @@ skipped under prerelease policy.
 - `connector.mapped_signals_share_net`
 - `connector.mapped_signals_split_nets`
 - `connector.reviewed_peer_signal_assignment_split`
+- `connector.reviewed_peer_signal_domain_shared_net`
+- `connector.reviewed_peer_distinct_signals_shared_net`
 - `connector.mapped_interface_shield_on_return_net`
 - `connector.mapped_interface_shield_on_supply_rail`
 - `connector.mapped_interface_power_contact_unassigned`
@@ -758,7 +760,21 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-345, local acceptance):** Added the default-REVIEW
+- **Latest progress (LINT-346, local acceptance):** Added the default-REVIEW
+  `connector.reviewed_peer_distinct_signals_shared_net` prompt for different
+  mapped signal names assigned to one exact net across separate
+  source-matched peer connectors. Existing `connector.mapped_signals_share_net`
+  covers distinct mapped contacts within one connector; this gate closes the
+  across-connector case. The selected synthetic and CLI/MCP checks passed 8
+  tests; the exact Docker native fault/control export passed on KiCad 10.0.0
+  and 10.0.5. The full rule-scoped acceptance passed 30 selected tests with
+  7,816 deselected, Ruff, Alphus boundary and duplicate-utility checks, docs,
+  strict Pyright, Windows-target Pyright, wheel/sdist/install checks, and
+  external inventory/surface/verify/playtest against template commit
+  `5ca79bedf665a9b6577d96b1d47f13ccd518c968`. The report and catalog expose
+  this as configurable REVIEW only; electrical applicability and reviewer
+  value remain unmeasured. Hosted acceptance is pending.
+- **Earlier progress (LINT-345, local acceptance):** Added the default-REVIEW
   `connector.reviewed_peer_signal_domain_shared_net` prompt for generic signal
   contacts in one source-reviewed peer group that share an exact native net
   while their maps declare different voltage-domain identifiers. The prompt
@@ -21067,6 +21083,45 @@ acceptance threads while new lint features proceed:
   `design_lint_rule(rule_id="connector.reviewed_peer_signal_domain_shared_net")`.
   The native lane uses
   `tests/test_connector_reviewed_peer_signal_domains_native.py`,
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, and `native_kicad`.
+
+#### LINT-346 — Review distinct mapped peer signals sharing one net
+
+- **Rule:** `connector.reviewed_peer_distinct_signals_shared_net`, default
+  `review`.
+- **Gap:** `connector.mapped_signals_share_net` detects distinct mapped signal
+  contacts sharing one net within the same connector. Separate connectors in
+  a current reviewed peer group can each contribute one generic signal to the
+  same net, leaving that within-connector rule with no pair to compare.
+- **Predicate:** Require complete current source-matched connector coverage,
+  a catalog digest, an authored peer-assignment group, generic fitted signal
+  contacts, nonempty mapped signal and domain identifiers, and one exact native
+  net per contact. Emit a REVIEW candidate for distinct signal names that
+  share a net across different connector references. Exclude any same-reference
+  signal pair, which remains with the existing within-connector rule.
+- **Incremental value:** A source-matched synthetic baseline with one generic
+  signal contact on each of two connector references returned no finding from
+  the within-connector check. Mapping the contacts to different signals in one
+  reviewed peer group now requests review. Same-signal peer sharing, separate
+  nets, separate groups, DNP, named-function, non-signal, stale, and incomplete
+  controls remain quiet. This demonstrates a distinct deterministic prompt,
+  not a confirmed board fault or a measured reviewer benefit.
+- **Boundaries:** A peer group scopes comparison but does not require commoning.
+  Signal aliases, loopback paths, and intentional cross-connections may be
+  valid. The rule does not validate a map against a datasheet, infer electrical
+  incompatibility, or establish PCB copper continuity. Projects can select
+  `block`, `review`, or `off`, and can ignore an exact fingerprint.
+- **Evidence:** Synthetic fault/control and order tests, CLI/MCP semantic
+  parity, catalog reachability, focused selectors, and repeated source-hashed
+  native netlist exports on digest-pinned KiCad 10.0.0 and 10.0.5. The same
+  tooling-owned generic two-contact source supports two authored map
+  interpretations; no external project schematic is included.
+- **Selection:** Run
+  `tests/test_connector_reviewed_peer_distinct_signals.py` and
+  `tests/test_design_lint_mcp_parity_reviewed_peer_signal_domains.py` with
+  `design_lint_rule(rule_id="connector.reviewed_peer_distinct_signals_shared_net")`.
+  The native lane uses
+  `tests/test_connector_reviewed_peer_distinct_signals_native.py`,
   `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, and `native_kicad`.
 
 ## Completion and release gate

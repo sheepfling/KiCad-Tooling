@@ -65,6 +65,9 @@ from tests.design_lint_fixtures.connector_numeric_peer_open import (
 from tests.design_lint_fixtures.connector_return_catalog_reachability import (
     connector_return_catalog_rule_ids,
 )
+from tests.design_lint_fixtures.connector_reviewed_peer_distinct_signals_catalog import (
+    reviewed_peer_distinct_signal_rule_ids,
+)
 from tests.design_lint_fixtures.connector_reviewed_peer_power_input_catalog import (
     reviewed_peer_power_input_rule_ids,
 )
@@ -491,5 +494,6 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         | reviewed_peer_power_input_rule_ids()
         | reviewed_peer_signal_assignment_rule_ids()
         | reviewed_peer_signal_domain_rule_ids()
+        | reviewed_peer_distinct_signal_rule_ids()
         | thermal_pad_catalog_rule_ids()
     )

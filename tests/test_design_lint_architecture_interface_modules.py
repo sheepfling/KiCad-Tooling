@@ -21,12 +21,14 @@ CONNECTOR_MAPPED_SIGNAL_MODULES = (
     "connector_reviewed_peer_signal_split.py",
     "connector_reviewed_peer_signal_evidence.py",
     "connector_reviewed_peer_signal_domains.py",
+    "connector_reviewed_peer_distinct_signals.py",
 )
 
 REVIEWED_PEER_SIGNAL_MODULES = (
     "connector_reviewed_peer_signal_evidence.py",
     "connector_reviewed_peer_signal_split.py",
     "connector_reviewed_peer_signal_domains.py",
+    "connector_reviewed_peer_distinct_signals.py",
 )
 
 
