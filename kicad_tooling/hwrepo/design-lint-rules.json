@@ -5801,10 +5801,12 @@
         "tests.test_i2c_pullup_heuristic_coverage.test_stale_native_netlist_hash_blocks_coverage_instead_of_suppressing",
         "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp",
         "tests.test_i2c_pullup_fixture_lane.test_native_array_lane_checks_contract_resolution_against_typed_exports",
-        "tests.test_i2c_pullup_native_fixture_lane.test_native_array_channel_fault_and_control_on_supported_images"
+        "tests.test_i2c_pullup_native_fixture_lane.test_native_array_channel_fault_and_control_on_supported_images",
+        "tests.test_i2c_unconnected_pins_native_fixture_lane.test_native_open_i2c_pin_fault_and_connected_control"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors",
+        "tests.test_design_lint_i2c_missing_pullups.test_explicitly_unconnected_i2c_line_does_not_form_a_pullup_bus",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_series_pullup_paths_are_bounded_and_unbranched",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_resistance_boundary_is_a_valid_control",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_missing_pullup_recognizes_exact_device_r_symbol_and_is_order_stable",
@@ -5819,7 +5821,8 @@
         "tests.test_i2c_pullup_heuristic_coverage.test_symmetric_array_pin_orientation_is_a_valid_control",
         "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp",
         "tests.test_i2c_pullup_fixture_lane.test_native_array_lane_checks_contract_resolution_against_typed_exports",
-        "tests.test_i2c_pullup_native_fixture_lane.test_native_array_channel_fault_and_control_on_supported_images"
+        "tests.test_i2c_pullup_native_fixture_lane.test_native_array_channel_fault_and_control_on_supported_images",
+        "tests.test_i2c_unconnected_pins_native_fixture_lane.test_native_open_i2c_pin_fault_and_connected_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -5838,7 +5841,8 @@
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/i2c_pullup_heuristics.py#i2c_buses_without_local_pullups",
       "required_native_fixtures": [
-        "KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES"
+        "KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES",
+        "KICAD_RUN_NATIVE_I2C_UNCONNECTED_PIN_FIXTURES"
       ]
     },
     {

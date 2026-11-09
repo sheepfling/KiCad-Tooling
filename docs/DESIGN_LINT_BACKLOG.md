@@ -763,6 +763,16 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **Latest progress (LINT-357, I2C explicit no-connect control):** A cohort
+  false-positive report motivated a focused counterexample for
+  `bus.i2c_missing_pullup`. Native exports must keep an SDA or SCL pin marked
+  no-connect out of the assigned bus pair, while the both-assigned control
+  still reports absent pull-up paths. The fault/control is linked to the rule
+  selector and requires both relevant native fixture lanes in package
+  acceptance. Two exact native cases passed on KiCad 10.0.0 and 10.0.5, and the
+  rule-scoped package acceptance passed 388 tests with 7,685 deselected. This
+  preserves an existing applicability boundary; it does not add a new
+  electrical requirement.
 - **Latest progress (LINT-356, missing connector-return native coverage):** The
   default-REVIEW `connector.no_connected_return` rule now requires a focused
   exact-version native lane in rule-scoped acceptance. A numeric-pin fault
@@ -21652,6 +21662,38 @@ acceptance threads while new lint features proceed:
   without the switch; exact Docker selector: 2 native passes on KiCad 10.0.0
   and 10.0.5, each checking first and repeat exports. Connector native
   registry, marker, and tag-selection checks: 121 passed.
+
+#### LINT-357 — Preserve I2C pull-up applicability for explicit no-connect pins
+
+- **Status:** Implemented as a synthetic and exact-native valid-control boundary
+  for the existing `bus.i2c_missing_pullup` rule.
+- **Cohort cue:** The kicad-happy v2.3.2 notes document a field-reported case
+  where its PU-001 detector requested a pull-up on a pin explicitly marked
+  no-connect, then record the correction. That failure mode prompted a local
+  regression check; no cohort code, product design, or fixture was imported.
+- **Coverage:** A tooling-owned netlist fixture moves either the SDA or SCL
+  pin into `unconnected_nets` and confirms it cannot alone form an assigned
+  I2C bus pair. The exact-native partial-pair fault has one explicitly
+  no-connected SDA and an assigned SCL; it must produce no
+  `bus.i2c_missing_pullup` finding. Its both-assigned control must still report
+  missing pull-up paths. The existing fixture is run through pinned KiCad
+  10.0.0 and 10.0.5 exports and repeated normalized netlists.
+- **Boundary:** This is an applicability control for a schematic-level
+  heuristic. It does not waive review of ordinary open pins, decide whether an
+  interface is required, identify internal or off-board pull-ups, or establish
+  electrical timing. The independent `bus.i2c_unconnected_pin` rule remains
+  available under its own policy.
+- **Selection:** The synthetic case is in
+  `tests/test_design_lint_i2c_missing_pullups.py`; exact native cases are in
+  `tests/test_i2c_unconnected_pins_native_fixture_lane.py`. The rule catalog
+  links both and requires `KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES` plus
+  `KICAD_RUN_NATIVE_I2C_UNCONNECTED_PIN_FIXTURES` for rule-scoped acceptance.
+- **Verification:** Focused synthetic selection passed 15 tests; the exact
+  Docker selection passed twice, once each on KiCad 10.0.0 and 10.0.5. The
+  scoped package acceptance passed 388 tests with 7,685 deselected, including
+  formatting, Ruff, module boundaries, Markdown checks, Linux and Windows
+  typing, wheel/sdist installation, external inventory/surface/verification,
+  and the relocated public-template playtest. No CLI/MCP behavior changed.
 
 ## Completion and release gate
 
