@@ -77,13 +77,11 @@ def test_rule_gate_also_collects_cross_rule_integrity_checks() -> None:
     )
     assert (
         "tests/test_ci_lint_prerelease_workflow.py::"
-        "test_full_acceptance_enables_every_active_rule_native_fixture"
-        in result.stdout
+        "test_full_acceptance_enables_every_active_rule_native_fixture" in result.stdout
     )
     assert (
         "tests/test_lint_gate_scope.py::"
-        "test_configured_native_fixtures_only_uses_full_acceptance_job"
-        in result.stdout
+        "test_configured_native_fixtures_only_uses_full_acceptance_job" in result.stdout
     )
     assert (
         "tests/test_design_lint_architecture_pytest_markers.py::test_active_catalog_fixture_references_receive_their_rule_marker"

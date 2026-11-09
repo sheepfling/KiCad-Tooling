@@ -58,6 +58,5 @@ def test_full_acceptance_enables_every_active_rule_native_fixture() -> None:
     }
 
     assert not missing, (
-        "Full acceptance must enable every native fixture required by active rules: "
-        f"{missing}"
+        f"Full acceptance must enable every native fixture required by active rules: {missing}"
     )

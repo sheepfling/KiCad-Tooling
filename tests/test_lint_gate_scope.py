@@ -27,12 +27,7 @@ _PROBE_FIXTURE = "KICAD_RUN_" + "NATIVE_PROBE_FIXTURES"
 _OTHER_FIXTURE = "KICAD_RUN_" + "NATIVE_OTHER"
 _RS485_FIXTURE = "KICAD_RUN_" + "NATIVE_RS485_DATA_LABEL_MISMATCH_FIXTURES"
 _EMPTY_PACKAGE_WORKFLOW = (
-    "name: synthetic\n"
-    "jobs:\n"
-    "  package:\n"
-    "    steps: []\n"
-    "  prerelease-lint-gate:\n"
-    "    steps: []\n"
+    "name: synthetic\njobs:\n  package:\n    steps: []\n  prerelease-lint-gate:\n    steps: []\n"
 )
 
 

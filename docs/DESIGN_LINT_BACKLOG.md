@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 311 rules are implemented with synthetic regression coverage.
+The following 312 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 311 active rules.
+The catalog currently contains 312 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -770,8 +770,11 @@ standalone parity work when it closes a demonstrated feature regression.
   every active rule's required native switches are declared there. A synthetic
   control puts a different switch only in the prerelease job and confirms it
   does not count. The focused scope, package, catalog-selector, and workflow
-  suites passed 222 tests; Ruff and Markdown checks passed. This prevents a coverage-wiring gap; it
-  does not add electrical fault detection.
+  suites passed 222 tests. Scoped `scripts/ci.py` acceptance passed formatting,
+  static checks, Markdown, focused pytest, both type-checking targets,
+  wheel/sdist builds, installed-wheel validation, and the public-template
+  playtest. This prevents a coverage-wiring gap; it does not add electrical
+  fault detection.
 - **Latest progress (LINT-353, hosted acceptance):** Added the default-REVIEW
   `bus.i2s_clock_data_same_net` cue for a fitted U/IC with one bounded I2S
   bit-clock pin and a native serial-data pin on the same exact net. Generic SPI
@@ -3945,7 +3948,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 311 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 312 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -21487,7 +21490,12 @@ acceptance threads while new lint features proceed:
   prerelease-only switches. The live catalog check covers all 312 active rules
   and their required native fixture switches; the focused scope, package,
   selector, workflow, and selection-architecture suites passed 222 tests.
-  Ruff and Markdown checks passed.
+  Ruff and Markdown checks passed. The first hosted `v0.5.3rc599` attempt
+  resolved its scope but stopped at Ruff formatting. After applying the
+  formatter changes, scoped local acceptance exposed stale 311-rule and
+  256-review catalog totals left by LINT-353; those totals are now reconciled
+  to 312 rules and 257 review defaults. The corrected scoped local acceptance
+  passed all stages, including installed-wheel and public-template checks.
 - **Selection:** `tests/test_ci_lint_prerelease_workflow.py` runs in the
   `design_lint and rule_gate_integrity` slice; the pytest-collection
   architecture test asserts that it and the synthetic scope checks in
