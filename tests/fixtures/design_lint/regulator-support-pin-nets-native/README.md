@@ -4,11 +4,11 @@ These tooling-owned synthetic schematics test
 `power.regulator_support_pin_net_mismatch`. The project map supplies the exact
 active-component identities and every expected native pin assignment.
 
-| Fixture | Change | Expected result |
-| --- | --- | --- |
-| `control.kicad_sch` | All mapped active support pins use their authored exact nets | No pin-net finding |
-| `wrong-net.kicad_sch` | U2.1 is assigned to a different local net | REVIEW for U2 |
-| `unconnected.kicad_sch` | U3.3 is explicitly left unconnected | REVIEW for U3 |
+| Fixture                 | Change                                                       | Expected result    |
+| ----------------------- | ------------------------------------------------------------ | ------------------ |
+| `control.kicad_sch`     | All mapped active support pins use their authored exact nets | No pin-net finding |
+| `wrong-net.kicad_sch`   | U2.1 is assigned to a different local net                    | REVIEW for U2      |
+| `unconnected.kicad_sch` | U3.3 is explicitly left unconnected                          | REVIEW for U3      |
 
 Run the synthetic cases with
 `python -I -m pytest tests/test_regulator_support_pin_net_map.py -m 'design_lint and power_lint'`.
