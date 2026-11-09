@@ -4126,8 +4126,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v88. The cross-process probe supports themed report
-  selectors and retains the complete 327-report inventory gate. Fault/control
+- **Status:** Implemented v89. The cross-process probe supports themed report
+  selectors and retains the complete 329-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -4241,10 +4241,24 @@ is not a reason by itself to expand its scope or change its default policy.
   review rules. Each target finding appears only in its fault report, and the
   complete reports are compared across three independently hash-seeded Python
   processes. Catalog selectors and marker architecture checks keep each case
-  individually selectable. The inventory now contains 327 reports; this adds
+  individually selectable. The inventory then contained 327 reports; this adds
   process-stability coverage without changing any heuristic's review meaning.
   This tests typed-report serialization, separate from the digest-pinned
   native schematic lane.
+  The v89 extension adds LINT-353's complete I2S clock/data same-net fault and
+  distinct-net control reports to the three-process hash-seed matrix. The
+  report netlist hashes are derived from their typed inputs, the finding's
+  exact pins and shared net are asserted, and the process-level case is linked
+  from the rule catalog. The complete report inventory now contains 329
+  reports. This is deterministic report evidence; exact native exports remain
+  covered separately by the digest-pinned Docker lane.
+  On 2026-11-09, the focused LINT-353 selection passed 8 tests, the complete
+  inventory/backlog selection passed 2 tests, and catalog marker, reachability,
+  architecture, and rule-gate collection checks passed 6 tests. The two exact-
+  version Docker fixtures passed. Scoped `scripts/ci.py` acceptance passed
+  formatting, code and architecture lint, Markdown checks, focused pytest,
+  Linux and Windows typing, wheel and sdist builds, installed-wheel checks, and
+  the separate public-template playtest.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
@@ -21463,7 +21477,8 @@ acceptance threads while new lint features proceed:
   zero ERC errors. This synthetic coverage does not measure field precision or
   reviewer value.
 - **Selection:** Run `tests/test_i2s_clock_data_same_net.py` and
-  `tests/test_design_lint_mcp_parity_i2s_clock_data_same_net.py` with
+  `tests/test_design_lint_mcp_parity_i2s_clock_data_same_net.py` and
+  `tests/test_design_lint_determinism_i2s_clock_data.py` with
   `design_lint_rule(rule_id="bus.i2s_clock_data_same_net")`. The native lane
   is `tests/test_i2s_clock_data_same_net_native_fixture_lane.py` with
   `KICAD_RUN_NATIVE_I2S_CLOCK_DATA_SAME_NET_FIXTURES=1` and `native_kicad`.

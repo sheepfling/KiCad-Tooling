@@ -3089,14 +3089,16 @@ external wiring.
 The regression set covers a shared-net fault, distinct-net control, bounded
 aliases and unrelated SPI-name controls, DNP/duplicate/ambiguous/open/incomplete
 endpoints, output pin types, policy and ignore behavior, stable evidence under
-mapping reordering, CLI/MCP parity, catalog reachability, and selector
-ownership. Tooling-owned synthetic fault/control schematics are repeated with
-digest-pinned KiCad 10.0.0 and 10.0.5 Docker images; see the
+mapping reordering, three-process hash-seed report stability, CLI/MCP parity,
+catalog reachability, and selector ownership. Digest-pinned KiCad 10.0.0 and
+10.0.5 Docker images repeat the tooling-owned synthetic fault/control
+schematics; see the
 [fixture record](../tests/fixtures/design_lint/i2s-clock-data-same-net/README.md).
 
 ```sh
 .venv/bin/python -I -m pytest -q tests/test_i2s_clock_data_same_net.py \
   tests/test_design_lint_mcp_parity_i2s_clock_data_same_net.py \
+  tests/test_design_lint_determinism_i2s_clock_data.py \
   -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2s_clock_data_same_net")'
 
 KICAD_RUN_NATIVE_I2S_CLOCK_DATA_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest -q \

@@ -7642,7 +7642,8 @@
         "tests.test_i2s_clock_data_same_net_native_fixture_lane.test_native_i2s_clock_data_same_net_fault_and_control_repeat"
       ],
       "metamorphic_fixtures": [
-        "tests.test_i2s_clock_data_same_net.test_mapping_order_keeps_fingerprint_and_evidence_stable"
+        "tests.test_i2s_clock_data_same_net.test_mapping_order_keeps_fingerprint_and_evidence_stable",
+        "tests.test_design_lint_determinism_i2s_clock_data.test_i2s_clock_data_fault_and_control_reports_are_hashseed_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_I2S_CLOCK_DATA_SAME_NET_FIXTURES"
