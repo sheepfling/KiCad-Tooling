@@ -295,6 +295,7 @@ INTERFACE_LINT_TEST_MODULES = frozenset(
         "tests/test_design_lint_peer_voltage.py",
         "tests/test_i2c_address_coverage.py",
         "tests/test_i2c_address_collisions.py",
+        "tests/test_i2c_address_collision_native_fixture_lane.py",
         "tests/test_i2c_address_straps.py",
         "tests/test_i2c_address_contract.py",
         "tests/test_i2c_pullup_heuristic_coverage.py",

@@ -323,6 +323,9 @@ python -I -B -m pytest -q -m "architecture and design_lint and interface_lint" \
 KICAD_RUN_NATIVE_I2C_PEER_REFERENCE_FIXTURES=1 python -I -B -m pytest -q \
   -m "design_lint and interface_lint and native_kicad" \
   tests/test_i2c_peer_reference_native_fixture_lane.py
+KICAD_RUN_NATIVE_I2C_ADDRESS_COLLISION_FIXTURES=1 python -I -B -m pytest -q \
+  -m 'design_lint_rule(rule_id="bus.i2c_address_collision")' \
+  tests/test_i2c_address_collision_native_fixture_lane.py
 KICAD_RUN_NATIVE_SPI_PEER_REFERENCE_FIXTURES=1 python -I -B -m pytest -q \
   -m "design_lint and interface_lint and native_kicad" \
   tests/test_spi_peer_reference_native_fixture_lane.py

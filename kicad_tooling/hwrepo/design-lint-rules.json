@@ -9845,11 +9845,13 @@
         "The rule identifies address conflicts, not bus electrical compatibility or successful communication."
       ],
       "fault_fixtures": [
-        "tests.test_i2c_address_collisions.test_same_segment_static_address_collision_is_reported"
+        "tests.test_i2c_address_collisions.test_same_segment_static_address_collision_is_reported",
+        "tests.test_i2c_address_collision_native_fixture_lane.test_native_i2c_address_collision_fault_and_control_repeat"
       ],
       "valid_control_fixtures": [
         "tests.test_i2c_address_straps.test_distinct_straps_and_same_addresses_on_isolated_segments_are_valid",
-        "tests.test_i2c_address_collisions.test_not_fitted_responder_does_not_create_a_collision"
+        "tests.test_i2c_address_collisions.test_not_fitted_responder_does_not_create_a_collision",
+        "tests.test_i2c_address_collision_native_fixture_lane.test_native_i2c_address_collision_fault_and_control_repeat"
       ],
       "metamorphic_fixtures": [
         "tests.test_i2c_address_collisions.test_collision_order_is_stable_and_separate_segments_clear_it",
@@ -9860,7 +9862,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "interfaces",
-      "implementation_owner": "kicad_tooling/hwrepo/i2c_addressing.py#scan_i2c_address_map"
+      "implementation_owner": "kicad_tooling/hwrepo/i2c_addressing.py#scan_i2c_address_map",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I2C_ADDRESS_COLLISION_FIXTURES"
+      ]
     },
     {
       "rule_id": "bus.i2c_unmapped_responder",

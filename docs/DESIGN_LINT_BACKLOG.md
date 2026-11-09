@@ -762,6 +762,16 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **Latest progress (LINT-350, hosted acceptance pending):** Added exact native
+  KiCad source-to-netlist fault/control coverage to the existing mapped
+  `bus.i2c_address_collision` review heuristic. The fault resolves two fitted
+  synthetic responders to `0x50`; the control resolves them to `0x50` and
+  `0x51`. Both sources export repeatably on digest-pinned KiCad 10.0.0 and
+  10.0.5. The focused selection passed 28 tests, including both Docker
+  versions, selector/catalog integrity, and CLI/MCP parity; strict Pyright for
+  the new runtime adapter passed. The tag and hosted result are pending. The
+  authored address map remains the requirement; native role names or similar
+  nets do not establish a collision by themselves.
 - **Latest progress (LINT-349, hosted acceptance):** Added the default-REVIEW
   `bus.i2s_clock_frame_same_net` heuristic for a fitted U/IC with one bounded
   bit-clock pin and one word-select/frame-clock pin on the same exact
@@ -16409,7 +16419,9 @@ control are documented in the
 
 #### LINT-033 — I2C responder-address collision review
 
-- **Status:** Implemented; synthetic validation only.
+- **Status:** Implemented with synthetic and exact-version native
+  source-to-netlist validation. The native lane runs on digest-pinned KiCad
+  10.0.0 and 10.0.5; hosted acceptance for the current focused tag is pending.
 - **Cohort input:** [kicad-happy](https://github.com/aklofas/kicad-happy)
   documents address-conflict detection as an analyzer family. This is a
   documented design input, not a benchmark or adoption of its workflow.
@@ -16428,14 +16440,23 @@ control are documented in the
   groups. Firmware selection, off-board devices, part-pinout truth, and mux
   isolation are not inferred. Segment maps that share either signal net are
   rejected as ambiguous address domains.
-- **Fixtures:** Same-segment collision; strapped-address mismatch; distinct
+- **Synthetic fixtures:** Same-segment collision; strapped-address mismatch; distinct
   strap values; same address on separate segments; unresolved strap; dynamic
   address; exact ignore and blocking override; DNP exclusion; invalid shared
   signal segment; CLI/MCP semantic parity. All fixtures are synthetic.
+- **Exact native fixtures:** Two synthetic fitted targets share the same
+  authored `MAIN_SDA`/`MAIN_SCL` segment. The fault assigns both A0 pins to
+  `GND`, resolving both maps to `0x50`; the control assigns U2 A0 to `+3V3`,
+  resolving its map to `0x51`. KiCad exports each source twice, and the
+  source-bound lint requires complete maps, stable netlist evidence, one
+  collision review for the fault, and no collision finding for the control.
+  Both pinned versions pass locally. This checks KiCad export compatibility
+  only; the synthetic symbol and map are not a device datasheet or field
+  confirmation.
 - **Done:** Schema, native netlist evidence, coverage status, deterministic
   findings, fault/control fixtures, docs, catalog entries, and parity tests are
-  implemented. Continue validation with cohort-independent fault fixtures and
-  identify missed applicable faults before changing maturity or default modes.
+  implemented. Continue with cohort-independent fault fixtures and identify
+  missed applicable faults before changing maturity or default modes.
 
 #### LINT-034 — External-interface protection coverage contract
 
@@ -21251,6 +21272,35 @@ acceptance threads while new lint features proceed:
   `design_lint_rule(rule_id="bus.i2s_clock_frame_same_net")`. The exact native
   lane is `tests/test_i2s_clock_frame_same_net_native_fixture_lane.py` with
   `KICAD_RUN_NATIVE_I2S_CLOCK_FRAME_SAME_NET_FIXTURES=1` and `native_kicad`.
+
+#### LINT-350 — Validate mapped I2C address collisions through native export
+
+- **Rule:** Existing `bus.i2c_address_collision`, default `review`; no new
+  electrical inference is introduced.
+- **Gap:** The authored address-map rule had synthetic behavior and surface
+  parity coverage, but no exact-version regression proving that native KiCad
+  exports preserve the strapped address pins the rule evaluates.
+- **Behavior:** Export a tooling-owned synthetic fault and control twice with
+  each pinned KiCad version. Confirm exact component, symbol, pin-function,
+  and net inventories before passing the native netlist into the source-bound
+  address-map evaluator. Require the fault to report `MAIN: U1, U2 at 0x50`
+  and the control to remain clear at `0x50`/`0x51`.
+- **Controls and boundaries:** The fixtures use synthetic fitted targets and
+  an independently authored map. They do not establish commercial part
+  identity, datasheet correctness, firmware behavior, mux isolation, or bus
+  electrical compatibility. Same addresses on different mapped segments
+  remain a synthetic valid control.
+- **Evidence:** Both fault/control sources exported repeatably on digest-pinned
+  KiCad 10.0.0 and 10.0.5. The focused selector passed 28 tests, including
+  Docker fixtures, catalog/selector integrity, and CLI/MCP parity. Strict
+  Pyright, Ruff, and Markdown checks passed. Hosted acceptance for the current
+  tag remains pending.
+- **Selection:** Run
+  `tests/test_i2c_address_collisions.py` and
+  `tests/test_i2c_address_collision_native_fixture_lane.py` with
+  `design_lint_rule(rule_id="bus.i2c_address_collision")`. The exact native
+  lane requires `KICAD_RUN_NATIVE_I2C_ADDRESS_COLLISION_FIXTURES=1` and
+  `native_kicad`.
 
 ## Completion and release gate
 
