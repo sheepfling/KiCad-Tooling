@@ -9,6 +9,14 @@ RULE_NODE_CASES = (
     ),
     (
         "connector.reviewed_peer_power_input_split",
+        "tests/test_connector_reviewed_peer_power_input_split.py::test_split_passive_power_input_on_unlike_reviewed_peers_needs_review",
+    ),
+    (
+        "connector.reviewed_peer_power_input_split",
+        "tests/test_connector_reviewed_peer_power_input_split.py::test_common_passive_power_input_on_unlike_reviewed_peers_stays_quiet",
+    ),
+    (
+        "connector.reviewed_peer_power_input_split",
         "tests/test_connector_reviewed_peer_power_input_parity.py::test_reviewed_peer_power_input_split_matches_between_cli_and_mcp",
     ),
     (

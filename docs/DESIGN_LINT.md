@@ -531,16 +531,16 @@ for the fault/control source hashes and exact-version native fixture.
 
 `connector.reviewed_peer_power_input_split` asks for review when a complete,
 current connector map explicitly places two unlike connectors in the same peer
-group and maps generic native `power_in` contacts to the same interface signal
-and voltage domain, but the schematic assigns those contacts to different
-nets. The contacts must have no mapped supply or return role; those roles and
-same-symbol, PART_ID, or same-value/footprint peers remain with their existing
-checks. This can help surface a connector power pin that may have been left on
-its own net, but it does not require the rails to be joined: separate sources,
-filtering, and isolation may be intentional. The heuristic needs a fully
-reviewed connector inventory and source-matched pin maps, and it does not prove
-actual voltage or PCB continuity. Project policy can keep `review`, set
-`block` or `off`, or ignore an exact finding fingerprint. See the
+group and maps generic native `power_in` or `passive` contacts to the same
+interface signal and voltage domain, but the schematic assigns those contacts
+to different nets. The contacts must have no mapped supply or return role.
+Those roles and same-symbol, PART_ID, or same-value/footprint peers remain with
+their existing checks. This can help surface a connector power pin that may
+have been left on its own net, but it does not require the rails to be joined:
+separate sources, filtering, and isolation may be intentional. The heuristic
+needs a fully reviewed connector inventory and source-matched pin maps, and it
+does not prove actual voltage or PCB continuity. Project policy can keep
+`review`, set `block` or `off`, or ignore an exact finding fingerprint. See the
 [synthetic fixture record](../tests/fixtures/design_lint/reviewed-peer-power-input-split-native/README.md).
 
 ```sh

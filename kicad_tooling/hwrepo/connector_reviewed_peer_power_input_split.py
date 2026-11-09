@@ -20,6 +20,7 @@ from .netlist_contract_models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "connector.reviewed_peer_power_input_split"
 _UNCLASSIFIED_ROLES = frozenset({None, "other"})
+_POWER_INPUT_ELECTRICAL_TYPES = frozenset({"power_in", "passive"})
 
 
 def reviewed_peer_power_input_split_candidates(
@@ -138,7 +139,8 @@ def reviewed_peer_power_input_split_candidates(
                         ),
                         message=(
                             "Unlike connector symbols in this source-reviewed peer group map a "
-                            "generic native power_in contact to the same interface signal and "
+                            "generic native power contact (power_in or passive) to the same "
+                            "interface signal and "
                             "voltage domain, but assign it to different nets. Review whether "
                             "separate sources, filtering, or isolation are intentional. The map "
                             "does not prove these nets should be joined or that PCB copper is "
@@ -194,7 +196,7 @@ def _eligible_power_inputs(
     electrical_types: dict[str, str],
     reference: str,
 ) -> dict[tuple[str, str], list[ConnectorMappedPinEvidence]]:
-    """Index current generic power inputs by authored interface signal and domain."""
+    """Index generic mapped power contacts by interface signal and domain."""
     found: dict[tuple[str, str], list[ConnectorMappedPinEvidence]] = {}
     for pin in mapped_pins.values():
         if pin.component_pin.rsplit(".", 1)[0].casefold() != reference.casefold():
@@ -204,7 +206,8 @@ def _eligible_power_inputs(
             pin.role not in _UNCLASSIFIED_ROLES
             or pin.voltage_domain is None
             or not pin.interface_signal.strip()
-            or electrical_types.get(pin.component_pin.casefold()) != "power_in"
+            or electrical_types.get(pin.component_pin.casefold())
+            not in _POWER_INPUT_ELECTRICAL_TYPES
             or not pin_function_is_generic(function)
         ):
             continue

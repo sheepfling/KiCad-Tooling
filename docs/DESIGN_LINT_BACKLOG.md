@@ -20862,7 +20862,7 @@ acceptance threads while new lint features proceed:
 
 - **Rule:** `connector.reviewed_peer_power_input_split`, default `review`.
 - **Gap:** Existing repeated-function checks cannot relate roleless generic
-  `power_in` contacts across different connector symbols. The existing
+  `power_in` or `passive` contacts across different connector symbols. The
   same-voltage footprint heuristic requires matching value and footprint, and
   the PART_ID peer check requires an exact authored part identity.
 - **Predicate:** Require globally complete connector inventory review plus
@@ -20870,15 +20870,18 @@ acceptance threads while new lint features proceed:
   Compare a pair only when native symbols differ, neither has PART_ID, and
   their nonempty value/footprint identities differ. The mapped contacts must
   share the exact interface signal and voltage domain, have generic native pin
-  functions and native `power_in` type, and have no mapped supply or return
-  role. Report a REVIEW candidate when both have exactly one net and those net
-  names differ.
+  functions and native `power_in` or `passive` type, and have no mapped supply
+  or return role. Report a REVIEW candidate when both have exactly one net and
+  those net names differ.
 - **Incremental value:** Before this rule, the tooling-owned heterogeneous
   USB/serial fixture passed with no findings: both complete connector maps
   placed the peers in one reviewed group and mapped the same generic power
-  input signal/domain to separate nets. The new cue reports that case while a
-  common-net control stays quiet. This is demonstrated coverage on synthetic
-  evidence only; field precision and reviewer value remain unmeasured.
+  input signal/domain to separate nets. Before this extension, a second
+  tooling-owned fixture with the same reviewed maps and generic pin function
+  but native `passive` electrical type produced no findings; it now receives
+  the same review prompt. Split and common-net controls cover both native
+  electrical types. This is demonstrated coverage on synthetic evidence only;
+  field precision and reviewer value remain unmeasured.
 - **Boundaries:** A shared peer group, signal name, or voltage domain does not
   prove that separate sources should be joined. Source selection, filtering,
   and isolation may be intentional. Incomplete/stale coverage, DNP parts,
@@ -20887,11 +20890,12 @@ acceptance threads while new lint features proceed:
   peers are excluded or remain with their existing rules. No PCB continuity
   or physical connector wiring is inferred. The rule can be set to `off`,
   promoted to `block`, or suppressed by an exact fingerprint ignore.
-- **Evidence:** Synthetic fault/control, different-domain and identity
-  controls, source-stale and incomplete-map controls, role exclusions, policy,
-  exact ignore, ordering stability, CLI/MCP parity, source digests, and repeated
-  exact-version native exports on KiCad 10.0.0 and 10.0.5. Fixtures are
-  tooling-owned and contain no product-board source.
+- **Evidence:** Synthetic `power_in` and `passive` fault/control pairs,
+  different-domain and identity controls, source-stale and incomplete-map
+  controls, role exclusions, policy, exact ignore, ordering stability, CLI/MCP
+  parity, source digests, and repeated exact-version native exports for both
+  electrical types on KiCad 10.0.0 and 10.0.5. Fixtures are tooling-owned and
+  contain no product-board source.
 - **Selection:** Run
   `tests/test_connector_reviewed_peer_power_input_split.py`,
   `tests/test_connector_reviewed_peer_power_input_parity.py`, and

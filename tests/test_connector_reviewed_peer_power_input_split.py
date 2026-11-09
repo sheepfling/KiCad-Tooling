@@ -42,6 +42,27 @@ def test_split_generic_power_input_on_unlike_reviewed_peers_needs_review() -> No
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_split_passive_power_input_on_unlike_reviewed_peers_needs_review() -> None:
+    observed = power_input_netlist(electrical_type="passive")
+    coverage = power_input_coverage(observed)
+    report = lint_report(observed, coverage)
+    findings = tuple(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert coverage.status == "COMPLETE"
+    assert len(findings) == 1
+    assert findings[0].evidence["assignments"] == ("J1.1=USB_5V", "J2.1=SERIAL_5V")
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_common_passive_power_input_on_unlike_reviewed_peers_stays_quiet() -> None:
+    common = power_input_netlist(
+        electrical_type="passive", power_assignments=("COMMON_5V", "COMMON_5V")
+    )
+    common_report = lint_report(common, power_input_coverage(common))
+    assert RULE_ID not in {item.rule_id for item in common_report.findings}
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_common_domain_and_peer_identity_controls_stay_quiet_for_this_rule() -> None:
     common = power_input_netlist(power_assignments=("COMMON_5V", "COMMON_5V"))
     separated_groups = power_input_coverage(
@@ -81,10 +102,6 @@ def test_common_domain_and_peer_identity_controls_stay_quiet_for_this_rule() -> 
         (
             power_input_netlist(function="VBUS"),
             power_input_coverage(power_input_netlist(function="VBUS")),
-        ),
-        (
-            power_input_netlist(electrical_type="passive"),
-            power_input_coverage(power_input_netlist(electrical_type="passive")),
         ),
         (
             power_input_netlist(part_ids=("PART-A", "PART-B")),

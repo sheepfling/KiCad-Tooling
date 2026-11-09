@@ -36,7 +36,10 @@ FIXTURE_ROOT = (
 EXPECTED_SOURCE_HASHES = {
     "fault": "1f274d1f6358c0b4340e69473d582df0c5c843469930e0813eab7dad6b98bc4e",
     "control": "d67e9657b9bcf7a8136d319c22562f2d6dcd4df11cc241dcd9613c18cc223110",
+    "passive-fault": "08f4b355fce56952ed21bb63e39a20f4da061811ae7d7b791caef15786bd759e",
+    "passive-control": "b05b1c46c0a492d6691261b905278eac431acd2c835dcc61e06d9d36a3d46223",
 }
+PASSIVE_CASES = frozenset({"passive-fault", "passive-control"})
 
 
 def _sha256(path: Path) -> str:
@@ -98,7 +101,7 @@ def test_native_reviewed_peer_power_input_fault_and_control_are_repeatable(
         'mkdir -p "$HOME"; '
         'actual="$(kicad-cli version)"; '
         f'test "$actual" = "{version}"; '
-        "for case in fault control; do "
+        "for case in fault control passive-fault passive-control; do "
         "for run in first repeat; do "
         "kicad-cli sch export netlist --format kicadxml "
         '"--output" "/output/${case}.${run}.netlist.xml" '
@@ -172,13 +175,14 @@ def test_native_reviewed_peer_power_input_fault_and_control_are_repeatable(
         assert first.components["J2"].value == "Serial connector"
         assert first.components["J1"].footprint == "Synthetic:USB_C"
         assert first.components["J2"].footprint == "Synthetic:DB9"
-        assert first.pin_electrical_types["J1.1"].casefold() == "power_in"
-        assert first.pin_electrical_types["J2.1"].casefold() == "power_in"
+        expected_type = "passive" if case in PASSIVE_CASES else "power_in"
+        assert first.pin_electrical_types["J1.1"].casefold() == expected_type
+        assert first.pin_electrical_types["J2.1"].casefold() == expected_type
         coverage = power_input_coverage(first)
         assert coverage.status == "COMPLETE"
         report = lint_report(first, coverage)
         finding_ids = {finding.rule_id for finding in report.findings}
-        if case == "fault":
+        if case in {"fault", "passive-fault"}:
             assert RULE_ID in finding_ids
             finding = next(item for item in report.findings if item.rule_id == RULE_ID)
             assert finding.evidence["assignments"] == ("J1.1=USB_5V", "J2.1=SERIAL_5V")
