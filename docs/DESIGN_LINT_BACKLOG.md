@@ -773,7 +773,9 @@ standalone parity work when it closes a demonstrated feature regression.
   external inventory/surface/verify/playtest against template commit
   `5ca79bedf665a9b6577d96b1d47f13ccd518c968`. The report and catalog expose
   this as configurable REVIEW only; electrical applicability and reviewer
-  value remain unmeasured. Hosted acceptance is pending.
+  value remain unmeasured. The tagged prerelease gate, including the native
+  fixture lane and installed-wheel checks against the external template,
+  passed in GitHub run `42587803194`.
 - **Earlier progress (LINT-345, local acceptance):** Added the default-REVIEW
   `connector.reviewed_peer_signal_domain_shared_net` prompt for generic signal
   contacts in one source-reviewed peer group that share an exact native net
