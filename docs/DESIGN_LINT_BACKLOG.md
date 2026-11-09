@@ -768,8 +768,13 @@ standalone parity work when it closes a demonstrated feature regression.
   Pyright, formatting, documentation, packaging, installed-wheel checks, and
   external playtest against the public template checkout at
   `ed89536f0dbbcb013145af2994fef41b2250143e`. The hosted prerelease run is
-  pending. This is synthetic review coverage; applicability and reviewer
-  value remain unmeasured.
+  `v0.5.3rc573` (run `42569253248`) passed scope resolution and the focused
+  lint/native cases, then caught `tests/design_lint_rule_selector_cases.py`
+  over the 500-line architecture limit. The six passive-open selector entries
+  now live in a connector-focused support module; local selector and module
+  size checks passed 64 tests. The first pushed tag remains unchanged, and the
+  corrective split is included in this follow-up. This is synthetic review
+  coverage; applicability and reviewer value remain unmeasured.
 - **Earlier progress (LINT-337 focused gate, local):** The RS-485 generic-connector finding now
   includes every other inventoried contact's function and assigned-net state.
   A synthetic J1.4 GND change from `BOARD_GND` to `unassigned` changes its
