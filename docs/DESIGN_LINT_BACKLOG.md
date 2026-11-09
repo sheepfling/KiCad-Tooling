@@ -655,6 +655,7 @@ skipped under prerelease policy.
 - `bus.ethernet_management_generic_connector_pair_review`
 - `bus.swd_generic_connector_pair_review`
 - `bus.swdio_swclk_same_net`
+- `bus.i2s_clock_data_same_net`
 - `bus.i2s_clock_frame_same_net`
 - `bus.jtag_generic_connector_pair_review`
 - `bus.can_tx_rx_same_net`
@@ -762,6 +763,17 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **Latest progress (LINT-353, local acceptance):** Added the default-REVIEW
+  `bus.i2s_clock_data_same_net` cue for a fitted U/IC with one bounded I2S
+  bit-clock pin and a native serial-data pin on the same exact net. Generic SPI
+  `SCK`/`SDO` names alone do not qualify. Synthetic fault/control, policy,
+  endpoint-completeness, evidence-order, CLI/MCP parity, rule selection, and
+  exact-version source fixtures are in place. The focused unit/parity selection
+  passed 7 tests, the KiCad 10.0.0/10.0.5 Docker lane passed 2 tests, and the
+  architecture/catalog selection passed 102 tests. Scoped `scripts/ci.py`
+  acceptance also passed, including strict and Windows-target typing,
+  wheel/sdist installation, and the separate public-template playtest. Field
+  precision and reviewer value remain unmeasured.
 - **Latest progress (LINT-352, hosted native acceptance):** The shared
   digest-pinned I2C address-map lane now covers
   `bus.i2c_unmapped_responder`. On the same native control schematic, the map
@@ -21398,6 +21410,42 @@ acceptance threads while new lint features proceed:
   `design_lint_rule(rule_id="bus.i2c_unmapped_responder")`. The native lane
   additionally requires `KICAD_RUN_NATIVE_I2C_ADDRESS_MAP_FIXTURES=1` and the
   `native_kicad` marker.
+
+#### LINT-353 — Review native I2S bit clock and serial data on one net
+
+- **Rule:** `bus.i2s_clock_data_same_net`, default `review`.
+- **Gap:** LINT-349 covers bit-clock and word-select sharing, but not a bit-clock
+  sharing a net with a serial-data pin on the same fitted IC. That assignment
+  may pass ERC when the native pin types are passive or bidirectional.
+- **Behavior:** For each fitted U/IC with a complete unique pin inventory,
+  identify one bounded bit-clock role and assigned serial-data roles from the
+  native function text. Require one net per pin and emit one candidate for
+  each data pin sharing the exact clock net. The finding records both pins,
+  native function names, electrical types, and the shared net. Two output pins
+  remain with ERC.
+- **Controls and boundaries:** A distinctive BCLK/BCK/BITCLK/BITCLOCK token
+  supplies I2S context; generic SCK is accepted only with an explicit `I2S`
+  token. Generic SPI SCK/SDO alone is not classified. DNP, duplicate or
+  ambiguous clocks, open or multiply assigned pins, and incomplete metadata
+  stay quiet. Names do not prove I2S use or require separate nets, so the rule
+  remains configurable and review-only by default. It does not validate audio
+  mode, firmware, PCB copper, or external wiring.
+- **Evidence:** Synthetic fault/control, bounded alias and unrelated-SPI
+  controls, endpoint completeness, electrical-type boundaries, policy/ignore,
+  mapping-order stability, CLI/MCP parity, catalog reachability, and selector
+  ownership. The focused unit/parity selection passed 7 tests; the exact native
+  KiCad 10.0.0/10.0.5 Docker lane passed 2 tests; and the architecture/catalog
+  selection passed 102 tests. Scoped `scripts/ci.py` acceptance passed repo-wide
+  formatting, lint, module-boundary checks, Markdown and link checks, focused
+  pytest, strict and Windows-target typing, wheel/sdist installation, and the
+  separate public-template playtest. The native schematics export twice and
+  verify normalized assignments, the expected review, and zero ERC errors.
+  This synthetic coverage does not measure field precision or reviewer value.
+- **Selection:** Run `tests/test_i2s_clock_data_same_net.py` and
+  `tests/test_design_lint_mcp_parity_i2s_clock_data_same_net.py` with
+  `design_lint_rule(rule_id="bus.i2s_clock_data_same_net")`. The native lane
+  is `tests/test_i2s_clock_data_same_net_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_I2S_CLOCK_DATA_SAME_NET_FIXTURES=1` and `native_kicad`.
 
 ## Completion and release gate
 

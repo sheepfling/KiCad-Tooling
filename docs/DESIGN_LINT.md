@@ -3067,6 +3067,43 @@ KICAD_RUN_NATIVE_I2S_CLOCK_FRAME_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pyte
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2s_clock_frame_same_net")'
 ```
 
+## Review native I2S bit clock and serial data pins assigned to one net
+
+`bus.i2s_clock_data_same_net` emits a default `review` finding when a fitted
+U/IC has a complete unique native pin inventory, exactly one bounded bit-clock
+role, and a serial-data role on the same exact schematic net. Explicit
+`BCLK`, `BCK`, `BITCLK`, or `BITCLOCK` roles provide I2S context. `SCK` is
+accepted only with an `I2S` token; data roles are bounded to I2S-qualified
+`DATA`, `DIN`, `DOUT`, `SDI`, or `SDO` names, and `SD`, `SDATA`, `SDIN`, or
+`SDOUT` tokens beside that I2S clock context. Generic `SCK` and `SDO` alone
+are not treated as an I2S pair.
+
+The finding is a review cue because native function names do not establish
+that the project uses I2S or requires separate nets. Duplicate or ambiguous
+clock roles, DNP components, open or multiply assigned pins, incomplete
+inventories, and two output pins stay quiet. Project policy can promote the
+prompt to `block`, set it `off`, or ignore one exact fingerprint. The check
+covers schematic net assignments; it does not prove PCB copper continuity or
+external wiring.
+
+The regression set covers a shared-net fault, distinct-net control, bounded
+aliases and unrelated SPI-name controls, DNP/duplicate/ambiguous/open/incomplete
+endpoints, output pin types, policy and ignore behavior, stable evidence under
+mapping reordering, CLI/MCP parity, catalog reachability, and selector
+ownership. Tooling-owned synthetic fault/control schematics are repeated with
+digest-pinned KiCad 10.0.0 and 10.0.5 Docker images; see the
+[fixture record](../tests/fixtures/design_lint/i2s-clock-data-same-net/README.md).
+
+```sh
+.venv/bin/python -I -m pytest -q tests/test_i2s_clock_data_same_net.py \
+  tests/test_design_lint_mcp_parity_i2s_clock_data_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2s_clock_data_same_net")'
+
+KICAD_RUN_NATIVE_I2S_CLOCK_DATA_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest -q \
+  tests/test_i2s_clock_data_same_net_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2s_clock_data_same_net")'
+```
+
 ## Review an SWD connector without an identified return
 
 `connector.swd_pair_without_return_review` asks for review when generic

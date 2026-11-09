@@ -7613,6 +7613,50 @@
       "implementation_owner": "kicad_tooling/hwrepo/swd_same_net.py#swdio_swclk_same_net_candidates"
     },
     {
+      "rule_id": "bus.i2s_clock_data_same_net",
+      "title": "Native I2S bit clock and serial data pins share a net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete fitted U/IC pin inventory, native pin functions, electrical types, and exact net assignments",
+      "predicate": "For each fitted U/IC with a complete unique native pin inventory, identify exactly one bit-clock role from BCLK, BCK, BITCLK, BITCLOCK, or an I2S-qualified SCK token, then identify assigned serial-data pins from I2S-qualified DATA/DIN/DOUT/SDI/SDO names or bounded SD/SDATA/SDIN/SDOUT tokens in that explicit clock context. Require one unambiguous net assignment for each role and emit a REVIEW candidate when the bit-clock and a data pin share the same net, except when both native electrical types are output because ERC can report that conflict.",
+      "supported_kicad_versions": [
+        "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixture exports; the selected project exact version is checked before export"
+      ],
+      "limitations": [
+        "Recognition is limited to fitted U/IC references with complete unique pin metadata, one unambiguous bit-clock role, and bounded I2S serial-data function names. DNP components, duplicate or ambiguous clocks, open or multiply assigned role pins, and incomplete inventories are skipped.",
+        "SCK is accepted only when explicitly qualified as I2S; generic SPI SCK and SDO/SDI names alone do not establish an I2S endpoint. SD and SDATA tokens are only considered alongside a distinctive I2S clock role.",
+        "Native function names do not establish that an I2S interface is used. A shared assignment may be intentional, so this rule defaults to review. It does not establish required separate nets, audio format, clock direction, or operating mode.",
+        "Two native output pins on the same net are left to ERC. This is a schematic-net heuristic only; it does not establish PCB copper continuity, firmware configuration, off-board wiring, electrical approval, or manufacturing readiness."
+      ],
+      "fault_fixtures": [
+        "tests.test_i2s_clock_data_same_net.test_shared_native_i2s_clock_and_data_roles_emit_review_with_exact_evidence",
+        "tests.test_design_lint_mcp_parity_i2s_clock_data_same_net.test_i2s_clock_data_same_net_cli_mcp_parity",
+        "tests.test_i2s_clock_data_same_net_native_fixture_lane.test_native_i2s_clock_data_same_net_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_i2s_clock_data_same_net.test_distinct_nets_and_bounded_data_aliases_are_controls",
+        "tests.test_i2s_clock_data_same_net.test_dnp_duplicate_ambiguous_open_and_incomplete_endpoints_are_quiet",
+        "tests.test_i2s_clock_data_same_net.test_two_native_output_types_remain_with_erc_but_one_output_is_reviewed",
+        "tests.test_i2s_clock_data_same_net_native_fixture_lane.test_native_i2s_clock_data_same_net_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_i2s_clock_data_same_net.test_mapping_order_keeps_fingerprint_and_evidence_stable"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I2S_CLOCK_DATA_SAME_NET_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/i2s_clock_data_same_net.py#i2s_clock_data_same_net_candidates",
+        "kicad_tooling/hwrepo/design_lint_i2s_clock_data_candidate_evidence.py#I2sClockDataSameNetCandidate",
+        "kicad_tooling/hwrepo/i2s_endpoint_inventory.py#clock_data_endpoints",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/i2s_clock_data_same_net.py#i2s_clock_data_same_net_candidates"
+    },
+    {
       "rule_id": "bus.i2s_clock_frame_same_net",
       "title": "Native I2S bit clock and word select pins share a net",
       "status": "active",
