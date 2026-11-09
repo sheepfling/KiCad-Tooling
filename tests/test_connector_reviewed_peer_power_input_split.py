@@ -14,6 +14,7 @@ from tests.design_lint_fixtures.connector_reviewed_peer_power_input import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.power_lint]
 
 RULE_ID = "connector.reviewed_peer_power_input_split"
+PASSIVE_OPEN_RULE_ID = "connector.reviewed_peer_passive_power_input_open"
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -134,6 +135,7 @@ def test_common_domain_and_peer_identity_controls_stay_quiet_for_this_rule() -> 
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=PASSIVE_OPEN_RULE_ID)
 def test_stale_incomplete_and_role_classified_maps_do_not_trigger_rule() -> None:
     observed = power_input_netlist()
     current = power_input_coverage(observed)
@@ -152,6 +154,13 @@ def test_stale_incomplete_and_role_classified_maps_do_not_trigger_rule() -> None
     )
     incomplete_report = lint_report(observed, incomplete)
     unreviewed_report = lint_report(observed, unreviewed_inventory)
+    passive_current = power_input_netlist(
+        electrical_type="passive", power_assignments=("USB_5V", None)
+    )
+    passive_changed = power_input_netlist(
+        electrical_type="passive", power_assignments=("USB_5V_CHANGED", None)
+    )
+    stale_passive = lint_report(passive_changed, power_input_coverage(passive_current))
 
     assert RULE_ID not in {item.rule_id for item in stale.findings}
     assert RULE_ID not in {item.rule_id for item in no_coverage.findings}
@@ -159,6 +168,7 @@ def test_stale_incomplete_and_role_classified_maps_do_not_trigger_rule() -> None
     assert RULE_ID not in {item.rule_id for item in supply_role.findings}
     assert RULE_ID not in {item.rule_id for item in incomplete_report.findings}
     assert RULE_ID not in {item.rule_id for item in unreviewed_report.findings}
+    assert PASSIVE_OPEN_RULE_ID not in {item.rule_id for item in stale_passive.findings}
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -240,3 +250,178 @@ def test_reviewed_peer_power_input_split_is_stable_under_mapping_order() -> None
     )
 
     assert (first.fingerprint, first.evidence) == (second.fingerprint, second.evidence)
+
+
+@pytest.mark.design_lint_rule(rule_id=PASSIVE_OPEN_RULE_ID)
+def test_unassigned_passive_power_input_peer_contact_needs_review() -> None:
+    observed = power_input_netlist(
+        electrical_type="passive",
+        power_assignments=("USB_5V", None),
+    )
+    coverage = power_input_coverage(observed)
+    report = lint_report(observed, coverage)
+    findings = tuple(item for item in report.findings if item.rule_id == PASSIVE_OPEN_RULE_ID)
+
+    assert coverage.status == "COMPLETE"
+    assert len(findings) == 1
+    assert findings[0].evidence["assignments"] == (
+        "J1.1=USB_5V",
+        "J2.1=<unassigned>",
+    )
+    assert "does not require tying the contacts" in findings[0].message
+    assert "connector.unconnected_power_input" not in {item.rule_id for item in report.findings}
+
+
+@pytest.mark.design_lint_rule(rule_id=PASSIVE_OPEN_RULE_ID)
+def test_documented_or_unmatched_passive_peer_opens_stay_quiet() -> None:
+    common = power_input_netlist(
+        electrical_type="passive", power_assignments=("COMMON_5V", "COMMON_5V")
+    )
+    common_report = lint_report(common, power_input_coverage(common))
+    assert PASSIVE_OPEN_RULE_ID not in {item.rule_id for item in common_report.findings}
+
+    observed = power_input_netlist(
+        electrical_type="passive",
+        power_assignments=("USB_5V", None),
+    )
+    dnp_observed = observed.model_copy(update={"dnp_components": ("J1",)})
+    cases = (
+        (
+            "reasoned open",
+            observed,
+            power_input_coverage(observed, unconnected_pin_reasons=(None, "intentionally open")),
+        ),
+        (
+            "separate groups",
+            observed,
+            power_input_coverage(observed, peer_groups=("usb-peers", "serial-peers")),
+        ),
+        (
+            "different signals",
+            observed,
+            power_input_coverage(observed, interface_signals=("USB_VBUS", "SERIAL_VCC")),
+        ),
+        (
+            "different domains",
+            observed,
+            power_input_coverage(observed, voltage_domains=("usb-5v", "serial-5v")),
+        ),
+        ("classified role", observed, power_input_coverage(observed, roles=("signal", "signal"))),
+        (
+            "peer mapped other role",
+            observed,
+            power_input_coverage(observed, roles=(None, "other")),
+        ),
+        ("incomplete maps", observed, power_input_coverage(observed, complete_maps=False)),
+        (
+            "unreviewed inventory",
+            observed,
+            power_input_coverage(observed, inventory_reviewed=False),
+        ),
+        ("DNP peer", dnp_observed, power_input_coverage(dnp_observed)),
+    )
+    for name, case_observed, coverage in cases:
+        report = lint_report(case_observed, coverage)
+        assert PASSIVE_OPEN_RULE_ID not in {item.rule_id for item in report.findings}, name
+
+    both_open = power_input_netlist(electrical_type="passive", power_assignments=(None, None))
+    both_open_report = lint_report(both_open, power_input_coverage(both_open))
+    assert PASSIVE_OPEN_RULE_ID not in {item.rule_id for item in both_open_report.findings}
+
+    power_in_open = power_input_netlist(
+        electrical_type="power_in", power_assignments=("USB_5V", None)
+    )
+    power_in_report = lint_report(power_in_open, power_input_coverage(power_in_open))
+    power_in_rule_ids = {item.rule_id for item in power_in_report.findings}
+    assert PASSIVE_OPEN_RULE_ID not in power_in_rule_ids
+    assert "connector.unconnected_power_input" in power_in_rule_ids
+
+
+@pytest.mark.design_lint_rule(rule_id=PASSIVE_OPEN_RULE_ID)
+def test_passive_peer_open_candidate_is_stable_under_mapping_order() -> None:
+    observed = power_input_netlist(
+        electrical_type="passive",
+        power_assignments=("USB_5V", None),
+    )
+    reordered = observed.model_copy(
+        update={
+            "components": dict(reversed(tuple(observed.components.items()))),
+            "nets": dict(reversed(tuple(observed.nets.items()))),
+            "component_symbols": dict(reversed(tuple(observed.component_symbols.items()))),
+            "component_pin_numbers": dict(reversed(tuple(observed.component_pin_numbers.items()))),
+            "pin_functions": dict(reversed(tuple(observed.pin_functions.items()))),
+            "pin_electrical_types": dict(reversed(tuple(observed.pin_electrical_types.items()))),
+        }
+    )
+    first = next(
+        item
+        for item in lint_report(observed, power_input_coverage(observed)).findings
+        if item.rule_id == PASSIVE_OPEN_RULE_ID
+    )
+    second = next(
+        item
+        for item in lint_report(reordered, power_input_coverage(reordered)).findings
+        if item.rule_id == PASSIVE_OPEN_RULE_ID
+    )
+    assert (first.fingerprint, first.evidence) == (second.fingerprint, second.evidence)
+
+
+@pytest.mark.design_lint_rule(rule_id=PASSIVE_OPEN_RULE_ID)
+def test_reviewed_peer_passive_open_obeys_policy_and_exact_ignore() -> None:
+    observed = power_input_netlist(
+        electrical_type="passive",
+        power_assignments=("USB_5V", None),
+    )
+    coverage = power_input_coverage(observed)
+    baseline = lint_report(observed, coverage)
+    finding = next(item for item in baseline.findings if item.rule_id == PASSIVE_OPEN_RULE_ID)
+    blocked = lint_report(
+        observed,
+        coverage,
+        DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id=PASSIVE_OPEN_RULE_ID,
+                    mode="block",
+                    reason="Synthetic policy requires disposition of the mapped open peer.",
+                ),
+            )
+        ),
+    )
+    disabled = lint_report(
+        observed,
+        coverage,
+        DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id=PASSIVE_OPEN_RULE_ID,
+                    mode="off",
+                    reason="Synthetic project opts out of this review cue.",
+                ),
+            )
+        ),
+    )
+    ignored = lint_report(
+        observed,
+        coverage,
+        DesignLintPolicy(
+            ignores=(
+                DesignLintIgnore(
+                    rule_id=PASSIVE_OPEN_RULE_ID,
+                    fingerprint=finding.fingerprint,
+                    reason="Synthetic connector open is independently reviewed as intentional.",
+                ),
+            )
+        ),
+    )
+
+    assert blocked.status == "FAIL"
+    assert disabled.status == "PASS"
+    assert any(
+        item.rule_id == PASSIVE_OPEN_RULE_ID and item.disposition == "RULE_OFF"
+        for item in disabled.findings
+    )
+    assert any(
+        item.rule_id == PASSIVE_OPEN_RULE_ID and item.disposition == "IGNORED"
+        for item in ignored.findings
+    )

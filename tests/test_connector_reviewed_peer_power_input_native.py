@@ -30,6 +30,7 @@ from tests.synthetic_design_lint_project import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.power_lint]
 
 RULE_ID = "connector.reviewed_peer_power_input_split"
+PASSIVE_OPEN_RULE_ID = "connector.reviewed_peer_passive_power_input_open"
 FIXTURE_ROOT = (
     Path(__file__).resolve().parent / "fixtures/design_lint/reviewed-peer-power-input-split-native"
 )
@@ -38,8 +39,9 @@ EXPECTED_SOURCE_HASHES = {
     "control": "d67e9657b9bcf7a8136d319c22562f2d6dcd4df11cc241dcd9613c18cc223110",
     "passive-fault": "08f4b355fce56952ed21bb63e39a20f4da061811ae7d7b791caef15786bd759e",
     "passive-control": "b05b1c46c0a492d6691261b905278eac431acd2c835dcc61e06d9d36a3d46223",
+    "passive-open-fault": "d6ca4949abb67e0a1b7f4e331a989808dcb215200b752503ba85e78f24645aa5",
 }
-PASSIVE_CASES = frozenset({"passive-fault", "passive-control"})
+PASSIVE_CASES = frozenset({"passive-fault", "passive-control", "passive-open-fault"})
 
 
 def _sha256(path: Path) -> str:
@@ -60,6 +62,7 @@ def test_native_reviewed_peer_power_input_fixture_sources_match_reviewed_hashes(
 @pytest.mark.native_kicad
 @pytest.mark.slow
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=PASSIVE_OPEN_RULE_ID)
 @pytest.mark.skipif(
     os.environ.get("KICAD_RUN_NATIVE_CONNECTOR_FIXTURES") != "1",
     reason="Digest-pinned native connector fixtures run in package acceptance",
@@ -101,7 +104,7 @@ def test_native_reviewed_peer_power_input_fault_and_control_are_repeatable(
         'mkdir -p "$HOME"; '
         'actual="$(kicad-cli version)"; '
         f'test "$actual" = "{version}"; '
-        "for case in fault control passive-fault passive-control; do "
+        "for case in fault control passive-fault passive-control passive-open-fault; do "
         "for run in first repeat; do "
         "kicad-cli sch export netlist --format kicadxml "
         '"--output" "/output/${case}.${run}.netlist.xml" '
@@ -182,9 +185,18 @@ def test_native_reviewed_peer_power_input_fault_and_control_are_repeatable(
         assert coverage.status == "COMPLETE"
         report = lint_report(first, coverage)
         finding_ids = {finding.rule_id for finding in report.findings}
-        if case in {"fault", "passive-fault"}:
+        if case == "passive-open-fault":
+            assert PASSIVE_OPEN_RULE_ID in finding_ids
+            assert RULE_ID not in finding_ids
+            finding = next(item for item in report.findings if item.rule_id == PASSIVE_OPEN_RULE_ID)
+            assert finding.evidence["assignments"] == (
+                "J1.1=USB_5V",
+                "J2.1=<unassigned>",
+            )
+        elif case in {"fault", "passive-fault"}:
             assert RULE_ID in finding_ids
             finding = next(item for item in report.findings if item.rule_id == RULE_ID)
             assert finding.evidence["assignments"] == ("J1.1=USB_5V", "J2.1=SERIAL_5V")
         else:
             assert RULE_ID not in finding_ids
+            assert PASSIVE_OPEN_RULE_ID not in finding_ids

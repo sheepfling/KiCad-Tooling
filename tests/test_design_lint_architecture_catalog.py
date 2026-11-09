@@ -210,6 +210,24 @@ def test_active_rule_fixture_modules_have_design_lint_and_theme_markers() -> Non
             {"design_lint", "connector_lint", "power_lint"},
         ),
         (
+            "test_connector_reviewed_peer_power_input_split.py",
+            {"design_lint", "connector_lint", "power_lint"},
+        ),
+        (
+            "test_connector_reviewed_peer_power_input_parity.py",
+            {
+                "design_lint",
+                "connector_lint",
+                "power_lint",
+                "parity_lint",
+                "slow",
+            },
+        ),
+        (
+            "test_connector_reviewed_peer_power_input_native.py",
+            {"design_lint", "connector_lint", "power_lint"},
+        ),
+        (
             "test_connector_footprint_peer_parity.py",
             {"design_lint", "connector_lint", "power_lint", "parity_lint"},
         ),

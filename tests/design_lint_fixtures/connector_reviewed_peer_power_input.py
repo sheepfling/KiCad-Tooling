@@ -74,6 +74,7 @@ def power_input_coverage(
     interface_signals: tuple[str, str] = ("POWER_INPUT", "POWER_INPUT"),
     voltage_domains: tuple[str, str] = ("external-5v", "external-5v"),
     roles: tuple[str | None, str | None] = (None, None),
+    unconnected_pin_reasons: tuple[str | None, str | None] = (None, None),
     complete_maps: bool = True,
     inventory_reviewed: bool = True,
 ) -> ConnectorCoverageReport:
@@ -83,6 +84,7 @@ def power_input_coverage(
         interface_signals=interface_signals,
         voltage_domains=voltage_domains,
         roles=roles,
+        unconnected_pin_reasons=unconnected_pin_reasons,
         complete_maps=complete_maps,
     )
     return evaluate_connector_coverage(
@@ -106,13 +108,22 @@ def power_input_project_documents(
     interface_signals: tuple[str, str] = ("POWER_INPUT", "POWER_INPUT"),
     voltage_domains: tuple[str, str] = ("external-5v", "external-5v"),
     roles: tuple[str | None, str | None] = (None, None),
+    unconnected_pin_reasons: tuple[str | None, str | None] = (None, None),
     complete_maps: bool = True,
 ) -> tuple[InterfacesCatalog, tuple[str, ...], tuple[ConnectorInterfaceReview, ...]]:
     """Return the synthetic shared catalog and per-connector pinout reviews."""
     interfaces: list[InterfaceRecord] = []
     reviews: list[ConnectorInterfaceReview] = []
     project_interfaces: list[str] = []
-    for index, (reference, interface_id, peer_group, signal, domain, role) in enumerate(
+    for index, (
+        reference,
+        interface_id,
+        peer_group,
+        signal,
+        domain,
+        role,
+        open_reason,
+    ) in enumerate(
         zip(
             ("J1", "J2"),
             ("usb-port", "serial-port"),
@@ -120,6 +131,7 @@ def power_input_project_documents(
             interface_signals,
             voltage_domains,
             roles,
+            unconnected_pin_reasons,
             strict=True,
         ),
         start=1,
@@ -161,6 +173,7 @@ def power_input_project_documents(
                 pin_map=({"1": "1", "2": "2"} if complete_maps else {"1": "1"}),
                 peer_assignment_group=peer_group,
                 peer_assignment_basis=None if peer_group is None else PEER_BASIS,
+                unconnected_pin_reasons={} if open_reason is None else {"1": open_reason},
             )
         )
     return (

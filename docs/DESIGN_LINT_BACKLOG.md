@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 305 rules are implemented with synthetic regression coverage.
+The following 306 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 305 active rules.
+The catalog currently contains 306 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -456,6 +456,7 @@ skipped under prerelease policy.
 - `connector.footprint_named_power_input_assignment_divergence`
 - `connector.footprint_same_voltage_power_input_unanchored`
 - `connector.reviewed_peer_power_input_split`
+- `connector.reviewed_peer_passive_power_input_open`
 - `connector.footprint_named_power_output_assignment_divergence`
 - `connector.footprint_named_passive_assignment_divergence`
 - `connector.footprint_named_power_input_all_open`
@@ -756,7 +757,20 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **LINT-337 focused gate (local):** The RS-485 generic-connector finding now
+- **Latest progress (LINT-343, local prerelease checkpoint):** Added the
+  default-REVIEW `connector.reviewed_peer_passive_power_input_open` prompt for
+  a source-matched, roleless passive contact left open beside its assigned
+  unlike connector peer. The existing split-net predicate now shares the
+  reviewed peer evidence builder. The focused connector, catalog, and
+  architecture selection passed 93 tests with 2 native cases skipped; the
+  exact Docker native selector passed 2 tests on pinned KiCad 10.0.0 and 10.0.5.
+  The scoped repository acceptance workflow passed strict and Windows
+  Pyright, formatting, documentation, packaging, installed-wheel checks, and
+  external playtest against the public template checkout at
+  `ed89536f0dbbcb013145af2994fef41b2250143e`. The hosted prerelease run is
+  pending. This is synthetic review coverage; applicability and reviewer
+  value remain unmeasured.
+- **Earlier progress (LINT-337 focused gate, local):** The RS-485 generic-connector finding now
   includes every other inventoried contact's function and assigned-net state.
   A synthetic J1.4 GND change from `BOARD_GND` to `unassigned` changes its
   source-bound fingerprint; the native generic-pair fault reports the same
@@ -768,7 +782,7 @@ standalone parity work when it closes a demonstrated feature regression.
   closed a missing thermal-pad native switch in the package workflow; both of
   that lane's pinned Docker cases passed. This adds reviewer context only and
   does not make common grounding a rule.
-- **Latest progress (LINT-336, prerelease checkpoint):** Added the opt-in
+- **Earlier progress (LINT-336, prerelease checkpoint):** Added the opt-in
   `pcb.reference_plane_unanchored_island` review cue for native filled
   reference-zone islands without direct pad anchors. The fault/control pair is
   synthetic and source-hashed; exact KiCad 10.0.0 and 10.0.5 captures repeat,
@@ -3823,7 +3837,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 305 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 306 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -20902,6 +20916,50 @@ acceptance threads while new lint features proceed:
   `tests/test_connector_reviewed_peer_power_input_native.py` with
   `design_lint_rule(rule_id="connector.reviewed_peer_power_input_split")`.
   The native lane uses `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` and
+  `native_kicad`.
+
+#### LINT-343 — Review an open passive power contact across unlike reviewed connector peers
+
+- **Rule:** `connector.reviewed_peer_passive_power_input_open`, default
+  `review`.
+- **Gap:** LINT-342 reports two generic power contacts assigned to different
+  nets, but it did not prompt when one unlike reviewed peer's native passive
+  contact was open and its mapped peer had one assigned net. Native ERC does
+  not know whether that passive contact was intended to be connected.
+- **Predicate:** Require complete current source-matched connector maps,
+  globally reviewed inventory, one explicit shared peer group, unlike native
+  symbols, no PART_ID, and distinct nonempty value/footprint identity. The two
+  generic native passive contacts must map to the same interface signal and
+  voltage domain, with neither contact assigned a mapped role. Emit REVIEW
+  only when one contact has no net, has no authored unconnected-pin reason,
+  and has no mapped role, while the peer has exactly one net. Mapped `other`,
+  supply, return, signal, and shield cases stay with their existing checks.
+- **Incremental value:** A baseline probe on a tooling-owned fixture with
+  complete matching maps returned no findings for the passive open fault. The
+  new rule reports the unassigned contact alongside its mapped peer. Controls
+  cover a common net, both contacts open, a documented open, incomplete or
+  stale map coverage, separate peer groups, different signal/domain, a
+  classified role, a DNP peer, and native `power_in` opens already handled by
+  `connector.unconnected_power_input`. Synthetic CLI/MCP parity exercises
+  both the new fault and the documented-open control.
+- **Boundaries:** This is a review prompt based on authored peer mapping. It
+  does not assert the contacts should be tied, select a target net, infer
+  intent, validate the map against a datasheet, establish PCB continuity, or
+  prove physical wiring. Intentional opens can be documented in the map or
+  suppressed by exact fingerprint. The default can be changed to `block` or
+  `off` by project policy.
+- **Evidence:** Synthetic fault/control, policy and exact-ignore cases,
+  mapping-order stability, CLI/MCP parity, source hashes, catalog reachability,
+  selector registration, and repeated native schematic exports from exact
+  KiCad 10.0.0 and 10.0.5 images. The native fixture is synthetic and does not
+  reconstruct a product board. Reviewer value and field precision remain
+  unmeasured.
+- **Selection:** Run
+  `tests/test_connector_reviewed_peer_power_input_split.py`,
+  `tests/test_connector_reviewed_peer_power_input_parity.py`, and
+  `tests/test_connector_reviewed_peer_power_input_native.py` with
+  `design_lint_rule(rule_id="connector.reviewed_peer_passive_power_input_open")`.
+  The exact native lane uses `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` and
   `native_kicad`.
 
 ## Completion and release gate

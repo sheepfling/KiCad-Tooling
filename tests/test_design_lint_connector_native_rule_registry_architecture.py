@@ -86,6 +86,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.reviewed_peer_power_input_split": {
             "tests.test_connector_reviewed_peer_power_input_native.test_native_reviewed_peer_power_input_fault_and_control_are_repeatable",
         },
+        "connector.reviewed_peer_passive_power_input_open": {
+            "tests.test_connector_reviewed_peer_power_input_native.test_native_reviewed_peer_power_input_fault_and_control_are_repeatable",
+        },
         "connector.stateful_contact_topology_mismatch": {
             "tests.test_connector_stateful_contacts.test_native_stateful_contact_fault_and_control_are_repeatable",
         },

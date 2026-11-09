@@ -134,6 +134,11 @@ POWER_INPUT_THEME_SUITES = (
     "test_power_input_source_anchors.py",
     "test_power_input_policy.py",
 )
+REVIEWED_CONNECTOR_POWER_INPUT_THEME_SUITES = (
+    "test_connector_reviewed_peer_power_input_split.py",
+    "test_connector_reviewed_peer_power_input_parity.py",
+    "test_connector_reviewed_peer_power_input_native.py",
+)
 DIGITAL_PEER_FIXTURE_THEME_SUITES = (
     "test_ci_hosted_digital_peer_spi.py",
     "test_ci_hosted_digital_peer_serial.py",
@@ -250,6 +255,7 @@ def test_design_lint_theme_suites_stay_below_review_limit() -> None:
                     *POWER_PATH_HOSTED_THEME_SUITES,
                     *IC_RAIL_NATIVE_THEME_SUITES,
                     *POWER_INPUT_THEME_SUITES,
+                    *REVIEWED_CONNECTOR_POWER_INPUT_THEME_SUITES,
                     *DIGITAL_PEER_FIXTURE_THEME_SUITES,
                     *NATIVE_INTERFACE_THEME_SUITES,
                     *COMPONENT_PEER_POWER_THEME_SUITES,
