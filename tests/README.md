@@ -329,6 +329,9 @@ KICAD_RUN_NATIVE_I2C_ADDRESS_MAP_FIXTURES=1 python -I -B -m pytest -q \
 KICAD_RUN_NATIVE_I2C_ADDRESS_MAP_FIXTURES=1 python -I -B -m pytest -q \
   -m 'design_lint_rule(rule_id="bus.i2c_address_mismatch")' \
   tests/test_i2c_address_map_native_fixture_lane.py
+KICAD_RUN_NATIVE_I2C_ADDRESS_MAP_FIXTURES=1 python -I -B -m pytest -q \
+  -m 'design_lint_rule(rule_id="bus.i2c_unmapped_responder")' \
+  tests/test_i2c_address_map_native_fixture_lane.py
 KICAD_RUN_NATIVE_SPI_PEER_REFERENCE_FIXTURES=1 python -I -B -m pytest -q \
   -m "design_lint and interface_lint and native_kicad" \
   tests/test_spi_peer_reference_native_fixture_lane.py

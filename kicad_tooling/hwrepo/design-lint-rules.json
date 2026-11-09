@@ -9891,11 +9891,13 @@
       ],
       "fault_fixtures": [
         "tests.test_i2c_address_coverage.test_unmapped_addressable_ic_without_map_is_review_candidate",
-        "tests.test_i2c_address_coverage.test_address_map_suppresses_listed_responder_and_finds_unlisted_peer"
+        "tests.test_i2c_address_coverage.test_address_map_suppresses_listed_responder_and_finds_unlisted_peer",
+        "tests.test_i2c_address_map_native_fixture_lane.test_native_i2c_address_map_faults_and_controls_repeat"
       ],
       "valid_control_fixtures": [
         "tests.test_i2c_address_coverage.test_address_map_candidate_skips_declared_dnp_and_non_ic_controls",
-        "tests.test_i2c_address_coverage.test_unmapped_address_candidate_obeys_project_rule_mode"
+        "tests.test_i2c_address_coverage.test_unmapped_address_candidate_obeys_project_rule_mode",
+        "tests.test_i2c_address_map_native_fixture_lane.test_native_i2c_address_map_faults_and_controls_repeat"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -9907,7 +9909,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "interfaces",
-      "implementation_owner": "kicad_tooling/hwrepo/i2c_addressing.py#unmapped_i2c_responders"
+      "implementation_owner": "kicad_tooling/hwrepo/i2c_addressing.py#unmapped_i2c_responders",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I2C_ADDRESS_MAP_FIXTURES"
+      ]
     },
     {
       "rule_id": "bus.i2c_signal_on_named_rail",

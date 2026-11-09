@@ -25,6 +25,7 @@ from .hwrepo.netlist_contract_models import NetlistContract
 
 COLLISION_RULE_ID = "bus.i2c_address_collision"
 MISMATCH_RULE_ID = "bus.i2c_address_mismatch"
+UNMAPPED_RESPONDER_RULE_ID = "bus.i2c_unmapped_responder"
 _CASES = ("control", "fault")
 _SOURCE_HASHES = {
     "control": "109b7699426f756fbf1b592e2950547b8fbbb145e338e2accbd52841d8bcbb1f",
@@ -76,14 +77,22 @@ def i2c_address_map_fixture_lane(
     log: HostedLog,
     specifications: Mapping[str, I2cAddressMap],
     mismatch_specifications: Mapping[str, I2cAddressMap],
+    unmapped_specification: I2cAddressMap,
 ) -> None:
-    """Export sources twice and evaluate collision and authored-address maps."""
+    """Export sources twice and evaluate collision, mismatch, and map coverage."""
     if (version, image) not in I2C_NATIVE_TOOLCHAINS:
         raise ValueError(f"I2C address fixtures do not cover KiCad {version} with this image")
     if set(specifications) != set(_CASES):
         raise ValueError("I2C address fixtures require one map for each fault/control source")
     if set(mismatch_specifications) != set(_CASES):
         raise ValueError("I2C mismatch fixtures require fault and corrected control maps")
+    unmapped_references = {
+        responder.reference
+        for segment in unmapped_specification.segments
+        for responder in segment.responders
+    }
+    if unmapped_references != {"U1"}:
+        raise ValueError("I2C unmapped-responder fixture must omit only fitted U2")
 
     root = root.resolve()
     fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/i2c-address-map-native"
@@ -271,6 +280,68 @@ def i2c_address_map_fixture_lane(
             raw_netlist_sha256=control_raw_netlist_sha256,
             normalized_netlist_sha256=case_results["control"][0],
             findings=";".join(item.subject for item in mismatch_findings) or "none",
+            address_coverage=report.i2c_address_coverage.status,
+            repeatable="true",
+            command_receipt=receipt_path,
+        )
+
+    unmapped_project = "synthetic-i2c-address-unmapped-responder-fault"
+    unmapped_report = evaluate(
+        unmapped_project,
+        ContractCoachReport(
+            status="READY_FOR_REVIEW",
+            project_id=unmapped_project,
+            observed=control_netlist,
+            netlist_sha256=control_raw_netlist_sha256,
+        ),
+        DesignLintPolicy(i2c_address_map=unmapped_specification),
+    )
+    if unmapped_report.i2c_address_coverage.status != "COMPLETE":
+        raise ValueError("Native I2C unmapped-responder map lost its mapped U1 coverage")
+    unmapped_findings = tuple(
+        item for item in unmapped_report.findings if item.rule_id == UNMAPPED_RESPONDER_RULE_ID
+    )
+    if (
+        len(unmapped_findings) != 1
+        or unmapped_findings[0].subject != "U2: I2C address-map coverage"
+        or unmapped_findings[0].mode != "review"
+        or unmapped_findings[0].evidence["assigned_net_pairs"] != ("MAIN_SDA / MAIN_SCL",)
+    ):
+        raise ValueError("Native I2C map omission no longer reviews only the unlisted U2")
+    if any(
+        item.rule_id in {COLLISION_RULE_ID, MISMATCH_RULE_ID} for item in unmapped_report.findings
+    ):
+        raise ValueError("Native I2C unmapped-responder fault unexpectedly reports address errors")
+    mapped_control_project = "synthetic-i2c-address-unmapped-responder-control"
+    mapped_control_report = evaluate(
+        mapped_control_project,
+        ContractCoachReport(
+            status="READY_FOR_REVIEW",
+            project_id=mapped_control_project,
+            observed=control_netlist,
+            netlist_sha256=control_raw_netlist_sha256,
+        ),
+        DesignLintPolicy(i2c_address_map=mismatch_specifications["control"]),
+    )
+    if mapped_control_report.i2c_address_coverage.status != "COMPLETE":
+        raise ValueError("Native I2C unmapped-responder control map is not complete")
+    if any(item.rule_id == UNMAPPED_RESPONDER_RULE_ID for item in mapped_control_report.findings):
+        raise ValueError("Native I2C complete map unexpectedly reports an unmapped responder")
+    for case, report, findings in (
+        ("fault", unmapped_report, unmapped_findings),
+        ("control", mapped_control_report, ()),
+    ):
+        log.event(
+            f"i2c-address-map/unmapped-responder/{case}",
+            "PASS",
+            project=f"synthetic-i2c-address-unmapped-responder-{case}",
+            kicad_version=version,
+            image=pinned_image(image),
+            source_sha256=source_hashes["control"],
+            raw_netlist_sha256=control_raw_netlist_sha256,
+            normalized_netlist_sha256=case_results["control"][0],
+            findings=";".join(item.subject for item in findings) or "none",
+            overall_lint_status=report.status,
             address_coverage=report.i2c_address_coverage.status,
             repeatable="true",
             command_receipt=receipt_path,

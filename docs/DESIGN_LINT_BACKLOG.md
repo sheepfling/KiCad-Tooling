@@ -762,6 +762,12 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **Latest progress (LINT-352, local native validation):** The shared
+  digest-pinned I2C address-map lane now covers
+  `bus.i2c_unmapped_responder`. On the same native control schematic, the map
+  listing only U1 produces one rule review for U2; the complete U1/U2 map
+  produces no finding from this rule. Exact KiCad 10.0.0 and 10.0.5 Docker
+  fixtures pass. Hosted acceptance is pending.
 - **Latest progress (LINT-351, hosted native acceptance):** Extended the
   tooling-owned I2C address-map lane to cover `bus.i2c_address_mismatch` with
   real KiCad 10.0.0 and 10.0.5 exports. The control source assigns U2 A0 to
@@ -21346,7 +21352,7 @@ acceptance threads while new lint features proceed:
   KiCad 10.0.0 and 10.0.5. Catalog, native-gate, tag-selection, and theme
   architecture checks passed 139 tests. The tagged hosted mismatch gate and
   installed-wheel/template acceptance passed in
-  GitHub Actions run `42647421033` passed from `v0.5.3rc591` at commit
+  GitHub Actions run `42647421033` for `v0.5.3rc591` at commit
   `44acb2debe3a528de36e5790ef93ae98d6890429`.
   The exact native selection uses
   `tests/test_i2c_address_map_native_fixture_lane.py` with
@@ -21355,6 +21361,36 @@ acceptance threads while new lint features proceed:
 - **Selection:** Run `tests/test_i2c_address_straps.py` and
   `tests/test_i2c_address_map_native_fixture_lane.py` with
   `design_lint_rule(rule_id="bus.i2c_address_mismatch")`.
+
+#### LINT-352 — Review fitted I2C responders omitted from the address map
+
+- **Rule:** Existing `bus.i2c_unmapped_responder`, default `review`; the
+  project-authored address map defines which responder references are
+  intentionally covered.
+- **Gap:** Synthetic behavior covered addressable fitted U/IC endpoints omitted
+  from a map, but the exact-version native lane did not prove that exported
+  SDA/SCL assignments preserve such a candidate.
+- **Behavior:** Reuse the digest-pinned native control source. An authored map
+  listing U1 while omitting fitted U2 must retain complete coverage of the
+  mapped U1 entry and produce one rule finding for U2, with its native assigned
+  net pair recorded. The complete U1/U2 map produces no finding from this rule.
+- **Controls and boundaries:** The source and names are synthetic. This does
+  not decide that every SDA/SCL device is an addressable responder, nor that a
+  bridge, mux, translator, or other non-addressable peer belongs in the map.
+  “Complete” address-map coverage describes the authored entries; it does not
+  establish that every candidate responder was listed. The overall lint report
+  may remain in review for other conditions when this rule has no finding.
+- **Evidence:** The focused lane passed both digest-pinned KiCad 10.0.0 and
+  10.0.5 Docker fixtures. Both retain the same control schematic hash
+  `109b7699426f756fbf1b592e2950547b8fbbb145e338e2accbd52841d8bcbb1f` and
+  normalized native netlist hash
+  `543c29b38c5db76c446d687ebac49c2ee647e9c7f60062bad3ec7fa0484e9643`. Local
+  catalog and architecture checks passed; hosted acceptance is pending.
+- **Selection:** Run `tests/test_i2c_address_coverage.py` and
+  `tests/test_i2c_address_map_native_fixture_lane.py` with
+  `design_lint_rule(rule_id="bus.i2c_unmapped_responder")`. The native lane
+  additionally requires `KICAD_RUN_NATIVE_I2C_ADDRESS_MAP_FIXTURES=1` and the
+  `native_kicad` marker.
 
 ## Completion and release gate
 

@@ -22,6 +22,14 @@ same control source requests one `bus.i2c_address_mismatch` review for U2 at
 authored segments remain a synthetic control in
 `tests/test_i2c_address_collisions.py`.
 
+The same native control export also exercises `bus.i2c_unmapped_responder`.
+An authored map containing U1 but omitting fitted U2 must keep U1's address
+coverage complete and issue one review for U2. Listing both responders is the
+control with no finding for this rule; the overall design-lint report may still
+be in review because of other checks. This checks a missing map entry; it does
+not decide that every SDA/SCL device needs an address, or that a bridge, mux,
+or translator is an addressable endpoint.
+
 Run the exact-version lane from the tooling checkout with:
 
 ```sh

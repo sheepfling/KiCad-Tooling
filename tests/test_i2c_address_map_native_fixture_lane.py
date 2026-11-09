@@ -42,6 +42,7 @@ def test_native_i2c_address_map_faults_and_controls_repeat(
         "fault": address_map(responder("U1"), responder("U2", address=0x50)),
         "control": address_map(responder("U1"), responder("U2", address=0x51)),
     }
+    unmapped_specification = address_map(responder("U1"))
     log = HostedLog(tmp_path, f"native-i2c-address-map-{version}")
     i2c_address_map_fixture_lane(
         tmp_path,
@@ -50,6 +51,7 @@ def test_native_i2c_address_map_faults_and_controls_repeat(
         log=log,
         specifications=collision_specifications,
         mismatch_specifications=mismatch_specifications,
+        unmapped_specification=unmapped_specification,
     )
 
     results = {
@@ -65,6 +67,8 @@ def test_native_i2c_address_map_faults_and_controls_repeat(
         "i2c-address-map/collision/fault",
         "i2c-address-map/strap-mismatch/control",
         "i2c-address-map/strap-mismatch/fault",
+        "i2c-address-map/unmapped-responder/control",
+        "i2c-address-map/unmapped-responder/fault",
     }
 
     native = results["i2c-address-map/native-export"]
@@ -100,3 +104,17 @@ def test_native_i2c_address_map_faults_and_controls_repeat(
     assert corrected["address_coverage"] == "COMPLETE"
     assert corrected["source_sha256"] == control["source_sha256"]
     assert corrected["normalized_netlist_sha256"] == control["normalized_netlist_sha256"]
+
+    unmapped = results["i2c-address-map/unmapped-responder/fault"]
+    assert unmapped["status"] == "PASS"
+    assert unmapped["findings"] == "U2: I2C address-map coverage"
+    assert unmapped["address_coverage"] == "COMPLETE"
+    assert unmapped["source_sha256"] == control["source_sha256"]
+    assert unmapped["normalized_netlist_sha256"] == control["normalized_netlist_sha256"]
+
+    mapped = results["i2c-address-map/unmapped-responder/control"]
+    assert mapped["status"] == "PASS"
+    assert mapped["findings"] == "none"
+    assert mapped["address_coverage"] == "COMPLETE"
+    assert mapped["source_sha256"] == control["source_sha256"]
+    assert mapped["normalized_netlist_sha256"] == control["normalized_netlist_sha256"]
