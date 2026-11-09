@@ -121,6 +121,7 @@ DesignLintRuleId = Literal[
     "connector.mapped_signals_share_net",
     "connector.mapped_signals_split_nets",
     "connector.reviewed_peer_signal_assignment_split",
+    "connector.reviewed_peer_signal_domain_shared_net",
     "connector.mapped_interface_shield_on_return_net",
     "connector.mapped_interface_shield_on_supply_rail",
     "connector.mapped_shield_signal_share_net",

@@ -71,6 +71,9 @@ from tests.design_lint_fixtures.connector_reviewed_peer_power_input_catalog impo
 from tests.design_lint_fixtures.connector_reviewed_peer_signal_catalog import (
     reviewed_peer_signal_assignment_rule_ids,
 )
+from tests.design_lint_fixtures.connector_reviewed_peer_signal_domains_catalog import (
+    reviewed_peer_signal_domain_rule_ids,
+)
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
 from tests.design_lint_fixtures.ethernet_data_labels import ethernet_data_label_netlist
 from tests.design_lint_fixtures.ethernet_data_unconnected import (
@@ -487,5 +490,6 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         | same_voltage_connector_power_input_rule_ids()
         | reviewed_peer_power_input_rule_ids()
         | reviewed_peer_signal_assignment_rule_ids()
+        | reviewed_peer_signal_domain_rule_ids()
         | thermal_pad_catalog_rule_ids()
     )

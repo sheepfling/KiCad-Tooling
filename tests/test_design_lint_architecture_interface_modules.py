@@ -19,6 +19,14 @@ CONNECTOR_MAPPED_SIGNAL_MODULES = (
     "connector_mapped_shield_signal_sharing.py",
     "connector_mapped_signal_split_nets.py",
     "connector_reviewed_peer_signal_split.py",
+    "connector_reviewed_peer_signal_evidence.py",
+    "connector_reviewed_peer_signal_domains.py",
+)
+
+REVIEWED_PEER_SIGNAL_MODULES = (
+    "connector_reviewed_peer_signal_evidence.py",
+    "connector_reviewed_peer_signal_split.py",
+    "connector_reviewed_peer_signal_domains.py",
 )
 
 
@@ -39,3 +47,8 @@ def test_i2c_peer_reference_review_stays_in_focused_protocol_modules() -> None:
 @pytest.mark.connector_lint
 def test_mapped_connector_signal_checks_stay_in_a_focused_owner_module() -> None:
     _assert_modules_are_reviewable(CONNECTOR_MAPPED_SIGNAL_MODULES, label="mapped connector")
+
+
+@pytest.mark.connector_lint
+def test_reviewed_peer_signal_checks_stay_in_focused_owner_modules() -> None:
+    _assert_modules_are_reviewable(REVIEWED_PEER_SIGNAL_MODULES, label="reviewed peer signal")

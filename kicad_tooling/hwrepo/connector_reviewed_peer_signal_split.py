@@ -1,15 +1,14 @@
-"""Review split mapped signals across source-reviewed connector peers."""
+"""Review split mapped signals across unlike reviewed connector peers."""
 
 from __future__ import annotations
 
 from collections import defaultdict
 
-from .connector_coverage import (
-    source_matched_connector_peer_assignment_groups,
-    source_matched_connector_pin_evidence,
+from .connector_coverage_models import ConnectorCoverageReport
+from .connector_reviewed_peer_signal_evidence import (
+    ReviewedPeerSignalContact,
+    reviewed_peer_signal_contacts,
 )
-from .connector_coverage_models import ConnectorCoverageReport, ConnectorMappedPinEvidence
-from .connector_identity import pin_function_is_generic
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
@@ -21,113 +20,79 @@ def reviewed_peer_signal_assignment_splits(
     observed: NetlistContract,
     coverage: ConnectorCoverageReport | None,
 ) -> tuple[Candidate, ...]:
-    """Review generic mapped signal pins split across unlike reviewed peers."""
+    """Review one mapped signal/domain split across unlike reviewed peers."""
     if (
         coverage is None
         or coverage.status != "COMPLETE"
         or coverage.interface_catalog_sha256 is None
     ):
         return ()
-
-    dnp_references = {reference.casefold() for reference in observed.dnp_components}
-    peer_scopes = source_matched_connector_peer_assignment_groups(observed, coverage)
-    contacts: dict[
-        tuple[str, str, str], dict[str, list[tuple[str, ConnectorMappedPinEvidence]]]
-    ] = defaultdict(lambda: defaultdict(list))
-    for component_pin, mapped in sorted(
-        source_matched_connector_pin_evidence(observed, coverage).items()
-    ):
-        reference, separator, _pin_number = component_pin.rpartition(".")
-        scope = peer_scopes.get(reference)
-        if (
-            not separator
-            or scope is None
-            or mapped.role != "signal"
-            or mapped.voltage_domain is None
-            or mapped.unconnected_reason is not None
-            or reference.casefold() in dnp_references
-            or not pin_function_is_generic(mapped.symbol_function)
-            or len(mapped.nets) != 1
-        ):
-            continue
+    contacts_by_key: dict[tuple[str, str, str], dict[str, list[ReviewedPeerSignalContact]]] = (
+        defaultdict(lambda: defaultdict(list))
+    )
+    for contact in reviewed_peer_signal_contacts(observed, coverage):
         key = (
-            scope.group.casefold(),
-            mapped.interface_signal.casefold(),
-            mapped.voltage_domain.casefold(),
+            contact.peer_assignment_group.casefold(),
+            contact.interface_signal.casefold(),
+            contact.voltage_domain.casefold(),
         )
-        contacts[key][reference.casefold()].append((reference, mapped))
+        contacts_by_key[key][contact.reference.casefold()].append(contact)
 
     candidates: list[Candidate] = []
-    for (group_key, _signal_key, _domain_key), by_reference in sorted(contacts.items()):
-        # A repeated contact inside one connector belongs to the existing rule.
+    for (_group_key, _signal_key, _domain_key), by_reference in sorted(contacts_by_key.items()):
+        # Repeated contacts inside one connector belong to existing rules.
         if len(by_reference) < 2 or any(len(items) != 1 for items in by_reference.values()):
             continue
-        references = tuple(
-            sorted(
-                (items[0][0] for items in by_reference.values()),
-                key=lambda value: (value.casefold(), value),
-            )
-        )
-        symbols = {
-            observed.component_symbols.get(reference, "").casefold() for reference in references
-        }
-        if "" in symbols or len(symbols) < 2:
+        peer_contacts = tuple(items[0] for items in by_reference.values())
+        symbols = {contact.native_symbol.casefold() for contact in peer_contacts}
+        if len(symbols) < 2:
             continue
-        # Same-symbol assignment differences remain with existing connector rules.
+
         nets_by_symbol: dict[str, set[str]] = defaultdict(set)
-        for reference in references:
-            symbol = observed.component_symbols[reference].casefold()
-            mapped = by_reference[reference.casefold()][0][1]
-            nets_by_symbol[symbol].add(mapped.nets[0])
+        for contact in peer_contacts:
+            nets_by_symbol[contact.native_symbol.casefold()].add(contact.net)
+        # Same-symbol assignment differences remain with existing connector rules.
         if any(len(nets) > 1 for nets in nets_by_symbol.values()):
             continue
 
-        assignments = tuple(
-            sorted(
-                ((reference, by_reference[reference.casefold()][0][1]) for reference in references),
-                key=lambda item: (item[0].casefold(), item[0]),
-            )
-        )
         nets = tuple(
             sorted(
-                {mapped.nets[0] for _reference, mapped in assignments},
+                {contact.net for contact in peer_contacts},
                 key=lambda value: (value.casefold(), value),
             )
         )
         if len(nets) < 2:
             continue
 
-        scope_evidence = tuple(
+        references = tuple(
             sorted(
-                {
-                    scope.basis
-                    for reference, scope in peer_scopes.items()
-                    if reference.casefold() in by_reference and scope.group.casefold() == group_key
-                },
+                (contact.reference for contact in peer_contacts),
                 key=lambda value: (value.casefold(), value),
             )
         )
         signal_name = min(
-            (mapped.interface_signal for _reference, mapped in assignments),
+            (contact.interface_signal for contact in peer_contacts),
             key=lambda value: (value.casefold(), value),
         )
         voltage_domain = min(
-            (mapped.voltage_domain for _reference, mapped in assignments if mapped.voltage_domain),
+            (contact.voltage_domain for contact in peer_contacts),
             key=lambda value: (value.casefold(), value),
         )
-        pins = tuple(
+        group_name = min(
+            (contact.peer_assignment_group for contact in peer_contacts),
+            key=lambda value: (value.casefold(), value),
+        )
+        bases = tuple(
             sorted(
-                (mapped.component_pin for _reference, mapped in assignments),
+                {contact.peer_assignment_basis for contact in peer_contacts},
                 key=lambda value: (value.casefold(), value),
             )
         )
-        group_name = min(
-            (
-                scope.group
-                for reference, scope in peer_scopes.items()
-                if reference.casefold() in by_reference
-            ),
-            key=lambda value: (value.casefold(), value),
+        pins = tuple(
+            sorted(
+                (contact.component_pin for contact in peer_contacts),
+                key=lambda value: (value.casefold(), value),
+            )
         )
         candidates.append(
             Candidate(
@@ -150,7 +115,7 @@ def reviewed_peer_signal_assignment_splits(
                     "interface_role": ("signal",),
                     "voltage_domain": (voltage_domain,),
                     "peer_assignment_group": (group_name,),
-                    "peer_assignment_basis": scope_evidence,
+                    "peer_assignment_basis": bases,
                     "assigned_nets": nets,
                     "interface_catalog_sha256": (str(coverage.interface_catalog_sha256),),
                 },

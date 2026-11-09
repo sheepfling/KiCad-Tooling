@@ -13,6 +13,9 @@ from .connector_reviewed_peer_power_input_split import (
     reviewed_peer_passive_power_input_open_candidates,
     reviewed_peer_power_input_split_candidates,
 )
+from .connector_reviewed_peer_signal_domains import (
+    reviewed_peer_signal_domains_sharing_net,
+)
 from .connector_reviewed_peer_signal_split import reviewed_peer_signal_assignment_splits
 from .connector_scope_coverage_candidates import connector_scope_singleton_candidates
 from .connector_stateful_contact_models import ConnectorStatefulContactMap
@@ -47,6 +50,7 @@ def connector_candidates(
         ),
         *mapped_supply_domains_shared_net_candidates(observed, connector_coverage),
         *reviewed_peer_signal_assignment_splits(observed, connector_coverage),
+        *reviewed_peer_signal_domains_sharing_net(observed, connector_coverage),
         *reviewed_peer_power_input_split_candidates(observed, connector_coverage),
         *reviewed_peer_passive_power_input_open_candidates(observed, connector_coverage),
         *connector_scope_singleton_candidates(observed, connector_coverage),

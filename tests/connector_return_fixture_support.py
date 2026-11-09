@@ -16,6 +16,10 @@ from tests.design_lint_fixtures.connector_footprint_peer_scope_cases import (
 from tests.design_lint_fixtures.connector_named_power_peer_cases import (
     named_connector_power_peer_cases,
 )
+from tests.design_lint_fixtures.connector_numeric_peer_open import (
+    numeric_open_connector_part_id_aliases,
+    numeric_open_connector_peers,
+)
 from tests.design_lint_fixtures.connector_peer_pin_cases import peer_pin_case_contracts
 from tests.design_lint_fixtures.connector_power_cases import (
     connector_power_case_contracts,
@@ -28,6 +32,7 @@ from tests.design_lint_fixtures.connector_return_cases import (
     return_case_contracts,
     return_positive_rail_case_contracts,
 )
+from tests.design_lint_fixtures.connector_reviewed_peer_signal_split import peer_signal_netlist
 from tests.design_lint_fixtures.named_component_power_pins import (
     named_component_return_pin_cases,
     named_component_supply_pin_cases,
@@ -63,6 +68,19 @@ def connector_return_fixture_contracts() -> dict[str, NetlistContract]:
             "repeated-signal-pin-unassigned-control": repeated_signal_pin_component(split=False),
             "mapped-distinct-signals-share-net": _mapped_signal_assignments(shared=True),
             "mapped-same-signal-split-nets": _mapped_signal_assignments(shared=False),
+            "reviewed-peer-signal-split": peer_signal_netlist(),
+            "reviewed-peer-signal-domain-shared-net": peer_signal_netlist(
+                nets=("SHARED_RX_NET", "SHARED_RX_NET")
+            ),
+            "numeric-peer-open-fault": numeric_open_connector_peers(),
+            "numeric-peer-open-control": numeric_open_connector_peers(open_references=()),
+            "numeric-peer-open-no-connect-ambiguity": numeric_open_connector_peers().model_copy(
+                update={"unconnected_nets": {"NO_CONNECT": ("J2.1",)}}
+            ),
+            "numeric-peer-open-part-id-fault": numeric_open_connector_part_id_aliases(),
+            "numeric-peer-open-part-id-control": numeric_open_connector_part_id_aliases(
+                open_references=()
+            ),
             "stateful-contact-fault": _stateful_contact(tip_pair_same_net=True),
             "stateful-contact-control": _stateful_contact(tip_pair_same_net=False),
         }
