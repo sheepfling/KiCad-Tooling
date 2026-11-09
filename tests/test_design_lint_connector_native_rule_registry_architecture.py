@@ -83,6 +83,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.footprint_same_voltage_power_input_unanchored": {
             "tests.test_connector_footprint_same_voltage_power_input_native_fixture_lane.test_native_same_voltage_connector_power_inputs_fault_and_control_repeatably",
         },
+        "connector.reviewed_peer_power_input_split": {
+            "tests.test_connector_reviewed_peer_power_input_native.test_native_reviewed_peer_power_input_fault_and_control_are_repeatable",
+        },
         "connector.stateful_contact_topology_mismatch": {
             "tests.test_connector_stateful_contacts.test_native_stateful_contact_fault_and_control_are_repeatable",
         },

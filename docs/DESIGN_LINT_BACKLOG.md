@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 304 rules are implemented with synthetic regression coverage.
+The following 305 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 304 active rules.
+The catalog currently contains 305 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -455,6 +455,7 @@ skipped under prerelease policy.
 - `connector.footprint_named_signal_assignment_divergence`
 - `connector.footprint_named_power_input_assignment_divergence`
 - `connector.footprint_same_voltage_power_input_unanchored`
+- `connector.reviewed_peer_power_input_split`
 - `connector.footprint_named_power_output_assignment_divergence`
 - `connector.footprint_named_passive_assignment_divergence`
 - `connector.footprint_named_power_input_all_open`
@@ -3822,7 +3823,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 304 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 305 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -20855,6 +20856,48 @@ acceptance threads while new lint features proceed:
   The exact native lane uses
   `tests/test_regulator_support_pin_net_coverage_native_fixture.py`,
   `KICAD_RUN_NATIVE_REGULATOR_SUPPORT_PIN_NET_COVERAGE_FIXTURES=1`, and
+  `native_kicad`.
+
+#### LINT-342 — Review split generic power inputs on unlike reviewed connector peers
+
+- **Rule:** `connector.reviewed_peer_power_input_split`, default `review`.
+- **Gap:** Existing repeated-function checks cannot relate roleless generic
+  `power_in` contacts across different connector symbols. The existing
+  same-voltage footprint heuristic requires matching value and footprint, and
+  the PART_ID peer check requires an exact authored part identity.
+- **Predicate:** Require globally complete connector inventory review plus
+  current source-matched pin maps and a shared authored `peer_assignment_group`.
+  Compare a pair only when native symbols differ, neither has PART_ID, and
+  their nonempty value/footprint identities differ. The mapped contacts must
+  share the exact interface signal and voltage domain, have generic native pin
+  functions and native `power_in` type, and have no mapped supply or return
+  role. Report a REVIEW candidate when both have exactly one net and those net
+  names differ.
+- **Incremental value:** Before this rule, the tooling-owned heterogeneous
+  USB/serial fixture passed with no findings: both complete connector maps
+  placed the peers in one reviewed group and mapped the same generic power
+  input signal/domain to separate nets. The new cue reports that case while a
+  common-net control stays quiet. This is demonstrated coverage on synthetic
+  evidence only; field precision and reviewer value remain unmeasured.
+- **Boundaries:** A shared peer group, signal name, or voltage domain does not
+  prove that separate sources should be joined. Source selection, filtering,
+  and isolation may be intentional. Incomplete/stale coverage, DNP parts,
+  mapped supply/return/signal/shield roles, named pins, opens, ambiguous
+  assignments, exact-symbol peers, PART_ID peers, and exact value/footprint
+  peers are excluded or remain with their existing rules. No PCB continuity
+  or physical connector wiring is inferred. The rule can be set to `off`,
+  promoted to `block`, or suppressed by an exact fingerprint ignore.
+- **Evidence:** Synthetic fault/control, different-domain and identity
+  controls, source-stale and incomplete-map controls, role exclusions, policy,
+  exact ignore, ordering stability, CLI/MCP parity, source digests, and repeated
+  exact-version native exports on KiCad 10.0.0 and 10.0.5. Fixtures are
+  tooling-owned and contain no product-board source.
+- **Selection:** Run
+  `tests/test_connector_reviewed_peer_power_input_split.py`,
+  `tests/test_connector_reviewed_peer_power_input_parity.py`, and
+  `tests/test_connector_reviewed_peer_power_input_native.py` with
+  `design_lint_rule(rule_id="connector.reviewed_peer_power_input_split")`.
+  The native lane uses `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` and
   `native_kicad`.
 
 ## Completion and release gate

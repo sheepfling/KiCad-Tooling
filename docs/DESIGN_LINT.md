@@ -527,6 +527,27 @@ for the fault/control source hashes and exact-version native fixture.
   -m 'design_lint and component_lint and power_lint and design_lint_rule(rule_id="component.same_voltage_power_inputs_split")'
 ```
 
+## Review split power inputs on unlike connector peers
+
+`connector.reviewed_peer_power_input_split` asks for review when a complete,
+current connector map explicitly places two unlike connectors in the same peer
+group and maps generic native `power_in` contacts to the same interface signal
+and voltage domain, but the schematic assigns those contacts to different
+nets. The contacts must have no mapped supply or return role; those roles and
+same-symbol, PART_ID, or same-value/footprint peers remain with their existing
+checks. This can help surface a connector power pin that may have been left on
+its own net, but it does not require the rails to be joined: separate sources,
+filtering, and isolation may be intentional. The heuristic needs a fully
+reviewed connector inventory and source-matched pin maps, and it does not prove
+actual voltage or PCB continuity. Project policy can keep `review`, set
+`block` or `off`, or ignore an exact finding fingerprint. See the
+[synthetic fixture record](../tests/fixtures/design_lint/reviewed-peer-power-input-split-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_reviewed_peer_power_input_split.py \
+  -m 'design_lint and connector_lint and power_lint and design_lint_rule(rule_id="connector.reviewed_peer_power_input_split")'
+```
+
 ## Review repeated signal pins on one component
 
 `component.repeated_signal_pin_assignment_divergence` is an opt-in REVIEW
@@ -797,7 +818,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 304 active rules.
+The catalog currently contains 305 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 

@@ -65,6 +65,9 @@ from tests.design_lint_fixtures.connector_numeric_peer_open import (
 from tests.design_lint_fixtures.connector_return_catalog_reachability import (
     connector_return_catalog_rule_ids,
 )
+from tests.design_lint_fixtures.connector_reviewed_peer_power_input_catalog import (
+    reviewed_peer_power_input_rule_ids,
+)
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
 from tests.design_lint_fixtures.ethernet_data_labels import ethernet_data_label_netlist
 from tests.design_lint_fixtures.ethernet_data_unconnected import (
@@ -479,5 +482,6 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         | {item.rule_id for item in candidates(numeric_open_connector_part_id_aliases())}
         | same_voltage_power_input_split_rule_ids()
         | same_voltage_connector_power_input_rule_ids()
+        | reviewed_peer_power_input_rule_ids()
         | thermal_pad_catalog_rule_ids()
     )

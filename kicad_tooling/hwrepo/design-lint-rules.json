@@ -1247,6 +1247,51 @@
       "metamorphic_not_applicable_basis": null
     },
     {
+      "rule_id": "connector.reviewed_peer_power_input_split",
+      "title": "Generic power inputs split across unlike reviewed connector peers",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist plus complete source-matched connector interface coverage",
+      "predicate": "Require globally complete connector coverage and current source-matched interface maps for two connector references in the same peer_assignment_group. Compare only different native symbols with no PART_ID and different nonempty value/footprint identity, so exact-symbol, exact-part, and footprint-alias checks retain their scopes. For one mapped interface signal and exact voltage_domain shared by both maps, require each native pin to have generic function metadata, power_in electrical type, role absent or other, and exactly one assigned net; emit a REVIEW candidate when the net names differ. The map and domain are review clues and do not require joining the nets.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The rule needs complete project connector inventory review and current, source-matched maps. Missing, stale, incomplete, DNP, or ambiguous evidence is not a finding.",
+        "Both contacts must map to the same interface signal and exact voltage_domain, and native pin metadata must be generic power_in with role absent or other. Supply, return, signal, shield, named-function, open-pin, and different-domain cases stay with their existing checks or remain unsupported.",
+        "Only unlike symbols with different nonempty value/footprint identity are considered. Exact-symbol peers, PART_ID aliases, and exact value/footprint aliases remain with their existing rules; those identity checks can still miss other cases.",
+        "Distinct net assignments may be intentional because of source selection, filtering, current limits, or isolation. A source map does not prove net commonality, PCB copper continuity, connector wiring, or actual voltage.",
+        "This is a REVIEW heuristic, not independent proof of a fault. Project policy can turn it off, block on it, or ignore an exact fingerprint."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_reviewed_peer_power_input_split.test_split_generic_power_input_on_unlike_reviewed_peers_needs_review",
+        "tests.test_connector_reviewed_peer_power_input_parity.test_reviewed_peer_power_input_split_matches_between_cli_and_mcp",
+        "tests.test_connector_reviewed_peer_power_input_native.test_native_reviewed_peer_power_input_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_reviewed_peer_power_input_split.test_common_domain_and_peer_identity_controls_stay_quiet_for_this_rule",
+        "tests.test_connector_reviewed_peer_power_input_split.test_stale_incomplete_and_role_classified_maps_do_not_trigger_rule",
+        "tests.test_connector_reviewed_peer_power_input_parity.test_reviewed_peer_power_input_split_matches_between_cli_and_mcp",
+        "tests.test_connector_reviewed_peer_power_input_native.test_native_reviewed_peer_power_input_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_reviewed_peer_power_input_split.test_reviewed_peer_power_input_split_is_stable_under_mapping_order"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_reviewed_peer_power_input_split.py#reviewed_peer_power_input_split_candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_reviewed_peer_power_input_split.py#reviewed_peer_power_input_split_candidates",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "metamorphic_not_applicable_basis": null
+    },
+    {
       "rule_id": "connector.footprint_named_power_input_assignment_divergence",
       "title": "Named power-input pin is assigned to different nets on a footprint-similar connector peer",
       "status": "active",
