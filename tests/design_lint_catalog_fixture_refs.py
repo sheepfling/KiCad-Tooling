@@ -17,6 +17,9 @@ from tests.design_lint_power_fixture_refs import OPEN_DRAIN_CONTROL_PARITY_FIXTU
 from tests.design_lint_swd_generic_connector_parity_fixtures import (
     SWD_GENERIC_CONNECTOR_PARITY_FIXTURES,
 )
+from tests.design_lint_swd_signal_same_net_parity_fixtures import (
+    SWD_SIGNAL_SAME_NET_PARITY_FIXTURES,
+)
 
 
 def _refs(owner: str, *tests: str) -> tuple[str, ...]:
@@ -30,6 +33,7 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
         **CONNECTOR_RETURN_PARITY_FIXTURES,
         **ETHERNET_CONNECTOR_PARITY_FIXTURES,
         **SWD_GENERIC_CONNECTOR_PARITY_FIXTURES,
+        **SWD_SIGNAL_SAME_NET_PARITY_FIXTURES,
         "bus.i2c_missing_pullup": MappingProxyType(
             {
                 "fault_fixtures": _refs(

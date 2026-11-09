@@ -216,6 +216,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_SWD_GENERIC_CONNECTOR_FIXTURES",
         ),
         (
+            "bus.swdio_swclk_same_net",
+            "KICAD_RUN_NATIVE_SWD_SIGNAL_SAME_NET_FIXTURES",
+        ),
+        (
             "bus.jtag_generic_connector_pair_review",
             "KICAD_RUN_NATIVE_JTAG_GENERIC_CONNECTOR_FIXTURES",
         ),

@@ -236,6 +236,7 @@ DesignLintRuleId = Literal[
     "bus.ethernet_generic_connector_pair_review",
     "bus.ethernet_management_generic_connector_pair_review",
     "bus.swd_generic_connector_pair_review",
+    "bus.swdio_swclk_same_net",
     "bus.jtag_generic_connector_pair_review",
     "bus.ethernet_management_signal_on_named_rail",
     "bus.ethernet_signal_on_named_rail",

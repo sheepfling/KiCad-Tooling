@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from kicad_tooling.hwrepo.bus_swd_generic_connector import swd_function_role
 from kicad_tooling.hwrepo.connector_coverage_models import (
     ConnectorCoverageEntry,
     ConnectorCoverageReport,
@@ -17,6 +16,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     DesignLintRuleOverride,
 )
+from kicad_tooling.hwrepo.swd_endpoint_inventory import swd_function_role
 from tests.design_lint_fixtures.swd_generic_connector_pair import generic_swd_connector_netlist
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]

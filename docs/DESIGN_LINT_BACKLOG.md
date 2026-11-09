@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 309 rules are implemented with synthetic regression coverage.
+The following 310 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 309 active rules.
+The catalog currently contains 310 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -654,6 +654,7 @@ skipped under prerelease policy.
 - `bus.ethernet_generic_connector_pair_review`
 - `bus.ethernet_management_generic_connector_pair_review`
 - `bus.swd_generic_connector_pair_review`
+- `bus.swdio_swclk_same_net`
 - `bus.jtag_generic_connector_pair_review`
 - `bus.can_tx_rx_same_net`
 - `bus.can_tx_rx_label_mismatch`
@@ -760,20 +761,27 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-347, local acceptance):** Improved the existing
-  `connector.mapped_interface_signal_unassigned` finding with current,
-  source-matched peer assignments when the peer group, signal, and voltage
-  domain match. The scoped package gate passed 15 tests (4 native parameter
-  cases skipped in that non-Docker run), the exact Docker-native set passed 10
-  tests across five signal-check scenarios, the selector suite passed 8 tests,
-  and catalog/marker architecture checks passed. Ruff, module-boundary,
-  duplicate-utility, Markdown, strict and Windows-target Pyright, wheel/sdist
-  builds, isolated wheel installation, import-origin, and CLI version checks
-  also passed; `mdrepo check .` passed separately. This adds review evidence,
-  not a rule or a common-ground requirement. Reviewer value remains unmeasured.
-  Tagged hosted acceptance passed in GitHub Actions run `42597351381`, including
-  the focused lint gate, native fixture lane, and installed-wheel check against
-  a separate project checkout.
+- **Latest progress (LINT-348, local acceptance):** Added the default-REVIEW
+  `bus.swdio_swclk_same_net` heuristic for a fitted U/IC whose complete native
+  inventory identifies one SWDIO and one SWCLK/SWDCLK pin on the same exact
+  schematic net. Findings retain the role pins, native functions, electrical
+  types, and net. Duplicate, open, ambiguous, incomplete, and DNP endpoints
+  remain quiet; two native output pins are left to ERC. Synthetic fault,
+  distinct-net and metadata controls, policy/ignore behavior, ordering,
+  CLI/MCP parity, catalog reachability, and selector architecture passed. The
+  focused gate passed 65 tests with 4 environment-gated native cases skipped;
+  the dedicated digest-pinned Docker lane passed 2 tests on KiCad 10.0.0 and
+  10.0.5 with repeatable exports and zero ERC errors. Ruff, formatting, and
+  strict Pyright on the changed runtime modules passed. The scoped package
+  gate also passed source/wheel builds, installed-wheel origin/version checks,
+  and the external-template inventory, verify, and playtest stages. The
+  pre-existing SWD generic-connector Docker regression passed 2 tests after the
+  shared inventory refactor. This is a configurable review heuristic; project
+  intent, field applicability, false-positive rate, and reviewer value remain
+  unmeasured.
+- **Previous hosted acceptance (LINT-347):** Tagged run `42597351381` passed,
+  including the focused lint gate, native fixture lane, and installed-wheel
+  check against a separate project checkout.
 - **Previous hosted acceptance (LINT-346):** The tagged prerelease gate,
   including the native fixture lane and installed-wheel checks against the
   external template, passed in GitHub run `42587803194`.
@@ -3879,7 +3887,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 309 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 310 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -21164,6 +21172,48 @@ acceptance threads while new lint features proceed:
   The exact native lane uses
   `tests/test_connector_mapped_interface_signal_peer_context_native.py`,
   `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, and `native_kicad`.
+
+#### LINT-348 — Review native SWDIO and SWCLK assigned to one net
+
+- **Rule:** `bus.swdio_swclk_same_net`, default `review`.
+- **Gap:** The SWD generic-connector association check intentionally skipped
+  endpoints where SWDIO and SWCLK shared one net. That kept same-net endpoints
+  out of that connector association rule, but also left this distinct signal
+  assignment without a named review prompt.
+- **Behavior:** Reuse the shared source-bound SWD endpoint inventory. For each
+  fitted U/IC with a complete unique pin inventory, identify exactly one
+  bounded SWDIO function and one SWCLK/SWDCLK function, each assigned to one
+  native net. Emit a review candidate when both roles resolve to that same
+  net. The report includes the endpoint reference, exact pins and native
+  functions, electrical types, and net. Two native output pins are left to
+  ERC; this preserves the existing separate-net behavior of the connector
+  association lint.
+- **Controls and boundaries:** DNP parts, duplicate roles, open or multiply
+  assigned pins, incomplete metadata, and inconsistent inventory are quiet.
+  Distinct nets and the historical SWDCLK alias are controls. Native role
+  names do not establish that the interface is used, that a debug connector
+  exists, or that the shared net is an error. Project policy can promote the
+  finding to `block`, disable it, or ignore an exact fingerprint. It does not
+  check PCB copper or external wiring.
+- **Evidence:** Synthetic same-net fault, distinct-net controls, DNP,
+  duplicate/open/ambiguous/incomplete cases, output-type boundary, policy and
+  ignore behavior, mapping-order stability, CLI/MCP parity, catalog/selector
+  reachability, and architecture ownership all passed. The tooling-owned
+  native fault/control schematics passed twice on digest-pinned KiCad 10.0.0
+  and 10.0.5 Docker images; normalized exports repeated, expected net
+  assignments matched, the fault emitted the named finding, the control was
+  clear, and both had zero ERC errors. The focused gate passed 65 tests with
+  four environment-gated native cases skipped, followed by two Docker-native
+  tests. The pre-existing SWD connector association lane also passed its two
+  Docker tests after the shared-inventory refactor. No proprietary board source
+  is part of the fixtures. Reviewer value
+  and field precision remain unmeasured.
+- **Selection:** Run
+  `tests/test_swd_signal_same_net.py` and
+  `tests/test_design_lint_mcp_parity_swd_signal_same_net.py` with
+  `design_lint_rule(rule_id="bus.swdio_swclk_same_net")`. The exact native
+  lane is `tests/test_swd_signal_same_net_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_SWD_SIGNAL_SAME_NET_FIXTURES=1` and `native_kicad`.
 
 ## Completion and release gate
 

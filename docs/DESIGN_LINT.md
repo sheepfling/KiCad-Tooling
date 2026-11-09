@@ -834,7 +834,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 309 active rules.
+The catalog currently contains 310 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -2996,6 +2996,38 @@ for source hashes and the native export boundary.
 KICAD_RUN_NATIVE_SWD_GENERIC_CONNECTOR_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
   .venv/bin/python -I -m pytest -q tests/test_swd_generic_connector_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.swd_generic_connector_pair_review")'
+```
+
+## Review native SWDIO and SWCLK pins assigned to one net
+
+`bus.swdio_swclk_same_net` emits a `review` finding when a fitted U/IC has a
+complete unique native pin inventory, exactly one SWDIO role, exactly one
+SWCLK/SWDCLK role, and both pins have one assignment to the same schematic
+net. The finding names the component, role pins, native functions, electrical
+types, and shared net. Pin-function names are clues: the connection may be
+intentional because of multiplexing or project-specific use. This rule does
+not infer that SWD is enabled or that a debug connector exists. Projects can
+promote it to `block`, turn it off, or ignore one exact fingerprint. Two
+native output pins on the shared net remain for ERC to report.
+
+Duplicate roles, DNP parts, open or multiply assigned role pins, and
+incomplete or inconsistent pin metadata remain quiet. The check covers
+schematic net assignments only and does not prove PCB copper continuity or
+off-board wiring. Synthetic controls cover distinct nets, historical
+`SWDCLK`, ambiguous and incomplete inventories, DNP, output pin types,
+policy/ignore behavior, and mapping-order stability. CLI and MCP results are
+compared. The tooling-owned native fault/control schematics export twice with
+digest-pinned KiCad 10.0.0 and 10.0.5 images; see the
+[fixture record](../tests/fixtures/design_lint/swd-signal-same-net/README.md).
+
+```sh
+.venv/bin/python -I -m pytest -q tests/test_swd_signal_same_net.py \
+  tests/test_design_lint_mcp_parity_swd_signal_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.swdio_swclk_same_net")'
+
+KICAD_RUN_NATIVE_SWD_SIGNAL_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest -q \
+  tests/test_swd_signal_same_net_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.swdio_swclk_same_net")'
 ```
 
 ## Review an SWD connector without an identified return

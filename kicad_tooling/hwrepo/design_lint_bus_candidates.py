@@ -38,6 +38,7 @@ from .design_lint_types import Candidate
 from .design_lint_unconnected_interface_candidates import unconnected_interface_candidates
 from .design_lint_usb_c_same_net_candidates import usb_c_same_net_candidates
 from .peer_reference_candidate_keys import PeerReferenceCandidateKeys
+from .swd_same_net import swdio_swclk_same_net_candidates
 from .usb_c_cc_endpoint_pairing import crossed_usb_c_cc_endpoint_candidates
 from .usb_c_sbu_same_net import usb_c_sbu_same_net_candidates
 from .usb_c_superspeed_lane_labels import usb_c_superspeed_lane_label_mismatch_candidates
@@ -100,6 +101,7 @@ def bus_candidates(inputs: BusCandidateInputs) -> tuple[Candidate, ...]:
             inputs.reviewed_connector_references,
             inputs.connector_coverage,
         ),
+        *swdio_swclk_same_net_candidates(observed),
         *jtag_generic_connector_pair_review_candidates(
             observed,
             inputs.reviewed_connector_references,
