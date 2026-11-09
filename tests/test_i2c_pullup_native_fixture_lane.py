@@ -27,6 +27,7 @@ pytestmark = [
     reason="native I2C pull-up fixtures run in the digest-pinned package acceptance lane",
 )
 @pytest.mark.design_lint_rule(rule_id="bus.i2c_pullup_input_limit_coverage")
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_low_equivalent_resistance")
 def test_native_array_channel_fault_and_control_on_supported_images(tmp_path: Path) -> None:
     root = tmp_path / "project"
     shutil.copytree(
@@ -68,15 +69,21 @@ def test_native_array_channel_fault_and_control_on_supported_images(tmp_path: Pa
             "i2c-pullup-fixture/native-export",
             "i2c-pullup-fixture/control",
             "i2c-pullup-fixture/fault",
+            "i2c-pullup-fixture/low_resistance_control",
+            "i2c-pullup-fixture/low_resistance_fault",
             "i2c-pullup-fixture/symbol-resistor",
         }
         assert results["i2c-pullup-fixture/native-export"]["status"] == "PASS"
         control = results["i2c-pullup-fixture/control"]
         fault = results["i2c-pullup-fixture/fault"]
         symbol_resistor = results["i2c-pullup-fixture/symbol-resistor"]
+        low_resistance_control = results["i2c-pullup-fixture/low_resistance_control"]
+        low_resistance_fault = results["i2c-pullup-fixture/low_resistance_fault"]
         normalized_hashes_by_version[version] = {
             "control": control["normalized_netlist_sha256"],
             "fault": fault["normalized_netlist_sha256"],
+            "low_resistance_control": low_resistance_control["normalized_netlist_sha256"],
+            "low_resistance_fault": low_resistance_fault["normalized_netlist_sha256"],
             "symbol_resistor": symbol_resistor["normalized_netlist_sha256"],
         }
         assert (control["sda"], control["scl"]) == ("PASS", "PASS")
@@ -120,6 +127,17 @@ def test_native_array_channel_fault_and_control_on_supported_images(tmp_path: Pa
             symbol_resistor["normalized_netlist_sha256"]
             == symbol_resistor["repeat_normalized_netlist_sha256"]
         )
+        assert low_resistance_control["equivalent_ohms"] == "1000Ω"
+        assert low_resistance_control["rule_findings"] == "none"
+        assert low_resistance_fault["equivalent_ohms"] == "SDA=750Ω"
+        assert low_resistance_fault["rule_findings"] == "bus.i2c_low_equivalent_resistance"
+        for result in (low_resistance_control, low_resistance_fault):
+            assert result["status"] == "PASS"
+            assert result["kicad_version"] == version
+            assert result["repeatable"] == "true"
+            assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
+            assert result["pullup_resistors"]
+            assert_native_fixture_mounts(root, result["command_receipt"])
         assert control["contract_path"] == "projects/synthetic-i2c-array/electrical.json"
         assert control["contract_sha256"] == fault["contract_sha256"]
         for result in (control, fault):

@@ -44,6 +44,9 @@ The generic I2C connector-pair review uses separate tooling-owned synthetic
 fault and named-role control schematics, with their source boundary and pinned
 hashes recorded in the
 [I2C connector-pair fixture README](fixtures/design_lint/i2c-generic-connector-native/README.md).
+The low-equivalent I2C resistance rule also has synthetic native fault/control schematics
+for an exact 1 kΩ boundary and a 750 Ω finding; source hashes and limits are in the
+[fixture README](fixtures/design_lint/i2c-low-equivalent-resistance-native/README.md).
 The all-open named peer power-input fault and control are separate synthetic tooling fixtures;
 their source boundary and pinned hashes are recorded in the
 [all-open peer power-input fixture README](fixtures/design_lint/named-peer-power-input-all-open/README.md).

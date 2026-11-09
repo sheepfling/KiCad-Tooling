@@ -5853,12 +5853,14 @@
       "fault_fixtures": [
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance",
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_series_pullup_paths",
-        "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_exact_device_r_symbol_under_non_r_reference"
+        "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_exact_device_r_symbol_under_non_r_reference",
+        "tests.test_i2c_pullup_native_fixture_lane.test_native_array_channel_fault_and_control_on_supported_images"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance",
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_series_pullup_paths",
-        "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_exact_device_r_symbol_under_non_r_reference"
+        "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_exact_device_r_symbol_under_non_r_reference",
+        "tests.test_i2c_pullup_native_fixture_lane.test_native_array_channel_fault_and_control_on_supported_images"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -5869,7 +5871,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "interfaces",
-      "implementation_owner": "kicad_tooling/hwrepo/i2c_pullup_heuristics.py#i2c_buses_with_low_equivalent_pullup_resistance"
+      "implementation_owner": "kicad_tooling/hwrepo/i2c_pullup_heuristics.py#i2c_buses_with_low_equivalent_pullup_resistance",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES"
+      ]
     },
     {
       "rule_id": "bus.i2c_multiple_pullup_rail_families",

@@ -11,10 +11,32 @@ import pytest
 from kicad_tooling import ci_hosted_i2c_pullup_fixtures as i2c_pullup_service
 from kicad_tooling.ci_hosted import HostedLog, i2c_pullup_native_fixture_lane
 from kicad_tooling.hwrepo.models import CommandEvidence
+from kicad_tooling.hwrepo.netlist_contract_models import NetlistContract
+from tests.design_lint_fixtures import i2c_netlist_with_parallel_sda
 from tests.design_lint_fixtures.i2c_arrays import array_netlist_with_capacitor
 from tests.design_lint_fixtures.i2c_resistor_symbols import i2c_netlist_with_device_r_symbol
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
+
+
+def _low_resistance_observation(value: str) -> NetlistContract:
+    source = i2c_netlist_with_parallel_sda(value)
+    return source.model_copy(
+        update={
+            "components": {"R1": source.components["R1"], "R2": source.components["R3"]},
+            "nets": {
+                "I2C_SDA": ("R1.2", "R2.2", "U1.1"),
+                "I2C_SCL": ("U1.2",),
+                "+3V3": ("R1.1", "R2.1"),
+            },
+            "component_symbols": {
+                "U1": "Synthetic:I2cTarget",
+                "R1": "Device:R",
+                "R2": "Device:R",
+            },
+            "component_pin_numbers": {"R1": ("1", "2"), "R2": ("1", "2")},
+        }
+    )
 
 
 @pytest.mark.design_lint_rule(rule_id="bus.i2c_pullup_input_limit_coverage")
@@ -44,9 +66,14 @@ def test_native_array_lane_checks_contract_resolution_against_typed_exports(
     fault_nets["SDA_WRONG"] = ("RN1.1",)
     fault = fault.model_copy(update={"nets": fault_nets})
     symbol_resistor = i2c_netlist_with_device_r_symbol()
+    low_resistance_observations = {
+        "low_resistance_control": _low_resistance_observation("2k"),
+        "low_resistance_fault": _low_resistance_observation("1k5"),
+    }
     observations = {
         "control": control,
         "fault": fault,
+        **low_resistance_observations,
         "symbol_resistor": symbol_resistor.model_copy(
             update={
                 "nets": {
@@ -74,6 +101,8 @@ def test_native_array_lane_checks_contract_resolution_against_typed_exports(
         assert {path.name for path in source_directory.iterdir()} == {
             "control.kicad_sch",
             "fault.kicad_sch",
+            "low_resistance_control.kicad_sch",
+            "low_resistance_fault.kicad_sch",
             "symbol_resistor.kicad_sch",
         }
         for case in observations:
@@ -135,3 +164,9 @@ def test_native_array_lane_checks_contract_resolution_against_typed_exports(
     assert symbol_resistor_result["component_pins"] == "1,2"
     assert symbol_resistor_result["pullup_path"] == "X1=4700Ω to +3V3"
     assert symbol_resistor_result["repeatable"] == "true"
+    low_resistance_control = results["i2c-pullup-fixture/low_resistance_control"]
+    low_resistance_fault = results["i2c-pullup-fixture/low_resistance_fault"]
+    assert low_resistance_control["equivalent_ohms"] == "1000Ω"
+    assert low_resistance_control["rule_findings"] == "none"
+    assert low_resistance_fault["equivalent_ohms"] == "SDA=750Ω"
+    assert low_resistance_fault["rule_findings"] == "bus.i2c_low_equivalent_resistance"

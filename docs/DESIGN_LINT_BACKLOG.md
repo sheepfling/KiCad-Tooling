@@ -21581,6 +21581,32 @@ acceptance threads while new lint features proceed:
   architecture test asserts that it and the synthetic scope checks in
   `tests/test_lint_gate_scope.py` remain included.
 
+#### LINT-355 — Validate low I2C pull-up resistance from native exports
+
+- **Status:** Implemented; the focused Python/catalog suite and the exact-version
+  native lane pass locally. Hosted acceptance for the prerelease tag is pending.
+- **Evidence:** The focused Python/catalog selector passed 79 tests, with 120
+  unrelated tests deselected. The native test passed on KiCad 10.0.0 and 10.0.5;
+  both fixtures exported twice and matched after typed normalization. Ruff,
+  Markdown lint, and repository-link checks passed.
+- **Priority:** P1 evidence completeness for an active deterministic heuristic.
+- **Gap:** `bus.i2c_low_equivalent_resistance` consumed typed native netlist
+  records and had synthetic fault/control coverage, but no exact-version
+  fixture demonstrated that native resistor symbols, values, pin inventories,
+  and assignments reached the predicate correctly.
+- **Coverage:** Add a tooling-owned native fault/control pair to the existing
+  digest-pinned I2C lane. Two 1.5 kΩ paths on SDA must produce a 750 Ω review;
+  two 2 kΩ paths must stay quiet at the strict 1 kΩ boundary. Repeat each export
+  on KiCad 10.0.0 and 10.0.5 and compare normalized typed-netlist digests.
+- **Boundary:** This is native-export compatibility evidence for the existing
+  review heuristic, not field validation or a project-specific electrical
+  requirement. It does not check resistor tolerance, sink current, rise time,
+  voltage compatibility, or routed copper.
+- **Selection:** The case is linked to
+  `tests/test_i2c_pullup_native_fixture_lane.py` and
+  `KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES`; select it with
+  `design_lint_rule(rule_id="bus.i2c_low_equivalent_resistance")`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

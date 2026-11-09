@@ -10,6 +10,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+from .ci_hosted_i2c_low_equivalent_resistance import check_i2c_low_equivalent_native_cases
 from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contract_coach_models import ContractCoachReport
@@ -39,8 +40,15 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
     pinned = pinned_image(config.image)
 
     fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/i2c-array-native"
+    low_resistance_fixture_root = (
+        tooling_checkout_root() / "tests/fixtures/design_lint/i2c-low-equivalent-resistance-native"
+    )
     fixtures = {
         **{case: fixture_root / f"{case}.kicad_sch" for case in ("control", "fault")},
+        **{
+            f"low_resistance_{case}": low_resistance_fixture_root / f"{case}.kicad_sch"
+            for case in ("control", "fault")
+        },
         "symbol_resistor": (
             tooling_checkout_root()
             / "tests/fixtures/design_lint/i2c-device-r-symbol-native/symbol_resistor.kicad_sch"
@@ -50,6 +58,8 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
     expected_source_hashes = {
         "control": "46fbdf1453e8254a633b7dee43b8877fc516758446314f4834f55a41db2a2479",
         "fault": "c4ec4dbb38f9a076d3f8969fd77b9f2f869648c1ca490f1c973e4b92ba16f595",
+        "low_resistance_control": "62c084d84647d91126b1892bc88a3410fb42512d34d3dc42430189107f61dacd",
+        "low_resistance_fault": "b1f58647560672950fc58bc2e4e776a2cf6c3310396a5c0bc8980f9c2b7aa632",
         "symbol_resistor": "1793291946117b88171d407379c6e768fb10e8b26feae7736f2206c57e5806b4",
     }
     if source_hashes != expected_source_hashes:
@@ -88,7 +98,7 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
         f'test "$actual" = "{config.kicad_version}"\n'
-        "for case in control fault symbol_resistor; do\n"
+        "for case in control fault low_resistance_control low_resistance_fault symbol_resistor; do\n"
         "  for run in first repeat; do\n"
         "    kicad-cli sch export netlist --format kicadxml \\\n"
         '      --output "/output/${case}.${run}.netlist.xml" \\\n'
@@ -159,7 +169,7 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
     for case, fixture in fixtures.items():
         if (
             digest(fixture) != source_hashes[case]
-            or digest(inputs / fixture.name) != source_hashes[case]
+            or digest(inputs / f"{case}.kicad_sch") != source_hashes[case]
         ):
             raise ValueError("Synthetic I2C fixture changed during native export")
         for run in ("first", "repeat"):
@@ -408,4 +418,17 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
         pullup_path="X1=4700Ω to +3V3",
         repeatable="true",
         command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),
+    )
+
+    check_i2c_low_equivalent_native_cases(
+        project=project,
+        kicad_version=config.kicad_version,
+        image=pinned,
+        source_hashes=source_hashes,
+        raw_hashes=raw_hashes,
+        normalized_hashes=normalized_hashes,
+        observations=observations,
+        command_receipt=scratch / "native.command.json",
+        root=root,
+        log=log,
     )

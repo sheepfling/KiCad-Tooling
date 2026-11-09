@@ -180,6 +180,10 @@ RULE_NODE_CASES = (
         "tests/test_design_lint_i2c_equivalent_resistance.py::test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance",
     ),
     (
+        "bus.i2c_low_equivalent_resistance",
+        "tests/test_i2c_pullup_native_fixture_lane.py::test_native_array_channel_fault_and_control_on_supported_images",
+    ),
+    (
         "bus.i2c_multiple_pullup_rail_families",
         "tests/test_design_lint_i2c_pullup_rail_families.py::test_same_family_rails_remain_valid_controls[sda_rails0-scl_rails0]",
     ),
