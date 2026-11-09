@@ -385,6 +385,7 @@ def prepare_evaluation(
             ic_decoupling_map=policy.ic_decoupling_map,
             regulator_passive_topology_map=policy.regulator_passive_topology_map,
             regulator_support_pin_role_map=policy.regulator_support_pin_role_map,
+            regulator_support_pin_net_map=policy.regulator_support_pin_net_map,
             capacitor_hold_up_map=policy.capacitor_hold_up_map,
             led_current_map=policy.led_current_map,
         ),

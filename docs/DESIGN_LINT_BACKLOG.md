@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 301 rules are implemented with synthetic regression coverage.
+The following 302 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 302 active rules.
+The catalog currently contains 303 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -20790,6 +20790,35 @@ acceptance threads while new lint features proceed:
   `tests/test_regulator_support_pin_roles_native_fixture.py`,
   `KICAD_RUN_NATIVE_REGULATOR_SUPPORT_PIN_ROLE_FIXTURES=1`, and
   `native_kicad`.
+
+#### LINT-340 — Review mapped active regulator-support pin-to-net assignments
+
+- **Rule:** `power.regulator_support_pin_net_mismatch`, default `review`.
+- **Gap:** LINT-339 compares authored symbol function and electrical-type
+  expectations, but it does not compare the active support component's
+  schematic pin assignments with a separately authored connectivity map.
+- **Predicate:** For each exact mapped active component, compare value, symbol,
+  footprint, optional PART_ID, fitted state, and complete native pin inventory.
+  Then compare every explicitly mapped pin's expected net name or expected
+  unconnected state with the native netlist. No topology or expected net is
+  inferred.
+- **Incremental value:** A synthetic wrong-net mutation keeps component
+  identity and all function/type metadata valid, so LINT-339 remains quiet
+  while LINT-340 reports the authored pin-to-net mismatch. A second fault
+  leaves a mapped pin unconnected; the exact-net control clears the finding.
+- **Boundaries:** The project-authored map is not validated against a
+  datasheet. Matching schematic assignments do not establish physical copper
+  continuity, component conduction, isolation, loop stability, or analog
+  performance. Unmapped devices are not guessed.
+- **Evidence:** Map validation, identity/inventory checks, REVIEW/block/off
+  policy, stable source-bound findings, CLI/MCP semantic parity, and exact
+  KiCad 10.0.0/10.0.5 native fault/control schematics.
+- **Selection:** Run `tests/test_regulator_support_pin_net_map.py` and
+  `tests/test_regulator_required_passives_parity.py` with
+  `design_lint_rule(rule_id="power.regulator_support_pin_net_mismatch")`.
+  The exact native lane uses
+  `tests/test_regulator_support_pin_net_native_fixture.py`,
+  `KICAD_RUN_NATIVE_REGULATOR_SUPPORT_PIN_NET_FIXTURES=1`, and `native_kicad`.
 
 ## Completion and release gate
 

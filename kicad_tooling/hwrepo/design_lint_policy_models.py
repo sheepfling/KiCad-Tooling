@@ -35,7 +35,7 @@ from .power_sequence_models import PowerSequenceMap
 from .rc_filter_models import RcFilterMap
 from .regulator_feedback_models import RegulatorFeedbackMap
 from .regulator_passive_models import RegulatorPassiveTopologyMap
-from .regulator_support_models import RegulatorSupportPinRoleMap
+from .regulator_support_models import RegulatorSupportPinNetMap, RegulatorSupportPinRoleMap
 from .signal_divider_models import SignalDividerMap
 from .signal_pair_models import ComplementaryPinFunctionAliasMap
 from .stm32_pin_map_models import Stm32CubeMxPinMap
@@ -64,6 +64,7 @@ class DesignLintPolicy(StrictModel):
     led_current_map: LedCurrentMap | None = None
     regulator_passive_topology_map: RegulatorPassiveTopologyMap | None = None
     regulator_support_pin_role_map: RegulatorSupportPinRoleMap | None = None
+    regulator_support_pin_net_map: RegulatorSupportPinNetMap | None = None
     capacitor_hold_up_map: CapacitorHoldUpMap | None = None
     rc_filter_map: RcFilterMap | None = None
     connector_return_distribution_map: ConnectorReturnDistributionMap | None = None

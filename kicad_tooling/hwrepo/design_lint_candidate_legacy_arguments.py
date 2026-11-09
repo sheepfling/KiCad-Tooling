@@ -40,7 +40,7 @@ from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
 from .rc_filter_models import RcFilterCoverageReport
 from .regulator_feedback_models import RegulatorFeedbackCoverageReport
-from .regulator_support_models import RegulatorSupportPinRoleMap
+from .regulator_support_models import RegulatorSupportPinNetMap, RegulatorSupportPinRoleMap
 from .rs485_peer_reference_types import Rs485PeerReferenceScan
 from .schematic_geometry import SchematicGeometryScan
 from .serial_participants import SerialPeerRosterContext
@@ -106,6 +106,7 @@ class LegacyCandidateArguments(TypedDict, total=False):
     connector_power_output_review_enabled: bool
     ic_decoupling_map: IcDecouplingMap | None
     regulator_support_pin_role_map: RegulatorSupportPinRoleMap | None
+    regulator_support_pin_net_map: RegulatorSupportPinNetMap | None
     oscillator_output_path_map: OscillatorOutputPathMap | None
     connector_stateful_contact_map: ConnectorStatefulContactMap | None
     led_current_map: LedCurrentMap | None

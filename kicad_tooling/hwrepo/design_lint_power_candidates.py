@@ -20,6 +20,7 @@ from .design_lint_power_decoupling import ic_decoupling_candidates
 from .design_lint_power_inputs import PowerCandidateInputs
 from .design_lint_power_regulator_passives import regulator_required_passive_candidates
 from .design_lint_power_regulator_pin_roles import regulator_pin_role_candidates
+from .design_lint_power_regulator_support_nets import regulator_support_pin_net_candidates
 from .design_lint_power_regulator_support_roles import regulator_support_pin_role_candidates
 from .design_lint_types import Candidate
 from .ic_decoupling_models import IcDecouplingMap
@@ -32,7 +33,7 @@ from .power_path_models import PowerPathMap
 from .power_pin_net_roles import named_power_pin_net_role_conflicts
 from .power_pin_paths import power_inputs_without_supported_source_paths
 from .power_rails import numbered_power_rail_groups
-from .regulator_support_models import RegulatorSupportPinRoleMap
+from .regulator_support_models import RegulatorSupportPinNetMap, RegulatorSupportPinRoleMap
 
 
 def power_candidates(
@@ -45,6 +46,7 @@ def power_candidates(
     ic_decoupling_map: IcDecouplingMap | None = None,
     capacitor_hold_up_map: CapacitorHoldUpMap | None = None,
     regulator_support_pin_role_map: RegulatorSupportPinRoleMap | None = None,
+    regulator_support_pin_net_map: RegulatorSupportPinNetMap | None = None,
 ) -> tuple[Candidate, ...]:
     """Compatibility adapter for the named power candidate input group."""
     return scan_power_candidates(
@@ -57,6 +59,7 @@ def power_candidates(
             ic_decoupling_map=ic_decoupling_map,
             capacitor_hold_up_map=capacitor_hold_up_map,
             regulator_support_pin_role_map=regulator_support_pin_role_map,
+            regulator_support_pin_net_map=regulator_support_pin_net_map,
         ),
         reviewed_connector_references=reviewed_connector_references,
         peer_unconnected_power_output_pins=peer_unconnected_power_output_pins,
@@ -81,6 +84,9 @@ def scan_power_candidates(
     found.extend(regulator_pin_role_candidates(observed, inputs.regulator_passive_topology_map))
     found.extend(
         regulator_support_pin_role_candidates(observed, inputs.regulator_support_pin_role_map)
+    )
+    found.extend(
+        regulator_support_pin_net_candidates(observed, inputs.regulator_support_pin_net_map)
     )
     found.extend(capacitor_hold_up_candidates(observed, inputs.capacitor_hold_up_map))
     found.extend(

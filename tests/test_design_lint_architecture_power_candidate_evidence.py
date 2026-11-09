@@ -151,6 +151,11 @@ def test_authored_power_map_rules_use_bounded_source_evidence() -> None:
             "power.regulator_support_pin_role_mismatch",
             "kicad_tooling/hwrepo/design_lint_regulator_support_candidate_evidence.py#RegulatorSupportPinRoleFindingEvidence",
         ),
+        "design_lint_power_regulator_support_nets.py": (
+            "regulator_support_pin_net_candidates",
+            "power.regulator_support_pin_net_mismatch",
+            "kicad_tooling/hwrepo/design_lint_regulator_support_candidate_evidence.py#RegulatorSupportPinNetFindingEvidence",
+        ),
     }
     source_owners = (
         "design_lint_ic_decoupling_candidate_evidence.py",
@@ -198,6 +203,9 @@ def test_authored_power_map_rules_use_bounded_source_evidence() -> None:
             ),
             "power.regulator_support_pin_role_mismatch": (
                 "kicad_tooling/hwrepo/regulator_support_checks.py#regulator_support_pin_role_issues"
+            ),
+            "power.regulator_support_pin_net_mismatch": (
+                "kicad_tooling/hwrepo/regulator_support_checks.py#regulator_support_pin_net_issues"
             ),
         }[rule_id]
         assert expected_validation_owner in rule.implementation_refs

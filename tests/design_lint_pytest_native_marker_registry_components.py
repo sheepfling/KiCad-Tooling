@@ -15,6 +15,7 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_regulator_required_passives.py": frozenset({"power_lint"}),
         "test_regulator_passive_pin_roles.py": frozenset({"power_lint"}),
         "test_regulator_support_pin_roles.py": frozenset({"power_lint"}),
+        "test_regulator_support_pin_net_map.py": frozenset({"power_lint"}),
         "test_capacitor_hold_up.py": frozenset({"power_lint"}),
         "test_capacitor_hold_up_rule_selectors.py": frozenset({"power_lint"}),
         "test_capacitor_hold_up_parity.py": frozenset({"parity_lint", "power_lint", "slow"}),
@@ -31,6 +32,9 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
             {"native_kicad", "power_lint", "slow"}
         ),
         "test_regulator_support_pin_roles_native_fixture.py": frozenset(
+            {"native_kicad", "power_lint", "slow"}
+        ),
+        "test_regulator_support_pin_net_native_fixture.py": frozenset(
             {"native_kicad", "power_lint", "slow"}
         ),
         "test_regulator_feedback_native_fixture.py": frozenset(

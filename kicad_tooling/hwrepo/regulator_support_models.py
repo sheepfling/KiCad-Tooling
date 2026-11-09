@@ -6,7 +6,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
 
-from .model_primitives import Identifier, NonEmptyText, Reference, StrictModel
+from .model_primitives import Identifier, NetName, NonEmptyText, Reference, StrictModel
 
 
 class RegulatorSupportPinRoleExpectation(StrictModel):
@@ -75,4 +75,71 @@ class RegulatorSupportPinRoleMap(StrictModel):
         references = [item.regulator_reference.casefold() for item in self.requirements]
         if len(set(references)) != len(references):
             raise ValueError("A regulator reference can have only one support-role entry")
+        return self
+
+
+class RegulatorSupportPinNetExpectation(StrictModel):
+    """One active support pin and its explicitly authored exact net assignment."""
+
+    pin: Reference
+    expected_net: NetName | None
+
+
+class RegulatorSupportNetComponentRequirement(StrictModel):
+    """Exact active-component identity and complete expected pin-to-net map."""
+
+    role: NonEmptyText
+    reference: Identifier
+    value: NonEmptyText
+    symbol: NonEmptyText
+    footprint: NonEmptyText
+    part_id: Identifier | None = None
+    pins: Annotated[tuple[RegulatorSupportPinNetExpectation, ...], Field(min_length=2)]
+
+    @model_validator(mode="after")
+    def complete_unique_pin_map(self) -> RegulatorSupportNetComponentRequirement:
+        prefix = f"{self.reference}.".casefold()
+        if any(not item.pin.casefold().startswith(prefix) for item in self.pins):
+            raise ValueError("Regulator-support net-map pins must belong to their component")
+        if len({item.pin.casefold() for item in self.pins}) != len(self.pins):
+            raise ValueError("Regulator-support net-map pins must be unique")
+        if not any(item.expected_net is not None for item in self.pins):
+            raise ValueError("A support component must declare at least one expected net")
+        return self
+
+
+class RegulatorSupportPinNetTopologyRequirement(StrictModel):
+    """One reviewed regulator context and exact active-support pin assignments."""
+
+    id: Identifier
+    basis: NonEmptyText
+    regulator_reference: Identifier
+    components: Annotated[tuple[RegulatorSupportNetComponentRequirement, ...], Field(min_length=1)]
+
+    @model_validator(mode="after")
+    def unique_support_components(self) -> RegulatorSupportPinNetTopologyRequirement:
+        references = (self.regulator_reference, *(item.reference for item in self.components))
+        if len({item.casefold() for item in references}) != len(references):
+            raise ValueError("Regulator-support component references must be unique")
+        if len({item.role.casefold() for item in self.components}) != len(self.components):
+            raise ValueError("Regulator-support roles must be unique within a topology")
+        return self
+
+
+class RegulatorSupportPinNetMap(StrictModel):
+    """Project-authored exact net assignments for active regulator-support pins."""
+
+    schema_version: Literal["1"] = "1"
+    basis: NonEmptyText
+    requirements: Annotated[
+        tuple[RegulatorSupportPinNetTopologyRequirement, ...], Field(min_length=1)
+    ]
+
+    @model_validator(mode="after")
+    def unique_support_topologies(self) -> RegulatorSupportPinNetMap:
+        if len({item.id.casefold() for item in self.requirements}) != len(self.requirements):
+            raise ValueError("Regulator-support topology IDs must be unique")
+        references = [item.regulator_reference.casefold() for item in self.requirements]
+        if len(set(references)) != len(references):
+            raise ValueError("A regulator reference can have only one support-net entry")
         return self

@@ -797,7 +797,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 302 active rules.
+The catalog currently contains 303 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -3329,6 +3329,49 @@ analog behavior. Unmapped devices are not guessed. Policy can set the rule to
 `block` or `off`, or ignore one exact finding. Synthetic native cases are
 documented in the
 [support-role fixture README](../tests/fixtures/design_lint/regulator-support-pin-roles-native/README.md).
+
+## Review mapped active regulator-support pin-to-net assignments
+
+`power.regulator_support_pin_net_mismatch` uses the separate
+`design_lint.regulator_support_pin_net_map`. Each entry names the reviewed
+regulator context, exact active support-component identity, and every pin in
+the native inventory. Each pin explicitly declares its expected net name, or
+`null` when it is expected to remain unconnected:
+
+```json
+{
+  "regulator_support_pin_net_map": {
+    "schema_version": "1",
+    "basis": "Reviewed synthetic feedback-support connectivity map",
+    "requirements": [{
+      "id": "main-feedback-support",
+      "basis": "Approved project pin-to-net review",
+      "regulator_reference": "U1",
+      "components": [{
+        "role": "feedback isolator",
+        "reference": "U2",
+        "value": "SYNTH-ISO",
+        "symbol": "Synthetic:FeedbackIsolator",
+        "footprint": "Synthetic:SOIC-4",
+        "pins": [
+          {"pin": "U2.1", "expected_net": "PRIMARY_FEEDBACK"},
+          {"pin": "U2.2", "expected_net": "ISOLATOR_OUTPUT"}
+        ]
+      }]
+    }]
+  }
+}
+```
+
+The rule reports exact identity, fit, inventory, and pin-to-net mismatches as
+`REVIEW`. It compares only nets named in this project map. It does not infer
+component roles or expected connectivity, validate the map against a
+datasheet, or prove a physical bond, PCB copper continuity, component
+conduction, isolation, feedback stability, or analog performance. The pin-role
+metadata rule remains separate. Project policy can set this rule to `block` or
+`off`, or ignore one exact finding. Synthetic exact-version cases are
+documented in the
+[support pin-net fixture README](../tests/fixtures/design_lint/regulator-support-pin-nets-native/README.md).
 
 ## Review a mapped signal-input divider
 

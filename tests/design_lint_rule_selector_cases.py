@@ -40,6 +40,14 @@ RULE_NODE_CASES = (
         "tests/test_regulator_support_pin_roles.py::test_mapped_active_support_mismatches_are_reviewed",
     ),
     (
+        "power.regulator_support_pin_net_mismatch",
+        "tests/test_regulator_support_pin_net_map.py::test_pin_net_change_is_reviewed_while_role_metadata_stays_valid",
+    ),
+    (
+        "power.regulator_support_pin_net_mismatch",
+        "tests/test_regulator_support_pin_net_native_fixture.py::test_native_active_support_pin_net_faults_and_control_are_source_bound",
+    ),
+    (
         "power.named_supply_pin_on_negative_rail",
         "tests/test_power_negative_rail.py::test_named_supply_pin_on_negative_rail_is_reviewed",
     ),

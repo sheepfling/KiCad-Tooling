@@ -13,6 +13,7 @@ from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import DesignLintPolicy, DesignLintReport
 from tests.electrical_parity_support import contract_netlist_xml
 from tests.mcp_parity_support import semantic_design_lint_report
+from tests.regulator_support_pin_net_support import support_pin_net_map, support_pin_netlist
 from tests.synthetic_design_lint_project import (
     install_synthetic_netlist,
     run_design_lint_cli,
@@ -23,6 +24,8 @@ from tests.test_regulator_passive_pin_roles import RULE_ID as PIN_ROLE_RULE_ID
 from tests.test_regulator_required_passives import RULE_ID, topology_map
 from tests.test_regulator_support_pin_roles import RULE_ID as SUPPORT_PIN_ROLE_RULE_ID
 from tests.test_regulator_support_pin_roles import support_map, support_netlist
+
+SUPPORT_PIN_NET_RULE_ID = "power.regulator_support_pin_net_mismatch"
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -38,10 +41,12 @@ def _assert_cli_mcp_parity(
     expected_rule_id: str,
     *,
     support_roles: bool = False,
+    support_nets: bool = False,
 ) -> None:
     policy = DesignLintPolicy(
-        regulator_passive_topology_map=None if support_roles else topology_map(),
+        regulator_passive_topology_map=None if support_roles or support_nets else topology_map(),
         regulator_support_pin_role_map=support_map() if support_roles else None,
+        regulator_support_pin_net_map=support_pin_net_map() if support_nets else None,
     )
     root, native = synthetic_design_lint_project(tmp_path, policy)
     install_synthetic_netlist(native, contract_netlist_xml(source))
@@ -95,4 +100,14 @@ def test_authored_active_regulator_support_pin_roles_match_cli_and_mcp(tmp_path:
         support_netlist(fault="wrong-optocoupler-function"),
         SUPPORT_PIN_ROLE_RULE_ID,
         support_roles=True,
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=SUPPORT_PIN_NET_RULE_ID)
+def test_authored_active_regulator_support_pin_nets_match_cli_and_mcp(tmp_path: Path) -> None:
+    _assert_cli_mcp_parity(
+        tmp_path,
+        support_pin_netlist(fault="wrong-net"),
+        SUPPORT_PIN_NET_RULE_ID,
+        support_nets=True,
     )
