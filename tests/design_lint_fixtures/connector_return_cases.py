@@ -387,7 +387,11 @@ def ret_return_label_case_contracts() -> dict[str, NetlistContract]:
                     "VSSA": tuple(
                         f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9)
                     ),
-                }
+                },
+                "pin_functions": {
+                    **common.pin_functions,
+                    **{f"J{reference}.{pin}": "GND" for reference in range(1, 5) for pin in (7, 9)},
+                },
             }
         ),
     }

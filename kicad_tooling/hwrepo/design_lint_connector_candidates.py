@@ -1,7 +1,5 @@
 """Coordinate connector pin and return-domain lint candidates."""
 
-from __future__ import annotations
-
 from .connector_coverage import source_matched_connector_peer_assignment_groups
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_peer_pin_candidate_results import (
