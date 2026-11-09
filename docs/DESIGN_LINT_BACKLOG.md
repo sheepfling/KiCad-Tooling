@@ -21205,9 +21205,14 @@ acceptance threads while new lint features proceed:
   clear, and both had zero ERC errors. The focused gate passed 65 tests with
   four environment-gated native cases skipped, followed by two Docker-native
   tests. The pre-existing SWD connector association lane also passed its two
-  Docker tests after the shared-inventory refactor. No proprietary board source
-  is part of the fixtures. Reviewer value
-  and field precision remain unmeasured.
+  Docker tests after the shared-inventory refactor. Tagged hosted acceptance
+  for `v0.5.3rc580` passed on 2026-11-09 (GitHub Actions run `42608880529`),
+  including scope resolution, the focused lint/integrity gate, exact-version
+  native fixtures, package installation, and the external-template playtest.
+  The preceding `v0.5.3rc579` attempt exposed an architecture guard that did
+  not accept the `swd_` interface module prefix; `rc580` adds that prefix and a
+  focused owner/size check. No proprietary board source is part of the
+  fixtures. Reviewer value and field precision remain unmeasured.
 - **Selection:** Run
   `tests/test_swd_signal_same_net.py` and
   `tests/test_design_lint_mcp_parity_swd_signal_same_net.py` with
