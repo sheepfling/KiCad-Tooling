@@ -3545,6 +3545,13 @@ is not a reason by itself to expand its scope or change its default policy.
   rule-selectable KiCad 10.0.0/10.0.5 return-net lane. I2C pull-up arrays are
   already catalogued under their active rule. These distinctions keep a
   rule-scoped tag from claiming coverage of a different authored contract.
+- **Catalog-derived native selectors (2026-11-09):** The selector regression
+  suite now generates a stable pytest case for every active rule/native-fixture
+  pair in `required_native_fixtures`, replacing a hand-maintained subset that
+  could omit later catalog entries. The focused selector run covered all 282
+  declared pairs. The suite is registered in the catalog lint area and carries
+  `rule_gate_integrity`, so each focused rule gate checks this selection
+  invariant. This changes test coverage only; it adds no electrical predicate.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
   distinguishes an optional mapped check that was not configured from one
   that ran with zero findings. It covers USB data-path, series power-path, and
