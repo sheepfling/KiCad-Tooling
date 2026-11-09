@@ -763,6 +763,18 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **Latest progress (LINT-080 v91, SWD determinism gate):** The complete
+  SWDIO/SWCLK same-net fault and distinct-net control reports now run across
+  three independently hash-seeded Python processes. The report hashes derive
+  from the typed netlists, and the exact U1.5/U1.6 pins and `SWD_SHARED` net
+  are asserted. The distinct-net control keeps the independent generic SWD
+  connector-association review while the same-net rule is quiet. The case is
+  linked to both affected rule entries. Focused SWD unit/parity/hash-seed
+  selection passed 8 tests; inventory/backlog passed 2; catalog marker,
+  reachability, architecture, and collection checks passed 6; exact-version
+  Docker fixtures passed 2. Scoped package acceptance passed formatting,
+  code and architecture lint, Markdown, focused pytest, Linux and Windows
+  typing, wheel/sdist, installed-wheel, and public-template playtest stages.
 - **Latest progress (LINT-354, local quality gate):** The LINT-353 hosted
   attempt exposed a fixture-registration gap: the tag resolver must confirm a
   native fixture switch is enabled in the full package-acceptance job. The
@@ -4126,8 +4138,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v90. The cross-process probe supports themed report
-  selectors and retains the complete 331-report inventory gate. Fault/control
+- **Status:** Implemented v91. The cross-process probe supports themed report
+  selectors and retains the complete 333-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -4271,6 +4283,20 @@ is not a reason by itself to expand its scope or change its default policy.
   lint, Markdown checks, focused pytest, Linux and Windows typing, wheel and
   sdist builds, installed-wheel checks, and the separate public-template
   playtest.
+  The v91 extension adds LINT-348's complete SWDIO/SWCLK shared-net fault and
+  distinct-net control reports to the three-process hash-seed matrix. The
+  reports bind hashes to their typed netlists, assert the exact U1.5/U1.6 pins
+  and `SWD_SHARED` net, and link the case from the rule catalog. The inventory
+  now contains 333 reports. Its distinct-net report retains the independent
+  generic SWD connector-association review; the determinism test verifies the
+  same-net rule is absent instead of requiring the complete report to be PASS.
+  The focused LINT-348 unit/parity/hash-seed selection passed 8 tests, the
+  inventory/backlog selection passed 2, catalog marker/reachability/architecture/
+  collection checks passed 6, and the exact-version Docker fixtures passed 2.
+  Ruff, Markdown, and repository link checks passed.
+  Scoped `scripts/ci.py` acceptance passed formatting, code and architecture
+  lint, Markdown, focused pytest, Linux and Windows typing, wheel and sdist
+  builds, installed-wheel checks, and the separate public-template playtest.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
@@ -21302,8 +21328,9 @@ acceptance threads while new lint features proceed:
   reachability, and architecture ownership all passed. The tooling-owned
   native fault/control schematics passed twice on digest-pinned KiCad 10.0.0
   and 10.0.5 Docker images; normalized exports repeated, expected net
-  assignments matched, the fault emitted the named finding, the control was
-  clear, and both had zero ERC errors. The focused gate passed 65 tests with
+  assignments matched, the fault emitted the named finding, and the native
+  control had no same-net finding; both had zero ERC errors. The focused gate
+  passed 65 tests with
   four environment-gated native cases skipped, followed by two Docker-native
   tests. The pre-existing SWD connector association lane also passed its two
   Docker tests after the shared-inventory refactor. Tagged hosted acceptance
@@ -21313,12 +21340,22 @@ acceptance threads while new lint features proceed:
   The preceding `v0.5.3rc579` attempt exposed an architecture guard that did
   not accept the `swd_` interface module prefix; `rc580` adds that prefix and a
   focused owner/size check. No proprietary board source is part of the
-  fixtures. Reviewer value and field precision remain unmeasured.
-- **Selection:** Run `tests/test_i2s_clock_frame_same_net.py` and
-  `tests/test_design_lint_mcp_parity_i2s_clock_frame_same_net.py` with
-  `design_lint_rule(rule_id="bus.i2s_clock_frame_same_net")`. The exact native
-  lane is `tests/test_i2s_clock_frame_same_net_native_fixture_lane.py` with
-  `KICAD_RUN_NATIVE_I2S_CLOCK_FRAME_SAME_NET_FIXTURES=1` and `native_kicad`.
+  fixtures. LINT-080 now compares complete SWD fault and distinct-net control
+  reports across three independently hash-seeded processes, checks the exact
+  pins and shared net, and verifies distinct input hashes. The distinct-net
+  control remains REVIEW for the separate generic connector-association cue,
+  while `bus.swdio_swclk_same_net` is absent. Reviewer value and field
+  precision remain unmeasured. The supplemental focused selection passed 8
+  tests, followed by 2 exact-version Docker tests; selector/catalog and
+  architecture checks passed 6 tests. The full scoped package acceptance
+  passed formatting, static checks, focused pytest, both typing targets,
+  wheel/sdist, installed-wheel, and external-template playtest stages.
+- **Selection:** Run `tests/test_swd_signal_same_net.py`,
+  `tests/test_design_lint_mcp_parity_swd_signal_same_net.py`, and
+  `tests/test_design_lint_determinism_swd_signal_same_net.py` with
+  `design_lint_rule(rule_id="bus.swdio_swclk_same_net")`. The exact native
+  lane is `tests/test_swd_signal_same_net_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_SWD_SIGNAL_SAME_NET_FIXTURES=1` and `native_kicad`.
 
 #### LINT-349 — Review native I2S bit clock and word select on one net
 

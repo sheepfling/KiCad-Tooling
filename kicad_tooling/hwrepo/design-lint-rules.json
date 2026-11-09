@@ -7553,7 +7553,8 @@
         "tests.test_swd_generic_connector_native_fixture_lane.test_native_generic_swd_connector_fault_and_control_repeat"
       ],
       "metamorphic_fixtures": [
-        "tests.test_swd_generic_connector_pair_review.test_report_is_stable_when_native_mappings_are_reordered"
+        "tests.test_swd_generic_connector_pair_review.test_report_is_stable_when_native_mappings_are_reordered",
+        "tests.test_design_lint_determinism_swd_signal_same_net.test_swd_fault_and_control_reports_are_hashseed_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_SWD_GENERIC_CONNECTOR_FIXTURES"
@@ -7598,7 +7599,8 @@
         "tests.test_swd_signal_same_net_native_fixture_lane.test_native_swdio_swclk_same_net_fault_and_control_repeat"
       ],
       "metamorphic_fixtures": [
-        "tests.test_swd_signal_same_net.test_mapping_order_keeps_fingerprint_and_evidence_stable"
+        "tests.test_swd_signal_same_net.test_mapping_order_keeps_fingerprint_and_evidence_stable",
+        "tests.test_design_lint_determinism_swd_signal_same_net.test_swd_fault_and_control_reports_are_hashseed_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_SWD_SIGNAL_SAME_NET_FIXTURES"

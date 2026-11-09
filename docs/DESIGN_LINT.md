@@ -3015,14 +3015,16 @@ incomplete or inconsistent pin metadata remain quiet. The check covers
 schematic net assignments only and does not prove PCB copper continuity or
 off-board wiring. Synthetic controls cover distinct nets, historical
 `SWDCLK`, ambiguous and incomplete inventories, DNP, output pin types,
-policy/ignore behavior, and mapping-order stability. CLI and MCP results are
-compared. The tooling-owned native fault/control schematics export twice with
-digest-pinned KiCad 10.0.0 and 10.0.5 images; see the
+policy/ignore behavior, mapping-order stability, and three-process
+hash-seed-stable fault/control reports. CLI and MCP results are compared. The
+tooling-owned native fault/control schematics export twice with digest-pinned
+KiCad 10.0.0 and 10.0.5 images; see the
 [fixture record](../tests/fixtures/design_lint/swd-signal-same-net/README.md).
 
 ```sh
 .venv/bin/python -I -m pytest -q tests/test_swd_signal_same_net.py \
   tests/test_design_lint_mcp_parity_swd_signal_same_net.py \
+  tests/test_design_lint_determinism_swd_signal_same_net.py \
   -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.swdio_swclk_same_net")'
 
 KICAD_RUN_NATIVE_SWD_SIGNAL_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest -q \
