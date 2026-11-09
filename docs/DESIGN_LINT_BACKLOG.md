@@ -849,9 +849,12 @@ standalone parity work when it closes a demonstrated feature regression.
   `v0.5.3rc584` attempt failed only the Markdown table-alignment rule; `rc585`
   includes the formatter correction. Function names remain clues, not authored
   requirements, and field applicability and reviewer value are unmeasured.
-- **Previous progress (LINT-348, hosted acceptance):** The default-REVIEW
-  `bus.swdio_swclk_same_net` heuristic passed its focused tests, both native
-  Docker versions, and the hosted `v0.5.3rc580` gate `42608880529`.
+- **Previous progress (LINT-348 supplemental determinism, hosted acceptance):**
+  The default-REVIEW `bus.swdio_swclk_same_net` heuristic passed its focused
+  tests and both native Docker versions. Its added fault/control reports are
+  stable across three independently hash-seeded processes. Hosted tag
+  `v0.5.3rc605` passed GitHub Actions run `42691772549`, including the scoped
+  lint gate and installed-wheel check against a separate project checkout.
 - **Previous hosted acceptance (LINT-347):** Tagged run `42597351381` passed,
   including the focused lint gate, native fixture lane, and installed-wheel
   check against a separate project checkout.
@@ -21349,7 +21352,10 @@ acceptance threads while new lint features proceed:
   tests, followed by 2 exact-version Docker tests; selector/catalog and
   architecture checks passed 6 tests. The full scoped package acceptance
   passed formatting, static checks, focused pytest, both typing targets,
-  wheel/sdist, installed-wheel, and external-template playtest stages.
+  wheel/sdist, installed-wheel, and external-template playtest stages. The
+  supplemental hosted acceptance tag `v0.5.3rc605` passed GitHub Actions run
+  `42691772549`, including scope resolution, the focused lint gate, and the
+  installed-wheel check against a separate project checkout.
 - **Selection:** Run `tests/test_swd_signal_same_net.py`,
   `tests/test_design_lint_mcp_parity_swd_signal_same_net.py`, and
   `tests/test_design_lint_determinism_swd_signal_same_net.py` with
