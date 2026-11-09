@@ -763,6 +763,15 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **Latest progress (LINT-354, local quality gate):** The LINT-353 hosted
+  attempt exposed a fixture-registration gap: the tag resolver must confirm a
+  native fixture switch is enabled in the full package-acceptance job. The
+  resolver now reads that job specifically, and a cross-rule gate checks that
+  every active rule's required native switches are declared there. A synthetic
+  control puts a different switch only in the prerelease job and confirms it
+  does not count. The focused scope, package, catalog-selector, and workflow
+  suites passed 222 tests; Ruff and Markdown checks passed. This prevents a coverage-wiring gap; it
+  does not add electrical fault detection.
 - **Latest progress (LINT-353, hosted acceptance):** Added the default-REVIEW
   `bus.i2s_clock_data_same_net` cue for a fitted U/IC with one bounded I2S
   bit-clock pin and a native serial-data pin on the same exact net. Generic SPI
@@ -777,7 +786,8 @@ standalone parity work when it closes a demonstrated feature regression.
   hosted focused gate against the external template. The earlier `rc596` tag
   correctly failed scope validation because its native fixture switch was
   absent from full acceptance; the switch is now declared in the full workflow.
-  Field precision and reviewer value remain unmeasured.
+  Acceptance-record tag `v0.5.3rc598` also passed in GitHub run
+  `42672552806`. Field precision and reviewer value remain unmeasured.
 - **Latest progress (LINT-352, hosted native acceptance):** The shared
   digest-pinned I2C address-map lane now covers
   `bus.i2c_unmapped_responder`. On the same native control schematic, the map
@@ -21454,6 +21464,34 @@ acceptance threads while new lint features proceed:
   `design_lint_rule(rule_id="bus.i2s_clock_data_same_net")`. The native lane
   is `tests/test_i2s_clock_data_same_net_native_fixture_lane.py` with
   `KICAD_RUN_NATIVE_I2S_CLOCK_DATA_SAME_NET_FIXTURES=1` and `native_kicad`.
+
+#### LINT-354 — Require active native lint fixtures in full acceptance
+
+- **Priority:** P0 release-coverage integrity; this is a tooling gate, not an
+  electrical rule.
+- **Gap:** A rule can declare an exact native fixture in its catalog while the
+  full package-acceptance job does not enable that fixture. The scoped tag
+  resolver then rejects a prerelease tag, and routine full acceptance would
+  also skip that native test.
+- **Behavior:** Read native fixture declarations from the `package` job only.
+  Cross-check the required fixture switches for every active design-lint rule
+  against that job in a `rule_gate_integrity` test included by every
+  rule-scoped prerelease gate.
+- **Controls and boundaries:** A fixture declared only in the prerelease job
+  is not considered full-acceptance coverage. A synthetic package-job
+  declaration is accepted; a prerelease-only declaration is ignored. This
+  checks workflow wiring and catalog coverage, not the electrical validity of
+  any fixture or board.
+- **Evidence:** The initial I2S clock/data tag demonstrated the missing
+  declaration. Synthetic scope tests now cover package-only versus
+  prerelease-only switches. The live catalog check covers all 312 active rules
+  and their required native fixture switches; the focused scope, package,
+  selector, workflow, and selection-architecture suites passed 222 tests.
+  Ruff and Markdown checks passed.
+- **Selection:** `tests/test_ci_lint_prerelease_workflow.py` runs in the
+  `design_lint and rule_gate_integrity` slice; the pytest-collection
+  architecture test asserts that it and the synthetic scope checks in
+  `tests/test_lint_gate_scope.py` remain included.
 
 ## Completion and release gate
 

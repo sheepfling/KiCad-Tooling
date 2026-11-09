@@ -7,6 +7,11 @@ from pathlib import Path
 
 import pytest
 
+from scripts.lint_gate_scope import (
+    configured_native_fixtures,
+    required_native_fixtures_by_rule,
+)
+
 pytestmark = [pytest.mark.design_lint, pytest.mark.catalog_lint, pytest.mark.rule_gate_integrity]
 
 
@@ -41,3 +46,18 @@ def test_lint_prerelease_skips_portability_previews_but_keeps_focused_acceptance
     assert 'python scripts/lint_gate_scope.py --tag "$GITHUB_REF_NAME"' in lint_gate
     assert '--pytest-markexpr "$PYTEST_MARKEXPR"' in lint_gate
     assert "build/acceptance-template" in lint_gate
+
+
+def test_full_acceptance_enables_every_active_rule_native_fixture() -> None:
+    repository = Path(__file__).resolve().parents[1]
+    configured = configured_native_fixtures(repository)
+    missing = {
+        rule_id: tuple(sorted(set(fixtures) - configured))
+        for rule_id, fixtures in required_native_fixtures_by_rule().items()
+        if set(fixtures) - configured
+    }
+
+    assert not missing, (
+        "Full acceptance must enable every native fixture required by active rules: "
+        f"{missing}"
+    )

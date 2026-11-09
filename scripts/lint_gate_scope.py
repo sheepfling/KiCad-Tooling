@@ -41,6 +41,9 @@ LINT_AREAS = frozenset(
 _NATIVE_FIXTURE_PATTERN = re.compile(
     r"^\s*(KICAD_RUN_NATIVE_[A-Z0-9_]+):\s*['\"]1['\"]\s*$", re.MULTILINE
 )
+_PACKAGE_JOB_PATTERN = re.compile(
+    r"^  package:\n(?P<body>.*?)(?=^  [^ \n]+:\n|\Z)", re.MULTILINE | re.DOTALL
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,7 +70,10 @@ class LintGateScope:
 def configured_native_fixtures(repository: Path) -> frozenset[str]:
     """Return fixture switches already covered by the full acceptance workflow."""
     workflow = (repository / ".github/workflows/tooling.yml").read_text(encoding="utf-8")
-    return frozenset(_NATIVE_FIXTURE_PATTERN.findall(workflow))
+    package_job = _PACKAGE_JOB_PATTERN.search(workflow)
+    if package_job is None:
+        raise ValueError("workflow does not declare the full-acceptance package job")
+    return frozenset(_NATIVE_FIXTURE_PATTERN.findall(package_job.group("body")))
 
 
 def active_design_lint_rule_ids() -> frozenset[str]:

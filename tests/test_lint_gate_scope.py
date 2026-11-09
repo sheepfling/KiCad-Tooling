@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from scripts.lint_gate_scope import (
+    configured_native_fixtures,
     main,
     parse_tag_message,
     read_message_scope,
@@ -15,11 +16,24 @@ from scripts.lint_gate_scope import (
     write_github_scope,
 )
 
-pytestmark = pytest.mark.architecture
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.catalog_lint,
+    pytest.mark.architecture,
+    pytest.mark.rule_gate_integrity,
+]
 
 _PROBE_FIXTURE = "KICAD_RUN_" + "NATIVE_PROBE_FIXTURES"
 _OTHER_FIXTURE = "KICAD_RUN_" + "NATIVE_OTHER"
 _RS485_FIXTURE = "KICAD_RUN_" + "NATIVE_RS485_DATA_LABEL_MISMATCH_FIXTURES"
+_EMPTY_PACKAGE_WORKFLOW = (
+    "name: synthetic\n"
+    "jobs:\n"
+    "  package:\n"
+    "    steps: []\n"
+    "  prerelease-lint-gate:\n"
+    "    steps: []\n"
+)
 
 
 def _git(repository: Path, *arguments: str) -> None:
@@ -36,7 +50,20 @@ def _native_fixture_message(repository: Path) -> str:
     )
     workflow = repository / ".github/workflows/tooling.yml"
     workflow.parent.mkdir(parents=True, exist_ok=True)
-    workflow.write_text(f"{_PROBE_FIXTURE}: '1'\n", encoding="utf-8")
+    workflow.write_text(
+        "jobs:\n"
+        "  package:\n"
+        "    steps:\n"
+        "      - name: full acceptance\n"
+        "        env:\n"
+        f"          {_PROBE_FIXTURE}: '1'\n"
+        "  prerelease-lint-gate:\n"
+        "    steps:\n"
+        "      - name: focused gate\n"
+        "        env:\n"
+        f"          {_OTHER_FIXTURE}: '1'\n",
+        encoding="utf-8",
+    )
     test_module = repository / "tests/test_native_probe.py"
     test_module.parent.mkdir(parents=True, exist_ok=True)
     return (
@@ -44,6 +71,13 @@ def _native_fixture_message(repository: Path) -> str:
         f"Native-Fixture: {_PROBE_FIXTURE}\n"
         "Test-Path: tests/test_native_probe.py\n"
     )
+
+
+def test_configured_native_fixtures_only_uses_full_acceptance_job(tmp_path: Path) -> None:
+    repository = tmp_path / "repository"
+    _native_fixture_message(repository)
+
+    assert configured_native_fixtures(repository) == frozenset({_PROBE_FIXTURE})
 
 
 def test_explicit_test_paths_must_select_a_native_test_guarded_by_each_fixture(
@@ -154,7 +188,7 @@ def test_annotated_area_tag_resolves_existing_test_paths_and_writes_action_outpu
     repository = tmp_path / "repository"
     workflow = repository / ".github/workflows/tooling.yml"
     workflow.parent.mkdir(parents=True)
-    workflow.write_text("name: synthetic\n", encoding="utf-8")
+    workflow.write_text(_EMPTY_PACKAGE_WORKFLOW, encoding="utf-8")
     paths = ("tests/test_probe.py", "tests/nested/test_peer.py")
     for path in paths:
         target = repository / path
@@ -233,7 +267,7 @@ def test_annotated_area_tag_rejects_a_missing_test_module(tmp_path: Path) -> Non
     repository = tmp_path / "repository"
     workflow = repository / ".github/workflows/tooling.yml"
     workflow.parent.mkdir(parents=True)
-    workflow.write_text("name: synthetic\n", encoding="utf-8")
+    workflow.write_text(_EMPTY_PACKAGE_WORKFLOW, encoding="utf-8")
     (repository / "tests").mkdir()
     _git(repository, "init", "-q")
     _git(repository, "config", "user.email", "lint-test@example.invalid")

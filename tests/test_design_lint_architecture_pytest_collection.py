@@ -35,6 +35,7 @@ def test_selector_architecture_suites_are_in_the_catalog_gate() -> None:
         assert "catalog_lint" in design_lint_markers_for_path(module)
 
 
+@pytest.mark.rule_gate_integrity
 def test_rule_gate_also_collects_cross_rule_integrity_checks() -> None:
     environment = os.environ.copy()
     environment.pop("KICAD_TEMPLATE_ROOT", None)
@@ -72,6 +73,16 @@ def test_rule_gate_also_collects_cross_rule_integrity_checks() -> None:
     )
     assert (
         "tests/test_design_lint_fixture_reachability.py::test_fixture_targets_follow_pytest_collection_names_and_class_controls"
+        in result.stdout
+    )
+    assert (
+        "tests/test_ci_lint_prerelease_workflow.py::"
+        "test_full_acceptance_enables_every_active_rule_native_fixture"
+        in result.stdout
+    )
+    assert (
+        "tests/test_lint_gate_scope.py::"
+        "test_configured_native_fixtures_only_uses_full_acceptance_job"
         in result.stdout
     )
     assert (

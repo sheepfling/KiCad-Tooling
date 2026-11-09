@@ -232,10 +232,17 @@ def test_annotated_area_and_rule_tags_resolve_scope_and_write_github_action_file
     workflow = repository / ".github/workflows/tooling.yml"
     workflow.parent.mkdir(parents=True)
     workflow.write_text(
+        "jobs:\n"
+        "  package:\n"
+        "    steps:\n"
+        "      - name: full acceptance\n"
+        "        env:\n"
         "          KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES: '1'\n"
         "          KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES: '1'\n"
         "          KICAD_RUN_NATIVE_SERIAL_PEER_FIXTURES: '1'\n"
-        "          KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES: '1'\n",
+        "          KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES: '1'\n"
+        "  prerelease-lint-gate:\n"
+        "    steps: []\n",
         encoding="utf-8",
     )
     (repository / "source.txt").write_text("synthetic\n", encoding="utf-8")
