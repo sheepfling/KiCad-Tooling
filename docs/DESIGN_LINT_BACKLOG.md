@@ -21583,12 +21583,13 @@ acceptance threads while new lint features proceed:
 
 #### LINT-355 — Validate low I2C pull-up resistance from native exports
 
-- **Status:** Implemented; the focused Python/catalog suite and the exact-version
-  native lane pass locally. Hosted acceptance for the prerelease tag is pending.
+- **Status:** Implemented; hosted acceptance for `v0.5.3rc608` passed in GitHub
+  Actions run `42700816966`.
 - **Evidence:** The focused Python/catalog selector passed 79 tests, with 120
   unrelated tests deselected. The native test passed on KiCad 10.0.0 and 10.0.5;
-  both fixtures exported twice and matched after typed normalization. Ruff,
-  Markdown lint, and repository-link checks passed.
+  both fixtures exported twice and matched after typed normalization. The hosted
+  scoped lint and installed-wheel check passed. Ruff, Markdown lint, and
+  repository-link checks passed locally.
 - **Priority:** P1 evidence completeness for an active deterministic heuristic.
 - **Gap:** `bus.i2c_low_equivalent_resistance` consumed typed native netlist
   records and had synthetic fault/control coverage, but no exact-version
