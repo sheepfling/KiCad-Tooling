@@ -770,8 +770,10 @@ standalone parity work when it closes a demonstrated feature regression.
   duplicate-utility, Markdown, strict and Windows-target Pyright, wheel/sdist
   builds, isolated wheel installation, import-origin, and CLI version checks
   also passed; `mdrepo check .` passed separately. This adds review evidence,
-  not a rule or a common-ground requirement. Reviewer value remains unmeasured;
-  hosted acceptance is pending.
+  not a rule or a common-ground requirement. Reviewer value remains unmeasured.
+  Tagged hosted acceptance passed in GitHub Actions run `42597351381`, including
+  the focused lint gate, native fixture lane, and installed-wheel check against
+  a separate project checkout.
 - **Previous hosted acceptance (LINT-346):** The tagged prerelease gate,
   including the native fixture lane and installed-wheel checks against the
   external template, passed in GitHub run `42587803194`.
@@ -21151,7 +21153,10 @@ acceptance threads while new lint features proceed:
 - **Evidence:** Focused synthetic and source-evidence tests, CLI/MCP semantic
   parity, catalog and selector reachability, plus repeated source-hashed
   exports using exact KiCad 10.0.0 and 10.0.5 Docker images. The schematic is
-  tooling-owned synthetic data; no product-board source is included.
+  tooling-owned synthetic data; no product-board source is included. Tagged
+  hosted acceptance passed in GitHub Actions run `42597351381`, including the
+  focused lint gate, native fixture lane, and installed-wheel check against a
+  separate project checkout.
 - **Selection:** Run
   `tests/test_connector_mapped_interface_signal_peer_context.py` and
   `tests/test_design_lint_mcp_parity_reviewed_peer_signal_domains.py` with
