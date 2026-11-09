@@ -769,9 +769,12 @@ standalone parity work when it closes a demonstrated feature regression.
   `0x51`. Both sources export repeatably on digest-pinned KiCad 10.0.0 and
   10.0.5. The focused selection passed 28 tests, including both Docker
   versions, selector/catalog integrity, and CLI/MCP parity; strict Pyright for
-  the new runtime adapter passed. The tag and hosted result are pending. The
-  authored address map remains the requirement; native role names or similar
-  nets do not establish a collision by themselves.
+  the new runtime adapter passed. The initial `v0.5.3rc587` hosted attempt
+  stopped at the Markdown graph gate because the fixture README had no inbound
+  link; it did not reach pytest or Docker. The README is now linked from
+  LINT-033, and hosted acceptance is pending a corrected tag. The authored
+  address map remains the requirement; native role names or similar nets do
+  not establish a collision by themselves.
 - **Latest progress (LINT-349, hosted acceptance):** Added the default-REVIEW
   `bus.i2s_clock_frame_same_net` heuristic for a fitted U/IC with one bounded
   bit-clock pin and one word-select/frame-clock pin on the same exact
@@ -16444,7 +16447,9 @@ control are documented in the
   strap values; same address on separate segments; unresolved strap; dynamic
   address; exact ignore and blocking override; DNP exclusion; invalid shared
   signal segment; CLI/MCP semantic parity. All fixtures are synthetic.
-- **Exact native fixtures:** Two synthetic fitted targets share the same
+- **Exact native fixtures:** See the
+  [native fixture guide](../tests/fixtures/design_lint/i2c-address-collision-native/README.md).
+  Two synthetic fitted targets share the same
   authored `MAIN_SDA`/`MAIN_SCL` segment. The fault assigns both A0 pins to
   `GND`, resolving both maps to `0x50`; the control assigns U2 A0 to `+3V3`,
   resolving its map to `0x51`. KiCad exports each source twice, and the
