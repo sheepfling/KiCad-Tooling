@@ -186,6 +186,12 @@ def test_swd_signal_same_net_rule_uses_its_focused_protocol_owner() -> None:
     assert owner in rule.implementation_refs
 
 
+def test_i2s_protocol_modules_stay_below_review_limit() -> None:
+    modules = tuple(HWREPO.glob("*i2s*.py"))
+    assert modules
+    assert all(_line_count(path) < IMPLEMENTATION_MAX_LINES for path in modules)
+
+
 def test_usb_c_sbu_unconnected_rule_uses_its_focused_protocol_owner() -> None:
     owner = "kicad_tooling/hwrepo/usb_c_sbu_unconnected_pin.py#unconnected_usb_c_sbu_pins"
     rule = next(

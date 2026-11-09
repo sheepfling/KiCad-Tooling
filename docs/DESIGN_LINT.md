@@ -834,7 +834,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 310 active rules.
+The catalog currently contains 311 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -3028,6 +3028,43 @@ digest-pinned KiCad 10.0.0 and 10.0.5 images; see the
 KICAD_RUN_NATIVE_SWD_SIGNAL_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest -q \
   tests/test_swd_signal_same_net_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.swdio_swclk_same_net")'
+```
+
+## Review native I2S bit clock and word select pins assigned to one net
+
+`bus.i2s_clock_frame_same_net` emits a default `review` finding when a fitted
+U/IC has a complete unique native pin inventory, exactly one bounded bit-clock
+role and one bounded word-select/frame-clock role, and both pins have one
+assignment to the same schematic net. The bounded native-function tokens are
+`BCLK`, `BCK`, `BITCLK`, `BITCLOCK`, and `SCK` for bit clock, and `LRCK`,
+`LRCLK`, `WCLK`, `WORDCLOCK`, `WORDSEL`, `WORDSELECT`, and `WS` for
+word select. The finding names the exact component, pins, native functions,
+electrical types, and shared net.
+
+These function names are clues only. A device may multiplex pins or use a
+nonstandard mode, so the check does not establish that I2S is enabled or that
+the project requires separate clock pins. Duplicate, ambiguous, DNP, open,
+multiply assigned, or incomplete endpoints stay quiet. Two native output pins
+on one net remain with ERC. Project policy can promote the prompt to `block`,
+set it `off`, or ignore one exact fingerprint. The check covers schematic net
+assignments; it does not prove PCB copper continuity or external wiring.
+
+The regression set covers shared-net fault and distinct-net control, bounded
+aliases, DNP/duplicate/ambiguous/open/incomplete endpoints, output pin types,
+policy and ignore behavior, stable evidence under mapping reordering, CLI/MCP
+parity, catalog reachability, and selector ownership. Tooling-owned synthetic
+fault/control schematics are repeated with digest-pinned KiCad 10.0.0 and
+10.0.5 Docker images; see the
+[fixture record](../tests/fixtures/design_lint/i2s-clock-frame-same-net/README.md).
+
+```sh
+.venv/bin/python -I -m pytest -q tests/test_i2s_clock_frame_same_net.py \
+  tests/test_design_lint_mcp_parity_i2s_clock_frame_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2s_clock_frame_same_net")'
+
+KICAD_RUN_NATIVE_I2S_CLOCK_FRAME_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest -q \
+  tests/test_i2s_clock_frame_same_net_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2s_clock_frame_same_net")'
 ```
 
 ## Review an SWD connector without an identified return

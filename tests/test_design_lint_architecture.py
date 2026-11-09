@@ -81,6 +81,7 @@ THEME_OWNER_PREFIXES = MappingProxyType(
             "external_protection",
             "i3c_",
             "i2c_",
+            "i2s_",
             "open_drain_",
             "rs485_",
             "serial_",

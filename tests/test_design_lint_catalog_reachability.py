@@ -12,6 +12,7 @@ import tests.component_peer_power_input_support as _component_peer_power_input_s
 import tests.connector_footprint_peer_support as _connector_footprint_peer_support
 import tests.design_lint_fixtures as _tests_design_lint_fixtures
 import tests.design_lint_fixtures.can_line_named_rail as _can_line_named_rail_fixtures
+import tests.design_lint_fixtures.catalog_reachability_signal_pairs as _signal_pair_reachability
 import tests.design_lint_fixtures.component_peer_pin_all_open as _component_peer_pin_all_open
 import tests.design_lint_fixtures.component_return_domains as _component_return_domains
 import tests.design_lint_fixtures.connector_mapped_supply_return_net as _mapped_supply_return_net
@@ -194,6 +195,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _usb_peer_reference_support.usb_peer_netlist(),
     )
     emitted = {item.rule_id for source in cases for item in candidates(source)}
+    emitted.update(_signal_pair_reachability.signal_pair_same_net_rule_ids())
     mapped_supply_source = _mapped_supply_return_net.mapped_supply_return_net_netlist()
     mapped_supply_report, _ = _mapped_supply_return_net.mapped_supply_return_net_report(
         mapped_supply_source

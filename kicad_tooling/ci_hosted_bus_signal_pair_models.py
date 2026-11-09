@@ -54,7 +54,7 @@ class SameNetCaseExpectation(StrictModel):
 class BusSignalPairFixtureExpectation(StrictModel):
     """Complete immutable contract for one shared bus-pair fixture runner."""
 
-    protocol: Literal["i2c", "i3c", "rs485", "swd", "usb", "usb-c"]
+    protocol: Literal["i2c", "i3c", "i2s", "rs485", "swd", "usb", "usb-c"]
     pair_name: Identifier
     rule_id: DesignLintRuleId
     fixture_directory: RepositoryPath

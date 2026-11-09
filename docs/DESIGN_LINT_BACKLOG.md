@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 310 rules are implemented with synthetic regression coverage.
+The following 311 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 310 active rules.
+The catalog currently contains 311 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -655,6 +655,7 @@ skipped under prerelease policy.
 - `bus.ethernet_management_generic_connector_pair_review`
 - `bus.swd_generic_connector_pair_review`
 - `bus.swdio_swclk_same_net`
+- `bus.i2s_clock_frame_same_net`
 - `bus.jtag_generic_connector_pair_review`
 - `bus.can_tx_rx_same_net`
 - `bus.can_tx_rx_label_mismatch`
@@ -21219,6 +21220,39 @@ acceptance threads while new lint features proceed:
   `design_lint_rule(rule_id="bus.swdio_swclk_same_net")`. The exact native
   lane is `tests/test_swd_signal_same_net_native_fixture_lane.py` with
   `KICAD_RUN_NATIVE_SWD_SIGNAL_SAME_NET_FIXTURES=1` and `native_kicad`.
+
+#### LINT-349 — Review native I2S bit clock and word select on one net
+
+- **Rule:** `bus.i2s_clock_frame_same_net`, default `review`.
+- **Gap:** Existing protocol same-net checks did not cover the distinct I2S
+  bit-clock and word-select/frame-clock roles. An unintended shared assignment
+  can remain a valid schematic net and pass ERC, so it deserves a bounded
+  review prompt.
+- **Behavior:** For each fitted U/IC with complete unique native pin metadata,
+  classify exactly one bit-clock function and one word-select function using
+  explicit bounded native tokens. Require one native net assignment per role
+  and prompt when both are the same net. The candidate records the exact pins,
+  function names, electrical types, and net. Two output pins remain with ERC.
+- **Controls and boundaries:** Distinct nets, DNP parts, duplicate or
+  ambiguous roles, open or multiply assigned pins, and incomplete metadata
+  stay quiet. Native names do not establish protocol use or a project
+  requirement. This check does not infer peer-connector pin intent, verify PCB
+  copper, or require common grounds. It is configurable through the existing
+  design-lint rule policy and exact finding ignore.
+- **Evidence:** Synthetic fault/control, bounded aliases, ambiguity and
+  endpoint-completeness controls, electrical-type boundaries, policy/ignore
+  behavior, mapping-order stability, CLI/MCP parity, catalog reachability,
+  selector ownership, and architecture module limits. Tooling-owned
+  schematics are exported twice with digest-pinned KiCad 10.0.0 and 10.0.5
+  Docker images; the native lane verifies normalized netlists, assignments,
+  repeatability, the expected review, and zero ERC errors. These synthetic
+  checks show the analyzer's supported behavior; they do not measure field
+  precision or reviewer value.
+- **Selection:** Run `tests/test_i2s_clock_frame_same_net.py` and
+  `tests/test_design_lint_mcp_parity_i2s_clock_frame_same_net.py` with
+  `design_lint_rule(rule_id="bus.i2s_clock_frame_same_net")`. The exact native
+  lane is `tests/test_i2s_clock_frame_same_net_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_I2S_CLOCK_FRAME_SAME_NET_FIXTURES=1` and `native_kicad`.
 
 ## Completion and release gate
 
