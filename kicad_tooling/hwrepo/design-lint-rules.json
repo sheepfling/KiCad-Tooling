@@ -3682,18 +3682,25 @@
         "tests.test_design_lint_connector_returns.test_return_named_net_is_context_not_proof_of_connector_pin_role",
         "tests.test_design_lint_connector_returns.test_shield_connection_does_not_count_as_a_signal_return",
         "tests.test_design_lint_connector_roles.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
-        "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics"
+        "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics",
+        "tests.test_connector_no_return_native_fixture_lane.test_no_return_lane_exports_only_its_fault_and_control",
+        "tests.test_connector_no_return_native_fixture_lane.test_native_no_return_fault_and_control_are_source_bound_and_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_returns.test_small_connector_is_excluded_from_missing_return_candidate",
         "tests.test_design_lint_connector_roles.test_connector_population_heuristics_ignore_dnp_instances",
         "tests.test_design_lint_connector_roles.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
-        "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics"
+        "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics",
+        "tests.test_connector_no_return_native_fixture_lane.test_no_return_lane_exports_only_its_fault_and_control",
+        "tests.test_connector_no_return_native_fixture_lane.test_native_no_return_fault_and_control_are_source_bound_and_repeatable"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_design_lint_connector_returns.test_connector_return_fingerprint_is_order_stable_and_repair_clears_candidate",
         "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_return_pins.py#connectors_without_connected_return",
@@ -7658,7 +7665,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2s_clock_data_same_net.py#i2s_clock_data_same_net_candidates",
         "kicad_tooling/hwrepo/design_lint_i2s_clock_data_candidate_evidence.py#I2sClockDataSameNetCandidate",
-        "kicad_tooling/hwrepo/i2s_endpoint_inventory.py#clock_data_endpoints",
+        "kicad_tooling/hwrepo/i2s_endpoint_inventory.py#I2sEndpointInventory",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
       ],
       "theme": "interfaces",

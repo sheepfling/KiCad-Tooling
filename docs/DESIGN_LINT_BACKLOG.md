@@ -763,6 +763,13 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **Latest progress (LINT-356, missing connector-return native coverage):** The
+  default-REVIEW `connector.no_connected_return` rule now requires a focused
+  exact-version native lane in rule-scoped acceptance. A numeric-pin fault
+  prompts for missing return-role review on J1–J4; a common `VSSA` control with
+  explicit native `GND` pin functions stays clear. This closes an acceptance
+  selection gap; it does not claim that every connector requires a local return
+  or that separate returns should be joined.
 - **Latest progress (LINT-080 v91, SWD determinism gate):** The complete
   SWDIO/SWCLK same-net fault and distinct-net control reports now run across
   three independently hash-seeded Python processes. The report hashes derive
@@ -21607,6 +21614,37 @@ acceptance threads while new lint features proceed:
   `tests/test_i2c_pullup_native_fixture_lane.py` and
   `KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES`; select it with
   `design_lint_rule(rule_id="bus.i2c_low_equivalent_resistance")`.
+
+#### LINT-356 — Require native coverage for missing connector-return review
+
+- **Status:** Implemented as a focused rule-scoped native test for the existing
+  `connector.no_connected_return` heuristic.
+- **Priority:** P1 evidence completeness for the connector-return review
+  family.
+- **Gap:** The broad connector lane already exported numeric-function DB9
+  cases, but the active rule did not declare a required native fixture. A
+  rule-scoped acceptance could therefore skip exact-version evidence for the
+  no-return-role prompt.
+- **Coverage:** Export only the synthetic `four-db9-neutral-fault` and
+  `vss-control` schematics twice on digest-pinned KiCad 10.0.0 and 10.0.5. The
+  fault must preserve numeric pin functions 7 and 9 and produce a no-connected-
+  return review for all four connectors. The control must preserve the eight
+  common VSSA assignments and explicit GND pin roles and remain clear. The rule
+  catalog now requires `KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES` and links
+  the focused test as both fault and valid control.
+- **Boundary:** The rule prompts when native connector metadata does not identify
+  a connected return role. It does not establish that a return is required,
+  that separate domains should be joined, or that PCB copper is continuous.
+  Fixtures are synthetic and tooling-owned; no project design source was used.
+- **Selection:** Run
+  `tests/test_connector_no_return_native_fixture_lane.py` with
+  `design_lint_rule(rule_id="connector.no_connected_return")`. Set
+  `KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES=1` for exact-version Docker
+  exports.
+- **Verification:** Focused selector: 1 synthetic pass, 2 native cases skipped
+  without the switch; exact Docker selector: 2 native passes on KiCad 10.0.0
+  and 10.0.5, each checking first and repeat exports. Connector native
+  registry, marker, and tag-selection checks: 121 passed.
 
 ## Completion and release gate
 

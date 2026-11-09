@@ -73,6 +73,7 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES",
         ),
         ("connector.repeated_pin_function", "KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES"),
+        ("connector.no_connected_return", "KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES"),
         (
             "connector.repeated_pin_function",
             "KICAD_RUN_NATIVE_MIXED_INTERFACE_RETURN_FIXTURES",

@@ -261,6 +261,9 @@ KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
 KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint and connector_lint and return_path_lint and design_lint_rule(rule_id="connector.repeated_pin_function")' \
   tests/test_native_db9_return_contracts.py
+KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint and connector_lint and return_path_lint and design_lint_rule(rule_id="connector.no_connected_return")' \
+  tests/test_connector_no_return_native_fixture_lane.py
 .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint and (design_lint_rule(rule_id="connector.repeated_pin_function") or evidence_lint or parity_lint)' \
   tests/test_design_lint_connector_compound_supply.py \

@@ -18,6 +18,10 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
             "tests.test_native_db9_return_contracts.test_native_db9_return_contracts_are_source_bound_and_repeatable",
             "tests.test_native_db9_return_contracts.test_db9_return_lane_exports_only_fault_and_control",
         },
+        "connector.no_connected_return": {
+            "tests.test_connector_no_return_native_fixture_lane.test_native_no_return_fault_and_control_are_source_bound_and_repeatable",
+            "tests.test_connector_no_return_native_fixture_lane.test_no_return_lane_exports_only_its_fault_and_control",
+        },
         "net.numbered_returns": {
             "tests.test_numbered_return_native_fixture_lane.test_native_numbered_pwm_return_fault_and_control_are_focused_and_repeatable",
             "tests.test_numbered_return_native_fixture_lane.test_native_ret_return_label_fault_and_control_are_focused_and_repeatable",
@@ -261,6 +265,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         rule_id: "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES" for rule_id in expected_cases_by_rule
     }
     native_fixture_by_rule["connector.repeated_pin_function"] = (
+        "KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES"
+    )
+    native_fixture_by_rule["connector.no_connected_return"] = (
         "KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES"
     )
     native_fixture_by_rule["component.unconnected_supply_pin"] = (

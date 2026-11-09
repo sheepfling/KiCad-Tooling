@@ -168,3 +168,41 @@ def db9_return_contract_fixture_lane(
     db9_control_nets = context.observed_contracts["four-db9-control", "first"].nets
     verify_db9_return_contracts(context, db9_control_nets)
     emit_connector_return_receipts(context, {})
+
+
+def connector_no_return_fixture_lane(
+    root: Path, *, project: str, image: str, log: ConnectorReturnLog
+) -> None:
+    """Run a generic-pin connector fault and named-return native control."""
+    context = prepare_connector_return_fixture_context(
+        root,
+        project=project,
+        image=image,
+        log=log,
+        case_names=("four-db9-neutral-fault", "vss-control"),
+    )
+    fault = context.reports["four-db9-neutral-fault", "first"]
+    no_return_findings = tuple(
+        finding for finding in fault.findings if finding.rule_id == "connector.no_connected_return"
+    )
+    expected_subjects = {f"J{reference}: no connected return" for reference in range(1, 5)}
+    fault_netlist = context.observed_contracts["four-db9-neutral-fault", "first"]
+    if (
+        fault.status != "REVIEW"
+        or {finding.subject for finding in no_return_findings} != expected_subjects
+        or fault_netlist.pin_functions.get("J1.7") != "7"
+        or fault_netlist.pin_functions.get("J1.9") != "9"
+    ):
+        raise ValueError("Generic-pin connector fault lost exact no-return review evidence")
+
+    control = context.reports["vss-control", "first"]
+    control_netlist = context.observed_contracts["vss-control", "first"]
+    expected_return_pins = {f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9)}
+    if (
+        control.status != "PASS"
+        or control.findings
+        or set(control_netlist.nets.get("VSSA", ())) != expected_return_pins
+        or any(control_netlist.pin_functions.get(pin) != "GND" for pin in expected_return_pins)
+    ):
+        raise ValueError("Named-return connector control no longer passes with exact pin coverage")
+    emit_connector_return_receipts(context, {})
