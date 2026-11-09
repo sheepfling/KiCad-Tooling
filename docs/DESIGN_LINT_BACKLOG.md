@@ -763,7 +763,7 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-353, local acceptance):** Added the default-REVIEW
+- **Latest progress (LINT-353, hosted acceptance):** Added the default-REVIEW
   `bus.i2s_clock_data_same_net` cue for a fitted U/IC with one bounded I2S
   bit-clock pin and a native serial-data pin on the same exact net. Generic SPI
   `SCK`/`SDO` names alone do not qualify. Synthetic fault/control, policy,
@@ -772,8 +772,12 @@ standalone parity work when it closes a demonstrated feature regression.
   passed 7 tests, the KiCad 10.0.0/10.0.5 Docker lane passed 2 tests, and the
   architecture/catalog selection passed 102 tests. Scoped `scripts/ci.py`
   acceptance also passed, including strict and Windows-target typing,
-  wheel/sdist installation, and the separate public-template playtest. Field
-  precision and reviewer value remain unmeasured.
+  wheel/sdist installation, and the separate public-template playtest. GitHub
+  prerelease run `42670550377` for `v0.5.3rc597` passed the scope resolver and
+  hosted focused gate against the external template. The earlier `rc596` tag
+  correctly failed scope validation because its native fixture switch was
+  absent from full acceptance; the switch is now declared in the full workflow.
+  Field precision and reviewer value remain unmeasured.
 - **Latest progress (LINT-352, hosted native acceptance):** The shared
   digest-pinned I2C address-map lane now covers
   `bus.i2c_unmapped_responder`. On the same native control schematic, the map
@@ -21438,9 +21442,13 @@ acceptance threads while new lint features proceed:
   selection passed 102 tests. Scoped `scripts/ci.py` acceptance passed repo-wide
   formatting, lint, module-boundary checks, Markdown and link checks, focused
   pytest, strict and Windows-target typing, wheel/sdist installation, and the
-  separate public-template playtest. The native schematics export twice and
-  verify normalized assignments, the expected review, and zero ERC errors.
-  This synthetic coverage does not measure field precision or reviewer value.
+  separate public-template playtest. The first hosted tag was rejected because
+  its native fixture switch was not declared in full acceptance; after
+  registering the switch there, GitHub run `42670550377` for `v0.5.3rc597`
+  passed the scoped gate and external-template playtest. The native schematics
+  export twice and verify normalized assignments, the expected review, and
+  zero ERC errors. This synthetic coverage does not measure field precision or
+  reviewer value.
 - **Selection:** Run `tests/test_i2s_clock_data_same_net.py` and
   `tests/test_design_lint_mcp_parity_i2s_clock_data_same_net.py` with
   `design_lint_rule(rule_id="bus.i2s_clock_data_same_net")`. The native lane
