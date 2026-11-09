@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .casefold_mapping_lookup import lookup_unique_casefold
 from .netlist_contract_models import NetlistContract
+from .regulator_component_checks import regulator_component_identity_issues
 from .regulator_passive_models import (
     RegulatorPassiveComponentRequirement,
     RegulatorPassiveTopologyMap,
@@ -14,46 +15,7 @@ def _component_issues(
     requirement: RegulatorPassiveComponentRequirement,
     observed: NetlistContract,
 ) -> tuple[str, ...]:
-    issues: list[str] = []
-    component = lookup_unique_casefold(observed.components, requirement.reference)
-    symbol = lookup_unique_casefold(observed.component_symbols, requirement.reference)
-    if component is None:
-        issues.append(f"{requirement.reference} is absent or ambiguous in the native netlist")
-    else:
-        if component.value != requirement.value:
-            issues.append(
-                f"{requirement.reference} value is {component.value!r}; expected {requirement.value!r}"
-            )
-        if component.footprint != requirement.footprint:
-            issues.append(
-                f"{requirement.reference} footprint is {component.footprint or '<empty>'}; "
-                f"expected {requirement.footprint!r}"
-            )
-        if requirement.part_id is not None and (
-            component.part_id is None
-            or component.part_id.casefold() != requirement.part_id.casefold()
-        ):
-            issues.append(
-                f"{requirement.reference} PART_ID is {component.part_id or '<missing>'}; "
-                f"expected {requirement.part_id!r}"
-            )
-    if symbol != requirement.symbol:
-        issues.append(
-            f"{requirement.reference} symbol is {symbol or '<unknown>'}; "
-            f"expected {requirement.symbol!r}"
-        )
-    if requirement.reference.casefold() in {item.casefold() for item in observed.dnp_components}:
-        issues.append(f"{requirement.reference} is marked DNP but the map requires it fitted")
-
-    actual_pins = lookup_unique_casefold(observed.component_pin_numbers, requirement.reference)
-    expected_numbers = {item.pin.rsplit(".", 1)[1].casefold() for item in requirement.pins}
-    if actual_pins is None:
-        issues.append(f"{requirement.reference} native pin inventory is unavailable or ambiguous")
-    elif {str(item).casefold() for item in actual_pins} != expected_numbers:
-        issues.append(
-            f"{requirement.reference} native pin inventory differs from the complete authored map"
-        )
-
+    issues = list(regulator_component_identity_issues(requirement, observed))
     for pin_requirement in requirement.pins:
         actual_nets = tuple(
             sorted(
@@ -124,7 +86,6 @@ def regulator_passive_pin_role_issues(
 ) -> tuple[tuple[str, tuple[str, ...]], ...]:
     """Compare only pin functions and electrical types explicitly named in the map."""
     results: list[tuple[str, tuple[str, ...]]] = []
-    dnp = {reference.casefold() for reference in observed.dnp_components}
     for topology in requirements.requirements:
         mapped_components = (
             topology.regulator,
@@ -138,35 +99,7 @@ def regulator_passive_pin_role_issues(
         seen: set[tuple[str, str, str]] = set()
         issues: set[str] = set()
         for component_requirement in mapped_components:
-            component_key = component_requirement.reference.casefold()
-            component = lookup_unique_casefold(observed.components, component_requirement.reference)
-            symbol = lookup_unique_casefold(
-                observed.component_symbols, component_requirement.reference
-            )
-            if (
-                component is None
-                or symbol != component_requirement.symbol
-                or component.value != component_requirement.value
-                or component.footprint != component_requirement.footprint
-                or (
-                    component_requirement.part_id is not None
-                    and (
-                        component.part_id is None
-                        or component.part_id.casefold() != component_requirement.part_id.casefold()
-                    )
-                )
-                or component_key in dnp
-            ):
-                continue
-            actual_numbers = lookup_unique_casefold(
-                observed.component_pin_numbers, component_requirement.reference
-            )
-            expected_numbers = {
-                pin.pin.rsplit(".", 1)[1].casefold() for pin in component_requirement.pins
-            }
-            if actual_numbers is None or {str(item).casefold() for item in actual_numbers} != (
-                expected_numbers
-            ):
+            if regulator_component_identity_issues(component_requirement, observed):
                 continue
             for pin in component_requirement.pins:
                 expected_function = pin.expected_function

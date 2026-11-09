@@ -17,6 +17,9 @@ from .design_lint_regulator_passive_candidate_evidence import (
     RegulatorPassivePinRoleFindingEvidence,
     RegulatorPassiveTopologyFindingEvidence,
 )
+from .design_lint_regulator_support_candidate_evidence import (
+    RegulatorSupportPinRoleFindingEvidence,
+)
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .net_dc_reference import ConnectorCapacitorOnlyNet
@@ -36,6 +39,7 @@ PowerCandidateSource: TypeAlias = (
     | IcDecouplingFindingEvidence
     | RegulatorPassiveTopologyFindingEvidence
     | RegulatorPassivePinRoleFindingEvidence
+    | RegulatorSupportPinRoleFindingEvidence
 )
 
 _SAME_VOLTAGE_POWER_INPUTS: DesignLintRuleId = "component.same_voltage_power_inputs_split"
@@ -51,6 +55,7 @@ _REGULATOR_PASSIVE_TOPOLOGY_MISMATCH: DesignLintRuleId = (
     "power.regulator_required_passive_topology_mismatch"
 )
 _REGULATOR_PIN_ROLE_MISMATCH: DesignLintRuleId = "power.regulator_pin_role_mismatch"
+_REGULATOR_SUPPORT_PIN_ROLE_MISMATCH: DesignLintRuleId = "power.regulator_support_pin_role_mismatch"
 
 
 def _string_tuples(values: Mapping[str, tuple[str, ...]]) -> dict[str, tuple[str, ...]]:
@@ -172,6 +177,20 @@ def project_power_candidate_evidence(
                 "topology_id": (requirement.id,),
                 "regulator": (requirement.regulator.reference,),
                 "components": source.component_references,
+                "issues": source.issues,
+                "map_sha256": (source.map_sha256,),
+            },
+        )
+    if isinstance(source, RegulatorSupportPinRoleFindingEvidence):
+        topology = source.topology
+        component = source.component
+        return CandidateEvidenceProjection(
+            rule_id=_REGULATOR_SUPPORT_PIN_ROLE_MISMATCH,
+            evidence={
+                "topology_id": (topology.id,),
+                "regulator": (topology.regulator_reference,),
+                "support_role": (component.role,),
+                "component": (component.reference,),
                 "issues": source.issues,
                 "map_sha256": (source.map_sha256,),
             },

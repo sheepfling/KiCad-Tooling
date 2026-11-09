@@ -36,6 +36,10 @@ RULE_NODE_CASES = (
         "tests/test_regulator_passive_pin_roles.py::test_same_pin_and_net_with_a_different_function_is_reviewed",
     ),
     (
+        "power.regulator_support_pin_role_mismatch",
+        "tests/test_regulator_support_pin_roles.py::test_mapped_active_support_mismatches_are_reviewed",
+    ),
+    (
         "power.named_supply_pin_on_negative_rail",
         "tests/test_power_negative_rail.py::test_named_supply_pin_on_negative_rail_is_reviewed",
     ),

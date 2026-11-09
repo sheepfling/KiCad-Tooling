@@ -12,6 +12,7 @@ from .oscillator_output_path_models import OscillatorOutputPathMap
 from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
 from .regulator_passive_models import RegulatorPassiveTopologyMap
+from .regulator_support_models import RegulatorSupportPinRoleMap
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,5 +25,6 @@ class PowerCandidateInputs:
     oscillator_output_path_map: OscillatorOutputPathMap | None
     ic_decoupling_map: IcDecouplingMap | None
     regulator_passive_topology_map: RegulatorPassiveTopologyMap | None = None
+    regulator_support_pin_role_map: RegulatorSupportPinRoleMap | None = None
     led_current_map: LedCurrentMap | None = None
     capacitor_hold_up_map: CapacitorHoldUpMap | None = None

@@ -797,7 +797,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 301 active rules.
+The catalog currently contains 302 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -3286,6 +3286,49 @@ infer an isolated converter, validate an optocoupler feedback loop, establish
 galvanic isolation, or assess PCB copper or analog performance. The synthetic
 fault/control source files are documented in the
 [regulator topology fixture README](../tests/fixtures/design_lint/regulator-required-passive-native/README.md).
+
+## Review mapped active regulator-support pin roles
+
+`power.regulator_support_pin_role_mismatch` uses a separate
+`design_lint.regulator_support_pin_role_map` for active parts such as an
+optocoupler or a secondary reference. Each entry names the regulator context,
+the independently reviewed basis, each component's exact value, symbol,
+footprint identity, and complete pin inventory. Pin expectations may state the
+selected symbol's native function, electrical type, or both:
+
+```json
+{
+  "regulator_support_pin_role_map": {
+    "schema_version": "1",
+    "basis": "Reviewed synthetic feedback-support map",
+    "requirements": [{
+      "id": "main-feedback-support",
+      "basis": "Approved project pin-role review",
+      "regulator_reference": "U1",
+      "components": [{
+        "role": "feedback isolator",
+        "reference": "U2",
+        "value": "SYNTH-ISO",
+        "symbol": "Synthetic:FeedbackIsolator",
+        "footprint": "Synthetic:SOIC-4",
+        "pins": [
+          {"pin": "U2.1", "expected_function": "IN", "expected_electrical_type": "input"},
+          {"pin": "U2.2", "expected_function": "OUT", "expected_electrical_type": "output"}
+        ]
+      }]
+    }]
+  }
+}
+```
+
+The rule compares authored fields only. It reports an absent or differently
+identified mapped component, DNP state, incomplete native pin inventory, and
+missing or mismatched native role metadata. A match does not prove the map
+against a datasheet, establish isolation or feedback connectivity, or validate
+analog behavior. Unmapped devices are not guessed. Policy can set the rule to
+`block` or `off`, or ignore one exact finding. Synthetic native cases are
+documented in the
+[support-role fixture README](../tests/fixtures/design_lint/regulator-support-pin-roles-native/README.md).
 
 ## Review a mapped signal-input divider
 

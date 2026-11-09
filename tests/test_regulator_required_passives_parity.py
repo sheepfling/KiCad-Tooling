@@ -21,6 +21,8 @@ from tests.synthetic_design_lint_project import (
 from tests.test_regulator_feedback import regulator_netlist
 from tests.test_regulator_passive_pin_roles import RULE_ID as PIN_ROLE_RULE_ID
 from tests.test_regulator_required_passives import RULE_ID, topology_map
+from tests.test_regulator_support_pin_roles import RULE_ID as SUPPORT_PIN_ROLE_RULE_ID
+from tests.test_regulator_support_pin_roles import support_map, support_netlist
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -30,8 +32,17 @@ pytestmark = [
 ]
 
 
-def _assert_cli_mcp_parity(tmp_path: Path, source, expected_rule_id: str) -> None:
-    policy = DesignLintPolicy(regulator_passive_topology_map=topology_map())
+def _assert_cli_mcp_parity(
+    tmp_path: Path,
+    source,
+    expected_rule_id: str,
+    *,
+    support_roles: bool = False,
+) -> None:
+    policy = DesignLintPolicy(
+        regulator_passive_topology_map=None if support_roles else topology_map(),
+        regulator_support_pin_role_map=support_map() if support_roles else None,
+    )
     root, native = synthetic_design_lint_project(tmp_path, policy)
     install_synthetic_netlist(native, contract_netlist_xml(source))
 
@@ -74,4 +85,14 @@ def test_authored_regulator_pin_role_rule_matches_cli_and_mcp(tmp_path: Path) ->
         tmp_path,
         regulator_netlist(fault="wrong-feedback-function", with_compensation_capacitor=True),
         PIN_ROLE_RULE_ID,
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=SUPPORT_PIN_ROLE_RULE_ID)
+def test_authored_active_regulator_support_pin_roles_match_cli_and_mcp(tmp_path: Path) -> None:
+    _assert_cli_mcp_parity(
+        tmp_path,
+        support_netlist(fault="wrong-optocoupler-function"),
+        SUPPORT_PIN_ROLE_RULE_ID,
+        support_roles=True,
     )

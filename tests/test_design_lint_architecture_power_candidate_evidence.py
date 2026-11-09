@@ -146,10 +146,16 @@ def test_authored_power_map_rules_use_bounded_source_evidence() -> None:
             "power.regulator_pin_role_mismatch",
             "kicad_tooling/hwrepo/design_lint_regulator_passive_candidate_evidence.py#RegulatorPassivePinRoleFindingEvidence",
         ),
+        "design_lint_power_regulator_support_roles.py": (
+            "regulator_support_pin_role_candidates",
+            "power.regulator_support_pin_role_mismatch",
+            "kicad_tooling/hwrepo/design_lint_regulator_support_candidate_evidence.py#RegulatorSupportPinRoleFindingEvidence",
+        ),
     }
     source_owners = (
         "design_lint_ic_decoupling_candidate_evidence.py",
         "design_lint_regulator_passive_candidate_evidence.py",
+        "design_lint_regulator_support_candidate_evidence.py",
     )
     for filename in (*source_owners, *routes):
         assert line_count(HWREPO / filename) < IMPLEMENTATION_MAX_LINES
@@ -189,6 +195,9 @@ def test_authored_power_map_rules_use_bounded_source_evidence() -> None:
             ),
             "power.regulator_pin_role_mismatch": (
                 "kicad_tooling/hwrepo/regulator_passive_checks.py#regulator_passive_pin_role_issues"
+            ),
+            "power.regulator_support_pin_role_mismatch": (
+                "kicad_tooling/hwrepo/regulator_support_checks.py#regulator_support_pin_role_issues"
             ),
         }[rule_id]
         assert expected_validation_owner in rule.implementation_refs

@@ -384,6 +384,7 @@ def prepare_evaluation(
             oscillator_output_path_map=policy.oscillator_output_path_map,
             ic_decoupling_map=policy.ic_decoupling_map,
             regulator_passive_topology_map=policy.regulator_passive_topology_map,
+            regulator_support_pin_role_map=policy.regulator_support_pin_role_map,
             capacitor_hold_up_map=policy.capacitor_hold_up_map,
             led_current_map=policy.led_current_map,
         ),

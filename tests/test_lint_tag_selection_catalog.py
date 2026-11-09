@@ -395,6 +395,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_REGULATOR_REQUIRED_PASSIVE_FIXTURES",
         ),
         (
+            "power.regulator_support_pin_role_mismatch",
+            "KICAD_RUN_NATIVE_REGULATOR_SUPPORT_PIN_ROLE_FIXTURES",
+        ),
+        (
             "power.capacitor_hold_up_below_project_minimum",
             "KICAD_RUN_NATIVE_CAPACITOR_HOLD_UP_FIXTURES",
         ),
