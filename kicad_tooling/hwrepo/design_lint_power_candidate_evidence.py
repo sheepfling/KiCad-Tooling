@@ -18,6 +18,7 @@ from .design_lint_regulator_passive_candidate_evidence import (
     RegulatorPassiveTopologyFindingEvidence,
 )
 from .design_lint_regulator_support_candidate_evidence import (
+    RegulatorSupportPinNetCoverageFindingEvidence,
     RegulatorSupportPinNetFindingEvidence,
     RegulatorSupportPinRoleFindingEvidence,
 )
@@ -42,6 +43,7 @@ PowerCandidateSource: TypeAlias = (
     | RegulatorPassivePinRoleFindingEvidence
     | RegulatorSupportPinRoleFindingEvidence
     | RegulatorSupportPinNetFindingEvidence
+    | RegulatorSupportPinNetCoverageFindingEvidence
 )
 
 _SAME_VOLTAGE_POWER_INPUTS: DesignLintRuleId = "component.same_voltage_power_inputs_split"
@@ -59,6 +61,9 @@ _REGULATOR_PASSIVE_TOPOLOGY_MISMATCH: DesignLintRuleId = (
 _REGULATOR_PIN_ROLE_MISMATCH: DesignLintRuleId = "power.regulator_pin_role_mismatch"
 _REGULATOR_SUPPORT_PIN_ROLE_MISMATCH: DesignLintRuleId = "power.regulator_support_pin_role_mismatch"
 _REGULATOR_SUPPORT_PIN_NET_MISMATCH: DesignLintRuleId = "power.regulator_support_pin_net_mismatch"
+_REGULATOR_SUPPORT_PIN_NET_COVERAGE_MISSING: DesignLintRuleId = (
+    "power.regulator_support_pin_net_map_coverage_missing"
+)
 
 
 def _string_tuples(values: Mapping[str, tuple[str, ...]]) -> dict[str, tuple[str, ...]]:
@@ -210,6 +215,20 @@ def project_power_candidate_evidence(
                 "component": (component.reference,),
                 "issues": source.issues,
                 "map_sha256": (source.map_sha256,),
+            },
+        )
+    if isinstance(source, RegulatorSupportPinNetCoverageFindingEvidence):
+        topology = source.topology
+        component = source.component
+        return CandidateEvidenceProjection(
+            rule_id=_REGULATOR_SUPPORT_PIN_NET_COVERAGE_MISSING,
+            evidence={
+                "topology_id": (topology.id,),
+                "regulator": (topology.regulator_reference,),
+                "support_role": (component.role,),
+                "component": (component.reference,),
+                "issues": source.issues,
+                "maps_sha256": (source.maps_sha256,),
             },
         )
     return CandidateEvidenceProjection(

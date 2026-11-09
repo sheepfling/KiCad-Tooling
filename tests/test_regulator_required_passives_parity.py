@@ -26,6 +26,7 @@ from tests.test_regulator_support_pin_roles import RULE_ID as SUPPORT_PIN_ROLE_R
 from tests.test_regulator_support_pin_roles import support_map, support_netlist
 
 SUPPORT_PIN_NET_RULE_ID = "power.regulator_support_pin_net_mismatch"
+SUPPORT_PIN_NET_COVERAGE_RULE_ID = "power.regulator_support_pin_net_map_coverage_missing"
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -42,10 +43,15 @@ def _assert_cli_mcp_parity(
     *,
     support_roles: bool = False,
     support_nets: bool = False,
+    support_net_coverage: bool = False,
 ) -> None:
     policy = DesignLintPolicy(
-        regulator_passive_topology_map=None if support_roles or support_nets else topology_map(),
-        regulator_support_pin_role_map=support_map() if support_roles else None,
+        regulator_passive_topology_map=(
+            None if support_roles or support_nets or support_net_coverage else topology_map()
+        ),
+        regulator_support_pin_role_map=(
+            support_map() if support_roles or support_net_coverage else None
+        ),
         regulator_support_pin_net_map=support_pin_net_map() if support_nets else None,
     )
     root, native = synthetic_design_lint_project(tmp_path, policy)
@@ -110,4 +116,14 @@ def test_authored_active_regulator_support_pin_nets_match_cli_and_mcp(tmp_path: 
         support_pin_netlist(fault="wrong-net"),
         SUPPORT_PIN_NET_RULE_ID,
         support_nets=True,
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=SUPPORT_PIN_NET_COVERAGE_RULE_ID)
+def test_active_support_role_map_without_pin_net_map_matches_cli_and_mcp(tmp_path: Path) -> None:
+    _assert_cli_mcp_parity(
+        tmp_path,
+        support_netlist(),
+        SUPPORT_PIN_NET_COVERAGE_RULE_ID,
+        support_net_coverage=True,
     )

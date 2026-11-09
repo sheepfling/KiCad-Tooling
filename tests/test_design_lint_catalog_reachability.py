@@ -90,6 +90,7 @@ from tests.power_sequence_support import (
 from tests.power_sequence_support import (
     power_sequence_netlist as synthetic_power_sequence_netlist,
 )
+from tests.regulator_support_reachability import regulator_support_rule_ids
 from tests.serial_participant_support import serial_netlist as serial_participant_netlist
 
 pytestmark = pytest.mark.design_lint
@@ -344,6 +345,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_test_regulator_feedback.regulator_feedback_map(),
     )
     emitted.update(item.rule_id for item in feedback_result.findings)
+    emitted.update(regulator_support_rule_ids())
     rc_filter_result = evaluate(
         "synthetic-rc-filter",
         _tests_design_lint_fixtures.coach(

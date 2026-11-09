@@ -10889,6 +10889,60 @@
       ]
     },
     {
+      "rule_id": "power.regulator_support_pin_net_map_coverage_missing",
+      "title": "Active regulator-support pin-to-net map coverage is incomplete",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Source-matched active support-component role map compared with optional project-authored support pin-to-net map and native component inventory",
+      "predicate": "For each active support component whose exact identity, fitted state, and complete native pin inventory match the project-authored role map, report when the separate pin-to-net map omits the regulator topology, component entry, or one or more role-mapped pins. A complete map is quiet. No expected nets are inferred.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Without an authored active support pin-role map, the rule makes no coverage claim and does not infer support components or pins.",
+        "The role and pin-to-net maps are project-authored and are not independently verified against a datasheet or application note.",
+        "Coverage of the authored maps does not establish correct pin assignments, PCB copper continuity, component conduction, isolation, analog performance, or manufacturing readiness."
+      ],
+      "fault_fixtures": [
+        "tests.test_regulator_support_pin_net_coverage.test_absent_pin_net_map_reviews_each_source_matched_role_component",
+        "tests.test_regulator_support_pin_net_coverage.test_partial_map_reviews_only_the_omitted_support_component",
+        "tests.test_regulator_support_pin_net_coverage.test_partial_pin_inventory_reviews_uncovered_role_map_pins",
+        "tests.test_regulator_support_pin_net_coverage.test_coverage_prompt_obeys_project_policy",
+        "tests.test_regulator_support_pin_net_coverage.test_exact_ignore_applies_only_while_both_authored_maps_match",
+        "tests.test_regulator_required_passives_parity.test_active_support_role_map_without_pin_net_map_matches_cli_and_mcp",
+        "tests.test_regulator_support_pin_net_coverage_native_fixture.test_native_active_support_pin_net_coverage_is_source_bound"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_regulator_support_pin_net_coverage.test_complete_pin_net_map_covers_every_source_matched_role_component",
+        "tests.test_regulator_support_pin_net_coverage.test_absent_role_map_does_not_invent_support_component_coverage"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_regulator_support_pin_net_coverage.test_map_order_changes_do_not_change_coverage_fingerprint_or_evidence",
+        "tests.test_regulator_support_pin_net_coverage.test_exact_ignore_applies_only_while_both_authored_maps_match"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/design_lint_power_regulator_support_net_coverage.py#regulator_support_pin_net_coverage_candidates",
+        "kicad_tooling/hwrepo/design_lint_regulator_support_candidate_evidence.py#RegulatorSupportPinNetCoverageFindingEvidence",
+        "kicad_tooling/hwrepo/design_lint_power_candidate_evidence.py#project_power_candidate_evidence",
+        "kicad_tooling/hwrepo/design_lint_power_candidate_evidence.py#PowerCandidate",
+        "kicad_tooling/hwrepo/regulator_support_checks.py#regulator_support_pin_net_coverage_issues",
+        "kicad_tooling/hwrepo/regulator_component_checks.py#regulator_component_identity_issues",
+        "kicad_tooling/hwrepo/regulator_support_models.py#RegulatorSupportPinRoleMap",
+        "kicad_tooling/hwrepo/regulator_support_models.py#RegulatorSupportPinNetMap",
+        "kicad_tooling/hwrepo/design_lint_policy_models.py#DesignLintPolicy",
+        "kicad_tooling/hwrepo/design_lint_power_inputs.py#PowerCandidateInputs",
+        "kicad_tooling/hwrepo/design_lint_power_candidates.py#scan_power_candidates",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
+      ],
+      "theme": "power",
+      "implementation_owner": "kicad_tooling/hwrepo/design_lint_power_regulator_support_net_coverage.py#regulator_support_pin_net_coverage_candidates",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_REGULATOR_SUPPORT_PIN_NET_COVERAGE_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "power.capacitor_hold_up_below_project_minimum",
       "title": "Mapped capacitor hold-up estimate is below the authored minimum",
       "theme": "power",

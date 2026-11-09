@@ -48,6 +48,18 @@ RULE_NODE_CASES = (
         "tests/test_regulator_support_pin_net_native_fixture.py::test_native_active_support_pin_net_faults_and_control_are_source_bound",
     ),
     (
+        "power.regulator_support_pin_net_map_coverage_missing",
+        "tests/test_regulator_support_pin_net_coverage.py::test_absent_pin_net_map_reviews_each_source_matched_role_component",
+    ),
+    (
+        "power.regulator_support_pin_net_map_coverage_missing",
+        "tests/test_regulator_required_passives_parity.py::test_active_support_role_map_without_pin_net_map_matches_cli_and_mcp",
+    ),
+    (
+        "power.regulator_support_pin_net_map_coverage_missing",
+        "tests/test_regulator_support_pin_net_coverage_native_fixture.py::test_native_active_support_pin_net_coverage_is_source_bound",
+    ),
+    (
         "power.named_supply_pin_on_negative_rail",
         "tests/test_power_negative_rail.py::test_named_supply_pin_on_negative_rail_is_reviewed",
     ),

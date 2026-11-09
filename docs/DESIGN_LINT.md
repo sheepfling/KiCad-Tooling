@@ -797,7 +797,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 303 active rules.
+The catalog currently contains 304 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -3371,6 +3371,23 @@ conduction, isolation, feedback stability, or analog performance. The pin-role
 metadata rule remains separate. Project policy can set this rule to `block` or
 `off`, or ignore one exact finding. Synthetic exact-version cases are
 documented in the
+[support pin-net fixture README](../tests/fixtures/design_lint/regulator-support-pin-nets-native/README.md).
+
+## Review missing active regulator-support pin-net map coverage
+
+`power.regulator_support_pin_net_map_coverage_missing` compares the
+source-matched active-component inventory in
+`design_lint.regulator_support_pin_role_map` with the separate
+`design_lint.regulator_support_pin_net_map`. It prompts when a role-mapped
+component or one of its role-mapped pins is absent from the pin-net map. It
+does not infer expected nets. No role map means no coverage claim, and a
+complete pin-net map is a quiet control.
+
+This is a default-`REVIEW` coverage prompt. Project policy can set it to
+`block` or `off`, or ignore one exact finding. Matching map coverage does not
+verify that either authored map is correct for the physical component, and a
+native schematic comparison does not prove PCB copper continuity or device
+behavior. Exact-version synthetic source-hashed cases are documented in the
 [support pin-net fixture README](../tests/fixtures/design_lint/regulator-support-pin-nets-native/README.md).
 
 ## Review a mapped signal-input divider

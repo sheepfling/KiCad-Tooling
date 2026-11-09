@@ -20,6 +20,9 @@ from .design_lint_power_decoupling import ic_decoupling_candidates
 from .design_lint_power_inputs import PowerCandidateInputs
 from .design_lint_power_regulator_passives import regulator_required_passive_candidates
 from .design_lint_power_regulator_pin_roles import regulator_pin_role_candidates
+from .design_lint_power_regulator_support_net_coverage import (
+    regulator_support_pin_net_coverage_candidates,
+)
 from .design_lint_power_regulator_support_nets import regulator_support_pin_net_candidates
 from .design_lint_power_regulator_support_roles import regulator_support_pin_role_candidates
 from .design_lint_types import Candidate
@@ -87,6 +90,13 @@ def scan_power_candidates(
     )
     found.extend(
         regulator_support_pin_net_candidates(observed, inputs.regulator_support_pin_net_map)
+    )
+    found.extend(
+        regulator_support_pin_net_coverage_candidates(
+            observed,
+            inputs.regulator_support_pin_role_map,
+            inputs.regulator_support_pin_net_map,
+        )
     )
     found.extend(capacitor_hold_up_candidates(observed, inputs.capacitor_hold_up_map))
     found.extend(

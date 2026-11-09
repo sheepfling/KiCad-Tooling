@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 302 rules are implemented with synthetic regression coverage.
+The following 304 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 303 active rules.
+The catalog currently contains 304 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -674,6 +674,9 @@ skipped under prerelease policy.
 - `power.regulator_feedback_mismatch`
 - `power.regulator_required_passive_topology_mismatch`
 - `power.regulator_pin_role_mismatch`
+- `power.regulator_support_pin_role_mismatch`
+- `power.regulator_support_pin_net_mismatch`
+- `power.regulator_support_pin_net_map_coverage_missing`
 - `power.capacitor_hold_up_below_project_minimum`
 - `interface.signal_divider_input_range_mismatch`
 - `filter.rc_corner_mismatch`
@@ -3819,7 +3822,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 301 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 304 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -20819,6 +20822,40 @@ acceptance threads while new lint features proceed:
   The exact native lane uses
   `tests/test_regulator_support_pin_net_native_fixture.py`,
   `KICAD_RUN_NATIVE_REGULATOR_SUPPORT_PIN_NET_FIXTURES=1`, and `native_kicad`.
+
+#### LINT-341 — Review missing active regulator-support pin-net map coverage
+
+- **Rule:** `power.regulator_support_pin_net_map_coverage_missing`, default
+  `review`.
+- **Gap:** LINT-339 can identify explicitly mapped active support components,
+  but LINT-340 only compares pin assignments when a separate pin-to-net map
+  exists. Without a coverage prompt, a missing map or an omitted component
+  could leave those assignments unreviewed without naming the coverage gap.
+- **Predicate:** For each active support component that exactly matches its
+  role-map identity, fitted state, and native pin inventory, report when the
+  separate pin-to-net map omits its regulator topology, component entry, or
+  one or more role-mapped pins. A complete map is quiet. The check never
+  guesses expected net names.
+- **Incremental value:** Synthetic cases cover an absent map, omitted
+  component, omitted pins, no role map, a complete map, policy overrides, and
+  exact ignores. The CLI/MCP parity case confirms both surfaces report the
+  same missing coverage. The exact-version native fixture confirms that the
+  active role-map components and their pins remain source-matched before the
+  prompt is emitted.
+- **Boundaries:** The role and pin-to-net maps remain project-authored and are
+  not validated against a datasheet. This check cannot discover an active
+  support component that the role map itself omits, decide which nets should
+  be expected, or establish PCB copper continuity, conduction, isolation,
+  analog behavior, or manufacturing readiness. Without a role map it makes no
+  coverage claim.
+- **Selection:** Run
+  `tests/test_regulator_support_pin_net_coverage.py` and
+  `tests/test_regulator_required_passives_parity.py` with
+  `design_lint_rule(rule_id="power.regulator_support_pin_net_map_coverage_missing")`.
+  The exact native lane uses
+  `tests/test_regulator_support_pin_net_coverage_native_fixture.py`,
+  `KICAD_RUN_NATIVE_REGULATOR_SUPPORT_PIN_NET_COVERAGE_FIXTURES=1`, and
+  `native_kicad`.
 
 ## Completion and release gate
 

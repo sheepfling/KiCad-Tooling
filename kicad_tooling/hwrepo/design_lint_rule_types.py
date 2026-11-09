@@ -252,6 +252,7 @@ DesignLintRuleId = Literal[
     "power.regulator_pin_role_mismatch",
     "power.regulator_support_pin_role_mismatch",
     "power.regulator_support_pin_net_mismatch",
+    "power.regulator_support_pin_net_map_coverage_missing",
     "power.capacitor_hold_up_below_project_minimum",
     "filter.rc_corner_mismatch",
     "pcb.decoupling_proximity",

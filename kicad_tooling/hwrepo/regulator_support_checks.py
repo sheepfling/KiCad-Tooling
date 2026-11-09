@@ -93,3 +93,55 @@ def regulator_support_pin_net_issues(
                     )
                 )
     return tuple(sorted(results, key=lambda item: (item[0].casefold(), item[1].casefold())))
+
+
+def regulator_support_pin_net_coverage_issues(
+    role_requirements: RegulatorSupportPinRoleMap,
+    net_requirements: RegulatorSupportPinNetMap | None,
+    observed: NetlistContract,
+) -> tuple[tuple[str, str, tuple[str, ...]], ...]:
+    """Find source-matched active support components missing pin-net map coverage."""
+    net_topologies = (
+        {}
+        if net_requirements is None
+        else {item.regulator_reference.casefold(): item for item in net_requirements.requirements}
+    )
+    results: list[tuple[str, str, tuple[str, ...]]] = []
+    for topology in role_requirements.requirements:
+        net_topology = net_topologies.get(topology.regulator_reference.casefold())
+        for component in topology.components:
+            if regulator_component_identity_issues(component, observed):
+                continue
+            if net_topology is None:
+                issues = (
+                    f"regulator {topology.regulator_reference} has no pin-to-net topology map",
+                )
+            else:
+                net_component = next(
+                    (
+                        item
+                        for item in net_topology.components
+                        if item.reference.casefold() == component.reference.casefold()
+                    ),
+                    None,
+                )
+                if net_component is None:
+                    issues = (f"{component.reference} has no pin-to-net map entry",)
+                else:
+                    mapped_pins = {item.pin.casefold() for item in net_component.pins}
+                    missing_pins = tuple(
+                        sorted(
+                            (
+                                item.pin
+                                for item in component.pins
+                                if item.pin.casefold() not in mapped_pins
+                            ),
+                            key=str.casefold,
+                        )
+                    )
+                    issues = (
+                        (f"pin-to-net map omits {', '.join(missing_pins)}",) if missing_pins else ()
+                    )
+            if issues:
+                results.append((topology.id, component.reference, issues))
+    return tuple(sorted(results, key=lambda item: (item[0].casefold(), item[1].casefold())))
