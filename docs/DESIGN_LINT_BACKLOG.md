@@ -21474,8 +21474,11 @@ acceptance threads while new lint features proceed:
   registering the switch there, GitHub run `42670550377` for `v0.5.3rc597`
   passed the scoped gate and external-template playtest. The native schematics
   export twice and verify normalized assignments, the expected review, and
-  zero ERC errors. This synthetic coverage does not measure field precision or
-  reviewer value.
+  zero ERC errors. The LINT-080 process-determinism extension passed hosted
+  acceptance for `v0.5.3rc601` in GitHub run `42680451164`, including the new
+  hash-seed regression, exact-version native fixtures, installed-wheel check,
+  and separate public-template playtest. This synthetic coverage does not
+  measure field precision or reviewer value.
 - **Selection:** Run `tests/test_i2s_clock_data_same_net.py` and
   `tests/test_design_lint_mcp_parity_i2s_clock_data_same_net.py` and
   `tests/test_design_lint_determinism_i2s_clock_data.py` with
