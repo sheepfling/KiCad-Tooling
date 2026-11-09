@@ -4126,8 +4126,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v89. The cross-process probe supports themed report
-  selectors and retains the complete 329-report inventory gate. Fault/control
+- **Status:** Implemented v90. The cross-process probe supports themed report
+  selectors and retains the complete 331-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -4259,6 +4259,18 @@ is not a reason by itself to expand its scope or change its default policy.
   formatting, code and architecture lint, Markdown checks, focused pytest,
   Linux and Windows typing, wheel and sdist builds, installed-wheel checks, and
   the separate public-template playtest.
+  The v90 extension adds LINT-349's complete I2S clock/word-select fault and
+  distinct-net control reports to the same three-process matrix. Their report
+  netlist hashes are derived from the typed inputs, exact role pins and shared
+  net are asserted, and the process-level case is catalogued as metamorphic
+  coverage. The full report inventory now contains 331 reports.
+  On 2026-11-09, the focused LINT-349 selection passed 8 tests, the inventory
+  and backlog selection passed 2, catalog marker/reachability/architecture/
+  collection checks passed 6, and both exact-version Docker fixtures passed.
+  Scoped `scripts/ci.py` acceptance passed formatting, code and architecture
+  lint, Markdown checks, focused pytest, Linux and Windows typing, wheel and
+  sdist builds, installed-wheel checks, and the separate public-template
+  playtest.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
@@ -21334,9 +21346,15 @@ acceptance threads while new lint features proceed:
   Docker images; the native lane verifies normalized netlists, assignments,
   repeatability, the expected review, and zero ERC errors. These synthetic
   checks show the analyzer's supported behavior; they do not measure field
-  precision or reviewer value.
+  precision or reviewer value. LINT-080 now compares its complete fault and
+  distinct-net control reports across three independently hash-seeded
+  processes, asserts the exact clock/frame pins and shared net, and verifies
+  different netlist hashes. The focused LINT-349 selection passed 8 tests,
+  both pinned Docker native fixtures passed, and scoped package acceptance
+  passed all stages.
 - **Selection:** Run `tests/test_i2s_clock_frame_same_net.py` and
-  `tests/test_design_lint_mcp_parity_i2s_clock_frame_same_net.py` with
+  `tests/test_design_lint_mcp_parity_i2s_clock_frame_same_net.py` and
+  `tests/test_design_lint_determinism_i2s_clock_frame.py` with
   `design_lint_rule(rule_id="bus.i2s_clock_frame_same_net")`. The exact native
   lane is `tests/test_i2s_clock_frame_same_net_native_fixture_lane.py` with
   `KICAD_RUN_NATIVE_I2S_CLOCK_FRAME_SAME_NET_FIXTURES=1` and `native_kicad`.

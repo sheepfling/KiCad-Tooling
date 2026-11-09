@@ -3052,14 +3052,16 @@ assignments; it does not prove PCB copper continuity or external wiring.
 The regression set covers shared-net fault and distinct-net control, bounded
 aliases, DNP/duplicate/ambiguous/open/incomplete endpoints, output pin types,
 policy and ignore behavior, stable evidence under mapping reordering, CLI/MCP
-parity, catalog reachability, and selector ownership. Tooling-owned synthetic
-fault/control schematics are repeated with digest-pinned KiCad 10.0.0 and
+parity, three-process hash-seed report stability, catalog reachability, and
+selector ownership. Tooling-owned synthetic fault/control schematics are
+repeated with digest-pinned KiCad 10.0.0 and
 10.0.5 Docker images; see the
 [fixture record](../tests/fixtures/design_lint/i2s-clock-frame-same-net/README.md).
 
 ```sh
 .venv/bin/python -I -m pytest -q tests/test_i2s_clock_frame_same_net.py \
   tests/test_design_lint_mcp_parity_i2s_clock_frame_same_net.py \
+  tests/test_design_lint_determinism_i2s_clock_frame.py \
   -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2s_clock_frame_same_net")'
 
 KICAD_RUN_NATIVE_I2S_CLOCK_FRAME_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest -q \
