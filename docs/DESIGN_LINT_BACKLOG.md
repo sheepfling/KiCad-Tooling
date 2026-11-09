@@ -21351,7 +21351,8 @@ acceptance threads while new lint features proceed:
   processes, asserts the exact clock/frame pins and shared net, and verifies
   different netlist hashes. The focused LINT-349 selection passed 8 tests,
   both pinned Docker native fixtures passed, and scoped package acceptance
-  passed all stages.
+  passed all stages. Hosted run `42684654325` for `v0.5.3rc603` passed the
+  tag-scoped gate and installed-wheel checks against the separate project.
 - **Selection:** Run `tests/test_i2s_clock_frame_same_net.py` and
   `tests/test_design_lint_mcp_parity_i2s_clock_frame_same_net.py` and
   `tests/test_design_lint_determinism_i2s_clock_frame.py` with
