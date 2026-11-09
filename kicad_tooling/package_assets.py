@@ -61,6 +61,7 @@ REQUIRED_WHEEL_ASSETS = frozenset(
         "kicad_tooling/hwrepo/connector_return_distribution_models.py",
         "kicad_tooling/hwrepo/connector_mapped_signal_sharing.py",
         "kicad_tooling/hwrepo/connector_mapped_signal_split_nets.py",
+        "kicad_tooling/hwrepo/connector_reviewed_peer_signal_split.py",
         "kicad_tooling/markdown_check/__main__.py",
         "kicad_tooling/fixtures/foreign-eagle-board.xml",
         "kicad_tooling/fixtures/scaffold-license.txt",

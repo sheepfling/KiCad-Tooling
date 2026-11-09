@@ -4171,6 +4171,49 @@
       "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_signal_split_nets.py#mapped_repeated_signal_contacts_split_nets"
     },
     {
+      "rule_id": "connector.reviewed_peer_signal_assignment_split",
+      "title": "Reviewed connector peer signals span separate native nets",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-matched connector comparison groups and KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For complete, current, source-matched connector coverage with a catalog digest, compare fitted generic native contacts with the same nonempty mapped signal name, signal role, and voltage domain inside one authored peer-assignment group. Emit one REVIEW candidate when each participating connector contributes exactly one such contact, at least two unlike native symbols participate, same-symbol peers do not already have split assignments, and the native contacts span two or more nets.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The authored peer group scopes comparison, while a repeated mapped signal and voltage domain are only review clues; split routes, isolation, or map errors may be intentional.",
+        "Only generic native functions, signal roles, non-DNP contacts with exactly one assigned net, a nonempty voltage domain, and source-matched peer groups are considered. Same-symbol splits and repeated same-signal contacts inside one connector remain with existing rules.",
+        "The rule does not require direct commoning, infer external wiring or signal direction, validate the interface map against a datasheet, or establish PCB copper continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_reviewed_peer_signal_split.test_split_generic_signal_across_unlike_reviewed_peers_needs_review",
+        "tests.test_design_lint_mcp_parity_reviewed_peer_signal_split.test_reviewed_peer_signal_split_matches_between_cli_and_mcp",
+        "tests.test_connector_reviewed_peer_signal_split_native.test_native_reviewed_peer_signal_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_reviewed_peer_signal_split.test_common_net_and_unlike_signal_domain_or_group_controls_stay_quiet",
+        "tests.test_connector_reviewed_peer_signal_split.test_named_dnp_and_non_signal_contacts_are_controls",
+        "tests.test_connector_reviewed_peer_signal_split.test_incomplete_stale_and_digestless_maps_are_controls",
+        "tests.test_design_lint_mcp_parity_reviewed_peer_signal_split.test_reviewed_peer_signal_split_matches_between_cli_and_mcp",
+        "tests.test_connector_reviewed_peer_signal_split_native.test_native_reviewed_peer_signal_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_reviewed_peer_signal_split.test_finding_is_stable_under_native_net_and_mapping_order",
+        "tests.test_connector_reviewed_peer_signal_split.test_policy_can_block_disable_or_exactly_ignore_review"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_reviewed_peer_signal_split.py#reviewed_peer_signal_assignment_splits",
+        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_reviewed_peer_signal_split.py#reviewed_peer_signal_assignment_splits"
+    },
+    {
       "rule_id": "connector.mapped_interface_shield_on_return_net",
       "title": "Mapped shield contact is assigned to a return-labeled net",
       "status": "active",

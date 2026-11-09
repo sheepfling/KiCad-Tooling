@@ -834,7 +834,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 306 active rules.
+The catalog currently contains 307 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -4029,6 +4029,52 @@ Run the exact-native lane with:
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_connector_mapped_signals_share_net_native_fixture_lane.py \
   -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_signals_share_net")'
+```
+
+## Review signal assignments across unlike reviewed connector peers
+
+`connector.reviewed_peer_signal_assignment_split` compares generic signal
+contacts on unlike connector symbols only when complete, current,
+source-matched maps place them in the same reviewed `peer_assignment_group`
+and give them the same nonempty interface signal and voltage domain. It prompts
+when each connector contributes one assigned contact and the contacts span
+different schematic nets. Repeated contacts within one connector and splits
+between peers using the same native symbol remain with the existing connector
+rules.
+
+The prompt asks whether separate routes or isolation are intentional. A peer
+group scopes the comparison; it does not require direct commoning. The check
+does not infer external wiring, validate a map against a datasheet, or prove
+PCB copper continuity. DNP contacts, named native functions, reasoned opens,
+ambiguous assignments, stale or incomplete maps, missing group review, and
+missing voltage domains are excluded. Project policy can promote the finding
+to `block`, turn it `off`, or suppress an exact fingerprint.
+
+The synthetic controls cover a common net, different mapped signals, different
+voltage domains, separate groups, same-symbol peers, named functions, DNP,
+non-signal roles, stale and incomplete evidence, policy, ignores, and mapping
+order. The exact native fault/control pair uses a tooling-owned USB-like and
+serial-like connector schematic; only the source-matched map changes between
+same-signal fault and distinct-signal control. Both exports repeat on the
+digest-pinned KiCad 10.0.0 and 10.0.5 images.
+The native input is documented in the
+[synthetic fixture README](../tests/fixtures/design_lint/reviewed-peer-signal-split/README.md).
+
+Run the focused synthetic and CLI/MCP checks with:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_connector_reviewed_peer_signal_split.py \
+  tests/test_design_lint_mcp_parity_reviewed_peer_signal_split.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.reviewed_peer_signal_assignment_split")'
+```
+
+Run the exact-native lane with:
+
+```sh
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_connector_reviewed_peer_signal_split_native.py \
+  -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.reviewed_peer_signal_assignment_split")'
 ```
 
 ## Review a mapped connector signal sharing a return net

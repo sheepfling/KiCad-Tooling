@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 306 rules are implemented with synthetic regression coverage.
+The following 307 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 306 active rules.
+The catalog currently contains 307 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -516,6 +516,7 @@ skipped under prerelease policy.
 - `connector.mapped_interface_signal_on_named_rail`
 - `connector.mapped_signals_share_net`
 - `connector.mapped_signals_split_nets`
+- `connector.reviewed_peer_signal_assignment_split`
 - `connector.mapped_interface_shield_on_return_net`
 - `connector.mapped_interface_shield_on_supply_rail`
 - `connector.mapped_interface_power_contact_unassigned`
@@ -757,7 +758,27 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-343, local prerelease checkpoint):** Added the
+- **Latest progress (LINT-344, local prerelease checkpoint):** Added the
+  default-REVIEW `connector.reviewed_peer_signal_assignment_split` prompt for
+  generic signal contacts split across unlike, source-reviewed connector peers
+  with the same mapped signal and voltage domain. The authored peer group
+  scopes review but does not assert that the nets must be common. Synthetic
+  fault/control cases, policy and ignore behavior, stale and incomplete map
+  controls, CLI/MCP parity, catalog reachability, and deterministic netlist
+  ordering are covered. The digest-pinned Docker fault/control exports passed
+  on KiCad 10.0.0 and 10.0.5. Focused regression and catalog selections passed
+  83 and 134 tests respectively, with one overlapping reachability test; the
+  no-Docker selection skipped its two native cases. The full rule-scoped local
+  acceptance enabled Docker and passed 30 tests, with 7,794 unrelated tests
+  deselected. Ruff, documentation, module-boundary and shared-utility checks,
+  strict Pyright, Windows-target Pyright, wheel and sdist builds, isolated
+  wheel installation, and external template inventory/surface/verify/playtest
+  passed against template commit
+  `5ca79bedf665a9b6577d96b1d47f13ccd518c968`. The new schematic fixture is
+  tooling-owned and contains no product-board source. This establishes a new
+  synthetic review pattern; field applicability and reviewer value remain
+  unmeasured. Hosted tag acceptance is pending.
+- **Earlier progress (LINT-343, local prerelease checkpoint):** Added the
   default-REVIEW `connector.reviewed_peer_passive_power_input_open` prompt for
   a source-matched, roleless passive contact left open beside its assigned
   unlike connector peer. The existing split-net predicate now shares the
@@ -3842,7 +3863,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 306 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 307 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -20966,6 +20987,49 @@ acceptance threads while new lint features proceed:
   `design_lint_rule(rule_id="connector.reviewed_peer_passive_power_input_open")`.
   The exact native lane uses `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` and
   `native_kicad`.
+
+#### LINT-344 — Review split mapped signal assignments across unlike reviewed connector peers
+
+- **Rule:** `connector.reviewed_peer_signal_assignment_split`, default
+  `review`.
+- **Gap:** `connector.mapped_signals_split_nets` compares repeated mapped
+  signal contacts within one connector. Generic pins on unlike USB-like and
+  serial-like connector symbols can map to the same interface signal and
+  voltage domain while receiving different schematic nets; the existing
+  within-connector rule has no finding for that pattern.
+- **Predicate:** Require complete current connector coverage and source-matched
+  peer-assignment groups. Compare fitted generic native contacts mapped to the
+  exact same nonempty signal and voltage domain. A connector must contribute
+  exactly one contact for that signal/domain, at least two unlike native
+  symbols must participate, and each same-symbol subset must already agree on
+  one net. Emit one REVIEW candidate when the participating symbols span
+  multiple native nets. Opens remain with the mapped-signal assignment rules.
+- **Incremental value:** A synthetic two-connector baseline returned no
+  findings for different net assignments despite complete source-matched maps
+  and a shared peer group. The fault is solely across unlike symbols; controls
+  keep a common net quiet and separate signal, domain, group, native-symbol,
+  role, DNP, function, and map evidence quiet. This establishes a new review
+  pattern, not a confirmed electrical defect or reviewer-value measurement.
+- **Boundaries:** The peer group scopes review but does not require commoning.
+  A same signal/domain can intentionally split across series elements,
+  isolation, or separate routes. This rule does not infer direction or off-board
+  wiring, validate maps against a datasheet, or establish PCB copper continuity.
+  Same-symbol pin comparisons and repeated contacts within one connector remain
+  with existing rules. The default can be promoted to `block`, turned `off`, or
+  suppressed by an exact fingerprint.
+- **Evidence:** Synthetic fault/control, peer scope/domain/signal controls,
+  named-function and DNP exclusions, incomplete/stale/digestless coverage,
+  policy and exact-ignore cases, stable ordering/rename behavior, CLI/MCP
+  semantic parity, and repeated source-hashed native exports on exact KiCad
+  10.0.0 and 10.0.5 images. The fixture is a tooling-owned schematic and
+  contains no product-board source.
+- **Selection:** Run
+  `tests/test_connector_reviewed_peer_signal_split.py` and
+  `tests/test_design_lint_mcp_parity_reviewed_peer_signal_split.py` with
+  `design_lint_rule(rule_id="connector.reviewed_peer_signal_assignment_split")`.
+  The native lane uses
+  `tests/test_connector_reviewed_peer_signal_split_native.py`,
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, and `native_kicad`.
 
 ## Completion and release gate
 
