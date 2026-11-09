@@ -5,6 +5,10 @@ from __future__ import annotations
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageReport, ConnectorMappedPinEvidence
 from .connector_identity import pin_function_is_generic
+from .connector_reviewed_peer_signal_evidence import (
+    ReviewedPeerSignalAssignmentContext,
+    reviewed_peer_signal_assignment_context,
+)
 from .design_lint_connector_mapped_interface_candidate_evidence import (
     MappedInterfacePinCandidate,
     MappedInterfacePinFindingEvidence,
@@ -44,6 +48,7 @@ def _mapped_interface_candidate(
     subject: str,
     message: str,
     excluded_pins: frozenset[str] = frozenset(),
+    peer_signal_context: ReviewedPeerSignalAssignmentContext | None = None,
 ) -> MappedInterfacePinCandidate:
     """Build one typed finding from the matched source pin and its rule context."""
     label_clue = named_rail_role_clue(mapped.nets[0]) if mapped.nets else None
@@ -54,6 +59,7 @@ def _mapped_interface_candidate(
         rule_id=rule_id,
         net_label_role_clue=label_clue,
         excluded_pins=excluded_pins,
+        peer_signal_context=peer_signal_context,
     )
     return MappedInterfacePinCandidate.from_source_evidence(
         source,
@@ -85,6 +91,29 @@ def unassigned_mapped_interface_signal_pins(
         ):
             continue
 
+        peer_context = reviewed_peer_signal_assignment_context(observed, coverage, mapped)
+        message = (
+            f"The source-matched interface maps this pin to {mapped.interface_signal}, but the "
+            "native netlist assigns it to no net. Review whether the contact needs a board "
+            "connection or is intentionally open; record an explicit unconnected-pin reason "
+            "for an intentional open. This check does not prove the chosen net is electrically "
+            "correct or that PCB copper is continuous."
+        )
+        if peer_context is not None:
+            peer_assignments = ", ".join(
+                f"{assignment.component_pin} -> {assignment.net}"
+                for assignment in peer_context.assignments
+            )
+            message = (
+                f"The source-matched interface maps this pin to {mapped.interface_signal}, but "
+                f"the native netlist assigns it to no net. Other current reviewed peer "
+                f"contacts {peer_assignments} map signal {mapped.interface_signal!r} in voltage "
+                f"domain {mapped.voltage_domain!r}. Review "
+                "whether this contact needs a board connection or is intentionally open. Peer "
+                "grouping does not require commoning, validate a selected net, or prove PCB "
+                "copper continuity."
+            )
+
         results.append(
             _mapped_interface_candidate(
                 observed,
@@ -92,11 +121,8 @@ def unassigned_mapped_interface_signal_pins(
                 mapped,
                 rule_id=RULE_ID,
                 subject=f"{pin}: reviewed signal contact has no net assignment",
-                message=f"The source-matched interface maps this pin to {mapped.interface_signal}, "
-                "but the native netlist assigns it to no net. Review whether the contact "
-                "needs a board connection or is intentionally open; record an explicit "
-                "unconnected-pin reason for an intentional open. This check does not prove "
-                "the chosen net is electrically correct or that PCB copper is continuous.",
+                message=message,
+                peer_signal_context=peer_context,
             )
         )
     return tuple(results)

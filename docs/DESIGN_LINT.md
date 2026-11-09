@@ -3766,6 +3766,44 @@ to report suspicious net splits independently. Synthetic controls show that
 two returns on one net and two returns on separate nets have the same ratio
 result; the latter can still produce that separate repeated-return review.
 
+## Review an unassigned mapped signal contact
+
+`connector.mapped_interface_signal_unassigned` asks for review when a fitted,
+generic signal contact has no native net assignment and no
+`unconnected_pin_reasons` entry in a complete, current connector interface
+map. This existing finding can include additional context when another current
+peer contact has the same mapped signal, voltage-domain identifier, and
+reviewed peer group. The report names each assigned peer pin and its exact
+native net so the reviewer can compare the open contact with the mapped peers.
+Evidence retains the peer group and basis, peer reference and pin, matched
+signal and voltage domain, and per-pin native net assignment.
+
+Peer grouping is review context. It does not say the contacts must share a net,
+validate the selected net, prove schematic intent, or establish PCB copper or
+off-board continuity. Different peer contacts may intentionally use separate
+nets. DNP connectors, stale or incomplete maps, ambiguous peer assignments,
+and pins with a documented intentional-open reason do not supply peer context;
+the documented-open target itself stays quiet. Project policy can leave the
+rule at `review`, set it to `block` or `off`, or ignore an exact finding
+fingerprint.
+
+The tooling-owned native fixture leaves J2.7 open beside assigned J1.2 and
+repeats the export on exact KiCad 10.0.0 and 10.0.5 images. A current
+intentional-open reason is the control over the same native export. See the
+[fixture note](../tests/fixtures/design_lint/mapped-interface-peer-context-native/README.md).
+
+Select the focused synthetic, CLI/MCP, and exact-native cases with:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_mapped_interface_signal_peer_context.py \
+  tests/test_design_lint_mcp_parity_reviewed_peer_signal_domains.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")'
+
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_connector_mapped_interface_signal_peer_context_native.py \
+  -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")'
+```
+
 ## Review an unassigned mapped shield contact
 
 `connector.mapped_interface_shield_unassigned` uses the `shield` role from a

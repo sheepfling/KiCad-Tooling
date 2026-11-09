@@ -8,6 +8,10 @@ from typing import Literal, TypeAlias
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageReport, ConnectorMappedPinEvidence
 from .connector_identity import pin_function_is_generic
+from .connector_reviewed_peer_signal_evidence import (
+    ReviewedPeerSignalAssignmentContext,
+    reviewed_peer_signal_assignment_context,
+)
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .named_rail_roles import NamedRailRoleClue, named_rail_role_clue
 from .netlist_contract_models import NetlistContract
@@ -45,6 +49,7 @@ class MappedInterfacePinFindingEvidence:
     rule_id: MappedInterfacePinRule
     net_label_role_clue: NamedRailRoleClue | None = None
     excluded_pins: frozenset[str] = frozenset()
+    peer_signal_context: ReviewedPeerSignalAssignmentContext | None = None
 
     def __post_init__(self) -> None:
         if self.rule_id not in {
@@ -120,6 +125,18 @@ class MappedInterfacePinFindingEvidence:
         }:
             raise ValueError("Native power pins cannot support an unassigned signal finding")
 
+        expected_peer_context = (
+            reviewed_peer_signal_assignment_context(
+                self.observed,
+                self.coverage,
+                self.mapped_pin,
+            )
+            if self.rule_id == _UNASSIGNED_SIGNAL
+            else None
+        )
+        if self.peer_signal_context != expected_peer_context:
+            raise ValueError("Mapped signal peer context must match current source evidence")
+
         actual_clue = None
         if not unassigned:
             actual_clue = named_rail_role_clue(self.mapped_pin.nets[0])
@@ -165,6 +182,23 @@ def project_mapped_interface_pin_evidence(
     evidence["assigned_nets"] = tuple(mapped.nets)
     if source.net_label_role_clue is not None:
         evidence["net_label_role_clue"] = (f"{source.net_label_role_clue} label",)
+    if source.peer_signal_context is not None:
+        context = source.peer_signal_context
+        evidence.update(
+            {
+                "peer_assignment_group": (context.group,),
+                "peer_assignment_basis": context.group_basis,
+                "peer_component_reference": tuple(
+                    assignment.reference for assignment in context.assignments
+                ),
+                "peer_component_pin": tuple(
+                    assignment.component_pin for assignment in context.assignments
+                ),
+                "peer_interface_signal": (str(mapped.interface_signal),),
+                "peer_interface_voltage_domain": (str(mapped.voltage_domain),),
+                "peer_assigned_nets": tuple(assignment.net for assignment in context.assignments),
+            }
+        )
     evidence["interface_catalog_sha256"] = (str(source.coverage.interface_catalog_sha256),)
     return CandidateEvidenceProjection(rule_id=source.rule_id, evidence=evidence)
 

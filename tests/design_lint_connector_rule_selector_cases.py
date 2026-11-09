@@ -4,6 +4,38 @@ from __future__ import annotations
 
 CONNECTOR_RULE_NODE_CASES = (
     (
+        "connector.mapped_interface_signal_unassigned",
+        "tests/test_connector_mapped_interface_signal_peer_context.py::test_open_mapped_signal_reports_current_peer_assignment_context",
+    ),
+    (
+        "connector.mapped_interface_signal_unassigned",
+        "tests/test_connector_mapped_interface_signal_peer_context.py::test_multiple_current_peers_keep_each_pin_paired_with_its_native_net",
+    ),
+    (
+        "connector.mapped_interface_signal_unassigned",
+        "tests/test_connector_mapped_interface_signal_peer_context.py::test_peer_context_requires_matching_current_signal_domain_and_group",
+    ),
+    (
+        "connector.mapped_interface_signal_unassigned",
+        "tests/test_connector_mapped_interface_signal_peer_context.py::test_open_or_dnp_peers_do_not_supply_assignment_context",
+    ),
+    (
+        "connector.mapped_interface_signal_unassigned",
+        "tests/test_connector_mapped_interface_signal_peer_context.py::test_documented_intentional_open_removes_target_finding",
+    ),
+    (
+        "connector.mapped_interface_signal_unassigned",
+        "tests/test_connector_mapped_interface_signal_peer_context.py::test_peer_context_evidence_is_stable_under_native_input_order",
+    ),
+    (
+        "connector.mapped_interface_signal_unassigned",
+        "tests/test_design_lint_mcp_parity_reviewed_peer_signal_domains.py::test_open_mapped_peer_signal_context_matches_between_cli_and_mcp",
+    ),
+    (
+        "connector.mapped_interface_signal_unassigned",
+        "tests/test_connector_mapped_interface_signal_peer_context_native.py::test_native_open_mapped_signal_peer_context_and_reasoned_control",
+    ),
+    (
         "connector.reviewed_peer_passive_power_input_open",
         "tests/test_connector_reviewed_peer_power_input_split.py::test_unassigned_passive_power_input_peer_contact_needs_review",
     ),

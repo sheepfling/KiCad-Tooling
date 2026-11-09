@@ -760,22 +760,21 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-346, local acceptance):** Added the default-REVIEW
-  `connector.reviewed_peer_distinct_signals_shared_net` prompt for different
-  mapped signal names assigned to one exact net across separate
-  source-matched peer connectors. Existing `connector.mapped_signals_share_net`
-  covers distinct mapped contacts within one connector; this gate closes the
-  across-connector case. The selected synthetic and CLI/MCP checks passed 8
-  tests; the exact Docker native fault/control export passed on KiCad 10.0.0
-  and 10.0.5. The full rule-scoped acceptance passed 30 selected tests with
-  7,816 deselected, Ruff, Alphus boundary and duplicate-utility checks, docs,
-  strict Pyright, Windows-target Pyright, wheel/sdist/install checks, and
-  external inventory/surface/verify/playtest against template commit
-  `5ca79bedf665a9b6577d96b1d47f13ccd518c968`. The report and catalog expose
-  this as configurable REVIEW only; electrical applicability and reviewer
-  value remain unmeasured. The tagged prerelease gate, including the native
-  fixture lane and installed-wheel checks against the external template,
-  passed in GitHub run `42587803194`.
+- **Latest progress (LINT-347, local acceptance):** Improved the existing
+  `connector.mapped_interface_signal_unassigned` finding with current,
+  source-matched peer assignments when the peer group, signal, and voltage
+  domain match. The scoped package gate passed 15 tests (4 native parameter
+  cases skipped in that non-Docker run), the exact Docker-native set passed 10
+  tests across five signal-check scenarios, the selector suite passed 8 tests,
+  and catalog/marker architecture checks passed. Ruff, module-boundary,
+  duplicate-utility, Markdown, strict and Windows-target Pyright, wheel/sdist
+  builds, isolated wheel installation, import-origin, and CLI version checks
+  also passed; `mdrepo check .` passed separately. This adds review evidence,
+  not a rule or a common-ground requirement. Reviewer value remains unmeasured;
+  hosted acceptance is pending.
+- **Previous hosted acceptance (LINT-346):** The tagged prerelease gate,
+  including the native fixture lane and installed-wheel checks against the
+  external template, passed in GitHub run `42587803194`.
 - **Earlier progress (LINT-345, local acceptance):** Added the default-REVIEW
   `connector.reviewed_peer_signal_domain_shared_net` prompt for generic signal
   contacts in one source-reviewed peer group that share an exact native net
@@ -3878,7 +3877,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 307 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 309 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -21124,6 +21123,41 @@ acceptance threads while new lint features proceed:
   `design_lint_rule(rule_id="connector.reviewed_peer_distinct_signals_shared_net")`.
   The native lane uses
   `tests/test_connector_reviewed_peer_distinct_signals_native.py`,
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, and `native_kicad`.
+
+#### LINT-347 — Add current peer assignments to open mapped-signal evidence
+
+- **Rule:** Existing `connector.mapped_interface_signal_unassigned`, default
+  `review`; this is an evidence-quality increment and does not add a rule.
+- **Gap:** The existing check already found an open mapped signal contact, but
+  its report did not show whether another source-matched connector in the same
+  reviewed group, signal, and voltage domain had an assignment. That made the
+  reviewer retrieve and compare peer findings manually.
+- **Behavior:** Keep the existing open-contact predicate. When complete,
+  digest-bound source evidence identifies one or more matching generic peer
+  contacts with one exact native net per contact, include the reference, pin,
+  and net assignments in that same finding. Preserve each peer-to-net pairing;
+  peers may be assigned to different nets. No peer context is emitted when
+  current maps do not match or peer assignments are ambiguous.
+- **Incremental value:** The primary lint still detects the same open pin; the
+  gain is localized evidence for review. This does not claim new fault
+  detection, reviewer time saved, or a confirmed electrical defect.
+- **Controls and boundaries:** Different signal, domain, or peer group; DNP
+  peers; all peers open; stale, incomplete, or digestless maps; and an explicit
+  intentional-open reason are controls. Peer grouping does not require
+  commoning, select the correct net, validate the map against a datasheet, or
+  establish PCB continuity. The finding remains configurable by the existing
+  rule policy and exact fingerprint ignore.
+- **Evidence:** Focused synthetic and source-evidence tests, CLI/MCP semantic
+  parity, catalog and selector reachability, plus repeated source-hashed
+  exports using exact KiCad 10.0.0 and 10.0.5 Docker images. The schematic is
+  tooling-owned synthetic data; no product-board source is included.
+- **Selection:** Run
+  `tests/test_connector_mapped_interface_signal_peer_context.py` and
+  `tests/test_design_lint_mcp_parity_reviewed_peer_signal_domains.py` with
+  `design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")`.
+  The exact native lane uses
+  `tests/test_connector_mapped_interface_signal_peer_context_native.py`,
   `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, and `native_kicad`.
 
 ## Completion and release gate

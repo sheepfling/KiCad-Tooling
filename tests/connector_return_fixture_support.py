@@ -69,6 +69,10 @@ def connector_return_fixture_contracts() -> dict[str, NetlistContract]:
             "mapped-distinct-signals-share-net": _mapped_signal_assignments(shared=True),
             "mapped-same-signal-split-nets": _mapped_signal_assignments(shared=False),
             "reviewed-peer-signal-split": peer_signal_netlist(),
+            "mapped-interface-peer-context-open": peer_signal_netlist(
+                nets=("SHARED_RX_NET", "SHARED_RX_NET"),
+                open_pins=("J2.7",),
+            ),
             "reviewed-peer-signal-domain-shared-net": peer_signal_netlist(
                 nets=("SHARED_RX_NET", "SHARED_RX_NET")
             ),

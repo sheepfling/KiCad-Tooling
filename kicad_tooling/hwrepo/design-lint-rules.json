@@ -3805,6 +3805,10 @@
       "fault_fixtures": [
         "tests.test_connector_mapped_interface_signal_unassigned.test_open_generic_mapped_signal_pin_requests_review_with_source_evidence",
         "tests.test_connector_mapped_interface_signal_unassigned.test_native_mapped_signal_pin_fault_and_control_are_repeatable",
+        "tests.test_connector_mapped_interface_signal_peer_context.test_open_mapped_signal_reports_current_peer_assignment_context",
+        "tests.test_connector_mapped_interface_signal_peer_context.test_multiple_current_peers_keep_each_pin_paired_with_its_native_net",
+        "tests.test_connector_mapped_interface_signal_peer_context_native.test_native_open_mapped_signal_peer_context_and_reasoned_control",
+        "tests.test_design_lint_mcp_parity_reviewed_peer_signal_domains.test_open_mapped_peer_signal_context_matches_between_cli_and_mcp",
         "tests.test_design_lint_mcp_parity_mapped_interface_signal.test_mapped_interface_signal_review_cli_mcp_parity"
       ],
       "valid_control_fixtures": [
@@ -3812,10 +3816,16 @@
         "tests.test_connector_mapped_interface_signal_unassigned.test_source_mismatched_or_digestless_coverage_cannot_trigger_review",
         "tests.test_connector_mapped_interface_signal_unassigned.test_review_obeys_project_policy_and_exact_ignore",
         "tests.test_connector_mapped_interface_signal_unassigned.test_native_mapped_signal_pin_fault_and_control_are_repeatable",
+        "tests.test_connector_mapped_interface_signal_peer_context.test_peer_context_requires_matching_current_signal_domain_and_group",
+        "tests.test_connector_mapped_interface_signal_peer_context.test_open_or_dnp_peers_do_not_supply_assignment_context",
+        "tests.test_connector_mapped_interface_signal_peer_context.test_documented_intentional_open_removes_target_finding",
+        "tests.test_connector_mapped_interface_signal_peer_context_native.test_native_open_mapped_signal_peer_context_and_reasoned_control",
+        "tests.test_design_lint_mcp_parity_reviewed_peer_signal_domains.test_open_mapped_peer_signal_context_matches_between_cli_and_mcp",
         "tests.test_design_lint_mcp_parity_mapped_interface_signal.test_mapped_interface_signal_review_cli_mcp_parity"
       ],
       "metamorphic_fixtures": [
-        "tests.test_connector_mapped_interface_signal_unassigned.test_review_is_stable_under_input_order_and_clears_when_connected"
+        "tests.test_connector_mapped_interface_signal_unassigned.test_review_is_stable_under_input_order_and_clears_when_connected",
+        "tests.test_connector_mapped_interface_signal_peer_context.test_peer_context_evidence_is_stable_under_native_input_order"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"

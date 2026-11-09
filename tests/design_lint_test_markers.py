@@ -182,6 +182,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_connector_footprint_peer_metadata_evidence.py",
                 "tests/test_design_lint_architecture_connector_footprint_peer_metadata_evidence.py",
                 "tests/test_connector_footprint_named_open_candidate_evidence.py",
+                "tests/test_connector_mapped_interface_signal_peer_context_native.py",
                 "tests/test_design_lint_architecture_connector_footprint_named_open_evidence.py",
                 "tests/test_connector_unanchored_scope_candidate_evidence.py",
                 "tests/test_design_lint_architecture_connector_unanchored_scope_candidate_evidence.py",
