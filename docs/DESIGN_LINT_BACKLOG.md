@@ -768,7 +768,7 @@ standalone parity work when it closes a demonstrated feature regression.
   `+3V3`; an authored map expecting `0x50` must prompt for observed `0x51`,
   while the corrected map stays clear. The same native source evidence also
   retains the LINT-350 collision fault/control. Hosted acceptance passed in
-  [run 42647421033](https://github.com/sheepfling/KiCad-Tooling/actions/runs/42647421033).
+  GitHub Actions run `42647421033`.
   The map is explicit project intent; no address is inferred from a reference
   or symbol name.
 - **Latest progress (LINT-350, hosted acceptance):** Added exact native
@@ -21346,8 +21346,8 @@ acceptance threads while new lint features proceed:
   KiCad 10.0.0 and 10.0.5. Catalog, native-gate, tag-selection, and theme
   architecture checks passed 139 tests. The tagged hosted mismatch gate and
   installed-wheel/template acceptance passed in
-  [run 42647421033](https://github.com/sheepfling/KiCad-Tooling/actions/runs/42647421033)
-  from `v0.5.3rc591` at commit `44acb2debe3a528de36e5790ef93ae98d6890429`.
+  GitHub Actions run `42647421033` passed from `v0.5.3rc591` at commit
+  `44acb2debe3a528de36e5790ef93ae98d6890429`.
   The exact native selection uses
   `tests/test_i2c_address_map_native_fixture_lane.py` with
   `KICAD_RUN_NATIVE_I2C_ADDRESS_MAP_FIXTURES=1`, marker
