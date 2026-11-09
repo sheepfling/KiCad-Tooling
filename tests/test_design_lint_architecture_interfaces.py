@@ -78,12 +78,10 @@ I2C_GENERIC_CONNECTOR_MODULES = (
 
 I3C_CONNECTOR_RETURN_MODULES = ("connector_return_i3c_review.py",)
 
-SWD_GENERIC_CONNECTOR_MODULES = (
-    "bus_swd_generic_connector.py",
-    "swd_generic_connector_models.py",
-    "design_lint_swd_generic_connector_candidate_evidence.py",
-    "design_lint_swd_generic_connector_candidates.py",
-    "design_lint_bus_candidates.py",
+SWD_SIGNAL_SAME_NET_MODULES = (
+    "swd_same_net.py",
+    "design_lint_swd_same_net_candidate_evidence.py",
+    "swd_endpoint_inventory.py",
 )
 
 SERIAL_PEER_ANALYSIS_MODULES = (
@@ -172,25 +170,20 @@ def test_i3c_connector_return_rule_stays_in_a_focused_protocol_module() -> None:
     assert rule.implementation_owner in rule.implementation_refs
 
 
-def test_swd_generic_connector_pair_rule_stays_in_focused_modules() -> None:
-    modules = [HWREPO / name for name in SWD_GENERIC_CONNECTOR_MODULES]
-    rule = next(
-        item
-        for item in rule_catalog().rules
-        if item.rule_id == "bus.swd_generic_connector_pair_review"
-    )
+def test_swd_signal_same_net_rule_uses_its_focused_protocol_owner() -> None:
+    modules = [HWREPO / name for name in SWD_SIGNAL_SAME_NET_MODULES]
+    rule = next(item for item in rule_catalog().rules if item.rule_id == "bus.swdio_swclk_same_net")
     module_sizes = {path.name: _line_count(path) for path in modules if path.is_file()}
     oversized = {
         name: lines for name, lines in module_sizes.items() if lines >= IMPLEMENTATION_MAX_LINES
     }
+    owner = "kicad_tooling/hwrepo/swd_same_net.py#swdio_swclk_same_net_candidates"
 
-    assert len(module_sizes) == len(SWD_GENERIC_CONNECTOR_MODULES)
-    assert not oversized, f"SWD connector-pair modules reached the review limit: {oversized}"
+    assert len(module_sizes) == len(SWD_SIGNAL_SAME_NET_MODULES)
+    assert not oversized, f"SWD signal same-net modules reached the review limit: {oversized}"
     assert rule.theme == "interfaces"
-    assert rule.implementation_owner == (
-        "kicad_tooling/hwrepo/bus_swd_generic_connector.py#generic_swd_connector_pairs"
-    )
-    assert rule.implementation_owner in rule.implementation_refs
+    assert rule.implementation_owner == owner
+    assert owner in rule.implementation_refs
 
 
 def test_usb_c_sbu_unconnected_rule_uses_its_focused_protocol_owner() -> None:
