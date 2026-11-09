@@ -762,24 +762,23 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-348, local acceptance):** Added the default-REVIEW
-  `bus.swdio_swclk_same_net` heuristic for a fitted U/IC whose complete native
-  inventory identifies one SWDIO and one SWCLK/SWDCLK pin on the same exact
-  schematic net. Findings retain the role pins, native functions, electrical
-  types, and net. Duplicate, open, ambiguous, incomplete, and DNP endpoints
-  remain quiet; two native output pins are left to ERC. Synthetic fault,
-  distinct-net and metadata controls, policy/ignore behavior, ordering,
-  CLI/MCP parity, catalog reachability, and selector architecture passed. The
-  focused gate passed 65 tests with 4 environment-gated native cases skipped;
-  the dedicated digest-pinned Docker lane passed 2 tests on KiCad 10.0.0 and
-  10.0.5 with repeatable exports and zero ERC errors. Ruff, formatting, and
-  strict Pyright on the changed runtime modules passed. The scoped package
-  gate also passed source/wheel builds, installed-wheel origin/version checks,
-  and the external-template inventory, verify, and playtest stages. The
-  pre-existing SWD generic-connector Docker regression passed 2 tests after the
-  shared inventory refactor. This is a configurable review heuristic; project
-  intent, field applicability, false-positive rate, and reviewer value remain
-  unmeasured.
+- **Latest progress (LINT-349, hosted acceptance):** Added the default-REVIEW
+  `bus.i2s_clock_frame_same_net` heuristic for a fitted U/IC with one bounded
+  bit-clock pin and one word-select/frame-clock pin on the same exact
+  schematic net. Synthetic controls cover distinct nets, aliases, DNP,
+  duplicate/ambiguous/open/incomplete endpoints, electrical-type boundaries,
+  policy/ignore behavior, deterministic evidence, CLI/MCP parity, catalog
+  reachability, and selector ownership. The full scoped selection passed 30
+  tests, including the digest-pinned KiCad 10.0.0 and 10.0.5 Docker fault and
+  control exports; strict Pyright on the changed runtime modules passed. The
+  hosted `v0.5.3rc585` acceptance run `42630494702` passed the scoped gate and
+  installed-wheel check against the separate project checkout. The preceding
+  `v0.5.3rc584` attempt failed only the Markdown table-alignment rule; `rc585`
+  includes the formatter correction. Function names remain clues, not authored
+  requirements, and field applicability and reviewer value are unmeasured.
+- **Previous progress (LINT-348, hosted acceptance):** The default-REVIEW
+  `bus.swdio_swclk_same_net` heuristic passed its focused tests, both native
+  Docker versions, and the hosted `v0.5.3rc580` gate `42608880529`.
 - **Previous hosted acceptance (LINT-347):** Tagged run `42597351381` passed,
   including the focused lint gate, native fixture lane, and installed-wheel
   check against a separate project checkout.
@@ -21214,12 +21213,11 @@ acceptance threads while new lint features proceed:
   not accept the `swd_` interface module prefix; `rc580` adds that prefix and a
   focused owner/size check. No proprietary board source is part of the
   fixtures. Reviewer value and field precision remain unmeasured.
-- **Selection:** Run
-  `tests/test_swd_signal_same_net.py` and
-  `tests/test_design_lint_mcp_parity_swd_signal_same_net.py` with
-  `design_lint_rule(rule_id="bus.swdio_swclk_same_net")`. The exact native
-  lane is `tests/test_swd_signal_same_net_native_fixture_lane.py` with
-  `KICAD_RUN_NATIVE_SWD_SIGNAL_SAME_NET_FIXTURES=1` and `native_kicad`.
+- **Selection:** Run `tests/test_i2s_clock_frame_same_net.py` and
+  `tests/test_design_lint_mcp_parity_i2s_clock_frame_same_net.py` with
+  `design_lint_rule(rule_id="bus.i2s_clock_frame_same_net")`. The exact native
+  lane is `tests/test_i2s_clock_frame_same_net_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_I2S_CLOCK_FRAME_SAME_NET_FIXTURES=1` and `native_kicad`.
 
 #### LINT-349 — Review native I2S bit clock and word select on one net
 
