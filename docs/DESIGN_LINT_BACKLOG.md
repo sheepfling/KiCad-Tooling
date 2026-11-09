@@ -762,19 +762,21 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest progress (LINT-350, hosted acceptance pending):** Added exact native
+- **Latest progress (LINT-350, hosted acceptance):** Added exact native
   KiCad source-to-netlist fault/control coverage to the existing mapped
   `bus.i2c_address_collision` review heuristic. The fault resolves two fitted
   synthetic responders to `0x50`; the control resolves them to `0x50` and
   `0x51`. Both sources export repeatably on digest-pinned KiCad 10.0.0 and
   10.0.5. The focused selection passed 28 tests, including both Docker
   versions, selector/catalog integrity, and CLI/MCP parity; strict Pyright for
-  the new runtime adapter passed. The initial `v0.5.3rc587` hosted attempt
-  stopped at the Markdown graph gate because the fixture README had no inbound
-  link; it did not reach pytest or Docker. The README is now linked from
-  LINT-033, and hosted acceptance is pending a corrected tag. The authored
-  address map remains the requirement; native role names or similar nets do
-  not establish a collision by themselves.
+  the new runtime adapter passed. The initial `v0.5.3rc587` attempt stopped at
+  the Markdown graph gate because the fixture README had no inbound link; it
+  did not reach pytest or Docker. After linking the guide from LINT-033,
+  `v0.5.3rc588` passed hosted run `42639674722`, including the focused unit
+  gate, strict and Windows-target typing, wheel/sdist checks, installed-wheel
+  verification, and external-template playtest. The authored address map
+  remains the requirement; native role names or similar nets do not establish
+  a collision by themselves.
 - **Latest progress (LINT-349, hosted acceptance):** Added the default-REVIEW
   `bus.i2s_clock_frame_same_net` heuristic for a fitted U/IC with one bounded
   bit-clock pin and one word-select/frame-clock pin on the same exact
@@ -16424,7 +16426,8 @@ control are documented in the
 
 - **Status:** Implemented with synthetic and exact-version native
   source-to-netlist validation. The native lane runs on digest-pinned KiCad
-  10.0.0 and 10.0.5; hosted acceptance for the current focused tag is pending.
+  10.0.0 and 10.0.5; focused hosted acceptance passed for `v0.5.3rc588` in
+  GitHub Actions run `42639674722`.
 - **Cohort input:** [kicad-happy](https://github.com/aklofas/kicad-happy)
   documents address-conflict detection as an analyzer family. This is a
   documented design input, not a benchmark or adoption of its workflow.
@@ -21298,8 +21301,12 @@ acceptance threads while new lint features proceed:
 - **Evidence:** Both fault/control sources exported repeatably on digest-pinned
   KiCad 10.0.0 and 10.0.5. The focused selector passed 28 tests, including
   Docker fixtures, catalog/selector integrity, and CLI/MCP parity. Strict
-  Pyright, Ruff, and Markdown checks passed. Hosted acceptance for the current
-  tag remains pending.
+  Pyright, Ruff, and Markdown checks passed. Hosted run `42639674722` for
+  `v0.5.3rc588` also passed its focused unit gate, strict and Windows-target
+  typing, wheel/sdist builds, installed-wheel verification, and
+  external-template playtest. The earlier `v0.5.3rc587` run stopped before
+  tests at the Markdown graph check; the fixture guide is now linked from
+  LINT-033.
 - **Selection:** Run
   `tests/test_i2c_address_collisions.py` and
   `tests/test_i2c_address_collision_native_fixture_lane.py` with
