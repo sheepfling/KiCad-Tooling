@@ -9,7 +9,7 @@ from .netlist_contract_models import NetlistContract
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
 
-_SUPPORTED_SNAPSHOT_SCHEMAS = frozenset({"12", "13", "14", "15"})
+_SUPPORTED_SNAPSHOT_SCHEMAS = frozenset({"12", "13", "14", "15", "16"})
 
 
 def compare_schematic_pcb_pad_nets(
@@ -23,7 +23,7 @@ def compare_schematic_pcb_pad_nets(
     establish physical copper continuity.
     """
     if snapshot.schema_version not in _SUPPORTED_SNAPSHOT_SCHEMAS:
-        raise ValueError("PCB pad net comparison requires native snapshot schema 12, 13, 14, or 15")
+        raise ValueError("PCB pad net comparison requires native snapshot schema 12 through 16")
 
     components: dict[str, tuple[str, str]] = {}
     for reference, component in netlist.components.items():

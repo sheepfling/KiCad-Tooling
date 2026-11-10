@@ -35,6 +35,7 @@ from tests.design_lint_fixtures.pcb_component_inventory import (
     NETLIST_SHA256,
     PROBE_SHA256,
     SNAPSHOT_SHA256,
+    SnapshotSchema,
     coach,
     netlist,
     snapshot,
@@ -160,7 +161,10 @@ def test_connected_pin_board_pad_net_differences_are_reviewable_and_configurable
         assert tuple(item.rule_id for item in stale.stale_ignores) == (RULE_ID,)
 
 
-def test_schema_15_native_snapshot_is_supported_for_pad_net_comparison() -> None:
+@pytest.mark.parametrize("schema_version", ["15", "16"])
+def test_supported_native_snapshot_schema_is_accepted_for_pad_net_comparison(
+    schema_version: SnapshotSchema,
+) -> None:
     observed = netlist(
         components={"U1": FOOTPRINT},
         nets={"SCHEMATIC_SIGNAL": ("U1.1",)},
@@ -169,13 +173,13 @@ def test_schema_15_native_snapshot_is_supported_for_pad_net_comparison() -> None
         observed,
         snapshot(
             "U1",
-            schema_version="15",
+            schema_version=schema_version,
             footprint_by_reference={"U1": FOOTPRINT},
             pad_net_by_reference={"U1.1": "BOARD_SIGNAL"},
         ),
     )
 
-    assert coverage.snapshot_schema == "15"
+    assert coverage.snapshot_schema == schema_version
     assert coverage.pad_net_comparison_status == "COMPLETE"
     (mismatch,) = coverage.pad_net_mismatches
     assert mismatch.mismatch == "net_assignment_differs"

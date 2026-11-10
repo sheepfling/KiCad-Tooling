@@ -12404,7 +12404,7 @@
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
-      "evidence_adapter": "Project-authored exact pad order and return-plane layer compared with source-bound KiCad 10 pcbnew snapshot schema 15, including native track endpoint contacts, canonical filled-zone island contours, and arc midpoint and length observations",
+      "evidence_adapter": "Project-authored exact pad order and return-plane layer compared with source-bound KiCad 10 pcbnew snapshot schema 16, including native track endpoint contacts, canonical filled-zone island contours, and arc midpoint and length observations",
       "predicate": "For each explicit switching-loop pad order, verify exact footprint, net, fitted state, and unique native pad center; compute the integer shoelace area of the authored pad-center polygon, compare it with an optional project limit, verify that mapped return pads share one filled island, and optionally resolve project-mapped trace edges into unique native track chains with ordered vertices and lengths.",
       "supported_kicad_versions": [
         "KiCad 10 native pcbnew API; each configured project's exact version and digest-pinned image are checked"
@@ -13369,7 +13369,7 @@
       "valid_control_fixtures": [
         "tests.test_pcb_rf_antenna.test_exact_module_identity_feed_and_local_keepout_transform_complete",
         "tests.test_pcb_rf_antenna.test_explicit_external_antenna_and_dnp_dispositions_are_supported",
-        "tests.test_pcb_keepouts_native.test_native_schema_15_snapshot_records_keepout_footprint_and_empty_touch_evidence",
+        "tests.test_pcb_keepouts_native.test_native_schema_16_snapshot_records_keepout_footprint_and_empty_touch_evidence",
         "tests.test_pcb_rf_antenna_mcp_parity.test_disabled_rf_antenna_coverage_matches_cli_and_mcp",
         "tests.test_pcb_rf_antenna_mcp_parity.test_enabled_rf_antenna_fault_and_control_match_cli_and_mcp"
       ],
@@ -13924,7 +13924,7 @@
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
-      "evidence_adapter": "Source-bound native schematic netlist pin assignments compared with native PCB pad assignments in snapshot schema 12, 13, 14, or 15",
+      "evidence_adapter": "Source-bound native schematic netlist pin assignments compared with native PCB pad assignments in snapshot schemas 12 through 16",
       "predicate": "For each pin with an assigned schematic net or an explicit native unconnected-net assignment, compare the case-insensitive reference and exact pin number with the same-numbered native PCB pad when the schematic footprint assignment is nonempty, the PCB reference is placed, and both footprint IDs match after trimming. Report a missing board pad, an unassigned board pad, a different exact net name after shared KiCad root-slash normalization, or a PCB net assigned to a schematic-unconnected pin.",
       "supported_kicad_versions": [
         "KiCad 10.0.0 and 10.0.5 native pcbnew API; exact project version and digest-pinned image are checked"
@@ -13934,7 +13934,7 @@
         "A schematic pin number may not map one-to-one to a physical pad in a custom symbol or footprint. Alternate pin-to-pad mappings, schematic-only symbols, board-only pads, and mismatched footprint identities are outside this comparison; confirm prompts against the part's approved mapping.",
         "DNP placements are compared when present in both sources because this is a CAD assignment check; the result does not establish physical population or a named variant's effective pin assignment.",
         "Exact net names, including case, are compared after shared normalization of KiCad's leading root-sheet slash. Intentional aliases or remaining board-side net naming differences may need project review, an exact finding ignore, or rule mode override.",
-        "The check requires source-bound schematic assignments and native PCB footprint/pad snapshot schema 12, 13, 14, or 15. Missing, stale, or unsupported evidence is a coverage gap and never a clean result."
+        "The check requires source-bound schematic assignments and native PCB footprint/pad snapshot schema 12 through 16. Missing, stale, or unsupported evidence is a coverage gap and never a clean result."
       ],
       "fault_fixtures": [
         "tests.test_pcb_schematic_pad_net_mismatch.test_connected_pin_board_pad_net_differences_are_reviewable_and_configurable",

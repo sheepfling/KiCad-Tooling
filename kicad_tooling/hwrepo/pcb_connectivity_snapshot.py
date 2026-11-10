@@ -50,7 +50,21 @@ class PcbConnectivitySnapshot(StrictModel):
     """Retained, deterministic native connectivity evidence for an exact board."""
 
     schema_version: Literal[
-        "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
     ] = "3"
     board_sha256: Digest
     kicad_version: NonEmptyText
@@ -333,13 +347,13 @@ def _validate_track_relationships(
 
 def _validate_track_arc_fields(track: PcbTrackObservation) -> None:
     if "arc_mid_nm" not in track.model_fields_set or "arc_length_nm" not in track.model_fields_set:
-        raise ValueError("Native PCB schema v15 requires explicit arc geometry fields")
+        raise ValueError("Native PCB schema v15+ requires explicit arc geometry fields")
     if track.geometry_kind == "arc" and (track.arc_mid_nm is None or track.arc_length_nm is None):
-        raise ValueError("Native PCB schema v15 arcs require midpoint and length evidence")
+        raise ValueError("Native PCB schema v15+ arcs require midpoint and length evidence")
     if track.geometry_kind == "segment" and (
         track.arc_mid_nm is not None or track.arc_length_nm is not None
     ):
-        raise ValueError("Native PCB schema v15 segments cannot carry arc evidence")
+        raise ValueError("Native PCB schema v15+ segments cannot carry arc evidence")
 
 
 def _validate_filled_zone_contours(snapshot: PcbConnectivitySnapshot, schema_version: int) -> None:

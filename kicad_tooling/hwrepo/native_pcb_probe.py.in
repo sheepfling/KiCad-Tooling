@@ -222,6 +222,9 @@ class NativePcbnew(Protocol):
     F_Mask: int
     B_Mask: int
     PAD_SHAPE_CIRCLE: int
+    PAD_SHAPE_OVAL: int
+    PAD_SHAPE_RECT: int
+    PAD_SHAPE_ROUNDRECT: int
     PCB_VIA: type[NativeVia]
     SHAPE_POLY_SET: Callable[[object], NativePolygonSet]
     ZONE_FILLER: Callable[[NativeBoard], NativeZoneFiller]
@@ -308,7 +311,9 @@ class AccessProbeObservation(TypedDict):
     obstacle: str | None
     obstacle_net: str | None
     distance_nm: int | None
-    target_aperture_shape: Literal["circle", "unsupported"] | None
+    target_aperture_shape: Literal[
+        "circle", "oval", "rectangle", "roundrect", "unsupported"
+    ] | None
     target_aperture_diameter_nm: int | None
 
 
@@ -417,7 +422,7 @@ class TrackObservation(TypedDict):
 
 
 class NativeProbeSnapshot(TypedDict):
-    schema_version: Literal["15"]
+    schema_version: Literal["16"]
     board_sha256: str
     kicad_version: str
     zones_refilled: bool

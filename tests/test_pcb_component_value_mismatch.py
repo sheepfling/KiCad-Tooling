@@ -33,6 +33,7 @@ from kicad_tooling.hwrepo.pcb_component_inventory import (
     evaluate_native_component_inventory_coverage,
 )
 from kicad_tooling.hwrepo.pcb_component_inventory_models import (
+    PcbComponentInventoryCoverageReport,
     PcbVariantPopulationCoverage,
     PcbVariantPopulationEvidence,
 )
@@ -465,13 +466,16 @@ def test_value_only_policy_captures_and_compares_native_footprint_values(
         ),
     )
 
-    coverage = design_lint_pcb_geometry_scan.scan_pcb_geometry(
+    reports = design_lint_pcb_geometry_scan.scan_pcb_geometry(
         root,
         config,
         coach_report,
         policy,
         native_summary,
-    )[-1]
+    )
+    coverage = next(
+        item for item in reports if isinstance(item, PcbComponentInventoryCoverageReport)
+    )
 
     if changed_receipt is not None:
         assert coverage.status == "BLOCKED"

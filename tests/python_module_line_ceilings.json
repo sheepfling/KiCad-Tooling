@@ -17,7 +17,6 @@
     "kicad_tooling/hwrepo/product.py": 864,
     "kicad_tooling/hwrepo/release.py": 793,
     "kicad_tooling/hwrepo/releasing.py": 510,
-    "kicad_tooling/hwrepo/test_access.py": 522,
     "kicad_tooling/hwrepo/three_d.py": 512,
     "kicad_tooling/parts.py": 560,
     "tests/test_artifact_parity.py": 705,
@@ -28,7 +27,6 @@
     "tests/test_parts_extensions.py": 853,
     "tests/test_product.py": 697,
     "tests/test_release_evidence.py": 500,
-    "tests/test_test_access.py": 604,
     "tests/test_validation.py": 565
   }
 }

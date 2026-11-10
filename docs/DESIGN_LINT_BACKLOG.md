@@ -738,6 +738,7 @@ skipped under prerelease policy.
 - `pcb.board_only_footprint`
 - `pcb.required_fitted_reference`
 - `pcb.touch_pad_reference_clearance`
+- `pcb.fiducial_count`
 - `connector.return_distribution`
 - `connector.serial_pair_without_return_review`
 - `connector.i2c_pair_without_return_review`
@@ -8178,10 +8179,12 @@ control are documented in the
 
 #### LINT-018 — Test-point and programming-access coverage
 
-- **Status:** Implemented v4. The schematic, PCB pad-surface, and optional
+- **Status:** Implemented v5. The schematic, PCB pad-surface, and optional
   probe envelope checks are reported separately. Each endpoint can require
   front, back, or either exposed board side. Envelope values are project-
-  authored and use deterministic KiCad 10 pad geometry.
+  authored and use deterministic KiCad 10 pad geometry. Native probe fit now
+  covers undrilled circles, ovals, rectangles, and rounded rectangles by the
+  smallest centered circular tip that fits the resolved mask aperture.
 - **Problem:** Required rails, programming signals, or factory measurement
   nodes may lack an accessible, project-approved test point.
 - **Evidence and check:** `test_access` declares each in-scope net as either
@@ -8194,17 +8197,20 @@ control are documented in the
   project-selected approach side. An optional circular probe envelope measures
   from that pad center to the nearest fitted, mask-layer-assigned different-net
   pad on each requested side. Native KiCad evidence also measures the target
-  aperture for circular, undrilled pads from the pad size and its resolved
+  aperture for supported undrilled pad shapes from the pad size and its resolved
   solder-mask expansion. The target aperture must fit the project-authored tip
   diameter plus twice its edge clearance; foreign-pad clearance must fit the
-  authored tip radius plus edge clearance. Requirements
-  round upward to a whole nanometer; measured distances round down to avoid an
+  authored tip radius plus edge clearance. For circular, oval, rectangular, and
+  rounded-rectangle targets, the native probe uses the smaller pad dimension
+  plus KiCad's resolved mask expansion as a centered circular-tip fit.
+  Requirements round upward to a whole nanometer; measured distances round down to avoid an
   optimistic floating-point boundary result. For a circular pad, the native
   probe uses its layer-specific copper size plus KiCad's resolved
   `PAD.GetSolderMaskExpansion` value in the [KiCad 10 PAD API][kicad10-pad].
-- **Boundary:** The envelope scan skips DNP and same-net pads. Only circular,
-  undrilled target apertures have a deterministic fit measurement; other
-  shapes and drilled pads remain unproven and fail the configured requirement.
+- **Boundary:** The envelope scan skips DNP and same-net pads. Only undrilled
+  circles, ovals, rectangles, and rounded rectangles have a deterministic fit
+  measurement. Chamfered, trapezoid, custom, and drilled target shapes remain
+  unproven and fail the configured requirement.
   The check does not inspect exposed tracks, vias, copper-zone mask openings,
   component bodies, fixtures, covers, mechanical reach, or manufacturing test
   coverage. A pass is limited to the measured target aperture and pad-neighbor
@@ -8215,18 +8221,19 @@ control are documented in the
   retained replay, aperture and clearance boundary faults, unsupported-shape
   handling, and CLI/MCP parity. The digest-pinned native fixture lane exercises
   a packaged synthetic PCB through KiCad 10.0.0 or 10.0.5, asserting exact
-  front/back obstacle identity and distance, circular mask aperture bounds,
+  front/back obstacle identity and distance, circular, oval, rectangular, and
+  rounded-rectangle mask aperture bounds,
   same-net/DNP exclusion, unconnected-pad reporting, unavailable-side handling,
-  undersize and exact-boundary aperture controls, unsupported rectangular and
-  drilled target pads, expected rule results, and repeatability across
+  undersize and exact-boundary aperture controls, and unsupported drilled
+  target pads, expected rule results, and repeatability across
   identical loads.
 - **Done when:** The KiCad 10 schematic and PCB stages are independently
   reported, exact endpoint mapping is source-bound, all fixtures pass, and
   configured probe-envelope rules have reviewable, replayable geometry. The
   supported board-object scope and native API behavior are exercised on
   synthetic fixtures.
-- **Future scope:** Evaluate oval, rectangular, and custom pad aperture fit
-  only when native geometry supports a conservative exact measurement. Tracks,
+- **Future scope:** Evaluate chamfered and custom pad aperture fit only when
+  native geometry supports a conservative exact measurement. Tracks,
   vias, zone openings, and mechanical obstruction remain separate bounded
   checks; do not infer overall physical accessibility from pad spacing.
 
@@ -22815,6 +22822,38 @@ acceptance threads while new lint features proceed:
   `tests/test_pcb_fiducials.py` and
   `tests/test_pcb_fiducials_native_fixture_lane.py` with
   `design_lint_rule(rule_id="pcb.fiducial_count")`. Native fixtures use
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`.
+
+#### LINT-381 — Measure centered probe fit on standard non-circular pads
+
+- **Status:** Implemented as a bounded extension to LINT-018's source-bound
+  PCB probe-envelope evidence.
+- **Priority:** P1 evidence completeness for a project-authored test-access
+  requirement. The native probe previously marked every non-circular target
+  pad unsupported even when KiCad exposed a standard symmetric shape and exact
+  solder-mask expansion.
+- **Predicate:** For fitted, undrilled circle, oval, rectangle, and
+  rounded-rectangle pads, use the smaller native pad dimension plus the exact
+  layer-specific solder-mask expansion as the largest centered circular tip
+  fit. Compare that integer-nanometer fit with the project-authored tip
+  diameter plus twice its edge clearance. Keep drilled, chamfered, trapezoid,
+  and custom pads unsupported.
+- **Boundary:** This measures centered fit and foreign-pad spacing only. It
+  does not evaluate track/via/zone openings, component bodies, physical probe
+  approach, or fixture access. A supported shape is not proof that a real
+  probe can reach the pad.
+- **Evidence:** Tooling-owned native PCB fixtures include undersize-mask
+  faults and exact fit controls for oval and rounded-rectangle pads, plus a
+  rotated anisotropic rectangular boundary control. KiCad 10.0.0 and 10.0.5
+  Docker exports check resolved mask expansion and repeatable typed
+  observations. Pytest covers each supported shape at and one nanometer below
+  the authored boundary, unsupported and drilled shapes, and the focused
+  module boundary.
+- **Selection:** Run
+  `tests/test_test_access_probe_aperture.py`,
+  `tests/test_test_access_probe_architecture.py`, and
+  `tests/test_pcb_access_native_fixture_lane.py` with
+  `design_lint and pcb_lint`. The native lane uses
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`.
 
 ## Completion and release gate

@@ -47,5 +47,6 @@ def test_native_probe_envelope_fixtures_on_supported_images(
         item for item in events if item.get("stage") == "pcb-access-fixture/probe-envelope"
     )
     assert result["status"] == "PASS"
+    assert result["checks"] == "6 PASS, 5 expected FAIL"
     assert result["kicad_version"] == version
     assert result["repeatable"] == "true"

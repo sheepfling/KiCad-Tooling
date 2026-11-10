@@ -35,7 +35,9 @@ BOARD_SHA256 = "b" * 64
 SNAPSHOT_SHA256 = "c" * 64
 PROBE_SHA256 = "d" * 64
 IMAGE = "registry.example/kicad:10.0.5@sha256:" + "e" * 64
-SnapshotSchema = Literal["2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"]
+SnapshotSchema = Literal[
+    "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"
+]
 ReviewMode = Literal["review", "block", "off"]
 
 
@@ -174,7 +176,7 @@ def snapshot(
                 dnp=dnp_by_key.get(reference.casefold(), False),
                 value=(
                     value_by_key.get(reference.casefold(), "synthetic")
-                    if schema_version in {"13", "14", "15"}
+                    if schema_version in {"13", "14", "15", "16"}
                     else None
                 ),
                 position_nm=(0, 0),
@@ -205,8 +207,8 @@ def complete_report(
         snapshot_path="build/design-lint/native/snapshot.json",
         snapshot_sha256=SNAPSHOT_SHA256,
         snapshot_schema=(
-            cast(Literal["12", "13", "14", "15"], board.schema_version)
-            if board.schema_version in {"12", "13", "14", "15"}
+            cast(Literal["12", "13", "14", "15", "16"], board.schema_version)
+            if board.schema_version in {"12", "13", "14", "15", "16"}
             else "12"
         ),
         kicad_version=board.kicad_version,
@@ -219,17 +221,17 @@ def complete_report(
             "DISABLED"
             if value_mode == "off"
             else "COMPLETE"
-            if board.schema_version in {"13", "14", "15"}
+            if board.schema_version in {"13", "14", "15", "16"}
             else "BLOCKED"
         ),
         value_mismatches=(
             compare_schematic_pcb_values(observed, board)
-            if value_mode != "off" and board.schema_version in {"13", "14", "15"}
+            if value_mode != "off" and board.schema_version in {"13", "14", "15", "16"}
             else ()
         ),
         value_comparison_issue=(
             "PCB component value comparison needs native footprint snapshot schema 13 or later"
-            if value_mode != "off" and board.schema_version not in {"13", "14", "15"}
+            if value_mode != "off" and board.schema_version not in {"13", "14", "15", "16"}
             else None
         ),
     )

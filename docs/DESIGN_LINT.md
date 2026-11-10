@@ -4699,9 +4699,11 @@ bound footprint identity, fitted state, board origin, canonical orientation,
 and board side; schema 13 adds native footprint value fields. Schema 14 adds
 exact touch-pad-to-filled-copper clearance observations and the digest of the
 explicit requests supplied to the native probe. Schema 15 adds native arc
-midpoints and centerline lengths. Current source-bound KiCad 10 geometry
-captures use schema 15. These additions retain the earlier aperture and
-zone-contour evidence.
+midpoints and centerline lengths. Schema 16 extends access-probe aperture
+observations to supported undrilled oval, rectangular, and rounded-rectangle
+pads, recording their conservative centered circular-tip fit. Current
+source-bound KiCad 10 geometry captures use schema 16. These additions retain
+the earlier aperture and zone-contour evidence.
 The probe copies each native filled-zone polygon set and calls KiCad's
 `SHAPE_POLY_SET.Unfracture()` before recording its outlines and holes. This
 preserves clearances that KiCad's filled result represents as fractured outline

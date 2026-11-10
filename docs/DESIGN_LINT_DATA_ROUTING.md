@@ -2074,7 +2074,7 @@ provides the admitted native schematic netlist and source hashes to
 modes. The source capture checks the authoritative board path and digest,
 configured KiCad version, pinned image, probe digest, refilled-zone state,
 native command shape, and snapshot/command receipts. The inventory comparison
-accepts snapshot schemas 12 through 15.
+accepts snapshot schemas 12 through 16.
 
 `evaluate_native_component_inventory_coverage` coordinates the comparisons
 that share the snapshot; it is not the owner of the individual pad-net

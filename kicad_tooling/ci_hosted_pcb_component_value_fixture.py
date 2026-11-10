@@ -95,9 +95,9 @@ def pcb_component_value_fixture_lane(
                     expected_board_sha256=board_hash,
                     purpose=f"{case} component-value PCB",
                 )
-                if observed_snapshot.schema_version != "15":
+                if observed_snapshot.schema_version != "16":
                     raise ValueError(
-                        "Native component-value comparison requires snapshot schema 15"
+                        "Native component-value comparison requires snapshot schema 16"
                     )
                 if retained_netlist is None:
                     retained_netlist = observed_netlist

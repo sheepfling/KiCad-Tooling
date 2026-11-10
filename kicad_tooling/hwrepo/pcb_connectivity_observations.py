@@ -262,7 +262,7 @@ class PcbFootprintPlacementObservation(StrictModel):
 
 
 class PcbAccessProbeObservation(StrictModel):
-    """Target aperture and nearest different-net pad for one configured probe surface."""
+    """Native center-fit diameter and nearest foreign pad for one probe surface."""
 
     endpoint: Reference
     side: Literal["front", "back"]
@@ -271,7 +271,9 @@ class PcbAccessProbeObservation(StrictModel):
     obstacle: Reference | None
     obstacle_net: NetName | None
     distance_nm: NonNegativeCount | None
-    target_aperture_shape: Literal["circle", "unsupported"] | None = None
+    target_aperture_shape: (
+        Literal["circle", "oval", "rectangle", "roundrect", "unsupported"] | None
+    ) = None
     target_aperture_diameter_nm: NonNegativeCount | None = None
 
     @model_validator(mode="after")
@@ -289,11 +291,11 @@ class PcbAccessProbeObservation(StrictModel):
             raise ValueError("Native probe obstacle cannot be the target endpoint")
         elif self.target_net is not None and self.obstacle_net == self.target_net:
             raise ValueError("Native probe obstacle must be on another net or unconnected")
-        if self.target_aperture_shape == "circle":
+        if self.target_aperture_shape in {"circle", "oval", "rectangle", "roundrect"}:
             if self.target_aperture_diameter_nm is None or self.target_aperture_diameter_nm <= 0:
-                raise ValueError("Circular native probe aperture needs a positive diameter")
+                raise ValueError("Supported native probe aperture needs a positive fit diameter")
         elif self.target_aperture_diameter_nm is not None:
-            raise ValueError("Native probe aperture diameter requires a supported circular shape")
+            raise ValueError("Native probe fit diameter requires a supported pad shape")
         if not self.target_exposed and self.target_aperture_shape is not None:
             raise ValueError("Unavailable target side cannot have aperture geometry")
         return self

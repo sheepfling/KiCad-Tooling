@@ -363,7 +363,7 @@ def main(
     )
 
     output: NativeProbeSnapshot = {
-        "schema_version": "15",
+        "schema_version": "16",
         "board_sha256": sha256(board_path),
         "kicad_version": native_pcbnew.GetBuildVersion(),
         "zones_refilled": zones_refilled,

@@ -86,7 +86,7 @@ def evaluate_pcb_fiducials(
     """Bind authored fiducial counts to the verified native PCB snapshot."""
     if mode == "off":
         return PcbFiducialCoverageReport(status="DISABLED", mode=mode)
-    if evidence.snapshot.schema_version not in {"12", "13", "14", "15"}:
+    if evidence.snapshot.schema_version not in {"12", "13", "14", "15", "16"}:
         return PcbFiducialCoverageReport(
             status="BLOCKED",
             mode=mode,

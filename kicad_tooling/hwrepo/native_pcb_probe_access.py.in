@@ -18,21 +18,34 @@ def access_probe_observations(
 
     def aperture_geometry(
         pad: NativePad, mask_layer: int
-    ) -> tuple[Literal["circle", "unsupported"], int | None]:
-        """Measure circular, undrilled pad-mask apertures without approximating other shapes."""
-        if pad.GetShape(mask_layer) != native_pcbnew.PAD_SHAPE_CIRCLE:
+    ) -> tuple[
+        Literal["circle", "oval", "rectangle", "roundrect", "unsupported"], int | None
+    ]:
+        """Measure centered circular-tip fit for symmetric, undrilled mask apertures."""
+        shapes: dict[int, Literal["circle", "oval", "rectangle", "roundrect"]] = {
+            native_pcbnew.PAD_SHAPE_CIRCLE: "circle",
+            native_pcbnew.PAD_SHAPE_OVAL: "oval",
+            native_pcbnew.PAD_SHAPE_RECT: "rectangle",
+            native_pcbnew.PAD_SHAPE_ROUNDRECT: "roundrect",
+        }
+        shape = shapes.get(pad.GetShape(mask_layer))
+        if shape is None:
             return "unsupported", None
         drill = pad.GetDrillSize()
         if int(drill.x) > 0 or int(drill.y) > 0:
             return "unsupported", None
         copper_size = pad.GetSize(mask_layer)
-        if int(copper_size.x) != int(copper_size.y):
+        width_nm = int(copper_size.x)
+        height_nm = int(copper_size.y)
+        if width_nm <= 0 or height_nm <= 0:
+            return "unsupported", None
+        if shape == "circle" and width_nm != height_nm:
             return "unsupported", None
         mask_expansion_nm = int(pad.GetSolderMaskExpansion(mask_layer))
-        diameter_nm = int(copper_size.x) + 2 * mask_expansion_nm
+        diameter_nm = min(width_nm, height_nm) + 2 * mask_expansion_nm
         if diameter_nm <= 0:
             return "unsupported", None
-        return "circle", diameter_nm
+        return shape, diameter_nm
 
     for request in requests:
         endpoint = request["endpoint"]
