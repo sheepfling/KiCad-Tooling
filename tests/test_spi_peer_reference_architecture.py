@@ -64,13 +64,13 @@ def test_spi_peer_reference_owner_and_protocol_modules_stay_focused() -> None:
     assert owner in rule["implementation_refs"]
 
 
-def test_bus_candidate_coordinator_delegates_spi_in_stable_order() -> None:
-    coordinator = HWREPO / "design_lint_bus_candidates.py"
+def test_spi_protocol_coordinator_preserves_peer_review_before_bias() -> None:
+    coordinator = HWREPO / "design_lint_spi_bus_candidates.py"
     tree = ast.parse(coordinator.read_text(encoding="utf-8"), filename=coordinator.name)
     function = next(
         node
         for node in tree.body
-        if isinstance(node, ast.FunctionDef) and node.name == "bus_candidates"
+        if isinstance(node, ast.FunctionDef) and node.name == "spi_protocol_bus_candidates"
     )
     calls = sorted(
         (node.lineno, node.func.id)
@@ -78,9 +78,10 @@ def test_bus_candidate_coordinator_delegates_spi_in_stable_order() -> None:
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
     )
     names = [name for _, name in calls]
-    assert (
-        names.index("i2c_peer_reference_candidates")
-        < names.index("spi_peer_reference_candidates")
-        < names.index("spi_bias_candidates")
-    )
+    assert names == [
+        "spi_peer_reference_candidates",
+        "spi_bias_candidates",
+        "generic_spi_connector_triad_review_candidates",
+        "spi_signal_candidates",
+    ]
     assert not any(name == "Candidate" for name in names)
