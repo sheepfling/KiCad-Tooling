@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 321 rules are implemented with synthetic regression coverage.
+The following 322 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 321 active rules.
+The catalog currently contains 322 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -435,6 +435,7 @@ skipped under prerelease policy.
 - `connector.repeated_pin_function`
 - `connector.mapped_supply_domains_share_net`
 - `connector.mapped_return_domains_share_net`
+- `connector.mapped_named_peer_return_split_nets`
 - `connector.mapped_supply_return_share_net`
 - `connector.mapped_supply_shield_share_net`
 - `connector.mapped_return_shield_share_net`
@@ -4085,7 +4086,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 321 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 322 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -22516,6 +22517,58 @@ acceptance threads while new lint features proceed:
   `tests/test_connector_mapped_supply_return_share_native_fixture_lane.py`
   with `design_lint_rule(rule_id="connector.mapped_return_domains_share_net")`.
   Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-374 — Review named mapped same-domain peer returns split across nets
+
+- **Status:** Implemented as `connector.mapped_named_peer_return_split_nets`,
+  default `review`.
+- **Priority:** P1 connector return-scope review. Project maps can identify
+  different native pin-function labels as returns in the same domain and
+  explicitly select them as comparison peers.
+- **Gap:** Generic connector heuristics compare pins with generic functions or
+  recognized return labels. If unlike connector symbols expose meaningful,
+  unrelated native names such as `CONTACT_A` and `CONTACT_B`, their source-
+  mapped return role does not enter that existing peer comparison. The
+  within-one-connector domain-split check also cannot compare different
+  connector references. A test-first baseline with two such pins in the same
+  mapped return domain and reviewed group emitted no existing specific return
+  prompt.
+- **Predicate:** Require complete current source-matched connector coverage
+  and catalog digest. Consider fitted mapped return pins only when every mapped
+  return participant in the exact domain has a current return-comparison group,
+  the source-authored domain and group match exactly, and each pin has one
+  native net. Require meaningful native function labels that are neither
+  generic nor already recognized as return labels. Prompt when at least two
+  connector references in one group use at least two exact native nets. If the
+  existing repeated-return comparison already covers any assignment, keep
+  that prompt and suppress this rule for the group.
+- **Boundary:** A shared domain and comparison group set heuristic scope; they
+  do not require electrical commoning, prove equal potential, or establish
+  physical continuity. The rule excludes DNP, open, ambiguous, stale,
+  incomplete, digestless, ungrouped, generic-function, and recognized-return
+  cases. Star returns, filters, protection, isolation, and intentionally
+  separate connector returns may be correct. Project policy can promote,
+  disable, or exactly ignore the REVIEW finding.
+- **Evidence:** Synthetic fault/control tests cover the no-existing-prompt
+  baseline, common-net and different-domain/group controls, legacy generic and
+  return-label suppression, DNP, open and multiply assigned pins, stale or
+  incomplete evidence, digestless coverage, policy, ignore lifecycle,
+  deterministic ordering, and typed source projection. CLI and MCP return the
+  same report from the shared service. Tooling-owned KiCad sources use two
+  custom connector symbols with different meaningful pin labels; the fault
+  assigns separate nets and the valid control uses a common label. Both sources
+  were exported twice on pinned KiCad 10.0.0 and 10.0.5 Docker images. Only
+  tooling-owned synthetic sources were added.
+- **Local verification:** The focused synthetic and parity selection passed 6
+  tests. Exact native fault/control tests passed on both pinned versions;
+  normalized native netlist contracts matched across repeated exports. Raw
+  XML hashes differ because KiCad writes export timestamps.
+- **Selection:** Run
+  `tests/test_connector_mapped_named_peer_return_split.py`,
+  `tests/test_design_lint_mcp_parity_mapped_peer_return_split.py`, and
+  `tests/test_connector_mapped_named_peer_return_split_native.py` with
+  `design_lint_rule(rule_id="connector.mapped_named_peer_return_split_nets")`.
+  Run native exports with `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate
 

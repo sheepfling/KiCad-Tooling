@@ -135,6 +135,23 @@ fault/control lane:
 Set `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` to execute the exact Docker
 exports on the pinned KiCad versions.
 
+Named mapped peer returns can use different meaningful native pin labels and
+still share an explicitly reviewed return scope and voltage domain. Select
+the scoped rule slice with:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  tests/test_connector_mapped_named_peer_return_split.py \
+  tests/test_design_lint_mcp_parity_mapped_peer_return_split.py \
+  tests/test_connector_mapped_named_peer_return_split_native.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_named_peer_return_split_nets")'
+```
+
+Run its source-hashed native fault and common-net control with
+`KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. Source ownership and limitations are
+documented in the
+[fixture README](fixtures/design_lint/mapped-named-peer-return-native/README.md).
+
 The low-equivalent I2C resistance rule also has synthetic native fault/control schematics
 for an exact 1 kΩ boundary and a 750 Ω finding; source hashes and limits are in the
 [fixture README](fixtures/design_lint/i2c-low-equivalent-resistance-native/README.md).

@@ -60,6 +60,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.mapped_return_domains_share_net": {
             "tests.test_connector_mapped_supply_return_share_native_fixture_lane.test_native_mapped_supply_return_share_fault_and_control",
         },
+        "connector.mapped_named_peer_return_split_nets": {
+            "tests.test_connector_mapped_named_peer_return_split_native.test_native_named_peer_return_split_fault_and_control",
+        },
         "connector.unconnected_power_output": {
             "tests.test_connector_unconnected_power_output.test_generic_connector_power_output_fault_and_control_on_pinned_native_versions",
         },
@@ -282,6 +285,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         },
         "connector.mapped_return_domains_share_net": {
             "tests.test_connector_mapped_supply_return_share_native_fixture_lane.test_native_mapped_supply_return_share_fault_and_control",
+        },
+        "connector.mapped_named_peer_return_split_nets": {
+            "tests.test_connector_mapped_named_peer_return_split_native.test_native_named_peer_return_split_fault_and_control",
         },
     }
     connector_native_rules = {

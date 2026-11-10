@@ -4,12 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import tests.test_connector_mapped_interface_other_named_rail as _mapped_other_rail
-import tests.test_connector_mapped_interface_other_unassigned as _mapped_other_contact
-import tests.test_connector_mapped_interface_power_contact_unassigned as _mapped_power_contact
-import tests.test_connector_mapped_interface_shield_on_return_net as _mapped_shield_return
-import tests.test_connector_mapped_interface_shield_on_supply_rail as _mapped_shield_supply
-import tests.test_connector_mapped_interface_signal_on_named_rail as _mapped_signal_rail
 import tests.test_connector_return_signal_net as _connector_return_signal_net
 from kicad_tooling.hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
 from kicad_tooling.hwrepo.design_lint import candidates
@@ -53,6 +47,9 @@ from tests.design_lint_fixtures.bjt_terminal_order import bjt_terminal_order_net
 from tests.design_lint_fixtures.can_signal_named_rail import can_signal_on_named_rail_netlist
 from tests.design_lint_fixtures.can_tx_output_sharing import can_tx_output_netlist
 from tests.design_lint_fixtures.can_tx_rx_same_net import can_tx_rx_same_net_netlist
+from tests.design_lint_fixtures.catalog_reachability_mapped_connectors import (
+    mapped_connector_rule_ids,  # noqa: F401
+)
 from tests.design_lint_fixtures.connector_coverage import (
     connector_supply_role_catalog,
     connector_supply_role_netlist,
@@ -139,27 +136,6 @@ from tests.test_regulator_required_passives import catalog_reachable_rule_ids
 from tests.usb_c_vbus_capacitance_support import usb_c_vbus_netlist
 
 TESTS = Path(__file__).resolve().parents[1]
-
-
-def mapped_connector_rule_ids() -> set[str]:
-    """Reach the exact mapped contact role and rail findings together."""
-    power, _ = _mapped_power_contact._report(_mapped_power_contact._source(), role="supply")
-    other, _ = _mapped_other_contact._report()
-    other_rail, _ = _mapped_other_rail._report(_mapped_other_rail._netlist())
-    signal, _ = _mapped_signal_rail._report(
-        _mapped_signal_rail.mapped_named_rail_netlist(target_net="GND")
-    )
-    shield_return, _ = _mapped_shield_return._report(
-        _mapped_shield_return.mapped_named_rail_netlist(target_net="RET")
-    )
-    shield_supply, _ = _mapped_shield_supply._report(
-        _mapped_shield_supply.mapped_named_rail_netlist(target_net="+5V")
-    )
-    return {
-        item.rule_id
-        for report in (power, other, other_rail, signal, shield_return, shield_supply)
-        for item in report.findings
-    }
 
 
 def usb_c_vbus_and_connector_return_review_rule_ids() -> set[str]:

@@ -7,6 +7,8 @@ import ast
 import pytest
 
 from kicad_tooling.hwrepo import (
+    design_lint_connector_named_peer_return_split_candidate_evidence,
+    design_lint_connectors_named_peer_return_splits,
     design_lint_crystal_candidate_evidence,
     design_lint_crystal_candidates,
     design_lint_power_path_candidate_evidence,
@@ -22,6 +24,7 @@ from kicad_tooling.hwrepo import (
     power_path_models,
     power_sequence_models,
 )
+from kicad_tooling.hwrepo.design_lint import rule_catalog
 from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, line_count
 
 pytestmark = [
@@ -161,3 +164,36 @@ def test_power_path_and_sequence_map_identity_have_shared_domain_owners() -> Non
         )
     assert line_count(sequence_identity_path) < IMPLEMENTATION_MAX_LINES
     assert line_count(sequence_evidence_path) < IMPLEMENTATION_MAX_LINES
+
+
+def test_named_peer_return_rule_has_a_focused_source_bound_owner() -> None:
+    owner_module = design_lint_connectors_named_peer_return_splits
+    evidence_module = design_lint_connector_named_peer_return_split_candidate_evidence
+    owner_path = HWREPO / "design_lint_connectors_named_peer_return_splits.py"
+    evidence_path = HWREPO / "design_lint_connector_named_peer_return_split_candidate_evidence.py"
+    rule = next(
+        item
+        for item in rule_catalog().rules
+        if item.rule_id == "connector.mapped_named_peer_return_split_nets"
+    )
+    owner = (
+        "kicad_tooling/hwrepo/design_lint_connectors_named_peer_return_splits.py"
+        "#mapped_named_peer_return_split_net_candidates"
+    )
+    projector = (
+        "kicad_tooling/hwrepo/design_lint_connector_named_peer_return_split_candidate_evidence.py"
+        "#project_mapped_named_peer_return_split_evidence"
+    )
+
+    assert owner_module.mapped_named_peer_return_split_net_candidates.__module__ == (
+        owner_module.__name__
+    )
+    assert (
+        evidence_module.MappedNamedPeerReturnSplitCandidate.__module__ == evidence_module.__name__
+    )
+    assert rule.theme == "connectors"
+    assert rule.implementation_owner == owner
+    assert rule.implementation_owner in rule.implementation_refs
+    assert projector in rule.implementation_refs
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert line_count(evidence_path) < IMPLEMENTATION_MAX_LINES

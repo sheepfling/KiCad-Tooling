@@ -880,7 +880,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 321 active rules.
+The catalog currently contains 322 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -1045,6 +1045,36 @@ Run exact KiCad 10.0.0 and 10.0.5 Docker exports with
 `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. The shared-node source is this rule's
 valid control; the separate-net source faults this rule. Those same sources
 play the opposite roles for the supply/return-sharing rule.
+
+### Named mapped peer returns in a shared domain with split nets
+
+`connector.mapped_named_peer_return_split_nets` prompts when fitted return
+contacts on at least two connector references have the same exact authored
+`voltage_domain` and the same current, reviewed `return_comparison_group`, but
+use separate exact native nets. It addresses named native pin functions that
+the normal repeated-return comparison cannot identify as return peers. If that
+existing comparison already covers any assignment, its finding remains the
+only prompt for the group.
+
+This check requires complete source-matched connector maps, a catalog digest,
+one current return-comparison group for every mapped return participant in the
+domain, meaningful native pin labels that are neither generic nor already
+recognized as returns, and exactly one net per pin. A group and a shared domain
+set comparison scope; they do not require a common net or prove an electrical
+fault, an external connection, or PCB continuity. A split may be intentional.
+
+Select the synthetic, CLI/MCP parity, and pinned native tests with:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  tests/test_connector_mapped_named_peer_return_split.py \
+  tests/test_design_lint_mcp_parity_mapped_peer_return_split.py \
+  tests/test_connector_mapped_named_peer_return_split_native.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_named_peer_return_split_nets")'
+```
+
+Set `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` to export the tooling-owned fault
+and common-net control twice with exact KiCad 10.0.0 and 10.0.5 Docker images.
 
 ### Distinct mapped connector return domains sharing a net
 
