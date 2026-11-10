@@ -21815,12 +21815,71 @@ acceptance threads while new lint features proceed:
   selector passed 13 tests with 4 deselected. The digest-pinned native power
   peer gate passed 2 parameterized tests across KiCad 10.0.0 and 10.0.5; one
   unmarked source-digest test was deselected by the narrow rule selector.
+  Corrected annotated tag `v0.5.3rc620` passed GitHub Actions run
+  `42750920705`, including tag-scope resolution, the focused rule gate, and
+  installed-wheel validation against the external template. Preceding tag
+  `v0.5.3rc619` stopped before tests because its annotation omitted the required
+  `Lint-Rule` selector.
 - **Selection:** Run
   `tests/test_connector_reviewed_peer_named_power_split.py`,
   `tests/test_connector_reviewed_peer_power_input_split.py`,
   `tests/test_connector_reviewed_peer_power_input_parity.py`, and
   `tests/test_connector_reviewed_peer_power_input_native.py` with
   `design_lint_rule(rule_id="connector.reviewed_peer_power_input_split")`.
+  The exact-native lane uses `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-361 — Review an open mapped named passive supply contact across connector peers
+
+- **Rule:** Extends `connector.reviewed_peer_passive_power_input_open`, default
+  `review`; no new rule ID or project configuration format.
+- **Gap:** LINT-343 handled an open generic passive contact only when neither
+  connector map declared a role. A complete current map could instead classify
+  unlike connector contacts as `supply`, with native functions VBUS and
+  VDD_IN and native electrical type `passive`. If one contact had no net and
+  no authored unconnected-pin reason while its peer had one assigned net,
+  native ERC and the existing repeated-function grouping did not ask for
+  review because the recognized power categories differed.
+- **Predicate:** Preserve LINT-343's complete connector inventory, current
+  source-matched maps, explicit shared peer group, unlike symbols, no PART_ID,
+  distinct nonempty value/footprint identity, exact shared interface signal
+  and voltage domain, passive electrical type, open-side absence of both a net
+  and authored unconnected reason, and exactly one assigned peer net. Extend
+  eligibility to two current `supply` roles only when their native power
+  categories differ; this includes generic-to-recognized and different named
+  categories. Same-category roles stay with
+  `connector.repeated_pin_function`. Keep the existing roleless generic path
+  and its evidence unchanged.
+- **Incremental value:** Before the extension, a tooling-owned synthetic
+  VBUS/VDD_IN passive-open case with complete source-matched maps returned
+  `PASS` and no candidate. It now emits one REVIEW with the pin functions,
+  normalized categories, map signal/domain, and exact open/assigned net
+  evidence. A common-net control is quiet; a documented open is quiet; and a
+  same-category open remains outside this rule. Different-domain/group,
+  stale/incomplete maps, DNP, and ambiguous assignment controls are included.
+- **Boundary:** A supply role and peer map make the open reviewable but do not
+  prove the contact must be connected. The pin may be intentionally reserved,
+  isolated, or unused. The rule does not select a target net, validate a
+  datasheet, establish PCB continuity, or prove connector wiring. Native
+  `power_in` opens remain with `connector.unconnected_power_input`.
+- **Evidence:** Synthetic fault/control, policy/ignore, ordering stability,
+  and CLI/MCP parity use tooling-owned contracts. Exact native passive-open
+  fault/control schematics are `named-open-fault.kicad_sch` (SHA-256
+  `14092384fffbe28d7588017c97e55fa8e4f779924af880a7c9b7e751800197d0`) and
+  `named-open-control.kicad_sch` (SHA-256
+  `3628a5b1cb264d1361563393fc6f0a9dd3c34bdf0e19fc4ef634725c83da3fcb`).
+  The exact-version Docker lane exports each source twice with KiCad 10.0.0 and
+  10.0.5. No project board or proprietary source was added.
+- **Verification:** The focused synthetic, existing generic, and CLI/MCP
+  selector passed 21 tests. The catalog/architecture selector passed 73 tests.
+  Pyright, Ruff, Rumdl, and native fixture source hashes passed. The digest-pinned
+  native connector lane passed 2 parameterized tests across KiCad 10.0.0 and
+  10.0.5; one unmarked source-hash test was deselected by the narrow rule
+  selector.
+- **Selection:** Run
+  `tests/test_connector_reviewed_peer_named_power_open.py`,
+  `tests/test_connector_reviewed_peer_power_input_parity.py`, and
+  `tests/test_connector_reviewed_peer_power_input_native.py` with
+  `design_lint_rule(rule_id="connector.reviewed_peer_passive_power_input_open")`.
   The exact-native lane uses `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate

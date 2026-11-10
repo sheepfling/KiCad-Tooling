@@ -1300,36 +1300,40 @@
     },
     {
       "rule_id": "connector.reviewed_peer_passive_power_input_open",
-      "title": "Generic passive power-input contact is open across unlike reviewed connector peers",
+      "title": "Passive power-input contact is open across unlike reviewed connector peers",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist plus complete source-matched connector interface coverage",
-      "predicate": "Require globally complete connector coverage and current source-matched interface maps for two unlike connectors in the same authored peer_assignment_group. Compare only different native symbols with no PART_ID and different nonempty value/footprint identity. For one generic interface signal and exact voltage_domain shared by both maps, require generic native pin functions, electrical types power_in or passive, and no mapped role on either contact. Emit a REVIEW candidate when one role-absent passive contact has no net and no unconnected_pin_reasons disposition while its peer has exactly one net. The map and domain are review context; they do not require the contact to be connected or the peers to share a net.",
+      "predicate": "Require globally complete connector coverage and current source-matched interface maps for two unlike connectors in the same authored peer_assignment_group. Compare only different native symbols with no PART_ID and different nonempty value/footprint identity. For one interface signal and exact voltage_domain shared by both maps, accept either (a) generic native pin functions with electrical types power_in or passive and no mapped roles, or (b) mapped supply roles with electrical types power_in or passive and generic or recognized named power functions whose connector_power_function_key categories differ. Emit a REVIEW candidate when one passive contact has no net and no unconnected_pin_reasons disposition while its peer has exactly one net; for case (a), both mapped roles must be absent, and for case (b), both must be supply. The map and domain are review context; they do not require the contact to be connected or the peers to share a net.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The rule needs complete project connector inventory review, current source-matched pin maps, and a shared reviewed peer group. Missing, stale, incomplete, DNP, or ambiguous evidence is not a finding.",
-        "Only a generic passive contact with no mapped role is eligible as the open side. Native power_in opens remain with connector.unconnected_power_input.",
-        "Both contacts must have no mapped role; mapped other, supply, return, signal, and shield cases remain with their existing checks. The assigned peer must map the same interface signal and exact voltage_domain and have exactly one assigned net. Unlike symbols with matching PART_ID or matching nonempty value/footprint identity remain with their existing peer checks.",
+        "The open contact must be passive. Generic opens are eligible only when both roles are absent. Mapped supply opens are eligible only when both contacts have supply roles and their native power-function categories differ; generic-to-named and different named categories are REVIEW clues. Same-category assignments remain with connector.repeated_pin_function. Native power_in opens remain with connector.unconnected_power_input.",
+        "Return, signal, shield, other-role, unmatched-domain, same-category, incomplete, stale, DNP, open-reason, or ambiguous-assignment cases do not produce this finding. The assigned peer must map the same interface signal and exact voltage_domain and have exactly one assigned net. Unlike symbols with matching PART_ID or matching nonempty value/footprint identity remain with their existing peer checks.",
         "An open contact may be intentionally unused, isolated, or reserved. The prompt does not require connection, select a target net, prove PCB copper continuity, or verify connector wiring.",
         "This is a REVIEW heuristic, not independent proof of a fault. Project policy can turn it off, block on it, or ignore an exact fingerprint."
       ],
       "fault_fixtures": [
         "tests.test_connector_reviewed_peer_power_input_split.test_unassigned_passive_power_input_peer_contact_needs_review",
+        "tests.test_connector_reviewed_peer_named_power_open.test_named_mapped_passive_open_contact_needs_review",
         "tests.test_connector_reviewed_peer_power_input_parity.test_reviewed_peer_power_input_split_matches_between_cli_and_mcp",
         "tests.test_connector_reviewed_peer_power_input_native.test_native_reviewed_peer_power_input_fault_and_control_are_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_connector_reviewed_peer_power_input_split.test_documented_or_unmatched_passive_peer_opens_stay_quiet",
         "tests.test_connector_reviewed_peer_power_input_split.test_reviewed_peer_passive_open_obeys_policy_and_exact_ignore",
+        "tests.test_connector_reviewed_peer_named_power_open.test_common_documented_and_same_category_opens_are_controls",
+        "tests.test_connector_reviewed_peer_named_power_open.test_named_open_peer_stays_quiet_for_different_domains_or_stale_maps",
         "tests.test_connector_reviewed_peer_power_input_parity.test_reviewed_peer_power_input_split_matches_between_cli_and_mcp",
         "tests.test_connector_reviewed_peer_power_input_native.test_native_reviewed_peer_power_input_fault_and_control_are_repeatable"
       ],
       "metamorphic_fixtures": [
-        "tests.test_connector_reviewed_peer_power_input_split.test_passive_peer_open_candidate_is_stable_under_mapping_order"
+        "tests.test_connector_reviewed_peer_power_input_split.test_passive_peer_open_candidate_is_stable_under_mapping_order",
+        "tests.test_connector_reviewed_peer_named_power_open.test_open_prompt_obeys_policy_and_exact_ignore"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_reviewed_peer_power_input_split.py#reviewed_peer_passive_power_input_open_candidates",

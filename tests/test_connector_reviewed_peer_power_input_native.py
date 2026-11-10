@@ -42,9 +42,19 @@ EXPECTED_SOURCE_HASHES = {
     "passive-open-fault": "d6ca4949abb67e0a1b7f4e331a989808dcb215200b752503ba85e78f24645aa5",
     "named-fault": "ae825d986b42a4987d580d66a174fd87cf53d0c93d7d949ac65a3660990e1936",
     "named-control": "85dc5cb5f4458bc37efe8dba6f48064c72acf0c4987be0e4a8fde4b136e805f1",
+    "named-open-fault": "14092384fffbe28d7588017c97e55fa8e4f779924af880a7c9b7e751800197d0",
+    "named-open-control": "3628a5b1cb264d1361563393fc6f0a9dd3c34bdf0e19fc4ef634725c83da3fcb",
 }
-PASSIVE_CASES = frozenset({"passive-fault", "passive-control", "passive-open-fault"})
-NAMED_CASES = frozenset({"named-fault", "named-control"})
+PASSIVE_CASES = frozenset(
+    {
+        "passive-fault",
+        "passive-control",
+        "passive-open-fault",
+        "named-open-fault",
+        "named-open-control",
+    }
+)
+NAMED_CASES = frozenset({"named-fault", "named-control", "named-open-fault", "named-open-control"})
 
 
 def _sha256(path: Path) -> str:
@@ -108,7 +118,7 @@ def test_native_reviewed_peer_power_input_fault_and_control_are_repeatable(
         'actual="$(kicad-cli version)"; '
         f'test "$actual" = "{version}"; '
         "for case in fault control passive-fault passive-control passive-open-fault "
-        "named-fault named-control; do "
+        "named-fault named-control named-open-fault named-open-control; do "
         "for run in first repeat; do "
         "kicad-cli sch export netlist --format kicadxml "
         '"--output" "/output/${case}.${run}.netlist.xml" '
@@ -202,6 +212,19 @@ def test_native_reviewed_peer_power_input_fault_and_control_are_repeatable(
                 "J1.1=USB_5V",
                 "J2.1=<unassigned>",
             )
+        elif case == "named-open-fault":
+            assert PASSIVE_OPEN_RULE_ID in finding_ids
+            assert RULE_ID not in finding_ids
+            finding = next(item for item in report.findings if item.rule_id == PASSIVE_OPEN_RULE_ID)
+            assert finding.evidence["assignments"] == (
+                "J1.1=USB_5V",
+                "J2.1=<unassigned>",
+            )
+            assert finding.evidence["native_pin_functions"] == (
+                "J1.1=VBUS",
+                "J2.1=VDD_IN",
+            )
+            assert finding.evidence["power_role_categories"] == ("vbus", "vdd")
         elif case in {"fault", "passive-fault", "named-fault"}:
             assert RULE_ID in finding_ids
             finding = next(item for item in report.findings if item.rule_id == RULE_ID)

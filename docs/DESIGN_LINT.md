@@ -552,18 +552,20 @@ actual voltage or PCB continuity. Project policy can keep `review`, set
 
 ## Review an open passive power contact across unlike connector peers
 
-`connector.reviewed_peer_passive_power_input_open` asks for review when one current, source-matched
-connector map leaves a generic passive contact without a mapped role or net, while an unlike
-connector in the same explicitly reviewed peer group assigns the same interface signal and voltage
-domain to exactly one net. This provides context for a passive contact that may have been left
-unconnected. Native `power_in` opens and mapped-role cases remain with their existing checks. The
-peer relationship does not require the contacts to share a net, select a target net, or establish
-PCB continuity; intentional opens can be documented in the connector map or handled with an exact
-finding ignore. The rule defaults to `review` and can be set to `block` or `off`. See the
+`connector.reviewed_peer_passive_power_input_open` asks for review when one current,
+source-matched connector map leaves a passive contact without a net, while an unlike connector in
+the same explicitly reviewed peer group assigns the same interface signal and voltage domain to
+exactly one net. It covers generic contacts with no mapped role, plus mapped supply-role contacts
+whose native power-function categories differ, such as VBUS and VDD_IN. Same-category named power
+contacts remain with the repeated-function check; native `power_in` opens remain with the existing
+unconnected-power check. The peer relationship does not require the contacts to share a net, select
+a target net, or establish PCB continuity; intentional opens can be documented in the connector map
+or handled with an exact finding ignore. The rule defaults to `review` and can be set to `block` or
+`off`. See the
 [synthetic fixture record](../tests/fixtures/design_lint/reviewed-peer-power-input-split-native/README.md).
 
 ```sh
-.venv/bin/python -I -m pytest tests/test_connector_reviewed_peer_power_input_split.py -m 'design_lint and connector_lint and power_lint and design_lint_rule(rule_id="connector.reviewed_peer_passive_power_input_open")'
+.venv/bin/python -I -m pytest tests/test_connector_reviewed_peer_power_input_split.py tests/test_connector_reviewed_peer_named_power_open.py -m 'design_lint and connector_lint and power_lint and design_lint_rule(rule_id="connector.reviewed_peer_passive_power_input_open")'
 ```
 
 ## Review repeated signal pins on one component

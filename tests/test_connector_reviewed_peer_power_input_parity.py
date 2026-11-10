@@ -111,6 +111,28 @@ def test_reviewed_peer_power_input_split_matches_between_cli_and_mcp(tmp_path: P
             False,
             ("supply", "supply"),
         ),
+        (
+            power_input_netlist(
+                power_assignments=("USB_5V", None),
+                functions=("VBUS", "VDD_IN"),
+                electrical_type="passive",
+            ),
+            (None, None),
+            False,
+            True,
+            ("supply", "supply"),
+        ),
+        (
+            power_input_netlist(
+                power_assignments=("COMMON_5V", "COMMON_5V"),
+                functions=("VBUS", "VDD_IN"),
+                electrical_type="passive",
+            ),
+            (None, None),
+            False,
+            False,
+            ("supply", "supply"),
+        ),
     )
 
     async def inspect_mcp() -> DesignLintReport:
@@ -172,3 +194,8 @@ def test_reviewed_peer_power_input_split_matches_between_cli_and_mcp(tmp_path: P
                 "J1.1=USB_5V",
                 "J2.1=<unassigned>",
             )
+            if roles == ("supply", "supply"):
+                assert passive_open_findings[0].evidence["native_pin_functions"] == (
+                    "J1.1=VBUS",
+                    "J2.1=VDD_IN",
+                )

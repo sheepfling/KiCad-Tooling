@@ -87,21 +87,26 @@ def reviewed_peer_passive_power_input_open_candidates(
     observed: NetlistContract,
     coverage: ConnectorCoverageReport | None,
 ) -> tuple[Candidate, ...]:
-    """Review an open generic passive contact beside an assigned reviewed peer.
+    """Review an open passive contact beside an assigned reviewed peer.
 
     Native ``power_in`` contacts retain their existing unconnected-pin rule.
-    This predicate adds the mapped context needed for generic passive contacts
-    whose role is still unclassified in the project pin map.
+    This predicate adds mapped context for generic unclassified contacts and
+    supply-role contacts with unlike named power-function categories.
     """
     candidates: list[Candidate] = []
     for pair in _reviewed_peer_power_input_pairs(observed, coverage):
         for opened_index, assigned_index in ((0, 1), (1, 0)):
             opened = pair.pins[opened_index]
             assigned = pair.pins[assigned_index]
+            roles_are_eligible = (
+                opened.role is None and assigned.role is None
+                if pair.classification == "generic power inputs"
+                else pair.classification in {"named power contacts", "mapped power contacts"}
+                and opened.role == assigned.role == "supply"
+            )
             if (
                 pair.electrical_types[opened_index] != "passive"
-                or opened.role is not None
-                or assigned.role is not None
+                or not roles_are_eligible
                 or opened.nets
                 or opened.unconnected_reason is not None
                 or len(assigned.nets) != 1
@@ -116,20 +121,36 @@ def reviewed_peer_passive_power_input_open_candidates(
                     rule_id=PASSIVE_OPEN_RULE_ID,
                     subject=(
                         f"{pair.group}: {pair.interface_signal} ({pair.voltage_domain}) "
-                        "generic passive power-input contact is open beside its peer"
+                        + (
+                            "generic passive power-input contact is open beside its peer"
+                            if pair.classification == "generic power inputs"
+                            else "mapped passive power contact is open beside its peer"
+                        )
                     ),
-                    message=(
-                        "Unlike connector symbols in this source-reviewed peer group map "
-                        "generic contacts to the same interface signal and voltage domain, "
-                        "but one passive contact has no net while its peer has one assigned "
-                        "net. Review whether the open is intentional or a connection is "
-                        "missing. The map does not require tying the contacts, select a target "
-                        "net, or prove PCB copper continuity."
-                    ),
+                    message=_passive_power_open_message(pair),
                     evidence=_pair_evidence(pair, assignments),
                 )
             )
     return _sorted_candidates(candidates)
+
+
+def _passive_power_open_message(pair: _ReviewedPeerPowerInputPair) -> str:
+    """Explain why the mapped open is reviewable without making it a connection rule."""
+    if pair.classification == "generic power inputs":
+        return (
+            "Unlike connector symbols in this source-reviewed peer group map generic contacts "
+            "to the same interface signal and voltage domain, but one passive contact has no net "
+            "while its peer has one assigned net. Review whether the open is intentional or a "
+            "connection is missing. The map does not require tying the contacts, select a target "
+            "net, or prove PCB copper continuity."
+        )
+    return (
+        "Unlike connector symbols in this source-reviewed peer group map power contacts to the "
+        "same interface signal and voltage domain, but one passive mapped supply contact has no "
+        "net while its peer has one assigned net. Review whether the open is intentional or a "
+        "connection is missing. The map does not require tying the contacts, select a target net, "
+        "or prove PCB copper continuity."
+    )
 
 
 def _reviewed_peer_power_input_pairs(
