@@ -43,6 +43,28 @@ def test_authored_zone_clearance_uses_exact_native_boundary(
     assert "regardless of solder-mask exposure" in check.detail
 
 
+def test_authored_zone_clearance_supports_back_copper_evidence() -> None:
+    requirement = probe_access_requirement(approach_side="back", zone_clearance_mm=0.1)
+    snapshot = probe_access_snapshot(
+        None,
+        None,
+        probe_side="back",
+        include_back=False,
+        schema_version="20",
+        zone_obstacle_uuid=ZONE_UUID,
+        zone_obstacle_layer="B.Cu",
+        zone_obstacle_net="GND",
+        zone_obstacle_island_index=0,
+        zone_obstacle_distance_nm=500_000,
+    )
+
+    (check,) = pcb_probe_envelope_checks(requirement, snapshot)
+
+    assert check.status == "PASS"
+    assert ZONE_UUID in check.detail
+    assert "island 0 on B.Cu" in check.detail
+
+
 def test_explicit_absence_of_foreign_zones_is_a_valid_control() -> None:
     requirement = probe_access_requirement(approach_side="front", zone_clearance_mm=0.1)
     snapshot = probe_access_snapshot(None, None, include_back=False, schema_version="20")

@@ -22979,9 +22979,10 @@ acceptance threads while new lint features proceed:
   does not interpret mask openings, arbitrary mask graphics, physical probe
   reach, fixtures, covers, or manufacturing test coverage. Projects author the
   clearance and basis; there is no universal threshold.
-- **Fixtures:** Tooling-owned synthetic native boards cover a one-nanometer-
-  inside foreign-zone fault, an exact observed-distance boundary, a closer
-  same-net zone decoy, and a filled-zone clearance hole around a target pad.
+- **Fixtures:** Tooling-owned synthetic native boards cover front- and
+  back-side one-nanometer-inside foreign-zone faults, exact observed-distance
+  boundaries, a closer same-net zone decoy, a filled-zone clearance hole around
+  a target pad, and closer opposite-side zones that must be ignored.
   Both digest-pinned KiCad 10.0.0 and 10.0.5 images must produce identical,
   source-bound observations on repeated capture.
 - **Selection:** Run

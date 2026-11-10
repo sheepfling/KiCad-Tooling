@@ -13,6 +13,8 @@ ZONE_PROBE_EXPECTED_STATUSES = {
     "test-access/pcb-probe-envelope/zone-clearance-boundary-control": "PASS",
     "test-access/pcb-probe-envelope/same-net-zone-control": "PASS",
     "test-access/pcb-probe-envelope/filled-zone-hole-control": "PASS",
+    "test-access/pcb-probe-envelope/back-zone-clearance-fault": "FAIL",
+    "test-access/pcb-probe-envelope/back-zone-clearance-boundary-control": "PASS",
 }
 
 ZONE_PROBE_EXPECTED_OBSERVATIONS = {
@@ -41,6 +43,20 @@ ZONE_PROBE_EXPECTED_OBSERVATIONS = {
         "00000000-0000-0000-0000-000000000053",
         "F.Cu",
         "FOREIGN_ZONE_HOLE",
+        0,
+        450_499,
+    ),
+    ("j32.1", "back"): (
+        "00000000-0000-0000-0000-000000000054",
+        "B.Cu",
+        "FOREIGN_ZONE_BACK_FAULT",
+        0,
+        450_499,
+    ),
+    ("j33.1", "back"): (
+        "00000000-0000-0000-0000-000000000055",
+        "B.Cu",
+        "FOREIGN_ZONE_BACK_BOUNDARY",
         0,
         450_499,
     ),
@@ -113,6 +129,38 @@ def zone_probe_fixture_decisions(
                     tip_diameter_mm=0.6,
                     clearance_mm=0.1,
                     zone_clearance_mm=0.1,
+                ),
+            ),
+        ),
+        RequiredTestAccess(
+            mode="required",
+            id="back-zone-clearance-fault",
+            basis="Synthetic back-side foreign filled zone lies one nanometer inside the authored envelope",
+            net="TARGET_ZONE_BACK_FAULT",
+            endpoints=(
+                endpoint(
+                    "J32",
+                    "TARGET_ZONE_BACK_FAULT",
+                    approach_side="back",
+                    tip_diameter_mm=0.6,
+                    clearance_mm=0.1,
+                    zone_clearance_mm=0.1505,
+                ),
+            ),
+        ),
+        RequiredTestAccess(
+            mode="required",
+            id="back-zone-clearance-boundary-control",
+            basis="Synthetic back-side foreign filled zone sits at the authored clearance boundary",
+            net="TARGET_ZONE_BACK_BOUNDARY",
+            endpoints=(
+                endpoint(
+                    "J33",
+                    "TARGET_ZONE_BACK_BOUNDARY",
+                    approach_side="back",
+                    tip_diameter_mm=0.6,
+                    clearance_mm=0.1,
+                    zone_clearance_mm=0.150499,
                 ),
             ),
         ),

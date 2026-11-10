@@ -391,7 +391,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             project=project,
             kicad_version=config.kicad_version,
             fixture_sha256=source_hash,
-            checks="12 PASS, 11 expected FAIL, 1 NOT_RUN",
+            checks="13 PASS, 12 expected FAIL, 1 NOT_RUN",
             repeatable="true",
             receipt=(scratch.relative_to(root) / "receipt-first").as_posix(),
         )

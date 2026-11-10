@@ -177,6 +177,22 @@ _ACCESS_PROBE_EXPECTED_PAD_OBSERVATIONS = {
         "circle",
         800_000,
     ),
+    ("j32.1", "back"): (
+        "J33.1",
+        "TARGET_ZONE_BACK_BOUNDARY",
+        9_750_001,
+        True,
+        "circle",
+        800_000,
+    ),
+    ("j33.1", "back"): (
+        "J32.1",
+        "TARGET_ZONE_BACK_FAULT",
+        9_750_001,
+        True,
+        "circle",
+        800_000,
+    ),
 }
 
 _EXPECTED_COURTYARDS = {

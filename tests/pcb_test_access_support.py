@@ -74,6 +74,7 @@ def probe_access_snapshot(
     front_nm: int | None,
     back_nm: int | None,
     *,
+    probe_side: Literal["front", "back"] = "front",
     back_exposed: bool = True,
     include_back: bool = True,
     aperture_shape: Literal["circle", "oval", "rectangle", "roundrect", "unsupported"] = "circle",
@@ -162,7 +163,7 @@ def probe_access_snapshot(
         access_probe_observations=(
             PcbAccessProbeObservation(
                 endpoint="J1.9",
-                side="front",
+                side=probe_side,
                 target_net="RESET_N",
                 target_exposed=True,
                 obstacle="J2.9" if front_nm is not None else None,
@@ -216,7 +217,7 @@ def probe_access_snapshot(
                 (
                     PcbAccessProbeObservation(
                         endpoint="J1.9",
-                        side="back",
+                        side="back" if probe_side == "front" else "front",
                         target_net="RESET_N",
                         target_exposed=back_exposed,
                         obstacle="J2.9" if back_exposed and back_nm is not None else None,
@@ -329,7 +330,7 @@ def probe_access_snapshot(
                     value="Synthetic footprint",
                     position_nm=position,
                     orientation_microdegrees=0,
-                    side="F.Cu",
+                    side="F.Cu" if probe_side == "front" else "B.Cu",
                 )
                 for reference, footprint, position in (
                     ("J1", "Connector:Dsub-9_Male", (10_000_000, 10_000_000)),

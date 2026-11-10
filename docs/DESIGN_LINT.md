@@ -8670,8 +8670,9 @@ a rectangular target, a drilled target, untented front and back vias, an exact
 via-clearance boundary, a same-net via decoy, and a nearby tented via that must
 be excluded. Track cases include different-net segments, an exact-distance
 boundary, a close same-net track control, and an unconnected arc. Zone cases
-include a one-nanometer-inside foreign-copper fault, an exact-distance boundary,
-a close same-net zone decoy, and the clearance hole around a target pad. It checks
+include front- and back-side one-nanometer-inside foreign-copper faults,
+exact-distance boundaries, a close same-net zone decoy, and the clearance hole
+around a target pad. Closer opposite-side zones verify layer filtering. It checks
 front/back/either-side behavior, exact aperture and clearance boundaries,
 unsupported-shape reporting, expected faults, and repeatability across two
 native loads. It also checks a nearby footprint with no courtyard plus exact
