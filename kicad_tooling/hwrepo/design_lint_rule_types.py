@@ -9,6 +9,7 @@ DesignLintRuleId = Literal[
     "connector.mapped_supply_domains_share_net",
     "connector.mapped_return_domains_share_net",
     "connector.mapped_named_peer_return_split_nets",
+    "connector.mapped_named_peer_supply_split_nets",
     "connector.return_supply_scope_singleton",
     "connector.stateful_contact_topology_mismatch",
     "connector.peer_pin_assignment_outlier",

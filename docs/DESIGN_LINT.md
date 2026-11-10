@@ -880,7 +880,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 322 active rules.
+The catalog currently contains 323 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -1071,6 +1071,36 @@ Select the synthetic, CLI/MCP parity, and pinned native tests with:
   tests/test_design_lint_mcp_parity_mapped_peer_return_split.py \
   tests/test_connector_mapped_named_peer_return_split_native.py \
   -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_named_peer_return_split_nets")'
+```
+
+Set `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` to export the tooling-owned fault
+and common-net control twice with exact KiCad 10.0.0 and 10.0.5 Docker images.
+
+### Named mapped peer supplies in a shared domain with split nets
+
+`connector.mapped_named_peer_supply_split_nets` prompts when fitted supply
+contacts on at least two connector references have the same exact authored
+`voltage_domain` and current, reviewed `supply_comparison_group`, but use
+separate exact native nets. It addresses meaningful native pin functions that
+the generic repeated-pin and recognized power-category checks cannot classify
+as supply peers.
+
+The check requires complete source-matched connector maps, a catalog digest,
+one current supply-comparison group for every mapped supply participant in the
+domain, meaningful native pin labels that are neither generic, return-like, nor
+already handled as known power categories, and exactly one net per pin. A group
+and shared domain set review scope; they do not require a common net or prove an
+electrical fault, an external connection, or PCB continuity. Separate sources,
+filters, protection, switches, and isolation may be intentional.
+
+Select the synthetic, CLI/MCP parity, and pinned native tests with:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  tests/test_connector_mapped_named_peer_supply_split.py \
+  tests/test_design_lint_mcp_parity_mapped_peer_supply_split.py \
+  tests/test_connector_mapped_named_peer_supply_split_native.py \
+  -m 'design_lint and connector_lint and interface_lint and power_lint and design_lint_rule(rule_id="connector.mapped_named_peer_supply_split_nets")'
 ```
 
 Set `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` to export the tooling-owned fault

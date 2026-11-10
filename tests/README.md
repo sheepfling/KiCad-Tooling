@@ -152,6 +152,24 @@ Run its source-hashed native fault and common-net control with
 documented in the
 [fixture README](fixtures/design_lint/mapped-named-peer-return-native/README.md).
 
+Named mapped peer supplies with distinct native pin functions use a separate
+review rule. It requires a current reviewed supply comparison group for every
+mapped supply participant in the voltage domain, and it suppresses contacts
+already covered by the generic peer-pin check:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  tests/test_connector_mapped_named_peer_supply_split.py \
+  tests/test_design_lint_mcp_parity_mapped_peer_supply_split.py \
+  tests/test_connector_mapped_named_peer_supply_split_native.py \
+  -m 'design_lint and connector_lint and interface_lint and power_lint and design_lint_rule(rule_id="connector.mapped_named_peer_supply_split_nets")'
+```
+
+Run exact native fault and common-net control exports with
+`KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. The tooling-owned source boundary,
+SHA-256 values, and limitations are in the
+[peer-supply fixture README](fixtures/design_lint/mapped-named-peer-supply-native/README.md).
+
 The low-equivalent I2C resistance rule also has synthetic native fault/control schematics
 for an exact 1 kΩ boundary and a 750 Ω finding; source hashes and limits are in the
 [fixture README](fixtures/design_lint/i2c-low-equivalent-resistance-native/README.md).

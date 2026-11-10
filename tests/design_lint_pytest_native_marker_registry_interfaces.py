@@ -288,6 +288,9 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_connector_mapped_named_signal_native.py": frozenset(
             {"connector_lint", "interface_lint", "native_kicad", "slow"}
         ),
+        "test_connector_mapped_named_peer_supply_split_native.py": frozenset(
+            {"connector_lint", "interface_lint", "power_lint", "native_kicad", "slow"}
+        ),
         "test_connector_mapped_interface_shield_on_return_net_native_fixture_lane.py": frozenset(
             {"connector_lint", "interface_lint"}
         ),
