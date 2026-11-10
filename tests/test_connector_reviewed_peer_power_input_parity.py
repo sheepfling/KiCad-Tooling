@@ -63,12 +63,13 @@ def test_reviewed_peer_power_input_split_matches_between_cli_and_mcp(tmp_path: P
     manifest_path = root / "projects/controller/project.json"
     manifest = read_model(manifest_path, ProjectManifest)
     cases = (
-        (power_input_netlist(), (None, None), True, False),
+        (power_input_netlist(), (None, None), True, False, (None, None)),
         (
             power_input_netlist(electrical_type="passive"),
             (None, None),
             True,
             False,
+            (None, None),
         ),
         (
             power_input_netlist(
@@ -77,18 +78,38 @@ def test_reviewed_peer_power_input_split_matches_between_cli_and_mcp(tmp_path: P
             (None, None),
             False,
             False,
+            (None, None),
         ),
         (
             power_input_netlist(electrical_type="passive", power_assignments=("USB_5V", None)),
             (None, None),
             False,
             True,
+            (None, None),
         ),
         (
             power_input_netlist(electrical_type="passive", power_assignments=("USB_5V", None)),
             (None, "intentionally open"),
             False,
             False,
+            (None, None),
+        ),
+        (
+            power_input_netlist(functions=("VBUS", "VDD_IN")),
+            (None, None),
+            True,
+            False,
+            ("supply", "supply"),
+        ),
+        (
+            power_input_netlist(
+                functions=("VBUS", "VDD_IN"),
+                power_assignments=("COMMON_5V", "COMMON_5V"),
+            ),
+            (None, None),
+            False,
+            False,
+            ("supply", "supply"),
         ),
     )
 
@@ -105,9 +126,10 @@ def test_reviewed_peer_power_input_split_matches_between_cli_and_mcp(tmp_path: P
             assert result.structured_content is not None
             return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
 
-    for observed, open_reasons, expected_split, expected_passive_open in cases:
+    for observed, open_reasons, expected_split, expected_passive_open, roles in cases:
         interface_catalog, project_interfaces, connector_reviews = power_input_project_documents(
-            unconnected_pin_reasons=open_reasons
+            roles=roles,
+            unconnected_pin_reasons=open_reasons,
         )
         write_model(root / "catalog/interfaces.json", interface_catalog)
         write_model(
@@ -140,6 +162,11 @@ def test_reviewed_peer_power_input_split_matches_between_cli_and_mcp(tmp_path: P
                 "J1.1=USB_5V",
                 "J2.1=SERIAL_5V",
             )
+            if roles == ("supply", "supply"):
+                assert split_findings[0].evidence["native_pin_functions"] == (
+                    "J1.1=VBUS",
+                    "J2.1=VDD_IN",
+                )
         if passive_open_findings:
             assert passive_open_findings[0].evidence["assignments"] == (
                 "J1.1=USB_5V",

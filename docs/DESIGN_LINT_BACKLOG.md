@@ -21770,6 +21770,59 @@ acceptance threads while new lint features proceed:
   evidence is unavailable. The overall project verification therefore remains
   `FAIL` for review, and no example source or expectation was changed.
 
+#### LINT-360 — Review named supply contacts split across unlike connector peers
+
+- **Rule:** Extends `connector.reviewed_peer_power_input_split`, default
+  `review`; no new rule ID or project configuration format.
+- **Gap:** LINT-342 covered generic roleless contacts, while
+  `connector.repeated_pin_function` compares matching native power-function
+  categories. A current reviewed map could therefore place a named VBUS pin
+  and a named VDD input in the same peer group, signal, and voltage domain,
+  while their separate net assignments produced no peer finding.
+- **Predicate:** Keep LINT-342's globally complete connector inventory,
+  source-matched maps, explicit shared peer group, unlike symbols, no PART_ID,
+  distinct nonempty value/footprint identity, exact shared interface signal
+  and voltage domain, and one net per contact. Continue reviewing generic
+  `power_in`/`passive` contacts without mapped supply roles. Also review
+  source-matched `supply` contacts whose native electrical type is `power_in`
+  or `passive` and whose native power-function categories differ. A generic
+  function paired with a recognized named supply category is also reviewable.
+  Same-category named functions remain with `connector.repeated_pin_function`.
+- **Incremental value:** Before the extension, the tooling-owned synthetic
+  VBUS/VDD_IN split with complete maps passed without the target finding. It
+  now emits one REVIEW with exact pin functions, normalized categories, map
+  signal/domain, and native net assignments. A common-net control is quiet;
+  a split VBUS/USB_VBUS same-category control remains with the existing
+  repeated-function rule. Generic, passive, mixed generic/named, domain,
+  group, stale-map, policy, and ordering cases are covered.
+- **Boundary:** Same signal/domain mappings and recognized function categories
+  are review clues, not a requirement to join supplies. Source selection,
+  filtering, protection, and isolation can make separate nets intentional.
+  Unrecognized function categories, open or ambiguous contacts, incomplete or
+  stale connector maps, DNP parts, and same-symbol/PART_ID/value-footprint
+  peers remain outside this extension. Native schematic assignments do not
+  establish PCB copper continuity or actual voltage.
+- **Evidence:** Synthetic tests use tooling-owned netlists and source-matched
+  connector maps. Exact native fault/control schematics are
+  `named-fault.kicad_sch` (SHA-256
+  `ae825d986b42a4987d580d66a174fd87cf53d0c93d7d949ac65a3660990e1936`) and
+  `named-control.kicad_sch` (SHA-256
+  `85dc5cb5f4458bc37efe8dba6f48064c72acf0c4987be0e4a8fde4b136e805f1`).
+  Both export twice under pinned KiCad 10.0.0 and 10.0.5 Docker images. The
+  CLI and MCP reports are compared through the existing parity test. No cohort
+  source, board, or proprietary project data was added.
+- **Verification:** The focused synthetic, existing generic, and CLI/MCP
+  selector passed 13 tests with 4 deselected. The digest-pinned native power
+  peer gate passed 2 parameterized tests across KiCad 10.0.0 and 10.0.5; one
+  unmarked source-digest test was deselected by the narrow rule selector.
+- **Selection:** Run
+  `tests/test_connector_reviewed_peer_named_power_split.py`,
+  `tests/test_connector_reviewed_peer_power_input_split.py`,
+  `tests/test_connector_reviewed_peer_power_input_parity.py`, and
+  `tests/test_connector_reviewed_peer_power_input_native.py` with
+  `design_lint_rule(rule_id="connector.reviewed_peer_power_input_split")`.
+  The exact-native lane uses `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

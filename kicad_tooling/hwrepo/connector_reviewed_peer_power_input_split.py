@@ -1,4 +1,4 @@
-"""Review generic power-input contacts across source-reviewed connector peers."""
+"""Review power-input contacts across source-reviewed connector peers."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from .connector_coverage_models import (
     ConnectorMappedPinEvidence,
     ConnectorMappedPinEvidenceByComponentPin,
 )
-from .connector_identity import pin_function_is_generic
+from .connector_identity import connector_power_function_key, pin_function_is_generic
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
@@ -39,16 +39,22 @@ class _ReviewedPeerPowerInputPair:
     voltage_domain: str
     pins: tuple[ConnectorMappedPinEvidence, ConnectorMappedPinEvidence]
     electrical_types: tuple[str, str]
+    native_functions: tuple[str, str]
+    power_categories: tuple[str | None, str | None]
+    classification: str
 
 
 def reviewed_peer_power_input_split_candidates(
     observed: NetlistContract,
     coverage: ConnectorCoverageReport | None,
 ) -> tuple[Candidate, ...]:
-    """Find mapped generic power inputs split across unlike reviewed peers.
+    """Find mapped power contacts split across unlike reviewed peers.
 
     A matching interface signal and voltage domain are review clues, not a
-    requirement to join the power nets.
+    requirement to join the power nets. Generic unclassified contacts and
+    source-mapped supply contacts with unlike named native functions are
+    separate evidence classes; same-category named contacts stay with the
+    repeated-function check.
     """
     candidates: list[Candidate] = []
     for pair in _reviewed_peer_power_input_pairs(observed, coverage):
@@ -68,16 +74,9 @@ def reviewed_peer_power_input_split_candidates(
                 rule_id=RULE_ID,
                 subject=(
                     f"{pair.group}: {pair.interface_signal} ({pair.voltage_domain}) "
-                    "generic power inputs use separate nets"
+                    f"{pair.classification} use separate nets"
                 ),
-                message=(
-                    "Unlike connector symbols in this source-reviewed peer group map a "
-                    "generic native power contact (power_in or passive) to the same "
-                    "interface signal and voltage domain, but assign it to different nets. "
-                    "Review whether separate sources, filtering, or isolation are intentional. "
-                    "The map does not prove these nets should be joined or that PCB copper is "
-                    "continuous."
-                ),
+                message=_finding_message(pair),
                 evidence=_pair_evidence(pair, assignments),
             )
         )
@@ -137,7 +136,7 @@ def _reviewed_peer_power_input_pairs(
     observed: NetlistContract,
     coverage: ConnectorCoverageReport | None,
 ) -> tuple[_ReviewedPeerPowerInputPair, ...]:
-    """Return exact mapped generic power contacts in unlike reviewed peer pairs."""
+    """Return exact mapped power contacts in unlike reviewed peer pairs."""
     if coverage is None or coverage.status != "COMPLETE":
         return ()
 
@@ -204,6 +203,36 @@ def _reviewed_peer_power_input_pairs(
                 if len(left) != 1 or len(right) != 1:
                     continue
                 left_pin, right_pin = left[0], right[0]
+                native_functions = (
+                    functions.get(left_pin.component_pin.casefold(), ""),
+                    functions.get(right_pin.component_pin.casefold(), ""),
+                )
+                categories: tuple[str | None, str | None] = (
+                    connector_power_function_key(native_functions[0])
+                    if native_functions[0]
+                    else None,
+                    connector_power_function_key(native_functions[1])
+                    if native_functions[1]
+                    else None,
+                )
+                if (
+                    left_pin.role in _UNCLASSIFIED_ROLES
+                    and right_pin.role in _UNCLASSIFIED_ROLES
+                    and all(pin_function_is_generic(function) for function in native_functions)
+                ):
+                    classification = "generic power inputs"
+                elif left_pin.role == right_pin.role == "supply":
+                    if categories[0] == categories[1]:
+                        # Same named category and generic mapped supplies already
+                        # have a more direct source in the repeated-function scan.
+                        continue
+                    classification = (
+                        "named power contacts"
+                        if all(category is not None for category in categories)
+                        else "mapped power contacts"
+                    )
+                else:
+                    continue
                 pairs.append(
                     _ReviewedPeerPowerInputPair(
                         group=group_names[group_key],
@@ -224,6 +253,9 @@ def _reviewed_peer_power_input_pairs(
                             electrical_types[left_pin.component_pin.casefold()],
                             electrical_types[right_pin.component_pin.casefold()],
                         ),
+                        native_functions=native_functions,
+                        power_categories=categories,
+                        classification=classification,
                     )
                 )
     return tuple(pairs)
@@ -235,19 +267,26 @@ def _eligible_power_inputs(
     electrical_types: dict[str, str],
     reference: str,
 ) -> dict[tuple[str, str], list[ConnectorMappedPinEvidence]]:
-    """Index current generic power contacts by authored signal and domain."""
+    """Index eligible current power contacts by authored signal and domain."""
     found: dict[tuple[str, str], list[ConnectorMappedPinEvidence]] = {}
     for pin in mapped_pins.values():
         if pin.component_pin.rsplit(".", 1)[0].casefold() != reference.casefold():
             continue
         function = functions.get(pin.component_pin.casefold())
+        generic_function = pin_function_is_generic(function)
+        named_power_function = (
+            not generic_function and connector_power_function_key(function or "") is not None
+        )
         if (
-            pin.role not in _UNCLASSIFIED_ROLES
+            pin.role not in _UNCLASSIFIED_ROLES | {"supply"}
             or pin.voltage_domain is None
             or not pin.interface_signal.strip()
             or electrical_types.get(pin.component_pin.casefold())
             not in _POWER_INPUT_ELECTRICAL_TYPES
-            or not pin_function_is_generic(function)
+            or not (
+                (pin.role in _UNCLASSIFIED_ROLES and generic_function)
+                or (pin.role == "supply" and (generic_function or named_power_function))
+            )
         ):
             continue
         key = (pin.interface_signal.casefold(), pin.voltage_domain.casefold())
@@ -260,7 +299,7 @@ def _pair_evidence(
     assignments: tuple[str, str],
 ) -> dict[str, tuple[str, ...]]:
     """Build stable source evidence shared by peer power-input findings."""
-    return {
+    evidence = {
         "peer_assignment_group": (pair.group,),
         "peer_assignment_basis": pair.group_basis,
         "connectors": tuple(sorted(pair.references, key=lambda item: (item.casefold(), item))),
@@ -271,6 +310,40 @@ def _pair_evidence(
         "voltage_domains": (pair.voltage_domain,),
         "assignments": tuple(sorted(assignments, key=lambda item: (item.casefold(), item))),
     }
+    if pair.classification != "generic power inputs":
+        evidence["native_pin_functions"] = tuple(
+            sorted(
+                (
+                    f"{pin.component_pin}={function or '<unnamed>'}"
+                    for pin, function in zip(pair.pins, pair.native_functions, strict=True)
+                ),
+                key=lambda item: (item.casefold(), item),
+            )
+        )
+        evidence["power_role_categories"] = tuple(
+            sorted(
+                {category for category in pair.power_categories if category is not None},
+                key=lambda item: (item.casefold(), item),
+            )
+        )
+    return evidence
+
+
+def _finding_message(pair: _ReviewedPeerPowerInputPair) -> str:
+    """Describe the evidence class without turning the map into a net requirement."""
+    if pair.classification == "generic power inputs":
+        contact = "generic native power contacts (power_in or passive)"
+    elif pair.classification == "named power contacts":
+        contact = "named native power contacts with different recognized supply functions"
+    else:
+        contact = "mapped power contacts with one generic and one named supply function"
+    return (
+        "Unlike connector symbols in this source-reviewed peer group map "
+        f"{contact} to the same interface signal and voltage domain, but assign them to "
+        "different nets. Review whether separate sources, filtering, or isolation are "
+        "intentional. The map does not prove these nets should be joined or that PCB copper "
+        "is continuous."
+    )
 
 
 def _sorted_candidates(candidates: list[Candidate]) -> tuple[Candidate, ...]:
