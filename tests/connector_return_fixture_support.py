@@ -67,6 +67,8 @@ def connector_return_fixture_contracts() -> dict[str, NetlistContract]:
             "repeated-signal-pin-unassigned-fault": repeated_signal_pin_with_unassigned_member(),
             "repeated-signal-pin-unassigned-control": repeated_signal_pin_component(split=False),
             "mapped-distinct-signals-share-net": _mapped_signal_assignments(shared=True),
+            "mapped-supply-signal-share-fault": _mapped_supply_signal_assignments(shared=True),
+            "mapped-supply-signal-share-control": _mapped_supply_signal_assignments(shared=False),
             "mapped-same-signal-split-nets": _mapped_signal_assignments(shared=False),
             "reviewed-peer-signal-split": peer_signal_netlist(),
             "mapped-interface-peer-context-open": peer_signal_netlist(
@@ -147,6 +149,23 @@ def _mapped_signal_assignments(*, shared: bool) -> NetlistContract:
         component_symbols={"J1": "Synthetic:MappedConnector"},
         component_pin_numbers={"J1": ("1", "2")},
         pin_functions={"J1.1": "1", "J1.2": "2"},
+    )
+
+
+def _mapped_supply_signal_assignments(*, shared: bool) -> NetlistContract:
+    """Build a mapped supply/signal connector with shared or separate assignments."""
+    nets = (
+        {"SHARED_NET": ("J1.1", "J1.2")}
+        if shared
+        else {"SUPPLY_NET": ("J1.1",), "SIGNAL_NET": ("J1.2",)}
+    )
+    return NetlistContract(
+        components={},
+        nets=nets,
+        component_symbols={"J1": "Lint:GenericPort"},
+        component_pin_numbers={"J1": ("1", "2")},
+        pin_functions={"J1.1": "1", "J1.2": "2"},
+        pin_electrical_types={"J1.1": "passive", "J1.2": "passive"},
     )
 
 

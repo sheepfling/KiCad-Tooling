@@ -17,6 +17,7 @@ CONNECTOR_MAPPED_SIGNAL_MODULES = (
     "connector_mapped_interface_pins.py",
     "connector_mapped_signal_sharing.py",
     "connector_mapped_shield_signal_sharing.py",
+    "connector_mapped_supply_signal_sharing.py",
     "connector_mapped_signal_split_nets.py",
     "connector_reviewed_peer_signal_split.py",
     "connector_reviewed_peer_signal_evidence.py",

@@ -7,6 +7,11 @@ from tests.design_lint_fixtures.connector_mapped_signal_sharing import (
     signal_sharing_netlist,
     signal_sharing_report,
 )
+from tests.design_lint_fixtures.connector_mapped_supply_signal_sharing import (
+    supply_signal_coverage,
+    supply_signal_netlist,
+    supply_signal_report,
+)
 
 
 def connector_role_sharing_rule_ids() -> set[str]:
@@ -26,4 +31,8 @@ def connector_role_sharing_rule_ids() -> set[str]:
         coverage = signal_sharing_coverage(source, signal_names=signal_names, roles=roles)
         report, _coverage = signal_sharing_report(source, coverage=coverage)
         emitted.update(item.rule_id for item in report.findings)
+    supply_source = supply_signal_netlist()
+    supply_coverage = supply_signal_coverage(supply_source)
+    supply_report, _coverage = supply_signal_report(supply_source, coverage=supply_coverage)
+    emitted.update(item.rule_id for item in supply_report.findings)
     return emitted

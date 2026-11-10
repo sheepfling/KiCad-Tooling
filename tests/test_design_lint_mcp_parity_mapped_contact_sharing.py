@@ -47,20 +47,28 @@ pytestmark = [
 
 SHIELD_RULE_ID = "connector.mapped_shield_signal_share_net"
 RETURN_RULE_ID = "connector.mapped_signal_return_share_net"
+SUPPLY_RULE_ID = "connector.mapped_supply_signal_share_net"
 INTERFACE_ID = "synthetic-mapped-contact-sharing"
-_ROLES: tuple[tuple[Literal["shield", "return"], str, MappedContactSharingRuleId, str], ...] = (
+_ROLES: tuple[
+    tuple[Literal["shield", "return", "supply"], str, MappedContactSharingRuleId, str], ...
+] = (
     ("shield", "CHASSIS_SHIELD", SHIELD_RULE_ID, "shield_component_pin"),
     ("return", "SIGNAL_RETURN", RETURN_RULE_ID, "return_component_pin"),
+    ("supply", "SUPPLY_IN", SUPPLY_RULE_ID, "supply_component_pin"),
 )
 
 
 def _install_reviewed_contact_interface(
     root: Path,
     *,
-    primary_role: Literal["shield", "return"],
+    primary_role: Literal["shield", "return", "supply"],
     primary_signal: str,
 ) -> Path:
-    primary_voltage = "chassis" if primary_role == "shield" else "signal-return"
+    primary_voltage = {
+        "shield": "chassis",
+        "return": "signal-return",
+        "supply": "supply-5v",
+    }[primary_role]
     interface = InterfaceRecord(
         id=INTERFACE_ID,
         revision="synthetic-1",
@@ -69,7 +77,7 @@ def _install_reviewed_contact_interface(
                 number="1",
                 signal=primary_signal,
                 role=primary_role,
-                direction="passive",
+                direction="input" if primary_role == "supply" else "passive",
                 voltage_domain=primary_voltage,
                 mating=primary_signal,
                 orientation="straight",
@@ -119,6 +127,7 @@ def _install_reviewed_contact_interface(
 
 @pytest.mark.design_lint_rule(rule_id=SHIELD_RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=RETURN_RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=SUPPLY_RULE_ID)
 def test_mapped_contact_sharing_findings_match_between_cli_and_mcp(tmp_path: Path) -> None:
     root, native = synthetic_design_lint_project(
         tmp_path,

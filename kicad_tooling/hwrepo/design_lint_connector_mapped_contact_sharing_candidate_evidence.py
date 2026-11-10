@@ -10,13 +10,15 @@ from .connector_coverage_models import ConnectorCoverageReport, ConnectorMappedP
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .netlist_contract_models import NetlistContract
 
-MappedContactSharingRole: TypeAlias = Literal["shield", "return"]
+MappedContactSharingRole: TypeAlias = Literal["shield", "return", "supply"]
 MappedContactSharingRuleId: TypeAlias = Literal[
     "connector.mapped_shield_signal_share_net",
     "connector.mapped_signal_return_share_net",
+    "connector.mapped_supply_signal_share_net",
 ]
 SHIELD_SIGNAL_RULE_ID: MappedContactSharingRuleId = "connector.mapped_shield_signal_share_net"
 SIGNAL_RETURN_RULE_ID: MappedContactSharingRuleId = "connector.mapped_signal_return_share_net"
+SUPPLY_SIGNAL_RULE_ID: MappedContactSharingRuleId = "connector.mapped_supply_signal_share_net"
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,8 +33,10 @@ class MappedConnectorContactsAtNet:
     def __post_init__(self) -> None:
         if not self.net_name:
             raise ValueError("Mapped connector contact groups require a native net name")
-        if self.primary_role not in {"shield", "return"}:
-            raise ValueError("Mapped contact-sharing primary role must be shield or return")
+        if self.primary_role not in {"shield", "return", "supply"}:
+            raise ValueError(
+                "Mapped contact-sharing primary role must be shield, return, or supply"
+            )
         if self.primary_contacts != tuple(
             sorted(self.primary_contacts, key=lambda item: item.component_pin)
         ):
@@ -85,7 +89,9 @@ class MappedConnectorContactSharingFindingEvidence:
     def rule_id(self) -> MappedContactSharingRuleId:
         if self.contacts.primary_role == "shield":
             return SHIELD_SIGNAL_RULE_ID
-        return SIGNAL_RETURN_RULE_ID
+        if self.contacts.primary_role == "return":
+            return SIGNAL_RETURN_RULE_ID
+        return SUPPLY_SIGNAL_RULE_ID
 
 
 def project_mapped_connector_contact_sharing_evidence(

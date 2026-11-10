@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 314 rules are implemented with synthetic regression coverage.
+The following 315 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 314 active rules.
+The catalog currently contains 315 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -434,6 +434,7 @@ skipped under prerelease policy.
 
 - `connector.repeated_pin_function`
 - `connector.mapped_supply_domains_share_net`
+- `connector.mapped_supply_signal_share_net`
 - `connector.return_supply_scope_singleton`
 - `connector.stateful_contact_topology_mismatch`
 - `connector.mapped_shield_signal_share_net`
@@ -785,6 +786,14 @@ standalone parity work when it closes a demonstrated feature regression.
   quiet control. CLI/MCP parity and repeated native exports on pinned KiCad
   10.0.0 and 10.0.5 pass. The map and rail-like label remain review clues, not
   proof of an electrical defect.
+- **Latest progress (LINT-367, mapped supply/signal shared net):**
+  A new default-REVIEW connector heuristic now compares a complete current interface
+  map with the native netlist and flags a mapped supply contact and signal
+  contact on one exact connector net. The fault/control pair repeats through
+  digest-pinned KiCad 10.0.0 and 10.0.5 Docker exports. Source and map role are
+  review clues only; intentional sharing remains valid and can be overridden
+  by project policy. See the
+  [fixture notes](../tests/fixtures/design_lint/mapped-supply-signal-share/README.md).
 - **Latest progress (LINT-364, named mapped signal opens):** The baseline
   returned no finding for a named `PWM_SYNC` contact with a complete,
   source-matched signal map and no native net assignment. The mapped-signal
@@ -4027,7 +4036,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 314 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 315 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -22184,6 +22193,38 @@ acceptance threads while new lint features proceed:
 - **Selection:** Run
   `python -I -m pytest -q tests/test_design_lint_backlog_catalog_status.py
   -m 'design_lint and catalog_lint'`.
+
+#### LINT-367 — Review mapped supply contacts sharing a net with signals
+
+- **Status:** Implemented as `connector.mapped_supply_signal_share_net`.
+- **Priority:** P1 connector/interface review; project-authored interface
+  roles supply the comparison context.
+- **Gap:** A connector contact mapped as supply and another mapped as signal
+  can share one exact native net without ERC reporting a pin-type conflict.
+  Existing signal/signal, return/signal, and shield/signal sharing rules do
+  not cover this role pair.
+- **Behavior:** For a fitted connector with complete, current, source-matched
+  interface coverage and a catalog digest, emit a default-REVIEW candidate
+  when one or more mapped supply contacts and one or more mapped signal
+  contacts each have exactly one assignment to the same native net. Existing
+  project rule modes and exact fingerprint ignores apply.
+- **Boundary:** Role maps and net assignments are evidence for review, not
+  proof of incompatible voltage, unintended sharing, an electrical defect, or
+  PCB copper continuity. DNP, reasoned-open, ambiguous, stale, incomplete, or
+  digestless evidence is excluded. Intentional shared supply/signal nets remain
+  valid.
+- **Evidence:** Synthetic tests cover shared and separate nets, alternate
+  roles, DNP, intentional opens, ambiguous assignments, stale/incomplete
+  maps, project overrides, and deterministic ordering. CLI/MCP reports match.
+  Tooling-owned source-hashed native fault/control exports repeat on pinned
+  KiCad 10.0.0 and 10.0.5. See the
+  [fixture notes](../tests/fixtures/design_lint/mapped-supply-signal-share/README.md).
+- **Selection:** Run
+  `tests/test_connector_mapped_supply_signal_share.py`,
+  `tests/test_design_lint_mcp_parity_mapped_contact_sharing.py`, and
+  `tests/test_connector_mapped_supply_signal_share_native_fixture_lane.py`
+  with `design_lint_rule(rule_id="connector.mapped_supply_signal_share_net")`.
+  Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate
 

@@ -167,6 +167,9 @@ DIGITAL_PEER_FIXTURE_THEME_SUITES = (
     "test_digital_peer_serial_reference_fixture_lane.py",
 )
 NATIVE_INTERFACE_THEME_SUITES = (
+    "test_connector_mapped_supply_signal_share.py",
+    "test_connector_mapped_supply_signal_share_native_fixture_lane.py",
+    "test_design_lint_mcp_parity_mapped_contact_sharing.py",
     "test_ci_hosted_usb_c_ports.py",
     "test_ci_hosted_stm32.py",
     "test_ci_hosted_control_inputs.py",

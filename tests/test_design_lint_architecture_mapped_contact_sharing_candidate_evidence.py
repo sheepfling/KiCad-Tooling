@@ -12,6 +12,9 @@ from kicad_tooling.hwrepo.connector_mapped_shield_signal_sharing import (
     mapped_shields_sharing_signal_nets,
     mapped_signals_sharing_return_nets,
 )
+from kicad_tooling.hwrepo.connector_mapped_supply_signal_sharing import (
+    mapped_supply_signal_sharing_net_candidates,
+)
 from kicad_tooling.hwrepo.connector_peer_pin_models import ConnectorPinRole
 from kicad_tooling.hwrepo.design_lint_connector_mapped_contact_sharing_candidate_evidence import (
     MappedConnectorContactSharingCandidate,
@@ -38,6 +41,7 @@ pytestmark = [
     (
         (("shield", "signal"), "shield"),
         (("return", "signal"), "return"),
+        (("supply", "signal"), "supply"),
     ),
 )
 def test_mapped_role_candidate_retains_current_catalog_and_pin_records(
@@ -51,6 +55,13 @@ def test_mapped_role_candidate_retains_current_catalog_and_pin_records(
         roles=roles,
     )
 
+    if primary_role == "supply":
+        (candidate,) = mapped_supply_signal_sharing_net_candidates(observed, coverage)
+        assert candidate.rule_id == "connector.mapped_supply_signal_share_net"
+        assert candidate.evidence["supply_component_pin"] == ("J1.1",)
+        assert candidate.evidence["signal_component_pin"] == ("J1.2",)
+        assert candidate.evidence["interface_catalog_sha256"] == ("c" * 64,)
+        return
     if primary_role == "shield":
         (candidate,) = mapped_shields_sharing_signal_nets(observed, coverage)
     else:
@@ -112,7 +123,7 @@ def test_mapped_source_rejects_tampered_net_and_unknown_role() -> None:
             source,
             contacts=replace(source.contacts, net_name="SYNTHETIC_OTHER_NET"),
         )
-    with pytest.raises(ValueError, match="primary role must be shield or return"):
+    with pytest.raises(ValueError, match="primary role must be shield, return, or supply"):
         replace(source.contacts, primary_role=cast(MappedContactSharingRole, "power"))
 
 

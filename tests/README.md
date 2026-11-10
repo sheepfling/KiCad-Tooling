@@ -44,6 +44,21 @@ The generic I2C connector-pair review uses separate tooling-owned synthetic
 fault and named-role control schematics, with their source boundary and pinned
 hashes recorded in the
 [I2C connector-pair fixture README](fixtures/design_lint/i2c-generic-connector-native/README.md).
+Mapped supply and signal contacts sharing one schematic net have a focused
+review selector and source-hashed native fault/control fixtures:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  tests/test_connector_mapped_supply_signal_share.py \
+  tests/test_design_lint_mcp_parity_mapped_contact_sharing.py \
+  tests/test_connector_mapped_supply_signal_share_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_supply_signal_share_net")'
+```
+
+Run the native Docker exports separately with
+`KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. Fixture source hashes and limitations
+are in the
+[mapped supply/signal fixture README](fixtures/design_lint/mapped-supply-signal-share/README.md).
 The low-equivalent I2C resistance rule also has synthetic native fault/control schematics
 for an exact 1 kΩ boundary and a 750 Ω finding; source hashes and limits are in the
 [fixture README](fixtures/design_lint/i2c-low-equivalent-resistance-native/README.md).
