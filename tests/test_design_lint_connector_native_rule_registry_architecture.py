@@ -172,6 +172,7 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         },
         "connector.mapped_interface_signal_on_named_rail": {
             "tests.test_connector_mapped_interface_signal_on_named_rail_native_fixture_lane.test_native_generic_signal_map_on_ret_is_reviewed_and_return_role_is_control",
+            "tests.test_connector_mapped_named_signal_rail_native.test_native_named_mapped_signal_rail_fault_and_control_repeat",
         },
         "connector.mapped_interface_power_contact_unassigned": {
             "tests.test_connector_mapped_interface_power_contact_unassigned.test_native_mapped_power_contact_fault_and_control_are_repeatable",

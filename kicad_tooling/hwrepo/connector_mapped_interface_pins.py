@@ -339,7 +339,7 @@ def mapped_signal_contacts_on_named_rails(
     observed: NetlistContract,
     coverage: ConnectorCoverageReport | None,
 ) -> tuple[Candidate, ...]:
-    """Review generic mapped signal contacts assigned to named rail-like nets."""
+    """Review mapped signal contacts assigned to named rail-like nets."""
     if coverage is None or coverage.status != "COMPLETE":
         return ()
 
@@ -351,7 +351,6 @@ def mapped_signal_contacts_on_named_rails(
             mapped.role != "signal"
             or mapped.unconnected_reason is not None
             or reference.casefold() in dnp_references
-            or not pin_function_is_generic(mapped.symbol_function)
             or len(mapped.nets) != 1
         ):
             continue
@@ -368,7 +367,7 @@ def mapped_signal_contacts_on_named_rails(
                 mapped,
                 rule_id=SIGNAL_NAMED_RAIL_RULE_ID,
                 subject=f"{pin}: mapped signal contact is assigned to {label_clue} net {net_name}",
-                message=f"The source-matched interface maps this generic contact to "
+                message=f"The source-matched interface maps this contact to "
                 f"{mapped.interface_signal} as a signal contact, while its single native "
                 f"net label ({net_name}) is recognized as {label_clue}. Review whether the "
                 "signal is intentionally tied to this rail or the map/assignment needs a "

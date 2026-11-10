@@ -80,6 +80,8 @@ CONNECTOR_LINT_TEST_MODULES = frozenset(
         "tests/test_connector_mapped_interface_signal_peer_context.py",
         "tests/test_connector_mapped_interface_signal_peer_context_native.py",
         "tests/test_connector_mapped_interface_candidate_evidence.py",
+        "tests/test_connector_mapped_named_signal_rail_native.py",
+        "tests/test_design_lint_mcp_parity_mapped_interface_signal.py",
         "tests/test_design_lint_architecture_connector_mapped_interface_candidate_evidence.py",
         "tests/test_connector_mapped_interface_other_named_rail.py",
         "tests/test_connector_mapped_interface_other_named_rail_native_fixture_lane.py",

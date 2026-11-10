@@ -24,7 +24,7 @@ def mapped_named_rail_netlist(
     target_type: str = "input",
     dnp: tuple[str, ...] = (),
 ) -> NetlistContract:
-    """Build one generic connector contact with a controlled assigned label."""
+    """Build one mapped connector contact with a controlled assigned label."""
     return mapped_interface_netlist(
         target_net=target_net,
         target_function=target_function,

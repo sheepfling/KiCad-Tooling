@@ -763,6 +763,14 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **Latest progress (LINT-365, named mapped signals on rail-like nets):** The
+  default-REVIEW `connector.mapped_interface_signal_on_named_rail` rule now
+  uses a complete source-matched interface map for both generic and named
+  native signal functions. A `PWM_SYNC` contact assigned to `GND` was a
+  test-first miss; the same mapped signal on its ordinary `PWM_SYNC` net is a
+  quiet control. CLI/MCP parity and repeated native exports on pinned KiCad
+  10.0.0 and 10.0.5 pass. The map and rail-like label remain review clues, not
+  proof of an electrical defect.
 - **Latest progress (LINT-364, named mapped signal opens):** The baseline
   returned no finding for a named `PWM_SYNC` contact with a complete,
   source-matched signal map and no native net assignment. The mapped-signal
@@ -14299,7 +14307,10 @@ control are documented in the
 #### LINT-213 — Review mapped signal contacts on named rails
 
 - **Status:** Implemented as the default-review rule
-  `connector.mapped_interface_signal_on_named_rail`.
+  `connector.mapped_interface_signal_on_named_rail`; LINT-365 extends the
+  original generic/missing-function predicate to named native signal
+  functions when a complete source-matched interface map supplies the signal
+  role.
 - **Gap:** A connector map may identify a contact as `signal` even though the
   native netlist assigns it only to a recognized supply-like or return-like
   net. Native pin-function checks do not establish this project-specific map
@@ -22037,6 +22048,48 @@ acceptance threads while new lint features proceed:
   `tests/test_connector_mapped_named_signal_native.py` with
   `design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")`.
   Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-365 — Review named mapped signal contacts on rail-like nets
+
+- **Rule:** Extend `connector.mapped_interface_signal_on_named_rail`, default
+  `review`, to named as well as generic native pin functions.
+- **Gap:** The prior predicate excluded every named native signal function.
+  Therefore, a complete current interface map identifying `PWM_SYNC` as a
+  signal did not prompt when its sole native net assignment was `GND`.
+- **Predicate:** For a fitted connector with complete, source-matched pin and
+  interface coverage and a current interface-catalog digest, review each
+  mapped `signal` contact with exactly one assigned net whose label matches
+  the bounded supply-like or return-like vocabulary. The native pin function
+  may be generic, missing, or named. DNP references, stale or incomplete
+  evidence, digestless coverage, multiply assigned pins, and ordinary labels
+  remain excluded.
+- **Boundary:** The map supplies role context and the net label supplies a
+  heuristic clue; neither proves potential, required connectivity, or a fault.
+  Intentional signal straps remain valid. Recognized protocol functions can
+  also receive their protocol-specific prompt. The rule does not change the
+  map or assignment and does not prove copper continuity or external wiring.
+- **Incremental value:** A new synthetic `PWM_SYNC`-on-`GND` case returned no
+  finding before the predicate change and now produces one localized REVIEW.
+  An assigned `PWM_SYNC` ordinary-net control remains quiet. CLI and MCP
+  reports match for both cases. Native source-hashed fault/control schematics
+  confirm the pin function and exact GND/ordinary-net assignments with
+  repeated exports on KiCad 10.0.0 and 10.0.5.
+- **Verification:** The existing named-rail synthetic suite passed 12 tests;
+  the rule-scoped synthetic and CLI/MCP selection passed 13 tests. The
+  catalog-derived rule selection and cross-rule integrity gate passed 349
+  tests with 7,786 deselected, including the prior generic native cases and
+  both new named native Docker parameters on KiCad 10.0.0 and 10.0.5. Ruff,
+  format, Rumdl, JSON parsing, catalog registration, selector reachability,
+  marker architecture, and fixture reachability passed. Hosted package
+  acceptance remains the publication gate.
+- **Fixtures:** See the
+  [named signal rail fixtures](../tests/fixtures/design_lint/mapped-named-signal-rail-native/README.md).
+- **Selection:** Run
+  `tests/test_connector_mapped_interface_signal_on_named_rail.py` and
+  `tests/test_design_lint_mcp_parity_mapped_interface_signal.py` with
+  `design_lint_rule(rule_id="connector.mapped_interface_signal_on_named_rail")`.
+  Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` and
+  `tests/test_connector_mapped_named_signal_rail_native.py`.
 
 ## Completion and release gate
 
