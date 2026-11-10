@@ -79,7 +79,9 @@ freshness check detects an index edit during export.
 Prerelease lint selection is owned by `scripts/lint_gate_scope.py` and invoked
 by the GitHub workflow. It validates annotated area/rule selectors, test paths,
 and native fixture switches before emitting the pytest expression and lane
-environment. Domain services remain independent of this CI adapter.
+environment. Rule tags also resolve Python type-check targets from cataloged
+implementation references; area tags and full acceptance retain package-wide
+type checks. Domain services remain independent of this CI adapter.
 
 The names above are entry points and owner families, not an exhaustive file
 inventory. Before adding a feature, follow its existing service imports and

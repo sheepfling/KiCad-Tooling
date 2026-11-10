@@ -14,10 +14,10 @@ backlog.
 
 See [current design lint rules](DESIGN_LINT.md) for implemented behavior and
 configuration. Items below are proposed work unless explicitly marked
-implemented. Any entry whose `Rule` field links an active catalog rule must
-also include a `Status` field; `catalog_lint` checks this relationship. A
-status records implementation progress, while the rule's maturity and evidence
-record what has actually been validated.
+implemented. Every entry whose `Rule` field links an active catalog rule
+must also include a `Status` field; `catalog_lint` checks this relationship.
+A status records implementation progress, while the rule's maturity and
+evidence record what has actually been validated.
 
 ## Working rules
 
@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 312 rules are implemented with synthetic regression coverage.
+The following 314 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 312 active rules.
+The catalog currently contains 314 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -460,6 +460,8 @@ skipped under prerelease policy.
 - `connector.footprint_same_voltage_power_input_unanchored`
 - `connector.reviewed_peer_power_input_split`
 - `connector.reviewed_peer_passive_power_input_open`
+- `connector.reviewed_peer_power_output_open`
+- `connector.reviewed_peer_power_output_split`
 - `connector.footprint_named_power_output_assignment_divergence`
 - `connector.footprint_named_passive_assignment_divergence`
 - `connector.footprint_named_power_input_all_open`
@@ -766,6 +768,51 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **Latest quality-gate progress (catalog-focused Pyright):** The last hosted
+  rule-tag run selected 349 tests, while its Linux and Windows package-wide
+  Pyright stages took about 291 seconds each. Rule-scoped prerelease tags now
+  derive Python targets from the active rule's cataloged implementation refs
+  and include the scope resolver and CI runner. Area tags and full acceptance
+  retain package-wide checks. Locally, the connector rule's five selected
+  modules passed Linux and Windows Pyright in 0.9 seconds each; the focused
+  selector passed 35 checks with 7 deselected, and both pinned native Docker
+  cases passed. Hosted tagged acceptance remains pending.
+- **Latest progress (LINT-365, named mapped signals on rail-like nets):** The
+  default-REVIEW `connector.mapped_interface_signal_on_named_rail` rule now
+  uses a complete source-matched interface map for both generic and named
+  native signal functions. A `PWM_SYNC` contact assigned to `GND` was a
+  test-first miss; the same mapped signal on its ordinary `PWM_SYNC` net is a
+  quiet control. CLI/MCP parity and repeated native exports on pinned KiCad
+  10.0.0 and 10.0.5 pass. The map and rail-like label remain review clues, not
+  proof of an electrical defect.
+- **Latest progress (LINT-364, named mapped signal opens):** The baseline
+  returned no finding for a named `PWM_SYNC` contact with a complete,
+  source-matched signal map and no native net assignment. The mapped-signal
+  review now covers named as well as generic pin functions, while retaining
+  the explicit intentional-open reason, DNP, stale-map, and power-pin
+  boundaries. Synthetic fault/control and CLI/MCP parity tests pass. The
+  tooling-owned named-signal fault and assigned control export repeatably on
+  pinned KiCad 10.0.0 and 10.0.5 Docker images. This remains a configurable
+  review prompt and does not establish that the signal must connect.
+- **Latest progress (LINT-358, deterministic component-value syntax):** A
+  pinned cohort release documents support for simulator-style component-value
+  spellings and deliberately leaves ambiguous comma forms uninterpreted. The
+  local bounded parser had missed unambiguous decimal-comma and grouped values,
+  `Meg`, femtofarads, and a primary capacitor value followed by metadata. The
+  shared syntax owner now supports those cases in existing I2C capacitance and
+  resistor checks, with ambiguous separators rejected. Tooling-owned fault and
+  valid-control schematics exercise native KiCad exports on the existing
+  digest-pinned lane; no cohort code or board data was imported.
+- **Latest progress (LINT-357, I2C explicit no-connect control):** A cohort
+  false-positive report motivated a focused counterexample for
+  `bus.i2c_missing_pullup`. Native exports must keep an SDA or SCL pin marked
+  no-connect out of the assigned bus pair, while the both-assigned control
+  still reports absent pull-up paths. The fault/control is linked to the rule
+  selector and requires both relevant native fixture lanes in package
+  acceptance. Two exact native cases passed on KiCad 10.0.0 and 10.0.5, and the
+  rule-scoped package acceptance passed 388 tests with 7,685 deselected. This
+  preserves an existing applicability boundary; it does not add a new
+  electrical requirement.
 - **Latest progress (LINT-356, missing connector-return native coverage):** The
   default-REVIEW `connector.no_connected_return` rule now requires a focused
   exact-version native lane in rule-scoped acceptance. A numeric-pin fault
@@ -3548,6 +3595,13 @@ is not a reason by itself to expand its scope or change its default policy.
   rule-selectable KiCad 10.0.0/10.0.5 return-net lane. I2C pull-up arrays are
   already catalogued under their active rule. These distinctions keep a
   rule-scoped tag from claiming coverage of a different authored contract.
+- **Catalog-derived native selectors (2026-11-09):** The selector regression
+  suite now generates a stable pytest case for every active rule/native-fixture
+  pair in `required_native_fixtures`, replacing a hand-maintained subset that
+  could omit later catalog entries. The focused selector run covered all 282
+  declared pairs. The suite is registered in the catalog lint area and carries
+  `rule_gate_integrity`, so each focused rule gate checks this selection
+  invariant. This changes test coverage only; it adds no electrical predicate.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
   distinguishes an optional mapped check that was not configured from one
   that ran with zero findings. It covers USB data-path, series power-path, and
@@ -3973,7 +4027,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 312 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 314 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -14267,7 +14321,10 @@ control are documented in the
 #### LINT-213 — Review mapped signal contacts on named rails
 
 - **Status:** Implemented as the default-review rule
-  `connector.mapped_interface_signal_on_named_rail`.
+  `connector.mapped_interface_signal_on_named_rail`; LINT-365 extends the
+  original generic/missing-function predicate to named native signal
+  functions when a complete source-matched interface map supplies the signal
+  role.
 - **Gap:** A connector map may identify a contact as `signal` even though the
   native netlist assigns it only to a recognized supply-like or return-like
   net. Native pin-function checks do not establish this project-specific map
@@ -21702,13 +21759,420 @@ acceptance threads while new lint features proceed:
   and 10.0.5, each checking first and repeat exports. Connector native
   registry, marker, and tag-selection checks: 121 passed.
 
-#### LINT-357 — Keep active catalog-linked backlog entries explicitly statused
+#### LINT-357 — Preserve I2C pull-up applicability for explicit no-connect pins
+
+- **Status:** Implemented as a synthetic and exact-native valid-control boundary
+  for the existing `bus.i2c_missing_pullup` rule.
+- **Cohort cue:** The kicad-happy v2.3.2 notes document a field-reported case
+  where its PU-001 detector requested a pull-up on a pin explicitly marked
+  no-connect, then record the correction. That failure mode prompted a local
+  regression check; no cohort code, product design, or fixture was imported.
+- **Coverage:** A tooling-owned netlist fixture moves either the SDA or SCL
+  pin into `unconnected_nets` and confirms it cannot alone form an assigned
+  I2C bus pair. The exact-native partial-pair fault has one explicitly
+  no-connected SDA and an assigned SCL; it must produce no
+  `bus.i2c_missing_pullup` finding. Its both-assigned control must still report
+  missing pull-up paths. The existing fixture is run through pinned KiCad
+  10.0.0 and 10.0.5 exports and repeated normalized netlists.
+- **Boundary:** This is an applicability control for a schematic-level
+  heuristic. It does not waive review of ordinary open pins, decide whether an
+  interface is required, identify internal or off-board pull-ups, or establish
+  electrical timing. The independent `bus.i2c_unconnected_pin` rule remains
+  available under its own policy.
+- **Selection:** The synthetic case is in
+  `tests/test_design_lint_i2c_missing_pullups.py`; exact native cases are in
+  `tests/test_i2c_unconnected_pins_native_fixture_lane.py`. The rule catalog
+  links both and requires `KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES` plus
+  `KICAD_RUN_NATIVE_I2C_UNCONNECTED_PIN_FIXTURES` for rule-scoped acceptance.
+- **Verification:** Focused synthetic selection passed 15 tests; the exact
+  Docker selection passed twice, once each on KiCad 10.0.0 and 10.0.5. The
+  scoped package acceptance passed 388 tests with 7,685 deselected, including
+  formatting, Ruff, module boundaries, Markdown checks, Linux and Windows
+  typing, wheel/sdist installation, external inventory/surface/verification,
+  and the relocated public-template playtest. No CLI/MCP behavior changed.
+
+#### LINT-358 — Parse bounded KiCad component-value spellings deterministically
+
+- **Status:** Implemented in the existing I2C capacitance-window and low
+  equivalent-resistance checks with synthetic and exact-native fault/control
+  coverage.
+- **Cohort cue:** kicad-happy v3.0.1 documents simulator-style parsing for
+  decimal commas, grouped spaces, `Meg`, femtofarads, and comma-delimited value
+  metadata. Its documented ambiguous `1,000` case remains unparsed. See the
+  pinned [v3.0.1 changelog][happy-value-syntax-v301].
+- **Coverage:** A shared bounded syntax helper serves capacitance and resistor
+  value owners. Synthetic cases prove decimal-comma and grouped values, `Meg`,
+  and a capacitor value followed by metadata reach the current rule predicates.
+  The native I2C array fixture carries a decimal-comma capacitor with value
+  metadata through the authored capacitance-window check; the native resistor
+  pair carries decimal-comma values through the equivalent-resistance check.
+- **Boundary:** Decimal and grouped forms are accepted only when unambiguous;
+  ambiguous comma grouping, malformed digit groups, negative values, and
+  unrecognized syntax stay unparsed. The parser does not infer component
+  tolerances, electrical ratings, or project requirements. This changes value
+  syntax support in existing heuristics; it adds no new electrical threshold.
+- **Selection:** The tests are linked to
+  `bus.i2c_pullup_input_limit_coverage` and
+  `bus.i2c_low_equivalent_resistance`. Exact-native coverage uses
+  `KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES`.
+- **Provenance:** The cohort source was reviewed at the pinned public release;
+  only the documented input cases informed first-party code and synthetic
+  regressions. No upstream implementation, fixture, product design, or
+  proprietary data was copied.
+- **Verification:** The focused parser/consumer/catalog selector passed 58
+  tests. The rule-scoped package acceptance passed 373 tests with 7,721
+  deselected; its exact-native I2C lane passed on KiCad 10.0.0 and 10.0.5,
+  including repeated normalized exports. Ruff, architecture and shared-utility
+  checks, Markdown checks, Linux and Windows Pyright, wheel/sdist builds,
+  isolated wheel installation, and public-template inventory, surface,
+  verification, and playtest stages passed. No CLI or MCP surface changed.
+
+#### LINT-359 — Normalize KiCad root-sheet net names in PCB comparison
+
+- **Observation:** A source-bound native scan of a public training-board copy
+  showed four false `pcb.schematic_pcb_pad_net_mismatch` findings. The native
+  schematic netlist and PCB pads both assigned `/PILOT_A` and `/PILOT_B`; the
+  shared netlist parser canonicalized these to `PILOT_A` and `PILOT_B`, while
+  the PCB comparison retained the leading slash. This was a comparison-boundary
+  false positive, not a board defect.
+- **Provenance:** The public template revision was
+  `ed89536f0dbbcb013145af2994fef41b2250143e`; the observed schematic, board,
+  native netlist, and PCB snapshot hashes were respectively
+  `bd3f349233ffc44f030b1004a1c08e51d1ec0589ecf646384f1ed3353806e5ad`,
+  `c8076b353b450663d9cc7081203bb6d1c59146bb7db7ae10eafc45fc358821f6`,
+  `2934682ee4f86990f8091d99f875cee418f5504202b9d75cf74df583a0e09e33`, and
+  `faebe6b7a7c81c1c4b7b399c67d83f126dcb3fa69e6d0ad535286fdb55313687`.
+  The source was exported with the pinned KiCad 10.0.0 image. No template file
+  or project expectation was copied into this repository.
+- **Local response:** Reuse the netlist parser's leading-slash normalization
+  when comparing native PCB pad names, retaining the original board name in any
+  actual mismatch evidence. Add a minimal native-XML control for matching
+  root-sheet names and a `/PILOT_B` mismatch control. Case-sensitive exact
+  comparison and all other name differences remain unchanged.
+- **Verification:** The full focused rule gate passed 340 tests with 7,755
+  deselected, including catalog/owner integrity and the digest-pinned native
+  pad-net fault/control lane on KiCad 10.0.0 and 10.0.5. Re-running the public
+  example from a disposable copy removed all four false pad-net findings; native export is
+  `PASS`. Two separate `REVIEW` findings remain because named-variant value
+  evidence is unavailable. The overall project verification therefore remains
+  `FAIL` for review, and no example source or expectation was changed.
+
+#### LINT-360 — Review named supply contacts split across unlike connector peers
+
+- **Status:** Implemented for active catalog rule: `connector.reviewed_peer_power_input_split`.
+- **Rule:** Extends `connector.reviewed_peer_power_input_split`, default
+  `review`; no new rule ID or project configuration format.
+- **Gap:** LINT-342 covered generic roleless contacts, while
+  `connector.repeated_pin_function` compares matching native power-function
+  categories. A current reviewed map could therefore place a named VBUS pin
+  and a named VDD input in the same peer group, signal, and voltage domain,
+  while their separate net assignments produced no peer finding.
+- **Predicate:** Keep LINT-342's globally complete connector inventory,
+  source-matched maps, explicit shared peer group, unlike symbols, no PART_ID,
+  distinct nonempty value/footprint identity, exact shared interface signal
+  and voltage domain, and one net per contact. Continue reviewing generic
+  `power_in`/`passive` contacts without mapped supply roles. Also review
+  source-matched `supply` contacts whose native electrical type is `power_in`
+  or `passive` and whose native power-function categories differ. A generic
+  function paired with a recognized named supply category is also reviewable.
+  Same-category named functions remain with `connector.repeated_pin_function`.
+- **Incremental value:** Before the extension, the tooling-owned synthetic
+  VBUS/VDD_IN split with complete maps passed without the target finding. It
+  now emits one REVIEW with exact pin functions, normalized categories, map
+  signal/domain, and native net assignments. A common-net control is quiet;
+  a split VBUS/USB_VBUS same-category control remains with the existing
+  repeated-function rule. Generic, passive, mixed generic/named, domain,
+  group, stale-map, policy, and ordering cases are covered.
+- **Boundary:** Same signal/domain mappings and recognized function categories
+  are review clues, not a requirement to join supplies. Source selection,
+  filtering, protection, and isolation can make separate nets intentional.
+  Unrecognized function categories, open or ambiguous contacts, incomplete or
+  stale connector maps, DNP parts, and same-symbol/PART_ID/value-footprint
+  peers remain outside this extension. Native schematic assignments do not
+  establish PCB copper continuity or actual voltage.
+- **Evidence:** Synthetic tests use tooling-owned netlists and source-matched
+  connector maps. Exact native fault/control schematics are
+  `named-fault.kicad_sch` (SHA-256
+  `ae825d986b42a4987d580d66a174fd87cf53d0c93d7d949ac65a3660990e1936`) and
+  `named-control.kicad_sch` (SHA-256
+  `85dc5cb5f4458bc37efe8dba6f48064c72acf0c4987be0e4a8fde4b136e805f1`).
+  Both export twice under pinned KiCad 10.0.0 and 10.0.5 Docker images. The
+  CLI and MCP reports are compared through the existing parity test. No cohort
+  source, board, or proprietary project data was added.
+- **Verification:** The focused synthetic, existing generic, and CLI/MCP
+  selector passed 13 tests with 4 deselected. The digest-pinned native power
+  peer gate passed 2 parameterized tests across KiCad 10.0.0 and 10.0.5; one
+  unmarked source-digest test was deselected by the narrow rule selector.
+  Corrected annotated tag `v0.5.3rc620` passed GitHub Actions run
+  `42750920705`, including tag-scope resolution, the focused rule gate, and
+  installed-wheel validation against the external template. Preceding tag
+  `v0.5.3rc619` stopped before tests because its annotation omitted the required
+  `Lint-Rule` selector.
+- **Selection:** Run
+  `tests/test_connector_reviewed_peer_named_power_split.py`,
+  `tests/test_connector_reviewed_peer_power_input_split.py`,
+  `tests/test_connector_reviewed_peer_power_input_parity.py`, and
+  `tests/test_connector_reviewed_peer_power_input_native.py` with
+  `design_lint_rule(rule_id="connector.reviewed_peer_power_input_split")`.
+  The exact-native lane uses `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-361 — Review an open mapped named passive supply contact across connector peers
+
+- **Status:** Implemented for active catalog rule:
+  `connector.reviewed_peer_passive_power_input_open`.
+- **Rule:** Extends `connector.reviewed_peer_passive_power_input_open`, default
+  `review`; no new rule ID or project configuration format.
+- **Gap:** LINT-343 handled an open generic passive contact only when neither
+  connector map declared a role. A complete current map could instead classify
+  unlike connector contacts as `supply`, with native functions VBUS and
+  VDD_IN and native electrical type `passive`. If one contact had no net and
+  no authored unconnected-pin reason while its peer had one assigned net,
+  native ERC and the existing repeated-function grouping did not ask for
+  review because the recognized power categories differed.
+- **Predicate:** Preserve LINT-343's complete connector inventory, current
+  source-matched maps, explicit shared peer group, unlike symbols, no PART_ID,
+  distinct nonempty value/footprint identity, exact shared interface signal
+  and voltage domain, passive electrical type, open-side absence of both a net
+  and authored unconnected reason, and exactly one assigned peer net. Extend
+  eligibility to two current `supply` roles only when their native power
+  categories differ; this includes generic-to-recognized and different named
+  categories. Same-category roles stay with
+  `connector.repeated_pin_function`. Keep the existing roleless generic path
+  and its evidence unchanged.
+- **Incremental value:** Before the extension, a tooling-owned synthetic
+  VBUS/VDD_IN passive-open case with complete source-matched maps returned
+  `PASS` and no candidate. It now emits one REVIEW with the pin functions,
+  normalized categories, map signal/domain, and exact open/assigned net
+  evidence. A common-net control is quiet; a documented open is quiet; and a
+  same-category open remains outside this rule. Different-domain/group,
+  stale/incomplete maps, DNP, and ambiguous assignment controls are included.
+- **Boundary:** A supply role and peer map make the open reviewable but do not
+  prove the contact must be connected. The pin may be intentionally reserved,
+  isolated, or unused. The rule does not select a target net, validate a
+  datasheet, establish PCB continuity, or prove connector wiring. Native
+  `power_in` opens remain with `connector.unconnected_power_input`.
+- **Evidence:** Synthetic fault/control, policy/ignore, ordering stability,
+  and CLI/MCP parity use tooling-owned contracts. Exact native passive-open
+  fault/control schematics are `named-open-fault.kicad_sch` (SHA-256
+  `14092384fffbe28d7588017c97e55fa8e4f779924af880a7c9b7e751800197d0`) and
+  `named-open-control.kicad_sch` (SHA-256
+  `3628a5b1cb264d1361563393fc6f0a9dd3c34bdf0e19fc4ef634725c83da3fcb`).
+  The exact-version Docker lane exports each source twice with KiCad 10.0.0 and
+  10.0.5. No project board or proprietary source was added.
+- **Verification:** The focused synthetic, existing generic, and CLI/MCP
+  selector passed 21 tests. The catalog/architecture selector passed 73 tests.
+  Pyright, Ruff, Rumdl, and native fixture source hashes passed. The digest-pinned
+  native connector lane passed 2 parameterized tests across KiCad 10.0.0 and
+  10.0.5; one unmarked source-hash test was deselected by the narrow rule
+  selector.
+- **Selection:** Run
+  `tests/test_connector_reviewed_peer_named_power_open.py`,
+  `tests/test_connector_reviewed_peer_power_input_parity.py`, and
+  `tests/test_connector_reviewed_peer_power_input_native.py` with
+  `design_lint_rule(rule_id="connector.reviewed_peer_passive_power_input_open")`.
+  The exact-native lane uses `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-362 — Review split named power outputs across unlike connector peers
+
+- **Status:** Implemented for active catalog rule: `connector.reviewed_peer_power_output_split`.
+- **Rule:** Add `connector.reviewed_peer_power_output_split`, default `review`.
+- **Gap:** LINT-342/LINT-360 checked generic and named contacts with native
+  `power_in` or `passive` types, and LINT-361 checked passive opens. A complete
+  current map could instead describe differently named connector supply
+  outputs with native `power_out` type. If their authored interface signal and
+  exact voltage domain matched but their net assignments split, the existing
+  peer input predicates did not inspect them.
+- **Predicate:** Require globally complete inventory review, source-matched
+  current pin maps, one explicit shared peer group, unlike native symbols, no
+  `PART_ID`, and distinct nonempty value/footprint identity. Require both
+  mapped contacts to have the same interface signal and exact voltage domain,
+  `supply` role, authored `output` direction, native `power_out` type, and
+  different recognized native power-function categories. Emit REVIEW only
+  when each contact has exactly one assigned net and the net names differ.
+  Shared peer identity and map evidence guide review; they do not require a
+  connection.
+- **Incremental value:** Before this rule, the tooling-owned synthetic
+  VBUS/VDD_OUT fault with separate nets and complete output maps returned
+  PASS. It now emits one REVIEW with exact pin functions, normalized power
+  categories, interface signal/direction/domain, peer basis, and net
+  assignments. The common-net control and same-function, wrong-direction,
+  wrong-role, different-domain/signal/group, stale, incomplete, open,
+  ambiguous, DNP, PART_ID, same-symbol, and identical value/footprint controls
+  stay quiet. Policy block, exact ignore, netlist-order stability, and
+  CLI/MCP parity are covered. The existing power-input rules reuse a new shared
+  peer-contact evidence service instead of duplicating their scanner.
+- **Boundary:** Different output categories may represent independent sources,
+  protection, current limits, or isolation. The heuristic does not prove that
+  the nets should be joined, that a supply can source current, that connector
+  wiring is correct, or that PCB copper is continuous. Same-category, generic,
+  unrecognized, input, passive, return, signal, shield, and unassigned output
+  contacts are outside this rule and remain with other checks or unsupported.
+- **Evidence:** Tooling-owned fault/control schematic fixtures are
+  `fault.kicad_sch` (SHA-256
+  `19b83b154efa06421f2b09874d2403ed708c848c2e75ac8ca042647eb146dce2`) and
+  `control.kicad_sch` (SHA-256
+  `a3e5a9915ae3b3192730100e45835cb1ceb16606b380d286b06c0e2fbc83b380`). Each
+  exports twice under pinned KiCad 10.0.0 and 10.0.5 Docker images. The
+  synthetic review, CLI/MCP parity, catalog, selector, and architecture suites
+  accompany the native lane. No cohort source, product board, or proprietary
+  project data was added.
+- **Verification:** The exact annotated-tag selection, with the native Docker
+  fixture switch enabled, passed 338 tests with 7,779 deselected. This included
+  the fault/control export twice on pinned KiCad 10.0.0 and 10.0.5. Full-
+  repository strict Pyright reported 0 errors or warnings; changed-file Ruff
+  checks, formatting, Rumdl documentation lint, JSON parsing, and source hash
+  checks passed.
+- **Selection:** Run
+  `tests/test_connector_reviewed_peer_power_output_split.py`,
+  `tests/test_connector_reviewed_peer_power_output_parity.py`, and
+  `tests/test_connector_reviewed_peer_power_output_native.py` with
+  `design_lint_rule(rule_id="connector.reviewed_peer_power_output_split")`.
+  Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-363 — Review an open named power output beside a connector peer
+
+- **Status:** Implemented for active catalog rule: `connector.reviewed_peer_power_output_open`.
+- **Rule:** Add `connector.reviewed_peer_power_output_open`, default `review`.
+- **Gap:** The generic unconnected-output check can recognize an open native
+  `power_out`, but does not establish whether a complete source-matched
+  connector map puts it beside an unlike connector peer with a corresponding
+  output. LINT-362 only compares two assigned nets, so an open output beside a
+  mapped peer output had no peer-specific prompt.
+- **Predicate:** Require globally complete connector inventory review,
+  source-matched current maps, one explicit peer group, unlike native symbols,
+  no `PART_ID`, and distinct nonempty value/footprint identity. For one shared
+  interface signal and exact voltage domain, require both map roles to be
+  `supply`, both directions to be `output`, both native electrical types to
+  be `power_out`, and distinct recognized power-function categories. Emit
+  REVIEW only when one contact has no net and no authored unconnected reason
+  while the other has exactly one net. The rule is symmetric and makes no
+  target-net or connection claim.
+- **Incremental value:** Test-first evaluation of the tooling-owned synthetic
+  VBUS/VDD_OUT case returned REVIEW for existing reasons but emitted no finding
+  from this peer-specific rule. The rule now reports the open and assigned pin
+  nets, functions, categories, signal, output directions, voltage domain, and
+  source-reviewed peer basis. Common assignments, both-open cases, documented
+  opens, same-category functions, wrong roles or directions, changed signal or
+  domain, different peer groups, stale or incomplete maps, and ambiguous nets
+  are controls. Policy promotion, exact ignore, stable net ordering, and
+  CLI/MCP parity are covered.
+- **Boundary:** A mapped peer may be intentionally unused, isolated, reserved,
+  or populated through a project-specific link. This is a configurable REVIEW
+  prompt; it does not require a connection, select the assigned peer net as a
+  target, prove connector wiring, establish actual voltage, or prove PCB copper
+  continuity.
+- **Evidence:** Tooling-owned `fault.kicad_sch` leaves J1.1 open beside J2.1
+  on `SERIAL_5V` (SHA-256
+  `9decb551ed29ee2a92f7909ae5066fe8d9f0ac7f4118dff04c484b05f7b8152d`);
+  `control.kicad_sch` assigns both mapped outputs to `COMMON_5V` (SHA-256
+  `a3e5a9915ae3b3192730100e45835cb1ceb16606b380d286b06c0e2fbc83b380`). Native
+  exports use pinned KiCad 10.0.0 and 10.0.5 Docker images.
+- **Verification:** Exact tag-scope selection passed: 338 passed, 7,791
+  deselected, including LINT-363 fault/control exports on pinned KiCad 10.0.0
+  and 10.0.5 Docker images. Full strict Pyright reported 0 errors or warnings;
+  Ruff, format checks, Rumdl, JSON parsing, fixture hashes, catalog reachability,
+  architecture, selector, and CLI/MCP parity checks passed.
+- **Selection:** Run
+  `tests/test_connector_reviewed_peer_power_output_open.py`,
+  `tests/test_connector_reviewed_peer_power_output_open_parity.py`, and
+  `tests/test_connector_reviewed_peer_power_output_open_native.py` with
+  `design_lint_rule(rule_id="connector.reviewed_peer_power_output_open")`.
+  Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-364 — Review an open named signal in a source-matched connector map
+
+- **Status:** Implemented for active catalog rule: `connector.mapped_interface_signal_unassigned`.
+- **Rule:** Extend `connector.mapped_interface_signal_unassigned`, default
+  `review`, to named as well as generic native signal functions.
+- **Gap:** The existing rule found open generic or missing-function signal
+  pins when a complete current connector map supplied their signal role. It
+  did not review a named but otherwise unclassified signal such as `PWM_SYNC`,
+  even when the same source-matched map identified that contact as a signal.
+  Protocol-specific aliases remain with their dedicated checks; the mapped
+  review supplies interface context for the exact open pin.
+- **Predicate:** Require a fitted connector, complete source-matched pin and
+  interface coverage, mapped `signal` role, no assigned net, no intentional-
+  open reason, and no native `power_in` or `power_out` type. Native function
+  text may be named, generic, or missing. Emit a configurable `REVIEW` using
+  the existing rule identity and finding evidence.
+- **Boundary:** A map role is review context, not proof that every signal pin
+  needs board connectivity. An intentional open requires an authored
+  `unconnected_pin_reasons` entry. DNP, stale or incomplete maps, and native
+  power pins stay outside the predicate. Recognized protocol functions may
+  also receive specialized prompts. The finding does not choose a target net,
+  validate electrical behavior, or prove PCB copper continuity.
+- **Incremental value:** Test-first typed coverage for an open `PWM_SYNC`
+  returned no finding before the change. It now emits the mapped-signal REVIEW;
+  connected, intentionally open, stale-map, DNP, and native-power controls
+  remain quiet for this rule. CLI and MCP reports match for the named fault
+  and connected control. The source-hashed native `PWM_SYNC` fault/control
+  exports repeat on pinned KiCad 10.0.0 and 10.0.5.
+- **Verification:** The catalog-derived rule selection and cross-rule
+  integrity gate passed 353 tests with 7,779 deselected. It included six
+  generic, peer-context, and named mapped-signal native fault/control tests
+  across pinned KiCad 10.0.0 and 10.0.5. The four-connector DB9 split-return
+  fault and common-return control also passed on both versions. Broader
+  protocol-specific duplication rates and reviewer effort remain unmeasured.
+- **Fixtures:** See the
+  [named mapped-signal native fixtures](../tests/fixtures/design_lint/mapped-named-signal-native/README.md).
+- **Selection:** Run
+  `tests/test_connector_mapped_interface_signal_unassigned.py`,
+  `tests/test_design_lint_mcp_parity_mapped_interface_signal.py`, and
+  `tests/test_connector_mapped_named_signal_native.py` with
+  `design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")`.
+  Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-365 — Review named mapped signal contacts on rail-like nets
+
+- **Status:** Implemented for active catalog rule:
+  `connector.mapped_interface_signal_on_named_rail`.
+- **Rule:** Extend `connector.mapped_interface_signal_on_named_rail`, default
+  `review`, to named as well as generic native pin functions.
+- **Gap:** The prior predicate excluded every named native signal function.
+  Therefore, a complete current interface map identifying `PWM_SYNC` as a
+  signal did not prompt when its sole native net assignment was `GND`.
+- **Predicate:** For a fitted connector with complete, source-matched pin and
+  interface coverage and a current interface-catalog digest, review each
+  mapped `signal` contact with exactly one assigned net whose label matches
+  the bounded supply-like or return-like vocabulary. The native pin function
+  may be generic, missing, or named. DNP references, stale or incomplete
+  evidence, digestless coverage, multiply assigned pins, and ordinary labels
+  remain excluded.
+- **Boundary:** The map supplies role context and the net label supplies a
+  heuristic clue; neither proves potential, required connectivity, or a fault.
+  Intentional signal straps remain valid. Recognized protocol functions can
+  also receive their protocol-specific prompt. The rule does not change the
+  map or assignment and does not prove copper continuity or external wiring.
+- **Incremental value:** A new synthetic `PWM_SYNC`-on-`GND` case returned no
+  finding before the predicate change and now produces one localized REVIEW.
+  An assigned `PWM_SYNC` ordinary-net control remains quiet. CLI and MCP
+  reports match for both cases. Native source-hashed fault/control schematics
+  confirm the pin function and exact GND/ordinary-net assignments with
+  repeated exports on KiCad 10.0.0 and 10.0.5.
+- **Verification:** The existing named-rail synthetic suite passed 12 tests;
+  the rule-scoped synthetic and CLI/MCP selection passed 13 tests. The
+  catalog-derived rule selection and cross-rule integrity gate passed 349
+  tests with 7,786 deselected, including the prior generic native cases and
+  both new named native Docker parameters on KiCad 10.0.0 and 10.0.5. Ruff,
+  format, Rumdl, JSON parsing, catalog registration, selector reachability,
+  marker architecture, and fixture reachability passed. Hosted package
+  acceptance remains the publication gate.
+- **Fixtures:** See the
+  [named signal rail fixtures](../tests/fixtures/design_lint/mapped-named-signal-rail-native/README.md).
+- **Selection:** Run
+  `tests/test_connector_mapped_interface_signal_on_named_rail.py` and
+  `tests/test_design_lint_mcp_parity_mapped_interface_signal.py` with
+  `design_lint_rule(rule_id="connector.mapped_interface_signal_on_named_rail")`.
+  Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` and
+  `tests/test_connector_mapped_named_signal_rail_native.py`.
+
+#### LINT-366 — Keep active catalog-linked backlog entries explicitly statused
 
 - **Status:** Implemented as `tests/test_design_lint_backlog_catalog_status.py`.
 - **Priority:** P1 backlog integrity; this is a documentation quality gate,
   not an electrical rule.
 - **Gap:** The backlog says entries are proposed unless marked implemented,
-  but 45 entries with active rules in their `Rule` fields had no status. That
+  but 51 entries with active rules in their `Rule` fields had no status. That
   made implemented checks read like unstarted proposals.
 - **Behavior:** The `catalog_lint` test reads the active rule catalog and
   requires every backlog entry that explicitly links one of those rules to
@@ -21739,6 +22203,7 @@ quality, or first-article continuity.
 [happy-crystal-detector]: https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/signal_detectors.py#L818-L950
 [happy-datasheets]: <https://github.com/aklofas/kicad-happy#-datasheets--sync-and-extract>
 [happy-lb001]: https://github.com/aklofas/kicad-happy/blob/a6bba1add1e18b89e3aa0824b9769ed1d9d79174/skills/kicad/scripts/signal_detectors.py#L4367-L4440
+[happy-value-syntax-v301]: https://github.com/aklofas/kicad-happy/blob/7d9d4d9fef87ac2d3eb16cfc5cdc9a0869f417f4/CHANGELOG.md
 [happy-changelog]: https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md
 [happy-analyzer]: https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/signal_detectors.py#L3633-L3673
 [kicad-device-library]: https://kicad.github.io/symbols/Device.html

@@ -101,6 +101,13 @@ Each path must name an existing `tests/test_*.py` file in this repository. A
 `Lint-Rule` tag cannot use `Test-Path`; rule tags keep their complete catalog-derived
 fixture selection.
 
+Rule-scoped tags also send each active rule's cataloged Python owner and
+implementation modules, plus the prerelease selector and runner modules, to both
+Linux and Windows Pyright stages. Non-Python fixture references are excluded.
+Area-scoped prerelease tags and full acceptance events keep package-wide Pyright
+checks, so the narrower type-check scope applies only when the tag selects one
+active rule.
+
 ```text
 Lint-Area: pcb_lint
 Native-Fixture: KICAD_RUN_NATIVE_PCB_FIXTURES

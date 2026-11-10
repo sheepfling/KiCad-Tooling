@@ -25,6 +25,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     DesignLintRuleOverride,
 )
+from kicad_tooling.hwrepo.resistor_paths import resistance_ohms
 from tests.design_lint_fixtures import (
     coach,
     i2c_netlist_with_parallel_sda,
@@ -109,6 +110,48 @@ def test_i2c_low_resistance_scan_returns_named_line_observations() -> None:
     assert isinstance(candidate, I2cPullupCandidate)
     assert candidate.source_evidence == scan
     assert candidate.evidence["equivalent_ohms"] == ("SDA=500Ω",)
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_low_equivalent_resistance")
+def test_kicad_decimal_comma_resistors_keep_fault_and_valid_control_distinct() -> None:
+    fault = evaluate(
+        "synthetic-i2c-decimal-comma",
+        coach(i2c_netlist_with_parallel_sda(resistance="1,5k")),
+        DesignLintPolicy(),
+    )
+    finding = next(
+        item for item in fault.findings if item.rule_id == "bus.i2c_low_equivalent_resistance"
+    )
+    assert finding.evidence["equivalent_ohms"] == ("SDA=750Ω",)
+
+    control = evaluate(
+        "synthetic-i2c-decimal-comma-control",
+        coach(i2c_netlist_with_parallel_sda(resistance="4,7k")),
+        DesignLintPolicy(),
+    )
+    assert "bus.i2c_low_equivalent_resistance" not in {item.rule_id for item in control.findings}
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_low_equivalent_resistance")
+@pytest.mark.parametrize(
+    ("value", "expected_ohms"),
+    (
+        ("1Meg", 1_000_000),
+        ("78 182", 78_182),
+        ("4,7k", 4_700),
+        (",5k", 500),
+        ("1 234,567", 1234.567),
+        ("1k, 5%", 1_000),
+        ("1, 000", None),
+        ("1, 000Ω", None),
+        ("1,000", None),
+        ("78 18", None),
+    ),
+)
+def test_resistance_parser_supports_bounded_values_and_rejects_ambiguous_separators(
+    value: str, expected_ohms: float | None
+) -> None:
+    assert resistance_ohms(value) == expected_ohms
 
 
 def test_bus_heuristics_facade_preserves_legacy_low_resistance_record() -> None:

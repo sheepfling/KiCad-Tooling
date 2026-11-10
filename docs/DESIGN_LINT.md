@@ -530,17 +530,19 @@ for the fault/control source hashes and exact-version native fixture.
 ## Review split power inputs on unlike connector peers
 
 `connector.reviewed_peer_power_input_split` asks for review when a complete,
-current connector map explicitly places two unlike connectors in the same peer
-group and maps generic native `power_in` or `passive` contacts to the same
-interface signal and voltage domain, but the schematic assigns those contacts
-to different nets. The contacts must have no mapped supply or return role.
-Those roles and same-symbol, PART_ID, or same-value/footprint peers remain with
-their existing checks. This can help surface a connector power pin that may
-have been left on its own net, but it does not require the rails to be joined:
-separate sources, filtering, and isolation may be intentional. The heuristic
-needs a fully reviewed connector inventory and source-matched pin maps, and it
-does not prove actual voltage or PCB continuity. Project policy can keep
-`review`, set `block` or `off`, or ignore an exact finding fingerprint. See the
+current connector map places two unlike connectors in the same peer group and
+maps contacts to the same interface signal and voltage domain, but the
+schematic assigns them to different nets. It covers generic native `power_in`
+or `passive` contacts with no mapped supply role, plus mapped supply-role
+contacts whose native power-function categories differ (for example, VBUS and
+VDD). Same-category named power pins remain with the repeated-function check.
+Same-symbol, PART_ID, and same-value/footprint peers remain with their existing
+checks. This can help surface a connector power pin that may have been left on
+its own net, but it does not require the rails to be joined: separate sources,
+filtering, and isolation may be intentional. The heuristic needs a fully
+reviewed connector inventory and source-matched pin maps, and it does not prove
+actual voltage or PCB continuity. Project policy can keep `review`, set
+`block` or `off`, or ignore an exact finding fingerprint. See the
 [synthetic fixture record](../tests/fixtures/design_lint/reviewed-peer-power-input-split-native/README.md).
 
 ```sh
@@ -548,20 +550,64 @@ does not prove actual voltage or PCB continuity. Project policy can keep
   -m 'design_lint and connector_lint and power_lint and design_lint_rule(rule_id="connector.reviewed_peer_power_input_split")'
 ```
 
+## Review split power outputs on unlike connector peers
+
+`connector.reviewed_peer_power_output_split` asks for review when unlike,
+source-reviewed connector peers map named supply outputs to the same interface
+signal and exact voltage domain but assign them to different nets. It requires
+complete current pin maps, one explicit peer group, distinct native symbols
+and value/footprint identity, mapped `supply` roles with authored `output`
+direction, native `power_out` pins, and different recognized power-function
+categories such as VBUS and VDD_OUT. Same-category outputs and common-net
+controls stay quiet. Independent sources, protection, current limits, and
+isolation can make split outputs intentional; the prompt does not require a
+tie or establish PCB continuity. The rule defaults to `review` and can be set
+to `block` or `off`, or ignored by exact fingerprint. See the
+[synthetic fault/control fixtures](../tests/fixtures/design_lint/reviewed-peer-power-output-split-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_reviewed_peer_power_output_split.py \
+  -m 'design_lint and connector_lint and power_lint and design_lint_rule(rule_id="connector.reviewed_peer_power_output_split")'
+```
+
+## Review an open named power output beside a connector peer
+
+`connector.reviewed_peer_power_output_open` asks for review when one connector
+in a fully source-matched peer group has an open named `power_out` contact and
+an unlike peer assigns the same authored output signal and exact voltage domain
+to one net. Both contacts must have `supply` roles, `output` directions, and
+different recognized power-function categories. The open pin must have no
+authored unconnected reason. Common nets are not a condition for this prompt;
+the peer map provides review context and does not require a connection or name
+the peer's net as a target. Documented opens, both-open cases, stale or
+ambiguous maps, same-category functions, and other roles or directions stay
+quiet. This is a configurable REVIEW heuristic and does not establish PCB
+continuity. See the
+[synthetic fixture record](../tests/fixtures/design_lint/reviewed-peer-power-output-open-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_reviewed_peer_power_output_open.py \
+  tests/test_connector_reviewed_peer_power_output_open_parity.py \
+  tests/test_connector_reviewed_peer_power_output_open_native.py \
+  -m 'design_lint and connector_lint and power_lint and design_lint_rule(rule_id="connector.reviewed_peer_power_output_open")'
+```
+
 ## Review an open passive power contact across unlike connector peers
 
-`connector.reviewed_peer_passive_power_input_open` asks for review when one current, source-matched
-connector map leaves a generic passive contact without a mapped role or net, while an unlike
-connector in the same explicitly reviewed peer group assigns the same interface signal and voltage
-domain to exactly one net. This provides context for a passive contact that may have been left
-unconnected. Native `power_in` opens and mapped-role cases remain with their existing checks. The
-peer relationship does not require the contacts to share a net, select a target net, or establish
-PCB continuity; intentional opens can be documented in the connector map or handled with an exact
-finding ignore. The rule defaults to `review` and can be set to `block` or `off`. See the
+`connector.reviewed_peer_passive_power_input_open` asks for review when one current,
+source-matched connector map leaves a passive contact without a net, while an unlike connector in
+the same explicitly reviewed peer group assigns the same interface signal and voltage domain to
+exactly one net. It covers generic contacts with no mapped role, plus mapped supply-role contacts
+whose native power-function categories differ, such as VBUS and VDD_IN. Same-category named power
+contacts remain with the repeated-function check; native `power_in` opens remain with the existing
+unconnected-power check. The peer relationship does not require the contacts to share a net, select
+a target net, or establish PCB continuity; intentional opens can be documented in the connector map
+or handled with an exact finding ignore. The rule defaults to `review` and can be set to `block` or
+`off`. See the
 [synthetic fixture record](../tests/fixtures/design_lint/reviewed-peer-power-input-split-native/README.md).
 
 ```sh
-.venv/bin/python -I -m pytest tests/test_connector_reviewed_peer_power_input_split.py -m 'design_lint and connector_lint and power_lint and design_lint_rule(rule_id="connector.reviewed_peer_passive_power_input_open")'
+.venv/bin/python -I -m pytest tests/test_connector_reviewed_peer_power_input_split.py tests/test_connector_reviewed_peer_named_power_open.py -m 'design_lint and connector_lint and power_lint and design_lint_rule(rule_id="connector.reviewed_peer_passive_power_input_open")'
 ```
 
 ## Review repeated signal pins on one component
@@ -834,7 +880,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 312 active rules.
+The catalog currently contains 314 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -3880,15 +3926,18 @@ result; the latter can still produce that separate repeated-return review.
 
 ## Review an unassigned mapped signal contact
 
-`connector.mapped_interface_signal_unassigned` asks for review when a fitted,
-generic signal contact has no native net assignment and no
-`unconnected_pin_reasons` entry in a complete, current connector interface
-map. This existing finding can include additional context when another current
-peer contact has the same mapped signal, voltage-domain identifier, and
-reviewed peer group. The report names each assigned peer pin and its exact
-native net so the reviewer can compare the open contact with the mapped peers.
-Evidence retains the peer group and basis, peer reference and pin, matched
-signal and voltage domain, and per-pin native net assignment.
+`connector.mapped_interface_signal_unassigned` asks for review when a fitted
+signal contact has no native net assignment and no `unconnected_pin_reasons`
+entry in a complete, current connector interface map. Native pin-function
+text may be generic or named; the source-matched map supplies the signal role.
+Named signals can also receive protocol-specific prompts when their aliases
+are recognized. For generic mapped signals, this finding can include
+additional context when another current peer contact has the same mapped
+signal, voltage-domain identifier, and reviewed peer group. The report names
+each assigned peer pin and its exact native net so the reviewer can compare
+the open contact with the mapped peers. Evidence retains the peer group and
+basis, peer reference and pin, matched signal and voltage domain, and per-pin
+native net assignment.
 
 Peer grouping is review context. It does not say the contacts must share a net,
 validate the selected net, prove schematic intent, or establish PCB copper or
@@ -3899,20 +3948,26 @@ the documented-open target itself stays quiet. Project policy can leave the
 rule at `review`, set it to `block` or `off`, or ignore an exact finding
 fingerprint.
 
-The tooling-owned native fixture leaves J2.7 open beside assigned J1.2 and
-repeats the export on exact KiCad 10.0.0 and 10.0.5 images. A current
-intentional-open reason is the control over the same native export. See the
-[fixture note](../tests/fixtures/design_lint/mapped-interface-peer-context-native/README.md).
+Tooling-owned native fixtures cover a generic mapped signal beside an assigned
+peer and a named `PWM_SYNC` contact that is open. The common controls are an
+intentional-open reason and an assigned `PWM_SYNC` signal. Exports repeat on
+exact KiCad 10.0.0 and 10.0.5 images. See the
+[peer-context fixture note](../tests/fixtures/design_lint/mapped-interface-peer-context-native/README.md)
+and the
+[named-signal fixture note](../tests/fixtures/design_lint/mapped-named-signal-native/README.md).
 
 Select the focused synthetic, CLI/MCP, and exact-native cases with:
 
 ```sh
 .venv/bin/python -I -m pytest tests/test_connector_mapped_interface_signal_peer_context.py \
+  tests/test_connector_mapped_interface_signal_unassigned.py \
+  tests/test_design_lint_mcp_parity_mapped_interface_signal.py \
   tests/test_design_lint_mcp_parity_reviewed_peer_signal_domains.py \
   -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")'
 
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_connector_mapped_interface_signal_peer_context_native.py \
+  tests/test_connector_mapped_named_signal_native.py \
   -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")'
 ```
 
@@ -4108,30 +4163,34 @@ KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
 ## Review a mapped signal contact on a named supply or return net
 
 `connector.mapped_interface_signal_on_named_rail` prompts when a complete,
-source-matched interface map marks a fitted generic-function contact as
-`signal`, while its only native schematic assignment has a recognized
-supply-like or return-like label such as `+5V`, `VBUS`, `GND`, `0V`, or `RET`.
-It localizes a map/assignment combination for review; it does not decide that
-the pin is misclassified. Intentional signal straps can be valid.
+source-matched interface map marks a fitted contact as `signal`, while its
+only native schematic assignment has a recognized supply-like or return-like
+label such as `+5V`, `VBUS`, `GND`, `0V`, or `RET`. The native pin function may
+be generic, missing, or named; the source-matched map supplies the interface
+role. This localizes a map/assignment combination for review; it does not
+decide that the pin is misclassified. Intentional signal straps can be valid.
 
-The check excludes named native pin functions, DNP connectors, multiply
-assigned contacts, stale or incomplete maps, missing catalog digests, and
-unrecognized labels. A net label is a review clue and does not prove voltage,
-electrical function, or required connectivity. The rule does not prove PCB
-copper continuity or external wiring. Project policy can keep it at `review`,
-set it to `block` or `off`, or ignore a finding by exact fingerprint.
+The check excludes DNP connectors, multiply assigned contacts, stale or
+incomplete maps, missing catalog digests, and unrecognized labels. Recognized
+protocol aliases may also receive protocol-specific prompts. A net label is a
+review clue and does not prove voltage, electrical function, or required
+connectivity. The rule does not prove PCB copper continuity or external
+wiring. Project policy can keep it at `review`, set it to `block` or `off`, or
+ignore a finding by exact fingerprint.
 
 Synthetic fault/control cases cover both supply and return labels, ordinary
-nets, other mapped roles, named native functions, DNP, stale and incomplete
-evidence, policy, exact ignores, and input-order stability. The native
-fault/control reuses the source-hashed tooling-owned `ret-control` schematic:
-the same generic J1.7 pin is mapped as `signal` for the fault and `return` for
-the control, with exports checked against KiCad 10.0.0 and 10.0.5.
+nets, other mapped roles, generic and named signal functions, DNP, stale and
+incomplete evidence, policy, exact ignores, and input-order stability. The
+existing generic native fault/control reuses the source-hashed tooling-owned
+`ret-control` schematic. A separate named `PWM_SYNC` fixture assigns the
+signal to `GND` as its fault and to an ordinary `PWM_SYNC` net as its control.
+Both native lanes repeat exports with KiCad 10.0.0 and 10.0.5.
 
 Run the focused synthetic slice with:
 
 ```sh
 .venv/bin/python -I -m pytest tests/test_connector_mapped_interface_signal_on_named_rail.py \
+  tests/test_design_lint_mcp_parity_mapped_interface_signal.py \
   -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_signal_on_named_rail")'
 ```
 
@@ -4140,6 +4199,7 @@ Run the exact-native lane with:
 ```sh
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_connector_mapped_interface_signal_on_named_rail_native_fixture_lane.py \
+  tests/test_connector_mapped_named_signal_rail_native.py \
   -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_signal_on_named_rail")'
 ```
 

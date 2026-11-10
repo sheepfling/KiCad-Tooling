@@ -15,7 +15,9 @@ CATALOG_SHA256 = "b" * 64
 INTERFACE_ID = "synthetic-connector-interface"
 
 
-def interface_record(*, target_role: ConnectorPinRole = "signal") -> InterfaceRecord:
+def interface_record(
+    *, target_role: ConnectorPinRole = "signal", target_signal_override: str | None = None
+) -> InterfaceRecord:
     role_fields = {
         "signal": ("UART_RX", "input", "logic-3v3", "UART_TX"),
         "return": ("SIGNAL_RETURN", "passive", "signal-return", "SIGNAL_RETURN"),
@@ -24,6 +26,9 @@ def interface_record(*, target_role: ConnectorPinRole = "signal") -> InterfaceRe
         "other": ("OTHER", "passive", "unspecified", "OTHER"),
     }
     target_signal, direction, voltage_domain, mating = role_fields[target_role]
+    if target_role == "signal" and target_signal_override is not None:
+        target_signal = target_signal_override.strip()
+        mating = target_signal
     return InterfaceRecord(
         id=INTERFACE_ID,
         revision="synthetic-1",
@@ -66,10 +71,11 @@ def interface_coverage(
     source: NetlistContract,
     *,
     target_role: ConnectorPinRole = "signal",
+    target_signal: str | None = None,
     unconnected_reason: str | None = None,
     pin_numbers: tuple[str, ...] = ("1", "2", "3"),
 ) -> ConnectorCoverageReport:
-    interface = interface_record(target_role=target_role)
+    interface = interface_record(target_role=target_role, target_signal_override=target_signal)
     interface = interface.model_copy(
         update={"pins": tuple(pin for pin in interface.pins if str(pin.number) in pin_numbers)}
     )

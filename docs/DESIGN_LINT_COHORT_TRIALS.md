@@ -8,7 +8,7 @@ for dispositions and timing; leave unmeasured values unstated.
 
 ## LINT-031 — Candidate analyzer trial and incremental-value register
 
-- **Status:** Partial v27; read-only synthetic comparisons across seven cohort
+- **Status:** Partial v28; read-only synthetic comparisons across seven cohort
   repositories, a first-party public-template applicability replay,
   kicad_skills schematic-rule trials, a ThomsonLint board-export trial, and
   public project review samples are recorded below, plus source-only audits of
@@ -47,7 +47,10 @@ for dispositions and timing; leave unmeasured values unstated.
   reviewer value remains unmeasured. A second pinned public multiport hub
   screen for LINT-289 now records seven generic connector-to-PHY pair review
   prompts from repeated KiCad 10.0.5 exports; these are applicability prompts,
-  not confirmed defects.
+  not confirmed defects. A pinned kicad-happy v3.0.1 source audit also prompted
+  bounded component-value parsing regressions for decimal commas, grouped
+  spaces, `Meg`, femtofarads, and value metadata; the local changes use
+  tooling-owned fault/control fixtures and existing native I2C lanes.
 
 ### Source review: kicad-druid custom DRC rule lint
 
@@ -2399,11 +2402,39 @@ for dispositions and timing; leave unmeasured values unstated.
   install or copy cohort code or board data. Keep it at `review` until independent project reviews
   establish useful thresholds and applicability.
 
+### Source review: kicad-happy v3.0.1 component-value syntax
+
+- **Pinned source:** The [v3.0.1 changelog][happy-value-syntax-v301]
+  documents simulator-style component-value parsing for decimal commas,
+  grouped spaces, `Meg`, femtofarads, and a primary value followed by comma
+  fields. It records `1,000` as ambiguous and leaves it unparsed.
+- **Local gap:** Before this change, local resistance parsing did not accept
+  decimal-comma `k` values or `Meg`, and removed all spaces, allowing malformed
+  digit groups to be mistaken for a single integer. Capacitance parsing missed
+  decimal commas, femtofarads, grouped values, and comma-separated metadata.
+- **Local response:** Add a shared bounded numeric grammar used by the existing
+  resistor and capacitor owners. Accept only strictly grouped spaces and an
+  unambiguous comma decimal; leave ambiguous grouping, malformed groups, and
+  unsupported forms uninterpreted. Preserve value metadata only after a
+  recognized primary value.
+- **Evidence:** Synthetic fault/control tests exercise I2C equivalent resistance
+  and an authored I2C capacitance window. The native I2C array control/fault pair
+  uses a decimal-comma capacitor with metadata, and the native resistor pair
+  uses decimal-comma resistance values. Both run through the existing
+  digest-pinned KiCad 10.0.0 and 10.0.5 lane. Scoped acceptance passed 373
+  tests with 7,721 deselected, along with the installed-package and external
+  public-template checks.
+- **Disposition and limits:** Adopt the input cases as a first-party bounded
+  parser improvement, not the upstream implementation or a wholesale simulator
+  grammar. These fixtures show local rule behavior and native export handling;
+  they do not establish field precision or electrical correctness. No upstream
+  code, fixture, product design, or proprietary data was imported.
+
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 312 active rules. Each entry has a deterministic predicate, evidence
+contains 314 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-Of the 312 active rules, 257 default to `review`, 54 to `off`, and
+Of the 314 active rules, 259 default to `review`, 54 to `off`, and
 `pcb.required_fitted_reference` to `block`. Off-by-default checks include
 schematic geometry, generic peer assignment, selected component topology
 reviews such as the BJT base-bias and base/collector same-net prompts, and
@@ -2430,6 +2461,7 @@ it does not claim field validation or effectiveness against private boards.
 [happy-cp003-license]: <https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/LICENSE>
 [happy-cp003-release]: https://github.com/aklofas/kicad-happy/releases/tag/v2.3.1
 [happy-cp003-source]: <https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/skills/kicad/scripts/analyze_pcb.py#L5796-L6103>
+[happy-value-syntax-v301]: https://github.com/aklofas/kicad-happy/blob/7d9d4d9fef87ac2d3eb16cfc5cdc9a0869f417f4/CHANGELOG.md
 [happy-v232-commit]: https://github.com/aklofas/kicad-happy/commit/2fd9aa0fe2d620f36627d9221e8b1393987ae38e
 [happy-v232-release]: https://github.com/aklofas/kicad-happy/releases/tag/v2.3.2
 [usb2-hub-license]: <https://github.com/brainsmoke/usb2_hub/blob/a6288e2ffc4866b52eb5f64b998376bd619a7674/LICENSE>

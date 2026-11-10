@@ -4,6 +4,38 @@ from __future__ import annotations
 
 CONNECTOR_RULE_NODE_CASES = (
     (
+        "connector.reviewed_peer_power_output_split",
+        "tests/test_connector_reviewed_peer_power_output_split.py::test_different_named_supply_outputs_split_across_reviewed_peers_need_review",
+    ),
+    (
+        "connector.reviewed_peer_power_output_split",
+        "tests/test_connector_reviewed_peer_power_output_split.py::test_common_same_function_and_nonoutput_directions_stay_quiet",
+    ),
+    (
+        "connector.reviewed_peer_power_output_split",
+        "tests/test_connector_reviewed_peer_power_output_parity.py::test_reviewed_peer_power_output_split_matches_between_cli_and_mcp",
+    ),
+    (
+        "connector.reviewed_peer_power_output_split",
+        "tests/test_connector_reviewed_peer_power_output_native.py::test_native_reviewed_peer_power_output_fault_and_control_are_repeatable",
+    ),
+    (
+        "connector.reviewed_peer_power_output_open",
+        "tests/test_connector_reviewed_peer_power_output_open.py::test_open_named_supply_output_beside_assigned_reviewed_peer_needs_review",
+    ),
+    (
+        "connector.reviewed_peer_power_output_open",
+        "tests/test_connector_reviewed_peer_power_output_open.py::test_open_output_requires_current_unambiguous_matching_peer_evidence",
+    ),
+    (
+        "connector.reviewed_peer_power_output_open",
+        "tests/test_connector_reviewed_peer_power_output_open_parity.py::test_reviewed_peer_power_output_open_matches_between_cli_and_mcp",
+    ),
+    (
+        "connector.reviewed_peer_power_output_open",
+        "tests/test_connector_reviewed_peer_power_output_open_native.py::test_native_reviewed_peer_power_output_open_fault_and_control_are_repeatable",
+    ),
+    (
         "connector.mapped_interface_signal_unassigned",
         "tests/test_connector_mapped_interface_signal_peer_context.py::test_open_mapped_signal_reports_current_peer_assignment_context",
     ),
@@ -34,6 +66,26 @@ CONNECTOR_RULE_NODE_CASES = (
     (
         "connector.mapped_interface_signal_unassigned",
         "tests/test_connector_mapped_interface_signal_peer_context_native.py::test_native_open_mapped_signal_peer_context_and_reasoned_control",
+    ),
+    (
+        "connector.mapped_interface_signal_unassigned",
+        "tests/test_connector_mapped_named_signal_native.py::test_native_named_mapped_signal_fault_and_control_repeat",
+    ),
+    (
+        "connector.mapped_interface_signal_unassigned",
+        "tests/test_design_lint_mcp_parity_mapped_interface_signal.py::test_mapped_interface_signal_review_cli_mcp_parity",
+    ),
+    (
+        "connector.mapped_interface_signal_on_named_rail",
+        "tests/test_connector_mapped_interface_signal_on_named_rail.py::test_named_mapped_signal_on_named_rail_requests_review",
+    ),
+    (
+        "connector.mapped_interface_signal_on_named_rail",
+        "tests/test_design_lint_mcp_parity_mapped_interface_signal.py::test_mapped_interface_signal_review_cli_mcp_parity",
+    ),
+    (
+        "connector.mapped_interface_signal_on_named_rail",
+        "tests/test_connector_mapped_named_signal_rail_native.py::test_native_named_mapped_signal_rail_fault_and_control_repeat",
     ),
     (
         "connector.reviewed_peer_passive_power_input_open",

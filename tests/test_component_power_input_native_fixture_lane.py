@@ -80,8 +80,12 @@ def test_component_power_input_lane_exports_only_its_faults_and_controls(
         "kicad_tooling.ci_hosted_connector_return_context.selected_config",
         lambda *_args: config,
     )
-    monkeypatch.setattr("kicad_tooling.hwrepo.contract_coach.run_command", fake_run_command)
-    monkeypatch.setattr("kicad_tooling.validate.read_netlist", fake_read_netlist)
+    monkeypatch.setattr(
+        "kicad_tooling.ci_hosted_connector_return_context.run_command", fake_run_command
+    )
+    monkeypatch.setattr(
+        "kicad_tooling.ci_hosted_connector_return_context.read_netlist", fake_read_netlist
+    )
 
     log = HostedLog(root, "component-power-input-unit")
     component_power_input_fixture_lane(root, project="synthetic", image=image, log=log)

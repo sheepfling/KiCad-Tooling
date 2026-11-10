@@ -1248,19 +1248,19 @@
     },
     {
       "rule_id": "connector.reviewed_peer_power_input_split",
-      "title": "Generic power-input contacts split across unlike reviewed connector peers",
+      "title": "Mapped power-input contacts split across unlike reviewed connector peers",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist plus complete source-matched connector interface coverage",
-      "predicate": "Require globally complete connector coverage and current source-matched interface maps for two connector references in the same peer_assignment_group. Compare only different native symbols with no PART_ID and different nonempty value/footprint identity, so exact-symbol, exact-part, and footprint-alias checks retain their scopes. For one mapped interface signal and exact voltage_domain shared by both maps, require each native pin to have generic function metadata, power_in or passive electrical type, role absent or other, and exactly one assigned net; emit a REVIEW candidate when the net names differ. The map and domain are review clues and do not require joining the nets.",
+      "predicate": "Require globally complete connector coverage and current source-matched interface maps for two connector references in the same peer_assignment_group. Compare only different native symbols with no PART_ID and different nonempty value/footprint identity, so exact-symbol, exact-part, and footprint-alias checks retain their scopes. For one mapped interface signal and exact voltage_domain shared by both maps, accept either (a) generic native pin functions with power_in or passive electrical type and role absent or other, or (b) source-matched supply roles with power_in or passive type and generic or recognized named power functions. For mapped supply roles, emit only when native named-power categories differ; same-category assignments remain with connector.repeated_pin_function. Emit a REVIEW candidate when each contact has exactly one assigned net and the net names differ. These map and domain clues do not require joining the nets.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The rule needs complete project connector inventory review and current, source-matched maps. Missing, stale, incomplete, DNP, or ambiguous evidence is not a finding.",
-        "Both contacts must map to the same interface signal and exact voltage_domain, and native pin metadata must be generic with power_in or passive electrical type and role absent or other. Supply, return, signal, shield, named-function, open-pin, and different-domain cases stay with their existing checks or remain unsupported.",
+        "Both contacts must map to the same interface signal and exact voltage_domain and have power_in or passive electrical type. Generic native functions are eligible only with role absent or other; named functions are eligible only with current mapped supply roles and a recognized connector power category. Same-category named functions remain with connector.repeated_pin_function. Return, signal, shield, open-pin, and different-domain cases remain with other checks or unsupported.",
         "Only unlike symbols with different nonempty value/footprint identity are considered. Exact-symbol peers, PART_ID aliases, and exact value/footprint aliases remain with their existing rules; those identity checks can still miss other cases.",
         "Distinct net assignments may be intentional because of source selection, filtering, current limits, or isolation. A source map does not prove net commonality, PCB copper continuity, connector wiring, or actual voltage.",
         "This is a REVIEW heuristic, not independent proof of a fault. Project policy can turn it off, block on it, or ignore an exact fingerprint."
@@ -1268,6 +1268,8 @@
       "fault_fixtures": [
         "tests.test_connector_reviewed_peer_power_input_split.test_split_generic_power_input_on_unlike_reviewed_peers_needs_review",
         "tests.test_connector_reviewed_peer_power_input_split.test_split_passive_power_input_on_unlike_reviewed_peers_needs_review",
+        "tests.test_connector_reviewed_peer_named_power_split.test_different_named_supply_roles_on_reviewed_peers_need_review",
+        "tests.test_connector_reviewed_peer_named_power_split.test_generic_and_named_mapped_supply_contacts_are_compared",
         "tests.test_connector_reviewed_peer_power_input_parity.test_reviewed_peer_power_input_split_matches_between_cli_and_mcp",
         "tests.test_connector_reviewed_peer_power_input_native.test_native_reviewed_peer_power_input_fault_and_control_are_repeatable"
       ],
@@ -1275,14 +1277,18 @@
         "tests.test_connector_reviewed_peer_power_input_split.test_common_domain_and_peer_identity_controls_stay_quiet_for_this_rule",
         "tests.test_connector_reviewed_peer_power_input_split.test_common_passive_power_input_on_unlike_reviewed_peers_stays_quiet",
         "tests.test_connector_reviewed_peer_power_input_split.test_stale_incomplete_and_role_classified_maps_do_not_trigger_rule",
+        "tests.test_connector_reviewed_peer_named_power_split.test_common_or_same_category_named_supplies_are_controls",
+        "tests.test_connector_reviewed_peer_named_power_split.test_domain_role_and_source_coverage_boundaries_stay_quiet",
         "tests.test_connector_reviewed_peer_power_input_parity.test_reviewed_peer_power_input_split_matches_between_cli_and_mcp",
         "tests.test_connector_reviewed_peer_power_input_native.test_native_reviewed_peer_power_input_fault_and_control_are_repeatable"
       ],
       "metamorphic_fixtures": [
-        "tests.test_connector_reviewed_peer_power_input_split.test_reviewed_peer_power_input_split_is_stable_under_mapping_order"
+        "tests.test_connector_reviewed_peer_power_input_split.test_reviewed_peer_power_input_split_is_stable_under_mapping_order",
+        "tests.test_connector_reviewed_peer_named_power_split.test_named_supply_split_supports_policy_and_stable_ordering"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_reviewed_peer_power_input_split.py#reviewed_peer_power_input_split_candidates",
+        "kicad_tooling/hwrepo/connector_reviewed_peer_power_contacts.py#reviewed_peer_power_contact_pairs",
         "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
@@ -1294,46 +1300,143 @@
       "metamorphic_not_applicable_basis": null
     },
     {
-      "rule_id": "connector.reviewed_peer_passive_power_input_open",
-      "title": "Generic passive power-input contact is open across unlike reviewed connector peers",
+      "rule_id": "connector.reviewed_peer_power_output_split",
+      "title": "Named power-output contacts split across unlike reviewed connector peers",
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_reviewed_peer_power_output_split.py#reviewed_peer_power_output_split_candidates",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist plus complete source-matched connector interface coverage",
-      "predicate": "Require globally complete connector coverage and current source-matched interface maps for two unlike connectors in the same authored peer_assignment_group. Compare only different native symbols with no PART_ID and different nonempty value/footprint identity. For one generic interface signal and exact voltage_domain shared by both maps, require generic native pin functions, electrical types power_in or passive, and no mapped role on either contact. Emit a REVIEW candidate when one role-absent passive contact has no net and no unconnected_pin_reasons disposition while its peer has exactly one net. The map and domain are review context; they do not require the contact to be connected or the peers to share a net.",
+      "predicate": "Require globally complete connector coverage and current source-matched maps for two fitted connectors in the same peer_assignment_group. Compare only different native symbols with no PART_ID and different nonempty value/footprint identity. For one shared interface signal and exact voltage_domain, require both authored interface directions to be output, both mapped roles to be supply, both native pin electrical types to be power_out, and both native functions to have different recognized connector power categories. Emit REVIEW only when each pin has exactly one assigned net and the exact net names differ. The map and categories are review clues; they do not require joining the nets.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The rule needs globally complete connector inventory review, complete current source-matched maps, and an authored shared peer group. Missing, stale, incomplete, DNP, PART_ID-bearing, or ambiguous evidence is not a finding.",
+        "Only mapped supply-role contacts with authored output direction, native power_out type, and different recognized native power-function categories are considered. Generic or unrecognized functions, same-category functions, inputs, passive contacts, returns, signals, shields, and different signals or voltage domains remain outside this predicate.",
+        "Only unlike symbols with different nonempty value/footprint identity are considered. Exact-symbol peers and exact value/footprint aliases remain with their existing checks.",
+        "Separate outputs may be intentional because of independent sources, protection, current limits, or isolation. A map does not prove net commonality, PCB copper continuity, connector wiring, actual voltage, or whether the output is capable of sourcing power.",
+        "This is a REVIEW heuristic, not independent proof of a fault. Project policy can turn it off, block on it, or ignore an exact fingerprint."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_reviewed_peer_power_output_split.test_different_named_supply_outputs_split_across_reviewed_peers_need_review",
+        "tests.test_connector_reviewed_peer_power_output_parity.test_reviewed_peer_power_output_split_matches_between_cli_and_mcp",
+        "tests.test_connector_reviewed_peer_power_output_native.test_native_reviewed_peer_power_output_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_reviewed_peer_power_output_split.test_common_same_function_and_nonoutput_directions_stay_quiet",
+        "tests.test_connector_reviewed_peer_power_output_split.test_role_domain_peer_identity_and_native_type_boundaries_stay_quiet",
+        "tests.test_connector_reviewed_peer_power_output_split.test_stale_incomplete_open_and_ambiguous_evidence_stay_quiet",
+        "tests.test_connector_reviewed_peer_power_output_parity.test_reviewed_peer_power_output_split_matches_between_cli_and_mcp",
+        "tests.test_connector_reviewed_peer_power_output_native.test_native_reviewed_peer_power_output_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_reviewed_peer_power_output_split.test_policy_exact_ignore_and_netlist_order_are_deterministic"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_reviewed_peer_power_output_split.py#reviewed_peer_power_output_split_candidates",
+        "kicad_tooling/hwrepo/connector_reviewed_peer_power_contacts.py#reviewed_peer_power_contact_pairs",
+        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "metamorphic_not_applicable_basis": null
+    },
+    {
+      "rule_id": "connector.reviewed_peer_passive_power_input_open",
+      "title": "Passive power-input contact is open across unlike reviewed connector peers",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist plus complete source-matched connector interface coverage",
+      "predicate": "Require globally complete connector coverage and current source-matched interface maps for two unlike connectors in the same authored peer_assignment_group. Compare only different native symbols with no PART_ID and different nonempty value/footprint identity. For one interface signal and exact voltage_domain shared by both maps, accept either (a) generic native pin functions with electrical types power_in or passive and no mapped roles, or (b) mapped supply roles with electrical types power_in or passive and generic or recognized named power functions whose connector_power_function_key categories differ. Emit a REVIEW candidate when one passive contact has no net and no unconnected_pin_reasons disposition while its peer has exactly one net; for case (a), both mapped roles must be absent, and for case (b), both must be supply. The map and domain are review context; they do not require the contact to be connected or the peers to share a net.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The rule needs complete project connector inventory review, current source-matched pin maps, and a shared reviewed peer group. Missing, stale, incomplete, DNP, or ambiguous evidence is not a finding.",
-        "Only a generic passive contact with no mapped role is eligible as the open side. Native power_in opens remain with connector.unconnected_power_input.",
-        "Both contacts must have no mapped role; mapped other, supply, return, signal, and shield cases remain with their existing checks. The assigned peer must map the same interface signal and exact voltage_domain and have exactly one assigned net. Unlike symbols with matching PART_ID or matching nonempty value/footprint identity remain with their existing peer checks.",
+        "The open contact must be passive. Generic opens are eligible only when both roles are absent. Mapped supply opens are eligible only when both contacts have supply roles and their native power-function categories differ; generic-to-named and different named categories are REVIEW clues. Same-category assignments remain with connector.repeated_pin_function. Native power_in opens remain with connector.unconnected_power_input.",
+        "Return, signal, shield, other-role, unmatched-domain, same-category, incomplete, stale, DNP, open-reason, or ambiguous-assignment cases do not produce this finding. The assigned peer must map the same interface signal and exact voltage_domain and have exactly one assigned net. Unlike symbols with matching PART_ID or matching nonempty value/footprint identity remain with their existing peer checks.",
         "An open contact may be intentionally unused, isolated, or reserved. The prompt does not require connection, select a target net, prove PCB copper continuity, or verify connector wiring.",
         "This is a REVIEW heuristic, not independent proof of a fault. Project policy can turn it off, block on it, or ignore an exact fingerprint."
       ],
       "fault_fixtures": [
         "tests.test_connector_reviewed_peer_power_input_split.test_unassigned_passive_power_input_peer_contact_needs_review",
+        "tests.test_connector_reviewed_peer_named_power_open.test_named_mapped_passive_open_contact_needs_review",
         "tests.test_connector_reviewed_peer_power_input_parity.test_reviewed_peer_power_input_split_matches_between_cli_and_mcp",
         "tests.test_connector_reviewed_peer_power_input_native.test_native_reviewed_peer_power_input_fault_and_control_are_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_connector_reviewed_peer_power_input_split.test_documented_or_unmatched_passive_peer_opens_stay_quiet",
         "tests.test_connector_reviewed_peer_power_input_split.test_reviewed_peer_passive_open_obeys_policy_and_exact_ignore",
+        "tests.test_connector_reviewed_peer_named_power_open.test_common_documented_and_same_category_opens_are_controls",
+        "tests.test_connector_reviewed_peer_named_power_open.test_named_open_peer_stays_quiet_for_different_domains_or_stale_maps",
         "tests.test_connector_reviewed_peer_power_input_parity.test_reviewed_peer_power_input_split_matches_between_cli_and_mcp",
         "tests.test_connector_reviewed_peer_power_input_native.test_native_reviewed_peer_power_input_fault_and_control_are_repeatable"
       ],
       "metamorphic_fixtures": [
-        "tests.test_connector_reviewed_peer_power_input_split.test_passive_peer_open_candidate_is_stable_under_mapping_order"
+        "tests.test_connector_reviewed_peer_power_input_split.test_passive_peer_open_candidate_is_stable_under_mapping_order",
+        "tests.test_connector_reviewed_peer_named_power_open.test_open_prompt_obeys_policy_and_exact_ignore"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_reviewed_peer_power_input_split.py#reviewed_peer_passive_power_input_open_candidates",
-        "kicad_tooling/hwrepo/connector_reviewed_peer_power_input_split.py#_reviewed_peer_power_input_pairs",
+        "kicad_tooling/hwrepo/connector_reviewed_peer_power_contacts.py#reviewed_peer_power_contact_pairs",
         "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_reviewed_peer_power_input_split.py#reviewed_peer_passive_power_input_open_candidates",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "metamorphic_not_applicable_basis": null
+    },
+    {
+      "rule_id": "connector.reviewed_peer_power_output_open",
+      "title": "Named power-output contact open beside an unlike reviewed connector peer",
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_reviewed_peer_power_output_open.py#reviewed_peer_power_output_open_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist plus complete source-matched connector interface coverage",
+      "predicate": "Require globally complete connector coverage and current source-matched maps for two fitted connectors in the same peer_assignment_group. Compare only different native symbols with no PART_ID and different nonempty value/footprint identity. For one shared interface signal and exact voltage_domain, require both authored interface directions to be output, both mapped roles to be supply, both native pin electrical types to be power_out, and both native functions to have different recognized connector power categories. Emit REVIEW only when exactly one contact has no assigned net and no authored unconnected_pin_reasons disposition, while its peer has exactly one assigned net. The map and categories are review clues; they do not require connecting the contacts or choosing the peer net as a target.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The rule needs globally complete connector inventory review, complete current source-matched maps, and a shared authored peer group. Missing, stale, incomplete, DNP, PART_ID-bearing, or ambiguous evidence is not a finding.",
+        "Only mapped supply-role contacts with authored output direction, native power_out type, and different recognized native power-function categories are considered. Generic or unrecognized functions, same-category functions, inputs, passive contacts, returns, signals, shields, and different signals or voltage domains remain outside this predicate.",
+        "Only unlike symbols with different nonempty value/footprint identity are considered. Exact-symbol peers and exact value/footprint aliases remain with their existing checks.",
+        "An open output may be intentionally unused, isolated, reserved, or populated through a project-specific link. A map does not prove a connection should be added, select a target net, prove PCB copper continuity, verify connector wiring, or establish actual voltage.",
+        "This is a REVIEW heuristic, not independent proof of a fault. Project policy can turn it off, block on it, or ignore an exact fingerprint."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_reviewed_peer_power_output_open.test_open_named_supply_output_beside_assigned_reviewed_peer_needs_review",
+        "tests.test_connector_reviewed_peer_power_output_open_parity.test_reviewed_peer_power_output_open_matches_between_cli_and_mcp",
+        "tests.test_connector_reviewed_peer_power_output_open_native.test_native_reviewed_peer_power_output_open_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_reviewed_peer_power_output_open.test_open_output_is_symmetric_and_documented_or_two_sided_opens_stay_quiet",
+        "tests.test_connector_reviewed_peer_power_output_open.test_open_output_requires_current_unambiguous_matching_peer_evidence",
+        "tests.test_connector_reviewed_peer_power_output_open_parity.test_reviewed_peer_power_output_open_matches_between_cli_and_mcp",
+        "tests.test_connector_reviewed_peer_power_output_open_native.test_native_reviewed_peer_power_output_open_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_reviewed_peer_power_output_open.test_open_output_obeys_policy_exact_ignore_and_stable_net_order"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_reviewed_peer_power_output_open.py#reviewed_peer_power_output_open_candidates",
+        "kicad_tooling/hwrepo/connector_reviewed_peer_power_contacts.py#reviewed_peer_power_contact_pairs",
+        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
       ],
@@ -3799,19 +3902,21 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For a fitted connector whose complete pin inventory and interface map are source-matched to the exported netlist and interface catalog, emit a REVIEW candidate for each role=signal contact with no net assignment, no explicit unconnected_pin_reasons disposition, a generic or missing native pin function, and no native power_in or power_out type.",
+      "predicate": "For a fitted connector whose complete pin inventory and interface map are source-matched to the exported netlist and interface catalog, emit a REVIEW candidate for each role=signal contact with no net assignment, no explicit unconnected_pin_reasons disposition, and no native power_in or power_out type. Native pin-function text may be named or generic; the source-matched map supplies the signal role.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The project interface map supplies a review role, not proof that every signal contact must be connected. An intentionally open contact needs an explicit unconnected_pin_reasons entry or a project rule override/ignore.",
-        "Only generic or missing native pin-function metadata is in scope; named signal contacts and typed power pins are left to their existing connector checks.",
+        "Named signal functions can also receive protocol-specific prompts when their aliases are recognized; this mapped review adds source-matched interface context. Typed power pins remain with power-contact checks.",
         "DNP references, stale or incomplete interface coverage, and evidence that does not match the exported pin inventory, pin functions, and nets are excluded.",
         "The review does not determine the correct net, prove schematic intent, establish PCB copper continuity, or verify an off-board or physical connection."
       ],
       "fault_fixtures": [
         "tests.test_connector_mapped_interface_signal_unassigned.test_open_generic_mapped_signal_pin_requests_review_with_source_evidence",
+        "tests.test_connector_mapped_interface_signal_unassigned.test_open_named_custom_mapped_signal_pin_requests_review",
         "tests.test_connector_mapped_interface_signal_unassigned.test_native_mapped_signal_pin_fault_and_control_are_repeatable",
+        "tests.test_connector_mapped_named_signal_native.test_native_named_mapped_signal_fault_and_control_repeat",
         "tests.test_connector_mapped_interface_signal_peer_context.test_open_mapped_signal_reports_current_peer_assignment_context",
         "tests.test_connector_mapped_interface_signal_peer_context.test_multiple_current_peers_keep_each_pin_paired_with_its_native_net",
         "tests.test_connector_mapped_interface_signal_peer_context_native.test_native_open_mapped_signal_peer_context_and_reasoned_control",
@@ -3820,6 +3925,7 @@
       ],
       "valid_control_fixtures": [
         "tests.test_connector_mapped_interface_signal_unassigned.test_connected_documented_open_and_ineligible_pins_are_controls",
+        "tests.test_connector_mapped_named_signal_native.test_native_named_mapped_signal_fault_and_control_repeat",
         "tests.test_connector_mapped_interface_signal_unassigned.test_source_mismatched_or_digestless_coverage_cannot_trigger_review",
         "tests.test_connector_mapped_interface_signal_unassigned.test_review_obeys_project_policy_and_exact_ignore",
         "tests.test_connector_mapped_interface_signal_unassigned.test_native_mapped_signal_pin_fault_and_control_are_repeatable",
@@ -4070,26 +4176,31 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "Source-matched connector interface role and KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For a fitted connector with complete, source-matched interface coverage and a current catalog digest, emit a REVIEW candidate when a generic or missing native pin function mapped as role=signal has exactly one assigned net whose label matches the narrow supply vocabulary or a bounded return token.",
+      "predicate": "For a fitted connector with complete, source-matched interface coverage and a current catalog digest, emit a REVIEW candidate when a generic, missing, or named native pin function mapped as role=signal has exactly one assigned net whose label matches the narrow supply vocabulary or a bounded return token. The independently authored map supplies the signal role.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The map role and named rail-like label are review clues, not proof of electrical potential, an actual mismatch, or required connectivity; intentional signal straps can be valid.",
-        "Only generic or missing native pin functions are considered. Named native pin functions, DNP references, stale or incomplete interface evidence, digestless coverage, multiply assigned contacts, and ordinary net labels are excluded.",
+        "Generic and named native signal functions are in scope because the source-matched map supplies the interface role. Recognized protocol aliases may also receive protocol-specific prompts. DNP references, stale or incomplete interface evidence, digestless coverage, multiply assigned contacts, and ordinary net labels are excluded.",
         "The review does not change the authored map, select a replacement net, or prove PCB copper continuity, external wiring, or physical bonding."
       ],
       "fault_fixtures": [
         "tests.test_connector_mapped_interface_signal_on_named_rail.test_generic_mapped_signal_on_named_rail_requests_review",
+        "tests.test_connector_mapped_interface_signal_on_named_rail.test_named_mapped_signal_on_named_rail_requests_review",
         "tests.test_connector_mapped_interface_signal_on_named_rail.test_bounded_supply_and_return_labels_are_review_clues",
         "tests.test_connector_mapped_interface_signal_on_named_rail.test_four_port_case_localizes_one_signal_role_map_mutation",
-        "tests.test_connector_mapped_interface_signal_on_named_rail_native_fixture_lane.test_native_generic_signal_map_on_ret_is_reviewed_and_return_role_is_control"
+        "tests.test_connector_mapped_interface_signal_on_named_rail_native_fixture_lane.test_native_generic_signal_map_on_ret_is_reviewed_and_return_role_is_control",
+        "tests.test_connector_mapped_named_signal_rail_native.test_native_named_mapped_signal_rail_fault_and_control_repeat",
+        "tests.test_design_lint_mcp_parity_mapped_interface_signal.test_mapped_interface_signal_review_cli_mcp_parity"
       ],
       "valid_control_fixtures": [
         "tests.test_connector_mapped_interface_signal_on_named_rail.test_unrelated_net_and_other_mapped_roles_are_controls",
+        "tests.test_connector_mapped_named_signal_rail_native.test_native_named_mapped_signal_rail_fault_and_control_repeat",
         "tests.test_connector_mapped_interface_signal_on_named_rail.test_stale_incomplete_digestless_and_multi_net_evidence_are_controls",
         "tests.test_connector_mapped_interface_signal_on_named_rail.test_review_policy_and_exact_ignore_apply",
-        "tests.test_connector_mapped_interface_signal_on_named_rail_native_fixture_lane.test_native_generic_signal_map_on_ret_is_reviewed_and_return_role_is_control"
+        "tests.test_connector_mapped_interface_signal_on_named_rail_native_fixture_lane.test_native_generic_signal_map_on_ret_is_reviewed_and_return_role_is_control",
+        "tests.test_design_lint_mcp_parity_mapped_interface_signal.test_mapped_interface_signal_review_cli_mcp_parity"
       ],
       "metamorphic_fixtures": [
         "tests.test_connector_mapped_interface_signal_on_named_rail.test_candidate_is_stable_under_netlist_mapping_order",
@@ -5794,6 +5905,8 @@
         "tests.test_i2c_pullup_capacitance.test_changed_part_identity_fails_mapped_capacitor",
         "tests.test_i2c_pullup_capacitance.test_changed_symbol_footprint_or_pin_inventory_fails_exact_mapping",
         "tests.test_i2c_pullup_capacitance.test_nominal_value_outside_reviewed_range_fails_mapped_capacitor",
+        "tests.test_i2c_pullup_capacitance.test_decimal_comma_capacitance_value_is_checked_against_mapped_window",
+        "tests.test_capacitance_values.test_parser_rejects_ambiguous_nonpositive_or_unbounded_values",
         "tests.test_i2c_pullup_capacitance.test_wrong_return_net_fails_exact_pin_mapping",
         "tests.test_i2c_pullup_capacitance.test_accounted_effective_capacitance_cannot_exceed_bus_maximum",
         "tests.test_i2c_pullup_capacitance.test_dnp_mapped_capacitor_cannot_satisfy_a_required_contributor",
@@ -5801,10 +5914,12 @@
         "tests.test_i2c_pullup_heuristic_coverage.test_stale_native_netlist_hash_blocks_coverage_instead_of_suppressing",
         "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp",
         "tests.test_i2c_pullup_fixture_lane.test_native_array_lane_checks_contract_resolution_against_typed_exports",
-        "tests.test_i2c_pullup_native_fixture_lane.test_native_array_channel_fault_and_control_on_supported_images"
+        "tests.test_i2c_pullup_native_fixture_lane.test_native_array_channel_fault_and_control_on_supported_images",
+        "tests.test_i2c_unconnected_pins_native_fixture_lane.test_native_open_i2c_pin_fault_and_connected_control"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors",
+        "tests.test_design_lint_i2c_missing_pullups.test_explicitly_unconnected_i2c_line_does_not_form_a_pullup_bus",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_series_pullup_paths_are_bounded_and_unbranched",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_resistance_boundary_is_a_valid_control",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_missing_pullup_recognizes_exact_device_r_symbol_and_is_order_stable",
@@ -5813,13 +5928,16 @@
         "tests.test_i2c_pullup_heuristic_coverage.test_exact_array_channel_tolerance_scope_resolves_the_i2c_prompt",
         "tests.test_i2c_pullup_heuristic_coverage.test_exact_array_capacitance_scope_resolves_the_i2c_prompt",
         "tests.test_i2c_pullup_capacitance.test_exact_fitted_capacitor_and_residual_bound_pass",
+        "tests.test_i2c_pullup_capacitance.test_decimal_comma_capacitance_value_is_checked_against_mapped_window",
         "tests.test_i2c_pullup_capacitance.test_explicit_non_c_reference_capacitor_mapping_passes",
+        "tests.test_capacitance_values.test_parser_accepts_unambiguous_kicad_value_fields",
         "tests.test_i2c_pullup_capacitance.test_non_c_capacitor_outside_the_scoped_line_is_not_a_candidate",
         "tests.test_i2c_pullup_capacitance.test_capacitance_contract_accepts_explicit_non_c_reference",
         "tests.test_i2c_pullup_heuristic_coverage.test_symmetric_array_pin_orientation_is_a_valid_control",
         "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp",
         "tests.test_i2c_pullup_fixture_lane.test_native_array_lane_checks_contract_resolution_against_typed_exports",
-        "tests.test_i2c_pullup_native_fixture_lane.test_native_array_channel_fault_and_control_on_supported_images"
+        "tests.test_i2c_pullup_native_fixture_lane.test_native_array_channel_fault_and_control_on_supported_images",
+        "tests.test_i2c_unconnected_pins_native_fixture_lane.test_native_open_i2c_pin_fault_and_connected_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -5838,7 +5956,8 @@
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/i2c_pullup_heuristics.py#i2c_buses_without_local_pullups",
       "required_native_fixtures": [
-        "KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES"
+        "KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES",
+        "KICAD_RUN_NATIVE_I2C_UNCONNECTED_PIN_FIXTURES"
       ]
     },
     {
@@ -5861,12 +5980,14 @@
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance",
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_series_pullup_paths",
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_exact_device_r_symbol_under_non_r_reference",
+        "tests.test_design_lint_i2c_equivalent_resistance.test_kicad_decimal_comma_resistors_keep_fault_and_valid_control_distinct",
         "tests.test_i2c_pullup_native_fixture_lane.test_native_array_channel_fault_and_control_on_supported_images"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance",
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_series_pullup_paths",
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_exact_device_r_symbol_under_non_r_reference",
+        "tests.test_design_lint_i2c_equivalent_resistance.test_kicad_decimal_comma_resistors_keep_fault_and_valid_control_distinct",
         "tests.test_i2c_pullup_native_fixture_lane.test_native_array_channel_fault_and_control_on_supported_images"
       ],
       "metamorphic_status": "covered",
@@ -13317,7 +13438,7 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "Source-bound native schematic netlist pin assignments compared with native PCB pad assignments in snapshot schema 12, 13, 14, or 15",
-      "predicate": "For each pin with an assigned schematic net or an explicit native unconnected-net assignment, compare the case-insensitive reference and exact pin number with the same-numbered native PCB pad when the schematic footprint assignment is nonempty, the PCB reference is placed, and both footprint IDs match after trimming. Report a missing board pad, an unassigned board pad, a different exact net name, or a PCB net assigned to a schematic-unconnected pin.",
+      "predicate": "For each pin with an assigned schematic net or an explicit native unconnected-net assignment, compare the case-insensitive reference and exact pin number with the same-numbered native PCB pad when the schematic footprint assignment is nonempty, the PCB reference is placed, and both footprint IDs match after trimming. Report a missing board pad, an unassigned board pad, a different exact net name after shared KiCad root-slash normalization, or a PCB net assigned to a schematic-unconnected pin.",
       "supported_kicad_versions": [
         "KiCad 10.0.0 and 10.0.5 native pcbnew API; exact project version and digest-pinned image are checked"
       ],
@@ -13325,11 +13446,12 @@
         "This compares CAD net assignments by reference and pad number. It does not infer that repeated connector pins, USB/serial returns, or similarly named nets must be bonded, and it does not establish routed copper continuity or physical conduction.",
         "A schematic pin number may not map one-to-one to a physical pad in a custom symbol or footprint. Alternate pin-to-pad mappings, schematic-only symbols, board-only pads, and mismatched footprint identities are outside this comparison; confirm prompts against the part's approved mapping.",
         "DNP placements are compared when present in both sources because this is a CAD assignment check; the result does not establish physical population or a named variant's effective pin assignment.",
-        "Exact net names are compared after native netlist normalization. Intentional aliases or board-side net naming differences may need project review, an exact finding ignore, or rule mode override.",
+        "Exact net names, including case, are compared after shared normalization of KiCad's leading root-sheet slash. Intentional aliases or remaining board-side net naming differences may need project review, an exact finding ignore, or rule mode override.",
         "The check requires source-bound schematic assignments and native PCB footprint/pad snapshot schema 12, 13, 14, or 15. Missing, stale, or unsupported evidence is a coverage gap and never a clean result."
       ],
       "fault_fixtures": [
         "tests.test_pcb_schematic_pad_net_mismatch.test_connected_pin_board_pad_net_differences_are_reviewable_and_configurable",
+        "tests.test_pcb_schematic_pad_net_mismatch.test_pad_net_only_policy_captures_and_compares_native_pad_assignments",
         "tests.test_pcb_schematic_pad_net_mismatch.test_board_assignment_on_schematic_unconnected_pin_is_reviewable",
         "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
         "tests.test_design_lint_mcp_parity_pcb_pad_net_mismatch.test_pad_net_capture_and_reconciliation_match_cli_and_mcp",
@@ -13337,6 +13459,7 @@
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_schematic_pad_net_mismatch.test_matching_assignments_and_noncomparable_components_are_controls",
+        "tests.test_pcb_schematic_pad_net_mismatch.test_kicad_root_sheet_net_prefix_matches_between_native_netlist_and_board",
         "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
         "tests.test_design_lint_mcp_parity_pcb_pad_net_mismatch.test_pad_net_capture_and_reconciliation_match_cli_and_mcp",
         "tests.test_pcb_schematic_pad_net_native_fixture_lane.test_native_schematic_pcb_pad_net_fault_and_control_are_source_bound"
@@ -13351,6 +13474,7 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_pad_net_comparison.py#compare_schematic_pcb_pad_nets",
+        "kicad_tooling/hwrepo/native_report_parsing.py#normalize_native_net_name",
         "kicad_tooling/hwrepo/pcb_component_inventory.py#evaluate_native_component_inventory_coverage",
         "kicad_tooling/hwrepo/design_lint_pcb_pad_net_candidates.py#pcb_pad_net_candidates",
         "kicad_tooling/hwrepo/design_lint_pcb_geometry_scan.py#scan_pcb_geometry",

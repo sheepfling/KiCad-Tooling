@@ -72,6 +72,22 @@ def test_generic_mapped_signal_on_named_rail_requests_review() -> None:
     assert "do not prove electrical potential" in finding.message
 
 
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_named_mapped_signal_on_named_rail_requests_review() -> None:
+    source = mapped_named_rail_netlist(target_net="GND", target_function="PWM_SYNC")
+    coverage = interface_coverage(source, target_signal="PWM_SYNC")
+    report, _coverage = _report(source, coverage=coverage)
+
+    findings = _findings(report)
+    assert coverage.status == "COMPLETE"
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.subject == "J1.2: mapped signal contact is assigned to return-like net GND"
+    assert finding.evidence["interface_signal"] == ("PWM_SYNC",)
+    assert finding.evidence["native_pin_function"] == ("PWM_SYNC",)
+    assert finding.evidence["assigned_nets"] == ("GND",)
+
+
 @pytest.mark.parametrize("net_name", ("+5V", "VBUS", "GND", "0V", "RET"))
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_bounded_supply_and_return_labels_are_review_clues(net_name: str) -> None:
@@ -92,17 +108,31 @@ def test_unrelated_net_and_other_mapped_roles_are_controls() -> None:
     mapped_supply, _ = _report(supply_source, role="supply")
     other_source = mapped_named_rail_netlist(target_net="GND")
     mapped_other, _ = _report(other_source, role="other")
-    named_native_function, _ = _report(
-        mapped_named_rail_netlist(target_net="GND", target_function="GND")
+    named_signal_source = mapped_named_rail_netlist(
+        target_net="PWM_SYNC", target_function="PWM_SYNC"
+    )
+    named_signal_control, _ = _report(
+        named_signal_source,
+        coverage=interface_coverage(named_signal_source, target_signal="PWM_SYNC"),
     )
     dnp, _ = _report(mapped_named_rail_netlist(target_net="GND", dnp=("J1",)))
+    named_dnp_source = mapped_named_rail_netlist(
+        target_net="GND",
+        target_function="PWM_SYNC",
+        dnp=("J1",),
+    )
+    named_dnp, _ = _report(
+        named_dnp_source,
+        coverage=interface_coverage(named_dnp_source, target_signal="PWM_SYNC"),
+    )
 
     assert not _findings(ordinary)
     assert not _findings(mapped_return)
     assert not _findings(mapped_supply)
     assert not _findings(mapped_other)
-    assert not _findings(named_native_function)
+    assert not _findings(named_signal_control)
     assert not _findings(dnp)
+    assert not _findings(named_dnp)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -215,3 +245,25 @@ def test_candidate_is_stable_under_netlist_mapping_order() -> None:
     second = _findings(_report(reordered)[0])[0]
 
     assert (first.fingerprint, first.evidence) == (second.fingerprint, second.evidence)
+
+    named_source = mapped_named_rail_netlist(target_net="GND", target_function="PWM_SYNC")
+    named_coverage = interface_coverage(named_source, target_signal="PWM_SYNC")
+    named_reordered = named_source.model_copy(
+        update={
+            "nets": dict(reversed(tuple(named_source.nets.items()))),
+            "pin_functions": dict(reversed(tuple(named_source.pin_functions.items()))),
+            "pin_electrical_types": dict(
+                reversed(tuple(named_source.pin_electrical_types.items()))
+            ),
+            "component_pin_numbers": dict(
+                reversed(tuple(named_source.component_pin_numbers.items()))
+            ),
+        }
+    )
+    named_first = _findings(_report(named_source, coverage=named_coverage)[0])[0]
+    named_second = _findings(_report(named_reordered, coverage=named_coverage)[0])[0]
+
+    assert (named_first.fingerprint, named_first.evidence) == (
+        named_second.fingerprint,
+        named_second.evidence,
+    )

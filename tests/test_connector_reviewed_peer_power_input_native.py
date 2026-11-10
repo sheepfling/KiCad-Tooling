@@ -40,8 +40,21 @@ EXPECTED_SOURCE_HASHES = {
     "passive-fault": "08f4b355fce56952ed21bb63e39a20f4da061811ae7d7b791caef15786bd759e",
     "passive-control": "b05b1c46c0a492d6691261b905278eac431acd2c835dcc61e06d9d36a3d46223",
     "passive-open-fault": "d6ca4949abb67e0a1b7f4e331a989808dcb215200b752503ba85e78f24645aa5",
+    "named-fault": "ae825d986b42a4987d580d66a174fd87cf53d0c93d7d949ac65a3660990e1936",
+    "named-control": "85dc5cb5f4458bc37efe8dba6f48064c72acf0c4987be0e4a8fde4b136e805f1",
+    "named-open-fault": "14092384fffbe28d7588017c97e55fa8e4f779924af880a7c9b7e751800197d0",
+    "named-open-control": "3628a5b1cb264d1361563393fc6f0a9dd3c34bdf0e19fc4ef634725c83da3fcb",
 }
-PASSIVE_CASES = frozenset({"passive-fault", "passive-control", "passive-open-fault"})
+PASSIVE_CASES = frozenset(
+    {
+        "passive-fault",
+        "passive-control",
+        "passive-open-fault",
+        "named-open-fault",
+        "named-open-control",
+    }
+)
+NAMED_CASES = frozenset({"named-fault", "named-control", "named-open-fault", "named-open-control"})
 
 
 def _sha256(path: Path) -> str:
@@ -104,7 +117,8 @@ def test_native_reviewed_peer_power_input_fault_and_control_are_repeatable(
         'mkdir -p "$HOME"; '
         'actual="$(kicad-cli version)"; '
         f'test "$actual" = "{version}"; '
-        "for case in fault control passive-fault passive-control passive-open-fault; do "
+        "for case in fault control passive-fault passive-control passive-open-fault "
+        "named-fault named-control named-open-fault named-open-control; do "
         "for run in first repeat; do "
         "kicad-cli sch export netlist --format kicadxml "
         '"--output" "/output/${case}.${run}.netlist.xml" '
@@ -181,7 +195,12 @@ def test_native_reviewed_peer_power_input_fault_and_control_are_repeatable(
         expected_type = "passive" if case in PASSIVE_CASES else "power_in"
         assert first.pin_electrical_types["J1.1"].casefold() == expected_type
         assert first.pin_electrical_types["J2.1"].casefold() == expected_type
-        coverage = power_input_coverage(first)
+        if case in NAMED_CASES:
+            assert first.pin_functions["J1.1"] == "VBUS"
+            assert first.pin_functions["J2.1"] == "VDD_IN"
+            coverage = power_input_coverage(first, roles=("supply", "supply"))
+        else:
+            coverage = power_input_coverage(first)
         assert coverage.status == "COMPLETE"
         report = lint_report(first, coverage)
         finding_ids = {finding.rule_id for finding in report.findings}
@@ -193,10 +212,29 @@ def test_native_reviewed_peer_power_input_fault_and_control_are_repeatable(
                 "J1.1=USB_5V",
                 "J2.1=<unassigned>",
             )
-        elif case in {"fault", "passive-fault"}:
+        elif case == "named-open-fault":
+            assert PASSIVE_OPEN_RULE_ID in finding_ids
+            assert RULE_ID not in finding_ids
+            finding = next(item for item in report.findings if item.rule_id == PASSIVE_OPEN_RULE_ID)
+            assert finding.evidence["assignments"] == (
+                "J1.1=USB_5V",
+                "J2.1=<unassigned>",
+            )
+            assert finding.evidence["native_pin_functions"] == (
+                "J1.1=VBUS",
+                "J2.1=VDD_IN",
+            )
+            assert finding.evidence["power_role_categories"] == ("vbus", "vdd")
+        elif case in {"fault", "passive-fault", "named-fault"}:
             assert RULE_ID in finding_ids
             finding = next(item for item in report.findings if item.rule_id == RULE_ID)
             assert finding.evidence["assignments"] == ("J1.1=USB_5V", "J2.1=SERIAL_5V")
+            if case == "named-fault":
+                assert finding.evidence["native_pin_functions"] == (
+                    "J1.1=VBUS",
+                    "J2.1=VDD_IN",
+                )
+                assert finding.evidence["power_role_categories"] == ("vbus", "vdd")
         else:
             assert RULE_ID not in finding_ids
             assert PASSIVE_OPEN_RULE_ID not in finding_ids

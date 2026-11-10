@@ -256,6 +256,32 @@ def i2c_unconnected_pin_fixture_lane(
     ):
         raise ValueError("Native I2C fault/control no longer selects the partial-pair candidate")
 
+    missing_pullup_findings: dict[FaultControlFixtureCase, tuple[str, ...]] = {}
+    for case in _FIXTURE_CASES:
+        observed = fixture_evidence[case].netlists.first.contract
+        pullup_report = evaluate(
+            f"synthetic-i2c-pullup-{case}",
+            ContractCoachReport(
+                status="READY_FOR_REVIEW",
+                project_id=f"synthetic-i2c-pullup-{case}",
+                observed=observed,
+                netlist_sha256=fixture_evidence[case].netlists.first.netlist_sha256,
+            ),
+            DesignLintPolicy(),
+        )
+        missing_pullup_findings[case] = tuple(
+            sorted(
+                item.rule_id
+                for item in pullup_report.findings
+                if item.rule_id == "bus.i2c_missing_pullup"
+            )
+        )
+    if missing_pullup_findings != {"control": ("bus.i2c_missing_pullup",), "fault": ()}:
+        raise ValueError(
+            "Native no-connect control changed I2C pull-up applicability: "
+            f"{missing_pullup_findings}"
+        )
+
     receipt_path = receipt.relative_to(root).as_posix()
     for case, findings in zip(_FIXTURE_CASES, (control_findings, fault_findings), strict=True):
         log.event(
@@ -271,6 +297,7 @@ def i2c_unconnected_pin_fixture_lane(
             ].netlists.repeat.normalized_sha256,
             repeatable="true",
             findings=";".join(item.subject for item in findings) or "none",
+            missing_pullup_findings=(";".join(missing_pullup_findings[case]) or "none"),
             **(
                 {
                     "default_mode": default_findings[0].mode,

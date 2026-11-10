@@ -92,7 +92,7 @@
     (in_bom yes) (on_board yes) (dnp no)
     (uuid "72000000-0000-4000-8000-000000000032")
     (property "Reference" "X1" (at 125.08 116 90) (effects (font (size 1.27 1.27)) (justify left)))
-    (property "Value" "10p" (at 128 120 90) (effects (font (size 1.27 1.27)) (justify left)))
+    (property "Value" "0,01nF, 10%" (at 128 120 90) (effects (font (size 1.27 1.27)) (justify left)))
     (property "Footprint" "Synthetic:0603" (at 120 120 0) (effects (font (size 1.27 1.27)) hide))
     (property "Datasheet" "" (at 120 120 0) (effects (font (size 1.27 1.27)) hide))
     (pin "1" (uuid "72000000-0000-4000-8000-000000000033"))

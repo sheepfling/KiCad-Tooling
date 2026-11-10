@@ -50,7 +50,7 @@ def test_native_array_lane_checks_contract_resolution_against_typed_exports(
         "9549d3a08e0822f9434a9eda0782c812451ab4a733c73535f9e8beed42039bc3"
     )
     config = SimpleNamespace(kicad_version="10.0.0", image=image)
-    control = array_netlist_with_capacitor(reference="X1").model_copy(
+    control = array_netlist_with_capacitor(reference="X1", value="0,01nF, 10%").model_copy(
         update={
             "nets": {
                 "I2C_SDA": ("RN1.1", "U1.1", "X1.1"),
@@ -60,15 +60,20 @@ def test_native_array_lane_checks_contract_resolution_against_typed_exports(
             }
         }
     )
-    fault = array_netlist_with_capacitor(reference="X1", extra_capacitor=True, extra_reference="X2")
+    fault = array_netlist_with_capacitor(
+        reference="X1",
+        extra_capacitor=True,
+        extra_reference="X2",
+        value="0,01nF, 10%",
+    )
     fault_nets = dict(fault.nets)
     fault_nets["I2C_SDA"] = ("U1.1", "X1.1", "X2.1")
     fault_nets["SDA_WRONG"] = ("RN1.1",)
     fault = fault.model_copy(update={"nets": fault_nets})
     symbol_resistor = i2c_netlist_with_device_r_symbol()
     low_resistance_observations = {
-        "low_resistance_control": _low_resistance_observation("2k"),
-        "low_resistance_fault": _low_resistance_observation("1k5"),
+        "low_resistance_control": _low_resistance_observation("2,0k"),
+        "low_resistance_fault": _low_resistance_observation("1,5k"),
     }
     observations = {
         "control": control,

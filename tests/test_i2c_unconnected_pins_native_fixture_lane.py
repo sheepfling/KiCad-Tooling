@@ -64,6 +64,7 @@ def _stage_results(log: HostedLog, prefix: str) -> dict[str, dict[str, str]]:
     reason="native I2C open-pin fixtures run in the digest-pinned package acceptance lane",
 )
 @pytest.mark.parametrize(("project", "version", "image"), PROJECT_TOOLCHAINS)
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_missing_pullup")
 def test_native_open_i2c_pin_fault_and_connected_control(
     native_project_root: Path, project: str, version: str, image: str
 ) -> None:
@@ -94,6 +95,7 @@ def test_native_open_i2c_pin_fault_and_connected_control(
     assert control["status"] == "PASS"
     assert control["source_sha256"] == CONTROL_SOURCE_SHA256
     assert control["findings"] == "none"
+    assert control["missing_pullup_findings"] == "bus.i2c_missing_pullup"
     assert control["review_mode"] == "review"
     assert control["repeatable"] == "true"
     assert control["normalized_netlist_sha256"] == control["repeat_normalized_netlist_sha256"]
@@ -106,6 +108,7 @@ def test_native_open_i2c_pin_fault_and_connected_control(
     assert fault["default_disposition"] == "RULE_OFF"
     assert fault["review_mode"] == "review"
     assert fault["findings"] == "U1.1: SDA"
+    assert fault["missing_pullup_findings"] == "none"
     assert fault["repeatable"] == "true"
     assert fault["normalized_netlist_sha256"] == fault["repeat_normalized_netlist_sha256"]
     assert_native_fixture_mounts(native_project_root, fault["command_receipt"])

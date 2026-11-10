@@ -175,6 +175,33 @@ def test_i2c_missing_pullup_is_order_stable_and_tracks_each_line_path() -> None:
     assert "bus.i2c_missing_pullup" not in {item.rule_id for item in complete.findings}
 
 
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_missing_pullup")
+@pytest.mark.parametrize("unconnected_pin", ("U1.1", "U1.2"))
+def test_explicitly_unconnected_i2c_line_does_not_form_a_pullup_bus(
+    unconnected_pin: str,
+) -> None:
+    source = i2c_netlist()
+    connected_nets = {
+        net: tuple(pin for pin in pins if pin != unconnected_pin)
+        for net, pins in source.nets.items()
+    }
+    connected_nets = {net: pins for net, pins in connected_nets.items() if pins}
+    observed = source.model_copy(
+        update={
+            "nets": connected_nets,
+            "unconnected_nets": {f"unconnected-{unconnected_pin}": (unconnected_pin,)},
+        }
+    )
+
+    report = evaluate(
+        "synthetic-i2c-explicit-no-connect",
+        coach(observed),
+        policy_without_i2c_map_prompt(),
+    )
+
+    assert "bus.i2c_missing_pullup" not in {item.rule_id for item in report.findings}
+
+
 @pytest.mark.parametrize(("connected_line", "remaining_line"), (("SDA", "SCL"), ("SCL", "SDA")))
 def test_connecting_one_line_leaves_only_the_other_pullup_missing(
     connected_line: str,

@@ -23,6 +23,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_default_mode_policy.py",
                 "tests/test_design_lint_catalog_fixtures.py",
                 "tests/test_design_lint_catalog_reachability.py",
+                "tests/test_lint_tag_selection_catalog.py",
                 "tests/test_design_lint_architecture_catalog.py",
                 "tests/test_design_lint_field_maturity.py",
                 "tests/test_design_lint_field_evidence_sources.py",
@@ -304,6 +305,7 @@ _LINT_AREA_MODULES = MappingProxyType(
         "parity_lint": frozenset(
             {
                 "tests/test_design_lint_mcp_parity_connector_named_power_peers.py",
+                "tests/test_design_lint_mcp_parity_mapped_interface_signal.py",
                 "tests/test_design_lint_mcp_parity_mapped_contact_sharing.py",
                 "tests/test_design_lint_mcp_parity_reviewed_peer_signal_domains.py",
                 "tests/test_design_lint_mcp_parity_peer_pin_assignment_outlier.py",

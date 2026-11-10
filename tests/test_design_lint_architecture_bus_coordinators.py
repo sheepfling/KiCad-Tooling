@@ -91,7 +91,7 @@ def test_peer_candidate_coordinator_delegates_by_protocol() -> None:
 
 
 def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
-    facade = HWREPO / "design_lint_bus_candidates.py"
+    coordinator = HWREPO / "design_lint_bus_candidates.py"
     modules = (
         "design_lint_i2c_candidates.py",
         "design_lint_i2c_bus_candidates.py",
@@ -113,7 +113,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "design_lint_bus_named_rail_candidates.py",
     )
 
-    assert line_count(facade) < FACADE_MAX_LINES
+    assert line_count(coordinator) < IMPLEMENTATION_MAX_LINES
     assert all((HWREPO / name).is_file() for name in modules)
     grouped_candidates = tuple(
         HWREPO / name
@@ -125,7 +125,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
     )
     assert all(line_count(path) < FACADE_MAX_LINES for path in grouped_candidates)
 
-    tree = ast.parse(facade.read_text(encoding="utf-8"), filename=facade.name)
+    tree = ast.parse(coordinator.read_text(encoding="utf-8"), filename=coordinator.name)
     function = next(
         node
         for node in tree.body
@@ -146,6 +146,9 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
 
     assert [name for _, name in calls] == [
         "i2c_protocol_bus_candidates",
+        "i3c_protocol_bus_candidates",
+        "i2s_clock_data_same_net_candidates",
+        "i2s_clock_frame_same_net_candidates",
         "two_wire_signal_candidates",
         "serial_protocol_bus_candidates",
         "spi_protocol_bus_candidates",
@@ -155,6 +158,11 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "ethernet_data_label_mismatch_candidates",
         "ethernet_management_label_mismatch_candidates",
         "ethernet_unconnected_pin_candidates",
+        "ethernet_generic_connector_pair_review_candidates",
+        "ethernet_management_generic_connector_pair_review_candidates",
+        "swd_generic_connector_pair_review_candidates",
+        "swdio_swclk_same_net_candidates",
+        "jtag_generic_connector_pair_review_candidates",
         "bus_named_rail_candidates",
         "complementary_signal_candidates",
         "usb_data_polarity_label_candidates",

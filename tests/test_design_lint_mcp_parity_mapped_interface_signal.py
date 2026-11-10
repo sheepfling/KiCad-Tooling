@@ -1,4 +1,4 @@
-"""CLI/MCP parity for the project-mapped generic connector signal review."""
+"""CLI/MCP parity for the project-mapped connector signal review."""
 
 from __future__ import annotations
 
@@ -40,6 +40,7 @@ from tests.synthetic_design_lint_project import (
 
 RULE_ID = "connector.mapped_interface_signal_unassigned"
 SHIELD_RULE_ID = "connector.mapped_interface_shield_unassigned"
+RAIL_RULE_ID = "connector.mapped_interface_signal_on_named_rail"
 INTERFACE_ID = "synthetic-connector-port"
 
 
@@ -48,6 +49,7 @@ def _install_reviewed_interface(
     island: Path,
     *,
     target_role: str = "signal",
+    target_signal: str = "UART_RX",
 ) -> Path:
     shield = target_role == "shield"
     interface = InterfaceRecord(
@@ -66,11 +68,11 @@ def _install_reviewed_interface(
             ),
             InterfacePin(
                 number="2",
-                signal="CHASSIS_SHIELD" if shield else "UART_RX",
+                signal="CHASSIS_SHIELD" if shield else target_signal,
                 role=target_role,
                 direction="passive" if shield else "input",
                 voltage_domain="chassis" if shield else "logic-3v3",
-                mating="CHASSIS_BOND" if shield else "UART_TX",
+                mating="CHASSIS_BOND" if shield else target_signal,
                 orientation="straight",
                 mechanical_clearance="synthetic",
             ),
@@ -102,7 +104,7 @@ def _install_reviewed_interface(
                     ConnectorInterfaceReview(
                         reference="J1",
                         disposition="interface",
-                        basis="Synthetic independently reviewed UART connector pinout",
+                        basis="Synthetic independently reviewed connector pinout",
                         interface_id=INTERFACE_ID,
                         pin_map={"1": "1", "2": "2", "3": "3"},
                     ),
@@ -118,6 +120,7 @@ def _install_reviewed_interface(
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=SHIELD_RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=RAIL_RULE_ID)
 def test_mapped_interface_signal_review_cli_mcp_parity(tmp_path: Path) -> None:
     """A mapped open signal is REVIEW on both surfaces and clears when connected."""
     policy = DesignLintPolicy(
@@ -178,6 +181,42 @@ def test_mapped_interface_signal_review_cli_mcp_parity(tmp_path: Path) -> None:
         (item.rule_id, item.subject, item.disposition) for item in control.findings
     ]
     assert RULE_ID not in {item.rule_id for item in control.findings}
+
+    _install_reviewed_interface(root, island, target_signal="PWM_SYNC")
+    named_fault_netlist = fault_netlist.replace('name="2"', 'name="PWM_SYNC"')
+    named_control_netlist = control_netlist.replace('name="2"', 'name="PWM_SYNC"').replace(
+        "UART_RX", "PWM_SYNC"
+    )
+    install_synthetic_netlist(native, named_fault_netlist)
+    named_fault = compare()
+    named_findings = [item for item in named_fault.findings if item.rule_id == RULE_ID]
+    assert len(named_findings) == 1
+    assert named_findings[0].evidence["interface_signal"] == ("PWM_SYNC",)
+    assert named_findings[0].evidence["native_pin_function"] == ("PWM_SYNC",)
+    assert named_findings[0].evidence["assigned_nets"] == ()
+
+    install_synthetic_netlist(native, named_control_netlist)
+    named_control = compare()
+    assert RULE_ID not in {item.rule_id for item in named_control.findings}
+
+    _install_reviewed_interface(root, island, target_signal="PWM_SYNC")
+    named_rail_fault_netlist = control_netlist.replace('name="2"', 'name="PWM_SYNC"').replace(
+        "UART_RX", "GND"
+    )
+    install_synthetic_netlist(native, named_rail_fault_netlist)
+    named_rail_fault = compare()
+    rail_findings = [item for item in named_rail_fault.findings if item.rule_id == RAIL_RULE_ID]
+    assert len(rail_findings) == 1
+    assert rail_findings[0].evidence["interface_signal"] == ("PWM_SYNC",)
+    assert rail_findings[0].evidence["native_pin_function"] == ("PWM_SYNC",)
+    assert rail_findings[0].evidence["assigned_nets"] == ("GND",)
+
+    named_rail_control_netlist = control_netlist.replace('name="2"', 'name="PWM_SYNC"').replace(
+        "UART_RX", "PWM_SYNC"
+    )
+    install_synthetic_netlist(native, named_rail_control_netlist)
+    named_rail_control = compare()
+    assert RAIL_RULE_ID not in {item.rule_id for item in named_rail_control.findings}
 
     _install_reviewed_interface(root, island, target_role="shield")
     install_synthetic_netlist(native, fault_netlist)

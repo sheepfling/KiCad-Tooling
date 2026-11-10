@@ -110,12 +110,10 @@ class MappedInterfacePinFindingEvidence:
             raise ValueError("Named-rail connector findings require one native net")
 
         generic_role = self.rule_id in {
-            _UNASSIGNED_SIGNAL,
             _UNASSIGNED_POWER,
             _UNASSIGNED_OTHER,
             _OTHER_NAMED_RAIL,
             _SUPPLY_RETURN_NET,
-            _SIGNAL_NAMED_RAIL,
         }
         if generic_role and not pin_function_is_generic(self.mapped_pin.symbol_function):
             raise ValueError("This mapped connector finding requires a generic symbol function")

@@ -61,6 +61,18 @@ def test_exact_fitted_capacitor_and_residual_bound_pass() -> None:
     assert "total upper bound 37.0pF versus bus maximum 50.0pF" in check.detail
 
 
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_pullup_input_limit_coverage")
+def test_decimal_comma_capacitance_value_is_checked_against_mapped_window() -> None:
+    control = _check(value="0,01nF, 10%")
+    assert control.status == "PASS"
+    assert control.observed == 37.0
+    assert "C1≤12pF" in control.detail
+
+    fault = _check(value="0,0220nF, 10%")
+    assert fault.status == "FAIL"
+    assert "outside 5.0–15.0pF" in fault.detail
+
+
 def test_explicit_non_c_reference_capacitor_mapping_passes() -> None:
     check = _check(reference="X1")
 

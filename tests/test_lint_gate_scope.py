@@ -9,10 +9,12 @@ import pytest
 
 from scripts.lint_gate_scope import (
     configured_native_fixtures,
+    implementation_paths_by_rule,
     main,
     parse_tag_message,
     read_message_scope,
     read_tag_scope,
+    required_native_fixtures_by_rule,
     write_github_scope,
 )
 
@@ -26,6 +28,11 @@ pytestmark = [
 _PROBE_FIXTURE = "KICAD_RUN_" + "NATIVE_PROBE_FIXTURES"
 _OTHER_FIXTURE = "KICAD_RUN_" + "NATIVE_OTHER"
 _RS485_FIXTURE = "KICAD_RUN_" + "NATIVE_RS485_DATA_LABEL_MISMATCH_FIXTURES"
+_RULE_GATE_TYPECHECK_PATHS = (
+    "kicad_tooling/ci_typecheck.py",
+    "scripts/ci.py",
+    "scripts/lint_gate_scope.py",
+)
 _EMPTY_PACKAGE_WORKFLOW = (
     "name: synthetic\njobs:\n  package:\n    steps: []\n  prerelease-lint-gate:\n    steps: []\n"
 )
@@ -211,6 +218,7 @@ def test_annotated_area_tag_resolves_existing_test_paths_and_writes_action_outpu
 
     scope = read_tag_scope("v0.9.0rc1", repository)
     assert scope.test_paths == paths
+    assert scope.typecheck_paths == ()
     assert scope.pytest_markexpr == "design_lint and pcb_lint"
 
     output = tmp_path / "github-output"
@@ -248,6 +256,43 @@ def test_lint_rule_tag_cannot_override_catalogued_test_selection() -> None:
             frozenset(),
             frozenset({rule_id}),
         )
+
+
+def test_rule_scope_selects_existing_catalogued_implementation_modules(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repository = Path(__file__).resolve().parents[1]
+    implementations = implementation_paths_by_rule()
+    native_fixtures = required_native_fixtures_by_rule()
+    rule_id = "connector.mapped_interface_signal_on_named_rail"
+    message = "\n".join(
+        (
+            f"Lint-Rule: {rule_id}",
+            *(f"Native-Fixture: {item}" for item in native_fixtures[rule_id]),
+        )
+    )
+
+    scope = read_message_scope(message, repository)
+
+    assert scope.typecheck_paths == tuple(
+        sorted(set(implementations[rule_id]) | set(_RULE_GATE_TYPECHECK_PATHS))
+    )
+    assert scope.typecheck_paths == tuple(sorted(set(scope.typecheck_paths)))
+    assert all((repository / path).is_file() for path in scope.typecheck_paths)
+
+    output = tmp_path / "github-output"
+    environment = tmp_path / "github-environment"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(output))
+    monkeypatch.setenv("GITHUB_ENV", str(environment))
+    write_github_scope(scope)
+
+    assert output.read_text(encoding="utf-8").splitlines() == [
+        f"markexpr={scope.pytest_markexpr}",
+        f"typecheckpaths={','.join(scope.typecheck_paths)}",
+    ]
+    assert environment.read_text(encoding="utf-8").splitlines() == [
+        f"{item}=1" for item in scope.native_fixtures
+    ]
 
 
 def test_lint_tag_rejects_duplicate_test_module_paths() -> None:
@@ -302,6 +347,13 @@ def test_message_file_preflight_validates_rule_scope_without_writing_github_outp
 
     assert capsys.readouterr().out.splitlines() == [
         'markexpr=design_lint and (design_lint_rule(rule_id="bus.rs485_data_direction_label_mismatch") or rule_gate_integrity)',
+        "typecheckpaths="
+        + ",".join(
+            sorted(
+                set(implementation_paths_by_rule()["bus.rs485_data_direction_label_mismatch"])
+                | set(_RULE_GATE_TYPECHECK_PATHS)
+            )
+        ),
         f"{_RS485_FIXTURE}=1",
     ]
     assert not github_output.exists()

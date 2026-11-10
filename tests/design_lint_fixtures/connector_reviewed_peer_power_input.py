@@ -28,6 +28,7 @@ def power_input_netlist(
     *,
     power_assignments: tuple[str | None, str | None] = ("USB_5V", "SERIAL_5V"),
     function: str = "Pin_1",
+    functions: tuple[str, str] | None = None,
     electrical_type: str = "power_in",
     symbols: tuple[str, str] = ("Synthetic:UsbPort", "Synthetic:SerialPort"),
     values: tuple[str, str] = ("USB receptacle", "Serial connector"),
@@ -35,7 +36,7 @@ def power_input_netlist(
     part_ids: tuple[str | None, str | None] = (None, None),
     dnp: tuple[str, ...] = (),
 ) -> NetlistContract:
-    """Build two unlike connectors with a generic, native power-input contact."""
+    """Build two unlike connector peers with configurable power-pin functions."""
     components = {
         reference: ComponentContract(value=value, footprint=footprint, part_id=part_id)
         for reference, value, footprint, part_id in zip(
@@ -46,6 +47,7 @@ def power_input_netlist(
     for reference, net in zip(("J1", "J2"), power_assignments, strict=True):
         if net is not None:
             nets[net] = (*nets.get(net, ()), f"{reference}.1")
+    pin_functions = functions if functions is not None else (function, function)
     return NetlistContract(
         components=components,
         nets=nets,
@@ -53,8 +55,8 @@ def power_input_netlist(
         component_symbols=dict(zip(("J1", "J2"), symbols, strict=True)),
         component_pin_numbers={"J1": ("1", "2"), "J2": ("1", "2")},
         pin_functions={
-            "J1.1": function,
-            "J2.1": function,
+            "J1.1": pin_functions[0],
+            "J2.1": pin_functions[1],
             "J1.2": "Pin_2",
             "J2.2": "Pin_2",
         },
@@ -74,6 +76,7 @@ def power_input_coverage(
     interface_signals: tuple[str, str] = ("POWER_INPUT", "POWER_INPUT"),
     voltage_domains: tuple[str, str] = ("external-5v", "external-5v"),
     roles: tuple[str | None, str | None] = (None, None),
+    directions: tuple[str, str] = ("input", "input"),
     unconnected_pin_reasons: tuple[str | None, str | None] = (None, None),
     complete_maps: bool = True,
     inventory_reviewed: bool = True,
@@ -84,6 +87,7 @@ def power_input_coverage(
         interface_signals=interface_signals,
         voltage_domains=voltage_domains,
         roles=roles,
+        directions=directions,
         unconnected_pin_reasons=unconnected_pin_reasons,
         complete_maps=complete_maps,
     )
@@ -108,6 +112,7 @@ def power_input_project_documents(
     interface_signals: tuple[str, str] = ("POWER_INPUT", "POWER_INPUT"),
     voltage_domains: tuple[str, str] = ("external-5v", "external-5v"),
     roles: tuple[str | None, str | None] = (None, None),
+    directions: tuple[str, str] = ("input", "input"),
     unconnected_pin_reasons: tuple[str | None, str | None] = (None, None),
     complete_maps: bool = True,
 ) -> tuple[InterfacesCatalog, tuple[str, ...], tuple[ConnectorInterfaceReview, ...]]:
@@ -122,6 +127,7 @@ def power_input_project_documents(
         signal,
         domain,
         role,
+        direction,
         open_reason,
     ) in enumerate(
         zip(
@@ -131,6 +137,7 @@ def power_input_project_documents(
             interface_signals,
             voltage_domains,
             roles,
+            directions,
             unconnected_pin_reasons,
             strict=True,
         ),
@@ -145,7 +152,7 @@ def power_input_project_documents(
                         number="1",
                         signal=signal,
                         role=role,
-                        direction="input",
+                        direction=direction,
                         voltage_domain=domain,
                         mating="synthetic fixture",
                         orientation="straight",

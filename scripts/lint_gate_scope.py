@@ -7,9 +7,10 @@ import ast
 import os
 import re
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
-from pathlib import Path
+from dataclasses import dataclass, replace
+from pathlib import Path, PurePosixPath
 
+from kicad_tooling.ci_typecheck import validate_typecheck_paths
 from kicad_tooling.git import run_git_text
 from kicad_tooling.pytest_scope import (
     pytest_collection_patterns,
@@ -44,6 +45,11 @@ _NATIVE_FIXTURE_PATTERN = re.compile(
 _PACKAGE_JOB_PATTERN = re.compile(
     r"^  package:\n(?P<body>.*?)(?=^  [^ \n]+:\n|\Z)", re.MULTILINE | re.DOTALL
 )
+_RULE_GATE_TYPECHECK_PATHS = (
+    "kicad_tooling/ci_typecheck.py",
+    "scripts/ci.py",
+    "scripts/lint_gate_scope.py",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,6 +58,7 @@ class LintGateScope:
     rule_id: str | None
     native_fixtures: tuple[str, ...]
     test_paths: tuple[str, ...] = ()
+    typecheck_paths: tuple[str, ...] = ()
 
     @property
     def pytest_markexpr(self) -> str:
@@ -90,6 +97,45 @@ def required_native_fixtures_by_rule() -> dict[str, tuple[str, ...]]:
         for rule in rule_catalog().rules
         if rule.status == "active"
     }
+
+
+def implementation_paths_by_rule() -> dict[str, tuple[str, ...]]:
+    """Return deterministic Python targets from active rules' cataloged references."""
+    from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
+
+    result: dict[str, tuple[str, ...]] = {}
+    for rule in rule_catalog().rules:
+        if rule.status != "active":
+            continue
+        references = (*rule.implementation_refs, rule.implementation_owner)
+        paths: set[str] = set()
+        owner_path: str | None = None
+        for reference in references:
+            module, separator, function = str(reference).partition("#")
+            path = (
+                module.replace(".", "/") + ".py" if module.startswith("kicad_tooling.") else module
+            )
+            parsed = PurePosixPath(path)
+            if parsed.suffix != ".py" or not path.startswith("kicad_tooling/"):
+                continue
+            if (
+                not separator
+                or not function
+                or parsed.is_absolute()
+                or ".." in parsed.parts
+                or path != parsed.as_posix()
+            ):
+                raise ValueError(
+                    f"Active rule {rule.rule_id!s} has an invalid implementation reference: "
+                    f"{reference!r}"
+                )
+            paths.add(path)
+            if str(reference) == rule.implementation_owner:
+                owner_path = path
+        if not paths or owner_path not in paths:
+            raise ValueError(f"Active rule {rule.rule_id!s} has no Python implementation owner")
+        result[str(rule.rule_id)] = tuple(sorted(paths))
+    return result
 
 
 def parse_tag_message(
@@ -177,7 +223,16 @@ def read_message_scope(message: str, repository: Path) -> LintGateScope:
         frozenset(native_fixtures_by_rule),
         native_fixtures_by_rule,
     )
+    if scope.rule_id is not None:
+        paths = implementation_paths_by_rule().get(scope.rule_id, ())
+        if not paths:
+            raise ValueError(f"Lint-Rule {scope.rule_id!r} has no cataloged implementation paths")
+        scope = replace(
+            scope,
+            typecheck_paths=tuple(sorted(set(paths) | set(_RULE_GATE_TYPECHECK_PATHS))),
+        )
     validate_test_module_files(scope.test_paths, repository)
+    validate_typecheck_paths(scope.typecheck_paths, repository)
     _validate_native_fixture_test_paths(scope, repository)
     return scope
 
@@ -338,10 +393,14 @@ def write_github_scope(scope: LintGateScope, *, write_github_files: bool = True)
             stream.write(f"markexpr={scope.pytest_markexpr}\n")
             if scope.test_paths:
                 stream.write(f"pytestpaths={','.join(scope.test_paths)}\n")
+            if scope.typecheck_paths:
+                stream.write(f"typecheckpaths={','.join(scope.typecheck_paths)}\n")
     else:
         print(f"markexpr={scope.pytest_markexpr}")
         if scope.test_paths:
             print(f"pytestpaths={','.join(scope.test_paths)}")
+        if scope.typecheck_paths:
+            print(f"typecheckpaths={','.join(scope.typecheck_paths)}")
 
     environment = os.environ.get("GITHUB_ENV")
     if write_github_files and environment:
