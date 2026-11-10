@@ -171,6 +171,7 @@ NATIVE_INTERFACE_THEME_SUITES = (
     "test_connector_mapped_supply_signal_share_native_fixture_lane.py",
     "test_connector_mapped_supply_return_share.py",
     "test_connector_mapped_supply_return_share_native_fixture_lane.py",
+    "test_connector_mapped_supply_shield_sharing.py",
     "test_design_lint_mcp_parity_mapped_contact_sharing.py",
     "test_ci_hosted_usb_c_ports.py",
     "test_ci_hosted_stm32.py",

@@ -4629,10 +4629,53 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_mapped_supply_return_sharing.py#mapped_supply_return_sharing_net_candidates",
+        "kicad_tooling/hwrepo/connector_mapped_role_pair_evidence.py#mapped_connector_role_pair_groups",
         "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_supply_return_sharing.py#mapped_supply_return_sharing_net_candidates"
+    },
+    {
+      "rule_id": "connector.mapped_supply_shield_share_net",
+      "title": "Mapped connector supply and shield share a native net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-matched connector interface roles and KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For complete, current source-matched connector interface coverage, emit a REVIEW candidate when one or more fitted mapped supply contacts and one or more fitted mapped shield contacts on the same connector each have exactly one assignment to the same native net.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "A mapped supply and shield sharing a net is a review clue. Shield bonding or bias may be intentional, and a source map does not establish a required separation or bond.",
+        "The predicate requires complete current connector role maps and exact one-net assignments. DNP connectors, reasoned opens, ambiguous assignments, stale or digestless coverage, and unmapped contacts are excluded.",
+        "The finding does not infer actual voltage, external chassis behavior, an electrical defect, or PCB copper continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_mapped_supply_shield_sharing.test_mapped_supply_and_shield_on_unclassified_shared_net_request_review",
+        "tests.test_connector_mapped_supply_return_share_native_fixture_lane.test_native_mapped_supply_return_share_fault_and_control",
+        "tests.test_design_lint_mcp_parity_mapped_contact_sharing.test_mapped_contact_sharing_findings_match_between_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_mapped_supply_shield_sharing.test_separate_nets_and_other_role_pairs_are_controls",
+        "tests.test_connector_mapped_supply_shield_sharing.test_dnp_open_ambiguous_stale_and_incomplete_maps_are_controls",
+        "tests.test_connector_mapped_supply_shield_sharing.test_project_policy_and_exact_ignore_apply",
+        "tests.test_connector_mapped_supply_return_share_native_fixture_lane.test_native_mapped_supply_return_share_fault_and_control"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_mapped_supply_shield_sharing.test_candidate_is_stable_under_netlist_mapping_order"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_mapped_supply_shield_sharing.py#mapped_supply_shield_sharing_net_candidates",
+        "kicad_tooling/hwrepo/connector_mapped_role_pair_evidence.py#mapped_connector_role_pair_groups",
+        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_supply_shield_sharing.py#mapped_supply_shield_sharing_net_candidates"
     },
     {
       "rule_id": "connector.mapped_supply_signal_share_net",

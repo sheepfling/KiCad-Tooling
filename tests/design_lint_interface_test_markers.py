@@ -29,6 +29,7 @@ INTERFACE_LINT_TEST_MODULES = frozenset(
         "tests/test_connector_mapped_supply_signal_share_native_fixture_lane.py",
         "tests/test_connector_mapped_supply_return_share.py",
         "tests/test_connector_mapped_supply_return_share_native_fixture_lane.py",
+        "tests/test_connector_mapped_supply_shield_sharing.py",
         "tests/test_connector_mapped_shield_signal_sharing.py",
         "tests/test_connector_mapped_signal_return_sharing.py",
         "tests/test_design_lint_architecture_mapped_contact_sharing_candidate_evidence.py",

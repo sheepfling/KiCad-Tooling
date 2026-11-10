@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 316 rules are implemented with synthetic regression coverage.
+The following 317 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 316 active rules.
+The catalog currently contains 317 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -435,6 +435,7 @@ skipped under prerelease policy.
 - `connector.repeated_pin_function`
 - `connector.mapped_supply_domains_share_net`
 - `connector.mapped_supply_return_share_net`
+- `connector.mapped_supply_shield_share_net`
 - `connector.mapped_supply_signal_share_net`
 - `connector.return_supply_scope_singleton`
 - `connector.stateful_contact_topology_mismatch`
@@ -802,6 +803,14 @@ standalone parity work when it closes a demonstrated feature regression.
   schematics pass pinned KiCad 10.0.0 and 10.0.5 Docker exports; intentional
   topology remains reviewable through project policy. See the
   [fixture notes](../tests/fixtures/design_lint/mapped-supply-return-share/README.md).
+- **Latest progress (LINT-369, mapped supply/shield shared net):**
+  Source-matched supply and shield contacts assigned to one exact native net
+  now request default-REVIEW, including unclassified net labels. This is a
+  heuristic prompt: shield bonding or bias may be intentional. Complete current
+  maps and catalog digests are required; DNP, reasoned-open, ambiguous, stale,
+  incomplete, and digestless cases stay quiet. Generic source-hashed native
+  connector fixtures exercise this topology on pinned KiCad 10.0.0 and 10.0.5
+  Docker exports.
 - **Latest progress (LINT-364, named mapped signal opens):** The baseline
   returned no finding for a named `PWM_SYNC` contact with a complete,
   source-matched signal map and no native net assignment. The mapped-signal
@@ -4044,7 +4053,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 316 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 317 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -22270,6 +22279,41 @@ acceptance threads while new lint features proceed:
   `tests/test_design_lint_mcp_parity_mapped_contact_sharing.py`, and
   `tests/test_connector_mapped_supply_return_share_native_fixture_lane.py`
   with `design_lint_rule(rule_id="connector.mapped_supply_return_share_net")`.
+  Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-369 — Review mapped connector supply and shield sharing a net
+
+- **Status:** Implemented as `connector.mapped_supply_shield_share_net`.
+- **Rule:** `connector.mapped_supply_shield_share_net`, default `review`.
+- **Priority:** P1 connector role/topology review. A mapped supply and shield
+  assigned to one exact native net is a useful clue even when the net name does
+  not resemble a recognized rail.
+- **Predicate:** Require complete, current, source-matched connector interface
+  coverage and its catalog digest. For each fitted connector, report a review
+  when mapped supply and shield contacts each have exactly one assignment to
+  the same native net.
+- **Incremental value:** The test-first baseline used a complete synthetic role
+  map on the unclassified `SHARED_SIGNAL_NET`; the catalog produced no target
+  finding. The new check reuses the typed role-pair evidence owner introduced
+  with LINT-368 and adds the supply/shield pairing without duplicating parsing
+  or source validation.
+- **Boundary:** This is a review prompt, not a demand to isolate or bond the
+  shield. Chassis bonding and shield bias can be intentional. DNP connectors,
+  reasoned opens, ambiguous assignments, stale or incomplete maps, and
+  digestless evidence are excluded. It does not infer actual voltages, external
+  chassis behavior, electrical defect, or PCB copper continuity. Policy can
+  promote or disable it, and exact finding fingerprints can be ignored.
+- **Evidence:** Synthetic cases cover shared-net detection, separate-net and
+  other-role controls, DNP, reasoned-open, ambiguous assignment, stale and
+  incomplete maps, digestless evidence, project policy, exact ignore, stable
+  ordering, and CLI/MCP parity. The source-hashed generic connector fault and
+  control are also checked using pinned KiCad 10.0.0 and 10.0.5 Docker images.
+  No product schematic or proprietary fixture was imported.
+- **Selection:** Run
+  `tests/test_connector_mapped_supply_shield_sharing.py`,
+  `tests/test_design_lint_mcp_parity_mapped_contact_sharing.py`, and
+  `tests/test_connector_mapped_supply_return_share_native_fixture_lane.py`
+  with `design_lint_rule(rule_id="connector.mapped_supply_shield_share_net")`.
   Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate

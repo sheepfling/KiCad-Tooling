@@ -63,8 +63,20 @@ def signal_sharing_coverage(
             number=str(index),
             signal=signal,
             role=roles[index - 1],
-            direction="bidirectional" if roles[index - 1] == "signal" else "passive",
-            voltage_domain="logic-3v3" if roles[index - 1] == "signal" else "signal-return",
+            direction=(
+                "input"
+                if roles[index - 1] == "supply"
+                else "bidirectional"
+                if roles[index - 1] == "signal"
+                else "passive"
+            ),
+            voltage_domain={
+                "supply": "logic-5v",
+                "signal": "logic-3v3",
+                "return": "signal-return",
+                "shield": "chassis",
+                "other": "unspecified",
+            }[roles[index - 1]],
             mating=signal,
             orientation="straight",
             mechanical_clearance="synthetic",

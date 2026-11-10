@@ -15,7 +15,6 @@ import tests.design_lint_fixtures.can_line_named_rail as _can_line_named_rail_fi
 import tests.design_lint_fixtures.catalog_reachability_signal_pairs as _signal_pair_reachability
 import tests.design_lint_fixtures.component_peer_pin_all_open as _component_peer_pin_all_open
 import tests.design_lint_fixtures.component_return_domains as _component_return_domains
-import tests.design_lint_fixtures.connector_mapped_supply_return_net as _mapped_supply_return_net
 import tests.design_lint_fixtures.connector_named_power_aliases as _connector_named_power_aliases
 import tests.design_lint_fixtures.connector_peer_pin_all_open as _connector_peer_pin_all_open
 import tests.design_lint_fixtures.connector_return_supply as _connector_return_supply_fixtures
@@ -76,6 +75,9 @@ from tests.design_lint_fixtures.catalog_reachability import (
     mapped_connector_rule_ids,
     protocol_peer_candidate_rule_ids,
     usb_c_vbus_and_connector_return_review_rule_ids,
+)
+from tests.design_lint_fixtures.catalog_reachability_mapped_contact_sharing import (
+    mapped_contact_sharing_rule_ids,
 )
 from tests.design_lint_fixtures.catalog_reachability_pcb import pcb_rule_ids
 from tests.design_lint_fixtures.component_catalog_reachability import (
@@ -196,11 +198,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     )
     emitted = {item.rule_id for source in cases for item in candidates(source)}
     emitted.update(_signal_pair_reachability.signal_pair_same_net_rule_ids())
-    mapped_supply_source = _mapped_supply_return_net.mapped_supply_return_net_netlist()
-    mapped_supply_report, _ = _mapped_supply_return_net.mapped_supply_return_net_report(
-        mapped_supply_source
-    )
-    emitted.update(item.rule_id for item in mapped_supply_report.findings)
+    emitted.update(mapped_contact_sharing_rule_ids())
     emitted.update(unconnected_protocol_candidate_rule_ids())
     emitted.update(protocol_peer_candidate_rule_ids())
     emitted.update(item.rule_id for item in candidates(_mosfet_gate_source_bias_fixtures.netlist()))

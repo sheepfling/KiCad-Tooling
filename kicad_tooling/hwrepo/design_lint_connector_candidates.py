@@ -3,6 +3,7 @@
 from .connector_coverage import source_matched_connector_peer_assignment_groups
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_mapped_supply_return_sharing import mapped_supply_return_sharing_net_candidates
+from .connector_mapped_supply_shield_sharing import mapped_supply_shield_sharing_net_candidates
 from .connector_mapped_supply_signal_sharing import mapped_supply_signal_sharing_net_candidates
 from .connector_peer_pin_candidate_results import (
     ConnectorCandidateResult,
@@ -55,6 +56,7 @@ def connector_candidates(
         ),
         *mapped_supply_domains_shared_net_candidates(observed, connector_coverage),
         *mapped_supply_return_sharing_net_candidates(observed, connector_coverage),
+        *mapped_supply_shield_sharing_net_candidates(observed, connector_coverage),
         *mapped_supply_signal_sharing_net_candidates(observed, connector_coverage),
         *reviewed_peer_signal_assignment_splits(observed, connector_coverage),
         *reviewed_peer_signal_domains_sharing_net(observed, connector_coverage),

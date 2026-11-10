@@ -15,6 +15,10 @@ from kicad_tooling.ci_hosted_connector_return_fixture_sources import (
 )
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.electrical import selected_config
+from tests.design_lint_fixtures.connector_mapped_signal_sharing import (
+    signal_sharing_coverage,
+    signal_sharing_report,
+)
 from tests.design_lint_fixtures.connector_mapped_supply_return_sharing import (
     supply_return_coverage,
     supply_return_report,
@@ -29,6 +33,7 @@ pytestmark = [
 ]
 
 RULE_ID = "connector.mapped_supply_return_share_net"
+SUPPLY_SHIELD_RULE_ID = "connector.mapped_supply_shield_share_net"
 FIXTURE_CASES = {
     "mapped-supply-return-share-fault": (
         "fault.kicad_sch",
@@ -42,6 +47,7 @@ FIXTURE_CASES = {
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=SUPPLY_SHIELD_RULE_ID)
 @pytest.mark.skipif(
     os.environ.get("KICAD_RUN_NATIVE_CONNECTOR_FIXTURES") != "1",
     reason="exact-version native connector fixtures run in package acceptance",
@@ -126,3 +132,22 @@ def test_native_mapped_supply_return_share_fault_and_control(
         assert observed.nets["SUPPLY_SOURCE"] == ("J1.1",)
         assert observed.nets["RETURN_REFERENCE"] == ("J1.2",)
         assert not findings
+
+    shield_coverage = signal_sharing_coverage(
+        observed,
+        signal_names=("SUPPLY_CONTACT", "CABLE_SHIELD"),
+        roles=("supply", "shield"),
+    )
+    shield_report, _ = signal_sharing_report(observed, coverage=shield_coverage)
+    shield_findings = tuple(
+        item for item in shield_report.findings if item.rule_id == SUPPLY_SHIELD_RULE_ID
+    )
+    assert shield_coverage.status == "COMPLETE"
+    if fixture_case.endswith("fault"):
+        assert observed.nets["AUX_SHARED_NODE"] == ("J1.1", "J1.2")
+        assert len(shield_findings) == 1
+        assert shield_findings[0].evidence["interface_role"] == ("supply", "shield")
+    else:
+        assert observed.nets["SUPPLY_SOURCE"] == ("J1.1",)
+        assert observed.nets["RETURN_REFERENCE"] == ("J1.2",)
+        assert not shield_findings

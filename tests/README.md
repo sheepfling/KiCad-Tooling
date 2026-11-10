@@ -65,6 +65,18 @@ Mapped supply/return shared-net checks use the same focused native lane:
   -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_supply_return_share_net")'
 ```
 
+Mapped supply/shield shared-net review uses the same source-matched coverage and
+exact native fixture lane. Select it with
+`design_lint_rule(rule_id="connector.mapped_supply_shield_share_net")`.
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  tests/test_connector_mapped_supply_shield_sharing.py \
+  tests/test_design_lint_mcp_parity_mapped_contact_sharing.py \
+  tests/test_connector_mapped_supply_return_share_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_supply_shield_share_net")'
+```
+
 Run the native Docker exports separately with
 `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. Fixture source hashes and limitations
 are in the
