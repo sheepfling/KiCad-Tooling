@@ -20,6 +20,9 @@ from .ci_hosted_connector_return_grounding import (
 )
 from .ci_hosted_connector_return_mapped_returns import verify_mapped_return_interfaces
 from .ci_hosted_connector_return_mapped_supplies import verify_mapped_supply_interfaces
+from .ci_hosted_connector_return_mapped_supply_return import (
+    verify_mapped_supply_return_sharing,
+)
 from .ci_hosted_connector_return_mapped_supply_signal import (
     verify_mapped_supply_signal_sharing,
 )
@@ -110,6 +113,7 @@ def connector_return_lint_fixture_lane(
     verify_mapped_return_interfaces(context)
     verify_mapped_supply_interfaces(context)
     verify_mapped_supply_signal_sharing(context)
+    verify_mapped_supply_return_sharing(context)
     verify_connector_peer_scope(context)
     emit_connector_return_receipts(context, peer_pin_coverage_receipts)
 

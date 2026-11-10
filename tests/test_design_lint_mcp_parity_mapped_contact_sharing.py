@@ -11,9 +11,7 @@ import pytest
 from mcp import Client
 
 from kicad_tooling.hwrepo.contracts import read_model, write_model
-from kicad_tooling.hwrepo.design_lint_connector_mapped_contact_sharing_candidate_evidence import (
-    MappedContactSharingRuleId,
-)
+from kicad_tooling.hwrepo.design_lint_rule_types import DesignLintRuleId
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
@@ -48,13 +46,56 @@ pytestmark = [
 SHIELD_RULE_ID = "connector.mapped_shield_signal_share_net"
 RETURN_RULE_ID = "connector.mapped_signal_return_share_net"
 SUPPLY_RULE_ID = "connector.mapped_supply_signal_share_net"
+SUPPLY_RETURN_RULE_ID = "connector.mapped_supply_return_share_net"
 INTERFACE_ID = "synthetic-mapped-contact-sharing"
 _ROLES: tuple[
-    tuple[Literal["shield", "return", "supply"], str, MappedContactSharingRuleId, str], ...
+    tuple[
+        Literal["shield", "return", "supply"],
+        str,
+        Literal["signal", "return"],
+        str,
+        DesignLintRuleId,
+        str,
+        str,
+    ],
+    ...,
 ] = (
-    ("shield", "CHASSIS_SHIELD", SHIELD_RULE_ID, "shield_component_pin"),
-    ("return", "SIGNAL_RETURN", RETURN_RULE_ID, "return_component_pin"),
-    ("supply", "SUPPLY_IN", SUPPLY_RULE_ID, "supply_component_pin"),
+    (
+        "shield",
+        "CHASSIS_SHIELD",
+        "signal",
+        "UART_RX",
+        SHIELD_RULE_ID,
+        "shield_component_pin",
+        "signal_component_pin",
+    ),
+    (
+        "return",
+        "SIGNAL_RETURN",
+        "signal",
+        "UART_RX",
+        RETURN_RULE_ID,
+        "return_component_pin",
+        "signal_component_pin",
+    ),
+    (
+        "supply",
+        "SUPPLY_IN",
+        "signal",
+        "UART_RX",
+        SUPPLY_RULE_ID,
+        "supply_component_pin",
+        "signal_component_pin",
+    ),
+    (
+        "supply",
+        "SUPPLY_IN",
+        "return",
+        "POWER_RETURN",
+        SUPPLY_RETURN_RULE_ID,
+        "supply_component_pin",
+        "return_component_pin",
+    ),
 )
 
 
@@ -63,12 +104,15 @@ def _install_reviewed_contact_interface(
     *,
     primary_role: Literal["shield", "return", "supply"],
     primary_signal: str,
+    secondary_role: Literal["signal", "return"],
+    secondary_signal: str,
 ) -> Path:
-    primary_voltage = {
+    voltage_domains = {
         "shield": "chassis",
         "return": "signal-return",
         "supply": "supply-5v",
-    }[primary_role]
+        "signal": "logic-3v3",
+    }
     interface = InterfaceRecord(
         id=INTERFACE_ID,
         revision="synthetic-1",
@@ -78,18 +122,18 @@ def _install_reviewed_contact_interface(
                 signal=primary_signal,
                 role=primary_role,
                 direction="input" if primary_role == "supply" else "passive",
-                voltage_domain=primary_voltage,
+                voltage_domain=voltage_domains[primary_role],
                 mating=primary_signal,
                 orientation="straight",
                 mechanical_clearance="synthetic",
             ),
             InterfacePin(
                 number="2",
-                signal="UART_RX",
-                role="signal",
-                direction="input",
-                voltage_domain="logic-3v3",
-                mating="UART_TX",
+                signal=secondary_signal,
+                role=secondary_role,
+                direction="input" if secondary_role == "signal" else "passive",
+                voltage_domain=voltage_domains[secondary_role],
+                mating=secondary_signal,
                 orientation="straight",
                 mechanical_clearance="synthetic",
             ),
@@ -128,6 +172,7 @@ def _install_reviewed_contact_interface(
 @pytest.mark.design_lint_rule(rule_id=SHIELD_RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=RETURN_RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=SUPPLY_RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=SUPPLY_RETURN_RULE_ID)
 def test_mapped_contact_sharing_findings_match_between_cli_and_mcp(tmp_path: Path) -> None:
     root, native = synthetic_design_lint_project(
         tmp_path,
@@ -157,11 +202,21 @@ def test_mapped_contact_sharing_findings_match_between_cli_and_mcp(tmp_path: Pat
             assert result.structured_content is not None
             return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
 
-    for role, signal, rule_id, primary_key in _ROLES:
+    for (
+        role,
+        signal,
+        secondary_role,
+        secondary_signal,
+        rule_id,
+        primary_key,
+        secondary_key,
+    ) in _ROLES:
         catalog_path = _install_reviewed_contact_interface(
             root,
             primary_role=role,
             primary_signal=signal,
+            secondary_role=secondary_role,
+            secondary_signal=secondary_signal,
         )
         install_synthetic_netlist(native, contract_netlist_xml(observed))
         process = run_design_lint_cli(tmp_path, root, native)
@@ -175,6 +230,6 @@ def test_mapped_contact_sharing_findings_match_between_cli_and_mcp(tmp_path: Pat
         assert cli_report.connector_coverage.interface_catalog_sha256 == digest(catalog_path)
         (finding,) = tuple(item for item in cli_report.findings if item.rule_id == rule_id)
         assert finding.evidence[primary_key] == ("J1.1",)
-        assert finding.evidence["signal_component_pin"] == ("J1.2",)
+        assert finding.evidence[secondary_key] == ("J1.2",)
         assert finding.evidence["assigned_net"] == ("SHARED_SIGNAL_NET",)
         assert finding.evidence["interface_catalog_sha256"] == (digest(catalog_path),)

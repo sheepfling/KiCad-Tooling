@@ -271,6 +271,10 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         / "mapped-supply-signal-share/fault.kicad_sch",
         "mapped-supply-signal-share-control": fixture_root
         / "mapped-supply-signal-share/control.kicad_sch",
+        "mapped-supply-return-share-fault": fixture_root
+        / "mapped-supply-return-share/fault.kicad_sch",
+        "mapped-supply-return-share-control": fixture_root
+        / "mapped-supply-return-share/control.kicad_sch",
         "mapped-same-signal-split-nets": fixture_root
         / "mapped-repeated-signal-split-nets/split-signal.kicad_sch",
         "reviewed-peer-signal-split": fixture_root / "reviewed-peer-signal-split/peers.kicad_sch",
@@ -439,6 +443,8 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = MappingProxyType(
         "mapped-distinct-signals-share-net": "3716e8019bc5d5572d8a4f2e9112e01aecd69a8c035354c37e92aa481a0595ba",
         "mapped-supply-signal-share-fault": "1fed938a34c42fcbb5518de81eca7bf2698e47e6b739c750e77ee56e914bd8a5",
         "mapped-supply-signal-share-control": "b71ebb62b93bd63a6f52c4540f41e85ddafede34253df708e4834b71272dbb15",
+        "mapped-supply-return-share-fault": "7050c0df9e0861b8650c438e6cfe2cdaa54159e7628b343e90d45f192ce73471",
+        "mapped-supply-return-share-control": "43db3b6ec2c64cc09c6551489363b8c8f1a87e42e49b565761fc2ca5e15c70da",
         "mapped-same-signal-split-nets": "fa11e55fe8cc046fd093eb3cb6fdd1c9a6cfc2c75a838320ea8ff720fa3c512e",
         "reviewed-peer-signal-split": "1f755fc59dfd41d6e337f8e58f64cb605e351fe862035b91893a9c5827302193",
         "reviewed-peer-signal-domain-shared-net": "0bb12e09a610f4e3255a0c84e7f7c6cdd2dd8ae41d9cc39a30537800bf37a36d",

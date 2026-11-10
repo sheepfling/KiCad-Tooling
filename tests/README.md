@@ -55,6 +55,16 @@ review selector and source-hashed native fault/control fixtures:
   -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_supply_signal_share_net")'
 ```
 
+Mapped supply/return shared-net checks use the same focused native lane:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  tests/test_connector_mapped_supply_return_share.py \
+  tests/test_design_lint_mcp_parity_mapped_contact_sharing.py \
+  tests/test_connector_mapped_supply_return_share_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_supply_return_share_net")'
+```
+
 Run the native Docker exports separately with
 `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. Fixture source hashes and limitations
 are in the

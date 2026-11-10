@@ -13,6 +13,9 @@ from tests.design_lint_fixtures.connector_footprint_peer_scope_cases import (
     connector_footprint_peer_scope_cases,
     connector_same_voltage_power_input_cases,
 )
+from tests.design_lint_fixtures.connector_mapped_supply_return_sharing import (
+    supply_return_netlist,
+)
 from tests.design_lint_fixtures.connector_named_power_peer_cases import (
     named_connector_power_peer_cases,
 )
@@ -69,6 +72,11 @@ def connector_return_fixture_contracts() -> dict[str, NetlistContract]:
             "mapped-distinct-signals-share-net": _mapped_signal_assignments(shared=True),
             "mapped-supply-signal-share-fault": _mapped_supply_signal_assignments(shared=True),
             "mapped-supply-signal-share-control": _mapped_supply_signal_assignments(shared=False),
+            "mapped-supply-return-share-fault": supply_return_netlist(),
+            "mapped-supply-return-share-control": supply_return_netlist(
+                supply_net="SUPPLY_SOURCE",
+                return_net="RETURN_REFERENCE",
+            ),
             "mapped-same-signal-split-nets": _mapped_signal_assignments(shared=False),
             "reviewed-peer-signal-split": peer_signal_netlist(),
             "mapped-interface-peer-context-open": peer_signal_netlist(
