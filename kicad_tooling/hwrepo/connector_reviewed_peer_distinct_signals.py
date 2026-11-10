@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 
 from .connector_coverage_models import ConnectorCoverageReport
+from .connector_identity import pin_function_is_generic
 from .connector_reviewed_peer_signal_evidence import (
     ReviewedPeerSignalContact,
     reviewed_peer_signal_contacts,
@@ -29,7 +30,11 @@ def reviewed_peer_distinct_signals_sharing_net(
         return ()
 
     contacts_by_scope: dict[tuple[str, str], list[ReviewedPeerSignalContact]] = defaultdict(list)
-    for contact in reviewed_peer_signal_contacts(observed, coverage):
+    for contact in reviewed_peer_signal_contacts(
+        observed,
+        coverage,
+        include_named_native_functions=True,
+    ):
         contacts_by_scope[(contact.peer_assignment_group.casefold(), contact.net)].append(contact)
 
     candidates: list[Candidate] = []
@@ -136,6 +141,28 @@ def _candidate(
     )
     group_name = groups[0]
     net_name = nets[0]
+    named_native_functions = any(
+        not pin_function_is_generic(contact.native_function) for contact in contacts
+    )
+    evidence = {
+        "component_reference": references,
+        "component_pin": pins,
+        "interface_signal": signal_names,
+        "interface_role": ("signal",),
+        "voltage_domain": domains,
+        "peer_assignment_group": groups,
+        "peer_assignment_basis": bases,
+        "assigned_nets": nets,
+        "interface_catalog_sha256": (catalog_digest,),
+    }
+    if named_native_functions:
+        evidence["native_pin_function"] = tuple(
+            f"{contact.component_pin}={contact.native_function or 'unknown'}"
+            for contact in sorted(
+                contacts,
+                key=lambda item: (item.component_pin.casefold(), item.component_pin),
+            )
+        )
     return Candidate(
         rule_id=RULE_ID,
         subject=(
@@ -143,20 +170,22 @@ def _candidate(
             f"share native net {net_name} across separate connectors"
         ),
         message=(
-            "Different signal names in this source-reviewed peer group are assigned to one native "
-            "net across separate connectors. Review whether the shared connection is intended. "
-            "Peer grouping and signal labels are review context only; this does not establish an "
-            "electrical conflict, validate the maps against a datasheet, or prove PCB continuity."
+            (
+                "Different mapped signal names on named native connector contacts in this "
+                "source-reviewed peer group are assigned to one native net across separate "
+                "connectors. Review whether the shared connection is intended. Native pin "
+                "functions appear in the evidence; peer grouping and signal labels are review "
+                "context only. This does not establish an electrical conflict, validate the maps "
+                "against a datasheet, or prove PCB continuity."
+            )
+            if named_native_functions
+            else (
+                "Different signal names in this source-reviewed peer group are assigned to one "
+                "native net across separate connectors. Review whether the shared connection is "
+                "intended. Peer grouping and signal labels are review context only; this does not "
+                "establish an electrical conflict, validate the maps against a datasheet, or prove "
+                "PCB continuity."
+            )
         ),
-        evidence={
-            "component_reference": references,
-            "component_pin": pins,
-            "interface_signal": signal_names,
-            "interface_role": ("signal",),
-            "voltage_domain": domains,
-            "peer_assignment_group": groups,
-            "peer_assignment_basis": bases,
-            "assigned_nets": nets,
-            "interface_catalog_sha256": (catalog_digest,),
-        },
+        evidence=evidence,
     )

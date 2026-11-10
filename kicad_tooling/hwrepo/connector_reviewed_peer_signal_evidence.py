@@ -169,7 +169,10 @@ def _reviewable_peer_signal_function(
     *,
     include_named_native_functions: bool,
 ) -> bool:
-    """Keep generic contacts and optionally admit named non-power signal labels."""
+    """Keep generic contacts and optionally admit named signal roles.
+
+    Exclude recognized supply, return, and shield labels.
+    """
     if pin_function_is_generic(function):
         return True
     return (

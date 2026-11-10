@@ -4503,23 +4503,26 @@ KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
 
 `connector.reviewed_peer_distinct_signals_shared_net` prompts when two or more
 current, source-matched connector maps in one authored peer group assign
-different generic signal contacts to the same exact native net across separate
-connector references. It leaves contacts on one connector to
-`connector.mapped_signals_share_net`. Each contact must have one exact net,
-signal role, domain label, and complete source-matched peer scope.
+different generic or meaningfully named signal contacts to the same exact
+native net across separate connector references. The existing
+`connector.mapped_signals_share_net` rule handles contacts on one connector.
+Each contact must have one exact net, signal role, domain label, and complete
+source-matched peer scope.
 
 Different mapped signal names sharing a net are a review clue. Aliases,
 loopback wiring, or another intentional cross-connection may be valid. The
 check does not infer an electrical conflict, validate maps against datasheets,
-or establish PCB continuity. Policy can promote the cue to `block`, turn it
-`off`, or ignore an exact fingerprint.
+or establish PCB continuity. Recognized power, return, and shield native
+functions are excluded. Named native function labels appear in the evidence.
+Policy can promote the cue to `block`, turn it `off`, or ignore an exact
+fingerprint.
 
-Synthetic controls cover same-signal peer sharing, separate nets, separate
-peer groups, named and DNP contacts, non-signal roles, stale or incomplete
-maps, policy overrides, and stable ordering. The native fault/control lane
-reuses a tooling-owned generic two-contact schematic under two source-matched
-map interpretations and repeats its export on digest-pinned KiCad 10.0.0 and
-10.0.5. See the
+Synthetic tests cover generic and named signal contacts, same-signal peer
+sharing, separate nets, separate peer groups, power, return, shield, DNP,
+non-signal, stale and incomplete maps, policy overrides, and stable ordering.
+The native lane reuses tooling-owned source-hashed schematics with named
+contacts under two source-matched map interpretations and repeats exports on
+digest-pinned KiCad 10.0.0 and 10.0.5. See the
 [fixture record](../tests/fixtures/design_lint/reviewed-peer-signal-domain-shared-net/README.md).
 
 Select its synthetic, CLI/MCP, and native regressions with:
@@ -4528,12 +4531,14 @@ Select its synthetic, CLI/MCP, and native regressions with:
 .venv/bin/python -I -m pytest \
   tests/test_connector_reviewed_peer_distinct_signals.py \
   tests/test_design_lint_mcp_parity_reviewed_peer_signal_domains.py \
+  tests/test_connector_mapped_named_peer_signal_split_native.py \
   -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.reviewed_peer_distinct_signals_shared_net")'
 ```
 
 ```sh
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_connector_reviewed_peer_distinct_signals_native.py \
+  tests/test_connector_mapped_named_peer_signal_split_native.py \
   -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.reviewed_peer_distinct_signals_shared_net")'
 ```
 
