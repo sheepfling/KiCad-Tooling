@@ -179,7 +179,7 @@ def read_netlist(path: Path) -> NetlistContract:
                         pin_electrical_types[f"{ref}.{number}"] = electrical_type
     nets: dict[str, tuple[str, ...]] = {}
     for net in tree.findall("./nets/net"):
-        name = net.attrib["name"].lstrip("/")
+        name = normalize_native_net_name(net.attrib["name"])
         if name in nets:
             raise ValueError("Duplicate normalized net name")
         pins: list[str] = []
@@ -205,6 +205,11 @@ def read_netlist(path: Path) -> NetlistContract:
         pin_electrical_types=pin_electrical_types,
         component_pin_numbers=component_pin_numbers,
     )
+
+
+def normalize_native_net_name(name: str) -> str:
+    """Remove KiCad's leading root-sheet slash from a native net name."""
+    return name.lstrip("/")
 
 
 def check_netlist(

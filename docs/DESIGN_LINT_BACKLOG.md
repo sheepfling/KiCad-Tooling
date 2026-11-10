@@ -21740,6 +21740,36 @@ acceptance threads while new lint features proceed:
   isolated wheel installation, and public-template inventory, surface,
   verification, and playtest stages passed. No CLI or MCP surface changed.
 
+#### LINT-359 — Normalize KiCad root-sheet net names in PCB comparison
+
+- **Observation:** A source-bound native scan of a public training-board copy
+  showed four false `pcb.schematic_pcb_pad_net_mismatch` findings. The native
+  schematic netlist and PCB pads both assigned `/PILOT_A` and `/PILOT_B`; the
+  shared netlist parser canonicalized these to `PILOT_A` and `PILOT_B`, while
+  the PCB comparison retained the leading slash. This was a comparison-boundary
+  false positive, not a board defect.
+- **Provenance:** The public template revision was
+  `ed89536f0dbbcb013145af2994fef41b2250143e`; the observed schematic, board,
+  native netlist, and PCB snapshot hashes were respectively
+  `bd3f349233ffc44f030b1004a1c08e51d1ec0589ecf646384f1ed3353806e5ad`,
+  `c8076b353b450663d9cc7081203bb6d1c59146bb7db7ae10eafc45fc358821f6`,
+  `2934682ee4f86990f8091d99f875cee418f5504202b9d75cf74df583a0e09e33`, and
+  `faebe6b7a7c81c1c4b7b399c67d83f126dcb3fa69e6d0ad535286fdb55313687`.
+  The source was exported with the pinned KiCad 10.0.0 image. No template file
+  or project expectation was copied into this repository.
+- **Local response:** Reuse the netlist parser's leading-slash normalization
+  when comparing native PCB pad names, retaining the original board name in any
+  actual mismatch evidence. Add a minimal native-XML control for matching
+  root-sheet names and a `/PILOT_B` mismatch control. Case-sensitive exact
+  comparison and all other name differences remain unchanged.
+- **Verification:** The full focused rule gate passed 340 tests with 7,755
+  deselected, including catalog/owner integrity and the digest-pinned native
+  pad-net fault/control lane on KiCad 10.0.0 and 10.0.5. Re-running the public
+  example from a disposable copy removed all four false pad-net findings; native export is
+  `PASS`. Two separate `REVIEW` findings remain because named-variant value
+  evidence is unavailable. The overall project verification therefore remains
+  `FAIL` for review, and no example source or expectation was changed.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

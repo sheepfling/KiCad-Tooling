@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from .native_report_parsing import normalize_native_net_name
 from .netlist_contract_models import NetlistContract
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
@@ -90,7 +91,7 @@ def compare_schematic_pcb_pad_nets(
                     board_net=None,
                 )
             )
-        elif board_net != schematic_net:
+        elif normalize_native_net_name(board_net) != normalize_native_net_name(schematic_net):
             mismatches.append(
                 PcbSchematicBoardPadNetMismatch(
                     reference=reference,

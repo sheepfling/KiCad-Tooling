@@ -20,8 +20,12 @@ from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     DesignLintRuleOverride,
 )
+from kicad_tooling.hwrepo.native_report_parsing import read_netlist
 from kicad_tooling.hwrepo.pcb_component_inventory import (
     evaluate_native_component_inventory_coverage,
+)
+from kicad_tooling.hwrepo.pcb_component_inventory_models import (
+    PcbComponentInventoryCoverageReport,
 )
 from kicad_tooling.hwrepo.pcb_pad_net_comparison import compare_schematic_pcb_pad_nets
 from kicad_tooling.hwrepo.pcb_return_path_capture import NativePcbConnectivityCapture
@@ -258,6 +262,38 @@ def test_pad_net_comparison_is_order_independent_and_net_names_are_exact() -> No
     assert reordered == first
 
 
+def test_kicad_root_sheet_net_prefix_matches_between_native_netlist_and_board(
+    tmp_path: Path,
+) -> None:
+    native_netlist = tmp_path / "netlist.xml"
+    native_netlist.write_text(
+        '<export><components><comp ref="U1"><value>1k</value>'
+        "<footprint>Synthetic:Probe_Module</footprint></comp></components>"
+        '<nets><net code="1" name="/PILOT_A">'
+        '<node ref="U1" pin="1"/></net></nets></export>',
+        encoding="utf-8",
+    )
+    observed = read_netlist(native_netlist)
+    assert "PILOT_A" in observed.nets
+
+    matching_board = snapshot(
+        "U1",
+        footprint_by_reference={"U1": FOOTPRINT},
+        pad_net_by_reference={"U1.1": "/PILOT_A"},
+    )
+    assert compare_schematic_pcb_pad_nets(observed, matching_board) == ()
+
+    differing_board = snapshot(
+        "U1",
+        footprint_by_reference={"U1": FOOTPRINT},
+        pad_net_by_reference={"U1.1": "/PILOT_B"},
+    )
+    (mismatch,) = compare_schematic_pcb_pad_nets(observed, differing_board)
+    assert mismatch.mismatch == "net_assignment_differs"
+    assert mismatch.schematic_net == "PILOT_A"
+    assert mismatch.board_net == "/PILOT_B"
+
+
 def test_pad_net_comparison_rejects_ambiguous_native_assignments() -> None:
     observed = netlist(
         components={"U1": FOOTPRINT},
@@ -376,13 +412,16 @@ def test_pad_net_only_policy_captures_and_compares_native_pad_assignments(
         lambda *_args, **_kwargs: True,
     )
 
-    coverage = design_lint_pcb_geometry_scan.scan_pcb_geometry(
+    reports = design_lint_pcb_geometry_scan.scan_pcb_geometry(
         root,
         config,
         coach_report,
         policy,
         native_summary,
-    )[-1]
+    )
+    coverage = next(
+        report for report in reports if isinstance(report, PcbComponentInventoryCoverageReport)
+    )
 
     assert coverage.status == "COMPLETE"
     assert coverage.pad_net_comparison_status == "COMPLETE"
