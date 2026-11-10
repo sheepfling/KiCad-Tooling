@@ -167,6 +167,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.mapped_same_domain_supply_split_nets": {
             "tests.test_connector_mapped_supply_return_share_native_fixture_lane.test_native_mapped_supply_return_share_fault_and_control",
         },
+        "connector.mapped_same_domain_return_split_nets": {
+            "tests.test_connector_mapped_supply_return_share_native_fixture_lane.test_native_mapped_supply_return_share_fault_and_control",
+        },
         "connector.mapped_signals_split_nets": {
             "tests.test_connector_mapped_signals_split_nets_native_fixture_lane.test_native_split_nets_are_reviewed_only_for_repeated_mapped_signal",
         },

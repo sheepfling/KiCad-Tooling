@@ -880,7 +880,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 319 active rules.
+The catalog currently contains 320 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -1023,6 +1023,28 @@ Run exact KiCad 10.0.0 and 10.0.5 Docker exports with
 tooling-owned connector schematics whose native exports respectively assign
 the two mapped supplies to separate nets and to one shared net. This confirms
 native evidence handling; it does not establish that separate nets are wrong.
+
+`connector.mapped_same_domain_return_split_nets` applies the same bounded
+review to mapped return contacts. It prompts when fitted return contacts on
+one connector share the same exact authored `voltage_domain` but are assigned
+to separate native nets. A common domain label does not require common nets;
+star returns, filters, protection, or isolation may make the split intentional.
+Incomplete, stale, digestless, open, ambiguous, and DNP evidence is excluded.
+
+Select its synthetic, parity, and pinned native regression slice with:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  tests/test_connector_mapped_same_domain_return_split.py \
+  tests/test_design_lint_mcp_parity_mapped_contact_sharing.py \
+  tests/test_connector_mapped_supply_return_share_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_same_domain_return_split_nets")'
+```
+
+Run exact KiCad 10.0.0 and 10.0.5 Docker exports with
+`KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. The shared-node source is this rule's
+valid control; the separate-net source faults this rule. Those same sources
+play the opposite roles for the supply/return-sharing rule.
 
 ### Mapped connector return/supply scopes with isolated peers
 

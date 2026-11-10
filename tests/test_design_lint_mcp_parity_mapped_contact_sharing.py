@@ -50,6 +50,7 @@ SUPPLY_RETURN_RULE_ID = "connector.mapped_supply_return_share_net"
 SUPPLY_SHIELD_RULE_ID = "connector.mapped_supply_shield_share_net"
 RETURN_SHIELD_RULE_ID = "connector.mapped_return_shield_share_net"
 SAME_DOMAIN_SUPPLY_SPLIT_RULE_ID = "connector.mapped_same_domain_supply_split_nets"
+SAME_DOMAIN_RETURN_SPLIT_RULE_ID = "connector.mapped_same_domain_return_split_nets"
 INTERFACE_ID = "synthetic-mapped-contact-sharing"
 _ROLES: tuple[
     tuple[
@@ -311,4 +312,60 @@ def test_same_domain_supply_split_findings_match_between_cli_and_mcp(tmp_path: P
     assert finding.evidence["mapped_supply_assignments"] == (
         "J1.1=SUPPLY_SEGMENT_A; voltage_domain=supply-5v",
         "J1.2=SUPPLY_SEGMENT_B; voltage_domain=supply-5v",
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=SAME_DOMAIN_RETURN_SPLIT_RULE_ID)
+def test_same_domain_return_split_findings_match_between_cli_and_mcp(tmp_path: Path) -> None:
+    root, native = synthetic_design_lint_project(
+        tmp_path,
+        parity_design_lint_policy(DesignLintPolicy()),
+    )
+    observed = NetlistContract(
+        components={
+            "J1": ComponentContract(value="Synthetic connector", footprint="Synthetic:2Pin")
+        },
+        nets={"RETURN_SEGMENT_A": ("J1.1",), "RETURN_SEGMENT_B": ("J1.2",)},
+        component_symbols={"J1": "Connector_Generic:Conn_02"},
+        component_pin_numbers={"J1": ("1", "2")},
+        pin_functions={"J1.1": "Pin_1", "J1.2": "Pin_2"},
+        pin_electrical_types={"J1.1": "passive", "J1.2": "passive"},
+    )
+    catalog_path = _install_reviewed_contact_interface(
+        root,
+        primary_role="return",
+        primary_signal="RETURN_CONTACT_A",
+        secondary_role="return",
+        secondary_signal="RETURN_CONTACT_B",
+    )
+    install_synthetic_netlist(native, contract_netlist_xml(observed))
+    process = run_design_lint_cli(tmp_path, root, native)
+    assert process.returncode in {0, 1}, process.stderr + process.stdout
+    cli_report = DesignLintReport.model_validate_json(process.stdout)
+
+    async def inspect_mcp() -> DesignLintReport:
+        async with Client(create_server(root), mode="legacy") as client:
+            result = await client.call_tool(
+                "inspect_design_lint",
+                {
+                    "project_id": "controller",
+                    "native_summary": native.relative_to(root).as_posix(),
+                },
+            )
+            assert not result.is_error, result.content
+            assert result.structured_content is not None
+            return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
+
+    mcp_report = asyncio.run(inspect_mcp())
+
+    assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(mcp_report)
+    assert cli_report.connector_coverage is not None
+    assert cli_report.connector_coverage.status == "COMPLETE"
+    assert cli_report.connector_coverage.interface_catalog_sha256 == digest(catalog_path)
+    (finding,) = tuple(
+        item for item in cli_report.findings if item.rule_id == SAME_DOMAIN_RETURN_SPLIT_RULE_ID
+    )
+    assert finding.evidence["mapped_return_assignments"] == (
+        "J1.1=RETURN_SEGMENT_A; voltage_domain=signal-return",
+        "J1.2=RETURN_SEGMENT_B; voltage_domain=signal-return",
     )

@@ -31,6 +31,9 @@ from .design_lint_connector_footprint_candidates import (
     connector_footprint_peer_pin_candidates,
 )
 from .design_lint_connector_pin_candidates import connector_pin_candidates
+from .design_lint_connectors_return_domains import (
+    mapped_same_domain_return_split_net_candidates,
+)
 from .design_lint_connectors_supply_domains import (
     mapped_same_domain_supply_split_net_candidates,
     mapped_supply_domains_shared_net_candidates,
@@ -58,6 +61,7 @@ def connector_candidates(
         ),
         *mapped_supply_domains_shared_net_candidates(observed, connector_coverage),
         *mapped_same_domain_supply_split_net_candidates(observed, connector_coverage),
+        *mapped_same_domain_return_split_net_candidates(observed, connector_coverage),
         *mapped_supply_return_sharing_net_candidates(observed, connector_coverage),
         *mapped_supply_shield_sharing_net_candidates(observed, connector_coverage),
         *mapped_return_shield_sharing_net_candidates(observed, connector_coverage),

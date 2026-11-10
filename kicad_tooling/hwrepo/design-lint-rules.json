@@ -4760,6 +4760,47 @@
       "implementation_owner": "kicad_tooling/hwrepo/design_lint_connectors_supply_domains.py#mapped_same_domain_supply_split_net_candidates"
     },
     {
+      "rule_id": "connector.mapped_same_domain_return_split_nets",
+      "title": "Mapped return contacts in one connector voltage domain use separate nets",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Complete source-matched connector interface roles and voltage domains plus KiCad 10 native XML netlists normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted connector with complete, current source-matched interface coverage and a catalog digest, emit a REVIEW candidate when at least two mapped return contacts have the same exact authored voltage_domain, each has exactly one native net assignment, and those assignments span at least two distinct native nets.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "A shared voltage_domain label is only a review clue. It does not establish that return contacts must be electrically common or that separate nets are an error.",
+        "The predicate uses exact authored domain strings and complete current source-matched maps. DNP connectors, reasoned opens, ambiguous or multiply assigned pins, stale or incomplete maps, missing catalog digests, and contacts with different domains are excluded.",
+        "The finding does not inspect intervening circuitry, external wiring, physical connectivity, or PCB copper continuity. Star returns, filters, protection devices, isolation, or other intentional splits may be valid."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_mapped_same_domain_return_split.test_same_domain_return_contacts_split_across_nets_request_review",
+        "tests.test_connector_mapped_supply_return_share_native_fixture_lane.test_native_mapped_supply_return_share_fault_and_control",
+        "tests.test_design_lint_mcp_parity_mapped_contact_sharing.test_same_domain_return_split_findings_match_between_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_mapped_same_domain_return_split.test_common_net_different_domains_and_other_roles_are_controls",
+        "tests.test_connector_mapped_same_domain_return_split.test_dnp_open_ambiguous_stale_incomplete_and_digestless_controls",
+        "tests.test_connector_mapped_supply_return_share_native_fixture_lane.test_native_mapped_supply_return_share_fault_and_control"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_mapped_same_domain_return_split.test_candidate_is_deterministic_and_rejects_stale_source_projection"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/design_lint_connectors_return_domains.py#mapped_same_domain_return_split_net_candidates",
+        "kicad_tooling/hwrepo/design_lint_return_domain_split_candidate_evidence.py#project_mapped_return_domain_split_evidence",
+        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/design_lint_connectors_return_domains.py#mapped_same_domain_return_split_net_candidates"
+    },
+    {
       "rule_id": "connector.mapped_return_shield_share_net",
       "title": "Mapped connector return and shield share a native net",
       "status": "active",

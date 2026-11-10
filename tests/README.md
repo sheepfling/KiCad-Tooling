@@ -106,6 +106,19 @@ same source-matched coverage and exact native fixture lane:
 
 Run exact native exports separately with
 `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+Same-domain return contacts split across native nets on one connector use the
+same source-matched coverage and exact native fixture lane:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  tests/test_connector_mapped_same_domain_return_split.py \
+  tests/test_design_lint_mcp_parity_mapped_contact_sharing.py \
+  tests/test_connector_mapped_supply_return_share_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_same_domain_return_split_nets")'
+```
+
+Run exact native exports with `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
 The low-equivalent I2C resistance rule also has synthetic native fault/control schematics
 for an exact 1 kΩ boundary and a 750 Ω finding; source hashes and limits are in the
 [fixture README](fixtures/design_lint/i2c-low-equivalent-resistance-native/README.md).

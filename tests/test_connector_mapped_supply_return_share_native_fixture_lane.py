@@ -36,6 +36,7 @@ RULE_ID = "connector.mapped_supply_return_share_net"
 SUPPLY_SHIELD_RULE_ID = "connector.mapped_supply_shield_share_net"
 RETURN_SHIELD_RULE_ID = "connector.mapped_return_shield_share_net"
 SAME_DOMAIN_SUPPLY_SPLIT_RULE_ID = "connector.mapped_same_domain_supply_split_nets"
+SAME_DOMAIN_RETURN_SPLIT_RULE_ID = "connector.mapped_same_domain_return_split_nets"
 FIXTURE_CASES = {
     "mapped-supply-return-share-fault": (
         "fault.kicad_sch",
@@ -52,6 +53,7 @@ FIXTURE_CASES = {
 @pytest.mark.design_lint_rule(rule_id=SUPPLY_SHIELD_RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=RETURN_SHIELD_RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=SAME_DOMAIN_SUPPLY_SPLIT_RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=SAME_DOMAIN_RETURN_SPLIT_RULE_ID)
 @pytest.mark.skipif(
     os.environ.get("KICAD_RUN_NATIVE_CONNECTOR_FIXTURES") != "1",
     reason="exact-version native connector fixtures run in package acceptance",
@@ -195,3 +197,27 @@ def test_native_mapped_supply_return_share_fault_and_control(
     else:
         assert observed.nets["AUX_SHARED_NODE"] == ("J1.1", "J1.2")
         assert not split_findings
+
+    return_coverage = signal_sharing_coverage(
+        observed,
+        signal_names=("RETURN_CONTACT_A", "RETURN_CONTACT_B"),
+        roles=("return", "return"),
+        voltage_domains=("signal-return", "signal-return"),
+    )
+    return_report, _ = signal_sharing_report(observed, coverage=return_coverage)
+    return_findings = tuple(
+        item for item in return_report.findings if item.rule_id == SAME_DOMAIN_RETURN_SPLIT_RULE_ID
+    )
+    # The shared-node fixture is a control for this split-net rule; the
+    # separately assigned fixture is its fault, the inverse of LINT-371.
+    if fixture_case.endswith("control"):
+        assert observed.nets["SUPPLY_SOURCE"] == ("J1.1",)
+        assert observed.nets["RETURN_REFERENCE"] == ("J1.2",)
+        assert len(return_findings) == 1
+        assert return_findings[0].evidence["split_native_nets"] == (
+            "RETURN_REFERENCE",
+            "SUPPLY_SOURCE",
+        )
+    else:
+        assert observed.nets["AUX_SHARED_NODE"] == ("J1.1", "J1.2")
+        assert not return_findings

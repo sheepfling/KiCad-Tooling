@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 319 rules are implemented with synthetic regression coverage.
+The following 320 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 319 active rules.
+The catalog currently contains 320 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -439,6 +439,7 @@ skipped under prerelease policy.
 - `connector.mapped_return_shield_share_net`
 - `connector.mapped_supply_signal_share_net`
 - `connector.mapped_same_domain_supply_split_nets`
+- `connector.mapped_same_domain_return_split_nets`
 - `connector.return_supply_scope_singleton`
 - `connector.stateful_contact_topology_mismatch`
 - `connector.mapped_shield_signal_share_net`
@@ -847,6 +848,18 @@ standalone parity work when it closes a demonstrated feature regression.
   resistor checks, with ambiguous separators rejected. Tooling-owned fault and
   valid-control schematics exercise native KiCad exports on the existing
   digest-pinned lane; no cohort code or board data was imported.
+- **Latest progress (LINT-372, local acceptance):** Added the default-REVIEW
+  `connector.mapped_same_domain_return_split_nets` heuristic. Its test-first
+  baseline showed that same-domain return contacts assigned to separate nets
+  had no existing finding. Synthetic split/common-net controls, domain and
+  role controls, incomplete/stale/DNP/open/ambiguous exclusions, policy,
+  fingerprint, ordering, source-projection, and CLI/MCP parity coverage now
+  pass. The source-hashed exact native fault/control lane passed on KiCad
+  10.0.0 and 10.0.5. Scoped `scripts/ci.py` acceptance passed formatting,
+  source/architecture checks, Markdown gates, rule-scoped tests, Linux and
+  Windows Pyright, wheel/sdist builds, installed-wheel origin/version checks,
+  and the separate public-template playtest. No product-board source or
+  cohort fixture was imported.
 - **Latest progress (LINT-357, I2C explicit no-connect control):** A cohort
   false-positive report motivated a focused counterexample for
   `bus.i2c_missing_pullup`. Native exports must keep an SDA or SCL pin marked
@@ -4071,7 +4084,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 319 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 320 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -22407,6 +22420,54 @@ acceptance threads while new lint features proceed:
   `tests/test_design_lint_mcp_parity_mapped_contact_sharing.py`, and
   `tests/test_connector_mapped_supply_return_share_native_fixture_lane.py`
   with `design_lint_rule(rule_id="connector.mapped_same_domain_supply_split_nets")`.
+  Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-372 — Review same-domain return pins split within one connector
+
+- **Status:** Implemented as `connector.mapped_same_domain_return_split_nets`,
+  default `review`.
+- **Gap:** The existing same-domain split check covered mapped supplies but not
+  mapped returns. A connector map can identify two contacts as returns in one
+  authored domain while the current native netlist assigns them to separate
+  nets; ERC alone cannot know that those returns warrant human review.
+- **Predicate:** Require complete, current, source-matched connector interface
+  coverage and its catalog digest. For each fitted connector and exact
+  `voltage_domain`, report once when at least two mapped return contacts each
+  have exactly one net assignment and the group spans at least two distinct
+  native nets.
+- **Incremental value:** Test-first baseline with both contacts mapped as
+  returns in `signal-return`, assigned to separate native nets, emitted no
+  active finding. Existing mapped return checks cover sharing with shields,
+  supplies, signals, and explicit return contracts; they do not compare
+  same-domain return contacts on one connector against each other.
+- **Boundary:** The shared `voltage_domain` label is a review clue, not a
+  requirement to short returns together. Star returns, filters, protection,
+  isolation, and other intentional arrangements may explain a split. The
+  heuristic excludes DNP, reasoned-open, ambiguous or multiply assigned,
+  stale, incomplete, and digestless evidence. It does not infer electrical
+  fault, external wiring, or PCB copper continuity. Projects can promote,
+  disable, or ignore the exact finding through normal policy.
+- **Evidence:** Synthetic coverage includes split and common-net cases,
+  different domains, non-return roles, DNP, intentional open, ambiguous
+  assignments, stale and incomplete maps, missing catalog digests, policy,
+  exact ignore, deterministic ordering, and stale source projection. CLI and
+  MCP use the same typed service. The exact native lane reuses the existing
+  tooling-owned two-pin connector source pair: for this rule, its split-net
+  source is the fault and its shared-node source is the control. KiCad 10.0.0
+  and 10.0.5 Docker exports verify native parsing; no product-board source or
+  cohort fixture was imported.
+- **Local verification:** The focused synthetic, parity, catalog,
+  reachability, architecture, native-registry, and backlog-status selection
+  passed 31 tests with four opt-in native cases skipped. The exact Docker lane
+  passed all four fault/control exports across both pinned KiCad versions.
+  Scoped `scripts/ci.py` acceptance also passed, including strict Linux and
+  Windows-target typing, package builds, installed-wheel checks against the
+  separate public template checkout, and its external playtest.
+- **Selection:** Run
+  `tests/test_connector_mapped_same_domain_return_split.py`,
+  `tests/test_design_lint_mcp_parity_mapped_contact_sharing.py`, and
+  `tests/test_connector_mapped_supply_return_share_native_fixture_lane.py`
+  with `design_lint_rule(rule_id="connector.mapped_same_domain_return_split_nets")`.
   Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate
