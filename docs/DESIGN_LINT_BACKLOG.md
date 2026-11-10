@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 318 rules are implemented with synthetic regression coverage.
+The following 319 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 318 active rules.
+The catalog currently contains 319 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -438,6 +438,7 @@ skipped under prerelease policy.
 - `connector.mapped_supply_shield_share_net`
 - `connector.mapped_return_shield_share_net`
 - `connector.mapped_supply_signal_share_net`
+- `connector.mapped_same_domain_supply_split_nets`
 - `connector.return_supply_scope_singleton`
 - `connector.stateful_contact_topology_mismatch`
 - `connector.mapped_shield_signal_share_net`
@@ -818,6 +819,16 @@ standalone parity work when it closes a demonstrated feature regression.
   This makes intentional chassis bonding explicit for review while leaving
   DNP, open, ambiguous, stale, and incomplete mappings out of scope. The rule
   reuses the typed source-evidence path and exact native fixture lane.
+- **Latest progress (LINT-371, same-domain supply pins split within one connector):**
+  A complete, source-matched map now prompts REVIEW when two or more fitted
+  supply contacts on one connector share the same exact authored
+  `voltage_domain` but have distinct native net assignments. The baseline was
+  quiet for a two-pin generic connector with complete same-domain supply maps
+  and split nets. The rule remains a prompt: domains do not require common
+  nets, and filters, switches, protection, or separate sources can explain
+  the split. Existing synthetic connector fault/control schematics are
+  re-exported on exact KiCad 10.0.0 and 10.0.5 Docker images with the authored
+  roles changed to two supplies; no board or project source was added.
 - **Latest progress (LINT-364, named mapped signal opens):** The baseline
   returned no finding for a named `PWM_SYNC` contact with a complete,
   source-matched signal map and no native net assignment. The mapped-signal
@@ -4060,7 +4071,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 318 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 319 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -22358,6 +22369,44 @@ acceptance threads while new lint features proceed:
   `tests/test_design_lint_mcp_parity_mapped_contact_sharing.py`, and
   `tests/test_connector_mapped_supply_return_share_native_fixture_lane.py`
   with `design_lint_rule(rule_id="connector.mapped_return_shield_share_net")`.
+  Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-371 — Review same-domain supply pins split within one connector
+
+- **Status:** Implemented as `connector.mapped_same_domain_supply_split_nets`.
+- **Rule:** `connector.mapped_same_domain_supply_split_nets`, default `review`.
+- **Priority:** P1 connector supply topology review. Two contacts assigned to
+  one exact project-authored supply domain but different native nets may
+  reveal an undocumented split in a connector power path.
+- **Predicate:** Require complete, current, source-matched connector interface
+  coverage and its catalog digest. For each fitted connector and exact
+  `voltage_domain`, report once when at least two mapped supply pins each have
+  exactly one net assignment and the group spans at least two distinct nets.
+- **Incremental value:** A test-first baseline with two generic connector
+  pins, both mapped as supplies in `logic-5v`, and assignments to
+  `SUPPLY_SEGMENT_A` and `SUPPLY_SEGMENT_B` emitted no active review for this
+  same-connector relationship. Existing peer supply checks compare separate
+  connectors, while the shared-net domain rule checks a different topology.
+- **Boundary:** The identical domain text is a review clue, not a requirement
+  that the contacts be common. Separate sources, switches, filters, protection
+  devices, or other intentional arrangements remain possible. The rule does
+  not infer nominal or instantaneous voltage, current-sharing behavior,
+  intervening circuitry, external wiring, an electrical defect, or PCB copper
+  continuity. DNP, reasoned-open, multiply assigned, stale, incomplete, and
+  digestless cases are excluded. Project policy can promote or disable the
+  rule, and exact finding fingerprints can be ignored.
+- **Evidence:** Synthetic tests cover split and common-net cases, distinct
+  domains, other roles, DNP, explicit opens, ambiguous assignments, stale and
+  incomplete maps, missing digests, policy, ignores, deterministic ordering,
+  and typed source projection. The CLI/MCP parity case uses the same typed
+  design-lint service. Existing tooling-owned connector fault/control sources
+  are exported repeatedly with pinned KiCad 10.0.0 and 10.0.5 Docker images;
+  the separate-net source is the fault and shared-net source is the control.
+- **Selection:** Run
+  `tests/test_connector_mapped_same_domain_supply_split.py`,
+  `tests/test_design_lint_mcp_parity_mapped_contact_sharing.py`, and
+  `tests/test_connector_mapped_supply_return_share_native_fixture_lane.py`
+  with `design_lint_rule(rule_id="connector.mapped_same_domain_supply_split_nets")`.
   Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate

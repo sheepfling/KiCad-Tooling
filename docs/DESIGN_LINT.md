@@ -880,7 +880,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 318 active rules.
+The catalog currently contains 319 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -998,6 +998,31 @@ The same native lane also checks scoped comparisons. Splitting two
 same-domain supplies into separate one-reference groups triggers the separate
 `connector.return_supply_scope_singleton` review, so a narrower comparison
 cannot look silently complete.
+
+`connector.mapped_same_domain_supply_split_nets` prompts when two or more
+fitted contacts on one connector are mapped as supplies in the same exact
+`voltage_domain`, but the current native netlist assigns them to different
+nets. It requires complete, source-matched connector coverage and a catalog
+digest. A shared domain label does not mean the pins must share one net; a
+filter, switch, protection device, separate source, or another intentional
+topology may explain the split. The default is `review`, with the normal
+project rule-mode and exact-fingerprint ignore controls.
+
+Select the synthetic, parity, and pinned native regression slice with:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  tests/test_connector_mapped_same_domain_supply_split.py \
+  tests/test_design_lint_mcp_parity_mapped_contact_sharing.py \
+  tests/test_connector_mapped_supply_return_share_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_same_domain_supply_split_nets")'
+```
+
+Run exact KiCad 10.0.0 and 10.0.5 Docker exports with
+`KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. The fault and valid control reuse
+tooling-owned connector schematics whose native exports respectively assign
+the two mapped supplies to separate nets and to one shared net. This confirms
+native evidence handling; it does not establish that separate nets are wrong.
 
 ### Mapped connector return/supply scopes with isolated peers
 

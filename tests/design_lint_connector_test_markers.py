@@ -95,6 +95,7 @@ CONNECTOR_LINT_TEST_MODULES = frozenset(
         "tests/test_connector_mapped_supply_signal_share_native_fixture_lane.py",
         "tests/test_connector_mapped_supply_return_share.py",
         "tests/test_connector_mapped_supply_return_share_native_fixture_lane.py",
+        "tests/test_connector_mapped_same_domain_supply_split.py",
         "tests/test_connector_mapped_supply_shield_sharing.py",
         "tests/test_connector_mapped_return_shield_sharing.py",
         "tests/test_connector_mapped_shield_signal_sharing.py",

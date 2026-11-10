@@ -55,9 +55,20 @@ def signal_sharing_coverage(
     *,
     signal_names: tuple[str, str] = ("CONTROL_A", "CONTROL_B"),
     roles: tuple[ConnectorPinRole, ConnectorPinRole] = ("signal", "signal"),
+    voltage_domains: tuple[str, str] | None = None,
     unconnected_pin_reasons: Mapping[str, str] | None = None,
 ) -> ConnectorCoverageReport:
     """Build complete project-authored connector coverage for the synthetic netlist."""
+    selected_domains = voltage_domains or tuple(
+        {
+            "supply": "logic-5v",
+            "signal": "logic-3v3",
+            "return": "signal-return",
+            "shield": "chassis",
+            "other": "unspecified",
+        }[role]
+        for role in roles
+    )
     pins = tuple(
         InterfacePin(
             number=str(index),
@@ -70,13 +81,7 @@ def signal_sharing_coverage(
                 if roles[index - 1] == "signal"
                 else "passive"
             ),
-            voltage_domain={
-                "supply": "logic-5v",
-                "signal": "logic-3v3",
-                "return": "signal-return",
-                "shield": "chassis",
-                "other": "unspecified",
-            }[roles[index - 1]],
+            voltage_domain=selected_domains[index - 1],
             mating=signal,
             orientation="straight",
             mechanical_clearance="synthetic",
