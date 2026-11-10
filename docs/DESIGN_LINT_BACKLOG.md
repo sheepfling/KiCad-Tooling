@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 324 rules are implemented with synthetic regression coverage.
+The following 325 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 324 active rules.
+The catalog currently contains 325 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -4088,7 +4088,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 324 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 325 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -22784,6 +22784,38 @@ acceptance threads while new lint features proceed:
 - **Selection:** Run the catalog-derived
   `design_lint_rule(rule_id="net.numbered_returns")` selection and the native
   fixture switch `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-380 — Review an authored board fiducial minimum
+
+- **Status:** Implemented as opt-in `pcb.fiducial_count`, defaulting to
+  `review` when a project authors a requirement map.
+- **Cohort cue:** The kicad-happy release notes list an FD-001 fiducial-presence
+  check. That exposes a useful catalog gap; no upstream analyzer code or cohort
+  board was copied.
+- **Gap:** Native DRC does not know which fitted footprints the assembly
+  requirement designates as fiducials, what minimum applies, or which board
+  side is required. Guessing a universal count would be unsafe.
+- **Contract and predicate:** Each project requirement supplies an independent
+  basis, positive minimum, exact accepted KiCad footprint identifiers, and
+  `front`, `back`, or `either`. Count only fitted native board footprints
+  matching those identifiers, case-insensitively. Exclude DNP and unrelated
+  footprints. A missing or stale source-bound map/snapshot is BLOCKED, not a
+  clean result.
+- **Boundary:** This does not infer fiducial identity, inspect panel data,
+  evaluate pad or mask geometry, vision performance, assembly settings, or
+  manufacturing suitability. It is a configurable count screen, not assembly
+  approval.
+- **Fixtures:** Synthetic fault/control and metamorphic cases cover side,
+  exact identity, DNP, exact minimum, ordering, stale evidence, report detail,
+  review/block/off, and exact ignore behavior. The digest-pinned Docker lane
+  checks a synthetic board under KiCad 10.0.0 and 10.0.5, repeats the snapshot,
+  and distinguishes one fitted exact match from a minimum of two and the
+  one-count boundary control.
+- **Selection:** Run
+  `tests/test_pcb_fiducials.py` and
+  `tests/test_pcb_fiducials_native_fixture_lane.py` with
+  `design_lint_rule(rule_id="pcb.fiducial_count")`. Native fixtures use
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`.
 
 ## Completion and release gate
 

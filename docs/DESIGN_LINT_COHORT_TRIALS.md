@@ -2430,11 +2430,25 @@ for dispositions and timing; leave unmeasured values unstated.
   they do not establish field precision or electrical correctness. No upstream
   code, fixture, product design, or proprietary data was imported.
 
+### Source screen: kicad-happy fiducial presence
+
+The upstream release notes list FD-001 for fiducial presence. This was recorded
+as a gap cue only; no upstream code, cohort board, or project requirement was
+copied. The local rule requires each project to name an independent basis,
+minimum count, exact accepted footprint identifiers, and board side. It counts
+fitted board footprints from source-bound native KiCad snapshots and keeps
+panel data, mask geometry, assembly vision, and manufacturing suitability
+outside its claim. Synthetic controls and exact-version Docker fixtures define
+the current evidence boundary. This is a local opt-in adaptation, not an
+evaluation of upstream precision or reviewer effort.
+
+Source: [kicad-happy release notes][happy-fiducial-release-notes].
+
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 324 active rules. Each entry has a deterministic predicate, evidence
+contains 325 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-Of the 324 active rules, 269 default to `review`, 54 to `off`, and
+Of the 325 active rules, 270 default to `review`, 54 to `off`, and
 `pcb.required_fitted_reference` to `block`. Off-by-default checks include
 schematic geometry, generic peer assignment, selected component topology
 reviews such as the BJT base-bias and base/collector same-net prompts, and
@@ -2457,6 +2471,7 @@ it does not claim field validation or effectiveness against private boards.
 [calcumaker-revision]: https://github.com/calcumaker/calcumaker/commit/113a283
 [calcumaker-wiring-review]: <https://github.com/calcumaker/calcumaker/blob/113a283/hardware/WIRING_REVIEW.md>
 [happy-changelog]: https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md
+[happy-fiducial-release-notes]: https://github.com/aklofas/kicad-happy/blob/main/release-notes.md
 [happy-cp003-commit]: https://github.com/aklofas/kicad-happy/commit/06840467ad0f5d76af45f64449b1f5ecb10f052f
 [happy-cp003-license]: <https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/LICENSE>
 [happy-cp003-release]: https://github.com/aklofas/kicad-happy/releases/tag/v2.3.1

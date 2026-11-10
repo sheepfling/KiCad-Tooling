@@ -12,6 +12,7 @@ from .discovery import ProjectConfig
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import PcbSignalPathRuleCoverageReport
+from .pcb_fiducial_models import PcbFiducialCoverageReport
 from .pcb_keepout_models import PcbKeepoutCoverageReport
 from .pcb_protection_path_models import PcbProtectionPathCoverageReport
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport
@@ -92,6 +93,11 @@ def pcb_geometry_fast_path_reports(
         PcbComponentInventoryCoverageReport(
             status=("DISABLED" if config.kind is ProjectKind.PCB else "NOT_APPLICABLE"),
             mode=inventory_mode if config.kind is ProjectKind.PCB else None,
+            fiducial_coverage=report(
+                PcbFiducialCoverageReport,
+                policy.pcb_fiducial_map,
+                "pcb.fiducial_count",
+            ),
         ),
         report(PcbThermalViaCoverageReport, policy.pcb_thermal_via_map, "pcb.thermal_via_coverage"),
     )

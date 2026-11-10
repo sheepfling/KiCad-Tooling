@@ -39,6 +39,7 @@ from .design_lint_missing_evidence import (
 from .design_lint_pcb_coverage_policy import (
     normalize_pcb_mapped_coverage_policy,
 )
+from .design_lint_pcb_fiducial_scan import normalize_pcb_fiducial_coverage
 from .design_lint_pcb_geometry_coverage_policy import normalize_pcb_input_coverage_policy
 from .design_lint_pcb_inputs import PcbCandidateInputs
 from .design_lint_peer_evaluation import scan_peer_design_lint_evidence
@@ -246,6 +247,22 @@ def prepare_evaluation(
         )
     pcb_component_inventory_coverage = (
         request.pcb_component_inventory_coverage or PcbComponentInventoryCoverageReport()
+    )
+    fiducial_override = next(
+        (item for item in policy.rules if item.rule_id == "pcb.fiducial_count"),
+        None,
+    )
+    fiducial_mode = "review" if fiducial_override is None else fiducial_override.mode
+    pcb_component_inventory_coverage = pcb_component_inventory_coverage.model_copy(
+        update={
+            "fiducial_coverage": normalize_pcb_fiducial_coverage(
+                pcb_component_inventory_coverage.fiducial_coverage,
+                policy.pcb_fiducial_map,
+                fiducial_mode,
+                source_hashes=source_hashes,
+                netlist_sha256=coach.netlist_sha256,
+            )
+        }
     )
     pcb_track_width_coverage = request.pcb_track_width_coverage
     if pcb_track_width_coverage is None:

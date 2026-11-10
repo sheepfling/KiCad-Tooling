@@ -20,6 +20,7 @@ from .model_primitives import StrictModel
 from .oscillator_output_path_models import OscillatorOutputPathMap
 from .pcb_decoupling_models import PcbDecouplingMap
 from .pcb_drc_models import PcbDifferentialPairRuleMap, PcbSignalPathRuleMap
+from .pcb_fiducial_models import PcbFiducialMap
 from .pcb_keepout_models import PcbKeepoutMap
 from .pcb_mechanical_edge_models import PcbMechanicalEdgeClearanceMap
 from .pcb_protection_path_models import PcbProtectionPathMap
@@ -81,6 +82,7 @@ class DesignLintPolicy(StrictModel):
     pcb_rf_module_antenna_map: PcbRfModuleAntennaMap | None = None
     pcb_touch_pad_clearance_map: PcbTouchPadClearanceMap | None = None
     pcb_thermal_via_map: PcbThermalViaMap | None = None
+    pcb_fiducial_map: PcbFiducialMap | None = None
     pcb_required_fitted_reference_map: PcbRequiredFittedReferenceMap | None = None
 
     @model_validator(mode="after")

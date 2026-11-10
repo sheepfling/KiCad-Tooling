@@ -292,6 +292,7 @@ DesignLintRuleId = Literal[
     "pcb.touch_pad_reference_clearance",
     "pcb.explicit_thermal_pad_scope_unreviewed",
     "pcb.thermal_via_coverage",
+    "pcb.fiducial_count",
     "pcb.schematic_component_inventory",
     "pcb.board_only_footprint",
     "pcb.required_fitted_reference",

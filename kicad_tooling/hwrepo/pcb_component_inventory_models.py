@@ -8,6 +8,7 @@ from pydantic import Field, model_validator
 
 from .model_primitives import Digest, Identifier, NonEmptyText, RepositoryPath, StrictModel
 from .pcb_board_only_footprint_models import PcbBoardOnlyFootprintCoverage
+from .pcb_fiducial_models import PcbFiducialCoverageReport
 from .pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
 from .pcb_required_fitted_reference_models import PcbRequiredFittedReferenceCoverage
 
@@ -209,6 +210,7 @@ class PcbComponentInventoryCoverageReport(StrictModel):
     required_fitted_reference_coverage: PcbRequiredFittedReferenceCoverage = Field(
         default_factory=PcbRequiredFittedReferenceCoverage
     )
+    fiducial_coverage: PcbFiducialCoverageReport = Field(default_factory=PcbFiducialCoverageReport)
     issue: NonEmptyText | None = None
 
     @model_validator(mode="after")

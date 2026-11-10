@@ -204,6 +204,7 @@ class DesignLintReport(StrictModel):
         validate_pcb_source_consistency(
             (
                 self.pcb_component_inventory,
+                self.pcb_component_inventory.fiducial_coverage,
                 self.pcb_decoupling,
                 self.pcb_differential_pair_rules,
                 self.pcb_keepout_coverage,
@@ -219,6 +220,7 @@ class DesignLintReport(StrictModel):
             report_netlist_sha256=self.netlist_sha256,
             netlist_reports=(
                 self.pcb_component_inventory,
+                self.pcb_component_inventory.fiducial_coverage,
                 self.pcb_decoupling,
                 self.pcb_keepout_coverage,
                 self.pcb_protection_path,

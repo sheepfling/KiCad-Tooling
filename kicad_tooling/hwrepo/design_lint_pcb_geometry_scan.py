@@ -14,6 +14,7 @@ from .design_lint_pcb_coverage_common import (
     PcbRuleMode,
     map_sha256,
 )
+from .design_lint_pcb_fiducial_scan import blocked_pcb_fiducial_coverage
 from .design_lint_pcb_geometry_capture import capture_pcb_geometry_source
 from .design_lint_pcb_geometry_fast_paths import pcb_geometry_fast_path_reports
 from .design_lint_pcb_layout_coverage import layout_coverage_reports
@@ -32,6 +33,8 @@ from .pcb_drc_models import (
     PcbSignalPathRuleCoverageReport,
     PcbSignalPathRuleMap,
 )
+from .pcb_fiducial_models import PcbFiducialMap
+from .pcb_fiducials import evaluate_pcb_fiducials
 from .pcb_geometry_receipts import verify_pcb_geometry_receipts
 from .pcb_keepout_models import (
     PcbKeepoutCoverageReport,
@@ -93,6 +96,7 @@ def scan_pcb_geometry(
     rf_antenna_map: PcbRfModuleAntennaMap | None = policy.pcb_rf_module_antenna_map
     touch_pad_clearance_map: PcbTouchPadClearanceMap | None = policy.pcb_touch_pad_clearance_map
     thermal_via_map: PcbThermalViaMap | None = policy.pcb_thermal_via_map
+    fiducial_map: PcbFiducialMap | None = policy.pcb_fiducial_map
     inventory_modes = resolve_pcb_component_inventory_modes(policy)
     inventory_mode = inventory_modes.inventory
     population_mode = inventory_modes.population
@@ -113,6 +117,7 @@ def scan_pcb_geometry(
         and rf_antenna_map is None
         and touch_pad_clearance_map is None
         and thermal_via_map is None
+        and fiducial_map is None
         and not inventory_required
     ):
         return pcb_geometry_fast_path_reports(
@@ -143,6 +148,8 @@ def scan_pcb_geometry(
     )
     thermal_via_override = overrides.get("pcb.thermal_via_coverage")
     thermal_via_mode = "review" if thermal_via_override is None else thermal_via_override.mode
+    fiducial_override = overrides.get("pcb.fiducial_count")
+    fiducial_mode = "review" if fiducial_override is None else fiducial_override.mode
     reference_plane_override = overrides.get("pcb.reference_plane_coverage")
     reference_plane_mode = (
         "review" if reference_plane_override is None else reference_plane_override.mode
@@ -159,6 +166,7 @@ def scan_pcb_geometry(
         touch_pad_clearance_map is None or touch_pad_clearance_mode == "off"
     )
     thermal_via_disabled = thermal_via_map is None or thermal_via_mode == "off"
+    fiducial_disabled = fiducial_map is None or fiducial_mode == "off"
     inventory_disabled = not inventory_required
     if (
         decoupling_disabled
@@ -171,6 +179,7 @@ def scan_pcb_geometry(
         and rf_antenna_disabled
         and touch_pad_clearance_disabled
         and thermal_via_disabled
+        and fiducial_disabled
         and inventory_disabled
         and not route_measurement_active
     ):
@@ -216,6 +225,19 @@ def scan_pcb_geometry(
                 required_fitted_reference_map=policy.pcb_required_fitted_reference_map,
                 required_fitted_reference_mode=required_fitted_reference_mode,
             )
+        fiducial_coverage = (
+            evaluate_pcb_fiducials(fiducial_map, fiducial_mode, evidence, netlist_sha256)
+            if fiducial_map is not None and not fiducial_disabled
+            else blocked_pcb_fiducial_coverage(
+                fiducial_map,
+                fiducial_mode,
+                board_relative,
+                "Fiducial coverage is disabled by project policy",
+            )
+        )
+        inventory_report = inventory_report.model_copy(
+            update={"fiducial_coverage": fiducial_coverage}
+        )
         modes: dict[str, PcbRuleMode] = {
             "pcb.decoupling_proximity": decoupling_mode,
             "pcb.protection_entry_path": protection_path_mode,
@@ -227,6 +249,7 @@ def scan_pcb_geometry(
             "pcb.rf_module_antenna_keepout_coverage": rf_antenna_mode,
             "pcb.touch_pad_reference_clearance": touch_pad_clearance_mode,
             "pcb.thermal_via_coverage": thermal_via_mode,
+            "pcb.fiducial_count": fiducial_mode,
             "pcb.schematic_component_inventory": inventory_mode,
             "pcb.schematic_pcb_dnp_mismatch": population_mode,
             "pcb.schematic_pcb_value_mismatch": value_mode,
@@ -447,6 +470,16 @@ def scan_pcb_geometry(
                 status="DISABLED" if config.kind is ProjectKind.PCB else "NOT_APPLICABLE",
                 mode=inventory_mode if config.kind is ProjectKind.PCB else None,
             )
+        )
+        inventory_report = inventory_report.model_copy(
+            update={
+                "fiducial_coverage": blocked_pcb_fiducial_coverage(
+                    fiducial_map,
+                    fiducial_mode,
+                    board_relative,
+                    issue,
+                )
+            }
         )
     return (
         decoupling_report,

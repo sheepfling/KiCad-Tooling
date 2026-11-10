@@ -8,6 +8,7 @@ from .model_primitives import Digest
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import PcbDifferentialPairRuleCoverageReport, PcbSignalPathRuleCoverageReport
+from .pcb_fiducial_models import PcbFiducialCoverageReport
 from .pcb_keepout_models import PcbKeepoutCoverageReport
 from .pcb_protection_path_models import PcbProtectionPathCoverageReport
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport
@@ -21,6 +22,7 @@ PcbSourceCoverage: TypeAlias = (
     PcbComponentInventoryCoverageReport
     | PcbDecouplingCoverageReport
     | PcbDifferentialPairRuleCoverageReport
+    | PcbFiducialCoverageReport
     | PcbKeepoutCoverageReport
     | PcbProtectionPathCoverageReport
     | PcbReferencePlaneCoverageReport
@@ -35,6 +37,7 @@ PcbSourceCoverage: TypeAlias = (
 PcbNetlistSourceCoverage: TypeAlias = (
     PcbComponentInventoryCoverageReport
     | PcbDecouplingCoverageReport
+    | PcbFiducialCoverageReport
     | PcbKeepoutCoverageReport
     | PcbProtectionPathCoverageReport
     | PcbReferencePlaneCoverageReport
@@ -65,6 +68,7 @@ def validate_pcb_source_consistency(
     for name, item in zip(
         (
             "PCB component inventory",
+            "PCB fiducial",
             "PCB decoupling",
             "PCB keepout",
             "PCB protection-path",

@@ -40,6 +40,7 @@ def assemble_design_lint_report(
     connector_return_distribution_coverage = context.connector_return_distribution_coverage
     pcb_decoupling_coverage = context.pcb_decoupling_coverage
     pcb_component_inventory_coverage = context.pcb_component_inventory_coverage
+    pcb_fiducial_coverage = pcb_component_inventory_coverage.fiducial_coverage
     pcb_protection_path_coverage = context.pcb_protection_path_coverage
     pcb_track_width_coverage = context.pcb_track_width_coverage
     pcb_reference_plane_coverage = context.pcb_reference_plane_coverage
@@ -83,6 +84,7 @@ def assemble_design_lint_report(
         or pcb_decoupling_coverage.status == "BLOCKED"
         or pcb_component_inventory_coverage.status == "BLOCKED"
         or pcb_component_inventory_coverage.required_fitted_reference_coverage.status == "BLOCKED"
+        or pcb_fiducial_coverage.status == "BLOCKED"
         or pcb_protection_path_coverage.status == "BLOCKED"
         or pcb_track_width_coverage.status == "BLOCKED"
         or pcb_reference_plane_coverage.status == "BLOCKED"
@@ -164,6 +166,7 @@ def assemble_design_lint_report(
             if pcb_component_inventory_coverage.required_fitted_reference_coverage.issue is None
             else (pcb_component_inventory_coverage.required_fitted_reference_coverage.issue,)
         )
+        + (() if pcb_fiducial_coverage.issue is None else (pcb_fiducial_coverage.issue,))
         + (
             ()
             if pcb_protection_path_coverage.issue is None
@@ -296,6 +299,14 @@ def assemble_design_lint_report(
         actions += ("Repair source-bound PCB geometry evidence, then rerun design lint.",)
     if pcb_component_inventory_coverage.status == "BLOCKED":
         actions += ("Restore the exact native PCB footprint inventory and rerun design lint.",)
+    if pcb_fiducial_coverage.status == "BLOCKED":
+        actions += (
+            "Restore source-bound native PCB footprint evidence for the configured fiducial requirement, then rerun design lint.",
+        )
+    if pcb_fiducial_coverage.status == "INCOMPLETE":
+        actions += (
+            "Review each authored board-side fiducial minimum and its exact matching native footprint placements; panel fiducials are outside this check.",
+        )
     if pcb_decoupling_coverage.status == "INCOMPLETE":
         actions += (
             "Review mapped IC and capacitor pad identities, fitted state, copper paths, and the project-authored distance limit.",

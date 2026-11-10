@@ -13760,6 +13760,52 @@
       "implementation_owner": "kicad_tooling/hwrepo/pcb_required_fitted_reference_checks.py#compare_required_fitted_references"
     },
     {
+      "rule_id": "pcb.fiducial_count",
+      "title": "Authored board fiducial minimum is not met",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Project-authored exact footprint identities, minimum count, and side compared with source-bound KiCad 10 native PCB footprint snapshot schema 12 or later",
+      "predicate": "For each explicitly configured board-level requirement, count fitted native PCB footprint placements whose exact case-insensitive library identifier appears in the authored accepted_footprints list and whose copper side matches front, back, or either. Report a review candidate when the count is below the authored minimum or source-bound footprint evidence is unavailable.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned pcbnew profiles; exact project version and image are checked"
+      ],
+      "limitations": [
+        "The project owner must provide a reviewed requirement basis, positive minimum count, exact accepted footprint identities, and side. No universal fiducial count is inferred; without a map, the check is not requested.",
+        "Only board-level native footprint placements are counted. Panel fiducials, pad shape, copper and solder-mask geometry, vision performance, assembly setup, and manufacturing suitability are outside this predicate.",
+        "The check trusts the authored footprint identity list and native DNP flags. A passing result confirms only the configured count and does not approve assembly or fabrication."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_fiducials.test_exact_footprint_identity_and_side_control_the_fiducial_count",
+        "tests.test_pcb_fiducials.test_policy_can_promote_disable_or_exactly_ignore_the_review_candidate",
+        "tests.test_pcb_fiducials.test_missing_coverage_for_an_authored_map_is_blocked_not_clean",
+        "tests.test_pcb_fiducials.test_snapshot_schema_without_footprint_placements_is_blocked",
+        "tests.test_pcb_fiducials_native_fixture_lane.test_native_fault_and_control_are_source_bound"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_fiducials.test_either_side_counts_fitted_exact_matches_and_excludes_dnp_and_other_parts",
+        "tests.test_pcb_fiducials.test_footprint_identifier_match_ignores_case_but_not_partial_names",
+        "tests.test_pcb_fiducials.test_back_side_and_exact_minimum_boundary_are_deterministic",
+        "tests.test_pcb_fiducials_native_fixture_lane.test_native_fault_and_control_are_source_bound"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_fiducials.test_reordering_native_footprints_does_not_change_evidence"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_fiducials.py#pcb_fiducial_entries",
+        "kicad_tooling/hwrepo/design_lint_pcb_fiducial_candidate_evidence.py#PcbFiducialCandidate",
+        "kicad_tooling/hwrepo/design_lint_pcb_fiducial_report.py#pcb_fiducial_report_lines",
+        "kicad_tooling/hwrepo/design_lint_pcb_geometry_scan.py#scan_pcb_geometry",
+        "kicad_tooling/ci_hosted_pcb_fiducials.py#pcb_fiducial_fixture_lane"
+      ],
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_fiducials.py#pcb_fiducial_entries"
+    },
+    {
       "rule_id": "pcb.schematic_pcb_dnp_mismatch",
       "title": "Schematic and PCB DNP states differ",
       "status": "active",

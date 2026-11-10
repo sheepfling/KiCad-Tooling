@@ -38,6 +38,7 @@ HOSTED_PCB_REFERENCE_PLANE_MODULE = "ci_hosted_pcb_reference_planes.py"
 HOSTED_PCB_REFERENCE_TRANSITION_MODULE = "ci_hosted_pcb_reference_transitions.py"
 HOSTED_PCB_ACCESS_MODULE = "ci_hosted_pcb_access.py"
 HOSTED_PCB_THERMAL_VIA_MODULE = "ci_hosted_pcb_thermal_vias.py"
+HOSTED_PCB_FIDUCIAL_MODULE = "ci_hosted_pcb_fiducials.py"
 HOSTED_PCB_GEOMETRY_MODULES = (
     "ci_hosted_pcb_fixture_support.py",
     "ci_hosted_pcb_geometry_fixtures.py",
@@ -124,6 +125,15 @@ def test_thermal_via_hosted_lane_stays_theme_scoped() -> None:
     assert (
         "kicad_tooling/ci_hosted_pcb_thermal_vias.py#pcb_thermal_via_fixture_lane" in catalog_text
     )
+
+
+def test_fiducial_hosted_lane_stays_theme_scoped() -> None:
+    module = REPO_ROOT / "kicad_tooling" / HOSTED_PCB_FIDUCIAL_MODULE
+    coordinator_text = (REPO_ROOT / "kicad_tooling" / "ci_hosted.py").read_text(encoding="utf-8")
+
+    assert _line_count(module) < IMPLEMENTATION_MAX_LINES
+    assert "def pcb_fiducial_fixture_lane(" not in coordinator_text
+    assert "from .ci_hosted_pcb_fiducials import pcb_fiducial_fixture_lane" in coordinator_text
 
 
 def test_pcb_geometry_hosted_fixtures_stay_split_by_lint_theme() -> None:

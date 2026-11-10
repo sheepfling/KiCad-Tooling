@@ -4,6 +4,30 @@ from __future__ import annotations
 
 PCB_RULE_NODE_CASES = (
     (
+        "pcb.fiducial_count",
+        "tests/test_pcb_fiducials.py::test_exact_footprint_identity_and_side_control_the_fiducial_count",
+    ),
+    (
+        "pcb.fiducial_count",
+        "tests/test_pcb_fiducials.py::test_policy_can_promote_disable_or_exactly_ignore_the_review_candidate",
+    ),
+    (
+        "pcb.fiducial_count",
+        "tests/test_pcb_fiducials.py::test_either_side_counts_fitted_exact_matches_and_excludes_dnp_and_other_parts",
+    ),
+    (
+        "pcb.fiducial_count",
+        "tests/test_pcb_fiducials.py::test_footprint_identifier_match_ignores_case_but_not_partial_names",
+    ),
+    (
+        "pcb.fiducial_count",
+        "tests/test_pcb_fiducials.py::test_snapshot_schema_without_footprint_placements_is_blocked",
+    ),
+    (
+        "pcb.fiducial_count",
+        "tests/test_pcb_fiducials_native_fixture_lane.py::test_native_fault_and_control_are_source_bound",
+    ),
+    (
         "pcb.reference_plane_unanchored_island",
         "tests/test_pcb_reference_plane_unanchored_island.py::test_mapped_unanchored_island_emits_source_bound_review_candidate",
     ),

@@ -880,7 +880,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 324 active rules.
+The catalog currently contains 325 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -8889,3 +8889,43 @@ This is geometry and connectivity coverage only. It does not prove that a via
 lies within the pad's copper shape, estimate thermal resistance or temperature,
 validate solderability, or establish thermal adequacy or fabrication readiness.
 The project owner must provide and review the independent requirement basis.
+
+## Review a project-authored PCB fiducial minimum
+
+Use `design_lint.pcb_fiducial_map` when a reviewed assembly requirement specifies
+a board-level minimum and the exact KiCad footprint identities that represent
+fiducials. The following example is synthetic; it does not prescribe a count
+or placement:
+
+```json
+{
+  "design_lint": {
+    "pcb_fiducial_map": {
+      "schema_version": "1",
+      "requirements": [
+        {
+          "id": "synthetic-board-fiducials",
+          "basis": "Synthetic assembly drawing requirement, revision 1",
+          "minimum_count": 3,
+          "accepted_footprints": ["Fiducial:Fiducial_1mm_Mask2mm"],
+          "side": "front"
+        }
+      ]
+    }
+  }
+}
+```
+
+The check counts fitted native PCB footprints whose complete library
+identifier exactly matches an authored entry, ignoring case. It applies
+`front`, `back`, or `either` to the board side. Use separate requirements
+when the front and back have different minima. DNP footprints and other
+footprint identities do not count. Without a map, the rule is not requested;
+with a map, it defaults to `review`, and project policy can choose `block`,
+`off`, or an exact fingerprint ignore.
+
+Evidence is bound to the board hash, native footprint snapshot, project
+netlist, KiCad version, image, and probe digest. This is a count screen only.
+It does not inspect panel fiducials, pad or solder-mask geometry, vision
+performance, placement tolerance, assembly setup, or manufacturing suitability.
+Review the actual board and assembly requirements before approving a build.

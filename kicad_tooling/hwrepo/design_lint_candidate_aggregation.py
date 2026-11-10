@@ -39,6 +39,7 @@ from .design_lint_pcb_board_only_candidates import pcb_board_only_footprint_cand
 from .design_lint_pcb_component_inventory_candidates import (
     pcb_component_inventory_candidates,
 )
+from .design_lint_pcb_fiducial_candidates import pcb_fiducial_candidates
 from .design_lint_pcb_inputs import PcbCandidateInputs
 from .design_lint_pcb_measurement_candidates import scan_pcb_measurement_candidates
 from .design_lint_pcb_pad_net_candidates import pcb_pad_net_candidates
@@ -233,6 +234,7 @@ def scan_candidate_result(
     found.extend(connector_result.candidates)
     found.extend(return_distribution_candidates(connector_return_distribution))
     found.extend(pcb_component_inventory_candidates(pcb_component_inventory_coverage))
+    found.extend(pcb_fiducial_candidates(pcb_component_inventory_coverage))
     found.extend(pcb_board_only_footprint_candidates(pcb_component_inventory_coverage))
     found.extend(pcb_required_fitted_reference_candidates(pcb_component_inventory_coverage))
     found.extend(pcb_pad_net_candidates(pcb_component_inventory_coverage))

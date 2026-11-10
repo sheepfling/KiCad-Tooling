@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .design_lint_pcb_board_only_report import board_only_footprint_report_lines
 from .design_lint_pcb_drc_report import pcb_drc_rule_coverage_report_lines
+from .design_lint_pcb_fiducial_report import pcb_fiducial_report_lines
 from .design_lint_pcb_required_fitted_reference_report import (
     required_fitted_reference_report_lines,
 )
@@ -423,4 +424,5 @@ def pcb_coverage_report_lines(report: DesignLintReport) -> list[str]:
             lines.append(f"  Coverage issue: {inventory.issue}")
     lines.extend(board_only_footprint_report_lines(inventory))
     lines.extend(required_fitted_reference_report_lines(inventory))
+    lines.extend(pcb_fiducial_report_lines(inventory.fiducial_coverage))
     return lines

@@ -167,6 +167,25 @@ def validate_source_bound_evidence(
         )
         if actual_board_only_findings != expected_board_only_findings:
             raise ValueError("Board-only footprint findings must match coverage rows")
+    fiducials = inventory.fiducial_coverage
+    _validate_component_coverage_netlist_hash(
+        "PCB fiducial",
+        fiducials.status,
+        fiducials.netlist_sha256,
+        netlist_sha256,
+        required_statuses=frozenset({"COMPLETE", "INCOMPLETE"}),
+    )
+    if findings_complete and fiducials.status in {"COMPLETE", "INCOMPLETE", "BLOCKED"}:
+        expected_fiducial_findings = (
+            1
+            if fiducials.status == "BLOCKED"
+            else sum(entry.status == "INCOMPLETE" for entry in fiducials.entries)
+        )
+        actual_fiducial_findings = sum(
+            finding.rule_id == "pcb.fiducial_count" for finding in findings
+        )
+        if actual_fiducial_findings != expected_fiducial_findings:
+            raise ValueError("PCB fiducial findings must match source-bound coverage rows")
     if findings_complete:
         validate_required_fitted_reference_findings(inventory, findings)
     _validate_component_coverage_netlist_hash(
