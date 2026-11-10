@@ -18,6 +18,11 @@ from tests.design_lint_fixtures.connector_mapped_peer_supply_split import (
     mapped_peer_supply_netlist,
     mapped_peer_supply_report,
 )
+from tests.design_lint_fixtures.connector_reviewed_peer_signal_split import (
+    peer_signal_coverage,
+    peer_signal_netlist,
+    peer_signal_report,
+)
 
 
 def mapped_connector_rule_ids() -> set[str]:
@@ -44,6 +49,11 @@ def mapped_connector_rule_ids() -> set[str]:
         mapped_supplies,
         coverage=mapped_peer_supply_coverage(mapped_supplies),
     )
+    mapped_signals = peer_signal_netlist(functions=("CONTACT_A", "CONTACT_B"))
+    mapped_signal_report = peer_signal_report(
+        mapped_signals,
+        coverage=peer_signal_coverage(mapped_signals),
+    )
     return {
         item.rule_id
         for report in (
@@ -55,6 +65,7 @@ def mapped_connector_rule_ids() -> set[str]:
             shield_supply,
             mapped_return_report,
             mapped_supply_report,
+            mapped_signal_report,
         )
         for item in report.findings
     }

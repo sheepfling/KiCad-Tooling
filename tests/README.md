@@ -170,6 +170,24 @@ Run exact native fault and common-net control exports with
 SHA-256 values, and limitations are in the
 [peer-supply fixture README](fixtures/design_lint/mapped-named-peer-supply-native/README.md).
 
+Named mapped peer signals use the corresponding scoped review when complete
+connector maps agree on an interface signal, voltage domain, and reviewed peer
+group but assign separate native nets. The map labels set review scope only;
+they do not require commoning. Its synthetic fault/control, CLI/MCP parity,
+and exact-version native checks are:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  tests/test_connector_mapped_named_peer_signal_split.py \
+  tests/test_design_lint_mcp_parity_reviewed_peer_signal_split.py \
+  tests/test_connector_mapped_named_peer_signal_split_native.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_named_peer_signal_split_nets")'
+```
+
+Enable `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` for KiCad 10.0.0 and 10.0.5
+Docker exports. Synthetic source details and hashes are in the
+[peer-signal fixture README](fixtures/design_lint/mapped-named-peer-signal-native/README.md).
+
 The low-equivalent I2C resistance rule also has synthetic native fault/control schematics
 for an exact 1 kΩ boundary and a 750 Ω finding; source hashes and limits are in the
 [fixture README](fixtures/design_lint/i2c-low-equivalent-resistance-native/README.md).

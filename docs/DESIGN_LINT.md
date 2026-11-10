@@ -880,7 +880,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 323 active rules.
+The catalog currently contains 324 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -1075,6 +1075,37 @@ Select the synthetic, CLI/MCP parity, and pinned native tests with:
 
 Set `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` to export the tooling-owned fault
 and common-net control twice with exact KiCad 10.0.0 and 10.0.5 Docker images.
+
+### Named mapped peer signals in one domain with split nets
+
+`connector.mapped_named_peer_signal_split_nets` prompts when fitted signal
+contacts on unlike connector symbols have the same exact mapped
+`interface_signal`, `voltage_domain`, and current `peer_assignment_group`, but
+use separate exact native nets. It requires current complete source-matched
+maps, one unambiguous net per participant, and a meaningful native pin
+function. Existing repeated-pin peer checks retain cases they already cover.
+
+These map fields set review scope only. They do not say the contacts must be
+common or that separate assignments are defects. DNP, open, ambiguous, stale,
+incomplete, digestless, unscoped, generic, return-like, recognized power, and
+same-symbol cases are excluded or remain with existing checks. Separate routes,
+switches, filters, protection, and isolation may be intentional. The rule does
+not establish PCB copper continuity.
+
+Select its synthetic, CLI/MCP parity, and pinned native cases with:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  tests/test_connector_mapped_named_peer_signal_split.py \
+  tests/test_design_lint_mcp_parity_reviewed_peer_signal_split.py \
+  tests/test_connector_mapped_named_peer_signal_split_native.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_named_peer_signal_split_nets")'
+```
+
+Set `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` to export the synthetic split-net
+fault and common-net control twice with exact KiCad 10.0.0 and 10.0.5 Docker
+images. The source hashes and ownership are recorded in:
+[fixture README](../tests/fixtures/design_lint/mapped-named-peer-signal-native/README.md).
 
 ### Named mapped peer supplies in a shared domain with split nets
 

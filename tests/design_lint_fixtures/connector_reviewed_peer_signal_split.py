@@ -26,6 +26,7 @@ from kicad_tooling.hwrepo.models import (
 )
 
 PeerList: TypeAlias = tuple[str, ...]
+PeerGroupList: TypeAlias = tuple[str | None, ...]
 OpenReasonList: TypeAlias = tuple[str | None, ...]
 INTERFACE_CATALOG_PATH = "catalog/interfaces.json"
 PEER_REFERENCES = ("J1", "J2")
@@ -74,7 +75,7 @@ def peer_signal_coverage(
     *,
     signals: PeerList | None = None,
     voltage_domains: PeerList | None = None,
-    peer_groups: PeerList | None = None,
+    peer_groups: PeerGroupList | None = None,
     roles: tuple[ConnectorPinRole, ...] | None = None,
     unconnected_reasons: OpenReasonList | None = None,
     peer_bases: PeerList | None = None,
@@ -121,7 +122,7 @@ def peer_signal_coverage(
         unconnected_reason,
         peer_basis,
     ) in configurations:
-        interface_key = (signal.casefold(), domain.casefold())
+        interface_key = (signal, domain)
         interface = interfaces_by_key.get(interface_key)
         if interface is None:
             interface_id = f"synthetic-peer-interface-{len(interfaces_by_key) + 1}"
@@ -150,7 +151,7 @@ def peer_signal_coverage(
                 interface_id=interface.id,
                 pin_map={"1": pin.split(".", 1)[1]},
                 peer_assignment_group=peer_group,
-                peer_assignment_basis=peer_basis,
+                peer_assignment_basis=peer_basis if peer_group is not None else None,
                 unconnected_pin_reasons=(
                     {} if unconnected_reason is None else {pin.split(".", 1)[1]: unconnected_reason}
                 ),

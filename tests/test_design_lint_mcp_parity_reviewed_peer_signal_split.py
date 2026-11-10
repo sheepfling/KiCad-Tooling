@@ -38,6 +38,7 @@ pytestmark = [
 ]
 
 RULE_ID = "connector.reviewed_peer_signal_assignment_split"
+MAPPED_NAMED_RULE_ID = "connector.mapped_named_peer_signal_split_nets"
 INTERFACE_ID = "synthetic-peer-serial-signal"
 
 
@@ -90,13 +91,13 @@ def _install_reviewed_peers(root: Path, island: Path) -> Path:
     return catalog_path
 
 
-def _fault_netlist() -> str:
-    return """<export><components>
+def _fault_netlist(functions: tuple[str, str] = ("2", "7")) -> str:
+    return f"""<export><components>
       <comp ref="J1"><value>Synthetic USB port</value><footprint>Synthetic:USB</footprint><libsource lib="Lint" part="UsbPort"/></comp>
       <comp ref="J2"><value>Synthetic serial port</value><footprint>Synthetic:DB9</footprint><libsource lib="Lint" part="SerialPort"/></comp>
     </components><libparts>
-      <libpart lib="Lint" part="UsbPort"><pins><pin num="2" name="2" type="passive"/></pins></libpart>
-      <libpart lib="Lint" part="SerialPort"><pins><pin num="7" name="7" type="passive"/></pins></libpart>
+      <libpart lib="Lint" part="UsbPort"><pins><pin num="2" name="{functions[0]}" type="passive"/></pins></libpart>
+      <libpart lib="Lint" part="SerialPort"><pins><pin num="7" name="{functions[1]}" type="passive"/></pins></libpart>
     </libparts><nets>
       <net name="USB_RX_NET"><node ref="J1" pin="2"/></net>
       <net name="SERIAL_RX_NET"><node ref="J2" pin="7"/></net>
@@ -135,3 +136,37 @@ def test_reviewed_peer_signal_split_matches_between_cli_and_mcp(tmp_path: Path) 
     assert len(findings) == 1
     assert findings[0].evidence["component_pin"] == ("J1.2", "J2.7")
     assert findings[0].evidence["assigned_nets"] == ("SERIAL_RX_NET", "USB_RX_NET")
+
+
+@pytest.mark.design_lint_rule(rule_id=MAPPED_NAMED_RULE_ID)
+def test_mapped_named_peer_signal_split_matches_between_cli_and_mcp(tmp_path: Path) -> None:
+    root, native = synthetic_design_lint_project(tmp_path, DesignLintPolicy())
+    catalog_path = _install_reviewed_peers(root, root / "projects/controller")
+    install_synthetic_netlist(native, _fault_netlist(("CONTACT_A", "CONTACT_B")))
+
+    async def inspect_mcp() -> DesignLintReport:
+        async with Client(create_server(root), mode="legacy") as client:
+            result = await client.call_tool(
+                "inspect_design_lint",
+                {
+                    "project_id": "controller",
+                    "native_summary": native.relative_to(root).as_posix(),
+                },
+            )
+            assert not result.is_error, result.content
+            assert result.structured_content is not None
+            return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
+
+    cli = run_design_lint_cli(tmp_path, root, native)
+    assert cli.returncode in {0, 1}, cli.stderr + cli.stdout
+    cli_report = DesignLintReport.model_validate_json(cli.stdout)
+    mcp_report = asyncio.run(inspect_mcp())
+
+    assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(mcp_report)
+    assert cli_report.connector_coverage is not None
+    assert cli_report.connector_coverage.status == "COMPLETE"
+    assert cli_report.connector_coverage.interface_catalog_sha256 == digest(catalog_path)
+    findings = tuple(item for item in cli_report.findings if item.rule_id == MAPPED_NAMED_RULE_ID)
+    assert len(findings) == 1
+    assert findings[0].evidence["component_pin"] == ("J1.2", "J2.7")
+    assert findings[0].evidence["split_native_nets"] == ("SERIAL_RX_NET", "USB_RX_NET")

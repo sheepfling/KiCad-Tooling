@@ -4939,6 +4939,50 @@
       "implementation_owner": "kicad_tooling/hwrepo/design_lint_connectors_named_peer_supply_splits.py#mapped_named_peer_supply_split_net_candidates"
     },
     {
+      "rule_id": "connector.mapped_named_peer_signal_split_nets",
+      "title": "Named mapped peer signals in one voltage domain use separate nets",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Complete source-matched connector signal roles, exact voltage domains and peer-assignment groups plus KiCad 10 native XML netlists normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For complete current connector coverage with a catalog digest, consider fitted mapped signal contacts whose exact interface_signal, voltage_domain, and current peer_assignment_group match. Require every mapped signal participant in that interface-signal/voltage-domain scope to have one current peer group, exclude contacts already covered by repeated native-pin peer review, and require one unambiguous exact native net and a meaningful non-generic, non-return, non-power native pin function for each member of the selected group. Emit one REVIEW candidate when at least two unlike connector symbols in that group use at least two distinct native nets.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The same interface_signal, voltage_domain, and reviewed peer_assignment_group define a review scope only. They do not state that contacts must be common or that separate nets are wrong.",
+        "The rule requires complete current source-matched maps and a catalog digest; every fitted mapped signal contact in the signal/domain scope must have a current peer group. DNP, open, ambiguous, stale, incomplete, digestless, unscoped, differently grouped, generic, return-like, recognized power-category, and same-symbol peer cases are excluded or left to existing checks.",
+        "The finding does not inspect external wiring, intervening circuitry, electrical potential, or PCB copper continuity. Separate routes, switches, filtering, protection, and isolation may be intentional."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_mapped_named_peer_signal_split.test_named_mapped_peer_signal_split_has_no_existing_specific_prompt",
+        "tests.test_connector_mapped_named_peer_signal_split_native.test_native_mapped_named_peer_signal_split_fault_and_control",
+        "tests.test_design_lint_mcp_parity_reviewed_peer_signal_split.test_mapped_named_peer_signal_split_matches_between_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_mapped_named_peer_signal_split.test_common_unscoped_generic_and_role_controls_stay_quiet",
+        "tests.test_connector_mapped_named_peer_signal_split.test_dnp_open_ambiguous_stale_incomplete_and_digestless_controls",
+        "tests.test_connector_mapped_named_peer_signal_split_native.test_native_mapped_named_peer_signal_split_fault_and_control"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_mapped_named_peer_signal_split.test_candidate_projection_rejects_stale_map_and_stays_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/design_lint_connectors_named_peer_signal_splits.py#mapped_named_peer_signal_split_net_candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_named_peer_signal_split_candidate_evidence.py#project_mapped_named_peer_signal_split_evidence",
+        "kicad_tooling/hwrepo/design_lint_connector_named_peer_signal_split_candidate_evidence.py#source_matched_legacy_named_peer_signal_pins",
+        "kicad_tooling/hwrepo/connector_identity.py#similar_connector_pin_groups",
+        "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_peer_assignment_groups",
+        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/design_lint_connectors_named_peer_signal_splits.py#mapped_named_peer_signal_split_net_candidates"
+    },
+    {
       "rule_id": "connector.mapped_return_shield_share_net",
       "title": "Mapped connector return and shield share a native net",
       "status": "active",

@@ -34,6 +34,9 @@ from .design_lint_connector_pin_candidates import connector_pin_candidates
 from .design_lint_connectors_named_peer_return_splits import (
     mapped_named_peer_return_split_net_candidates,
 )
+from .design_lint_connectors_named_peer_signal_splits import (
+    mapped_named_peer_signal_split_net_candidates,
+)
 from .design_lint_connectors_named_peer_supply_splits import (
     mapped_named_peer_supply_split_net_candidates,
 )
@@ -79,6 +82,7 @@ def connector_candidates(
         *mapped_return_shield_sharing_net_candidates(observed, connector_coverage),
         *mapped_supply_signal_sharing_net_candidates(observed, connector_coverage),
         *reviewed_peer_signal_assignment_splits(observed, connector_coverage),
+        *mapped_named_peer_signal_split_net_candidates(observed, connector_coverage),
         *reviewed_peer_signal_domains_sharing_net(observed, connector_coverage),
         *reviewed_peer_distinct_signals_sharing_net(observed, connector_coverage),
         *reviewed_peer_power_input_split_candidates(observed, connector_coverage),

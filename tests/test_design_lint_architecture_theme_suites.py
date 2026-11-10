@@ -176,6 +176,8 @@ NATIVE_INTERFACE_THEME_SUITES = (
     "test_design_lint_mcp_parity_mapped_peer_return_split.py",
     "test_connector_mapped_named_peer_supply_split.py",
     "test_connector_mapped_named_peer_supply_split_native.py",
+    "test_connector_mapped_named_peer_signal_split.py",
+    "test_connector_mapped_named_peer_signal_split_native.py",
     "test_design_lint_mcp_parity_mapped_peer_supply_split.py",
     "test_connector_mapped_supply_shield_sharing.py",
     "test_connector_mapped_return_shield_sharing.py",

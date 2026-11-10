@@ -8,8 +8,10 @@ import pytest
 
 from kicad_tooling.hwrepo import (
     design_lint_connector_named_peer_return_split_candidate_evidence,
+    design_lint_connector_named_peer_signal_split_candidate_evidence,
     design_lint_connector_named_peer_supply_split_candidate_evidence,
     design_lint_connectors_named_peer_return_splits,
+    design_lint_connectors_named_peer_signal_splits,
     design_lint_connectors_named_peer_supply_splits,
     design_lint_crystal_candidate_evidence,
     design_lint_crystal_candidates,
@@ -225,6 +227,39 @@ def test_named_peer_supply_rule_has_a_focused_source_bound_owner() -> None:
     )
     assert (
         evidence_module.MappedNamedPeerSupplySplitCandidate.__module__ == evidence_module.__name__
+    )
+    assert rule.theme == "connectors"
+    assert rule.implementation_owner == owner
+    assert rule.implementation_owner in rule.implementation_refs
+    assert projector in rule.implementation_refs
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert line_count(evidence_path) < IMPLEMENTATION_MAX_LINES
+
+
+def test_named_peer_signal_rule_has_a_focused_source_bound_owner() -> None:
+    owner_module = design_lint_connectors_named_peer_signal_splits
+    evidence_module = design_lint_connector_named_peer_signal_split_candidate_evidence
+    owner_path = HWREPO / "design_lint_connectors_named_peer_signal_splits.py"
+    evidence_path = HWREPO / "design_lint_connector_named_peer_signal_split_candidate_evidence.py"
+    rule = next(
+        item
+        for item in rule_catalog().rules
+        if item.rule_id == "connector.mapped_named_peer_signal_split_nets"
+    )
+    owner = (
+        "kicad_tooling/hwrepo/design_lint_connectors_named_peer_signal_splits.py"
+        "#mapped_named_peer_signal_split_net_candidates"
+    )
+    projector = (
+        "kicad_tooling/hwrepo/design_lint_connector_named_peer_signal_split_candidate_evidence.py"
+        "#project_mapped_named_peer_signal_split_evidence"
+    )
+
+    assert owner_module.mapped_named_peer_signal_split_net_candidates.__module__ == (
+        owner_module.__name__
+    )
+    assert (
+        evidence_module.MappedNamedPeerSignalSplitCandidate.__module__ == evidence_module.__name__
     )
     assert rule.theme == "connectors"
     assert rule.implementation_owner == owner

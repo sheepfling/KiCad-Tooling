@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 323 rules are implemented with synthetic regression coverage.
+The following 324 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 323 active rules.
+The catalog currently contains 324 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -437,6 +437,7 @@ skipped under prerelease policy.
 - `connector.mapped_return_domains_share_net`
 - `connector.mapped_named_peer_return_split_nets`
 - `connector.mapped_named_peer_supply_split_nets`
+- `connector.mapped_named_peer_signal_split_nets`
 - `connector.mapped_supply_return_share_net`
 - `connector.mapped_supply_shield_share_net`
 - `connector.mapped_return_shield_share_net`
@@ -4087,7 +4088,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 323 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 324 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -22619,6 +22620,53 @@ acceptance threads while new lint features proceed:
   `tests/test_design_lint_mcp_parity_mapped_peer_supply_split.py`, and
   `tests/test_connector_mapped_named_peer_supply_split_native.py` with
   `design_lint_rule(rule_id="connector.mapped_named_peer_supply_split_nets")`.
+  Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-376 — Review named mapped peer signals split across nets
+
+- **Status:** Implemented as `connector.mapped_named_peer_signal_split_nets`,
+  default `review`.
+- **Priority:** P1 connector/interface review. Independently mapped interface
+  signals can provide a useful comparison scope even when unlike native
+  connector symbols use meaningful, unrelated function labels.
+- **Gap:** The existing within-connector mapped-signal comparison does not
+  compare one mapped signal across connector references. The generic
+  cross-connector pin check also cannot pair meaningful unlike labels. A
+  test-first synthetic baseline with complete signal maps, one exact voltage
+  domain, one reviewed peer group, and two native nets produced no existing
+  specific signal-peer prompt.
+- **Predicate:** Require complete current source-matched connector coverage
+  and a catalog digest. Consider fitted signal contacts only when every mapped
+  signal contact for the exact `interface_signal` and `voltage_domain` has a
+  current peer-assignment group, each member of the selected group has one
+  exact net, and each native function is meaningful, non-generic, and outside
+  recognized return and power categories. Require at least two unlike native
+  connector symbols and distinct exact nets. Existing repeated-pin peer
+  comparisons retain assignments that they already cover.
+- **Boundary:** `interface_signal`, `voltage_domain`, and
+  `peer_assignment_group` set review scope; they do not require commoning or
+  establish that split routes are wrong. DNP, open, ambiguous, stale,
+  incomplete, digestless, unscoped, generic, return-like, recognized power,
+  and same-symbol cases are excluded or left with existing checks. Separate
+  routes, switches, filters, protection, and isolation may be intentional. The
+  finding does not establish external wiring or PCB copper continuity.
+- **Evidence:** Synthetic regressions cover the missing baseline, common-net,
+  different signal/domain/group, unscoped, generic and role controls, DNP,
+  open, ambiguous, stale, incomplete and digestless inputs, policy and exact
+  ignore behavior, deterministic evidence projection, and CLI/MCP parity. The
+  tooling-owned native fault/control sources are source-hashed and contain two
+  unlike one-pin synthetic symbols. KiCad 10.0.0 and 10.0.5 Docker exports
+  repeated identically at the normalized netlist-contract boundary. No product
+  board or cohort source was imported.
+- **Local verification:** The focused synthetic/parity selection passed 6
+  tests. The exact Docker lane passed its fault and common-net control across
+  both pinned KiCad versions (8 exports total). Package-wide acceptance and
+  hosted CI are still pending for this checkpoint.
+- **Selection:** Run
+  `tests/test_connector_mapped_named_peer_signal_split.py`,
+  `tests/test_design_lint_mcp_parity_reviewed_peer_signal_split.py`, and
+  `tests/test_connector_mapped_named_peer_signal_split_native.py` with
+  `design_lint_rule(rule_id="connector.mapped_named_peer_signal_split_nets")`.
   Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate
