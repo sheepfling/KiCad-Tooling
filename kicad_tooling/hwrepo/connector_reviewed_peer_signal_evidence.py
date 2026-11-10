@@ -1,4 +1,4 @@
-"""Source-matched generic signal contacts in reviewed connector peer groups."""
+"""Source-matched signal contacts in reviewed connector peer groups."""
 
 from __future__ import annotations
 
@@ -10,17 +10,23 @@ from .connector_coverage import (
     source_matched_connector_pin_evidence,
 )
 from .connector_coverage_models import ConnectorCoverageReport, ConnectorMappedPinEvidence
-from .connector_identity import pin_function_is_generic
+from .connector_identity import (
+    connector_power_function_key,
+    is_return_function,
+    is_shield_function,
+    pin_function_is_generic,
+)
 from .netlist_contract_models import NetlistContract
 
 
 @dataclass(frozen=True, slots=True)
 class ReviewedPeerSignalContact:
-    """One unambiguous generic signal contact with current reviewed peer scope."""
+    """One unambiguous signal contact with current reviewed peer scope."""
 
     reference: str
     component_pin: str
     native_symbol: str
+    native_function: str | None
     net: str
     interface_signal: str
     voltage_domain: str
@@ -30,11 +36,12 @@ class ReviewedPeerSignalContact:
 
 @dataclass(frozen=True, slots=True)
 class ReviewedPeerSignalObservation:
-    """One mapped generic signal contact, including assigned and open states."""
+    """One mapped eligible signal contact, including assigned and open states."""
 
     reference: str
     component_pin: str
     native_symbol: str
+    native_function: str | None
     nets: tuple[str, ...]
     unconnected_reason: str | None
     interface_signal: str
@@ -64,20 +71,27 @@ class ReviewedPeerSignalAssignmentContext:
 def reviewed_peer_signal_contacts(
     observed: NetlistContract,
     coverage: ConnectorCoverageReport | None,
+    *,
+    include_named_native_functions: bool = False,
 ) -> tuple[ReviewedPeerSignalContact, ...]:
-    """Return fitted, assigned generic signal contacts with source-matched peer maps."""
+    """Return fitted assigned signal contacts with source-matched peer maps."""
     return tuple(
         ReviewedPeerSignalContact(
             reference=observation.reference,
             component_pin=observation.component_pin,
             native_symbol=observation.native_symbol,
+            native_function=observation.native_function,
             net=observation.nets[0],
             interface_signal=observation.interface_signal,
             voltage_domain=observation.voltage_domain,
             peer_assignment_group=observation.peer_assignment_group,
             peer_assignment_basis=observation.peer_assignment_basis,
         )
-        for observation in reviewed_peer_signal_observations(observed, coverage)
+        for observation in reviewed_peer_signal_observations(
+            observed,
+            coverage,
+            include_named_native_functions=include_named_native_functions,
+        )
         if observation.unconnected_reason is None and len(observation.nets) == 1
     )
 
@@ -85,8 +99,10 @@ def reviewed_peer_signal_contacts(
 def reviewed_peer_signal_observations(
     observed: NetlistContract,
     coverage: ConnectorCoverageReport | None,
+    *,
+    include_named_native_functions: bool = False,
 ) -> tuple[ReviewedPeerSignalObservation, ...]:
-    """Return source-matched generic signal pins, retaining open/intentional-open states."""
+    """Return source-matched eligible signal pins, retaining open states."""
     if (
         coverage is None
         or coverage.status != "COMPLETE"
@@ -103,6 +119,7 @@ def reviewed_peer_signal_observations(
         reference, separator, _pin_number = component_pin.rpartition(".")
         scope = peer_scopes.get(reference)
         native_symbol = observed.component_symbols.get(reference, "").strip()
+        native_function = mapped.symbol_function
         signal = mapped.interface_signal.strip()
         voltage_domain = (mapped.voltage_domain or "").strip()
         if (
@@ -113,7 +130,10 @@ def reviewed_peer_signal_observations(
             or not voltage_domain
             or not native_symbol
             or reference.casefold() in dnp_references
-            or not pin_function_is_generic(mapped.symbol_function)
+            or not _reviewable_peer_signal_function(
+                native_function,
+                include_named_native_functions=include_named_native_functions,
+            )
         ):
             continue
         contacts.append(
@@ -121,6 +141,7 @@ def reviewed_peer_signal_observations(
                 reference=reference,
                 component_pin=component_pin,
                 native_symbol=native_symbol,
+                native_function=native_function,
                 nets=mapped.nets,
                 unconnected_reason=mapped.unconnected_reason,
                 interface_signal=signal,
@@ -140,6 +161,23 @@ def reviewed_peer_signal_observations(
                 item.component_pin.casefold(),
             ),
         )
+    )
+
+
+def _reviewable_peer_signal_function(
+    function: str | None,
+    *,
+    include_named_native_functions: bool,
+) -> bool:
+    """Keep generic contacts and optionally admit named non-power signal labels."""
+    if pin_function_is_generic(function):
+        return True
+    return (
+        include_named_native_functions
+        and function is not None
+        and connector_power_function_key(function) is None
+        and not is_return_function(function)
+        and not is_shield_function(function)
     )
 
 

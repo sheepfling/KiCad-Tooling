@@ -4399,26 +4399,30 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "Source-matched connector comparison groups and KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For complete, current, source-matched connector coverage with a catalog digest, compare fitted generic native contacts with the same nonempty mapped signal name and signal role inside one authored peer-assignment group. Emit one REVIEW candidate when each participating connector contributes exactly one such contact, the mapped voltage-domain identifiers differ, and the native contacts have the same exact net assignment.",
+      "predicate": "For complete, current, source-matched connector coverage with a catalog digest, compare fitted generic or meaningful named native signal contacts with the same nonempty mapped signal name and signal role inside one authored peer-assignment group. Emit one REVIEW candidate when each participating connector contributes exactly one such contact, the mapped voltage-domain identifiers differ, and the native contacts have the same exact net assignment.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Distinct voltage-domain identifiers are review clues only; they do not establish nominal voltages, incompatibility, or a requirement to isolate the contacts.",
-        "Only generic native functions, signal roles, non-DNP contacts with exactly one assigned net, and source-matched peer groups are considered. Repeated contacts inside one connector remain with existing rules.",
+        "Generic and meaningful named native signal functions are considered; recognized power, return, and shield functions are excluded. Contacts must be signal-role, non-DNP, assigned to exactly one net, and source-matched to a peer group. Repeated contacts inside one connector remain with existing rules.",
         "The rule does not validate an interface map against a datasheet, infer external wiring, prove a direct electrical short, or establish PCB copper continuity."
       ],
       "fault_fixtures": [
         "tests.test_connector_reviewed_peer_signal_domains.test_same_signal_on_shared_net_across_distinct_voltage_domains_needs_review",
+        "tests.test_connector_reviewed_peer_signal_domains.test_named_native_signal_contacts_with_distinct_domains_need_review",
         "tests.test_design_lint_mcp_parity_reviewed_peer_signal_domains.test_reviewed_peer_signal_domains_match_between_cli_and_mcp",
-        "tests.test_connector_reviewed_peer_signal_domains_native.test_native_reviewed_peer_signal_domains_fault_and_control_repeat"
+        "tests.test_design_lint_mcp_parity_reviewed_peer_signal_domains.test_named_peer_signal_domains_match_between_cli_and_mcp",
+        "tests.test_connector_reviewed_peer_signal_domains_native.test_native_reviewed_peer_signal_domains_fault_and_control_repeat",
+        "tests.test_connector_mapped_named_peer_signal_split_native.test_native_mapped_named_peer_signal_split_fault_and_control"
       ],
       "valid_control_fixtures": [
         "tests.test_connector_reviewed_peer_signal_domains.test_same_domain_and_nonmatching_signal_group_or_net_stay_quiet",
-        "tests.test_connector_reviewed_peer_signal_domains.test_named_dnp_and_non_signal_contacts_are_controls",
+        "tests.test_connector_reviewed_peer_signal_domains.test_named_power_return_dnp_and_non_signal_contacts_are_controls",
         "tests.test_connector_reviewed_peer_signal_domains.test_incomplete_stale_and_digestless_maps_are_controls",
         "tests.test_design_lint_mcp_parity_reviewed_peer_signal_domains.test_reviewed_peer_signal_domains_match_between_cli_and_mcp",
-        "tests.test_connector_reviewed_peer_signal_domains_native.test_native_reviewed_peer_signal_domains_fault_and_control_repeat"
+        "tests.test_connector_reviewed_peer_signal_domains_native.test_native_reviewed_peer_signal_domains_fault_and_control_repeat",
+        "tests.test_connector_mapped_named_peer_signal_split_native.test_native_mapped_named_peer_signal_split_fault_and_control"
       ],
       "metamorphic_fixtures": [
         "tests.test_connector_reviewed_peer_signal_domains.test_finding_is_stable_under_native_net_and_mapping_order",

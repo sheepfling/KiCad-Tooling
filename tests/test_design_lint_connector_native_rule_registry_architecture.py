@@ -191,6 +191,7 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         },
         "connector.reviewed_peer_signal_domain_shared_net": {
             "tests.test_connector_reviewed_peer_signal_domains_native.test_native_reviewed_peer_signal_domains_fault_and_control_repeat",
+            "tests.test_connector_mapped_named_peer_signal_split_native.test_native_mapped_named_peer_signal_split_fault_and_control",
         },
         "connector.reviewed_peer_distinct_signals_shared_net": {
             "tests.test_connector_reviewed_peer_distinct_signals_native.test_native_distinct_peer_signals_fault_and_control_repeat",

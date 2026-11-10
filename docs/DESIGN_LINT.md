@@ -4458,25 +4458,26 @@ KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
 ## Review a shared peer signal mapped to different voltage domains
 
 `connector.reviewed_peer_signal_domain_shared_net` prompts when complete,
-current, source-matched connector maps put generic contacts in one reviewed
-peer group, give them the same interface signal name, declare different
-voltage-domain identifiers, and KiCad assigns them to one exact net. Each
-participating connector must contribute exactly one unambiguous fitted contact.
+current, source-matched connector maps put generic or meaningfully named signal
+contacts in one reviewed peer group, give them the same interface signal name,
+declare different voltage-domain identifiers, and KiCad assigns them to one
+exact net. Each participating connector must contribute exactly one
+unambiguous fitted contact.
 
 This is a review cue: domain identifiers do not reveal nominal voltages or
 prove incompatibility, and the prompt does not declare that the contacts must
 be isolated. Project policy can promote it to `block`, turn it `off`, or ignore
 an exact fingerprint. The predicate excludes stale or incomplete maps,
-non-signal roles, named native pin functions, DNP contacts, reasoned opens, and
-ambiguous assignments. It does not validate a map against a datasheet or prove
-PCB copper continuity.
+non-signal roles, recognized power, return, and shield functions, DNP contacts,
+reasoned opens, and ambiguous assignments. Named native function labels appear
+in evidence to help reviewers identify the compared contacts. It does not
+validate a map against a datasheet or prove PCB copper continuity.
 
-The synthetic fault maps two unlike generic connector pins to the same signal
-and native net but different domain identifiers. Controls cover same-domain
-sharing, different signals or peer groups, separate nets, DNP, named functions,
-stale and incomplete maps, exact ignores, and ordering stability. The exact
-native fixture is tooling-owned and repeated with digest-pinned KiCad 10.0.0
-and 10.0.5. See the
+The synthetic fault covers both generic and named connector signal functions.
+Controls cover same-domain sharing, different signals or peer groups, separate
+nets, power, return, shield, DNP, stale and incomplete maps, exact ignores, and
+ordering stability. The exact native fixture is tooling-owned and repeated
+with digest-pinned KiCad 10.0.0 and 10.0.5. See the
 [synthetic fixture record](../tests/fixtures/design_lint/reviewed-peer-signal-domain-shared-net/README.md).
 
 Run the focused synthetic and CLI/MCP checks with:
@@ -4485,6 +4486,7 @@ Run the focused synthetic and CLI/MCP checks with:
 .venv/bin/python -I -m pytest \
   tests/test_connector_reviewed_peer_signal_domains.py \
   tests/test_design_lint_mcp_parity_reviewed_peer_signal_domains.py \
+  tests/test_connector_mapped_named_peer_signal_split_native.py \
   -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.reviewed_peer_signal_domain_shared_net")'
 ```
 
@@ -4493,6 +4495,7 @@ Run the exact-native lane with:
 ```sh
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_connector_reviewed_peer_signal_domains_native.py \
+  tests/test_connector_mapped_named_peer_signal_split_native.py \
   -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.reviewed_peer_signal_domain_shared_net")'
 ```
 

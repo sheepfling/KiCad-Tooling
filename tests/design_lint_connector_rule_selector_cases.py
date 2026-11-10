@@ -141,11 +141,15 @@ CONNECTOR_RULE_NODE_CASES = (
     ),
     (
         "connector.reviewed_peer_signal_domain_shared_net",
+        "tests/test_connector_reviewed_peer_signal_domains.py::test_named_native_signal_contacts_with_distinct_domains_need_review",
+    ),
+    (
+        "connector.reviewed_peer_signal_domain_shared_net",
         "tests/test_connector_reviewed_peer_signal_domains.py::test_same_domain_and_nonmatching_signal_group_or_net_stay_quiet",
     ),
     (
         "connector.reviewed_peer_signal_domain_shared_net",
-        "tests/test_connector_reviewed_peer_signal_domains.py::test_named_dnp_and_non_signal_contacts_are_controls",
+        "tests/test_connector_reviewed_peer_signal_domains.py::test_named_power_return_dnp_and_non_signal_contacts_are_controls",
     ),
     (
         "connector.reviewed_peer_signal_domain_shared_net",
@@ -165,7 +169,15 @@ CONNECTOR_RULE_NODE_CASES = (
     ),
     (
         "connector.reviewed_peer_signal_domain_shared_net",
+        "tests/test_design_lint_mcp_parity_reviewed_peer_signal_domains.py::test_named_peer_signal_domains_match_between_cli_and_mcp",
+    ),
+    (
+        "connector.reviewed_peer_signal_domain_shared_net",
         "tests/test_connector_reviewed_peer_signal_domains_native.py::test_native_reviewed_peer_signal_domains_fault_and_control_repeat",
+    ),
+    (
+        "connector.reviewed_peer_signal_domain_shared_net",
+        "tests/test_connector_mapped_named_peer_signal_split_native.py::test_native_mapped_named_peer_signal_split_fault_and_control",
     ),
     (
         "connector.reviewed_peer_distinct_signals_shared_net",

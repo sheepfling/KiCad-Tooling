@@ -40,6 +40,7 @@ EXPECTED_SOURCE_HASHES = {
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.design_lint_rule(rule_id="connector.reviewed_peer_signal_domain_shared_net")
 def test_native_mapped_named_peer_signal_split_fault_and_control(tmp_path: Path) -> None:
     for kicad_version, image in PINNED_NATIVE_KICAD_IMAGES.items():
         work = tmp_path / f"work-{kicad_version}"
@@ -114,3 +115,27 @@ def test_native_mapped_named_peer_signal_split_fault_and_control(tmp_path: Path)
             else:
                 assert not findings
                 assert first.nets["COMMON_NODE"] == ("J1.1", "J2.1")
+
+            domain_coverage = peer_signal_coverage(
+                first,
+                references=("J1", "J2"),
+                pins=("J1.1", "J2.1"),
+                voltage_domains=("logic-3v3", "logic-5v"),
+            )
+            domain_report = peer_signal_report(first, coverage=domain_coverage)
+            domain_findings = tuple(
+                item
+                for item in domain_report.findings
+                if item.rule_id == "connector.reviewed_peer_signal_domain_shared_net"
+            )
+            assert domain_coverage.status == "COMPLETE"
+            if case == "control":
+                (domain_finding,) = domain_findings
+                assert domain_finding.evidence["component_pin"] == ("J1.1", "J2.1")
+                assert domain_finding.evidence["native_pin_function"] == (
+                    "J1.1=CONTACT_A",
+                    "J2.1=CONTACT_B",
+                )
+                assert domain_finding.evidence["assigned_nets"] == ("COMMON_NODE",)
+            else:
+                assert not domain_findings

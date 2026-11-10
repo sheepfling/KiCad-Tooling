@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 
 from .connector_coverage_models import ConnectorCoverageReport
+from .connector_identity import pin_function_is_generic
 from .connector_reviewed_peer_signal_evidence import (
     ReviewedPeerSignalContact,
     reviewed_peer_signal_contacts,
@@ -31,7 +32,11 @@ def reviewed_peer_signal_domains_sharing_net(
     contacts_by_key: dict[tuple[str, str, str], dict[str, list[ReviewedPeerSignalContact]]] = (
         defaultdict(lambda: defaultdict(list))
     )
-    for contact in reviewed_peer_signal_contacts(observed, coverage):
+    for contact in reviewed_peer_signal_contacts(
+        observed,
+        coverage,
+        include_named_native_functions=True,
+    ):
         key = (
             contact.peer_assignment_group.casefold(),
             contact.interface_signal.casefold(),
@@ -87,6 +92,28 @@ def reviewed_peer_signal_domains_sharing_net(
                 key=lambda value: (value.casefold(), value),
             )
         )
+        named_native_functions = any(
+            not pin_function_is_generic(contact.native_function) for contact in peer_contacts
+        )
+        evidence = {
+            "component_reference": references,
+            "component_pin": pins,
+            "interface_signal": (signal_name,),
+            "interface_role": ("signal",),
+            "voltage_domain": domains,
+            "peer_assignment_group": (group_name,),
+            "peer_assignment_basis": bases,
+            "assigned_nets": (net_name,),
+            "interface_catalog_sha256": (str(coverage.interface_catalog_sha256),),
+        }
+        if named_native_functions:
+            evidence["native_pin_function"] = tuple(
+                f"{contact.component_pin}={contact.native_function or 'unknown'}"
+                for contact in sorted(
+                    peer_contacts,
+                    key=lambda item: (item.component_pin.casefold(), item.component_pin),
+                )
+            )
         candidates.append(
             Candidate(
                 rule_id=RULE_ID,
@@ -95,23 +122,25 @@ def reviewed_peer_signal_domains_sharing_net(
                     f"{', '.join(domains)} shares native net {net_name}"
                 ),
                 message=(
-                    "Generic connector contacts in this source-reviewed peer group map to the "
-                    "same interface signal but declare different voltage domains on one native "
-                    "net. Review whether a direct connection is intended and electrically "
-                    "compatible. Domain identifiers do not establish nominal voltages or prove "
-                    "an incompatibility; this review does not establish PCB copper continuity."
+                    (
+                        "Named native connector contacts in this source-reviewed peer group map "
+                        "to the same interface signal but declare different voltage domains on "
+                        "one native net. Review whether this direct connection is intended and "
+                        "electrically compatible. Native pin functions appear in the evidence; "
+                        "domain identifiers do not establish nominal voltages or prove an "
+                        "incompatibility. The review does not establish PCB copper continuity."
+                    )
+                    if named_native_functions
+                    else (
+                        "Generic connector contacts in this source-reviewed peer group map to "
+                        "the same interface signal but declare different voltage domains on one "
+                        "native net. Review whether a direct connection is intended and "
+                        "electrically compatible. Domain identifiers do not establish nominal "
+                        "voltages or prove an incompatibility; this review does not establish "
+                        "PCB copper continuity."
+                    )
                 ),
-                evidence={
-                    "component_reference": references,
-                    "component_pin": pins,
-                    "interface_signal": (signal_name,),
-                    "interface_role": ("signal",),
-                    "voltage_domain": domains,
-                    "peer_assignment_group": (group_name,),
-                    "peer_assignment_basis": bases,
-                    "assigned_nets": (net_name,),
-                    "interface_catalog_sha256": (str(coverage.interface_catalog_sha256),),
-                },
+                evidence=evidence,
             )
         )
     return tuple(

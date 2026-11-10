@@ -50,6 +50,43 @@ def test_same_signal_on_shared_net_across_distinct_voltage_domains_needs_review(
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_named_native_signal_contacts_with_distinct_domains_need_review() -> None:
+    observed = peer_signal_netlist(
+        nets=("SHARED_RX", "SHARED_RX"),
+        functions=("CONTACT_A", "CONTACT_B"),
+    )
+    coverage = peer_signal_coverage(
+        observed,
+        voltage_domains=("logic-3v3", "logic-5v"),
+    )
+    report = peer_signal_report(observed, coverage=coverage)
+
+    specific_findings = tuple(
+        item.rule_id
+        for item in report.findings
+        if item.rule_id
+        in {
+            RULE_ID,
+            "connector.reviewed_peer_signal_assignment_split",
+            "connector.reviewed_peer_distinct_signals_shared_net",
+            "connector.mapped_signals_share_net",
+            "connector.mapped_signals_split_nets",
+        }
+    )
+    assert coverage.status == "COMPLETE"
+    assert specific_findings == (RULE_ID,)
+    (finding,) = _findings(report)
+    assert finding.evidence["component_pin"] == ("J1.2", "J2.7")
+    assert finding.evidence["native_pin_function"] == (
+        "J1.2=CONTACT_A",
+        "J2.7=CONTACT_B",
+    )
+    assert finding.evidence["voltage_domain"] == ("logic-3v3", "logic-5v")
+    assert finding.evidence["assigned_nets"] == ("SHARED_RX",)
+    assert "Named native connector contacts" in finding.message
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_same_domain_and_nonmatching_signal_group_or_net_stay_quiet() -> None:
     observed = peer_signal_netlist(nets=("SHARED_RX", "SHARED_RX"))
     reports = (
@@ -91,16 +128,58 @@ def test_same_domain_and_nonmatching_signal_group_or_net_stay_quiet() -> None:
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
-def test_named_dnp_and_non_signal_contacts_are_controls() -> None:
+def test_named_power_return_dnp_and_non_signal_contacts_are_controls() -> None:
     observed = peer_signal_netlist(nets=("SHARED_RX", "SHARED_RX"))
     distinct_domains = peer_signal_coverage(
         observed,
         voltage_domains=("logic-3v3", "logic-5v"),
     )
+    power_observed = peer_signal_netlist(
+        nets=("SHARED_RX", "SHARED_RX"),
+        functions=("GND", "VBUS"),
+    )
+    power_coverage = peer_signal_coverage(
+        power_observed,
+        voltage_domains=("logic-3v3", "logic-5v"),
+    )
+    shield_observed = peer_signal_netlist(
+        nets=("SHARED_RX", "SHARED_RX"),
+        functions=("SHIELD", "CONTACT_B"),
+    )
+    shield_coverage = peer_signal_coverage(
+        shield_observed,
+        voltage_domains=("logic-3v3", "logic-5v"),
+    )
+    named_observed = peer_signal_netlist(
+        nets=("SHARED_RX", "SHARED_RX"),
+        functions=("CONTACT_A", "CONTACT_B"),
+    )
+    named_same_domain_coverage = peer_signal_coverage(named_observed)
     reports = (
         peer_signal_report(
-            peer_signal_netlist(nets=("SHARED_RX", "SHARED_RX"), functions=("RX", "RX")),
-            coverage=distinct_domains,
+            power_observed,
+            coverage=power_coverage,
+        ),
+        peer_signal_report(
+            named_observed,
+            coverage=named_same_domain_coverage,
+        ),
+        peer_signal_report(
+            peer_signal_netlist(
+                nets=("NET_A", "NET_B"),
+                functions=("CONTACT_A", "CONTACT_B"),
+            ),
+            coverage=peer_signal_coverage(
+                peer_signal_netlist(
+                    nets=("NET_A", "NET_B"),
+                    functions=("CONTACT_A", "CONTACT_B"),
+                ),
+                voltage_domains=("logic-3v3", "logic-5v"),
+            ),
+        ),
+        peer_signal_report(
+            shield_observed,
+            coverage=shield_coverage,
         ),
         peer_signal_report(
             peer_signal_netlist(nets=("SHARED_RX", "SHARED_RX"), dnp=("J2",)),

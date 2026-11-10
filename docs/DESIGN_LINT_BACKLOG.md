@@ -21363,23 +21363,21 @@ acceptance threads while new lint features proceed:
   `connector.reviewed_peer_signal_domain_shared_net`.
 - **Rule:** `connector.reviewed_peer_signal_domain_shared_net`, default
   `review`.
-- **Gap:** Reviewed connector peers can have generic contacts mapped to the
-  same signal but different voltage-domain identifiers while the native
-  netlist assigns both contacts to one net. Existing checks cover different
-  signals sharing a net, supply contacts sharing a net, and the inverse case
-  where same-domain peer signals are split across nets; none asks about this
-  combination.
-- **Predicate:** Require complete current connector coverage, a catalog digest,
+- **Original gap and predicate:** The initial LINT-345 implementation covered
+  generic contacts mapped to the same signal but different voltage-domain
+  identifiers while the native netlist assigned both contacts to one net.
+  It required complete current connector coverage, a catalog digest,
   source-matched peer-assignment groups, generic fitted signal contacts, and
-  one exact signal name. Each participating connector contributes exactly one
-  unambiguous assigned contact. Emit one REVIEW candidate when distinct
-  voltage-domain identifiers share the same exact native net.
+  one exact signal name. Each participating connector contributed exactly
+  one unambiguous assigned contact. The LINT-377 extension below adds
+  meaningful named native signal functions to this same rule.
 - **Incremental value:** A synthetic complete-map baseline with two unlike
   connector symbols and one shared signal net had no finding before this
   rule. A source-reviewed fault now prompts; same-domain sharing, different
-  signal/group, separate-net, non-signal, DNP, named-function, stale and
-  incomplete-map controls remain quiet. This is a distinct deterministic review
-  cue, not a confirmed electrical fault or a voltage compatibility check.
+  signal/group, separate-net, non-signal, DNP, recognized supply, return, and
+  shield-function controls, plus stale and incomplete maps, remain quiet. This is a
+  deterministic review cue, not a confirmed electrical fault or a voltage
+  compatibility check.
 - **Boundaries:** Domain identifiers are labels, not numeric voltage evidence.
   The rule does not require isolation, infer nominal values, validate maps
   against datasheets, establish an electrical short, or prove PCB copper
@@ -22667,6 +22665,55 @@ acceptance threads while new lint features proceed:
   `tests/test_design_lint_mcp_parity_reviewed_peer_signal_split.py`, and
   `tests/test_connector_mapped_named_peer_signal_split_native.py` with
   `design_lint_rule(rule_id="connector.mapped_named_peer_signal_split_nets")`.
+  Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-377 — Extend shared peer-signal domain review to named contacts
+
+- **Status:** Extends active rule
+  `connector.reviewed_peer_signal_domain_shared_net`; no new rule ID or
+  project requirement is introduced.
+- **Priority:** P1 connector/interface review. Native pin function labels can
+  be useful evidence even when connector symbols use unlike names such as
+  `CONTACT_A` and `CONTACT_B`.
+- **Gap:** LINT-345 compares generic contacts only. A complete, current,
+  source-matched pair with the same mapped signal, different mapped voltage
+  domains, and one exact shared net produced no specific review candidate if
+  both native pin functions had meaningful names.
+- **Predicate:** Preserve the LINT-345 requirements for source-matched complete
+  connector maps, a catalog digest, a common authored peer group, one signal
+  role and mapped signal name, differing domain identifiers, one fitted
+  contact per connector, and one exact shared native net. Include generic and
+  meaningful named native signal functions. Exclude recognized supply,
+  return, and shield functions. For named contacts, include their exact native
+  function labels in the finding evidence.
+- **Controls and limits:** Same-domain and split-net named contacts remain
+  quiet, as do DNP, non-signal, stale, incomplete, digestless, supply, return,
+  and shield cases. Domain labels do not establish nominal voltage or prove
+  incompatibility. A peer group scopes the review and does not require
+  commoning. The check does not validate a pinout against a datasheet or prove
+  PCB copper continuity.
+- **Incremental value:** A test-first baseline using `CONTACT_A` and
+  `CONTACT_B` with distinct mapped domains and one exact shared net returned no
+  finding from existing specific rules. The extended rule now emits a REVIEW
+  candidate and records both native labels. The default remains `review` and
+  projects can promote, disable, or exactly ignore the candidate through the
+  existing policy controls.
+- **Evidence:** The named-contact synthetic fault and same-domain, split-net,
+  power, return, shield, DNP, and non-signal controls pass. CLI/MCP parity,
+  catalog fixture reachability, pytest rule selection, and native marker
+  architecture checks pass. The tooling-owned named-contact schematic uses
+  one source whose contacts are split and a second whose contacts share a net;
+  under mixed mapped domains those cases respectively control and trigger the
+  rule on exact KiCad 10.0.0 and 10.0.5 Docker images. The scoped `scripts/ci.py`
+  acceptance passed 364 tests with 7,885 deselected, formatting, lint,
+  documentation, Linux and Windows Pyright, wheel/sdist builds, installed-wheel
+  checks, and external template inventory, surface, verify, and playtest.
+  No cohort or product-board source was used. Hosted CI is pending this tag.
+- **Selection:** Run
+  `tests/test_connector_reviewed_peer_signal_domains.py`,
+  `tests/test_design_lint_mcp_parity_reviewed_peer_signal_domains.py`, and
+  `tests/test_connector_mapped_named_peer_signal_split_native.py` with
+  `design_lint_rule(rule_id="connector.reviewed_peer_signal_domain_shared_net")`.
   Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate
