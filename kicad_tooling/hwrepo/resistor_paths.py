@@ -6,9 +6,11 @@ import re
 from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
+from decimal import Decimal
 from types import MappingProxyType
 from typing import TypeAlias
 
+from .component_value_syntax import parse_component_value_number, primary_component_value_text
 from .connector_identity import power_function_key
 from .netlist_contract_models import NetlistContract
 
@@ -16,9 +18,17 @@ RESISTOR_REFERENCE_PATTERN = re.compile(r"^R[A-Z]*[0-9]+$", re.IGNORECASE)
 VISIBLE_PULLUP_MIN_OHMS = 1_000.0
 VISIBLE_PULLUP_MAX_OHMS = 100_000.0
 
-_ENGINEERING_VALUE = re.compile(r"^(?P<whole>[0-9]+)(?P<unit>[krm])(?P<fraction>[0-9]+)$")
+_VALUE_NUMBER = (
+    r"(?:[0-9]{1,3}(?: [0-9]{3})+(?:[.,][0-9]*)?|"
+    r"[0-9]+(?:[.,][0-9]*)?|[.,][0-9]+)"
+)
+_ENGINEERING_VALUE = re.compile(
+    r"^(?P<whole>[0-9]+)(?P<unit>[krm])(?P<fraction>[0-9]+)$", re.IGNORECASE
+)
 
-_STANDARD_VALUE = re.compile(r"^(?P<amount>[0-9]+(?:\.[0-9]+)?)(?P<unit>[krm]?)$")
+_STANDARD_VALUE = re.compile(
+    rf"^\s*(?P<amount>{_VALUE_NUMBER})\s*(?P<unit>meg|[krm]?)\s*$", re.IGNORECASE
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,20 +54,34 @@ class DirectResistor:
 
 
 def resistance_ohms(value: str) -> float | None:
-    compact = value.strip().replace("Ω", "").replace("Ω", "").casefold()
-    compact = re.sub(r"ohms?$", "", compact).replace(" ", "")
-    engineering = _ENGINEERING_VALUE.fullmatch(compact)
+    compact = value.strip().replace("Ω", "").replace("Ω", "")
+    compact = re.sub(r"\s*ohms?$", "", compact, flags=re.IGNORECASE).strip()
+    primary = primary_component_value_text(compact)
+    if primary is None:
+        return None
+    primary_text, has_metadata = primary
+    engineering = _ENGINEERING_VALUE.fullmatch(primary_text)
     if engineering is not None:
-        amount = float(f"{engineering['whole']}.{engineering['fraction']}")
-        unit = engineering["unit"]
+        amount = parse_component_value_number(f"{engineering['whole']}.{engineering['fraction']}")
+        unit = engineering["unit"].casefold()
     else:
-        standard = _STANDARD_VALUE.fullmatch(compact)
+        standard = _STANDARD_VALUE.fullmatch(primary_text)
         if standard is None:
             return None
-        amount = float(standard["amount"])
-        unit = standard["unit"]
-    scale = {"": 1.0, "r": 1.0, "k": 1_000.0, "m": 1_000_000.0}[unit]
-    return amount * scale
+        unit = standard["unit"].casefold()
+        if has_metadata and not unit:
+            return None
+        amount = parse_component_value_number(standard["amount"])
+    if amount is None:
+        return None
+    scale = {
+        "": Decimal(1),
+        "r": Decimal(1),
+        "k": Decimal(1_000),
+        "m": Decimal(1_000_000),
+        "meg": Decimal(1_000_000),
+    }[unit]
+    return float(amount * scale)
 
 
 def direct_resistors(

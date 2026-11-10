@@ -3,16 +3,20 @@
 from __future__ import annotations
 
 import re
-from decimal import Decimal, DecimalException, InvalidOperation, localcontext
+from decimal import Decimal, DecimalException, localcontext
 from types import MappingProxyType
 
+from .component_value_syntax import parse_component_value_number, primary_component_value_text
+
 _CAPACITANCE_VALUE = re.compile(
-    r"^\s*(?P<number>(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+))\s*"
-    r"(?P<unit>pf|nf|uf|μf|µf|mf|f|p|n|u)\s*$",
+    r"^\s*(?P<number>(?:[0-9]{1,3}(?: [0-9]{3})+(?:[.,][0-9]*)?|"
+    r"[0-9]+(?:[.,][0-9]*)?|[.,][0-9]+))\s*"
+    r"(?P<unit>ff|pf|nf|uf|μf|µf|mf|f|p|n|u)\s*$",
     re.IGNORECASE,
 )
 _PICO_FARADS_PER_UNIT = MappingProxyType(
     {
+        "ff": Decimal("0.001"),
         "p": Decimal(1),
         "pf": Decimal(1),
         "n": Decimal(1000),
@@ -28,17 +32,16 @@ _PICO_FARADS_PER_UNIT = MappingProxyType(
 
 
 def parse_capacitance_pf(value: str) -> Decimal | None:
-    """Parse a deliberately small set of explicit KiCad capacitance spellings."""
-    if len(value) > 128:
+    """Parse bounded KiCad capacitance spellings without guessing separators."""
+    primary = primary_component_value_text(value)
+    if primary is None:
         return None
-    match = _CAPACITANCE_VALUE.fullmatch(value)
+    value_text, _has_metadata = primary
+    match = _CAPACITANCE_VALUE.fullmatch(value_text)
     if match is None:
         return None
-    try:
-        number = Decimal(match.group("number"))
-    except InvalidOperation:
-        return None
-    if not number.is_finite() or number <= 0:
+    number = parse_component_value_number(match.group("number"))
+    if number is None or number <= 0:
         return None
     try:
         with localcontext() as context:

@@ -5794,6 +5794,8 @@
         "tests.test_i2c_pullup_capacitance.test_changed_part_identity_fails_mapped_capacitor",
         "tests.test_i2c_pullup_capacitance.test_changed_symbol_footprint_or_pin_inventory_fails_exact_mapping",
         "tests.test_i2c_pullup_capacitance.test_nominal_value_outside_reviewed_range_fails_mapped_capacitor",
+        "tests.test_i2c_pullup_capacitance.test_decimal_comma_capacitance_value_is_checked_against_mapped_window",
+        "tests.test_capacitance_values.test_parser_rejects_ambiguous_nonpositive_or_unbounded_values",
         "tests.test_i2c_pullup_capacitance.test_wrong_return_net_fails_exact_pin_mapping",
         "tests.test_i2c_pullup_capacitance.test_accounted_effective_capacitance_cannot_exceed_bus_maximum",
         "tests.test_i2c_pullup_capacitance.test_dnp_mapped_capacitor_cannot_satisfy_a_required_contributor",
@@ -5815,7 +5817,9 @@
         "tests.test_i2c_pullup_heuristic_coverage.test_exact_array_channel_tolerance_scope_resolves_the_i2c_prompt",
         "tests.test_i2c_pullup_heuristic_coverage.test_exact_array_capacitance_scope_resolves_the_i2c_prompt",
         "tests.test_i2c_pullup_capacitance.test_exact_fitted_capacitor_and_residual_bound_pass",
+        "tests.test_i2c_pullup_capacitance.test_decimal_comma_capacitance_value_is_checked_against_mapped_window",
         "tests.test_i2c_pullup_capacitance.test_explicit_non_c_reference_capacitor_mapping_passes",
+        "tests.test_capacitance_values.test_parser_accepts_unambiguous_kicad_value_fields",
         "tests.test_i2c_pullup_capacitance.test_non_c_capacitor_outside_the_scoped_line_is_not_a_candidate",
         "tests.test_i2c_pullup_capacitance.test_capacitance_contract_accepts_explicit_non_c_reference",
         "tests.test_i2c_pullup_heuristic_coverage.test_symmetric_array_pin_orientation_is_a_valid_control",
@@ -5865,12 +5869,14 @@
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance",
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_series_pullup_paths",
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_exact_device_r_symbol_under_non_r_reference",
+        "tests.test_design_lint_i2c_equivalent_resistance.test_kicad_decimal_comma_resistors_keep_fault_and_valid_control_distinct",
         "tests.test_i2c_pullup_native_fixture_lane.test_native_array_channel_fault_and_control_on_supported_images"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance",
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_series_pullup_paths",
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_exact_device_r_symbol_under_non_r_reference",
+        "tests.test_design_lint_i2c_equivalent_resistance.test_kicad_decimal_comma_resistors_keep_fault_and_valid_control_distinct",
         "tests.test_i2c_pullup_native_fixture_lane.test_native_array_channel_fault_and_control_on_supported_images"
       ],
       "metamorphic_status": "covered",

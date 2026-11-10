@@ -29,8 +29,8 @@ def check_i2c_low_equivalent_native_cases(
     """Require native fault/control exports to preserve the low-resistance predicate."""
 
     for case, expected_value, expected_equivalent in (
-        ("low_resistance_control", "2k", 1_000.0),
-        ("low_resistance_fault", "1k5", 750.0),
+        ("low_resistance_control", "2,0k", 1_000.0),
+        ("low_resistance_fault", "1,5k", 750.0),
     ):
         observed = observations[(case, "first")]
         expected_net_members = {

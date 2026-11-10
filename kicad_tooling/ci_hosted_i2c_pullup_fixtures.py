@@ -56,10 +56,10 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
     }
     source_hashes = {case: digest(path) for case, path in fixtures.items()}
     expected_source_hashes = {
-        "control": "46fbdf1453e8254a633b7dee43b8877fc516758446314f4834f55a41db2a2479",
-        "fault": "c4ec4dbb38f9a076d3f8969fd77b9f2f869648c1ca490f1c973e4b92ba16f595",
-        "low_resistance_control": "62c084d84647d91126b1892bc88a3410fb42512d34d3dc42430189107f61dacd",
-        "low_resistance_fault": "b1f58647560672950fc58bc2e4e776a2cf6c3310396a5c0bc8980f9c2b7aa632",
+        "control": "27eb1bdf27b33ca5788d3070f9310c39cd37db59b3617c0c15320b95f0e33aa4",
+        "fault": "cb69cde42375460a9579d7aa0aa1c77c9a73e542072b91c31c970a0789145379",
+        "low_resistance_control": "0574dbdecd149637c80ec3d9427a9c7fcea78f9542bb8371ea02ad8b7c4570f2",
+        "low_resistance_fault": "183705336727e538f54e80c94c4d318d6e94b9dba8b247c8bfdea96c504937ce",
         "symbol_resistor": "1793291946117b88171d407379c6e768fb10e8b26feae7736f2206c57e5806b4",
     }
     if source_hashes != expected_source_hashes:
@@ -205,7 +205,7 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
     capacitor = control.components.get("X1")
     if (
         capacitor is None
-        or capacitor.value != "10p"
+        or capacitor.value != "0,01nF, 10%"
         or capacitor.footprint != "Synthetic:0603"
         or control.component_symbols.get("X1") != "Device:C"
         or set(control.component_pin_numbers.get("X1", ())) != {"1", "2"}

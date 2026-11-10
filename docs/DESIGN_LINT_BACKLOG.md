@@ -763,6 +763,15 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **Latest progress (LINT-358, deterministic component-value syntax):** A
+  pinned cohort release documents support for simulator-style component-value
+  spellings and deliberately leaves ambiguous comma forms uninterpreted. The
+  local bounded parser had missed unambiguous decimal-comma and grouped values,
+  `Meg`, femtofarads, and a primary capacitor value followed by metadata. The
+  shared syntax owner now supports those cases in existing I2C capacitance and
+  resistor checks, with ambiguous separators rejected. Tooling-owned fault and
+  valid-control schematics exercise native KiCad exports on the existing
+  digest-pinned lane; no cohort code or board data was imported.
 - **Latest progress (LINT-357, I2C explicit no-connect control):** A cohort
   false-positive report motivated a focused counterexample for
   `bus.i2c_missing_pullup`. Native exports must keep an SDA or SCL pin marked
@@ -21695,6 +21704,42 @@ acceptance threads while new lint features proceed:
   typing, wheel/sdist installation, external inventory/surface/verification,
   and the relocated public-template playtest. No CLI/MCP behavior changed.
 
+#### LINT-358 — Parse bounded KiCad component-value spellings deterministically
+
+- **Status:** Implemented in the existing I2C capacitance-window and low
+  equivalent-resistance checks with synthetic and exact-native fault/control
+  coverage.
+- **Cohort cue:** kicad-happy v3.0.1 documents simulator-style parsing for
+  decimal commas, grouped spaces, `Meg`, femtofarads, and comma-delimited value
+  metadata. Its documented ambiguous `1,000` case remains unparsed. See the
+  pinned [v3.0.1 changelog][happy-value-syntax-v301].
+- **Coverage:** A shared bounded syntax helper serves capacitance and resistor
+  value owners. Synthetic cases prove decimal-comma and grouped values, `Meg`,
+  and a capacitor value followed by metadata reach the current rule predicates.
+  The native I2C array fixture carries a decimal-comma capacitor with value
+  metadata through the authored capacitance-window check; the native resistor
+  pair carries decimal-comma values through the equivalent-resistance check.
+- **Boundary:** Decimal and grouped forms are accepted only when unambiguous;
+  ambiguous comma grouping, malformed digit groups, negative values, and
+  unrecognized syntax stay unparsed. The parser does not infer component
+  tolerances, electrical ratings, or project requirements. This changes value
+  syntax support in existing heuristics; it adds no new electrical threshold.
+- **Selection:** The tests are linked to
+  `bus.i2c_pullup_input_limit_coverage` and
+  `bus.i2c_low_equivalent_resistance`. Exact-native coverage uses
+  `KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES`.
+- **Provenance:** The cohort source was reviewed at the pinned public release;
+  only the documented input cases informed first-party code and synthetic
+  regressions. No upstream implementation, fixture, product design, or
+  proprietary data was copied.
+- **Verification:** The focused parser/consumer/catalog selector passed 58
+  tests. The rule-scoped package acceptance passed 373 tests with 7,721
+  deselected; its exact-native I2C lane passed on KiCad 10.0.0 and 10.0.5,
+  including repeated normalized exports. Ruff, architecture and shared-utility
+  checks, Markdown checks, Linux and Windows Pyright, wheel/sdist builds,
+  isolated wheel installation, and public-template inventory, surface,
+  verification, and playtest stages passed. No CLI or MCP surface changed.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -21713,6 +21758,7 @@ quality, or first-article continuity.
 [happy-crystal-detector]: https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/signal_detectors.py#L818-L950
 [happy-datasheets]: <https://github.com/aklofas/kicad-happy#-datasheets--sync-and-extract>
 [happy-lb001]: https://github.com/aklofas/kicad-happy/blob/a6bba1add1e18b89e3aa0824b9769ed1d9d79174/skills/kicad/scripts/signal_detectors.py#L4367-L4440
+[happy-value-syntax-v301]: https://github.com/aklofas/kicad-happy/blob/7d9d4d9fef87ac2d3eb16cfc5cdc9a0869f417f4/CHANGELOG.md
 [happy-changelog]: https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md
 [happy-analyzer]: https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/signal_detectors.py#L3633-L3673
 [kicad-device-library]: https://kicad.github.io/symbols/Device.html

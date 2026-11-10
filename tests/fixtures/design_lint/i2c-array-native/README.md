@@ -19,9 +19,10 @@ The 4-pin array maps independent channels RN1.1–RN1.2 and RN1.3–RN1.4 to
 SDA/SCL and +3V3. The native export must retain the symbol ID, footprint,
 value, expected project `PART_ID`, all four pins, and exact net assignments.
 Both schematics include an explicit `Device:C` capacitor under the nonstandard
-reference `X1`, connected from SDA to GND. The authored capacitance scope maps
-its exact symbol, footprint, two-pin inventory, nets, nominal range, and
-effective-capacitance bound; native export must preserve that mapping. The
+reference `X1`, connected from SDA to GND, with value `0,01nF, 10%` (10 pF).
+The authored capacitance scope maps its exact symbol, footprint, two-pin
+inventory, nets, nominal range, and effective-capacitance bound; native export
+must preserve that mapping and parsed nominal value. The
 fault schematic also puts an unmapped `Device:C` symbol at `X2` on SDA, proving
 that symbol-based discovery catches a capacitor even when its reference is not
 C-prefixed.
