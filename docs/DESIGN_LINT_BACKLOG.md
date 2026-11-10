@@ -771,7 +771,10 @@ standalone parity work when it closes a demonstrated feature regression.
   retain package-wide checks. Locally, the connector rule's five selected
   modules passed Linux and Windows Pyright in 0.9 seconds each; the focused
   selector passed 35 checks with 7 deselected, and both pinned native Docker
-  cases passed. Hosted tagged acceptance remains pending.
+  cases passed. Hosted tag `v0.5.3rc626` acceptance also passed (run
+  `42777237044`): its scoped unit stage took 136.5 seconds, Linux and Windows
+  Pyright took 1.8 and 1.6 seconds, and the installed-wheel external-project
+  rehearsal passed.
 - **Latest progress (LINT-365, named mapped signals on rail-like nets):** The
   default-REVIEW `connector.mapped_interface_signal_on_named_rail` rule now
   uses a complete source-matched interface map for both generic and named
