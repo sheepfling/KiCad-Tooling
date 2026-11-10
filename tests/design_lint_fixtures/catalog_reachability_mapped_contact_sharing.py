@@ -14,7 +14,7 @@ from tests.design_lint_fixtures.connector_mapped_supply_return_net import (
 
 
 def mapped_contact_sharing_rule_ids() -> set[str]:
-    """Reach mapped supply/return and supply/shield shared-net rules."""
+    """Reach mapped power and shield/return shared-net rules."""
     return_report, _ = mapped_supply_return_net_report(mapped_supply_return_net_netlist())
     source = signal_sharing_netlist()
     coverage = signal_sharing_coverage(
@@ -23,4 +23,17 @@ def mapped_contact_sharing_rule_ids() -> set[str]:
         roles=("supply", "shield"),
     )
     shield_report, _ = signal_sharing_report(source, coverage=coverage)
-    return {item.rule_id for item in (*return_report.findings, *shield_report.findings)}
+    return_coverage = signal_sharing_coverage(
+        source,
+        signal_names=("SIGNAL_RETURN", "CABLE_SHIELD"),
+        roles=("return", "shield"),
+    )
+    return_shield_report, _ = signal_sharing_report(source, coverage=return_coverage)
+    return {
+        item.rule_id
+        for item in (
+            *return_report.findings,
+            *shield_report.findings,
+            *return_shield_report.findings,
+        )
+    }

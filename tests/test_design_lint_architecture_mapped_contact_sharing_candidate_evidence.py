@@ -85,13 +85,15 @@ def test_mapped_role_candidate_retains_current_catalog_and_pin_records(
 
 
 @pytest.mark.parametrize(
-    ("secondary_role", "rule_id"),
+    ("primary_role", "secondary_role", "rule_id"),
     (
-        ("return", "connector.mapped_supply_return_share_net"),
-        ("shield", "connector.mapped_supply_shield_share_net"),
+        ("supply", "return", "connector.mapped_supply_return_share_net"),
+        ("supply", "shield", "connector.mapped_supply_shield_share_net"),
+        ("return", "shield", "connector.mapped_return_shield_share_net"),
     ),
 )
 def test_mapped_power_role_pair_candidate_retains_exact_source_evidence(
+    primary_role: ConnectorPinRole,
     secondary_role: ConnectorPinRole,
     rule_id: str,
 ) -> None:
@@ -99,12 +101,12 @@ def test_mapped_power_role_pair_candidate_retains_exact_source_evidence(
     coverage = signal_sharing_coverage(
         observed,
         signal_names=("SUPPLY_CONTACT", "SECONDARY_CONTACT"),
-        roles=("supply", secondary_role),
+        roles=(primary_role, secondary_role),
     )
     (contacts,) = mapped_connector_role_pair_groups(
         observed,
         coverage,
-        primary_role="supply",
+        primary_role=primary_role,
         secondary_role=secondary_role,
     )
     source = MappedConnectorRolePairFindingEvidence(
@@ -129,7 +131,7 @@ def test_mapped_power_role_pair_candidate_retains_exact_source_evidence(
         ).evidence
     )
     assert candidate.evidence["component_reference"] == ("J1",)
-    assert candidate.evidence["supply_component_pin"] == ("J1.1",)
+    assert candidate.evidence[f"{primary_role}_component_pin"] == ("J1.1",)
     assert candidate.evidence[f"{secondary_role}_component_pin"] == ("J1.2",)
 
 
@@ -142,6 +144,10 @@ def test_mapped_power_role_pair_dispatchers_only_use_typed_source_projection() -
         (
             "connector_mapped_supply_shield_sharing.py",
             "mapped_supply_shield_sharing_net_candidates",
+        ),
+        (
+            "connector_mapped_return_shield_sharing.py",
+            "mapped_return_shield_sharing_net_candidates",
         ),
     ):
         path = HWREPO / name

@@ -132,6 +132,7 @@ DesignLintRuleId = Literal[
     "connector.mapped_supply_signal_share_net",
     "connector.mapped_supply_return_share_net",
     "connector.mapped_supply_shield_share_net",
+    "connector.mapped_return_shield_share_net",
     "connector.return_pin_on_positive_rail",
     "connector.return_pin_shares_protocol_signal_net",
     "component.unconnected_power_input",

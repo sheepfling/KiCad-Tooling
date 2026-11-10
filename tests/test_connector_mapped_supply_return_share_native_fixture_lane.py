@@ -34,6 +34,7 @@ pytestmark = [
 
 RULE_ID = "connector.mapped_supply_return_share_net"
 SUPPLY_SHIELD_RULE_ID = "connector.mapped_supply_shield_share_net"
+RETURN_SHIELD_RULE_ID = "connector.mapped_return_shield_share_net"
 FIXTURE_CASES = {
     "mapped-supply-return-share-fault": (
         "fault.kicad_sch",
@@ -48,6 +49,7 @@ FIXTURE_CASES = {
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=SUPPLY_SHIELD_RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=RETURN_SHIELD_RULE_ID)
 @pytest.mark.skipif(
     os.environ.get("KICAD_RUN_NATIVE_CONNECTOR_FIXTURES") != "1",
     reason="exact-version native connector fixtures run in package acceptance",
@@ -151,3 +153,22 @@ def test_native_mapped_supply_return_share_fault_and_control(
         assert observed.nets["SUPPLY_SOURCE"] == ("J1.1",)
         assert observed.nets["RETURN_REFERENCE"] == ("J1.2",)
         assert not shield_findings
+
+    return_shield_coverage = signal_sharing_coverage(
+        observed,
+        signal_names=("SIGNAL_RETURN", "CABLE_SHIELD"),
+        roles=("return", "shield"),
+    )
+    return_shield_report, _ = signal_sharing_report(observed, coverage=return_shield_coverage)
+    return_shield_findings = tuple(
+        item for item in return_shield_report.findings if item.rule_id == RETURN_SHIELD_RULE_ID
+    )
+    assert return_shield_coverage.status == "COMPLETE"
+    if fixture_case.endswith("fault"):
+        assert observed.nets["AUX_SHARED_NODE"] == ("J1.1", "J1.2")
+        assert len(return_shield_findings) == 1
+        assert return_shield_findings[0].evidence["interface_role"] == ("return", "shield")
+    else:
+        assert observed.nets["SUPPLY_SOURCE"] == ("J1.1",)
+        assert observed.nets["RETURN_REFERENCE"] == ("J1.2",)
+        assert not return_shield_findings

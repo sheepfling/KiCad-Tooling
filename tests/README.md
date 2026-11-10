@@ -77,6 +77,17 @@ exact native fixture lane. Select it with
   -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_supply_shield_share_net")'
 ```
 
+Mapped return/shield shared-net review uses complete source-matched coverage
+and the exact native connector fixture lane:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  tests/test_connector_mapped_return_shield_sharing.py \
+  tests/test_design_lint_mcp_parity_mapped_contact_sharing.py \
+  tests/test_connector_mapped_supply_return_share_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_return_shield_share_net")'
+```
+
 Run the native Docker exports separately with
 `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. Fixture source hashes and limitations
 are in the

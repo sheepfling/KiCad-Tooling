@@ -48,6 +48,7 @@ RETURN_RULE_ID = "connector.mapped_signal_return_share_net"
 SUPPLY_RULE_ID = "connector.mapped_supply_signal_share_net"
 SUPPLY_RETURN_RULE_ID = "connector.mapped_supply_return_share_net"
 SUPPLY_SHIELD_RULE_ID = "connector.mapped_supply_shield_share_net"
+RETURN_SHIELD_RULE_ID = "connector.mapped_return_shield_share_net"
 INTERFACE_ID = "synthetic-mapped-contact-sharing"
 _ROLES: tuple[
     tuple[
@@ -104,6 +105,15 @@ _ROLES: tuple[
         "CABLE_SHIELD",
         SUPPLY_SHIELD_RULE_ID,
         "supply_component_pin",
+        "shield_component_pin",
+    ),
+    (
+        "return",
+        "SIGNAL_RETURN",
+        "shield",
+        "CABLE_SHIELD",
+        RETURN_SHIELD_RULE_ID,
+        "return_component_pin",
         "shield_component_pin",
     ),
 )
@@ -184,6 +194,7 @@ def _install_reviewed_contact_interface(
 @pytest.mark.design_lint_rule(rule_id=SUPPLY_RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=SUPPLY_RETURN_RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=SUPPLY_SHIELD_RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=RETURN_SHIELD_RULE_ID)
 def test_mapped_contact_sharing_findings_match_between_cli_and_mcp(tmp_path: Path) -> None:
     root, native = synthetic_design_lint_project(
         tmp_path,
