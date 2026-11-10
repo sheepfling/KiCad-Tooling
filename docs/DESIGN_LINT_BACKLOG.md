@@ -14,7 +14,10 @@ backlog.
 
 See [current design lint rules](DESIGN_LINT.md) for implemented behavior and
 configuration. Items below are proposed work unless explicitly marked
-implemented.
+implemented. Any entry whose `Rule` field links an active catalog rule must
+also include a `Status` field; `catalog_lint` checks this relationship. A
+status records implementation progress, while the rule's maturity and evidence
+record what has actually been validated.
 
 ## Working rules
 
@@ -19413,6 +19416,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-289 — Prompt review of generic connector pins assigned to USB PHY pairs
 
+- **Status:** Implemented for active catalog rule: `bus.usb_generic_connector_phy_pair_review`.
 - **Rule:** `bus.usb_generic_connector_phy_pair_review`, default `review`.
 - **Trigger:** A fitted connector candidate has a complete, unambiguous native
   pin inventory, and generic `Pin_N` contacts on two distinct nets match the
@@ -19444,6 +19448,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-290 — Prompt review of generic connector pins assigned to CAN pairs
 
+- **Status:** Implemented for active catalog rule: `bus.can_generic_connector_pair_review`.
 - **Rule:** `bus.can_generic_connector_pair_review`, default `review`.
 - **Trigger:** A fitted U/IC endpoint has complete, unique native pin metadata
   and exactly one CANH and CANL pin on distinct, unambiguous nets. A completely
@@ -19477,6 +19482,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-291 — Prompt review of generic connector pins assigned to I2C pairs
 
+- **Status:** Implemented for active catalog rule: `bus.i2c_generic_connector_pair_review`.
 - **Rule:** `bus.i2c_generic_connector_pair_review`, default `review`.
 - **Trigger:** A fitted U/IC endpoint has complete, unique native pin metadata
   and exactly one SDA and SCL pin on distinct, unambiguous nets. A completely
@@ -19511,6 +19517,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-292 — Prompt review of generic connector pins assigned to SPI triads
 
+- **Status:** Implemented for active catalog rule: `bus.spi_generic_connector_triad_review`.
 - **Rule:** `bus.spi_generic_connector_triad_review`, default `review`.
 - **Trigger:** One fitted U/IC endpoint has complete, unique native pin
   metadata and exactly one clock, controller-to-peripheral data, and
@@ -19545,6 +19552,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-293 — Prompt review of generic connector pins assigned to UART pairs
 
+- **Status:** Implemented for active catalog rule: `bus.serial_generic_connector_pair_review`.
 - **Rule:** `bus.serial_generic_connector_pair_review`, default `review`.
 - **Trigger:** A fitted U/IC endpoint has a complete, unique native pin
   inventory and exactly one TX and RX pin in the same recognized UART/USART
@@ -19583,6 +19591,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-294 — Prompt review of generic connector pins assigned to RS-485 pairs
 
+- **Status:** Implemented for active catalog rule: `bus.rs485_generic_connector_pair_review`.
 - **Rule:** `bus.rs485_generic_connector_pair_review`, default `review`.
 - **Trigger:** A fitted U/IC endpoint has an explicitly recognized RS-485
   identity, complete unique native pin metadata, and exactly one A and one B
@@ -19623,6 +19632,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-295 — Prompt review of generic connector pins on USB SuperSpeed pairs
 
+- **Status:** Implemented for active catalog rule:
+  `bus.usb_superspeed_generic_connector_pair_review`.
 - **Rule:** `bus.usb_superspeed_generic_connector_pair_review`, default
   `review`.
 - **Trigger:** A fitted U/IC endpoint has a complete, unique native pin
@@ -19661,6 +19672,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-296 — Prompt review of generic connector pins on Ethernet PHY pairs
 
+- **Status:** Implemented for active catalog rule: `bus.ethernet_generic_connector_pair_review`.
 - **Rule:** `bus.ethernet_generic_connector_pair_review`, default `review`.
 - **Trigger:** A fitted U/IC endpoint has complete, unique pin inventory and
   exactly one recognized Ethernet TX-positive/TX-negative or RX-positive/
@@ -19692,6 +19704,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-297 — Prompt review of generic connector pins on Ethernet management nets
 
+- **Status:** Implemented for active catalog rule:
+  `bus.ethernet_management_generic_connector_pair_review`.
 - **Rule:** `bus.ethernet_management_generic_connector_pair_review`, default
   `review`.
 - **Trigger:** A fitted U/IC has complete unique native pin metadata and exactly
@@ -19721,6 +19735,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-298 — Prompt review of generic connector pins on SWD nets
 
+- **Status:** Implemented for active catalog rule: `bus.swd_generic_connector_pair_review`.
 - **Rule:** `bus.swd_generic_connector_pair_review`, default `review`.
 - **Trigger:** A fitted U/IC has complete unique native pin metadata and one
   uniquely assigned SWDIO pin plus one SWCLK or SWDCLK pin on distinct nets. A
@@ -19752,6 +19767,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-299 — Prompt review of generic connector pins on JTAG nets
 
+- **Status:** Implemented for active catalog rule: `bus.jtag_generic_connector_pair_review`.
 - **Rule:** `bus.jtag_generic_connector_pair_review`, default `review`.
 - **Trigger:** A fitted U/IC has complete unique native pin metadata and one
   uniquely assigned TCK function plus one TMS function on distinct nets. A
@@ -19783,6 +19799,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-300 — Prompt review of a two-pin UART connector without a return role
 
+- **Status:** Implemented for active catalog rule: `connector.serial_pair_without_return_review`.
 - **Rule:** `connector.serial_pair_without_return_review`, default `review`.
 - **Trigger:** A fitted U/IC has a complete unique native UART TX/RX pair on
   distinct exact nets. A fully inventoried connector has exactly two native
@@ -19819,6 +19836,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-301 — Prompt review of a two-pin I2C connector without a return role
 
+- **Status:** Implemented for active catalog rule: `connector.i2c_pair_without_return_review`.
 - **Rule:** `connector.i2c_pair_without_return_review`, default `review`.
 - **Trigger:** A fitted U/IC has complete unique native pin metadata and one
   uniquely assigned I2C SDA/SCL pair on distinct nets. A completely inventoried
@@ -19851,6 +19869,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-302 — Prompt review of a two-pin CAN connector without a return role
 
+- **Status:** Implemented for active catalog rule: `connector.can_pair_without_return_review`.
 - **Rule:** `connector.can_pair_without_return_review`, default `review`.
 - **Trigger:** A fitted U/IC has complete unique native pin metadata and one
   uniquely assigned CANH/CANL pair on distinct nets. A completely inventoried
@@ -19883,6 +19902,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-303 — Prompt review of a two-pin RS-485 connector without a return role
 
+- **Status:** Implemented for active catalog rule: `connector.rs485_pair_without_return_review`.
 - **Rule:** `connector.rs485_pair_without_return_review`, default `review`.
 - **Trigger:** A fitted U/IC has a complete unique native RS-485 A/B pair on
   distinct exact nets. A fully inventoried connector has exactly two native
@@ -19912,6 +19932,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-304 — Review a two-pin USB 2.0 connector pair without an identified return
 
+- **Status:** Implemented for active catalog rule: `connector.usb2_pair_without_return_review`.
 - **Rule:** `connector.usb2_pair_without_return_review`, default `review`.
 - **Trigger:** A fitted connector with a complete, unique two-pin inventory is
   assigned one contact per exact D+/D- net of one recognized native USB 2.0
@@ -19945,6 +19966,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-305 — Review a two-pin USB SuperSpeed connector pair without an identified return
 
+- **Status:** Implemented for active catalog rule:
+  `connector.usb_superspeed_pair_without_return_review`.
 - **Rule:** `connector.usb_superspeed_pair_without_return_review`, default
   `review`.
 - **Trigger:** A fitted connector with a complete, unique two-pin inventory is
@@ -19979,6 +20002,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-306 — Review generic connector contacts on a USB-C controller CC pair
 
+- **Status:** Implemented for active catalog rule: `bus.usb_c_generic_connector_cc_pair_review`.
 - **Rule:** `bus.usb_c_generic_connector_cc_pair_review`, default `review`.
 - **Trigger:** One fitted numeric U/IC has exactly one native CC1 and CC2
   function in its complete unique pin inventory, each assigned directly to a
@@ -20010,6 +20034,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-307 — Review a mapped SPI connector without an identified return role
 
+- **Status:** Implemented for active catalog rule: `connector.spi_triad_without_return_review`.
 - **Rule:** `connector.spi_triad_without_return_review`, default `review`.
 - **Trigger:** A fitted generic connector has a complete, current, source-matched
   map accounting for every contact. The map matches generic connector contacts
@@ -20042,6 +20067,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-308 — Review a mapped storage capacitor below an authored hold-up minimum
 
+- **Status:** Implemented for active catalog rule: `power.capacitor_hold_up_below_project_minimum`.
 - **Rule:** `power.capacitor_hold_up_below_project_minimum`, default `review`.
 - **Trigger:** A project-authored requirement names one exact fitted capacitor,
   its PART_ID, value, symbol, footprint, complete two-pin inventory, and the
@@ -20075,6 +20101,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-309 — Parallel hold-up banks
 
+- **Status:** Implemented for active catalog rule: `power.capacitor_hold_up_below_project_minimum`.
 - **Rule:** extends `power.capacitor_hold_up_below_project_minimum`; no new
   inferred rule or default policy mode is added.
 - **Trigger:** A project may add up to 32 exact `parallel_capacitors` members to
@@ -20205,6 +20232,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-313 — Review a two-pin I3C connector without an identified return
 
+- **Status:** Implemented for active catalog rule: `connector.i3c_pair_without_return_review`.
 - **Rule:** `connector.i3c_pair_without_return_review`, default `review`.
 - **Trigger:** A fitted U/IC has complete unique native pin metadata and one
   uniquely assigned I3C SDA/SCL pair whose optional channel identifiers match
@@ -20239,6 +20267,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-314 — Review an SWD connector without an identified return
 
+- **Status:** Implemented for active catalog rule: `connector.swd_pair_without_return_review`.
 - **Rule:** `connector.swd_pair_without_return_review`, default `review`.
 - **Trigger:** A complete connector candidate has generic contacts on both
   exact, distinct SWDIO and SWCLK/SWDCLK nets from a fitted U/IC with a
@@ -20272,6 +20301,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-315 — Review a JTAG connector without an identified return
 
+- **Status:** Implemented for active catalog rule: `connector.jtag_pair_without_return_review`.
 - **Rule:** `connector.jtag_pair_without_return_review`, default `review`.
 - **Trigger:** A complete connector candidate has generic contacts on both
   exact, distinct TCK and TMS nets from a fitted U/IC with a complete, unique
@@ -20315,6 +20345,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-316 — Add exact-native evidence for an unassigned USB-C CC pin
 
+- **Status:** Implemented for active catalog rule: `bus.usb_c_unconnected_cc_pin`.
 - **Rule:** `bus.usb_c_unconnected_cc_pin`, default `review`; this is a
   verification-coverage improvement for the existing rule, not a new detector.
 - **Gap:** The rule had synthetic fault/control and order-stability coverage,
@@ -20334,6 +20365,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-317 — Add exact-native evidence for an unassigned CANH/CANL line
 
+- **Status:** Implemented for active catalog rule: `bus.can_unconnected_line`.
 - **Rule:** `bus.can_unconnected_line`, default `review`; this adds native
   verification coverage for an existing heuristic.
 - **Gap:** Synthetic fault/control and order-stability checks existed, but the
@@ -20356,6 +20388,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-318 — Measure routed skew for authored differential-pair bundles
 
+- **Status:** Implemented for active catalog rule: `pcb.differential_pair_route_skew`.
 - **Rule:** `pcb.differential_pair_route_skew`, default `review`; the project
   must explicitly map exact path endpoints and approve a maximum skew.
 - **Gap:** KiCad DRC rule-coverage checks verify that an authored skew rule is
@@ -20400,6 +20433,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-320 — Review mapped differential-pair layer-sequence differences
 
+- **Status:** Implemented for active catalog rule: `pcb.differential_pair_route_layer_mismatch`.
 - **Rule:** `pcb.differential_pair_route_layer_mismatch`, default `review`.
 - **Trigger:** Every path in a project-mapped pair bundle has one resolved
   source-bound native track chain between its exact endpoint pads, but the
@@ -20453,6 +20487,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-322 — Include other connector contacts in generic UART review evidence
 
+- **Status:** Implemented for active catalog rule: `bus.serial_generic_connector_pair_review`.
 - **Rule:** `bus.serial_generic_connector_pair_review`, default `review`; the
   trigger and policy are unchanged.
 - **Gap:** When a generic connector carries the exact TX/RX nets of a recognized
@@ -20928,6 +20963,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-338 — Review mapped regulator pin-role metadata
 
+- **Status:** Implemented for active catalog rule: `power.regulator_pin_role_mismatch`.
 - **Rule:** `power.regulator_pin_role_mismatch`, default `review`.
 - **Cohort evidence:** The pinned TF-001 source trial returned deterministic
   isolated-feedback findings when no transformer existed and when the
@@ -20967,6 +21003,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-339 — Review mapped active regulator-support pin roles
 
+- **Status:** Implemented for active catalog rule: `power.regulator_support_pin_role_mismatch`.
 - **Rule:** `power.regulator_support_pin_role_mismatch`, default `review`.
 - **Cohort evidence:** TF-001's optocoupler and TL431-like symbols used role-
   agnostic pins; LINT-338 checks regulator pins but does not map these active
@@ -20998,6 +21035,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-340 — Review mapped active regulator-support pin-to-net assignments
 
+- **Status:** Implemented for active catalog rule: `power.regulator_support_pin_net_mismatch`.
 - **Rule:** `power.regulator_support_pin_net_mismatch`, default `review`.
 - **Gap:** LINT-339 compares authored symbol function and electrical-type
   expectations, but it does not compare the active support component's
@@ -21027,6 +21065,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-341 — Review missing active regulator-support pin-net map coverage
 
+- **Status:** Implemented for active catalog rule:
+  `power.regulator_support_pin_net_map_coverage_missing`.
 - **Rule:** `power.regulator_support_pin_net_map_coverage_missing`, default
   `review`.
 - **Gap:** LINT-339 can identify explicitly mapped active support components,
@@ -21061,6 +21101,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-342 — Review split generic power inputs on unlike reviewed connector peers
 
+- **Status:** Implemented for active catalog rule: `connector.reviewed_peer_power_input_split`.
 - **Rule:** `connector.reviewed_peer_power_input_split`, default `review`.
 - **Gap:** Existing repeated-function checks cannot relate roleless generic
   `power_in` or `passive` contacts across different connector symbols. The
@@ -21107,6 +21148,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-343 — Review an open passive power contact across unlike reviewed connector peers
 
+- **Status:** Implemented for active catalog rule:
+  `connector.reviewed_peer_passive_power_input_open`.
 - **Rule:** `connector.reviewed_peer_passive_power_input_open`, default
   `review`.
 - **Gap:** LINT-342 reports two generic power contacts assigned to different
@@ -21151,6 +21194,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-344 — Review split mapped signal assignments across unlike reviewed connector peers
 
+- **Status:** Implemented for active catalog rule:
+  `connector.reviewed_peer_signal_assignment_split`.
 - **Rule:** `connector.reviewed_peer_signal_assignment_split`, default
   `review`.
 - **Gap:** `connector.mapped_signals_split_nets` compares repeated mapped
@@ -21196,6 +21241,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-345 — Review a shared peer signal mapped to different voltage domains
 
+- **Status:** Implemented for active catalog rule:
+  `connector.reviewed_peer_signal_domain_shared_net`.
 - **Rule:** `connector.reviewed_peer_signal_domain_shared_net`, default
   `review`.
 - **Gap:** Reviewed connector peers can have generic contacts mapped to the
@@ -21235,6 +21282,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-346 — Review distinct mapped peer signals sharing one net
 
+- **Status:** Implemented for active catalog rule:
+  `connector.reviewed_peer_distinct_signals_shared_net`.
 - **Rule:** `connector.reviewed_peer_distinct_signals_shared_net`, default
   `review`.
 - **Gap:** `connector.mapped_signals_share_net` detects distinct mapped signal
@@ -21274,6 +21323,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-347 — Add current peer assignments to open mapped-signal evidence
 
+- **Status:** Implemented for active catalog rule: `connector.mapped_interface_signal_unassigned`.
 - **Rule:** Existing `connector.mapped_interface_signal_unassigned`, default
   `review`; this is an evidence-quality increment and does not add a rule.
 - **Gap:** The existing check already found an open mapped signal contact, but
@@ -21312,6 +21362,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-348 — Review native SWDIO and SWCLK assigned to one net
 
+- **Status:** Implemented for active catalog rule: `bus.swdio_swclk_same_net`.
 - **Rule:** `bus.swdio_swclk_same_net`, default `review`.
 - **Gap:** The SWD generic-connector association check intentionally skipped
   endpoints where SWDIO and SWCLK shared one net. That kept same-net endpoints
@@ -21372,6 +21423,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-349 — Review native I2S bit clock and word select on one net
 
+- **Status:** Implemented for active catalog rule: `bus.i2s_clock_frame_same_net`.
 - **Rule:** `bus.i2s_clock_frame_same_net`, default `review`.
 - **Gap:** Existing protocol same-net checks did not cover the distinct I2S
   bit-clock and word-select/frame-clock roles. An unintended shared assignment
@@ -21412,6 +21464,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-350 — Validate mapped I2C address collisions through native export
 
+- **Status:** Implemented for active catalog rule: `bus.i2c_address_collision`.
 - **Rule:** Existing `bus.i2c_address_collision`, default `review`; no new
   electrical inference is introduced.
 - **Gap:** The authored address-map rule had synthetic behavior and surface
@@ -21445,6 +21498,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-351 — Validate mapped I2C strap mismatches through native export
 
+- **Status:** Implemented for active catalog rule: `bus.i2c_address_mismatch`.
 - **Rule:** Existing `bus.i2c_address_mismatch`, default `review`; the project
   map remains the independent source of the expected responder address.
 - **Gap:** The source-bound address evaluator had synthetic mismatch coverage,
@@ -21478,6 +21532,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-352 — Review fitted I2C responders omitted from the address map
 
+- **Status:** Implemented for active catalog rule: `bus.i2c_unmapped_responder`.
 - **Rule:** Existing `bus.i2c_unmapped_responder`, default `review`; the
   project-authored address map defines which responder references are
   intentionally covered.
@@ -21513,6 +21568,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-353 — Review native I2S bit clock and serial data on one net
 
+- **Status:** Implemented for active catalog rule: `bus.i2s_clock_data_same_net`.
 - **Rule:** `bus.i2s_clock_data_same_net`, default `review`.
 - **Gap:** LINT-349 covers bit-clock and word-select sharing, but not a bit-clock
   sharing a net with a serial-data pin on the same fitted IC. That assignment
@@ -21645,6 +21701,25 @@ acceptance threads while new lint features proceed:
   without the switch; exact Docker selector: 2 native passes on KiCad 10.0.0
   and 10.0.5, each checking first and repeat exports. Connector native
   registry, marker, and tag-selection checks: 121 passed.
+
+#### LINT-357 — Keep active catalog-linked backlog entries explicitly statused
+
+- **Status:** Implemented as `tests/test_design_lint_backlog_catalog_status.py`.
+- **Priority:** P1 backlog integrity; this is a documentation quality gate,
+  not an electrical rule.
+- **Gap:** The backlog says entries are proposed unless marked implemented,
+  but 45 entries with active rules in their `Rule` fields had no status. That
+  made implemented checks read like unstarted proposals.
+- **Behavior:** The `catalog_lint` test reads the active rule catalog and
+  requires every backlog entry that explicitly links one of those rules to
+  carry a status field. It only treats IDs inside the `Rule` field as links;
+  explanatory prose does not create a catalog relationship.
+- **Boundary:** This gate checks backlog metadata. It does not validate rule
+  predicates, native coverage, applicability, field precision, or reviewer
+  value.
+- **Selection:** Run
+  `python -I -m pytest -q tests/test_design_lint_backlog_catalog_status.py
+  -m 'design_lint and catalog_lint'`.
 
 ## Completion and release gate
 

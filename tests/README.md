@@ -541,7 +541,8 @@ independent Python processes.
 
 The marker and collection architecture tests run in the focused `catalog_lint`
 gate, so CI checks both catalog reachability and the selectors used to keep
-that gate narrow.
+that gate narrow. Active catalog-linked backlog entries are status-checked by
+`tests/test_design_lint_backlog_catalog_status.py` in the same selector.
 
 The native decoupling fixture runs separately with:
 
