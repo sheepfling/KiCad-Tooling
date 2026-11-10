@@ -16,6 +16,15 @@ from scripts import ci
 def _selected_unit_command(
     root: Path, monkeypatch: pytest.MonkeyPatch, arguments: Sequence[str]
 ) -> tuple[str, ...]:
+    return _selected_stage_command(root, monkeypatch, arguments, "unit")
+
+
+def _selected_stage_command(
+    root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    arguments: Sequence[str],
+    selected_stage: str,
+) -> tuple[str, ...]:
     monkeypatch.setattr(ci, "ROOT", root)
     monkeypatch.setattr(ci.sys, "argv", ["scripts/ci.py", *arguments])
     monkeypatch.delenv("KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY", raising=False)
@@ -29,7 +38,7 @@ def _selected_unit_command(
     )
     with pytest.raises(StopIteration, match="stop after stage selection"):
         ci.main()
-    return {call.args[0]: call.args[1] for call in stage.call_args_list}["unit"]
+    return {call.args[0]: call.args[1] for call in stage.call_args_list}[selected_stage]
 
 
 @pytest.mark.architecture
@@ -83,6 +92,50 @@ def test_ci_driver_prefers_existing_test_modules_over_marker_selection(
         "-q",
         "--durations=10",
         selected,
+    )
+
+
+@pytest.mark.architecture
+@pytest.mark.design_lint
+@pytest.mark.rule_gate_integrity
+def test_ci_driver_applies_catalogued_typecheck_targets_to_both_platforms(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    target = "kicad_tooling/hwrepo/connector_identity.py"
+    target_path = tmp_path / target
+    target_path.parent.mkdir(parents=True)
+    target_path.write_text("\n", encoding="utf-8")
+
+    linux = _selected_stage_command(tmp_path, monkeypatch, ["--typecheck-paths", target], "pyright")
+    windows = _selected_stage_command(
+        tmp_path, monkeypatch, ["--typecheck-paths", target], "windows-types"
+    )
+
+    assert linux[-1] == target
+    assert windows[-3:] == ("--pythonversion", "3.11", target)
+    assert "--pythonplatform" in windows
+
+
+@pytest.mark.architecture
+@pytest.mark.design_lint
+@pytest.mark.rule_gate_integrity
+def test_ci_driver_keeps_package_wide_typecheck_when_no_scope_is_passed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    linux = _selected_stage_command(tmp_path, monkeypatch, [], "pyright")
+    windows = _selected_stage_command(tmp_path, monkeypatch, [], "windows-types")
+
+    assert linux == (sys.executable, "-m", "pyright", "--pythonpath", sys.executable)
+    assert windows == (
+        sys.executable,
+        "-m",
+        "pyright",
+        "--pythonpath",
+        sys.executable,
+        "--pythonplatform",
+        "Windows",
+        "--pythonversion",
+        "3.11",
     )
 
 

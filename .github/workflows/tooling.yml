@@ -224,6 +224,7 @@ jobs:
         env:
           PYTEST_MARKEXPR: ${{ steps.lint-scope.outputs.markexpr }}
           PYTEST_PATHS: ${{ steps.lint-scope.outputs.pytestpaths }}
+          TYPECHECK_PATHS: ${{ steps.lint-scope.outputs.typecheckpaths }}
         run: |
           args=(
             --project-root build/acceptance-template
@@ -232,6 +233,10 @@ jobs:
           if [[ -n "${PYTEST_PATHS:-}" ]]; then
             IFS=',' read -r -a pytest_paths <<< "$PYTEST_PATHS"
             args+=(--pytest-paths "${pytest_paths[@]}")
+          fi
+          if [[ -n "${TYPECHECK_PATHS:-}" ]]; then
+            IFS=',' read -r -a typecheck_paths <<< "$TYPECHECK_PATHS"
+            args+=(--typecheck-paths "${typecheck_paths[@]}")
           fi
           python scripts/ci.py "${args[@]}"
       - name: Keep stage logs

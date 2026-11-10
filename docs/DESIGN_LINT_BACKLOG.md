@@ -763,6 +763,15 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **Latest quality-gate progress (catalog-focused Pyright):** The last hosted
+  rule-tag run selected 349 tests, while its Linux and Windows package-wide
+  Pyright stages took about 291 seconds each. Rule-scoped prerelease tags now
+  derive Python targets from the active rule's cataloged implementation refs
+  and include the scope resolver and CI runner. Area tags and full acceptance
+  retain package-wide checks. Locally, the connector rule's five selected
+  modules passed Linux and Windows Pyright in 0.9 seconds each; the focused
+  selector passed 35 checks with 7 deselected, and both pinned native Docker
+  cases passed. Hosted tagged acceptance remains pending.
 - **Latest progress (LINT-365, named mapped signals on rail-like nets):** The
   default-REVIEW `connector.mapped_interface_signal_on_named_rail` rule now
   uses a complete source-matched interface map for both generic and named

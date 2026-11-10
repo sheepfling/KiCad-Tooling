@@ -18,6 +18,7 @@ from pathlib import Path
 
 from pydantic import JsonValue
 
+from kicad_tooling.ci_typecheck import pyright_command, validate_typecheck_paths
 from kicad_tooling.hwrepo.contracts import repo_path_is_within
 from kicad_tooling.package_build import build_distributions
 from kicad_tooling.platforms import is_windows_host
@@ -235,9 +236,15 @@ def main() -> int:
         nargs="+",
         help="Optional explicit test modules; these replace --pytest-markexpr selection",
     )
+    parser.add_argument(
+        "--typecheck-paths",
+        nargs="+",
+        help="Optional catalog-selected Python modules for the prerelease Pyright stages",
+    )
     args = parser.parse_args()
     try:
         pytest_paths = validate_test_module_files(args.pytest_paths or (), ROOT)
+        typecheck_paths = validate_typecheck_paths(args.typecheck_paths or (), ROOT)
     except ValueError as error:
         parser.error(str(error))
     logs = ROOT / "build/ci"
@@ -370,23 +377,13 @@ def main() -> int:
             run(ROOT, output, stage)
         stage(
             "pyright",
-            (sys.executable, "-m", "pyright", "--pythonpath", sys.executable),
+            pyright_command(sys.executable, target_paths=typecheck_paths),
             output,
             cwd=ROOT,
         )
         stage(
             "windows-types",
-            (
-                sys.executable,
-                "-m",
-                "pyright",
-                "--pythonpath",
-                sys.executable,
-                "--pythonplatform",
-                "Windows",
-                "--pythonversion",
-                "3.11",
-            ),
+            pyright_command(sys.executable, target_paths=typecheck_paths, windows=True),
             output,
             cwd=ROOT,
         )

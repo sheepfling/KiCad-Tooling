@@ -45,6 +45,8 @@ def test_lint_prerelease_skips_portability_previews_but_keeps_focused_acceptance
     assert "contains(github.ref_name, 'rc')" in lint_gate
     assert 'python scripts/lint_gate_scope.py --tag "$GITHUB_REF_NAME"' in lint_gate
     assert '--pytest-markexpr "$PYTEST_MARKEXPR"' in lint_gate
+    assert "TYPECHECK_PATHS: ${{ steps.lint-scope.outputs.typecheckpaths }}" in lint_gate
+    assert 'args+=(--typecheck-paths "${typecheck_paths[@]}")' in lint_gate
     assert "build/acceptance-template" in lint_gate
 
 
