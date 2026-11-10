@@ -151,7 +151,8 @@ def verify_switching_loop_geometry_cases(ctx: SwitchingLoopContext):
                     )
                 stack = {layer.casefold() for layer in snapshot.copper_layers}
                 if (
-                    snapshot.schema_version not in {"10", "11", "12", "13", "14", "15", "16", "17"}
+                    snapshot.schema_version
+                    not in {"10", "11", "12", "13", "14", "15", "16", "17", "18"}
                     or snapshot.board_sha256 != source_hash
                     or snapshot.kicad_version != ctx.config.kicad_version
                     or (snapshot.image != ctx.config.image)

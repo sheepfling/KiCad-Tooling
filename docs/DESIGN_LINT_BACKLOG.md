@@ -22893,6 +22893,38 @@ acceptance threads while new lint features proceed:
   `design_lint and pcb_lint`. The native lane uses
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`.
 
+#### LINT-383 — Check authored test-probe clearance to untented vias
+
+- **Status:** Implemented as an opt-in extension to LINT-018's source-bound PCB
+  probe-envelope evidence.
+- **Priority:** P1 evidence completeness when a project-authored access point
+  needs clearance from exposed via copper reviewed.
+- **Gap:** A test point can pass aperture, neighbor-pad, and courtyard checks
+  while a nearby untented via occupies the authored probe-tip envelope.
+- **Contract and predicate:** An endpoint may author a separate
+  `via_clearance_mm`. For each required side, compare the nearest via that
+  spans that outer copper layer and is not tented there against the probe-tip
+  radius plus the authored clearance. Exclude same-net vias; include foreign
+  and unconnected vias. Require schema v18 native evidence, including explicit
+  absence when no qualifying via is observed. A pre-v18 snapshot returns
+  `NOT_RUN` for this requirement.
+- **Boundary:** This uses KiCad's native via shape and side-specific tenting
+  state. It does not classify exposed tracks, copper-zone openings, or
+  arbitrary mask graphics, and a passing result does not prove fixture fit,
+  probe angle or reach, or manufacturing test coverage.
+- **Fixtures:** Synthetic KiCad fixtures cover a one-nanometer-inside fault,
+  an exact clearance boundary, a closer same-net via that is ignored, a nearby
+  tented-via control that is excluded, and a back-side via fault. Both approved
+  KiCad 10.0.0 and 10.0.5 digest-pinned images must produce repeatable,
+  source-bound evidence.
+- **Selection:** Run
+  `tests/test_test_access_probe_aperture.py`,
+  `tests/test_test_access_probe_architecture.py`,
+  `tests/test_pcb_connectivity_snapshot_integrity.py`, and
+  `tests/test_pcb_access_native_fixture_lane.py` with
+  `design_lint and pcb_lint`. The native lane uses
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

@@ -52,6 +52,7 @@ def main(
     pad_rows: dict[str, PadObservation] = {}
     pad_geometry: list[tuple[str, bool, NativePad]] = []
     footprint_geometry: list[tuple[str, bool, int, NativeFootprint]] = []
+    access_via_geometry: list[tuple[str, str | None, NativeVia]] = []
     via_rows: dict[str, ViaSnapshotObservation] = {}
     via_identity_by_native_uuid: dict[str, str] = {}
     via_objects: list[tuple[str, NativeVia]] = []
@@ -63,6 +64,7 @@ def main(
             native_via = cast(NativeVia, track)
             via = via_observation(native_via, board)
             identity = via["id"]
+            access_via_geometry.append((identity, via["net"], native_via))
             native_uuid = track.m_Uuid.AsString().casefold()
             if native_uuid in via_identity_by_native_uuid:
                 raise ValueError(f"Duplicate native PCB via identity {native_uuid}")
@@ -355,7 +357,7 @@ def main(
 
     access_requests, access_requests_sha256 = read_access_requests(request_path)
     access_observations = access_probe_observations(
-        access_requests, pad_geometry, footprint_geometry
+        access_requests, pad_geometry, footprint_geometry, access_via_geometry
     )
     touch_requests, touch_requests_sha256 = read_touch_pad_clearance_requests(
         touch_clearance_request_path
@@ -369,7 +371,7 @@ def main(
     )
 
     output: NativeProbeSnapshot = {
-        "schema_version": "17",
+        "schema_version": "18",
         "board_sha256": sha256(board_path),
         "kicad_version": native_pcbnew.GetBuildVersion(),
         "zones_refilled": zones_refilled,

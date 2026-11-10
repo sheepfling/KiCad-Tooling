@@ -19,11 +19,12 @@ from .model_primitives import (
 
 
 class TestAccessProbeEnvelope(StrictModel):
-    """Project-approved circular probe tip and optional courtyard envelope."""
+    """Project-approved circular probe tip and optional surface-clearance limits."""
 
     tip_diameter_mm: ElectricalPositive
     clearance_mm: NonNegativeMeasure
     courtyard_clearance_mm: NonNegativeMeasure | None = None
+    via_clearance_mm: NonNegativeMeasure | None = None
 
 
 class PcbAccessProbeRequest(StrictModel):

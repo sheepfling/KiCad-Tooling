@@ -53,7 +53,7 @@ def capture_pcb_geometry_source(
             "build/design-lint/pcb-geometry-*"
         )
     if (
-        snapshot.schema_version not in {"10", "11", "12", "13", "14", "15", "16", "17"}
+        snapshot.schema_version not in {"10", "11", "12", "13", "14", "15", "16", "17", "18"}
         or snapshot.board_sha256 != board_hash
         or snapshot.kicad_version != config.kicad_version
         or snapshot.image != pinned_image(config.image)

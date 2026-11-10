@@ -8572,7 +8572,8 @@ reason, such as a hazardous high-voltage node excluded from routine probing:
             "probe_envelope": {
               "tip_diameter_mm": 0.8,
               "clearance_mm": 0.2,
-              "courtyard_clearance_mm": 0.2
+              "courtyard_clearance_mm": 0.2,
+              "via_clearance_mm": 0.2
             }
           }
         ]
@@ -8633,23 +8634,35 @@ is a board-authored placement proxy, not proof of the component body's shape or
 height, fixture access, approach angle, cover clearance, or physical probe
 reach. This optional check requires native PCB snapshot schema v17 or newer.
 
+`via_clearance_mm` is an optional, separate requirement for clearance to vias
+on the selected outer copper side. Native KiCad evidence measures the nearest
+different-net or unconnected via's effective copper shape from the target pad
+center, after excluding same-net vias and vias tented on that side. It compares
+the distance with the probe-tip radius plus the authored via clearance. This
+check requires source-bound native PCB snapshot schema v18 or newer. Older
+snapshots leave this requirement `NOT_RUN`.
+
 The synthetic native acceptance fixture exercises a fitted different-net pad,
 a closer same-net pad, a closer DNP pad, a no-net obstacle, front-only access,
 an undersize circular aperture, an exact-fit aperture with a mask contraction,
-a rectangular target, and a drilled target. It checks front/back/either-side
-behavior, exact aperture and clearance boundaries, unsupported-shape reporting,
-expected faults, and repeatability across two native loads. It also checks a
-nearby footprint with no courtyard plus exact and failing measured courtyard
-boundaries. Package acceptance runs it against the project's digest-pinned
-KiCad 10.0.0 and 10.0.5 images and retains the request, snapshot, probe, and
-command receipt under ignored `build/ci/` output.
+a rectangular target, a drilled target, untented front and back vias, an exact
+via-clearance boundary, a same-net via decoy, and a nearby tented via that must
+be excluded. It checks front/back/either-side behavior, exact aperture and
+clearance boundaries, unsupported-shape reporting, expected faults, and
+repeatability across two native loads. It also checks a nearby footprint with
+no courtyard plus exact and failing measured courtyard boundaries. Package
+acceptance runs it against the project's digest-pinned KiCad 10.0.0 and 10.0.5
+images and retains the request, snapshot, probe, and command receipt under
+ignored `build/ci/` output.
 
-This is a bounded pad-aperture, pad-neighbor, and optional courtyard-proxy
-check. It skips DNP footprints and same-net neighbor pads; it does not inspect
-exposed tracks, vias, copper-zone mask openings, component-body height,
-fixtures, covers, probe reach, or manufacturing test coverage. A passing
-result describes only the configured geometry around the selected PCB pad.
-Review the physical access path and first-article test separately.
+This is a bounded pad-aperture, pad-neighbor, via, and optional
+courtyard-proxy check. It skips DNP footprints and same-net neighbor pads. Via
+coverage is limited to native via objects and their side-specific KiCad tenting
+state; it does not inspect exposed tracks, copper-zone mask openings, arbitrary
+mask graphics, component-body height, fixtures, covers, probe reach, or
+manufacturing test coverage. A passing result describes only the configured
+geometry around the selected PCB pad. Review the physical access path and
+first-article test separately.
 
 [electrical-drc-items-100]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/drc/drc_item.cpp
 [electrical-drc-items-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/drc/drc_item.cpp

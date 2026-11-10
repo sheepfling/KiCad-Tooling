@@ -157,6 +157,8 @@ class NativeVia(NativeTrack, Protocol):
 
     def GetLayerSet(self) -> NativeLayerSet: ...
 
+    def IsTented(self, layer: int) -> bool: ...
+
 
 class NativeConnectedItem(Protocol):
     m_Uuid: NativeUuid
@@ -321,24 +323,6 @@ class RawAccessProbeRequest(TypedDict, total=False):
     side: object
 
 
-class AccessProbeObservation(TypedDict):
-    endpoint: str
-    side: Literal["front", "back"]
-    target_net: str | None
-    target_exposed: bool
-    obstacle: str | None
-    obstacle_net: str | None
-    distance_nm: int | None
-    target_aperture_shape: Literal[
-        "circle", "oval", "rectangle", "roundrect", "unsupported"
-    ] | None
-    target_aperture_diameter_nm: int | None
-    courtyard_obstacle: str | None
-    courtyard_distance_nm: int | None
-    unmeasured_courtyard_footprint: str | None
-    unmeasured_courtyard_distance_nm: int | None
-
-
 class TouchPadClearanceRequest(TypedDict):
     id: str
     pad: str
@@ -444,7 +428,7 @@ class TrackObservation(TypedDict):
 
 
 class NativeProbeSnapshot(TypedDict):
-    schema_version: Literal["17"]
+    schema_version: Literal["18"]
     board_sha256: str
     kicad_version: str
     zones_refilled: bool

@@ -51,7 +51,7 @@ def pcb_probe_envelope_checks(
     spec: TestAccessAnalysis,
     snapshot: PcbConnectivitySnapshot,
 ) -> tuple[ElectricalCheck, ...]:
-    """Check authored probe envelopes against retained native pad and courtyard geometry."""
+    """Check authored probe envelopes against retained native pad, via, and courtyard geometry."""
     request_set = pcb_access_probe_request_set(spec)
     if request_set is None:
         return ()
@@ -62,12 +62,26 @@ def pcb_probe_envelope_checks(
         if decision.mode == "required"
         for endpoint in decision.endpoints
     )
+    requires_via = any(
+        endpoint.probe_envelope is not None and endpoint.probe_envelope.via_clearance_mm is not None
+        for decision in spec.decisions
+        if decision.mode == "required"
+        for endpoint in decision.endpoints
+    )
     if requires_courtyard and int(snapshot.schema_version) < 17:
         return (
             ElectricalCheck(
                 id="test-access/pcb-probe-envelope/courtyard-evidence",
                 status="NOT_RUN",
                 detail="Authored courtyard clearance requires native PCB snapshot schema v17 or newer.",
+            ),
+        )
+    if requires_via and int(snapshot.schema_version) < 18:
+        return (
+            ElectricalCheck(
+                id="test-access/pcb-probe-envelope/via-evidence",
+                status="NOT_RUN",
+                detail="Authored via clearance requires native PCB snapshot schema v18 or newer.",
             ),
         )
     observations = {
@@ -109,6 +123,11 @@ def pcb_probe_envelope_checks(
                 else ceil(
                     (envelope.tip_diameter_mm / 2 + envelope.courtyard_clearance_mm) * 1_000_000
                 )
+            )
+            required_via_nm = (
+                None
+                if envelope.via_clearance_mm is None
+                else ceil((envelope.tip_diameter_mm / 2 + envelope.via_clearance_mm) * 1_000_000)
             )
             side_details: list[str] = []
             endpoint_pass = False
@@ -206,7 +225,23 @@ def pcb_probe_envelope_checks(
                             f"{required_courtyard_nm / 1_000_000:.6g} mm"
                         )
                     courtyard_unresolved = courtyard_unresolved and not measured_courtyard_failure
-                side_clear = aperture_clear and neighbor_clear and courtyard_clear
+                via_clear = True
+                if required_via_nm is not None:
+                    if observation.via_obstacle_id is None:
+                        side_details.append(
+                            f"{side}: no different-net or unconnected untented outer-layer via was observed; "
+                            f"required envelope radius is {required_via_nm / 1_000_000:.6g} mm"
+                        )
+                    else:
+                        assert observation.via_obstacle_distance_nm is not None
+                        via_clear = observation.via_obstacle_distance_nm >= required_via_nm
+                        side_details.append(
+                            f"{side}: nearest different-net or unconnected untented via "
+                            f"{observation.via_obstacle_id} ({observation.via_obstacle_net or 'no net'}) is "
+                            f"{observation.via_obstacle_distance_nm / 1_000_000:.6g} mm from the pad center; "
+                            f"required envelope radius is {required_via_nm / 1_000_000:.6g} mm"
+                        )
+                side_clear = aperture_clear and neighbor_clear and courtyard_clear and via_clear
                 endpoint_pass = endpoint_pass or side_clear
                 endpoint_unresolved = endpoint_unresolved or courtyard_unresolved
             endpoint_results.append(
@@ -237,8 +272,10 @@ def pcb_probe_envelope_checks(
             "using KiCad mask expansion and the smaller pad dimension as the centered circular-tip fit. "
             "Neighbor clearance checks fitted exposed footprint pads from the target pad center. Optional "
             "courtyard clearance compares same-side fitted footprint courtyard polygons, and uses the nearest "
-            "unmeasured footprint bounding box to identify missing nearby courtyards. It does not establish body "
-            "height, probe angle, fixture or cover access, or physical reach; tracks, vias, zone apertures, "
+            "unmeasured footprint bounding box to identify missing nearby courtyards. Optional via clearance "
+            "measures only untented vias that span the selected outer copper side; it does not infer exposure "
+            "from arbitrary mask graphics. It does not establish body height, probe angle, fixture or cover access, "
+            "or physical reach; tracks, zone apertures, "
             "custom/chamfered/trapezoid target shapes, and footprints on the opposite board side are not evaluated."
         )
         checks.append(

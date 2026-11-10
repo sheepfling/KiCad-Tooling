@@ -67,6 +67,7 @@ class PcbConnectivitySnapshot(StrictModel):
         "15",
         "16",
         "17",
+        "18",
     ] = "3"
     board_sha256: Digest
     kicad_version: NonEmptyText
@@ -103,6 +104,7 @@ class PcbConnectivitySnapshot(StrictModel):
         validate_access_probe_relationships(
             self.access_probe_observations,
             index.pads_by_reference,
+            index.vias_by_id,
             self.footprints,
             schema_version,
         )

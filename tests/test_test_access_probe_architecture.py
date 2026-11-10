@@ -13,6 +13,8 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint, pytest.mark.archite
 
 def test_test_access_probe_modules_stay_under_the_review_limit() -> None:
     paths = (
+        REPO_ROOT / "kicad_tooling/ci_hosted_pcb_access.py",
+        REPO_ROOT / "kicad_tooling/ci_hosted_pcb_access_vias.py",
         REPO_ROOT / "kicad_tooling/hwrepo/test_access.py",
         REPO_ROOT / "kicad_tooling/hwrepo/test_access_probe_envelope.py",
         REPO_ROOT / "kicad_tooling/hwrepo/pcb_connectivity_probe_validation.py",

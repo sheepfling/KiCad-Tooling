@@ -131,6 +131,57 @@ def test_authored_courtyard_clearance_requires_current_native_evidence() -> None
     assert "schema v17 or newer" in check.detail
 
 
+@pytest.mark.parametrize(
+    ("distance_nm", "expected_status"),
+    [(500_000, "PASS"), (499_999, "FAIL")],
+)
+def test_authored_untented_via_clearance_uses_exact_native_boundary(
+    distance_nm: int, expected_status: str
+) -> None:
+    requirement = probe_access_requirement(approach_side="front", via_clearance_mm=0.1)
+    snapshot = probe_access_snapshot(
+        None,
+        None,
+        include_back=False,
+        schema_version="18",
+        via_obstacle_id="e" * 64,
+        via_obstacle_net="GND",
+        via_obstacle_distance_nm=distance_nm,
+        via_obstacle_tented=False,
+    )
+
+    (check,) = pcb_probe_envelope_checks(requirement, snapshot)
+
+    assert check.status == expected_status
+    assert "untented via" in check.detail
+    assert "required envelope radius is 0.5 mm" in check.detail
+
+
+def test_authored_via_clearance_requires_current_native_evidence() -> None:
+    requirement = probe_access_requirement(approach_side="front", via_clearance_mm=0.1)
+    snapshot = probe_access_snapshot(None, None, include_back=False)
+
+    (check,) = pcb_probe_envelope_checks(requirement, snapshot)
+
+    assert check.status == "NOT_RUN"
+    assert "schema v18 or newer" in check.detail
+
+
+def test_via_access_observation_must_reference_observed_untented_via() -> None:
+    with pytest.raises(ValidationError, match="unobserved via"):
+        probe_access_snapshot(
+            None,
+            None,
+            include_back=False,
+            schema_version="18",
+            via_obstacle_id="f" * 64,
+            via_obstacle_net="GND",
+            via_obstacle_distance_nm=500_000,
+            via_obstacle_tented=False,
+            include_via_inventory=False,
+        )
+
+
 def test_courtyard_measurement_must_reference_observed_same_side_footprint() -> None:
     with pytest.raises(ValidationError, match="unobserved footprint"):
         probe_access_snapshot(

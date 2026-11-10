@@ -152,6 +152,25 @@ def test_value_difference_is_reviewable_configurable_and_source_bound() -> None:
     assert tuple(item.rule_id for item in stale.stale_ignores) == (RULE_ID,)
 
 
+def test_schema18_supports_complete_source_bound_value_coverage() -> None:
+    observed = netlist(components={"R1": FOOTPRINT}, values={"R1": "10k"})
+    coverage = complete_report(
+        observed,
+        snapshot(
+            "R1",
+            schema_version="18",
+            footprint_by_reference={"R1": FOOTPRINT},
+            value_by_reference={"R1": "10K"},
+        ),
+        value_mode="review",
+    )
+
+    assert coverage.status == "COMPLETE"
+    assert coverage.snapshot_schema == "18"
+    assert coverage.value_comparison_status == "COMPLETE"
+    assert tuple(item.reference for item in coverage.value_mismatches) == ("R1",)
+
+
 def test_matching_trimmed_values_and_noncomparable_parts_are_controls() -> None:
     observed = netlist(
         components={"R1": FOOTPRINT, "U1": FOOTPRINT, "R2": "", "U4": FOOTPRINT},

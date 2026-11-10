@@ -1,11 +1,34 @@
 # Access probes: validate authored requests and measure source-defined surfaces.
 
+class AccessProbeObservation(TypedDict):
+    endpoint: str
+    side: Literal["front", "back"]
+    target_net: str | None
+    target_exposed: bool
+    obstacle: str | None
+    obstacle_net: str | None
+    distance_nm: int | None
+    target_aperture_shape: Literal[
+        "circle", "oval", "rectangle", "roundrect", "unsupported"
+    ] | None
+    target_aperture_diameter_nm: int | None
+    courtyard_obstacle: str | None
+    courtyard_distance_nm: int | None
+    unmeasured_courtyard_footprint: str | None
+    unmeasured_courtyard_distance_nm: int | None
+    via_obstacle_id: str | None
+    via_obstacle_net: str | None
+    via_obstacle_distance_nm: int | None
+    via_obstacle_tented: bool | None
+
+
 def access_probe_observations(
     requests: list[AccessProbeRequest],
     pad_geometry: list[tuple[str, bool, NativePad]],
     footprint_geometry: list[tuple[str, bool, int, NativeFootprint]],
+    via_geometry: list[tuple[str, str | None, NativeVia]],
 ) -> list[AccessProbeObservation]:
-    """Measure foreign pads and same-side courtyards from each requested pad center."""
+    """Measure foreign pads, untented vias, and same-side courtyards from each pad center."""
     observations: list[AccessProbeObservation] = []
     layer_ids = {
         "front": (native_pcbnew.F_Cu, native_pcbnew.F_Mask),
@@ -86,6 +109,10 @@ def access_probe_observations(
                     "courtyard_distance_nm": None,
                     "unmeasured_courtyard_footprint": None,
                     "unmeasured_courtyard_distance_nm": None,
+                    "via_obstacle_id": None,
+                    "via_obstacle_net": None,
+                    "via_obstacle_distance_nm": None,
+                    "via_obstacle_tented": None,
                 }
             )
             continue
@@ -137,6 +164,21 @@ def access_probe_observations(
             candidate = (distance_nm, reference.casefold(), reference)
             if nearest_unmeasured is None or candidate < nearest_unmeasured:
                 nearest_unmeasured = candidate
+        nearest_via: tuple[int, str, str, str | None] | None = None
+        for identity, via_net, via in via_geometry:
+            if not via.GetLayerSet().Contains(copper_layer) or via.IsTented(copper_layer):
+                continue
+            if target_net is not None and via_net == target_net:
+                continue
+            shape = via.GetEffectiveShape(copper_layer)
+            if shape is None:
+                raise ValueError(f"KiCad returned no effective via shape for {endpoint}")
+            distance_nm = floor(float(shape.Distance(position)))
+            if distance_nm < 0:
+                raise ValueError(f"KiCad returned a negative via distance for {endpoint}")
+            candidate = (distance_nm, identity.casefold(), identity, via_net)
+            if nearest_via is None or candidate[:3] < nearest_via[:3]:
+                nearest_via = candidate
         observations.append(
             {
                 "endpoint": endpoint,
@@ -160,6 +202,10 @@ def access_probe_observations(
                 "unmeasured_courtyard_distance_nm": (
                     nearest_unmeasured[0] if nearest_unmeasured is not None else None
                 ),
+                "via_obstacle_id": nearest_via[2] if nearest_via is not None else None,
+                "via_obstacle_net": nearest_via[3] if nearest_via is not None else None,
+                "via_obstacle_distance_nm": nearest_via[0] if nearest_via is not None else None,
+                "via_obstacle_tented": False if nearest_via is not None else None,
             }
         )
     return observations

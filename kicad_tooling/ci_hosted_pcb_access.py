@@ -7,6 +7,12 @@ import tempfile
 from pathlib import Path
 from typing import Literal
 
+from .ci_hosted_pcb_access_vias import (
+    VIA_PROBE_EXPECTED_PAD_OBSERVATIONS,
+    VIA_PROBE_EXPECTED_STATUSES,
+    validate_via_probe_fixture_observations,
+    via_probe_fixture_decisions,
+)
 from .ci_hosted_support import HostedLog
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
@@ -45,6 +51,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
         tip_diameter_mm: float,
         clearance_mm: float,
         courtyard_clearance_mm: float | None = None,
+        via_clearance_mm: float | None = None,
     ) -> TestAccessEndpointRequirement:
         return TestAccessEndpointRequirement(
             kind="test_point",
@@ -58,6 +65,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
                 tip_diameter_mm=tip_diameter_mm,
                 clearance_mm=clearance_mm,
                 courtyard_clearance_mm=courtyard_clearance_mm,
+                via_clearance_mm=via_clearance_mm,
             ),
         )
 
@@ -114,6 +122,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
                     ),
                 ),
             ),
+            *via_probe_fixture_decisions(endpoint),
             RequiredTestAccess(
                 mode="required",
                 id="front-only-clearance-fault",
@@ -276,6 +285,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
         "test-access/pcb-probe-envelope/undersize-roundrect-aperture-fault": "FAIL",
         "test-access/pcb-probe-envelope/roundrect-aperture-boundary-control": "PASS",
         "test-access/pcb-probe-envelope/courtyard-clearance-fault": "FAIL",
+        **VIA_PROBE_EXPECTED_STATUSES,
     }
     expected_observations = {
         ("j1.1", "front"): ("J4.1", "FOREIGN_FRONT", 400_000, True, "circle", 1_200_000),
@@ -362,6 +372,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             "circle",
             1_000_000,
         ),
+        **VIA_PROBE_EXPECTED_PAD_OBSERVATIONS,
     }
     try:
         retained_observations: tuple[PcbAccessProbeObservation, ...] | None = None
@@ -383,7 +394,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             request_path = receipt / "access-probe-requests.json"
             if (
                 snapshot.board_sha256 != source_hash
-                or snapshot.schema_version != "17"
+                or snapshot.schema_version != "18"
                 or snapshot.kicad_version != config.kicad_version
                 or snapshot.image != config.image
                 or snapshot.probe_sha256 != expected_probe_sha256()
@@ -437,11 +448,20 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
                         f"expected {expected}, found {observed}"
                     )
 
-            checks = {item.id: item.status for item in pcb_probe_envelope_checks(spec, snapshot)}
+            validate_via_probe_fixture_observations(snapshot, observations)
+
+            check_results = pcb_probe_envelope_checks(spec, snapshot)
+            checks = {item.id: item.status for item in check_results}
             if checks != expected_statuses:
+                mismatched_details = {
+                    item.id: item.detail
+                    for item in check_results
+                    if checks.get(item.id) != expected_statuses.get(item.id)
+                }
                 raise ValueError(
                     "Probe-envelope fault/control results differ from the synthetic expectations: "
-                    f"expected {expected_statuses}, found {checks}"
+                    f"expected {expected_statuses}, found {checks}; "
+                    f"mismatched details: {mismatched_details}"
                 )
             if retained_observations is None:
                 retained_observations = snapshot.access_probe_observations
@@ -456,7 +476,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             project=project,
             kicad_version=config.kicad_version,
             fixture_sha256=source_hash,
-            checks="5 PASS, 6 expected FAIL, 1 NOT_RUN",
+            checks="7 PASS, 8 expected FAIL, 1 NOT_RUN",
             repeatable="true",
             receipt=(scratch.relative_to(root) / "receipt-first").as_posix(),
         )

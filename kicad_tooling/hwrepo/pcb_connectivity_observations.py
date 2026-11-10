@@ -262,7 +262,7 @@ class PcbFootprintPlacementObservation(StrictModel):
 
 
 class PcbAccessProbeObservation(StrictModel):
-    """Native center-fit, pad clearance, and courtyard evidence for one probe surface."""
+    """Native pad-fit, obstacle, courtyard, and exposed-via evidence for one probe surface."""
 
     endpoint: Reference
     side: Literal["front", "back"]
@@ -279,6 +279,10 @@ class PcbAccessProbeObservation(StrictModel):
     courtyard_distance_nm: NonNegativeCount | None = None
     unmeasured_courtyard_footprint: Reference | None = None
     unmeasured_courtyard_distance_nm: NonNegativeCount | None = None
+    via_obstacle_id: Digest | None = None
+    via_obstacle_net: NetName | None = None
+    via_obstacle_distance_nm: NonNegativeCount | None = None
+    via_obstacle_tented: bool | None = None
 
     @model_validator(mode="after")
     def complete_nearest_obstacle(self) -> PcbAccessProbeObservation:
@@ -310,6 +314,24 @@ class PcbAccessProbeObservation(StrictModel):
             == self.endpoint.rsplit(".", 1)[0].casefold()
         ):
             raise ValueError("Native unmeasured courtyard cannot be the target footprint")
+        if self.via_obstacle_id is None:
+            if any(
+                value is not None
+                for value in (
+                    self.via_obstacle_net,
+                    self.via_obstacle_distance_nm,
+                    self.via_obstacle_tented,
+                )
+            ):
+                raise ValueError("Native probe via evidence needs a via identity")
+        elif self.via_obstacle_distance_nm is None or self.via_obstacle_tented is not False:
+            raise ValueError("Native probe via obstacle must be measured and untented")
+        if (
+            self.via_obstacle_id is not None
+            and self.target_net is not None
+            and self.via_obstacle_net == self.target_net
+        ):
+            raise ValueError("Native probe via obstacle must be on another net or unconnected")
         if self.target_aperture_shape in {"circle", "oval", "rectangle", "roundrect"}:
             if self.target_aperture_diameter_nm is None or self.target_aperture_diameter_nm <= 0:
                 raise ValueError("Supported native probe aperture needs a positive fit diameter")

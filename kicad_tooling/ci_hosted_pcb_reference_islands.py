@@ -46,7 +46,7 @@ def _native_snapshot(
     if snapshot is None:
         raise ValueError("Native reference-island capture returned no snapshot")
     if (
-        snapshot.schema_version not in {"9", "10", "11", "12", "13", "14", "15", "16", "17"}
+        snapshot.schema_version not in {"9", "10", "11", "12", "13", "14", "15", "16", "17", "18"}
         or snapshot.board_sha256 != board_sha256
         or snapshot.kicad_version != fixture_config.kicad_version
         or snapshot.image != fixture_config.image

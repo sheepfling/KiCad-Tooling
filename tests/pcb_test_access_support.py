@@ -9,6 +9,7 @@ from kicad_tooling.hwrepo.pcb_connectivity_observations import (
     PcbAccessProbeObservation,
     PcbFootprintPlacementObservation,
     PcbPadConnectivityObservation,
+    PcbViaObservation,
 )
 from kicad_tooling.hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from kicad_tooling.hwrepo.pcb_test_access_models import (
@@ -74,11 +75,16 @@ def probe_access_snapshot(
     include_back: bool = True,
     aperture_shape: Literal["circle", "oval", "rectangle", "roundrect", "unsupported"] = "circle",
     aperture_diameter_nm: int | None = 1_000_000,
-    schema_version: Literal["3", "17"] = "3",
+    schema_version: Literal["3", "17", "18"] = "3",
     courtyard_obstacle: str | None = None,
     courtyard_distance_nm: int | None = None,
     unmeasured_courtyard_footprint: str | None = None,
     unmeasured_courtyard_distance_nm: int | None = None,
+    via_obstacle_id: str | None = None,
+    via_obstacle_net: str | None = None,
+    via_obstacle_distance_nm: int | None = None,
+    via_obstacle_tented: bool | None = None,
+    include_via_inventory: bool = True,
 ) -> PcbConnectivitySnapshot:
     pads = (
         PcbPadConnectivityObservation(
@@ -113,7 +119,6 @@ def probe_access_snapshot(
         pads=pads,
         net_ties=(),
         zones=(),
-        vias=(),
         access_probe_observations=(
             PcbAccessProbeObservation(
                 endpoint="J1.9",
@@ -132,7 +137,17 @@ def probe_access_snapshot(
                         "unmeasured_courtyard_footprint": unmeasured_courtyard_footprint,
                         "unmeasured_courtyard_distance_nm": unmeasured_courtyard_distance_nm,
                     }
-                    if schema_version == "17"
+                    if schema_version in {"17", "18"}
+                    else {}
+                ),
+                **(
+                    {
+                        "via_obstacle_id": via_obstacle_id,
+                        "via_obstacle_net": via_obstacle_net,
+                        "via_obstacle_distance_nm": via_obstacle_distance_nm,
+                        "via_obstacle_tented": via_obstacle_tented,
+                    }
+                    if schema_version == "18"
                     else {}
                 ),
             ),
@@ -155,7 +170,17 @@ def probe_access_snapshot(
                                 "unmeasured_courtyard_footprint": None,
                                 "unmeasured_courtyard_distance_nm": None,
                             }
-                            if schema_version == "17"
+                            if schema_version in {"17", "18"}
+                            else {}
+                        ),
+                        **(
+                            {
+                                "via_obstacle_id": None,
+                                "via_obstacle_net": None,
+                                "via_obstacle_distance_nm": None,
+                                "via_obstacle_tented": None,
+                            }
+                            if schema_version == "18"
                             else {}
                         ),
                     ),
@@ -165,10 +190,28 @@ def probe_access_snapshot(
             ),
         ),
         schema_version=schema_version,
-        access_probe_requests_sha256="d" * 64 if schema_version == "17" else None,
+        access_probe_requests_sha256="d" * 64 if schema_version in {"17", "18"} else None,
         tracks=(),
-        copper_layers=("F.Cu", "B.Cu") if schema_version == "17" else (),
+        copper_layers=("F.Cu", "B.Cu") if schema_version in {"17", "18"} else (),
         rule_areas=(),
+        vias=(
+            (
+                PcbViaObservation(
+                    id=via_obstacle_id,
+                    net=via_obstacle_net,
+                    x_nm=10_800_000,
+                    y_nm=10_000_000,
+                    start_layer="F.Cu",
+                    end_layer="B.Cu",
+                    diameter_nm=600_000,
+                    drill_nm=300_000,
+                    kind="through",
+                    multiplicity=1,
+                ),
+            )
+            if via_obstacle_id is not None and include_via_inventory
+            else ()
+        ),
         footprints=(
             tuple(
                 PcbFootprintPlacementObservation(
@@ -186,7 +229,7 @@ def probe_access_snapshot(
                     ("U1", "Synthetic:NearbyPart", (10_500_000, 10_000_000)),
                 )
             )
-            if schema_version == "17"
+            if schema_version in {"17", "18"}
             else ()
         ),
         touch_pad_clearance_observations=(),
@@ -198,6 +241,7 @@ def probe_access_requirement(
     *,
     approach_side: Literal["front", "back", "either"],
     courtyard_clearance_mm: float | None = None,
+    via_clearance_mm: float | None = None,
 ) -> AccessAnalysis:
     requirement = access_requirement(approach_side=approach_side)
     decision = requirement.decisions[0]
@@ -208,6 +252,7 @@ def probe_access_requirement(
                 tip_diameter_mm=0.8,
                 clearance_mm=0.1,
                 courtyard_clearance_mm=courtyard_clearance_mm,
+                via_clearance_mm=via_clearance_mm,
             )
         }
     )
