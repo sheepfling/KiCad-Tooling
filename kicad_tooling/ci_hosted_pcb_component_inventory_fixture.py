@@ -111,7 +111,7 @@ def pcb_component_inventory_fixture_lane(
                     expected_board_sha256=board_hash,
                     purpose=f"{case} component inventory PCB",
                 )
-                if snapshot.schema_version != "18":
+                if snapshot.schema_version != "19":
                     raise ValueError(
                         "Native footprint inventory acceptance requires snapshot schema 18"
                     )
@@ -281,7 +281,7 @@ def pcb_component_inventory_fixture_lane(
                 or retained_snapshot_path is None
             ):
                 raise ValueError(f"Native footprint identity {case} evidence is unavailable")
-            if retained_snapshot.schema_version != "18":
+            if retained_snapshot.schema_version != "19":
                 raise ValueError("Native footprint identity acceptance requires snapshot schema 18")
             component = retained_netlist.components.get("U1")
             placement = next(

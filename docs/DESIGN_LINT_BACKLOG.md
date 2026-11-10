@@ -22925,6 +22925,40 @@ acceptance threads while new lint features proceed:
   `design_lint and pcb_lint`. The native lane uses
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`.
 
+#### LINT-384 — Check authored probe clearance to outer-layer tracks
+
+- **Status:** Implemented as an opt-in extension to LINT-018's source-bound PCB
+  probe-envelope evidence.
+- **Priority:** P1 evidence completeness when a project-authored probe envelope
+  requires a keepaway from outer-layer track copper.
+- **Gap:** Pad, courtyard, and via checks can pass while a different-net or
+  unconnected outer-layer track crosses the project-authored probe envelope.
+- **Contract and predicate:** An endpoint may author a separate
+  `track_clearance_mm`. For each required side, measure the nearest `PCB_TRACK`
+  segment or `PCB_ARC` effective copper shape on that outer copper layer from
+  the target pad center. Exclude same-net tracks; include different-net and
+  unconnected tracks. Compare with the probe-tip radius plus the authored
+  clearance. Require native PCB snapshot schema v19 with explicit track
+  identity, net, geometry kind, side-bound inventory, and absence fields. A
+  pre-v19 snapshot returns `NOT_RUN` for this requirement.
+- **Boundary:** This is a conservative track-copper keepaway; it does not know
+  whether solder mask covers a track or classify custom mask openings. It does
+  not inspect copper-zone openings, component bodies, fixtures, approach angle
+  or reach, or prove manufacturing access. Projects must author a reviewed
+  clearance and basis; there is no universal threshold.
+- **Fixtures:** Tooling-owned synthetic native boards cover a one-nanometer-
+  inside foreign-segment fault, exact-boundary segment control, close same-net
+  track exclusion, and one-nanometer-inside unconnected-arc fault. Both
+  digest-pinned KiCad 10.0.0 and 10.0.5 images must produce identical
+  source-bound observations on repeated capture.
+- **Selection:** Run
+  `tests/test_test_access_probe_tracks.py`,
+  `tests/test_test_access_probe_architecture.py`,
+  `tests/test_pcb_connectivity_snapshot_integrity.py`, and
+  `tests/test_pcb_access_native_fixture_lane.py` with
+  `design_lint and pcb_lint`. The native lane uses
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

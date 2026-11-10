@@ -428,7 +428,7 @@ class TrackObservation(TypedDict):
 
 
 class NativeProbeSnapshot(TypedDict):
-    schema_version: Literal["18"]
+    schema_version: Literal["19"]
     board_sha256: str
     kicad_version: str
     zones_refilled: bool

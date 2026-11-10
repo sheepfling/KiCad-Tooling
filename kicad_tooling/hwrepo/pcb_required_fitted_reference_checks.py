@@ -30,7 +30,7 @@ def compare_required_fitted_references(
     variants: tuple[PcbVariantPopulationSource, ...] = (),
 ) -> tuple[PcbRequiredFittedReferenceMismatch, ...]:
     """Compare base and named-variant requirements with source-bound native evidence."""
-    if snapshot.schema_version not in {"12", "13", "14", "15", "16", "17", "18"}:
+    if snapshot.schema_version not in {"12", "13", "14", "15", "16", "17", "18", "19"}:
         raise ValueError("Required fitted PCB references need snapshot schema 12, 13, or 14")
 
     schematic = _unique_casefolded(

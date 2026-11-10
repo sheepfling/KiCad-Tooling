@@ -20,6 +20,10 @@ class AccessProbeObservation(TypedDict):
     via_obstacle_net: str | None
     via_obstacle_distance_nm: int | None
     via_obstacle_tented: bool | None
+    track_obstacle_uuid: str | None
+    track_obstacle_net: str | None
+    track_obstacle_distance_nm: int | None
+    track_obstacle_geometry: Literal["segment", "arc"] | None
 
 
 def access_probe_observations(
@@ -27,8 +31,9 @@ def access_probe_observations(
     pad_geometry: list[tuple[str, bool, NativePad]],
     footprint_geometry: list[tuple[str, bool, int, NativeFootprint]],
     via_geometry: list[tuple[str, str | None, NativeVia]],
+    track_geometry: list[tuple[str, str | None, NativeTrack]],
 ) -> list[AccessProbeObservation]:
-    """Measure foreign pads, untented vias, and same-side courtyards from each pad center."""
+    """Measure foreign pads/tracks, untented vias, and courtyards from each pad center."""
     observations: list[AccessProbeObservation] = []
     layer_ids = {
         "front": (native_pcbnew.F_Cu, native_pcbnew.F_Mask),
@@ -113,6 +118,10 @@ def access_probe_observations(
                     "via_obstacle_net": None,
                     "via_obstacle_distance_nm": None,
                     "via_obstacle_tented": None,
+                    "track_obstacle_uuid": None,
+                    "track_obstacle_net": None,
+                    "track_obstacle_distance_nm": None,
+                    "track_obstacle_geometry": None,
                 }
             )
             continue
@@ -179,6 +188,25 @@ def access_probe_observations(
             candidate = (distance_nm, identity.casefold(), identity, via_net)
             if nearest_via is None or candidate[:3] < nearest_via[:3]:
                 nearest_via = candidate
+        nearest_track: tuple[int, str, str, str | None, Literal["segment", "arc"]] | None = None
+        for identity, track_net, track in track_geometry:
+            item_class = track.GetClass()
+            if item_class not in {"PCB_TRACK", "PCB_ARC"} or track.GetLayer() != copper_layer:
+                continue
+            if target_net is not None and track_net == target_net:
+                continue
+            shape = track.GetEffectiveShape(copper_layer)
+            if shape is None:
+                raise ValueError(f"KiCad returned no effective track shape for {endpoint}")
+            distance_nm = floor(float(shape.Distance(position)))
+            if distance_nm < 0:
+                raise ValueError(f"KiCad returned a negative track distance for {endpoint}")
+            geometry_kind: Literal["segment", "arc"] = (
+                "segment" if item_class == "PCB_TRACK" else "arc"
+            )
+            candidate = (distance_nm, identity.casefold(), identity, track_net, geometry_kind)
+            if nearest_track is None or candidate[:3] < nearest_track[:3]:
+                nearest_track = candidate
         observations.append(
             {
                 "endpoint": endpoint,
@@ -206,6 +234,10 @@ def access_probe_observations(
                 "via_obstacle_net": nearest_via[3] if nearest_via is not None else None,
                 "via_obstacle_distance_nm": nearest_via[0] if nearest_via is not None else None,
                 "via_obstacle_tented": False if nearest_via is not None else None,
+                "track_obstacle_uuid": nearest_track[2] if nearest_track is not None else None,
+                "track_obstacle_net": nearest_track[3] if nearest_track is not None else None,
+                "track_obstacle_distance_nm": nearest_track[0] if nearest_track is not None else None,
+                "track_obstacle_geometry": nearest_track[4] if nearest_track is not None else None,
             }
         )
     return observations

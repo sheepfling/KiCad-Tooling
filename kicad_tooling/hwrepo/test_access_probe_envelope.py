@@ -51,7 +51,7 @@ def pcb_probe_envelope_checks(
     spec: TestAccessAnalysis,
     snapshot: PcbConnectivitySnapshot,
 ) -> tuple[ElectricalCheck, ...]:
-    """Check authored probe envelopes against retained native pad, via, and courtyard geometry."""
+    """Check authored probe envelopes against retained native pad, via, track, and courtyard geometry."""
     request_set = pcb_access_probe_request_set(spec)
     if request_set is None:
         return ()
@@ -64,6 +64,13 @@ def pcb_probe_envelope_checks(
     )
     requires_via = any(
         endpoint.probe_envelope is not None and endpoint.probe_envelope.via_clearance_mm is not None
+        for decision in spec.decisions
+        if decision.mode == "required"
+        for endpoint in decision.endpoints
+    )
+    requires_track = any(
+        endpoint.probe_envelope is not None
+        and endpoint.probe_envelope.track_clearance_mm is not None
         for decision in spec.decisions
         if decision.mode == "required"
         for endpoint in decision.endpoints
@@ -82,6 +89,14 @@ def pcb_probe_envelope_checks(
                 id="test-access/pcb-probe-envelope/via-evidence",
                 status="NOT_RUN",
                 detail="Authored via clearance requires native PCB snapshot schema v18 or newer.",
+            ),
+        )
+    if requires_track and int(snapshot.schema_version) < 19:
+        return (
+            ElectricalCheck(
+                id="test-access/pcb-probe-envelope/track-evidence",
+                status="NOT_RUN",
+                detail="Authored track clearance requires native PCB snapshot schema v19 or newer.",
             ),
         )
     observations = {
@@ -128,6 +143,11 @@ def pcb_probe_envelope_checks(
                 None
                 if envelope.via_clearance_mm is None
                 else ceil((envelope.tip_diameter_mm / 2 + envelope.via_clearance_mm) * 1_000_000)
+            )
+            required_track_nm = (
+                None
+                if envelope.track_clearance_mm is None
+                else ceil((envelope.tip_diameter_mm / 2 + envelope.track_clearance_mm) * 1_000_000)
             )
             side_details: list[str] = []
             endpoint_pass = False
@@ -241,7 +261,30 @@ def pcb_probe_envelope_checks(
                             f"{observation.via_obstacle_distance_nm / 1_000_000:.6g} mm from the pad center; "
                             f"required envelope radius is {required_via_nm / 1_000_000:.6g} mm"
                         )
-                side_clear = aperture_clear and neighbor_clear and courtyard_clear and via_clear
+                track_clear = True
+                if required_track_nm is not None:
+                    if observation.track_obstacle_uuid is None:
+                        side_details.append(
+                            f"{side}: no different-net or unconnected outer-layer track was observed; "
+                            f"required envelope radius is {required_track_nm / 1_000_000:.6g} mm"
+                        )
+                    else:
+                        assert observation.track_obstacle_distance_nm is not None
+                        track_clear = observation.track_obstacle_distance_nm >= required_track_nm
+                        side_details.append(
+                            f"{side}: nearest different-net or unconnected outer-layer "
+                            f"{observation.track_obstacle_geometry} {observation.track_obstacle_uuid} "
+                            f"({observation.track_obstacle_net or 'no net'}) is "
+                            f"{observation.track_obstacle_distance_nm / 1_000_000:.6g} mm from the pad center; "
+                            f"required envelope radius is {required_track_nm / 1_000_000:.6g} mm"
+                        )
+                side_clear = (
+                    aperture_clear
+                    and neighbor_clear
+                    and courtyard_clear
+                    and via_clear
+                    and track_clear
+                )
                 endpoint_pass = endpoint_pass or side_clear
                 endpoint_unresolved = endpoint_unresolved or courtyard_unresolved
             endpoint_results.append(
@@ -274,8 +317,10 @@ def pcb_probe_envelope_checks(
             "courtyard clearance compares same-side fitted footprint courtyard polygons, and uses the nearest "
             "unmeasured footprint bounding box to identify missing nearby courtyards. Optional via clearance "
             "measures only untented vias that span the selected outer copper side; it does not infer exposure "
-            "from arbitrary mask graphics. It does not establish body height, probe angle, fixture or cover access, "
-            "or physical reach; tracks, zone apertures, "
+            "from arbitrary mask graphics. Optional track clearance measures outer-layer copper tracks regardless "
+            "of solder-mask exposure, so it does not classify custom mask openings. The checks do not establish "
+            "body height, probe angle, fixture or cover access, "
+            "or physical reach; zone apertures, "
             "custom/chamfered/trapezoid target shapes, and footprints on the opposite board side are not evaluated."
         )
         checks.append(

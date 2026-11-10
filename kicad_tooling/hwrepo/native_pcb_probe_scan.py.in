@@ -357,7 +357,11 @@ def main(
 
     access_requests, access_requests_sha256 = read_access_requests(request_path)
     access_observations = access_probe_observations(
-        access_requests, pad_geometry, footprint_geometry, access_via_geometry
+        access_requests,
+        pad_geometry,
+        footprint_geometry,
+        access_via_geometry,
+        [(row["uuid"], row["net"], track) for row, track in track_objects],
     )
     touch_requests, touch_requests_sha256 = read_touch_pad_clearance_requests(
         touch_clearance_request_path
@@ -371,7 +375,7 @@ def main(
     )
 
     output: NativeProbeSnapshot = {
-        "schema_version": "18",
+        "schema_version": "19",
         "board_sha256": sha256(board_path),
         "kicad_version": native_pcbnew.GetBuildVersion(),
         "zones_refilled": zones_refilled,

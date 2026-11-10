@@ -8,6 +8,7 @@ from .pcb_connectivity_observations import (
     PcbAccessProbeObservation,
     PcbFootprintPlacementObservation,
     PcbPadConnectivityObservation,
+    PcbTrackObservation,
     PcbViaObservation,
 )
 
@@ -16,6 +17,7 @@ def validate_access_probe_relationships(
     observations: tuple[PcbAccessProbeObservation, ...],
     pads_by_reference: Mapping[str, PcbPadConnectivityObservation],
     vias_by_id: Mapping[str, PcbViaObservation],
+    tracks_by_uuid: Mapping[str, PcbTrackObservation],
     footprints: tuple[PcbFootprintPlacementObservation, ...],
     schema_version: int,
 ) -> None:
@@ -44,6 +46,17 @@ def validate_access_probe_relationships(
                 raise ValueError("Native PCB probe observation refers to an unobserved via")
             if via.net != item.via_obstacle_net:
                 raise ValueError("Native PCB probe via net differs from its via inventory")
+        if item.track_obstacle_uuid is not None:
+            track = tracks_by_uuid.get(item.track_obstacle_uuid.casefold())
+            if track is None:
+                raise ValueError("Native PCB probe observation refers to an unobserved track")
+            if track.net != item.track_obstacle_net:
+                raise ValueError("Native PCB probe track net differs from its track inventory")
+            expected_layer = "F.Cu" if item.side == "front" else "B.Cu"
+            if track.layer.casefold() != expected_layer.casefold():
+                raise ValueError("Native PCB probe track evidence uses the wrong outer layer")
+            if track.geometry_kind != item.track_obstacle_geometry:
+                raise ValueError("Native PCB probe track geometry differs from its track inventory")
         if schema_version >= 10 and any(
             field not in item.model_fields_set
             for field in ("target_aperture_shape", "target_aperture_diameter_nm")
@@ -82,6 +95,27 @@ def validate_access_probe_relationships(
             )
         ):
             raise ValueError("Native probe via evidence requires schema v18+")
+        if schema_version >= 19:
+            if any(
+                field not in item.model_fields_set
+                for field in (
+                    "track_obstacle_uuid",
+                    "track_obstacle_net",
+                    "track_obstacle_distance_nm",
+                    "track_obstacle_geometry",
+                )
+            ):
+                raise ValueError("Native PCB schema v19+ requires explicit track access evidence")
+        elif any(
+            field in item.model_fields_set
+            for field in (
+                "track_obstacle_uuid",
+                "track_obstacle_net",
+                "track_obstacle_distance_nm",
+                "track_obstacle_geometry",
+            )
+        ):
+            raise ValueError("Native probe track evidence requires schema v19+")
 
 
 def _validate_courtyard_evidence(

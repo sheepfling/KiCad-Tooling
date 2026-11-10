@@ -7,9 +7,16 @@ import tempfile
 from pathlib import Path
 from typing import Literal
 
+from .ci_hosted_pcb_access_expectations import (
+    expected_access_probe_courtyards,
+    expected_access_probe_pad_observations,
+    expected_access_probe_statuses,
+)
+from .ci_hosted_pcb_access_tracks import (
+    track_probe_fixture_decisions,
+    validate_track_probe_fixture_observations,
+)
 from .ci_hosted_pcb_access_vias import (
-    VIA_PROBE_EXPECTED_PAD_OBSERVATIONS,
-    VIA_PROBE_EXPECTED_STATUSES,
     validate_via_probe_fixture_observations,
     via_probe_fixture_decisions,
 )
@@ -52,6 +59,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
         clearance_mm: float,
         courtyard_clearance_mm: float | None = None,
         via_clearance_mm: float | None = None,
+        track_clearance_mm: float | None = None,
     ) -> TestAccessEndpointRequirement:
         return TestAccessEndpointRequirement(
             kind="test_point",
@@ -66,6 +74,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
                 clearance_mm=clearance_mm,
                 courtyard_clearance_mm=courtyard_clearance_mm,
                 via_clearance_mm=via_clearance_mm,
+                track_clearance_mm=track_clearance_mm,
             ),
         )
 
@@ -123,6 +132,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
                 ),
             ),
             *via_probe_fixture_decisions(endpoint),
+            *track_probe_fixture_decisions(endpoint),
             RequiredTestAccess(
                 mode="required",
                 id="front-only-clearance-fault",
@@ -272,108 +282,8 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
     shutil.copyfile(fixture_root / "pcb-access-probe-envelope.kicad_pcb", board)
     source_hash = digest(board)
     fixture_config = config.model_copy(update={"project": relative_project.as_posix()})
-    expected_statuses = {
-        "test-access/pcb-probe-envelope/front-back-boundary": "PASS",
-        "test-access/pcb-probe-envelope/unconnected-obstacle": "NOT_RUN",
-        "test-access/pcb-probe-envelope/front-only-clearance-fault": "FAIL",
-        "test-access/pcb-probe-envelope/undersize-aperture-fault": "FAIL",
-        "test-access/pcb-probe-envelope/aperture-fit-boundary-control": "PASS",
-        "test-access/pcb-probe-envelope/rectangular-aperture-boundary-control": "PASS",
-        "test-access/pcb-probe-envelope/drilled-aperture-unsupported": "FAIL",
-        "test-access/pcb-probe-envelope/undersize-oval-aperture-fault": "FAIL",
-        "test-access/pcb-probe-envelope/oval-aperture-boundary-control": "PASS",
-        "test-access/pcb-probe-envelope/undersize-roundrect-aperture-fault": "FAIL",
-        "test-access/pcb-probe-envelope/roundrect-aperture-boundary-control": "PASS",
-        "test-access/pcb-probe-envelope/courtyard-clearance-fault": "FAIL",
-        **VIA_PROBE_EXPECTED_STATUSES,
-    }
-    expected_observations = {
-        ("j1.1", "front"): ("J4.1", "FOREIGN_FRONT", 400_000, True, "circle", 1_200_000),
-        ("j1.1", "back"): ("J5.1", "FOREIGN_BACK", 800_000, True, "circle", 1_200_000),
-        ("j7.1", "front"): ("J8.1", None, 400_000, True, "circle", 800_000),
-        ("j9.1", "front"): (
-            "J10.1",
-            "FOREIGN_FRONT_ONLY",
-            400_000,
-            True,
-            "circle",
-            300_000,
-        ),
-        ("j9.1", "back"): (None, None, None, False, None, None),
-        ("j11.1", "front"): (
-            "J12.1",
-            "TARGET_APERTURE_BOUNDARY",
-            9_500_001,
-            True,
-            "circle",
-            400_000,
-        ),
-        ("j12.1", "front"): (
-            "J13.1",
-            "TARGET_APERTURE_RECT",
-            9_400_000,
-            True,
-            "circle",
-            800_000,
-        ),
-        ("j13.1", "front"): (
-            "J12.1",
-            "TARGET_APERTURE_BOUNDARY",
-            9_500_001,
-            True,
-            "rectangle",
-            800_000,
-        ),
-        ("j14.1", "front"): (
-            "J13.1",
-            "TARGET_APERTURE_RECT",
-            9_400_000,
-            True,
-            "unsupported",
-            None,
-        ),
-        ("j15.1", "front"): (
-            "J16.1",
-            "TARGET_APERTURE_OVAL_BOUNDARY",
-            9_400_001,
-            True,
-            "oval",
-            600_000,
-        ),
-        ("j16.1", "front"): (
-            "J15.1",
-            "TARGET_APERTURE_OVAL_SMALL",
-            9_400_001,
-            True,
-            "oval",
-            800_000,
-        ),
-        ("j17.1", "front"): (
-            "J16.1",
-            "TARGET_APERTURE_OVAL_BOUNDARY",
-            9_400_001,
-            True,
-            "roundrect",
-            600_000,
-        ),
-        ("j18.1", "front"): (
-            "J19.1",
-            "TARGET_COURTYARD_SMALL",
-            9_500_001,
-            True,
-            "roundrect",
-            800_000,
-        ),
-        ("j19.1", "front"): (
-            "J18.1",
-            "TARGET_APERTURE_ROUNDRECT_BOUNDARY",
-            9_600_000,
-            True,
-            "circle",
-            1_000_000,
-        ),
-        **VIA_PROBE_EXPECTED_PAD_OBSERVATIONS,
-    }
+    expected_statuses = expected_access_probe_statuses()
+    expected_observations = expected_access_probe_pad_observations()
     try:
         retained_observations: tuple[PcbAccessProbeObservation, ...] | None = None
         for repeat in ("first", "repeat"):
@@ -394,7 +304,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             request_path = receipt / "access-probe-requests.json"
             if (
                 snapshot.board_sha256 != source_hash
-                or snapshot.schema_version != "18"
+                or snapshot.schema_version != "19"
                 or snapshot.kicad_version != config.kicad_version
                 or snapshot.image != config.image
                 or snapshot.probe_sha256 != expected_probe_sha256()
@@ -429,11 +339,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
                         f"expected {expected}, found {observed}"
                     )
 
-            expected_courtyards = {
-                ("j7.1", "front"): ("U1", 100_400_000, "J8", 250_000),
-                ("j18.1", "front"): ("U1", 400_000, "J17", 9_400_000),
-                ("j19.1", "front"): ("U2", 399_999, "J18", 9_400_000),
-            }
+            expected_courtyards = expected_access_probe_courtyards()
             for key, expected in expected_courtyards.items():
                 item = observations[key]
                 observed = (
@@ -449,6 +355,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
                     )
 
             validate_via_probe_fixture_observations(snapshot, observations)
+            validate_track_probe_fixture_observations(snapshot, observations)
 
             check_results = pcb_probe_envelope_checks(spec, snapshot)
             checks = {item.id: item.status for item in check_results}
@@ -476,7 +383,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             project=project,
             kicad_version=config.kicad_version,
             fixture_sha256=source_hash,
-            checks="7 PASS, 8 expected FAIL, 1 NOT_RUN",
+            checks="9 PASS, 10 expected FAIL, 1 NOT_RUN",
             repeatable="true",
             receipt=(scratch.relative_to(root) / "receipt-first").as_posix(),
         )

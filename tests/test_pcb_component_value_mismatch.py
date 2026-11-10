@@ -158,7 +158,7 @@ def test_schema18_supports_complete_source_bound_value_coverage() -> None:
         observed,
         snapshot(
             "R1",
-            schema_version="18",
+            schema_version="19",
             footprint_by_reference={"R1": FOOTPRINT},
             value_by_reference={"R1": "10K"},
         ),
@@ -166,7 +166,7 @@ def test_schema18_supports_complete_source_bound_value_coverage() -> None:
     )
 
     assert coverage.status == "COMPLETE"
-    assert coverage.snapshot_schema == "18"
+    assert coverage.snapshot_schema == "19"
     assert coverage.value_comparison_status == "COMPLETE"
     assert tuple(item.reference for item in coverage.value_mismatches) == ("R1",)
 

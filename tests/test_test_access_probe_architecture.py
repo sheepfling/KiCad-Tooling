@@ -14,13 +14,18 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint, pytest.mark.archite
 def test_test_access_probe_modules_stay_under_the_review_limit() -> None:
     paths = (
         REPO_ROOT / "kicad_tooling/ci_hosted_pcb_access.py",
+        REPO_ROOT / "kicad_tooling/ci_hosted_pcb_access_expectations.py",
         REPO_ROOT / "kicad_tooling/ci_hosted_pcb_access_vias.py",
+        REPO_ROOT / "kicad_tooling/ci_hosted_pcb_access_tracks.py",
         REPO_ROOT / "kicad_tooling/hwrepo/test_access.py",
         REPO_ROOT / "kicad_tooling/hwrepo/test_access_probe_envelope.py",
         REPO_ROOT / "kicad_tooling/hwrepo/pcb_connectivity_probe_validation.py",
+        REPO_ROOT / "kicad_tooling/hwrepo/native_pcb_probe_access.py.in",
+        REPO_ROOT / "kicad_tooling/hwrepo/native_pcb_probe_scan.py.in",
         REPO_ROOT / "tests/pcb_test_access_support.py",
         REPO_ROOT / "tests/test_test_access.py",
         REPO_ROOT / "tests/test_test_access_probe_aperture.py",
+        REPO_ROOT / "tests/test_test_access_probe_tracks.py",
     )
 
     assert all(line_count(path) < IMPLEMENTATION_MAX_LINES for path in paths)

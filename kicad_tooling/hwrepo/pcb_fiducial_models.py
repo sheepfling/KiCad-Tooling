@@ -17,7 +17,7 @@ from .model_primitives import (
 
 PcbFiducialSide = Literal["front", "back", "either"]
 PcbFiducialMode = Literal["review", "block", "off"]
-PcbFiducialSnapshotSchema = Literal["12", "13", "14", "15", "16", "17", "18"]
+PcbFiducialSnapshotSchema = Literal["12", "13", "14", "15", "16", "17", "18", "19"]
 
 
 class PcbFiducialRequirement(StrictModel):
