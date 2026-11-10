@@ -15,6 +15,7 @@ _INDEX_BEFORE_RETURN = re.compile(
     re.IGNORECASE,
 )
 _RETURN_TOKEN = re.compile(rf"(?<![A-Z0-9])(?:{_RETURN_WORDS})(?![A-Z0-9])", re.IGNORECASE)
+_SERIAL_PROTOCOL_NUMBERS = frozenset({"rs232", "rs422", "rs485"})
 
 
 def is_return_like_net_name(name: str) -> bool:
@@ -32,9 +33,13 @@ def _indexed_return(name: str) -> tuple[str, int] | None:
     if match is None:
         return None
     stem = match.group("stem").rstrip(" _./-")
+    protocol_name = re.sub(
+        r"[\s_./-]+", "", f"{stem}{match.group('separator')}{match.group('index')}"
+    ).casefold()
     if (
         re.fullmatch(r"[A-Z][A-Z0-9]*", stem, re.IGNORECASE) is None
         or _RETURN_TOKEN.fullmatch(stem) is not None
+        or protocol_name in _SERIAL_PROTOCOL_NUMBERS
     ):
         return None
     return f"{stem}_{match.group('return')}", int(match.group("index"))

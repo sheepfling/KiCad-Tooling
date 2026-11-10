@@ -2063,6 +2063,8 @@ The `net.numbered_returns` review groups indexed return labels such as
 `USB1_GND`/`USB2_GND`, `CPU_1_GND`/`CPU_2_GND`, `CAN1_GND`/`CAN2_GND`,
 `I2C1_0V`/`I2C2_0V`, and `SPI1_RET`/`SPI2_RET`. A prefix must be an ASCII
 letter/digit identifier and cannot itself be a recognized return token. It
+does not treat the exact protocol identifiers `RS232`, `RS422`, and `RS485`
+immediately before a return token as numbered interface indexes. It
 asks whether each family’s domains should be common, bonded, or intentionally
 isolated; it does not infer that every port or processor domain must share
 ground. The recognizer also accepts one letter after `GND` or `VSS` (for

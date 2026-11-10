@@ -9764,6 +9764,7 @@
       ],
       "limitations": [
         "Suffix similarity is only a review clue; separate numbered returns can be intentional isolation domains.",
+        "Exact RS232, RS422, and RS485 protocol identifiers immediately before a return token are not interpreted as numeric interface indexes.",
         "Only documented return-like tokens and ASCII letter/digit identifier prefixes are recognized; prefixes that are return tokens, contain other characters, or contain non-ASCII letters are excluded. A recognized identifier can still describe a per-device or per-domain label, so findings may describe intentionally separate returns and require project review. The RET token is lexical context, not proof that a net is ground or that domains should be joined."
       ],
       "fault_fixtures": [
@@ -9789,6 +9790,7 @@
         "tests.test_protocol_return_name_groups.test_common_protocol_return_nets_are_a_valid_control",
         "tests.test_protocol_return_name_groups.test_return_token_prefix_is_not_misread_as_a_device_identifier",
         "tests.test_protocol_return_name_groups.test_return_tokens_and_non_identifier_prefixes_stay_quiet",
+        "tests.test_protocol_return_name_groups.test_serial_protocol_numbers_are_not_return_domain_indices",
         "tests.test_return_net_lint.test_explicit_return_pin_functions_suppress_letter_suffix_prompt",
         "tests.test_return_net_lint.test_common_ret_and_reset_labels_are_valid_controls",
         "tests.test_design_lint_mcp_parity_return_labels.test_ret_return_names_match_cli_and_mcp",

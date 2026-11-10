@@ -52,6 +52,21 @@ def test_compact_can_i2c_and_spi_return_families_are_reviewed_separately() -> No
     }
 
 
+@pytest.mark.parametrize(
+    ("first", "second"),
+    (
+        ("RS232_GND", "RS485_GND"),
+        ("RS-232_GND", "RS-422_GND"),
+        ("RS_232_GND", "RS_485_GND"),
+    ),
+)
+def test_serial_protocol_numbers_are_not_return_domain_indices(first: str, second: str) -> None:
+    report = _report({first: ("J1.1",), second: ("J2.1",)})
+
+    assert report.status == "PASS"
+    assert not report.findings
+
+
 def test_common_protocol_return_nets_are_a_valid_control() -> None:
     report = _report(
         {

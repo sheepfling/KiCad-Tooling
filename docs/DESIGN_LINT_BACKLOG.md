@@ -22761,6 +22761,30 @@ acceptance threads while new lint features proceed:
   `design_lint_rule(rule_id="connector.reviewed_peer_distinct_signals_shared_net")`.
   Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
 
+#### LINT-379 — Exclude serial protocol numbers from return-domain indexing
+
+- **Status:** Implemented as a bounded false-positive correction to
+  `net.numbered_returns`; the rule remains default-`review`.
+- **Gap:** The LINT-279 compact identifier pattern could read `RS232_GND` and
+  `RS485_GND` as two return nets with a shared `RS` prefix and indexes 232 and
+  485. In these labels, those numbers identify serial protocol families, not
+  sibling interface instances.
+- **Predicate:** When a numeric index appears immediately before a return
+  token, exclude the exact canonical protocol names `RS232`, `RS422`, and
+  `RS485` after removing supported separators. Other recognized ASCII
+  prefix/index forms such as `USB1_GND`, `CPU_1_GND`, and `CAN2_GND` retain
+  their existing behavior.
+- **Boundary:** This is a lexical exception with no electrical inference.
+  Other numbered return groups remain review clues; separate interface
+  grounds may be intentional.
+- **Fixtures:** Three synthetic controls cover compact, hyphenated, and
+  underscored serial protocol spellings. Existing DB9-style
+  `0V PWM 1`–`0V PWM 4` fault/control schematics remain in the exact-rule gate,
+  including repeated KiCad 10.0.0 and 10.0.5 exports.
+- **Selection:** Run the catalog-derived
+  `design_lint_rule(rule_id="net.numbered_returns")` selection and the native
+  fixture switch `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
