@@ -10,6 +10,7 @@ from .pcb_connectivity_observations import (
     PcbPadConnectivityObservation,
     PcbTrackObservation,
     PcbViaObservation,
+    PcbZoneObservation,
 )
 
 
@@ -18,10 +19,12 @@ def validate_access_probe_relationships(
     pads_by_reference: Mapping[str, PcbPadConnectivityObservation],
     vias_by_id: Mapping[str, PcbViaObservation],
     tracks_by_uuid: Mapping[str, PcbTrackObservation],
+    zones: tuple[PcbZoneObservation, ...],
     footprints: tuple[PcbFootprintPlacementObservation, ...],
     schema_version: int,
 ) -> None:
     """Reject probe geometry that is not tied to observed pads and footprints."""
+    zones_by_identity = {(zone.uuid.casefold(), zone.layer.casefold()): zone for zone in zones}
     probe_keys = [(item.endpoint.casefold(), item.side.casefold()) for item in observations]
     if len(set(probe_keys)) != len(probe_keys):
         raise ValueError("Native PCB probe endpoint and side identities must be unique")
@@ -57,6 +60,22 @@ def validate_access_probe_relationships(
                 raise ValueError("Native PCB probe track evidence uses the wrong outer layer")
             if track.geometry_kind != item.track_obstacle_geometry:
                 raise ValueError("Native PCB probe track geometry differs from its track inventory")
+        if item.zone_obstacle_uuid is not None:
+            layer = item.zone_obstacle_layer
+            if layer is None or item.zone_obstacle_island_index is None:
+                raise ValueError("Native PCB probe zone evidence is incomplete")
+            zone = zones_by_identity.get((item.zone_obstacle_uuid.casefold(), layer.casefold()))
+            if zone is None:
+                raise ValueError("Native PCB probe observation refers to an unobserved zone")
+            if zone.net != item.zone_obstacle_net:
+                raise ValueError("Native PCB probe zone net differs from its zone inventory")
+            if item.zone_obstacle_island_index not in {
+                island.island_index for island in zone.filled_islands
+            }:
+                raise ValueError("Native PCB probe observation refers to an unobserved zone island")
+            expected_layer = "F.Cu" if item.side == "front" else "B.Cu"
+            if layer.casefold() != expected_layer.casefold():
+                raise ValueError("Native PCB probe zone evidence uses the wrong outer layer")
         if schema_version >= 10 and any(
             field not in item.model_fields_set
             for field in ("target_aperture_shape", "target_aperture_diameter_nm")
@@ -116,6 +135,29 @@ def validate_access_probe_relationships(
             )
         ):
             raise ValueError("Native probe track evidence requires schema v19+")
+        if schema_version >= 20:
+            if any(
+                field not in item.model_fields_set
+                for field in (
+                    "zone_obstacle_uuid",
+                    "zone_obstacle_layer",
+                    "zone_obstacle_net",
+                    "zone_obstacle_island_index",
+                    "zone_obstacle_distance_nm",
+                )
+            ):
+                raise ValueError("Native PCB schema v20+ requires explicit zone access evidence")
+        elif any(
+            field in item.model_fields_set
+            for field in (
+                "zone_obstacle_uuid",
+                "zone_obstacle_layer",
+                "zone_obstacle_net",
+                "zone_obstacle_island_index",
+                "zone_obstacle_distance_nm",
+            )
+        ):
+            raise ValueError("Native probe zone evidence requires schema v20+")
 
 
 def _validate_courtyard_evidence(

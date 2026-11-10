@@ -8652,13 +8652,26 @@ v19 or newer. It conservatively measures track copper regardless of whether
 solder mask covers it; it does not classify custom mask openings or zone
 apertures. A pre-v19 snapshot leaves this requirement `NOT_RUN`.
 
+`zone_clearance_mm` is an optional, separate requirement for clearance to
+foreign or unconnected filled copper zones on the selected outer copper side.
+The native probe refills zones, restores each filled island's outline and holes,
+and records the nearest applicable island's zone UUID, layer, net, island index,
+and distance from the target pad center. Same-net zones are excluded. The
+comparison uses the probe-tip radius plus the authored clearance and requires
+source-bound snapshot schema v20 or newer. This measures filled copper
+regardless of solder-mask coverage; it does not infer mask openings from zone
+configuration or arbitrary graphics. A pre-v20 snapshot leaves this
+requirement `NOT_RUN`.
+
 The synthetic native acceptance fixture exercises a fitted different-net pad,
 a closer same-net pad, a closer DNP pad, a no-net obstacle, front-only access,
 an undersize circular aperture, an exact-fit aperture with a mask contraction,
 a rectangular target, a drilled target, untented front and back vias, an exact
 via-clearance boundary, a same-net via decoy, and a nearby tented via that must
 be excluded. Track cases include different-net segments, an exact-distance
-boundary, a close same-net track control, and an unconnected arc. It checks
+boundary, a close same-net track control, and an unconnected arc. Zone cases
+include a one-nanometer-inside foreign-copper fault, an exact-distance boundary,
+a close same-net zone decoy, and the clearance hole around a target pad. It checks
 front/back/either-side behavior, exact aperture and clearance boundaries,
 unsupported-shape reporting, expected faults, and repeatability across two
 native loads. It also checks a nearby footprint with no courtyard plus exact
@@ -8666,13 +8679,15 @@ and failing measured courtyard boundaries. Package acceptance runs it against
 the project's digest-pinned KiCad 10.0.0 and 10.0.5 images and retains the
 request, snapshot, probe, and command receipt under ignored `build/ci/` output.
 
-This is a bounded pad-aperture, pad-neighbor, via, track, and optional
-courtyard-proxy check. It skips DNP footprints and same-net neighbor pads. Via
-coverage is limited to native via objects and their side-specific KiCad tenting
-state. Track coverage measures outer-layer copper tracks even when the actual
-solder-mask state is unknown. Neither check inspects zone apertures or
-arbitrary mask graphics, and neither proves component-body height, fixtures,
-covers, probe reach, or manufacturing test coverage. A passing result
+This is a bounded pad-aperture, pad-neighbor, via, track, filled-zone, and
+optional courtyard-proxy check. It skips DNP footprints and same-net neighbor
+pads, vias, tracks, and zones. Via coverage is limited to native via objects
+and their side-specific KiCad tenting state. Track and zone coverage measure
+outer-layer copper even when the actual solder-mask state is unknown. The zone
+check uses filled island outlines and holes, not the authored zone boundary.
+These checks do not classify arbitrary mask graphics, and they do not prove
+component-body height, fixtures, covers, probe reach, or manufacturing test
+coverage. A passing result
 describes only the configured geometry around the selected PCB pad. Review the
 physical access path and first-article test separately.
 

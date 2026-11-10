@@ -51,7 +51,7 @@ def pcb_probe_envelope_checks(
     spec: TestAccessAnalysis,
     snapshot: PcbConnectivitySnapshot,
 ) -> tuple[ElectricalCheck, ...]:
-    """Check authored probe envelopes against retained native pad, via, track, and courtyard geometry."""
+    """Check authored probe envelopes against retained native pad and PCB geometry."""
     request_set = pcb_access_probe_request_set(spec)
     if request_set is None:
         return ()
@@ -71,6 +71,13 @@ def pcb_probe_envelope_checks(
     requires_track = any(
         endpoint.probe_envelope is not None
         and endpoint.probe_envelope.track_clearance_mm is not None
+        for decision in spec.decisions
+        if decision.mode == "required"
+        for endpoint in decision.endpoints
+    )
+    requires_zone = any(
+        endpoint.probe_envelope is not None
+        and endpoint.probe_envelope.zone_clearance_mm is not None
         for decision in spec.decisions
         if decision.mode == "required"
         for endpoint in decision.endpoints
@@ -97,6 +104,14 @@ def pcb_probe_envelope_checks(
                 id="test-access/pcb-probe-envelope/track-evidence",
                 status="NOT_RUN",
                 detail="Authored track clearance requires native PCB snapshot schema v19 or newer.",
+            ),
+        )
+    if requires_zone and int(snapshot.schema_version) < 20:
+        return (
+            ElectricalCheck(
+                id="test-access/pcb-probe-envelope/zone-evidence",
+                status="NOT_RUN",
+                detail="Authored copper-zone clearance requires native PCB snapshot schema v20 or newer.",
             ),
         )
     observations = {
@@ -148,6 +163,11 @@ def pcb_probe_envelope_checks(
                 None
                 if envelope.track_clearance_mm is None
                 else ceil((envelope.tip_diameter_mm / 2 + envelope.track_clearance_mm) * 1_000_000)
+            )
+            required_zone_nm = (
+                None
+                if envelope.zone_clearance_mm is None
+                else ceil((envelope.tip_diameter_mm / 2 + envelope.zone_clearance_mm) * 1_000_000)
             )
             side_details: list[str] = []
             endpoint_pass = False
@@ -285,6 +305,27 @@ def pcb_probe_envelope_checks(
                     and via_clear
                     and track_clear
                 )
+                zone_clear = True
+                if required_zone_nm is not None:
+                    if observation.zone_obstacle_uuid is None:
+                        side_details.append(
+                            f"{side}: no different-net or unconnected filled outer-layer zone was observed; "
+                            f"required envelope radius is {required_zone_nm / 1_000_000:.6g} mm"
+                        )
+                    else:
+                        assert observation.zone_obstacle_distance_nm is not None
+                        assert observation.zone_obstacle_island_index is not None
+                        assert observation.zone_obstacle_layer is not None
+                        zone_clear = observation.zone_obstacle_distance_nm >= required_zone_nm
+                        side_details.append(
+                            f"{side}: nearest different-net or unconnected filled zone "
+                            f"{observation.zone_obstacle_uuid} island {observation.zone_obstacle_island_index} "
+                            f"on {observation.zone_obstacle_layer} "
+                            f"({observation.zone_obstacle_net or 'no net'}) is "
+                            f"{observation.zone_obstacle_distance_nm / 1_000_000:.6g} mm from the pad center; "
+                            f"required envelope radius is {required_zone_nm / 1_000_000:.6g} mm"
+                        )
+                side_clear = side_clear and zone_clear
                 endpoint_pass = endpoint_pass or side_clear
                 endpoint_unresolved = endpoint_unresolved or courtyard_unresolved
             endpoint_results.append(
@@ -317,8 +358,8 @@ def pcb_probe_envelope_checks(
             "courtyard clearance compares same-side fitted footprint courtyard polygons, and uses the nearest "
             "unmeasured footprint bounding box to identify missing nearby courtyards. Optional via clearance "
             "measures only untented vias that span the selected outer copper side; it does not infer exposure "
-            "from arbitrary mask graphics. Optional track clearance measures outer-layer copper tracks regardless "
-            "of solder-mask exposure, so it does not classify custom mask openings. The checks do not establish "
+            "from arbitrary mask graphics. Optional track and filled-zone clearances measure outer-layer copper "
+            "regardless of solder-mask exposure, so they do not classify custom mask openings. The checks do not establish "
             "body height, probe angle, fixture or cover access, "
             "or physical reach; zone apertures, "
             "custom/chamfered/trapezoid target shapes, and footprints on the opposite board side are not evaluated."

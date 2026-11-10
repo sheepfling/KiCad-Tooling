@@ -9,7 +9,7 @@ from .netlist_contract_models import NetlistContract
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
 
-_SUPPORTED_SNAPSHOT_SCHEMAS = frozenset({"12", "13", "14", "15", "16", "17", "18", "19"})
+_SUPPORTED_SNAPSHOT_SCHEMAS = frozenset({"12", "13", "14", "15", "16", "17", "18", "19", "20"})
 
 
 def compare_schematic_pcb_pad_nets(

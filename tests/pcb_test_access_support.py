@@ -11,6 +11,8 @@ from kicad_tooling.hwrepo.pcb_connectivity_observations import (
     PcbPadConnectivityObservation,
     PcbTrackObservation,
     PcbViaObservation,
+    PcbZoneFilledIslandObservation,
+    PcbZoneObservation,
 )
 from kicad_tooling.hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from kicad_tooling.hwrepo.pcb_test_access_models import (
@@ -76,7 +78,7 @@ def probe_access_snapshot(
     include_back: bool = True,
     aperture_shape: Literal["circle", "oval", "rectangle", "roundrect", "unsupported"] = "circle",
     aperture_diameter_nm: int | None = 1_000_000,
-    schema_version: Literal["3", "17", "18", "19"] = "3",
+    schema_version: Literal["3", "17", "18", "19", "20"] = "3",
     courtyard_obstacle: str | None = None,
     courtyard_distance_nm: int | None = None,
     unmeasured_courtyard_footprint: str | None = None,
@@ -91,6 +93,14 @@ def probe_access_snapshot(
     track_obstacle_distance_nm: int | None = None,
     track_obstacle_geometry: Literal["segment", "arc"] | None = None,
     include_track_inventory: bool = True,
+    zone_obstacle_uuid: str | None = None,
+    zone_obstacle_layer: str | None = None,
+    zone_obstacle_net: str | None = None,
+    zone_obstacle_island_index: int | None = None,
+    zone_obstacle_distance_nm: int | None = None,
+    include_zone_inventory: bool = True,
+    zone_inventory_net: str | None = "GND",
+    inventory_zone_island_index: int = 0,
 ) -> PcbConnectivitySnapshot:
     pads = (
         PcbPadConnectivityObservation(
@@ -124,7 +134,31 @@ def probe_access_snapshot(
         zones_refilled=True,
         pads=pads,
         net_ties=(),
-        zones=(),
+        zones=(
+            (
+                PcbZoneObservation(
+                    uuid=zone_obstacle_uuid,
+                    layer=zone_obstacle_layer,
+                    name="Synthetic zone",
+                    net=zone_inventory_net,
+                    filled_island_count=1,
+                    unanchored_pad_island_indexes=(0,),
+                    filled_islands=(
+                        PcbZoneFilledIslandObservation(
+                            island_index=inventory_zone_island_index,
+                            outline_nm=(
+                                (10_800_000, 9_000_000),
+                                (11_800_000, 9_000_000),
+                                (11_800_000, 11_000_000),
+                                (10_800_000, 11_000_000),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+            if zone_obstacle_uuid is not None and include_zone_inventory
+            else ()
+        ),
         access_probe_observations=(
             PcbAccessProbeObservation(
                 endpoint="J1.9",
@@ -143,7 +177,7 @@ def probe_access_snapshot(
                         "unmeasured_courtyard_footprint": unmeasured_courtyard_footprint,
                         "unmeasured_courtyard_distance_nm": unmeasured_courtyard_distance_nm,
                     }
-                    if schema_version in {"17", "18", "19"}
+                    if schema_version in {"17", "18", "19", "20"}
                     else {}
                 ),
                 **(
@@ -153,7 +187,7 @@ def probe_access_snapshot(
                         "via_obstacle_distance_nm": via_obstacle_distance_nm,
                         "via_obstacle_tented": via_obstacle_tented,
                     }
-                    if schema_version in {"18", "19"}
+                    if schema_version in {"18", "19", "20"}
                     else {}
                 ),
                 **(
@@ -163,7 +197,18 @@ def probe_access_snapshot(
                         "track_obstacle_distance_nm": track_obstacle_distance_nm,
                         "track_obstacle_geometry": track_obstacle_geometry,
                     }
-                    if schema_version == "19"
+                    if schema_version in {"19", "20"}
+                    else {}
+                ),
+                **(
+                    {
+                        "zone_obstacle_uuid": zone_obstacle_uuid,
+                        "zone_obstacle_layer": zone_obstacle_layer,
+                        "zone_obstacle_net": zone_obstacle_net,
+                        "zone_obstacle_island_index": zone_obstacle_island_index,
+                        "zone_obstacle_distance_nm": zone_obstacle_distance_nm,
+                    }
+                    if schema_version == "20"
                     else {}
                 ),
             ),
@@ -186,7 +231,7 @@ def probe_access_snapshot(
                                 "unmeasured_courtyard_footprint": None,
                                 "unmeasured_courtyard_distance_nm": None,
                             }
-                            if schema_version in {"17", "18", "19"}
+                            if schema_version in {"17", "18", "19", "20"}
                             else {}
                         ),
                         **(
@@ -196,7 +241,7 @@ def probe_access_snapshot(
                                 "via_obstacle_distance_nm": None,
                                 "via_obstacle_tented": None,
                             }
-                            if schema_version in {"18", "19"}
+                            if schema_version in {"18", "19", "20"}
                             else {}
                         ),
                         **(
@@ -206,7 +251,18 @@ def probe_access_snapshot(
                                 "track_obstacle_distance_nm": None,
                                 "track_obstacle_geometry": None,
                             }
-                            if schema_version == "19"
+                            if schema_version in {"19", "20"}
+                            else {}
+                        ),
+                        **(
+                            {
+                                "zone_obstacle_uuid": None,
+                                "zone_obstacle_layer": None,
+                                "zone_obstacle_net": None,
+                                "zone_obstacle_island_index": None,
+                                "zone_obstacle_distance_nm": None,
+                            }
+                            if schema_version == "20"
                             else {}
                         ),
                     ),
@@ -216,7 +272,9 @@ def probe_access_snapshot(
             ),
         ),
         schema_version=schema_version,
-        access_probe_requests_sha256="d" * 64 if schema_version in {"17", "18", "19"} else None,
+        access_probe_requests_sha256="d" * 64
+        if schema_version in {"17", "18", "19", "20"}
+        else None,
         tracks=(
             (
                 PcbTrackObservation(
@@ -242,7 +300,7 @@ def probe_access_snapshot(
             if track_obstacle_uuid is not None and include_track_inventory
             else ()
         ),
-        copper_layers=("F.Cu", "B.Cu") if schema_version in {"17", "18", "19"} else (),
+        copper_layers=("F.Cu", "B.Cu") if schema_version in {"17", "18", "19", "20"} else (),
         rule_areas=(),
         vias=(
             (
@@ -279,7 +337,7 @@ def probe_access_snapshot(
                     ("U1", "Synthetic:NearbyPart", (10_500_000, 10_000_000)),
                 )
             )
-            if schema_version in {"17", "18", "19"}
+            if schema_version in {"17", "18", "19", "20"}
             else ()
         ),
         touch_pad_clearance_observations=(),
@@ -293,6 +351,7 @@ def probe_access_requirement(
     courtyard_clearance_mm: float | None = None,
     via_clearance_mm: float | None = None,
     track_clearance_mm: float | None = None,
+    zone_clearance_mm: float | None = None,
 ) -> AccessAnalysis:
     requirement = access_requirement(approach_side=approach_side)
     decision = requirement.decisions[0]
@@ -305,6 +364,7 @@ def probe_access_requirement(
                 courtyard_clearance_mm=courtyard_clearance_mm,
                 via_clearance_mm=via_clearance_mm,
                 track_clearance_mm=track_clearance_mm,
+                zone_clearance_mm=zone_clearance_mm,
             )
         }
     )

@@ -26,6 +26,7 @@ class TestAccessProbeEnvelope(StrictModel):
     courtyard_clearance_mm: NonNegativeMeasure | None = None
     via_clearance_mm: NonNegativeMeasure | None = None
     track_clearance_mm: NonNegativeMeasure | None = None
+    zone_clearance_mm: NonNegativeMeasure | None = None
 
 
 class PcbAccessProbeRequest(StrictModel):

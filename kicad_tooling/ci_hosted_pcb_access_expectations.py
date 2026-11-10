@@ -7,6 +7,7 @@ from .ci_hosted_pcb_access_vias import (
     VIA_PROBE_EXPECTED_PAD_OBSERVATIONS,
     VIA_PROBE_EXPECTED_STATUSES,
 )
+from .ci_hosted_pcb_access_zones import ZONE_PROBE_EXPECTED_STATUSES
 
 _ACCESS_PROBE_EXPECTED_STATUSES = {
     "test-access/pcb-probe-envelope/front-back-boundary": "PASS",
@@ -23,6 +24,7 @@ _ACCESS_PROBE_EXPECTED_STATUSES = {
     "test-access/pcb-probe-envelope/courtyard-clearance-fault": "FAIL",
     **VIA_PROBE_EXPECTED_STATUSES,
     **TRACK_PROBE_EXPECTED_STATUSES,
+    **ZONE_PROBE_EXPECTED_STATUSES,
 }
 
 _ACCESS_PROBE_EXPECTED_PAD_OBSERVATIONS = {
@@ -139,6 +141,38 @@ _ACCESS_PROBE_EXPECTED_PAD_OBSERVATIONS = {
         "J25.1",
         "TARGET_TRACK_BOUNDARY",
         19_750_001,
+        True,
+        "circle",
+        800_000,
+    ),
+    ("j28.1", "front"): (
+        "J29.1",
+        "TARGET_ZONE_BOUNDARY",
+        9_750_001,
+        True,
+        "circle",
+        800_000,
+    ),
+    ("j29.1", "front"): (
+        "J28.1",
+        "TARGET_ZONE_FAULT",
+        9_750_001,
+        True,
+        "circle",
+        800_000,
+    ),
+    ("j30.1", "front"): (
+        "J29.1",
+        "TARGET_ZONE_BOUNDARY",
+        9_750_001,
+        True,
+        "circle",
+        800_000,
+    ),
+    ("j31.1", "front"): (
+        "J30.1",
+        "TARGET_ZONE_SAME_NET",
+        9_750_001,
         True,
         "circle",
         800_000,

@@ -97,7 +97,7 @@ def test_native_schema_17_snapshot_records_keepout_footprint_and_empty_touch_evi
     assert command.returncode == 0, command.stderr or command.error
     assert snapshot is not None
     assert snapshot.kicad_version == expected_version
-    assert snapshot.schema_version == "19"
+    assert snapshot.schema_version == "20"
     assert snapshot.touch_pad_clearance_observations == ()
     assert snapshot.touch_pad_clearance_requests_sha256 is None
     assert snapshot.board_sha256

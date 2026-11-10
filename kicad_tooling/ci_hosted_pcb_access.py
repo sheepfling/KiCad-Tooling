@@ -20,6 +20,10 @@ from .ci_hosted_pcb_access_vias import (
     validate_via_probe_fixture_observations,
     via_probe_fixture_decisions,
 )
+from .ci_hosted_pcb_access_zones import (
+    validate_zone_probe_fixture_observations,
+    zone_probe_fixture_decisions,
+)
 from .ci_hosted_support import HostedLog
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
@@ -60,6 +64,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
         courtyard_clearance_mm: float | None = None,
         via_clearance_mm: float | None = None,
         track_clearance_mm: float | None = None,
+        zone_clearance_mm: float | None = None,
     ) -> TestAccessEndpointRequirement:
         return TestAccessEndpointRequirement(
             kind="test_point",
@@ -75,6 +80,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
                 courtyard_clearance_mm=courtyard_clearance_mm,
                 via_clearance_mm=via_clearance_mm,
                 track_clearance_mm=track_clearance_mm,
+                zone_clearance_mm=zone_clearance_mm,
             ),
         )
 
@@ -133,6 +139,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             ),
             *via_probe_fixture_decisions(endpoint),
             *track_probe_fixture_decisions(endpoint),
+            *zone_probe_fixture_decisions(endpoint),
             RequiredTestAccess(
                 mode="required",
                 id="front-only-clearance-fault",
@@ -304,7 +311,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             request_path = receipt / "access-probe-requests.json"
             if (
                 snapshot.board_sha256 != source_hash
-                or snapshot.schema_version != "19"
+                or snapshot.schema_version != "20"
                 or snapshot.kicad_version != config.kicad_version
                 or snapshot.image != config.image
                 or snapshot.probe_sha256 != expected_probe_sha256()
@@ -356,6 +363,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
 
             validate_via_probe_fixture_observations(snapshot, observations)
             validate_track_probe_fixture_observations(snapshot, observations)
+            validate_zone_probe_fixture_observations(snapshot, observations)
 
             check_results = pcb_probe_envelope_checks(spec, snapshot)
             checks = {item.id: item.status for item in check_results}
@@ -383,7 +391,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             project=project,
             kicad_version=config.kicad_version,
             fixture_sha256=source_hash,
-            checks="9 PASS, 10 expected FAIL, 1 NOT_RUN",
+            checks="12 PASS, 11 expected FAIL, 1 NOT_RUN",
             repeatable="true",
             receipt=(scratch.relative_to(root) / "receipt-first").as_posix(),
         )

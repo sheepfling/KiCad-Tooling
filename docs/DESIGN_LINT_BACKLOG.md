@@ -22959,6 +22959,40 @@ acceptance threads while new lint features proceed:
   `design_lint and pcb_lint`. The native lane uses
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`.
 
+#### LINT-385 — Check authored probe clearance to filled copper zones
+
+- **Status:** Implemented as an opt-in extension to LINT-018's source-bound PCB
+  probe-envelope evidence.
+- **Priority:** P1 evidence completeness when a project-authored probe envelope
+  requires a keepaway from filled outer-layer copper zones.
+- **Gap:** Pad, courtyard, via, and track checks can pass while a different-net
+  or unconnected filled zone reaches the required probe envelope.
+- **Contract and predicate:** An endpoint may author a separate
+  `zone_clearance_mm`. After native zone refill, measure the nearest filled
+  outer-layer island from the target pad center. Exclude same-net zones and
+  retain the zone UUID, layer, net, island index, and exact measured distance;
+  relationship validation must match the zone and island inventory. Compare
+  against the probe-tip radius plus the authored clearance. Require native PCB
+  snapshot schema v20 with explicit zone evidence and absence fields. A
+  pre-v20 snapshot returns `NOT_RUN` for this requirement.
+- **Boundary:** This measures filled copper, regardless of mask exposure. It
+  does not interpret mask openings, arbitrary mask graphics, physical probe
+  reach, fixtures, covers, or manufacturing test coverage. Projects author the
+  clearance and basis; there is no universal threshold.
+- **Fixtures:** Tooling-owned synthetic native boards cover a one-nanometer-
+  inside foreign-zone fault, an exact observed-distance boundary, a closer
+  same-net zone decoy, and a filled-zone clearance hole around a target pad.
+  Both digest-pinned KiCad 10.0.0 and 10.0.5 images must produce identical,
+  source-bound observations on repeated capture.
+- **Selection:** Run
+  `tests/test_test_access_probe_zones.py`,
+  `tests/test_test_access_probe_architecture.py`,
+  `tests/test_design_lint_architecture_pcb_connectivity.py`,
+  `tests/test_pcb_connectivity_snapshot_integrity.py`, and
+  `tests/test_pcb_access_native_fixture_lane.py` with
+  `design_lint and pcb_lint`. The native lane uses
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

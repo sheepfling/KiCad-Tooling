@@ -117,6 +117,17 @@ def normalized_filled_zone_polygons(zone: NativeZone, layer: int) -> NativePolyg
     return filled
 
 
+def filled_zone_island_shapes(filled: NativePolygonSet) -> tuple[tuple[int, NativePolygonSet], ...]:
+    """Return independent native filled-island shapes with holes restored."""
+    islands: list[tuple[int, NativePolygonSet]] = []
+    for island_index in range(filled.OutlineCount()):
+        island = native_pcbnew.SHAPE_POLY_SET(filled.COutline(island_index))
+        for hole_index in range(filled.HoleCount(island_index)):
+            island.AddHole(filled.CHole(island_index, hole_index), 0)
+        islands.append((island_index, island))
+    return tuple(islands)
+
+
 def zone_island_indexes_touching_pad(
     pad: NativePad, zone: NativeZone, filled: NativePolygonSet
 ) -> tuple[int, ...]:
@@ -126,10 +137,7 @@ def zone_island_indexes_touching_pad(
         return ()
     pad_shape = pad.GetEffectiveShape(layer)
     indexes: list[int] = []
-    for island_index in range(filled.OutlineCount()):
-        island = native_pcbnew.SHAPE_POLY_SET(filled.COutline(island_index))
-        for hole_index in range(filled.HoleCount(island_index)):
-            island.AddHole(filled.CHole(island_index, hole_index), 0)
+    for island_index, island in filled_zone_island_shapes(filled):
         if island.Collide(pad_shape):
             indexes.append(island_index)
     return tuple(indexes)

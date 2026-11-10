@@ -24,6 +24,11 @@ class AccessProbeObservation(TypedDict):
     track_obstacle_net: str | None
     track_obstacle_distance_nm: int | None
     track_obstacle_geometry: Literal["segment", "arc"] | None
+    zone_obstacle_uuid: str | None
+    zone_obstacle_layer: str | None
+    zone_obstacle_net: str | None
+    zone_obstacle_island_index: int | None
+    zone_obstacle_distance_nm: int | None
 
 
 def access_probe_observations(
@@ -32,6 +37,7 @@ def access_probe_observations(
     footprint_geometry: list[tuple[str, bool, int, NativeFootprint]],
     via_geometry: list[tuple[str, str | None, NativeVia]],
     track_geometry: list[tuple[str, str | None, NativeTrack]],
+    zone_geometry: list[tuple[str, str | None, int, int, NativePolygonSet]],
 ) -> list[AccessProbeObservation]:
     """Measure foreign pads/tracks, untented vias, and courtyards from each pad center."""
     observations: list[AccessProbeObservation] = []
@@ -41,6 +47,7 @@ def access_probe_observations(
     }
     courtyard_layers = {"front": native_pcbnew.F_CrtYd, "back": native_pcbnew.B_CrtYd}
     footprint_sides = {native_pcbnew.F_Cu: "front", native_pcbnew.B_Cu: "back"}
+    copper_layer_names = {native_pcbnew.F_Cu: "F.Cu", native_pcbnew.B_Cu: "B.Cu"}
 
     def exposed(pad: NativePad, side: Literal["front", "back"]) -> bool:
         copper_layer, mask_layer = layer_ids[side]
@@ -122,6 +129,11 @@ def access_probe_observations(
                     "track_obstacle_net": None,
                     "track_obstacle_distance_nm": None,
                     "track_obstacle_geometry": None,
+                    "zone_obstacle_uuid": None,
+                    "zone_obstacle_layer": None,
+                    "zone_obstacle_net": None,
+                    "zone_obstacle_island_index": None,
+                    "zone_obstacle_distance_nm": None,
                 }
             )
             continue
@@ -207,6 +219,24 @@ def access_probe_observations(
             candidate = (distance_nm, identity.casefold(), identity, track_net, geometry_kind)
             if nearest_track is None or candidate[:3] < nearest_track[:3]:
                 nearest_track = candidate
+        nearest_zone: tuple[int, str, str, str, str | None, int] | None = None
+        for identity, zone_net, zone_layer, island_index, island in zone_geometry:
+            if zone_layer != copper_layer or (target_net is not None and zone_net == target_net):
+                continue
+            distance_nm = floor(float(island.Distance(position)))
+            if distance_nm < 0:
+                raise ValueError(f"KiCad returned a negative zone distance for {endpoint}")
+            layer_name = copper_layer_names[zone_layer]
+            candidate = (
+                distance_nm,
+                identity.casefold(),
+                layer_name.casefold(),
+                identity,
+                zone_net,
+                island_index,
+            )
+            if nearest_zone is None or candidate[:3] < nearest_zone[:3]:
+                nearest_zone = candidate
         observations.append(
             {
                 "endpoint": endpoint,
@@ -238,6 +268,13 @@ def access_probe_observations(
                 "track_obstacle_net": nearest_track[3] if nearest_track is not None else None,
                 "track_obstacle_distance_nm": nearest_track[0] if nearest_track is not None else None,
                 "track_obstacle_geometry": nearest_track[4] if nearest_track is not None else None,
+                "zone_obstacle_uuid": nearest_zone[3] if nearest_zone is not None else None,
+                "zone_obstacle_layer": (
+                    copper_layer_names[copper_layer] if nearest_zone is not None else None
+                ),
+                "zone_obstacle_net": nearest_zone[4] if nearest_zone is not None else None,
+                "zone_obstacle_island_index": nearest_zone[5] if nearest_zone is not None else None,
+                "zone_obstacle_distance_nm": nearest_zone[0] if nearest_zone is not None else None,
             }
         )
     return observations

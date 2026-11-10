@@ -17,16 +17,18 @@ from .model_primitives import (
     StrictModel,
 )
 
+PcbZoneUuid = Annotated[
+    str,
+    StringConstraints(
+        pattern=r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    ),
+]
+
 
 class PcbZoneIdentity(StrictModel):
     """Native KiCad identity for one copper zone on one board layer."""
 
-    uuid: Annotated[
-        str,
-        StringConstraints(
-            pattern=r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-        ),
-    ]
+    uuid: PcbZoneUuid
     layer: NonEmptyText
 
 
@@ -262,7 +264,7 @@ class PcbFootprintPlacementObservation(StrictModel):
 
 
 class PcbAccessProbeObservation(StrictModel):
-    """Native pad-fit, obstacle, courtyard, via, and track evidence for one probe surface."""
+    """Native pad-fit, obstacle, courtyard, via, track, and zone evidence for one probe surface."""
 
     endpoint: Reference
     side: Literal["front", "back"]
@@ -287,6 +289,11 @@ class PcbAccessProbeObservation(StrictModel):
     track_obstacle_net: NetName | None = None
     track_obstacle_distance_nm: NonNegativeCount | None = None
     track_obstacle_geometry: Literal["segment", "arc"] | None = None
+    zone_obstacle_uuid: PcbZoneUuid | None = None
+    zone_obstacle_layer: NonEmptyText | None = None
+    zone_obstacle_net: NetName | None = None
+    zone_obstacle_island_index: NonNegativeCount | None = None
+    zone_obstacle_distance_nm: NonNegativeCount | None = None
 
     @model_validator(mode="after")
     def complete_nearest_obstacle(self) -> PcbAccessProbeObservation:
@@ -354,6 +361,34 @@ class PcbAccessProbeObservation(StrictModel):
             and self.track_obstacle_net == self.target_net
         ):
             raise ValueError("Native probe track obstacle must be on another net or unconnected")
+        if self.zone_obstacle_uuid is None:
+            if any(
+                value is not None
+                for value in (
+                    self.zone_obstacle_layer,
+                    self.zone_obstacle_net,
+                    self.zone_obstacle_island_index,
+                    self.zone_obstacle_distance_nm,
+                )
+            ):
+                raise ValueError("Native probe zone evidence needs a zone identity")
+        elif any(
+            value is None
+            for value in (
+                self.zone_obstacle_layer,
+                self.zone_obstacle_island_index,
+                self.zone_obstacle_distance_nm,
+            )
+        ):
+            raise ValueError(
+                "Native probe zone obstacle needs layer, island, and measured distance"
+            )
+        if (
+            self.zone_obstacle_uuid is not None
+            and self.target_net is not None
+            and self.zone_obstacle_net == self.target_net
+        ):
+            raise ValueError("Native probe zone obstacle must be on another net or unconnected")
         if self.target_aperture_shape in {"circle", "oval", "rectangle", "roundrect"}:
             if self.target_aperture_diameter_nm is None or self.target_aperture_diameter_nm <= 0:
                 raise ValueError("Supported native probe aperture needs a positive fit diameter")
