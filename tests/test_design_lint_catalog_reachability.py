@@ -12,7 +12,7 @@ import tests.component_peer_power_input_support as _component_peer_power_input_s
 import tests.connector_footprint_peer_support as _connector_footprint_peer_support
 import tests.design_lint_fixtures as _tests_design_lint_fixtures
 import tests.design_lint_fixtures.can_line_named_rail as _can_line_named_rail_fixtures
-import tests.design_lint_fixtures.catalog_reachability_connector_domain_splits as _connector_domain_split_reachability
+import tests.design_lint_fixtures.catalog_reachability_connector_domains as _connector_domains_reachability
 import tests.design_lint_fixtures.catalog_reachability_signal_pairs as _signal_pair_reachability
 import tests.design_lint_fixtures.component_peer_pin_all_open as _component_peer_pin_all_open
 import tests.design_lint_fixtures.component_return_domains as _component_return_domains
@@ -200,7 +200,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     emitted = {item.rule_id for source in cases for item in candidates(source)}
     emitted.update(_signal_pair_reachability.signal_pair_same_net_rule_ids())
     emitted.update(mapped_contact_sharing_rule_ids())
-    emitted.update(_connector_domain_split_reachability.mapped_connector_domain_split_rule_ids())
+    emitted.update(_connector_domains_reachability.mapped_connector_domain_rule_ids())
     emitted.update(unconnected_protocol_candidate_rule_ids())
     emitted.update(protocol_peer_candidate_rule_ids())
     emitted.update(item.rule_id for item in candidates(_mosfet_gate_source_bias_fixtures.netlist()))

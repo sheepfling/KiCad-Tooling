@@ -13,20 +13,22 @@ pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.connector_lint,
     pytest.mark.evidence_lint,
+    pytest.mark.design_lint_rule(rule_id="connector.mapped_return_domains_share_net"),
 ]
 
 
 def test_supply_domain_evidence_has_a_focused_owner() -> None:
-    owner = HWREPO / "design_lint_connector_supply_domain_candidate_evidence.py"
+    owner = HWREPO / "design_lint_connector_domain_shared_net_candidate_evidence.py"
     tree = ast.parse(owner.read_text(encoding="utf-8"), filename=owner.name)
 
     assert line_count(owner) < IMPLEMENTATION_MAX_LINES
     assert any(
-        isinstance(node, ast.FunctionDef) and node.name == "project_mapped_supply_domains_evidence"
+        isinstance(node, ast.FunctionDef)
+        and node.name == "project_mapped_connector_domains_shared_net_evidence"
         for node in tree.body
     )
     assert any(
-        isinstance(node, ast.ClassDef) and node.name == "MappedSupplyDomainsCandidate"
+        isinstance(node, ast.ClassDef) and node.name == "MappedConnectorDomainsCandidate"
         for node in tree.body
     )
 
@@ -51,6 +53,56 @@ def test_supply_domain_predicate_routes_through_typed_source_evidence() -> None:
     )
     assert not any(
         isinstance(node, ast.keyword) and node.arg == "evidence" for node in ast.walk(function)
+    )
+
+
+def test_supply_evidence_compatibility_names_remain_in_the_small_wrapper() -> None:
+    wrapper = HWREPO / "design_lint_connector_supply_domain_candidate_evidence.py"
+    tree = ast.parse(wrapper.read_text(encoding="utf-8"), filename=wrapper.name)
+    assert line_count(wrapper) < IMPLEMENTATION_MAX_LINES
+    assert any(
+        isinstance(node, ast.FunctionDef) and node.name == "project_mapped_supply_domains_evidence"
+        for node in tree.body
+    )
+    assert any(
+        isinstance(node, ast.ImportFrom)
+        and node.module == "design_lint_connector_domain_shared_net_candidate_evidence"
+        for node in tree.body
+    )
+
+
+def test_return_domain_shared_net_predicate_uses_shared_source_grouping() -> None:
+    owner = HWREPO / "design_lint_connectors_return_domains_shared_net.py"
+    tree = ast.parse(owner.read_text(encoding="utf-8"), filename=owner.name)
+    assert line_count(owner) < IMPLEMENTATION_MAX_LINES
+    function = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef)
+        and node.name == "mapped_return_domains_shared_net_candidates"
+    )
+    assert any(
+        isinstance(node, ast.Name) and node.id == "mapped_connector_domain_assignments_by_net"
+        for node in ast.walk(function)
+    )
+    assert any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id == "MappedConnectorDomainsCandidate"
+        and node.func.attr == "from_source_evidence"
+        for node in ast.walk(function)
+    )
+
+
+def test_connector_domain_shared_net_grouping_has_a_focused_owner() -> None:
+    owner = HWREPO / "connector_domain_assignment_groups.py"
+    tree = ast.parse(owner.read_text(encoding="utf-8"), filename=owner.name)
+    assert line_count(owner) < IMPLEMENTATION_MAX_LINES
+    assert any(
+        isinstance(node, ast.FunctionDef)
+        and node.name == "mapped_connector_domain_assignments_by_net"
+        for node in tree.body
     )
 
 

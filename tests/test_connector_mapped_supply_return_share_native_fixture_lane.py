@@ -37,6 +37,7 @@ SUPPLY_SHIELD_RULE_ID = "connector.mapped_supply_shield_share_net"
 RETURN_SHIELD_RULE_ID = "connector.mapped_return_shield_share_net"
 SAME_DOMAIN_SUPPLY_SPLIT_RULE_ID = "connector.mapped_same_domain_supply_split_nets"
 SAME_DOMAIN_RETURN_SPLIT_RULE_ID = "connector.mapped_same_domain_return_split_nets"
+RETURN_DOMAINS_SHARED_NET_RULE_ID = "connector.mapped_return_domains_share_net"
 FIXTURE_CASES = {
     "mapped-supply-return-share-fault": (
         "fault.kicad_sch",
@@ -54,6 +55,7 @@ FIXTURE_CASES = {
 @pytest.mark.design_lint_rule(rule_id=RETURN_SHIELD_RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=SAME_DOMAIN_SUPPLY_SPLIT_RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=SAME_DOMAIN_RETURN_SPLIT_RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=RETURN_DOMAINS_SHARED_NET_RULE_ID)
 @pytest.mark.skipif(
     os.environ.get("KICAD_RUN_NATIVE_CONNECTOR_FIXTURES") != "1",
     reason="exact-version native connector fixtures run in package acceptance",
@@ -117,6 +119,24 @@ def test_native_mapped_supply_return_share_fault_and_control(
     assert_native_fixture_mounts(root, native_events[-1]["command_receipt"])
 
     observed = context.observed_contracts[fixture_case, "first"]
+    mapped_return_coverage = signal_sharing_coverage(
+        observed,
+        signal_names=("SIGNAL_RETURN", "CHASSIS_RETURN"),
+        roles=("return", "return"),
+        voltage_domains=("signal-return", "chassis-return"),
+    )
+    mapped_return_report, _ = signal_sharing_report(observed, coverage=mapped_return_coverage)
+    mapped_return_findings = tuple(
+        item
+        for item in mapped_return_report.findings
+        if item.rule_id == RETURN_DOMAINS_SHARED_NET_RULE_ID
+    )
+    if fixture_case.endswith("fault"):
+        assert len(mapped_return_findings) == 1
+        assert mapped_return_findings[0].evidence["native_shared_net"] == ("AUX_SHARED_NODE",)
+    else:
+        assert not mapped_return_findings
+
     assert observed.pin_functions["J1.1"] == "1"
     assert observed.pin_functions["J1.2"] == "2"
     report, coverage = supply_return_report(

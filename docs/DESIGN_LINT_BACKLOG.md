@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 320 rules are implemented with synthetic regression coverage.
+The following 321 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 320 active rules.
+The catalog currently contains 321 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -434,6 +434,7 @@ skipped under prerelease policy.
 
 - `connector.repeated_pin_function`
 - `connector.mapped_supply_domains_share_net`
+- `connector.mapped_return_domains_share_net`
 - `connector.mapped_supply_return_share_net`
 - `connector.mapped_supply_shield_share_net`
 - `connector.mapped_return_shield_share_net`
@@ -4084,7 +4085,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 320 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 321 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -22468,6 +22469,52 @@ acceptance threads while new lint features proceed:
   `tests/test_design_lint_mcp_parity_mapped_contact_sharing.py`, and
   `tests/test_connector_mapped_supply_return_share_native_fixture_lane.py`
   with `design_lint_rule(rule_id="connector.mapped_same_domain_return_split_nets")`.
+  Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-373 — Review distinct mapped return domains assigned to one net
+
+- **Status:** Implemented as `connector.mapped_return_domains_share_net`,
+  default `review`.
+- **Rule:** `connector.mapped_return_domains_share_net`, default `review`.
+- **Gap:** Existing mapped sharing checks cover return contacts with supplies,
+  shields, and signals, while same-domain checks review separate assignments.
+  Distinct source-authored return domains assigned to one exact schematic net
+  had no dedicated prompt, even though that topology may deserve review.
+- **Predicate:** Group complete, source-matched, fitted, unambiguous return
+  contacts across connector references by exact native net. Report once when a
+  group contains at least two distinct exact `voltage_domain` identifiers,
+  including the mapped pin list, role, and current interface-catalog digest.
+- **Incremental value:** The test-first synthetic baseline assigned two mapped
+  return contacts from `signal-return` and `chassis-return` to one schematic
+  net; no existing rule reported that exact source-mapped pattern. The new
+  review is the return-domain counterpart to the existing supply-domain
+  shared-net prompt.
+- **Boundary:** Distinct domain identifiers do not establish different
+  potentials, an unintended bond, or an electrical fault. Common return
+  references are a valid control; net ties and indirect paths are outside this
+  exact-net predicate. Stale, incomplete, digestless, open, ambiguous, and DNP
+  assignments are excluded. This check does not establish PCB copper
+  continuity or require domains to stay isolated.
+- **Evidence:** Synthetic tests cover different domains across two connector
+  instances and within one connector, same-domain and separate-net controls,
+  role separation, stale and ambiguous assignments, reasoned opens, DNP,
+  project mode overrides, exact ignores, ordering stability, and typed source
+  projection. A CLI/MCP parity fixture exercises the shared typed service.
+  The existing tooling-owned two-contact native schematic pair covers the
+  shared-net fault and separate-net control on KiCad 10.0.0 and 10.0.5. No
+  product-project source, proprietary fixture, or approval data was imported.
+- **Local verification:** The single-rule acceptance selection passed 366
+  tests, with four opt-in native cases skipped and 7,849 unrelated tests
+  deselected. The separate exact Docker lane passed all four fault/control
+  exports. Scoped `scripts/ci.py` passed Ruff, Alphus, Markdown checks, Linux
+  and Windows-target Pyright, wheel/sdist builds, isolated wheel installation,
+  and external plus adapted template playtests. Catalog and backlog metadata
+  checks passed 22 tests.
+- **Selection:** Run
+  `tests/test_connector_return_domains_share_net.py`,
+  `tests/test_design_lint_mcp_parity_mapped_contact_sharing.py`, and
+  `tests/test_connector_mapped_supply_return_share_native_fixture_lane.py`
+  with `design_lint_rule(rule_id="connector.mapped_return_domains_share_net")`.
   Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate

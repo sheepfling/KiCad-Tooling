@@ -51,6 +51,7 @@ SUPPLY_SHIELD_RULE_ID = "connector.mapped_supply_shield_share_net"
 RETURN_SHIELD_RULE_ID = "connector.mapped_return_shield_share_net"
 SAME_DOMAIN_SUPPLY_SPLIT_RULE_ID = "connector.mapped_same_domain_supply_split_nets"
 SAME_DOMAIN_RETURN_SPLIT_RULE_ID = "connector.mapped_same_domain_return_split_nets"
+RETURN_DOMAINS_SHARED_NET_RULE_ID = "connector.mapped_return_domains_share_net"
 INTERFACE_ID = "synthetic-mapped-contact-sharing"
 _ROLES: tuple[
     tuple[
@@ -128,6 +129,8 @@ def _install_reviewed_contact_interface(
     primary_signal: str,
     secondary_role: Literal["signal", "return", "shield"],
     secondary_signal: str,
+    primary_voltage_domain: str | None = None,
+    secondary_voltage_domain: str | None = None,
 ) -> Path:
     voltage_domains = {
         "shield": "chassis",
@@ -144,7 +147,7 @@ def _install_reviewed_contact_interface(
                 signal=primary_signal,
                 role=primary_role,
                 direction="input" if primary_role == "supply" else "passive",
-                voltage_domain=voltage_domains[primary_role],
+                voltage_domain=primary_voltage_domain or voltage_domains[primary_role],
                 mating=primary_signal,
                 orientation="straight",
                 mechanical_clearance="synthetic",
@@ -154,7 +157,7 @@ def _install_reviewed_contact_interface(
                 signal=secondary_signal,
                 role=secondary_role,
                 direction="input" if secondary_role in {"signal", "supply"} else "passive",
-                voltage_domain=voltage_domains[secondary_role],
+                voltage_domain=secondary_voltage_domain or voltage_domains[secondary_role],
                 mating=secondary_signal,
                 orientation="straight",
                 mechanical_clearance="synthetic",
@@ -369,3 +372,60 @@ def test_same_domain_return_split_findings_match_between_cli_and_mcp(tmp_path: P
         "J1.1=RETURN_SEGMENT_A; voltage_domain=signal-return",
         "J1.2=RETURN_SEGMENT_B; voltage_domain=signal-return",
     )
+
+
+@pytest.mark.design_lint_rule(rule_id=RETURN_DOMAINS_SHARED_NET_RULE_ID)
+def test_distinct_return_domain_shared_net_matches_between_cli_and_mcp(tmp_path: Path) -> None:
+    root, native = synthetic_design_lint_project(
+        tmp_path,
+        parity_design_lint_policy(DesignLintPolicy()),
+    )
+    observed = NetlistContract(
+        components={
+            "J1": ComponentContract(value="Synthetic connector", footprint="Synthetic:2Pin")
+        },
+        nets={"SHARED_RETURN_NET": ("J1.1", "J1.2")},
+        component_symbols={"J1": "Connector_Generic:Conn_02"},
+        component_pin_numbers={"J1": ("1", "2")},
+        pin_functions={"J1.1": "Pin_1", "J1.2": "Pin_2"},
+        pin_electrical_types={"J1.1": "passive", "J1.2": "passive"},
+    )
+    catalog_path = _install_reviewed_contact_interface(
+        root,
+        primary_role="return",
+        primary_signal="SIGNAL_RETURN",
+        secondary_role="return",
+        secondary_signal="CHASSIS_RETURN",
+        primary_voltage_domain="signal-return",
+        secondary_voltage_domain="chassis-return",
+    )
+    install_synthetic_netlist(native, contract_netlist_xml(observed))
+    process = run_design_lint_cli(tmp_path, root, native)
+    assert process.returncode in {0, 1}, process.stderr + process.stdout
+    cli_report = DesignLintReport.model_validate_json(process.stdout)
+
+    async def inspect_mcp() -> DesignLintReport:
+        async with Client(create_server(root), mode="legacy") as client:
+            result = await client.call_tool(
+                "inspect_design_lint",
+                {
+                    "project_id": "controller",
+                    "native_summary": native.relative_to(root).as_posix(),
+                },
+            )
+            assert not result.is_error, result.content
+            assert result.structured_content is not None
+            return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
+
+    mcp_report = asyncio.run(inspect_mcp())
+
+    assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(mcp_report)
+    assert cli_report.connector_coverage is not None
+    assert cli_report.connector_coverage.status == "COMPLETE"
+    assert cli_report.connector_coverage.interface_catalog_sha256 == digest(catalog_path)
+    (finding,) = tuple(
+        item for item in cli_report.findings if item.rule_id == RETURN_DOMAINS_SHARED_NET_RULE_ID
+    )
+    assert finding.evidence["native_shared_net"] == ("SHARED_RETURN_NET",)
+    assert finding.evidence["interface_role"] == ("return",)
+    assert finding.evidence["reviewed_voltage_domains"] == ("chassis-return", "signal-return")

@@ -880,7 +880,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 320 active rules.
+The catalog currently contains 321 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -1045,6 +1045,36 @@ Run exact KiCad 10.0.0 and 10.0.5 Docker exports with
 `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. The shared-node source is this rule's
 valid control; the separate-net source faults this rule. Those same sources
 play the opposite roles for the supply/return-sharing rule.
+
+### Distinct mapped connector return domains sharing a net
+
+`connector.mapped_return_domains_share_net` prompts when complete,
+source-matched connector entries classify fitted pins as returns in distinct
+authored `voltage_domain` groups, including pins on different connector
+instances, but the native schematic assigns those pins to one exact net. It
+gives reviewers the exact pins, net, domain labels, and interface-catalog
+digest. A domain-name difference does not prove that a bond
+is unintended, that the domains differ electrically, or that the PCB return
+path is continuous. Stale, incomplete, digestless, open, ambiguous, and DNP
+evidence is skipped. Projects can promote, disable, or ignore the finding
+through the normal design-lint policy.
+
+Select its synthetic, CLI/MCP parity, architecture, catalog, and native tests
+with:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  tests/test_connector_return_domains_share_net.py \
+  tests/test_design_lint_mcp_parity_mapped_contact_sharing.py \
+  tests/test_connector_mapped_supply_return_share_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_return_domains_share_net")'
+```
+
+Run the native lane with
+`KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` on pinned KiCad 10.0.0 and 10.0.5.
+It reuses the tooling-owned two-contact fixture: the common-net source prompts
+for two distinct mapped return domains, while the separate-net source stays
+quiet. This tests schematic evidence handling only.
 
 ### Mapped connector return/supply scopes with isolated peers
 

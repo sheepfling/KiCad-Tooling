@@ -2097,6 +2097,12 @@ covers inspection parity, two quiet controls, and the exact rule's quiet-to-revi
 finding transition through both CLI and MCP reconciliation. Route details and
 validation are in `docs/DESIGN_LINT_DATA_ROUTING.md`.
 
+The return-domain shared-net counterpart now uses the same source-matched
+assignment grouping and typed evidence projection, with a separate
+theme-owned predicate and catalog owner. Its scoped CLI/MCP parity test
+confirms that both surfaces report the same mapped pins, domain labels, net,
+and catalog digest.
+
 The second catalog-to-surface route audit covers
 `pcb.custom_drc_text_variable_review`. Its typed evidence binds the project DRC
 file, project file, board file, and configured KiCad version; its CLI/MCP

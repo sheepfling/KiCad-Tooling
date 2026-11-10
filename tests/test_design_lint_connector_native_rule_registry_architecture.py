@@ -9,6 +9,7 @@ from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.architecture]
 
 
+@pytest.mark.rule_gate_integrity
 def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> None:
     expected_cases_by_rule = {
         "component.same_voltage_power_inputs_split": {
@@ -55,6 +56,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         },
         "connector.mapped_supply_domains_share_net": {
             "tests.test_ci_hosted_connector_returns.test_mapped_supply_domains_shared_net_fault",
+        },
+        "connector.mapped_return_domains_share_net": {
+            "tests.test_connector_mapped_supply_return_share_native_fixture_lane.test_native_mapped_supply_return_share_fault_and_control",
         },
         "connector.unconnected_power_output": {
             "tests.test_connector_unconnected_power_output.test_generic_connector_power_output_fault_and_control_on_pinned_native_versions",
@@ -275,6 +279,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
     expected_control_cases_by_rule = {
         "connector.mapped_supply_domains_share_net": {
             "tests.test_ci_hosted_connector_returns.test_mapped_supply_domains_shared_net_valid_controls",
+        },
+        "connector.mapped_return_domains_share_net": {
+            "tests.test_connector_mapped_supply_return_share_native_fixture_lane.test_native_mapped_supply_return_share_fault_and_control",
         },
     }
     connector_native_rules = {

@@ -6,8 +6,8 @@ from collections import defaultdict
 
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageReport
+from .connector_domain_assignment_groups import mapped_connector_domain_assignments_by_net
 from .design_lint_connector_supply_domain_candidate_evidence import (
-    MappedSupplyDomainAssignment,
     MappedSupplyDomainsCandidate,
     MappedSupplyDomainsFindingEvidence,
     MappedSupplyDomainsSharedNet,
@@ -38,33 +38,12 @@ def mapped_supply_domains_shared_net_candidates(
     if coverage is None:
         return ()
 
-    mapped_pins = source_matched_connector_pin_evidence(observed, coverage)
-    unpopulated = {reference.casefold() for reference in observed.dnp_components}
-    assignments_by_net: dict[str, list[MappedSupplyDomainAssignment]] = defaultdict(list)
-    for pin, mapped in sorted(mapped_pins.items()):
-        reference = pin.rsplit(".", 1)[0]
-        if (
-            reference.casefold() in unpopulated
-            or mapped.role != "supply"
-            or mapped.voltage_domain is None
-            or mapped.unconnected_reason is not None
-            or len(mapped.nets) != 1
-        ):
-            continue
-        assignments_by_net[mapped.nets[0]].append(
-            MappedSupplyDomainAssignment(
-                pin=pin,
-                native_net=mapped.nets[0],
-                voltage_domain=str(mapped.voltage_domain),
-                mapped_pin=mapped,
-            )
-        )
+    assignments_by_net = mapped_connector_domain_assignments_by_net(
+        observed, coverage, role="supply"
+    )
 
     candidates: list[Candidate] = []
-    for net, assignments in sorted(assignments_by_net.items()):
-        ordered_assignments = tuple(
-            sorted(assignments, key=lambda item: (item.voltage_domain, item.pin))
-        )
+    for net, ordered_assignments in assignments_by_net.items():
         ordered_domains = tuple(sorted({item.voltage_domain for item in ordered_assignments}))
         if len(ordered_domains) < 2:
             continue

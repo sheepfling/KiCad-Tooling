@@ -162,6 +162,56 @@
       "implementation_owner": "kicad_tooling/hwrepo/design_lint_connectors_supply_domains.py#mapped_supply_domains_shared_net_candidates"
     },
     {
+      "rule_id": "connector.mapped_return_domains_share_net",
+      "title": "Distinct mapped connector return domains share a net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, compared with source-matched project connector coverage",
+      "predicate": "Complete source-matched connector interface entries classify two or more unambiguous fitted return pins with distinct exact voltage_domain identifiers on one exact native schematic net. Emit one review candidate per shared net and include the mapped pins, domains, interface role, and current interface-catalog digest.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "This is a REVIEW heuristic. Distinct authored return voltage_domain identifiers do not prove different potentials, an unintended bond, or an electrical defect.",
+        "Only unambiguous fitted pins from source-matched connector entries are considered. Missing, incomplete, stale, open, multiply assigned, or DNP pin evidence is skipped; unreviewed connectors remain outside the comparison.",
+        "The predicate requires one exact common native schematic-net assignment. It does not infer net-tie, switch, protection, external cable, or transitive return paths.",
+        "Native schematic net equality does not establish PCB copper geometry, physical continuity, external wiring, or manufacturing correctness."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_return_domains_share_net.test_distinct_mapped_return_domains_on_one_net_request_review",
+        "tests.test_connector_return_domains_share_net.test_distinct_return_domains_on_separate_connectors_sharing_one_net_request_review",
+        "tests.test_connector_mapped_supply_return_share_native_fixture_lane.test_native_mapped_supply_return_share_fault_and_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_mapped_supply_return_share_native_fixture_lane.test_native_mapped_supply_return_share_fault_and_control",
+        "tests.test_connector_return_domains_share_net.test_same_return_domain_and_separate_return_nets_are_controls",
+        "tests.test_connector_return_domains_share_net.test_two_connector_same_domain_or_separate_net_assignments_are_controls",
+        "tests.test_connector_return_domains_share_net.test_supply_domains_do_not_emit_the_return_domain_rule",
+        "tests.test_connector_return_domains_share_net.test_stale_incomplete_digestless_ambiguous_open_and_dnp_maps_do_not_prompt",
+        "tests.test_connector_return_domains_share_net.test_project_policy_can_block_disable_or_exactly_ignore_the_review"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_return_domains_share_net.test_return_domain_review_is_deterministic_under_input_ordering",
+        "tests.test_connector_return_domains_share_net.test_typed_return_source_projection_rejects_changed_netlist",
+        "tests.test_design_lint_architecture_connector_supply_domain_candidate_evidence.test_return_domain_shared_net_predicate_uses_shared_source_grouping",
+        "tests.test_design_lint_mcp_parity_mapped_contact_sharing.test_distinct_return_domain_shared_net_matches_between_cli_and_mcp"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/design_lint_connectors_return_domains_shared_net.py#mapped_return_domains_shared_net_candidates",
+        "kicad_tooling/hwrepo/connector_domain_assignment_groups.py#mapped_connector_domain_assignments_by_net",
+        "kicad_tooling/hwrepo/design_lint_connector_domain_shared_net_candidate_evidence.py#project_mapped_connector_domains_shared_net_evidence",
+        "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_pin_evidence",
+        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/design_lint_connectors_return_domains_shared_net.py#mapped_return_domains_shared_net_candidates"
+    },
+    {
       "rule_id": "connector.return_supply_scope_singleton",
       "title": "Mapped connector return or supply scope leaves a peer without comparison",
       "status": "active",
