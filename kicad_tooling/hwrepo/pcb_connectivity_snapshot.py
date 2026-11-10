@@ -20,6 +20,7 @@ from .pcb_connectivity_observations import (
     PcbViaObservation,
     PcbZoneObservation,
 )
+from .pcb_connectivity_probe_validation import validate_access_probe_relationships
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceObservation
 
 
@@ -65,6 +66,7 @@ class PcbConnectivitySnapshot(StrictModel):
         "14",
         "15",
         "16",
+        "17",
     ] = "3"
     board_sha256: Digest
     kicad_version: NonEmptyText
@@ -98,7 +100,12 @@ class PcbConnectivitySnapshot(StrictModel):
         _validate_snapshot_inventory_contract(self, schema_version)
         _validate_track_relationships(self, index, schema_version)
         _validate_filled_zone_contours(self, schema_version)
-        _validate_access_probe_relationships(self, index, schema_version)
+        validate_access_probe_relationships(
+            self.access_probe_observations,
+            index.pads_by_reference,
+            self.footprints,
+            schema_version,
+        )
         _validate_rule_area_contract(self, schema_version)
         _validate_footprint_contract(self, schema_version)
         _validate_touch_pad_observations(self, index, schema_version)
@@ -367,38 +374,6 @@ def _validate_filled_zone_contours(snapshot: PcbConnectivitySnapshot, schema_ver
         indexes = {item.island_index for item in zone.filled_islands}
         if indexes != set(range(zone.filled_island_count)):
             raise ValueError("Native PCB schema v9 needs one contour for every filled zone island")
-
-
-def _validate_access_probe_relationships(
-    snapshot: PcbConnectivitySnapshot,
-    index: _PcbConnectivityIndex,
-    schema_version: int,
-) -> None:
-    probe_keys = [
-        (item.endpoint.casefold(), item.side.casefold())
-        for item in snapshot.access_probe_observations
-    ]
-    if len(set(probe_keys)) != len(probe_keys):
-        raise ValueError("Native PCB probe endpoint and side identities must be unique")
-    for item in snapshot.access_probe_observations:
-        target = index.pads_by_reference.get(item.endpoint.casefold())
-        if target is None:
-            raise ValueError("Native PCB probe observation refers to an unobserved pad")
-        if target.net != item.target_net:
-            raise ValueError("Native PCB probe target net differs from its pad inventory")
-        if item.obstacle is not None:
-            obstacle = index.pads_by_reference.get(item.obstacle.casefold())
-            if obstacle is None:
-                raise ValueError(
-                    "Native PCB probe observation refers to an unobserved obstacle pad"
-                )
-            if obstacle.net != item.obstacle_net:
-                raise ValueError("Native PCB probe obstacle net differs from its pad inventory")
-        if schema_version >= 10 and any(
-            field not in item.model_fields_set
-            for field in ("target_aperture_shape", "target_aperture_diameter_nm")
-        ):
-            raise ValueError("Native PCB schema v10+ requires explicit target aperture evidence")
 
 
 def _validate_rule_area_contract(snapshot: PcbConnectivitySnapshot, schema_version: int) -> None:

@@ -15,6 +15,7 @@ def test_test_access_probe_modules_stay_under_the_review_limit() -> None:
     paths = (
         REPO_ROOT / "kicad_tooling/hwrepo/test_access.py",
         REPO_ROOT / "kicad_tooling/hwrepo/test_access_probe_envelope.py",
+        REPO_ROOT / "kicad_tooling/hwrepo/pcb_connectivity_probe_validation.py",
         REPO_ROOT / "tests/pcb_test_access_support.py",
         REPO_ROOT / "tests/test_test_access.py",
         REPO_ROOT / "tests/test_test_access_probe_aperture.py",

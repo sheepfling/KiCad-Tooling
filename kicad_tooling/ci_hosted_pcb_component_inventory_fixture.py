@@ -52,7 +52,7 @@ def pcb_component_inventory_fixture_lane(
     board_source = context.fixture_root / "pcb-decoupling-placement.kicad_pcb"
     expected_fixture_sha256 = {
         "fault": "0198205216be6cd5be0c03ac14b7c2b9de52258aacd564159e16532fadb10446",
-        "control": "0fe232d691405e8ac95ef894a2ece81a3d11ccd9b200f59ff6fcb685d591bd98",
+        "control": "c69f78c67a841826b88e776d596ec60d62702ee262efc72a1aee9f9421af9cb4",
         "board": "adbec8134e1bce77a91642ac610e70c2ff23d6dca9dc7ac9fa97853e0251a445",
     }
     for case, schematic_source in cases.items():
@@ -111,7 +111,7 @@ def pcb_component_inventory_fixture_lane(
                     expected_board_sha256=board_hash,
                     purpose=f"{case} component inventory PCB",
                 )
-                if snapshot.schema_version != "16":
+                if snapshot.schema_version != "17":
                     raise ValueError(
                         "Native footprint inventory acceptance requires snapshot schema 16"
                     )
@@ -281,7 +281,7 @@ def pcb_component_inventory_fixture_lane(
                 or retained_snapshot_path is None
             ):
                 raise ValueError(f"Native footprint identity {case} evidence is unavailable")
-            if retained_snapshot.schema_version != "16":
+            if retained_snapshot.schema_version != "17":
                 raise ValueError("Native footprint identity acceptance requires snapshot schema 16")
             component = retained_netlist.components.get("U1")
             placement = next(

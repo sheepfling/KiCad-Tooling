@@ -22856,6 +22856,43 @@ acceptance threads while new lint features proceed:
   `design_lint and pcb_lint`. The native lane uses
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`.
 
+#### LINT-382 — Check authored test-probe clearance to component courtyards
+
+- **Status:** Implemented as an opt-in extension to LINT-018's source-bound PCB
+  probe-envelope evidence.
+- **Priority:** P1 evidence completeness when a project-authored test-access
+  requirement needs component-outline clearance reviewed.
+- **Gap:** Pad aperture and exposed-pad spacing can pass while a neighboring
+  fitted component's documented courtyard enters the region needed for the
+  probe tip. ERC and ordinary pad-to-pad checks do not express the probe's
+  placement envelope.
+- **Contract and predicate:** An endpoint may author a separate
+  `courtyard_clearance_mm`. On each required board side, compare the nearest
+  fitted same-side courtyard polygon's native distance from the target pad
+  center against the probe-tip radius plus that clearance. Exclude DNP and
+  opposite-side footprints. If a nearby same-side fitted footprint lacks a
+  courtyard and its native bounding box reaches the required envelope, return
+  `NOT_RUN` rather than infer a safe body outline. This requires source-bound
+  native PCB snapshot schema v17 or newer.
+- **Boundary:** Courtyard geometry is a review proxy defined by the board
+  author. The check does not establish the physical package-body outline or
+  height, fixtures, covers, probe angle or reach, exposed tracks, vias, zone
+  apertures, or manufacturing access. A pass only satisfies the authored
+  geometric courtyard requirement against the exact retained board snapshot.
+- **Fixtures:** Synthetic KiCad fixtures cover an exact measured courtyard
+  boundary, a one-nanometer-inside fault, a nearby footprint without a
+  courtyard that remains unresolved, and closer DNP/opposite-side courtyards
+  that must be excluded. Native exports run twice under the digest-pinned
+  KiCad 10.0.0 and 10.0.5 images and compare the source-bound observation
+  records.
+- **Selection:** Run
+  `tests/test_test_access_probe_aperture.py`,
+  `tests/test_test_access_probe_architecture.py`,
+  `tests/test_pcb_connectivity_snapshot_integrity.py`, and
+  `tests/test_pcb_access_native_fixture_lane.py` with
+  `design_lint and pcb_lint`. The native lane uses
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

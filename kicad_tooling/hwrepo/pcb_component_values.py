@@ -15,7 +15,7 @@ def compare_schematic_pcb_values(
     variants: tuple[PcbVariantPopulationSource, ...] = (),
 ) -> tuple[PcbComponentValueMismatch, ...]:
     """Compare exact base and named-variant values for components fitted in both CAD sources."""
-    if snapshot.schema_version not in {"13", "14", "15", "16"}:
+    if snapshot.schema_version not in {"13", "14", "15", "16", "17"}:
         raise ValueError(
             "PCB component value comparison requires native snapshot schema 13 or later"
         )

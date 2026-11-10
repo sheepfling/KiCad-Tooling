@@ -8571,7 +8571,8 @@ reason, such as a hazardous high-voltage node excluded from routine probing:
             "approach_side": "front",
             "probe_envelope": {
               "tip_diameter_mm": 0.8,
-              "clearance_mm": 0.2
+              "clearance_mm": 0.2,
+              "courtyard_clearance_mm": 0.2
             }
           }
         ]
@@ -8607,12 +8608,12 @@ projects or boards without a required physical access point, record a reasoned
 pass electrical policy.
 
 An endpoint may add `probe_envelope` with a reviewed `tip_diameter_mm` and
-`clearance_mm`. For circular, undrilled target pads, the pinned KiCad 10
-geometry probe combines the circular pad size with KiCad's resolved solder-mask
-expansion and requires the resulting aperture diameter to fit
-`tip_diameter_mm + 2 * clearance_mm`. Other pad shapes and
-drilled pads are reported as unproven and fail this configured fit check. The
-probe also measures from the target pad center to the nearest fitted,
+`clearance_mm`. For undrilled circles, ovals, rectangles, and rounded
+rectangles, the pinned KiCad 10 geometry probe uses the smaller pad dimension
+plus KiCad's resolved solder-mask expansion as the centered circular-tip fit.
+That fit must meet `tip_diameter_mm + 2 * clearance_mm`. Custom and drilled
+pads remain unproven and fail this configured fit check. The probe also
+measures from the target pad center to the nearest fitted,
 mask-layer-assigned pad on the same board side that belongs to a different net
 or has no net. It compares this distance with
 `tip_diameter_mm / 2 + clearance_mm`, rounded upward to the nearest nanometer.
@@ -8623,22 +8624,32 @@ a fixed side checks only that side. The native probe request and result are
 retained and rechecked against the exact board, requirement, KiCad image, and
 probe source.
 
+`courtyard_clearance_mm` is an optional, separate requirement for the gap from
+the target pad center to same-side, fitted component courtyard polygons. It
+uses the circular tip radius plus the authored courtyard clearance. A nearby
+fitted footprint with no same-side courtyard leaves that requirement
+`NOT_RUN` when its native bounding box reaches the probe envelope. A courtyard
+is a board-authored placement proxy, not proof of the component body's shape or
+height, fixture access, approach angle, cover clearance, or physical probe
+reach. This optional check requires native PCB snapshot schema v17 or newer.
+
 The synthetic native acceptance fixture exercises a fitted different-net pad,
 a closer same-net pad, a closer DNP pad, a no-net obstacle, front-only access,
 an undersize circular aperture, an exact-fit aperture with a mask contraction,
 a rectangular target, and a drilled target. It checks front/back/either-side
 behavior, exact aperture and clearance boundaries, unsupported-shape reporting,
-expected faults, and repeatability across two native loads. Package acceptance
-runs it against the project's digest-pinned KiCad 10.0.0 and 10.0.5 images and
-retains the request, snapshot, probe, and command receipt under ignored
-`build/ci/` output.
+expected faults, and repeatability across two native loads. It also checks a
+nearby footprint with no courtyard plus exact and failing measured courtyard
+boundaries. Package acceptance runs it against the project's digest-pinned
+KiCad 10.0.0 and 10.0.5 images and retains the request, snapshot, probe, and
+command receipt under ignored `build/ci/` output.
 
-This is a bounded pad-aperture and pad-neighbor check. It skips DNP footprints
-and same-net neighbor pads; it does not inspect exposed tracks, vias,
-copper-zone mask openings, non-circular or drilled target-pad fit, component
-bodies, fixtures, covers, probe reach, or manufacturing test coverage. A
-passing result describes only the configured geometry around the selected PCB
-pad. Review the physical access path and first-article test separately.
+This is a bounded pad-aperture, pad-neighbor, and optional courtyard-proxy
+check. It skips DNP footprints and same-net neighbor pads; it does not inspect
+exposed tracks, vias, copper-zone mask openings, component-body height,
+fixtures, covers, probe reach, or manufacturing test coverage. A passing
+result describes only the configured geometry around the selected PCB pad.
+Review the physical access path and first-article test separately.
 
 [electrical-drc-items-100]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/drc/drc_item.cpp
 [electrical-drc-items-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/drc/drc_item.cpp

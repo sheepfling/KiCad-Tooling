@@ -6,7 +6,7 @@ import hashlib
 import json
 import sys
 from collections.abc import Callable, Iterable
-from math import floor, isfinite
+from math import floor, isfinite, isqrt
 from pathlib import Path
 from typing import Literal, Protocol, TypedDict, cast, overload
 
@@ -16,6 +16,16 @@ import pcbnew as _pcbnew  # type: ignore[import-not-found]
 class NativePoint(Protocol):
     x: int
     y: int
+
+
+class NativeBox(Protocol):
+    def GetLeft(self) -> int: ...
+
+    def GetRight(self) -> int: ...
+
+    def GetTop(self) -> int: ...
+
+    def GetBottom(self) -> int: ...
 
 
 class NativeUuid(Protocol):
@@ -44,6 +54,8 @@ class NativePolygonSet(Protocol):
     def HoleCount(self, index: int) -> int: ...
 
     def CHole(self, outline_index: int, hole_index: int) -> NativeLineChain: ...
+
+    def Distance(self, point: NativePoint) -> int: ...
 
     def AddHole(self, hole: NativeLineChain, error: int) -> None: ...
 
@@ -205,6 +217,10 @@ class NativeFootprint(Protocol):
 
     def GetLayer(self) -> int: ...
 
+    def GetCourtyard(self, layer: int) -> NativePolygonSet: ...
+
+    def GetBoundingBox(self, include_text: bool, include_hidden_text: bool) -> NativeBox: ...
+
     def Pads(self) -> Iterable[NativePad]: ...
 
     def IsNetTie(self) -> bool: ...
@@ -221,6 +237,8 @@ class NativePcbnew(Protocol):
     B_Cu: int
     F_Mask: int
     B_Mask: int
+    F_CrtYd: int
+    B_CrtYd: int
     PAD_SHAPE_CIRCLE: int
     PAD_SHAPE_OVAL: int
     PAD_SHAPE_RECT: int
@@ -315,6 +333,10 @@ class AccessProbeObservation(TypedDict):
         "circle", "oval", "rectangle", "roundrect", "unsupported"
     ] | None
     target_aperture_diameter_nm: int | None
+    courtyard_obstacle: str | None
+    courtyard_distance_nm: int | None
+    unmeasured_courtyard_footprint: str | None
+    unmeasured_courtyard_distance_nm: int | None
 
 
 class TouchPadClearanceRequest(TypedDict):
@@ -422,7 +444,7 @@ class TrackObservation(TypedDict):
 
 
 class NativeProbeSnapshot(TypedDict):
-    schema_version: Literal["16"]
+    schema_version: Literal["17"]
     board_sha256: str
     kicad_version: str
     zones_refilled: bool

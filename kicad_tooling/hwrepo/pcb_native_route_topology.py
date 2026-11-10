@@ -164,7 +164,7 @@ def resolve_native_pad_route(
         if len(item.positions_nm) != 1:
             return _incomplete(f"Mapped edge pad {reference} needs exactly one native center")
 
-    if snapshot.schema_version not in {"8", "9", "10", "11", "12", "13", "14", "15", "16"}:
+    if snapshot.schema_version not in {"8", "9", "10", "11", "12", "13", "14", "15", "16", "17"}:
         return _incomplete("Native track endpoint-contact evidence requires PCB snapshot schema 8+")
     allowed_layers = {layer.casefold() for layer in layers}
     copper_layers = {layer.casefold() for layer in snapshot.copper_layers}
@@ -346,7 +346,7 @@ def resolve_native_pad_route(
         if track.geometry_kind == "segment":
             track_length_nm = _rounded_segment_length_nm(*ordered)
         elif (
-            snapshot.schema_version in {"15", "16"}
+            snapshot.schema_version in {"15", "16", "17"}
             and track.arc_mid_nm is not None
             and track.arc_length_nm is not None
         ):

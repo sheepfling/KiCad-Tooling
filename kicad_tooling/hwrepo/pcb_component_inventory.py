@@ -37,9 +37,9 @@ def compare_fitted_schematic_pcb_inventory(
     snapshot: PcbConnectivitySnapshot,
 ) -> PcbComponentInventoryComparison:
     """Compare fitted schematic footprint assignments with native PCB placements."""
-    if snapshot.schema_version not in {"12", "13", "14", "15", "16"}:
+    if snapshot.schema_version not in {"12", "13", "14", "15", "16", "17"}:
         raise ValueError(
-            "PCB component inventory requires native footprint snapshot schema 12 through 16"
+            "PCB component inventory requires native footprint snapshot schema 12 through 17"
         )
 
     schematic_references: dict[str, str] = {}
@@ -195,8 +195,8 @@ def evaluate_native_component_inventory_coverage(
         issue = "Source-bound native schematic netlist is unavailable"
     elif netlist_sha256 is None:
         issue = "Source-bound native schematic netlist digest is unavailable"
-    elif snapshot.schema_version not in {"12", "13", "14", "15", "16"}:
-        issue = "PCB component inventory needs native footprint snapshot schema 12 through 16"
+    elif snapshot.schema_version not in {"12", "13", "14", "15", "16", "17"}:
+        issue = "PCB component inventory needs native footprint snapshot schema 12 through 17"
     else:
         try:
             comparison = compare_fitted_schematic_pcb_inventory(netlist, snapshot)
@@ -256,7 +256,7 @@ def evaluate_native_component_inventory_coverage(
                 ),
             )
             if value_mode != "off":
-                if snapshot.schema_version in {"13", "14", "15", "16"}:
+                if snapshot.schema_version in {"13", "14", "15", "16", "17"}:
                     if variant_coverage.status == "BLOCKED":
                         value_comparison_issue = (
                             "Named-variant value evidence is unavailable: "
@@ -328,9 +328,9 @@ def evaluate_native_component_inventory_coverage(
             issue=issue,
         )
 
-    if snapshot.schema_version not in {"12", "13", "14", "15", "16"}:
+    if snapshot.schema_version not in {"12", "13", "14", "15", "16", "17"}:
         raise ValueError(
-            "PCB component inventory requires native footprint snapshot schema 12 through 16"
+            "PCB component inventory requires native footprint snapshot schema 12 through 17"
         )
     return PcbComponentInventoryCoverageReport(
         status="COMPLETE",
@@ -340,7 +340,7 @@ def evaluate_native_component_inventory_coverage(
         board_sha256=board_sha256,
         snapshot_path=snapshot_path,
         snapshot_sha256=snapshot_sha256,
-        snapshot_schema=cast(Literal["12", "13", "14", "15", "16"], snapshot.schema_version),
+        snapshot_schema=cast(Literal["12", "13", "14", "15", "16", "17"], snapshot.schema_version),
         kicad_version=snapshot.kicad_version,
         image=snapshot.image,
         probe_sha256=probe_sha256,

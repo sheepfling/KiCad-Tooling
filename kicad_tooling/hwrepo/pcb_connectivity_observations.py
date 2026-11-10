@@ -262,7 +262,7 @@ class PcbFootprintPlacementObservation(StrictModel):
 
 
 class PcbAccessProbeObservation(StrictModel):
-    """Native center-fit diameter and nearest foreign pad for one probe surface."""
+    """Native center-fit, pad clearance, and courtyard evidence for one probe surface."""
 
     endpoint: Reference
     side: Literal["front", "back"]
@@ -275,6 +275,10 @@ class PcbAccessProbeObservation(StrictModel):
         Literal["circle", "oval", "rectangle", "roundrect", "unsupported"] | None
     ) = None
     target_aperture_diameter_nm: NonNegativeCount | None = None
+    courtyard_obstacle: Reference | None = None
+    courtyard_distance_nm: NonNegativeCount | None = None
+    unmeasured_courtyard_footprint: Reference | None = None
+    unmeasured_courtyard_distance_nm: NonNegativeCount | None = None
 
     @model_validator(mode="after")
     def complete_nearest_obstacle(self) -> PcbAccessProbeObservation:
@@ -291,6 +295,21 @@ class PcbAccessProbeObservation(StrictModel):
             raise ValueError("Native probe obstacle cannot be the target endpoint")
         elif self.target_net is not None and self.obstacle_net == self.target_net:
             raise ValueError("Native probe obstacle must be on another net or unconnected")
+        if (self.courtyard_obstacle is None) != (self.courtyard_distance_nm is None):
+            raise ValueError("Native probe courtyard obstacle needs its measured distance")
+        if (self.unmeasured_courtyard_footprint is None) != (
+            self.unmeasured_courtyard_distance_nm is None
+        ):
+            raise ValueError("Native unmeasured courtyard needs its bounding-box distance")
+        if self.courtyard_obstacle is not None and (
+            self.courtyard_obstacle.casefold() == self.endpoint.rsplit(".", 1)[0].casefold()
+        ):
+            raise ValueError("Native probe courtyard obstacle cannot be the target footprint")
+        if self.unmeasured_courtyard_footprint is not None and (
+            self.unmeasured_courtyard_footprint.casefold()
+            == self.endpoint.rsplit(".", 1)[0].casefold()
+        ):
+            raise ValueError("Native unmeasured courtyard cannot be the target footprint")
         if self.target_aperture_shape in {"circle", "oval", "rectangle", "roundrect"}:
             if self.target_aperture_diameter_nm is None or self.target_aperture_diameter_nm <= 0:
                 raise ValueError("Supported native probe aperture needs a positive fit diameter")

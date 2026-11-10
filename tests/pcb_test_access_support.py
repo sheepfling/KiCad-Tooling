@@ -7,6 +7,7 @@ from typing import Literal
 from kicad_tooling.hwrepo.analysis_state_models import AnalysisNotApplicable
 from kicad_tooling.hwrepo.pcb_connectivity_observations import (
     PcbAccessProbeObservation,
+    PcbFootprintPlacementObservation,
     PcbPadConnectivityObservation,
 )
 from kicad_tooling.hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
@@ -73,6 +74,11 @@ def probe_access_snapshot(
     include_back: bool = True,
     aperture_shape: Literal["circle", "oval", "rectangle", "roundrect", "unsupported"] = "circle",
     aperture_diameter_nm: int | None = 1_000_000,
+    schema_version: Literal["3", "17"] = "3",
+    courtyard_obstacle: str | None = None,
+    courtyard_distance_nm: int | None = None,
+    unmeasured_courtyard_footprint: str | None = None,
+    unmeasured_courtyard_distance_nm: int | None = None,
 ) -> PcbConnectivitySnapshot:
     pads = (
         PcbPadConnectivityObservation(
@@ -84,6 +90,7 @@ def probe_access_snapshot(
             connected_zones=(),
             connected_islands=(),
             connected_vias=(),
+            positions_nm=((10_000_000, 10_000_000),),
         ),
         PcbPadConnectivityObservation(
             pad="J2.9",
@@ -94,6 +101,7 @@ def probe_access_snapshot(
             connected_zones=(),
             connected_islands=(),
             connected_vias=(),
+            positions_nm=((12_000_000, 10_000_000),),
         ),
     )
     return PcbConnectivitySnapshot(
@@ -117,6 +125,16 @@ def probe_access_snapshot(
                 distance_nm=front_nm,
                 target_aperture_shape=aperture_shape,
                 target_aperture_diameter_nm=aperture_diameter_nm,
+                **(
+                    {
+                        "courtyard_obstacle": courtyard_obstacle,
+                        "courtyard_distance_nm": courtyard_distance_nm,
+                        "unmeasured_courtyard_footprint": unmeasured_courtyard_footprint,
+                        "unmeasured_courtyard_distance_nm": unmeasured_courtyard_distance_nm,
+                    }
+                    if schema_version == "17"
+                    else {}
+                ),
             ),
             *(
                 (
@@ -130,17 +148,56 @@ def probe_access_snapshot(
                         distance_nm=back_nm if back_exposed else None,
                         target_aperture_shape=aperture_shape if back_exposed else None,
                         target_aperture_diameter_nm=aperture_diameter_nm if back_exposed else None,
+                        **(
+                            {
+                                "courtyard_obstacle": None,
+                                "courtyard_distance_nm": None,
+                                "unmeasured_courtyard_footprint": None,
+                                "unmeasured_courtyard_distance_nm": None,
+                            }
+                            if schema_version == "17"
+                            else {}
+                        ),
                     ),
                 )
                 if include_back
                 else ()
             ),
         ),
+        schema_version=schema_version,
+        access_probe_requests_sha256="d" * 64 if schema_version == "17" else None,
+        tracks=(),
+        copper_layers=("F.Cu", "B.Cu") if schema_version == "17" else (),
+        rule_areas=(),
+        footprints=(
+            tuple(
+                PcbFootprintPlacementObservation(
+                    reference=reference,
+                    footprint=footprint,
+                    dnp=False,
+                    value="Synthetic footprint",
+                    position_nm=position,
+                    orientation_microdegrees=0,
+                    side="F.Cu",
+                )
+                for reference, footprint, position in (
+                    ("J1", "Connector:Dsub-9_Male", (10_000_000, 10_000_000)),
+                    ("J2", "Connector:Dsub-9_Male", (12_000_000, 10_000_000)),
+                    ("U1", "Synthetic:NearbyPart", (10_500_000, 10_000_000)),
+                )
+            )
+            if schema_version == "17"
+            else ()
+        ),
+        touch_pad_clearance_observations=(),
+        touch_pad_clearance_requests_sha256=None,
     )
 
 
 def probe_access_requirement(
-    *, approach_side: Literal["front", "back", "either"]
+    *,
+    approach_side: Literal["front", "back", "either"],
+    courtyard_clearance_mm: float | None = None,
 ) -> AccessAnalysis:
     requirement = access_requirement(approach_side=approach_side)
     decision = requirement.decisions[0]
@@ -150,6 +207,7 @@ def probe_access_requirement(
             "probe_envelope": AccessProbeEnvelope(
                 tip_diameter_mm=0.8,
                 clearance_mm=0.1,
+                courtyard_clearance_mm=courtyard_clearance_mm,
             )
         }
     )

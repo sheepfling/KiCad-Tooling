@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.pcb_connectivity_observations import PcbAccessProbeObservation
 from kicad_tooling.hwrepo.test_access import pcb_probe_envelope_checks
@@ -77,4 +78,66 @@ def test_supported_native_shape_requires_a_fit_measurement(shape: str) -> None:
             distance_nm=None,
             target_aperture_shape=shape,
             target_aperture_diameter_nm=None,
+        )
+
+
+@pytest.mark.parametrize(
+    ("distance_nm", "expected_status"),
+    [(500_000, "PASS"), (499_999, "FAIL")],
+)
+def test_authored_courtyard_clearance_uses_exact_native_boundary(
+    distance_nm: int, expected_status: str
+) -> None:
+    requirement = probe_access_requirement(approach_side="front", courtyard_clearance_mm=0.1)
+    snapshot = probe_access_snapshot(
+        None,
+        None,
+        include_back=False,
+        schema_version="17",
+        courtyard_obstacle="U1",
+        courtyard_distance_nm=distance_nm,
+    )
+
+    (check,) = pcb_probe_envelope_checks(requirement, snapshot)
+
+    assert check.status == expected_status
+    assert "required probe radius plus courtyard clearance is 0.5 mm" in check.detail
+
+
+def test_nearby_footprint_without_courtyard_stays_unresolved() -> None:
+    requirement = probe_access_requirement(approach_side="front", courtyard_clearance_mm=0.1)
+    snapshot = probe_access_snapshot(
+        None,
+        None,
+        include_back=False,
+        schema_version="17",
+        unmeasured_courtyard_footprint="U1",
+        unmeasured_courtyard_distance_nm=500_000,
+    )
+
+    (check,) = pcb_probe_envelope_checks(requirement, snapshot)
+
+    assert check.status == "NOT_RUN"
+    assert "U1 has no same-side courtyard" in check.detail
+
+
+def test_authored_courtyard_clearance_requires_current_native_evidence() -> None:
+    requirement = probe_access_requirement(approach_side="front", courtyard_clearance_mm=0.1)
+    snapshot = probe_access_snapshot(None, None, include_back=False)
+
+    (check,) = pcb_probe_envelope_checks(requirement, snapshot)
+
+    assert check.status == "NOT_RUN"
+    assert "schema v17 or newer" in check.detail
+
+
+def test_courtyard_measurement_must_reference_observed_same_side_footprint() -> None:
+    with pytest.raises(ValidationError, match="unobserved footprint"):
+        probe_access_snapshot(
+            None,
+            None,
+            include_back=False,
+            schema_version="17",
+            courtyard_obstacle="U9",
+            courtyard_distance_nm=500_000,
         )

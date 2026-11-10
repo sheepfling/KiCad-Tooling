@@ -44,6 +44,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
         approach_side: Literal["front", "back", "either"],
         tip_diameter_mm: float,
         clearance_mm: float,
+        courtyard_clearance_mm: float | None = None,
     ) -> TestAccessEndpointRequirement:
         return TestAccessEndpointRequirement(
             kind="test_point",
@@ -56,6 +57,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             probe_envelope=TestAccessProbeEnvelope(
                 tip_diameter_mm=tip_diameter_mm,
                 clearance_mm=clearance_mm,
+                courtyard_clearance_mm=courtyard_clearance_mm,
             ),
         )
 
@@ -92,6 +94,23 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
                         approach_side="front",
                         tip_diameter_mm=0.6,
                         clearance_mm=0.1,
+                        courtyard_clearance_mm=0.1,
+                    ),
+                ),
+            ),
+            RequiredTestAccess(
+                mode="required",
+                id="courtyard-clearance-fault",
+                basis="Synthetic same-side component courtyard enters the authored probe envelope",
+                net="TARGET_COURTYARD_SMALL",
+                endpoints=(
+                    endpoint(
+                        "J19",
+                        "TARGET_COURTYARD_SMALL",
+                        approach_side="front",
+                        tip_diameter_mm=0.6,
+                        clearance_mm=0.1,
+                        courtyard_clearance_mm=0.1,
                     ),
                 ),
             ),
@@ -212,6 +231,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
                         approach_side="front",
                         tip_diameter_mm=0.6,
                         clearance_mm=0.1,
+                        courtyard_clearance_mm=0.1,
                     ),
                 ),
             ),
@@ -245,7 +265,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
     fixture_config = config.model_copy(update={"project": relative_project.as_posix()})
     expected_statuses = {
         "test-access/pcb-probe-envelope/front-back-boundary": "PASS",
-        "test-access/pcb-probe-envelope/unconnected-obstacle": "PASS",
+        "test-access/pcb-probe-envelope/unconnected-obstacle": "NOT_RUN",
         "test-access/pcb-probe-envelope/front-only-clearance-fault": "FAIL",
         "test-access/pcb-probe-envelope/undersize-aperture-fault": "FAIL",
         "test-access/pcb-probe-envelope/aperture-fit-boundary-control": "PASS",
@@ -255,6 +275,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
         "test-access/pcb-probe-envelope/oval-aperture-boundary-control": "PASS",
         "test-access/pcb-probe-envelope/undersize-roundrect-aperture-fault": "FAIL",
         "test-access/pcb-probe-envelope/roundrect-aperture-boundary-control": "PASS",
+        "test-access/pcb-probe-envelope/courtyard-clearance-fault": "FAIL",
     }
     expected_observations = {
         ("j1.1", "front"): ("J4.1", "FOREIGN_FRONT", 400_000, True, "circle", 1_200_000),
@@ -326,12 +347,20 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             600_000,
         ),
         ("j18.1", "front"): (
-            "J17.1",
-            "TARGET_APERTURE_ROUNDRECT_SMALL",
-            9_600_000,
+            "J19.1",
+            "TARGET_COURTYARD_SMALL",
+            9_500_001,
             True,
             "roundrect",
             800_000,
+        ),
+        ("j19.1", "front"): (
+            "J18.1",
+            "TARGET_APERTURE_ROUNDRECT_BOUNDARY",
+            9_600_000,
+            True,
+            "circle",
+            1_000_000,
         ),
     }
     try:
@@ -354,6 +383,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             request_path = receipt / "access-probe-requests.json"
             if (
                 snapshot.board_sha256 != source_hash
+                or snapshot.schema_version != "17"
                 or snapshot.kicad_version != config.kicad_version
                 or snapshot.image != config.image
                 or snapshot.probe_sha256 != expected_probe_sha256()
@@ -388,6 +418,25 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
                         f"expected {expected}, found {observed}"
                     )
 
+            expected_courtyards = {
+                ("j7.1", "front"): ("U1", 100_400_000, "J8", 250_000),
+                ("j18.1", "front"): ("U1", 400_000, "J17", 9_400_000),
+                ("j19.1", "front"): ("U2", 399_999, "J18", 9_400_000),
+            }
+            for key, expected in expected_courtyards.items():
+                item = observations[key]
+                observed = (
+                    item.courtyard_obstacle,
+                    item.courtyard_distance_nm,
+                    item.unmeasured_courtyard_footprint,
+                    item.unmeasured_courtyard_distance_nm,
+                )
+                if observed != expected:
+                    raise ValueError(
+                        f"Native courtyard geometry for {key[0]} {key[1]} differs from its fixture: "
+                        f"expected {expected}, found {observed}"
+                    )
+
             checks = {item.id: item.status for item in pcb_probe_envelope_checks(spec, snapshot)}
             if checks != expected_statuses:
                 raise ValueError(
@@ -407,7 +456,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             project=project,
             kicad_version=config.kicad_version,
             fixture_sha256=source_hash,
-            checks="6 PASS, 5 expected FAIL",
+            checks="5 PASS, 6 expected FAIL, 1 NOT_RUN",
             repeatable="true",
             receipt=(scratch.relative_to(root) / "receipt-first").as_posix(),
         )

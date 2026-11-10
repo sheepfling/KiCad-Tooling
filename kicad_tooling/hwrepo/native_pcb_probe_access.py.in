@@ -1,15 +1,18 @@
-# Access probes: validate authored requests and measure exposed pad surfaces.
+# Access probes: validate authored requests and measure source-defined surfaces.
 
 def access_probe_observations(
     requests: list[AccessProbeRequest],
     pad_geometry: list[tuple[str, bool, NativePad]],
+    footprint_geometry: list[tuple[str, bool, int, NativeFootprint]],
 ) -> list[AccessProbeObservation]:
-    """Measure each requested pad center to the nearest exposed foreign-net pad."""
+    """Measure foreign pads and same-side courtyards from each requested pad center."""
     observations: list[AccessProbeObservation] = []
     layer_ids = {
         "front": (native_pcbnew.F_Cu, native_pcbnew.F_Mask),
         "back": (native_pcbnew.B_Cu, native_pcbnew.B_Mask),
     }
+    courtyard_layers = {"front": native_pcbnew.F_CrtYd, "back": native_pcbnew.B_CrtYd}
+    footprint_sides = {native_pcbnew.F_Cu: "front", native_pcbnew.B_Cu: "back"}
 
     def exposed(pad: NativePad, side: Literal["front", "back"]) -> bool:
         copper_layer, mask_layer = layer_ids[side]
@@ -79,6 +82,10 @@ def access_probe_observations(
                     "distance_nm": None,
                     "target_aperture_shape": None,
                     "target_aperture_diameter_nm": None,
+                    "courtyard_obstacle": None,
+                    "courtyard_distance_nm": None,
+                    "unmeasured_courtyard_footprint": None,
+                    "unmeasured_courtyard_distance_nm": None,
                 }
             )
             continue
@@ -102,6 +109,34 @@ def access_probe_observations(
             candidate = (distance_nm, reference.casefold(), reference, obstacle_net)
             if nearest is None or candidate[:3] < nearest[:3]:
                 nearest = candidate
+        target_reference = endpoint.rsplit(".", 1)[0]
+        nearest_courtyard: tuple[int, str, str] | None = None
+        nearest_unmeasured: tuple[int, str, str] | None = None
+        for reference, dnp, footprint_layer, footprint in footprint_geometry:
+            if (
+                reference.casefold() == target_reference.casefold()
+                or dnp
+                or footprint_sides.get(footprint_layer) != side
+            ):
+                continue
+            courtyard = footprint.GetCourtyard(courtyard_layers[side])
+            if courtyard.OutlineCount() > 0:
+                distance_nm = int(courtyard.Distance(position))
+                if distance_nm < 0:
+                    raise ValueError(
+                        f"KiCad returned a negative courtyard distance for {endpoint}"
+                    )
+                candidate = (distance_nm, reference.casefold(), reference)
+                if nearest_courtyard is None or candidate < nearest_courtyard:
+                    nearest_courtyard = candidate
+                continue
+            box = footprint.GetBoundingBox(False, False)
+            dx = max(box.GetLeft() - int(position.x), 0, int(position.x) - box.GetRight())
+            dy = max(box.GetTop() - int(position.y), 0, int(position.y) - box.GetBottom())
+            distance_nm = isqrt(dx * dx + dy * dy)
+            candidate = (distance_nm, reference.casefold(), reference)
+            if nearest_unmeasured is None or candidate < nearest_unmeasured:
+                nearest_unmeasured = candidate
         observations.append(
             {
                 "endpoint": endpoint,
@@ -113,6 +148,18 @@ def access_probe_observations(
                 "distance_nm": nearest[0] if nearest is not None else None,
                 "target_aperture_shape": aperture_shape,
                 "target_aperture_diameter_nm": aperture_diameter_nm,
+                "courtyard_obstacle": (
+                    nearest_courtyard[2] if nearest_courtyard is not None else None
+                ),
+                "courtyard_distance_nm": (
+                    nearest_courtyard[0] if nearest_courtyard is not None else None
+                ),
+                "unmeasured_courtyard_footprint": (
+                    nearest_unmeasured[2] if nearest_unmeasured is not None else None
+                ),
+                "unmeasured_courtyard_distance_nm": (
+                    nearest_unmeasured[0] if nearest_unmeasured is not None else None
+                ),
             }
         )
     return observations
