@@ -1,4 +1,4 @@
-"""Review generic signal contacts mapped by a complete connector interface."""
+"""Review open signal contacts mapped by a complete connector interface."""
 
 from __future__ import annotations
 
@@ -59,10 +59,12 @@ def _coverage(
     *,
     unconnected_reason: str | None = None,
     target_role: ConnectorPinRole = "signal",
+    target_signal: str | None = None,
 ) -> ConnectorCoverageReport:
     return interface_coverage(
         source,
         target_role=target_role,
+        target_signal=target_signal,
         unconnected_reason=unconnected_reason,
     )
 
@@ -79,12 +81,14 @@ def _lint(
     *,
     unconnected_reason: str | None = None,
     target_role: ConnectorPinRole = "signal",
+    target_signal: str | None = None,
     policy: DesignLintPolicy | None = None,
 ) -> tuple[DesignLintReport, ConnectorCoverageReport]:
     coverage = _coverage(
         source,
         unconnected_reason=unconnected_reason,
         target_role=target_role,
+        target_signal=target_signal,
     )
     return _lint_with_coverage(source, coverage, policy=policy), coverage
 
@@ -135,6 +139,23 @@ def test_open_generic_mapped_signal_pin_requests_review_with_source_evidence() -
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_open_named_custom_mapped_signal_pin_requests_review() -> None:
+    report, coverage = _lint(
+        _netlist(target_function="PWM_SYNC"),
+        target_signal="PWM_SYNC",
+    )
+
+    assert coverage.status == "COMPLETE"
+    assert len(_rule_findings(report)) == 1
+    finding = _rule_findings(report)[0]
+    assert report.status == "REVIEW"
+    assert finding.subject == "J1.2: reviewed signal contact has no net assignment"
+    assert finding.evidence["interface_signal"] == ("PWM_SYNC",)
+    assert finding.evidence["native_pin_function"] == ("PWM_SYNC",)
+    assert finding.evidence["assigned_nets"] == ()
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_connected_documented_open_and_ineligible_pins_are_controls() -> None:
     connected, _ = _lint(_netlist(target_net="UART_RX"))
     documented_open, coverage = _lint(
@@ -144,6 +165,15 @@ def test_connected_documented_open_and_ineligible_pins_are_controls() -> None:
     dnp, _ = _lint(_netlist(dnp=("J1",)))
     other_role, _ = _lint(_netlist(), target_role="return")
     native_power, _ = _lint(_netlist(target_type="power_in"))
+    named_open_reason, _ = _lint(
+        _netlist(target_function="PWM_SYNC"),
+        target_signal="PWM_SYNC",
+        unconnected_reason="The external PWM_SYNC contact is intentionally reserved.",
+    )
+    named_connected, _ = _lint(
+        _netlist(target_net="PWM_SYNC", target_function="PWM_SYNC"),
+        target_signal="PWM_SYNC",
+    )
 
     assert not _rule_findings(connected)
     assert not _rule_findings(documented_open)
@@ -153,6 +183,8 @@ def test_connected_documented_open_and_ineligible_pins_are_controls() -> None:
     assert not _rule_findings(dnp)
     assert not _rule_findings(other_role)
     assert not _rule_findings(native_power)
+    assert not _rule_findings(named_open_reason)
+    assert not _rule_findings(named_connected)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

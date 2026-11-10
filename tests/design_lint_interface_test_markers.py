@@ -7,6 +7,7 @@ INTERFACE_LINT_TEST_MODULES = frozenset(
         "tests/test_connector_stateful_contacts.py",
         "tests/test_connector_stateful_contact_architecture.py",
         "tests/test_connector_mapped_interface_other_unassigned.py",
+        "tests/test_connector_mapped_named_signal_native.py",
         "tests/test_connector_mapped_interface_signal_peer_context.py",
         "tests/test_connector_mapped_interface_signal_peer_context_native.py",
         "tests/test_connector_mapped_interface_candidate_evidence.py",

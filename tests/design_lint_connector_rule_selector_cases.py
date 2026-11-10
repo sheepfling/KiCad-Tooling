@@ -68,6 +68,14 @@ CONNECTOR_RULE_NODE_CASES = (
         "tests/test_connector_mapped_interface_signal_peer_context_native.py::test_native_open_mapped_signal_peer_context_and_reasoned_control",
     ),
     (
+        "connector.mapped_interface_signal_unassigned",
+        "tests/test_connector_mapped_named_signal_native.py::test_native_named_mapped_signal_fault_and_control_repeat",
+    ),
+    (
+        "connector.mapped_interface_signal_unassigned",
+        "tests/test_design_lint_mcp_parity_mapped_interface_signal.py::test_mapped_interface_signal_review_cli_mcp_parity",
+    ),
+    (
         "connector.reviewed_peer_passive_power_input_open",
         "tests/test_connector_reviewed_peer_power_input_split.py::test_unassigned_passive_power_input_peer_contact_needs_review",
     ),

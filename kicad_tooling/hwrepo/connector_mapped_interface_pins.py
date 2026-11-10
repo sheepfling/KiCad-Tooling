@@ -72,7 +72,7 @@ def unassigned_mapped_interface_signal_pins(
     observed: NetlistContract,
     coverage: ConnectorCoverageReport | None,
 ) -> tuple[Candidate, ...]:
-    """Prompt on open generic signal contacts in complete, source-matched interfaces."""
+    """Prompt on open mapped signal contacts with current source-matched evidence."""
     if coverage is None:
         return ()
 
@@ -86,7 +86,6 @@ def unassigned_mapped_interface_signal_pins(
             or mapped.nets
             or mapped.unconnected_reason is not None
             or reference.casefold() in dnp_references
-            or not pin_function_is_generic(mapped.symbol_function)
             or electrical_type in {"power_in", "power_out"}
         ):
             continue

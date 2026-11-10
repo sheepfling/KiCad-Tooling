@@ -410,7 +410,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 313 rules are implemented with synthetic regression coverage.
+The following 314 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 The catalog currently contains 314 active rules.
@@ -763,6 +763,15 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **Latest progress (LINT-364, named mapped signal opens):** The baseline
+  returned no finding for a named `PWM_SYNC` contact with a complete,
+  source-matched signal map and no native net assignment. The mapped-signal
+  review now covers named as well as generic pin functions, while retaining
+  the explicit intentional-open reason, DNP, stale-map, and power-pin
+  boundaries. Synthetic fault/control and CLI/MCP parity tests pass. The
+  tooling-owned named-signal fault and assigned control export repeatably on
+  pinned KiCad 10.0.0 and 10.0.5 Docker images. This remains a configurable
+  review prompt and does not establish that the signal must connect.
 - **Latest progress (LINT-358, deterministic component-value syntax):** A
   pinned cohort release documents support for simulator-style component-value
   spellings and deliberately leaves ambiguous comma forms uninterpreted. The
@@ -21985,6 +21994,48 @@ acceptance threads while new lint features proceed:
   `tests/test_connector_reviewed_peer_power_output_open_parity.py`, and
   `tests/test_connector_reviewed_peer_power_output_open_native.py` with
   `design_lint_rule(rule_id="connector.reviewed_peer_power_output_open")`.
+  Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-364 — Review an open named signal in a source-matched connector map
+
+- **Rule:** Extend `connector.mapped_interface_signal_unassigned`, default
+  `review`, to named as well as generic native signal functions.
+- **Gap:** The existing rule found open generic or missing-function signal
+  pins when a complete current connector map supplied their signal role. It
+  did not review a named but otherwise unclassified signal such as `PWM_SYNC`,
+  even when the same source-matched map identified that contact as a signal.
+  Protocol-specific aliases remain with their dedicated checks; the mapped
+  review supplies interface context for the exact open pin.
+- **Predicate:** Require a fitted connector, complete source-matched pin and
+  interface coverage, mapped `signal` role, no assigned net, no intentional-
+  open reason, and no native `power_in` or `power_out` type. Native function
+  text may be named, generic, or missing. Emit a configurable `REVIEW` using
+  the existing rule identity and finding evidence.
+- **Boundary:** A map role is review context, not proof that every signal pin
+  needs board connectivity. An intentional open requires an authored
+  `unconnected_pin_reasons` entry. DNP, stale or incomplete maps, and native
+  power pins stay outside the predicate. Recognized protocol functions may
+  also receive specialized prompts. The finding does not choose a target net,
+  validate electrical behavior, or prove PCB copper continuity.
+- **Incremental value:** Test-first typed coverage for an open `PWM_SYNC`
+  returned no finding before the change. It now emits the mapped-signal REVIEW;
+  connected, intentionally open, stale-map, DNP, and native-power controls
+  remain quiet for this rule. CLI and MCP reports match for the named fault
+  and connected control. The source-hashed native `PWM_SYNC` fault/control
+  exports repeat on pinned KiCad 10.0.0 and 10.0.5.
+- **Verification:** The catalog-derived rule selection and cross-rule
+  integrity gate passed 353 tests with 7,779 deselected. It included six
+  generic, peer-context, and named mapped-signal native fault/control tests
+  across pinned KiCad 10.0.0 and 10.0.5. The four-connector DB9 split-return
+  fault and common-return control also passed on both versions. Broader
+  protocol-specific duplication rates and reviewer effort remain unmeasured.
+- **Fixtures:** See the
+  [named mapped-signal native fixtures](../tests/fixtures/design_lint/mapped-named-signal-native/README.md).
+- **Selection:** Run
+  `tests/test_connector_mapped_interface_signal_unassigned.py`,
+  `tests/test_design_lint_mcp_parity_mapped_interface_signal.py`, and
+  `tests/test_connector_mapped_named_signal_native.py` with
+  `design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")`.
   Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate

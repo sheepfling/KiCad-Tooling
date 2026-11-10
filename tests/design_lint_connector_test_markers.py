@@ -76,6 +76,7 @@ CONNECTOR_LINT_TEST_MODULES = frozenset(
         "tests/test_design_lint_architecture_spi_connector_return.py",
         "tests/test_spi_generic_connector_native_fixture_lane.py",
         "tests/test_connector_mapped_interface_other_unassigned.py",
+        "tests/test_connector_mapped_named_signal_native.py",
         "tests/test_connector_mapped_interface_signal_peer_context.py",
         "tests/test_connector_mapped_interface_signal_peer_context_native.py",
         "tests/test_connector_mapped_interface_candidate_evidence.py",

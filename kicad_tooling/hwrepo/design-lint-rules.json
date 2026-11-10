@@ -3902,19 +3902,21 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For a fitted connector whose complete pin inventory and interface map are source-matched to the exported netlist and interface catalog, emit a REVIEW candidate for each role=signal contact with no net assignment, no explicit unconnected_pin_reasons disposition, a generic or missing native pin function, and no native power_in or power_out type.",
+      "predicate": "For a fitted connector whose complete pin inventory and interface map are source-matched to the exported netlist and interface catalog, emit a REVIEW candidate for each role=signal contact with no net assignment, no explicit unconnected_pin_reasons disposition, and no native power_in or power_out type. Native pin-function text may be named or generic; the source-matched map supplies the signal role.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The project interface map supplies a review role, not proof that every signal contact must be connected. An intentionally open contact needs an explicit unconnected_pin_reasons entry or a project rule override/ignore.",
-        "Only generic or missing native pin-function metadata is in scope; named signal contacts and typed power pins are left to their existing connector checks.",
+        "Named signal functions can also receive protocol-specific prompts when their aliases are recognized; this mapped review adds source-matched interface context. Typed power pins remain with power-contact checks.",
         "DNP references, stale or incomplete interface coverage, and evidence that does not match the exported pin inventory, pin functions, and nets are excluded.",
         "The review does not determine the correct net, prove schematic intent, establish PCB copper continuity, or verify an off-board or physical connection."
       ],
       "fault_fixtures": [
         "tests.test_connector_mapped_interface_signal_unassigned.test_open_generic_mapped_signal_pin_requests_review_with_source_evidence",
+        "tests.test_connector_mapped_interface_signal_unassigned.test_open_named_custom_mapped_signal_pin_requests_review",
         "tests.test_connector_mapped_interface_signal_unassigned.test_native_mapped_signal_pin_fault_and_control_are_repeatable",
+        "tests.test_connector_mapped_named_signal_native.test_native_named_mapped_signal_fault_and_control_repeat",
         "tests.test_connector_mapped_interface_signal_peer_context.test_open_mapped_signal_reports_current_peer_assignment_context",
         "tests.test_connector_mapped_interface_signal_peer_context.test_multiple_current_peers_keep_each_pin_paired_with_its_native_net",
         "tests.test_connector_mapped_interface_signal_peer_context_native.test_native_open_mapped_signal_peer_context_and_reasoned_control",
@@ -3923,6 +3925,7 @@
       ],
       "valid_control_fixtures": [
         "tests.test_connector_mapped_interface_signal_unassigned.test_connected_documented_open_and_ineligible_pins_are_controls",
+        "tests.test_connector_mapped_named_signal_native.test_native_named_mapped_signal_fault_and_control_repeat",
         "tests.test_connector_mapped_interface_signal_unassigned.test_source_mismatched_or_digestless_coverage_cannot_trigger_review",
         "tests.test_connector_mapped_interface_signal_unassigned.test_review_obeys_project_policy_and_exact_ignore",
         "tests.test_connector_mapped_interface_signal_unassigned.test_native_mapped_signal_pin_fault_and_control_are_repeatable",

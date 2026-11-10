@@ -110,7 +110,6 @@ class MappedInterfacePinFindingEvidence:
             raise ValueError("Named-rail connector findings require one native net")
 
         generic_role = self.rule_id in {
-            _UNASSIGNED_SIGNAL,
             _UNASSIGNED_POWER,
             _UNASSIGNED_OTHER,
             _OTHER_NAMED_RAIL,

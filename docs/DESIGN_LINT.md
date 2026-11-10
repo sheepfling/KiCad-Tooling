@@ -3926,15 +3926,18 @@ result; the latter can still produce that separate repeated-return review.
 
 ## Review an unassigned mapped signal contact
 
-`connector.mapped_interface_signal_unassigned` asks for review when a fitted,
-generic signal contact has no native net assignment and no
-`unconnected_pin_reasons` entry in a complete, current connector interface
-map. This existing finding can include additional context when another current
-peer contact has the same mapped signal, voltage-domain identifier, and
-reviewed peer group. The report names each assigned peer pin and its exact
-native net so the reviewer can compare the open contact with the mapped peers.
-Evidence retains the peer group and basis, peer reference and pin, matched
-signal and voltage domain, and per-pin native net assignment.
+`connector.mapped_interface_signal_unassigned` asks for review when a fitted
+signal contact has no native net assignment and no `unconnected_pin_reasons`
+entry in a complete, current connector interface map. Native pin-function
+text may be generic or named; the source-matched map supplies the signal role.
+Named signals can also receive protocol-specific prompts when their aliases
+are recognized. For generic mapped signals, this finding can include
+additional context when another current peer contact has the same mapped
+signal, voltage-domain identifier, and reviewed peer group. The report names
+each assigned peer pin and its exact native net so the reviewer can compare
+the open contact with the mapped peers. Evidence retains the peer group and
+basis, peer reference and pin, matched signal and voltage domain, and per-pin
+native net assignment.
 
 Peer grouping is review context. It does not say the contacts must share a net,
 validate the selected net, prove schematic intent, or establish PCB copper or
@@ -3945,20 +3948,26 @@ the documented-open target itself stays quiet. Project policy can leave the
 rule at `review`, set it to `block` or `off`, or ignore an exact finding
 fingerprint.
 
-The tooling-owned native fixture leaves J2.7 open beside assigned J1.2 and
-repeats the export on exact KiCad 10.0.0 and 10.0.5 images. A current
-intentional-open reason is the control over the same native export. See the
-[fixture note](../tests/fixtures/design_lint/mapped-interface-peer-context-native/README.md).
+Tooling-owned native fixtures cover a generic mapped signal beside an assigned
+peer and a named `PWM_SYNC` contact that is open. The common controls are an
+intentional-open reason and an assigned `PWM_SYNC` signal. Exports repeat on
+exact KiCad 10.0.0 and 10.0.5 images. See the
+[peer-context fixture note](../tests/fixtures/design_lint/mapped-interface-peer-context-native/README.md)
+and the
+[named-signal fixture note](../tests/fixtures/design_lint/mapped-named-signal-native/README.md).
 
 Select the focused synthetic, CLI/MCP, and exact-native cases with:
 
 ```sh
 .venv/bin/python -I -m pytest tests/test_connector_mapped_interface_signal_peer_context.py \
+  tests/test_connector_mapped_interface_signal_unassigned.py \
+  tests/test_design_lint_mcp_parity_mapped_interface_signal.py \
   tests/test_design_lint_mcp_parity_reviewed_peer_signal_domains.py \
   -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")'
 
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_connector_mapped_interface_signal_peer_context_native.py \
+  tests/test_connector_mapped_named_signal_native.py \
   -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")'
 ```
 
