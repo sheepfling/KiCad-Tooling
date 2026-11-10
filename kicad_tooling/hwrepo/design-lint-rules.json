@@ -1288,11 +1288,59 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_reviewed_peer_power_input_split.py#reviewed_peer_power_input_split_candidates",
+        "kicad_tooling/hwrepo/connector_reviewed_peer_power_contacts.py#reviewed_peer_power_contact_pairs",
         "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_reviewed_peer_power_input_split.py#reviewed_peer_power_input_split_candidates",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "metamorphic_not_applicable_basis": null
+    },
+    {
+      "rule_id": "connector.reviewed_peer_power_output_split",
+      "title": "Named power-output contacts split across unlike reviewed connector peers",
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_reviewed_peer_power_output_split.py#reviewed_peer_power_output_split_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist plus complete source-matched connector interface coverage",
+      "predicate": "Require globally complete connector coverage and current source-matched maps for two fitted connectors in the same peer_assignment_group. Compare only different native symbols with no PART_ID and different nonempty value/footprint identity. For one shared interface signal and exact voltage_domain, require both authored interface directions to be output, both mapped roles to be supply, both native pin electrical types to be power_out, and both native functions to have different recognized connector power categories. Emit REVIEW only when each pin has exactly one assigned net and the exact net names differ. The map and categories are review clues; they do not require joining the nets.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The rule needs globally complete connector inventory review, complete current source-matched maps, and an authored shared peer group. Missing, stale, incomplete, DNP, PART_ID-bearing, or ambiguous evidence is not a finding.",
+        "Only mapped supply-role contacts with authored output direction, native power_out type, and different recognized native power-function categories are considered. Generic or unrecognized functions, same-category functions, inputs, passive contacts, returns, signals, shields, and different signals or voltage domains remain outside this predicate.",
+        "Only unlike symbols with different nonempty value/footprint identity are considered. Exact-symbol peers and exact value/footprint aliases remain with their existing checks.",
+        "Separate outputs may be intentional because of independent sources, protection, current limits, or isolation. A map does not prove net commonality, PCB copper continuity, connector wiring, actual voltage, or whether the output is capable of sourcing power.",
+        "This is a REVIEW heuristic, not independent proof of a fault. Project policy can turn it off, block on it, or ignore an exact fingerprint."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_reviewed_peer_power_output_split.test_different_named_supply_outputs_split_across_reviewed_peers_need_review",
+        "tests.test_connector_reviewed_peer_power_output_parity.test_reviewed_peer_power_output_split_matches_between_cli_and_mcp",
+        "tests.test_connector_reviewed_peer_power_output_native.test_native_reviewed_peer_power_output_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_reviewed_peer_power_output_split.test_common_same_function_and_nonoutput_directions_stay_quiet",
+        "tests.test_connector_reviewed_peer_power_output_split.test_role_domain_peer_identity_and_native_type_boundaries_stay_quiet",
+        "tests.test_connector_reviewed_peer_power_output_split.test_stale_incomplete_open_and_ambiguous_evidence_stay_quiet",
+        "tests.test_connector_reviewed_peer_power_output_parity.test_reviewed_peer_power_output_split_matches_between_cli_and_mcp",
+        "tests.test_connector_reviewed_peer_power_output_native.test_native_reviewed_peer_power_output_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_reviewed_peer_power_output_split.test_policy_exact_ignore_and_netlist_order_are_deterministic"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_reviewed_peer_power_output_split.py#reviewed_peer_power_output_split_candidates",
+        "kicad_tooling/hwrepo/connector_reviewed_peer_power_contacts.py#reviewed_peer_power_contact_pairs",
+        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
       ],
@@ -1337,7 +1385,7 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_reviewed_peer_power_input_split.py#reviewed_peer_passive_power_input_open_candidates",
-        "kicad_tooling/hwrepo/connector_reviewed_peer_power_input_split.py#_reviewed_peer_power_input_pairs",
+        "kicad_tooling/hwrepo/connector_reviewed_peer_power_contacts.py#reviewed_peer_power_contact_pairs",
         "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],

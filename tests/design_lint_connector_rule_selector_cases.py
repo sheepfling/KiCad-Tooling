@@ -4,6 +4,22 @@ from __future__ import annotations
 
 CONNECTOR_RULE_NODE_CASES = (
     (
+        "connector.reviewed_peer_power_output_split",
+        "tests/test_connector_reviewed_peer_power_output_split.py::test_different_named_supply_outputs_split_across_reviewed_peers_need_review",
+    ),
+    (
+        "connector.reviewed_peer_power_output_split",
+        "tests/test_connector_reviewed_peer_power_output_split.py::test_common_same_function_and_nonoutput_directions_stay_quiet",
+    ),
+    (
+        "connector.reviewed_peer_power_output_split",
+        "tests/test_connector_reviewed_peer_power_output_parity.py::test_reviewed_peer_power_output_split_matches_between_cli_and_mcp",
+    ),
+    (
+        "connector.reviewed_peer_power_output_split",
+        "tests/test_connector_reviewed_peer_power_output_native.py::test_native_reviewed_peer_power_output_fault_and_control_are_repeatable",
+    ),
+    (
         "connector.mapped_interface_signal_unassigned",
         "tests/test_connector_mapped_interface_signal_peer_context.py::test_open_mapped_signal_reports_current_peer_assignment_context",
     ),

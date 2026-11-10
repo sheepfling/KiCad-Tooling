@@ -76,6 +76,7 @@ def power_input_coverage(
     interface_signals: tuple[str, str] = ("POWER_INPUT", "POWER_INPUT"),
     voltage_domains: tuple[str, str] = ("external-5v", "external-5v"),
     roles: tuple[str | None, str | None] = (None, None),
+    directions: tuple[str, str] = ("input", "input"),
     unconnected_pin_reasons: tuple[str | None, str | None] = (None, None),
     complete_maps: bool = True,
     inventory_reviewed: bool = True,
@@ -86,6 +87,7 @@ def power_input_coverage(
         interface_signals=interface_signals,
         voltage_domains=voltage_domains,
         roles=roles,
+        directions=directions,
         unconnected_pin_reasons=unconnected_pin_reasons,
         complete_maps=complete_maps,
     )
@@ -110,6 +112,7 @@ def power_input_project_documents(
     interface_signals: tuple[str, str] = ("POWER_INPUT", "POWER_INPUT"),
     voltage_domains: tuple[str, str] = ("external-5v", "external-5v"),
     roles: tuple[str | None, str | None] = (None, None),
+    directions: tuple[str, str] = ("input", "input"),
     unconnected_pin_reasons: tuple[str | None, str | None] = (None, None),
     complete_maps: bool = True,
 ) -> tuple[InterfacesCatalog, tuple[str, ...], tuple[ConnectorInterfaceReview, ...]]:
@@ -124,6 +127,7 @@ def power_input_project_documents(
         signal,
         domain,
         role,
+        direction,
         open_reason,
     ) in enumerate(
         zip(
@@ -133,6 +137,7 @@ def power_input_project_documents(
             interface_signals,
             voltage_domains,
             roles,
+            directions,
             unconnected_pin_reasons,
             strict=True,
         ),
@@ -147,7 +152,7 @@ def power_input_project_documents(
                         number="1",
                         signal=signal,
                         role=role,
-                        direction="input",
+                        direction=direction,
                         voltage_domain=domain,
                         mating="synthetic fixture",
                         orientation="straight",

@@ -410,10 +410,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 312 rules are implemented with synthetic regression coverage.
+The following 313 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 312 active rules.
+The catalog currently contains 313 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -21881,6 +21881,62 @@ acceptance threads while new lint features proceed:
   `tests/test_connector_reviewed_peer_power_input_native.py` with
   `design_lint_rule(rule_id="connector.reviewed_peer_passive_power_input_open")`.
   The exact-native lane uses `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-362 — Review split named power outputs across unlike connector peers
+
+- **Rule:** Add `connector.reviewed_peer_power_output_split`, default `review`.
+- **Gap:** LINT-342/LINT-360 checked generic and named contacts with native
+  `power_in` or `passive` types, and LINT-361 checked passive opens. A complete
+  current map could instead describe differently named connector supply
+  outputs with native `power_out` type. If their authored interface signal and
+  exact voltage domain matched but their net assignments split, the existing
+  peer input predicates did not inspect them.
+- **Predicate:** Require globally complete inventory review, source-matched
+  current pin maps, one explicit shared peer group, unlike native symbols, no
+  `PART_ID`, and distinct nonempty value/footprint identity. Require both
+  mapped contacts to have the same interface signal and exact voltage domain,
+  `supply` role, authored `output` direction, native `power_out` type, and
+  different recognized native power-function categories. Emit REVIEW only
+  when each contact has exactly one assigned net and the net names differ.
+  Shared peer identity and map evidence guide review; they do not require a
+  connection.
+- **Incremental value:** Before this rule, the tooling-owned synthetic
+  VBUS/VDD_OUT fault with separate nets and complete output maps returned
+  PASS. It now emits one REVIEW with exact pin functions, normalized power
+  categories, interface signal/direction/domain, peer basis, and net
+  assignments. The common-net control and same-function, wrong-direction,
+  wrong-role, different-domain/signal/group, stale, incomplete, open,
+  ambiguous, DNP, PART_ID, same-symbol, and identical value/footprint controls
+  stay quiet. Policy block, exact ignore, netlist-order stability, and
+  CLI/MCP parity are covered. The existing power-input rules reuse a new shared
+  peer-contact evidence service instead of duplicating their scanner.
+- **Boundary:** Different output categories may represent independent sources,
+  protection, current limits, or isolation. The heuristic does not prove that
+  the nets should be joined, that a supply can source current, that connector
+  wiring is correct, or that PCB copper is continuous. Same-category, generic,
+  unrecognized, input, passive, return, signal, shield, and unassigned output
+  contacts are outside this rule and remain with other checks or unsupported.
+- **Evidence:** Tooling-owned fault/control schematic fixtures are
+  `fault.kicad_sch` (SHA-256
+  `19b83b154efa06421f2b09874d2403ed708c848c2e75ac8ca042647eb146dce2`) and
+  `control.kicad_sch` (SHA-256
+  `a3e5a9915ae3b3192730100e45835cb1ceb16606b380d286b06c0e2fbc83b380`). Each
+  exports twice under pinned KiCad 10.0.0 and 10.0.5 Docker images. The
+  synthetic review, CLI/MCP parity, catalog, selector, and architecture suites
+  accompany the native lane. No cohort source, product board, or proprietary
+  project data was added.
+- **Verification:** The exact annotated-tag selection, with the native Docker
+  fixture switch enabled, passed 338 tests with 7,779 deselected. This included
+  the fault/control export twice on pinned KiCad 10.0.0 and 10.0.5. Full-
+  repository strict Pyright reported 0 errors or warnings; changed-file Ruff
+  checks, formatting, Rumdl documentation lint, JSON parsing, and source hash
+  checks passed.
+- **Selection:** Run
+  `tests/test_connector_reviewed_peer_power_output_split.py`,
+  `tests/test_connector_reviewed_peer_power_output_parity.py`, and
+  `tests/test_connector_reviewed_peer_power_output_native.py` with
+  `design_lint_rule(rule_id="connector.reviewed_peer_power_output_split")`.
+  Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate
 

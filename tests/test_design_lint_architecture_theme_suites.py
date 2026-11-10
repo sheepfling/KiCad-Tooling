@@ -151,6 +151,9 @@ REVIEWED_CONNECTOR_POWER_INPUT_THEME_SUITES = (
     "test_connector_reviewed_peer_power_input_split.py",
     "test_connector_reviewed_peer_power_input_parity.py",
     "test_connector_reviewed_peer_power_input_native.py",
+    "test_connector_reviewed_peer_power_output_split.py",
+    "test_connector_reviewed_peer_power_output_parity.py",
+    "test_connector_reviewed_peer_power_output_native.py",
 )
 DIGITAL_PEER_FIXTURE_THEME_SUITES = (
     "test_ci_hosted_digital_peer_spi.py",

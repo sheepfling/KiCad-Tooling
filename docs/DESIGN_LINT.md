@@ -550,6 +550,26 @@ actual voltage or PCB continuity. Project policy can keep `review`, set
   -m 'design_lint and connector_lint and power_lint and design_lint_rule(rule_id="connector.reviewed_peer_power_input_split")'
 ```
 
+## Review split power outputs on unlike connector peers
+
+`connector.reviewed_peer_power_output_split` asks for review when unlike,
+source-reviewed connector peers map named supply outputs to the same interface
+signal and exact voltage domain but assign them to different nets. It requires
+complete current pin maps, one explicit peer group, distinct native symbols
+and value/footprint identity, mapped `supply` roles with authored `output`
+direction, native `power_out` pins, and different recognized power-function
+categories such as VBUS and VDD_OUT. Same-category outputs and common-net
+controls stay quiet. Independent sources, protection, current limits, and
+isolation can make split outputs intentional; the prompt does not require a
+tie or establish PCB continuity. The rule defaults to `review` and can be set
+to `block` or `off`, or ignored by exact fingerprint. See the
+[synthetic fault/control fixtures](../tests/fixtures/design_lint/reviewed-peer-power-output-split-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_reviewed_peer_power_output_split.py \
+  -m 'design_lint and connector_lint and power_lint and design_lint_rule(rule_id="connector.reviewed_peer_power_output_split")'
+```
+
 ## Review an open passive power contact across unlike connector peers
 
 `connector.reviewed_peer_passive_power_input_open` asks for review when one current,
@@ -838,7 +858,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 312 active rules.
+The catalog currently contains 313 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 

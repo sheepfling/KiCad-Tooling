@@ -24,6 +24,7 @@ class ConnectorMappedPinEvidence(StrictModel):
     interface_signal: NonEmptyText
     component_pin: Reference
     role: ConnectorPinRole | None = None
+    direction: NonEmptyText | None = None
     voltage_domain: NonEmptyText | None = None
     symbol_function: NonEmptyText | None = None
     unconnected_reason: NonEmptyText | None = None

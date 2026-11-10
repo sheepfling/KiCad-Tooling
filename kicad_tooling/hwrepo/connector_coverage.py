@@ -203,6 +203,7 @@ def evaluate(
                 interface_signal=interface_pins[interface_pin_number].signal,
                 component_pin=f"{reference}.{component_pin_number}",
                 role=interface_pins[interface_pin_number].role,
+                direction=interface_pins[interface_pin_number].direction,
                 voltage_domain=interface_pins[interface_pin_number].voltage_domain,
                 symbol_function=observed.pin_functions.get(f"{reference}.{component_pin_number}"),
                 unconnected_reason=review.unconnected_pin_reasons.get(component_pin_number),
