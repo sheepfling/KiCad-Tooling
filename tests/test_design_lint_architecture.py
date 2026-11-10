@@ -52,6 +52,7 @@ PIN_ANALYSIS_MODULES = (
     "connector_reviewed_peer_power_contacts.py",
     "connector_reviewed_peer_power_input_split.py",
     "connector_reviewed_peer_power_output_split.py",
+    "connector_reviewed_peer_power_output_open.py",
     "connector_peer_power_output.py",
     "connector_pins.py",
     "connector_return_pins.py",

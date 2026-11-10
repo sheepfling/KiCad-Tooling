@@ -570,6 +570,28 @@ to `block` or `off`, or ignored by exact fingerprint. See the
   -m 'design_lint and connector_lint and power_lint and design_lint_rule(rule_id="connector.reviewed_peer_power_output_split")'
 ```
 
+## Review an open named power output beside a connector peer
+
+`connector.reviewed_peer_power_output_open` asks for review when one connector
+in a fully source-matched peer group has an open named `power_out` contact and
+an unlike peer assigns the same authored output signal and exact voltage domain
+to one net. Both contacts must have `supply` roles, `output` directions, and
+different recognized power-function categories. The open pin must have no
+authored unconnected reason. Common nets are not a condition for this prompt;
+the peer map provides review context and does not require a connection or name
+the peer's net as a target. Documented opens, both-open cases, stale or
+ambiguous maps, same-category functions, and other roles or directions stay
+quiet. This is a configurable REVIEW heuristic and does not establish PCB
+continuity. See the
+[synthetic fixture record](../tests/fixtures/design_lint/reviewed-peer-power-output-open-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_reviewed_peer_power_output_open.py \
+  tests/test_connector_reviewed_peer_power_output_open_parity.py \
+  tests/test_connector_reviewed_peer_power_output_open_native.py \
+  -m 'design_lint and connector_lint and power_lint and design_lint_rule(rule_id="connector.reviewed_peer_power_output_open")'
+```
+
 ## Review an open passive power contact across unlike connector peers
 
 `connector.reviewed_peer_passive_power_input_open` asks for review when one current,
@@ -858,7 +880,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 313 active rules.
+The catalog currently contains 314 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 

@@ -68,8 +68,8 @@ from tests.design_lint_fixtures.connector_return_catalog_reachability import (
 from tests.design_lint_fixtures.connector_reviewed_peer_distinct_signals_catalog import (
     reviewed_peer_distinct_signal_rule_ids,
 )
-from tests.design_lint_fixtures.connector_reviewed_peer_power_input_catalog import (
-    reviewed_peer_power_input_rule_ids,
+from tests.design_lint_fixtures.connector_reviewed_peer_power_catalog import (
+    reviewed_peer_power_rule_ids,
 )
 from tests.design_lint_fixtures.connector_reviewed_peer_signal_catalog import (
     reviewed_peer_signal_assignment_rule_ids,
@@ -491,7 +491,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         | {item.rule_id for item in candidates(numeric_open_connector_part_id_aliases())}
         | same_voltage_power_input_split_rule_ids()
         | same_voltage_connector_power_input_rule_ids()
-        | reviewed_peer_power_input_rule_ids()
+        | reviewed_peer_power_rule_ids()
         | reviewed_peer_signal_assignment_rule_ids()
         | reviewed_peer_signal_domain_rule_ids()
         | reviewed_peer_distinct_signal_rule_ids()

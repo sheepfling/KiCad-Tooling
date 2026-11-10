@@ -413,7 +413,7 @@ intended requirement.
 The following 313 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 313 active rules.
+The catalog currently contains 314 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -21936,6 +21936,55 @@ acceptance threads while new lint features proceed:
   `tests/test_connector_reviewed_peer_power_output_parity.py`, and
   `tests/test_connector_reviewed_peer_power_output_native.py` with
   `design_lint_rule(rule_id="connector.reviewed_peer_power_output_split")`.
+  Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+
+#### LINT-363 — Review an open named power output beside a connector peer
+
+- **Rule:** Add `connector.reviewed_peer_power_output_open`, default `review`.
+- **Gap:** The generic unconnected-output check can recognize an open native
+  `power_out`, but does not establish whether a complete source-matched
+  connector map puts it beside an unlike connector peer with a corresponding
+  output. LINT-362 only compares two assigned nets, so an open output beside a
+  mapped peer output had no peer-specific prompt.
+- **Predicate:** Require globally complete connector inventory review,
+  source-matched current maps, one explicit peer group, unlike native symbols,
+  no `PART_ID`, and distinct nonempty value/footprint identity. For one shared
+  interface signal and exact voltage domain, require both map roles to be
+  `supply`, both directions to be `output`, both native electrical types to
+  be `power_out`, and distinct recognized power-function categories. Emit
+  REVIEW only when one contact has no net and no authored unconnected reason
+  while the other has exactly one net. The rule is symmetric and makes no
+  target-net or connection claim.
+- **Incremental value:** Test-first evaluation of the tooling-owned synthetic
+  VBUS/VDD_OUT case returned REVIEW for existing reasons but emitted no finding
+  from this peer-specific rule. The rule now reports the open and assigned pin
+  nets, functions, categories, signal, output directions, voltage domain, and
+  source-reviewed peer basis. Common assignments, both-open cases, documented
+  opens, same-category functions, wrong roles or directions, changed signal or
+  domain, different peer groups, stale or incomplete maps, and ambiguous nets
+  are controls. Policy promotion, exact ignore, stable net ordering, and
+  CLI/MCP parity are covered.
+- **Boundary:** A mapped peer may be intentionally unused, isolated, reserved,
+  or populated through a project-specific link. This is a configurable REVIEW
+  prompt; it does not require a connection, select the assigned peer net as a
+  target, prove connector wiring, establish actual voltage, or prove PCB copper
+  continuity.
+- **Evidence:** Tooling-owned `fault.kicad_sch` leaves J1.1 open beside J2.1
+  on `SERIAL_5V` (SHA-256
+  `9decb551ed29ee2a92f7909ae5066fe8d9f0ac7f4118dff04c484b05f7b8152d`);
+  `control.kicad_sch` assigns both mapped outputs to `COMMON_5V` (SHA-256
+  `a3e5a9915ae3b3192730100e45835cb1ceb16606b380d286b06c0e2fbc83b380`). Native
+  exports use pinned KiCad 10.0.0 and 10.0.5 Docker images.
+- **Verification:** Exact tag-scope selection passed: 338 passed, 7,791
+  deselected, including LINT-363 fault/control exports on pinned KiCad 10.0.0
+  and 10.0.5 Docker images. Full strict Pyright reported 0 errors or warnings;
+  Ruff, format checks, Rumdl, JSON parsing, fixture hashes, catalog reachability,
+  architecture, selector, and CLI/MCP parity checks passed.
+- **Selection:** Run
+  `tests/test_connector_reviewed_peer_power_output_open.py`,
+  `tests/test_connector_reviewed_peer_power_output_open_parity.py`, and
+  `tests/test_connector_reviewed_peer_power_output_open_native.py` with
+  `design_lint_rule(rule_id="connector.reviewed_peer_power_output_open")`.
   Exact native exports use `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate

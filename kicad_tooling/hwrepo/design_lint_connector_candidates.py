@@ -14,6 +14,7 @@ from .connector_reviewed_peer_power_input_split import (
     reviewed_peer_passive_power_input_open_candidates,
     reviewed_peer_power_input_split_candidates,
 )
+from .connector_reviewed_peer_power_output_open import reviewed_peer_power_output_open_candidates
 from .connector_reviewed_peer_power_output_split import reviewed_peer_power_output_split_candidates
 from .connector_reviewed_peer_signal_domains import (
     reviewed_peer_signal_domains_sharing_net,
@@ -56,6 +57,7 @@ def connector_candidates(
         *reviewed_peer_distinct_signals_sharing_net(observed, connector_coverage),
         *reviewed_peer_power_input_split_candidates(observed, connector_coverage),
         *reviewed_peer_power_output_split_candidates(observed, connector_coverage),
+        *reviewed_peer_power_output_open_candidates(observed, connector_coverage),
         *reviewed_peer_passive_power_input_open_candidates(observed, connector_coverage),
         *connector_scope_singleton_candidates(observed, connector_coverage),
         *connector_footprint_peer_pin_candidates(

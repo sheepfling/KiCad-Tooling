@@ -1397,6 +1397,52 @@
       "metamorphic_not_applicable_basis": null
     },
     {
+      "rule_id": "connector.reviewed_peer_power_output_open",
+      "title": "Named power-output contact open beside an unlike reviewed connector peer",
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_reviewed_peer_power_output_open.py#reviewed_peer_power_output_open_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist plus complete source-matched connector interface coverage",
+      "predicate": "Require globally complete connector coverage and current source-matched maps for two fitted connectors in the same peer_assignment_group. Compare only different native symbols with no PART_ID and different nonempty value/footprint identity. For one shared interface signal and exact voltage_domain, require both authored interface directions to be output, both mapped roles to be supply, both native pin electrical types to be power_out, and both native functions to have different recognized connector power categories. Emit REVIEW only when exactly one contact has no assigned net and no authored unconnected_pin_reasons disposition, while its peer has exactly one assigned net. The map and categories are review clues; they do not require connecting the contacts or choosing the peer net as a target.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The rule needs globally complete connector inventory review, complete current source-matched maps, and a shared authored peer group. Missing, stale, incomplete, DNP, PART_ID-bearing, or ambiguous evidence is not a finding.",
+        "Only mapped supply-role contacts with authored output direction, native power_out type, and different recognized native power-function categories are considered. Generic or unrecognized functions, same-category functions, inputs, passive contacts, returns, signals, shields, and different signals or voltage domains remain outside this predicate.",
+        "Only unlike symbols with different nonempty value/footprint identity are considered. Exact-symbol peers and exact value/footprint aliases remain with their existing checks.",
+        "An open output may be intentionally unused, isolated, reserved, or populated through a project-specific link. A map does not prove a connection should be added, select a target net, prove PCB copper continuity, verify connector wiring, or establish actual voltage.",
+        "This is a REVIEW heuristic, not independent proof of a fault. Project policy can turn it off, block on it, or ignore an exact fingerprint."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_reviewed_peer_power_output_open.test_open_named_supply_output_beside_assigned_reviewed_peer_needs_review",
+        "tests.test_connector_reviewed_peer_power_output_open_parity.test_reviewed_peer_power_output_open_matches_between_cli_and_mcp",
+        "tests.test_connector_reviewed_peer_power_output_open_native.test_native_reviewed_peer_power_output_open_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_reviewed_peer_power_output_open.test_open_output_is_symmetric_and_documented_or_two_sided_opens_stay_quiet",
+        "tests.test_connector_reviewed_peer_power_output_open.test_open_output_requires_current_unambiguous_matching_peer_evidence",
+        "tests.test_connector_reviewed_peer_power_output_open_parity.test_reviewed_peer_power_output_open_matches_between_cli_and_mcp",
+        "tests.test_connector_reviewed_peer_power_output_open_native.test_native_reviewed_peer_power_output_open_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_reviewed_peer_power_output_open.test_open_output_obeys_policy_exact_ignore_and_stable_net_order"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_reviewed_peer_power_output_open.py#reviewed_peer_power_output_open_candidates",
+        "kicad_tooling/hwrepo/connector_reviewed_peer_power_contacts.py#reviewed_peer_power_contact_pairs",
+        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "metamorphic_not_applicable_basis": null
+    },
+    {
       "rule_id": "connector.footprint_named_power_input_assignment_divergence",
       "title": "Named power-input pin is assigned to different nets on a footprint-similar connector peer",
       "status": "active",
