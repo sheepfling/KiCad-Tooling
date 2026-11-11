@@ -13369,7 +13369,7 @@
       "valid_control_fixtures": [
         "tests.test_pcb_rf_antenna.test_exact_module_identity_feed_and_local_keepout_transform_complete",
         "tests.test_pcb_rf_antenna.test_explicit_external_antenna_and_dnp_dispositions_are_supported",
-        "tests.test_pcb_keepouts_native.test_native_schema_16_snapshot_records_keepout_footprint_and_empty_touch_evidence",
+        "tests.test_pcb_keepouts_native.test_native_schema_17_snapshot_records_keepout_footprint_and_empty_touch_evidence",
         "tests.test_pcb_rf_antenna_mcp_parity.test_disabled_rf_antenna_coverage_matches_cli_and_mcp",
         "tests.test_pcb_rf_antenna_mcp_parity.test_enabled_rf_antenna_fault_and_control_match_cli_and_mcp"
       ],
@@ -13888,7 +13888,7 @@
       "fault_fixtures": [
         "tests.test_pcb_component_value_mismatch.test_value_difference_is_reviewable_configurable_and_source_bound",
         "tests.test_pcb_component_value_mismatch.test_named_variant_values_compare_same_name_fitted_sources_and_localize_findings",
-        "tests.test_pcb_component_value_mismatch.test_value_only_policy_captures_and_compares_native_footprint_values",
+        "tests.test_pcb_component_value_scan.test_value_only_policy_captures_and_compares_native_footprint_values",
         "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
         "tests.test_design_lint_mcp_parity_pcb_value_mismatch.test_value_mismatch_capture_and_reconciliation_match_cli_and_mcp",
         "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound"
