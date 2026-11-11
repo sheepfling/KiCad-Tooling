@@ -23912,7 +23912,8 @@ acceptance threads while new lint features proceed:
 #### LINT-406 — Review deprecated custom DRC condition functions
 
 - **Status:** Implemented as the configurable default-REVIEW rule
-  `pcb.custom_drc_deprecated_condition_function`.
+  `pcb.custom_drc_deprecated_condition_function`; tagged acceptance
+  `v0.5.3rc684` passed in GitHub Actions run `43122661678`.
 - **Source:** The [KiCad 10 documentation][kicad-10-dru-functions] labels
   `insideArea`, the three `inside*Courtyard` functions, and `memberOf`
   as deprecated and documents their replacements.
@@ -23940,7 +23941,8 @@ acceptance threads while new lint features proceed:
   source or cohort code was imported.
 - **Focused selection:** The dedicated unit and parity modules are registered
   under `design_lint`, `pcb_lint`, `evidence_lint`, and the exact rule selector.
-  They can run without the native KiCad Docker lane.
+  They can run without the native KiCad Docker lane. The tagged hosted gate also
+  passed its installed-wheel check against a separate project checkout.
 
 ## Completion and release gate
 
