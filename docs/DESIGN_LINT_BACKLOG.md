@@ -788,12 +788,21 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest local lint-gate checkpoint (candidate v0.5.3rc676):** LINT-402
+- **Latest local lint-gate checkpoint (candidate v0.5.3rc677):** LINT-403
+  makes the default-ignore ERC keys exact-patch scoped instead of assuming
+  one global set for every KiCad 10.0 release. The scoped package gate passed
+  434 tests with 8,480 deselected, including all eight digest-pinned native
+  images. Ruff, both Alphus profiles, Markdown and repository-link checks,
+  native and Windows-target Pyright, wheel and source-archive builds, and
+  installed-wheel verification against the public and adapted template
+  checkouts passed. Hosted acceptance is pending.
+- **Earlier published lint-gate checkpoint (v0.5.3rc676):** LINT-402
   aligns `schematic.erc_error_downgraded` metadata with the eight exact
   source-audited patches already accepted by its settings parser. The scoped
   package gate passed 739 tests with 8,135 deselected, including all eight
   digest-pinned native images and installed-wheel checks against the separate
-  public workflow template and adapted layout. Hosted acceptance is pending.
+  public workflow template and adapted layout. Hosted acceptance passed
+  GitHub Actions run `43081520278`.
 - **Latest feature work (LINT-402, audited ERC patch coverage):** The rule now
   advertises KiCad 10.0.0, 10.0.1, 10.0.2, 10.0.4, 10.0.5, 10.0.6, 10.0.7,
   and 10.0.8. Tests cover all twenty Error-default keys on each version and
@@ -23454,13 +23463,13 @@ acceptance threads while new lint features proceed:
 - **Gap:** A project can set a named ERC check's severity to `ignore` in
   `.kicad_pro`. The resulting normal ERC report can omit an error entirely, so
   this is a quality-policy change that ERC alone does not explain.
-- **Behavior:** For source-hashed KiCad 10.0.x project settings with ERC schema
-  0, emit one candidate for each explicitly ignored rule except the four
-  KiCad-default ignored keys: `footprint_filter`, `four_way_junction`,
-  `simulation_model_issue`, and `single_global_label`. Preserve the rule key,
-  source hash, and exact configured KiCad patch. Default-ignore values were
-  checked in the tagged KiCad 10.0.0 and 10.0.5 source; native ERC behavior is
-  exercised against both pinned images.
+- **Initial behavior:** For source-hashed KiCad 10.0.0 and 10.0.5 project
+  settings with ERC schema 0, emit one candidate for each explicitly ignored
+  rule except the four KiCad-default ignored keys: `footprint_filter`,
+  `four_way_junction`, `simulation_model_issue`, and `single_global_label`.
+  Preserve the rule key, source hash, and exact configured KiCad patch. LINT-403
+  expands the defaults catalog to each audited exact patch and scopes the rule
+  accordingly.
 - **Boundary:** This is a review prompt, not a claim that a board has an
   unconnected pin or that a suppression is wrong. It does not identify affected
   objects, infer connector requirements, run ERC, or prove PCB continuity.
@@ -23702,8 +23711,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-402 — Extend ERC downgrade review to every source-audited KiCad 10.0 patch
 
-- **Status:** Local scoped acceptance passed; hosted tag acceptance is
-  pending.
+- **Status:** Implemented and published as `v0.5.3rc676`.
 - **Gap:** `schematic.erc_error_downgraded` recognized source maps for eight
   KiCad patches while advertising only five. The three omitted patches were
   routed to `schematic.erc_catalog_unverified`, obscuring the specific
@@ -23728,6 +23736,41 @@ acceptance threads while new lint features proceed:
   checkout rehearsals passed. The external checkout was the public workflow
   template at `5ca79bedf665a9b6577d96b1d47f13ccd518c968`; its playtest passed.
   No project-board source or proprietary fixture was used.
+
+#### LINT-403 — Scope default-ignored ERC keys to audited KiCad patches
+
+- **Rule:** `schematic.erc_rule_ignored` (existing rule; no new rule ID).
+- **Status:** Implemented as an exact patch catalog for
+  `schematic.erc_rule_ignored`; local scoped acceptance passed and hosted tag
+  acceptance is pending.
+- **Gap:** The rule accepted every KiCad 10.0 patch while excluding a single
+  global set of four default-ignored keys. That exception set was documented
+  from only 10.0.0 and 10.0.5, even though ERC catalog support is maintained
+  per exact patch. An unaudited patch could therefore inherit an assumption
+  that had not been checked for its release.
+- **Behavior:** Store the four default-ignored keys against the exact audited
+  patch set: 10.0.0, 10.0.1, 10.0.2, 10.0.4, 10.0.5, 10.0.6, 10.0.7, and
+  10.0.8. Restrict this rule to those exact releases; leave 10.0.3 and other
+  patches to `schematic.erc_catalog_unverified` when they contain explicit
+  severity overrides.
+- **Regression coverage:** Check all four default-ignore controls for every
+  supported release, exercise a non-default ignored rule on every release,
+  assert that the catalog patch set is exact, and retain the native
+  `pin_not_connected` Ignore/Error fixture across all eight pinned images.
+- **Boundary:** This narrows version claims; it adds no new electrical
+  inference. It still reports review prompts about saved ERC severity settings
+  and does not claim that an ignored rule affects a current violation.
+- **Selection:** Run `tests/test_schematic_erc_global_severity_review.py`
+  with `design_lint and schematic_lint and design_lint_rule(rule_id="schematic.erc_rule_ignored")`.
+  The tagged rule gate includes the native matrix via
+  `KICAD_RUN_NATIVE_SCHEMATIC_ERC_GLOBAL_SEVERITY_FIXTURES=1`.
+- **Local acceptance (candidate v0.5.3rc677):** The scoped package gate passed
+  434 tests with 8,480 deselected, including exact native tests on all eight
+  digest-pinned KiCad images. Ruff, both Alphus profiles, rumdl, mdrepo,
+  native and Windows-target Pyright, wheel and source-archive builds,
+  installed-wheel origin/version checks, and CLI/MCP plus verification checks
+  against the separate public template and adapted checkout passed. No customer
+  or proprietary board source was used.
 
 ## Completion and release gate
 

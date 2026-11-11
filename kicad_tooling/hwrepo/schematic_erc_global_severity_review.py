@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -10,7 +9,7 @@ from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .project_models import ProjectConfig, ProjectKind
 from .schematic_erc_project_settings import (
-    ERC_DEFAULT_IGNORED_RULE_KEYS,
+    ERC_DEFAULT_IGNORED_RULE_KEYS_BY_KICAD_VERSION,
     SCHEMATIC_ERC_SUPPORTED_PROJECT_KINDS,
     SchematicErcRuleSeverity,
     configured_schematic_erc_rule_severities,
@@ -21,7 +20,6 @@ from .schematic_erc_project_settings_evidence import (
 )
 from .source_state_models import SourceHashInventory
 
-_SUPPORTED_KICAD_VERSION = re.compile(r"10\.0\.\d+\Z")
 _RULE_ID: DesignLintRuleId = "schematic.erc_rule_ignored"
 
 
@@ -38,11 +36,14 @@ class SchematicErcIgnoredRuleEvidence:
     def __post_init__(self) -> None:
         if self.project_kind not in SCHEMATIC_ERC_SUPPORTED_PROJECT_KINDS:
             raise ValueError("Ignored schematic ERC rules require a schematic-capable project")
-        if _SUPPORTED_KICAD_VERSION.fullmatch(self.kicad_version) is None:
-            raise ValueError("Ignored schematic ERC rules require KiCad 10.0.x")
+        default_ignored_rules = ERC_DEFAULT_IGNORED_RULE_KEYS_BY_KICAD_VERSION.get(
+            self.kicad_version
+        )
+        if default_ignored_rules is None:
+            raise ValueError("Ignored schematic ERC rules require an audited KiCad 10.0 patch")
         if self.configured_rule.severity != "ignore":
             raise ValueError("Schematic ERC ignored-rule evidence must have Ignore severity")
-        if self.configured_rule.rule_key in ERC_DEFAULT_IGNORED_RULE_KEYS:
+        if self.configured_rule.rule_key in default_ignored_rules:
             raise ValueError("KiCad default-ignore ERC rules are not review candidates")
 
 
@@ -110,10 +111,11 @@ def source_bound_schematic_erc_ignored_rule_candidates(
     config: ProjectConfig,
     source_hashes: SourceHashInventory,
 ) -> tuple[Candidate, ...]:
-    """Review explicit KiCad 10.0.x ERC ignores other than documented defaults."""
+    """Review explicit ERC ignores on audited KiCad 10.0 patches."""
     if config.kind not in SCHEMATIC_ERC_SUPPORTED_PROJECT_KINDS:
         return ()
-    if _SUPPORTED_KICAD_VERSION.fullmatch(config.kicad_version) is None:
+    default_ignored_rules = ERC_DEFAULT_IGNORED_RULE_KEYS_BY_KICAD_VERSION.get(config.kicad_version)
+    if default_ignored_rules is None:
         return ()
 
     relative = str(config.project)
@@ -140,5 +142,5 @@ def source_bound_schematic_erc_ignored_rule_candidates(
             )
         )
         for rule in configured_rules
-        if rule.severity == "ignore" and rule.rule_key not in ERC_DEFAULT_IGNORED_RULE_KEYS
+        if rule.severity == "ignore" and rule.rule_key not in default_ignored_rules
     )

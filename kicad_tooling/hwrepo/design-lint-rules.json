@@ -10007,14 +10007,14 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "Exact source-hashed KiCad 10.0 .kicad_pro erc.rule_severities map, schema version, and configured patch version",
-      "predicate": "For a supported KiCad 10.0.x project with ERC settings schema 0, emit one review candidate for each rule explicitly set to Ignore except the four rule keys KiCad documents as default-ignore.",
+      "predicate": "For a project with ERC settings schema 0 and an audited exact KiCad 10.0 patch, emit one review candidate for each rule explicitly set to Ignore except the four rule keys documented as default-ignore in that patch.",
       "supported_kicad_versions": [
-        "KiCad 10.0.x .kicad_pro erc.rule_severities with schema 0; native suppression behavior is checked against the pinned 10.0.0 and 10.0.5 images"
+        "Exact KiCad 10.0.0, 10.0.1, 10.0.2, 10.0.4, 10.0.5, 10.0.6, 10.0.7, and 10.0.8 .kicad_pro erc.rule_severities with schema 0; exact patch-specific default-ignore maps; native suppression behavior is checked against each digest-pinned image"
       ],
       "limitations": [
         "A globally ignored rule may be intentional; this review prompt does not assert that a violation exists or that the project's severity decision is wrong.",
         "The check reads the project settings map and does not run ERC, identify affected schematic objects, inspect connectivity, infer power or ground requirements, or validate PCB copper.",
-        "Only KiCad 10.0.x schema 0 is in scope. Four rule keys with documented Ignore defaults are excluded; a project policy can set the rule to block or off, or ignore an exact finding."
+        "Only the eight audited KiCad 10.0 patches and ERC settings schema 0 are in scope. KiCad 10.0.3 and other unaudited patches are handled by schematic.erc_catalog_unverified when explicit overrides exist. A project policy can set this rule to block or off, or ignore an exact finding."
       ],
       "fault_fixtures": [
         "tests.test_schematic_erc_global_severity_review.test_ignored_pin_connectivity_rule_creates_source_bound_review_candidate",
@@ -10025,7 +10025,8 @@
         "KICAD_RUN_NATIVE_SCHEMATIC_ERC_GLOBAL_SEVERITY_FIXTURES"
       ],
       "valid_control_fixtures": [
-        "tests.test_schematic_erc_global_severity_review.test_kicad_default_ignores_and_active_rules_are_valid_controls",
+        "tests.test_schematic_erc_global_severity_review.test_kicad_default_ignores_are_valid_controls_for_each_audited_patch",
+        "tests.test_schematic_erc_global_severity_review.test_active_severity_settings_remain_valid_controls",
         "tests.test_schematic_erc_global_severity_review.test_non_schematic_kinds_and_unsupported_patch_versions_are_out_of_scope"
       ],
       "metamorphic_fixtures": [
@@ -10035,6 +10036,7 @@
         "kicad_tooling/hwrepo/schematic_erc_global_severity_review.py#source_bound_schematic_erc_ignored_rule_candidates",
         "kicad_tooling/hwrepo/schematic_erc_global_severity_review.py#project_schematic_erc_ignored_rule_evidence",
         "kicad_tooling/hwrepo/schematic_erc_project_settings.py#configured_schematic_erc_rule_severities",
+        "kicad_tooling/hwrepo/schematic_erc_project_settings.py#ERC_DEFAULT_IGNORED_RULE_KEYS_BY_KICAD_VERSION",
         "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
         "kicad_tooling/hwrepo/design_lint_candidate_inputs.py#DesignLintCandidateInputs",
         "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"

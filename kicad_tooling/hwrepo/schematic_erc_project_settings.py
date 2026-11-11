@@ -91,6 +91,18 @@ ERC_RULE_KEYS_BY_KICAD_VERSION: Mapping[str, frozenset[str]] = MappingProxyType(
         "10.0.8": _ERC_RULE_KEYS_KICAD_10_0_7,
     }
 )
+ERC_DEFAULT_IGNORED_RULE_KEYS_BY_KICAD_VERSION: Mapping[str, frozenset[str]] = MappingProxyType(
+    {
+        "10.0.0": ERC_DEFAULT_IGNORED_RULE_KEYS,
+        "10.0.1": ERC_DEFAULT_IGNORED_RULE_KEYS,
+        "10.0.2": ERC_DEFAULT_IGNORED_RULE_KEYS,
+        "10.0.4": ERC_DEFAULT_IGNORED_RULE_KEYS,
+        "10.0.5": ERC_DEFAULT_IGNORED_RULE_KEYS,
+        "10.0.6": ERC_DEFAULT_IGNORED_RULE_KEYS,
+        "10.0.7": ERC_DEFAULT_IGNORED_RULE_KEYS,
+        "10.0.8": ERC_DEFAULT_IGNORED_RULE_KEYS,
+    }
+)
 ERC_DEFAULT_WARNING_RULE_KEYS_BY_KICAD_VERSION: Mapping[str, frozenset[str]] = MappingProxyType(
     {
         "10.0.0": ERC_DEFAULT_WARNING_RULE_KEYS,

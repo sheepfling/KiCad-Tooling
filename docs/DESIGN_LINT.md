@@ -5480,18 +5480,23 @@ an exact-fingerprint ignore. Tooling-owned synthetic settings are in
 
 ## Review globally ignored schematic ERC rules
 
-`schematic.erc_rule_ignored` prompts for each KiCad 10.0.x project setting
+`schematic.erc_rule_ignored` prompts for each audited exact KiCad 10.0 project setting
 under `erc.rule_severities` that sets a rule to `ignore`, except the four rules
 KiCad itself documents with Ignore defaults: `footprint_filter`,
 `four_way_junction`, `simulation_model_issue`, and `single_global_label`. The
 finding names the exact rule key, hashes the `.kicad_pro` source, and records
-the configured KiCad patch version. KiCad 10.0 uses ERC settings schema 0;
-the severity map and default values are defined in the tagged
-[ERC settings source][kicad-10-erc-settings-source] and
-[ERC item definitions][kicad-10-erc-item-source]. The native fixture confirms
-that `pin_not_connected` disappears from the standard ERC report when set to
-Ignore and returns as an error when set back to Error in KiCad 10.0.0 and
-10.0.5.
+the configured KiCad patch version. The check supports exactly 10.0.0, 10.0.1,
+10.0.2, 10.0.4, 10.0.5, 10.0.6, 10.0.7, and 10.0.8. KiCad 10.0 uses ERC
+settings schema 0. Its patch-tagged settings sources define the severity map
+and show the four Ignore defaults for [10.0.0][kicad-erc-settings-100],
+[10.0.1][kicad-erc-settings-101], [10.0.2][kicad-erc-settings-102],
+[10.0.4][kicad-erc-settings-104], [10.0.5][kicad-erc-settings-105],
+[10.0.6][kicad-erc-settings-106], [10.0.7][kicad-erc-settings-107], and
+[10.0.8][kicad-erc-settings-108]. The native fixture confirms that
+`pin_not_connected` disappears from the standard ERC report when set to Ignore
+and returns as an error when set back to Error on every supported pinned image.
+KiCad 10.0.3 and other unaudited patches are left to
+`schematic.erc_catalog_unverified` when explicit severity overrides exist.
 
 This is a review prompt, not a defect claim. It does not run ERC, identify which
 objects are affected, infer which connector pins should share ground, or prove
@@ -5499,7 +5504,14 @@ schematic or PCB connectivity. The rule is configurable as `review`, `block`,
 or `off`, and supports exact-fingerprint ignores. Synthetic settings are in
 [`tests/fixtures/design_lint/schematic-erc-global-severity/`](../tests/fixtures/design_lint/schematic-erc-global-severity/README.md).
 
-[kicad-10-erc-item-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/eeschema/erc/erc_item.cpp
+[kicad-erc-settings-100]: https://gitlab.com/kicad/code/kicad/-/raw/10.0.0/eeschema/erc/erc_settings.cpp
+[kicad-erc-settings-101]: https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.1/eeschema/erc/erc_settings.cpp
+[kicad-erc-settings-102]: https://gitlab.com/kicad/code/kicad/-/raw/10.0.2/eeschema/erc/erc_settings.cpp
+[kicad-erc-settings-104]: https://gitlab.com/kicad/code/kicad/-/raw/10.0.4/eeschema/erc/erc_settings.cpp
+[kicad-erc-settings-105]: https://gitlab.com/kicad/code/kicad/-/raw/10.0.5/eeschema/erc/erc_settings.cpp
+[kicad-erc-settings-106]: https://gitlab.com/kicad/code/kicad/-/raw/10.0.6/eeschema/erc/erc_settings.cpp
+[kicad-erc-settings-107]: https://gitlab.com/kicad/code/kicad/-/raw/10.0.7/eeschema/erc/erc_settings.cpp
+[kicad-erc-settings-108]: https://gitlab.com/kicad/code/kicad/-/raw/10.0.8/eeschema/erc/erc_settings.cpp
 
 ## Review Error-default schematic ERC checks set to Warning
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from dataclasses import replace
 from pathlib import Path
@@ -10,6 +11,7 @@ from typing import cast
 
 import pytest
 
+from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
 from kicad_tooling.hwrepo.design_lint_component_coverage import ComponentMapCoverageInputs
 from kicad_tooling.hwrepo.design_lint_evaluation_types import DesignLintEvaluationRequest
 from kicad_tooling.hwrepo.design_lint_evaluator import evaluate_request
@@ -25,6 +27,7 @@ from kicad_tooling.hwrepo.schematic_erc_global_severity_review import (
     source_bound_schematic_erc_ignored_rule_candidates,
 )
 from kicad_tooling.hwrepo.schematic_erc_project_settings import (
+    ERC_DEFAULT_IGNORED_RULE_KEYS_BY_KICAD_VERSION,
     SchematicErcRuleSeverity,
     configured_schematic_erc_rule_severities,
 )
@@ -63,10 +66,11 @@ def _scan(root: Path, config: ProjectConfig, source_hashes: Mapping[str, str]):
     return source_bound_schematic_erc_ignored_rule_candidates(root, config, source_hashes)
 
 
+@pytest.mark.parametrize("version", tuple(ERC_DEFAULT_IGNORED_RULE_KEYS_BY_KICAD_VERSION))
 def test_ignored_pin_connectivity_rule_creates_source_bound_review_candidate(
-    tmp_path: Path,
+    tmp_path: Path, version: str
 ) -> None:
-    root, project, config, source_hashes = _project(tmp_path)
+    root, project, config, source_hashes = _project(tmp_path, kicad_version=version)
 
     candidates = _scan(root, config, source_hashes)
 
@@ -79,7 +83,7 @@ def test_ignored_pin_connectivity_rule_creates_source_bound_review_candidate(
     assert candidate.evidence == {
         "source_path": (PROJECT_RELATIVE,),
         "source_sha256": (digest(project),),
-        "kicad_version": ("10.0.5",),
+        "kicad_version": (version,),
         "erc_rule_key": ("pin_not_connected",),
         "configured_severity": ("ignore",),
     }
@@ -95,7 +99,27 @@ def test_candidate_fields_cannot_diverge_from_source_settings(tmp_path: Path) ->
         replace(candidate.source_evidence, configured_rule=SchematicErcRuleSeverity("x", "warning"))
 
 
-def test_kicad_default_ignores_and_active_rules_are_valid_controls(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("version", "rule_key"),
+    tuple(
+        (version, rule_key)
+        for version, rule_keys in ERC_DEFAULT_IGNORED_RULE_KEYS_BY_KICAD_VERSION.items()
+        for rule_key in sorted(rule_keys)
+    ),
+)
+def test_kicad_default_ignores_are_valid_controls_for_each_audited_patch(
+    tmp_path: Path, version: str, rule_key: str
+) -> None:
+    document = f'{{"erc":{{"rule_severities":{{"{rule_key}":"ignore"}}}}}}'
+    root, _, config, source_hashes = _project(tmp_path, kicad_version=version)
+    project = root / PROJECT_RELATIVE
+    project.write_text(document, encoding="utf-8")
+    source_hashes[PROJECT_RELATIVE] = digest(project)
+
+    assert _scan(root, config, source_hashes) == ()
+
+
+def test_active_severity_settings_remain_valid_controls(tmp_path: Path) -> None:
     root, _, config, source_hashes = _project(tmp_path, "control.kicad_pro")
 
     assert _scan(root, config, source_hashes) == ()
@@ -155,13 +179,35 @@ def test_non_schematic_kinds_and_unsupported_patch_versions_are_out_of_scope(
     root, _, config, source_hashes = _project(tmp_path)
     pcb_only = cast(ProjectConfig, SimpleNamespace(kind=ProjectKind.PCB_ONLY))
     assert _scan(root, pcb_only, source_hashes) == ()
-    for version in ("9.0.0", "10.1.0", "11.0.0"):
+    for version in ("9.0.0", "10.0.3", "10.0.9", "10.1.0", "11.0.0"):
         unsupported = cast(
             ProjectConfig,
             SimpleNamespace(kind=ProjectKind.PCB, project=PROJECT_RELATIVE, kicad_version=version),
         )
         assert _scan(root, unsupported, source_hashes) == ()
     assert config.kind is ProjectKind.PCB
+
+
+def test_default_ignore_catalog_is_exact_and_matches_rule_support() -> None:
+    expected_versions = {
+        "10.0.0",
+        "10.0.1",
+        "10.0.2",
+        "10.0.4",
+        "10.0.5",
+        "10.0.6",
+        "10.0.7",
+        "10.0.8",
+    }
+    (entry,) = rule_catalog(rule_id=RULE_ID).rules
+    catalog_versions = set(re.findall(r"\b10\.0\.\d+\b", entry.supported_kicad_versions[0]))
+
+    assert set(ERC_DEFAULT_IGNORED_RULE_KEYS_BY_KICAD_VERSION) == expected_versions
+    assert catalog_versions == expected_versions
+    assert all(
+        rule_keys == ERC_DEFAULT_IGNORED_RULE_KEYS_BY_KICAD_VERSION["10.0.0"]
+        for rule_keys in ERC_DEFAULT_IGNORED_RULE_KEYS_BY_KICAD_VERSION.values()
+    )
 
 
 def test_review_block_exact_ignore_and_off_policy_are_supported(tmp_path: Path) -> None:
