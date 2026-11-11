@@ -18,6 +18,7 @@ from scripts.lint_gate_scope import (
     LINT_AREAS,
     active_design_lint_rule_ids,
     configured_native_fixtures,
+    implementation_paths_by_rule,
     parse_tag_message,
     read_tag_scope,
     required_native_fixtures_by_rule,
@@ -248,6 +249,17 @@ def test_annotated_area_and_rule_tags_resolve_scope_and_write_github_action_file
         encoding="utf-8",
     )
     (repository / "source.txt").write_text("synthetic\n", encoding="utf-8")
+    typecheck_paths = {
+        "kicad_tooling/ci_typecheck.py",
+        "scripts/ci.py",
+        "scripts/lint_gate_scope.py",
+        *implementation_paths_by_rule()["power.mapped_sequence_dependency_mismatch"],
+        *implementation_paths_by_rule()["bus.serial_peer_reference_review"],
+    }
+    for relative_path in typecheck_paths:
+        target = repository / relative_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("# synthetic type-check target\n", encoding="utf-8")
     commands = (
         ("init", "-q"),
         ("config", "user.email", "lint-test@example.invalid"),
@@ -305,10 +317,20 @@ def test_annotated_area_and_rule_tags_resolve_scope_and_write_github_action_file
     )
     assert rule_scope.pytest_markexpr == expected_rule_markexpr
     assert rule_scope.native_fixtures == ("KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES",)
+    expected_typecheck_paths = (
+        "kicad_tooling/ci_typecheck.py",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py",
+        "kicad_tooling/hwrepo/power_sequences.py",
+        "scripts/ci.py",
+        "scripts/lint_gate_scope.py",
+    )
+    assert rule_scope.typecheck_paths == expected_typecheck_paths
     output.write_text("", encoding="utf-8")
     environment.write_text("", encoding="utf-8")
     write_github_scope(rule_scope)
-    assert output.read_text(encoding="utf-8") == (f"markexpr={expected_rule_markexpr}\n")
+    assert output.read_text(encoding="utf-8") == (
+        f"markexpr={expected_rule_markexpr}\ntypecheckpaths={','.join(expected_typecheck_paths)}\n"
+    )
     assert environment.read_text(encoding="utf-8") == (
         "KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES=1\n"
     )
