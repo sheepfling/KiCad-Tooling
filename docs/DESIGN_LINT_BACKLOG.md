@@ -781,19 +781,21 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest quality-gate progress (v0.5.3rc660):** The focused hosted acceptance
-  passed in GitHub run `42969938353`. Its selector ran 369 tests, deselected
-  7,979, and completed pytest in 112.56 seconds. Linux and Windows type checks,
-  wheel and source distribution checks, and the installed-wheel rehearsal
-  against a separate public-template checkout all passed. The exact native
-  KiCad fixture lane passed on the tooling-owned board; preview and package
-  release jobs were skipped by prerelease policy. The `rc657` selector-integrity
-  probe took 4.90 seconds after nested collection was bounded to representative
-  modules, compared with 26.55 seconds before that change. Earlier `rc652`
-  exposed a missing tag selector, `rc653` exposed Markdown table alignment,
-  and `rc654` exposed a stale catalog fixture reference plus a test-module size
-  violation; `rc655` passed the corrected gate.
-- **Latest feature work (LINT-391, localized alternate-plane evidence):** The
+- **Latest quality-gate progress (v0.5.3rc662):** The focused hosted acceptance
+  passed in GitHub run `42985527003`. Its selector ran 372 tests, deselected
+  8,012, and completed pytest in 140.65 seconds. Linux and Windows type checks,
+  wheel and source-distribution checks, and the installed-wheel rehearsal
+  against the separate public template and a relocated-layout copy all passed.
+  The exact native lane passed on digest-pinned KiCad 10.0.0 and 10.0.5. Preview
+  and package-release jobs were skipped by prerelease policy.
+- **Latest feature work (LINT-393, mapped supply-pin coverage):** The new
+  default-off `power.component_supply_range_pin_coverage` rule checks that
+  every native `power_in` pin on a component named in the reviewed supply-range
+  map has its own map entry. Missing or contradictory native coverage stays
+  visible as REVIEW; a complete map is quiet. The source-hashed KiCad
+  10.0.0/10.0.5 fault/control passed and CLI/MCP parity uses the shared
+  evaluator. No external project data was used.
+- **Earlier feature work (LINT-391, localized alternate-plane evidence):** The
   existing opt-in `pcb.alternate_reference_plane_run` finding now retains exact
   contiguous centerline intervals for each alternate filled-zone net and
   localizes their endpoints on the native track coordinates. Disjoint spans
@@ -23303,7 +23305,9 @@ acceptance threads while new lint features proceed:
   identity matching, and deterministic map ordering. CLI and MCP exercise the
   same typed evaluator. A source-hashed native fault/control schematic verifies
   both `power_in` pins on KiCad 10.0.0 and 10.0.5; the incomplete map reports
-  U1.2, and the complete map is quiet.
+  U1.2, and the complete map is quiet. Tagged acceptance `v0.5.3rc662` passed
+  in GitHub run `42985527003`: 372 tests passed, 8,012 were deselected, and the
+  hosted wheel and external-project checks passed.
 - **Selection:** Run `tests/test_component_supply_range_pin_coverage.py` and
   `tests/test_component_supply_voltage_range_parity.py` with:
 
