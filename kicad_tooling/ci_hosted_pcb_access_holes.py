@@ -11,11 +11,29 @@ from .hwrepo.pcb_test_access_models import RequiredTestAccess, TestAccessEndpoin
 HOLE_PROBE_EXPECTED_STATUSES = {
     "test-access/pcb-probe-envelope/drill-hole-boundary-control": "PASS",
     "test-access/pcb-probe-envelope/drill-hole-clearance-fault": "FAIL",
+    "test-access/pcb-probe-envelope/oblong-drill-boundary-control": "PASS",
+    "test-access/pcb-probe-envelope/oblong-drill-clearance-fault": "FAIL",
 }
 
 HOLE_PROBE_EXPECTED_OBSERVATIONS = {
     ("j36.1", "front"): ("pad:00000000-0000-0000-0000-0000000000a1", 500_001),
     ("j37.1", "front"): ("pad:00000000-0000-0000-0000-0000000000a2", 500_000),
+    ("j38.1", "front"): ("pad:00000000-0000-0000-0000-0000000000a3", 500_001),
+    ("j39.1", "front"): ("pad:00000000-0000-0000-0000-0000000000a4", 500_000),
+}
+
+_HOLE_PROBE_EXPECTED_GEOMETRY = {
+    ("j36.1", "front"): ("H1", (500_000, 500_000), "circle"),
+    ("j37.1", "front"): ("H2", (500_000, 500_000), "circle"),
+    ("j38.1", "front"): ("H3", (1_000_000, 500_000), "oval"),
+    ("j39.1", "front"): ("H4", (1_000_000, 500_000), "oval"),
+}
+
+_HOLE_PROBE_EXPECTED_TARGET_NETS = {
+    ("j36.1", "front"): "TARGET_HOLE_BOUNDARY",
+    ("j37.1", "front"): "TARGET_HOLE_FAULT",
+    ("j38.1", "front"): "TARGET_OBLONG_HOLE_BOUNDARY",
+    ("j39.1", "front"): "TARGET_OBLONG_HOLE_FAULT",
 }
 
 
@@ -56,6 +74,38 @@ def hole_probe_fixture_decisions(
                 ),
             ),
         ),
+        RequiredTestAccess(
+            mode="required",
+            id="oblong-drill-boundary-control",
+            basis="Synthetic plated slot meets the project-authored probe clearance exactly",
+            net="TARGET_OBLONG_HOLE_BOUNDARY",
+            endpoints=(
+                endpoint(
+                    "J38",
+                    "TARGET_OBLONG_HOLE_BOUNDARY",
+                    approach_side="front",
+                    tip_diameter_mm=0.8,
+                    clearance_mm=0.05,
+                    drill_hole_clearance_mm=0.100001,
+                ),
+            ),
+        ),
+        RequiredTestAccess(
+            mode="required",
+            id="oblong-drill-clearance-fault",
+            basis="Synthetic plated slot is one nanometer inside the project-authored clearance",
+            net="TARGET_OBLONG_HOLE_FAULT",
+            endpoints=(
+                endpoint(
+                    "J39",
+                    "TARGET_OBLONG_HOLE_FAULT",
+                    approach_side="front",
+                    tip_diameter_mm=0.8,
+                    clearance_mm=0.05,
+                    drill_hole_clearance_mm=0.100001,
+                ),
+            ),
+        ),
     )
 
 
@@ -63,25 +113,29 @@ def validate_hole_probe_fixture_observations(
     snapshot: PcbConnectivitySnapshot,
     observations: Mapping[tuple[str, str], PcbAccessProbeObservation],
 ) -> None:
-    """Require native IDs, NPTH geometry, via surface access, and exact distances."""
+    """Require native IDs, circular and slotted pad holes, via access, and distances."""
     holes = {item.id.casefold(): item for item in snapshot.drill_holes}
     for key, expected in HOLE_PROBE_EXPECTED_OBSERVATIONS.items():
         item = observations[key]
         observed = (item.hole_obstacle_id, item.hole_obstacle_distance_nm)
-        if observed != expected:
+        expected_net = _HOLE_PROBE_EXPECTED_TARGET_NETS[key]
+        if observed != expected or item.target_net != expected_net:
             raise ValueError(
                 f"Native drill-hole geometry for {key[0]} {key[1]} differs from its fixture: "
-                f"expected {expected}, found {observed}"
+                f"expected net {expected_net} and hole {expected}, "
+                f"found net {item.target_net} and hole {observed}"
             )
         identity, _distance_nm = expected
         hole = holes.get(identity.casefold())
+        reference, drill_size_nm, shape = _HOLE_PROBE_EXPECTED_GEOMETRY[key]
         if (
             hole is None
             or hole.kind != "pad"
-            or hole.footprint_reference != ("H1" if key[0] == "j36.1" else "H2")
-            or hole.drill_size_nm != (500_000, 500_000)
-            or hole.shape != "circle"
+            or hole.footprint_reference != reference
+            or hole.drill_size_nm != drill_size_nm
+            or hole.shape != shape
             or "front" not in hole.surfaces
+            or (shape == "oval" and "back" not in hole.surfaces)
         ):
             raise ValueError(f"Native drill-hole identity for {key[0]} has invalid source geometry")
 

@@ -109,9 +109,11 @@ def probe_access_snapshot(
     include_edge_inventory: bool = False,
     hole_obstacle_id: str | None = None,
     hole_obstacle_distance_nm: int | None = None,
+    hole_obstacle_shape: Literal["circle", "oval"] = "circle",
 ) -> PcbConnectivitySnapshot:
     hole_pads, hole_footprints, hole_inventory = drill_hole_fixture_rows(
-        hole_obstacle_id if schema_version == "22" else None
+        hole_obstacle_id if schema_version == "22" else None,
+        hole_obstacle_shape,
     )
     pads = (
         PcbPadConnectivityObservation(

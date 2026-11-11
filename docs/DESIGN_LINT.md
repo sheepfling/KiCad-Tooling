@@ -8700,8 +8700,11 @@ include front- and back-side one-nanometer-inside foreign-copper faults,
 exact-distance boundaries, a close same-net zone decoy, and the clearance hole
 around a target pad. Closer opposite-side zones verify layer filtering. Edge
 cases include an exact outer-board boundary control and a one-nanometer-inside
-internal-cutout fault. Drill-hole cases include a non-plated hole at the exact
-authored boundary and one opening one nanometer inside it. It checks
+internal-cutout fault. Drill-hole cases include circular non-plated openings
+at the exact authored boundary and one nanometer inside it, plus plated oblong
+1.0 by 0.5 mm slots with source-matched endpoint nets at the 500,001 nm
+boundary and 500,000 nm fault. The native snapshot must retain each slot's UUID,
+dimensions, oval shape, and front/back surface inventory. It checks
 front/back/either-side behavior, exact aperture and clearance boundaries,
 unsupported-shape reporting, expected faults, and repeatability across two
 native loads. It also checks a nearby footprint with no courtyard plus exact

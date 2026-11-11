@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from kicad_tooling.hwrepo.pcb_connectivity_holes import PcbDrillHoleObservation
 from kicad_tooling.hwrepo.pcb_connectivity_observations import (
     PcbFootprintPlacementObservation,
@@ -11,6 +13,7 @@ from kicad_tooling.hwrepo.pcb_connectivity_observations import (
 
 def drill_hole_fixture_rows(
     hole_id: str | None,
+    shape: Literal["circle", "oval"] = "circle",
 ) -> tuple[
     tuple[PcbPadConnectivityObservation, ...],
     tuple[PcbFootprintPlacementObservation, ...],
@@ -20,6 +23,7 @@ def drill_hole_fixture_rows(
     if hole_id is None:
         return (), (), ()
     pad_uuid = "00000000-0000-0000-0000-000000000088"
+    drill_size_nm = (400_000, 400_000) if shape == "circle" else (400_000, 200_000)
     return (
         (
             PcbPadConnectivityObservation(
@@ -54,8 +58,8 @@ def drill_hole_fixture_rows(
                 footprint_reference="H1",
                 footprint="Synthetic:MountingHole",
                 position_nm=(10_700_000, 10_000_000),
-                drill_size_nm=(400_000, 400_000),
-                shape="circle",
+                drill_size_nm=drill_size_nm,
+                shape=shape,
                 surfaces=("front", "back"),
             ),
         ),

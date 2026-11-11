@@ -47,17 +47,10 @@ def test_probe_envelope_fixture_uses_repeatable_source_bound_requests(
     assert len(captured) == 2
     assert captured[0][0].read_bytes() == captured[1][0].read_bytes()
     assert captured[0][1] == captured[1][1]
-    assert set(captured[0][1]) == {
-        ("J1.1", "front"),
-        ("J1.1", "back"),
-        ("J7.1", "front"),
-        ("J9.1", "front"),
-        ("J9.1", "back"),
-        ("J11.1", "front"),
-        ("J12.1", "front"),
-        ("J13.1", "front"),
-        ("J14.1", "front"),
-    }
+    assert {(endpoint.lower(), side) for endpoint, side in captured[0][1]} == set(
+        access_lane.expected_access_probe_pad_observations()
+    )
+    assert {("J38.1", "front"), ("J39.1", "front")} <= set(captured[0][1])
     result = next(
         json.loads(line)
         for line in log.events.read_text(encoding="utf-8").splitlines()

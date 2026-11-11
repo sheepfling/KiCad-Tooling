@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 import pytest
 from pydantic import ValidationError
 
@@ -18,11 +20,16 @@ HOLE_ID = "pad:00000000-0000-0000-0000-000000000088"
 
 
 @pytest.mark.parametrize(
-    ("distance_nm", "expected_status"),
-    ((500_000, "PASS"), (499_999, "FAIL")),
+    ("shape", "distance_nm", "expected_status"),
+    (
+        ("circle", 500_000, "PASS"),
+        ("circle", 499_999, "FAIL"),
+        ("oval", 500_000, "PASS"),
+        ("oval", 499_999, "FAIL"),
+    ),
 )
 def test_authored_hole_clearance_uses_inclusive_nanometer_boundary(
-    distance_nm: int, expected_status: str
+    shape: Literal["circle", "oval"], distance_nm: int, expected_status: str
 ) -> None:
     requirement = probe_access_requirement(
         approach_side="front",
@@ -35,10 +42,12 @@ def test_authored_hole_clearance_uses_inclusive_nanometer_boundary(
         schema_version="22",
         hole_obstacle_id=HOLE_ID,
         hole_obstacle_distance_nm=distance_nm,
+        hole_obstacle_shape=shape,
     )
 
     result = pcb_probe_envelope_checks(requirement, snapshot)[0]
 
+    assert snapshot.drill_holes[0].shape == shape
     assert result.status == expected_status
     assert "nearest fitted drill hole" in result.detail
 

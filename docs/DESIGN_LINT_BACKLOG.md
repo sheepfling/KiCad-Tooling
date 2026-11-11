@@ -779,16 +779,21 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest quality-gate progress (catalog-focused Pyright):** The last hosted
-  rule-tag run selected 349 tests, while its Linux and Windows package-wide
-  Pyright stages took about 291 seconds each. Rule-scoped prerelease tags now
-  derive Python targets from the active rule's cataloged implementation refs
-  and include the scope resolver and CI runner. Area tags and full acceptance
-  retain package-wide checks. Locally, the connector rule's five selected
-  modules passed Linux and Windows Pyright in 0.9 seconds each; the focused
-  selector passed 35 checks with 7 deselected, and both pinned native Docker
-  cases passed. Hosted tagged acceptance remains pending.
-- **Latest progress (LINT-365, named mapped signals on rail-like nets):** The
+- **Latest quality-gate progress (v0.5.3rc650):** Hosted acceptance passed in
+  GitHub run `42940844402`, including the rule-scoped gate and installed-wheel
+  playtest against a separate template checkout. The focused tag selection
+  passed 89 tests locally with both pinned native PCB images enabled. Ruff,
+  formatting, and full-project Pyright also passed. The preceding `rc649` run
+  identified missing files in a synthetic scoped-typecheck fixture; `rc650`
+  adds those files to the fixture and passes the same hosted gate.
+- **Latest progress (LINT-388, plated oblong drill coverage):** Extended the
+  LINT-387 native fixture with plated 1.0 by 0.5 mm slots. The source-matched
+  front-side observation records an oval drill and both exposed surfaces; a
+  500,001 nm measurement passes and a 500,000 nm measurement fails. The
+  repeated exact-version Docker lane passed on KiCad 10.0.0 and 10.0.5. This
+  closes a supported-geometry coverage gap without changing lint behavior or
+  default policy.
+- **Earlier progress (LINT-365, named mapped signals on rail-like nets):** The
   default-REVIEW `connector.mapped_interface_signal_on_named_rail` rule now
   uses a complete source-matched interface map for both generic and named
   native signal functions. A `PWM_SYNC` contact assigned to `GND` was a
@@ -796,7 +801,7 @@ standalone parity work when it closes a demonstrated feature regression.
   quiet control. CLI/MCP parity and repeated native exports on pinned KiCad
   10.0.0 and 10.0.5 pass. The map and rail-like label remain review clues, not
   proof of an electrical defect.
-- **Latest progress (LINT-367, mapped supply/signal shared net):**
+- **Earlier progress (LINT-367, mapped supply/signal shared net):**
   A new default-REVIEW connector heuristic now compares a complete current interface
   map with the native netlist and flags a mapped supply contact and signal
   contact on one exact connector net. The fault/control pair repeats through
@@ -804,14 +809,14 @@ standalone parity work when it closes a demonstrated feature regression.
   review clues only; intentional sharing remains valid and can be overridden
   by project policy. See the
   [fixture notes](../tests/fixtures/design_lint/mapped-supply-signal-share/README.md).
-- **Latest progress (LINT-368, mapped supply/return shared net):**
+- **Earlier progress (LINT-368, mapped supply/return shared net):**
   Complete source-matched connector roles now identify supply and return
   contacts assigned to one exact, unclassified native net for default-REVIEW.
   The test-first baseline missed this case. Generic source-hashed fault/control
   schematics pass pinned KiCad 10.0.0 and 10.0.5 Docker exports; intentional
   topology remains reviewable through project policy. See the
   [fixture notes](../tests/fixtures/design_lint/mapped-supply-return-share/README.md).
-- **Latest progress (LINT-369, mapped supply/shield shared net):**
+- **Earlier progress (LINT-369, mapped supply/shield shared net):**
   Source-matched supply and shield contacts assigned to one exact native net
   now request default-REVIEW, including unclassified net labels. This is a
   heuristic prompt: shield bonding or bias may be intentional. Complete current
@@ -819,13 +824,13 @@ standalone parity work when it closes a demonstrated feature regression.
   incomplete, and digestless cases stay quiet. Generic source-hashed native
   connector fixtures exercise this topology on pinned KiCad 10.0.0 and 10.0.5
   Docker exports.
-- **Latest progress (LINT-370, mapped return/shield shared net):**
+- **Earlier progress (LINT-370, mapped return/shield shared net):**
   A complete, current connector map now prompts REVIEW when mapped return and
   shield contacts share one exact native net, including unclassified labels.
   This makes intentional chassis bonding explicit for review while leaving
   DNP, open, ambiguous, stale, and incomplete mappings out of scope. The rule
   reuses the typed source-evidence path and exact native fixture lane.
-- **Latest progress (LINT-371, same-domain supply pins split within one connector):**
+- **Earlier progress (LINT-371, same-domain supply pins split within one connector):**
   A complete, source-matched map now prompts REVIEW when two or more fitted
   supply contacts on one connector share the same exact authored
   `voltage_domain` but have distinct native net assignments. The baseline was
@@ -835,7 +840,7 @@ standalone parity work when it closes a demonstrated feature regression.
   the split. Existing synthetic connector fault/control schematics are
   re-exported on exact KiCad 10.0.0 and 10.0.5 Docker images with the authored
   roles changed to two supplies; no board or project source was added.
-- **Latest progress (LINT-364, named mapped signal opens):** The baseline
+- **Earlier progress (LINT-364, named mapped signal opens):** The baseline
   returned no finding for a named `PWM_SYNC` contact with a complete,
   source-matched signal map and no native net assignment. The mapped-signal
   review now covers named as well as generic pin functions, while retaining
@@ -844,7 +849,7 @@ standalone parity work when it closes a demonstrated feature regression.
   tooling-owned named-signal fault and assigned control export repeatably on
   pinned KiCad 10.0.0 and 10.0.5 Docker images. This remains a configurable
   review prompt and does not establish that the signal must connect.
-- **Latest progress (LINT-358, deterministic component-value syntax):** A
+- **Earlier progress (LINT-358, deterministic component-value syntax):** A
   pinned cohort release documents support for simulator-style component-value
   spellings and deliberately leaves ambiguous comma forms uninterpreted. The
   local bounded parser had missed unambiguous decimal-comma and grouped values,
@@ -853,7 +858,7 @@ standalone parity work when it closes a demonstrated feature regression.
   resistor checks, with ambiguous separators rejected. Tooling-owned fault and
   valid-control schematics exercise native KiCad exports on the existing
   digest-pinned lane; no cohort code or board data was imported.
-- **Latest progress (LINT-372, local acceptance):** Added the default-REVIEW
+- **Earlier progress (LINT-372, local acceptance):** Added the default-REVIEW
   `connector.mapped_same_domain_return_split_nets` heuristic. Its test-first
   baseline showed that same-domain return contacts assigned to separate nets
   had no existing finding. Synthetic split/common-net controls, domain and
@@ -865,7 +870,7 @@ standalone parity work when it closes a demonstrated feature regression.
   Windows Pyright, wheel/sdist builds, installed-wheel origin/version checks,
   and the separate public-template playtest. No product-board source or
   cohort fixture was imported.
-- **Latest progress (LINT-357, I2C explicit no-connect control):** A cohort
+- **Earlier progress (LINT-357, I2C explicit no-connect control):** A cohort
   false-positive report motivated a focused counterexample for
   `bus.i2c_missing_pullup`. Native exports must keep an SDA or SCL pin marked
   no-connect out of the assigned bus pair, while the both-assigned control
@@ -875,14 +880,14 @@ standalone parity work when it closes a demonstrated feature regression.
   rule-scoped package acceptance passed 388 tests with 7,685 deselected. This
   preserves an existing applicability boundary; it does not add a new
   electrical requirement.
-- **Latest progress (LINT-356, missing connector-return native coverage):** The
+- **Earlier progress (LINT-356, missing connector-return native coverage):** The
   default-REVIEW `connector.no_connected_return` rule now requires a focused
   exact-version native lane in rule-scoped acceptance. A numeric-pin fault
   prompts for missing return-role review on J1–J4; a common `VSSA` control with
   explicit native `GND` pin functions stays clear. This closes an acceptance
   selection gap; it does not claim that every connector requires a local return
   or that separate returns should be joined.
-- **Latest progress (LINT-080 v91, SWD determinism gate):** The complete
+- **Earlier progress (LINT-080 v91, SWD determinism gate):** The complete
   SWDIO/SWCLK same-net fault and distinct-net control reports now run across
   three independently hash-seeded Python processes. The report hashes derive
   from the typed netlists, and the exact U1.5/U1.6 pins and `SWD_SHARED` net
@@ -894,7 +899,7 @@ standalone parity work when it closes a demonstrated feature regression.
   Docker fixtures passed 2. Scoped package acceptance passed formatting,
   code and architecture lint, Markdown, focused pytest, Linux and Windows
   typing, wheel/sdist, installed-wheel, and public-template playtest stages.
-- **Latest progress (LINT-354, local quality gate):** The LINT-353 hosted
+- **Earlier progress (LINT-354, local quality gate):** The LINT-353 hosted
   attempt exposed a fixture-registration gap: the tag resolver must confirm a
   native fixture switch is enabled in the full package-acceptance job. The
   resolver now reads that job specifically, and a cross-rule gate checks that
@@ -906,7 +911,7 @@ standalone parity work when it closes a demonstrated feature regression.
   wheel/sdist builds, installed-wheel validation, and the public-template
   playtest. This prevents a coverage-wiring gap; it does not add electrical
   fault detection.
-- **Latest progress (LINT-353, hosted acceptance):** Added the default-REVIEW
+- **Earlier progress (LINT-353, hosted acceptance):** Added the default-REVIEW
   `bus.i2s_clock_data_same_net` cue for a fitted U/IC with one bounded I2S
   bit-clock pin and a native serial-data pin on the same exact net. Generic SPI
   `SCK`/`SDO` names alone do not qualify. Synthetic fault/control, policy,
@@ -922,7 +927,7 @@ standalone parity work when it closes a demonstrated feature regression.
   absent from full acceptance; the switch is now declared in the full workflow.
   Acceptance-record tag `v0.5.3rc598` also passed in GitHub run
   `42672552806`. Field precision and reviewer value remain unmeasured.
-- **Latest progress (LINT-352, hosted native acceptance):** The shared
+- **Earlier progress (LINT-352, hosted native acceptance):** The shared
   digest-pinned I2C address-map lane now covers
   `bus.i2c_unmapped_responder`. On the same native control schematic, the map
   listing only U1 produces one rule review for U2; the complete U1/U2 map
@@ -930,7 +935,7 @@ standalone parity work when it closes a demonstrated feature regression.
   fixtures pass locally. Tagged acceptance passed in GitHub Actions run
   `42658760628` from `v0.5.3rc594`, including the focused gate and external
   template playtest.
-- **Latest progress (LINT-351, hosted native acceptance):** Extended the
+- **Earlier progress (LINT-351, hosted native acceptance):** Extended the
   tooling-owned I2C address-map lane to cover `bus.i2c_address_mismatch` with
   real KiCad 10.0.0 and 10.0.5 exports. The control source assigns U2 A0 to
   `+3V3`; an authored map expecting `0x50` must prompt for observed `0x51`,
@@ -939,7 +944,7 @@ standalone parity work when it closes a demonstrated feature regression.
   GitHub Actions run `42647421033`.
   The map is explicit project intent; no address is inferred from a reference
   or symbol name.
-- **Latest progress (LINT-350, hosted acceptance):** Added exact native
+- **Earlier progress (LINT-350, hosted acceptance):** Added exact native
   KiCad source-to-netlist fault/control coverage to the existing mapped
   `bus.i2c_address_collision` review heuristic. The fault resolves two fitted
   synthetic responders to `0x50`; the control resolves them to `0x50` and
@@ -954,7 +959,7 @@ standalone parity work when it closes a demonstrated feature regression.
   verification, and external-template playtest. The authored address map
   remains the requirement; native role names or similar nets do not establish
   a collision by themselves.
-- **Latest progress (LINT-349, hosted acceptance):** Added the default-REVIEW
+- **Earlier progress (LINT-349, hosted acceptance):** Added the default-REVIEW
   `bus.i2s_clock_frame_same_net` heuristic for a fitted U/IC with one bounded
   bit-clock pin and one word-select/frame-clock pin on the same exact
   schematic net. Synthetic controls cover distinct nets, aliases, DNP,
@@ -23057,6 +23062,36 @@ acceptance threads while new lint features proceed:
   `tests/test_test_access_probe_architecture.py`,
   `tests/test_design_lint_architecture_pcb_connectivity.py`,
   `tests/test_pcb_connectivity_snapshot_integrity.py`, and
+  `tests/test_pcb_access_native_fixture_lane.py` with
+  `design_lint and pcb_lint`. The native lane uses
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`.
+
+#### LINT-388 — Validate plated oblong drill-clearance evidence
+
+- **Status:** Implemented as native-fixture coverage for LINT-387; the
+  deterministic clearance predicate and project policy are unchanged.
+- **Priority:** P1 verification completeness for the supported native drill
+  shape inventory.
+- **Gap:** LINT-387's production adapter recognizes oblong drills and captures
+  each pad opening's outer-surface availability, but its original native
+  regression asserted only circular non-plated holes. A wrong slot orientation,
+  distance, or plated-pad surface inventory could therefore pass its gate.
+- **Fixture:** Tooling-owned plated through-hole slots use a 1.0 by 0.5 mm
+  oblong drill. The required front-side drill observation names the native pad
+  UUID, exact footprint reference, size, oval shape, and both outer surfaces.
+  Source-matched endpoint/control and endpoint/fault nets prevent a net mismatch
+  from masquerading as a clearance failure. Native distances are 500,001 nm at
+  the inclusive control boundary and 500,000 nm for the one-nanometer-inside
+  fault.
+- **Validation:** Both source-hashed board exports repeat on digest-pinned
+  KiCad 10.0.0 and 10.0.5. The separate synthetic service test covers circular
+  and oval measured-distance boundaries. No project board, cohort fixture, or
+  external proprietary source is used.
+- **Selection:** Run `tests/test_test_access_probe_holes.py`,
+  `tests/test_test_access_probe_architecture.py`,
+  `tests/test_design_lint_architecture_pcb_connectivity.py`,
+  `tests/test_pcb_connectivity_snapshot_integrity.py`,
+  `tests/test_pcb_access_fixture_lane.py`, and
   `tests/test_pcb_access_native_fixture_lane.py` with
   `design_lint and pcb_lint`. The native lane uses
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`.

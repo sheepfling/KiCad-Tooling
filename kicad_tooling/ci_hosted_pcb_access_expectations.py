@@ -229,6 +229,22 @@ _ACCESS_PROBE_EXPECTED_PAD_OBSERVATIONS = {
         "circle",
         1_000_000,
     ),
+    ("j38.1", "front"): (
+        "J39.1",
+        "TARGET_OBLONG_HOLE_FAULT",
+        17_400_002,
+        True,
+        "circle",
+        1_200_000,
+    ),
+    ("j39.1", "front"): (
+        "J38.1",
+        "TARGET_OBLONG_HOLE_BOUNDARY",
+        17_400_002,
+        True,
+        "circle",
+        1_200_000,
+    ),
 }
 
 _EXPECTED_COURTYARDS = {

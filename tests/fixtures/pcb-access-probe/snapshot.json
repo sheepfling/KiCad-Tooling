@@ -1,40 +1,3544 @@
 {
-  "schema_version": "10",
-  "board_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-  "kicad_version": "10.0.0",
-  "image": "fixture.invalid/kicad@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-  "probe_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-  "zones_refilled": true,
-  "pads": [
-    {"pad": "J1.1", "net": "TARGET_ACCESS", "footprint": "Synthetic:AccessTarget", "dnp": false, "connected_pads": ["J1.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
-    {"pad": "J2.1", "net": "TARGET_ACCESS", "footprint": "Synthetic:AccessNeighbor", "dnp": false, "connected_pads": ["J2.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
-    {"pad": "J3.1", "net": "FOREIGN_DNP", "footprint": "Synthetic:AccessNeighbor", "dnp": true, "connected_pads": ["J3.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
-    {"pad": "J4.1", "net": "FOREIGN_FRONT", "footprint": "Synthetic:AccessNeighbor", "dnp": false, "connected_pads": ["J4.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
-    {"pad": "J5.1", "net": "FOREIGN_BACK", "footprint": "Synthetic:AccessNeighbor", "dnp": false, "connected_pads": ["J5.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
-    {"pad": "J7.1", "net": "TARGET_NO_NET_NEIGHBOR", "footprint": "Synthetic:AccessTarget", "dnp": false, "connected_pads": ["J7.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
-    {"pad": "J8.1", "net": null, "footprint": "Synthetic:AccessNeighbor", "dnp": false, "connected_pads": ["J8.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
-    {"pad": "J9.1", "net": "TARGET_FRONT_ONLY", "footprint": "Synthetic:AccessTarget", "dnp": false, "connected_pads": ["J9.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
-    {"pad": "J10.1", "net": "FOREIGN_FRONT_ONLY", "footprint": "Synthetic:AccessNeighbor", "dnp": false, "connected_pads": ["J10.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
-    {"pad": "J11.1", "net": "TARGET_APERTURE_SMALL", "footprint": "Synthetic:AccessTarget", "dnp": false, "connected_pads": ["J11.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
-    {"pad": "J12.1", "net": "TARGET_APERTURE_BOUNDARY", "footprint": "Synthetic:AccessTarget", "dnp": false, "connected_pads": ["J12.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
-    {"pad": "J13.1", "net": "TARGET_APERTURE_RECT", "footprint": "Synthetic:AccessTarget", "dnp": false, "connected_pads": ["J13.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
-    {"pad": "J14.1", "net": "TARGET_APERTURE_DRILLED", "footprint": "Synthetic:AccessTarget", "dnp": false, "connected_pads": ["J14.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]}
-  ],
-  "net_ties": [],
-  "zones": [],
-  "vias": [],
-  "tracks": [],
-  "copper_layers": ["F.Cu", "B.Cu"],
   "access_probe_observations": [
-    {"endpoint": "J1.1", "side": "front", "target_net": "TARGET_ACCESS", "target_exposed": true, "obstacle": "J4.1", "obstacle_net": "FOREIGN_FRONT", "distance_nm": 400000, "target_aperture_shape": "circle", "target_aperture_diameter_nm": 1200000},
-    {"endpoint": "J1.1", "side": "back", "target_net": "TARGET_ACCESS", "target_exposed": true, "obstacle": "J5.1", "obstacle_net": "FOREIGN_BACK", "distance_nm": 800000, "target_aperture_shape": "circle", "target_aperture_diameter_nm": 1200000},
-    {"endpoint": "J7.1", "side": "front", "target_net": "TARGET_NO_NET_NEIGHBOR", "target_exposed": true, "obstacle": "J8.1", "obstacle_net": null, "distance_nm": 400000, "target_aperture_shape": "circle", "target_aperture_diameter_nm": 800000},
-    {"endpoint": "J9.1", "side": "front", "target_net": "TARGET_FRONT_ONLY", "target_exposed": true, "obstacle": "J10.1", "obstacle_net": "FOREIGN_FRONT_ONLY", "distance_nm": 400000, "target_aperture_shape": "circle", "target_aperture_diameter_nm": 300000},
-    {"endpoint": "J9.1", "side": "back", "target_net": "TARGET_FRONT_ONLY", "target_exposed": false, "obstacle": null, "obstacle_net": null, "distance_nm": null, "target_aperture_shape": null, "target_aperture_diameter_nm": null},
-    {"endpoint": "J11.1", "side": "front", "target_net": "TARGET_APERTURE_SMALL", "target_exposed": true, "obstacle": "J12.1", "obstacle_net": "TARGET_APERTURE_BOUNDARY", "distance_nm": 9500001, "target_aperture_shape": "circle", "target_aperture_diameter_nm": 400000},
-    {"endpoint": "J12.1", "side": "front", "target_net": "TARGET_APERTURE_BOUNDARY", "target_exposed": true, "obstacle": "J13.1", "obstacle_net": "TARGET_APERTURE_RECT", "distance_nm": 9500000, "target_aperture_shape": "circle", "target_aperture_diameter_nm": 800000},
-    {"endpoint": "J13.1", "side": "front", "target_net": "TARGET_APERTURE_RECT", "target_exposed": true, "obstacle": "J12.1", "obstacle_net": "TARGET_APERTURE_BOUNDARY", "distance_nm": 9500001, "target_aperture_shape": "unsupported", "target_aperture_diameter_nm": null},
-    {"endpoint": "J14.1", "side": "front", "target_net": "TARGET_APERTURE_DRILLED", "target_exposed": true, "obstacle": "J13.1", "obstacle_net": "TARGET_APERTURE_RECT", "distance_nm": 9500000, "target_aperture_shape": "unsupported", "target_aperture_diameter_nm": null}
+    {
+      "courtyard_distance_nm": 125105000,
+      "courtyard_obstacle": "U3",
+      "distance_nm": 800000,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J1.1",
+      "hole_obstacle_distance_nm": 74800001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a0",
+      "obstacle": "J5.1",
+      "obstacle_net": "FOREIGN_BACK",
+      "side": "back",
+      "target_aperture_diameter_nm": 1200000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_ACCESS",
+      "track_obstacle_distance_nm": 255050000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "TARGET_TRACK_SAME_NET",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000042",
+      "unmeasured_courtyard_distance_nm": 650000,
+      "unmeasured_courtyard_footprint": "J5",
+      "via_obstacle_distance_nm": 165400001,
+      "via_obstacle_id": "e0ca6df862bb100a6e377a5c94daa80c2dab1c5dcde2fce6c6e0700e33b962e2",
+      "via_obstacle_net": "FOREIGN_VIA_BACK",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 295300000,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "B.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_OPPOSITE_BACK",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000056"
+    },
+    {
+      "courtyard_distance_nm": 115400000,
+      "courtyard_obstacle": "U1",
+      "distance_nm": 400000,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J1.1",
+      "hole_obstacle_distance_nm": 74800001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a0",
+      "obstacle": "J4.1",
+      "obstacle_net": "FOREIGN_FRONT",
+      "side": "front",
+      "target_aperture_diameter_nm": 1200000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_ACCESS",
+      "track_obstacle_distance_nm": 175400000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "FOREIGN_TRACK_FAULT",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000040",
+      "unmeasured_courtyard_distance_nm": 0,
+      "unmeasured_courtyard_footprint": "J2",
+      "via_obstacle_distance_nm": 135400000,
+      "via_obstacle_id": "267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 295400082,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": 70400000,
+      "courtyard_obstacle": "U1",
+      "distance_nm": 9500001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J11.1",
+      "hole_obstacle_distance_nm": 29800001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a0",
+      "obstacle": "J12.1",
+      "obstacle_net": "TARGET_APERTURE_BOUNDARY",
+      "side": "front",
+      "target_aperture_diameter_nm": 400000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_APERTURE_SMALL",
+      "track_obstacle_distance_nm": 130400000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "FOREIGN_TRACK_FAULT",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000040",
+      "unmeasured_courtyard_distance_nm": 9500000,
+      "unmeasured_courtyard_footprint": "J12",
+      "via_obstacle_distance_nm": 90400000,
+      "via_obstacle_id": "267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 250400097,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": 60400000,
+      "courtyard_obstacle": "U1",
+      "distance_nm": 9400000,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J12.1",
+      "hole_obstacle_distance_nm": 19800001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a0",
+      "obstacle": "J13.1",
+      "obstacle_net": "TARGET_APERTURE_RECT",
+      "side": "front",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_APERTURE_BOUNDARY",
+      "track_obstacle_distance_nm": 120400000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "FOREIGN_TRACK_FAULT",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000040",
+      "unmeasured_courtyard_distance_nm": 9400000,
+      "unmeasured_courtyard_footprint": "J13",
+      "via_obstacle_distance_nm": 80400000,
+      "via_obstacle_id": "267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 240400101,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": 50400000,
+      "courtyard_obstacle": "U1",
+      "distance_nm": 9500001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J13.1",
+      "hole_obstacle_distance_nm": 9800001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a0",
+      "obstacle": "J12.1",
+      "obstacle_net": "TARGET_APERTURE_BOUNDARY",
+      "side": "front",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "rectangle",
+      "target_exposed": true,
+      "target_net": "TARGET_APERTURE_RECT",
+      "track_obstacle_distance_nm": 110400000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "FOREIGN_TRACK_FAULT",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000040",
+      "unmeasured_courtyard_distance_nm": 9500000,
+      "unmeasured_courtyard_footprint": "J12",
+      "via_obstacle_distance_nm": 70400000,
+      "via_obstacle_id": "267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 230400106,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": 40400000,
+      "courtyard_obstacle": "U1",
+      "distance_nm": 9400000,
+      "edge_obstacle_distance_nm": 4974999,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J14.1",
+      "hole_obstacle_distance_nm": 60550000,
+      "hole_obstacle_id": "via:267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "obstacle": "J13.1",
+      "obstacle_net": "TARGET_APERTURE_RECT",
+      "side": "front",
+      "target_aperture_diameter_nm": null,
+      "target_aperture_shape": "unsupported",
+      "target_exposed": true,
+      "target_net": "TARGET_APERTURE_DRILLED",
+      "track_obstacle_distance_nm": 100400000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "FOREIGN_TRACK_FAULT",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000040",
+      "unmeasured_courtyard_distance_nm": 9400000,
+      "unmeasured_courtyard_footprint": "J13",
+      "via_obstacle_distance_nm": 60400000,
+      "via_obstacle_id": "267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 220400111,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": 30400000,
+      "courtyard_obstacle": "U1",
+      "distance_nm": 9400001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J15.1",
+      "hole_obstacle_distance_nm": 9800001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a0",
+      "obstacle": "J16.1",
+      "obstacle_net": "TARGET_APERTURE_OVAL_BOUNDARY",
+      "side": "front",
+      "target_aperture_diameter_nm": 600000,
+      "target_aperture_shape": "oval",
+      "target_exposed": true,
+      "target_net": "TARGET_APERTURE_OVAL_SMALL",
+      "track_obstacle_distance_nm": 90400000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "FOREIGN_TRACK_FAULT",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000040",
+      "unmeasured_courtyard_distance_nm": 9400000,
+      "unmeasured_courtyard_footprint": "J16",
+      "via_obstacle_distance_nm": 50400000,
+      "via_obstacle_id": "267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 210400116,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": 20400000,
+      "courtyard_obstacle": "U1",
+      "distance_nm": 9400001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J16.1",
+      "hole_obstacle_distance_nm": 19800001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a0",
+      "obstacle": "J15.1",
+      "obstacle_net": "TARGET_APERTURE_OVAL_SMALL",
+      "side": "front",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "oval",
+      "target_exposed": true,
+      "target_net": "TARGET_APERTURE_OVAL_BOUNDARY",
+      "track_obstacle_distance_nm": 80400000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "FOREIGN_TRACK_FAULT",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000040",
+      "unmeasured_courtyard_distance_nm": 9400000,
+      "unmeasured_courtyard_footprint": "J15",
+      "via_obstacle_distance_nm": 40400000,
+      "via_obstacle_id": "267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 200400122,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": 10400000,
+      "courtyard_obstacle": "U1",
+      "distance_nm": 9400001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J17.1",
+      "hole_obstacle_distance_nm": 29800001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a0",
+      "obstacle": "J16.1",
+      "obstacle_net": "TARGET_APERTURE_OVAL_BOUNDARY",
+      "side": "front",
+      "target_aperture_diameter_nm": 600000,
+      "target_aperture_shape": "roundrect",
+      "target_exposed": true,
+      "target_net": "TARGET_APERTURE_ROUNDRECT_SMALL",
+      "track_obstacle_distance_nm": 70400000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "FOREIGN_TRACK_FAULT",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000040",
+      "unmeasured_courtyard_distance_nm": 9400000,
+      "unmeasured_courtyard_footprint": "J16",
+      "via_obstacle_distance_nm": 30400000,
+      "via_obstacle_id": "267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 190400128,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": 400000,
+      "courtyard_obstacle": "U1",
+      "distance_nm": 9500001,
+      "edge_obstacle_distance_nm": 4974999,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000060",
+      "endpoint": "J18.1",
+      "hole_obstacle_distance_nm": 20550000,
+      "hole_obstacle_id": "via:267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "obstacle": "J19.1",
+      "obstacle_net": "TARGET_COURTYARD_SMALL",
+      "side": "front",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "roundrect",
+      "target_exposed": true,
+      "target_net": "TARGET_APERTURE_ROUNDRECT_BOUNDARY",
+      "track_obstacle_distance_nm": 60400000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "FOREIGN_TRACK_FAULT",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000040",
+      "unmeasured_courtyard_distance_nm": 9400000,
+      "unmeasured_courtyard_footprint": "J17",
+      "via_obstacle_distance_nm": 20400000,
+      "via_obstacle_id": "267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 180400135,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": 399999,
+      "courtyard_obstacle": "U2",
+      "distance_nm": 9600000,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J19.1",
+      "hole_obstacle_distance_nm": 10550000,
+      "hole_obstacle_id": "via:267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "obstacle": "J18.1",
+      "obstacle_net": "TARGET_APERTURE_ROUNDRECT_BOUNDARY",
+      "side": "front",
+      "target_aperture_diameter_nm": 1000000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_COURTYARD_SMALL",
+      "track_obstacle_distance_nm": 50400000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "FOREIGN_TRACK_FAULT",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000040",
+      "unmeasured_courtyard_distance_nm": 9400000,
+      "unmeasured_courtyard_footprint": "J18",
+      "via_obstacle_distance_nm": 10400000,
+      "via_obstacle_id": "267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 170400143,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": 9299999,
+      "courtyard_obstacle": "U2",
+      "distance_nm": 9500001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J20.1",
+      "hole_obstacle_distance_nm": 550000,
+      "hole_obstacle_id": "via:267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "obstacle": "J19.1",
+      "obstacle_net": "TARGET_COURTYARD_SMALL",
+      "side": "front",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_VIA_FAULT",
+      "track_obstacle_distance_nm": 40400000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "FOREIGN_TRACK_FAULT",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000040",
+      "unmeasured_courtyard_distance_nm": 9500000,
+      "unmeasured_courtyard_footprint": "J19",
+      "via_obstacle_distance_nm": 400000,
+      "via_obstacle_id": "267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 160400152,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": 19299999,
+      "courtyard_obstacle": "U2",
+      "distance_nm": 9750001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J21.1",
+      "hole_obstacle_distance_nm": 400001,
+      "hole_obstacle_id": "via:465c8ccd0ea9f72bee8b98c444058f2aadf7f83605a407b48b46faa50ee24dd3",
+      "obstacle": "J20.1",
+      "obstacle_net": "TARGET_VIA_FAULT",
+      "side": "front",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_VIA_BOUNDARY",
+      "track_obstacle_distance_nm": 30400000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "FOREIGN_TRACK_FAULT",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000040",
+      "unmeasured_courtyard_distance_nm": 9750000,
+      "unmeasured_courtyard_footprint": "J20",
+      "via_obstacle_distance_nm": 400000,
+      "via_obstacle_id": "2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 150400162,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": 29299999,
+      "courtyard_obstacle": "U2",
+      "distance_nm": 9750001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J22.1",
+      "hole_obstacle_distance_nm": 9150002,
+      "hole_obstacle_id": "via:2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "obstacle": "J21.1",
+      "obstacle_net": "TARGET_VIA_BOUNDARY",
+      "side": "front",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_TENTED_VIA",
+      "track_obstacle_distance_nm": 20400000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "FOREIGN_TRACK_FAULT",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000040",
+      "unmeasured_courtyard_distance_nm": 9750000,
+      "unmeasured_courtyard_footprint": "J21",
+      "via_obstacle_distance_nm": 9000002,
+      "via_obstacle_id": "2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 140400174,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": 39305000,
+      "courtyard_obstacle": "U3",
+      "distance_nm": 89500001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J23.1",
+      "hole_obstacle_distance_nm": 550001,
+      "hole_obstacle_id": "via:e0ca6df862bb100a6e377a5c94daa80c2dab1c5dcde2fce6c6e0700e33b962e2",
+      "obstacle": "J14.1",
+      "obstacle_net": "TARGET_APERTURE_DRILLED",
+      "side": "back",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_BACK_VIA",
+      "track_obstacle_distance_nm": 90050000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "TARGET_TRACK_SAME_NET",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000042",
+      "unmeasured_courtyard_distance_nm": 89750000,
+      "unmeasured_courtyard_footprint": "J26",
+      "via_obstacle_distance_nm": 400001,
+      "via_obstacle_id": "e0ca6df862bb100a6e377a5c94daa80c2dab1c5dcde2fce6c6e0700e33b962e2",
+      "via_obstacle_net": "FOREIGN_VIA_BACK",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 130300000,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "B.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_OPPOSITE_BACK",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000056"
+    },
+    {
+      "courtyard_distance_nm": 49299999,
+      "courtyard_obstacle": "U2",
+      "distance_nm": 9750001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J24.1",
+      "hole_obstacle_distance_nm": 29150002,
+      "hole_obstacle_id": "via:2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "obstacle": "J25.1",
+      "obstacle_net": "TARGET_TRACK_BOUNDARY",
+      "side": "front",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_TRACK_FAULT",
+      "track_obstacle_distance_nm": 400000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "FOREIGN_TRACK_FAULT",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000040",
+      "unmeasured_courtyard_distance_nm": 9750000,
+      "unmeasured_courtyard_footprint": "J25",
+      "via_obstacle_distance_nm": 29000002,
+      "via_obstacle_id": "2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 120400203,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": 59299999,
+      "courtyard_obstacle": "U2",
+      "distance_nm": 9750001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J25.1",
+      "hole_obstacle_distance_nm": 39150002,
+      "hole_obstacle_id": "via:2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "obstacle": "J24.1",
+      "obstacle_net": "TARGET_TRACK_FAULT",
+      "side": "front",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_TRACK_BOUNDARY",
+      "track_obstacle_distance_nm": 400000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "FOREIGN_TRACK_BOUNDARY",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000041",
+      "unmeasured_courtyard_distance_nm": 9750000,
+      "unmeasured_courtyard_footprint": "J24",
+      "via_obstacle_distance_nm": 39000002,
+      "via_obstacle_id": "2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 110400221,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": 129305000,
+      "courtyard_obstacle": "U3",
+      "distance_nm": 89750001,
+      "edge_obstacle_distance_nm": 4974999,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J26.1",
+      "hole_obstacle_distance_nm": 89150001,
+      "hole_obstacle_id": "via:e0ca6df862bb100a6e377a5c94daa80c2dab1c5dcde2fce6c6e0700e33b962e2",
+      "obstacle": "J23.1",
+      "obstacle_net": "TARGET_BACK_VIA",
+      "side": "back",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_TRACK_SAME_NET",
+      "track_obstacle_distance_nm": null,
+      "track_obstacle_geometry": null,
+      "track_obstacle_net": null,
+      "track_obstacle_uuid": null,
+      "unmeasured_courtyard_distance_nm": 89750000,
+      "unmeasured_courtyard_footprint": "J23",
+      "via_obstacle_distance_nm": 89000001,
+      "via_obstacle_id": "e0ca6df862bb100a6e377a5c94daa80c2dab1c5dcde2fce6c6e0700e33b962e2",
+      "via_obstacle_net": "FOREIGN_VIA_BACK",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 40300000,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "B.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_OPPOSITE_BACK",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000056"
+    },
+    {
+      "courtyard_distance_nm": 79299999,
+      "courtyard_obstacle": "U2",
+      "distance_nm": 19750001,
+      "edge_obstacle_distance_nm": 4974999,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000060",
+      "endpoint": "J27.1",
+      "hole_obstacle_distance_nm": 59150002,
+      "hole_obstacle_id": "via:2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "obstacle": "J25.1",
+      "obstacle_net": "TARGET_TRACK_BOUNDARY",
+      "side": "front",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_TRACK_ARC",
+      "track_obstacle_distance_nm": 400001,
+      "track_obstacle_geometry": "arc",
+      "track_obstacle_net": null,
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000043",
+      "unmeasured_courtyard_distance_nm": 19750000,
+      "unmeasured_courtyard_footprint": "J25",
+      "via_obstacle_distance_nm": 59000002,
+      "via_obstacle_id": "2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 90400270,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": 169299999,
+      "courtyard_obstacle": "U2",
+      "distance_nm": 9750001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J28.1",
+      "hole_obstacle_distance_nm": 100500001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a1",
+      "obstacle": "J29.1",
+      "obstacle_net": "TARGET_ZONE_BOUNDARY",
+      "side": "front",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_ZONE_FAULT",
+      "track_obstacle_distance_nm": 88901405,
+      "track_obstacle_geometry": "arc",
+      "track_obstacle_net": null,
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000043",
+      "unmeasured_courtyard_distance_nm": 9750000,
+      "unmeasured_courtyard_footprint": "J29",
+      "via_obstacle_distance_nm": 149000002,
+      "via_obstacle_id": "2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 450499,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": 179299999,
+      "courtyard_obstacle": "U2",
+      "distance_nm": 9750001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J29.1",
+      "hole_obstacle_distance_nm": 90500001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a1",
+      "obstacle": "J28.1",
+      "obstacle_net": "TARGET_ZONE_FAULT",
+      "side": "front",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_ZONE_BOUNDARY",
+      "track_obstacle_distance_nm": 98901263,
+      "track_obstacle_geometry": "arc",
+      "track_obstacle_net": null,
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000043",
+      "unmeasured_courtyard_distance_nm": 9750000,
+      "unmeasured_courtyard_footprint": "J28",
+      "via_obstacle_distance_nm": 159000002,
+      "via_obstacle_id": "2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 450499,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_BOUNDARY",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000051"
+    },
+    {
+      "courtyard_distance_nm": 189299999,
+      "courtyard_obstacle": "U2",
+      "distance_nm": 9750001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J30.1",
+      "hole_obstacle_distance_nm": 80500001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a1",
+      "obstacle": "J29.1",
+      "obstacle_net": "TARGET_ZONE_BOUNDARY",
+      "side": "front",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_ZONE_SAME_NET",
+      "track_obstacle_distance_nm": 108901147,
+      "track_obstacle_geometry": "arc",
+      "track_obstacle_net": null,
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000043",
+      "unmeasured_courtyard_distance_nm": 9750000,
+      "unmeasured_courtyard_footprint": "J29",
+      "via_obstacle_distance_nm": 169000002,
+      "via_obstacle_id": "2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 9000000,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_BOUNDARY",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000051"
+    },
+    {
+      "courtyard_distance_nm": 199299999,
+      "courtyard_obstacle": "U2",
+      "distance_nm": 9750001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J31.1",
+      "hole_obstacle_distance_nm": 70500001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a1",
+      "obstacle": "J30.1",
+      "obstacle_net": "TARGET_ZONE_SAME_NET",
+      "side": "front",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_ZONE_HOLE",
+      "track_obstacle_distance_nm": 118901051,
+      "track_obstacle_geometry": "arc",
+      "track_obstacle_net": null,
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000043",
+      "unmeasured_courtyard_distance_nm": 9750000,
+      "unmeasured_courtyard_footprint": "J30",
+      "via_obstacle_distance_nm": 179000002,
+      "via_obstacle_id": "2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 450499,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_HOLE",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000053"
+    },
+    {
+      "courtyard_distance_nm": 239305000,
+      "courtyard_obstacle": "U3",
+      "distance_nm": 9750001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J32.1",
+      "hole_obstacle_distance_nm": 30500001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a1",
+      "obstacle": "J33.1",
+      "obstacle_net": "TARGET_ZONE_BACK_BOUNDARY",
+      "side": "back",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_ZONE_BACK_FAULT",
+      "track_obstacle_distance_nm": 109850000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "TARGET_TRACK_SAME_NET",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000042",
+      "unmeasured_courtyard_distance_nm": 9750000,
+      "unmeasured_courtyard_footprint": "J33",
+      "via_obstacle_distance_nm": 199000001,
+      "via_obstacle_id": "e0ca6df862bb100a6e377a5c94daa80c2dab1c5dcde2fce6c6e0700e33b962e2",
+      "via_obstacle_net": "FOREIGN_VIA_BACK",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 450499,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "B.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_BACK_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000054"
+    },
+    {
+      "courtyard_distance_nm": 249305000,
+      "courtyard_obstacle": "U3",
+      "distance_nm": 9750001,
+      "edge_obstacle_distance_nm": 4974999,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J33.1",
+      "hole_obstacle_distance_nm": 20500001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a1",
+      "obstacle": "J32.1",
+      "obstacle_net": "TARGET_ZONE_BACK_FAULT",
+      "side": "back",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_ZONE_BACK_BOUNDARY",
+      "track_obstacle_distance_nm": 119850000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "TARGET_TRACK_SAME_NET",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000042",
+      "unmeasured_courtyard_distance_nm": 9750000,
+      "unmeasured_courtyard_footprint": "J32",
+      "via_obstacle_distance_nm": 209000001,
+      "via_obstacle_id": "e0ca6df862bb100a6e377a5c94daa80c2dab1c5dcde2fce6c6e0700e33b962e2",
+      "via_obstacle_net": "FOREIGN_VIA_BACK",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 450499,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "B.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_BACK_BOUNDARY",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000055"
+    },
+    {
+      "courtyard_distance_nm": 368899999,
+      "courtyard_obstacle": "U2",
+      "distance_nm": 18500001,
+      "edge_obstacle_distance_nm": 375000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000058",
+      "endpoint": "J34.1",
+      "hole_obstacle_distance_nm": 39100001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a4",
+      "obstacle": "J35.1",
+      "obstacle_net": "TARGET_EDGE_FAULT",
+      "side": "front",
+      "target_aperture_diameter_nm": 1000000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_EDGE_BOUNDARY",
+      "track_obstacle_distance_nm": 288500433,
+      "track_obstacle_geometry": "arc",
+      "track_obstacle_net": null,
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000043",
+      "unmeasured_courtyard_distance_nm": 18500000,
+      "unmeasured_courtyard_footprint": "J35",
+      "via_obstacle_distance_nm": 348600002,
+      "via_obstacle_id": "2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 128900000,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_OPPOSITE_FRONT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000057"
+    },
+    {
+      "courtyard_distance_nm": 349899999,
+      "courtyard_obstacle": "U2",
+      "distance_nm": 18500001,
+      "edge_obstacle_distance_nm": 375000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000062",
+      "endpoint": "J35.1",
+      "hole_obstacle_distance_nm": 20100001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a4",
+      "obstacle": "J34.1",
+      "obstacle_net": "TARGET_EDGE_BOUNDARY",
+      "side": "front",
+      "target_aperture_diameter_nm": 1000000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_EDGE_FAULT",
+      "track_obstacle_distance_nm": 269500463,
+      "track_obstacle_geometry": "arc",
+      "track_obstacle_net": null,
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000043",
+      "unmeasured_courtyard_distance_nm": 18500000,
+      "unmeasured_courtyard_footprint": "J34",
+      "via_obstacle_distance_nm": 329600002,
+      "via_obstacle_id": "2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 109900000,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_OPPOSITE_FRONT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000057"
+    },
+    {
+      "courtyard_distance_nm": 269299999,
+      "courtyard_obstacle": "U2",
+      "distance_nm": 9400001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J36.1",
+      "hole_obstacle_distance_nm": 500001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a1",
+      "obstacle": "J37.1",
+      "obstacle_net": "TARGET_HOLE_FAULT",
+      "side": "front",
+      "target_aperture_diameter_nm": 1200000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_HOLE_BOUNDARY",
+      "track_obstacle_distance_nm": 188900661,
+      "track_obstacle_geometry": "arc",
+      "track_obstacle_net": null,
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000043",
+      "unmeasured_courtyard_distance_nm": 500000,
+      "unmeasured_courtyard_footprint": "H1",
+      "via_obstacle_distance_nm": 249000002,
+      "via_obstacle_id": "2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 29300000,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_OPPOSITE_FRONT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000057"
+    },
+    {
+      "courtyard_distance_nm": 279299999,
+      "courtyard_obstacle": "U2",
+      "distance_nm": 9400001,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J37.1",
+      "hole_obstacle_distance_nm": 500000,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a2",
+      "obstacle": "J36.1",
+      "obstacle_net": "TARGET_HOLE_BOUNDARY",
+      "side": "front",
+      "target_aperture_diameter_nm": 1200000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_HOLE_FAULT",
+      "track_obstacle_distance_nm": 198900628,
+      "track_obstacle_geometry": "arc",
+      "track_obstacle_net": null,
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000043",
+      "unmeasured_courtyard_distance_nm": 499999,
+      "unmeasured_courtyard_footprint": "H2",
+      "via_obstacle_distance_nm": 259000002,
+      "via_obstacle_id": "2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 39300000,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_OPPOSITE_FRONT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000057"
+    },
+    {
+      "courtyard_distance_nm": 310299999,
+      "courtyard_obstacle": "U2",
+      "distance_nm": 17400002,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J38.1",
+      "hole_obstacle_distance_nm": 500001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a3",
+      "obstacle": "J39.1",
+      "obstacle_net": "TARGET_OBLONG_HOLE_FAULT",
+      "side": "front",
+      "target_aperture_diameter_nm": 1200000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_OBLONG_HOLE_BOUNDARY",
+      "track_obstacle_distance_nm": 229900543,
+      "track_obstacle_geometry": "arc",
+      "track_obstacle_net": null,
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000043",
+      "unmeasured_courtyard_distance_nm": 100000,
+      "unmeasured_courtyard_footprint": "H3",
+      "via_obstacle_distance_nm": 290000002,
+      "via_obstacle_id": "2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 70300000,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_OPPOSITE_FRONT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000057"
+    },
+    {
+      "courtyard_distance_nm": 328300000,
+      "courtyard_obstacle": "U2",
+      "distance_nm": 17400002,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J39.1",
+      "hole_obstacle_distance_nm": 500000,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a4",
+      "obstacle": "J38.1",
+      "obstacle_net": "TARGET_OBLONG_HOLE_BOUNDARY",
+      "side": "front",
+      "target_aperture_diameter_nm": 1200000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_OBLONG_HOLE_FAULT",
+      "track_obstacle_distance_nm": 247900505,
+      "track_obstacle_geometry": "arc",
+      "track_obstacle_net": null,
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000043",
+      "unmeasured_courtyard_distance_nm": 99999,
+      "unmeasured_courtyard_footprint": "H4",
+      "via_obstacle_distance_nm": 308000003,
+      "via_obstacle_id": "2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 88300001,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_OPPOSITE_FRONT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000057"
+    },
+    {
+      "courtyard_distance_nm": 100400000,
+      "courtyard_obstacle": "U1",
+      "distance_nm": 400000,
+      "edge_obstacle_distance_nm": 4974999,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J7.1",
+      "hole_obstacle_distance_nm": 59800001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a0",
+      "obstacle": "J8.1",
+      "obstacle_net": null,
+      "side": "front",
+      "target_aperture_diameter_nm": 800000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_NO_NET_NEIGHBOR",
+      "track_obstacle_distance_nm": 160400000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "FOREIGN_TRACK_FAULT",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000040",
+      "unmeasured_courtyard_distance_nm": 250000,
+      "unmeasured_courtyard_footprint": "J8",
+      "via_obstacle_distance_nm": 120400000,
+      "via_obstacle_id": "267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 280400087,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "courtyard_distance_nm": null,
+      "courtyard_obstacle": null,
+      "distance_nm": null,
+      "edge_obstacle_distance_nm": null,
+      "edge_obstacle_uuid": null,
+      "endpoint": "J9.1",
+      "hole_obstacle_distance_nm": null,
+      "hole_obstacle_id": null,
+      "obstacle": null,
+      "obstacle_net": null,
+      "side": "back",
+      "target_aperture_diameter_nm": null,
+      "target_aperture_shape": null,
+      "target_exposed": false,
+      "target_net": "TARGET_FRONT_ONLY",
+      "track_obstacle_distance_nm": null,
+      "track_obstacle_geometry": null,
+      "track_obstacle_net": null,
+      "track_obstacle_uuid": null,
+      "unmeasured_courtyard_distance_nm": null,
+      "unmeasured_courtyard_footprint": null,
+      "via_obstacle_distance_nm": null,
+      "via_obstacle_id": null,
+      "via_obstacle_net": null,
+      "via_obstacle_tented": null,
+      "zone_obstacle_distance_nm": null,
+      "zone_obstacle_island_index": null,
+      "zone_obstacle_layer": null,
+      "zone_obstacle_net": null,
+      "zone_obstacle_uuid": null
+    },
+    {
+      "courtyard_distance_nm": 85400000,
+      "courtyard_obstacle": "U1",
+      "distance_nm": 400000,
+      "edge_obstacle_distance_nm": 4975000,
+      "edge_obstacle_uuid": "00000000-0000-0000-0000-000000000059",
+      "endpoint": "J9.1",
+      "hole_obstacle_distance_nm": 44800001,
+      "hole_obstacle_id": "pad:00000000-0000-0000-0000-0000000000a0",
+      "obstacle": "J10.1",
+      "obstacle_net": "FOREIGN_FRONT_ONLY",
+      "side": "front",
+      "target_aperture_diameter_nm": 300000,
+      "target_aperture_shape": "circle",
+      "target_exposed": true,
+      "target_net": "TARGET_FRONT_ONLY",
+      "track_obstacle_distance_nm": 145400000,
+      "track_obstacle_geometry": "segment",
+      "track_obstacle_net": "FOREIGN_TRACK_FAULT",
+      "track_obstacle_uuid": "00000000-0000-0000-0000-000000000040",
+      "unmeasured_courtyard_distance_nm": 250000,
+      "unmeasured_courtyard_footprint": "J10",
+      "via_obstacle_distance_nm": 105400000,
+      "via_obstacle_id": "267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "via_obstacle_net": "FOREIGN_VIA",
+      "via_obstacle_tented": false,
+      "zone_obstacle_distance_nm": 265400092,
+      "zone_obstacle_island_index": 0,
+      "zone_obstacle_layer": "F.Cu",
+      "zone_obstacle_net": "FOREIGN_ZONE_FAULT",
+      "zone_obstacle_uuid": "00000000-0000-0000-0000-000000000050"
+    }
   ],
-  "access_probe_requests_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  "access_probe_requests_sha256": "fb8fb7cee2427b274d7d75db014c78c5021b406d37a74b894251668698a341ae",
+  "board_sha256": "a46fff73e5ed8868abbc0791d51c3e549a166fb2cbea8f42885ecce84c4180ab",
+  "copper_layers": [
+    "F.Cu",
+    "B.Cu"
+  ],
+  "drill_holes": [
+    {
+      "drill_size_nm": [
+        400000,
+        400000
+      ],
+      "footprint": "Synthetic:AccessTarget",
+      "footprint_reference": "J14",
+      "id": "pad:00000000-0000-0000-0000-0000000000a0",
+      "kind": "pad",
+      "pad": "J14.1",
+      "pad_uuid": "00000000-0000-0000-0000-0000000000a0",
+      "position_nm": [
+        80000000,
+        5000000
+      ],
+      "shape": "circle",
+      "surfaces": [
+        "front",
+        "back"
+      ]
+    },
+    {
+      "drill_size_nm": [
+        500000,
+        500000
+      ],
+      "footprint": "Synthetic:MountingHole",
+      "footprint_reference": "H1",
+      "id": "pad:00000000-0000-0000-0000-0000000000a1",
+      "kind": "pad",
+      "pad_uuid": "00000000-0000-0000-0000-0000000000a1",
+      "position_nm": [
+        400750000,
+        5000000
+      ],
+      "shape": "circle",
+      "surfaces": [
+        "front",
+        "back"
+      ]
+    },
+    {
+      "drill_size_nm": [
+        500000,
+        500000
+      ],
+      "footprint": "Synthetic:MountingHole",
+      "footprint_reference": "H2",
+      "id": "pad:00000000-0000-0000-0000-0000000000a2",
+      "kind": "pad",
+      "pad_uuid": "00000000-0000-0000-0000-0000000000a2",
+      "position_nm": [
+        410749999,
+        5000000
+      ],
+      "shape": "circle",
+      "surfaces": [
+        "front",
+        "back"
+      ]
+    },
+    {
+      "drill_size_nm": [
+        1000000,
+        500000
+      ],
+      "footprint": "Synthetic:SlottedPlatedHole",
+      "footprint_reference": "H3",
+      "id": "pad:00000000-0000-0000-0000-0000000000a3",
+      "kind": "pad",
+      "pad": "H3.1",
+      "pad_uuid": "00000000-0000-0000-0000-0000000000a3",
+      "position_nm": [
+        440000000,
+        5000000
+      ],
+      "shape": "oval",
+      "surfaces": [
+        "front",
+        "back"
+      ]
+    },
+    {
+      "drill_size_nm": [
+        1000000,
+        500000
+      ],
+      "footprint": "Synthetic:SlottedPlatedHole",
+      "footprint_reference": "H4",
+      "id": "pad:00000000-0000-0000-0000-0000000000a4",
+      "kind": "pad",
+      "pad": "H4.1",
+      "pad_uuid": "00000000-0000-0000-0000-0000000000a4",
+      "position_nm": [
+        460000000,
+        5000000
+      ],
+      "shape": "oval",
+      "surfaces": [
+        "front",
+        "back"
+      ]
+    },
+    {
+      "drill_size_nm": [
+        300000,
+        300000
+      ],
+      "id": "via:267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "kind": "via",
+      "position_nm": [
+        140699999,
+        5000000
+      ],
+      "shape": "circle",
+      "surfaces": [
+        "front"
+      ],
+      "via_id": "267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef"
+    },
+    {
+      "drill_size_nm": [
+        300000,
+        300000
+      ],
+      "id": "via:2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "kind": "via",
+      "position_nm": [
+        150699999,
+        5000000
+      ],
+      "shape": "circle",
+      "surfaces": [
+        "front"
+      ],
+      "via_id": "2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801"
+    },
+    {
+      "drill_size_nm": [
+        300000,
+        300000
+      ],
+      "id": "via:465c8ccd0ea9f72bee8b98c444058f2aadf7f83605a407b48b46faa50ee24dd3",
+      "kind": "via",
+      "position_nm": [
+        149450000,
+        5000000
+      ],
+      "shape": "circle",
+      "surfaces": [
+        "front"
+      ],
+      "via_id": "465c8ccd0ea9f72bee8b98c444058f2aadf7f83605a407b48b46faa50ee24dd3"
+    },
+    {
+      "drill_size_nm": [
+        300000,
+        300000
+      ],
+      "id": "via:e0ca6df862bb100a6e377a5c94daa80c2dab1c5dcde2fce6c6e0700e33b962e2",
+      "kind": "via",
+      "position_nm": [
+        170700000,
+        5000000
+      ],
+      "shape": "circle",
+      "surfaces": [
+        "back"
+      ],
+      "via_id": "e0ca6df862bb100a6e377a5c94daa80c2dab1c5dcde2fce6c6e0700e33b962e2"
+    }
+  ],
+  "edge_cuts": [
+    {
+      "uuid": "00000000-0000-0000-0000-000000000058",
+      "width_nm": 50000
+    },
+    {
+      "uuid": "00000000-0000-0000-0000-000000000059",
+      "width_nm": 50000
+    },
+    {
+      "uuid": "00000000-0000-0000-0000-000000000060",
+      "width_nm": 50000
+    },
+    {
+      "uuid": "00000000-0000-0000-0000-000000000061",
+      "width_nm": 50000
+    },
+    {
+      "uuid": "00000000-0000-0000-0000-000000000062",
+      "width_nm": 50000
+    },
+    {
+      "uuid": "00000000-0000-0000-0000-000000000063",
+      "width_nm": 50000
+    },
+    {
+      "uuid": "00000000-0000-0000-0000-000000000064",
+      "width_nm": 50000
+    },
+    {
+      "uuid": "00000000-0000-0000-0000-000000000065",
+      "width_nm": 50000
+    }
+  ],
+  "footprints": [
+    {
+      "dnp": false,
+      "footprint": "Synthetic:MountingHole",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        400750000,
+        5000000
+      ],
+      "reference": "H1",
+      "side": "F.Cu",
+      "value": "NPTH Boundary"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:MountingHole",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        410749999,
+        5000000
+      ],
+      "reference": "H2",
+      "side": "F.Cu",
+      "value": "NPTH One Nanometer Inside"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:SlottedPlatedHole",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        440000000,
+        5000000
+      ],
+      "reference": "H3",
+      "side": "F.Cu",
+      "value": "Plated Oblong Boundary"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:SlottedPlatedHole",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        460000000,
+        5000000
+      ],
+      "reference": "H4",
+      "side": "F.Cu",
+      "value": "Plated Oblong One Nanometer Inside"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        5000000,
+        5000000
+      ],
+      "reference": "J1",
+      "side": "F.Cu",
+      "value": "AccessTarget"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessNeighbor",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        35500000,
+        5000000
+      ],
+      "reference": "J10",
+      "side": "F.Cu",
+      "value": "FrontOnlyObstacle"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        50000000,
+        5000000
+      ],
+      "reference": "J11",
+      "side": "F.Cu",
+      "value": "UndersizeApertureFault"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        60000000,
+        5000000
+      ],
+      "reference": "J12",
+      "side": "F.Cu",
+      "value": "ExactApertureBoundaryControl"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 90000000,
+      "position_nm": [
+        70000000,
+        5000000
+      ],
+      "reference": "J13",
+      "side": "F.Cu",
+      "value": "RectangularApertureBoundaryControl"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        80000000,
+        5000000
+      ],
+      "reference": "J14",
+      "side": "F.Cu",
+      "value": "DrilledApertureUnsupported"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        90000000,
+        5000000
+      ],
+      "reference": "J15",
+      "side": "F.Cu",
+      "value": "UndersizeOvalApertureFault"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 90000000,
+      "position_nm": [
+        100000000,
+        5000000
+      ],
+      "reference": "J16",
+      "side": "F.Cu",
+      "value": "ExactOvalApertureBoundaryControl"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        110000000,
+        5000000
+      ],
+      "reference": "J17",
+      "side": "F.Cu",
+      "value": "UndersizeRoundrectApertureFault"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        120000000,
+        5000000
+      ],
+      "reference": "J18",
+      "side": "F.Cu",
+      "value": "ExactRoundrectApertureBoundaryControl"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        130000000,
+        5000000
+      ],
+      "reference": "J19",
+      "side": "F.Cu",
+      "value": "CourtyardClearanceFault"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessNeighbor",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        5150000,
+        5000000
+      ],
+      "reference": "J2",
+      "side": "F.Cu",
+      "value": "SameNetNeighbor"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        140000000,
+        5000000
+      ],
+      "reference": "J20",
+      "side": "F.Cu",
+      "value": "UntentedViaClearanceFault"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        150000000,
+        5000000
+      ],
+      "reference": "J21",
+      "side": "F.Cu",
+      "value": "UntentedViaBoundaryControl"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        160000000,
+        5000000
+      ],
+      "reference": "J22",
+      "side": "F.Cu",
+      "value": "TentedViaControl"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        170000000,
+        5000000
+      ],
+      "reference": "J23",
+      "side": "B.Cu",
+      "value": "BackUntentedViaFault"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        180000000,
+        5000000
+      ],
+      "reference": "J24",
+      "side": "F.Cu",
+      "value": "TrackClearanceFault"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        190000000,
+        5000000
+      ],
+      "reference": "J25",
+      "side": "F.Cu",
+      "value": "TrackClearanceBoundaryControl"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        260000000,
+        5000000
+      ],
+      "reference": "J26",
+      "side": "B.Cu",
+      "value": "SameNetTrackControl"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        210000000,
+        5000000
+      ],
+      "reference": "J27",
+      "side": "F.Cu",
+      "value": "UnconnectedTrackArcFault"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        300000000,
+        5000000
+      ],
+      "reference": "J28",
+      "side": "F.Cu",
+      "value": "ForeignZoneClearanceFault"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        310000000,
+        5000000
+      ],
+      "reference": "J29",
+      "side": "F.Cu",
+      "value": "ForeignZoneBoundaryControl"
+    },
+    {
+      "dnp": true,
+      "footprint": "Synthetic:AccessNeighbor",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        5050000,
+        5000000
+      ],
+      "reference": "J3",
+      "side": "F.Cu",
+      "value": "DnpNeighbor"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        320000000,
+        5000000
+      ],
+      "reference": "J30",
+      "side": "F.Cu",
+      "value": "SameNetZoneControl"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        330000000,
+        5000000
+      ],
+      "reference": "J31",
+      "side": "F.Cu",
+      "value": "FilledZoneHoleControl"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        370000000,
+        5000000
+      ],
+      "reference": "J32",
+      "side": "B.Cu",
+      "value": "BackZoneClearanceFault"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        380000000,
+        5000000
+      ],
+      "reference": "J33",
+      "side": "B.Cu",
+      "value": "BackZoneClearanceBoundaryControl"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        499600000,
+        5000000
+      ],
+      "reference": "J34",
+      "side": "F.Cu",
+      "value": "BoardEdgeBoundaryControl"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        480600000,
+        5000000
+      ],
+      "reference": "J35",
+      "side": "F.Cu",
+      "value": "BoardEdgeClearanceFault"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        400000000,
+        5000000
+      ],
+      "reference": "J36",
+      "side": "F.Cu",
+      "value": "DrillHoleBoundaryControl"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        410000000,
+        5000000
+      ],
+      "reference": "J37",
+      "side": "F.Cu",
+      "value": "DrillHoleClearanceFault"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        441000000,
+        5000000
+      ],
+      "reference": "J38",
+      "side": "F.Cu",
+      "value": "OblongDrillBoundaryControl"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        459000001,
+        5000000
+      ],
+      "reference": "J39",
+      "side": "F.Cu",
+      "value": "OblongDrillClearanceFault"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessNeighbor",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        5500000,
+        5000000
+      ],
+      "reference": "J4",
+      "side": "F.Cu",
+      "value": "FrontObstacle"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessNeighbor",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        5900000,
+        5000000
+      ],
+      "reference": "J5",
+      "side": "B.Cu",
+      "value": "BackObstacle"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        20000000,
+        5000000
+      ],
+      "reference": "J7",
+      "side": "F.Cu",
+      "value": "NoNetNeighborTarget"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessNeighbor",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        20500000,
+        5000000
+      ],
+      "reference": "J8",
+      "side": "F.Cu",
+      "value": "UnconnectedObstacle"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        35000000,
+        5000000
+      ],
+      "reference": "J9",
+      "side": "F.Cu",
+      "value": "FrontOnlyTarget"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessBody",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        120800000,
+        5000000
+      ],
+      "reference": "U1",
+      "side": "F.Cu",
+      "value": "CourtyardBoundaryControl"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessBody",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        130550000,
+        5000000
+      ],
+      "reference": "U2",
+      "side": "F.Cu",
+      "value": "CourtyardClearanceFault"
+    },
+    {
+      "dnp": false,
+      "footprint": "Synthetic:AccessBody",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        130400000,
+        5000000
+      ],
+      "reference": "U3",
+      "side": "B.Cu",
+      "value": "OppositeSideCourtyardControl"
+    },
+    {
+      "dnp": true,
+      "footprint": "Synthetic:AccessBody",
+      "orientation_microdegrees": 0,
+      "position_nm": [
+        130200000,
+        5000000
+      ],
+      "reference": "U4",
+      "side": "F.Cu",
+      "value": "DnpCourtyardControl"
+    }
+  ],
+  "kicad_version": "10.0.0",
+  "net_ties": [],
+  "pads": [
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "H3.1",
+        "J38.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:SlottedPlatedHole",
+      "net": "TARGET_OBLONG_HOLE_BOUNDARY",
+      "pad": "H3.1",
+      "positions_nm": [
+        [
+          440000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "H4.1",
+        "J39.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:SlottedPlatedHole",
+      "net": "TARGET_OBLONG_HOLE_FAULT",
+      "pad": "H4.1",
+      "positions_nm": [
+        [
+          460000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J1.1",
+        "J2.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_ACCESS",
+      "pad": "J1.1",
+      "positions_nm": [
+        [
+          5000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J10.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessNeighbor",
+      "net": "FOREIGN_FRONT_ONLY",
+      "pad": "J10.1",
+      "positions_nm": [
+        [
+          35500000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J11.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_APERTURE_SMALL",
+      "pad": "J11.1",
+      "positions_nm": [
+        [
+          50000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J12.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_APERTURE_BOUNDARY",
+      "pad": "J12.1",
+      "positions_nm": [
+        [
+          60000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J13.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_APERTURE_RECT",
+      "pad": "J13.1",
+      "positions_nm": [
+        [
+          70000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J14.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_APERTURE_DRILLED",
+      "pad": "J14.1",
+      "positions_nm": [
+        [
+          80000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J15.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_APERTURE_OVAL_SMALL",
+      "pad": "J15.1",
+      "positions_nm": [
+        [
+          90000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J16.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_APERTURE_OVAL_BOUNDARY",
+      "pad": "J16.1",
+      "positions_nm": [
+        [
+          100000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J17.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_APERTURE_ROUNDRECT_SMALL",
+      "pad": "J17.1",
+      "positions_nm": [
+        [
+          110000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J18.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_APERTURE_ROUNDRECT_BOUNDARY",
+      "pad": "J18.1",
+      "positions_nm": [
+        [
+          120000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J19.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_COURTYARD_SMALL",
+      "pad": "J19.1",
+      "positions_nm": [
+        [
+          130000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J1.1",
+        "J2.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessNeighbor",
+      "net": "TARGET_ACCESS",
+      "pad": "J2.1",
+      "positions_nm": [
+        [
+          5150000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J20.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_VIA_FAULT",
+      "pad": "J20.1",
+      "positions_nm": [
+        [
+          140000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J21.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_VIA_BOUNDARY",
+      "pad": "J21.1",
+      "positions_nm": [
+        [
+          150000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J22.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_TENTED_VIA",
+      "pad": "J22.1",
+      "positions_nm": [
+        [
+          160000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J23.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_BACK_VIA",
+      "pad": "J23.1",
+      "positions_nm": [
+        [
+          170000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J24.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_TRACK_FAULT",
+      "pad": "J24.1",
+      "positions_nm": [
+        [
+          180000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J25.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_TRACK_BOUNDARY",
+      "pad": "J25.1",
+      "positions_nm": [
+        [
+          190000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J26.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_TRACK_SAME_NET",
+      "pad": "J26.1",
+      "positions_nm": [
+        [
+          260000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J27.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_TRACK_ARC",
+      "pad": "J27.1",
+      "positions_nm": [
+        [
+          210000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J28.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_ZONE_FAULT",
+      "pad": "J28.1",
+      "positions_nm": [
+        [
+          300000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J29.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_ZONE_BOUNDARY",
+      "pad": "J29.1",
+      "positions_nm": [
+        [
+          310000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J3.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": true,
+      "footprint": "Synthetic:AccessNeighbor",
+      "net": "FOREIGN_DNP",
+      "pad": "J3.1",
+      "positions_nm": [
+        [
+          5050000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J30.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_ZONE_SAME_NET",
+      "pad": "J30.1",
+      "positions_nm": [
+        [
+          320000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J31.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_ZONE_HOLE",
+      "pad": "J31.1",
+      "positions_nm": [
+        [
+          330000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J32.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_ZONE_BACK_FAULT",
+      "pad": "J32.1",
+      "positions_nm": [
+        [
+          370000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J33.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_ZONE_BACK_BOUNDARY",
+      "pad": "J33.1",
+      "positions_nm": [
+        [
+          380000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J34.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_EDGE_BOUNDARY",
+      "pad": "J34.1",
+      "positions_nm": [
+        [
+          499600000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J35.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_EDGE_FAULT",
+      "pad": "J35.1",
+      "positions_nm": [
+        [
+          480600000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J36.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_HOLE_BOUNDARY",
+      "pad": "J36.1",
+      "positions_nm": [
+        [
+          400000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J37.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_HOLE_FAULT",
+      "pad": "J37.1",
+      "positions_nm": [
+        [
+          410000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "H3.1",
+        "J38.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_OBLONG_HOLE_BOUNDARY",
+      "pad": "J38.1",
+      "positions_nm": [
+        [
+          441000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "H4.1",
+        "J39.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_OBLONG_HOLE_FAULT",
+      "pad": "J39.1",
+      "positions_nm": [
+        [
+          459000001,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J4.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessNeighbor",
+      "net": "FOREIGN_FRONT",
+      "pad": "J4.1",
+      "positions_nm": [
+        [
+          5500000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J5.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessNeighbor",
+      "net": "FOREIGN_BACK",
+      "pad": "J5.1",
+      "positions_nm": [
+        [
+          5900000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J7.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_NO_NET_NEIGHBOR",
+      "pad": "J7.1",
+      "positions_nm": [
+        [
+          20000000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J8.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessNeighbor",
+      "net": null,
+      "pad": "J8.1",
+      "positions_nm": [
+        [
+          20500000,
+          5000000
+        ]
+      ]
+    },
+    {
+      "connected_islands": [],
+      "connected_pads": [
+        "J9.1"
+      ],
+      "connected_vias": [],
+      "connected_zones": [],
+      "dnp": false,
+      "footprint": "Synthetic:AccessTarget",
+      "net": "TARGET_FRONT_ONLY",
+      "pad": "J9.1",
+      "positions_nm": [
+        [
+          35000000,
+          5000000
+        ]
+      ]
+    }
+  ],
+  "rule_areas": [],
+  "schema_version": "22",
+  "touch_pad_clearance_observations": [],
+  "touch_pad_clearance_requests_sha256": null,
+  "tracks": [
+    {
+      "arc_length_nm": null,
+      "arc_mid_nm": null,
+      "end_nm": [
+        180500000,
+        6000000
+      ],
+      "end_pads": [],
+      "end_tracks": [],
+      "end_vias": [],
+      "geometry_kind": "segment",
+      "layer": "F.Cu",
+      "net": "FOREIGN_TRACK_FAULT",
+      "start_nm": [
+        180500000,
+        4000000
+      ],
+      "start_pads": [],
+      "start_tracks": [],
+      "start_vias": [],
+      "uuid": "00000000-0000-0000-0000-000000000040",
+      "width_nm": 200000
+    },
+    {
+      "arc_length_nm": null,
+      "arc_mid_nm": null,
+      "end_nm": [
+        190500000,
+        6000000
+      ],
+      "end_pads": [],
+      "end_tracks": [],
+      "end_vias": [],
+      "geometry_kind": "segment",
+      "layer": "F.Cu",
+      "net": "FOREIGN_TRACK_BOUNDARY",
+      "start_nm": [
+        190500000,
+        4000000
+      ],
+      "start_pads": [],
+      "start_tracks": [],
+      "start_vias": [],
+      "uuid": "00000000-0000-0000-0000-000000000041",
+      "width_nm": 200000
+    },
+    {
+      "arc_length_nm": null,
+      "arc_mid_nm": null,
+      "end_nm": [
+        260100000,
+        6000000
+      ],
+      "end_pads": [],
+      "end_tracks": [],
+      "end_vias": [],
+      "geometry_kind": "segment",
+      "layer": "B.Cu",
+      "net": "TARGET_TRACK_SAME_NET",
+      "start_nm": [
+        260100000,
+        4000000
+      ],
+      "start_pads": [],
+      "start_tracks": [],
+      "start_vias": [],
+      "uuid": "00000000-0000-0000-0000-000000000042",
+      "width_nm": 100000
+    },
+    {
+      "arc_length_nm": 1570796,
+      "arc_mid_nm": [
+        210500000,
+        5000000
+      ],
+      "end_nm": [
+        211000000,
+        5500000
+      ],
+      "end_pads": [],
+      "end_tracks": [],
+      "end_vias": [],
+      "geometry_kind": "arc",
+      "layer": "F.Cu",
+      "net": null,
+      "start_nm": [
+        211000000,
+        4500000
+      ],
+      "start_pads": [],
+      "start_tracks": [],
+      "start_vias": [],
+      "uuid": "00000000-0000-0000-0000-000000000043",
+      "width_nm": 200000
+    }
+  ],
+  "vias": [
+    {
+      "diameter_nm": 600000,
+      "drill_nm": 300000,
+      "end_layer": "B.Cu",
+      "id": "0d2f5a252a2536efa7ce356ce2a36276809f19e8268eb5a3f1532dec02e8174d",
+      "kind": "through",
+      "multiplicity": 1,
+      "net": "FOREIGN_TENTED_VIA",
+      "start_layer": "F.Cu",
+      "x_nm": 160600000,
+      "y_nm": 5000000
+    },
+    {
+      "diameter_nm": 600000,
+      "drill_nm": 300000,
+      "end_layer": "B.Cu",
+      "id": "267dc1f48164d8e20b3c631c8e00e8737bf1dfaf47eaa4c4a66d3fbf8b75c4ef",
+      "kind": "through",
+      "multiplicity": 1,
+      "net": "FOREIGN_VIA",
+      "start_layer": "F.Cu",
+      "x_nm": 140699999,
+      "y_nm": 5000000
+    },
+    {
+      "diameter_nm": 600000,
+      "drill_nm": 300000,
+      "end_layer": "B.Cu",
+      "id": "2fa9da97f11b9e3e2ff4558cf5ef83c7f2ce3ce42145671fa83558f166436801",
+      "kind": "through",
+      "multiplicity": 1,
+      "net": "FOREIGN_VIA",
+      "start_layer": "F.Cu",
+      "x_nm": 150699999,
+      "y_nm": 5000000
+    },
+    {
+      "diameter_nm": 600000,
+      "drill_nm": 300000,
+      "end_layer": "B.Cu",
+      "id": "465c8ccd0ea9f72bee8b98c444058f2aadf7f83605a407b48b46faa50ee24dd3",
+      "kind": "through",
+      "multiplicity": 1,
+      "net": "TARGET_VIA_BOUNDARY",
+      "start_layer": "F.Cu",
+      "x_nm": 149450000,
+      "y_nm": 5000000
+    },
+    {
+      "diameter_nm": 600000,
+      "drill_nm": 300000,
+      "end_layer": "B.Cu",
+      "id": "e0ca6df862bb100a6e377a5c94daa80c2dab1c5dcde2fce6c6e0700e33b962e2",
+      "kind": "through",
+      "multiplicity": 1,
+      "net": "FOREIGN_VIA_BACK",
+      "start_layer": "F.Cu",
+      "x_nm": 170700000,
+      "y_nm": 5000000
+    }
+  ],
+  "zones": [
+    {
+      "filled_island_count": 1,
+      "filled_islands": [
+        {
+          "holes_nm": [],
+          "island_index": 0,
+          "outline_nm": [
+            [
+              300400000,
+              4549000
+            ],
+            [
+              300400000,
+              4778691
+            ],
+            [
+              300406565,
+              4803191
+            ],
+            [
+              300419798,
+              4826111
+            ],
+            [
+              300450500,
+              4940688
+            ],
+            [
+              300450500,
+              5059312
+            ],
+            [
+              300450499,
+              5059312
+            ],
+            [
+              300419799,
+              5173886
+            ],
+            [
+              300406564,
+              5196809
+            ],
+            [
+              300400000,
+              5221307
+            ],
+            [
+              300400000,
+              5451000
+            ],
+            [
+              300414352,
+              5485648
+            ],
+            [
+              300449000,
+              5500000
+            ],
+            [
+              300951000,
+              5500000
+            ],
+            [
+              300985648,
+              5485648
+            ],
+            [
+              301000000,
+              5451000
+            ],
+            [
+              301000000,
+              4549000
+            ],
+            [
+              300985648,
+              4514352
+            ],
+            [
+              300951000,
+              4500000
+            ],
+            [
+              300449000,
+              4500000
+            ],
+            [
+              300414352,
+              4514352
+            ]
+          ]
+        }
+      ],
+      "layer": "F.Cu",
+      "name": "",
+      "net": "FOREIGN_ZONE_FAULT",
+      "unanchored_pad_island_indexes": [
+        0
+      ],
+      "uuid": "00000000-0000-0000-0000-000000000050"
+    },
+    {
+      "filled_island_count": 1,
+      "filled_islands": [
+        {
+          "holes_nm": [],
+          "island_index": 0,
+          "outline_nm": [
+            [
+              310400000,
+              4549000
+            ],
+            [
+              310400000,
+              4778691
+            ],
+            [
+              310406565,
+              4803191
+            ],
+            [
+              310419798,
+              4826111
+            ],
+            [
+              310450500,
+              4940688
+            ],
+            [
+              310450500,
+              5059312
+            ],
+            [
+              310450499,
+              5059312
+            ],
+            [
+              310419799,
+              5173886
+            ],
+            [
+              310406564,
+              5196809
+            ],
+            [
+              310400000,
+              5221307
+            ],
+            [
+              310400000,
+              5451000
+            ],
+            [
+              310414352,
+              5485648
+            ],
+            [
+              310449000,
+              5500000
+            ],
+            [
+              310951000,
+              5500000
+            ],
+            [
+              310985648,
+              5485648
+            ],
+            [
+              311000000,
+              5451000
+            ],
+            [
+              311000000,
+              4549000
+            ],
+            [
+              310985648,
+              4514352
+            ],
+            [
+              310951000,
+              4500000
+            ],
+            [
+              310449000,
+              4500000
+            ],
+            [
+              310414352,
+              4514352
+            ]
+          ]
+        }
+      ],
+      "layer": "F.Cu",
+      "name": "",
+      "net": "FOREIGN_ZONE_BOUNDARY",
+      "unanchored_pad_island_indexes": [
+        0
+      ],
+      "uuid": "00000000-0000-0000-0000-000000000051"
+    },
+    {
+      "filled_island_count": 1,
+      "filled_islands": [
+        {
+          "holes_nm": [],
+          "island_index": 0,
+          "outline_nm": [
+            [
+              320400000,
+              4549000
+            ],
+            [
+              320400000,
+              5451000
+            ],
+            [
+              320414352,
+              5485648
+            ],
+            [
+              320449000,
+              5500000
+            ],
+            [
+              320951000,
+              5500000
+            ],
+            [
+              320985648,
+              5485648
+            ],
+            [
+              321000000,
+              5451000
+            ],
+            [
+              321000000,
+              4549000
+            ],
+            [
+              320985648,
+              4514352
+            ],
+            [
+              320951000,
+              4500000
+            ],
+            [
+              320449000,
+              4500000
+            ],
+            [
+              320414352,
+              4514352
+            ]
+          ]
+        }
+      ],
+      "layer": "F.Cu",
+      "name": "",
+      "net": "TARGET_ZONE_SAME_NET",
+      "unanchored_pad_island_indexes": [
+        0
+      ],
+      "uuid": "00000000-0000-0000-0000-000000000052"
+    },
+    {
+      "filled_island_count": 1,
+      "filled_islands": [
+        {
+          "holes_nm": [
+            [
+              [
+                329549500,
+                4940688
+              ],
+              [
+                329549500,
+                5059311
+              ],
+              [
+                329580201,
+                5173887
+              ],
+              [
+                329639511,
+                5276613
+              ],
+              [
+                329723387,
+                5360489
+              ],
+              [
+                329826114,
+                5419799
+              ],
+              [
+                329940688,
+                5450500
+              ],
+              [
+                330059311,
+                5450500
+              ],
+              [
+                330116597,
+                5435149
+              ],
+              [
+                330173886,
+                5419799
+              ],
+              [
+                330276613,
+                5360489
+              ],
+              [
+                330360489,
+                5276613
+              ],
+              [
+                330419799,
+                5173886
+              ],
+              [
+                330435149,
+                5116597
+              ],
+              [
+                330450500,
+                5059311
+              ],
+              [
+                330450500,
+                4940688
+              ],
+              [
+                330419798,
+                4826112
+              ],
+              [
+                330360488,
+                4723386
+              ],
+              [
+                330276613,
+                4639511
+              ],
+              [
+                330173884,
+                4580200
+              ],
+              [
+                330059312,
+                4549500
+              ],
+              [
+                329940688,
+                4549500
+              ],
+              [
+                329826112,
+                4580201
+              ],
+              [
+                329723386,
+                4639511
+              ],
+              [
+                329639512,
+                4723386
+              ],
+              [
+                329639511,
+                4723386
+              ],
+              [
+                329580200,
+                4826115
+              ]
+            ]
+          ],
+          "island_index": 0,
+          "outline_nm": [
+            [
+              329000000,
+              4049000
+            ],
+            [
+              329000000,
+              4940688
+            ],
+            [
+              329000000,
+              5951000
+            ],
+            [
+              329014352,
+              5985648
+            ],
+            [
+              329049000,
+              6000000
+            ],
+            [
+              330951000,
+              6000000
+            ],
+            [
+              330985648,
+              5985648
+            ],
+            [
+              331000000,
+              5951000
+            ],
+            [
+              331000000,
+              4049000
+            ],
+            [
+              330985648,
+              4014352
+            ],
+            [
+              330951000,
+              4000000
+            ],
+            [
+              329049000,
+              4000000
+            ],
+            [
+              329014352,
+              4014352
+            ]
+          ]
+        }
+      ],
+      "layer": "F.Cu",
+      "name": "",
+      "net": "FOREIGN_ZONE_HOLE",
+      "unanchored_pad_island_indexes": [
+        0
+      ],
+      "uuid": "00000000-0000-0000-0000-000000000053"
+    },
+    {
+      "filled_island_count": 1,
+      "filled_islands": [
+        {
+          "holes_nm": [],
+          "island_index": 0,
+          "outline_nm": [
+            [
+              370400000,
+              4549000
+            ],
+            [
+              370400000,
+              4778691
+            ],
+            [
+              370406565,
+              4803191
+            ],
+            [
+              370419798,
+              4826111
+            ],
+            [
+              370450500,
+              4940688
+            ],
+            [
+              370450500,
+              5059312
+            ],
+            [
+              370450499,
+              5059312
+            ],
+            [
+              370419799,
+              5173886
+            ],
+            [
+              370406564,
+              5196809
+            ],
+            [
+              370400000,
+              5221307
+            ],
+            [
+              370400000,
+              5451000
+            ],
+            [
+              370414352,
+              5485648
+            ],
+            [
+              370449000,
+              5500000
+            ],
+            [
+              370951000,
+              5500000
+            ],
+            [
+              370985648,
+              5485648
+            ],
+            [
+              371000000,
+              5451000
+            ],
+            [
+              371000000,
+              4549000
+            ],
+            [
+              370985648,
+              4514352
+            ],
+            [
+              370951000,
+              4500000
+            ],
+            [
+              370449000,
+              4500000
+            ],
+            [
+              370414352,
+              4514352
+            ]
+          ]
+        }
+      ],
+      "layer": "B.Cu",
+      "name": "",
+      "net": "FOREIGN_ZONE_BACK_FAULT",
+      "unanchored_pad_island_indexes": [
+        0
+      ],
+      "uuid": "00000000-0000-0000-0000-000000000054"
+    },
+    {
+      "filled_island_count": 1,
+      "filled_islands": [
+        {
+          "holes_nm": [],
+          "island_index": 0,
+          "outline_nm": [
+            [
+              380400000,
+              4549000
+            ],
+            [
+              380400000,
+              4778691
+            ],
+            [
+              380406565,
+              4803191
+            ],
+            [
+              380419798,
+              4826111
+            ],
+            [
+              380450500,
+              4940688
+            ],
+            [
+              380450500,
+              5059312
+            ],
+            [
+              380450499,
+              5059312
+            ],
+            [
+              380419799,
+              5173886
+            ],
+            [
+              380406564,
+              5196809
+            ],
+            [
+              380400000,
+              5221307
+            ],
+            [
+              380400000,
+              5451000
+            ],
+            [
+              380414352,
+              5485648
+            ],
+            [
+              380449000,
+              5500000
+            ],
+            [
+              380951000,
+              5500000
+            ],
+            [
+              380985648,
+              5485648
+            ],
+            [
+              381000000,
+              5451000
+            ],
+            [
+              381000000,
+              4549000
+            ],
+            [
+              380985648,
+              4514352
+            ],
+            [
+              380951000,
+              4500000
+            ],
+            [
+              380449000,
+              4500000
+            ],
+            [
+              380414352,
+              4514352
+            ]
+          ]
+        }
+      ],
+      "layer": "B.Cu",
+      "name": "",
+      "net": "FOREIGN_ZONE_BACK_BOUNDARY",
+      "unanchored_pad_island_indexes": [
+        0
+      ],
+      "uuid": "00000000-0000-0000-0000-000000000055"
+    },
+    {
+      "filled_island_count": 1,
+      "filled_islands": [
+        {
+          "holes_nm": [],
+          "island_index": 0,
+          "outline_nm": [
+            [
+              300300000,
+              4549000
+            ],
+            [
+              300300000,
+              5451000
+            ],
+            [
+              300314352,
+              5485648
+            ],
+            [
+              300349000,
+              5500000
+            ],
+            [
+              300651000,
+              5500000
+            ],
+            [
+              300685648,
+              5485648
+            ],
+            [
+              300700000,
+              5451000
+            ],
+            [
+              300700000,
+              4549000
+            ],
+            [
+              300685648,
+              4514352
+            ],
+            [
+              300651000,
+              4500000
+            ],
+            [
+              300349000,
+              4500000
+            ],
+            [
+              300314352,
+              4514352
+            ]
+          ]
+        }
+      ],
+      "layer": "B.Cu",
+      "name": "",
+      "net": "FOREIGN_ZONE_OPPOSITE_BACK",
+      "unanchored_pad_island_indexes": [
+        0
+      ],
+      "uuid": "00000000-0000-0000-0000-000000000056"
+    },
+    {
+      "filled_island_count": 1,
+      "filled_islands": [
+        {
+          "holes_nm": [],
+          "island_index": 0,
+          "outline_nm": [
+            [
+              370300000,
+              4549000
+            ],
+            [
+              370300000,
+              5451000
+            ],
+            [
+              370314352,
+              5485648
+            ],
+            [
+              370349000,
+              5500000
+            ],
+            [
+              370651000,
+              5500000
+            ],
+            [
+              370685648,
+              5485648
+            ],
+            [
+              370700000,
+              5451000
+            ],
+            [
+              370700000,
+              4549000
+            ],
+            [
+              370685648,
+              4514352
+            ],
+            [
+              370651000,
+              4500000
+            ],
+            [
+              370349000,
+              4500000
+            ],
+            [
+              370314352,
+              4514352
+            ]
+          ]
+        }
+      ],
+      "layer": "F.Cu",
+      "name": "",
+      "net": "FOREIGN_ZONE_OPPOSITE_FRONT",
+      "unanchored_pad_island_indexes": [
+        0
+      ],
+      "uuid": "00000000-0000-0000-0000-000000000057"
+    }
+  ],
+  "zones_refilled": true,
+  "image": "fixture.invalid/kicad@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "probe_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
 }
