@@ -44,6 +44,14 @@ PCB_RULE_NODE_CASES = (
         "tests/test_pcb_alternate_reference_plane_run.py::test_authored_alternate_net_threshold_emits_exact_review_candidate",
     ),
     (
+        "pcb.alternate_reference_plane_run",
+        "tests/test_pcb_alternate_reference_plane_run.py::test_disjoint_alternate_plane_intervals_are_localized_separately",
+    ),
+    (
+        "pcb.alternate_reference_plane_run",
+        "tests/test_pcb_alternate_reference_plane_run.py::test_legacy_coverage_reports_keep_aggregate_findings_without_coordinates",
+    ),
+    (
         "pcb.differential_pair_route_skew",
         "tests/test_pcb_differential_pair_route_skew.py::test_excessive_routed_skew_is_reviewed_against_authored_bound",
     ),

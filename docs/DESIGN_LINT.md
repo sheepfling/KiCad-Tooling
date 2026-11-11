@@ -4827,6 +4827,11 @@ include separated intervals or multiple track items; it does not prove one
 continuous run. This heuristic defaults to `review`, and projects can turn it
 off or ignore an exact finding. Alternate planes and reference transitions may
 be intentional, so the rule does not label them as defects or join their nets.
+Current native measurements also retain each contiguous alternate-net interval
+along its track and report the exact interval endpoint coordinates in
+nanometres. Disjoint spans remain separate in the evidence. Older stored
+coverage reports without endpoints or interval data keep their aggregate
+finding, with the coordinate list empty.
 
 This is a review screen for likely reference-plane gaps. It does not infer
 design intent or ground domains, measure trace-width overlap or return-current

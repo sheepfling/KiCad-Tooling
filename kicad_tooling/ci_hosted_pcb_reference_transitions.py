@@ -16,6 +16,7 @@ from .hwrepo.pcb_reference_plane_models import (
 )
 from .hwrepo.pcb_reference_plane_transitions import (
     PcbAlternateReferenceRunMeasurement,
+    alternate_reference_interval_evidence,
     alternate_reference_plane_run_measurements,
 )
 from .hwrepo.pcb_reference_planes import pcb_reference_plane_entries
@@ -77,10 +78,21 @@ def pcb_alternate_reference_plane_fixture_lane(
 
     try:
         retained: dict[
-            str, tuple[PcbConnectivitySnapshot, PcbAlternateReferenceRunMeasurement]
+            str,
+            tuple[
+                PcbConnectivitySnapshot,
+                PcbAlternateReferenceRunMeasurement,
+                tuple[str, ...],
+            ],
         ] = {}
         for case, specification in (("fault", fault_map), ("control", control_map)):
-            samples: list[tuple[PcbConnectivitySnapshot, PcbAlternateReferenceRunMeasurement]] = []
+            samples: list[
+                tuple[
+                    PcbConnectivitySnapshot,
+                    PcbAlternateReferenceRunMeasurement,
+                    tuple[str, ...],
+                ]
+            ] = []
             for repeat in ("first", "repeat"):
                 receipt = scratch / f"{case}-receipt-{repeat}"
                 command, snapshot = capture_native_pcb_connectivity(root, fixture_config, receipt)
@@ -129,11 +141,16 @@ def pcb_alternate_reference_plane_fixture_lane(
                 if len(vcc_runs) != 1 or not vcc_runs[0].track_coverage_nm:
                     raise ValueError("Native DATA route did not produce VCC centerline coverage")
                 measured = vcc_runs[0]
+                localized_intervals = alternate_reference_interval_evidence(entries[0], measured)
+                if not localized_intervals or any(
+                    "nm->" not in item for item in localized_intervals
+                ):
+                    raise ValueError("Native alternate-plane coverage lacks localized intervals")
                 if measured.meets_threshold != (case == "fault"):
                     raise ValueError(
                         f"Native alternate-plane {case} threshold result was unexpected: {measured}"
                     )
-                sample = (snapshot, measured)
+                sample = (snapshot, measured, localized_intervals)
                 if samples and sample != samples[0]:
                     raise ValueError(
                         "Repeated alternate reference-plane capture changed its evidence"
@@ -143,8 +160,8 @@ def pcb_alternate_reference_plane_fixture_lane(
                 raise ValueError("Native alternate reference-plane evidence was not retained")
             retained[case] = samples[0]
 
-        fault_snapshot, fault_measurement = retained["fault"]
-        control_snapshot, control_measurement = retained["control"]
+        fault_snapshot, fault_measurement, fault_intervals = retained["fault"]
+        control_snapshot, control_measurement, _control_intervals = retained["control"]
         if fault_snapshot.kicad_version != control_snapshot.kicad_version:
             raise ValueError("Native alternate reference-plane fault/control versions differ")
         log.event(
@@ -158,6 +175,7 @@ def pcb_alternate_reference_plane_fixture_lane(
             fault_threshold_um=fault_measurement.minimum_length_um,
             control_threshold_um=control_measurement.minimum_length_um,
             observed_coverage_nm=str(fault_measurement.total_coverage_nm),
+            localized_intervals="|".join(fault_intervals),
             fault_review="true",
             control_review="false",
             repeatable="true",

@@ -15,6 +15,54 @@ from .pcb_reference_plane_models import (
 RULE_ID: DesignLintRuleId = "pcb.alternate_reference_plane_run"
 
 
+def _fraction_text(value: Fraction) -> str:
+    return (
+        str(value.numerator) if value.denominator == 1 else f"{value.numerator}/{value.denominator}"
+    )
+
+
+def _point_text(point: tuple[Fraction, Fraction]) -> str:
+    return f"{_fraction_text(point[0])},{_fraction_text(point[1])}nm"
+
+
+def alternate_reference_interval_evidence(
+    entry: PcbReferencePlaneCoverageEntry,
+    measurement: PcbAlternateReferenceRunMeasurement,
+) -> tuple[str, ...]:
+    """Localize each alternate-net contribution to exact native track coordinates."""
+    tracks = {item.track_uuid.casefold(): item for item in entry.tracks}
+    localized: list[str] = []
+    for track_id, _amount in measurement.track_coverage_nm:
+        track = tracks[track_id.casefold()]
+        if track.start_nm is None or track.end_nm is None:
+            continue
+        coverage = next(
+            (
+                item
+                for item in track.alternate_reference_coverages
+                if item.net.casefold() == measurement.alternate_net.casefold()
+            ),
+            None,
+        )
+        if coverage is None:
+            continue
+        dx = track.end_nm[0] - track.start_nm[0]
+        dy = track.end_nm[1] - track.start_nm[1]
+        for interval in coverage.covered_intervals:
+            start = interval.start_parameter
+            end = interval.end_parameter
+            first = (
+                Fraction(track.start_nm[0]) + start * dx,
+                Fraction(track.start_nm[1]) + start * dy,
+            )
+            last = (
+                Fraction(track.start_nm[0]) + end * dx,
+                Fraction(track.start_nm[1]) + end * dy,
+            )
+            localized.append(f"{track.track_uuid}:{_point_text(first)}->{_point_text(last)}")
+    return tuple(localized)
+
+
 @dataclass(frozen=True, slots=True)
 class PcbAlternateReferenceRunMeasurement:
     """Exact per-net and per-layer sum of alternate filled-zone centerline coverage."""
@@ -131,11 +179,15 @@ def project_pcb_alternate_reference_run(
             "contributing_tracks": tuple(
                 f"{track_id}:{amount}nm" for track_id, amount in measurement.track_coverage_nm
             ),
+            "alternate_reference_intervals": alternate_reference_interval_evidence(
+                entry, measurement
+            ),
             "coverage_status": (entry.status,),
             "basis": (entry.basis,),
             "metric": (
                 "Sum of exact per-track centerline fractions inside filled adjacent-layer zones "
-                + "for this alternate net; contributions can be disjoint and are not a continuity proof",
+                + "for this alternate net; exact covered intervals are localized when the source "
+                + "report retains track endpoints; aggregate coverage is not a continuity proof",
             ),
         },
     )
@@ -165,8 +217,9 @@ class PcbAlternateReferenceRunCandidate(Candidate):
                 f"{source_evidence.entry.signal_net} track centerline measured over filled "
                 f"{measurement.alternate_net} copper on adjacent {measurement.reference_layer}; "
                 f"the project-authored review threshold is {measurement.minimum_length_um} µm. "
-                "This total is summed across observed straight track items, so intervals may be "
-                "disjoint and the measurement does not establish copper continuity, return "
+                "Evidence localizes contiguous alternate-net spans to exact track coordinates. "
+                "The total is summed across straight track items, so spans may be disjoint and "
+                "the measurement does not establish copper continuity, return "
                 "adequacy, or intent."
             ),
             evidence=projection.evidence,

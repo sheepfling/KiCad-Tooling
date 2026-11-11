@@ -779,8 +779,10 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest quality-gate progress (v0.5.3rc658):** Hosted acceptance passed in
-  GitHub run `42965434410`. The focused selector ran 367 tests, deselected
+- **Latest quality-gate progress (v0.5.3rc659):** The documentation follow-up
+  tag passed hosted acceptance in GitHub run `42966247338`; code acceptance for
+  the same branch remains `rc658`, run `42965434410`. That focused selector ran
+  367 tests, deselected
   7,979, and completed its pytest stage in 125.16 seconds; the console and
   retained event report those counts, elapsed time, and ten slowest cases. The
   selector-integrity probe took 4.90 seconds, compared with 26.55 seconds in
@@ -792,6 +794,16 @@ standalone parity work when it closes a demonstrated feature regression.
   a test-module size violation; the follow-up tags preserve those audit
   results, and `rc655` passed the corrected gate. Preview and package-release
   jobs were skipped by prerelease policy.
+- **Latest feature work (LINT-391, localized alternate-plane evidence):** The
+  existing opt-in `pcb.alternate_reference_plane_run` finding now retains exact
+  contiguous centerline intervals for each alternate filled-zone net and
+  localizes their endpoints on the native track coordinates. Disjoint spans
+  remain separate. Older source-bound coverage reports without endpoints or
+  interval data still produce their aggregate finding. This changes review
+  evidence only: the authored threshold, default mode, and electrical
+  conclusions do not change. Focused synthetic and CLI/MCP parity tests pass;
+  the exact Docker lane passes on KiCad 10.0.0 and 10.0.5 with the tooling-owned
+  fixture. No external project data is used.
 - **Latest progress (LINT-389, pad-connected reference islands):** Refined the
   opt-in island review so same-net tracks and vias connecting a pad to the exact
   filled island suppress the false candidate. The disconnected island remains
@@ -23193,6 +23205,44 @@ acceptance threads while new lint features proceed:
 - **Selection:** Run
   `tests/test_design_lint_architecture_pytest_collection.py` with
   `design_lint and (design_lint_rule(rule_id="bus.i2c_missing_pullup") or rule_gate_integrity)`.
+
+#### LINT-391 — Localize alternate reference-plane coverage on native tracks
+
+- **Status:** Evidence refinement to the existing opt-in default-REVIEW rule
+  `pcb.alternate_reference_plane_run`; the threshold and finding policy are
+  unchanged.
+- **Gap:** LINT-335 reported exact aggregate centerline length over each
+  alternate adjacent filled-zone net but did not show where those contributions
+  occurred on the source track. A disjoint-zone total and a contiguous span
+  could have the same finding text.
+- **Behavior:** Native capture now retains each exact contiguous track interval
+  inside the union of filled zones for one alternate net. The source-bound
+  report stores reduced rational start/end parameters and the exact native track
+  endpoints; finding evidence projects each interval endpoint to nanometre
+  coordinates. Adjacent same-net zone pieces merge, while separated spans stay
+  separate. Older stored reports without these additive fields continue to
+  produce aggregate findings and omit coordinates.
+- **Boundary:** Interval coordinates describe native track centerlines inside
+  filled zones. They do not establish a continuous copper route, plane
+  connectivity, transition quality, return-current adequacy, a defect, or
+  electrical intent. The project-authored map and threshold remain required.
+- **Evidence:** Synthetic coverage asserts a continuous run and two disjoint
+  runs with identical total length, exact coordinate localization, and legacy
+  report compatibility. CLI/MCP parity carries the same localized evidence;
+  the focused synthetic, architecture, selector, and parity slice passed 37
+  tests. The tooling-owned native fault/control board passed on digest-pinned
+  KiCad 10.0.0 and 10.0.5 Docker images (2 passed, 4 deselected); repeated
+  captures compare identical interval coordinates. No cohort implementation,
+  board, or proprietary source was copied.
+- **Selection:** Run
+  `tests/test_pcb_alternate_reference_plane_run.py` and
+  `tests/test_design_lint_architecture_pcb_models.py` with
+  `design_lint and pcb_lint and design_lint_rule(rule_id="pcb.alternate_reference_plane_run")`.
+  Run
+  `tests/test_design_lint_mcp_parity_pcb_alternate_reference_plane.py` with
+  `parity_lint and design_lint and pcb_lint`. Exact native coverage uses
+  `tests/test_pcb_reference_plane_native_fixture_lane.py`,
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, and the same rule selector.
 
 ## Completion and release gate
 

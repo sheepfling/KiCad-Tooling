@@ -12318,13 +12318,14 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "Project-authored alternate-net coverage threshold compared with source-bound KiCad 10 pcbnew track and filled-zone contours in the reference-plane coverage report",
-      "predicate": "When a mapped signal/reference requirement opts in with minimum_alternate_reference_length_um, group exact straight-track centerline coverage by alternate filled-zone net and immediately adjacent copper layer. Sum segment length multiplied by the exact covered fraction across mapped tracks; emit REVIEW when the project-authored threshold is met. The sum can include disjoint intervals and segments.",
+      "predicate": "When a mapped signal/reference requirement opts in with minimum_alternate_reference_length_um, group exact straight-track centerline coverage by alternate filled-zone net and immediately adjacent copper layer. Sum segment length multiplied by the exact covered fraction across mapped tracks; emit REVIEW when the project-authored threshold is met. New native measurements retain exact contiguous intervals and their endpoint coordinates on each source track.",
       "supported_kicad_versions": [
         "KiCad 10 native pcbnew API; each configured project's exact version and digest-pinned image are checked"
       ],
       "limitations": [
         "The check is opt-in and requires an exact project-authored signal/reference map and minimum alternate-net coverage; it does not infer intent or signal criticality from names.",
-        "The metric measures track centerlines over native filled zones and sums contributions by alternate net and adjacent layer. Contributions can be disjoint and do not prove one continuous run, zone connectivity, return-current adequacy, coupling, emissions, or electrical failure.",
+        "The metric measures track centerlines over native filled zones and sums contributions by alternate net and adjacent layer. Localized intervals identify where a track centerline lies inside each alternate net, but do not prove one continuous route run, zone connectivity, return-current adequacy, coupling, emissions, or electrical failure.",
+        "Older stored coverage reports without track endpoints or interval records retain aggregate findings but cannot provide localized coordinates.",
         "An alternate plane can be intentional, including a designed transition, chassis/shield region, or return strategy. Findings require engineering review and can be set to off or ignored by exact fingerprint.",
         "Short unmapped routes, unsupported arc geometry, trace width, pad and via connections, and return paths beyond immediate adjacent copper are outside this metric."
       ],
@@ -12340,7 +12341,9 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_pcb_alternate_reference_plane_run.test_alternate_plane_evidence_is_stable_under_zone_order_and_policy_can_disable"
+        "tests.test_pcb_alternate_reference_plane_run.test_alternate_plane_evidence_is_stable_under_zone_order_and_policy_can_disable",
+        "tests.test_pcb_alternate_reference_plane_run.test_disjoint_alternate_plane_intervals_are_localized_separately",
+        "tests.test_pcb_alternate_reference_plane_run.test_legacy_coverage_reports_keep_aggregate_findings_without_coordinates"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_PCB_FIXTURES"

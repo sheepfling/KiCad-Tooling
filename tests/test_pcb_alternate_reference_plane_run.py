@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from fractions import Fraction
+
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import evaluate
@@ -98,6 +101,10 @@ def test_authored_alternate_net_threshold_emits_exact_review_candidate() -> None
             item.zone_uuids,
             item.covered_fraction_numerator,
             item.covered_fraction_denominator,
+            tuple(
+                (interval.start_parameter, interval.end_parameter)
+                for interval in item.covered_intervals
+            ),
         )
         for item in alternate
     ] == [
@@ -106,6 +113,7 @@ def test_authored_alternate_net_threshold_emits_exact_review_candidate() -> None
             (ZONE_ALT_A, ZONE_ALT_B),
             2,
             5,
+            ((Fraction(2, 5), Fraction(4, 5)),),
         )
     ]
     assert len(alternate_reference_plane_run_candidates(coverage)) == 1
@@ -123,7 +131,83 @@ def test_authored_alternate_net_threshold_emits_exact_review_candidate() -> None
     assert finding.evidence["alternate_net"] == ("VCC",)
     assert finding.evidence["adjacent_reference_layer"] == ("In1.Cu",)
     assert finding.evidence["contributing_tracks"] == (f"{entry.tracks[0].track_uuid}:4000000nm",)
+    assert finding.evidence["alternate_reference_intervals"] == (
+        f"{entry.tracks[0].track_uuid}:4000000,5000000nm->8000000,5000000nm",
+    )
     assert "does not establish copper continuity" in finding.message
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE)
+def test_disjoint_alternate_plane_intervals_are_localized_separately() -> None:
+    spec = mapping(
+        requirement(
+            minimum_fraction=0,
+            minimum_alternate_reference_length_um=1,
+        )
+    )
+    observed = snapshot(
+        track(),
+        zones=(
+            zone(
+                ZONE_GND,
+                net="GND",
+                outline=((0, 0), (2_000_000, 0), (2_000_000, 10_000_000), (0, 10_000_000)),
+            ),
+            zone(
+                ZONE_ALT_A,
+                net="VCC",
+                outline=(
+                    (2_000_000, 0),
+                    (4_000_000, 0),
+                    (4_000_000, 10_000_000),
+                    (2_000_000, 10_000_000),
+                ),
+            ),
+            zone(
+                ZONE_ALT_B,
+                net="VCC",
+                outline=(
+                    (6_000_000, 0),
+                    (8_000_000, 0),
+                    (8_000_000, 10_000_000),
+                    (6_000_000, 10_000_000),
+                ),
+            ),
+        ),
+    )
+
+    entry = pcb_reference_plane_entries(spec, observed)[0]
+    coverage = entry.tracks[0].alternate_reference_coverages[0]
+    assert coverage.covered_fraction_numerator == 2
+    assert coverage.covered_fraction_denominator == 5
+    assert tuple(
+        (item.start_parameter, item.end_parameter) for item in coverage.covered_intervals
+    ) == (
+        (Fraction(1, 5), Fraction(2, 5)),
+        (Fraction(3, 5), Fraction(4, 5)),
+    )
+    (candidate,) = alternate_reference_plane_run_candidates(report(spec, observed))
+    assert candidate.evidence["alternate_reference_intervals"] == (
+        f"{entry.tracks[0].track_uuid}:2000000,5000000nm->4000000,5000000nm",
+        f"{entry.tracks[0].track_uuid}:6000000,5000000nm->8000000,5000000nm",
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE)
+def test_legacy_coverage_reports_keep_aggregate_findings_without_coordinates() -> None:
+    _, _, current = evaluated_report(threshold_um=4_000)
+    payload = current.model_dump(mode="json")
+    measured_track = payload["entries"][0]["tracks"][0]
+    measured_track.pop("start_nm")
+    measured_track.pop("end_nm")
+    measured_track["alternate_reference_coverages"][0].pop("covered_intervals")
+
+    legacy = type(current).model_validate_json(json.dumps(payload))
+    (candidate,) = alternate_reference_plane_run_candidates(legacy)
+    assert candidate.evidence["contributing_tracks"] == (
+        f"{legacy.entries[0].tracks[0].track_uuid}:4000000nm",
+    )
+    assert candidate.evidence["alternate_reference_intervals"] == ()
 
 
 def test_alternate_net_review_is_opt_in_and_threshold_boundary_is_exact() -> None:

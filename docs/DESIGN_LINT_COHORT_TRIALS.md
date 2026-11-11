@@ -2402,6 +2402,21 @@ for dispositions and timing; leave unmeasured values unstated.
   install or copy cohort code or board data. Keep it at `review` until independent project reviews
   establish useful thresholds and applicability.
 
+### Follow-up: localize alternate-plane spans on source tracks
+
+- **Cohort input:** The GP-001 source screen above motivates attention to alternate-net plane
+  changes, but its fixed distance and nearby-capacitor assumptions remain unadopted.
+- **Local refinement:** LINT-391 extends LINT-335's existing project-authored threshold finding
+  with exact contiguous filled-zone intervals and endpoint coordinates on each native track.
+  Disjoint contributions remain distinct, and older stored coverage reports retain aggregate
+  findings without coordinates.
+- **Evidence boundary:** This adds review localization only. It does not change the authored
+  threshold or default mode, and interval evidence does not prove continuity, electrical intent,
+  or a defect. Synthetic controls and digest-pinned KiCad Docker fixtures validate the local
+  geometry; they do not measure field precision or reviewer value.
+- **Disposition:** Reuse the cohort as a design cue only. No cohort code or board data was copied,
+  and no universal distance threshold was adopted.
+
 ### Source review: kicad-happy v3.0.1 component-value syntax
 
 - **Pinned source:** The [v3.0.1 changelog][happy-value-syntax-v301]

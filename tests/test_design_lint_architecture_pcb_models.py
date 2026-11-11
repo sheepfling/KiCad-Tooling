@@ -104,6 +104,7 @@ PCB_REFERENCE_PLANE_MODEL_NAMES = (
     "PcbReferencePlaneCoverageEntry",
     "PcbReferencePlaneCoverageReport",
 )
+PCB_REFERENCE_PLANE_INTERNAL_MODEL_NAMES = ("PcbReferencePlaneCoverageInterval",)
 
 PCB_SWITCHING_LOOP_MODEL_NAMES = (
     "PcbSwitchingLoopPad",
@@ -259,6 +260,7 @@ def test_pcb_reference_plane_models_have_a_theme_owner_and_compatibility_exports
 
     assert _line_count(owner) < IMPLEMENTATION_MAX_LINES
     assert set(PCB_REFERENCE_PLANE_MODEL_NAMES) <= _top_level_definitions(owner)
+    assert set(PCB_REFERENCE_PLANE_INTERNAL_MODEL_NAMES) <= _top_level_definitions(owner)
     for name in PCB_REFERENCE_PLANE_MODEL_NAMES:
         assert getattr(shared_models, name) is getattr(pcb_reference_plane_models, name)
 

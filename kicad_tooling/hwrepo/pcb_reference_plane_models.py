@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fractions import Fraction
+from itertools import pairwise
 from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
@@ -65,6 +66,38 @@ class PcbReferencePlaneMap(StrictModel):
         return self
 
 
+class PcbReferencePlaneCoverageInterval(StrictModel):
+    """Exact normalized start/end parameters for one contiguous track interval."""
+
+    start_numerator: NonNegativeCount
+    start_denominator: PositiveCount
+    end_numerator: NonNegativeCount
+    end_denominator: PositiveCount
+
+    @property
+    def start_parameter(self) -> Fraction:
+        return Fraction(self.start_numerator, self.start_denominator)
+
+    @property
+    def end_parameter(self) -> Fraction:
+        return Fraction(self.end_numerator, self.end_denominator)
+
+    @model_validator(mode="after")
+    def canonical_interval(self) -> PcbReferencePlaneCoverageInterval:
+        start = self.start_parameter
+        end = self.end_parameter
+        if start < 0 or end > 1 or start >= end:
+            raise ValueError("Reference-plane intervals must be nonempty and within the track")
+        if (
+            start.numerator != self.start_numerator
+            or start.denominator != self.start_denominator
+            or end.numerator != self.end_numerator
+            or end.denominator != self.end_denominator
+        ):
+            raise ValueError("Reference-plane interval fractions must be reduced")
+        return self
+
+
 class PcbReferencePlaneNetCoverage(StrictModel):
     """Native filled copper coverage by one non-required net under a signal track."""
 
@@ -72,6 +105,8 @@ class PcbReferencePlaneNetCoverage(StrictModel):
     zone_uuids: tuple[NativePcbUuid, ...]
     covered_fraction_numerator: PositiveCount
     covered_fraction_denominator: PositiveCount
+    # Older stored reports do not contain intervals; new native scans always do.
+    covered_intervals: tuple[PcbReferencePlaneCoverageInterval, ...] = ()
 
     @model_validator(mode="after")
     def canonical_alternate_fraction(self) -> PcbReferencePlaneNetCoverage:
@@ -88,6 +123,21 @@ class PcbReferencePlaneNetCoverage(StrictModel):
             raise ValueError("Alternate reference coverage fraction must be reduced")
         if len({item.casefold() for item in self.zone_uuids}) != len(self.zone_uuids):
             raise ValueError("Alternate reference coverage repeats a zone identity")
+        if self.covered_intervals:
+            intervals = tuple(
+                (item.start_parameter, item.end_parameter) for item in self.covered_intervals
+            )
+            if intervals != tuple(sorted(intervals)):
+                raise ValueError("Alternate reference coverage intervals must be ordered")
+            if any(
+                previous_end >= next_start
+                for (_, previous_end), (next_start, _) in pairwise(intervals)
+            ):
+                raise ValueError(
+                    "Alternate reference coverage intervals must be disjoint and merged"
+                )
+            if sum((end - start for start, end in intervals), Fraction(0)) != fraction:
+                raise ValueError("Alternate reference intervals must match the covered fraction")
         return self
 
 
@@ -114,6 +164,9 @@ class PcbReferencePlaneTrackMeasurement(StrictModel):
     covered_fraction_denominator: PositiveCount
     below_minimum: bool
     alternate_reference_coverages: tuple[PcbReferencePlaneNetCoverage, ...] = ()
+    # Optional for compatibility with source-bound reports captured before localization.
+    start_nm: tuple[int, int] | None = None
+    end_nm: tuple[int, int] | None = None
 
     @model_validator(mode="after")
     def canonical_coverage_fraction(self) -> PcbReferencePlaneTrackMeasurement:
@@ -145,6 +198,10 @@ class PcbReferencePlaneTrackMeasurement(StrictModel):
             raise ValueError("PCB reference-plane measurement repeats an endpoint via")
         if not hole_vias <= endpoint_vias:
             raise ValueError("Reference-hole via context must name an observed track endpoint via")
+        if (self.start_nm is None) != (self.end_nm is None):
+            raise ValueError("PCB reference-plane track endpoints must be supplied together")
+        if self.start_nm is not None and self.start_nm == self.end_nm:
+            raise ValueError("PCB reference-plane track endpoints must be distinct")
         return self
 
 

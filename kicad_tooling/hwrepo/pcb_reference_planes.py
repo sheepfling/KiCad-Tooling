@@ -15,6 +15,7 @@ from .pcb_connectivity_observations import (
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_reference_plane_models import (
     PcbReferencePlaneCoverageEntry,
+    PcbReferencePlaneCoverageInterval,
     PcbReferencePlaneMap,
     PcbReferencePlaneNetCoverage,
     PcbReferencePlaneRequirement,
@@ -94,15 +95,15 @@ def _segment_edge_parameters(
     return (low, high)
 
 
-def _covered_fraction(
+def _covered_intervals(
     start: Point,
     end: Point,
     islands: tuple[PcbZoneFilledIslandObservation, ...],
-) -> Fraction:
-    """Measure the share of one straight track centerline inside a union of zones."""
+) -> tuple[tuple[Fraction, Fraction], ...]:
+    """Return exact, ordered centerline intervals inside a union of filled islands."""
     route = (end[0] - start[0], end[1] - start[1])
     if route == (0, 0):
-        return Fraction(0)
+        return ()
     rings = tuple(ring for island in islands for ring in (island.outline_nm, *island.holes_nm))
     boundaries = {Fraction(0), Fraction(1)}
     for ring in rings:
@@ -111,7 +112,7 @@ def _covered_fraction(
                 _segment_edge_parameters(start, end, first, ring[(index + 1) % len(ring)])
             )
     ordered = sorted(boundaries)
-    covered = Fraction(0)
+    covered: list[tuple[Fraction, Fraction]] = []
     for low, high in pairwise(ordered):
         if low == high:
             continue
@@ -121,8 +122,20 @@ def _covered_fraction(
             Fraction(start[1]) + midpoint * route[1],
         )
         if any(_island_contains(point, island) for island in islands):
-            covered += high - low
-    return covered
+            if covered and covered[-1][1] == low:
+                covered[-1] = (covered[-1][0], high)
+            else:
+                covered.append((low, high))
+    return tuple(covered)
+
+
+def _covered_fraction(
+    start: Point,
+    end: Point,
+    islands: tuple[PcbZoneFilledIslandObservation, ...],
+) -> Fraction:
+    """Measure the share of one straight track centerline inside a union of zones."""
+    return sum((high - low for low, high in _covered_intervals(start, end, islands)), Fraction(0))
 
 
 def _adjacent_layers(copper_layers: tuple[str, ...], signal_layer: str) -> tuple[str, ...]:
@@ -225,7 +238,8 @@ def _alternate_net_coverages(
             key=lambda net: (net.casefold(), net),
         )
         islands = tuple(island for zone in alternate_zones for island in zone.filled_islands)
-        fraction = _covered_fraction(track.start_nm, track.end_nm, islands)
+        intervals = _covered_intervals(track.start_nm, track.end_nm, islands)
+        fraction = sum((high - low for low, high in intervals), Fraction(0))
         if fraction:
             coverages.append(
                 PcbReferencePlaneNetCoverage(
@@ -235,6 +249,15 @@ def _alternate_net_coverages(
                     ),
                     covered_fraction_numerator=fraction.numerator,
                     covered_fraction_denominator=fraction.denominator,
+                    covered_intervals=tuple(
+                        PcbReferencePlaneCoverageInterval(
+                            start_numerator=low.numerator,
+                            start_denominator=low.denominator,
+                            end_numerator=high.numerator,
+                            end_denominator=high.denominator,
+                        )
+                        for low, high in intervals
+                    ),
                 )
             )
     return tuple(sorted(coverages, key=lambda item: (item.net.casefold(), item.net)))
@@ -349,6 +372,8 @@ def pcb_reference_plane_entries(
                         covered_fraction_denominator=fraction.denominator,
                         below_minimum=fraction < threshold,
                         alternate_reference_coverages=alternate_coverages,
+                        start_nm=track.start_nm,
+                        end_nm=track.end_nm,
                     )
                 )
 

@@ -88,6 +88,8 @@ def test_alternate_reference_plane_selector_stays_with_its_fault_control_and_par
     }
     assert selected == {
         "tests/test_pcb_alternate_reference_plane_run.py::test_authored_alternate_net_threshold_emits_exact_review_candidate",
+        "tests/test_pcb_alternate_reference_plane_run.py::test_disjoint_alternate_plane_intervals_are_localized_separately",
+        "tests/test_pcb_alternate_reference_plane_run.py::test_legacy_coverage_reports_keep_aggregate_findings_without_coordinates",
         "tests/test_pcb_alternate_reference_plane_run.py::test_alternate_net_review_is_opt_in_and_threshold_boundary_is_exact",
         "tests/test_pcb_alternate_reference_plane_run.py::test_alternate_plane_evidence_is_stable_under_zone_order_and_policy_can_disable",
         "tests/test_pcb_reference_plane_native_fixture_lane.py::test_native_alternate_reference_net_fault_control_repeats[controller-10.0.0]",

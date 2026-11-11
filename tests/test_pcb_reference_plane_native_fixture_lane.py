@@ -108,6 +108,8 @@ def test_native_alternate_reference_net_fault_control_repeats(
     assert 500_000 <= coverage_nm < 3_000_000
     assert result["fault_review"] == "true"
     assert result["control_review"] == "false"
+    assert "nm->" in result["localized_intervals"]
+    assert result["localized_intervals"].startswith("00000000-0000-0000-0000-")
     assert result["repeatable"] == "true"
     assert (root / result["fault_receipt"]).exists()
     assert (root / result["control_receipt"]).exists()

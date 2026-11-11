@@ -101,6 +101,10 @@ class _AlternateReferencePlaneParityCases(McpParityHarness):
         self.assertEqual(finding.mode, "review")
         self.assertEqual(finding.evidence["alternate_net"], ("VCC",))
         self.assertEqual(finding.evidence["minimum_alternate_reference_length_um"], ("400",))
+        self.assertEqual(
+            finding.evidence["alternate_reference_intervals"],
+            ("00000000-0000-0000-0000-000000000103:2500000,2000000nm->3000000,2000000nm",),
+        )
 
 
 def test_alternate_reference_plane_rule_matches_cli_and_mcp() -> None:
