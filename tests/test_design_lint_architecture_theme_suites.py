@@ -32,6 +32,8 @@ SCHEMATIC_ERC_THEME_SUITES = (
     "test_schematic_erc_global_severity_native_fixture_lane.py",
     "test_schematic_erc_warning_downgrade.py",
     "test_design_lint_mcp_parity_schematic_erc_warning_downgrade.py",
+    "test_schematic_erc_catalog_coverage.py",
+    "test_design_lint_mcp_parity_schematic_erc_catalog_coverage.py",
     "test_schematic_erc_unknown_rule_key.py",
     "test_design_lint_mcp_parity_schematic_erc_unknown_rule_key.py",
 )

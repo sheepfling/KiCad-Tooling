@@ -20,7 +20,8 @@ KICAD_10_NATIVE_TOOLCHAINS = (
 # Exact-version matrix for the source-audited global ERC severity catalogs.
 # Keep it separate so adding ERC releases does not multiply every native lane.
 KICAD_10_ERC_SEVERITY_TOOLCHAINS = (
-    *KICAD_10_NATIVE_TOOLCHAINS,
+    KICAD_10_NATIVE_TOOLCHAINS[0],
+    KICAD_10_NATIVE_TOOLCHAINS[1],
     (
         "10.0.6",
         (

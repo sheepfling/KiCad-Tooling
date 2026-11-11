@@ -125,6 +125,10 @@ def test_error_warning_and_ignore_baselines_are_disjoint() -> None:
     assert not ERC_DEFAULT_WARNING_RULE_KEYS & ERC_DEFAULT_IGNORED_RULE_KEYS
     assert len(ERC_DEFAULT_ERROR_RULE_KEYS) == 20
     assert len(ERC_DEFAULT_WARNING_RULE_KEYS) == 22
+    for version in ("10.0.0", "10.0.5", "10.0.6"):
+        assert ERC_DEFAULT_WARNING_RULE_KEYS_BY_KICAD_VERSION[version] == (
+            ERC_DEFAULT_WARNING_RULE_KEYS
+        )
     assert ERC_DEFAULT_WARNING_RULE_KEYS_BY_KICAD_VERSION["10.0.6"] == ERC_DEFAULT_WARNING_RULE_KEYS
     assert ERC_DEFAULT_WARNING_RULE_KEYS_BY_KICAD_VERSION["10.0.7"] == (
         ERC_DEFAULT_WARNING_RULE_KEYS | {"same_local_global_power"}
@@ -136,6 +140,9 @@ def test_error_warning_and_ignore_baselines_are_disjoint() -> None:
 
 @pytest.mark.parametrize("version", tuple(ERC_RULE_KEYS_BY_KICAD_VERSION))
 def test_default_severity_sets_partition_the_exact_patch_catalog(version: str) -> None:
+    assert set(ERC_DEFAULT_WARNING_RULE_KEYS_BY_KICAD_VERSION) == set(
+        ERC_RULE_KEYS_BY_KICAD_VERSION
+    )
     warnings = ERC_DEFAULT_WARNING_RULE_KEYS_BY_KICAD_VERSION[version]
 
     assert not ERC_DEFAULT_ERROR_RULE_KEYS & warnings
@@ -218,7 +225,15 @@ def test_unsupported_kicad_versions_and_non_schematic_projects_are_out_of_scope(
     root, _, config, source_hashes = _project(tmp_path)
     pcb_only = cast(ProjectConfig, SimpleNamespace(kind=ProjectKind.PCB_ONLY))
     assert _scan(root, pcb_only, source_hashes) == ()
-    for version in ("9.0.0", "10.1.0", "11.0.0"):
+    for version in (
+        "9.0.0",
+        "10.0.1",
+        "10.0.2",
+        "10.0.3",
+        "10.0.4",
+        "10.1.0",
+        "11.0.0",
+    ):
         unsupported = cast(
             ProjectConfig,
             SimpleNamespace(kind=ProjectKind.PCB, project=config.project, kicad_version=version),

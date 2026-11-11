@@ -8,6 +8,9 @@ from typing import cast
 
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import ProjectConfig, ProjectKind
+from kicad_tooling.hwrepo.schematic_erc_catalog_coverage import (
+    source_bound_schematic_erc_catalog_coverage_candidates,
+)
 from kicad_tooling.hwrepo.schematic_erc_global_severity_review import (
     source_bound_schematic_erc_ignored_rule_candidates,
 )
@@ -59,4 +62,15 @@ def schematic_erc_global_severity_rule_ids() -> frozenset[str]:
         unknown_config,
         {unknown_relative: digest(unknown_settings)},
     )
-    return frozenset(candidate.rule_id for candidate in (*ignored, *downgraded, *unknown))
+    coverage_config = cast(
+        ProjectConfig,
+        SimpleNamespace(kind=ProjectKind.PCB, project=unknown_relative, kicad_version="10.0.3"),
+    )
+    coverage = source_bound_schematic_erc_catalog_coverage_candidates(
+        repository,
+        coverage_config,
+        {unknown_relative: digest(unknown_settings)},
+    )
+    return frozenset(
+        candidate.rule_id for candidate in (*ignored, *downgraded, *unknown, *coverage)
+    )

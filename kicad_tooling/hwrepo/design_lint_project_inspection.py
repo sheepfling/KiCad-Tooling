@@ -72,6 +72,9 @@ from .pcb_dru_rule_review import (
 from .pcb_mechanical_edge_clearance import mechanical_edge_rule_coverage_candidates
 from .project_models import ProjectManifest
 from .project_source_hashes import hash_project_sources as hashes
+from .schematic_erc_catalog_coverage import (
+    source_bound_schematic_erc_catalog_coverage_candidates,
+)
 from .schematic_erc_exclusion_review import source_bound_schematic_erc_exclusion_candidates
 from .schematic_erc_global_severity_review import (
     source_bound_schematic_erc_ignored_rule_candidates,
@@ -183,6 +186,11 @@ def inspect_design_lint_request(
             *source_bound_pcb_drc_exclusion_candidates(root, config, coach.source_hashes),
         )
         schematic_source_candidates = (
+            *source_bound_schematic_erc_catalog_coverage_candidates(
+                root,
+                config,
+                coach.source_hashes,
+            ),
             *source_bound_schematic_erc_exclusion_candidates(
                 root,
                 config,

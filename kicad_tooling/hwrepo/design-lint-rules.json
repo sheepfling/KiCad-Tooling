@@ -9918,12 +9918,12 @@
       "evidence_adapter": "Exact source-hashed KiCad 10.0 .kicad_pro erc.rule_severities map, schema version, and configured patch version",
       "predicate": "For supported KiCad 10.0.x project settings with ERC schema 0, emit one review candidate for each known KiCad Error-default rule explicitly configured as Warning.",
       "supported_kicad_versions": [
-        "KiCad 10.0.x .kicad_pro erc.rule_severities with schema 0; default severities are sourced from KiCad 10.0.0 and 10.0.5 definitions, and native behavior is tested on both pinned images"
+        "Exact KiCad 10.0.0, 10.0.5, 10.0.6, 10.0.7, and 10.0.8 .kicad_pro settings with schema 0; other patches are surfaced by schematic.erc_catalog_unverified when explicit overrides exist"
       ],
       "limitations": [
         "A Warning override may be intentional; the finding does not assert that a violation exists or that the changed project policy is wrong.",
         "The check reads saved project settings and does not run ERC, identify affected schematic objects, inspect connectivity, infer power or ground requirements, or validate PCB copper.",
-        "Only the explicitly catalogued KiCad 10.0 Error-default keys are reviewed. PCB-only projects and other KiCad versions are out of scope; project policy can select block, off, or an exact-fingerprint ignore."
+        "Only the explicitly catalogued KiCad 10.0 Error-default keys are reviewed. PCB-only projects and other KiCad versions are out of scope; explicit overrides on an unaudited version receive a separate catalog-coverage review. Project policy can select block, off, or an exact-fingerprint ignore."
       ],
       "fault_fixtures": [
         "tests.test_schematic_erc_warning_downgrade.test_error_default_changed_to_warning_creates_source_bound_review",
@@ -10041,6 +10041,46 @@
       ]
     },
     {
+      "rule_id": "schematic.erc_catalog_unverified",
+      "title": "Explicit ERC overrides need catalog review on an unaudited KiCad patch",
+      "theme": "schematic",
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_erc_catalog_coverage.py#source_bound_schematic_erc_catalog_coverage_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-hashed KiCad .kicad_pro erc.rule_severities entries and configured exact KiCad version, compared with the audited patch catalog",
+      "predicate": "For a schematic-capable project on a KiCad version absent from the audited ERC catalog, emit one review candidate when explicit ERC severity overrides exist.",
+      "supported_kicad_versions": [
+        "Any exact configured version without an audited catalog; this is a catalog-coverage review, not an ERC compatibility claim"
+      ],
+      "limitations": [
+        "The finding does not determine whether any override key or severity is valid for the configured release, and it does not claim an electrical defect.",
+        "The review is limited to explicit erc.rule_severities entries in ERC settings schema 0. Projects without overrides and projects outside schematic-capable kinds are quiet.",
+        "This rule does not run ERC or inspect schematic connectivity, board copper, or physical return paths. Project policy can select block, off, or an exact-fingerprint ignore."
+      ],
+      "fault_fixtures": [
+        "tests.test_schematic_erc_catalog_coverage.test_unverified_patch_with_explicit_overrides_creates_source_bound_review",
+        "tests.test_design_lint_mcp_parity_schematic_erc_catalog_coverage.test_unverified_erc_catalog_review_matches_between_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_schematic_erc_catalog_coverage.test_audited_patches_are_valid_controls",
+        "tests.test_schematic_erc_catalog_coverage.test_no_override_entries_and_non_schematic_projects_are_quiet"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_schematic_erc_catalog_coverage.test_override_source_order_does_not_change_review_summary"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/schematic_erc_catalog_coverage.py#source_bound_schematic_erc_catalog_coverage_candidates",
+        "kicad_tooling/hwrepo/schematic_erc_catalog_coverage.py#project_schematic_erc_catalog_coverage_evidence",
+        "kicad_tooling/hwrepo/schematic_erc_project_settings.py#configured_schematic_erc_rule_severities",
+        "kicad_tooling/hwrepo/schematic_erc_project_settings_evidence.py#read_source_bound_schematic_erc_settings",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
+        "kicad_tooling/hwrepo/design_lint_candidate_inputs.py#DesignLintCandidateInputs",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
+      ]
+    },
+    {
       "rule_id": "schematic.erc_unknown_rule_key",
       "title": "Unknown schematic ERC severity keys need version review",
       "theme": "schematic",
@@ -10057,7 +10097,7 @@
       "limitations": [
         "An unknown key may be a typo, stale entry, or key from another KiCad patch; the finding does not identify the intended replacement or claim an electrical defect.",
         "KiCad applies saved severities only to registered ERC item keys, so an unknown entry may have no effect. The check does not run ERC, inspect the schematic, infer electrical intent, or validate PCB copper.",
-        "KiCad 10.0.1 through 10.0.4 and patches outside the explicit catalog remain out of scope until their complete key catalog and native behavior are reviewed. Project policy can select block, off, or an exact-fingerprint ignore."
+        "KiCad 10.0.1 through 10.0.4 and patches outside the explicit catalog remain out of scope until exact native behavior is checked. The official image catalog has no 10.0.3 image. Project policy can select block, off, or an exact-fingerprint ignore."
       ],
       "fault_fixtures": [
         "tests.test_schematic_erc_unknown_rule_key.test_unknown_keys_at_each_severity_create_source_bound_review_candidates",

@@ -10,6 +10,7 @@ from typing import cast
 
 import pytest
 
+from kicad_tooling.ci_hosted_kicad10_images import KICAD_10_ERC_SEVERITY_TOOLCHAINS
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import ProjectConfig, ProjectKind
 from kicad_tooling.hwrepo.schematic_erc_project_settings import (
@@ -21,7 +22,13 @@ from kicad_tooling.hwrepo.schematic_erc_unknown_rule_key_review import (
 )
 
 RULE_ID = "schematic.erc_unknown_rule_key"
-AUDITED_KICAD_VERSIONS = ("10.0.0", "10.0.5", "10.0.6", "10.0.7", "10.0.8")
+AUDITED_KICAD_VERSIONS = (
+    "10.0.0",
+    "10.0.5",
+    "10.0.6",
+    "10.0.7",
+    "10.0.8",
+)
 PROJECT_RELATIVE = "projects/controller.kicad_pro"
 FIXTURES = Path(__file__).parent / "fixtures/design_lint/schematic-erc-global-severity"
 pytestmark = [
@@ -64,6 +71,18 @@ def test_known_key_catalog_is_closed_to_audited_patches() -> None:
         assert ERC_RULE_KEYS_BY_KICAD_VERSION[version] == expanded
     assert len(baseline) == 46
     assert len(expanded) == 47
+
+
+def test_native_matrix_covers_each_audited_patch_with_a_pinned_image() -> None:
+    versions = tuple(version for version, _image in KICAD_10_ERC_SEVERITY_TOOLCHAINS)
+    images = tuple(image for _version, image in KICAD_10_ERC_SEVERITY_TOOLCHAINS)
+
+    assert versions == AUDITED_KICAD_VERSIONS
+    assert len(images) == len(set(images))
+    assert all(
+        f"ghcr.io/kicad/kicad:{version}@sha256:" in image
+        for version, image in zip(versions, images, strict=True)
+    )
 
 
 @pytest.mark.parametrize("version", AUDITED_KICAD_VERSIONS)
@@ -120,7 +139,15 @@ def test_every_known_key_is_a_valid_control_at_each_severity(
 
 def test_unsupported_versions_and_non_schematic_kinds_are_out_of_scope(tmp_path: Path) -> None:
     root, _, config, source_hashes = _project(tmp_path)
-    for version in ("9.0.0", "10.0.1", "10.0.3", "10.0.4", "10.0.9", "11.0.0"):
+    for version in (
+        "9.0.0",
+        "10.0.1",
+        "10.0.2",
+        "10.0.3",
+        "10.0.4",
+        "10.0.9",
+        "11.0.0",
+    ):
         unsupported = cast(
             ProjectConfig,
             SimpleNamespace(kind=ProjectKind.PCB, project=PROJECT_RELATIVE, kicad_version=version),

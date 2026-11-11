@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 331 active rules.
+The catalog currently contains 333 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -5506,12 +5506,17 @@ or `off`, and supports exact-fingerprint ignores. Synthetic settings are in
 `schematic.erc_error_downgraded` prompts for each explicitly configured KiCad
 10.0 ERC rule in the tooling's documented Error-default key set when its saved
 severity is `warning`. The finding identifies the exact rule key, source hash,
-and configured KiCad patch version. The default key set is taken from KiCad's
-tagged [`erc_settings.cpp`][kicad-10.0.0-erc-settings-source] and
-[`erc_item.cpp`][kicad-10.0.5-erc-item-source]; default Warning and Ignore
-checks are valid controls. The native fixture shows `pin_not_connected` as a
-Warning after the override and as an Error in the control on KiCad 10.0.0 and
-10.0.5.
+and configured KiCad patch version. The audited versions are exactly 10.0.0,
+10.0.5, 10.0.6, 10.0.7, and 10.0.8. The Error-default sets match across
+those releases, and native fault/control fixtures run on each digest-pinned
+image. Other patches remain unsupported until their source and native behavior
+are verified; `schematic.erc_catalog_unverified` reports explicit overrides
+on those patches for review. The baseline comes from KiCad 10.0.0's
+[settings loader][kicad-10.0.0-erc-settings-source] and 10.0.5's
+[ERC item definitions][kicad-10.0.5-erc-item-source].
+Default Warning and Ignore checks are valid controls. Native fixtures show
+`pin_not_connected` as a Warning after the override and as an Error in the
+control on every audited image.
 
 This is a review prompt about a severity-policy change, not proof that a
 violation exists or that the override is wrong. It does not run ERC, identify
@@ -5522,27 +5527,41 @@ ignore an exact fingerprint. Tooling-owned settings fixtures are in
 
 [kicad-10.0.0-erc-settings-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/eeschema/erc/erc_settings.cpp
 [kicad-10.0.5-erc-item-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/eeschema/erc/erc_item.cpp
+[kicad-10.0.1-erc-item-source]: https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.1/eeschema/erc/erc_item.cpp
+[kicad-10.0.1-erc-settings-source]: https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.1/eeschema/erc/erc_settings.cpp
+[kicad-10.0.2-erc-item-source]: https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.2/eeschema/erc/erc_item.cpp
+[kicad-10.0.2-erc-settings-source]: https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.2/eeschema/erc/erc_settings.cpp
+[kicad-10.0.4-erc-item-source]: https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.4/eeschema/erc/erc_item.cpp
+[kicad-10.0.4-erc-settings-source]: https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.4/eeschema/erc/erc_settings.cpp
 
 ## Review unknown schematic ERC severity keys
 
 `schematic.erc_unknown_rule_key` prompts for each saved
 `erc.rule_severities` key missing from the audited KiCad 10.0.0, 10.0.5,
-10.0.6, 10.0.7, or 10.0.8 catalog. The finding names the exact key, saved
-severity, project source hash, and configured patch version. KiCad's tagged
+10.0.6, 10.0.7, or 10.0.8 catalog. The finding names
+the exact key, saved severity, project source hash, and configured patch
+version. KiCad's tagged
 settings loaders walk the registered items in each matching release and apply
 a saved severity only when its key matches a registered item. An unknown entry
 can therefore be ignored by ERC. The catalog has 46 keys in 10.0.0, 10.0.5,
-and 10.0.6; 10.0.7 and 10.0.8 add the warning-default key
-`same_local_global_power` for 47 keys. Exact native fault/control runs use all
-five pinned releases.
+and 10.0.6; 10.0.7 and 10.0.8 add the
+warning-default key `same_local_global_power` for 47 keys. Exact native
+fault/control runs use all five supported pinned releases.
 
 This is a review prompt for a possible typo, stale setting, or patch-version
 mismatch. It does not guess a replacement key, claim an electrical defect, or
 run ERC for the project. KiCad 10.0.1 through 10.0.4 and patches outside the
-explicit catalog stay out of scope until their complete key set and native
-behavior are reviewed. KiCad 10.0.7 adds `same_local_global_power`; the exact
-10.0.6 and 10.0.7 definitions show why a 10.0-wide key whitelist would be
-unsafe. The tagged settings loaders and item definitions for 10.0.6
+explicit catalog stay out of scope until exact native behavior is verified.
+The [official image list][kicad-docker-versions] has no digest-pinned 10.0.3
+image. KiCad 10.0.7 adds `same_local_global_power`; exact release sources show
+why a 10.0-wide key whitelist would be unsafe. Tagged settings loaders and item
+definitions for 10.0.1 ([settings][kicad-10.0.1-erc-settings-source],
+[items][kicad-10.0.1-erc-item-source]), 10.0.2
+([settings][kicad-10.0.2-erc-settings-source],
+[items][kicad-10.0.2-erc-item-source]), and 10.0.4
+([settings][kicad-10.0.4-erc-settings-source],
+[items][kicad-10.0.4-erc-item-source]) match the 46-key catalog at source level,
+but those early patches are not active until exact native fixtures pass. The 10.0.6
 ([settings][kicad-10.0.6-erc-settings-source],
 [items][kicad-10.0.6-erc-item-source]), 10.0.7
 ([settings][kicad-10.0.7-erc-settings-source],
@@ -5567,6 +5586,23 @@ The exact native regression is in
 [kicad-10.0.7-erc-settings-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.7/eeschema/erc/erc_settings.cpp
 [kicad-10.0.8-erc-item-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/eeschema/erc/erc_item.cpp
 [kicad-10.0.8-erc-settings-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/eeschema/erc/erc_settings.cpp
+[kicad-docker-versions]: https://github.com/KiCad/kicad-docker/pkgs/container/kicad/versions?filters%5Bversion_type%5D=tagged
+
+## Review ERC overrides on an unaudited KiCad patch
+
+`schematic.erc_catalog_unverified` emits one source-bound review when a
+schematic-capable project contains explicit `erc.rule_severities` settings but
+its configured KiCad version has no audited ERC catalog. The finding lists the
+configured keys and severities, the exact patch version, and the `.kicad_pro`
+source hash. It points to a coverage gap: the tooling cannot confirm that those
+keys exist or that their configured severities match the engineer's intent.
+
+This review does not declare an override invalid, infer electrical intent, or
+run ERC. Projects with an audited patch, no explicit severity entries, or no
+schematic-capable project kind stay quiet. The project can set the finding to
+`review`, `block`, or `off`, or ignore an exact fingerprint. Unit and CLI/MCP
+parity regressions are in `tests/test_schematic_erc_catalog_coverage.py` and
+`tests/test_design_lint_mcp_parity_schematic_erc_catalog_coverage.py`.
 
 ## Review persisted per-violation PCB DRC exclusions
 

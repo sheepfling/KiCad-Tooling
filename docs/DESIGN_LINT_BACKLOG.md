@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 331 rules are implemented with synthetic regression coverage.
+The following 333 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 331 active rules.
+The catalog currently contains 333 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -763,6 +763,8 @@ skipped under prerelease policy.
 - `pcb.differential_pair_route_skew`
 - `pcb.differential_pair_route_layer_mismatch`
 - `schematic.erc_error_downgraded`
+- `schematic.erc_catalog_unverified`
+- `schematic.erc_unknown_rule_key`
 
 This baseline catches suspicious connector symmetry and missing named pins,
 plus narrow netlist patterns for I2C, I3C, SPI, USB-C, and CAN. It does not
@@ -785,29 +787,42 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest published quality gate (v0.5.3rc668):** The hosted acceptance passed
-  in GitHub Actions run `43019404091`. Its annotated tag selected the rule and
-  cross-rule integrity checks, and enabled the required native fixture. The
-  installed-wheel rehearsal against the separate public template passed.
+- **Latest published quality gate (v0.5.3rc670):** LINT-399 was committed and
+  pushed with its annotated tag. The scoped local gate passed 550 selected
+  tests, including native ERC fixtures on five digest-pinned releases.
+  GitHub Actions had no run or commit status when checked; the local gate
+  skipped mdrepo.
 - **Latest feature work (LINT-397, ERC severity downgrades):** The new
   `schematic.erc_error_downgraded` rule prompts when a source-hashed KiCad
-  10.0.x project explicitly lowers one of twenty documented Error-default ERC
-  keys to Warning. It defaults to REVIEW and leaves default-Warning controls
-  quiet. The exact tag-scoped local gate passed with 425 tests and 8,067
-  deselected, including exact native runs on KiCad 10.0.0 and 10.0.5; Ruff,
+  project on an explicitly audited KiCad 10.0 patch lowers one of twenty
+  documented Error-default ERC keys to Warning. KiCad 10.0.3 and other
+  unlisted patches remain out of scope. It defaults to REVIEW and leaves
+  default-Warning controls quiet. The original tag-scoped local gate passed
+  with 425 tests and 8,067 deselected, including exact native runs on KiCad
+  10.0.0 and 10.0.5; Ruff,
   Alphus, Markdown, Pyright, Windows types, wheel, sdist, and installed-package
   checks also passed.
   Hosted acceptance passed in GitHub Actions run `43019404091`.
   The package and preview jobs were skipped by prerelease policy.
   No external or proprietary project source was used.
-- **Current feature work (LINT-399, current-patch ERC catalog coverage):**
-  LINT-398's `schematic.erc_unknown_rule_key` rule now uses exact catalogs for
+- **Earlier feature work (LINT-399, current-patch ERC catalog coverage):**
+  LINT-398's `schematic.erc_unknown_rule_key` rule uses exact catalogs for
   KiCad 10.0.0, 10.0.5, 10.0.6, 10.0.7, and 10.0.8. The catalog contains 46
   keys through 10.0.6 and 47 keys in 10.0.7/10.0.8, where
   `same_local_global_power` is a new Warning-default key. Each supported release
-  has a digest-pinned native fixture; 10.0.1 through 10.0.4 remain explicitly
-  unsupported pending their own exact-version fixture coverage. LINT-399's
-  focused local acceptance passed; hosted acceptance is pending.
+  has a digest-pinned native fixture. KiCad 10.0.1, 10.0.2, and 10.0.4 have
+  matching 46-key source catalogs but are not active until exact native
+  behavior passes; the official package list has no exact 10.0.3 image.
+  LINT-399 was tagged and pushed as `v0.5.3rc670`; hosted status was not
+  available when checked.
+- **Current feature work (LINT-400, ERC catalog coverage gaps):** The new
+  `schematic.erc_catalog_unverified` review reports explicit severity overrides
+  when the exact configured KiCad release has no active catalog. The candidate
+  includes source hash, version, all configured keys, and severities. It stays
+  quiet for audited versions, projects without explicit overrides, and
+  non-schematic kinds. LINT-400 does not activate early KiCad patches based on
+  source inspection alone. Local acceptance passed 766 selected tests with 5
+  skipped and 7,864 deselected; hosted acceptance is pending.
 - **Earlier feature work (LINT-393, mapped supply-pin coverage):** The
   default-off `power.component_supply_range_pin_coverage` rule checks that
   every native `power_in` pin on a component named in the reviewed supply-range
@@ -4141,7 +4156,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 331 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 333 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -23425,8 +23440,7 @@ acceptance threads while new lint features proceed:
   verification, and external-template playtest passed. The focused native test
   also passed in exact KiCad 10.0.0 and 10.0.5 containers; each emitted the two
   synthetic exclusions as `excluded: true` with the expected error types and
-  comment. Hosted tag `v0.5.3rc665` passed GitHub Actions run
-  [43007744812](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43007744812).
+  comment. Hosted tag `v0.5.3rc665` passed GitHub Actions run `43007744812`.
 
 #### LINT-396 — Review globally ignored schematic ERC rules
 
@@ -23545,7 +23559,10 @@ acceptance threads while new lint features proceed:
   `same_local_global_power` with Warning default.
 - **Behavior:** Add exact catalogs for 10.0.6, 10.0.7, and 10.0.8. Reuse the
   46-key set for 10.0.6 and add the one source-registered key for 10.0.7 and
-  10.0.8. Keep 10.0.1 through 10.0.4 and later unreviewed patches out of scope.
+  10.0.8. At this stage, 10.0.1 through 10.0.4 had not yet been activated
+  with exact native checks. LINT-400 now reports explicit ERC settings on
+  those unlisted versions as a coverage review without claiming that the
+  catalogs are supported.
   Record Warning defaults by exact patch so the new key is not treated as a
   known default in older versions.
 - **Evidence:** KiCad's release-tagged `erc_item.cpp` and `erc_settings.cpp`
@@ -23559,8 +23576,8 @@ acceptance threads while new lint features proceed:
   five-image ERC lane separate from the shared two-image matrix so unrelated
   native test suites do not expand.
 - **Boundary:** This is an audited catalog slice, not a major-version-wide
-  whitelist. KiCad 10.0.1 through 10.0.4 and any unlisted patch remain
-  unavailable until the full catalog and exact native fixture are reviewed.
+  whitelist. KiCad 10.0.3 and any unlisted patch remain unavailable because
+  the exact source and native fixture are not both verified.
   Native results confirm saved severity handling, not electrical correctness.
 - **Selection:** Run the focused unknown-key unit and CLI/MCP parity tests
   using:
@@ -23578,6 +23595,50 @@ acceptance threads while new lint features proceed:
   Pyright, Windows type checks, wheel/sdist, installed-package verification,
   and the separate public-template and adapted-checkout rehearsals passed.
   The local run skipped mdrepo; hosted acceptance runs it.
+
+#### LINT-400 — Report ERC catalog coverage gaps
+
+- **Status:** Local acceptance passed on 2026-11-11; hosted acceptance is pending.
+- **Priority:** P1 deterministic coverage reporting for existing ERC policy checks.
+- **Gap:** The unknown-key and Error-to-Warning rules correctly require exact
+  audited patch catalogs, but previously returned no candidates on unlisted
+  versions. That made an explicit ERC override look indistinguishable from a
+  checked, clean configuration.
+- **Behavior:** Emit one REVIEW candidate for each schematic-capable project
+  with explicit `erc.rule_severities` overrides on a version absent from the
+  catalog. Include the exact source hash, configured version, keys, and
+  severities. Do not claim an override is invalid and do not infer electrical
+  intent. Keep unsupported versions unsupported until both source and native
+  behavior are audited.
+- **Evidence:** Source-bound parsing reuses the canonical ERC settings reader
+  and severity parser. Exact source and native checks continue to gate catalog
+  activation. The 10.0.1, 10.0.2, and 10.0.4 source maps match the 46-key set,
+  but native images could not be fetched in this environment; 10.0.3 has no
+  official digest-pinned image.
+- **Fixtures:** Synthetic fault coverage includes unlisted 10.0.1 through
+  10.0.4, 10.0.9, and 11.0.0; valid controls include all five audited patches,
+  an empty override map, non-schematic projects, source-hash mismatch, and
+  stable order under reordered settings. CLI and MCP reports must match.
+- **Boundary:** This rule identifies incomplete tooling coverage, not an
+  electrical defect or failed ERC run. It does not activate patch catalogs or
+  prove PCB connectivity.
+- **Selection:** Run focused ERC coverage and parity tests with
+  this pytest marker expression:
+
+  ```text
+  design_lint and schematic_lint and (
+    design_lint_rule(rule_id="schematic.erc_catalog_unverified")
+  )
+  ```
+
+- **Acceptance:** The focused package gate passed 766 tests, skipped 5, and
+  deselected 7,864. Ruff, format, Alphus, Rumdl, mdrepo, Linux and Windows
+  Pyright, wheel/sdist builds, and the isolated installed-wheel checks passed.
+  The wheel passed inventory, surface, verification, adapted-checkout, and
+  playtest checks against clean public KiCAD-Test revision `ed89536`. The
+  native ERC fault/control lane passed on the five audited digest-pinned
+  releases. The focused architecture-owner, module-size, pytest-theme-size,
+  and catalog-reachability checks passed. Hosted acceptance is pending.
 
 ## Completion and release gate
 

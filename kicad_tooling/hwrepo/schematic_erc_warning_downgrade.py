@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -11,6 +10,7 @@ from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .project_models import ProjectConfig, ProjectKind
 from .schematic_erc_project_settings import (
     ERC_DEFAULT_ERROR_RULE_KEYS,
+    ERC_RULE_KEYS_BY_KICAD_VERSION,
     SCHEMATIC_ERC_SUPPORTED_PROJECT_KINDS,
     SchematicErcRuleSeverity,
     configured_schematic_erc_rule_severities,
@@ -21,7 +21,6 @@ from .schematic_erc_project_settings_evidence import (
 )
 from .source_state_models import SourceHashInventory
 
-_SUPPORTED_KICAD_VERSION = re.compile(r"10\.0\.\d+\Z")
 _RULE_ID: DesignLintRuleId = "schematic.erc_error_downgraded"
 
 
@@ -38,9 +37,13 @@ class SchematicErcWarningDowngradeEvidence:
     def __post_init__(self) -> None:
         if self.project_kind not in SCHEMATIC_ERC_SUPPORTED_PROJECT_KINDS:
             raise ValueError("ERC severity downgrade evidence requires a schematic-capable project")
-        if _SUPPORTED_KICAD_VERSION.fullmatch(self.kicad_version) is None:
-            raise ValueError("ERC severity downgrade evidence requires KiCad 10.0.x")
-        if self.configured_rule.rule_key not in ERC_DEFAULT_ERROR_RULE_KEYS:
+        supported_keys = ERC_RULE_KEYS_BY_KICAD_VERSION.get(self.kicad_version)
+        if supported_keys is None:
+            raise ValueError("ERC severity downgrade evidence requires an audited KiCad 10.0 patch")
+        if (
+            self.configured_rule.rule_key not in ERC_DEFAULT_ERROR_RULE_KEYS
+            or self.configured_rule.rule_key not in supported_keys
+        ):
             raise ValueError("ERC downgrade evidence must name a known Error-default rule")
         if self.configured_rule.severity != "warning":
             raise ValueError("ERC downgrade evidence must have Warning severity")
@@ -111,10 +114,11 @@ def source_bound_schematic_erc_warning_downgrade_candidates(
     config: ProjectConfig,
     source_hashes: SourceHashInventory,
 ) -> tuple[Candidate, ...]:
-    """Review explicit Warning overrides of named KiCad 10.0.x Error defaults."""
+    """Review Error-default Warning overrides for an exact audited KiCad patch."""
     if config.kind not in SCHEMATIC_ERC_SUPPORTED_PROJECT_KINDS:
         return ()
-    if _SUPPORTED_KICAD_VERSION.fullmatch(config.kicad_version) is None:
+    supported_keys = ERC_RULE_KEYS_BY_KICAD_VERSION.get(config.kicad_version)
+    if supported_keys is None:
         return ()
 
     relative = str(config.project)
@@ -140,5 +144,9 @@ def source_bound_schematic_erc_warning_downgrade_candidates(
             )
         )
         for rule in configured_rules
-        if rule.severity == "warning" and rule.rule_key in ERC_DEFAULT_ERROR_RULE_KEYS
+        if (
+            rule.severity == "warning"
+            and rule.rule_key in ERC_DEFAULT_ERROR_RULE_KEYS
+            and rule.rule_key in supported_keys
+        )
     )
