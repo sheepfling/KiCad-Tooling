@@ -788,7 +788,7 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Current lint-gate checkpoint (candidate v0.5.3rc683):** LINT-405 adds a
+- **Latest published lint-gate checkpoint (v0.5.3rc683):** LINT-405 adds a
   source-bound REVIEW for risky custom DRC layer names. The first hosted run of
   `v0.5.3rc682` exposed two rule-gate omissions: this rule was absent from
   synthetic catalog reachability, and its selector entries pushed a support
@@ -796,7 +796,9 @@ standalone parity work when it closes a demonstrated feature regression.
   case table, and reachability exercises the actual source-bound predicate. The
   exact tag selector passed 381 tests with 8,549 deselected, including repeated
   fault and control cases in the digest-pinned KiCad 10.0.8 Docker image. Hosted
-  acceptance for `v0.5.3rc683` is pending.
+  prerelease acceptance passed in GitHub Actions run
+  [43118619465](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43118619465).
+  Package and preview jobs were skipped under prerelease policy.
 - **Previously published lint-gate checkpoint (v0.5.3rc681):** LINT-404 adds the
   source-hashed DB9 split/common fault-control pair to the official pinned
   KiCad 10.0.8 image while preserving the existing 10.0.0/10.0.5 cases. The
@@ -23893,8 +23895,9 @@ acceptance threads while new lint features proceed:
   omissions described above. After the synthetic reachability case and selector
   split were added, the exact tag selector passed 381 tests with 8,549
   deselected; its pinned native test ran each of four fault/control cases twice.
-  Ruff and format checks passed on the follow-up changes. Hosted acceptance for
-  `v0.5.3rc683` is pending.
+  Ruff and format checks passed on the follow-up changes. Hosted prerelease
+  acceptance for `v0.5.3rc683` passed in GitHub Actions run
+  [43118619465](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43118619465).
 
 ## Completion and release gate
 
