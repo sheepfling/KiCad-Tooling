@@ -37,12 +37,6 @@ SUPPLY_RANGE_MAP_COVERAGE_PARITY_FIXTURES = MappingProxyType(
                         "test_component_supply_range_map_coverage_review_matches_between_cli_and_mcp"
                     ),
                 ),
-                "valid_control_fixtures": (
-                    (
-                        "tests.test_component_supply_range_map_coverage_parity."
-                        "test_component_supply_range_map_coverage_review_matches_between_cli_and_mcp"
-                    ),
-                ),
             }
         ),
     }

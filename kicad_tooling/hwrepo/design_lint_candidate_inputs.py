@@ -15,6 +15,7 @@ from .design_lint_pcb_inputs import PcbCandidateInputs
 from .design_lint_peer_inputs import PeerCandidateInputs
 from .design_lint_power_inputs import PowerCandidateInputs
 from .design_lint_rule_models import DesignLintRuleCatalog
+from .design_lint_types import Candidate
 from .design_lint_usb_data_path_inputs import UsbDataPathCandidateInputs
 from .external_protection_models import ExternalProtectionCoverageReport
 from .model_primitives import Digest
@@ -72,6 +73,7 @@ class DesignLintCandidateInputs:
     pcb: PcbCandidateInputs
     usb_data_path: UsbDataPathCandidateInputs
     netlist_sha256: Digest | None = None
+    schematic_source_candidates: tuple[Candidate, ...] = ()
 
     def __post_init__(self) -> None:
         if self.bus.observed is not self.observed and self.bus.observed != self.observed:

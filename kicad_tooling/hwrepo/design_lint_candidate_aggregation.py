@@ -282,6 +282,7 @@ def scan_candidate_result(
     found.extend(bus_result.candidates)
     if schematic_geometry is not None:
         found.extend(schematic_geometry_candidates(schematic_geometry))
+    found.extend(inputs.schematic_source_candidates)
     found.extend(
         scan_peer_candidates(
             PeerCandidateScanInputs(

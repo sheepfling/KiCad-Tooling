@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import tests.test_connector_return_signal_net as _connector_return_signal_net
 from kicad_tooling.hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
 from kicad_tooling.hwrepo.design_lint import candidates
 from kicad_tooling.hwrepo.schematic_geometry import scan_wire_ends_on_pin_lines
@@ -49,6 +48,9 @@ from tests.design_lint_fixtures.can_tx_output_sharing import can_tx_output_netli
 from tests.design_lint_fixtures.can_tx_rx_same_net import can_tx_rx_same_net_netlist
 from tests.design_lint_fixtures.catalog_reachability_mapped_connectors import (
     mapped_connector_rule_ids,  # noqa: F401
+)
+from tests.design_lint_fixtures.catalog_reachability_usb_c import (
+    usb_c_vbus_and_connector_return_review_rule_ids,  # noqa: F401
 )
 from tests.design_lint_fixtures.component_supply_voltage_ranges import (
     supply_range_map,
@@ -120,6 +122,7 @@ from tests.design_lint_fixtures.spi_signal_named_rail import spi_signal_on_named
 from tests.design_lint_fixtures.thermal_pad_catalog_reachability import thermal_pad_catalog_rule_ids
 from tests.design_lint_fixtures.usb_data_pair_crossing import usb_data_pair_crossing_netlist
 from tests.design_lint_fixtures.usb_signal_named_rail import usb_signal_on_named_rail_netlist
+from tests.schematic_erc_exclusion_support import source_bound_erc_exclusion_rule_ids
 from tests.serial_participant_support import (
     same_net_serial_netlist,
     serial_tx_output_netlist,
@@ -138,23 +141,8 @@ from tests.test_oscillator_output_paths import (
     oscillator_output_path_map,
 )
 from tests.test_regulator_required_passives import catalog_reachable_rule_ids
-from tests.usb_c_vbus_capacitance_support import usb_c_vbus_netlist
 
 TESTS = Path(__file__).resolve().parents[1]
-
-
-def usb_c_vbus_and_connector_return_review_rule_ids() -> set[str]:
-    """Reach the USB-C capacitor prompt and local return/signal review."""
-    from kicad_tooling.hwrepo.usb_c_ports import UsbCPortRosterContext
-
-    usb_c = candidates(
-        usb_c_vbus_netlist(),
-        usb_c_port_roster=UsbCPortRosterContext(state="not_configured"),
-    )
-    connector_return = _connector_return_signal_net._report(
-        _connector_return_signal_net._source()
-    ).findings
-    return {item.rule_id for item in (*usb_c, *connector_return)}
 
 
 def catalog_reachability_rule_ids() -> set[str]:
@@ -358,6 +346,7 @@ def catalog_reachability_rule_ids() -> set[str]:
         for item in lint_report(peer_assignments, coverage).findings
     )
     result.update(connector_return_catalog_rule_ids())
+    result.update(source_bound_erc_exclusion_rule_ids())
     return result
 
 

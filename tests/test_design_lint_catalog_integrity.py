@@ -52,6 +52,18 @@ def test_catalog_implementation_references_resolve_to_sources_or_fixtures() -> N
                 if isinstance(node, ast.ImportFrom)
                 for alias in node.names
             )
+            names.update(
+                target.id
+                for node in module.body
+                if isinstance(node, ast.Assign)
+                for target in node.targets
+                if isinstance(target, ast.Name)
+            )
+            names.update(
+                node.target.id
+                for node in module.body
+                if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name)
+            )
             assert symbol in names, (
                 f"{rule.rule_id}: {reference} does not resolve to a top-level source symbol"
             )

@@ -318,6 +318,7 @@ DesignLintRuleId = Literal[
     "pcb.miscellaneous_drc_check_downgraded",
     "pcb.warning_default_drc_check_ignored",
     "pcb.drc_exclusion_present",
+    "schematic.erc_exclusion_present",
     "connector.return_distribution",
     "net.numbered_returns",
     "net.numbered_power_rails",

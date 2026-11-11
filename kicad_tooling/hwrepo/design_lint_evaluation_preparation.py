@@ -379,6 +379,7 @@ def prepare_evaluation(
         netlist_sha256=coach.netlist_sha256,
         catalog=catalog,
         schematic_geometry=request.schematic_geometry,
+        schematic_source_candidates=request.schematic_source_candidates,
         reviewed_connector_references=peer_evidence.reviewed_connector_references,
         connector=ConnectorCandidateInputs(
             coverage=request.component_map_coverage.connector_coverage,

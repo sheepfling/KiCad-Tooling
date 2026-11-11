@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 328 rules are implemented with synthetic regression coverage.
+The following 329 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 328 active rules.
+The catalog currently contains 329 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -683,6 +683,7 @@ skipped under prerelease policy.
 - `signal.named_pair_without_reviewed_requirement`
 - `net.numbered_returns`
 - `net.numbered_power_rails`
+- `schematic.erc_exclusion_present`
 - `schematic.wire_end_on_pin_line`
 - `schematic.pin_tip_on_wire_interior`
 - `schematic.wire_endpoint_near_pin_tip`
@@ -4131,7 +4132,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 328 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 329 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -23373,6 +23374,41 @@ acceptance threads while new lint features proceed:
   tag `v0.5.3rc663` passed GitHub run `42993545811`, including the scoped rule
   selection, required native fixture switch, and installed-wheel rehearsal.
 
+#### LINT-395 — Review persisted schematic ERC exclusions
+
+- **Status:** Implemented as `schematic.erc_exclusion_present`, default
+  `review`; local scoped Docker acceptance passed, hosted gate pending.
+- **Gap:** KiCad can retain per-violation ERC exclusions in the project file.
+  Native ERC can report excluded violations with `--severity-exclusions`, but
+  the current source-review tooling had no project-settings rule for this
+  exception inventory. See the [KiCad 10 CLI documentation][kicad-10-erc-cli]
+  and [ERC settings reference][kicad-erc-settings].
+- **Behavior:** For source-hashed KiCad 10.0.x `.kicad_pro` files, emit one
+  review prompt per saved ERC exclusion. Accept legacy schema 0 marker strings
+  and string/comment pairs, plus schema 1 marker objects. Preserve the exact
+  source hash, configured patch version, ERC error type, a stable marker digest,
+  and any saved comment. Unknown settings schemas and malformed records fail
+  closed.
+- **Boundary:** An exclusion is a prompt to inspect an exception, not evidence
+  of a current ERC defect or an incorrect design. The rule does not resolve
+  markers against the schematic or assert connectivity. PCB-only projects and
+  KiCad versions outside 10.0.x are out of scope; project policy can set the
+  rule to `block` or `off`, or ignore an exact finding.
+- **Fixtures:** Synthetic cases cover saved exclusions with and without
+  comments, empty controls, legacy marker formats, malformed/duplicate records,
+  source-hash mismatch, patch-version scope, ordering stability, configurable
+  disposition, and CLI/MCP parity. No external project source is used.
+- **Selection:** Run
+  `tests/test_schematic_erc_exclusion_review.py` and
+  `tests/test_design_lint_mcp_parity_schematic_erc_exclusions.py` with
+  `design_lint and schematic_lint`; the catalog-derived rule selector includes
+  the same cases.
+- **Local scoped gate (2026-11-11):** `scripts/ci.py` passed with 370 tests
+  passed and 8,041 deselected. Ruff, Alphus, Markdown checks, Linux/Windows
+  Pyright, wheel and sdist builds, isolated wheel install, external checkout
+  verification, and external-template playtest passed. Hosted tag validation
+  remains for the checkpoint push.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -23408,6 +23444,8 @@ quality, or first-article continuity.
 [happy-cross-verify]: https://github.com/aklofas/kicad-happy/blob/main/release-notes.md
 [kicad-skills-pcb]: <https://github.com/sabas0ba/kicad_skills/blob/main/docs/guides/kicad-pcb-review.md>
 [usb-c-generic-connector-fixtures]: ../tests/fixtures/design_lint/usb-c-generic-connector-native/README.md
+[kicad-10-erc-cli]: https://docs.kicad.org/10.0/en/cli/cli.html
+[kicad-erc-settings]: https://docs.kicad.org/doxygen/classERC__SETTINGS.html
 
 [calcumaker-hardware]: https://github.com/calcumaker/calcumaker/tree/113a283/hardware
 [antmicro-cm4]: https://github.com/antmicro/cm4-baseboard/tree/d248c2921e8e7f4c9b30c96ea5f376d9b2780f1e
