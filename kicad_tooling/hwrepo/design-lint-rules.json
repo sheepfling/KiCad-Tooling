@@ -12897,6 +12897,49 @@
       ]
     },
     {
+      "rule_id": "pcb.differential_pair_reference_via_stitching",
+      "title": "Mapped pair transitions lack nearby reference-net vias",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_differential_pair_reference_via_stitching.py#measure_differential_pair_reference_via_stitching",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Project-authored exact pair paths, reference-net identity and distance limit, plus source-bound native track and via geometry",
+      "predicate": "For each configured two-path pair bundle and each fully resolved native track-layer transition, emit one REVIEW candidate when no via assigned to the exact authored reference net spans both transition layers within the authored Euclidean distance bound.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 native PCB probe snapshots"
+      ],
+      "limitations": [
+        "The check runs only for signal-path bundles with both reference_net and max_reference_via_distance_nm authored; no reference net or distance is inferred.",
+        "A nearby via on the authored net does not prove that it connects to a continuous reference plane, is electrically effective, or is the intended return path. The result is a review heuristic, not a continuity or signal-integrity verdict.",
+        "Only exactly two mapped signal paths are supported. Cross-layer route adjacency without one exact shared signal via is reported as incomplete rather than clean."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_differential_pair_reference_via_stitching.test_reference_via_beyond_authored_distance_requests_review",
+        "tests.test_pcb_differential_pair_reference_via_stitching.test_nearby_via_on_another_net_does_not_satisfy_authored_reference",
+        "tests.test_pcb_differential_pair_route_skew_native.test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_differential_pair_reference_via_stitching.test_reference_via_within_inclusive_project_distance_is_quiet",
+        "tests.test_pcb_differential_pair_reference_via_stitching.test_pair_without_layer_transition_does_not_request_stitching_review",
+        "tests.test_pcb_differential_pair_route_skew_native.test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_differential_pair_reference_via_stitching.test_reference_via_result_is_stable_when_native_items_are_reordered"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_differential_pair_reference_via_stitching.py#measure_differential_pair_reference_via_stitching",
+        "kicad_tooling/hwrepo/design_lint_pcb_reference_via_candidate.py#differential_pair_reference_via_candidates",
+        "kicad_tooling/hwrepo/pcb_signal_path_native_route.py#measure_project_mapped_signal_path",
+        "kicad_tooling/hwrepo/pcb_differential_pair_reference_via_models.py#PcbDifferentialPairReferenceViaReport",
+        "kicad_tooling/hwrepo/pcb_signal_path_rule_models.py#PcbSignalPathBundleRequirement"
+      ]
+    },
+    {
       "rule_id": "pcb.custom_drc_rule_without_constraint",
       "title": "Custom DRC rules without constraints need review",
       "theme": "pcb",

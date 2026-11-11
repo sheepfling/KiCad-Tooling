@@ -54,6 +54,7 @@ from . import pcb_protection_path_models as _pcb_protection_path_models
 from . import pcb_reference_plane_models as _pcb_reference_plane_models
 from . import pcb_return_path_models as _pcb_return_path_models
 from . import pcb_rf_antenna_models as _pcb_rf_antenna_models
+from . import pcb_signal_path_rule_models as _pcb_signal_path_rule_models
 from . import pcb_switching_loop_models as _pcb_switching_loop_models
 from . import pcb_test_access_models as _pcb_test_access_models
 from . import pcb_track_width_models as _pcb_track_width_models
@@ -437,12 +438,12 @@ ExcludedTestAccess = _pcb_test_access_models.ExcludedTestAccess
 TestAccessDecision = _pcb_test_access_models.TestAccessDecision
 PcbAccessAnalysis = _pcb_test_access_models.PcbAccessAnalysis
 TestAccessAnalysis = _pcb_test_access_models.TestAccessAnalysis
-PcbDrcMinMaxRequirement = _pcb_drc_models.PcbDrcMinMaxRequirement
-PcbDrcMaximumRequirement = _pcb_drc_models.PcbDrcMaximumRequirement
-PcbDrcPadSelectorPattern = _pcb_drc_models.PcbDrcPadSelectorPattern
-PcbSignalPathRequirement = _pcb_drc_models.PcbSignalPathRequirement
-PcbSignalPathBundleRequirement = _pcb_drc_models.PcbSignalPathBundleRequirement
-PcbSignalPathRuleMap = _pcb_drc_models.PcbSignalPathRuleMap
+PcbDrcMinMaxRequirement = _pcb_signal_path_rule_models.PcbDrcMinMaxRequirement
+PcbDrcMaximumRequirement = _pcb_signal_path_rule_models.PcbDrcMaximumRequirement
+PcbDrcPadSelectorPattern = _pcb_signal_path_rule_models.PcbDrcPadSelectorPattern
+PcbSignalPathRequirement = _pcb_signal_path_rule_models.PcbSignalPathRequirement
+PcbSignalPathBundleRequirement = _pcb_signal_path_rule_models.PcbSignalPathBundleRequirement
+PcbSignalPathRuleMap = _pcb_signal_path_rule_models.PcbSignalPathRuleMap
 PcbDifferentialPairRuleRequirement = _pcb_drc_models.PcbDifferentialPairRuleRequirement
 PcbDifferentialPairRuleMap = _pcb_drc_models.PcbDifferentialPairRuleMap
 PcbDrcConstraintName = _pcb_drc_models.PcbDrcConstraintName

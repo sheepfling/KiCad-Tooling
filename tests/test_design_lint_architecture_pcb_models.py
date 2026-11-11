@@ -55,12 +55,6 @@ PCB_RF_ANTENNA_MODEL_NAMES = (
 )
 
 PCB_DRC_MODEL_NAMES = (
-    "PcbDrcMinMaxRequirement",
-    "PcbDrcMaximumRequirement",
-    "PcbDrcPadSelectorPattern",
-    "PcbSignalPathRequirement",
-    "PcbSignalPathBundleRequirement",
-    "PcbSignalPathRuleMap",
     "PcbDifferentialPairRuleRequirement",
     "PcbDifferentialPairRuleMap",
     "PcbDrcConstraintName",

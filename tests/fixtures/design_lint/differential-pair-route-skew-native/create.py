@@ -83,9 +83,24 @@ def create(output: Path, expected_version: str) -> None:
     if not _FOOTPRINT_LIBRARY.is_dir():
         raise RuntimeError(f"Pinned KiCad image has no footprint library: {_FOOTPRINT_LIBRARY}")
     (output / "kicad-version.txt").write_text(f"{actual}\n", encoding="utf-8")
-    for case in ("control", "fault", "layer-control", "layer-fault"):
+    for case in (
+        "control",
+        "fault",
+        "layer-control",
+        "layer-fault",
+        "stitch-control",
+        "stitch-fault",
+    ):
         board = pcbnew.BOARD()
-        nets = {name: pcbnew.NETINFO_ITEM(board, name) for name in ("USB_DP", "USB_DN")}
+        names = (
+            ("USB_DP", "USB_DN", "GND")
+            if case.startswith("stitch-")
+            else (
+                "USB_DP",
+                "USB_DN",
+            )
+        )
+        nets = {name: pcbnew.NETINFO_ITEM(board, name) for name in names}
         for net in nets.values():
             board.Add(net)
         source_pads = _add_footprint(board, "J1", (10.0, 10.0), nets)
@@ -94,7 +109,7 @@ def create(output: Path, expected_version: str) -> None:
         positive_target = receiver_pads["1"].GetPosition()
         negative_source = source_pads["2"].GetPosition()
         negative_target = receiver_pads["2"].GetPosition()
-        if case in {"layer-control", "layer-fault"}:
+        if case in {"layer-control", "layer-fault", "stitch-control", "stitch-fault"}:
             midpoint_offset = pcbnew.FromMM(15.0)
             positive_midpoint = pcbnew.VECTOR2I(
                 positive_source.x + midpoint_offset, positive_source.y
@@ -102,7 +117,7 @@ def create(output: Path, expected_version: str) -> None:
             negative_midpoint = pcbnew.VECTOR2I(
                 negative_source.x + midpoint_offset, negative_source.y
             )
-            pair_uses_vias = case == "layer-control"
+            pair_uses_vias = case in {"layer-control", "stitch-control", "stitch-fault"}
             if pair_uses_vias:
                 _add_via(board, positive_midpoint, nets["USB_DP"])
             _add_track(
@@ -133,6 +148,13 @@ def create(output: Path, expected_version: str) -> None:
                 nets["USB_DN"],
                 pcbnew.B_Cu,
             )
+            if case.startswith("stitch-"):
+                reference_position_mm = (25.0, 11.27) if case == "stitch-control" else (35.0, 22.54)
+                reference_position = pcbnew.VECTOR2I(
+                    pcbnew.FromMM(reference_position_mm[0]),
+                    pcbnew.FromMM(reference_position_mm[1]),
+                )
+                _add_via(board, reference_position, nets["GND"])
         else:
             _add_track(board, positive_source, positive_target, nets["USB_DP"])
         if case == "control":

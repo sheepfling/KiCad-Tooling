@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 333 rules are implemented with synthetic regression coverage.
+The following 334 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 333 active rules.
+The catalog currently contains 334 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -762,6 +762,7 @@ skipped under prerelease policy.
 - `pcb.thermal_via_coverage`
 - `pcb.differential_pair_route_skew`
 - `pcb.differential_pair_route_layer_mismatch`
+- `pcb.differential_pair_reference_via_stitching`
 - `schematic.erc_error_downgraded`
 - `schematic.erc_catalog_unverified`
 - `schematic.erc_unknown_rule_key`
@@ -23594,7 +23595,9 @@ acceptance threads while new lint features proceed:
   with 7,864 deselected; all eight digest-pinned native fixtures, Ruff, both
   Alphus profiles, Rumdl, mdrepo, Linux and Windows type checks, wheel/sdist,
   fresh installation, and external-project rehearsals passed locally on
-  2026-11-11. Hosted acceptance for this expanded matrix is pending.
+  2026-11-11. Hosted run `43052823492` passed the tagged prerelease lint gate;
+  package and preview jobs were skipped by prerelease policy, so the expanded
+  package matrix remains locally validated only.
 
 #### LINT-400 — Report ERC catalog coverage gaps
 
@@ -23637,7 +23640,60 @@ acceptance threads while new lint features proceed:
   scoped package gate and installed-wheel rehearsal. The follow-up expanded
   package gate passed 855 tests with 7,864 deselected; it included the eight
   native ERC versions, package checks, and focused architecture and catalog
-  checks. Hosted acceptance for the expanded matrix is pending.
+  checks. Hosted run `43052823492` passed the tagged prerelease lint gate;
+  package and preview jobs were skipped by prerelease policy, so the expanded
+  package matrix remains locally validated only.
+
+#### LINT-401 — Review differential-pair reference-via proximity
+
+- **Status:** Implemented and accepted on
+  `feature/lint401-diff-pair-stitching`.
+- **Cohort signal:** The documented DP-003 check in
+  [kicad-happy v3.0.1][happy-v301-diffpair-reference-via] prompted a search
+  for a distinct gap beside the existing route-skew and pair-layer-sequence
+  reviews. No cohort code or board data was imported.
+- **Gap:** A mapped pair can change PCB layers without a nearby via on its
+  reference net. Native ERC/DRC and the existing pair checks do not establish
+  that project-specific return-path expectation.
+- **Behavior:** A project may add `reference_net` and
+  `max_reference_via_distance_nm` to an exact two-path signal bundle. For each
+  resolved route layer transition, compare the transition to vias assigned to
+  that exact net that span both transition layers. Use the authored Euclidean
+  maximum and emit one REVIEW candidate per pair when no compatible via is
+  nearby. Do not infer a reference net, radius, or that two grounds should be
+  joined.
+- **Evidence:** The analyzer uses the existing source-bound native PCB
+  snapshot, exact pad-to-pad route, ordered copper layers, via net, via stack,
+  and board coordinates. Current source, map, netlist, snapshot, command, and
+  native tool/image identities stay attached to the result. Missing or stale
+  evidence becomes blocked coverage rather than a clean check.
+- **Fixtures:** Tooling-owned synthetic controls cover a via at the inclusive
+  authored boundary, a via beyond it, a nearby via on the wrong net, a pair
+  without layer transitions, a missing source-netlist reference domain, and
+  deterministic ordering. The digest-pinned KiCad 10.0.0/10.0.5 lane adds
+  generated near/far reference-via boards; it imports no example project data.
+  CLI/MCP serialization parity and focused package acceptance are required
+  before tagging.
+- **Boundary:** Proximity to a same-net via does not prove that the via reaches
+  an effective reference plane or that the return-current path is adequate.
+  The finding is a configurable review heuristic, not continuity, SI, EMC, or
+  fabrication approval. Project policy may set the rule to `off`, `review`, or
+  `block`; the distance is never guessed.
+- **Selection:** Run the focused tests with
+  `design_lint and pcb_lint and design_lint_rule(rule_id="pcb.differential_pair_reference_via_stitching")`.
+  Run the two-version native lane with `KICAD_RUN_NATIVE_PCB_FIXTURES=1`.
+- **Acceptance:** The focused rule suite passed 22 tests with 8 deselected; the
+  combined heuristic, route-skew, signal-path coverage, CLI/MCP parity, model
+  ownership, catalog, and architecture selection passed 78 tests. The final
+  scoped package gate passed 386 tests with 8,346 deselected. It ran the
+  digest-pinned KiCad 10.0.0 and 10.0.5 Docker fixtures, Pyright for native and
+  Windows targets, source and wheel builds, and installed-wheel inventory,
+  surface-parity, verification, adapted-checkout, and playtest checks against
+  the clean public KiCad workflow template checkout. Isolated installation was
+  supplied the exact `pydantic-core` and `rpds-py` wheels fetched for this
+  interpreter after the package index failed to resolve those native wheels;
+  dependency declarations were unchanged. Ruff, formatting, Markdown, catalog
+  reachability, pytest selection, and module-size architecture checks passed.
 
 ## Completion and release gate
 
@@ -23708,5 +23764,6 @@ quality, or first-article continuity.
 [rs485-adi-pin-functions]: https://www.analog.com/media/en/technical-documentation/data-sheets/max1487-max491.pdf
 [happy-bootstrap-commit]: https://github.com/aklofas/kicad-happy/commit/4701c26eba7b9788874a0bf9b45c0a3e81db1628
 [happy-v232-release]: https://github.com/aklofas/kicad-happy/releases/tag/v2.3.2
+[happy-v301-diffpair-reference-via]: https://github.com/aklofas/kicad-happy/releases/tag/v3.0.1
 [kicad-source-mirror-releases]: https://github.com/KiCad/kicad-source-mirror/releases
 [kicad-docker-digests]: https://github.com/KiCad/kicad-docker/pkgs/container/kicad/versions?filters%5Bversion_type%5D=tagged

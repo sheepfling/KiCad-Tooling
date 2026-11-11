@@ -32,6 +32,7 @@ from tests.synthetic_design_lint_project import (
 
 @pytest.mark.parametrize("edge_only", (False, True))
 @pytest.mark.design_lint_rule(rule_id="pcb.differential_pair_route_skew")
+@pytest.mark.design_lint_rule(rule_id="pcb.differential_pair_reference_via_stitching")
 def test_disabled_signal_path_coverage_matches_cli_and_mcp(tmp_path: Path, edge_only: bool) -> None:
     requirements = (
         PcbSignalPathRuleMap(
@@ -48,7 +49,20 @@ def test_disabled_signal_path_coverage_matches_cli_and_mcp(tmp_path: Path, edge_
             ),
         )
         if edge_only
-        else path_map()
+        else path_map().model_copy(
+            update={
+                "bundles": (
+                    path_map()
+                    .bundles[0]
+                    .model_copy(
+                        update={
+                            "reference_net": "SYNTH_GND",
+                            "max_reference_via_distance_nm": 2_000_000,
+                        }
+                    ),
+                )
+            }
+        )
     )
     policy = DesignLintPolicy(
         pcb_signal_path_rule_map=requirements,
@@ -62,6 +76,11 @@ def test_disabled_signal_path_coverage_matches_cli_and_mcp(tmp_path: Path, edge_
                 rule_id="pcb.differential_pair_route_skew",
                 mode="off",
                 reason="Synthetic parity fixture disables route-skew review",
+            ),
+            DesignLintRuleOverride(
+                rule_id="pcb.differential_pair_reference_via_stitching",
+                mode="off",
+                reason="Synthetic parity fixture disables reference-via review",
             ),
         ),
     )
@@ -89,7 +108,12 @@ def test_disabled_signal_path_coverage_matches_cli_and_mcp(tmp_path: Path, edge_
     route_skew = mcp_report.pcb_signal_path_rules.route_skew
     assert route_skew is not None
     assert route_skew.status == ("NOT_REQUESTED" if edge_only else "DISABLED")
-    assert (
-        mcp_report.pcb_signal_path_rules.map_sha256
-        == hashlib.sha256(requirements.model_dump_json().encode("utf-8")).hexdigest()
+    assert mcp_report.pcb_signal_path_rules.map_sha256 == (
+        hashlib.sha256(requirements.model_dump_json().encode("utf-8")).hexdigest()
     )
+    reference_via = mcp_report.pcb_signal_path_rules.reference_via_stitching
+    if edge_only:
+        assert reference_via is None
+    else:
+        assert reference_via is not None
+        assert reference_via.status == "DISABLED"

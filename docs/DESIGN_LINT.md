@@ -5721,6 +5721,40 @@ severities and a matching custom rule with `(severity ignore)` do not count as
 coverage. Absent or duplicate rules, changed bounds, unsupported syntax, stale
 endpoints, and disconnected pads remain review findings.
 
+### Review reference-via proximity at pair layer transitions
+
+For a project-reviewed two-path pair, a bundle can opt into this proximity
+heuristic without a separate skew limit by adding both fields:
+
+```json
+{
+  "reference_net": "GND",
+  "max_reference_via_distance_nm": 2000000
+}
+```
+
+The referenced net must appear in the source-bound schematic netlist. The
+checker inspects every cross-layer transition on each uniquely mapped native
+route and looks for a via assigned to that exact net that spans the transition
+layers within the authored Euclidean distance. The default rule mode is
+`review`; use `off` to disable it or `block` only after reviewing the project
+threshold and intended return topology. Bundles without both fields are not
+checked. The rule supports exactly two mapped signal paths.
+
+This is a geometric review cue. A via carrying the expected net does not prove
+that it connects to a continuous plane or gives adequate return-current,
+signal-integrity, or emissions performance. Missing or stale native route
+evidence remains blocked/reviewable rather than clean. Select the synthetic
+regressions with:
+
+```text
+design_lint and pcb_lint and
+design_lint_rule(rule_id="pcb.differential_pair_reference_via_stitching")
+```
+
+The digest-pinned KiCad 10.0.0/10.0.5 fault/control lane also runs in
+`KICAD_RUN_NATIVE_PCB_FIXTURES=1`.
+
 The map has no layer scope, so a matching rule with a layer clause is
 unsupported even if its selector and bound match. Invalid or repeated layer
 clauses are also unsupported. A later rule with the same constraint leaves

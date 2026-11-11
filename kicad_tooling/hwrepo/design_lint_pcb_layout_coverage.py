@@ -14,10 +14,7 @@ from .design_lint_pcb_coverage_common import (
 )
 from .discovery import ProjectConfig
 from .models import Digest
-from .pcb_drc_models import (
-    PcbSignalPathRuleCoverageReport,
-    PcbSignalPathRuleMap,
-)
+from .pcb_drc_models import PcbSignalPathRuleCoverageReport
 from .pcb_drc_source_scan import scan_source_bound_signal_path_map
 from .pcb_keepout_models import (
     PcbKeepoutCoverageReport,
@@ -29,6 +26,7 @@ from .pcb_rf_antenna_models import (
     PcbRfModuleAntennaCoverageReport,
     PcbRfModuleAntennaMap,
 )
+from .pcb_signal_path_rule_models import PcbSignalPathRuleMap
 from .pcb_touch_pad_clearance import touch_pad_clearance_entries
 from .pcb_touch_pad_clearance_models import (
     PcbTouchPadClearanceCoverageReport,

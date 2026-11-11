@@ -15,6 +15,9 @@ from .design_lint_pcb_keepout_candidate_evidence import (
     PcbKeepoutCandidate,
     PcbKeepoutFindingEvidence,
 )
+from .design_lint_pcb_reference_via_candidate import (
+    differential_pair_reference_via_candidates,
+)
 from .design_lint_pcb_rf_antenna_candidate_evidence import (
     PcbRfAntennaCandidate,
     PcbRfAntennaFindingEvidence,
@@ -110,6 +113,9 @@ def pcb_requirement_coverage_candidates(
                 )
             )
     if pcb_signal_path_coverage is not None:
+        reference_via_stitching = pcb_signal_path_coverage.reference_via_stitching
+        if reference_via_stitching is not None:
+            found.extend(differential_pair_reference_via_candidates(reference_via_stitching))
         route_skew = pcb_signal_path_coverage.route_skew
         if route_skew is not None:
             if route_skew.status == "INCOMPLETE":

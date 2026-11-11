@@ -95,6 +95,9 @@ from tests.design_lint_fixtures.i2c_signal_named_rail import i2c_signal_on_named
 from tests.design_lint_fixtures.mosfet_drain_source_same_net import mosfet_drain_source_netlist
 from tests.design_lint_fixtures.mosfet_gate_direct_drive import netlist as mosfet_gate_drive_netlist
 from tests.design_lint_fixtures.mosfet_terminal_order import mosfet_terminal_order_netlist
+from tests.design_lint_fixtures.pcb_differential_pair_reference_via import (
+    reference_via_candidate_ids,
+)
 from tests.design_lint_fixtures.polarized_capacitor import netlist as polarized_capacitor_netlist
 from tests.design_lint_fixtures.rs485_data_label_mismatch import rs485_data_label_netlist
 from tests.design_lint_fixtures.rs485_data_same_net import rs485_data_same_net_netlist
@@ -347,6 +350,7 @@ def catalog_reachability_rule_ids() -> set[str]:
     )
     result.update(connector_return_catalog_rule_ids())
     result.update(source_bound_erc_exclusion_rule_ids())
+    result.update(reference_via_candidate_ids(Path(__file__).resolve().parent))
     return result
 
 

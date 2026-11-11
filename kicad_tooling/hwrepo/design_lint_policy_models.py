@@ -20,7 +20,7 @@ from .led_current_models import LedCurrentMap
 from .model_primitives import StrictModel
 from .oscillator_output_path_models import OscillatorOutputPathMap
 from .pcb_decoupling_models import PcbDecouplingMap
-from .pcb_drc_models import PcbDifferentialPairRuleMap, PcbSignalPathRuleMap
+from .pcb_drc_models import PcbDifferentialPairRuleMap
 from .pcb_fiducial_models import PcbFiducialMap
 from .pcb_keepout_models import PcbKeepoutMap
 from .pcb_mechanical_edge_models import PcbMechanicalEdgeClearanceMap
@@ -28,6 +28,7 @@ from .pcb_protection_path_models import PcbProtectionPathMap
 from .pcb_reference_plane_models import PcbReferencePlaneMap
 from .pcb_required_fitted_reference_models import PcbRequiredFittedReferenceMap
 from .pcb_rf_antenna_models import PcbRfModuleAntennaMap
+from .pcb_signal_path_rule_models import PcbSignalPathRuleMap
 from .pcb_switching_loop_models import PcbSwitchingLoopMap
 from .pcb_thermal_via_models import PcbThermalViaMap
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceMap

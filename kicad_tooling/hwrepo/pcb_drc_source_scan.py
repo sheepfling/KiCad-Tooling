@@ -15,7 +15,6 @@ from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
     PcbDifferentialPairRuleMap,
     PcbSignalPathRuleCoverageReport,
-    PcbSignalPathRuleMap,
 )
 from .pcb_drc_rule_coverage import compare_native_rules, compare_native_signal_path_rules
 from .pcb_drc_source_evidence import (
@@ -24,6 +23,7 @@ from .pcb_drc_source_evidence import (
     verify_source_bound_drc_unchanged,
 )
 from .pcb_geometry_receipts import verify_pcb_geometry_receipts
+from .pcb_signal_path_rule_models import PcbSignalPathRuleMap
 from .project_models import ProjectConfig
 from .source_state_models import SourceHashInventory
 
@@ -100,6 +100,11 @@ def scan_source_bound_signal_path_map(
     """Bind mapped pad paths to both source-bound DRC and exact native copper evidence."""
     root = root.resolve()
     requirement_hash = hashlib.sha256(requirements.model_dump_json().encode("utf-8")).hexdigest()
+    if not requirements.has_native_drc_requirements():
+        return PcbSignalPathRuleCoverageReport(
+            status="NOT_REQUESTED",
+            map_sha256=requirement_hash,
+        )
     if mode == "off":
         return PcbSignalPathRuleCoverageReport(
             status="DISABLED", mode="off", map_sha256=requirement_hash

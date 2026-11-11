@@ -7,7 +7,7 @@ from typing import Literal
 from .design_lint_pcb_coverage_common import map_sha256
 from .pcb_board_source_binding import pcb_board_source_matches
 from .pcb_differential_pair_skew_models import PcbDifferentialPairRouteSkewReport
-from .pcb_drc_models import PcbSignalPathRuleMap
+from .pcb_signal_path_rule_models import PcbSignalPathRuleMap
 from .source_inventory_fingerprint import source_inventory_sha256
 from .source_state_models import SourceHashInventory
 
@@ -22,7 +22,9 @@ def normalize_pcb_route_skew_policy(
     source_hashes: SourceHashInventory,
 ) -> PcbDifferentialPairRouteSkewReport:
     """Reject missing, stale, or wrongly mapped native route measurements."""
-    requested = requirements is not None and bool(requirements.bundles)
+    requested = requirements is not None and any(
+        item.max_skew is not None for item in requirements.bundles
+    )
     requirement_hash = map_sha256(requirements) if requirements is not None else None
     if not requested:
         if coverage is not None and coverage.status in {"COMPLETE", "INCOMPLETE"}:

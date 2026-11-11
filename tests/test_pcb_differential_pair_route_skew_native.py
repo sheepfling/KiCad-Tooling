@@ -15,11 +15,20 @@ import pytest
 from kicad_tooling.hwrepo.command_evidence_models import CommandEvidence
 from kicad_tooling.hwrepo.contracts import write_model
 from kicad_tooling.hwrepo.design_lint_pcb_coverage_common import PcbGeometrySourceEvidence
+from kicad_tooling.hwrepo.design_lint_pcb_reference_via_candidate import (
+    RULE_ID as REFERENCE_VIA_RULE_ID,
+)
 from kicad_tooling.hwrepo.design_lint_pcb_requirement_candidates import (
     pcb_requirement_coverage_candidates,
 )
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
+from kicad_tooling.hwrepo.pcb_differential_pair_reference_via_models import (
+    PcbDifferentialPairReferenceViaReport,
+)
+from kicad_tooling.hwrepo.pcb_differential_pair_reference_via_stitching import (
+    measure_differential_pair_reference_via_stitching,
+)
 from kicad_tooling.hwrepo.pcb_differential_pair_route_skew import (
     measure_differential_pair_route_skew,
 )
@@ -31,6 +40,10 @@ from kicad_tooling.hwrepo.pcb_return_path_capture import (
     expected_probe_sha256,
     native_probe_source,
 )
+from tests.design_lint_fixtures.pcb_differential_pair_reference_via import (
+    stitching_map,
+    stitching_netlist,
+)
 from tests.design_lint_fixtures.pcb_differential_pair_route_skew import (
     route_map,
     source_netlist,
@@ -41,6 +54,7 @@ SOURCE_ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_ROOT = SOURCE_ROOT / "tests/fixtures/design_lint/differential-pair-route-skew-native"
 RULE_ID = "pcb.differential_pair_route_skew"
 LAYER_TRANSITION_RULE_ID = "pcb.differential_pair_route_layer_mismatch"
+REFERENCE_VIA_MAP_RULE_ID = "pcb.differential_pair_reference_via_stitching"
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -136,6 +150,7 @@ def _prepare_output(version: str) -> Path:
 
 @pytest.mark.parametrize(("version", "image"), tuple(PINNED_NATIVE_KICAD_IMAGES.items()))
 @pytest.mark.design_lint_rule(rule_id=LAYER_TRANSITION_RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=REFERENCE_VIA_MAP_RULE_ID)
 def test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots(
     version: str,
     image: str,
@@ -153,11 +168,17 @@ def test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots(
     assert (work / "boards/kicad-version.txt").read_text(encoding="utf-8").strip() == version
     write_model(work / "generator.command.json", generated)
 
-    source = source_netlist()
-    netlist_sha256 = hashlib.sha256(source.model_dump_json().encode("utf-8")).hexdigest()
     probe_sha256 = expected_probe_sha256()
     reports: dict[str, PcbDifferentialPairRouteSkewReport] = {}
-    for case in ("control", "fault", "layer-control", "layer-fault"):
+    stitching_reports: dict[str, PcbDifferentialPairReferenceViaReport] = {}
+    for case in (
+        "control",
+        "fault",
+        "layer-control",
+        "layer-fault",
+        "stitch-control",
+        "stitch-fault",
+    ):
         board = work / f"boards/{case}.kicad_pcb"
         raw_snapshot_path = work / f"boards/{case}.native.json"
         command = _container_python(
@@ -201,16 +222,24 @@ def test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots(
             command_path=command_path,
             command_sha256=digest(command_path),
         )
+        requirements = (
+            stitching_map(maximum_distance_nm=2_000_000)
+            if case.startswith("stitch-")
+            else route_map(maximum_skew_nm=500_000)
+        )
+        source = stitching_netlist() if case.startswith("stitch-") else source_netlist()
+        netlist_sha256 = hashlib.sha256(source.model_dump_json().encode("utf-8")).hexdigest()
+        source_inventory = {relative_board: board_sha256}
         coverage = measure_differential_pair_route_skew(
-            route_map(maximum_skew_nm=500_000),
+            requirements,
             source,
             evidence,
-            {relative_board: board_sha256},
+            source_inventory,
             netlist_sha256,
             "review",
         )
         repeated = measure_differential_pair_route_skew(
-            route_map(maximum_skew_nm=500_000),
+            requirements,
             source,
             evidence,
             {relative_board: board_sha256},
@@ -220,6 +249,17 @@ def test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots(
         assert repeated == coverage
         write_model(work / f"boards/{case}.route-skew.json", coverage)
         reports[case] = coverage
+        if case.startswith("stitch-"):
+            stitching = measure_differential_pair_reference_via_stitching(
+                requirements,
+                source,
+                evidence,
+                source_inventory,
+                netlist_sha256,
+                "review",
+            )
+            write_model(work / f"boards/{case}.reference-via.json", stitching)
+            stitching_reports[case] = stitching
 
     control = reports["control"]
     assert control.status == "COMPLETE"
@@ -269,6 +309,32 @@ def test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots(
     assert layer_fault_paths["positive-path"].track_layers == ("F.Cu",)
     assert layer_fault_paths["negative-path"].track_layers == ("F.Cu", "B.Cu")
 
+    stitch_control = stitching_reports["stitch-control"]
+    assert stitch_control.status == "COMPLETE"
+    assert len(stitch_control.entries[0].transitions) == 2
+    assert all(item.status == "WITHIN_LIMIT" for item in stitch_control.entries[0].transitions)
+    assert not pcb_requirement_coverage_candidates(
+        pcb_signal_path_coverage=PcbSignalPathRuleCoverageReport(
+            reference_via_stitching=stitch_control
+        )
+    )
+
+    stitch_fault = stitching_reports["stitch-fault"]
+    assert stitch_fault.status == "INCOMPLETE"
+    assert all(
+        item.status == "MISSING_REFERENCE_VIA"
+        and item.nearest_distance_nm is not None
+        and item.nearest_distance_nm > 2_000_000
+        for item in stitch_fault.entries[0].transitions
+    )
+    stitch_findings = pcb_requirement_coverage_candidates(
+        pcb_signal_path_coverage=PcbSignalPathRuleCoverageReport(
+            reference_via_stitching=stitch_fault
+        )
+    )
+    assert len(stitch_findings) == 1
+    assert stitch_findings[0].rule_id == REFERENCE_VIA_RULE_ID
+
     manifest: dict[str, str | int | None] = {
         "kicad_version": version,
         "image": image,
@@ -288,6 +354,16 @@ def test_native_pair_route_skew_fault_and_control_use_exact_board_snapshots(
         "layer_fault_board_sha256": digest(work / "boards/layer-fault.kicad_pcb"),
         "layer_fault_snapshot_sha256": digest(work / "boards/layer-fault.snapshot.json"),
         "layer_fault_route_skew_sha256": digest(work / "boards/layer-fault.route-skew.json"),
+        "stitch_control_board_sha256": digest(work / "boards/stitch-control.kicad_pcb"),
+        "stitch_control_snapshot_sha256": digest(work / "boards/stitch-control.snapshot.json"),
+        "stitch_control_reference_via_sha256": digest(
+            work / "boards/stitch-control.reference-via.json"
+        ),
+        "stitch_fault_board_sha256": digest(work / "boards/stitch-fault.kicad_pcb"),
+        "stitch_fault_snapshot_sha256": digest(work / "boards/stitch-fault.snapshot.json"),
+        "stitch_fault_reference_via_sha256": digest(
+            work / "boards/stitch-fault.reference-via.json"
+        ),
         "layer_fault_route_profiles": (
             f"negative={'->'.join(layer_fault_paths['negative-path'].track_layers)};"
             f"positive={'->'.join(layer_fault_paths['positive-path'].track_layers)}"

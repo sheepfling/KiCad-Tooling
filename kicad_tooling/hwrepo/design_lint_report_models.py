@@ -27,6 +27,9 @@ from .design_lint_report_connector_coverage_validation import (
 )
 from .design_lint_report_evidence_validation import validate_source_bound_evidence
 from .design_lint_report_pcb_evidence_validation import validate_pcb_source_consistency
+from .design_lint_report_pcb_reference_via_validation import (
+    validate_pcb_reference_via_source,
+)
 from .design_lint_report_pcb_route_skew_validation import validate_pcb_route_skew_source
 from .design_lint_report_peer_coverage_validation import validate_peer_coverage
 from .design_lint_rule_models import DesignLintRuleCatalog
@@ -234,6 +237,11 @@ class DesignLintReport(StrictModel):
         )
         validate_pcb_route_skew_source(
             self.pcb_signal_path_rules.route_skew,
+            source_hashes=self.source_hashes,
+            netlist_sha256=self.netlist_sha256,
+        )
+        validate_pcb_reference_via_source(
+            self.pcb_signal_path_rules.reference_via_stitching,
             source_hashes=self.source_hashes,
             netlist_sha256=self.netlist_sha256,
         )

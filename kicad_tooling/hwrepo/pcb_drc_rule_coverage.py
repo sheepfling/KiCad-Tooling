@@ -10,10 +10,12 @@ from kicad_tooling.hwrepo.pcb_drc_models import (
     PcbDifferentialPairRuleMap,
     PcbDrcConstraintCoverage,
     PcbDrcConstraintName,
+    PcbSignalPathRuleCoverageEntry,
+)
+from kicad_tooling.hwrepo.pcb_signal_path_rule_models import (
     PcbDrcMaximumRequirement,
     PcbDrcMinMaxRequirement,
     PcbSignalPathRequirement,
-    PcbSignalPathRuleCoverageEntry,
     PcbSignalPathRuleMap,
 )
 
@@ -331,6 +333,8 @@ def compare_native_signal_path_rules(
         )
 
     for bundle in sorted(requirements.bundles, key=lambda item: item.id.casefold()):
+        if bundle.max_skew is None:
+            continue
         members = tuple(paths[item.casefold()] for item in bundle.path_ids)
         bundle_issues: list[str] = []
         expected_from = {drc_pad_selector(item.from_pad).casefold() for item in members}

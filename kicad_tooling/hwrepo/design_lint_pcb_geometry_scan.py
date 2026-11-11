@@ -29,10 +29,7 @@ from .discovery import ProjectConfig
 from .pcb_board_only_footprint_models import PcbBoardOnlyFootprintCoverage
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport, PcbDecouplingMap
-from .pcb_drc_models import (
-    PcbSignalPathRuleCoverageReport,
-    PcbSignalPathRuleMap,
-)
+from .pcb_drc_models import PcbSignalPathRuleCoverageReport
 from .pcb_fiducial_models import PcbFiducialMap
 from .pcb_fiducials import evaluate_pcb_fiducials
 from .pcb_geometry_receipts import verify_pcb_geometry_receipts
@@ -49,6 +46,7 @@ from .pcb_rf_antenna_models import (
     PcbRfModuleAntennaCoverageReport,
     PcbRfModuleAntennaMap,
 )
+from .pcb_signal_path_rule_models import PcbSignalPathRuleMap
 from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,
     PcbSwitchingLoopMap,
