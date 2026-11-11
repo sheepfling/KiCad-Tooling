@@ -11,20 +11,38 @@ from kicad_tooling.hwrepo.models import ProjectConfig, ProjectKind
 from kicad_tooling.hwrepo.schematic_erc_global_severity_review import (
     source_bound_schematic_erc_ignored_rule_candidates,
 )
+from kicad_tooling.hwrepo.schematic_erc_warning_downgrade import (
+    source_bound_schematic_erc_warning_downgrade_candidates,
+)
 
 
 def schematic_erc_global_severity_rule_ids() -> frozenset[str]:
-    """Reach the active global-ignore rule from its source-bound synthetic fixture."""
+    """Reach active global-severity rules from source-bound synthetic fixtures."""
     repository = Path(__file__).resolve().parents[2]
-    relative = "tests/fixtures/design_lint/schematic-erc-global-severity/fault.kicad_pro"
-    settings = repository / relative
     config = cast(
         ProjectConfig,
-        SimpleNamespace(kind=ProjectKind.PCB, project=relative, kicad_version="10.0.5"),
+        SimpleNamespace(
+            kind=ProjectKind.PCB,
+            project="tests/fixtures/design_lint/schematic-erc-global-severity/fault.kicad_pro",
+            kicad_version="10.0.5",
+        ),
     )
-    candidates = source_bound_schematic_erc_ignored_rule_candidates(
+    ignore_relative = str(config.project)
+    ignore_settings = repository / ignore_relative
+    ignored = source_bound_schematic_erc_ignored_rule_candidates(
         repository,
         config,
-        {relative: digest(settings)},
+        {ignore_relative: digest(ignore_settings)},
     )
-    return frozenset(candidate.rule_id for candidate in candidates)
+    warning_relative = "tests/fixtures/design_lint/schematic-erc-warning-downgrade/fault.kicad_pro"
+    warning_settings = repository / warning_relative
+    warning_config = cast(
+        ProjectConfig,
+        SimpleNamespace(kind=ProjectKind.PCB, project=warning_relative, kicad_version="10.0.5"),
+    )
+    downgraded = source_bound_schematic_erc_warning_downgrade_candidates(
+        repository,
+        warning_config,
+        {warning_relative: digest(warning_settings)},
+    )
+    return frozenset(candidate.rule_id for candidate in (*ignored, *downgraded))

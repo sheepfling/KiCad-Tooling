@@ -1,0 +1,9 @@
+{
+  "erc": {
+    "meta": {"version": 0},
+    "rule_severities": {
+      "endpoint_off_grid": "warning",
+      "pin_not_connected": "error"
+    }
+  }
+}

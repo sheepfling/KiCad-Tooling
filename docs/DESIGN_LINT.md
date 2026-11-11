@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 330 active rules.
+The catalog currently contains 331 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -5500,6 +5500,28 @@ or `off`, and supports exact-fingerprint ignores. Synthetic settings are in
 [`tests/fixtures/design_lint/schematic-erc-global-severity/`](../tests/fixtures/design_lint/schematic-erc-global-severity/README.md).
 
 [kicad-10-erc-item-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/eeschema/erc/erc_item.cpp
+
+## Review Error-default schematic ERC checks set to Warning
+
+`schematic.erc_error_downgraded` prompts for each explicitly configured KiCad
+10.0 ERC rule in the tooling's documented Error-default key set when its saved
+severity is `warning`. The finding identifies the exact rule key, source hash,
+and configured KiCad patch version. The default key set is taken from KiCad's
+tagged [`erc_settings.cpp`][kicad-10.0.0-erc-settings-source] and
+[`erc_item.cpp`][kicad-10.0.5-erc-item-source]; default Warning and Ignore
+checks are valid controls. The native fixture shows `pin_not_connected` as a
+Warning after the override and as an Error in the control on KiCad 10.0.0 and
+10.0.5.
+
+This is a review prompt about a severity-policy change, not proof that a
+violation exists or that the override is wrong. It does not run ERC, identify
+affected schematic objects, infer connector power or ground intent, or prove
+PCB connectivity. Project policy can set it to `review`, `block`, or `off`, or
+ignore an exact fingerprint. Tooling-owned settings fixtures are in
+[`tests/fixtures/design_lint/schematic-erc-warning-downgrade/`](../tests/fixtures/design_lint/schematic-erc-warning-downgrade/README.md).
+
+[kicad-10.0.0-erc-settings-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/eeschema/erc/erc_settings.cpp
+[kicad-10.0.5-erc-item-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/eeschema/erc/erc_item.cpp
 
 ## Review persisted per-violation PCB DRC exclusions
 

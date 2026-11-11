@@ -18,6 +18,7 @@ pytestmark = [
     pytest.mark.native_kicad,
     pytest.mark.slow,
     pytest.mark.design_lint_rule(rule_id="schematic.erc_rule_ignored"),
+    pytest.mark.design_lint_rule(rule_id="schematic.erc_error_downgraded"),
     pytest.mark.skipif(
         os.environ.get("KICAD_RUN_NATIVE_SCHEMATIC_ERC_GLOBAL_SEVERITY_FIXTURES") != "1",
         reason="native global ERC severity fixtures run in the digest-pinned acceptance lane",
@@ -26,7 +27,7 @@ pytestmark = [
 
 
 @pytest.mark.parametrize(("version", "image"), KICAD_10_NATIVE_TOOLCHAINS)
-def test_native_erc_honors_global_ignore_and_active_severities(version: str, image: str) -> None:
+def test_native_erc_honors_persisted_global_severities(version: str, image: str) -> None:
     repository = Path(__file__).resolve().parents[1]
     (repository / "build/ci").mkdir(parents=True, exist_ok=True)
     log = HostedLog(repository, f"native-schematic-erc-global-severity-{version}")
@@ -39,16 +40,24 @@ def test_native_erc_honors_global_ignore_and_active_severities(version: str, ima
     )
 
     events = tuple(json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines())
-    native_result = next(
+    native_results = tuple(
         item
         for item in events
         if item.get("stage") == "schematic-erc-global-severity/native-export"
         and item.get("status") == "PASS"
     )
+    assert native_results
+    native_result = native_results[-1]
     assert native_result["kicad_version"] == version
     assert native_result["image"] == image
     assert native_result["ignored_pin_not_connected"] == "absent"
     assert native_result["active_pin_not_connected"] == "error"
+    assert native_result["downgraded_pin_not_connected"] == "warning"
     assert native_result["repeatable"] == "true"
-    for key in ("ignored_settings_sha256", "active_settings_sha256", "schematic_sha256"):
+    for key in (
+        "ignored_settings_sha256",
+        "active_settings_sha256",
+        "downgraded_settings_sha256",
+        "schematic_sha256",
+    ):
         assert len(native_result[key]) == 64

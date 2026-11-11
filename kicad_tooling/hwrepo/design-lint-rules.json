@@ -9907,6 +9907,52 @@
       ]
     },
     {
+      "rule_id": "schematic.erc_error_downgraded",
+      "title": "Error-default schematic ERC rules set to Warning need intentional review",
+      "theme": "schematic",
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_erc_warning_downgrade.py#source_bound_schematic_erc_warning_downgrade_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0 .kicad_pro erc.rule_severities map, schema version, and configured patch version",
+      "predicate": "For supported KiCad 10.0.x project settings with ERC schema 0, emit one review candidate for each known KiCad Error-default rule explicitly configured as Warning.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.x .kicad_pro erc.rule_severities with schema 0; default severities are sourced from KiCad 10.0.0 and 10.0.5 definitions, and native behavior is tested on both pinned images"
+      ],
+      "limitations": [
+        "A Warning override may be intentional; the finding does not assert that a violation exists or that the changed project policy is wrong.",
+        "The check reads saved project settings and does not run ERC, identify affected schematic objects, inspect connectivity, infer power or ground requirements, or validate PCB copper.",
+        "Only the explicitly catalogued KiCad 10.0 Error-default keys are reviewed. PCB-only projects and other KiCad versions are out of scope; project policy can select block, off, or an exact-fingerprint ignore."
+      ],
+      "fault_fixtures": [
+        "tests.test_schematic_erc_warning_downgrade.test_error_default_changed_to_warning_creates_source_bound_review",
+        "tests.test_schematic_erc_warning_downgrade.test_every_known_error_default_warning_override_is_reviewed",
+        "tests.test_design_lint_mcp_parity_schematic_erc_warning_downgrade.test_erc_error_downgrade_review_matches_between_cli_and_mcp",
+        "tests.test_schematic_erc_global_severity_native_fixture_lane.test_native_erc_honors_persisted_global_severities"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_ERC_GLOBAL_SEVERITY_FIXTURES"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_schematic_erc_warning_downgrade.test_kicad_default_warning_is_a_valid_control",
+        "tests.test_schematic_erc_warning_downgrade.test_active_error_and_known_kicad_warning_controls_are_quiet",
+        "tests.test_schematic_erc_warning_downgrade.test_unsupported_kicad_versions_and_non_schematic_projects_are_out_of_scope"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_schematic_erc_warning_downgrade.test_source_order_does_not_change_candidate_order_or_subjects"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/schematic_erc_warning_downgrade.py#source_bound_schematic_erc_warning_downgrade_candidates",
+        "kicad_tooling/hwrepo/schematic_erc_warning_downgrade.py#project_schematic_erc_warning_downgrade_evidence",
+        "kicad_tooling/hwrepo/schematic_erc_project_settings.py#configured_schematic_erc_rule_severities",
+        "kicad_tooling/hwrepo/schematic_erc_project_settings_evidence.py#read_source_bound_schematic_erc_settings",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
+        "kicad_tooling/hwrepo/design_lint_candidate_inputs.py#DesignLintCandidateInputs",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
+      ]
+    },
+    {
       "rule_id": "schematic.erc_exclusion_present",
       "title": "Persisted schematic ERC exclusions need intentional review",
       "theme": "schematic",
@@ -9973,7 +10019,7 @@
       "fault_fixtures": [
         "tests.test_schematic_erc_global_severity_review.test_ignored_pin_connectivity_rule_creates_source_bound_review_candidate",
         "tests.test_design_lint_mcp_parity_schematic_erc_global_severity.test_global_erc_ignore_review_matches_between_cli_and_mcp",
-        "tests.test_schematic_erc_global_severity_native_fixture_lane.test_native_erc_honors_global_ignore_and_active_severities"
+        "tests.test_schematic_erc_global_severity_native_fixture_lane.test_native_erc_honors_persisted_global_severities"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_SCHEMATIC_ERC_GLOBAL_SEVERITY_FIXTURES"

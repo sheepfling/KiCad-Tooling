@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 330 rules are implemented with synthetic regression coverage.
+The following 331 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 330 active rules.
+The catalog currently contains 331 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -762,6 +762,7 @@ skipped under prerelease policy.
 - `pcb.thermal_via_coverage`
 - `pcb.differential_pair_route_skew`
 - `pcb.differential_pair_route_layer_mismatch`
+- `schematic.erc_error_downgraded`
 
 This baseline catches suspicious connector symmetry and missing named pins,
 plus narrow netlist patterns for I2C, I3C, SPI, USB-C, and CAN. It does not
@@ -784,22 +785,19 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest quality-gate progress (v0.5.3rc663):** The focused hosted acceptance
-  passed in GitHub run `42993545811`. The tag selected the new rule plus
-  cross-rule integrity checks and enabled its required native fixture. The
+- **Latest published quality gate (v0.5.3rc667):** The hosted acceptance passed
+  in GitHub run `43014481795`. Its annotated tag selected the rule and
+  cross-rule integrity checks, and enabled the required native fixture. The
   installed-wheel rehearsal against the separate public template passed.
-  Local CI ran 373 tests and deselected 8,023; its exact Docker lane passed on
-  KiCad 10.0.0 and 10.0.5. Preview and package-release jobs were skipped by
-  prerelease policy.
-- **Latest feature work (LINT-394, unmapped fitted IC supply pins):** The new
-  default-off `power.component_supply_range_map_coverage` rule finds fitted
-  U/IC references with native `power_in` pins that lack a current authored
-  supply-range identity. It emits a component-level REVIEW prompt without
-  guessing voltages, nets, or pin limits. The exact rule gate passed locally:
-  373 tests passed, 8,023 were deselected, and both native Docker profiles
-  (KiCad 10.0.0 and 10.0.5) passed. Pyright, Windows types, wheel/sdist,
-  installed-wheel, and separate-template playtests passed. Hosted acceptance
-  passed in GitHub run `42993545811`. No external project data was used.
+- **Latest feature work (LINT-397, ERC severity downgrades):** The new
+  `schematic.erc_error_downgraded` rule prompts when a source-hashed KiCad
+  10.0.x project explicitly lowers one of twenty documented Error-default ERC
+  keys to Warning. It defaults to REVIEW and leaves default-Warning controls
+  quiet. The exact tag-scoped local gate passed with 425 tests and 8,067
+  deselected, including exact native runs on KiCad 10.0.0 and 10.0.5; Ruff,
+  Alphus, Markdown, Pyright, Windows types, wheel, sdist, and installed-package
+  checks also passed.
+  No external or proprietary project source was used.
 - **Earlier feature work (LINT-393, mapped supply-pin coverage):** The
   default-off `power.component_supply_range_pin_coverage` rule checks that
   every native `power_in` pin on a component named in the reviewed supply-range
@@ -4133,7 +4131,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 330 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 331 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -23454,6 +23452,39 @@ acceptance threads while new lint features proceed:
   10.0.5 Docker images. Ruff, Alphus, Markdown lint, Pyright, Windows type
   checks, wheel/sdist builds, and installed package checks passed. The local
   gate skipped mdrepo network checks.
+
+#### LINT-397 — Review Error-default schematic ERC rules set to Warning
+
+- **Status:** Implemented as `schematic.erc_error_downgraded`, default `review`.
+- **Gap:** A KiCad project can explicitly lower an ERC rule from its Error
+  default to Warning. Native ERC will still report the issue, but a production
+  handoff may miss that its severity was deliberately reduced.
+- **Behavior:** For source-hashed KiCad 10.0.x project settings with ERC schema
+  0, emit one review candidate for each explicitly configured Warning among
+  the closed set of twenty documented Error-default keys. KiCad-default
+  Warning keys remain quiet controls. The candidate records the rule key,
+  source hash, and configured patch version. `schematic.erc_rule_ignored`
+  separately handles rules set to Ignore.
+- **Boundary:** This flags a saved policy change; it does not claim an ERC
+  violation exists, identify affected objects, infer connector supply/return
+  requirements, or prove schematic or PCB connectivity. Project policy can
+  select `block`, `off`, or an exact-fingerprint ignore.
+- **Fixtures:** Synthetic fault/control tests cover all twenty Error-default
+  keys, default-Warning controls, active Error settings, malformed and
+  unsupported settings, source binding, stable ordering, and configurable
+  dispositions. The native fixture uses the synthetic unconnected-pin
+  schematic to prove Warning versus Error behavior on KiCad 10.0.0 and 10.0.5.
+- **Selection:** Run
+  `tests/test_schematic_erc_warning_downgrade.py` and
+  `tests/test_design_lint_mcp_parity_schematic_erc_warning_downgrade.py` with
+  `design_lint and schematic_lint and design_lint_rule(rule_id="schematic.erc_error_downgraded")`.
+  Exact native coverage uses
+  `tests/test_schematic_erc_global_severity_native_fixture_lane.py` and
+  `KICAD_RUN_NATIVE_SCHEMATIC_ERC_GLOBAL_SEVERITY_FIXTURES=1`.
+- **Evidence:** Tagged KiCad 10.0.0 ERC settings and KiCad 10.0.5 ERC item
+  source define the reviewed default-key set. Local synthetic and CLI/MCP
+  regressions pass; the exact two-image Docker fixture passes. No external
+  project source or proprietary board data was used.
 
 ## Completion and release gate
 

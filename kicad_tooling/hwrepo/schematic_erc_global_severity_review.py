@@ -6,15 +6,17 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from .contracts import repo_path
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
-from .evidence import digest
 from .project_models import ProjectConfig, ProjectKind
 from .schematic_erc_project_settings import (
     ERC_DEFAULT_IGNORED_RULE_KEYS,
     SchematicErcRuleSeverity,
     configured_schematic_erc_rule_severities,
+)
+from .schematic_erc_project_settings_evidence import (
+    read_source_bound_schematic_erc_settings,
+    verify_source_bound_schematic_erc_settings_unchanged,
 )
 from .source_state_models import SourceHashInventory
 
@@ -121,36 +123,24 @@ def source_bound_schematic_erc_ignored_rule_candidates(
     if _SUPPORTED_KICAD_VERSION.fullmatch(config.kicad_version) is None:
         return ()
 
-    root = root.resolve()
     relative = str(config.project)
-    settings_file = repo_path(root, relative)
-    expected_hash = source_hashes.get(relative)
-    if not settings_file.exists():
-        if expected_hash is not None:
-            raise ValueError("Source-bound KiCad project settings disappeared during inspection")
+    source = read_source_bound_schematic_erc_settings(root, relative, source_hashes)
+    if source is None:
         return ()
-    if not settings_file.is_file():
-        raise ValueError("KiCad project settings path is not a regular file")
-    if expected_hash is None:
-        raise ValueError("KiCad project settings are outside source-bound project inputs")
-    if digest(settings_file) != expected_hash:
-        raise ValueError("KiCad project settings differ from source-bound project inputs")
 
     try:
-        document = settings_file.read_text(encoding="utf-8")
-        configured_rules = configured_schematic_erc_rule_severities(document)
+        configured_rules = configured_schematic_erc_rule_severities(source.document)
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         raise ValueError(
             f"{relative}: could not read supported schematic ERC rule severities: {exc}"
         ) from exc
-    if digest(settings_file) != expected_hash:
-        raise ValueError("KiCad project settings changed during design-lint inspection")
+    verify_source_bound_schematic_erc_settings_unchanged(root, source)
 
     return tuple(
         SchematicErcIgnoredRuleCandidate.from_source_evidence(
             SchematicErcIgnoredRuleEvidence(
-                source_path=relative,
-                source_sha256=expected_hash,
+                source_path=source.source_path,
+                source_sha256=source.source_sha256,
                 kicad_version=config.kicad_version,
                 project_kind=config.kind,
                 configured_rule=rule,

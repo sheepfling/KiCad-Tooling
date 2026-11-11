@@ -18,6 +18,56 @@ ERC_DEFAULT_IGNORED_RULE_KEYS = frozenset(
         "single_global_label",
     }
 )
+ERC_DEFAULT_ERROR_RULE_KEYS = frozenset(
+    {
+        "bus_definition_conflict",
+        "bus_entry_needed",
+        "bus_to_bus_conflict",
+        "bus_to_net_conflict",
+        "different_unit_footprint",
+        "different_unit_net",
+        "duplicate_reference",
+        "duplicate_sheet_names",
+        "extra_units",
+        "hier_label_mismatch",
+        "label_dangling",
+        "missing_power_pin",
+        "pin_not_connected",
+        "pin_not_driven",
+        "power_pin_not_driven",
+        "unannotated",
+        "undefined_netclass",
+        "unresolved_variable",
+        "unit_value_mismatch",
+        "wire_dangling",
+    }
+)
+ERC_DEFAULT_WARNING_RULE_KEYS = frozenset(
+    {
+        "endpoint_off_grid",
+        "field_name_whitespace",
+        "footprint_link_issues",
+        "ground_pin_not_ground",
+        "isolated_pin_label",
+        "label_multiple_wires",
+        "lib_symbol_issues",
+        "lib_symbol_mismatch",
+        "missing_bidi_pin",
+        "missing_input_pin",
+        "missing_unit",
+        "multiple_net_names",
+        "net_not_bus_member",
+        "no_connect_connected",
+        "no_connect_dangling",
+        "pin_to_pin",
+        "same_local_global_label",
+        "similar_label_and_power",
+        "similar_labels",
+        "similar_power",
+        "stacked_pin_name",
+        "unconnected_wire_endpoint",
+    }
+)
 
 
 class _ErcMeta(BaseModel):
