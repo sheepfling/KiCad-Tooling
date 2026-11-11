@@ -41,6 +41,9 @@ def test_three_uart_headers_localize_one_split_return_among_common_peers() -> No
         coverage.candidate_group_count,
     ) == (6, 6, 2, 4, 1)
 
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_three_uart_headers_with_common_references_are_quiet() -> None:
     common = report(three_uart_connector_reference_netlist(common_references=True))
     assert RULE_ID not in {item.rule_id for item in common.findings}
     common_coverage = common.serial_peer_reference_coverage
@@ -51,6 +54,10 @@ def test_three_uart_headers_localize_one_split_return_among_common_peers() -> No
         common_coverage.candidate_group_count,
     ) == (6, 6, 0)
 
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_three_uart_peer_reference_report_is_order_stable() -> None:
+    source = three_uart_connector_reference_netlist()
     reordered = source.model_copy(
         update={
             "components": dict(reversed(tuple(source.components.items()))),

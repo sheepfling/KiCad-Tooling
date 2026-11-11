@@ -23267,8 +23267,15 @@ acceptance threads while new lint features proceed:
   passed); the exact SPI rule selector passed 14 tests with 59 deselected. The
   I2C lint, parity, two-version Docker, and marker/selector/catalog checks
   passed together (89 passed); its exact rule selector passed 22 tests with 2
-  deselected. These changes improve test selection and timing evidence; they
-  do not change either lint predicate.
+  deselected. Serial three-UART split, common-reference control, and ordering
+  cases are also individually selectable with the exact
+  `bus.serial_peer_reference_review` marker, and its pinned native regression
+  suite is included by that selector. Its focused selector passed 10 tests with
+  2 deselected, including pinned KiCad 10.0.0 and 10.0.5 native cases; the
+  three unit cases ran independently. Architecture and marker selection checks
+  passed 7 tests, and catalog/backlog reachability checks passed 17. These
+  changes improve test selection and timing evidence; they do not change any
+  lint predicate.
 
 #### LINT-391 — Localize alternate reference-plane coverage on native tracks
 

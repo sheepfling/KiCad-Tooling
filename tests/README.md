@@ -468,6 +468,12 @@ python -I -B -m pytest -q -m "design_lint and interface_lint" \
   tests/test_can_peer_reference_review.py tests/test_can_peer_reference_architecture.py
 python -I -B -m pytest -q -m "design_lint and interface_lint" \
   tests/test_rs485_peer_reference_review.py tests/test_rs485_peer_reference_architecture.py
+python -I -B -m pytest -q \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.serial_peer_reference_review")' \
+  tests/test_serial_peer_reference_multichannel.py
+KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES=1 python -I -B -m pytest -q \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.serial_peer_reference_review")' \
+  tests/test_ci_hosted_digital_peer_serial.py
 python -I -B -m pytest -q -m "architecture and design_lint and interface_lint" \
   tests/test_spi_peer_reference_architecture.py
 KICAD_RUN_NATIVE_I2C_PEER_REFERENCE_FIXTURES=1 python -I -B -m pytest -q \
