@@ -10,6 +10,14 @@ from pydantic import BaseModel, ConfigDict, JsonValue
 from .contracts import parse_model_text
 
 SUPPORTED_ERC_EXCLUSION_SCHEMA_VERSION = 0
+ERC_DEFAULT_IGNORED_RULE_KEYS = frozenset(
+    {
+        "footprint_filter",
+        "four_way_junction",
+        "simulation_model_issue",
+        "single_global_label",
+    }
+)
 
 
 class _ErcMeta(BaseModel):
@@ -23,6 +31,7 @@ class _ErcSettings(BaseModel):
 
     meta: _ErcMeta | None = None
     erc_exclusions: list[JsonValue] | None = None
+    rule_severities: dict[str, str] | None = None
 
 
 class _ProjectSettings(BaseModel):
@@ -38,6 +47,41 @@ class SchematicErcExclusion:
     marker: str
     error_type: str
     comment: str
+
+
+@dataclass(frozen=True, slots=True)
+class SchematicErcRuleSeverity:
+    """One explicitly configured schematic ERC rule severity."""
+
+    rule_key: str
+    severity: str
+
+
+def configured_schematic_erc_rule_severities(
+    document: str,
+) -> tuple[SchematicErcRuleSeverity, ...]:
+    """Read the supported KiCad 10.0 ERC severity map in stable key order."""
+    project = parse_model_text(document, _ProjectSettings)
+    if project.erc is None:
+        return ()
+    settings = project.erc
+    if "meta" in settings.model_fields_set and settings.meta is None:
+        raise ValueError("ERC severity settings metadata is malformed")
+    if "rule_severities" in settings.model_fields_set and settings.rule_severities is None:
+        raise ValueError("ERC rule severity map must be an object")
+    schema_version = settings.meta.version if settings.meta is not None else 0
+    if schema_version != SUPPORTED_ERC_EXCLUSION_SCHEMA_VERSION:
+        raise ValueError(f"ERC severity settings schema version is not supported: {schema_version}")
+    severities = settings.rule_severities or {}
+    supported_severities = {"error", "warning", "ignore"}
+    records: list[SchematicErcRuleSeverity] = []
+    for rule_key, severity in sorted(severities.items()):
+        if not rule_key.strip():
+            raise ValueError("ERC rule severity key must not be empty")
+        if severity not in supported_severities:
+            raise ValueError(f"ERC rule severity for {rule_key!r} is not supported: {severity!r}")
+        records.append(SchematicErcRuleSeverity(rule_key, severity))
+    return tuple(records)
 
 
 def _serialized_marker_identity(value: str) -> tuple[str, str]:

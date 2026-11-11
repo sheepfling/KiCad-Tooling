@@ -34,11 +34,6 @@ _NON_RULE_NATIVE_TESTS = MappingProxyType(
             "test_native_can_split_termination_fault_and_control",
         ): "The authored CAN termination contract checks its ordered topology and midpoint capacitor; it is distinct from the active direct-termination review heuristic.",
         (
-            "tests.test_component_rating_native_fixture_lane",
-            None,
-            "test_component_and_connector_rating_controls_export_repeatably",
-        ): "This native lane validates authored component and connector rating requirements; the design-lint catalog has no rating predicate.",
-        (
             "tests.test_empty_netlist_evidence_native_fixture_lane",
             None,
             "test_native_empty_inventory_trigger_and_nonempty_control_on_supported_images",

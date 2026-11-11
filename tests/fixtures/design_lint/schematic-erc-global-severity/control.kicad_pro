@@ -1,0 +1,13 @@
+{
+  "erc": {
+    "meta": {"version": 0},
+    "rule_severities": {
+      "footprint_filter": "ignore",
+      "four_way_junction": "ignore",
+      "label_dangling": "warning",
+      "pin_not_connected": "error",
+      "simulation_model_issue": "ignore",
+      "single_global_label": "ignore"
+    }
+  }
+}

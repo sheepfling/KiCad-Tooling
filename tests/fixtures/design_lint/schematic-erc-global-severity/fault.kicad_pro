@@ -1,0 +1,8 @@
+{
+  "erc": {
+    "meta": {"version": 0},
+    "rule_severities": {
+      "pin_not_connected": "ignore"
+    }
+  }
+}

@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 329 rules are implemented with synthetic regression coverage.
+The following 330 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 329 active rules.
+The catalog currently contains 330 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -684,6 +684,7 @@ skipped under prerelease policy.
 - `net.numbered_returns`
 - `net.numbered_power_rails`
 - `schematic.erc_exclusion_present`
+- `schematic.erc_rule_ignored`
 - `schematic.wire_end_on_pin_line`
 - `schematic.pin_tip_on_wire_interior`
 - `schematic.wire_endpoint_near_pin_tip`
@@ -4132,7 +4133,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 329 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 330 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -4141,6 +4142,7 @@ is not a reason by itself to expand its scope or change its default policy.
   stays quiet, while its unproven same-device control retains the same review finding. The
   comparison uses rule and subject identity, not source-bound evidence that must change with the
   input.
+
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -23417,6 +23419,41 @@ acceptance threads while new lint features proceed:
   synthetic exclusions as `excluded: true` with the expected error types and
   comment. Hosted tag `v0.5.3rc665` passed GitHub Actions run
   [43007744812](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43007744812).
+
+#### LINT-396 — Review globally ignored schematic ERC rules
+
+- **Status:** Implemented as `schematic.erc_rule_ignored`, default `review`.
+- **Gap:** A project can set a named ERC check's severity to `ignore` in
+  `.kicad_pro`. The resulting normal ERC report can omit an error entirely, so
+  this is a quality-policy change that ERC alone does not explain.
+- **Behavior:** For source-hashed KiCad 10.0.x project settings with ERC schema
+  0, emit one candidate for each explicitly ignored rule except the four
+  KiCad-default ignored keys: `footprint_filter`, `four_way_junction`,
+  `simulation_model_issue`, and `single_global_label`. Preserve the rule key,
+  source hash, and exact configured KiCad patch. Default-ignore values were
+  checked in the tagged KiCad 10.0.0 and 10.0.5 source; native ERC behavior is
+  exercised against both pinned images.
+- **Boundary:** This is a review prompt, not a claim that a board has an
+  unconnected pin or that a suppression is wrong. It does not identify affected
+  objects, infer connector requirements, run ERC, or prove PCB continuity.
+  Project policy can select `block`, `off`, or an exact-fingerprint ignore.
+- **Fixtures:** Synthetic tests cover the suppressed `pin_not_connected` rule,
+  KiCad's default-ignore controls, active severities, schema and data failures,
+  source-hash mismatch, exact patch scope, candidate integrity, stable ordering,
+  and configurable dispositions. Native fixtures prove that Ignore removes a
+  known unconnected-pin error from the ordinary ERC report and Error restores
+  it in KiCad 10.0.0 and 10.0.5.
+- **Selection:** Run
+  `tests/test_schematic_erc_global_severity_review.py` with
+  `design_lint and schematic_lint and design_lint_rule(rule_id="schematic.erc_rule_ignored")`.
+  Exact native coverage uses
+  `tests/test_schematic_erc_global_severity_native_fixture_lane.py` and
+  `KICAD_RUN_NATIVE_SCHEMATIC_ERC_GLOBAL_SEVERITY_FIXTURES=1`.
+- **Local scoped gate (2026-11-11):** `scripts/ci.py` passed with 17 passed and
+  8,419 deselected, including native exports in the pinned KiCad 10.0.0 and
+  10.0.5 Docker images. Ruff, Alphus, Markdown lint, Pyright, Windows type
+  checks, wheel/sdist builds, and installed package checks passed. The local
+  gate skipped mdrepo network checks.
 
 ## Completion and release gate
 

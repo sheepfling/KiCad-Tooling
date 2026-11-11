@@ -88,6 +88,9 @@ from .ci_hosted_rs485_unconnected_data import (
     rs485_unconnected_line_pin_fixture_lane,
 )
 from .ci_hosted_schematic_erc_exclusions import schematic_erc_exclusion_fixture_lane
+from .ci_hosted_schematic_erc_global_severity import (
+    schematic_erc_global_severity_fixture_lane,
+)
 from .ci_hosted_serial_peer_fixtures import serial_peer_fixture_lane
 from .ci_hosted_serial_peer_net_labels import serial_peer_net_label_fixture_lane
 from .ci_hosted_serial_peer_reference_bonds import (
@@ -488,6 +491,12 @@ def native_lane(
             log=log,
         )
         schematic_erc_exclusion_fixture_lane(
+            root,
+            project=project,
+            image=image,
+            log=log,
+        )
+        schematic_erc_global_severity_fixture_lane(
             root,
             project=project,
             image=image,

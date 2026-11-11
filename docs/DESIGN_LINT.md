@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 329 active rules.
+The catalog currently contains 330 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -5477,6 +5477,29 @@ an exact-fingerprint ignore. Tooling-owned synthetic settings are in
 [kicad-10-erc-cli]: https://docs.kicad.org/10.0/en/cli/cli.html
 [kicad-10-erc-settings-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/eeschema/erc/erc_settings.cpp
 [kicad-10-erc-marker-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/eeschema/sch_marker.cpp
+
+## Review globally ignored schematic ERC rules
+
+`schematic.erc_rule_ignored` prompts for each KiCad 10.0.x project setting
+under `erc.rule_severities` that sets a rule to `ignore`, except the four rules
+KiCad itself documents with Ignore defaults: `footprint_filter`,
+`four_way_junction`, `simulation_model_issue`, and `single_global_label`. The
+finding names the exact rule key, hashes the `.kicad_pro` source, and records
+the configured KiCad patch version. KiCad 10.0 uses ERC settings schema 0;
+the severity map and default values are defined in the tagged
+[ERC settings source][kicad-10-erc-settings-source] and
+[ERC item definitions][kicad-10-erc-item-source]. The native fixture confirms
+that `pin_not_connected` disappears from the standard ERC report when set to
+Ignore and returns as an error when set back to Error in KiCad 10.0.0 and
+10.0.5.
+
+This is a review prompt, not a defect claim. It does not run ERC, identify which
+objects are affected, infer which connector pins should share ground, or prove
+schematic or PCB connectivity. The rule is configurable as `review`, `block`,
+or `off`, and supports exact-fingerprint ignores. Synthetic settings are in
+[`tests/fixtures/design_lint/schematic-erc-global-severity/`](../tests/fixtures/design_lint/schematic-erc-global-severity/README.md).
+
+[kicad-10-erc-item-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/eeschema/erc/erc_item.cpp
 
 ## Review persisted per-violation PCB DRC exclusions
 

@@ -52,6 +52,7 @@ from .power import (
     unconnected_component_power_pins,
     with_control_resistor,
 )
+from .schematic_erc_global_severity import schematic_erc_global_severity_rule_ids
 
 __all__ = (
     "can_netlist",
@@ -85,6 +86,7 @@ __all__ = (
     "peer_connector_pin_assignments",
     "policy_without_i2c_map_prompt",
     "repeated_component_supply_pins",
+    "schematic_erc_global_severity_rule_ids",
     "serial_peer_voltage_map",
     "serial_peer_voltage_netlist",
     "serial_peer_voltage_translator_netlist",

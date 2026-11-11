@@ -73,6 +73,9 @@ from .pcb_mechanical_edge_clearance import mechanical_edge_rule_coverage_candida
 from .project_models import ProjectManifest
 from .project_source_hashes import hash_project_sources as hashes
 from .schematic_erc_exclusion_review import source_bound_schematic_erc_exclusion_candidates
+from .schematic_erc_global_severity_review import (
+    source_bound_schematic_erc_ignored_rule_candidates,
+)
 from .selection import resolve_project
 
 
@@ -173,10 +176,17 @@ def inspect_design_lint_request(
             *downgraded_miscellaneous_drc_check_candidates(root, config, coach.source_hashes),
             *source_bound_pcb_drc_exclusion_candidates(root, config, coach.source_hashes),
         )
-        schematic_source_candidates = source_bound_schematic_erc_exclusion_candidates(
-            root,
-            config,
-            coach.source_hashes,
+        schematic_source_candidates = (
+            *source_bound_schematic_erc_exclusion_candidates(
+                root,
+                config,
+                coach.source_hashes,
+            ),
+            *source_bound_schematic_erc_ignored_rule_candidates(
+                root,
+                config,
+                coach.source_hashes,
+            ),
         )
         spi_roster = spi_roster_context(root, config)
         serial_peer_roster = serial_peer_roster_context(root, config)
