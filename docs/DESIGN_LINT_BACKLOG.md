@@ -782,13 +782,13 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest quality-gate progress (v0.5.3rc662):** The focused hosted acceptance
-  passed in GitHub run `42985527003`. Its selector ran 372 tests, deselected
-  8,012, and completed pytest in 140.65 seconds. Linux and Windows type checks,
-  wheel and source-distribution checks, and the installed-wheel rehearsal
-  against the separate public template and a relocated-layout copy all passed.
-  The exact native lane passed on digest-pinned KiCad 10.0.0 and 10.0.5. Preview
-  and package-release jobs were skipped by prerelease policy.
+- **Latest quality-gate progress (v0.5.3rc663):** The focused hosted acceptance
+  passed in GitHub run `42993545811`. The tag selected the new rule plus
+  cross-rule integrity checks and enabled its required native fixture. The
+  installed-wheel rehearsal against the separate public template passed.
+  Local CI ran 373 tests and deselected 8,023; its exact Docker lane passed on
+  KiCad 10.0.0 and 10.0.5. Preview and package-release jobs were skipped by
+  prerelease policy.
 - **Latest feature work (LINT-394, unmapped fitted IC supply pins):** The new
   default-off `power.component_supply_range_map_coverage` rule finds fitted
   U/IC references with native `power_in` pins that lack a current authored
@@ -796,8 +796,8 @@ standalone parity work when it closes a demonstrated feature regression.
   guessing voltages, nets, or pin limits. The exact rule gate passed locally:
   373 tests passed, 8,023 were deselected, and both native Docker profiles
   (KiCad 10.0.0 and 10.0.5) passed. Pyright, Windows types, wheel/sdist,
-  installed-wheel, and separate-template playtests passed. Hosted acceptance is
-  pending this tag. No external project data was used.
+  installed-wheel, and separate-template playtests passed. Hosted acceptance
+  passed in GitHub run `42993545811`. No external project data was used.
 - **Earlier feature work (LINT-393, mapped supply-pin coverage):** The
   default-off `power.component_supply_range_pin_coverage` rule checks that
   every native `power_in` pin on a component named in the reviewed supply-range
@@ -23370,7 +23370,8 @@ acceptance threads while new lint features proceed:
   mapped/unmapped controls, and the CLI/MCP parity case. Formatting, Ruff,
   Alphus, Markdown checks, Pyright, Windows type checks, wheel/sdist builds,
   installed-wheel checks, and external-template playtests passed. Hosted
-  acceptance remains pending.
+  tag `v0.5.3rc663` passed GitHub run `42993545811`, including the scoped rule
+  selection, required native fixture switch, and installed-wheel rehearsal.
 
 ## Completion and release gate
 
