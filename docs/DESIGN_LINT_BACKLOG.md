@@ -788,14 +788,15 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest local lint-gate checkpoint (candidate v0.5.3rc677):** LINT-403
+- **Latest published lint-gate checkpoint (v0.5.3rc677):** LINT-403
   makes the default-ignore ERC keys exact-patch scoped instead of assuming
   one global set for every KiCad 10.0 release. The scoped package gate passed
   434 tests with 8,480 deselected, including all eight digest-pinned native
   images. Ruff, both Alphus profiles, Markdown and repository-link checks,
   native and Windows-target Pyright, wheel and source-archive builds, and
   installed-wheel verification against the public and adapted template
-  checkouts passed. Hosted acceptance is pending.
+  checkouts passed. Hosted acceptance passed in GitHub Actions run
+  [43088190619](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43088190619).
 - **Earlier published lint-gate checkpoint (v0.5.3rc676):** LINT-402
   aligns `schematic.erc_error_downgraded` metadata with the eight exact
   source-audited patches already accepted by its settings parser. The scoped
@@ -23741,8 +23742,7 @@ acceptance threads while new lint features proceed:
 
 - **Rule:** `schematic.erc_rule_ignored` (existing rule; no new rule ID).
 - **Status:** Implemented as an exact patch catalog for
-  `schematic.erc_rule_ignored`; local scoped acceptance passed and hosted tag
-  acceptance is pending.
+  `schematic.erc_rule_ignored`; local and hosted scoped acceptance passed.
 - **Gap:** The rule accepted every KiCad 10.0 patch while excluding a single
   global set of four default-ignored keys. That exception set was documented
   from only 10.0.0 and 10.0.5, even though ERC catalog support is maintained
@@ -23771,6 +23771,8 @@ acceptance threads while new lint features proceed:
   installed-wheel origin/version checks, and CLI/MCP plus verification checks
   against the separate public template and adapted checkout passed. No customer
   or proprietary board source was used.
+- **Hosted acceptance:** Tag `v0.5.3rc677` passed GitHub Actions run
+  [43088190619](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43088190619).
 
 ## Completion and release gate
 
