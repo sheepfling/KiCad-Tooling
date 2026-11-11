@@ -785,8 +785,8 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest published quality gate (v0.5.3rc667):** The hosted acceptance passed
-  in GitHub run `43014481795`. Its annotated tag selected the rule and
+- **Latest published quality gate (v0.5.3rc668):** The hosted acceptance passed
+  in GitHub Actions run `43019404091`. Its annotated tag selected the rule and
   cross-rule integrity checks, and enabled the required native fixture. The
   installed-wheel rehearsal against the separate public template passed.
 - **Latest feature work (LINT-397, ERC severity downgrades):** The new
@@ -797,6 +797,8 @@ standalone parity work when it closes a demonstrated feature regression.
   deselected, including exact native runs on KiCad 10.0.0 and 10.0.5; Ruff,
   Alphus, Markdown, Pyright, Windows types, wheel, sdist, and installed-package
   checks also passed.
+  Hosted acceptance passed in GitHub Actions run `43019404091`.
+  The package and preview jobs were skipped by prerelease policy.
   No external or proprietary project source was used.
 - **Earlier feature work (LINT-393, mapped supply-pin coverage):** The
   default-off `power.component_supply_range_pin_coverage` rule checks that
@@ -23485,6 +23487,11 @@ acceptance threads while new lint features proceed:
   source define the reviewed default-key set. Local synthetic and CLI/MCP
   regressions pass; the exact two-image Docker fixture passes. No external
   project source or proprietary board data was used.
+- **Hosted acceptance (2026-11-11):** Annotated tag `v0.5.3rc668` passed GitHub
+  Actions run `43019404091`, including the tag-selected rule-integrity checks,
+  pinned native fixture, and
+  installed-wheel rehearsal against the separate public project checkout.
+  Package and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
