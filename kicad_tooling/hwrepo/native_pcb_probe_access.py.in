@@ -1,5 +1,21 @@
 # Access probes: validate authored requests and measure source-defined surfaces.
 
+
+class NativeDrawing(Protocol):
+    m_Uuid: NativeUuid
+
+    def GetLayer(self) -> int: ...
+
+    def GetWidth(self) -> int: ...
+
+    def GetEffectiveShape(self, layer: int) -> NativeShape | None: ...
+
+
+class EdgeCutObservation(TypedDict):
+    uuid: str
+    width_nm: int
+
+
 class AccessProbeObservation(TypedDict):
     endpoint: str
     side: Literal["front", "back"]
@@ -8,9 +24,7 @@ class AccessProbeObservation(TypedDict):
     obstacle: str | None
     obstacle_net: str | None
     distance_nm: int | None
-    target_aperture_shape: Literal[
-        "circle", "oval", "rectangle", "roundrect", "unsupported"
-    ] | None
+    target_aperture_shape: Literal["circle", "oval", "rectangle", "roundrect", "unsupported"] | None
     target_aperture_diameter_nm: int | None
     courtyard_obstacle: str | None
     courtyard_distance_nm: int | None
@@ -29,6 +43,8 @@ class AccessProbeObservation(TypedDict):
     zone_obstacle_net: str | None
     zone_obstacle_island_index: int | None
     zone_obstacle_distance_nm: int | None
+    edge_obstacle_uuid: NotRequired[str | None]
+    edge_obstacle_distance_nm: NotRequired[int | None]
 
 
 def access_probe_observations(
@@ -38,6 +54,8 @@ def access_probe_observations(
     via_geometry: list[tuple[str, str | None, NativeVia]],
     track_geometry: list[tuple[str, str | None, NativeTrack]],
     zone_geometry: list[tuple[str, str | None, int, int, NativePolygonSet]],
+    edge_geometry: list[tuple[str, NativeShape]],
+    include_edge_cuts: bool,
 ) -> list[AccessProbeObservation]:
     """Measure foreign pads/tracks, untented vias, and courtyards from each pad center."""
     observations: list[AccessProbeObservation] = []
@@ -56,9 +74,7 @@ def access_probe_observations(
 
     def aperture_geometry(
         pad: NativePad, mask_layer: int
-    ) -> tuple[
-        Literal["circle", "oval", "rectangle", "roundrect", "unsupported"], int | None
-    ]:
+    ) -> tuple[Literal["circle", "oval", "rectangle", "roundrect", "unsupported"], int | None]:
         """Measure centered circular-tip fit for symmetric, undrilled mask apertures."""
         shapes: dict[int, Literal["circle", "oval", "rectangle", "roundrect"]] = {
             native_pcbnew.PAD_SHAPE_CIRCLE: "circle",
@@ -106,36 +122,37 @@ def access_probe_observations(
                 f"Requested probe endpoint {endpoint} has multiple exposed {side}-side pads"
             )
         if not targets:
-            observations.append(
-                {
-                    "endpoint": endpoint,
-                    "side": side,
-                    "target_net": target_net,
-                    "target_exposed": False,
-                    "obstacle": None,
-                    "obstacle_net": None,
-                    "distance_nm": None,
-                    "target_aperture_shape": None,
-                    "target_aperture_diameter_nm": None,
-                    "courtyard_obstacle": None,
-                    "courtyard_distance_nm": None,
-                    "unmeasured_courtyard_footprint": None,
-                    "unmeasured_courtyard_distance_nm": None,
-                    "via_obstacle_id": None,
-                    "via_obstacle_net": None,
-                    "via_obstacle_distance_nm": None,
-                    "via_obstacle_tented": None,
-                    "track_obstacle_uuid": None,
-                    "track_obstacle_net": None,
-                    "track_obstacle_distance_nm": None,
-                    "track_obstacle_geometry": None,
-                    "zone_obstacle_uuid": None,
-                    "zone_obstacle_layer": None,
-                    "zone_obstacle_net": None,
-                    "zone_obstacle_island_index": None,
-                    "zone_obstacle_distance_nm": None,
-                }
-            )
+            observation: AccessProbeObservation = {
+                "endpoint": endpoint,
+                "side": side,
+                "target_net": target_net,
+                "target_exposed": False,
+                "obstacle": None,
+                "obstacle_net": None,
+                "distance_nm": None,
+                "target_aperture_shape": None,
+                "target_aperture_diameter_nm": None,
+                "courtyard_obstacle": None,
+                "courtyard_distance_nm": None,
+                "unmeasured_courtyard_footprint": None,
+                "unmeasured_courtyard_distance_nm": None,
+                "via_obstacle_id": None,
+                "via_obstacle_net": None,
+                "via_obstacle_distance_nm": None,
+                "via_obstacle_tented": None,
+                "track_obstacle_uuid": None,
+                "track_obstacle_net": None,
+                "track_obstacle_distance_nm": None,
+                "track_obstacle_geometry": None,
+                "zone_obstacle_uuid": None,
+                "zone_obstacle_layer": None,
+                "zone_obstacle_net": None,
+                "zone_obstacle_island_index": None,
+                "zone_obstacle_distance_nm": None,
+            }
+            if include_edge_cuts:
+                observation.update({"edge_obstacle_uuid": None, "edge_obstacle_distance_nm": None})
+            observations.append(observation)
             continue
         target = targets[0]
         aperture_shape, aperture_diameter_nm = aperture_geometry(target, layer_ids[side][1])
@@ -171,9 +188,7 @@ def access_probe_observations(
             if courtyard.OutlineCount() > 0:
                 distance_nm = int(courtyard.Distance(position))
                 if distance_nm < 0:
-                    raise ValueError(
-                        f"KiCad returned a negative courtyard distance for {endpoint}"
-                    )
+                    raise ValueError(f"KiCad returned a negative courtyard distance for {endpoint}")
                 candidate = (distance_nm, reference.casefold(), reference)
                 if nearest_courtyard is None or candidate < nearest_courtyard:
                     nearest_courtyard = candidate
@@ -237,46 +252,60 @@ def access_probe_observations(
             )
             if nearest_zone is None or candidate[:3] < nearest_zone[:3]:
                 nearest_zone = candidate
-        observations.append(
-            {
-                "endpoint": endpoint,
-                "side": side,
-                "target_net": target_net,
-                "target_exposed": True,
-                "obstacle": nearest[2] if nearest is not None else None,
-                "obstacle_net": nearest[3] if nearest is not None else None,
-                "distance_nm": nearest[0] if nearest is not None else None,
-                "target_aperture_shape": aperture_shape,
-                "target_aperture_diameter_nm": aperture_diameter_nm,
-                "courtyard_obstacle": (
-                    nearest_courtyard[2] if nearest_courtyard is not None else None
-                ),
-                "courtyard_distance_nm": (
-                    nearest_courtyard[0] if nearest_courtyard is not None else None
-                ),
-                "unmeasured_courtyard_footprint": (
-                    nearest_unmeasured[2] if nearest_unmeasured is not None else None
-                ),
-                "unmeasured_courtyard_distance_nm": (
-                    nearest_unmeasured[0] if nearest_unmeasured is not None else None
-                ),
-                "via_obstacle_id": nearest_via[2] if nearest_via is not None else None,
-                "via_obstacle_net": nearest_via[3] if nearest_via is not None else None,
-                "via_obstacle_distance_nm": nearest_via[0] if nearest_via is not None else None,
-                "via_obstacle_tented": False if nearest_via is not None else None,
-                "track_obstacle_uuid": nearest_track[2] if nearest_track is not None else None,
-                "track_obstacle_net": nearest_track[3] if nearest_track is not None else None,
-                "track_obstacle_distance_nm": nearest_track[0] if nearest_track is not None else None,
-                "track_obstacle_geometry": nearest_track[4] if nearest_track is not None else None,
-                "zone_obstacle_uuid": nearest_zone[3] if nearest_zone is not None else None,
-                "zone_obstacle_layer": (
-                    copper_layer_names[copper_layer] if nearest_zone is not None else None
-                ),
-                "zone_obstacle_net": nearest_zone[4] if nearest_zone is not None else None,
-                "zone_obstacle_island_index": nearest_zone[5] if nearest_zone is not None else None,
-                "zone_obstacle_distance_nm": nearest_zone[0] if nearest_zone is not None else None,
-            }
-        )
+        nearest_edge: tuple[int, str, str] | None = None
+        for identity, edge_shape in edge_geometry:
+            distance_nm = floor(float(edge_shape.Distance(position)))
+            if distance_nm < 0:
+                raise ValueError(f"KiCad returned a negative Edge.Cuts distance for {endpoint}")
+            candidate = (distance_nm, identity.casefold(), identity)
+            if nearest_edge is None or candidate[:2] < nearest_edge[:2]:
+                nearest_edge = candidate
+        observation = {
+            "endpoint": endpoint,
+            "side": side,
+            "target_net": target_net,
+            "target_exposed": True,
+            "obstacle": nearest[2] if nearest is not None else None,
+            "obstacle_net": nearest[3] if nearest is not None else None,
+            "distance_nm": nearest[0] if nearest is not None else None,
+            "target_aperture_shape": aperture_shape,
+            "target_aperture_diameter_nm": aperture_diameter_nm,
+            "courtyard_obstacle": (nearest_courtyard[2] if nearest_courtyard is not None else None),
+            "courtyard_distance_nm": (
+                nearest_courtyard[0] if nearest_courtyard is not None else None
+            ),
+            "unmeasured_courtyard_footprint": (
+                nearest_unmeasured[2] if nearest_unmeasured is not None else None
+            ),
+            "unmeasured_courtyard_distance_nm": (
+                nearest_unmeasured[0] if nearest_unmeasured is not None else None
+            ),
+            "via_obstacle_id": nearest_via[2] if nearest_via is not None else None,
+            "via_obstacle_net": nearest_via[3] if nearest_via is not None else None,
+            "via_obstacle_distance_nm": nearest_via[0] if nearest_via is not None else None,
+            "via_obstacle_tented": False if nearest_via is not None else None,
+            "track_obstacle_uuid": nearest_track[2] if nearest_track is not None else None,
+            "track_obstacle_net": nearest_track[3] if nearest_track is not None else None,
+            "track_obstacle_distance_nm": nearest_track[0] if nearest_track is not None else None,
+            "track_obstacle_geometry": nearest_track[4] if nearest_track is not None else None,
+            "zone_obstacle_uuid": nearest_zone[3] if nearest_zone is not None else None,
+            "zone_obstacle_layer": (
+                copper_layer_names[copper_layer] if nearest_zone is not None else None
+            ),
+            "zone_obstacle_net": nearest_zone[4] if nearest_zone is not None else None,
+            "zone_obstacle_island_index": nearest_zone[5] if nearest_zone is not None else None,
+            "zone_obstacle_distance_nm": nearest_zone[0] if nearest_zone is not None else None,
+        }
+        if include_edge_cuts:
+            observation.update(
+                {
+                    "edge_obstacle_uuid": nearest_edge[2] if nearest_edge is not None else None,
+                    "edge_obstacle_distance_nm": (
+                        nearest_edge[0] if nearest_edge is not None else None
+                    ),
+                }
+            )
+        observations.append(observation)
     return observations
 
 
@@ -293,10 +322,14 @@ def read_access_requests(path: Path | None) -> tuple[list[AccessProbeRequest], s
     requests: list[AccessProbeRequest] = []
     seen: set[tuple[str, str]] = set()
     for row_value in raw_requests:
-        if not isinstance(row_value, dict) or set(row_value) != {"endpoint", "net", "side"}:
+        if not isinstance(row_value, dict) or frozenset(row_value) not in {
+            frozenset({"endpoint", "net", "side"}),
+            frozenset({"endpoint", "net", "side", "include_edge_cuts"}),
+        }:
             raise ValueError("Native probe request has an invalid shape")
         row = cast(RawAccessProbeRequest, row_value)
         endpoint_value, net_value, side_value = row["endpoint"], row["net"], row["side"]
+        include_edge_cuts = row.get("include_edge_cuts", False)
         if not isinstance(endpoint_value, str) or not endpoint_value.strip():
             raise ValueError("Native probe request values must be non-empty strings")
         if not isinstance(net_value, str) or not net_value.strip():
@@ -305,12 +338,21 @@ def read_access_requests(path: Path | None) -> tuple[list[AccessProbeRequest], s
             raise ValueError("Native probe request values must be non-empty strings")
         if side_value not in {"front", "back"} or endpoint_value.count(".") != 1:
             raise ValueError("Native probe request has an invalid endpoint or side")
+        if type(include_edge_cuts) is not bool:
+            raise ValueError("Native probe Edge.Cuts request flag must be boolean")
         side = cast(Literal["front", "back"], side_value)
         key = (endpoint_value.casefold(), side)
         if key in seen:
             raise ValueError("Native probe requests contain a duplicate endpoint surface")
         seen.add(key)
-        requests.append({"endpoint": endpoint_value, "net": net_value, "side": side})
+        requests.append(
+            {
+                "endpoint": endpoint_value,
+                "net": net_value,
+                "side": side,
+                "include_edge_cuts": include_edge_cuts,
+            }
+        )
     if not requests:
         raise ValueError("Native probe request file must contain at least one request")
     return requests, sha256(path)

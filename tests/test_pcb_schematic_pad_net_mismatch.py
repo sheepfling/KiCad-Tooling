@@ -161,7 +161,7 @@ def test_connected_pin_board_pad_net_differences_are_reviewable_and_configurable
         assert tuple(item.rule_id for item in stale.stale_ignores) == (RULE_ID,)
 
 
-@pytest.mark.parametrize("schema_version", ["15", "16", "17", "18", "19", "20"])
+@pytest.mark.parametrize("schema_version", ["15", "16", "17", "18", "19", "20", "21"])
 def test_supported_native_snapshot_schema_is_accepted_for_pad_net_comparison(
     schema_version: SnapshotSchema,
 ) -> None:

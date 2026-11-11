@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from math import ceil
+from decimal import ROUND_CEILING, Decimal
 
 from .electrical_report_models import ElectricalCheck
 from .pcb_connectivity_observations import PcbAccessProbeObservation
@@ -13,6 +13,18 @@ from .pcb_test_access_models import (
     TestAccessAnalysis,
     TestAccessEndpointRequirement,
 )
+
+
+def _probe_radius_nm(tip_diameter_mm: float, clearance_mm: float) -> int:
+    """Round the decimal-authored tip radius and clearance upward to nanometers."""
+    radius_mm = Decimal(str(tip_diameter_mm)) / 2 + Decimal(str(clearance_mm))
+    return int((radius_mm * 1_000_000).to_integral_value(rounding=ROUND_CEILING))
+
+
+def _probe_aperture_diameter_nm(tip_diameter_mm: float, clearance_mm: float) -> int:
+    """Round the decimal-authored tip-plus-clearance diameter upward to nanometers."""
+    diameter_mm = Decimal(str(tip_diameter_mm)) + 2 * Decimal(str(clearance_mm))
+    return int((diameter_mm * 1_000_000).to_integral_value(rounding=ROUND_CEILING))
 
 
 def pcb_access_probe_request_set(
@@ -32,7 +44,16 @@ def pcb_access_probe_request_set(
                 else (endpoint.approach_side,)
             )
             requests.extend(
-                PcbAccessProbeRequest(endpoint=endpoint.pin, net=decision.net, side=side)
+                PcbAccessProbeRequest(
+                    endpoint=endpoint.pin,
+                    net=decision.net,
+                    side=side,
+                    include_edge_cuts=(
+                        True
+                        if endpoint.probe_envelope.board_edge_clearance_mm is not None
+                        else None
+                    ),
+                )
                 for side in sides
             )
     if not requests:
@@ -82,6 +103,13 @@ def pcb_probe_envelope_checks(
         if decision.mode == "required"
         for endpoint in decision.endpoints
     )
+    requires_edge = any(
+        endpoint.probe_envelope is not None
+        and endpoint.probe_envelope.board_edge_clearance_mm is not None
+        for decision in spec.decisions
+        if decision.mode == "required"
+        for endpoint in decision.endpoints
+    )
     if requires_courtyard and int(snapshot.schema_version) < 17:
         return (
             ElectricalCheck(
@@ -114,6 +142,17 @@ def pcb_probe_envelope_checks(
                 detail="Authored copper-zone clearance requires native PCB snapshot schema v20 or newer.",
             ),
         )
+    if requires_edge and (int(snapshot.schema_version) < 21 or not snapshot.edge_cuts):
+        return (
+            ElectricalCheck(
+                id="test-access/pcb-probe-envelope/edge-evidence",
+                status="NOT_RUN",
+                detail=(
+                    "Authored board-edge clearance requires native PCB schema v21+ "
+                    "and an observed Edge.Cuts inventory."
+                ),
+            ),
+        )
     observations = {
         (item.endpoint.casefold(), item.side): item for item in snapshot.access_probe_observations
     }
@@ -143,31 +182,34 @@ def pcb_probe_envelope_checks(
                 if endpoint.approach_side == "either"
                 else (endpoint.approach_side,)
             )
-            required_nm = ceil((envelope.tip_diameter_mm / 2 + envelope.clearance_mm) * 1_000_000)
-            required_aperture_nm = ceil(
-                (envelope.tip_diameter_mm + 2 * envelope.clearance_mm) * 1_000_000
+            required_nm = _probe_radius_nm(envelope.tip_diameter_mm, envelope.clearance_mm)
+            required_aperture_nm = _probe_aperture_diameter_nm(
+                envelope.tip_diameter_mm, envelope.clearance_mm
             )
             required_courtyard_nm = (
                 None
                 if envelope.courtyard_clearance_mm is None
-                else ceil(
-                    (envelope.tip_diameter_mm / 2 + envelope.courtyard_clearance_mm) * 1_000_000
-                )
+                else _probe_radius_nm(envelope.tip_diameter_mm, envelope.courtyard_clearance_mm)
             )
             required_via_nm = (
                 None
                 if envelope.via_clearance_mm is None
-                else ceil((envelope.tip_diameter_mm / 2 + envelope.via_clearance_mm) * 1_000_000)
+                else _probe_radius_nm(envelope.tip_diameter_mm, envelope.via_clearance_mm)
             )
             required_track_nm = (
                 None
                 if envelope.track_clearance_mm is None
-                else ceil((envelope.tip_diameter_mm / 2 + envelope.track_clearance_mm) * 1_000_000)
+                else _probe_radius_nm(envelope.tip_diameter_mm, envelope.track_clearance_mm)
             )
             required_zone_nm = (
                 None
                 if envelope.zone_clearance_mm is None
-                else ceil((envelope.tip_diameter_mm / 2 + envelope.zone_clearance_mm) * 1_000_000)
+                else _probe_radius_nm(envelope.tip_diameter_mm, envelope.zone_clearance_mm)
+            )
+            required_board_edge_nm = (
+                None
+                if envelope.board_edge_clearance_mm is None
+                else _probe_radius_nm(envelope.tip_diameter_mm, envelope.board_edge_clearance_mm)
             )
             side_details: list[str] = []
             endpoint_pass = False
@@ -326,6 +368,26 @@ def pcb_probe_envelope_checks(
                             f"required envelope radius is {required_zone_nm / 1_000_000:.6g} mm"
                         )
                 side_clear = side_clear and zone_clear
+                edge_clear = True
+                if required_board_edge_nm is not None:
+                    if observation.edge_obstacle_uuid is None:
+                        edge_clear = False
+                        side_details.append(
+                            f"{side}: no native Edge.Cuts obstacle was measured; "
+                            f"required probe radius plus board-edge clearance is "
+                            f"{required_board_edge_nm / 1_000_000:.6g} mm"
+                        )
+                    else:
+                        assert observation.edge_obstacle_distance_nm is not None
+                        edge_clear = observation.edge_obstacle_distance_nm >= required_board_edge_nm
+                        side_details.append(
+                            f"{side}: nearest native Edge.Cuts item "
+                            f"{observation.edge_obstacle_uuid} is "
+                            f"{observation.edge_obstacle_distance_nm / 1_000_000:.6g} mm "
+                            f"from the pad center; required probe radius plus board-edge "
+                            f"clearance is {required_board_edge_nm / 1_000_000:.6g} mm"
+                        )
+                side_clear = side_clear and edge_clear
                 endpoint_pass = endpoint_pass or side_clear
                 endpoint_unresolved = endpoint_unresolved or courtyard_unresolved
             endpoint_results.append(
@@ -359,7 +421,9 @@ def pcb_probe_envelope_checks(
             "unmeasured footprint bounding box to identify missing nearby courtyards. Optional via clearance "
             "measures only untented vias that span the selected outer copper side; it does not infer exposure "
             "from arbitrary mask graphics. Optional track and filled-zone clearances measure outer-layer copper "
-            "regardless of solder-mask exposure, so they do not classify custom mask openings. The checks do not establish "
+            "regardless of solder-mask exposure, so they do not classify custom mask openings. Optional board-edge "
+            "clearance measures individual native Edge.Cuts shapes but does not validate outline closure or distinguish "
+            "the outer perimeter from internal cutouts. The checks do not establish "
             "body height, probe angle, fixture or cover access, "
             "or physical reach; zone apertures, "
             "custom/chamfered/trapezoid target shapes, and footprints on the opposite board side are not evaluated."

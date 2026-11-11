@@ -10,6 +10,8 @@ from typing import Literal
 from pydantic import model_validator
 
 from .model_primitives import Digest, NonEmptyText, StrictModel
+from .pcb_connectivity_edge_validation import validate_board_edge_evidence
+from .pcb_connectivity_edges import PcbEdgeCutObservation
 from .pcb_connectivity_observations import (
     PcbAccessProbeObservation,
     PcbFootprintPlacementObservation,
@@ -70,6 +72,7 @@ class PcbConnectivitySnapshot(StrictModel):
         "18",
         "19",
         "20",
+        "21",
     ] = "3"
     board_sha256: Digest
     kicad_version: NonEmptyText
@@ -86,6 +89,7 @@ class PcbConnectivitySnapshot(StrictModel):
     copper_layers: tuple[NonEmptyText, ...] = ()
     rule_areas: tuple[PcbRuleAreaObservation, ...] = ()
     footprints: tuple[PcbFootprintPlacementObservation, ...] = ()
+    edge_cuts: tuple[PcbEdgeCutObservation, ...] = ()
     touch_pad_clearance_observations: tuple[PcbTouchPadClearanceObservation, ...] = ()
     touch_pad_clearance_requests_sha256: Digest | None = None
 
@@ -111,6 +115,12 @@ class PcbConnectivitySnapshot(StrictModel):
             self.zones,
             self.footprints,
             schema_version,
+        )
+        validate_board_edge_evidence(
+            self.edge_cuts,
+            self.access_probe_observations,
+            schema_version=schema_version,
+            edge_inventory_present="edge_cuts" in self.model_fields_set,
         )
         _validate_rule_area_contract(self, schema_version)
         _validate_footprint_contract(self, schema_version)

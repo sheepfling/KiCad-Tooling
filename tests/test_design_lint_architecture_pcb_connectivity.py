@@ -7,7 +7,12 @@ import ast
 import pytest
 
 from kicad_tooling.hwrepo import models as shared_models
-from kicad_tooling.hwrepo import pcb_connectivity_observations, pcb_connectivity_snapshot
+from kicad_tooling.hwrepo import (
+    pcb_connectivity_edge_validation,
+    pcb_connectivity_edges,
+    pcb_connectivity_observations,
+    pcb_connectivity_snapshot,
+)
 from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, REPO_ROOT, line_count
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
@@ -46,13 +51,25 @@ def test_connectivity_models_have_bounded_theme_owners_and_compatibility_exports
     observation_owner = HWREPO / "pcb_connectivity_observations.py"
     snapshot_owner = HWREPO / "pcb_connectivity_snapshot.py"
     probe_validation_owner = HWREPO / "pcb_connectivity_probe_validation.py"
+    edge_owner = HWREPO / "pcb_connectivity_edges.py"
+    edge_validation_owner = HWREPO / "pcb_connectivity_edge_validation.py"
 
     assert line_count(observation_owner) < IMPLEMENTATION_MAX_LINES
     assert line_count(snapshot_owner) < IMPLEMENTATION_MAX_LINES
     assert line_count(probe_validation_owner) < IMPLEMENTATION_MAX_LINES
+    assert line_count(edge_owner) < IMPLEMENTATION_MAX_LINES
+    assert line_count(edge_validation_owner) < IMPLEMENTATION_MAX_LINES
     assert set(OBSERVATION_MODEL_NAMES) <= _top_level_definitions(observation_owner)
     assert {"PcbConnectivitySnapshot"} <= _top_level_definitions(snapshot_owner)
     assert {"validate_access_probe_relationships"} <= _top_level_definitions(probe_validation_owner)
+    assert {"PcbEdgeCutObservation"} <= _top_level_definitions(edge_owner)
+    assert {"validate_board_edge_evidence"} <= _top_level_definitions(edge_validation_owner)
+    assert pcb_connectivity_edges.PcbEdgeCutObservation.__module__.endswith(
+        "pcb_connectivity_edges"
+    )
+    assert pcb_connectivity_edge_validation.validate_board_edge_evidence.__module__.endswith(
+        "pcb_connectivity_edge_validation"
+    )
     for name in OBSERVATION_MODEL_NAMES:
         assert getattr(shared_models, name) is getattr(pcb_connectivity_observations, name)
     assert (

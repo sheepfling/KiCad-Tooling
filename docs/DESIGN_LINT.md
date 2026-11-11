@@ -8574,7 +8574,9 @@ reason, such as a hazardous high-voltage node excluded from routine probing:
               "clearance_mm": 0.2,
               "courtyard_clearance_mm": 0.2,
               "via_clearance_mm": 0.2,
-              "track_clearance_mm": 0.2
+              "track_clearance_mm": 0.2,
+              "zone_clearance_mm": 0.2,
+              "board_edge_clearance_mm": 0.2
             }
           }
         ]
@@ -8663,6 +8665,17 @@ regardless of solder-mask coverage; it does not infer mask openings from zone
 configuration or arbitrary graphics. A pre-v20 snapshot leaves this
 requirement `NOT_RUN`.
 
+`board_edge_clearance_mm` is an optional, separate requirement for clearance
+to native `Edge.Cuts` drawings, including internal cutouts. KiCad measures the
+nearest drawing's effective shape from the target pad center; the check compares
+that distance with the probe-tip radius plus the authored board-edge clearance.
+It retains the nearest drawing UUID and requires source-bound snapshot schema
+v21 with an explicit Edge.Cuts inventory. Missing or empty outline evidence
+leaves this requirement `NOT_RUN`. This geometry screen does not validate that
+the outline is closed or manufacturable, distinguish an outer perimeter from
+an internal cutout, or prove a fixture's physical approach and reach. Projects
+must author a reviewed threshold and basis; there is no universal clearance.
+
 The synthetic native acceptance fixture exercises a fitted different-net pad,
 a closer same-net pad, a closer DNP pad, a no-net obstacle, front-only access,
 an undersize circular aperture, an exact-fit aperture with a mask contraction,
@@ -8672,7 +8685,9 @@ be excluded. Track cases include different-net segments, an exact-distance
 boundary, a close same-net track control, and an unconnected arc. Zone cases
 include front- and back-side one-nanometer-inside foreign-copper faults,
 exact-distance boundaries, a close same-net zone decoy, and the clearance hole
-around a target pad. Closer opposite-side zones verify layer filtering. It checks
+around a target pad. Closer opposite-side zones verify layer filtering. Edge
+cases include an exact outer-board boundary control and a one-nanometer-inside
+internal-cutout fault. It checks
 front/back/either-side behavior, exact aperture and clearance boundaries,
 unsupported-shape reporting, expected faults, and repeatability across two
 native loads. It also checks a nearby footprint with no courtyard plus exact
@@ -8680,8 +8695,8 @@ and failing measured courtyard boundaries. Package acceptance runs it against
 the project's digest-pinned KiCad 10.0.0 and 10.0.5 images and retains the
 request, snapshot, probe, and command receipt under ignored `build/ci/` output.
 
-This is a bounded pad-aperture, pad-neighbor, via, track, filled-zone, and
-optional courtyard-proxy check. It skips DNP footprints and same-net neighbor
+This is a bounded pad-aperture, pad-neighbor, via, track, filled-zone, Edge.Cuts,
+and optional courtyard-proxy check. It skips DNP footprints and same-net neighbor
 pads, vias, tracks, and zones. Via coverage is limited to native via objects
 and their side-specific KiCad tenting state. Track and zone coverage measure
 outer-layer copper even when the actual solder-mask state is unknown. The zone

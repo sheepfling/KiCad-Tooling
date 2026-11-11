@@ -8,7 +8,7 @@ import sys
 from collections.abc import Callable, Iterable
 from math import floor, isfinite, isqrt
 from pathlib import Path
-from typing import Literal, Protocol, TypedDict, cast, overload
+from typing import Literal, NotRequired, Protocol, TypedDict, cast, overload
 
 import pcbnew as _pcbnew  # type: ignore[import-not-found]
 
@@ -70,6 +70,8 @@ class NativeBoard(Protocol):
     def Zones(self) -> list[NativeZone]: ...
 
     def GetTracks(self) -> Iterable[NativeTrack]: ...
+
+    def GetDrawings(self) -> Iterable[NativeDrawing]: ...
 
     def GetFootprints(self) -> Iterable[NativeFootprint]: ...
 
@@ -237,6 +239,7 @@ class NativeZoneFiller(Protocol):
 class NativePcbnew(Protocol):
     F_Cu: int
     B_Cu: int
+    Edge_Cuts: int
     F_Mask: int
     B_Mask: int
     F_CrtYd: int
@@ -310,6 +313,7 @@ class AccessProbeRequest(TypedDict):
     endpoint: str
     net: str
     side: Literal["front", "back"]
+    include_edge_cuts: bool
 
 
 class RawAccessRequestEnvelope(TypedDict, total=False):
@@ -321,6 +325,7 @@ class RawAccessProbeRequest(TypedDict, total=False):
     endpoint: object
     net: object
     side: object
+    include_edge_cuts: object
 
 
 class TouchPadClearanceRequest(TypedDict):
@@ -428,7 +433,7 @@ class TrackObservation(TypedDict):
 
 
 class NativeProbeSnapshot(TypedDict):
-    schema_version: Literal["20"]
+    schema_version: Literal["20", "21"]
     board_sha256: str
     kicad_version: str
     zones_refilled: bool
@@ -444,6 +449,7 @@ class NativeProbeSnapshot(TypedDict):
     touch_pad_clearance_requests_sha256: str | None
     tracks: list[TrackObservation]
     copper_layers: list[str]
+    edge_cuts: NotRequired[list[EdgeCutObservation]]
 
 
 def sha256(path: Path) -> str:
