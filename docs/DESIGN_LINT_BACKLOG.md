@@ -779,15 +779,22 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest quality-gate progress (v0.5.3rc651):** Hosted acceptance passed in
-  GitHub run `42950019471`, including the exact native lane, Linux/Windows
-  typechecks, package/wheel checks, and installed-template playtest. The
-  preceding `rc650` run passed the rule-scoped gate and installed-wheel
-  playtest; its focused tag selection passed 89 tests locally with both pinned
-  native PCB images enabled. Ruff, formatting, and full-project Pyright also
-  passed at that checkpoint. The `rc649` run identified missing files in a
-  synthetic scoped-typecheck fixture; `rc650` added those files.
-- **Latest progress (LINT-388, plated oblong drill coverage):** Extended the
+- **Latest quality-gate progress (v0.5.3rc655):** Hosted acceptance passed in
+  GitHub run `42958643499`. The scoped design-lint and integrity checks, exact
+  native PCB fixtures, package/wheel checks, and installed-wheel rehearsal
+  against a separate public-template checkout all passed. `rc652` exposed a
+  missing tag selector, `rc653` exposed Markdown table alignment, and `rc654`
+  exposed a stale catalog fixture reference plus a test-module size violation;
+  the follow-up tags preserve those audit results, and `rc655` passed the
+  corrected gate. Preview and package jobs were skipped by prerelease policy.
+- **Latest progress (LINT-389, pad-connected reference islands):** Refined the
+  opt-in island review so same-net tracks and vias connecting a pad to the exact
+  filled island suppress the false candidate. The disconnected island remains
+  a fault; direct-pad, indirect-track, and plated-via controls stay quiet.
+  The digest-pinned native fixture repeats on KiCad 10.0.0 and 10.0.5. The
+  hosted `rc655` acceptance passed after the catalog and module-size integrity
+  repairs; no project board data was imported.
+- **Earlier progress (LINT-388, plated oblong drill coverage):** Extended the
   LINT-387 native fixture with plated 1.0 by 0.5 mm slots. The source-matched
   front-side observation records an oval drill and both exposed surfaces; a
   500,001 nm measurement passes and a 500,000 nm measurement fails. The
@@ -23128,6 +23135,13 @@ acceptance threads while new lint features proceed:
   `tests/test_pcb_reference_plane_unanchored_island_native.py`,
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, and the
   `pcb.reference_plane_unanchored_island` rule selector.
+- **Tagged acceptance (2026-11-10):** `v0.5.3rc655` (GitHub Actions run
+  `42958643499`) passed the scoped lint and rule-integrity gate, including both
+  digest-pinned native KiCad versions, packaging checks, and installed-wheel
+  verification against a separate public-template checkout. Earlier immutable
+  audit tags preserve the selector, Markdown-table, and repository-integrity
+  failures that the follow-up corrected. Preview and package-release jobs were
+  skipped under prerelease policy.
 
 ## Completion and release gate
 
