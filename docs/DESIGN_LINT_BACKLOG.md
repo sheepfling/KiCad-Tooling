@@ -788,7 +788,13 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest published lint-gate checkpoint (v0.5.3rc677):** LINT-403
+- **Latest published lint-gate checkpoint (v0.5.3rc680):** Focused serial
+  reference fault, control, and ordering regressions now collect separately.
+  The exact serial unit and native selector passed 10 tests with 2 deselected,
+  including KiCad 10.0.0 and 10.0.5. The selector and catalog gates passed,
+  and hosted prerelease lint acceptance passed in GitHub Actions run
+  [43101940203](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43101940203).
+- **Earlier published lint-gate checkpoint (v0.5.3rc677):** LINT-403
   makes the default-ignore ERC keys exact-patch scoped instead of assuming
   one global set for every KiCad 10.0 release. The scoped package gate passed
   434 tests with 8,480 deselected, including all eight digest-pinned native
@@ -23791,6 +23797,39 @@ acceptance threads while new lint features proceed:
   or proprietary board source was used.
 - **Hosted acceptance:** Tag `v0.5.3rc677` passed GitHub Actions run
   [43088190619](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43088190619).
+
+#### LINT-404 — Recheck the DB9 return heuristic on KiCad 10.0.8
+
+- **Status:** Implemented as an extension to the existing native regression
+  for `connector.repeated_pin_function`; the lint predicate and policy are
+  unchanged.
+- **Gap:** The source-hashed four-port DB9 split/common fault-control pair had
+  been repeated on KiCad 10.0.0 and 10.0.5, while the official
+  [10.0.8 Linux/amd64 image][kicad-docker-digests] had not been included in
+  that focused gate.
+- **Change:** Add the official digest-pinned `10.0.8-amd64` image to the
+  DB9-only lane. Its full reference is recorded in
+  `tests/test_native_db9_return_contracts.py`. The split-return fixture must report
+  `connector.repeated_pin_function` and `net.numbered_returns`; the common
+  return control must remain quiet. Other connector native lanes retain their
+  existing version matrix.
+- **Evidence boundary:** The sources are tooling-owned synthetic schematics.
+  This verifies native netlist and report behavior for these two cases on
+  KiCad 10.0.8; it does not validate board copper, prove that separate return
+  nets are a defect, or expand every rule's exact-version support claim.
+- **Focused selection:** Run `tests/test_native_db9_return_contracts.py` with
+  `KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES=1` and the
+  `connector.repeated_pin_function` selector.
+- **Local acceptance:** The focused DB9 module passed 5 tests, including
+  digest-pinned KiCad 10.0.0, 10.0.5, and 10.0.8. The scoped package gate
+  passed 452 tests with 8,467 deselected; this includes the DB9 lane on all
+  three versions and the existing mixed-interface lane on 10.0.0/10.0.5.
+  Ruff, both Alphus profiles, Markdown and repository-link checks, native and
+  Windows-target Pyright, wheel and source-archive builds, installed-wheel
+  origin/version checks, and external/adapted checkout rehearsals passed. The
+  external public template was checked out at
+  `ed89536f0dbbcb013145af2994fef41b2250143e`. Annotated tag and hosted
+  acceptance are pending.
 
 ## Completion and release gate
 

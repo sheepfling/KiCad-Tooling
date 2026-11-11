@@ -165,6 +165,7 @@ def db9_return_contract_fixture_lane(
         image=image,
         log=log,
         case_names=("four-db9-fault", "four-db9-control"),
+        supported_versions=("10.0.0", "10.0.5", "10.0.8"),
     )
     fault = context.reports["four-db9-fault", "first"]
     control = context.reports["four-db9-control", "first"]

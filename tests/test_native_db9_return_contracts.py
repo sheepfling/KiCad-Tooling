@@ -29,6 +29,15 @@ pytestmark = [
     pytest.mark.return_path_lint,
 ]
 
+_DB9_NATIVE_IMAGES = {
+    **PINNED_NATIVE_KICAD_IMAGES,
+    # Official KiCad GHCR linux/amd64 digest; see the package version record.
+    "10.0.8": (
+        "ghcr.io/kicad/kicad:10.0.8-amd64@sha256:"
+        "05f6ac957e351bbbd9e1f9c996be997f61948ed9f94e0c3cab336bfcaf60161c"
+    ),
+}
+
 
 def _assert_db9_contract_results(results: Mapping[str, Mapping[str, str]], version: str) -> None:
     prefix = "connector-return-fixture/"
@@ -201,14 +210,18 @@ def test_db9_return_lane_exports_only_fault_and_control(
 )
 @pytest.mark.parametrize(
     ("project", "version"),
-    (("controller", "10.0.0"), ("raspberry-pi-status-led", "10.0.5")),
+    (
+        ("controller", "10.0.0"),
+        ("raspberry-pi-status-led", "10.0.5"),
+        ("controller-10-0-8", "10.0.8"),
+    ),
 )
 def test_native_db9_return_contracts_are_source_bound_and_repeatable(
     tmp_path: Path, project: str, version: str
 ) -> None:
     from kicad_tooling.ci_hosted_connector_return_lane import db9_return_contract_fixture_lane
 
-    image = PINNED_NATIVE_KICAD_IMAGES[version]
+    image = _DB9_NATIVE_IMAGES[version]
     root, _ = synthetic_design_lint_project(
         tmp_path,
         DesignLintPolicy(),

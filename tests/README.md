@@ -405,6 +405,7 @@ KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
 KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint and connector_lint and return_path_lint and design_lint_rule(rule_id="connector.repeated_pin_function")' \
   tests/test_native_db9_return_contracts.py
+# DB9 native coverage: pinned KiCad 10.0.0, 10.0.5, and 10.0.8 images.
 KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint and connector_lint and return_path_lint and design_lint_rule(rule_id="connector.no_connected_return")' \
   tests/test_connector_no_return_native_fixture_lane.py

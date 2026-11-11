@@ -64,6 +64,7 @@ def prepare_connector_return_fixture_context(
     log: ConnectorReturnLog,
     *,
     case_names: tuple[str, ...] | None = None,
+    supported_versions: tuple[str, ...] = ("10.0.0", "10.0.5"),
     stage_prefix: str = "connector-return-fixture",
     rule_overrides_by_case: Mapping[str, tuple[DesignLintRuleId, ...]] | None = None,
 ) -> ConnectorReturnFixtureContext:
@@ -72,7 +73,7 @@ def prepare_connector_return_fixture_context(
     config = selected_config(root, project)
     if config.image != image:
         raise ValueError(f"{project}: native fixture image differs from its reviewed toolchain")
-    if config.kicad_version not in {"10.0.0", "10.0.5"}:
+    if config.kicad_version not in supported_versions:
         raise ValueError(
             f"Connector return lint fixtures do not cover KiCad {config.kicad_version}"
         )
