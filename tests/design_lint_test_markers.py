@@ -19,6 +19,7 @@ _LINT_AREA_MODULES = MappingProxyType(
         "catalog_lint": frozenset(
             {
                 "tests/test_design_lint_backlog.py",
+                "tests/test_design_lint_catalog_documentation.py",
                 "tests/test_design_lint_catalog.py",
                 "tests/test_design_lint_default_mode_policy.py",
                 "tests/test_design_lint_catalog_fixtures.py",
