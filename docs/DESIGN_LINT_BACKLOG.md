@@ -796,8 +796,7 @@ standalone parity work when it closes a demonstrated feature regression.
   case table, and reachability exercises the actual source-bound predicate. The
   exact tag selector passed 381 tests with 8,549 deselected, including repeated
   fault and control cases in the digest-pinned KiCad 10.0.8 Docker image. Hosted
-  prerelease acceptance passed in GitHub Actions run
-  [43118619465](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43118619465).
+  prerelease acceptance passed in GitHub Actions run 43118619465.
   Package and preview jobs were skipped under prerelease policy.
 - **Previously published lint-gate checkpoint (v0.5.3rc681):** LINT-404 adds the
   source-hashed DB9 split/common fault-control pair to the official pinned
@@ -23896,8 +23895,7 @@ acceptance threads while new lint features proceed:
   split were added, the exact tag selector passed 381 tests with 8,549
   deselected; its pinned native test ran each of four fault/control cases twice.
   Ruff and format checks passed on the follow-up changes. Hosted prerelease
-  acceptance for `v0.5.3rc683` passed in GitHub Actions run
-  [43118619465](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43118619465).
+  acceptance for `v0.5.3rc683` passed in GitHub Actions run 43118619465.
 
 ## Completion and release gate
 
