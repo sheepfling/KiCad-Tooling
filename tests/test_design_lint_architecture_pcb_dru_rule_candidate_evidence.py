@@ -117,6 +117,31 @@ def test_custom_drc_layer_evidence_and_predicate_have_thematic_owners() -> None:
     assert "custom_drc_layer_reference_candidates" in functions
 
 
+def test_deprecated_custom_drc_function_evidence_has_a_focused_owner() -> None:
+    evidence_owner = HWREPO / "design_lint_pcb_dru_deprecated_function_evidence.py"
+    evidence_tree = ast.parse(evidence_owner.read_text(encoding="utf-8"))
+    assert line_count(evidence_owner) < IMPLEMENTATION_MAX_LINES
+    classes = {node.name for node in evidence_tree.body if isinstance(node, ast.ClassDef)}
+    functions = {node.name for node in evidence_tree.body if isinstance(node, ast.FunctionDef)}
+    assert {
+        "PcbDruDeprecatedFunctionUse",
+        "PcbDruDeprecatedFunctionFindingEvidence",
+        "PcbDruDeprecatedFunctionCandidate",
+    } <= classes
+    assert "project_pcb_dru_deprecated_function_evidence" in functions
+
+    predicate_owner = HWREPO / "pcb_dru_deprecated_function_review.py"
+    predicate_tree = ast.parse(predicate_owner.read_text(encoding="utf-8"))
+    predicate_functions = {
+        node.name for node in predicate_tree.body if isinstance(node, ast.FunctionDef)
+    }
+    assert line_count(predicate_owner) < IMPLEMENTATION_MAX_LINES
+    assert {
+        "_deprecated_condition_function_uses",
+        "custom_drc_deprecated_condition_function_candidates",
+    } <= predicate_functions
+
+
 def test_custom_drc_adapter_only_routes_through_typed_candidate_builders() -> None:
     route = HWREPO / "pcb_dru_rule_review.py"
     tree = ast.parse(route.read_text(encoding="utf-8"), filename=route.name)

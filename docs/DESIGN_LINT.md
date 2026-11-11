@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 335 active rules.
+The catalog currently contains 336 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -5307,6 +5307,39 @@ native fault/control probes. See the
 KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_pcb_dru_layer_reference_native.py \
   -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_layer_reference")'
+```
+
+## Review deprecated custom DRC condition functions
+
+`pcb.custom_drc_deprecated_condition_function` asks for review when a named,
+source-bound KiCad 10 `.kicad_dru` rule calls one of five functions that the
+[KiCad 10 custom-rule reference](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html)
+marks deprecated: `insideArea`, `insideCourtyard`,
+`insideFrontCourtyard`, `insideBackCourtyard`, or `memberOf`. The finding
+identifies the source hash, rule name and ordinal, function spelling,
+documented replacement, and position in the condition. Project policy can
+choose `block`, `off`, or an exact-fingerprint ignore.
+
+This is a maintenance prompt. It does not claim the old form is rejected or
+creates an electrical defect. Review whether KiCad's documented replacement
+preserves the intended match before editing the rule. Conditions are not
+evaluated, and files containing `${...}` are deferred to the existing
+text-variable review. The pinned Docker test confirms only that the deprecated
+and replacement syntax reach a terminal sentinel on KiCad 10.0.8.
+
+Tooling-owned fixtures cover all five spellings, replacements, quoted strings,
+comments, source binding, policy, fingerprints, CLI/MCP parity, and the
+repeated native sentinel case. See the
+[fixture note](../tests/fixtures/design_lint/pcb-dru-deprecated-condition-functions/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_pcb_dru_deprecated_condition_functions.py \
+  tests/test_design_lint_mcp_parity_pcb_dru_deprecated_condition_functions.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.custom_drc_deprecated_condition_function")'
+
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_dru_deprecated_condition_functions_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_deprecated_condition_function")'
 ```
 
 ## Review explicitly ignored custom PCB rules

@@ -1,0 +1,8 @@
+(version 1)
+(rule "CurrentQueries"
+    (constraint clearance (min 0.2mm))
+    (condition "A.intersectsArea('HV keepout') && B.intersectsFrontCourtyard('U1') && A.memberOfGroup('Critical')"))
+(rule "StringAndCommentControl"
+    (constraint physical_clearance (min 1mm))
+    (condition "A.Reference == 'insideArea(' && B.Text == 'insideCourtyard(' && A.memberOfGroup('memberOf(')"))
+# insideArea('CommentOnly') and memberOf('CommentOnly') are not expressions.

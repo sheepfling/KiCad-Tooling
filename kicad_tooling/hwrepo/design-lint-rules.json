@@ -15842,6 +15842,49 @@
         "kicad_tooling/hwrepo/design_lint_pcb_dru_layer_evidence.py#PcbDruLayerFindingEvidence",
         "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
       ]
+    },
+    {
+      "rule_id": "pcb.custom_drc_deprecated_condition_function",
+      "title": "Deprecated custom DRC condition functions need review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_dru_deprecated_function_review.py#custom_drc_deprecated_condition_function_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-verified .kicad_dru path and SHA-256 hash, configured KiCad version, rule name and ordinal, deprecated function names, documented replacements, and condition offsets",
+      "predicate": "For a source-bound KiCad 10 version-1 PCB custom-rule file without text-variable substitutions, emit one REVIEW candidate per named rule containing an exact call to a documented deprecated condition function outside quoted string values. The current function set is insideArea, insideCourtyard, insideFrontCourtyard, insideBackCourtyard, and memberOf.",
+      "supported_kicad_versions": [
+        "KiCad 10.x version-1 .kicad_dru syntax, based on the KiCad 10.0 custom condition-function reference"
+      ],
+      "limitations": [
+        "The review is a maintenance prompt from documented deprecations. It does not claim the function is rejected, changes its current result, or creates an electrical defect.",
+        "A suggested replacement must be reviewed for the intended matching semantics; the tool does not rewrite rule expressions.",
+        "Only the five exact deprecated names documented in the KiCad 10.0 reference are recognized. Unknown functions and future documentation changes require a separate update.",
+        "The expression scanner identifies calls outside quoted strings but does not evaluate conditions or native board behavior. The native fixture proves only terminal-sentinel reachability for one pinned 10.0.8 setup. Files containing text-variable substitutions are deferred to the existing substitution review."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_dru_deprecated_condition_functions.test_deprecated_calls_are_reported_once_per_named_rule",
+        "tests.test_design_lint_mcp_parity_pcb_dru_deprecated_condition_functions.test_deprecated_custom_drc_function_review_matches_cli_and_mcp",
+        "tests.test_pcb_dru_deprecated_condition_functions_native.test_deprecated_and_replacement_calls_reach_native_sentinel_on_kicad_1008"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_dru_deprecated_condition_functions.test_current_functions_strings_comments_and_no_condition_are_quiet",
+        "tests.test_pcb_dru_deprecated_condition_functions.test_text_variable_sources_are_deferred_and_exact_version_is_required",
+        "tests.test_pcb_dru_deprecated_condition_functions_native.test_deprecated_and_replacement_calls_reach_native_sentinel_on_kicad_1008"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_dru_deprecated_condition_functions.test_source_binding_determinism_and_policy_are_exact"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_dru_deprecated_function_review.py#custom_drc_deprecated_condition_function_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_rule_declarations",
+        "kicad_tooling/hwrepo/design_lint_pcb_dru_deprecated_function_evidence.py#PcbDruDeprecatedFunctionFindingEvidence",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ]
     }
   ]
 }

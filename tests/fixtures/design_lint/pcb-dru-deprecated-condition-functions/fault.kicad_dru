@@ -1,0 +1,7 @@
+(version 1)
+(rule "DeprecatedQueries"
+    (constraint clearance (min 0.2mm))
+    (condition "A.insideArea('HV keepout') && B.insideFrontCourtyard('U1') && A.memberOf('Critical')"))
+(rule "DeprecatedCourtyardPair"
+    (constraint physical_clearance (min 1mm))
+    (condition "A.insideCourtyard('J1') || B.insideBackCourtyard('J2')"))

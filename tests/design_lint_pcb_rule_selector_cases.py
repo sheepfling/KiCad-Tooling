@@ -152,6 +152,30 @@ PCB_RULE_NODE_CASES = (
         "tests/test_pcb_dru_layer_reference_native.py::test_native_layer_name_faults_and_controls_on_pinned_kicad_1008",
     ),
     (
+        "pcb.custom_drc_deprecated_condition_function",
+        "tests/test_pcb_dru_deprecated_condition_functions.py::test_deprecated_calls_are_reported_once_per_named_rule",
+    ),
+    (
+        "pcb.custom_drc_deprecated_condition_function",
+        "tests/test_pcb_dru_deprecated_condition_functions.py::test_current_functions_strings_comments_and_no_condition_are_quiet",
+    ),
+    (
+        "pcb.custom_drc_deprecated_condition_function",
+        "tests/test_pcb_dru_deprecated_condition_functions.py::test_text_variable_sources_are_deferred_and_exact_version_is_required",
+    ),
+    (
+        "pcb.custom_drc_deprecated_condition_function",
+        "tests/test_pcb_dru_deprecated_condition_functions.py::test_source_binding_determinism_and_policy_are_exact",
+    ),
+    (
+        "pcb.custom_drc_deprecated_condition_function",
+        "tests/test_design_lint_mcp_parity_pcb_dru_deprecated_condition_functions.py::test_deprecated_custom_drc_function_review_matches_cli_and_mcp",
+    ),
+    (
+        "pcb.custom_drc_deprecated_condition_function",
+        "tests/test_pcb_dru_deprecated_condition_functions_native.py::test_deprecated_and_replacement_calls_reach_native_sentinel_on_kicad_1008",
+    ),
+    (
         "pcb.mechanical_edge_clearance_rule_coverage",
         "tests/test_design_lint_determinism_pcb_mechanical_edge.py::test_mechanical_edge_fault_and_control_reports_are_source_bound_and_deterministic",
     ),

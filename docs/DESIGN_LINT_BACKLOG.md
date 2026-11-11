@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 335 rules are implemented with synthetic regression coverage.
+The following 336 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 335 active rules.
+The catalog currently contains 336 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -724,6 +724,8 @@ skipped under prerelease policy.
 - `pcb.custom_drc_casefold_rule_name_collision`
 - `pcb.custom_drc_conflicting_severities`
 - `pcb.custom_drc_text_variable_review`
+- `pcb.custom_drc_layer_reference`
+- `pcb.custom_drc_deprecated_condition_function`
 - `pcb.core_drc_check_ignored`
 - `pcb.core_drc_check_warning`
 - `pcb.dfm_drc_check_ignored`
@@ -798,6 +800,16 @@ standalone parity work when it closes a demonstrated feature regression.
   fault and control cases in the digest-pinned KiCad 10.0.8 Docker image. Hosted
   prerelease acceptance passed in GitHub Actions run 43118619465.
   Package and preview jobs were skipped under prerelease policy.
+- **Current feature work (LINT-406):** A source-bound default-REVIEW rule now
+  flags the five exact custom DRC condition functions that KiCad 10 documents
+  as deprecated, with replacement names, rule identity, and condition offsets.
+  The review stays configurable and makes no electrical-defect claim. The
+  focused Python/CLI/MCP slice passed 5 tests with 15 deselected; the separate
+  repeated Docker sentinel test passed on pinned KiCad 10.0.8. Catalog,
+  architecture, selector, reachability, fixture-marker, and native-switch
+  checks passed 29 tests. Targeted Pyright, Ruff, both Alphus architecture
+  profiles, Markdown validation, and source-module size checks passed. Hosted
+  acceptance is pending; no proprietary design data was used.
 - **Previously published lint-gate checkpoint (v0.5.3rc681):** LINT-404 adds the
   source-hashed DB9 split/common fault-control pair to the official pinned
   KiCad 10.0.8 image while preserving the existing 10.0.0/10.0.5 cases. The
@@ -4197,7 +4209,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 333 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 336 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -23897,6 +23909,39 @@ acceptance threads while new lint features proceed:
   Ruff and format checks passed on the follow-up changes. Hosted prerelease
   acceptance for `v0.5.3rc683` passed in GitHub Actions run 43118619465.
 
+#### LINT-406 — Review deprecated custom DRC condition functions
+
+- **Status:** Implemented as the configurable default-REVIEW rule
+  `pcb.custom_drc_deprecated_condition_function`.
+- **Source:** The [KiCad 10 documentation][kicad-10-dru-functions] labels
+  `insideArea`, the three `inside*Courtyard` functions, and `memberOf`
+  as deprecated and documents their replacements.
+- **Gap:** The native custom-rule compilation gate checks whether KiCad reaches
+  a terminal rule. It does not prompt maintainers when a syntactically accepted
+  authored condition continues to use an API documented as deprecated.
+- **Predicate:** For a source-bound KiCad 10 version-1 `.kicad_dru` without
+  `${...}` substitutions, inspect each named rule's condition. Emit one
+  source-hashed review candidate per rule containing an exact deprecated
+  function call outside quoted string values. Preserve rule identity, function
+  names, replacements, and offsets in the condition. Project policy can select
+  `review`, `block`, `off`, or an exact-fingerprint ignore.
+- **Boundary:** This is a maintenance prompt, not a claim that the old function
+  is rejected, changes its result, or creates an electrical defect. The tool
+  does not rewrite expressions or prove a replacement preserves the intended
+  match. It recognizes only the five exact spellings documented in KiCad 10.0;
+  text-variable files remain with the existing substitution review. No native
+  behavior claim is made, so this lint has no native fixture requirement.
+- **Evidence:** Tooling-owned synthetic fault/control fixtures cover all five
+  deprecated spellings, documented replacements, quoted strings, comments,
+  text-variable deferral, source binding, deterministic evidence, policy, and
+  CLI/MCP parity. A repeated source-bound fault/control sentinel run on the
+  digest-pinned KiCad 10.0.8 image confirms that both syntax forms reach the
+  terminal rule; it does not compare their matching semantics. No project
+  source or cohort code was imported.
+- **Focused selection:** The dedicated unit and parity modules are registered
+  under `design_lint`, `pcb_lint`, `evidence_lint`, and the exact rule selector.
+  They can run without the native KiCad Docker lane.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -23955,6 +24000,7 @@ quality, or first-article continuity.
 [kicad-thermistor-ptc-us-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor_PTC_US.kicad_sym>
 
 [kicad-10-drc]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#drc-configuration
+[kicad-10-dru-functions]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html
 [kicad-10.0.0-drc-items]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/drc/drc_item.cpp
 [kicad-10.0.5-drc-items]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/drc/drc_item.cpp
 [kicad-10-drc-exclusions]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#design-rule-checking

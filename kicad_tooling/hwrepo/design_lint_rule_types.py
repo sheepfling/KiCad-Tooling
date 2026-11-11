@@ -311,6 +311,7 @@ DesignLintRuleId = Literal[
     "pcb.custom_drc_conflicting_severities",
     "pcb.custom_drc_text_variable_review",
     "pcb.custom_drc_layer_reference",
+    "pcb.custom_drc_deprecated_condition_function",
     "pcb.core_drc_check_ignored",
     "pcb.core_drc_check_warning",
     "pcb.dfm_drc_check_ignored",
