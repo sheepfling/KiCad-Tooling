@@ -23270,6 +23270,8 @@ acceptance threads while new lint features proceed:
   `24V` versus `5V` label and passed repeatable KiCad 10.0.0 and 10.0.5 exports
   with no ERC errors. The rule is cataloged with its theme-owned predicate,
   required native lane, opt-in default, and explicit limitations.
+  The `v0.5.3rc661` hosted gate passed in run `42977999191`; prerelease policy
+  skipped the package and platform-preview jobs.
   Source hashes and native-profile details are recorded in the
   [synthetic fixture README](../tests/fixtures/design_lint/component-supply-voltage-range/README.md).
 - **Selection:** Run `tests/test_component_supply_voltage_range.py`,
