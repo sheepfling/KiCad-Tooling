@@ -21,6 +21,27 @@ KICAD_10_NATIVE_TOOLCHAINS = (
 # Keep it separate so adding ERC releases does not multiply every native lane.
 KICAD_10_ERC_SEVERITY_TOOLCHAINS = (
     KICAD_10_NATIVE_TOOLCHAINS[0],
+    (
+        "10.0.1",
+        (
+            "ghcr.io/kicad/kicad:10.0.1@sha256:"
+            "90241570e363ac3bfb02008407bcc95f1f7914bb2bd42cdec093966bbf353397"
+        ),
+    ),
+    (
+        "10.0.2",
+        (
+            "ghcr.io/kicad/kicad:10.0.2@sha256:"
+            "165c81785b2df23a09892f4cc53bc0095a83b469bfbbe07989670d64049677a7"
+        ),
+    ),
+    (
+        "10.0.4",
+        (
+            "ghcr.io/kicad/kicad:10.0.4@sha256:"
+            "770e2fa006695077b5ba218742d5c3137896af91257b2ca971243fa56b01bb86"
+        ),
+    ),
     KICAD_10_NATIVE_TOOLCHAINS[1],
     (
         "10.0.6",

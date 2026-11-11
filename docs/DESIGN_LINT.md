@@ -5537,21 +5537,21 @@ ignore an exact fingerprint. Tooling-owned settings fixtures are in
 ## Review unknown schematic ERC severity keys
 
 `schematic.erc_unknown_rule_key` prompts for each saved
-`erc.rule_severities` key missing from the audited KiCad 10.0.0, 10.0.5,
-10.0.6, 10.0.7, or 10.0.8 catalog. The finding names
+`erc.rule_severities` key missing from the audited KiCad 10.0.0, 10.0.1,
+10.0.2, 10.0.4, 10.0.5, 10.0.6, 10.0.7, or 10.0.8 catalog. The finding names
 the exact key, saved severity, project source hash, and configured patch
 version. KiCad's tagged
 settings loaders walk the registered items in each matching release and apply
 a saved severity only when its key matches a registered item. An unknown entry
-can therefore be ignored by ERC. The catalog has 46 keys in 10.0.0, 10.0.5,
-and 10.0.6; 10.0.7 and 10.0.8 add the
+can therefore be ignored by ERC. The catalog has 46 keys in 10.0.0, 10.0.1,
+10.0.2, 10.0.4, 10.0.5, and 10.0.6; 10.0.7 and 10.0.8 add the
 warning-default key `same_local_global_power` for 47 keys. Exact native
-fault/control runs use all five supported pinned releases.
+fault/control runs use all eight supported pinned releases.
 
 This is a review prompt for a possible typo, stale setting, or patch-version
 mismatch. It does not guess a replacement key, claim an electrical defect, or
-run ERC for the project. KiCad 10.0.1 through 10.0.4 and patches outside the
-explicit catalog stay out of scope until exact native behavior is verified.
+run ERC for the project. KiCad 10.0.3 and patches outside the explicit catalog
+stay out of scope until exact native behavior is verified.
 The [official image list][kicad-docker-versions] has no digest-pinned 10.0.3
 image. KiCad 10.0.7 adds `same_local_global_power`; exact release sources show
 why a 10.0-wide key whitelist would be unsafe. Tagged settings loaders and item
@@ -5561,8 +5561,8 @@ definitions for 10.0.1 ([settings][kicad-10.0.1-erc-settings-source],
 [items][kicad-10.0.2-erc-item-source]), and 10.0.4
 ([settings][kicad-10.0.4-erc-settings-source],
 [items][kicad-10.0.4-erc-item-source]) match the 46-key catalog at source level,
-but those early patches are not active until exact native fixtures pass. The 10.0.6
-([settings][kicad-10.0.6-erc-settings-source],
+and exact native fault/control fixtures now pass on their digest-pinned images.
+The 10.0.6 ([settings][kicad-10.0.6-erc-settings-source],
 [items][kicad-10.0.6-erc-item-source]), 10.0.7
 ([settings][kicad-10.0.7-erc-settings-source],
 [items][kicad-10.0.7-erc-item-source]), and 10.0.8

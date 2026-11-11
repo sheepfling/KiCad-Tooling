@@ -227,10 +227,7 @@ def test_unsupported_kicad_versions_and_non_schematic_projects_are_out_of_scope(
     assert _scan(root, pcb_only, source_hashes) == ()
     for version in (
         "9.0.0",
-        "10.0.1",
-        "10.0.2",
         "10.0.3",
-        "10.0.4",
         "10.1.0",
         "11.0.0",
     ):

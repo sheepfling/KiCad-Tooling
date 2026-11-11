@@ -56,7 +56,7 @@ def _scan(root: Path, config: ProjectConfig, source_hashes: dict[str, str]):
     return source_bound_schematic_erc_catalog_coverage_candidates(root, config, source_hashes)
 
 
-@pytest.mark.parametrize("version", ("10.0.1", "10.0.2", "10.0.3", "10.0.4", "10.0.9", "11.0.0"))
+@pytest.mark.parametrize("version", ("10.0.3", "10.0.9", "11.0.0"))
 def test_unverified_patch_with_explicit_overrides_creates_source_bound_review(
     tmp_path: Path, version: str
 ) -> None:
