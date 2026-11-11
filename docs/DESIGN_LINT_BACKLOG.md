@@ -23377,7 +23377,7 @@ acceptance threads while new lint features proceed:
 #### LINT-395 — Review persisted schematic ERC exclusions
 
 - **Status:** Implemented as `schematic.erc_exclusion_present`, default
-  `review`; exact native checks passed locally, hosted gate pending.
+  `review`; local and hosted scoped acceptance passed.
 - **Gap:** KiCad can retain per-violation ERC exclusions in the project file.
   Native ERC can report excluded violations with `--severity-exclusions`, but
   the current source-review tooling had no project-settings rule for this
@@ -23415,7 +23415,8 @@ acceptance threads while new lint features proceed:
   verification, and external-template playtest passed. The focused native test
   also passed in exact KiCad 10.0.0 and 10.0.5 containers; each emitted the two
   synthetic exclusions as `excluded: true` with the expected error types and
-  comment. Hosted tag validation remains for the checkpoint push.
+  comment. Hosted tag `v0.5.3rc665` passed GitHub Actions run
+  [43007744812](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43007744812).
 
 ## Completion and release gate
 
