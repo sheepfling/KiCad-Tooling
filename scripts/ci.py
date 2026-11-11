@@ -22,6 +22,7 @@ from kicad_tooling.ci_typecheck import pyright_command, validate_typecheck_paths
 from kicad_tooling.hwrepo.contracts import repo_path_is_within
 from kicad_tooling.package_build import build_distributions
 from kicad_tooling.platforms import is_windows_host
+from kicad_tooling.pytest_metrics import report_pytest_metrics
 from kicad_tooling.pytest_scope import validate_test_module_files
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,7 +44,7 @@ def stage(
     (output / f"{name}.stdout.log").write_text(result.stdout, encoding="utf-8")
     (output / f"{name}.stderr.log").write_text(result.stderr, encoding="utf-8")
     status = "PASS" if result.returncode == 0 else "FAIL"
-    entry = {
+    entry: dict[str, object] = {
         "time_utc": datetime.now(UTC).isoformat(),
         "stage": name,
         "status": status,
@@ -51,6 +52,8 @@ def stage(
         "elapsed_seconds": round(time.monotonic() - started, 3),
         "command": list(command),
     }
+    if name == "unit":
+        entry["pytest_metrics"] = report_pytest_metrics(result.stdout)
     with (output / "events.jsonl").open("a", encoding="utf-8") as stream:
         stream.write(json.dumps(entry, sort_keys=True) + "\n")
     print(f"tooling-ci: {name} {status.lower()} ({entry['elapsed_seconds']}s)", flush=True)
