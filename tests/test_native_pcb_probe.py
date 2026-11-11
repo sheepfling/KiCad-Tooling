@@ -26,12 +26,29 @@ class NativeProbeHelpers(TypedDict):
 
     canonical_ring_nm: Callable[[FakeLineChain], list[list[int]]]
     filled_zone_islands: Callable[[FakeFilledPolygons], list[FilledZoneIsland]]
+    filled_zone_island_shapes: Callable[
+        [FakeFilledPolygons], tuple[tuple[int, FakeShapePolySet], ...]
+    ]
+    cached_zone_island_shapes: Callable[
+        [
+            tuple[str, str],
+            dict[tuple[str, str], FakeFilledPolygons],
+            dict[tuple[str, str], tuple[tuple[int, FakeShapePolySet], ...]],
+        ],
+        tuple[tuple[int, FakeShapePolySet], ...],
+    ]
     rule_area_observation: Callable[[FakeRuleArea, FakeBoard], RuleAreaObservation | None]
     footprint_placement_observation: Callable[
         [FakeFootprint, FakeBoard], FootprintPlacementObservation | None
     ]
-    zone_island_indexes_touching_pad: Callable[
-        [FakePadShape, FakeZone, FakeFilledPolygons], tuple[int, ...]
+    zone_island_indexes_connected_to_pad_component: Callable[
+        [
+            tuple[FakeConnectedItem, ...],
+            FakeZone,
+            tuple[tuple[int, FakeShapePolySet], ...],
+            dict[tuple[str, str, int], tuple[int, ...]],
+        ],
+        tuple[int, ...],
     ]
     native_pcbnew: NativePcbnewProbe
 
@@ -114,33 +131,67 @@ class FakeFilledPolygons:
 
 
 class FakeCollidableIsland(FakeLineChain):
-    def __init__(self, points: tuple[tuple[int, int], ...], *, touches_pad: bool) -> None:
+    def __init__(
+        self,
+        points: tuple[tuple[int, int], ...],
+        *,
+        touches_pad: bool = False,
+        island_index: int | None = None,
+    ) -> None:
         super().__init__(points)
         self.touches_pad = touches_pad
+        self.island_index = island_index
 
     def Collide(self, _shape: object) -> bool:
+        island_indexes = getattr(_shape, "island_indexes", None)
+        if island_indexes is not None and self.island_index is not None:
+            return self.island_index in island_indexes
         return self.touches_pad
 
     def AddHole(self, _hole: FakeLineChain, _error: int) -> None:
         return None
 
 
-class FakePadShape:
-    def __init__(self, layers: AbstractSet[int]) -> None:
+class FakeConnectedCopperShape:
+    def __init__(self, island_indexes: AbstractSet[int]) -> None:
+        self.island_indexes = island_indexes
+
+
+class FakeConnectedItem:
+    def __init__(
+        self,
+        item_class: str,
+        *,
+        layers: AbstractSet[int] = frozenset(),
+        layer: int = -1,
+        island_indexes: AbstractSet[int] = frozenset(),
+        identity: str = "item-1",
+    ) -> None:
+        self.item_class = item_class
         self.layers = layers
-        self.requested_layers: list[int] = []
+        self.layer = layer
+        self.island_indexes = island_indexes
+        self.m_Uuid = type("Uuid", (), {"AsString": lambda _self: identity})()
+        self.shape_requests = 0
+
+    def GetClass(self) -> str:
+        return self.item_class
 
     def GetLayerSet(self) -> FakeLayerSet:
         return FakeLayerSet(self.layers)
 
-    def GetEffectiveShape(self, layer: int) -> object:
-        self.requested_layers.append(layer)
-        return object()
+    def GetLayer(self) -> int:
+        return self.layer
+
+    def GetEffectiveShape(self, _layer: int) -> FakeConnectedCopperShape:
+        self.shape_requests += 1
+        return FakeConnectedCopperShape(self.island_indexes)
 
 
 class FakeZone:
     def __init__(self, layer: int) -> None:
         self.layer = layer
+        self.m_Uuid = type("Uuid", (), {"AsString": lambda _self: "zone-1"})()
 
     def GetLayer(self) -> int:
         return self.layer
@@ -311,24 +362,42 @@ def test_canonicalization_rejects_degenerate_native_rings() -> None:
         canonical_ring(FakeLineChain(((0, 0), (1, 1), (0, 0))))
 
 
-def test_zone_island_evidence_is_direct_to_pad_and_layer() -> None:
+def test_zone_island_evidence_maps_component_items_by_layer_and_caches_shapes() -> None:
     helpers = probe_helpers()
     helpers["native_pcbnew"].SHAPE_POLY_SET = lambda outline: FakeShapePolySet(
         cast(FakeCollidableIsland, outline)
     )
-    observe = helpers["zone_island_indexes_touching_pad"]
-    pad = FakePadShape({0})
+    observe = helpers["zone_island_indexes_connected_to_pad_component"]
     filled = FakeFilledPolygons(
         outlines=(
-            FakeCollidableIsland(((0, 0), (2, 0), (2, 2)), touches_pad=True),
-            FakeCollidableIsland(((3, 3), (4, 3), (4, 4)), touches_pad=False),
+            FakeCollidableIsland(((0, 0), (2, 0), (2, 2)), island_index=0),
+            FakeCollidableIsland(((3, 3), (4, 3), (4, 4)), island_index=1),
         ),
         holes=((), ()),
     )
 
-    assert observe(pad, FakeZone(0), filled) == (0,)
-    assert observe(pad, FakeZone(1), filled) == ()
-    assert pad.requested_layers == [0]
+    zone_identity = ("zone-1", "f.cu")
+    shape_cache: dict[tuple[str, str], tuple[tuple[int, FakeShapePolySet], ...]] = {}
+    islands = helpers["cached_zone_island_shapes"](
+        zone_identity, {zone_identity: filled}, shape_cache
+    )
+    assert helpers["cached_zone_island_shapes"](zone_identity, {}, shape_cache) is islands
+    zone = FakeZone(0)
+    item_touch_cache: dict[tuple[str, str, int], tuple[int, ...]] = {}
+    direct_pad = FakeConnectedItem("PAD", layers={0}, island_indexes={0}, identity="pad-0")
+    disconnected_pad = FakeConnectedItem("PAD", layers={0}, identity="pad-1")
+    track = FakeConnectedItem("PCB_TRACK", layer=0, island_indexes={1}, identity="track-1")
+    via = FakeConnectedItem("PCB_VIA", layers={0, 1}, island_indexes={0}, identity="via-1")
+    other_layer_track = FakeConnectedItem(
+        "PCB_TRACK", layer=1, island_indexes={0}, identity="track-2"
+    )
+
+    assert observe((direct_pad,), zone, islands, item_touch_cache) == (0,)
+    assert observe((disconnected_pad, track), zone, islands, item_touch_cache) == (1,)
+    assert observe((disconnected_pad, via), zone, islands, item_touch_cache) == (0,)
+    assert observe((other_layer_track,), zone, islands, item_touch_cache) == ()
+    assert observe((track,), zone, islands, item_touch_cache) == (1,)
+    assert track.shape_requests == 1
 
 
 def test_rule_area_observation_serializes_outline_holes_layers_and_restrictions() -> None:

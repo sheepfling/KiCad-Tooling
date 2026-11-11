@@ -779,13 +779,14 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest quality-gate progress (v0.5.3rc650):** Hosted acceptance passed in
-  GitHub run `42940844402`, including the rule-scoped gate and installed-wheel
-  playtest against a separate template checkout. The focused tag selection
-  passed 89 tests locally with both pinned native PCB images enabled. Ruff,
-  formatting, and full-project Pyright also passed. The preceding `rc649` run
-  identified missing files in a synthetic scoped-typecheck fixture; `rc650`
-  adds those files to the fixture and passes the same hosted gate.
+- **Latest quality-gate progress (v0.5.3rc651):** Hosted acceptance passed in
+  GitHub run `42950019471`, including the exact native lane, Linux/Windows
+  typechecks, package/wheel checks, and installed-template playtest. The
+  preceding `rc650` run passed the rule-scoped gate and installed-wheel
+  playtest; its focused tag selection passed 89 tests locally with both pinned
+  native PCB images enabled. Ruff, formatting, and full-project Pyright also
+  passed at that checkpoint. The `rc649` run identified missing files in a
+  synthetic scoped-typecheck fixture; `rc650` added those files.
 - **Latest progress (LINT-388, plated oblong drill coverage):** Extended the
   LINT-387 native fixture with plated 1.0 by 0.5 mm slots. The source-matched
   front-side observation records an oval drill and both exposed surfaces; a
@@ -21030,7 +21031,7 @@ acceptance threads while new lint features proceed:
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1` and
   `design_lint_rule(rule_id="pcb.alternate_reference_plane_run")`.
 
-#### LINT-336 — Review mapped reference-zone islands without direct pad anchors
+#### LINT-336 — Review mapped reference-zone islands without pad-connected copper
 
 - **Status:** Added the opt-in default-REVIEW rule
   `pcb.reference_plane_unanchored_island`. It extends the existing
@@ -21038,21 +21039,24 @@ acceptance threads while new lint features proceed:
   `review_unanchored_islands`; an unset or false switch stays quiet.
 - **Predicate:** On copper layers immediately adjacent to the mapped signal
   layers, select filled islands matching the exact mapped reference net whose
-  source-bound native snapshot records no direct pad anchor. Emit one candidate
-  per such island only when its native contour is retained.
-- **Boundary:** This finding only says that the island has no direct pad anchor
-  in the native snapshot. Tracks or vias may still connect it. The rule does
-  not infer ground intent, prove electrical isolation, determine return-current
-  adequacy, or call a design defective. A pad-anchored island and a map with
-  the opt-in unset are quiet controls; project policy can disable or block the
-  review rule.
-- **Evidence:** Tooling-owned synthetic fault/control boards differ only in
-  whether the RETURN pad is on B.Cu or directly touches the F.Cu zone. Native
-  snapshots on pinned KiCad 10.0.0 and 10.0.5 images report one unanchored
-  island for the fault and none for the control. Native DRC reports zero
-  unconnected items and the same issue types for both. The fixture notes record
-  source hashes and the limits of that comparison; no external project design
-  data is used.
+  source-bound native snapshot records no copper path from a pad.
+  Component pads, tracks, and vias must touch the exact filled island to count
+  as an anchor. Emit one candidate per such island only when its native contour
+  is retained.
+- **Boundary:** The finding says that KiCad's native connectivity model did not
+  show a path from a fitted pad to the island. It does not infer ground intent,
+  prove a design defect, determine return-current adequacy, or establish
+  physical continuity beyond the modeled copper. Directly anchored,
+  track-connected, and opt-in-disabled controls stay quiet; project policy can
+  disable or block the review rule.
+- **Evidence:** Tooling-owned synthetic fixtures include a disconnected RETURN
+  pad, a directly anchored control, an outside pad connected by same-net F.Cu
+  track, and a B.Cu pad connected through a plated via. Native snapshots on
+  pinned KiCad 10.0.0 and 10.0.5 images report one unanchored island for the
+  fault and none for the three controls. Native DRC reports zero unconnected
+  items and the same issue types for all four. The fixture notes record source
+  hashes and the limits of that comparison; no external project design data is
+  used.
 - **Selection:** Synthetic, policy and zone-order coverage uses
   `tests/test_pcb_reference_plane_unanchored_island.py`; public-surface parity
   uses `tests/test_design_lint_mcp_parity_pcb_reference_plane_island.py`; exact
@@ -23095,6 +23099,35 @@ acceptance threads while new lint features proceed:
   `tests/test_pcb_access_native_fixture_lane.py` with
   `design_lint and pcb_lint`. The native lane uses
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`.
+
+#### LINT-389 — Recognize pad-connected reference islands through copper paths
+
+- **Status:** Implemented refinement to the opt-in default-REVIEW rule
+  `pcb.reference_plane_unanchored_island`; its catalog entry and policy stay the
+  same.
+- **Gap:** The original probe counted only pads whose copper shape directly
+  touched a filled zone island. A pad connected through a same-net track or via
+  could therefore leave a false review candidate.
+- **Predicate:** For each native pad connectivity component, match pad, track,
+  and via copper shapes against the exact filled islands for zones in that
+  component. Only an island touched by copper in a component containing a pad
+  is considered pad-connected. Items elsewhere in the component do not anchor
+  a different island by themselves.
+- **Fixtures:** The existing disconnected fault remains a candidate. Direct
+  pad contact, an outside pad connected through an F.Cu track, and a B.Cu pad
+  connected through a plated via are quiet controls. Repeated captures use the
+  digest-pinned KiCad 10.0.0 and 10.0.5 images; the native DRC result remains
+  the same across all four fixtures.
+- **Boundary:** This reduces review noise for islands with a modeled copper
+  path to a pad. It does not establish ground intent, adequate return
+  current, design correctness, fabrication quality, or first-article
+  continuity.
+- **Selection:** Run `tests/test_native_pcb_probe.py` and
+  `tests/test_pcb_reference_plane_unanchored_island.py` with
+  `design_lint and pcb_lint`. Exact native checks use
+  `tests/test_pcb_reference_plane_unanchored_island_native.py`,
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, and the
+  `pcb.reference_plane_unanchored_island` rule selector.
 
 ## Completion and release gate
 

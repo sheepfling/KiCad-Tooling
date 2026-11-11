@@ -128,16 +128,67 @@ def filled_zone_island_shapes(filled: NativePolygonSet) -> tuple[tuple[int, Nati
     return tuple(islands)
 
 
-def zone_island_indexes_touching_pad(
-    pad: NativePad, zone: NativeZone, filled: NativePolygonSet
+def cached_zone_island_shapes(
+    identity: tuple[str, str],
+    filled_polygons: dict[tuple[str, str], NativePolygonSet],
+    shape_cache: dict[tuple[str, str], tuple[tuple[int, NativePolygonSet], ...]],
+) -> tuple[tuple[int, NativePolygonSet], ...]:
+    """Build and retain one zone's filled-island copper shapes on first use."""
+    shapes = shape_cache.get(identity)
+    if shapes is not None:
+        return shapes
+    filled = filled_polygons.get(identity)
+    if filled is None:
+        raise ValueError(f"Native PCB zone {identity[0]} has no retained filled geometry")
+    shapes = filled_zone_island_shapes(filled)
+    shape_cache[identity] = shapes
+    return shapes
+
+
+def zone_island_indexes_connected_to_pad_component(
+    connected_items: Iterable[NativeConnectedItem],
+    zone: NativeZone,
+    islands: tuple[tuple[int, NativePolygonSet], ...],
+    item_touch_cache: dict[tuple[str, str, int], tuple[int, ...]],
 ) -> tuple[int, ...]:
-    """Return filled islands on this pad's copper layers that touch its copper shape."""
+    """Map copper islands touched by items in one native pad-connectivity component."""
     layer = zone.GetLayer()
-    if not pad.GetLayerSet().Contains(layer):
+    connected: set[int] = set()
+    for item in connected_items:
+        key = (item.m_Uuid.AsString().casefold(), zone.m_Uuid.AsString().casefold(), layer)
+        item_islands = item_touch_cache.get(key)
+        if item_islands is None:
+            item_islands = zone_island_indexes_touched_by_item(item, zone, islands)
+            item_touch_cache[key] = item_islands
+        connected.update(item_islands)
+    return tuple(sorted(connected))
+
+
+def zone_island_indexes_touched_by_item(
+    item: NativeConnectedItem,
+    zone: NativeZone,
+    islands: tuple[tuple[int, NativePolygonSet], ...],
+) -> tuple[int, ...]:
+    """Return exact filled islands touched by one connected native copper item."""
+    layer = zone.GetLayer()
+    item_class = item.GetClass()
+    if item_class == "PAD":
+        native_pad = cast(NativePad, item)
+        if not native_pad.GetLayerSet().Contains(layer):
+            return ()
+        shape = native_pad.GetEffectiveShape(layer)
+    elif item_class == "PCB_VIA":
+        native_via = cast(NativeVia, item)
+        if not native_via.GetLayerSet().Contains(layer):
+            return ()
+        shape = native_via.GetEffectiveShape(layer)
+    elif item_class in {"PCB_TRACK", "PCB_ARC"}:
+        native_track = cast(NativeTrack, item)
+        if native_track.GetLayer() != layer:
+            return ()
+        shape = native_track.GetEffectiveShape(layer)
+    else:
         return ()
-    pad_shape = pad.GetEffectiveShape(layer)
-    indexes: list[int] = []
-    for island_index, island in filled_zone_island_shapes(filled):
-        if island.Collide(pad_shape):
-            indexes.append(island_index)
-    return tuple(indexes)
+    if shape is None:
+        return ()
+    return tuple(island_index for island_index, island in islands if island.Collide(shape))

@@ -46,7 +46,7 @@ def _native_snapshot(
     if snapshot is None:
         raise ValueError("Native reference-island capture returned no snapshot")
     if (
-        snapshot.schema_version not in {"9", "10", "11", "12", "13", "14", "15", "16", "17", "18"}
+        int(snapshot.schema_version) < 9
         or snapshot.board_sha256 != board_sha256
         or snapshot.kicad_version != fixture_config.kicad_version
         or snapshot.image != fixture_config.image
@@ -107,7 +107,7 @@ def _drc_summary(
 def pcb_reference_zone_island_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
-    """Repeat a native fault/control capture and show that DRC types do not distinguish it."""
+    """Repeat native fault/control captures that distinguish pad-connected islands."""
     root = root.resolve()
     config: ProjectConfig = selected_config(root, project)
     if config.image != image:
@@ -120,8 +120,12 @@ def pcb_reference_zone_island_fixture_lane(
     )
     fault_board = scratch / "fault.kicad_pcb"
     control_board = scratch / "control.kicad_pcb"
+    indirect_control_board = scratch / "indirect-control.kicad_pcb"
+    via_control_board = scratch / "via-control.kicad_pcb"
     shutil.copyfile(source_root / "fault.kicad_pcb", fault_board)
     shutil.copyfile(source_root / "control.kicad_pcb", control_board)
+    shutil.copyfile(source_root / "indirect-control.kicad_pcb", indirect_control_board)
+    shutil.copyfile(source_root / "via-control.kicad_pcb", via_control_board)
     specification = PcbReferencePlaneMap(
         basis="Synthetic explicitly mapped adjacent reference-zone review",
         requirements=(
@@ -138,7 +142,13 @@ def pcb_reference_zone_island_fixture_lane(
         ),
     )
     retained: dict[str, tuple[PcbConnectivitySnapshot, tuple[str, ...]]] = {}
-    for case, board in (("fault", fault_board), ("control", control_board)):
+    cases = (
+        ("fault", fault_board),
+        ("control", control_board),
+        ("indirect-control", indirect_control_board),
+        ("via-control", via_control_board),
+    )
+    for case, board in cases:
         relative_project = board.relative_to(root).with_suffix(".kicad_pro")
         fixture_config = config.model_copy(update={"project": relative_project.as_posix()})
         board_hash = digest(board)
@@ -205,8 +215,17 @@ def pcb_reference_zone_island_fixture_lane(
         retained[case] = samples[0]
     fault_snapshot, fault_drc = retained["fault"]
     control_snapshot, control_drc = retained["control"]
-    if fault_drc != control_drc or fault_snapshot.kicad_version != control_snapshot.kicad_version:
-        raise ValueError("Fault/control DRC or native version differed unexpectedly")
+    indirect_snapshot, indirect_drc = retained["indirect-control"]
+    via_snapshot, via_drc = retained["via-control"]
+    if (
+        fault_drc != control_drc
+        or fault_drc != indirect_drc
+        or fault_drc != via_drc
+        or fault_snapshot.kicad_version != control_snapshot.kicad_version
+        or fault_snapshot.kicad_version != indirect_snapshot.kicad_version
+        or fault_snapshot.kicad_version != via_snapshot.kicad_version
+    ):
+        raise ValueError("Reference-island fixture DRC or native version differed unexpectedly")
     log.event(
         "pcb-reference-plane-fixture/unanchored-island",
         "PASS",
@@ -226,11 +245,19 @@ def pcb_reference_zone_island_fixture_lane(
             )
         ),
         control_unanchored_islands="none",
+        indirect_control_unanchored_islands="none",
+        via_control_unanchored_islands="none",
         drc_unconnected_items="0",
         drc_violation_types=",".join(fault_drc),
         repeatable="true",
         fault_receipt=(fault_board.parent / "fault-receipt-first").relative_to(root).as_posix(),
         control_receipt=(control_board.parent / "control-receipt-first")
+        .relative_to(root)
+        .as_posix(),
+        indirect_control_receipt=(indirect_control_board.parent / "indirect-control-receipt-first")
+        .relative_to(root)
+        .as_posix(),
+        via_control_receipt=(via_control_board.parent / "via-control-receipt-first")
         .relative_to(root)
         .as_posix(),
     )

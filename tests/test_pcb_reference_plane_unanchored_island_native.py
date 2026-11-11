@@ -51,6 +51,8 @@ def test_native_unanchored_reference_island_fault_control_repeats(
     assert result["kicad_version"] == version
     assert result["fault_unanchored_islands"] == "1"
     assert result["control_unanchored_islands"] == "none"
+    assert result["indirect_control_unanchored_islands"] == "none"
+    assert result["via_control_unanchored_islands"] == "none"
     assert result["drc_unconnected_items"] == "0"
     assert set(result["drc_violation_types"].split(",")) == {
         "lib_footprint_issues",
@@ -59,3 +61,5 @@ def test_native_unanchored_reference_island_fault_control_repeats(
     assert result["repeatable"] == "true"
     assert (root / result["fault_receipt"]).exists()
     assert (root / result["control_receipt"]).exists()
+    assert (root / result["indirect_control_receipt"]).exists()
+    assert (root / result["via_control_receipt"]).exists()

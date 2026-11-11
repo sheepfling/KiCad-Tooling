@@ -24,6 +24,8 @@ def main(
     zone_rows: dict[tuple[str, str], ZoneObservation] = {}
     zone_objects: dict[tuple[str, str], NativeZone] = {}
     filled_polygons: dict[tuple[str, str], NativePolygonSet] = {}
+    zone_island_shapes: dict[tuple[str, str], tuple[tuple[int, NativePolygonSet], ...]] = {}
+    item_touch_cache: dict[tuple[str, str, int], tuple[int, ...]] = {}
     rule_areas: list[RuleAreaObservation] = []
     for zone in zones:
         if zone.GetIsRuleArea():
@@ -142,7 +144,8 @@ def main(
             component_zones: set[tuple[str, str]] = set()
             connected_zones: set[tuple[str, str]] = set()
             connected_vias: set[str] = set()
-            for item in connectivity.GetConnectedItems(pad, 0):
+            component_items = tuple(connectivity.GetConnectedItems(pad, 0))
+            for item in component_items:
                 if item.GetClass() == "PAD":
                     item_reference = pad_reference(cast(NativePad, item))
                     if item_reference:
@@ -169,15 +172,17 @@ def main(
             ):
                 identity = (uuid.casefold(), layer.casefold())
                 zone = zone_objects.get(identity)
-                filled = filled_polygons.get(identity)
-                if zone is None or filled is None:
+                if zone is None:
                     raise ValueError(
                         f"Connected pad {reference} refers to an unobserved zone {uuid} on {layer}"
                     )
-                island_indices = zone_island_indexes_touching_pad(pad, zone, filled)
+                islands = cached_zone_island_shapes(identity, filled_polygons, zone_island_shapes)
+                island_indices = zone_island_indexes_connected_to_pad_component(
+                    component_items, zone, islands, item_touch_cache
+                )
                 if not island_indices:
-                    # GetConnectedItems returns every item in the copper component. A
-                    # plane elsewhere in that component is not direct pad contact.
+                    # A zone can share a copper component with another island. Only
+                    # items in this component that touch this island establish its path.
                     continue
                 connected_zones.add((uuid, layer))
                 connected_islands.extend(
@@ -403,7 +408,9 @@ def main(
                 island,
             )
             for identity, zone in zone_objects.items()
-            for island_index, island in filled_zone_island_shapes(filled_polygons[identity])
+            for island_index, island in cached_zone_island_shapes(
+                identity, filled_polygons, zone_island_shapes
+            )
         ],
         edge_geometry,
         drill_hole_geometry,
