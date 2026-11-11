@@ -373,12 +373,14 @@ def pcb_native_snapshot_shim() -> str:
     return path.read_text(encoding="utf-8")
 
 
-def run_mcp_parity(case_type: type[McpParityHarness], method_name: str) -> None:
+def run_mcp_parity(
+    case_type: type[McpParityHarness], method_name: str, *case_arguments: object
+) -> None:
     """Run one legacy async parity body from an ordinary pytest function."""
     case = case_type()
     try:
         case.setUp()
-        asyncio.run(getattr(case, method_name)())
+        asyncio.run(getattr(case, method_name)(*case_arguments))
     finally:
         temporary = getattr(case, "temporary", None)
         if temporary is not None:

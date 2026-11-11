@@ -18,7 +18,11 @@ from kicad_tooling.hwrepo.spi_peer_reference_scan import scan_spi_peer_reference
 from tests.reference_pin_role_support import with_unspecified_reference_pins
 from tests.spi_peer_reference_support import spi_peer_netlist
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.interface_lint,
+    pytest.mark.design_lint_rule(rule_id="bus.spi_peer_reference_review"),
+]
 
 RULE_ID = "bus.spi_peer_reference_review"
 
