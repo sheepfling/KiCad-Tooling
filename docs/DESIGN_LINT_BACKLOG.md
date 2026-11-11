@@ -779,10 +779,12 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest quality-gate progress (v0.5.3rc657):** Hosted acceptance passed in
-  GitHub run `42962395268`. The focused selector ran 367 tests, deselected
-  7,979, and completed its pytest stage in 180.88 seconds; the console and
-  retained event now report those counts, elapsed time, and ten slowest cases.
+- **Latest quality-gate progress (v0.5.3rc658):** Hosted acceptance passed in
+  GitHub run `42965434410`. The focused selector ran 367 tests, deselected
+  7,979, and completed its pytest stage in 125.16 seconds; the console and
+  retained event report those counts, elapsed time, and ten slowest cases. The
+  selector-integrity probe took 4.90 seconds, compared with 26.55 seconds in
+  `rc657` after the nested collection was bounded to representative modules.
   The tagged gate's exact native KiCad fixtures, package and wheel checks, and
   installed-wheel rehearsal against a separate public-template checkout all
   passed. `rc652` exposed a missing tag selector, `rc653` exposed Markdown
@@ -795,7 +797,7 @@ standalone parity work when it closes a demonstrated feature regression.
   filled island suppress the false candidate. The disconnected island remains
   a fault; direct-pad, indirect-track, and plated-via controls stay quiet.
   The digest-pinned native fixture repeats on KiCad 10.0.0 and 10.0.5. The
-  original implementation passed hosted `rc655`; hosted `rc657` repeated the
+  original implementation passed hosted `rc655`; hosted `rc658` repeated the
   scoped gate with current pytest metrics after the catalog and module-size
   integrity repairs. No project board data was imported.
 - **Earlier progress (LINT-388, plated oblong drill coverage):** Extended the
@@ -23181,6 +23183,13 @@ acceptance threads while new lint features proceed:
   took 1.07 seconds in that run; both exact native KiCad fault/control cases,
   both Pyright targets, distribution builds, installed-wheel checks, and
   external-project checks passed.
+- **Tagged acceptance:** `v0.5.3rc658` (GitHub Actions run `42965434410`)
+  passed the focused lint and integrity gate. The same test ran in 4.90 seconds
+  on this hosted attempt, after taking 26.55 seconds in `rc657`; total pytest
+  time also reflects variable native-fixture runtime. Both pinned KiCad native
+  cases, wheel and source-distribution builds, installed-wheel checks, and
+  external-project verification passed. The separate preview and package
+  release jobs were skipped by prerelease policy.
 - **Selection:** Run
   `tests/test_design_lint_architecture_pytest_collection.py` with
   `design_lint and (design_lint_rule(rule_id="bus.i2c_missing_pullup") or rule_gate_integrity)`.
