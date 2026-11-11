@@ -12,6 +12,8 @@ from pydantic import model_validator
 from .model_primitives import Digest, NonEmptyText, StrictModel
 from .pcb_connectivity_edge_validation import validate_board_edge_evidence
 from .pcb_connectivity_edges import PcbEdgeCutObservation
+from .pcb_connectivity_hole_validation import validate_drill_hole_evidence
+from .pcb_connectivity_holes import PcbDrillHoleObservation
 from .pcb_connectivity_observations import (
     PcbAccessProbeObservation,
     PcbFootprintPlacementObservation,
@@ -73,6 +75,7 @@ class PcbConnectivitySnapshot(StrictModel):
         "19",
         "20",
         "21",
+        "22",
     ] = "3"
     board_sha256: Digest
     kicad_version: NonEmptyText
@@ -90,6 +93,7 @@ class PcbConnectivitySnapshot(StrictModel):
     rule_areas: tuple[PcbRuleAreaObservation, ...] = ()
     footprints: tuple[PcbFootprintPlacementObservation, ...] = ()
     edge_cuts: tuple[PcbEdgeCutObservation, ...] = ()
+    drill_holes: tuple[PcbDrillHoleObservation, ...] = ()
     touch_pad_clearance_observations: tuple[PcbTouchPadClearanceObservation, ...] = ()
     touch_pad_clearance_requests_sha256: Digest | None = None
 
@@ -121,6 +125,15 @@ class PcbConnectivitySnapshot(StrictModel):
             self.access_probe_observations,
             schema_version=schema_version,
             edge_inventory_present="edge_cuts" in self.model_fields_set,
+        )
+        validate_drill_hole_evidence(
+            self.drill_holes,
+            self.access_probe_observations,
+            index.pads_by_reference,
+            index.vias_by_id,
+            self.footprints,
+            schema_version=schema_version,
+            inventory_present="drill_holes" in self.model_fields_set,
         )
         _validate_rule_area_contract(self, schema_version)
         _validate_footprint_contract(self, schema_version)

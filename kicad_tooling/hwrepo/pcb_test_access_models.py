@@ -28,6 +28,7 @@ class TestAccessProbeEnvelope(StrictModel):
     track_clearance_mm: NonNegativeMeasure | None = None
     zone_clearance_mm: NonNegativeMeasure | None = None
     board_edge_clearance_mm: NonNegativeMeasure | None = None
+    drill_hole_clearance_mm: NonNegativeMeasure | None = None
 
 
 class PcbAccessProbeRequest(StrictModel):
@@ -37,6 +38,7 @@ class PcbAccessProbeRequest(StrictModel):
     net: NetName
     side: Literal["front", "back"]
     include_edge_cuts: bool | None = None
+    include_drill_holes: bool | None = None
 
 
 class PcbAccessProbeRequestSet(StrictModel):

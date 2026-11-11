@@ -52,6 +52,7 @@ def main(
 
     pad_rows: dict[str, PadObservation] = {}
     pad_geometry: list[tuple[str, bool, NativePad]] = []
+    drill_pad_geometry: list[tuple[str, bool, NativePad]] = []
     footprint_geometry: list[tuple[str, bool, int, NativeFootprint]] = []
     access_via_geometry: list[tuple[str, str | None, NativeVia]] = []
     via_rows: dict[str, ViaSnapshotObservation] = {}
@@ -133,6 +134,7 @@ def main(
         footprint_geometry.append((footprint.GetReference(), dnp, footprint.GetLayer(), footprint))
         for pad in footprint.Pads():
             reference = pad_reference(pad)
+            drill_pad_geometry.append((reference, dnp, pad))
             if not reference:
                 continue
             pad_geometry.append((reference, dnp, pad))
@@ -355,7 +357,23 @@ def main(
         )
 
     access_requests, access_requests_sha256 = read_access_requests(request_path)
-    include_edge_cuts = any(item["include_edge_cuts"] for item in access_requests)
+    include_drill_holes = any(item["include_drill_holes"] for item in access_requests)
+    include_edge_cuts = include_drill_holes or any(
+        item["include_edge_cuts"] for item in access_requests
+    )
+    drill_hole_rows: list[DrillHoleObservation] = []
+    drill_hole_geometry: list[
+        tuple[
+            str,
+            str | None,
+            tuple[Literal["front", "back"], ...],
+            NativeShape,
+        ]
+    ] = []
+    if include_drill_holes:
+        drill_hole_rows, drill_hole_geometry = drill_hole_inventory(
+            drill_pad_geometry, access_via_geometry
+        )
     edge_cut_rows: list[EdgeCutObservation] = []
     edge_geometry: list[tuple[str, NativeShape]] = []
     if include_edge_cuts:
@@ -388,7 +406,9 @@ def main(
             for island_index, island in filled_zone_island_shapes(filled_polygons[identity])
         ],
         edge_geometry,
+        drill_hole_geometry,
         include_edge_cuts,
+        include_drill_holes,
     )
     touch_requests, touch_requests_sha256 = read_touch_pad_clearance_requests(
         touch_clearance_request_path
@@ -402,7 +422,7 @@ def main(
     )
 
     output: NativeProbeSnapshot = {
-        "schema_version": "21" if include_edge_cuts else "20",
+        "schema_version": ("22" if include_drill_holes else "21" if include_edge_cuts else "20"),
         "board_sha256": sha256(board_path),
         "kicad_version": native_pcbnew.GetBuildVersion(),
         "zones_refilled": zones_refilled,
@@ -424,6 +444,7 @@ def main(
             board.GetLayerName(layer) for layer in board.GetEnabledLayers().CuStack()
         ],
         **({"edge_cuts": edge_cut_rows} if include_edge_cuts else {}),
+        **({"drill_holes": drill_hole_rows} if include_drill_holes else {}),
     }
     output_path.write_text(json.dumps(output, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
 

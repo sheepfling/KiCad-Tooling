@@ -24,6 +24,7 @@ from kicad_tooling.hwrepo.pcb_test_access_models import (
     TestAccessEndpointRequirement,
     TestAccessProbeEnvelope,
 )
+from tests.pcb_test_access_hole_support import drill_hole_fixture_rows
 
 AccessAnalysis = TestAccessAnalysis
 AccessEndpointRequirement = TestAccessEndpointRequirement
@@ -80,7 +81,7 @@ def probe_access_snapshot(
     include_back: bool = True,
     aperture_shape: Literal["circle", "oval", "rectangle", "roundrect", "unsupported"] = "circle",
     aperture_diameter_nm: int | None = 1_000_000,
-    schema_version: Literal["3", "17", "18", "19", "20", "21"] = "3",
+    schema_version: Literal["3", "17", "18", "19", "20", "21", "22"] = "3",
     courtyard_obstacle: str | None = None,
     courtyard_distance_nm: int | None = None,
     unmeasured_courtyard_footprint: str | None = None,
@@ -106,7 +107,12 @@ def probe_access_snapshot(
     edge_obstacle_uuid: str | None = None,
     edge_obstacle_distance_nm: int | None = None,
     include_edge_inventory: bool = False,
+    hole_obstacle_id: str | None = None,
+    hole_obstacle_distance_nm: int | None = None,
 ) -> PcbConnectivitySnapshot:
+    hole_pads, hole_footprints, hole_inventory = drill_hole_fixture_rows(
+        hole_obstacle_id if schema_version == "22" else None
+    )
     pads = (
         PcbPadConnectivityObservation(
             pad="J1.9",
@@ -130,6 +136,7 @@ def probe_access_snapshot(
             connected_vias=(),
             positions_nm=((12_000_000, 10_000_000),),
         ),
+        *hole_pads,
     )
     return PcbConnectivitySnapshot(
         board_sha256="a" * 64,
@@ -182,7 +189,7 @@ def probe_access_snapshot(
                         "unmeasured_courtyard_footprint": unmeasured_courtyard_footprint,
                         "unmeasured_courtyard_distance_nm": unmeasured_courtyard_distance_nm,
                     }
-                    if schema_version in {"17", "18", "19", "20", "21"}
+                    if schema_version in {"17", "18", "19", "20", "21", "22"}
                     else {}
                 ),
                 **(
@@ -192,7 +199,7 @@ def probe_access_snapshot(
                         "via_obstacle_distance_nm": via_obstacle_distance_nm,
                         "via_obstacle_tented": via_obstacle_tented,
                     }
-                    if schema_version in {"18", "19", "20", "21"}
+                    if schema_version in {"18", "19", "20", "21", "22"}
                     else {}
                 ),
                 **(
@@ -202,7 +209,7 @@ def probe_access_snapshot(
                         "track_obstacle_distance_nm": track_obstacle_distance_nm,
                         "track_obstacle_geometry": track_obstacle_geometry,
                     }
-                    if schema_version in {"19", "20", "21"}
+                    if schema_version in {"19", "20", "21", "22"}
                     else {}
                 ),
                 **(
@@ -213,7 +220,7 @@ def probe_access_snapshot(
                         "zone_obstacle_island_index": zone_obstacle_island_index,
                         "zone_obstacle_distance_nm": zone_obstacle_distance_nm,
                     }
-                    if schema_version in {"20", "21"}
+                    if schema_version in {"20", "21", "22"}
                     else {}
                 ),
                 **(
@@ -221,7 +228,15 @@ def probe_access_snapshot(
                         "edge_obstacle_uuid": edge_obstacle_uuid,
                         "edge_obstacle_distance_nm": edge_obstacle_distance_nm,
                     }
-                    if schema_version == "21"
+                    if schema_version in {"21", "22"}
+                    else {}
+                ),
+                **(
+                    {
+                        "hole_obstacle_id": hole_obstacle_id,
+                        "hole_obstacle_distance_nm": hole_obstacle_distance_nm,
+                    }
+                    if schema_version == "22"
                     else {}
                 ),
             ),
@@ -244,7 +259,7 @@ def probe_access_snapshot(
                                 "unmeasured_courtyard_footprint": None,
                                 "unmeasured_courtyard_distance_nm": None,
                             }
-                            if schema_version in {"17", "18", "19", "20", "21"}
+                            if schema_version in {"17", "18", "19", "20", "21", "22"}
                             else {}
                         ),
                         **(
@@ -254,7 +269,7 @@ def probe_access_snapshot(
                                 "via_obstacle_distance_nm": None,
                                 "via_obstacle_tented": None,
                             }
-                            if schema_version in {"18", "19", "20", "21"}
+                            if schema_version in {"18", "19", "20", "21", "22"}
                             else {}
                         ),
                         **(
@@ -264,7 +279,7 @@ def probe_access_snapshot(
                                 "track_obstacle_distance_nm": None,
                                 "track_obstacle_geometry": None,
                             }
-                            if schema_version in {"19", "20", "21"}
+                            if schema_version in {"19", "20", "21", "22"}
                             else {}
                         ),
                         **(
@@ -275,7 +290,7 @@ def probe_access_snapshot(
                                 "zone_obstacle_island_index": None,
                                 "zone_obstacle_distance_nm": None,
                             }
-                            if schema_version in {"20", "21"}
+                            if schema_version in {"20", "21", "22"}
                             else {}
                         ),
                         **(
@@ -283,7 +298,17 @@ def probe_access_snapshot(
                                 "edge_obstacle_uuid": None,
                                 "edge_obstacle_distance_nm": None,
                             }
-                            if schema_version == "21"
+                            if schema_version in {"21", "22"}
+                            else {}
+                        ),
+                        **(
+                            {
+                                "hole_obstacle_id": (hole_obstacle_id if back_exposed else None),
+                                "hole_obstacle_distance_nm": (
+                                    hole_obstacle_distance_nm if back_exposed else None
+                                ),
+                            }
+                            if schema_version == "22"
                             else {}
                         ),
                     ),
@@ -294,7 +319,7 @@ def probe_access_snapshot(
         ),
         schema_version=schema_version,
         access_probe_requests_sha256="d" * 64
-        if schema_version in {"17", "18", "19", "20", "21"}
+        if schema_version in {"17", "18", "19", "20", "21", "22"}
         else None,
         tracks=(
             (
@@ -321,7 +346,9 @@ def probe_access_snapshot(
             if track_obstacle_uuid is not None and include_track_inventory
             else ()
         ),
-        copper_layers=("F.Cu", "B.Cu") if schema_version in {"17", "18", "19", "20", "21"} else (),
+        copper_layers=("F.Cu", "B.Cu")
+        if schema_version in {"17", "18", "19", "20", "21", "22"}
+        else (),
         rule_areas=(),
         vias=(
             (
@@ -358,9 +385,10 @@ def probe_access_snapshot(
                     ("U1", "Synthetic:NearbyPart", (10_500_000, 10_000_000)),
                 )
             )
-            if schema_version in {"17", "18", "19", "20", "21"}
+            if schema_version in {"17", "18", "19", "20", "21", "22"}
             else ()
-        ),
+        )
+        + hole_footprints,
         touch_pad_clearance_observations=(),
         touch_pad_clearance_requests_sha256=None,
         **(
@@ -376,7 +404,14 @@ def probe_access_snapshot(
                     else ()
                 ),
             }
-            if schema_version == "21"
+            if schema_version in {"21", "22"}
+            else {}
+        ),
+        **(
+            {
+                "drill_holes": hole_inventory,
+            }
+            if schema_version == "22"
             else {}
         ),
     )
@@ -390,6 +425,7 @@ def probe_access_requirement(
     track_clearance_mm: float | None = None,
     zone_clearance_mm: float | None = None,
     board_edge_clearance_mm: float | None = None,
+    drill_hole_clearance_mm: float | None = None,
 ) -> AccessAnalysis:
     requirement = access_requirement(approach_side=approach_side)
     decision = requirement.decisions[0]
@@ -404,6 +440,7 @@ def probe_access_requirement(
                 track_clearance_mm=track_clearance_mm,
                 zone_clearance_mm=zone_clearance_mm,
                 board_edge_clearance_mm=board_edge_clearance_mm,
+                drill_hole_clearance_mm=drill_hole_clearance_mm,
             )
         }
     )

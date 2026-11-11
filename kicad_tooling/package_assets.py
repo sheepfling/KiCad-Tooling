@@ -71,6 +71,7 @@ REQUIRED_WHEEL_ASSETS = frozenset(
         "kicad_tooling/hwrepo/design-lint-rules.json",
         "kicad_tooling/hwrepo/pcb_variant_probe.py.in",
         "kicad_tooling/hwrepo/native_pcb_probe_touch_clearance.py.in",
+        "kicad_tooling/hwrepo/native_pcb_probe_holes.py.in",
         "kicad_tooling/hwrepo/schematic-text-metrics.json",
         "kicad_tooling/hwrepo/assets/three_d_viewer.js",
         "kicad_tooling/hwrepo/assets/threejs-LICENSE.txt",

@@ -95,6 +95,14 @@ class NativePad(Protocol):
 
     def GetDrillSize(self) -> NativePoint: ...
 
+    def GetDrillShape(self) -> int: ...
+
+    def GetSecondaryDrillSize(self) -> NativePoint: ...
+
+    def GetTertiaryDrillSize(self) -> NativePoint: ...
+
+    def GetAttribute(self) -> int: ...
+
     def GetSize(self, layer: int) -> NativePoint: ...
 
     def GetSolderMaskExpansion(self, layer: int) -> int: ...
@@ -104,6 +112,10 @@ class NativePad(Protocol):
     def GetPosition(self) -> NativePoint: ...
 
     def GetEffectiveShape(self, layer: int) -> NativeShape | None: ...
+
+    def GetEffectiveHoleShape(self) -> NativeShape | None: ...
+
+    def IsBackdrilledOrPostMachined(self, layer: int) -> bool: ...
 
 
 class NativeShape(Protocol):
@@ -158,6 +170,8 @@ class NativeVia(NativeTrack, Protocol):
     def GetDrillValue(self) -> int: ...
 
     def GetLayerSet(self) -> NativeLayerSet: ...
+
+    def GetEffectiveHoleShape(self) -> NativeShape | None: ...
 
     def IsTented(self, layer: int) -> bool: ...
 
@@ -248,6 +262,9 @@ class NativePcbnew(Protocol):
     PAD_SHAPE_OVAL: int
     PAD_SHAPE_RECT: int
     PAD_SHAPE_ROUNDRECT: int
+    PAD_DRILL_SHAPE_CIRCLE: int
+    PAD_DRILL_SHAPE_OBLONG: int
+    PAD_ATTRIB_NPTH: int
     PCB_VIA: type[NativeVia]
     SHAPE_POLY_SET: Callable[[object], NativePolygonSet]
     ZONE_FILLER: Callable[[NativeBoard], NativeZoneFiller]
@@ -314,6 +331,7 @@ class AccessProbeRequest(TypedDict):
     net: str
     side: Literal["front", "back"]
     include_edge_cuts: bool
+    include_drill_holes: bool
 
 
 class RawAccessRequestEnvelope(TypedDict, total=False):
@@ -326,6 +344,21 @@ class RawAccessProbeRequest(TypedDict, total=False):
     net: object
     side: object
     include_edge_cuts: object
+    include_drill_holes: object
+
+
+class DrillHoleObservation(TypedDict):
+    id: str
+    kind: Literal["pad", "via"]
+    pad: NotRequired[str]
+    pad_uuid: NotRequired[str]
+    via_id: NotRequired[str]
+    footprint_reference: NotRequired[str]
+    footprint: NotRequired[str]
+    position_nm: list[int]
+    drill_size_nm: list[int]
+    shape: Literal["circle", "oval", "other"]
+    surfaces: list[Literal["front", "back"]]
 
 
 class TouchPadClearanceRequest(TypedDict):
@@ -433,7 +466,7 @@ class TrackObservation(TypedDict):
 
 
 class NativeProbeSnapshot(TypedDict):
-    schema_version: Literal["20", "21"]
+    schema_version: Literal["20", "21", "22"]
     board_sha256: str
     kicad_version: str
     zones_refilled: bool
@@ -450,6 +483,7 @@ class NativeProbeSnapshot(TypedDict):
     tracks: list[TrackObservation]
     copper_layers: list[str]
     edge_cuts: NotRequired[list[EdgeCutObservation]]
+    drill_holes: NotRequired[list[DrillHoleObservation]]
 
 
 def sha256(path: Path) -> str:

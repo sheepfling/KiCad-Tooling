@@ -56,6 +56,7 @@ SnapshotSchema = Literal[
     "19",
     "20",
     "21",
+    "22",
 ]
 ReviewMode = Literal["review", "block", "off"]
 
@@ -195,7 +196,8 @@ def snapshot(
                 dnp=dnp_by_key.get(reference.casefold(), False),
                 value=(
                     value_by_key.get(reference.casefold(), "synthetic")
-                    if schema_version in {"13", "14", "15", "16", "17", "18", "19", "20", "21"}
+                    if schema_version
+                    in {"13", "14", "15", "16", "17", "18", "19", "20", "21", "22"}
                     else None
                 ),
                 position_nm=(0, 0),
@@ -206,7 +208,8 @@ def snapshot(
         ),
         touch_pad_clearance_observations=(),
         touch_pad_clearance_requests_sha256=None,
-        **({"edge_cuts": ()} if schema_version == "21" else {}),
+        **({"edge_cuts": ()} if schema_version in {"21", "22"} else {}),
+        **({"drill_holes": ()} if schema_version == "22" else {}),
     )
 
 
@@ -228,10 +231,11 @@ def complete_report(
         snapshot_sha256=SNAPSHOT_SHA256,
         snapshot_schema=(
             cast(
-                Literal["12", "13", "14", "15", "16", "17", "18", "19", "20", "21"],
+                Literal["12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"],
                 board.schema_version,
             )
-            if board.schema_version in {"12", "13", "14", "15", "16", "17", "18", "19", "20", "21"}
+            if board.schema_version
+            in {"12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"}
             else "12"
         ),
         kicad_version=board.kicad_version,
@@ -244,19 +248,20 @@ def complete_report(
             "DISABLED"
             if value_mode == "off"
             else "COMPLETE"
-            if board.schema_version in {"13", "14", "15", "16", "17", "18", "19", "20", "21"}
+            if board.schema_version in {"13", "14", "15", "16", "17", "18", "19", "20", "21", "22"}
             else "BLOCKED"
         ),
         value_mismatches=(
             compare_schematic_pcb_values(observed, board)
             if value_mode != "off"
-            and board.schema_version in {"13", "14", "15", "16", "17", "18", "19", "20", "21"}
+            and board.schema_version in {"13", "14", "15", "16", "17", "18", "19", "20", "21", "22"}
             else ()
         ),
         value_comparison_issue=(
             "PCB component value comparison needs native footprint snapshot schema 13 or later"
             if value_mode != "off"
-            and board.schema_version not in {"13", "14", "15", "16", "17", "18", "19", "20", "21"}
+            and board.schema_version
+            not in {"13", "14", "15", "16", "17", "18", "19", "20", "21", "22"}
             else None
         ),
     )

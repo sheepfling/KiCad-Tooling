@@ -50,7 +50,15 @@ def pcb_access_probe_request_set(
                     side=side,
                     include_edge_cuts=(
                         True
-                        if endpoint.probe_envelope.board_edge_clearance_mm is not None
+                        if (
+                            endpoint.probe_envelope.board_edge_clearance_mm is not None
+                            or endpoint.probe_envelope.drill_hole_clearance_mm is not None
+                        )
+                        else None
+                    ),
+                    include_drill_holes=(
+                        True
+                        if endpoint.probe_envelope.drill_hole_clearance_mm is not None
                         else None
                     ),
                 )
@@ -110,6 +118,13 @@ def pcb_probe_envelope_checks(
         if decision.mode == "required"
         for endpoint in decision.endpoints
     )
+    requires_drill_hole = any(
+        endpoint.probe_envelope is not None
+        and endpoint.probe_envelope.drill_hole_clearance_mm is not None
+        for decision in spec.decisions
+        if decision.mode == "required"
+        for endpoint in decision.endpoints
+    )
     if requires_courtyard and int(snapshot.schema_version) < 17:
         return (
             ElectricalCheck(
@@ -150,6 +165,16 @@ def pcb_probe_envelope_checks(
                 detail=(
                     "Authored board-edge clearance requires native PCB schema v21+ "
                     "and an observed Edge.Cuts inventory."
+                ),
+            ),
+        )
+    if requires_drill_hole and int(snapshot.schema_version) < 22:
+        return (
+            ElectricalCheck(
+                id="test-access/pcb-probe-envelope/drill-hole-evidence",
+                status="NOT_RUN",
+                detail=(
+                    "Authored drill-hole clearance requires native PCB snapshot schema v22 or newer."
                 ),
             ),
         )
@@ -210,6 +235,11 @@ def pcb_probe_envelope_checks(
                 None
                 if envelope.board_edge_clearance_mm is None
                 else _probe_radius_nm(envelope.tip_diameter_mm, envelope.board_edge_clearance_mm)
+            )
+            required_drill_hole_nm = (
+                None
+                if envelope.drill_hole_clearance_mm is None
+                else _probe_radius_nm(envelope.tip_diameter_mm, envelope.drill_hole_clearance_mm)
             )
             side_details: list[str] = []
             endpoint_pass = False
@@ -388,6 +418,26 @@ def pcb_probe_envelope_checks(
                             f"clearance is {required_board_edge_nm / 1_000_000:.6g} mm"
                         )
                 side_clear = side_clear and edge_clear
+                drill_hole_clear = True
+                if required_drill_hole_nm is not None:
+                    if observation.hole_obstacle_id is None:
+                        side_details.append(
+                            f"{side}: no fitted surface drill hole was observed; required probe "
+                            f"radius plus drill-hole clearance is "
+                            f"{required_drill_hole_nm / 1_000_000:.6g} mm"
+                        )
+                    else:
+                        assert observation.hole_obstacle_distance_nm is not None
+                        drill_hole_clear = (
+                            observation.hole_obstacle_distance_nm >= required_drill_hole_nm
+                        )
+                        side_details.append(
+                            f"{side}: nearest fitted drill hole {observation.hole_obstacle_id} "
+                            f"is {observation.hole_obstacle_distance_nm / 1_000_000:.6g} mm "
+                            f"from the pad center; required probe radius plus drill-hole "
+                            f"clearance is {required_drill_hole_nm / 1_000_000:.6g} mm"
+                        )
+                side_clear = side_clear and drill_hole_clear
                 endpoint_pass = endpoint_pass or side_clear
                 endpoint_unresolved = endpoint_unresolved or courtyard_unresolved
             endpoint_results.append(

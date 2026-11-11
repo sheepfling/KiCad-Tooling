@@ -37,7 +37,19 @@ def compare_fitted_schematic_pcb_inventory(
     snapshot: PcbConnectivitySnapshot,
 ) -> PcbComponentInventoryComparison:
     """Compare fitted schematic footprint assignments with native PCB placements."""
-    if snapshot.schema_version not in {"12", "13", "14", "15", "16", "17", "18", "19", "20", "21"}:
+    if snapshot.schema_version not in {
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+    }:
         raise ValueError(
             "PCB component inventory requires native footprint snapshot schema 12 through 17"
         )
@@ -206,6 +218,7 @@ def evaluate_native_component_inventory_coverage(
         "19",
         "20",
         "21",
+        "22",
     }:
         issue = "PCB component inventory needs native footprint snapshot schema 12 through 17"
     else:
@@ -277,6 +290,7 @@ def evaluate_native_component_inventory_coverage(
                     "19",
                     "20",
                     "21",
+                    "22",
                 }:
                     if variant_coverage.status == "BLOCKED":
                         value_comparison_issue = (
@@ -349,7 +363,19 @@ def evaluate_native_component_inventory_coverage(
             issue=issue,
         )
 
-    if snapshot.schema_version not in {"12", "13", "14", "15", "16", "17", "18", "19", "20", "21"}:
+    if snapshot.schema_version not in {
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+    }:
         raise ValueError(
             "PCB component inventory requires native footprint snapshot schema 12 through 17"
         )
@@ -362,7 +388,7 @@ def evaluate_native_component_inventory_coverage(
         snapshot_path=snapshot_path,
         snapshot_sha256=snapshot_sha256,
         snapshot_schema=cast(
-            Literal["12", "13", "14", "15", "16", "17", "18", "19", "20", "21"],
+            Literal["12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"],
             snapshot.schema_version,
         ),
         kicad_version=snapshot.kicad_version,

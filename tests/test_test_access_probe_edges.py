@@ -60,9 +60,9 @@ def test_board_edge_requirement_requests_source_bound_edge_inventory() -> None:
 
 @pytest.mark.parametrize(
     "schema_version",
-    ("20", "21"),
+    ("20", "21", "22"),
 )
-def test_missing_board_edge_evidence_is_not_run(schema_version: Literal["20", "21"]) -> None:
+def test_missing_board_edge_evidence_is_not_run(schema_version: Literal["20", "21", "22"]) -> None:
     requirement = probe_access_requirement(
         approach_side="front",
         board_edge_clearance_mm=0.075,

@@ -179,6 +179,7 @@ def resolve_native_pad_route(
         "19",
         "20",
         "21",
+        "22",
     }:
         return _incomplete("Native track endpoint-contact evidence requires PCB snapshot schema 8+")
     allowed_layers = {layer.casefold() for layer in layers}
@@ -361,7 +362,7 @@ def resolve_native_pad_route(
         if track.geometry_kind == "segment":
             track_length_nm = _rounded_segment_length_nm(*ordered)
         elif (
-            snapshot.schema_version in {"15", "16", "17", "18", "19", "20", "21"}
+            snapshot.schema_version in {"15", "16", "17", "18", "19", "20", "21", "22"}
             and track.arc_mid_nm is not None
             and track.arc_length_nm is not None
         ):

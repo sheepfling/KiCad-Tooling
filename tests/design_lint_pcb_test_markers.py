@@ -25,6 +25,7 @@ PCB_LINT_TEST_MODULES = frozenset(
         "tests/test_pcb_access_native_fixture_lane.py",
         "tests/test_pcb_access_fixture_lane.py",
         "tests/test_pcb_decoupling.py",
+        "tests/test_test_access_probe_holes.py",
         "tests/test_pcb_decoupling_return_vias.py",
         "tests/test_pcb_decoupling_native_fixture_lane.py",
         "tests/test_pcb_drc_coverage.py",

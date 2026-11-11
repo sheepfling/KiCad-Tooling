@@ -238,6 +238,7 @@ PCB_THEME_SUITES = (
     "test_pcb_switching_loop_routes.py",
     "test_pcb_access_fixture_lane.py",
     "test_pcb_access_native_fixture_lane.py",
+    "test_test_access_probe_holes.py",
     "test_pcb_drc_coverage.py",
     "test_pcb_dru_rule_without_constraint.py",
     "test_pcb_dru_rule_without_constraint_native.py",

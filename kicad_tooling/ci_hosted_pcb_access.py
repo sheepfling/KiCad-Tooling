@@ -16,6 +16,10 @@ from .ci_hosted_pcb_access_expectations import (
     expected_access_probe_pad_observations,
     expected_access_probe_statuses,
 )
+from .ci_hosted_pcb_access_holes import (
+    hole_probe_fixture_decisions,
+    validate_hole_probe_fixture_observations,
+)
 from .ci_hosted_pcb_access_tracks import (
     track_probe_fixture_decisions,
     validate_track_probe_fixture_observations,
@@ -31,6 +35,7 @@ from .ci_hosted_pcb_access_zones import (
 from .ci_hosted_support import HostedLog
 from .hwrepo.electrical import selected_config
 from .hwrepo.evidence import digest
+from .hwrepo.pcb_connectivity_holes import PcbDrillHoleObservation
 from .hwrepo.pcb_connectivity_observations import PcbAccessProbeObservation
 from .hwrepo.pcb_return_path_capture import (
     capture_native_pcb_connectivity,
@@ -70,6 +75,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
         track_clearance_mm: float | None = None,
         zone_clearance_mm: float | None = None,
         board_edge_clearance_mm: float | None = None,
+        drill_hole_clearance_mm: float | None = None,
     ) -> TestAccessEndpointRequirement:
         return TestAccessEndpointRequirement(
             kind="test_point",
@@ -87,6 +93,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
                 track_clearance_mm=track_clearance_mm,
                 zone_clearance_mm=zone_clearance_mm,
                 board_edge_clearance_mm=board_edge_clearance_mm,
+                drill_hole_clearance_mm=drill_hole_clearance_mm,
             ),
         )
 
@@ -147,6 +154,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             *track_probe_fixture_decisions(endpoint),
             *zone_probe_fixture_decisions(endpoint),
             *edge_probe_fixture_decisions(endpoint),
+            *hole_probe_fixture_decisions(endpoint),
             RequiredTestAccess(
                 mode="required",
                 id="front-only-clearance-fault",
@@ -300,6 +308,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
     expected_observations = expected_access_probe_pad_observations()
     try:
         retained_observations: tuple[PcbAccessProbeObservation, ...] | None = None
+        retained_drill_holes: tuple[PcbDrillHoleObservation, ...] | None = None
         for repeat in ("first", "repeat"):
             receipt = scratch / f"receipt-{repeat}"
             command, snapshot = capture_native_pcb_connectivity(
@@ -318,7 +327,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             request_path = receipt / "access-probe-requests.json"
             if (
                 snapshot.board_sha256 != source_hash
-                or snapshot.schema_version != "21"
+                or snapshot.schema_version != "22"
                 or snapshot.kicad_version != config.kicad_version
                 or snapshot.image != config.image
                 or snapshot.probe_sha256 != expected_probe_sha256()
@@ -372,6 +381,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             validate_track_probe_fixture_observations(snapshot, observations)
             validate_zone_probe_fixture_observations(snapshot, observations)
             validate_edge_probe_fixture_observations(snapshot, observations)
+            validate_hole_probe_fixture_observations(snapshot, observations)
 
             check_results = pcb_probe_envelope_checks(spec, snapshot)
             checks = {item.id: item.status for item in check_results}
@@ -388,9 +398,14 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
                 )
             if retained_observations is None:
                 retained_observations = snapshot.access_probe_observations
+                retained_drill_holes = snapshot.drill_holes
             elif retained_observations != snapshot.access_probe_observations:
                 raise ValueError(
                     "Repeated native probe geometry changed for identical board inputs"
+                )
+            elif retained_drill_holes != snapshot.drill_holes:
+                raise ValueError(
+                    "Repeated native drill-hole identities changed for identical board inputs"
                 )
 
         log.event(
@@ -399,7 +414,7 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             project=project,
             kicad_version=config.kicad_version,
             fixture_sha256=source_hash,
-            checks="14 PASS, 13 expected FAIL, 1 NOT_RUN",
+            checks="15 PASS, 14 expected FAIL, 1 NOT_RUN",
             repeatable="true",
             receipt=(scratch.relative_to(root) / "receipt-first").as_posix(),
         )

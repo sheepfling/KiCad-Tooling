@@ -297,6 +297,8 @@ class PcbAccessProbeObservation(StrictModel):
     zone_obstacle_distance_nm: NonNegativeCount | None = None
     edge_obstacle_uuid: PcbEdgeCutUuid | None = None
     edge_obstacle_distance_nm: NonNegativeCount | None = None
+    hole_obstacle_id: NonEmptyText | None = None
+    hole_obstacle_distance_nm: NonNegativeCount | None = None
 
     @model_validator(mode="after")
     def complete_nearest_obstacle(self) -> PcbAccessProbeObservation:
@@ -396,6 +398,10 @@ class PcbAccessProbeObservation(StrictModel):
             raise ValueError("Native probe Edge.Cuts obstacle needs its measured distance")
         if self.edge_obstacle_uuid is not None and not self.target_exposed:
             raise ValueError("Unavailable target side cannot have an Edge.Cuts obstacle")
+        if (self.hole_obstacle_id is None) != (self.hole_obstacle_distance_nm is None):
+            raise ValueError("Native probe drill-hole obstacle needs its measured distance")
+        if self.hole_obstacle_id is not None and not self.target_exposed:
+            raise ValueError("Unavailable target side cannot have a drill-hole obstacle")
         if self.target_aperture_shape in {"circle", "oval", "rectangle", "roundrect"}:
             if self.target_aperture_diameter_nm is None or self.target_aperture_diameter_nm <= 0:
                 raise ValueError("Supported native probe aperture needs a positive fit diameter")

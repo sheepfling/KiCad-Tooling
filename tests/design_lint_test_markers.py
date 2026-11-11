@@ -213,6 +213,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_mcp_parity_mapped_peer_supply_split.py",
                 "tests/test_electrical_pcb_return_evidence.py",
                 "tests/test_electrical_test_access_evidence.py",
+                "tests/test_test_access_probe_holes.py",
                 "tests/test_electrical_test_access_parity.py",
                 "tests/test_design_lint_architecture_pcb_measurement_candidate_evidence.py",
                 "tests/test_pcb_measurement_candidate_evidence.py",

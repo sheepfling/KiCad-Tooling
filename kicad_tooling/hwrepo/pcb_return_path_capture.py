@@ -25,6 +25,7 @@ from .project_models import ProjectConfig
 NATIVE_PROBE_SOURCE_PARTS = (
     "native_pcb_probe.py.in",
     "native_pcb_probe_access.py.in",
+    "native_pcb_probe_holes.py.in",
     "native_pcb_probe_geometry.py.in",
     "native_pcb_probe_touch_clearance.py.in",
     "native_pcb_probe_scan.py.in",

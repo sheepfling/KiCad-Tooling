@@ -35,9 +35,9 @@ class PcbComponentInventorySourceReceipt(StrictModel):
     board_path: RepositoryPath | None = None
     board_sha256: Digest | None = None
     snapshot_sha256: Digest | None = None
-    snapshot_schema: Literal["12", "13", "14", "15", "16", "17", "18", "19", "20", "21"] | None = (
-        None
-    )
+    snapshot_schema: (
+        Literal["12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"] | None
+    ) = None
     kicad_version: NonEmptyText | None = None
     image: NonEmptyText | None = None
     probe_sha256: Digest | None = None
@@ -186,9 +186,9 @@ class PcbComponentInventoryCoverageReport(StrictModel):
     board_sha256: Digest | None = None
     snapshot_path: RepositoryPath | None = None
     snapshot_sha256: Digest | None = None
-    snapshot_schema: Literal["12", "13", "14", "15", "16", "17", "18", "19", "20", "21"] | None = (
-        None
-    )
+    snapshot_schema: (
+        Literal["12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"] | None
+    ) = None
     kicad_version: NonEmptyText | None = None
     image: NonEmptyText | None = None
     probe_sha256: Digest | None = None
@@ -247,6 +247,7 @@ class PcbComponentInventoryCoverageReport(StrictModel):
             "19",
             "20",
             "21",
+            "22",
         }:
             raise ValueError("Complete PCB value comparison requires snapshot schema 13 or later")
         if self.value_comparison_status == "BLOCKED" and self.value_comparison_issue is None:
@@ -270,7 +271,7 @@ class PcbComponentInventoryCoverageReport(StrictModel):
         if self.board_only_footprint_coverage.status == "COMPLETE" and (
             self.status != "COMPLETE"
             or self.snapshot_schema
-            not in {"12", "13", "14", "15", "16", "17", "18", "19", "20", "21"}
+            not in {"12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"}
         ):
             raise ValueError("Complete board-only coverage needs complete source-bound inventory")
         if self.board_only_footprint_coverage.status == "BLOCKED" and self.status != "BLOCKED":
@@ -279,7 +280,7 @@ class PcbComponentInventoryCoverageReport(StrictModel):
         if required_fitted.status == "COMPLETE" and (
             self.status != "COMPLETE"
             or self.snapshot_schema
-            not in {"12", "13", "14", "15", "16", "17", "18", "19", "20", "21"}
+            not in {"12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"}
         ):
             raise ValueError("Complete required-fitted coverage needs complete native inventory")
         if self.status == "COMPLETE":

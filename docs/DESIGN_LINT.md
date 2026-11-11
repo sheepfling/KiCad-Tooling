@@ -8676,6 +8676,19 @@ the outline is closed or manufacturable, distinguish an outer perimeter from
 an internal cutout, or prove a fixture's physical approach and reach. Projects
 must author a reviewed threshold and basis; there is no universal clearance.
 
+`drill_hole_clearance_mm` is an optional, separate requirement for openings
+from fitted drilled pads and untented vias that reach the selected outer board
+surface. It measures from the target pad center to the nearest retained native
+effective hole shape, regardless of the hole's net, and compares that distance
+with the probe-tip radius plus the authored clearance. This requires source-
+bound native PCB schema v22 with explicit drill-hole and Edge.Cuts inventories
+and per-surface measurements. DNP pads, tented vias, and holes that do not
+reach the requested outer surface are excluded. Secondary or tertiary pad
+drills and backdrilled or post-machined pad holes make capture unavailable;
+older snapshots leave the requirement `NOT_RUN`. This screen does not model
+probe angle, part bodies, fixtures, covers, or physical reach. Projects author
+the threshold and basis; there is no universal clearance.
+
 The synthetic native acceptance fixture exercises a fitted different-net pad,
 a closer same-net pad, a closer DNP pad, a no-net obstacle, front-only access,
 an undersize circular aperture, an exact-fit aperture with a mask contraction,
@@ -8687,7 +8700,8 @@ include front- and back-side one-nanometer-inside foreign-copper faults,
 exact-distance boundaries, a close same-net zone decoy, and the clearance hole
 around a target pad. Closer opposite-side zones verify layer filtering. Edge
 cases include an exact outer-board boundary control and a one-nanometer-inside
-internal-cutout fault. It checks
+internal-cutout fault. Drill-hole cases include a non-plated hole at the exact
+authored boundary and one opening one nanometer inside it. It checks
 front/back/either-side behavior, exact aperture and clearance boundaries,
 unsupported-shape reporting, expected faults, and repeatability across two
 native loads. It also checks a nearby footprint with no courtyard plus exact

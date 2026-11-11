@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .ci_hosted_pcb_access_edges import EDGE_PROBE_EXPECTED_STATUSES
+from .ci_hosted_pcb_access_holes import HOLE_PROBE_EXPECTED_STATUSES
 from .ci_hosted_pcb_access_tracks import TRACK_PROBE_EXPECTED_STATUSES
 from .ci_hosted_pcb_access_vias import (
     VIA_PROBE_EXPECTED_PAD_OBSERVATIONS,
@@ -27,6 +28,7 @@ _ACCESS_PROBE_EXPECTED_STATUSES = {
     **TRACK_PROBE_EXPECTED_STATUSES,
     **ZONE_PROBE_EXPECTED_STATUSES,
     **EDGE_PROBE_EXPECTED_STATUSES,
+    **HOLE_PROBE_EXPECTED_STATUSES,
 }
 
 _ACCESS_PROBE_EXPECTED_PAD_OBSERVATIONS = {
@@ -113,6 +115,22 @@ _ACCESS_PROBE_EXPECTED_PAD_OBSERVATIONS = {
         True,
         "circle",
         1_000_000,
+    ),
+    ("j36.1", "front"): (
+        "J37.1",
+        "TARGET_HOLE_FAULT",
+        9_400_001,
+        True,
+        "circle",
+        1_200_000,
+    ),
+    ("j37.1", "front"): (
+        "J36.1",
+        "TARGET_HOLE_BOUNDARY",
+        9_400_001,
+        True,
+        "circle",
+        1_200_000,
     ),
     **VIA_PROBE_EXPECTED_PAD_OBSERVATIONS,
     ("j24.1", "front"): (

@@ -45,6 +45,8 @@ class AccessProbeObservation(TypedDict):
     zone_obstacle_distance_nm: int | None
     edge_obstacle_uuid: NotRequired[str | None]
     edge_obstacle_distance_nm: NotRequired[int | None]
+    hole_obstacle_id: NotRequired[str | None]
+    hole_obstacle_distance_nm: NotRequired[int | None]
 
 
 def access_probe_observations(
@@ -55,7 +57,16 @@ def access_probe_observations(
     track_geometry: list[tuple[str, str | None, NativeTrack]],
     zone_geometry: list[tuple[str, str | None, int, int, NativePolygonSet]],
     edge_geometry: list[tuple[str, NativeShape]],
+    drill_hole_geometry: list[
+        tuple[
+            str,
+            str | None,
+            tuple[Literal["front", "back"], ...],
+            NativeShape,
+        ]
+    ],
     include_edge_cuts: bool,
+    include_drill_holes: bool,
 ) -> list[AccessProbeObservation]:
     """Measure foreign pads/tracks, untented vias, and courtyards from each pad center."""
     observations: list[AccessProbeObservation] = []
@@ -152,6 +163,8 @@ def access_probe_observations(
             }
             if include_edge_cuts:
                 observation.update({"edge_obstacle_uuid": None, "edge_obstacle_distance_nm": None})
+            if include_drill_holes:
+                observation.update({"hole_obstacle_id": None, "hole_obstacle_distance_nm": None})
             observations.append(observation)
             continue
         target = targets[0]
@@ -305,6 +318,30 @@ def access_probe_observations(
                     ),
                 }
             )
+        if include_drill_holes:
+            nearest_hole: tuple[int, str, str] | None = None
+            for identity, pad_reference_value, surfaces, hole_shape in drill_hole_geometry:
+                if side not in surfaces or (
+                    pad_reference_value is not None
+                    and pad_reference_value.casefold() == endpoint.casefold()
+                ):
+                    continue
+                distance_nm = floor(float(hole_shape.Distance(position)))
+                if distance_nm < 0:
+                    raise ValueError(
+                        f"KiCad returned a negative drill-hole distance for {endpoint}"
+                    )
+                candidate = (distance_nm, identity.casefold(), identity)
+                if nearest_hole is None or candidate[:2] < nearest_hole[:2]:
+                    nearest_hole = candidate
+            observation.update(
+                {
+                    "hole_obstacle_id": nearest_hole[2] if nearest_hole is not None else None,
+                    "hole_obstacle_distance_nm": (
+                        nearest_hole[0] if nearest_hole is not None else None
+                    ),
+                }
+            )
         observations.append(observation)
     return observations
 
@@ -322,14 +359,28 @@ def read_access_requests(path: Path | None) -> tuple[list[AccessProbeRequest], s
     requests: list[AccessProbeRequest] = []
     seen: set[tuple[str, str]] = set()
     for row_value in raw_requests:
-        if not isinstance(row_value, dict) or frozenset(row_value) not in {
-            frozenset({"endpoint", "net", "side"}),
-            frozenset({"endpoint", "net", "side", "include_edge_cuts"}),
-        }:
+        if (
+            not isinstance(row_value, dict)
+            or not {
+                "endpoint",
+                "net",
+                "side",
+            }
+            <= set(row_value)
+            or not set(row_value)
+            <= {
+                "endpoint",
+                "net",
+                "side",
+                "include_edge_cuts",
+                "include_drill_holes",
+            }
+        ):
             raise ValueError("Native probe request has an invalid shape")
         row = cast(RawAccessProbeRequest, row_value)
         endpoint_value, net_value, side_value = row["endpoint"], row["net"], row["side"]
         include_edge_cuts = row.get("include_edge_cuts", False)
+        include_drill_holes = row.get("include_drill_holes", False)
         if not isinstance(endpoint_value, str) or not endpoint_value.strip():
             raise ValueError("Native probe request values must be non-empty strings")
         if not isinstance(net_value, str) or not net_value.strip():
@@ -340,6 +391,8 @@ def read_access_requests(path: Path | None) -> tuple[list[AccessProbeRequest], s
             raise ValueError("Native probe request has an invalid endpoint or side")
         if type(include_edge_cuts) is not bool:
             raise ValueError("Native probe Edge.Cuts request flag must be boolean")
+        if type(include_drill_holes) is not bool:
+            raise ValueError("Native probe drill-hole request flag must be boolean")
         side = cast(Literal["front", "back"], side_value)
         key = (endpoint_value.casefold(), side)
         if key in seen:
@@ -351,6 +404,7 @@ def read_access_requests(path: Path | None) -> tuple[list[AccessProbeRequest], s
                 "net": net_value,
                 "side": side,
                 "include_edge_cuts": include_edge_cuts,
+                "include_drill_holes": include_drill_holes,
             }
         )
     if not requests:

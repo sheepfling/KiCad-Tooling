@@ -1,0 +1,138 @@
+"""Capture native PCB drill-hole identities and distance geometry."""
+
+
+def drill_hole_inventory(
+    pad_geometry: list[tuple[str, bool, NativePad]],
+    via_geometry: list[tuple[str, str | None, NativeVia]],
+) -> tuple[
+    list[DrillHoleObservation],
+    list[
+        tuple[
+            str,
+            str | None,
+            tuple[Literal["front", "back"], ...],
+            NativeShape,
+        ]
+    ],
+]:
+    """Capture fitted pad/via drill openings and the native shapes used for distance."""
+    rows: dict[str, DrillHoleObservation] = {}
+    geometry: dict[
+        str,
+        tuple[str, str | None, tuple[Literal["front", "back"], ...], NativeShape],
+    ] = {}
+
+    def surfaces_for(
+        item: NativePad | NativeVia,
+        *,
+        via: bool = False,
+        non_plated: bool = False,
+        tented_sides: frozenset[str] = frozenset(),
+    ) -> tuple[Literal["front", "back"], ...]:
+        layers = item.GetLayerSet()
+        surfaces: list[Literal["front", "back"]] = []
+        if non_plated or (
+            layers.Contains(native_pcbnew.F_Cu) and (via or layers.Contains(native_pcbnew.F_Mask))
+        ):
+            if "front" not in tented_sides:
+                surfaces.append("front")
+        if non_plated or (
+            layers.Contains(native_pcbnew.B_Cu) and (via or layers.Contains(native_pcbnew.B_Mask))
+        ):
+            if "back" not in tented_sides:
+                surfaces.append("back")
+        return tuple(surfaces)
+
+    def add(
+        row: DrillHoleObservation,
+        pad_reference_value: str | None,
+        surfaces: tuple[Literal["front", "back"], ...],
+        shape: NativeShape | None,
+    ) -> None:
+        if not surfaces:
+            return
+        if shape is None or shape.IsNull():
+            raise ValueError(f"KiCad returned no effective drill-hole shape for {row['id']}")
+        identity = row["id"].casefold()
+        prior = rows.get(identity)
+        if prior is not None and prior != row:
+            raise ValueError(f"Native drill-hole identity has conflicting geometry: {row['id']}")
+        rows[identity] = row
+        geometry[identity] = (row["id"], pad_reference_value, surfaces, shape)
+
+    drill_shapes = {
+        native_pcbnew.PAD_DRILL_SHAPE_CIRCLE: "circle",
+        native_pcbnew.PAD_DRILL_SHAPE_OBLONG: "oval",
+    }
+    for reference, dnp, pad in pad_geometry:
+        if dnp:
+            continue
+        drill = pad.GetDrillSize()
+        width_nm, height_nm = int(drill.x), int(drill.y)
+        if width_nm <= 0 and height_nm <= 0:
+            continue
+        if width_nm <= 0 or height_nm <= 0:
+            raise ValueError(f"Native pad {reference} has an invalid drill size")
+        if any(
+            int(size.x) > 0 or int(size.y) > 0
+            for size in (pad.GetSecondaryDrillSize(), pad.GetTertiaryDrillSize())
+        ):
+            raise ValueError(f"Native pad {reference} uses unsupported secondary drill geometry")
+        if any(
+            pad.IsBackdrilledOrPostMachined(layer)
+            for layer in (native_pcbnew.F_Cu, native_pcbnew.B_Cu)
+        ):
+            raise ValueError(
+                f"Native pad {reference} uses unsupported post-machined drill geometry"
+            )
+        footprint = pad.GetParentFootprint()
+        pad_uuid = pad.m_Uuid.AsString()
+        if not pad_uuid:
+            raise ValueError(f"Native pad {reference} has no stable drill-hole UUID")
+        surface_sides = surfaces_for(
+            pad,
+            non_plated=pad.GetAttribute() == native_pcbnew.PAD_ATTRIB_NPTH,
+        )
+        shape_name = drill_shapes.get(pad.GetDrillShape(), "other")
+        pad_reference_value = reference or None
+        row: DrillHoleObservation = {
+            "id": f"pad:{pad_uuid}",
+            "kind": "pad",
+            "pad_uuid": pad_uuid,
+            "footprint_reference": footprint.GetReference(),
+            "footprint": footprint.GetFPIDAsString(),
+            "position_nm": [int(pad.GetPosition().x), int(pad.GetPosition().y)],
+            "drill_size_nm": [width_nm, height_nm],
+            "shape": shape_name,
+            "surfaces": list(surface_sides),
+        }
+        if pad_reference_value is not None:
+            row["pad"] = pad_reference_value
+        add(row, pad_reference_value, surface_sides, pad.GetEffectiveHoleShape())
+
+    for identity, _net, via in via_geometry:
+        drill_nm = int(via.GetDrillValue())
+        if drill_nm <= 0:
+            continue
+        tented_sides = frozenset(
+            side
+            for side, layer in (("front", native_pcbnew.F_Cu), ("back", native_pcbnew.B_Cu))
+            if via.IsTented(layer)
+        )
+        surface_sides = surfaces_for(via, via=True, tented_sides=tented_sides)
+        position = via.GetPosition()
+        row = {
+            "id": f"via:{identity}",
+            "kind": "via",
+            "via_id": identity,
+            "position_nm": [int(position.x), int(position.y)],
+            "drill_size_nm": [drill_nm, drill_nm],
+            "shape": "circle",
+            "surfaces": list(surface_sides),
+        }
+        add(row, None, surface_sides, via.GetEffectiveHoleShape())
+
+    return (
+        sorted(rows.values(), key=lambda item: item["id"].casefold()),
+        [geometry[key] for key in sorted(geometry)],
+    )

@@ -51,7 +51,19 @@ def compare_schematic_pcb_population(
     variants: tuple[PcbVariantPopulationSource, ...] = (),
 ) -> tuple[PcbPopulationMismatch, ...]:
     """Review base and same-name variant DNP states for comparable CAD records."""
-    if snapshot.schema_version not in {"12", "13", "14", "15", "16", "17", "18", "19", "20", "21"}:
+    if snapshot.schema_version not in {
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+    }:
         raise ValueError(
             "PCB population comparison requires native footprint snapshot schema 12, 13, or 14"
         )
