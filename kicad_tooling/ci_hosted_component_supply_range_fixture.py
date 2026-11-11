@@ -1,0 +1,144 @@
+"""Verify native source and fault/control behavior for mapped supply ranges."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+
+from .ci_hosted_component_rating_context import ComponentRatingFixtureContext
+from .ci_hosted_support import HostedLog
+from .hwrepo.component_supply_range_models import (
+    ComponentSupplyVoltageRangeMap,
+    ComponentSupplyVoltageRangeRequirement,
+)
+from .hwrepo.contracts import read_kicad_erc_report
+from .hwrepo.design_lint_power_supply_range import component_supply_voltage_range_candidates
+from .hwrepo.evidence import digest
+from .hwrepo.native_report_parsing import read_netlist
+from .hwrepo.power_component_supply_range import RULE_ID
+
+
+def verify_component_supply_range_fixture(
+    context: ComponentRatingFixtureContext,
+    log: HostedLog,
+) -> None:
+    """Check both exact-version exports and the mapped out-of-range prompt."""
+    fixture_hashes = {
+        "fault": context.supply_range_fault_sha256,
+        "control": context.supply_range_control_sha256,
+    }
+    if fixture_hashes["fault"] != fixture_hashes["control"]:
+        # The fixtures differ only in the two native voltage-label strings.
+        source_texts = {
+            "fault": context.supply_range_fault_fixture.read_text(encoding="utf-8"),
+            "control": context.supply_range_control_fixture.read_text(encoding="utf-8"),
+        }
+        if source_texts["fault"].replace('"24V"', '"5V"') != source_texts["control"]:
+            raise ValueError("Supply-range native fault and control differ beyond rail labels")
+
+    parsed = {}
+    netlist_hashes: dict[tuple[str, str], str] = {}
+    erc_signatures: dict[str, tuple[tuple[str, str], ...]] = {}
+    for case in ("fault", "control"):
+        for run in ("first", "repeat"):
+            netlist_path = context.output / f"supply-range.{case}.{run}.netlist.xml"
+            erc_path = context.output / f"supply-range.{case}.{run}.erc.json"
+            if not netlist_path.is_file() or not erc_path.is_file():
+                raise ValueError(f"Supply-range native export omitted the {case} {run} evidence")
+            observed = read_netlist(netlist_path)
+            normalized = json.dumps(
+                observed.model_dump(mode="json"),
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=False,
+            ).encode("utf-8")
+            netlist_hashes[case, run] = hashlib.sha256(normalized).hexdigest()
+            erc = read_kicad_erc_report(erc_path)
+            if erc.kicad_version != context.config.kicad_version:
+                raise ValueError("Supply-range ERC evidence has the wrong KiCad version")
+            signature = tuple(sorted((item.type, item.severity) for item in erc.violations))
+            if any(severity == "error" for _, severity in signature):
+                raise ValueError(f"Supply-range synthetic schematic has ERC errors: {signature}")
+            erc_signatures[case, run] = signature
+            parsed[case, run] = observed
+
+        if netlist_hashes[case, "first"] != netlist_hashes[case, "repeat"]:
+            raise ValueError(f"Supply-range {case} netlist export was not repeatable")
+        if erc_signatures[case, "first"] != erc_signatures[case, "repeat"]:
+            raise ValueError(f"Supply-range {case} ERC signature was not repeatable")
+
+    map_entry = ComponentSupplyVoltageRangeRequirement(
+        id="synthetic-input-range",
+        reference="U1",
+        expected_symbol="Synthetic:SupplyRangeIC",
+        expected_footprint="Synthetic:SOT23-3",
+        expected_part_id="SYNTHETIC-SUPPLY-RANGE-IC",
+        pin="U1.1",
+        expected_pin_function="VIN",
+        minimum_voltage_v=5.0,
+        maximum_voltage_v=12.0,
+        range_source="Synthetic test basis only",
+        range_conditions="Synthetic native fault/control boundary; not a device specification",
+    )
+    requirements = ComponentSupplyVoltageRangeMap(
+        basis="Synthetic native fixture only",
+        requirements=(map_entry,),
+    )
+    fault = parsed["fault", "first"]
+    control = parsed["control", "first"]
+    for observed in (fault, control):
+        component = observed.components.get("U1")
+        if (
+            component is None
+            or component.footprint != map_entry.expected_footprint
+            or component.part_id != map_entry.expected_part_id
+            or observed.component_symbols.get("U1") != map_entry.expected_symbol
+            or "1" not in observed.component_pin_numbers.get("U1", ())
+            or observed.pin_functions.get("U1.1") != "VIN"
+            or observed.pin_electrical_types.get("U1.1") != "power_in"
+        ):
+            raise ValueError("Native supply-range fixture lost exact component or pin evidence")
+
+    fault_findings = component_supply_voltage_range_candidates(fault, requirements)
+    control_findings = component_supply_voltage_range_candidates(control, requirements)
+    if (
+        len(fault_findings) != 1
+        or fault_findings[0].rule_id != RULE_ID
+        or fault_findings[0].evidence.get("assigned_net") != ("24V",)
+        or fault_findings[0].evidence.get("net_label_voltage_v") != ("24",)
+        or control_findings
+        or "U1.1" not in control.nets.get("5V", ())
+    ):
+        raise ValueError("Native component supply-range fault/control did not match expectations")
+
+    log.event(
+        "component-supply-range-fixture/native-export",
+        "PASS",
+        project=context.project,
+        kicad_version=context.config.kicad_version,
+        fault_sha256=digest(context.supply_range_fault_fixture),
+        control_sha256=digest(context.supply_range_control_fixture),
+        normalized_netlist_sha256=netlist_hashes["fault", "first"],
+        repeat_normalized_netlist_sha256=netlist_hashes["fault", "repeat"],
+        erc_error_types="none",
+        erc_signature=repr(erc_signatures["fault", "first"]),
+        repeatable="true",
+    )
+    log.event(
+        "component-supply-range-fixture/out-of-range-fault",
+        "PASS",
+        project=context.project,
+        kicad_version=context.config.kicad_version,
+        net="24V",
+        finding_rule=RULE_ID,
+        repeatable="true",
+    )
+    log.event(
+        "component-supply-range-fixture/in-range-control",
+        "PASS",
+        project=context.project,
+        kicad_version=context.config.kicad_version,
+        net="5V",
+        finding_rule="none",
+        repeatable="true",
+    )

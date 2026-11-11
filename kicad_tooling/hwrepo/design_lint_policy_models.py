@@ -8,6 +8,7 @@ from pydantic import model_validator
 
 from .capacitor_hold_up_models import CapacitorHoldUpMap
 from .component_role_models import ComponentRoleMap
+from .component_supply_range_models import ComponentSupplyVoltageRangeMap
 from .connector_return_distribution_models import ConnectorReturnDistributionMap
 from .connector_stateful_contact_models import ConnectorStatefulContactMap
 from .crystal_network_models import CrystalNetworkMap
@@ -50,6 +51,7 @@ class DesignLintPolicy(StrictModel):
     rules: tuple[DesignLintRuleOverride, ...] = ()
     ignores: tuple[DesignLintIgnore, ...] = ()
     component_role_map: ComponentRoleMap | None = None
+    component_supply_voltage_range_map: ComponentSupplyVoltageRangeMap | None = None
     complementary_pin_function_alias_map: ComplementaryPinFunctionAliasMap | None = None
     stm32_pin_maps: tuple[Stm32CubeMxPinMap, ...] = ()
     i2c_address_map: I2cAddressMap | None = None
@@ -97,4 +99,17 @@ class DesignLintPolicy(StrictModel):
             self.stm32_pin_maps
         ):
             raise ValueError("An MCU reference can appear in only one CubeMX pin map")
+        supply_range_mode = next(
+            (
+                item.mode
+                for item in self.rules
+                if item.rule_id == "power.component_supply_voltage_outside_range"
+            ),
+            "off",
+        )
+        if supply_range_mode != "off" and self.component_supply_voltage_range_map is None:
+            raise ValueError(
+                "Enabling power.component_supply_voltage_outside_range requires "
+                "component_supply_voltage_range_map"
+            )
         return self

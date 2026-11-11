@@ -70,6 +70,7 @@ DesignLintRuleId = Literal[
     "power.gpio_to_control_input_voltage_review",
     "power.open_drain_control_input_pullup_voltage_review",
     "power.named_supply_pin_on_negative_rail",
+    "power.component_supply_voltage_outside_range",
     "component.peer_power_pin_assignment_divergence",
     "component.peer_power_input_assignment_divergence",
     "component.peer_power_input_named_assignment_divergence",

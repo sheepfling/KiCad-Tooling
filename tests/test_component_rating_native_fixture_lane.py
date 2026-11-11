@@ -63,12 +63,22 @@ def test_component_and_connector_rating_controls_export_repeatably(tmp_path: Pat
     expected_mosfet_fixture_sha256 = (
         "92e70feba1b173c5cbcf8bf2bc9d820be1f7bf1116448e76b072da0b7d1119b6"
     )
+    supply_range_fixture_root = (
+        repository / "tests/fixtures/design_lint/component-supply-voltage-range"
+    )
+    expected_supply_range_fixture_hashes = {
+        "fault.kicad_sch": "2114ccc1f771667a0ee7c9ed2ae8a8d865fc05f597fb792b9c591d647441b94e",
+        "control.kicad_sch": "c8da09bc16116df7f3083d3b99b4cbdc1c389e08f5638b701ed3b8b5e424e0dd",
+    }
     assert hashlib.sha256(fixture.read_bytes()).hexdigest() == expected_fixture_sha256
     assert hashlib.sha256(power_fixture.read_bytes()).hexdigest() == expected_power_fixture_sha256
     assert (
         hashlib.sha256(contact_fixture.read_bytes()).hexdigest() == expected_contact_fixture_sha256
     )
     assert hashlib.sha256(mosfet_fixture.read_bytes()).hexdigest() == expected_mosfet_fixture_sha256
+    for fixture_name, expected_hash in expected_supply_range_fixture_hashes.items():
+        fixture_path = supply_range_fixture_root / fixture_name
+        assert hashlib.sha256(fixture_path.read_bytes()).hexdigest() == expected_hash
     normalized_hashes: dict[str, str] = {}
     power_normalized_hashes: dict[str, str] = {}
     contact_normalized_hashes: dict[str, str] = {}
@@ -80,6 +90,35 @@ def test_component_and_connector_rating_controls_export_repeatably(tmp_path: Pat
         log = HostedLog(root, f"native-component-rating-{project}")
         component_rating_fixtures_lane(root, project=project, image=config.image, log=log)
         events = tuple(json.loads(line) for line in log.events.read_text().splitlines())
+        supply_range_results = {
+            item["stage"]: item
+            for item in events
+            if item.get("stage", "").startswith("component-supply-range-fixture/")
+        }
+        assert set(supply_range_results) == {
+            "component-supply-range-fixture/native-export",
+            "component-supply-range-fixture/out-of-range-fault",
+            "component-supply-range-fixture/in-range-control",
+        }
+        supply_range_native = supply_range_results["component-supply-range-fixture/native-export"]
+        assert supply_range_native["status"] == "PASS"
+        assert supply_range_native["kicad_version"] == version
+        assert supply_range_native["repeatable"] == "true"
+        assert (
+            supply_range_native["normalized_netlist_sha256"]
+            == (supply_range_native["repeat_normalized_netlist_sha256"])
+        )
+        assert supply_range_native["erc_error_types"] == "none"
+        assert (
+            supply_range_results["component-supply-range-fixture/out-of-range-fault"][
+                "finding_rule"
+            ]
+            == "power.component_supply_voltage_outside_range"
+        )
+        assert (
+            supply_range_results["component-supply-range-fixture/in-range-control"]["finding_rule"]
+            == "none"
+        )
         results = {
             item["stage"]: item
             for item in events
@@ -261,9 +300,10 @@ def test_component_and_connector_rating_controls_export_repeatably(tmp_path: Pat
             for (index, item) in enumerate(command["argv"][:-1])
             if item == "-v"
         )
-        assert len(mounts) == 3
+        assert len(mounts) == 4
         assert sum(item.endswith(":/fixtures:ro") for item in mounts) == 1
         assert sum(item.endswith(":/mosfet-fixture:ro") for item in mounts) == 1
+        assert sum(item.endswith(":/supply-range-fixtures:ro") for item in mounts) == 1
         assert sum(item.endswith(":/output:rw") for item in mounts) == 1
     assert len(set(normalized_hashes.values())) == 1
     assert len(set(power_normalized_hashes.values())) == 1

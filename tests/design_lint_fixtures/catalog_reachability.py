@@ -50,6 +50,10 @@ from tests.design_lint_fixtures.can_tx_rx_same_net import can_tx_rx_same_net_net
 from tests.design_lint_fixtures.catalog_reachability_mapped_connectors import (
     mapped_connector_rule_ids,  # noqa: F401
 )
+from tests.design_lint_fixtures.component_supply_voltage_ranges import (
+    supply_range_map,
+    supply_range_netlist,
+)
 from tests.design_lint_fixtures.connector_coverage import (
     connector_supply_role_catalog,
     connector_supply_role_netlist,
@@ -253,6 +257,13 @@ def catalog_reachability_rule_ids() -> set[str]:
     result.update(item.rule_id for item in candidates(bjt_collector_emitter_netlist()))
     result.update(item.rule_id for item in candidates(bjt_base_emitter_netlist()))
     result.update(item.rule_id for item in candidates(bjt_base_collector_netlist()))
+    result.update(
+        item.rule_id
+        for item in candidates(
+            supply_range_netlist(input_net="3V3"),
+            component_supply_voltage_range_map=supply_range_map(),
+        )
+    )
     result.update(item.rule_id for item in candidates(bjt_base_drive_netlist()))
     result.update(item.rule_id for item in candidates(bjt_base_bias_netlist()))
     supply_domain_netlist = connector_supply_role_netlist(common_supply=True)

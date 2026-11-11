@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 325 rules are implemented with synthetic regression coverage.
+The following 326 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 325 active rules.
+The catalog currently contains 326 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -562,6 +562,7 @@ skipped under prerelease policy.
 - `component.led_directly_driven_from_output`
 - `component.mapped_led_current_range_mismatch`
 - `oscillator.output_load_path_mismatch`
+- `power.component_supply_voltage_outside_range`
 - `power.gpio_to_control_input_voltage_review`
 - `power.open_drain_control_input_pullup_voltage_review`
 - `power.ic_decoupling_below_project_minimum`
@@ -4117,7 +4118,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 325 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 326 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -23240,6 +23241,42 @@ acceptance threads while new lint features proceed:
   `parity_lint and design_lint and pcb_lint`. Exact native coverage uses
   `tests/test_pcb_reference_plane_native_fixture_lane.py`,
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, and the same rule selector.
+
+#### LINT-392 — Review mapped IC supply pins against their operating range
+
+- **Status:** New opt-in deterministic review rule, default `off`.
+- **Cohort cue:** The pinned kicad-happy v3.0.1 notes document OV-001, a
+  component operating-voltage-range analysis. This implementation uses that
+  as a cue to identify a useful gap; no cohort code or project data is copied,
+  installed, or used at runtime. See [the upstream changelog][happy-value-syntax-v301].
+- **Behavior:** A project may map exact fitted IC supply pins to a reviewed
+  inclusive operating-voltage range, range source, and conditions. The rule
+  checks native component identity, footprint, `PART_ID`, pin inventory,
+  function, `power_in` type, and unique net assignment. Supported explicit
+  signed numeric voltage labels outside the range produce a review finding;
+  stale mappings, ambiguous or unassigned pins, and unsupported voltage-label
+  formats produce an incomplete-evidence finding. Enabling the rule requires
+  the project-authored map.
+- **Boundary:** Net-label voltages are nominal clues, not measured potentials.
+  The checker does not validate datasheets or the authored range, discover
+  omitted supply pins, or assess absolute maximum ratings, tolerance, ripple,
+  transients, sequencing, source capability, component behavior, or PCB
+  continuity. It complements LINT-064's two-terminal working-voltage margin
+  check; it does not replace it.
+- **Evidence:** Synthetic tests cover below/above-range faults, inclusive
+  boundaries, stale identity, missing or ambiguous voltage evidence, an
+  in-range control, map-order stability, shared evaluator behavior, and CLI/MCP
+  parity. Digest-pinned native fault/control schematics differ only in the
+  `24V` versus `5V` label and passed repeatable KiCad 10.0.0 and 10.0.5 exports
+  with no ERC errors. The rule is cataloged with its theme-owned predicate,
+  required native lane, opt-in default, and explicit limitations.
+  Source hashes and native-profile details are recorded in the
+  [synthetic fixture README](../tests/fixtures/design_lint/component-supply-voltage-range/README.md).
+- **Selection:** Run `tests/test_component_supply_voltage_range.py`,
+  `tests/test_component_supply_voltage_range_parity.py`, and the selector case in
+  `tests/test_component_rating_native_fixture_lane.py` with
+  `design_lint and component_lint and power_lint and design_lint_rule(rule_id="power.component_supply_voltage_outside_range")`.
+  Native acceptance requires `KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES=1`.
 
 ## Completion and release gate
 

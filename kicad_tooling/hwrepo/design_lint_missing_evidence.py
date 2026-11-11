@@ -128,6 +128,13 @@ def missing_evidence_report(data: DesignLintMissingEvidenceInput) -> DesignLintR
                 "netlist evidence."
             ),
         )
+    if policy.component_supply_voltage_range_map is not None:
+        missing_evidence_issues += (
+            (
+                "The project component supply voltage-range map cannot be checked without "
+                "source-bound native netlist evidence."
+            ),
+        )
     if policy.complementary_pin_function_alias_map is not None:
         missing_evidence_issues += (
             (

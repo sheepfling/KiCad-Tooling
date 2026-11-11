@@ -97,7 +97,7 @@ from tests.power_sequence_support import (
 from tests.regulator_support_reachability import regulator_support_rule_ids
 from tests.serial_participant_support import serial_netlist as serial_participant_netlist
 
-pytestmark = pytest.mark.design_lint
+pytestmark = [pytest.mark.design_lint, pytest.mark.rule_gate_integrity]
 
 
 def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:

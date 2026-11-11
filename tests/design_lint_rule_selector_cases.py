@@ -4,6 +4,14 @@ from __future__ import annotations
 
 RULE_NODE_CASES = (
     (
+        "power.component_supply_voltage_outside_range",
+        "tests/test_component_supply_voltage_range.py::test_supported_positive_voltage_label_below_range_needs_review",
+    ),
+    (
+        "power.component_supply_voltage_outside_range",
+        "tests/test_component_supply_voltage_range.py::test_supported_positive_voltage_inside_inclusive_range_is_quiet",
+    ),
+    (
         "connector.reviewed_peer_power_input_split",
         "tests/test_connector_reviewed_peer_power_input_split.py::test_split_generic_power_input_on_unlike_reviewed_peers_needs_review",
     ),

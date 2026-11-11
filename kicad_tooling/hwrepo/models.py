@@ -19,6 +19,7 @@ from . import can_termination_models as _can_termination_models
 from . import component_peer_pin_models as _component_peer_pin_models
 from . import component_rating_models as _component_rating_models
 from . import component_role_models as _component_role_models
+from . import component_supply_range_models as _component_supply_range_models
 from . import connector_contact_rating_models as _connector_contact_rating_models
 from . import connector_coverage_models as _connector_coverage_models
 from . import connector_peer_pin_models as _connector_peer_pin_models
@@ -311,6 +312,10 @@ DesignLintPolicy = _design_lint_policy_models.DesignLintPolicy
 DesignLintMappedCheckRun = _design_lint_mapped_topology_models.DesignLintMappedCheckRun
 ComponentVoltageRatingRequirement = _component_rating_models.ComponentVoltageRatingRequirement
 ComponentVoltageRatingAnalysis = _component_rating_models.ComponentVoltageRatingAnalysis
+ComponentSupplyVoltageRangeRequirement = (
+    _component_supply_range_models.ComponentSupplyVoltageRangeRequirement
+)
+ComponentSupplyVoltageRangeMap = _component_supply_range_models.ComponentSupplyVoltageRangeMap
 ComponentPowerRatingRequirement = _component_rating_models.ComponentPowerRatingRequirement
 ComponentPowerRatingAnalysis = _component_rating_models.ComponentPowerRatingAnalysis
 ComponentRolePin = _component_role_models.ComponentRolePin

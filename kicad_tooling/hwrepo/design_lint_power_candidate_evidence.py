@@ -25,6 +25,7 @@ from .design_lint_regulator_support_candidate_evidence import (
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .net_dc_reference import ConnectorCapacitorOnlyNet
+from .power_component_supply_range import ComponentSupplyVoltageRangeIssue
 from .power_decoupling import PowerRailCapacitorGap
 from .power_pin_paths import PowerInputSourcePathGap
 from .power_rail_models import NumberedPowerRailGroup
@@ -44,6 +45,7 @@ PowerCandidateSource: TypeAlias = (
     | RegulatorSupportPinRoleFindingEvidence
     | RegulatorSupportPinNetFindingEvidence
     | RegulatorSupportPinNetCoverageFindingEvidence
+    | ComponentSupplyVoltageRangeIssue
 )
 
 _SAME_VOLTAGE_POWER_INPUTS: DesignLintRuleId = "component.same_voltage_power_inputs_split"
@@ -229,6 +231,28 @@ def project_power_candidate_evidence(
                 "component": (component.reference,),
                 "issues": source.issues,
                 "maps_sha256": (source.maps_sha256,),
+            },
+        )
+    if isinstance(source, ComponentSupplyVoltageRangeIssue):
+        requirement = source.requirement
+        return CandidateEvidenceProjection(
+            rule_id="power.component_supply_voltage_outside_range",
+            evidence={
+                "requirement_id": (requirement.id,),
+                "component": (requirement.reference,),
+                "pin": (requirement.pin,),
+                "expected_pin_function": (requirement.expected_pin_function,),
+                "reviewed_range_v": (
+                    f"{requirement.minimum_voltage_v:g}..{requirement.maximum_voltage_v:g}",
+                ),
+                "range_source": (requirement.range_source,),
+                "range_conditions": (requirement.range_conditions,),
+                "assigned_net": () if source.actual_net is None else (source.actual_net,),
+                "net_label_voltage_v": (
+                    () if source.actual_voltage_v is None else (f"{source.actual_voltage_v:g}",)
+                ),
+                "issues": source.issues,
+                "map_sha256": (source.map_sha256,),
             },
         )
     return CandidateEvidenceProjection(

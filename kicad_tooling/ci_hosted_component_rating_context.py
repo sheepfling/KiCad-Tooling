@@ -26,5 +26,10 @@ class ComponentRatingFixtureContext:
     mosfet_fixture_root: Path
     mosfet_fixture: Path
     mosfet_fixture_sha256: str
+    supply_range_fixture_root: Path
+    supply_range_fault_fixture: Path
+    supply_range_fault_sha256: str
+    supply_range_control_fixture: Path
+    supply_range_control_sha256: str
     scratch: Path
     output: Path

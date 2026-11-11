@@ -11,6 +11,7 @@ from .component_power_input_domains import same_voltage_power_inputs_on_differen
 from .component_power_output_candidates import unconnected_power_output_candidates
 from .component_role_models import ComponentRoleMap
 from .component_roles import resolve_component_role_map
+from .component_supply_range_models import ComponentSupplyVoltageRangeMap
 from .design_lint_component_unconnected_pin_candidate_evidence import (
     UnconnectedComponentPinCandidate,
 )
@@ -25,6 +26,7 @@ from .design_lint_power_regulator_support_net_coverage import (
 )
 from .design_lint_power_regulator_support_nets import regulator_support_pin_net_candidates
 from .design_lint_power_regulator_support_roles import regulator_support_pin_role_candidates
+from .design_lint_power_supply_range import component_supply_voltage_range_candidates
 from .design_lint_types import Candidate
 from .ic_decoupling_models import IcDecouplingMap
 from .net_dc_reference import connector_capacitor_only_nets
@@ -48,6 +50,7 @@ def power_candidates(
     peer_unconnected_power_output_pins: frozenset[str] = frozenset(),
     ic_decoupling_map: IcDecouplingMap | None = None,
     capacitor_hold_up_map: CapacitorHoldUpMap | None = None,
+    component_supply_voltage_range_map: ComponentSupplyVoltageRangeMap | None = None,
     regulator_support_pin_role_map: RegulatorSupportPinRoleMap | None = None,
     regulator_support_pin_net_map: RegulatorSupportPinNetMap | None = None,
 ) -> tuple[Candidate, ...]:
@@ -61,6 +64,7 @@ def power_candidates(
             oscillator_output_path_map=None,
             ic_decoupling_map=ic_decoupling_map,
             capacitor_hold_up_map=capacitor_hold_up_map,
+            component_supply_voltage_range_map=component_supply_voltage_range_map,
             regulator_support_pin_role_map=regulator_support_pin_role_map,
             regulator_support_pin_net_map=regulator_support_pin_net_map,
         ),
@@ -99,6 +103,12 @@ def scan_power_candidates(
         )
     )
     found.extend(capacitor_hold_up_candidates(observed, inputs.capacitor_hold_up_map))
+    found.extend(
+        component_supply_voltage_range_candidates(
+            observed,
+            inputs.component_supply_voltage_range_map,
+        )
+    )
     found.extend(
         named_power_pin_net_role_conflicts(
             observed,

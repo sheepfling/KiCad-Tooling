@@ -8,6 +8,7 @@ from .bus_signal_pairs import ComplementaryPinFunctionAliasResolution
 from .can_peer_reference_scan import CanPeerReferenceScan
 from .component_peer_pin_scan import ComponentPeerPinAssignmentScans
 from .component_role_models import ComponentRoleMap
+from .component_supply_range_models import ComponentSupplyVoltageRangeMap
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_return_distribution_models import ConnectorReturnDistributionCoverageReport
 from .connector_stateful_contact_models import ConnectorStatefulContactMap
@@ -83,6 +84,7 @@ class LegacyCandidateArguments(TypedDict, total=False):
     i2c_pullup_heuristic_coverage: I2cPullupHeuristicCoverage | None
     digital_peer_voltage_context: DigitalPeerVoltageLintContext | None
     component_role_map: ComponentRoleMap | None
+    component_supply_voltage_range_map: ComponentSupplyVoltageRangeMap | None
     serial_peer_roster: SerialPeerRosterContext | None
     reviewed_connector_references: tuple[str, ...]
     complementary_alias_resolution: ComplementaryPinFunctionAliasResolution | None

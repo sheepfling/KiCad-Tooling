@@ -398,6 +398,7 @@ def prepare_evaluation(
             component_role_map=policy.component_role_map,
             power_path_map=policy.power_path_map,
             power_sequence_map=policy.power_sequence_map,
+            component_supply_voltage_range_map=policy.component_supply_voltage_range_map,
             oscillator_output_path_map=policy.oscillator_output_path_map,
             ic_decoupling_map=policy.ic_decoupling_map,
             regulator_passive_topology_map=policy.regulator_passive_topology_map,

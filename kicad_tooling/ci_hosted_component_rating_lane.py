@@ -9,6 +9,9 @@ from pathlib import Path
 
 from .ci_hosted_component_power_rating_fixture import verify_component_power_rating_fixture
 from .ci_hosted_component_rating_context import ComponentRatingFixtureContext
+from .ci_hosted_component_supply_range_fixture import (
+    verify_component_supply_range_fixture,
+)
 from .ci_hosted_component_voltage_rating_fixture import verify_component_voltage_rating_fixture
 from .ci_hosted_connector_contact_rating_fixture import verify_connector_contact_rating_fixture
 from .ci_hosted_mosfet_stress_fixture import verify_mosfet_stress_fixture
@@ -40,6 +43,13 @@ def component_rating_fixtures_lane(root: Path, *, project: str, image: str, log:
     mosfet_fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint/mosfet-stress"
     mosfet_fixture = mosfet_fixture_root / "mosfet.kicad_sch"
     mosfet_fixture_sha256 = digest(mosfet_fixture)
+    supply_range_fixture_root = (
+        tooling_checkout_root() / "tests/fixtures/design_lint/component-supply-voltage-range"
+    )
+    supply_range_fault_fixture = supply_range_fixture_root / "fault.kicad_sch"
+    supply_range_fault_sha256 = digest(supply_range_fault_fixture)
+    supply_range_control_fixture = supply_range_fixture_root / "control.kicad_sch"
+    supply_range_control_sha256 = digest(supply_range_control_fixture)
     scratch = Path(
         tempfile.mkdtemp(prefix=f"component-voltage-rating-{project}-", dir=log.directory.resolve())
     )
@@ -68,6 +78,16 @@ def component_rating_fixtures_lane(root: Path, *, project: str, image: str, log:
                 "for run in first repeat; do kicad-cli sch export netlist "
                 '--format kicadxml --output "/output/power.${run}.netlist.xml" '
                 '"/fixtures/power-control.kicad_sch"; done\n'
+            ),
+            (
+                "for case in fault control; do for run in first repeat; do "
+                "kicad-cli sch export netlist --format kicadxml --output "
+                '"/output/supply-range.${case}.${run}.netlist.xml" '
+                '"/supply-range-fixtures/${case}.kicad_sch"; '
+                "kicad-cli sch erc --format json --severity-all --output "
+                '"/output/supply-range.${case}.${run}.erc.json" '
+                '"/supply-range-fixtures/${case}.kicad_sch"; '
+                "done; done\n"
             ),
             (
                 "for run in first repeat; do kicad-cli sch erc --format json --severity-all "
@@ -125,6 +145,8 @@ def component_rating_fixtures_lane(root: Path, *, project: str, image: str, log:
         "-v",
         f"{mosfet_fixture_root.resolve()}:/mosfet-fixture:ro",
         "-v",
+        f"{supply_range_fixture_root.resolve()}:/supply-range-fixtures:ro",
+        "-v",
         f"{output}:/output:rw",
         "-w",
         "/fixtures",
@@ -173,10 +195,16 @@ def component_rating_fixtures_lane(root: Path, *, project: str, image: str, log:
         mosfet_fixture_root=mosfet_fixture_root,
         mosfet_fixture=mosfet_fixture,
         mosfet_fixture_sha256=mosfet_fixture_sha256,
+        supply_range_fixture_root=supply_range_fixture_root,
+        supply_range_fault_fixture=supply_range_fault_fixture,
+        supply_range_fault_sha256=supply_range_fault_sha256,
+        supply_range_control_fixture=supply_range_control_fixture,
+        supply_range_control_sha256=supply_range_control_sha256,
         scratch=scratch,
         output=output,
     )
     verify_component_voltage_rating_fixture(context, log)
+    verify_component_supply_range_fixture(context, log)
     verify_component_power_rating_fixture(context, log)
     verify_connector_contact_rating_fixture(context, log)
     verify_mosfet_stress_fixture(context, log)

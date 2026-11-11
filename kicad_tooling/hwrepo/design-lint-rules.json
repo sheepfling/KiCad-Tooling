@@ -14219,6 +14219,52 @@
       "implementation_owner": "kicad_tooling/hwrepo/power_negative_rail.py#positive_supply_pins_on_negative_rails"
     },
     {
+      "rule_id": "power.component_supply_voltage_outside_range",
+      "title": "Mapped component supply pin label is outside its operating range",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each project-mapped exact fitted component supply pin, require the native reference, symbol, footprint, PART_ID, pin inventory, pin function, power_in electrical type, and one assigned net to match. If the assigned net label encodes a supported explicit signed nominal voltage outside the map's inclusive reviewed operating range, emit REVIEW. Also review stale identity, unassigned or ambiguous pins, and labels without a supported explicit numeric voltage as incomplete map evidence.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The check covers only exact pins listed in the optional project-owned map; it does not discover every supply pin or turn an incomplete map into proof of full component coverage.",
+        "The map's part identity, recommended operating range, source, and conditions are project inputs and are not verified against a datasheet. The check does not evaluate absolute-maximum limits, rail tolerance, ripple, transients, sequencing, source capability, or device behavior.",
+        "A supported explicit voltage in a net label is a nominal clue, not a measurement or proof of net potential. Custom labels without a recognized numeric value remain incomplete; a matching label does not prove electrical suitability or PCB copper continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_component_supply_voltage_range.test_supported_positive_voltage_label_below_range_needs_review",
+        "tests.test_component_supply_voltage_range.test_exact_range_boundary_is_quiet_and_upper_outlier_is_reported",
+        "tests.test_component_supply_voltage_range.test_enabled_rule_runs_through_the_shared_design_lint_evaluator",
+        "tests.test_component_supply_voltage_range_parity.test_component_supply_voltage_range_review_matches_between_cli_and_mcp",
+        "tests.test_component_rating_native_fixture_lane.test_component_and_connector_rating_controls_export_repeatably"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_component_supply_voltage_range.test_supported_positive_voltage_inside_inclusive_range_is_quiet",
+        "tests.test_component_supply_voltage_range.test_exact_range_boundary_is_quiet_and_upper_outlier_is_reported",
+        "tests.test_component_supply_voltage_range.test_enabled_rule_clears_when_the_native_net_label_moves_inside_authored_range",
+        "tests.test_component_rating_native_fixture_lane.test_component_and_connector_rating_controls_export_repeatably"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_component_supply_voltage_range.test_requirement_order_does_not_change_map_digest_or_issue_order"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/power_component_supply_range.py#component_supply_voltage_range_issues",
+        "kicad_tooling/hwrepo/component_supply_range_models.py#ComponentSupplyVoltageRangeMap",
+        "kicad_tooling/hwrepo/power_rails.py#explicit_voltage_rail_value",
+        "kicad_tooling/hwrepo/design_lint_power_supply_range.py#component_supply_voltage_range_candidates",
+        "kicad_tooling/hwrepo/design_lint_power_candidates.py#scan_power_candidates"
+      ],
+      "theme": "power",
+      "implementation_owner": "kicad_tooling/hwrepo/power_component_supply_range.py#component_supply_voltage_range_issues"
+    },
+    {
       "rule_id": "power.ic_rail_without_fitted_capacitor",
       "title": "Recognized IC supply rail has no fitted capacitor to return",
       "status": "active",

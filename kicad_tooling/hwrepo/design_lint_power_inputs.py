@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from .capacitor_hold_up_models import CapacitorHoldUpMap
 from .component_role_models import ComponentRoleMap
+from .component_supply_range_models import ComponentSupplyVoltageRangeMap
 from .ic_decoupling_models import IcDecouplingMap
 from .led_current_models import LedCurrentMap
 from .oscillator_output_path_models import OscillatorOutputPathMap
@@ -29,3 +30,4 @@ class PowerCandidateInputs:
     regulator_support_pin_net_map: RegulatorSupportPinNetMap | None = None
     led_current_map: LedCurrentMap | None = None
     capacitor_hold_up_map: CapacitorHoldUpMap | None = None
+    component_supply_voltage_range_map: ComponentSupplyVoltageRangeMap | None = None

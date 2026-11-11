@@ -118,6 +118,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "schematic.wire_through_symbol_body",
             "pcb.board_only_footprint",
             "pcb.required_fitted_reference",
+            "power.component_supply_voltage_outside_range",
             "connector.footprint_peer_pin_all_open",
             "connector.footprint_same_voltage_power_input_unanchored",
             "connector.generic_peer_pin_all_open",

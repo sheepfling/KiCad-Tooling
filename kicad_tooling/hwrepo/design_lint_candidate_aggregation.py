@@ -126,6 +126,7 @@ def candidates(
                 oscillator_output_path_map=legacy.get("oscillator_output_path_map"),
                 ic_decoupling_map=legacy.get("ic_decoupling_map"),
                 led_current_map=legacy.get("led_current_map"),
+                component_supply_voltage_range_map=legacy.get("component_supply_voltage_range_map"),
                 regulator_support_pin_role_map=legacy.get("regulator_support_pin_role_map"),
                 regulator_support_pin_net_map=legacy.get("regulator_support_pin_net_map"),
             ),
