@@ -779,21 +779,18 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest quality-gate progress (v0.5.3rc659):** The documentation follow-up
-  tag passed hosted acceptance in GitHub run `42966247338`; code acceptance for
-  the same branch remains `rc658`, run `42965434410`. That focused selector ran
-  367 tests, deselected
-  7,979, and completed its pytest stage in 125.16 seconds; the console and
-  retained event report those counts, elapsed time, and ten slowest cases. The
-  selector-integrity probe took 4.90 seconds, compared with 26.55 seconds in
-  `rc657` after the nested collection was bounded to representative modules.
-  The tagged gate's exact native KiCad fixtures, package and wheel checks, and
-  installed-wheel rehearsal against a separate public-template checkout all
-  passed. `rc652` exposed a missing tag selector, `rc653` exposed Markdown
-  table alignment, and `rc654` exposed a stale catalog fixture reference plus
-  a test-module size violation; the follow-up tags preserve those audit
-  results, and `rc655` passed the corrected gate. Preview and package-release
-  jobs were skipped by prerelease policy.
+- **Latest quality-gate progress (v0.5.3rc660):** The focused hosted acceptance
+  passed in GitHub run `42969938353`. Its selector ran 369 tests, deselected
+  7,979, and completed pytest in 112.56 seconds. Linux and Windows type checks,
+  wheel and source distribution checks, and the installed-wheel rehearsal
+  against a separate public-template checkout all passed. The exact native
+  KiCad fixture lane passed on the tooling-owned board; preview and package
+  release jobs were skipped by prerelease policy. The `rc657` selector-integrity
+  probe took 4.90 seconds after nested collection was bounded to representative
+  modules, compared with 26.55 seconds before that change. Earlier `rc652`
+  exposed a missing tag selector, `rc653` exposed Markdown table alignment,
+  and `rc654` exposed a stale catalog fixture reference plus a test-module size
+  violation; `rc655` passed the corrected gate.
 - **Latest feature work (LINT-391, localized alternate-plane evidence):** The
   existing opt-in `pcb.alternate_reference_plane_run` finding now retains exact
   contiguous centerline intervals for each alternate filled-zone net and
