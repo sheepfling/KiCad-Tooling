@@ -65,3 +65,17 @@ def test_component_supply_voltage_range_rule_tags_select_native_fault_control_ca
     assert native_fixture in rule.required_native_fixtures
     assert native_test in rule.fault_fixtures
     assert native_test in rule.valid_control_fixtures
+
+
+def test_component_supply_range_pin_coverage_rule_reuses_native_fault_control_case() -> None:
+    rule_id = "power.component_supply_range_pin_coverage"
+    rule = next(entry for entry in rule_catalog().rules if entry.rule_id == rule_id)
+    native_fixture = "KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES"
+    native_test = (
+        "tests.test_component_rating_native_fixture_lane."
+        "test_component_and_connector_rating_controls_export_repeatably"
+    )
+
+    assert native_fixture in rule.required_native_fixtures
+    assert native_test in rule.fault_fixtures
+    assert native_test in rule.valid_control_fixtures

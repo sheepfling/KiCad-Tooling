@@ -71,6 +71,7 @@ DesignLintRuleId = Literal[
     "power.open_drain_control_input_pullup_voltage_review",
     "power.named_supply_pin_on_negative_rail",
     "power.component_supply_voltage_outside_range",
+    "power.component_supply_range_pin_coverage",
     "component.peer_power_pin_assignment_divergence",
     "component.peer_power_input_assignment_divergence",
     "component.peer_power_input_named_assignment_divergence",

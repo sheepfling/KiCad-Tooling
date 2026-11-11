@@ -527,6 +527,30 @@ for the fault/control source hashes and exact-version native fixture.
   -m 'design_lint and component_lint and power_lint and design_lint_rule(rule_id="component.same_voltage_power_inputs_split")'
 ```
 
+## Review mapped IC supply-pin coverage
+
+`power.component_supply_range_pin_coverage` checks each fitted component named
+in the project-authored `component_supply_voltage_range_map`. It compares the
+native pin-number inventory and electrical types against the map's per-pin
+operating-range entries. An unmapped `power_in` pin, a missing pin inventory,
+an unlisted pin with no native electrical type, or typed pins that disagree
+with the inventory produces a configurable `REVIEW`. A complete map is quiet.
+This rule is opt-in and requires the same authored range map used by
+`power.component_supply_voltage_outside_range`.
+
+The rule does not find components omitted from the map, establish that a
+symbol represents every physical package pin, validate the authored ranges,
+or prove supply voltage, connectivity, or PCB copper continuity. Treat a
+complete result as coverage of the named symbol metadata only. The synthetic
+fault/control and exact-version native cases are recorded in the
+[fixture README](../tests/fixtures/design_lint/component-supply-voltage-range/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_component_supply_range_pin_coverage.py \
+  tests/test_component_supply_voltage_range_parity.py \
+  -m 'design_lint and component_lint and power_lint and design_lint_rule(rule_id="power.component_supply_range_pin_coverage")'
+```
+
 ## Review split power inputs on unlike connector peers
 
 `connector.reviewed_peer_power_input_split` asks for review when a complete,
@@ -880,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 326 active rules.
+The catalog currently contains 327 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 

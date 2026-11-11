@@ -13,9 +13,16 @@ from .hwrepo.component_supply_range_models import (
 )
 from .hwrepo.contracts import read_kicad_erc_report
 from .hwrepo.design_lint_power_supply_range import component_supply_voltage_range_candidates
+from .hwrepo.design_lint_power_supply_range_coverage import (
+    component_supply_range_pin_coverage_candidates,
+)
 from .hwrepo.evidence import digest
 from .hwrepo.native_report_parsing import read_netlist
+from .hwrepo.netlist_contract_models import NetlistContract
 from .hwrepo.power_component_supply_range import RULE_ID
+from .hwrepo.power_component_supply_range_coverage import (
+    component_supply_range_pin_coverage_issues,
+)
 
 
 def verify_component_supply_range_fixture(
@@ -36,9 +43,9 @@ def verify_component_supply_range_fixture(
         if source_texts["fault"].replace('"24V"', '"5V"') != source_texts["control"]:
             raise ValueError("Supply-range native fault and control differ beyond rail labels")
 
-    parsed = {}
+    parsed: dict[str, NetlistContract] = {}
     netlist_hashes: dict[tuple[str, str], str] = {}
-    erc_signatures: dict[str, tuple[tuple[str, str], ...]] = {}
+    erc_signatures: dict[tuple[str, str], tuple[tuple[str, str], ...]] = {}
     for case in ("fault", "control"):
         for run in ("first", "repeat"):
             netlist_path = context.output / f"supply-range.{case}.{run}.netlist.xml"
@@ -60,7 +67,7 @@ def verify_component_supply_range_fixture(
             if any(severity == "error" for _, severity in signature):
                 raise ValueError(f"Supply-range synthetic schematic has ERC errors: {signature}")
             erc_signatures[case, run] = signature
-            parsed[case, run] = observed
+            parsed[f"{case}:{run}"] = observed
 
         if netlist_hashes[case, "first"] != netlist_hashes[case, "repeat"]:
             raise ValueError(f"Supply-range {case} netlist export was not repeatable")
@@ -84,8 +91,8 @@ def verify_component_supply_range_fixture(
         basis="Synthetic native fixture only",
         requirements=(map_entry,),
     )
-    fault = parsed["fault", "first"]
-    control = parsed["control", "first"]
+    fault = parsed["fault:first"]
+    control = parsed["control:first"]
     for observed in (fault, control):
         component = observed.components.get("U1")
         if (
@@ -94,8 +101,11 @@ def verify_component_supply_range_fixture(
             or component.part_id != map_entry.expected_part_id
             or observed.component_symbols.get("U1") != map_entry.expected_symbol
             or "1" not in observed.component_pin_numbers.get("U1", ())
+            or "2" not in observed.component_pin_numbers.get("U1", ())
             or observed.pin_functions.get("U1.1") != "VIN"
             or observed.pin_electrical_types.get("U1.1") != "power_in"
+            or observed.pin_functions.get("U1.2") != "VDD"
+            or observed.pin_electrical_types.get("U1.2") != "power_in"
         ):
             raise ValueError("Native supply-range fixture lost exact component or pin evidence")
 
@@ -110,6 +120,38 @@ def verify_component_supply_range_fixture(
         or "U1.1" not in control.nets.get("5V", ())
     ):
         raise ValueError("Native component supply-range fault/control did not match expectations")
+
+    second_map_entry = ComponentSupplyVoltageRangeRequirement(
+        id="synthetic-second-input-range",
+        reference="U1",
+        expected_symbol=map_entry.expected_symbol,
+        expected_footprint=map_entry.expected_footprint,
+        expected_part_id=map_entry.expected_part_id,
+        pin="U1.2",
+        expected_pin_function="VDD",
+        minimum_voltage_v=0.0,
+        maximum_voltage_v=5.0,
+        range_source="Synthetic test basis only",
+        range_conditions="Synthetic native coverage control; not a device specification",
+    )
+    complete_map = ComponentSupplyVoltageRangeMap(
+        basis="Synthetic native fixture only",
+        requirements=(map_entry, second_map_entry),
+    )
+    coverage_faults = component_supply_range_pin_coverage_candidates(fault, requirements)
+    coverage_controls = component_supply_range_pin_coverage_candidates(fault, complete_map)
+    coverage_issues = component_supply_range_pin_coverage_issues(fault, requirements)
+    if (
+        len(coverage_faults) != 1
+        or coverage_faults[0].rule_id != "power.component_supply_range_pin_coverage"
+        or coverage_faults[0].evidence.get("unmapped_power_input_pins") != ("U1.2",)
+        or coverage_controls
+        or len(coverage_issues) != 1
+        or coverage_issues[0].native_power_input_pins != ("U1.1", "U1.2")
+    ):
+        raise ValueError(
+            "Native supply-range pin-coverage fault/control did not match expectations"
+        )
 
     log.event(
         "component-supply-range-fixture/native-export",
@@ -139,6 +181,24 @@ def verify_component_supply_range_fixture(
         project=context.project,
         kicad_version=context.config.kicad_version,
         net="5V",
+        finding_rule="none",
+        repeatable="true",
+    )
+    log.event(
+        "component-supply-range-coverage-fixture/missing-map-entry",
+        "PASS",
+        project=context.project,
+        kicad_version=context.config.kicad_version,
+        unmapped_power_input_pin="U1.2",
+        finding_rule="power.component_supply_range_pin_coverage",
+        repeatable="true",
+    )
+    log.event(
+        "component-supply-range-coverage-fixture/complete-map-control",
+        "PASS",
+        project=context.project,
+        kicad_version=context.config.kicad_version,
+        mapped_power_input_pins="U1.1,U1.2",
         finding_rule="none",
         repeatable="true",
     )

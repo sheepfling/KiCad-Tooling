@@ -17,7 +17,10 @@
       (symbol "SupplyRangeIC_1_1"
         (pin power_in line (at -5.08 0 0) (length 2.54)
           (name "VIN" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27)))))))
+          (number "1" (effects (font (size 1.27 1.27)))))
+        (pin power_in line (at -5.08 5.08 0) (length 2.54)
+          (name "VDD" (effects (font (size 1.27 1.27))))
+          (number "2" (effects (font (size 1.27 1.27)))))))
     (symbol "Synthetic:SupplySource"
       (pin_names (offset 0) hide)
       (in_bom yes) (on_board yes)
@@ -41,6 +44,7 @@
     (property "Footprint" "Synthetic:SOT23-3" (at 101.60 63.50 0) (effects (font (size 1.27 1.27)) hide))
     (property "PART_ID" "SYNTHETIC-SUPPLY-RANGE-IC" (at 101.60 63.50 0) (effects (font (size 1.27 1.27)) hide))
     (pin "1" (uuid "73100000-0000-4000-8000-000000000011"))
+    (pin "2" (uuid "73100000-0000-4000-8000-000000000012"))
     (instances (project "synthetic-component-supply-range-fault"
       (path "/73100000-0000-4000-8000-000000000001" (reference "U1") (unit 1)))))
   (symbol (lib_id "Synthetic:SupplySource") (at 152.40 63.50 0) (unit 1)
@@ -59,6 +63,12 @@
   (label "24V" (at 88.90 63.50 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid "73100000-0000-4000-8000-000000000031"))
+  (wire (pts (xy 96.52 58.42) (xy 88.90 58.42))
+    (stroke (width 0) (type default))
+    (uuid "73100000-0000-4000-8000-000000000034"))
+  (label "24V" (at 88.90 58.42 0)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid "73100000-0000-4000-8000-000000000035"))
   (wire (pts (xy 147.32 63.50) (xy 139.70 63.50))
     (stroke (width 0) (type default))
     (uuid "73100000-0000-4000-8000-000000000032"))

@@ -69,6 +69,20 @@ def supply_range_review_policy() -> DesignLintPolicy:
     )
 
 
+def supply_range_pin_coverage_review_policy() -> DesignLintPolicy:
+    """Opt into mapped supply pin coverage with one deliberately omitted pin."""
+    return DesignLintPolicy(
+        rules=(
+            DesignLintRuleOverride(
+                rule_id="power.component_supply_range_pin_coverage",
+                mode="review",
+                reason="Synthetic test explicitly enables mapped supply pin coverage",
+            ),
+        ),
+        component_supply_voltage_range_map=supply_range_map(),
+    )
+
+
 def supply_range_netlist(
     *,
     input_net: str | None = "3V3",

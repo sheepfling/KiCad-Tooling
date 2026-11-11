@@ -14265,6 +14265,54 @@
       "implementation_owner": "kicad_tooling/hwrepo/power_component_supply_range.py#component_supply_voltage_range_issues"
     },
     {
+      "rule_id": "power.component_supply_range_pin_coverage",
+      "title": "Mapped component omits native power-input pins from its range map",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each exact fitted component reference present in the project-authored component_supply_voltage_range_map, compare the native component identity, complete pin-number inventory, and per-pin electrical types. If the source-matched inventory contains a power_in pin absent from the per-pin range requirements, emit REVIEW. If native inventory or an unlisted pin's electrical type is unavailable, emit REVIEW for incomplete coverage evidence.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The rule covers only references present in the optional project-owned supply-range map; it does not discover unmapped components elsewhere in the project.",
+        "Native power_in metadata describes the KiCad symbol, not necessarily every physical package supply pin. This check does not prove that the symbol or part identity is correct, or that any authored operating range is valid.",
+        "A complete range map is a reviewer coverage assertion. It does not establish voltage suitability, connectivity to a source, actual net voltage, PCB copper continuity, or manufacturing readiness."
+      ],
+      "fault_fixtures": [
+        "tests.test_component_supply_range_pin_coverage.test_unmapped_power_input_pin_needs_review",
+        "tests.test_component_supply_range_pin_coverage.test_native_typed_pin_outside_inventory_needs_review",
+        "tests.test_component_supply_range_pin_coverage.test_enabled_rule_runs_through_the_shared_design_lint_evaluator",
+        "tests.test_component_supply_voltage_range_parity.test_component_supply_range_pin_coverage_review_matches_between_cli_and_mcp",
+        "tests.test_component_rating_native_fixture_lane.test_component_and_connector_rating_controls_export_repeatably"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_component_supply_range_pin_coverage.test_complete_component_supply_pin_map_is_quiet",
+        "tests.test_component_supply_range_pin_coverage.test_non_power_input_pin_does_not_require_range_entry",
+        "tests.test_component_rating_native_fixture_lane.test_component_and_connector_rating_controls_export_repeatably"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_component_supply_range_pin_coverage.test_requirement_order_does_not_change_coverage_evidence"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/power_component_supply_range_coverage.py#component_supply_range_pin_coverage_issues",
+        "kicad_tooling/hwrepo/design_lint_power_supply_range_coverage.py#component_supply_range_pin_coverage_candidates",
+        "kicad_tooling/hwrepo/design_lint_power_candidates.py#scan_power_candidates",
+        "kicad_tooling/hwrepo/design_lint_power_candidate_evidence.py#project_power_candidate_evidence",
+        "kicad_tooling/hwrepo/component_supply_range_models.py#ComponentSupplyVoltageRangeMap",
+        "kicad_tooling/hwrepo/design_lint_policy_models.py#DesignLintPolicy",
+        "kicad_tooling/hwrepo/design_lint_rule_types.py#DesignLintRuleId",
+        "kicad_tooling/ci_hosted_component_supply_range_fixture.py#verify_component_supply_range_fixture"
+      ],
+      "theme": "power",
+      "implementation_owner": "kicad_tooling/hwrepo/power_component_supply_range_coverage.py#component_supply_range_pin_coverage_issues"
+    },
+    {
       "rule_id": "power.ic_rail_without_fitted_capacitor",
       "title": "Recognized IC supply rail has no fitted capacitor to return",
       "status": "active",

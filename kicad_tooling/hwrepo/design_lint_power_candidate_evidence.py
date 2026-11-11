@@ -26,6 +26,7 @@ from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .net_dc_reference import ConnectorCapacitorOnlyNet
 from .power_component_supply_range import ComponentSupplyVoltageRangeIssue
+from .power_component_supply_range_coverage import ComponentSupplyRangePinCoverageIssue
 from .power_decoupling import PowerRailCapacitorGap
 from .power_pin_paths import PowerInputSourcePathGap
 from .power_rail_models import NumberedPowerRailGroup
@@ -46,6 +47,7 @@ PowerCandidateSource: TypeAlias = (
     | RegulatorSupportPinNetFindingEvidence
     | RegulatorSupportPinNetCoverageFindingEvidence
     | ComponentSupplyVoltageRangeIssue
+    | ComponentSupplyRangePinCoverageIssue
 )
 
 _SAME_VOLTAGE_POWER_INPUTS: DesignLintRuleId = "component.same_voltage_power_inputs_split"
@@ -252,6 +254,21 @@ def project_power_candidate_evidence(
                     () if source.actual_voltage_v is None else (f"{source.actual_voltage_v:g}",)
                 ),
                 "issues": source.issues,
+                "map_sha256": (source.map_sha256,),
+            },
+        )
+    if isinstance(source, ComponentSupplyRangePinCoverageIssue):
+        return CandidateEvidenceProjection(
+            rule_id="power.component_supply_range_pin_coverage",
+            evidence={
+                "component": (source.reference,),
+                "symbol": (source.symbol,),
+                "native_power_input_pins": source.native_power_input_pins,
+                "mapped_range_pins": source.mapped_range_pins,
+                "unmapped_power_input_pins": source.unmapped_power_input_pins,
+                "pin_type_unavailable_pins": source.pin_type_unavailable_pins,
+                "pin_inventory_unavailable": ("true",) if source.pin_inventory_unavailable else (),
+                "pin_inventory_disagreement_pins": source.pin_inventory_disagreement_pins,
                 "map_sha256": (source.map_sha256,),
             },
         )

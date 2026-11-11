@@ -17,6 +17,11 @@ pytestmark = [pytest.mark.catalog_lint, pytest.mark.architecture]
 
 RULE_ID = "power.component_supply_voltage_outside_range"
 OWNER = "kicad_tooling/hwrepo/power_component_supply_range.py#component_supply_voltage_range_issues"
+PIN_COVERAGE_RULE_ID = "power.component_supply_range_pin_coverage"
+PIN_COVERAGE_OWNER = (
+    "kicad_tooling/hwrepo/power_component_supply_range_coverage.py#"
+    "component_supply_range_pin_coverage_issues"
+)
 
 
 def test_catalog_names_the_theme_owned_predicate_and_disabled_default() -> None:
@@ -27,6 +32,15 @@ def test_catalog_names_the_theme_owned_predicate_and_disabled_default() -> None:
     assert rule.implementation_owner == OWNER
     assert OWNER in rule.implementation_refs
     assert "component_voltage_ratings.py" not in rule.implementation_owner
+
+
+def test_catalog_names_the_theme_owned_supply_pin_coverage_predicate() -> None:
+    rule = next(item for item in rule_catalog().rules if item.rule_id == PIN_COVERAGE_RULE_ID)
+
+    assert rule.theme == "power"
+    assert rule.default_mode == "off"
+    assert rule.implementation_owner == PIN_COVERAGE_OWNER
+    assert PIN_COVERAGE_OWNER in rule.implementation_refs
 
 
 def test_supply_range_model_has_a_direct_owner_and_public_compatibility_export() -> None:
@@ -42,7 +56,10 @@ def test_supply_range_modules_and_lint_suite_stay_below_review_limits() -> None:
         "kicad_tooling/hwrepo/component_supply_range_models.py",
         "kicad_tooling/hwrepo/power_component_supply_range.py",
         "kicad_tooling/hwrepo/design_lint_power_supply_range.py",
+        "kicad_tooling/hwrepo/power_component_supply_range_coverage.py",
+        "kicad_tooling/hwrepo/design_lint_power_supply_range_coverage.py",
         "tests/test_component_supply_voltage_range.py",
+        "tests/test_component_supply_range_pin_coverage.py",
         "tests/test_component_supply_voltage_range_parity.py",
         "tests/test_component_rating_native_fixture_lane.py",
     )

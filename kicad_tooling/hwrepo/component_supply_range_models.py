@@ -58,6 +58,19 @@ class ComponentSupplyVoltageRangeMap(StrictModel):
             raise ValueError("Supply-range requirement IDs must be unique")
         if len({item.pin.casefold() for item in self.requirements}) != len(self.requirements):
             raise ValueError("Each supply pin may have only one operating-range requirement")
+        component_identities: dict[str, tuple[str, str, str]] = {}
+        for requirement in self.requirements:
+            key = requirement.reference.casefold()
+            identity = (
+                requirement.expected_symbol,
+                requirement.expected_footprint,
+                requirement.expected_part_id,
+            )
+            previous = component_identities.setdefault(key, identity)
+            if previous != identity:
+                raise ValueError(
+                    "Supply-range requirements for one component must use consistent identity"
+                )
         return self
 
 

@@ -29,6 +29,7 @@ COMPONENT_LINT_TEST_MODULES = frozenset(
         "tests/test_component_power_ratings.py",
         "tests/test_component_voltage_ratings.py",
         "tests/test_component_supply_voltage_range.py",
+        "tests/test_component_supply_range_pin_coverage.py",
         "tests/test_component_supply_voltage_range_parity.py",
         "tests/test_component_rating_native_fixture_lane.py",
         "tests/test_electrical_component_evidence.py",

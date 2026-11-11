@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 326 rules are implemented with synthetic regression coverage.
+The following 327 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 326 active rules.
+The catalog currently contains 327 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -563,6 +563,7 @@ skipped under prerelease policy.
 - `component.mapped_led_current_range_mismatch`
 - `oscillator.output_load_path_mismatch`
 - `power.component_supply_voltage_outside_range`
+- `power.component_supply_range_pin_coverage`
 - `power.gpio_to_control_input_voltage_review`
 - `power.open_drain_control_input_pullup_voltage_review`
 - `power.ic_decoupling_below_project_minimum`
@@ -4118,7 +4119,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 326 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 327 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -23279,6 +23280,41 @@ acceptance threads while new lint features proceed:
   `tests/test_component_rating_native_fixture_lane.py` with
   `design_lint and component_lint and power_lint and design_lint_rule(rule_id="power.component_supply_voltage_outside_range")`.
   Native acceptance requires `KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES=1`.
+
+#### LINT-393 — Review mapped IC supply-pin range-map coverage
+
+- **Status:** New opt-in deterministic review rule, default `off`.
+- **Gap:** LINT-392 checked each authored operating range but did not compare
+  the mapped component's complete native `power_in` inventory with the pins
+  named in that map. A second power-input pin could therefore be absent from
+  the reviewed requirements without a specific coverage prompt.
+- **Behavior:** For exact fitted references present in the authored
+  `component_supply_voltage_range_map`, compare native component identity,
+  pin-number inventory, and electrical types. Review unmapped `power_in` pins,
+  missing native pin inventory, unknown type for an unlisted pin, or typed-pin
+  inventory disagreement. Enabling the rule requires the authored range map.
+- **Boundary:** Unmapped components are not discovered. Native symbol metadata
+  does not prove the symbol includes every physical package pin or that the
+  authored range is correct; the check does not validate actual voltage,
+  source paths, copper connectivity, or manufacturing readiness. The rule is
+  independent of whether the separate LINT-392 range comparison is enabled.
+- **Evidence:** Synthetic fault/control and metamorphic cases cover omitted
+  pins, a complete map, non-power pins, incomplete type/inventory metadata,
+  identity matching, and deterministic map ordering. CLI and MCP exercise the
+  same typed evaluator. A source-hashed native fault/control schematic verifies
+  both `power_in` pins on KiCad 10.0.0 and 10.0.5; the incomplete map reports
+  U1.2, and the complete map is quiet.
+- **Selection:** Run `tests/test_component_supply_range_pin_coverage.py` and
+  `tests/test_component_supply_voltage_range_parity.py` with:
+
+  ```text
+  design_lint and component_lint and power_lint and
+  design_lint_rule(rule_id="power.component_supply_range_pin_coverage")
+  ```
+
+  Exact native acceptance uses
+  `tests/test_component_rating_native_fixture_lane.py` and
+  `KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES=1`.
 
 ## Completion and release gate
 

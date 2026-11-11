@@ -27,6 +27,9 @@ from .design_lint_power_regulator_support_net_coverage import (
 from .design_lint_power_regulator_support_nets import regulator_support_pin_net_candidates
 from .design_lint_power_regulator_support_roles import regulator_support_pin_role_candidates
 from .design_lint_power_supply_range import component_supply_voltage_range_candidates
+from .design_lint_power_supply_range_coverage import (
+    component_supply_range_pin_coverage_candidates,
+)
 from .design_lint_types import Candidate
 from .ic_decoupling_models import IcDecouplingMap
 from .net_dc_reference import connector_capacitor_only_nets
@@ -105,6 +108,12 @@ def scan_power_candidates(
     found.extend(capacitor_hold_up_candidates(observed, inputs.capacitor_hold_up_map))
     found.extend(
         component_supply_voltage_range_candidates(
+            observed,
+            inputs.component_supply_voltage_range_map,
+        )
+    )
+    found.extend(
+        component_supply_range_pin_coverage_candidates(
             observed,
             inputs.component_supply_voltage_range_map,
         )

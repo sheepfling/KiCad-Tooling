@@ -67,8 +67,8 @@ def test_component_and_connector_rating_controls_export_repeatably(tmp_path: Pat
         repository / "tests/fixtures/design_lint/component-supply-voltage-range"
     )
     expected_supply_range_fixture_hashes = {
-        "fault.kicad_sch": "2114ccc1f771667a0ee7c9ed2ae8a8d865fc05f597fb792b9c591d647441b94e",
-        "control.kicad_sch": "c8da09bc16116df7f3083d3b99b4cbdc1c389e08f5638b701ed3b8b5e424e0dd",
+        "fault.kicad_sch": "6bf5cae9f306553442dfbac9a427f584068ae1e8df4ee6f797907c3bce289ccc",
+        "control.kicad_sch": "09d4978aba50c6378dcd46cd870897ff30640cb9428bd4f02ff2cc115e826064",
     }
     assert hashlib.sha256(fixture.read_bytes()).hexdigest() == expected_fixture_sha256
     assert hashlib.sha256(power_fixture.read_bytes()).hexdigest() == expected_power_fixture_sha256
@@ -117,6 +117,27 @@ def test_component_and_connector_rating_controls_export_repeatably(tmp_path: Pat
         )
         assert (
             supply_range_results["component-supply-range-fixture/in-range-control"]["finding_rule"]
+            == "none"
+        )
+        coverage_results = {
+            item["stage"]: item
+            for item in events
+            if item.get("stage", "").startswith("component-supply-range-coverage-fixture/")
+        }
+        assert set(coverage_results) == {
+            "component-supply-range-coverage-fixture/missing-map-entry",
+            "component-supply-range-coverage-fixture/complete-map-control",
+        }
+        assert (
+            coverage_results["component-supply-range-coverage-fixture/missing-map-entry"][
+                "finding_rule"
+            ]
+            == "power.component_supply_range_pin_coverage"
+        )
+        assert (
+            coverage_results["component-supply-range-coverage-fixture/complete-map-control"][
+                "finding_rule"
+            ]
             == "none"
         )
         results = {
