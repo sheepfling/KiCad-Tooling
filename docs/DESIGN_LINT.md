@@ -5507,13 +5507,16 @@ or `off`, and supports exact-fingerprint ignores. Synthetic settings are in
 10.0 ERC rule in the tooling's documented Error-default key set when its saved
 severity is `warning`. The finding identifies the exact rule key, source hash,
 and configured KiCad patch version. The audited versions are exactly 10.0.0,
-10.0.5, 10.0.6, 10.0.7, and 10.0.8. The Error-default sets match across
-those releases, and native fault/control fixtures run on each digest-pinned
-image. Other patches remain unsupported until their source and native behavior
-are verified; `schematic.erc_catalog_unverified` reports explicit overrides
-on those patches for review. The baseline comes from KiCad 10.0.0's
-[settings loader][kicad-10.0.0-erc-settings-source] and 10.0.5's
-[ERC item definitions][kicad-10.0.5-erc-item-source].
+10.0.1, 10.0.2, 10.0.4, 10.0.5, 10.0.6, 10.0.7, and 10.0.8. The
+Error-default sets match across those releases, and native fault/control
+fixtures run on each digest-pinned image. Other patches remain unsupported
+until their source and native behavior are verified;
+`schematic.erc_catalog_unverified` reports explicit overrides on those patches
+for review. Patch-specific source audits include the [10.0.0 settings
+loader][kicad-10.0.0-erc-settings-source], 10.0.1, 10.0.2, and 10.0.4
+[settings loaders][kicad-10.0.1-erc-settings-source], [10.0.5 ERC item
+definitions][kicad-10.0.5-erc-item-source], and 10.0.6 through 10.0.8 settings
+and item definitions.
 Default Warning and Ignore checks are valid controls. Native fixtures show
 `pin_not_connected` as a Warning after the override and as an Error in the
 control on every audited image.

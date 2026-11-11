@@ -9918,7 +9918,7 @@
       "evidence_adapter": "Exact source-hashed KiCad 10.0 .kicad_pro erc.rule_severities map, schema version, and configured patch version",
       "predicate": "For supported KiCad 10.0.x project settings with ERC schema 0, emit one review candidate for each known KiCad Error-default rule explicitly configured as Warning.",
       "supported_kicad_versions": [
-        "Exact KiCad 10.0.0, 10.0.5, 10.0.6, 10.0.7, and 10.0.8 .kicad_pro settings with schema 0; other patches are surfaced by schematic.erc_catalog_unverified when explicit overrides exist"
+        "Exact KiCad 10.0.0, 10.0.1, 10.0.2, 10.0.4, 10.0.5, 10.0.6, 10.0.7, and 10.0.8 .kicad_pro settings with schema 0; other patches are surfaced by schematic.erc_catalog_unverified when explicit overrides exist"
       ],
       "limitations": [
         "A Warning override may be intentional; the finding does not assert that a violation exists or that the changed project policy is wrong.",

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from dataclasses import replace
 from pathlib import Path
@@ -10,6 +11,7 @@ from typing import cast
 
 import pytest
 
+from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
 from kicad_tooling.hwrepo.design_lint_component_coverage import ComponentMapCoverageInputs
 from kicad_tooling.hwrepo.design_lint_evaluation_types import DesignLintEvaluationRequest
 from kicad_tooling.hwrepo.design_lint_evaluator import evaluate_request
@@ -89,17 +91,32 @@ def test_error_default_changed_to_warning_creates_source_bound_review(tmp_path: 
     }
 
 
-@pytest.mark.parametrize("rule_key", sorted(ERC_DEFAULT_ERROR_RULE_KEYS))
+@pytest.mark.parametrize(
+    ("version", "rule_key"),
+    tuple(
+        (version, rule_key)
+        for version in ERC_RULE_KEYS_BY_KICAD_VERSION
+        for rule_key in sorted(ERC_DEFAULT_ERROR_RULE_KEYS)
+    ),
+)
 def test_every_known_error_default_warning_override_is_reviewed(
-    tmp_path: Path, rule_key: str
+    tmp_path: Path, version: str, rule_key: str
 ) -> None:
     document = f'{{"erc":{{"meta":{{"version":0}},"rule_severities":{{"{rule_key}":"warning"}}}}}}'
-    root, _, config, source_hashes = _project(tmp_path, document)
+    root, _, config, source_hashes = _project(tmp_path, document, kicad_version=version)
 
     (candidate,) = _scan(root, config, source_hashes)
 
     assert candidate.evidence["erc_rule_key"] == (rule_key,)
+    assert candidate.evidence["kicad_version"] == (version,)
     assert candidate.evidence["default_severity"] == ("error",)
+
+
+def test_catalog_support_matches_exact_audited_erc_patch_set() -> None:
+    (entry,) = rule_catalog(rule_id=RULE_ID).rules
+    catalog_versions = set(re.findall(r"\b10\.0\.\d+\b", entry.supported_kicad_versions[0]))
+
+    assert catalog_versions == set(ERC_RULE_KEYS_BY_KICAD_VERSION)
 
 
 @pytest.mark.parametrize(

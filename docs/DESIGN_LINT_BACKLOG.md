@@ -788,25 +788,30 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest published quality gate (v0.5.3rc672):** LINT-400 was committed and
-  pushed with its annotated tag. The original `rc671` annotation lacked the
-  required scope selector; `rc672` adds focused test paths without rewriting
-  the earlier tag. The local focused gate passed 766 tests, and the hosted
-  gate passed 230 selected tests plus installed-wheel checks in GitHub Actions
-  run `43042984160`.
-- **Latest feature work (LINT-397, ERC severity downgrades):** The new
-  `schematic.erc_error_downgraded` rule prompts when a source-hashed KiCad
-  project on an explicitly audited KiCad 10.0 patch lowers one of twenty
-  documented Error-default ERC keys to Warning. KiCad 10.0.3 and other
-  unlisted patches remain out of scope. It defaults to REVIEW and leaves
-  default-Warning controls quiet. The original tag-scoped local gate passed
-  with 425 tests and 8,067 deselected, including exact native runs on KiCad
-  10.0.0 and 10.0.5; Ruff,
-  Alphus, Markdown, Pyright, Windows types, wheel, sdist, and installed-package
-  checks also passed.
-  Hosted acceptance passed in GitHub Actions run `43019404091`.
-  The package and preview jobs were skipped by prerelease policy.
-  No external or proprietary project source was used.
+- **Latest local lint-gate checkpoint (candidate v0.5.3rc676):** LINT-402
+  aligns `schematic.erc_error_downgraded` metadata with the eight exact
+  source-audited patches already accepted by its settings parser. The scoped
+  package gate passed 739 tests with 8,135 deselected, including all eight
+  digest-pinned native images and installed-wheel checks against the separate
+  public workflow template and adapted layout. Hosted acceptance is pending.
+- **Latest feature work (LINT-402, audited ERC patch coverage):** The rule now
+  advertises KiCad 10.0.0, 10.0.1, 10.0.2, 10.0.4, 10.0.5, 10.0.6, 10.0.7,
+  and 10.0.8. Tests cover all twenty Error-default keys on each version and
+  assert that catalog support stays synchronized with the exact source map.
+  KiCad 10.0.3 and other unaudited patches remain in the separate coverage
+  review. The result remains REVIEW and does not claim that an override or
+  electrical condition is wrong.
+- **Earlier published checkpoint (v0.5.3rc675):** LINT-401's documentation
+  guard keeps the active rule totals and default-mode counts synchronized with
+  the packaged catalog. Its scoped local gate passed 387 tests, including
+  digest-pinned KiCad 10.0.0 and 10.0.5 PCB fixtures.
+- **Earlier feature work (LINT-397, ERC severity downgrades):** The
+  source-bound `schematic.erc_error_downgraded` REVIEW rule identifies one of
+  twenty documented Error-default keys explicitly changed to Warning.
+  LINT-402 extends its supported patch list to the eight exact audited
+  versions. KiCad 10.0.3 and other unaudited patches remain out of scope.
+  Hosted acceptance for the original five-patch scope passed in GitHub Actions
+  run `43019404091`; package and preview jobs were skipped by prerelease policy.
 - **Earlier feature work (LINT-399, current-patch ERC catalog coverage):**
   `schematic.erc_unknown_rule_key` now uses exact catalogs for KiCad 10.0.0,
   10.0.1, 10.0.2, 10.0.4, 10.0.5, 10.0.6, 10.0.7, and 10.0.8. The catalog
@@ -816,7 +821,7 @@ standalone parity work when it closes a demonstrated feature regression.
   fault/control runs. KiCad 10.0.3 remains unavailable because the official
   package list has no digest-pinned image. The expanded local package and
   native checks passed; hosted acceptance for this extension is pending.
-- **Current feature work (LINT-400, ERC catalog coverage gaps):** The new
+- **Earlier feature work (LINT-400, ERC catalog coverage gaps):** The
   `schematic.erc_catalog_unverified` review reports explicit severity overrides
   when the exact configured KiCad release has no active catalog. The candidate
   includes source hash, version, all configured keys, and severities. It stays
@@ -23694,6 +23699,35 @@ acceptance threads while new lint features proceed:
   interpreter after the package index failed to resolve those native wheels;
   dependency declarations were unchanged. Ruff, formatting, Markdown, catalog
   reachability, pytest selection, and module-size architecture checks passed.
+
+#### LINT-402 — Extend ERC downgrade review to every source-audited KiCad 10.0 patch
+
+- **Status:** Local scoped acceptance passed; hosted tag acceptance is
+  pending.
+- **Gap:** `schematic.erc_error_downgraded` recognized source maps for eight
+  KiCad patches while advertising only five. The three omitted patches were
+  routed to `schematic.erc_catalog_unverified`, obscuring the specific
+  Error-to-Warning review even though source and native evidence were already
+  present.
+- **Behavior:** Align catalog metadata with the exact audited schema-0 patch
+  set: 10.0.0, 10.0.1, 10.0.2, 10.0.4, 10.0.5, 10.0.6, 10.0.7, and 10.0.8.
+  Keep 10.0.3 and all other patches in the separate catalog-coverage review.
+- **Regression coverage:** Exercise all twenty Error-default keys on every
+  supported patch, assert catalog support matches the source-map keys, and run
+  the existing native severity fixture on all eight digest-pinned images.
+- **Boundary:** The prompt identifies an authored severity change; it does not
+  claim a violation exists or that the Warning override is wrong. Exact native
+  results validate saved severity behavior, not electrical correctness.
+- **Selection:** Run the existing `schematic.erc_error_downgraded` rule gate
+  with `KICAD_RUN_NATIVE_SCHEMATIC_ERC_GLOBAL_SEVERITY_FIXTURES=1`.
+- **Acceptance:** The scoped package gate passed 739 tests with 8,135
+  deselected. All eight digest-pinned KiCad 10.0.0, 10.0.1, 10.0.2, 10.0.4,
+  10.0.5, 10.0.6, 10.0.7, and 10.0.8 native cases passed. Ruff, both Alphus
+  profiles, Markdown checks, native and Windows-target Pyright, wheel and
+  source-archive builds, installed-wheel checks, and the external and adapted
+  checkout rehearsals passed. The external checkout was the public workflow
+  template at `5ca79bedf665a9b6577d96b1d47f13ccd518c968`; its playtest passed.
+  No project-board source or proprietary fixture was used.
 
 ## Completion and release gate
 
