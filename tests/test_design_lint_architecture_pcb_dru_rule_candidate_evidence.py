@@ -97,6 +97,26 @@ def test_custom_drc_name_evidence_has_a_separate_focused_owner() -> None:
         )
 
 
+def test_custom_drc_layer_evidence_and_predicate_have_thematic_owners() -> None:
+    evidence_owner = HWREPO / "design_lint_pcb_dru_layer_evidence.py"
+    evidence_tree = ast.parse(evidence_owner.read_text(encoding="utf-8"))
+    assert line_count(evidence_owner) < IMPLEMENTATION_MAX_LINES
+    classes = {node.name for node in evidence_tree.body if isinstance(node, ast.ClassDef)}
+    functions = {node.name for node in evidence_tree.body if isinstance(node, ast.FunctionDef)}
+    assert {
+        "PcbDruLayerIssue",
+        "PcbDruLayerFindingEvidence",
+        "PcbDruLayerCandidate",
+    } <= classes
+    assert "project_pcb_dru_layer_evidence" in functions
+
+    predicate_owner = HWREPO / "pcb_dru_layer_review.py"
+    predicate_tree = ast.parse(predicate_owner.read_text(encoding="utf-8"))
+    functions = {node.name for node in predicate_tree.body if isinstance(node, ast.FunctionDef)}
+    assert line_count(predicate_owner) < IMPLEMENTATION_MAX_LINES
+    assert "custom_drc_layer_reference_candidates" in functions
+
+
 def test_custom_drc_adapter_only_routes_through_typed_candidate_builders() -> None:
     route = HWREPO / "pcb_dru_rule_review.py"
     tree = ast.parse(route.read_text(encoding="utf-8"), filename=route.name)
@@ -104,8 +124,8 @@ def test_custom_drc_adapter_only_routes_through_typed_candidate_builders() -> No
     assert line_count(route) < IMPLEMENTATION_MAX_LINES
     functions = {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)}
     assert {
-        "_source_bound_rule_file",
-        "_source_bound_project_input",
+        "source_bound_rule_file",
+        "source_bound_project_input",
         "_rule_candidate",
         "ignored_custom_drc_rule_candidates",
         "excluded_custom_drc_rule_candidates",
@@ -116,7 +136,7 @@ def test_custom_drc_adapter_only_routes_through_typed_candidate_builders() -> No
         "custom_drc_conflicting_severity_candidates",
     } <= functions.keys()
 
-    source_reader = functions["_source_bound_rule_file"]
+    source_reader = functions["source_bound_rule_file"]
     assert source_reader.returns is not None
     assert any(
         isinstance(node, ast.Name) and node.id == "SourceBoundPcbDruRuleFile"

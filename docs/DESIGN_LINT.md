@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 334 active rules.
+The catalog currently contains 335 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -5269,6 +5269,45 @@ does not suppress the parsing failure. A separate
 [synthetic native experiment](../tests/fixtures/design_lint/drc-severity-text-variable/README.md)
 demonstrates KiCad's severity substitution on the pinned 10.0.0 and 10.0.5
 images; it does not run the local lint analyzer or establish project intent.
+
+## Review custom DRC layer references
+
+`pcb.custom_drc_layer_reference` asks for review when a source-bound KiCad 10
+`.kicad_dru` rule uses a known display alias, an unrecognized layer name, or a
+recognized layer absent from the exact saved board layer inventory. It checks
+direct `(layer "...")` clauses and literal layer names in supported
+`A.Layer == "..."` and `A.existsOnLayer("...")` conditions. Evidence includes
+the exact rule and board hashes, rule name and ordinal, referenced layers,
+issue kind, and configured KiCad version. The default is `review`; project
+policy can choose `block`, `off`, or an exact-fingerprint ignore.
+
+The rule recommends stable file-format names such as `F.SilkS`; it does not
+claim that a display alias always fails. In the tested default setup,
+`F.Silkscreen` still loaded. A recognized inner copper layer absent from this
+board may be intended for another stackup or variant. An unrecognized
+`F.Unknown` layer suppressed the appended terminal-sentinel rule on the pinned
+KiCad 10.0.8 synthetic probe while DRC returned code 5 for unrelated board
+findings. This one result does not establish the same behavior for every
+version or setup. Files containing `${...}` are deferred to the separate
+text-variable review, and wildcard references are skipped. The finding does
+not evaluate rule applicability, verify copper, or establish electrical or
+manufacturing approval.
+
+Tooling-owned fixtures cover direct and condition references, board-specific
+display aliases, unknown and stackup-absent names, canonical controls, exact
+source binding, policy, fingerprints, CLI/MCP parity, and repeated pinned
+native fault/control probes. See the
+[fixture note](../tests/fixtures/design_lint/pcb-dru-layer-reference/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_pcb_dru_layer_reference.py \
+  tests/test_design_lint_mcp_parity_pcb_dru_layer_reference.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.custom_drc_layer_reference")'
+
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_dru_layer_reference_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_layer_reference")'
+```
 
 ## Review explicitly ignored custom PCB rules
 

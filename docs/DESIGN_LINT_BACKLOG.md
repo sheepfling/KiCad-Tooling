@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 334 rules are implemented with synthetic regression coverage.
+The following 335 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 334 active rules.
+The catalog currently contains 335 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -797,6 +797,14 @@ standalone parity work when it closes a demonstrated feature regression.
   adapted layout. Hosted prerelease acceptance passed in GitHub Actions run
   [43106385974](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43106385974).
   Package and preview jobs were skipped under prerelease policy.
+- **Current implementation (LINT-405; candidate v0.5.3rc682):** Add a
+  source-bound REVIEW for risky custom DRC layer names. The scoped package gate
+  passed 436 selected tests, including CLI/MCP parity and repeated native
+  display-alias, unknown-layer, absent-inner-layer, and canonical cases on
+  digest-pinned KiCad 10.0.8. Ruff, both Alphus profiles, rumdl, mdrepo, native
+  and Windows-target Pyright, wheel/sdist builds, fresh wheel installation,
+  and public-template/adapted-layout rehearsals passed. Hosted CI will run after
+  the tag push.
 - **Latest published lint-gate checkpoint (v0.5.3rc680):** Focused serial
   reference fault, control, and ordering regressions now collect separately.
   The exact serial unit and native selector passed 10 tests with 2 deselected,
@@ -23841,6 +23849,52 @@ acceptance threads while new lint features proceed:
 - **Hosted acceptance:** Tag `v0.5.3rc681` passed in GitHub Actions run
   [43106385974](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43106385974).
   The package and preview jobs were skipped by prerelease policy.
+
+#### LINT-405 — Review custom DRC layer references
+
+- **Status:** Implemented as the default-REVIEW rule
+  `pcb.custom_drc_layer_reference`; source and board identities are bound to
+  the exact `.kicad_dru` and `.kicad_pcb` SHA-256 values.
+- **Gap:** The terminal-sentinel probe proved that the appended final rule
+  reached native DRC, but did not inspect layer names used by authored rules.
+  The source-pinned kicad-druid review identified a layer-name lint
+  opportunity. KiCad keeps file-format names distinct from some board display
+  names.
+- **Predicate:** Inspect named version-1 rules for direct `(layer "...")`
+  clauses and literal names in supported `.Layer == "..."` or
+  `.existsOnLayer("...")` condition forms. Prompt for known display aliases,
+  unrecognized names, and recognized names absent from the exact board's saved
+  layer inventory. Evidence records source hashes, rule identity, exact layer
+  strings, issue classes, and configured version.
+- **Limits:** This defaults to REVIEW. `F.Silkscreen` was accepted by the
+  default KiCad 10.0.8 setup tested, so alias spelling is a stability prompt.
+  An absent inner layer can belong to another intended stackup. On the exact
+  pinned 10.0.8 synthetic probe, `F.Unknown` suppressed the terminal sentinel
+  but DRC still returned code 5 for unrelated findings; that observation is
+  not generalized to every version or setup. Text-variable files are left to
+  the existing substitution review, wildcards are skipped, and native DRC does
+  not verify electrical intent or copper connectivity.
+- **Fixtures:** Tooling-owned inputs cover display aliases in direct clauses
+  and conditions, a board-saved display alias, an unknown name, a recognized
+  absent inner layer, canonical names, comments, text-variable deferral,
+  source binding, policy, and deterministic fingerprints. The exact native
+  test repeats all four cases on the digest-pinned KiCad 10.0.8 image recorded
+  in `tests/test_pcb_dru_layer_reference_native.py`.
+- **Focused selection:** Run
+  `tests/test_pcb_dru_layer_reference.py` and
+  `tests/test_design_lint_mcp_parity_pcb_dru_layer_reference.py` with the
+  `design_lint`, `pcb_lint`, and
+  `design_lint_rule(rule_id="pcb.custom_drc_layer_reference")` markers. Add
+  `tests/test_pcb_dru_layer_reference_native.py`, set
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, and select `native_kicad` for Docker.
+- **Local acceptance:** The scoped package gate passed 436 tests with no
+  failures. It included all related custom-rule parser and parity suites,
+  architecture and catalog selectors, and the 10.0.8 native test, which ran
+  each of its four cases twice. Both native and Windows-target Pyright, Ruff,
+  both Alphus profiles, rumdl, mdrepo, wheel/sdist builds, fresh installed-wheel
+  origin/version checks, and inventory/surface/verify/playtest rehearsals on
+  the public template and its adapted layout passed. Hosted CI remains pending
+  for tag `v0.5.3rc682`.
 
 ## Completion and release gate
 

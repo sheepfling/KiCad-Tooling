@@ -102,6 +102,7 @@ class NativeDrcRuleDeclaration:
     ordinal: int
     constraint_count: int
     condition: str | None
+    layers: tuple[str, ...] = ()
 
 
 NativeDrcRuleSeverity: TypeAlias = Literal["error", "warning", "ignore", "exclusion"]
@@ -400,12 +401,18 @@ def native_rule_declarations(source: str) -> tuple[NativeDrcRuleDeclaration, ...
         constraint_count = sum(
             _atoms(source, child)[:1] == ("constraint",) for child in rule.children
         )
+        layers = tuple(
+            atoms[1]
+            for child in rule.children
+            if (atoms := _atoms(source, child))[:1] == ("layer",) and len(atoms) == 2
+        )
         result.append(
             NativeDrcRuleDeclaration(
                 name=rule.name,
                 ordinal=rule.ordinal,
                 constraint_count=constraint_count,
                 condition=condition,
+                layers=layers,
             )
         )
     return tuple(result)

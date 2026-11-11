@@ -29,6 +29,10 @@ from kicad_tooling.hwrepo.models import (
 from kicad_tooling.validate import hashes
 
 _IMAGE = "registry.invalid/kicad:10.0.5@sha256:" + "a" * 64
+_PCB_RULE_REVIEW_BOARD = (
+    Path(__file__).parents[1]
+    / "kicad_tooling/hwrepo/fixtures/pcb-dru-rule-compilation-probe.kicad_pcb"
+)
 PINNED_NATIVE_KICAD_IMAGES = MappingProxyType(
     {
         "10.0.0": (
@@ -56,6 +60,7 @@ def synthetic_design_lint_project(
     image: str = _IMAGE,
     custom_rules_source: str | None = None,
     project_settings_source: str | None = None,
+    board_source: str | None = None,
 ) -> tuple[Path, Path]:
     """Create source-bound synthetic evidence, optionally including custom DRC rules."""
     root = base / "repository"
@@ -70,6 +75,8 @@ def synthetic_design_lint_project(
     source_paths = tuple(
         f"kicad/{project_id}{suffix}" for suffix in (".kicad_pro", ".kicad_sch", ".kicad_pcb")
     )
+    if custom_rules_source is not None and board_source is None:
+        board_source = _PCB_RULE_REVIEW_BOARD.read_text(encoding="utf-8")
     source_bytes = {
         source_paths[0]: (
             b'{"board":{"design_settings":{"rule_severities":{}}}}\n'
@@ -77,7 +84,9 @@ def synthetic_design_lint_project(
             else project_settings_source.encode("utf-8")
         ),
         source_paths[1]: b"synthetic schematic source\n",
-        source_paths[2]: b"synthetic PCB source\n",
+        source_paths[2]: (
+            b"synthetic PCB source\n" if board_source is None else board_source.encode("utf-8")
+        ),
     }
     if custom_rules_source is not None:
         rules_relative = f"kicad/{project_id}.kicad_dru"

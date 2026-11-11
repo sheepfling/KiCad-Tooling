@@ -1,0 +1,9 @@
+(version 1)
+(rule "CanonicalLayerClause"
+  (layer "F.Cu")
+  (severity error)
+  (constraint track_width (min 0.5mm)))
+(rule "CanonicalConditionLayer"
+  (condition "A.Layer == 'B.Cu'")
+  (severity error)
+  (constraint track_width (min 0.5mm)))

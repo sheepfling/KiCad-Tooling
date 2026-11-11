@@ -27,6 +27,7 @@ PcbDruRuleId: TypeAlias = Literal[
     "pcb.custom_drc_duplicate_rule_name",
     "pcb.custom_drc_casefold_rule_name_collision",
     "pcb.custom_drc_conflicting_severities",
+    "pcb.custom_drc_layer_reference",
 ]
 PcbDruParsedRule: TypeAlias = NativeIgnoredDrcRule | NativeDrcRuleWithSeverity
 PcbDruInputRole: TypeAlias = Literal["project", "board"]

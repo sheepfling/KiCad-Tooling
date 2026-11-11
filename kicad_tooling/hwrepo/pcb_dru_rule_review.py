@@ -44,7 +44,7 @@ from .source_state_models import SourceHashInventory
 _TEXT_VARIABLE = re.compile(r"\$\{([^{}]+)\}")
 
 
-def _source_bound_rule_file(
+def source_bound_rule_file(
     root: Path,
     config: ProjectConfig,
     source_hashes: SourceHashInventory,
@@ -75,7 +75,7 @@ def _source_bound_rule_file(
     )
 
 
-def _source_bound_project_input(
+def source_bound_project_input(
     root: Path,
     relative: str,
     role: PcbDruInputRole,
@@ -125,7 +125,7 @@ def ignored_custom_drc_rule_candidates(
     An explicit Ignore may be intentional. Findings therefore describe the
     authored declaration and ask for review without asserting it is a defect.
     """
-    source_file = _source_bound_rule_file(root, config, source_hashes)
+    source_file = source_bound_rule_file(root, config, source_hashes)
     if source_file is None:
         return ()
     source = source_file.local_path.read_text(encoding="utf-8")
@@ -156,7 +156,7 @@ def excluded_custom_drc_rule_candidates(
         return ()
     if not is_supported_pcb_dru_kicad_version(config.kicad_version):
         return ()
-    source_file = _source_bound_rule_file(root, config, source_hashes)
+    source_file = source_bound_rule_file(root, config, source_hashes)
     if source_file is None:
         return ()
     source = source_file.local_path.read_text(encoding="utf-8")
@@ -185,7 +185,7 @@ def text_variable_custom_drc_rule_candidates(
     """Request review when source contains a KiCad substitution not evaluated here."""
     if not is_supported_pcb_dru_kicad_version(config.kicad_version):
         return ()
-    source_file = _source_bound_rule_file(root, config, source_hashes)
+    source_file = source_bound_rule_file(root, config, source_hashes)
     if source_file is None:
         return ()
     source = source_file.local_path.read_text(encoding="utf-8")
@@ -197,8 +197,8 @@ def text_variable_custom_drc_rule_candidates(
     root = root.resolve()
     project_relative = str(config.project)
     board_relative = Path(project_relative).with_suffix(".kicad_pcb").as_posix()
-    project_source = _source_bound_project_input(root, project_relative, "project", source_hashes)
-    board_source = _source_bound_project_input(root, board_relative, "board", source_hashes)
+    project_source = source_bound_project_input(root, project_relative, "project", source_hashes)
+    board_source = source_bound_project_input(root, board_relative, "board", source_hashes)
     source_evidence = PcbDruTextVariableFindingEvidence(
         source_file=source_file,
         project_source=project_source,
@@ -245,7 +245,7 @@ def custom_drc_rule_without_constraint_candidates(
     """Review source-bound named custom rules that declare no constraints."""
     if not is_supported_pcb_dru_kicad_version(config.kicad_version):
         return ()
-    source_file = _source_bound_rule_file(root, config, source_hashes)
+    source_file = source_bound_rule_file(root, config, source_hashes)
     if source_file is None:
         return ()
     source = source_file.local_path.read_text(encoding="utf-8")
@@ -269,7 +269,7 @@ def custom_drc_duplicate_rule_name_candidates(
     """Review exact duplicate names in source-bound KiCad 10 custom rules."""
     if not is_supported_pcb_dru_kicad_version(config.kicad_version):
         return ()
-    source_file = _source_bound_rule_file(root, config, source_hashes)
+    source_file = source_bound_rule_file(root, config, source_hashes)
     if source_file is None:
         return ()
     source = source_file.local_path.read_text(encoding="utf-8")
@@ -314,7 +314,7 @@ def custom_drc_casefold_rule_name_collision_candidates(
     """Prompt when distinct custom DRC names share the same case-folded spelling."""
     if not is_supported_pcb_dru_kicad_version(config.kicad_version):
         return ()
-    source_file = _source_bound_rule_file(root, config, source_hashes)
+    source_file = source_bound_rule_file(root, config, source_hashes)
     if source_file is None:
         return ()
     source = source_file.local_path.read_text(encoding="utf-8")
@@ -365,7 +365,7 @@ def custom_drc_conflicting_severity_candidates(
     """Review source-bound named rules with conflicting direct severities."""
     if not is_supported_pcb_dru_kicad_version(config.kicad_version):
         return ()
-    source_file = _source_bound_rule_file(root, config, source_hashes)
+    source_file = source_bound_rule_file(root, config, source_hashes)
     if source_file is None:
         return ()
     source = source_file.local_path.read_text(encoding="utf-8")

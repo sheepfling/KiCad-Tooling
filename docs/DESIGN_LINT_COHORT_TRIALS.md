@@ -84,6 +84,39 @@ for dispositions and timing; leave unmeasured values unstated.
   [negative case fixture record](../tests/fixtures/design_lint/pcb-dru-item-type-case/README.md),
   and its [native test](../tests/test_pcb_dru_item_type_case_native.py).
 
+### Follow-up source review: custom DRC layer references
+
+- **Cohort cue:** The MIT-licensed [Cimos/kicad-druid source][druid-layer-review]
+  at `6687d733be816e27317456a29355d3c69eea0fa3`
+  describes linting layer identifiers in `.kicad_dru` files. KiCad's own
+  [LSET::NameToLayer implementation][kicad-layer-name-to-layer]
+  maps file-format identifiers such as `F.SilkS`, while saved board layer
+  records can retain separate display names such as `F.Silkscreen` in a
+  [KiCad 10.0.4 source fixture][kicad-layer-display-name-example].
+- **Incremental gap:** The existing terminal-sentinel custom-rule probe proves
+  that the rule engine reached its appended final rule. It did not check
+  whether named authored rules use a recognized layer or a layer present in
+  the exact board stackup.
+- **Native trial:** Tooling-owned rule inputs ran twice each on the digest-pinned
+  KiCad 10.0.8 image. A direct `F.Silkscreen` layer reference was accepted in
+  the tested default setup and the sentinel matched. `F.Unknown` left only
+  unrelated `track_dangling` findings, suppressed the terminal sentinel, and
+  DRC returned code 5. A valid but absent `In5.Cu` layer kept the sentinel
+  active and produced no authored `track_width` finding; a canonical `F.Cu`
+  control produced the authored width findings. The test records only these
+  exact synthetic outcomes.
+- **Disposition and limits:** Adopt a deterministic default-REVIEW source rule
+  that compares layer clauses and supported literal layer conditions with the
+  board's source-bound layer inventory. The check advises canonical file-format
+  names while acknowledging that some display aliases work in a default setup.
+  An absent copper layer may be intentional for another stackup; the unknown
+  name's suppression behavior is established only on the pinned version and
+  synthetic input. No cohort code, project, or board was copied. See
+  [LINT-405](DESIGN_LINT_BACKLOG.md#lint-405--review-custom-drc-layer-references),
+  the tooling-owned
+  [fixture note](../tests/fixtures/design_lint/pcb-dru-layer-reference/README.md),
+  and its [native regression](../tests/test_pcb_dru_layer_reference_native.py).
+
 ### Native trial: conflicting custom DRC severities
 
 - **Gap and motivation:** The shared custom-rule parser already recognized
@@ -2460,10 +2493,10 @@ evaluation of upstream precision or reviewer effort.
 Source: [kicad-happy release notes][happy-fiducial-release-notes].
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 334 active rules. Each entry has a deterministic predicate, evidence
+contains 335 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-Of the 334 active rules, 276 default to `review`, 57 to `off`, and
+Of the 335 active rules, 277 default to `review`, 57 to `off`, and
 `pcb.required_fitted_reference` to `block`. Off-by-default checks include
 schematic geometry, generic peer assignment, selected component topology
 reviews such as the BJT base-bias and base/collector same-net prompts, and
@@ -2498,3 +2531,6 @@ it does not claim field validation or effectiveness against private boards.
 [usb2-hub-revision]: https://github.com/brainsmoke/usb2_hub/tree/a6288e2ffc4866b52eb5f64b998376bd619a7674
 [stickhub-license]: https://github.com/rbtsco/StickHub/blob/5f369a785bedc4b1d3b99222c841ac684e04f016/LICENSE.md
 [stickhub-schematic]: https://github.com/rbtsco/StickHub/blob/5f369a785bedc4b1d3b99222c841ac684e04f016/StickHub.kicad_sch
+[druid-layer-review]: <https://github.com/Cimos/kicad-druid/commit/6687d733be816e27317456a29355d3c69eea0fa3>
+[kicad-layer-name-to-layer]: <https://gitlab.com/kicad/code/kicad/-/blob/6fd26c3126ab342aa49dac7de8de36f187c6c08f/common/lset.cpp>
+[kicad-layer-display-name-example]: <https://gitlab.com/kicad/code/kicad/-/blob/10.0.4/qa/data/eeschema/issue24044/issue24044.kicad_pcb>

@@ -1,0 +1,13 @@
+(version 1)
+(rule "DirectDisplayLayer"
+  (layer "F.Silkscreen")
+  (severity error)
+  (constraint track_width (min 0.5mm)))
+(rule "ConditionDisplayLayer"
+  (condition "A.Layer == 'B.Silkscreen'")
+  (severity error)
+  (constraint track_width (min 0.5mm)))
+(rule "ExistsOnLayerDisplay"
+  (condition "A.existsOnLayer('B.Silkscreen')")
+  (severity error)
+  (constraint track_width (min 0.5mm)))

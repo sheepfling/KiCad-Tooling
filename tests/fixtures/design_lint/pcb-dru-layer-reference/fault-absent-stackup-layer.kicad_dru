@@ -1,0 +1,6 @@
+(version 1)
+(rule "AbsentInnerCopperLayer"
+  (layer "In5.Cu")
+  (condition "A.Type == 'Track'")
+  (severity error)
+  (constraint track_width (min 0.5mm)))

@@ -30,7 +30,21 @@ Additional synthetic native fixtures record the
 [connector power-input comparison](fixtures/design_lint/connector-footprint-same-voltage-power-input-native/README.md),
 [differential-pair edge clearance](fixtures/design_lint/differential-pair-edge-clearance/README.md),
 [custom-rule text variables](fixtures/design_lint/drc-text-variables/README.md), and
+[custom DRC layer references](fixtures/design_lint/pcb-dru-layer-reference/README.md),
 [native clearance clamp](fixtures/design_lint/drc-clearance-clamp/README.md).
+
+Select custom DRC layer-name review and its CLI/MCP parity case with:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  tests/test_pcb_dru_layer_reference.py \
+  tests/test_design_lint_mcp_parity_pcb_dru_layer_reference.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.custom_drc_layer_reference")'
+```
+
+Run the exact KiCad 10.0.8 Docker fault/control lane separately with
+`KICAD_RUN_NATIVE_PCB_FIXTURES=1` and the same rule selector, adding
+`tests/test_pcb_dru_layer_reference_native.py` and the `native_kicad` marker.
 The non-connector named supply/return-pin faults and assigned control have a separate
 [component pin fixture README](fixtures/design_lint/unconnected-named-component-pins/README.md) and
 a focused native lane per rule.
