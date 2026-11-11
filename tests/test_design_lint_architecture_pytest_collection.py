@@ -14,6 +14,18 @@ from tests.design_lint_test_markers import design_lint_markers_for_path
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
+_RULE_GATE_COLLECTION_MODULES = (
+    "tests/test_design_lint_architecture.py",
+    "tests/test_design_lint_architecture_catalog.py",
+    "tests/test_design_lint_fixture_reachability.py",
+    "tests/test_ci_lint_prerelease_workflow.py",
+    "tests/test_lint_gate_scope.py",
+    "tests/test_design_lint_architecture_pytest_markers.py",
+    "tests/test_design_lint_i2c_missing_pullups.py",
+    "tests/test_design_lint_backlog.py",
+    "tests/test_power_paths.py",
+)
+
 
 def _is_version_parameter_decorator(decorator: ast.expr) -> bool:
     if not isinstance(decorator, ast.Call):
@@ -49,6 +61,7 @@ def test_rule_gate_also_collects_cross_rule_integrity_checks() -> None:
             "-m",
             'design_lint and (design_lint_rule(rule_id="bus.i2c_missing_pullup") or rule_gate_integrity)',
             "--collect-only",
+            *_RULE_GATE_COLLECTION_MODULES,
         ),
         cwd=Path(__file__).resolve().parents[1],
         env=environment,

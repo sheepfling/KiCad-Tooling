@@ -779,21 +779,25 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest quality-gate progress (v0.5.3rc655):** Hosted acceptance passed in
-  GitHub run `42958643499`. The scoped design-lint and integrity checks, exact
-  native PCB fixtures, package/wheel checks, and installed-wheel rehearsal
-  against a separate public-template checkout all passed. `rc652` exposed a
-  missing tag selector, `rc653` exposed Markdown table alignment, and `rc654`
-  exposed a stale catalog fixture reference plus a test-module size violation;
-  the follow-up tags preserve those audit results, and `rc655` passed the
-  corrected gate. Preview and package jobs were skipped by prerelease policy.
+- **Latest quality-gate progress (v0.5.3rc657):** Hosted acceptance passed in
+  GitHub run `42962395268`. The focused selector ran 367 tests, deselected
+  7,979, and completed its pytest stage in 180.88 seconds; the console and
+  retained event now report those counts, elapsed time, and ten slowest cases.
+  The tagged gate's exact native KiCad fixtures, package and wheel checks, and
+  installed-wheel rehearsal against a separate public-template checkout all
+  passed. `rc652` exposed a missing tag selector, `rc653` exposed Markdown
+  table alignment, and `rc654` exposed a stale catalog fixture reference plus
+  a test-module size violation; the follow-up tags preserve those audit
+  results, and `rc655` passed the corrected gate. Preview and package-release
+  jobs were skipped by prerelease policy.
 - **Latest progress (LINT-389, pad-connected reference islands):** Refined the
   opt-in island review so same-net tracks and vias connecting a pad to the exact
   filled island suppress the false candidate. The disconnected island remains
   a fault; direct-pad, indirect-track, and plated-via controls stay quiet.
   The digest-pinned native fixture repeats on KiCad 10.0.0 and 10.0.5. The
-  hosted `rc655` acceptance passed after the catalog and module-size integrity
-  repairs; no project board data was imported.
+  original implementation passed hosted `rc655`; hosted `rc657` repeated the
+  scoped gate with current pytest metrics after the catalog and module-size
+  integrity repairs. No project board data was imported.
 - **Earlier progress (LINT-388, plated oblong drill coverage):** Extended the
   LINT-387 native fixture with plated 1.0 by 0.5 mm slots. The source-matched
   front-side observation records an oval drill and both exposed surfaces; a
@@ -23135,13 +23139,51 @@ acceptance threads while new lint features proceed:
   `tests/test_pcb_reference_plane_unanchored_island_native.py`,
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, and the
   `pcb.reference_plane_unanchored_island` rule selector.
-- **Tagged acceptance (2026-11-10):** `v0.5.3rc655` (GitHub Actions run
-  `42958643499`) passed the scoped lint and rule-integrity gate, including both
+- **Tagged acceptance (2026-11-10):** `v0.5.3rc657` (GitHub Actions run
+  `42962395268`) passed the scoped lint and rule-integrity gate, including both
   digest-pinned native KiCad versions, packaging checks, and installed-wheel
-  verification against a separate public-template checkout. Earlier immutable
+  verification against a separate public-template checkout. The pytest stage
+  reported 367 passed and 7,979 deselected in 180.88 seconds. Earlier immutable
   audit tags preserve the selector, Markdown-table, and repository-integrity
   failures that the follow-up corrected. Preview and package-release jobs were
   skipped under prerelease policy.
+
+#### LINT-390 — Keep focused rule-gate collection observable and bounded
+
+- **Status:** Implemented in the package CI driver and pytest regressions. The
+  unit stage reports recognized outcome counts, pytest elapsed time, and up to
+  ten slowest cases in both the console and its JSONL event. A summary that the
+  parser cannot recognize is reported as unavailable without masking the test
+  stage result. The selector-integrity subprocess now collects explicit
+  representative modules rather than scanning the full test tree.
+- **Priority:** P0 quality-gate efficiency and diagnostic visibility for the
+  focused prerelease gates.
+- **Gap:** Successful CI runs retained pytest's duration output in an artifact,
+  but hid counts and slow cases from the live log and event receipt. The
+  cross-rule selector guard also spent 26.55 seconds collecting the full test
+  tree merely to check several known rule and integrity cases.
+- **Behavior:** Retain parsed counts and durations with the unit-stage event.
+  Exercise the same rule selector against the catalog, fixture-reachability,
+  workflow, tag-scope, marker, and rule-test modules, with unrelated-module
+  controls. This keeps the selector's positive and negative checks while
+  avoiding whole-tree collection inside that test.
+- **Boundary:** Pytest metrics describe the selected run; they do not establish
+  complete electrical-rule coverage, hardware correctness, or release
+  approval. Full acceptance remains responsible for the complete suite.
+- **Evidence:** Hosted `v0.5.3rc657` reported 367 passed and 7,979 deselected
+  in 180.88 seconds. After bounding the nested selector probe, its focused local
+  regression completed in 1.24 seconds; its subprocess collected 47 selected
+  tests and deselected 64 tests from the listed modules. No project source was
+  used.
+- **Scoped package acceptance:** The full local `scripts/ci.py` gate passed all
+  25 recorded stages with Docker enabled. Its unit stage ran the same 367 tests
+  and deselected 7,979 in 48.48 seconds. The narrowed selector-integrity test
+  took 1.07 seconds in that run; both exact native KiCad fault/control cases,
+  both Pyright targets, distribution builds, installed-wheel checks, and
+  external-project checks passed.
+- **Selection:** Run
+  `tests/test_design_lint_architecture_pytest_collection.py` with
+  `design_lint and (design_lint_rule(rule_id="bus.i2c_missing_pullup") or rule_gate_integrity)`.
 
 ## Completion and release gate
 
