@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from pydantic import BaseModel, ConfigDict, JsonValue
 
 from .contracts import parse_model_text
+from .project_models import ProjectKind
 
 SUPPORTED_ERC_EXCLUSION_SCHEMA_VERSION = 0
 ERC_DEFAULT_IGNORED_RULE_KEYS = frozenset(
@@ -66,6 +69,24 @@ ERC_DEFAULT_WARNING_RULE_KEYS = frozenset(
         "similar_power",
         "stacked_pin_name",
         "unconnected_wire_endpoint",
+    }
+)
+_ERC_RULE_KEYS_KICAD_10_0: frozenset[str] = (
+    ERC_DEFAULT_ERROR_RULE_KEYS | ERC_DEFAULT_WARNING_RULE_KEYS | ERC_DEFAULT_IGNORED_RULE_KEYS
+)
+# Keep exact patch entries; later KiCad 10.0 releases can add ERC item keys.
+ERC_RULE_KEYS_BY_KICAD_VERSION: Mapping[str, frozenset[str]] = MappingProxyType(
+    {
+        "10.0.0": _ERC_RULE_KEYS_KICAD_10_0,
+        "10.0.5": _ERC_RULE_KEYS_KICAD_10_0,
+    }
+)
+SCHEMATIC_ERC_SUPPORTED_PROJECT_KINDS = frozenset(
+    {
+        ProjectKind.PCB,
+        ProjectKind.SCHEMATIC,
+        ProjectKind.SYSTEM_WIRING,
+        ProjectKind.HARNESS_INTERFACE,
     }
 )
 

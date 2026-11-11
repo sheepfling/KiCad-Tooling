@@ -26,6 +26,15 @@ SCHEMATIC_GEOMETRY_THEME_SUITES = (
     "test_schematic_geometry_native_pin_connectivity.py",
     "test_schematic_geometry_native_wire_topology.py",
 )
+SCHEMATIC_ERC_THEME_SUITES = (
+    "test_schematic_erc_global_severity_review.py",
+    "test_design_lint_mcp_parity_schematic_erc_global_severity.py",
+    "test_schematic_erc_global_severity_native_fixture_lane.py",
+    "test_schematic_erc_warning_downgrade.py",
+    "test_design_lint_mcp_parity_schematic_erc_warning_downgrade.py",
+    "test_schematic_erc_unknown_rule_key.py",
+    "test_design_lint_mcp_parity_schematic_erc_unknown_rule_key.py",
+)
 PCB_REFERENCE_PLANE_THEME_SUITES = (
     "test_pcb_alternate_reference_plane_run.py",
     "test_design_lint_mcp_parity_pcb_alternate_reference_plane.py",
@@ -273,6 +282,7 @@ def test_design_lint_theme_suites_stay_below_review_limit() -> None:
                 for name in (
                     *PCB_THEME_SUITES,
                     *SCHEMATIC_GEOMETRY_THEME_SUITES,
+                    *SCHEMATIC_ERC_THEME_SUITES,
                     *PCB_REFERENCE_PLANE_THEME_SUITES,
                     *CONNECTOR_COVERAGE_THEME_SUITES,
                     *HOSTED_ORCHESTRATION_THEME_SUITES,

@@ -41,7 +41,7 @@ def _pin_not_connected_records(
 def schematic_erc_global_severity_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
-    """Prove Ignore hides a known pin error and Error restores it in native ERC."""
+    """Prove native ERC ignores unknown keys and applies recognized severities."""
     root = root.resolve()
     toolchains = {pinned_image: version for version, pinned_image in KICAD_10_NATIVE_TOOLCHAINS}
     version = toolchains.get(image)
@@ -52,6 +52,7 @@ def schematic_erc_global_severity_fixture_lane(
     schematic = fixture_root / "near-miss-pin-line.kicad_sch"
     settings_root = fixture_root / "schematic-erc-global-severity"
     warning_settings = fixture_root / "schematic-erc-warning-downgrade/fault.kicad_pro"
+    unknown_settings = settings_root / "unknown.kicad_pro"
     scratch = Path(
         tempfile.mkdtemp(
             prefix=f"schematic-erc-global-severity-{version}-", dir=log.directory.resolve()
@@ -65,6 +66,7 @@ def schematic_erc_global_severity_fixture_lane(
         ("ignored", settings_root / "fault.kicad_pro"),
         ("active", settings_root / "control.kicad_pro"),
         ("downgraded", warning_settings),
+        ("unknown", unknown_settings),
     )
     for case, settings_file in cases:
         case_root = inputs / case
@@ -79,7 +81,7 @@ def schematic_erc_global_severity_fixture_lane(
         'mkdir -p "$HOME"\n'
         'actual="$(kicad-cli version)"\n'
         f'test "$actual" = "{version}"\n'
-        "for case in ignored active downgraded; do\n"
+        "for case in ignored active downgraded unknown; do\n"
         "  for run in first repeat; do\n"
         "    kicad-cli sch erc --format json --output "
         '"/output/$case.$run.erc.json" '
@@ -127,7 +129,7 @@ def schematic_erc_global_severity_fixture_lane(
             run: _pin_not_connected_records(output / f"{case}.{run}.erc.json", version)
             for run in ("first", "repeat")
         }
-        for case in ("ignored", "active", "downgraded")
+        for case in ("ignored", "active", "downgraded", "unknown")
     }
     expected_active_pins = (
         ("error", False, ("a0000000-0000-4000-8000-000000000003",)),
@@ -140,6 +142,8 @@ def schematic_erc_global_severity_fixture_lane(
         raise ValueError("Native ERC did not report the control pin_not_connected error")
     if any(records != expected_downgraded_pins for records in normalized["downgraded"].values()):
         raise ValueError("Native ERC did not lower pin_not_connected from Error to Warning")
+    if any(records != expected_active_pins for records in normalized["unknown"].values()):
+        raise ValueError("An unknown ERC severity key changed the recognized pin error")
     if any(records["first"] != records["repeat"] for records in normalized.values()):
         raise ValueError("Native ERC global severity recognition is not repeatable")
     log.event(
@@ -151,9 +155,11 @@ def schematic_erc_global_severity_fixture_lane(
         ignored_pin_not_connected="absent",
         active_pin_not_connected="error",
         downgraded_pin_not_connected="warning",
+        unknown_key_pin_not_connected="error",
         repeatable="true",
         ignored_settings_sha256=digest(settings_root / "fault.kicad_pro"),
         active_settings_sha256=digest(settings_root / "control.kicad_pro"),
         downgraded_settings_sha256=digest(warning_settings),
+        unknown_settings_sha256=digest(unknown_settings),
         schematic_sha256=digest(schematic),
     )

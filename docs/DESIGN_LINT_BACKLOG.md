@@ -800,6 +800,14 @@ standalone parity work when it closes a demonstrated feature regression.
   Hosted acceptance passed in GitHub Actions run `43019404091`.
   The package and preview jobs were skipped by prerelease policy.
   No external or proprietary project source was used.
+- **Current feature work (LINT-398, unknown ERC severity keys):** The new
+  `schematic.erc_unknown_rule_key` rule prompts for saved `.kicad_pro` severity
+  keys absent from the exact KiCad 10.0.0 and 10.0.5 ERC catalogs. The source
+  map is deliberately closed to those two releases; a typo or version mismatch
+  may otherwise leave an intended severity change unapplied. Its focused local
+  gate passed, including the two digest-pinned Docker versions, Python and
+  Windows type checks, wheel/sdist, and installed public-template rehearsal.
+  Hosted acceptance is pending.
 - **Earlier feature work (LINT-393, mapped supply-pin coverage):** The
   default-off `power.component_supply_range_pin_coverage` rule checks that
   every native `power_in` pin on a component named in the reviewed supply-range
@@ -23492,6 +23500,41 @@ acceptance threads while new lint features proceed:
   pinned native fixture, and
   installed-wheel rehearsal against the separate public project checkout.
   Package and preview jobs were skipped under prerelease policy.
+
+#### LINT-398 — Review unknown schematic ERC severity keys
+
+- **Status:** Implemented locally as `schematic.erc_unknown_rule_key`, default
+  `review`; hosted tag acceptance is pending.
+- **Gap:** KiCad applies saved `erc.rule_severities` entries only for
+  registered ERC item keys. A typo or a key from another patch may leave the
+  intended severity change unapplied without a project-owned warning.
+- **Behavior:** For source-hashed schematic-capable KiCad 10.0.0 and 10.0.5
+  projects with ERC settings schema 0, emit one source-bound candidate for each
+  configured key absent from that exact release's reviewed key set. All
+  severity values are checked because key recognition is independent of the
+  selected severity. KiCad 10.0.7 adds `same_local_global_power`, confirming
+  that the key set can change within a major version; 10.0.7 remains out of
+  scope until its full catalog and native lane are reviewed.
+- **Boundary:** A candidate may be a typo, stale entry, or version mismatch;
+  it is not an electrical defect and the check does not guess a replacement
+  key. Other KiCad patches stay out of scope until their complete rule-key
+  catalog is verified. The native fault keeps a known pin rule at Error while
+  an unknown key requests Ignore; exact-version ERC must retain the Error.
+- **Fixtures:** Synthetic settings cover unknown keys at Error, Warning, and
+  Ignore, every known key at each severity, exact source binding, unsupported
+  patch versions, stable ordering, and CLI/MCP parity. The shared native
+  severity lane covers KiCad 10.0.0 and 10.0.5.
+- **Selection:** Run the rule's focused schematic lint tests with
+  `design_lint and schematic_lint and design_lint_rule(rule_id="schematic.erc_unknown_rule_key")`.
+  Native coverage uses
+  `tests/test_schematic_erc_global_severity_native_fixture_lane.py` and
+  `KICAD_RUN_NATIVE_SCHEMATIC_ERC_GLOBAL_SEVERITY_FIXTURES=1`.
+- **Local scoped gate (2026-11-11):** `scripts/ci.py` passed with 385 tests
+  and 8,122 deselected. Exact native cases passed on digest-pinned KiCad 10.0.0
+  and 10.0.5. Ruff, Alphus, Markdown, Linux and Windows Pyright, wheel/sdist,
+  installed-package verification, and the separate public template and adapted
+  checkout rehearsals passed. The local run skipped mdrepo; hosted acceptance
+  runs it.
 
 ## Completion and release gate
 

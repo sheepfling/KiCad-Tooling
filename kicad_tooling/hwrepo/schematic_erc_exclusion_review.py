@@ -8,8 +8,9 @@ from pathlib import Path
 
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
-from .project_models import ProjectConfig, ProjectKind
+from .project_models import ProjectConfig
 from .schematic_erc_project_settings import (
+    SCHEMATIC_ERC_SUPPORTED_PROJECT_KINDS,
     SchematicErcExclusion,
     schematic_erc_exclusion_marker_sha256,
     schematic_erc_exclusions,
@@ -22,14 +23,6 @@ from .source_state_models import SourceHashInventory
 
 _SUPPORTED_KICAD_VERSION = re.compile(r"10\.0\.\d+\Z")
 _SCHEMATIC_ERC_EXCLUSION_RULE_ID: DesignLintRuleId = "schematic.erc_exclusion_present"
-_SUPPORTED_PROJECT_KINDS = frozenset(
-    {
-        ProjectKind.PCB,
-        ProjectKind.SCHEMATIC,
-        ProjectKind.SYSTEM_WIRING,
-        ProjectKind.HARNESS_INTERFACE,
-    }
-)
 
 
 @dataclass(frozen=True, slots=True)
@@ -116,7 +109,7 @@ def source_bound_schematic_erc_exclusion_candidates(
     source_hashes: SourceHashInventory,
 ) -> tuple[Candidate, ...]:
     """Prompt to recheck each saved schematic ERC exclusion in KiCad 10.0."""
-    if config.kind not in _SUPPORTED_PROJECT_KINDS:
+    if config.kind not in SCHEMATIC_ERC_SUPPORTED_PROJECT_KINDS:
         return ()
     if _SUPPORTED_KICAD_VERSION.fullmatch(config.kicad_version) is None:
         return ()

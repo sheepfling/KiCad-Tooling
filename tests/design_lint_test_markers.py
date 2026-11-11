@@ -47,6 +47,8 @@ _LINT_AREA_MODULES = MappingProxyType(
             {
                 "tests/test_schematic_geometry_text.py",
                 "tests/test_design_lint_schematic_text.py",
+                "tests/test_schematic_erc_unknown_rule_key.py",
+                "tests/test_design_lint_mcp_parity_schematic_erc_unknown_rule_key.py",
                 "tests/test_schematic_geometry_symbol_body.py",
                 "tests/test_schematic_geometry_symbol_arc_body.py",
                 "tests/test_schematic_geometry_pin_proximity.py",

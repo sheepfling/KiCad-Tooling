@@ -76,6 +76,9 @@ from .schematic_erc_exclusion_review import source_bound_schematic_erc_exclusion
 from .schematic_erc_global_severity_review import (
     source_bound_schematic_erc_ignored_rule_candidates,
 )
+from .schematic_erc_unknown_rule_key_review import (
+    source_bound_schematic_erc_unknown_rule_key_candidates,
+)
 from .schematic_erc_warning_downgrade import (
     source_bound_schematic_erc_warning_downgrade_candidates,
 )
@@ -186,6 +189,11 @@ def inspect_design_lint_request(
                 coach.source_hashes,
             ),
             *source_bound_schematic_erc_ignored_rule_candidates(
+                root,
+                config,
+                coach.source_hashes,
+            ),
+            *source_bound_schematic_erc_unknown_rule_key_candidates(
                 root,
                 config,
                 coach.source_hashes,

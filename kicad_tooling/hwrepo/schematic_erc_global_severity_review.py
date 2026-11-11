@@ -11,6 +11,7 @@ from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .project_models import ProjectConfig, ProjectKind
 from .schematic_erc_project_settings import (
     ERC_DEFAULT_IGNORED_RULE_KEYS,
+    SCHEMATIC_ERC_SUPPORTED_PROJECT_KINDS,
     SchematicErcRuleSeverity,
     configured_schematic_erc_rule_severities,
 )
@@ -22,14 +23,6 @@ from .source_state_models import SourceHashInventory
 
 _SUPPORTED_KICAD_VERSION = re.compile(r"10\.0\.\d+\Z")
 _RULE_ID: DesignLintRuleId = "schematic.erc_rule_ignored"
-_SUPPORTED_PROJECT_KINDS = frozenset(
-    {
-        ProjectKind.PCB,
-        ProjectKind.SCHEMATIC,
-        ProjectKind.SYSTEM_WIRING,
-        ProjectKind.HARNESS_INTERFACE,
-    }
-)
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,7 +36,7 @@ class SchematicErcIgnoredRuleEvidence:
     configured_rule: SchematicErcRuleSeverity
 
     def __post_init__(self) -> None:
-        if self.project_kind not in _SUPPORTED_PROJECT_KINDS:
+        if self.project_kind not in SCHEMATIC_ERC_SUPPORTED_PROJECT_KINDS:
             raise ValueError("Ignored schematic ERC rules require a schematic-capable project")
         if _SUPPORTED_KICAD_VERSION.fullmatch(self.kicad_version) is None:
             raise ValueError("Ignored schematic ERC rules require KiCad 10.0.x")
@@ -118,7 +111,7 @@ def source_bound_schematic_erc_ignored_rule_candidates(
     source_hashes: SourceHashInventory,
 ) -> tuple[Candidate, ...]:
     """Review explicit KiCad 10.0.x ERC ignores other than documented defaults."""
-    if config.kind not in _SUPPORTED_PROJECT_KINDS:
+    if config.kind not in SCHEMATIC_ERC_SUPPORTED_PROJECT_KINDS:
         return ()
     if _SUPPORTED_KICAD_VERSION.fullmatch(config.kicad_version) is None:
         return ()

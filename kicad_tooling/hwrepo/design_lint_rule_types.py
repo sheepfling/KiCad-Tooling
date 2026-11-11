@@ -321,6 +321,7 @@ DesignLintRuleId = Literal[
     "schematic.erc_error_downgraded",
     "schematic.erc_exclusion_present",
     "schematic.erc_rule_ignored",
+    "schematic.erc_unknown_rule_key",
     "connector.return_distribution",
     "net.numbered_returns",
     "net.numbered_power_rails",
