@@ -14313,6 +14313,55 @@
       "implementation_owner": "kicad_tooling/hwrepo/power_component_supply_range_coverage.py#component_supply_range_pin_coverage_issues"
     },
     {
+      "rule_id": "power.component_supply_range_map_coverage",
+      "title": "Fitted IC supply pins have no current operating-range map",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted component whose reference matches the shared U/IC integrated-circuit convention and whose current native pin-type inventory contains one or more power_in pins, compare its symbol, footprint, and PART_ID with component_supply_voltage_range_map. Emit REVIEW when no map identity exists or when the mapped identity is stale. A current exact identity suppresses this coverage prompt; per-pin completeness remains with power.component_supply_range_pin_coverage.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Reference convention and power_in metadata are candidate-discovery clues. The check does not discover custom reference conventions or components whose native electrical-type metadata is missing.",
+        "A current map identity does not establish that the symbol contains every physical package supply pin or that the authored ranges, source documents, voltages, or operating conditions are correct.",
+        "The rule does not infer required nets, join supply domains, establish source capability or PCB continuity, or assess manufacturing readiness. It is optional and default off to avoid imposing range-map coverage on projects that have not selected this review scope."
+      ],
+      "fault_fixtures": [
+        "tests.test_component_supply_range_map_coverage.test_unmapped_fitted_ic_supply_pins_need_review",
+        "tests.test_component_supply_range_map_coverage.test_stale_identity_does_not_count_as_current_map_coverage",
+        "tests.test_component_supply_range_map_coverage.test_enabled_rule_uses_shared_evaluator_and_can_be_disabled",
+        "tests.test_component_supply_range_map_coverage_parity.test_component_supply_range_map_coverage_review_matches_between_cli_and_mcp",
+        "tests.test_component_rating_native_fixture_lane.test_component_and_connector_rating_controls_export_repeatably"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_component_supply_range_map_coverage.test_complete_current_map_quiets_each_supported_ic",
+        "tests.test_component_supply_range_map_coverage.test_non_ic_dnp_and_non_power_input_components_are_not_candidates",
+        "tests.test_component_rating_native_fixture_lane.test_component_and_connector_rating_controls_export_repeatably"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_component_supply_range_map_coverage.test_map_order_does_not_change_issue_identity_or_order"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/power_component_supply_range_map_coverage.py#component_supply_range_map_coverage_issues",
+        "kicad_tooling/hwrepo/design_lint_power_supply_range_map_coverage.py#component_supply_range_map_coverage_candidates",
+        "kicad_tooling/hwrepo/design_lint_power_candidates.py#scan_power_candidates",
+        "kicad_tooling/hwrepo/design_lint_power_candidate_evidence.py#project_power_candidate_evidence",
+        "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
+        "kicad_tooling/hwrepo/component_supply_range_models.py#ComponentSupplyVoltageRangeMap",
+        "kicad_tooling/hwrepo/design_lint_policy_models.py#DesignLintPolicy",
+        "kicad_tooling/hwrepo/design_lint_rule_types.py#DesignLintRuleId",
+        "kicad_tooling/ci_hosted_component_supply_range_fixture.py#verify_component_supply_range_fixture"
+      ],
+      "theme": "power",
+      "implementation_owner": "kicad_tooling/hwrepo/power_component_supply_range_map_coverage.py#component_supply_range_map_coverage_issues"
+    },
+    {
       "rule_id": "power.ic_rail_without_fitted_capacitor",
       "title": "Recognized IC supply rail has no fitted capacitor to return",
       "status": "active",

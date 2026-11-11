@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 327 rules are implemented with synthetic regression coverage.
+The following 328 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 327 active rules.
+The catalog currently contains 328 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -564,6 +564,7 @@ skipped under prerelease policy.
 - `oscillator.output_load_path_mismatch`
 - `power.component_supply_voltage_outside_range`
 - `power.component_supply_range_pin_coverage`
+- `power.component_supply_range_map_coverage`
 - `power.gpio_to_control_input_voltage_review`
 - `power.open_drain_control_input_pullup_voltage_review`
 - `power.ic_decoupling_below_project_minimum`
@@ -788,7 +789,16 @@ standalone parity work when it closes a demonstrated feature regression.
   against the separate public template and a relocated-layout copy all passed.
   The exact native lane passed on digest-pinned KiCad 10.0.0 and 10.0.5. Preview
   and package-release jobs were skipped by prerelease policy.
-- **Latest feature work (LINT-393, mapped supply-pin coverage):** The new
+- **Latest feature work (LINT-394, unmapped fitted IC supply pins):** The new
+  default-off `power.component_supply_range_map_coverage` rule finds fitted
+  U/IC references with native `power_in` pins that lack a current authored
+  supply-range identity. It emits a component-level REVIEW prompt without
+  guessing voltages, nets, or pin limits. The exact rule gate passed locally:
+  373 tests passed, 8,023 were deselected, and both native Docker profiles
+  (KiCad 10.0.0 and 10.0.5) passed. Pyright, Windows types, wheel/sdist,
+  installed-wheel, and separate-template playtests passed. Hosted acceptance is
+  pending this tag. No external project data was used.
+- **Earlier feature work (LINT-393, mapped supply-pin coverage):** The
   default-off `power.component_supply_range_pin_coverage` rule checks that
   every native `power_in` pin on a component named in the reviewed supply-range
   map has its own map entry. Missing or contradictory native coverage stays
@@ -4121,7 +4131,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-  Current catalog audit: 327 covered, 0 not applicable, 0 unreviewed.
+  Current catalog audit: 328 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -23319,6 +23329,48 @@ acceptance threads while new lint features proceed:
   Exact native acceptance uses
   `tests/test_component_rating_native_fixture_lane.py` and
   `KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES=1`.
+
+#### LINT-394 — Review unmapped fitted IC supply pins
+
+- **Status:** New opt-in deterministic coverage rule,
+  `power.component_supply_range_map_coverage`, default `off`.
+- **Cohort cue:** The documented kicad-happy OV-001 operating-range review
+  motivated LINT-392. LINT-394 closes the neighboring discovery gap: a map
+  comparison cannot prompt on an IC that was never added to the map. No cohort
+  implementation or board data is used at runtime.
+- **Behavior:** When a project opts in and supplies its authored range map,
+  scan fitted U/IC references with current native `power_in` pin metadata.
+  Emit a component-level REVIEW prompt when the reference has no range-map
+  entry or its mapped symbol, footprint, or `PART_ID` is stale. A current
+  exact identity clears this component-coverage prompt; LINT-393 continues to
+  check whether each native supply pin has its own range entry.
+- **Boundary:** U/IC reference syntax and `power_in` symbol metadata are
+  discovery clues only. Components with custom reference conventions or
+  missing electrical-type metadata are not discovered. The prompt does not
+  infer a voltage, expected net, required common domain, physical package pin,
+  source capability, or PCB continuity. Default-off keeps broad map coverage
+  an explicit project choice.
+- **Fixtures:** Synthetic cases cover an unmapped second IC, an exact current
+  map, stale identity, DNP, non-IC references, non-power pins, stable map
+  ordering, shared evaluation, rule-off behavior, and CLI/MCP parity. The
+  tooling-owned native fixture adds an unmapped U3 beside mapped U1; the
+  incomplete-map case names U3.1/U3.2 and the complete-map control clears it.
+  Exact source-bound exports use digest-pinned KiCad 10.0.0 and 10.0.5 and
+  retain repeatable netlists plus ERC signatures. The authored ranges are
+  synthetic test values, not device ratings.
+- **Selection:** Run
+  `tests/test_component_supply_range_map_coverage.py` and
+  `tests/test_component_supply_range_map_coverage_parity.py` with
+  `design_lint and component_lint and power_lint`; exact native acceptance
+  uses `tests/test_component_rating_native_fixture_lane.py` and
+  `KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES=1`.
+- **Local scoped gate (2026-11-11):** `scripts/ci.py` passed the rule selector
+  plus cross-rule integrity checks: 373 passed, 8,023 deselected. The suite
+  included source-hashed repeatable KiCad 10.0.0/10.0.5 Docker exports, ERC,
+  mapped/unmapped controls, and the CLI/MCP parity case. Formatting, Ruff,
+  Alphus, Markdown checks, Pyright, Windows type checks, wheel/sdist builds,
+  installed-wheel checks, and external-template playtests passed. Hosted
+  acceptance remains pending.
 
 ## Completion and release gate
 

@@ -22,6 +22,11 @@ PIN_COVERAGE_OWNER = (
     "kicad_tooling/hwrepo/power_component_supply_range_coverage.py#"
     "component_supply_range_pin_coverage_issues"
 )
+MAP_COVERAGE_RULE_ID = "power.component_supply_range_map_coverage"
+MAP_COVERAGE_OWNER = (
+    "kicad_tooling/hwrepo/power_component_supply_range_map_coverage.py#"
+    "component_supply_range_map_coverage_issues"
+)
 
 
 def test_catalog_names_the_theme_owned_predicate_and_disabled_default() -> None:
@@ -43,6 +48,15 @@ def test_catalog_names_the_theme_owned_supply_pin_coverage_predicate() -> None:
     assert PIN_COVERAGE_OWNER in rule.implementation_refs
 
 
+def test_catalog_names_the_theme_owned_supply_range_map_discovery_predicate() -> None:
+    rule = next(item for item in rule_catalog().rules if item.rule_id == MAP_COVERAGE_RULE_ID)
+
+    assert rule.theme == "power"
+    assert rule.default_mode == "off"
+    assert rule.implementation_owner == MAP_COVERAGE_OWNER
+    assert MAP_COVERAGE_OWNER in rule.implementation_refs
+
+
 def test_supply_range_model_has_a_direct_owner_and_public_compatibility_export() -> None:
     assert PublicMap is ComponentSupplyVoltageRangeMap
     assert inspect.getmodule(ComponentSupplyVoltageRangeMap).__name__ == (
@@ -58,9 +72,13 @@ def test_supply_range_modules_and_lint_suite_stay_below_review_limits() -> None:
         "kicad_tooling/hwrepo/design_lint_power_supply_range.py",
         "kicad_tooling/hwrepo/power_component_supply_range_coverage.py",
         "kicad_tooling/hwrepo/design_lint_power_supply_range_coverage.py",
+        "kicad_tooling/hwrepo/power_component_supply_range_map_coverage.py",
+        "kicad_tooling/hwrepo/design_lint_power_supply_range_map_coverage.py",
         "tests/test_component_supply_voltage_range.py",
         "tests/test_component_supply_range_pin_coverage.py",
+        "tests/test_component_supply_range_map_coverage.py",
         "tests/test_component_supply_voltage_range_parity.py",
+        "tests/test_component_supply_range_map_coverage_parity.py",
         "tests/test_component_rating_native_fixture_lane.py",
     )
 

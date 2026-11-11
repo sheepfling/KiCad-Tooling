@@ -120,6 +120,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "pcb.required_fitted_reference",
             "power.component_supply_voltage_outside_range",
             "power.component_supply_range_pin_coverage",
+            "power.component_supply_range_map_coverage",
             "connector.footprint_peer_pin_all_open",
             "connector.footprint_same_voltage_power_input_unanchored",
             "connector.generic_peer_pin_all_open",

@@ -1,25 +1,28 @@
 # Mapped component supply-voltage range fixture
 
 These tooling-owned synthetic schematics exercise the opt-in
-`power.component_supply_voltage_outside_range` and
-`power.component_supply_range_pin_coverage` review rules. Both contain the
+`power.component_supply_voltage_outside_range`,
+`power.component_supply_range_pin_coverage`, and
+`power.component_supply_range_map_coverage` review rules. Both contain the
 same synthetic `U1` with two native `power_in` pins (`VIN` and `VDD`) and exact
-symbol, footprint, `PART_ID`, and pin inventory. Both pins share the source
-rail. The fault labels that rail `24V`; the valid control labels it `5V`. Their
-only source difference is the voltage label.
+symbol, footprint, `PART_ID`, and pin inventory. They also contain a fitted,
+unmapped `U3` with the same two pin functions and a distinct `PART_ID`. Both ICs
+share the source rail: the fault labels it `24V`, and the valid control labels
+it `5V`. Their only source difference is the voltage label.
 
-The native verifier applies an explicitly authored synthetic range map for
-`U1.1` with an inclusive range of 5 V to 12 V. The 24 V net label creates a
-review finding and the 5 V label is quiet. For pin-coverage review, a map that
-lists only `U1.1` reports the uncovered native `power_in` pin `U1.2`; adding an
-exact `U1.2` range entry clears that coverage finding on the same native source.
+The native verifier applies a synthetic range map for `U1.1` with an inclusive
+range of 5 V to 12 V. The 24 V net label creates a review finding and the 5 V
+label is quiet. For pin-coverage review, a map that lists only `U1.1` reports
+the uncovered native `power_in` pin `U1.2`; adding an exact `U1.2` range entry
+clears that pin-coverage finding. For component-map coverage, the `U1`-only map
+prompts on the unmapped `U3.1`/`U3.2`; exact entries for U3 clear the prompt.
 The synthetic ranges are test boundaries, not real component ratings or
 datasheet claims.
 
 | Case                | SHA-256                                                            |
 | ------------------- | ------------------------------------------------------------------ |
-| `fault.kicad_sch`   | `6bf5cae9f306553442dfbac9a427f584068ae1e8df4ee6f797907c3bce289ccc` |
-| `control.kicad_sch` | `09d4978aba50c6378dcd46cd870897ff30640cb9428bd4f02ff2cc115e826064` |
+| `fault.kicad_sch`   | `3966a0ffd04d4e75dc30c751497ba34c00dcdafbf12982903d42b96470a3c152` |
+| `control.kicad_sch` | `4a9709636901c51b362e688f22d4ae3bd69faa2b2b0a747e6e2d09ae31a73545` |
 
 The acceptance test exports both schematics twice using the selected external
 template's exact KiCad project profiles: KiCad 10.0.0 and 10.0.5. The images

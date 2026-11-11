@@ -52,6 +52,7 @@ from tests.design_lint_fixtures.catalog_reachability_mapped_connectors import (
 )
 from tests.design_lint_fixtures.component_supply_voltage_ranges import (
     supply_range_map,
+    supply_range_map_coverage_netlist,
     supply_range_netlist,
 )
 from tests.design_lint_fixtures.connector_coverage import (
@@ -261,6 +262,13 @@ def catalog_reachability_rule_ids() -> set[str]:
         item.rule_id
         for item in candidates(
             supply_range_netlist(input_net="3V3"),
+            component_supply_voltage_range_map=supply_range_map(),
+        )
+    )
+    result.update(
+        item.rule_id
+        for item in candidates(
+            supply_range_map_coverage_netlist(),
             component_supply_voltage_range_map=supply_range_map(),
         )
     )

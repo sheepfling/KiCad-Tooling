@@ -125,4 +125,17 @@ class DesignLintPolicy(StrictModel):
                 "Enabling power.component_supply_range_pin_coverage requires "
                 "component_supply_voltage_range_map"
             )
+        supply_map_coverage_mode = next(
+            (
+                item.mode
+                for item in self.rules
+                if item.rule_id == "power.component_supply_range_map_coverage"
+            ),
+            "off",
+        )
+        if supply_map_coverage_mode != "off" and self.component_supply_voltage_range_map is None:
+            raise ValueError(
+                "Enabling power.component_supply_range_map_coverage requires "
+                "component_supply_voltage_range_map"
+            )
         return self

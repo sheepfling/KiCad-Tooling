@@ -26,3 +26,24 @@ OPEN_DRAIN_CONTROL_PARITY_FIXTURES = MappingProxyType(
         ),
     }
 )
+
+SUPPLY_RANGE_MAP_COVERAGE_PARITY_FIXTURES = MappingProxyType(
+    {
+        "power.component_supply_range_map_coverage": MappingProxyType(
+            {
+                "fault_fixtures": (
+                    (
+                        "tests.test_component_supply_range_map_coverage_parity."
+                        "test_component_supply_range_map_coverage_review_matches_between_cli_and_mcp"
+                    ),
+                ),
+                "valid_control_fixtures": (
+                    (
+                        "tests.test_component_supply_range_map_coverage_parity."
+                        "test_component_supply_range_map_coverage_review_matches_between_cli_and_mcp"
+                    ),
+                ),
+            }
+        ),
+    }
+)

@@ -72,6 +72,7 @@ DesignLintRuleId = Literal[
     "power.named_supply_pin_on_negative_rail",
     "power.component_supply_voltage_outside_range",
     "power.component_supply_range_pin_coverage",
+    "power.component_supply_range_map_coverage",
     "component.peer_power_pin_assignment_divergence",
     "component.peer_power_input_assignment_divergence",
     "component.peer_power_input_named_assignment_divergence",

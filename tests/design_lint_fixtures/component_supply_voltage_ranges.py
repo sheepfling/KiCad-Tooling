@@ -21,6 +21,7 @@ SUPPLY_PART_ID = "SYNTHETIC-SUPPLY-RANGE-IC"
 def supply_range_requirement(
     *,
     id: str = "u1-input",
+    reference: str = "U1",
     pin: str = "U1.1",
     minimum_voltage_v: float = 7.0,
     maximum_voltage_v: float = 35.0,
@@ -32,7 +33,7 @@ def supply_range_requirement(
     """Return one synthetic, exact-part supply-range map entry."""
     return ComponentSupplyVoltageRangeRequirement(
         id=id,
-        reference="U1",
+        reference=reference,
         expected_symbol=expected_symbol,
         expected_footprint=expected_footprint,
         expected_part_id=expected_part_id,
@@ -42,6 +43,72 @@ def supply_range_requirement(
         maximum_voltage_v=maximum_voltage_v,
         range_source="Synthetic test basis only",
         range_conditions="Synthetic nominal-label boundary; not a device specification",
+    )
+
+
+def supply_range_map_coverage_netlist() -> NetlistContract:
+    """Return U1 plus a second fitted IC omitted from the supply-range map."""
+    observed = supply_range_netlist()
+    return observed.model_copy(
+        update={
+            "components": {
+                **observed.components,
+                "U3": ComponentContract(
+                    value="Synthetic supply-input device",
+                    footprint=SUPPLY_FOOTPRINT,
+                    part_id="SYNTHETIC-UNCOVERED-SUPPLY-IC",
+                ),
+            },
+            "nets": {
+                **observed.nets,
+                "3V3": ("U3.1",),
+                "GND": (*observed.nets["GND"], "U3.2"),
+            },
+            "component_symbols": {**observed.component_symbols, "U3": SUPPLY_SYMBOL},
+            "pin_functions": {
+                **observed.pin_functions,
+                "U3.1": "VIN",
+                "U3.2": "VDD",
+            },
+            "pin_electrical_types": {
+                **observed.pin_electrical_types,
+                "U3.1": "power_in",
+                "U3.2": "power_in",
+            },
+            "component_pin_numbers": {
+                **observed.component_pin_numbers,
+                "U3": ("1", "2"),
+            },
+        }
+    )
+
+
+def supply_range_map_coverage_complete_map() -> ComponentSupplyVoltageRangeMap:
+    """Map every native supply pin on the two synthetic ICs."""
+    return supply_range_map(
+        supply_range_requirement(),
+        supply_range_requirement(
+            id="u1-ground-input",
+            pin="U1.2",
+            expected_pin_function="VDD",
+            minimum_voltage_v=0.0,
+            maximum_voltage_v=0.0,
+        ),
+        supply_range_requirement(
+            id="u3-input",
+            reference="U3",
+            pin="U3.1",
+            expected_part_id="SYNTHETIC-UNCOVERED-SUPPLY-IC",
+        ),
+        supply_range_requirement(
+            id="u3-ground-input",
+            reference="U3",
+            pin="U3.2",
+            expected_part_id="SYNTHETIC-UNCOVERED-SUPPLY-IC",
+            expected_pin_function="VDD",
+            minimum_voltage_v=0.0,
+            maximum_voltage_v=0.0,
+        ),
     )
 
 

@@ -67,8 +67,8 @@ def test_component_and_connector_rating_controls_export_repeatably(tmp_path: Pat
         repository / "tests/fixtures/design_lint/component-supply-voltage-range"
     )
     expected_supply_range_fixture_hashes = {
-        "fault.kicad_sch": "6bf5cae9f306553442dfbac9a427f584068ae1e8df4ee6f797907c3bce289ccc",
-        "control.kicad_sch": "09d4978aba50c6378dcd46cd870897ff30640cb9428bd4f02ff2cc115e826064",
+        "fault.kicad_sch": "3966a0ffd04d4e75dc30c751497ba34c00dcdafbf12982903d42b96470a3c152",
+        "control.kicad_sch": "4a9709636901c51b362e688f22d4ae3bd69faa2b2b0a747e6e2d09ae31a73545",
     }
     assert hashlib.sha256(fixture.read_bytes()).hexdigest() == expected_fixture_sha256
     assert hashlib.sha256(power_fixture.read_bytes()).hexdigest() == expected_power_fixture_sha256
@@ -99,6 +99,8 @@ def test_component_and_connector_rating_controls_export_repeatably(tmp_path: Pat
             "component-supply-range-fixture/native-export",
             "component-supply-range-fixture/out-of-range-fault",
             "component-supply-range-fixture/in-range-control",
+            "component-supply-range-fixture/unmapped-component-fault",
+            "component-supply-range-fixture/complete-project-map-control",
         }
         supply_range_native = supply_range_results["component-supply-range-fixture/native-export"]
         assert supply_range_native["status"] == "PASS"
@@ -117,6 +119,18 @@ def test_component_and_connector_rating_controls_export_repeatably(tmp_path: Pat
         )
         assert (
             supply_range_results["component-supply-range-fixture/in-range-control"]["finding_rule"]
+            == "none"
+        )
+        assert (
+            supply_range_results["component-supply-range-fixture/unmapped-component-fault"][
+                "finding_rule"
+            ]
+            == "power.component_supply_range_map_coverage"
+        )
+        assert (
+            supply_range_results["component-supply-range-fixture/complete-project-map-control"][
+                "finding_rule"
+            ]
             == "none"
         )
         coverage_results = {
