@@ -788,6 +788,15 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **Latest published lint-gate checkpoint (v0.5.3rc681):** LINT-404 adds the
+  source-hashed DB9 split/common fault-control pair to the official pinned
+  KiCad 10.0.8 image while preserving the existing 10.0.0/10.0.5 cases. The
+  scoped package gate passed 452 tests with 8,467 deselected, including both
+  required native lanes, targeted Linux and Windows typing, wheel/source
+  builds, and installed-wheel rehearsal against the public template and its
+  adapted layout. Hosted prerelease acceptance passed in GitHub Actions run
+  [43106385974](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43106385974).
+  Package and preview jobs were skipped under prerelease policy.
 - **Latest published lint-gate checkpoint (v0.5.3rc680):** Focused serial
   reference fault, control, and ordering regressions now collect separately.
   The exact serial unit and native selector passed 10 tests with 2 deselected,
@@ -23828,8 +23837,10 @@ acceptance threads while new lint features proceed:
   Windows-target Pyright, wheel and source-archive builds, installed-wheel
   origin/version checks, and external/adapted checkout rehearsals passed. The
   external public template was checked out at
-  `ed89536f0dbbcb013145af2994fef41b2250143e`. Annotated tag and hosted
-  acceptance are pending.
+  `ed89536f0dbbcb013145af2994fef41b2250143e`.
+- **Hosted acceptance:** Tag `v0.5.3rc681` passed in GitHub Actions run
+  [43106385974](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43106385974).
+  The package and preview jobs were skipped by prerelease policy.
 
 ## Completion and release gate
 
