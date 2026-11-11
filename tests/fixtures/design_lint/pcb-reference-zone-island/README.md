@@ -44,9 +44,9 @@ and connectivity before interpreting a candidate.
 
 Fixture SHA-256:
 
-| Board                        | SHA-256                                                                  |
-| ---------------------------- | ------------------------------------------------------------------------ |
-| `fault.kicad_pcb`            | `501f69644d4f40dae7f2aada3da27595cfb2d32aae8b2213e2909d76c46115d4`     |
-| `control.kicad_pcb`          | `609405676e4dc46f00620c4dce0c188391496c91006fe5199762a352c8850f36`     |
-| `indirect-control.kicad_pcb` | `2e69f57225cabb1ea91a88234dc2e9edc8550cfab1d2490d58faae07d44fdb76`   |
-| `via-control.kicad_pcb`      | `f04acaab75f69b98570d2429c58ad87e4691bbb69df649c0be32be0714505c21`   |
+| Board                        | SHA-256                                                            |
+| ---------------------------- | ------------------------------------------------------------------ |
+| `fault.kicad_pcb`            | `501f69644d4f40dae7f2aada3da27595cfb2d32aae8b2213e2909d76c46115d4` |
+| `control.kicad_pcb`          | `609405676e4dc46f00620c4dce0c188391496c91006fe5199762a352c8850f36` |
+| `indirect-control.kicad_pcb` | `2e69f57225cabb1ea91a88234dc2e9edc8550cfab1d2490d58faae07d44fdb76` |
+| `via-control.kicad_pcb`      | `f04acaab75f69b98570d2429c58ad87e4691bbb69df649c0be32be0714505c21` |
