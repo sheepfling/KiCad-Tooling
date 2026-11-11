@@ -480,36 +480,4 @@ RULE_NODE_CASES = (
         "connector.mapped_interface_other_unassigned",
         "tests/test_design_lint_determinism_mapped_interface_other_unassigned.py::test_other_contact_fault_and_control_reports_are_deterministic",
     ),
-    (
-        "pcb.custom_drc_layer_reference",
-        "tests/test_pcb_dru_layer_reference.py::test_display_aliases_in_layer_clauses_and_conditions_request_review",
-    ),
-    (
-        "pcb.custom_drc_layer_reference",
-        "tests/test_pcb_dru_layer_reference.py::test_unknown_and_stackup_absent_layers_are_distinguished",
-    ),
-    (
-        "pcb.custom_drc_layer_reference",
-        "tests/test_pcb_dru_layer_reference.py::test_canonical_names_and_alias_text_in_comments_are_quiet",
-    ),
-    (
-        "pcb.custom_drc_layer_reference",
-        "tests/test_pcb_dru_layer_reference.py::test_text_variables_defer_to_the_existing_substitution_review",
-    ),
-    (
-        "pcb.custom_drc_layer_reference",
-        "tests/test_pcb_dru_layer_reference.py::test_board_saved_display_alias_is_discovered_from_its_layer_table",
-    ),
-    (
-        "pcb.custom_drc_layer_reference",
-        "tests/test_pcb_dru_layer_reference.py::test_source_hashes_fingerprints_and_project_policy_are_exact",
-    ),
-    (
-        "pcb.custom_drc_layer_reference",
-        "tests/test_design_lint_mcp_parity_pcb_dru_layer_reference.py::test_custom_drc_layer_review_matches_cli_and_mcp",
-    ),
-    (
-        "pcb.custom_drc_layer_reference",
-        "tests/test_pcb_dru_layer_reference_native.py::test_native_layer_name_faults_and_controls_on_pinned_kicad_1008",
-    ),
 )

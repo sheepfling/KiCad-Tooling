@@ -788,7 +788,16 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
-- **Latest published lint-gate checkpoint (v0.5.3rc681):** LINT-404 adds the
+- **Current lint-gate checkpoint (candidate v0.5.3rc683):** LINT-405 adds a
+  source-bound REVIEW for risky custom DRC layer names. The first hosted run of
+  `v0.5.3rc682` exposed two rule-gate omissions: this rule was absent from
+  synthetic catalog reachability, and its selector entries pushed a support
+  module over the 500-line limit. The PCB selector entries now live in the PCB
+  case table, and reachability exercises the actual source-bound predicate. The
+  exact tag selector passed 381 tests with 8,549 deselected, including repeated
+  fault and control cases in the digest-pinned KiCad 10.0.8 Docker image. Hosted
+  acceptance for `v0.5.3rc683` is pending.
+- **Previously published lint-gate checkpoint (v0.5.3rc681):** LINT-404 adds the
   source-hashed DB9 split/common fault-control pair to the official pinned
   KiCad 10.0.8 image while preserving the existing 10.0.0/10.0.5 cases. The
   scoped package gate passed 452 tests with 8,467 deselected, including both
@@ -797,14 +806,6 @@ standalone parity work when it closes a demonstrated feature regression.
   adapted layout. Hosted prerelease acceptance passed in GitHub Actions run
   [43106385974](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43106385974).
   Package and preview jobs were skipped under prerelease policy.
-- **Current implementation (LINT-405; candidate v0.5.3rc682):** Add a
-  source-bound REVIEW for risky custom DRC layer names. The scoped package gate
-  passed 436 selected tests, including CLI/MCP parity and repeated native
-  display-alias, unknown-layer, absent-inner-layer, and canonical cases on
-  digest-pinned KiCad 10.0.8. Ruff, both Alphus profiles, rumdl, mdrepo, native
-  and Windows-target Pyright, wheel/sdist builds, fresh wheel installation,
-  and public-template/adapted-layout rehearsals passed. Hosted CI will run after
-  the tag push.
 - **Latest published lint-gate checkpoint (v0.5.3rc680):** Focused serial
   reference fault, control, and ordering regressions now collect separately.
   The exact serial unit and native selector passed 10 tests with 2 deselected,
@@ -23887,14 +23888,13 @@ acceptance threads while new lint features proceed:
   `design_lint_rule(rule_id="pcb.custom_drc_layer_reference")` markers. Add
   `tests/test_pcb_dru_layer_reference_native.py`, set
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, and select `native_kicad` for Docker.
-- **Local acceptance:** The scoped package gate passed 436 tests with no
-  failures. It included all related custom-rule parser and parity suites,
-  architecture and catalog selectors, and the 10.0.8 native test, which ran
-  each of its four cases twice. Both native and Windows-target Pyright, Ruff,
-  both Alphus profiles, rumdl, mdrepo, wheel/sdist builds, fresh installed-wheel
-  origin/version checks, and inventory/surface/verify/playtest rehearsals on
-  the public template and its adapted layout passed. Hosted CI remains pending
-  for tag `v0.5.3rc682`.
+- **Local acceptance:** The scoped package gate passed 436 tests before the
+  first tag. Hosted acceptance for `v0.5.3rc682` then caught the two rule-gate
+  omissions described above. After the synthetic reachability case and selector
+  split were added, the exact tag selector passed 381 tests with 8,549
+  deselected; its pinned native test ran each of four fault/control cases twice.
+  Ruff and format checks passed on the follow-up changes. Hosted acceptance for
+  `v0.5.3rc683` is pending.
 
 ## Completion and release gate
 

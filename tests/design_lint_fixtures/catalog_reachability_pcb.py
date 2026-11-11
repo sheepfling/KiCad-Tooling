@@ -34,6 +34,9 @@ from tests import pcb_rf_antenna_support as _pcb_rf_antenna_support
 from tests.design_lint_fixtures import observed as observed_netlist
 from tests.design_lint_fixtures import pcb_reference_planes as _pcb_reference_plane_fixtures
 from tests.design_lint_fixtures import pcb_switching_loop as _pcb_switching_loop_fixtures
+from tests.design_lint_fixtures.catalog_reachability_pcb_dru_layer import (
+    custom_drc_layer_rule_ids,
+)
 from tests.design_lint_fixtures.catalog_reachability_pcb_fiducials import pcb_fiducial_rule_ids
 from tests.design_lint_fixtures.catalog_reachability_pcb_routes import pcb_route_rule_ids
 from tests.design_lint_fixtures.jtag_generic_connector_pair import generic_jtag_connector_netlist
@@ -471,4 +474,5 @@ def pcb_rule_ids() -> set[str]:
     )
     result.update(item.rule_id for item in touch_candidates)
     result.update(pcb_fiducial_rule_ids())
+    result.update(custom_drc_layer_rule_ids())
     return result
