@@ -1,7 +1,7 @@
 {
   "erc": {
     "meta": {
-      "version": 1
+      "version": 0
     },
     "erc_exclusions": []
   }

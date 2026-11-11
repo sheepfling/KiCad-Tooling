@@ -34,7 +34,7 @@ from tests.schematic_erc_exclusion_support import PROJECT_RELATIVE, erc_exclusio
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.schematic_lint,
-    pytest.mark.design_lint_rule("schematic.erc_exclusion_present"),
+    pytest.mark.design_lint_rule(rule_id="schematic.erc_exclusion_present"),
 ]
 
 RULE_ID = "schematic.erc_exclusion_present"
@@ -50,7 +50,7 @@ def test_saved_exclusions_report_type_comment_and_source_binding(tmp_path: Path)
     candidates = _scan(root, config, source_hashes)
 
     assert tuple(item.evidence["erc_error_type"][0] for item in candidates) == (
-        "label_not_connected",
+        "label_dangling",
         "pin_not_connected",
     )
     assert all(item.rule_id == RULE_ID for item in candidates)
@@ -72,7 +72,7 @@ def test_saved_exclusions_report_type_comment_and_source_binding(tmp_path: Path)
         "exclusion_comment": ("Synthetic intentionally-unused test point.",),
     }
     without_comment = next(
-        item for item in candidates if item.evidence["erc_error_type"] == ("label_not_connected",)
+        item for item in candidates if item.evidence["erc_error_type"] == ("label_dangling",)
     )
     assert "no explanatory comment" in without_comment.message
     assert without_comment.evidence["exclusion_comment"] == ("",)
@@ -93,26 +93,38 @@ def test_empty_or_absent_exclusion_lists_are_valid_controls(tmp_path: Path) -> N
     root, _, config, source_hashes = erc_exclusion_project(tmp_path, "control.kicad_pro")
     assert _scan(root, config, source_hashes) == ()
     assert schematic_erc_exclusions("{}") == ()
-    assert schematic_erc_exclusions('{"erc":{"meta":{"version":1}}}') == ()
+    assert schematic_erc_exclusions('{"erc":{"meta":{"version":0}}}') == ()
 
 
-def test_legacy_marker_strings_and_comment_pairs_are_supported() -> None:
-    marker = "pin_not_connected|12000000|8000000|11111111-1111-4111-8111-111111111111"
+def test_kicad_10_serialized_markers_and_comment_pairs_are_supported() -> None:
+    marker = (
+        "pin_not_connected|12000000|8000000|11111111-1111-4111-8111-111111111111|"
+        "22222222-2222-4222-8222-222222222222|||"
+    )
+    marker_with_comment = (
+        "label_dangling|14000000|9000000|33333333-3333-4333-8333-333333333333|"
+        "44444444-4444-4444-8444-444444444444|||"
+    )
     document = json.dumps(
-        {"erc": {"meta": {"version": 0}, "erc_exclusions": [marker, [marker + "|2", "reviewed"]]}}
+        {
+            "erc": {
+                "meta": {"version": 0},
+                "erc_exclusions": [marker, [marker_with_comment, "reviewed"]],
+            }
+        }
     )
 
     exclusions = schematic_erc_exclusions(document)
 
     assert exclusions == (
-        SchematicErcExclusion(marker=marker, error_type="pin_not_connected", comment=""),
         SchematicErcExclusion(
-            marker=marker + "|2", error_type="pin_not_connected", comment="reviewed"
+            marker=marker_with_comment, error_type="label_dangling", comment="reviewed"
         ),
+        SchematicErcExclusion(marker=marker, error_type="pin_not_connected", comment=""),
     )
     assert (
         schematic_erc_exclusion_marker_sha256(exclusions[0])
-        == hashlib.sha256(marker.encode("utf-8")).hexdigest()
+        == hashlib.sha256(marker_with_comment.encode("utf-8")).hexdigest()
     )
 
 
@@ -136,11 +148,15 @@ def test_marker_order_does_not_change_candidate_identity(tmp_path: Path) -> None
     "document",
     (
         '{"erc":{"meta":{"version":2},"erc_exclusions":[]}}',
-        '{"erc":{"meta":{"version":1},"erc_exclusions":[{"marker":{},"comment":4}]}}',
-        '{"erc":{"meta":{"version":1},"erc_exclusions":[{"marker":{"error_type":"x","position":{"x_nm":"1","y_nm":"2"},"items":[]}}]}}',
+        '{"erc":{"meta":{"version":1},"erc_exclusions":[]}}',
+        '{"erc":{"meta":{"version":0},"erc_exclusions":[{}]}}',
         '{"erc":{"meta":{"version":0},"erc_exclusions":[[]]}}',
+        '{"erc":{"meta":{"version":0},"erc_exclusions":[["|bad","comment"]]}}',
+        '{"erc":{"meta":{"version":0},"erc_exclusions":["pin_not_connected|bad|8000000|11111111-1111-4111-8111-111111111111|22222222-2222-4222-8222-222222222222|||"]}}',
+        '{"erc":{"meta":{"version":0},"erc_exclusions":[["pin_not_connected|1","bad", "extra"]]}}',
+        '{"erc":{"meta":{"version":0},"erc_exclusions":[["pin_not_connected|1",4]]}}',
         '{"erc":{"meta":{"version":0},"erc_exclusions":["duplicate|1","duplicate|1"]}}',
-        '{"erc":{"meta":{"version":1},"erc_exclusions":[],"erc_exclusions":[]}}',
+        '{"erc":{"meta":{"version":0},"erc_exclusions":[],"erc_exclusions":[]}}',
     ),
 )
 def test_unknown_or_malformed_exclusion_data_fails_closed(document: str) -> None:

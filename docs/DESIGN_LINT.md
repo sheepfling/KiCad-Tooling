@@ -5458,11 +5458,14 @@ approval. Tooling-owned settings fixtures are in
 project `.kicad_pro` file contains a saved per-violation ERC exclusion. The
 finding includes the ERC error type, stable marker hash, any saved comment, the
 project file hash, and the exact configured KiCad patch version. The check
-accepts legacy settings schema 0 marker strings or marker/comment pairs and
-current schema 1 marker objects. KiCad's CLI can list excluded ERC violations
-with `--severity-exclusions` ([KiCad 10 CLI reference][kicad-10-erc-cli]); the
-[ERC settings reference][kicad-erc-settings] describes project exclusion
-storage.
+reads KiCad 10.0 ERC settings schema 0 and accepts serialized marker strings
+or `[marker, comment]` pairs. It requires the serializer's eight fields and
+integer internal-unit coordinates. KiCad 10.0.0 and 10.0.5 store these under
+`erc.erc_exclusions`; `SCH_MARKER::SerializeToString` defines the marker text.
+KiCad's CLI can list excluded ERC violations with `--severity-exclusions`
+([KiCad 10 CLI reference][kicad-10-erc-cli]). The tagged source documents the
+[settings schema][kicad-10-erc-settings-source] and
+[marker serialization][kicad-10-erc-marker-source].
 
 This is a review prompt for an exception, not proof that an ERC violation still
 exists or that the exception is wrong. The rule does not resolve a saved marker
@@ -5472,7 +5475,8 @@ an exact-fingerprint ignore. Tooling-owned synthetic settings are in
 [`tests/fixtures/design_lint/schematic-erc-exclusions/`](../tests/fixtures/design_lint/schematic-erc-exclusions/).
 
 [kicad-10-erc-cli]: https://docs.kicad.org/10.0/en/cli/cli.html
-[kicad-erc-settings]: https://docs.kicad.org/doxygen/classERC__SETTINGS.html
+[kicad-10-erc-settings-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/eeschema/erc/erc_settings.cpp
+[kicad-10-erc-marker-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/eeschema/sch_marker.cpp
 
 ## Review persisted per-violation PCB DRC exclusions
 

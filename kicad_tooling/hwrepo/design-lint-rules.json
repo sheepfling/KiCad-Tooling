@@ -9916,9 +9916,9 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "Exact source-hashed KiCad 10.0 .kicad_pro ERC exclusion marker, optional comment, schema version, and configured patch version",
-      "predicate": "For supported KiCad 10.0.x project settings with ERC exclusion schema version 0 or 1, emit one review candidate for each persisted per-violation schematic ERC exclusion, whether or not it has a comment.",
+      "predicate": "For supported KiCad 10.0.x project settings with ERC exclusion schema version 0, emit one review candidate for each persisted per-violation schematic ERC exclusion, whether or not it has a comment.",
       "supported_kicad_versions": [
-        "KiCad 10.0.x .kicad_pro erc.erc_exclusions with legacy schema 0 marker strings/pairs or current schema 1 marker objects; exact configured patch version is recorded and unsupported schema versions are rejected"
+        "KiCad 10.0.x .kicad_pro erc.erc_exclusions with schema 0 serialized marker strings or [marker, comment] pairs; markers require eight fields and integer coordinates, exact configured patch version is recorded, and unsupported schema versions are rejected"
       ],
       "limitations": [
         "A saved exclusion is a review prompt, not proof that the ERC violation is still present or that its exception is wrong; a saved comment is evidence but not approval.",
@@ -9927,7 +9927,11 @@
       ],
       "fault_fixtures": [
         "tests.test_schematic_erc_exclusion_review.test_saved_exclusions_report_type_comment_and_source_binding",
-        "tests.test_design_lint_mcp_parity_schematic_erc_exclusions.test_saved_erc_exclusions_match_between_cli_and_mcp"
+        "tests.test_design_lint_mcp_parity_schematic_erc_exclusions.test_saved_erc_exclusions_match_between_cli_and_mcp",
+        "tests.test_schematic_erc_exclusion_native_fixture_lane.test_kicad_10_reloads_and_reports_saved_exclusions"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_ERC_EXCLUSION_FIXTURES"
       ],
       "valid_control_fixtures": [
         "tests.test_schematic_erc_exclusion_review.test_empty_or_absent_exclusion_lists_are_valid_controls",

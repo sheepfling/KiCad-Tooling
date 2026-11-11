@@ -72,6 +72,7 @@ def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) 
         "pcb_thermal_via_fixture_lane",
         "pcb_reference_plane_narrow_void_fixture_lane",
         "pcb_alternate_reference_plane_fixture_lane",
+        "schematic_erc_exclusion_fixture_lane",
     )
     with ExitStack() as stack:
         run = stack.enter_context(patch.object(log, "run"))
@@ -88,6 +89,8 @@ def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) 
                 component_peer_signal_input_fixture_lane=DEFAULT,
                 component_peer_signal_output_fixture_lane=DEFAULT,
                 component_peer_bidirectional_fixture_lane=DEFAULT,
+                pcb_fiducial_fixture_lane=DEFAULT,
+                pcb_reference_zone_island_fixture_lane=DEFAULT,
             )
         )
         electrical = stack.enter_context(
@@ -120,6 +123,8 @@ def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) 
         other_native_fixtures["component_peer_signal_output_fixture_lane"],
         other_native_fixtures["component_peer_signal_input_fixture_lane"],
         other_native_fixtures["component_peer_bidirectional_fixture_lane"],
+        other_native_fixtures["pcb_fiducial_fixture_lane"],
+        other_native_fixtures["pcb_reference_zone_island_fixture_lane"],
     ):
         fixture.assert_called_once_with(root, **expected_kwargs)
     stages = [call.args[0] for call in run.call_args_list]

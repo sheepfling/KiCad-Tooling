@@ -23377,18 +23377,22 @@ acceptance threads while new lint features proceed:
 #### LINT-395 — Review persisted schematic ERC exclusions
 
 - **Status:** Implemented as `schematic.erc_exclusion_present`, default
-  `review`; local scoped Docker acceptance passed, hosted gate pending.
+  `review`; exact native checks passed locally, hosted gate pending.
 - **Gap:** KiCad can retain per-violation ERC exclusions in the project file.
   Native ERC can report excluded violations with `--severity-exclusions`, but
   the current source-review tooling had no project-settings rule for this
   exception inventory. See the [KiCad 10 CLI documentation][kicad-10-erc-cli]
-  and [ERC settings reference][kicad-erc-settings].
+  and the tagged KiCad source references in the
+  [user documentation](DESIGN_LINT.md#review-persisted-schematic-erc-exclusions).
 - **Behavior:** For source-hashed KiCad 10.0.x `.kicad_pro` files, emit one
-  review prompt per saved ERC exclusion. Accept legacy schema 0 marker strings
-  and string/comment pairs, plus schema 1 marker objects. Preserve the exact
-  source hash, configured patch version, ERC error type, a stable marker digest,
-  and any saved comment. Unknown settings schemas and malformed records fail
-  closed.
+  review prompt per saved ERC exclusion. KiCad 10.0 uses ERC settings schema
+  0 and stores exclusions as serialized marker strings or `[marker, comment]`
+  pairs under `erc.erc_exclusions`; markers must have the eight fields emitted
+  by KiCad's serializer, including integer internal-unit coordinates. Unknown
+  settings versions and malformed records fail closed. Preserve the exact
+  source hash, configured patch version, serialized marker identity, a stable
+  marker digest, and any saved comment. KiCad 10.0.0 and 10.0.5 Docker checks
+  both recognized the synthetic saved markers as excluded violations.
 - **Boundary:** An exclusion is a prompt to inspect an exception, not evidence
   of a current ERC defect or an incorrect design. The rule does not resolve
   markers against the schematic or assert connectivity. PCB-only projects and
@@ -23401,13 +23405,17 @@ acceptance threads while new lint features proceed:
 - **Selection:** Run
   `tests/test_schematic_erc_exclusion_review.py` and
   `tests/test_design_lint_mcp_parity_schematic_erc_exclusions.py` with
-  `design_lint and schematic_lint`; the catalog-derived rule selector includes
-  the same cases.
-- **Local scoped gate (2026-11-11):** `scripts/ci.py` passed with 370 tests
-  passed and 8,041 deselected. Ruff, Alphus, Markdown checks, Linux/Windows
+  `design_lint and schematic_lint`. Exact native coverage uses
+  `tests/test_schematic_erc_exclusion_native_fixture_lane.py` and
+  `KICAD_RUN_NATIVE_SCHEMATIC_ERC_EXCLUSION_FIXTURES=1`; the catalog-derived
+  rule selector includes the same cases.
+- **Local scoped gate (2026-11-11):** `scripts/ci.py` passed with 387 tests
+  passed and 8,031 deselected. Ruff, Alphus, Markdown checks, Linux/Windows
   Pyright, wheel and sdist builds, isolated wheel install, external checkout
-  verification, and external-template playtest passed. Hosted tag validation
-  remains for the checkpoint push.
+  verification, and external-template playtest passed. The focused native test
+  also passed in exact KiCad 10.0.0 and 10.0.5 containers; each emitted the two
+  synthetic exclusions as `excluded: true` with the expected error types and
+  comment. Hosted tag validation remains for the checkpoint push.
 
 ## Completion and release gate
 
@@ -23445,7 +23453,6 @@ quality, or first-article continuity.
 [kicad-skills-pcb]: <https://github.com/sabas0ba/kicad_skills/blob/main/docs/guides/kicad-pcb-review.md>
 [usb-c-generic-connector-fixtures]: ../tests/fixtures/design_lint/usb-c-generic-connector-native/README.md
 [kicad-10-erc-cli]: https://docs.kicad.org/10.0/en/cli/cli.html
-[kicad-erc-settings]: https://docs.kicad.org/doxygen/classERC__SETTINGS.html
 
 [calcumaker-hardware]: https://github.com/calcumaker/calcumaker/tree/113a283/hardware
 [antmicro-cm4]: https://github.com/antmicro/cm4-baseboard/tree/d248c2921e8e7f4c9b30c96ea5f376d9b2780f1e

@@ -3,16 +3,13 @@
 from __future__ import annotations
 
 import hashlib
-import json
-import re
 from dataclasses import dataclass
-from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, JsonValue
 
 from .contracts import parse_model_text
 
-SUPPORTED_ERC_EXCLUSION_SCHEMA_VERSION = 1
+SUPPORTED_ERC_EXCLUSION_SCHEMA_VERSION = 0
 
 
 class _ErcMeta(BaseModel):
@@ -43,75 +40,36 @@ class SchematicErcExclusion:
     comment: str
 
 
-def _proto_marker_identity(value: JsonValue) -> tuple[str, str]:
-    if not isinstance(value, dict):
-        raise TypeError("KiCad 10 ERC exclusion must contain a marker object")
-    error_type = value.get("error_type")
-    position = value.get("position")
-    items = value.get("items")
-    if not isinstance(error_type, str) or not error_type.strip():
-        raise ValueError("ERC exclusion marker has no error_type")
-    if not isinstance(position, dict) or not isinstance(items, list):
-        raise TypeError("ERC exclusion marker does not match the supported KiCad 10 schema")
-    coordinates = (position.get("x_nm"), position.get("y_nm"))
-    if not all(
-        isinstance(coordinate, str) and re.fullmatch(r"-?\d+", coordinate) is not None
-        for coordinate in coordinates
-    ):
-        raise ValueError("ERC exclusion marker position must contain integer x_nm and y_nm strings")
-    if not items:
-        raise ValueError("ERC exclusion marker items must contain non-empty UUID values")
-    item_values: list[str] = []
-    for item in items:
-        if not isinstance(item, dict):
-            raise TypeError("ERC exclusion marker items must contain non-empty UUID values")
-        item_value = item.get("value")
-        if not isinstance(item_value, str):
-            raise TypeError("ERC exclusion marker items must contain non-empty UUID values")
-        item_values.append(item_value)
-    try:
-        parsed_uuids = [UUID(item_value) for item_value in item_values]
-    except ValueError as exc:
-        raise ValueError("ERC exclusion marker item values must be UUIDs") from exc
-    if any(
-        str(parsed) != item_value
-        for parsed, item_value in zip(parsed_uuids, item_values, strict=True)
-    ):
-        raise ValueError("ERC exclusion marker item values must be canonical UUIDs")
-    canonical = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-    return canonical, error_type
-
-
-def _legacy_marker_identity(value: JsonValue) -> tuple[str, str]:
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError("Legacy ERC exclusion marker is empty or not text")
-    error_type = value.partition("|")[0]
-    if not error_type:
-        raise ValueError("Legacy ERC exclusion marker is missing its error type")
+def _serialized_marker_identity(value: str) -> tuple[str, str]:
+    if not value.strip():
+        raise ValueError("ERC exclusion marker is empty")
+    fields = value.split("|")
+    if len(fields) != 8:
+        raise ValueError("ERC exclusion marker must contain eight serialized fields")
+    error_type = fields[0]
+    if not error_type.strip():
+        raise ValueError("ERC exclusion marker is missing its settings key")
+    for coordinate in fields[1:3]:
+        try:
+            if str(int(coordinate)) != coordinate:
+                raise ValueError
+        except ValueError as exc:
+            raise ValueError("ERC exclusion marker coordinates must be integer text") from exc
     return value, error_type
 
 
-def _read_exclusion(record: JsonValue, schema_version: int) -> SchematicErcExclusion:
-    if schema_version == SUPPORTED_ERC_EXCLUSION_SCHEMA_VERSION:
-        if not isinstance(record, dict):
-            raise ValueError("KiCad 10 ERC exclusions must use marker objects")
-        marker, error_type = _proto_marker_identity(record.get("marker"))
-        comment_value = record.get("comment", "")
-        if not isinstance(comment_value, str):
-            raise ValueError("ERC exclusion comment must be text")
-        comment = comment_value
-    elif isinstance(record, str):
-        marker, error_type = _legacy_marker_identity(record)
+def _read_exclusion(record: JsonValue) -> SchematicErcExclusion:
+    if isinstance(record, str):
+        marker, error_type = _serialized_marker_identity(record)
         comment = ""
-    elif isinstance(record, list) and len(record) in {1, 2} and isinstance(record[0], str):
-        marker, error_type = _legacy_marker_identity(record[0])
-        comment = record[1] if len(record) == 2 else ""
-        if not isinstance(comment, str):
-            raise ValueError("Legacy ERC exclusion comment must be text")
+    elif isinstance(record, list) and len(record) == 2:
+        marker_value, comment_value = record
+        if not isinstance(marker_value, str) or not isinstance(comment_value, str):
+            raise TypeError("ERC exclusion marker/comment pair must contain text")
+        marker, error_type = _serialized_marker_identity(marker_value)
+        comment = comment_value
     else:
-        raise ValueError("Legacy ERC exclusion must be a marker or marker/comment pair")
-    if error_type.startswith("ERCET_"):
-        error_type = error_type.removeprefix("ERCET_").lower()
+        raise ValueError("ERC exclusion must be a serialized marker or marker/comment pair")
     return SchematicErcExclusion(marker=marker, error_type=error_type, comment=comment)
 
 
@@ -131,7 +89,7 @@ def schematic_erc_exclusions(document: str) -> tuple[SchematicErcExclusion, ...]
             f"ERC exclusion settings schema version is not supported: {schema_version}"
         )
     records = settings.erc_exclusions or []
-    exclusions = tuple(_read_exclusion(record, schema_version) for record in records)
+    exclusions = tuple(_read_exclusion(record) for record in records)
     markers = [item.marker for item in exclusions]
     if len(markers) != len(set(markers)):
         raise ValueError("ERC exclusion markers must be unique")

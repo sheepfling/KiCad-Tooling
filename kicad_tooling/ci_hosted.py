@@ -87,6 +87,7 @@ from .ci_hosted_rs485_unconnected_data import (
     rs485_unconnected_data_pin_fixture_lane,
     rs485_unconnected_line_pin_fixture_lane,
 )
+from .ci_hosted_schematic_erc_exclusions import schematic_erc_exclusion_fixture_lane
 from .ci_hosted_serial_peer_fixtures import serial_peer_fixture_lane
 from .ci_hosted_serial_peer_net_labels import serial_peer_net_label_fixture_lane
 from .ci_hosted_serial_peer_reference_bonds import (
@@ -196,6 +197,7 @@ __all__ = (
     "rs485_peer_reference_native_fixture_lane",
     "rs485_unconnected_data_pin_fixture_lane",
     "rs485_unconnected_line_pin_fixture_lane",
+    "schematic_erc_exclusion_fixture_lane",
     "serial_peer_fixture_lane",
     "serial_peer_net_label_fixture_lane",
     "serial_peer_reference_bond_fixture_lane",
@@ -480,6 +482,12 @@ def native_lane(
         pcb_thermal_via_fixture_lane(root, project=project, image=image, log=log)
         pcb_reference_plane_narrow_void_fixture_lane(root, project=project, image=image, log=log)
         pcb_alternate_reference_plane_fixture_lane(
+            root,
+            project=project,
+            image=image,
+            log=log,
+        )
+        schematic_erc_exclusion_fixture_lane(
             root,
             project=project,
             image=image,
