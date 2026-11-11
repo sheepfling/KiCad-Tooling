@@ -5526,23 +5526,29 @@ ignore an exact fingerprint. Tooling-owned settings fixtures are in
 ## Review unknown schematic ERC severity keys
 
 `schematic.erc_unknown_rule_key` prompts for each saved
-`erc.rule_severities` key missing from the audited KiCad 10.0.0 or 10.0.5
-catalog. The finding names the exact key, saved severity, project source hash,
-and configured patch version. KiCad's tagged settings loaders for
-[10.0.0][kicad-10.0.0-erc-settings-source] and
-[10.0.5][kicad-10.0.5-erc-settings-source] walk the registered items in the
-matching [10.0.0][kicad-10.0.0-erc-item-source] and
-[10.0.5][kicad-10.0.5-erc-item-source] sources and apply a saved severity only
-when its key matches a registered item. An unknown entry can therefore be
-ignored by ERC. The catalog and native fault/control use both pinned releases.
+`erc.rule_severities` key missing from the audited KiCad 10.0.0, 10.0.5,
+10.0.6, 10.0.7, or 10.0.8 catalog. The finding names the exact key, saved
+severity, project source hash, and configured patch version. KiCad's tagged
+settings loaders walk the registered items in each matching release and apply
+a saved severity only when its key matches a registered item. An unknown entry
+can therefore be ignored by ERC. The catalog has 46 keys in 10.0.0, 10.0.5,
+and 10.0.6; 10.0.7 and 10.0.8 add the warning-default key
+`same_local_global_power` for 47 keys. Exact native fault/control runs use all
+five pinned releases.
 
 This is a review prompt for a possible typo, stale setting, or patch-version
 mismatch. It does not guess a replacement key, claim an electrical defect, or
-run ERC for the project. Other KiCad patch versions stay out of scope until
-their complete key set is reviewed. For example, KiCad 10.0.7 adds
-`same_local_global_power`, so the 10.0.0 and 10.0.5 lists are not treated as a
-major-version-wide whitelist, as shown in the
-[10.0.7 ERC item definitions][kicad-10.0.7-erc-item-source].
+run ERC for the project. KiCad 10.0.1 through 10.0.4 and patches outside the
+explicit catalog stay out of scope until their complete key set and native
+behavior are reviewed. KiCad 10.0.7 adds `same_local_global_power`; the exact
+10.0.6 and 10.0.7 definitions show why a 10.0-wide key whitelist would be
+unsafe. The tagged settings loaders and item definitions for 10.0.6
+([settings][kicad-10.0.6-erc-settings-source],
+[items][kicad-10.0.6-erc-item-source]), 10.0.7
+([settings][kicad-10.0.7-erc-settings-source],
+[items][kicad-10.0.7-erc-item-source]), and 10.0.8
+([settings][kicad-10.0.8-erc-settings-source],
+[items][kicad-10.0.8-erc-item-source]) show the exact patch boundaries.
 Project policy can select `review`, `block`, or `off`, or ignore an exact
 fingerprint. The synthetic setting is in
 [`tests/fixtures/design_lint/schematic-erc-global-severity/`](../tests/fixtures/design_lint/schematic-erc-global-severity/README.md).
@@ -5555,9 +5561,12 @@ The exact native regression is in
 `tests/test_schematic_erc_global_severity_native_fixture_lane.py` and runs with
 `KICAD_RUN_NATIVE_SCHEMATIC_ERC_GLOBAL_SEVERITY_FIXTURES=1`.
 
-[kicad-10.0.0-erc-item-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/eeschema/erc/erc_item.cpp
-[kicad-10.0.5-erc-settings-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/eeschema/erc/erc_settings.cpp
 [kicad-10.0.7-erc-item-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.7/eeschema/erc/erc_item.cpp
+[kicad-10.0.6-erc-item-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.6/eeschema/erc/erc_item.cpp
+[kicad-10.0.6-erc-settings-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.6/eeschema/erc/erc_settings.cpp
+[kicad-10.0.7-erc-settings-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.7/eeschema/erc/erc_settings.cpp
+[kicad-10.0.8-erc-item-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/eeschema/erc/erc_item.cpp
+[kicad-10.0.8-erc-settings-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/eeschema/erc/erc_settings.cpp
 
 ## Review persisted per-violation PCB DRC exclusions
 

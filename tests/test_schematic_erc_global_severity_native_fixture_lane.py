@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from kicad_tooling.ci_hosted import HostedLog, schematic_erc_global_severity_fixture_lane
-from kicad_tooling.ci_hosted_kicad10_images import KICAD_10_NATIVE_TOOLCHAINS
+from kicad_tooling.ci_hosted_kicad10_images import KICAD_10_ERC_SEVERITY_TOOLCHAINS
 from kicad_tooling.hwrepo.evidence import digest
 
 pytestmark = [
@@ -28,7 +28,7 @@ pytestmark = [
 ]
 
 
-@pytest.mark.parametrize(("version", "image"), KICAD_10_NATIVE_TOOLCHAINS)
+@pytest.mark.parametrize(("version", "image"), KICAD_10_ERC_SEVERITY_TOOLCHAINS)
 def test_native_erc_honors_persisted_global_severities(version: str, image: str) -> None:
     repository = Path(__file__).resolve().parents[1]
     (repository / "build/ci").mkdir(parents=True, exist_ok=True)

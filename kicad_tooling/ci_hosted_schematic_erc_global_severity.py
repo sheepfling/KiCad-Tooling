@@ -9,7 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from .ci_hosted_kicad10_images import KICAD_10_NATIVE_TOOLCHAINS
+from .ci_hosted_kicad10_images import KICAD_10_ERC_SEVERITY_TOOLCHAINS
 from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.evidence import digest
 
@@ -43,7 +43,9 @@ def schematic_erc_global_severity_fixture_lane(
 ) -> None:
     """Prove native ERC ignores unknown keys and applies recognized severities."""
     root = root.resolve()
-    toolchains = {pinned_image: version for version, pinned_image in KICAD_10_NATIVE_TOOLCHAINS}
+    toolchains = {
+        pinned_image: version for version, pinned_image in KICAD_10_ERC_SEVERITY_TOOLCHAINS
+    }
     version = toolchains.get(image)
     if version is None:
         raise ValueError(f"ERC global severity fixture does not cover image {image}")

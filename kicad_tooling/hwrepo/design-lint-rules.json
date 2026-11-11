@@ -10049,15 +10049,15 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
-      "evidence_adapter": "Exact source-hashed KiCad 10.0.0 or 10.0.5 .kicad_pro erc.rule_severities map and configured patch version",
-      "predicate": "For source-hashed schematic-capable KiCad 10.0.0 or 10.0.5 projects with ERC schema 0, emit one review candidate for each configured rule_severities key absent from that exact release's registered ERC key catalog.",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0.0, 10.0.5, 10.0.6, 10.0.7, or 10.0.8 .kicad_pro erc.rule_severities map and configured patch version",
+      "predicate": "For source-hashed schematic-capable projects on an audited exact KiCad 10.0 patch with ERC schema 0, emit one review candidate for each configured rule_severities key absent from that release's registered ERC key catalog.",
       "supported_kicad_versions": [
-        "KiCad 10.0.0 and 10.0.5 only; known ERC keys are version-scoped from the tagged erc_item.cpp and erc_settings.cpp sources, with native behavior checked on both pinned images"
+        "Exact KiCad 10.0.0, 10.0.5, 10.0.6, 10.0.7, and 10.0.8; known ERC keys are version-scoped from each tagged erc_item.cpp and erc_settings.cpp, with native behavior checked on each digest-pinned image"
       ],
       "limitations": [
         "An unknown key may be a typo, stale entry, or key from another KiCad patch; the finding does not identify the intended replacement or claim an electrical defect.",
         "KiCad applies saved severities only to registered ERC item keys, so an unknown entry may have no effect. The check does not run ERC, inspect the schematic, infer electrical intent, or validate PCB copper.",
-        "Other KiCad patches are out of scope until their complete key catalog is reviewed. Project policy can select block, off, or an exact-fingerprint ignore."
+        "KiCad 10.0.1 through 10.0.4 and patches outside the explicit catalog remain out of scope until their complete key catalog and native behavior are reviewed. Project policy can select block, off, or an exact-fingerprint ignore."
       ],
       "fault_fixtures": [
         "tests.test_schematic_erc_unknown_rule_key.test_unknown_keys_at_each_severity_create_source_bound_review_candidates",

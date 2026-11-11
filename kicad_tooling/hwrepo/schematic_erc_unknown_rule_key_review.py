@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -21,7 +20,6 @@ from .schematic_erc_project_settings_evidence import (
 )
 from .source_state_models import SourceHashInventory
 
-_SUPPORTED_KICAD_VERSION = re.compile(r"10\.0\.(?:0|5)\Z")
 _RULE_ID: DesignLintRuleId = "schematic.erc_unknown_rule_key"
 
 
@@ -39,10 +37,7 @@ class SchematicErcUnknownRuleKeyEvidence:
         if self.project_kind not in SCHEMATIC_ERC_SUPPORTED_PROJECT_KINDS:
             raise ValueError("Unknown schematic ERC keys require a schematic-capable project")
         recognized_keys = ERC_RULE_KEYS_BY_KICAD_VERSION.get(self.kicad_version)
-        if (
-            recognized_keys is None
-            or _SUPPORTED_KICAD_VERSION.fullmatch(self.kicad_version) is None
-        ):
+        if recognized_keys is None:
             raise ValueError("Unknown schematic ERC keys require an audited KiCad 10.0 patch")
         if self.configured_rule.rule_key in recognized_keys:
             raise ValueError("Known schematic ERC keys are not review candidates")
@@ -117,7 +112,7 @@ def source_bound_schematic_erc_unknown_rule_key_candidates(
     if config.kind not in SCHEMATIC_ERC_SUPPORTED_PROJECT_KINDS:
         return ()
     recognized_keys = ERC_RULE_KEYS_BY_KICAD_VERSION.get(config.kicad_version)
-    if recognized_keys is None or _SUPPORTED_KICAD_VERSION.fullmatch(config.kicad_version) is None:
+    if recognized_keys is None:
         return ()
 
     relative = str(config.project)

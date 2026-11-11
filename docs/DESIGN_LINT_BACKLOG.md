@@ -800,14 +800,14 @@ standalone parity work when it closes a demonstrated feature regression.
   Hosted acceptance passed in GitHub Actions run `43019404091`.
   The package and preview jobs were skipped by prerelease policy.
   No external or proprietary project source was used.
-- **Current feature work (LINT-398, unknown ERC severity keys):** The new
-  `schematic.erc_unknown_rule_key` rule prompts for saved `.kicad_pro` severity
-  keys absent from the exact KiCad 10.0.0 and 10.0.5 ERC catalogs. The source
-  map is deliberately closed to those two releases; a typo or version mismatch
-  may otherwise leave an intended severity change unapplied. Its focused local
-  gate passed, including the two digest-pinned Docker versions, Python and
-  Windows type checks, wheel/sdist, and installed public-template rehearsal.
-  Hosted acceptance is pending.
+- **Current feature work (LINT-399, current-patch ERC catalog coverage):**
+  LINT-398's `schematic.erc_unknown_rule_key` rule now uses exact catalogs for
+  KiCad 10.0.0, 10.0.5, 10.0.6, 10.0.7, and 10.0.8. The catalog contains 46
+  keys through 10.0.6 and 47 keys in 10.0.7/10.0.8, where
+  `same_local_global_power` is a new Warning-default key. Each supported release
+  has a digest-pinned native fixture; 10.0.1 through 10.0.4 remain explicitly
+  unsupported pending their own exact-version fixture coverage. LINT-399's
+  focused local acceptance passed; hosted acceptance is pending.
 - **Earlier feature work (LINT-393, mapped supply-pin coverage):** The
   default-off `power.component_supply_range_pin_coverage` rule checks that
   every native `power_in` pin on a component named in the reviewed supply-range
@@ -23503,18 +23503,17 @@ acceptance threads while new lint features proceed:
 
 #### LINT-398 — Review unknown schematic ERC severity keys
 
-- **Status:** Implemented locally as `schematic.erc_unknown_rule_key`, default
-  `review`; hosted tag acceptance is pending.
+- **Status:** Implemented as `schematic.erc_unknown_rule_key`, default
+  `review`; its exact catalog is extended by LINT-399.
 - **Gap:** KiCad applies saved `erc.rule_severities` entries only for
   registered ERC item keys. A typo or a key from another patch may leave the
   intended severity change unapplied without a project-owned warning.
-- **Behavior:** For source-hashed schematic-capable KiCad 10.0.0 and 10.0.5
-  projects with ERC settings schema 0, emit one source-bound candidate for each
-  configured key absent from that exact release's reviewed key set. All
+- **Behavior:** For source-hashed schematic-capable projects on an audited exact
+  KiCad 10.0 patch with ERC settings schema 0, emit one source-bound candidate
+  for each configured key absent from that release's reviewed key set. All
   severity values are checked because key recognition is independent of the
-  selected severity. KiCad 10.0.7 adds `same_local_global_power`, confirming
-  that the key set can change within a major version; 10.0.7 remains out of
-  scope until its full catalog and native lane are reviewed.
+  selected severity. LINT-399 adds exact catalogs for 10.0.6, 10.0.7, and
+  10.0.8; the latter two include `same_local_global_power`.
 - **Boundary:** A candidate may be a typo, stale entry, or version mismatch;
   it is not an electrical defect and the check does not guess a replacement
   key. Other KiCad patches stay out of scope until their complete rule-key
@@ -23522,8 +23521,8 @@ acceptance threads while new lint features proceed:
   an unknown key requests Ignore; exact-version ERC must retain the Error.
 - **Fixtures:** Synthetic settings cover unknown keys at Error, Warning, and
   Ignore, every known key at each severity, exact source binding, unsupported
-  patch versions, stable ordering, and CLI/MCP parity. The shared native
-  severity lane covers KiCad 10.0.0 and 10.0.5.
+  patch versions, stable ordering, and CLI/MCP parity. The native severity lane
+  runs all exact catalog versions added so far.
 - **Selection:** Run the rule's focused schematic lint tests with
   `design_lint and schematic_lint and design_lint_rule(rule_id="schematic.erc_unknown_rule_key")`.
   Native coverage uses
@@ -23535,6 +23534,50 @@ acceptance threads while new lint features proceed:
   installed-package verification, and the separate public template and adapted
   checkout rehearsals passed. The local run skipped mdrepo; hosted acceptance
   runs it.
+
+#### LINT-399 — Extend ERC key catalogs to current KiCad 10.0 patches
+
+- **Status:** Focused local acceptance passed on 2026-11-11; hosted acceptance
+  is pending.
+- **Gap:** LINT-398 deliberately recognized only KiCad 10.0.0 and 10.0.5, so
+  source-hashed projects on 10.0.6 through the current 10.0.8 release received
+  no unknown-key review. The patch difference is material: 10.0.7 adds
+  `same_local_global_power` with Warning default.
+- **Behavior:** Add exact catalogs for 10.0.6, 10.0.7, and 10.0.8. Reuse the
+  46-key set for 10.0.6 and add the one source-registered key for 10.0.7 and
+  10.0.8. Keep 10.0.1 through 10.0.4 and later unreviewed patches out of scope.
+  Record Warning defaults by exact patch so the new key is not treated as a
+  known default in older versions.
+- **Evidence:** KiCad's release-tagged `erc_item.cpp` and `erc_settings.cpp`
+  files define the registered keys and default severity. Official
+  [source mirror releases][kicad-source-mirror-releases] and the
+  [official KiCad Docker package digests][kicad-docker-digests] provide exact
+  source and native-run boundaries.
+- **Fixtures:** Test every known key as a quiet control and unknown keys at all
+  severities for each audited patch. Run the same native fault/control lane on
+  digest-pinned 10.0.0, 10.0.5, 10.0.6, 10.0.7, and 10.0.8 images. Keep this
+  five-image ERC lane separate from the shared two-image matrix so unrelated
+  native test suites do not expand.
+- **Boundary:** This is an audited catalog slice, not a major-version-wide
+  whitelist. KiCad 10.0.1 through 10.0.4 and any unlisted patch remain
+  unavailable until the full catalog and exact native fixture are reviewed.
+  Native results confirm saved severity handling, not electrical correctness.
+- **Selection:** Run the focused unknown-key unit and CLI/MCP parity tests
+  using:
+
+  ```text
+  design_lint and schematic_lint and
+  design_lint_rule(rule_id="schematic.erc_unknown_rule_key")
+  ```
+
+  Run the exact five-image lane with
+  `KICAD_RUN_NATIVE_SCHEMATIC_ERC_GLOBAL_SEVERITY_FIXTURES=1`.
+- **Acceptance:** Scoped package CI passed 550 selected tests with 8,067
+  deselected, including native fault/control runs on digest-pinned KiCad
+  10.0.0, 10.0.5, 10.0.6, 10.0.7, and 10.0.8. Ruff, Alphus, Markdown,
+  Pyright, Windows type checks, wheel/sdist, installed-package verification,
+  and the separate public-template and adapted-checkout rehearsals passed.
+  The local run skipped mdrepo; hosted acceptance runs it.
 
 ## Completion and release gate
 
@@ -23605,3 +23648,5 @@ quality, or first-article continuity.
 [rs485-adi-pin-functions]: https://www.analog.com/media/en/technical-documentation/data-sheets/max1487-max491.pdf
 [happy-bootstrap-commit]: https://github.com/aklofas/kicad-happy/commit/4701c26eba7b9788874a0bf9b45c0a3e81db1628
 [happy-v232-release]: https://github.com/aklofas/kicad-happy/releases/tag/v2.3.2
+[kicad-source-mirror-releases]: https://github.com/KiCad/kicad-source-mirror/releases
+[kicad-docker-digests]: https://github.com/KiCad/kicad-docker/pkgs/container/kicad/versions?filters%5Bversion_type%5D=tagged

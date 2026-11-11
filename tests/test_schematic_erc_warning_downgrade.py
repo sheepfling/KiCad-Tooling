@@ -24,6 +24,8 @@ from kicad_tooling.hwrepo.schematic_erc_project_settings import (
     ERC_DEFAULT_ERROR_RULE_KEYS,
     ERC_DEFAULT_IGNORED_RULE_KEYS,
     ERC_DEFAULT_WARNING_RULE_KEYS,
+    ERC_DEFAULT_WARNING_RULE_KEYS_BY_KICAD_VERSION,
+    ERC_RULE_KEYS_BY_KICAD_VERSION,
     SchematicErcRuleSeverity,
     configured_schematic_erc_rule_severities,
 )
@@ -100,10 +102,19 @@ def test_every_known_error_default_warning_override_is_reviewed(
     assert candidate.evidence["default_severity"] == ("error",)
 
 
-@pytest.mark.parametrize("rule_key", sorted(ERC_DEFAULT_WARNING_RULE_KEYS))
-def test_kicad_default_warning_is_a_valid_control(tmp_path: Path, rule_key: str) -> None:
+@pytest.mark.parametrize(
+    ("version", "rule_key"),
+    tuple(
+        (version, rule_key)
+        for version, rule_keys in ERC_DEFAULT_WARNING_RULE_KEYS_BY_KICAD_VERSION.items()
+        for rule_key in sorted(rule_keys)
+    ),
+)
+def test_kicad_default_warning_is_a_valid_control(
+    tmp_path: Path, version: str, rule_key: str
+) -> None:
     document = f'{{"erc":{{"meta":{{"version":0}},"rule_severities":{{"{rule_key}":"warning"}}}}}}'
-    root, _, config, source_hashes = _project(tmp_path, document)
+    root, _, config, source_hashes = _project(tmp_path, document, kicad_version=version)
 
     assert _scan(root, config, source_hashes) == ()
 
@@ -114,6 +125,26 @@ def test_error_warning_and_ignore_baselines_are_disjoint() -> None:
     assert not ERC_DEFAULT_WARNING_RULE_KEYS & ERC_DEFAULT_IGNORED_RULE_KEYS
     assert len(ERC_DEFAULT_ERROR_RULE_KEYS) == 20
     assert len(ERC_DEFAULT_WARNING_RULE_KEYS) == 22
+    assert ERC_DEFAULT_WARNING_RULE_KEYS_BY_KICAD_VERSION["10.0.6"] == ERC_DEFAULT_WARNING_RULE_KEYS
+    assert ERC_DEFAULT_WARNING_RULE_KEYS_BY_KICAD_VERSION["10.0.7"] == (
+        ERC_DEFAULT_WARNING_RULE_KEYS | {"same_local_global_power"}
+    )
+    assert ERC_DEFAULT_WARNING_RULE_KEYS_BY_KICAD_VERSION["10.0.8"] == (
+        ERC_DEFAULT_WARNING_RULE_KEYS | {"same_local_global_power"}
+    )
+
+
+@pytest.mark.parametrize("version", tuple(ERC_RULE_KEYS_BY_KICAD_VERSION))
+def test_default_severity_sets_partition_the_exact_patch_catalog(version: str) -> None:
+    warnings = ERC_DEFAULT_WARNING_RULE_KEYS_BY_KICAD_VERSION[version]
+
+    assert not ERC_DEFAULT_ERROR_RULE_KEYS & warnings
+    assert not ERC_DEFAULT_ERROR_RULE_KEYS & ERC_DEFAULT_IGNORED_RULE_KEYS
+    assert not warnings & ERC_DEFAULT_IGNORED_RULE_KEYS
+    assert (
+        ERC_DEFAULT_ERROR_RULE_KEYS | warnings | ERC_DEFAULT_IGNORED_RULE_KEYS
+        == (ERC_RULE_KEYS_BY_KICAD_VERSION[version])
+    )
 
 
 def test_active_error_and_known_kicad_warning_controls_are_quiet(tmp_path: Path) -> None:

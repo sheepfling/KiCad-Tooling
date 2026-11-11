@@ -75,10 +75,26 @@ _ERC_RULE_KEYS_KICAD_10_0: frozenset[str] = (
     ERC_DEFAULT_ERROR_RULE_KEYS | ERC_DEFAULT_WARNING_RULE_KEYS | ERC_DEFAULT_IGNORED_RULE_KEYS
 )
 # Keep exact patch entries; later KiCad 10.0 releases can add ERC item keys.
+_ERC_RULE_KEYS_KICAD_10_0_7 = _ERC_RULE_KEYS_KICAD_10_0 | {"same_local_global_power"}
+_ERC_DEFAULT_WARNING_RULE_KEYS_KICAD_10_0_7 = ERC_DEFAULT_WARNING_RULE_KEYS | {
+    "same_local_global_power"
+}
 ERC_RULE_KEYS_BY_KICAD_VERSION: Mapping[str, frozenset[str]] = MappingProxyType(
     {
         "10.0.0": _ERC_RULE_KEYS_KICAD_10_0,
         "10.0.5": _ERC_RULE_KEYS_KICAD_10_0,
+        "10.0.6": _ERC_RULE_KEYS_KICAD_10_0,
+        "10.0.7": _ERC_RULE_KEYS_KICAD_10_0_7,
+        "10.0.8": _ERC_RULE_KEYS_KICAD_10_0_7,
+    }
+)
+ERC_DEFAULT_WARNING_RULE_KEYS_BY_KICAD_VERSION: Mapping[str, frozenset[str]] = MappingProxyType(
+    {
+        "10.0.0": ERC_DEFAULT_WARNING_RULE_KEYS,
+        "10.0.5": ERC_DEFAULT_WARNING_RULE_KEYS,
+        "10.0.6": ERC_DEFAULT_WARNING_RULE_KEYS,
+        "10.0.7": _ERC_DEFAULT_WARNING_RULE_KEYS_KICAD_10_0_7,
+        "10.0.8": _ERC_DEFAULT_WARNING_RULE_KEYS_KICAD_10_0_7,
     }
 )
 SCHEMATIC_ERC_SUPPORTED_PROJECT_KINDS = frozenset(

@@ -21,6 +21,7 @@ from kicad_tooling.hwrepo.schematic_erc_unknown_rule_key_review import (
 )
 
 RULE_ID = "schematic.erc_unknown_rule_key"
+AUDITED_KICAD_VERSIONS = ("10.0.0", "10.0.5", "10.0.6", "10.0.7", "10.0.8")
 PROJECT_RELATIVE = "projects/controller.kicad_pro"
 FIXTURES = Path(__file__).parent / "fixtures/design_lint/schematic-erc-global-severity"
 pytestmark = [
@@ -54,12 +55,18 @@ def _scan(root: Path, config: ProjectConfig, source_hashes: dict[str, str]):
 
 
 def test_known_key_catalog_is_closed_to_audited_patches() -> None:
-    assert set(ERC_RULE_KEYS_BY_KICAD_VERSION) == {"10.0.0", "10.0.5"}
-    assert ERC_RULE_KEYS_BY_KICAD_VERSION["10.0.0"] == ERC_RULE_KEYS_BY_KICAD_VERSION["10.0.5"]
-    assert len(ERC_RULE_KEYS_BY_KICAD_VERSION["10.0.0"]) == 46
+    assert set(ERC_RULE_KEYS_BY_KICAD_VERSION) == set(AUDITED_KICAD_VERSIONS)
+    baseline = ERC_RULE_KEYS_BY_KICAD_VERSION["10.0.0"]
+    for version in ("10.0.5", "10.0.6"):
+        assert ERC_RULE_KEYS_BY_KICAD_VERSION[version] == baseline
+    expanded = baseline | {"same_local_global_power"}
+    for version in ("10.0.7", "10.0.8"):
+        assert ERC_RULE_KEYS_BY_KICAD_VERSION[version] == expanded
+    assert len(baseline) == 46
+    assert len(expanded) == 47
 
 
-@pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
+@pytest.mark.parametrize("version", AUDITED_KICAD_VERSIONS)
 def test_unknown_keys_at_each_severity_create_source_bound_review_candidates(
     tmp_path: Path, version: str
 ) -> None:
@@ -96,12 +103,12 @@ def test_unknown_keys_at_each_severity_create_source_bound_review_candidates(
         assert "may not affect native ERC" in candidate.message
 
 
-@pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
+@pytest.mark.parametrize("version", AUDITED_KICAD_VERSIONS)
 @pytest.mark.parametrize("severity", ("error", "warning", "ignore"))
 def test_every_known_key_is_a_valid_control_at_each_severity(
     tmp_path: Path, version: str, severity: str
 ) -> None:
-    root, project, config, _ = _project(tmp_path)
+    root, project, config, _ = _project(tmp_path, kicad_version=version)
     configured = {key: severity for key in ERC_RULE_KEYS_BY_KICAD_VERSION[version]}
     project.write_text(
         json.dumps({"erc": {"meta": {"version": 0}, "rule_severities": configured}}),
@@ -113,7 +120,7 @@ def test_every_known_key_is_a_valid_control_at_each_severity(
 
 def test_unsupported_versions_and_non_schematic_kinds_are_out_of_scope(tmp_path: Path) -> None:
     root, _, config, source_hashes = _project(tmp_path)
-    for version in ("9.0.0", "10.0.3", "10.0.6", "10.0.7", "11.0.0"):
+    for version in ("9.0.0", "10.0.1", "10.0.3", "10.0.4", "10.0.9", "11.0.0"):
         unsupported = cast(
             ProjectConfig,
             SimpleNamespace(kind=ProjectKind.PCB, project=PROJECT_RELATIVE, kicad_version=version),
