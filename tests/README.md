@@ -471,7 +471,7 @@ python -I -B -m pytest -q -m "design_lint and interface_lint" \
 python -I -B -m pytest -q -m "architecture and design_lint and interface_lint" \
   tests/test_spi_peer_reference_architecture.py
 KICAD_RUN_NATIVE_I2C_PEER_REFERENCE_FIXTURES=1 python -I -B -m pytest -q \
-  -m "design_lint and interface_lint and native_kicad" \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_peer_reference_review")' \
   tests/test_i2c_peer_reference_native_fixture_lane.py
 KICAD_RUN_NATIVE_I2C_ADDRESS_MAP_FIXTURES=1 python -I -B -m pytest -q \
   -m 'design_lint_rule(rule_id="bus.i2c_address_collision")' \
@@ -496,6 +496,10 @@ KICAD_TEMPLATE_ROOT=/path/to/KiCad-Team-Workflow-Template \
   tests/test_design_lint_mcp_parity_i2c.py::test_i2c_peer_reference_review_cli_mcp_parity \
   tests/test_design_lint_mcp_parity_can_reference.py \
   tests/test_design_lint_mcp_parity_rs485_reference.py
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Team-Workflow-Template \
+  python -I -B -m pytest -q \
+  -m 'design_lint and interface_lint and parity_lint and design_lint_rule(rule_id="bus.i2c_peer_reference_review")' \
+  -k split-reference-review tests/test_design_lint_mcp_parity_i2c.py
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Team-Workflow-Template \
   python -I -B -m pytest -q \
   -m 'design_lint and interface_lint and parity_lint and design_lint_rule(rule_id="bus.spi_peer_reference_review")' \

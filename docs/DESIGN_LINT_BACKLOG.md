@@ -23258,15 +23258,17 @@ acceptance threads while new lint features proceed:
 - **Selection:** Run
   `tests/test_design_lint_architecture_pytest_collection.py` with
   `design_lint and (design_lint_rule(rule_id="bus.i2c_missing_pullup") or rule_gate_integrity)`.
-- **Per-scenario pytest selection (2026-11-11):** The SPI peer-reference CLI/MCP
-  fault and common-return control are independently parameterized and carry
-  the exact `bus.spi_peer_reference_review` selector. Its unit, parity, and
-  native fixture modules share that rule marker, so the split fault can be
-  selected by pytest case ID and reports its own duration. The focused lint,
-  parity, two-version Docker lane, and marker/selector/catalog architecture
-  checks passed together (73 passed); the focused rule selection passed 14
-  tests with 59 deselected. This improves test selection and timing evidence;
-  it does not change the lint predicate.
+- **Per-scenario pytest selection (2026-11-11):** The SPI and I2C
+  peer-reference CLI/MCP fault and common-reference control are independently
+  parameterized and carry exact rule selectors. Their unit, parity, and native
+  fixture modules share those markers, so each fault/control case is selectable
+  by pytest ID and reports its own duration. SPI's focused lint, parity,
+  two-version Docker, and marker/selector/catalog checks passed together (73
+  passed); the exact SPI rule selector passed 14 tests with 59 deselected. The
+  I2C lint, parity, two-version Docker, and marker/selector/catalog checks
+  passed together (89 passed); its exact rule selector passed 22 tests with 2
+  deselected. These changes improve test selection and timing evidence; they
+  do not change either lint predicate.
 
 #### LINT-391 — Localize alternate reference-plane coverage on native tracks
 

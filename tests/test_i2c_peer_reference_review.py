@@ -15,7 +15,11 @@ from kicad_tooling.hwrepo.models import (
 from tests.i2c_peer_reference_support import i2c_peer_netlist
 from tests.reference_pin_role_support import with_unspecified_reference_pins
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.interface_lint,
+    pytest.mark.design_lint_rule(rule_id="bus.i2c_peer_reference_review"),
+]
 
 RULE_ID = "bus.i2c_peer_reference_review"
 

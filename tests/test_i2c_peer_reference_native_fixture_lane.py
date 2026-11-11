@@ -14,7 +14,11 @@ from kicad_tooling.hwrepo.electrical import selected_config
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.support import reference_root
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.interface_lint,
+    pytest.mark.design_lint_rule(rule_id="bus.i2c_peer_reference_review"),
+]
 
 
 @pytest.mark.skipif(
