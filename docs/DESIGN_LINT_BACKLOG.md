@@ -804,14 +804,22 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc715):** LINT-427 catches
+- **Latest published lint-gate checkpoint (v0.5.3rc716):** LINT-428 extends
+  the named power-input peer review to unanchored connector aliases only when
+  a complete current source-matched peer group scopes the comparison. Local
+  scoped acceptance passed 409 tests with 8,864 deselected, including native
+  fault/control exports in both pinned KiCad versions. Hosted prerelease
+  acceptance and the installed-wheel check against a separate project passed
+  in GitHub Actions run `43285650010`; package and preview jobs were skipped
+  under prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc715):** LINT-427 catches
   conflicting duplicate `net_settings.classes` JSON members and repeated
   same-name netclass definitions. KiCad 10.0.8 DRC confirmed the wide-last
   clearance fault twice while the narrow-last and distinct-name controls
   remained clean. Local scoped acceptance passed 419 tests with 8,850
   deselected. Hosted prerelease acceptance passed in run `43277952874`;
   package and preview jobs were skipped under prerelease policy.
-- **Previous lint-gate checkpoint (v0.5.3rc714):** LINT-426 extends
+- **Earlier lint-gate checkpoint (v0.5.3rc714):** LINT-426 extends
   `pcb.duplicate_object_uuid` with a footprint/track collision measurement.
   KiCad 10.0.0 and 10.0.5 resolve the shared identifier in dangling-track and
   unconnected DRC records to `Footprint J1`; the distinct-identity control
@@ -25159,7 +25167,9 @@ acceptance threads while new lint features proceed:
   tests with 8,864 deselected, including the fault/control exports in both
   pinned native versions. Ruff, both Alphus profiles, Rumdl, mdrepo, Linux and
   Windows Pyright, wheel and sdist builds, and installed-wheel checks passed.
-  Hosted prerelease acceptance is pending.
+  Hosted prerelease acceptance and the installed-wheel check against a
+  separate project passed in GitHub Actions run `43285650010`. Package and
+  preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
