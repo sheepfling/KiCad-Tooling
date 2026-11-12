@@ -804,7 +804,14 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc716):** LINT-428 extends
+- **Latest published lint-gate checkpoint (v0.5.3rc717):** LINT-429 extends
+  `pcb.drc_conflicting_netclass_definitions` to review conflicting repeated
+  clearance fields within a named netclass. Local scoped acceptance passed
+  425 tests with 8,854 deselected, including pinned KiCad 10.0.8 Docker
+  fault/control runs. Hosted prerelease acceptance and the installed-wheel
+  check against a separate project passed in run `43292742782`; package and
+  preview jobs were skipped under prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc716):** LINT-428 extends
   the named power-input peer review to unanchored connector aliases only when
   a complete current source-matched peer group scopes the comparison. Local
   scoped acceptance passed 409 tests with 8,864 deselected, including native
@@ -25201,6 +25208,10 @@ acceptance threads while new lint features proceed:
   8,854 deselected, including the pinned KiCad 10.0.8 native cases. Ruff,
   Alphus module and shared-utility checks, Rumdl, mdrepo, Linux and Windows
   Pyright, wheel and sdist builds, and installed-artifact checks passed.
+  Hosted prerelease acceptance and the installed-wheel check against the
+  separate project passed in GitHub Actions run `43292742782` on commit
+  `2a97e0cdd3864ef86447a35c8c3fe3cb701d6618`. Package and preview jobs were
+  skipped under prerelease policy.
 
 ## Completion and release gate
 
