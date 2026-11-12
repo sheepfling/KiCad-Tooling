@@ -123,6 +123,7 @@ def source_bound_schematic_erc_exclusion_candidates(
         exclusions = schematic_erc_exclusions(
             source.document,
             allow_duplicate_severity_keys=True,
+            allow_duplicate_board_section=config.kicad_version == "10.0.8",
         )
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         raise ValueError(

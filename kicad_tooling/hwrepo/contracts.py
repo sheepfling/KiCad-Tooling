@@ -67,8 +67,9 @@ def parse_model_text_allow_duplicate_json_keys_at(
     model: type[Model],
     *,
     allowed_duplicate_object_paths: frozenset[tuple[str, ...]],
+    allowed_duplicate_object_members: frozenset[tuple[tuple[str, ...], str]] = frozenset(),
 ) -> Model:
-    """Validate JSON while allowing duplicate names only in named object paths."""
+    """Validate JSON while allowing duplicates only at named paths or members."""
     decoded = json.loads(
         document,
         object_pairs_hook=retain_json_object_pairs,
@@ -77,6 +78,7 @@ def parse_model_text_allow_duplicate_json_keys_at(
     normalized = json_value_from_object_pairs(
         decoded,
         allowed_duplicate_object_paths=allowed_duplicate_object_paths,
+        allowed_duplicate_object_members=allowed_duplicate_object_members,
     )
     normalized_document = json.dumps(normalized, separators=(",", ":"), allow_nan=False)
     return model.model_validate_json(normalized_document, strict=True)

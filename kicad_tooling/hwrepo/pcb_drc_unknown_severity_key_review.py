@@ -128,6 +128,7 @@ def source_bound_pcb_drc_unknown_severity_key_candidates(
             source.document,
             allow_duplicate_erc_severity_keys=True,
             allow_duplicate_drc_severity_keys=True,
+            allow_duplicate_board_section=config.kicad_version == "10.0.8",
         )
     except (ValueError, TypeError) as exc:
         raise ValueError(

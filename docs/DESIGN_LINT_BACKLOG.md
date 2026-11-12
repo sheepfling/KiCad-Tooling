@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 343 rules are implemented with synthetic regression coverage.
+The following 344 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 343 active rules.
+The catalog currently contains 344 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -735,6 +735,7 @@ skipped under prerelease policy.
 - `pcb.miscellaneous_drc_check_downgraded`
 - `pcb.warning_default_drc_check_ignored`
 - `pcb.drc_exclusion_present`
+- `pcb.drc_duplicate_board_section`
 - `pcb.drc_duplicate_severity_key`
 - `pcb.drc_unknown_severity_key`
 - `pcb.drc_invalid_severity_value`
@@ -4245,7 +4246,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 343 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 344 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -19236,9 +19237,9 @@ engineering advice applies to every design.
 | USB external series-resistor topology                  | kicad-happy PR-004; ST AN4879; TI TUSB2036 datasheet                                               | LINT-049 implements an opt-in exact connector-to-PHY path map. The source-backed integrated STM32 direct-path control and TI TUSB2036 27R control both pass; removing a mapped resistor is detected. The generic cohort rule prompts on both PHY classes, so its universal resistor assumption is not adopted. Native source-to-netlist regressions now pass synthetic direct, series, and bypass cases on KiCad 10.0.0 and 10.0.5. Native ERC and electrical qualification remain open.                                                                                                                                                                                                                                                                                                                                                                                           |
 | STM32CubeMX to KiCad MCU pin assignments               | jbmata/STM32-KiCad-Pin-Checker README and selected `ioc.py` source                                 | LINT-050 implements a configurable, source-hashed map from exact package pins to KiCad symbol pins, schematic nets, CubeMX signals, and labels. Service and CLI/MCP parity pass, as do repeated native exports on KiCad 10.0.0 and 10.0.5. The pinned trial found order-dependent PA13 suffix conflicts and ignored escaped PH0; local parsing rejects conflicts and accepts PH0. The candidate remains unadopted; GUI behavior and reviewer value were not measured. See LINT-031.                                                                                                                                                                                                                                                                                                                                                                                                |
 | IC power-pin DC-source path                            | kicad-happy `audit_power_pin_dc_paths`, PP-001                                                     | LINT-031's mapped wrong-rail follow-up shows PP-001 detects the ERC-clean synthetic fault when no map exists, while the valid path control is quiet. The project-authored LINT-055 map already catches it when supplied. LINT-056 adopts a configurable fallback REVIEW using a narrower explicit passive set; it does not copy the candidate's severity or “AC-coupled” diagnosis. External source recognition, custom paths, and broader false-positive behavior remain open.                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Connector/capacitor-only net without visible DC anchor | kicad_skills `analog.no_dc_path`                                                                   | LINT-065 adds a default REVIEW when every fitted pin on a non-return net is a supported connector or capacitor and at least one of each is present. It does not trace DC paths and allows off-board/internal bias. Native KiCad 10.0.0/10.0.5 runs repeat the fault, output-driver control, and DNP-capacitor control; ERC is clean in all. The pinned cohort runtime duplicates the fitted fault, stays quiet on the output-driver control, and warns on the DNP control because it counts unpopulated C/J/P-prefixed symbols. No unique detection; see LINT-031. This is synthetic evidence, not field validation.                                                                                                                                                                                                                                                               |
+| Connector/capacitor-only net without visible DC anchor | kicad_skills `analog.no_dc_path`                                                                   | LINT-065 adds a default REVIEW when every fitted pin on a non-return net is a supported connector or capacitor and at least one of each is present. It does not trace DC paths and allows off-board/internal bias. Native KiCad 10.0.0/10.0.5 and pinned Docker KiCad 10.0.4 runs repeat the fault, output-driver control, and DNP-capacitor control; ERC is clean in the local native cases. The cohort runtime duplicates the fitted fault, stays quiet on the output-driver control, and warns on the DNP control because it counts unpopulated C/J/P-prefixed symbols. No unique detection; wrapper limitations and repeat hashes are in LINT-031. This is synthetic evidence, not field validation.                                                                                                                                                                           |
 | Unmapped decoupled power-input source path             | kicad-happy `PP-001`                                                                               | LINT-056 uses native `power_in`, fitted capacitor-to-return evidence, recognized positive rails or `power_out` pins, and a bounded fitted path graph. It recognizes bidirectional passive elements and the exact bridged solder-jumper symbol, and traverses exact supported diodes in the source-to-load direction. It prompts REVIEW when no supported path is found and suppresses the prompt for endpoints covered by an authored LINT-055 map. The synthetic assigned-wrong-rail case is missed by the mapless baseline and native ERC; the check does not infer required connectivity or prove conduction.                                                                                                                                                                                                                                                                   |
-| IC decoupling-to-return coverage                       | kicad-happy `DO-DET`; kicad_skills `analog.missing_decoupling`                                     | LINT-046 emits a review prompt for a source-backed no-cap schematic whose `power_in` and `power_out` pins share `+3V3`; native KiCad 10.0.0/10.0.5 report no `power_pin_not_driven` violation. kicad-happy reports the no-cap fault and also synthetic source U2; kicad_skills duplicates the fitted fault/control result in `--no-cli` fallback mode. The kicad_skills DNP case stays quiet although native exports preserve the DNP flag and LINT-046 reports it. These trials add no unique detection; capacitor need/value, placement, and PCB return path remain open. See LINT-031 and the synthetic fixture record.                                                                                                                                                                                                                                                         |
+| IC decoupling-to-return coverage                       | kicad-happy `DO-DET`; kicad_skills `analog.missing_decoupling`                                     | LINT-046 emits a review prompt for a source-backed no-cap schematic whose `power_in` and `power_out` pins share `+3V3`; native KiCad 10.0.0/10.0.5 report no `power_pin_not_driven` violation. kicad-happy reports the no-cap fault and also synthetic source U2; kicad_skills duplicates the fault/control result in `--no-cli` mode and in pinned Docker KiCad 10.0.4. Its DNP control stays quiet, although LINT-046 reports the source-bound missing fitted path. These trials add no unique detection; capacitor need/value, placement, and PCB return path remain open. See LINT-031 and the synthetic fixture record.                                                                                                                                                                                                                                                       |
 | External connector protection coverage                 | kicad-happy and ThomsonLint `EMC_ESD_001`                                                          | LINT-034 adopted as a source-bound per-pin coverage contract. Applicability is authored; clamp suitability and PCB return geometry remain unverified.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | Crystal load network                                   | kicad-happy crystal analysis                                                                       | LINT-035 adopted for an explicitly mapped Pierce topology, nominal value ranges, and source-bound pins. Startup, tolerance, and placement are not established.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | Adjustable regulator setpoint                          | kicad-happy feedback-divider analysis                                                              | LINT-036 adopted for a project-mapped two-resistor topology and reviewed reference range. No part-name inference or general converter model is used.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
@@ -24447,6 +24448,54 @@ acceptance threads while new lint features proceed:
   Linux and Windows typing, wheel and source builds, installed-wheel checks,
   and external/adapted project checks passed. Package and preview jobs were
   skipped under prerelease policy.
+
+#### LINT-417 — Review duplicate top-level PCB board settings sections
+
+- **Priority:** P1 saved-settings integrity. A repeated root `board` JSON
+  member can hide one complete PCB settings section during ordinary parsing.
+  Before this check, strict project-settings readers failed on the duplicated
+  member and returned no localized lint finding.
+- **Status:** Implemented as default-review rule
+  `pcb.drc_duplicate_board_section` for exact KiCad 10.0.8. Source-bound
+  readers now tolerate only the repeated root `board` member while retaining
+  their existing strict behavior for unrelated duplicate keys. Direct settings
+  readers remain strict unless explicitly used by a source-bound review.
+- **Behavior:** For source-hashed PCB and PCB-only projects, report one finding
+  when the root JSON object repeats `board`. Preserve each complete section as
+  source-ordered key/value pairs with the exact source hash. The rule does not
+  select an intended section.
+- **Native evidence:** A digest-pinned KiCad 10.0.8 run measured the known
+  `track_dangling` severity embedded in repeated root sections. Warning then
+  Ignore suppressed the synthetic warning; Ignore then Warning and the unique
+  Warning control emitted warnings. This establishes only the tested setting,
+  key, fixture, and image.
+- **Regression coverage:** Tooling-owned fault settings repeat the root member
+  in both orders; a unique section and an unrelated duplicate-key control keep
+  the scope narrow. Tests cover source binding, version and project-kind
+  boundaries, pair-preserving evidence, deterministic scans, strict direct
+  parsing, CLI/MCP parity, and the exact-version native fault/control lane.
+- **Evidence boundary:** This flags ambiguous saved settings. It does not
+  generalize native behavior to other fields, determine the intended section,
+  run DRC on project boards, or establish a board defect or manufacturing
+  readiness. Duplicate metadata or other root members remain out of scope.
+- **Selection:** Run `tests/test_pcb_drc_duplicate_board_section.py` and
+  `tests/test_design_lint_mcp_parity_pcb_drc_duplicate_board_section.py` with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.drc_duplicate_board_section")`. The exact
+  native module is `tests/test_pcb_drc_duplicate_board_section_native.py` with
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`.
+- **Cohort tooling follow-up:** The pinned `kicad_skills` Docker workflow was
+  built and run against tooling-owned synthetic fixtures. It confirmed no
+  unique behavior for its decoupling and connector/capacitor-only checks; its
+  wrapper also required a platform override on the ARM host and failed on empty
+  Bash argument arrays under `set -u`. Direct offline Docker runs exercised
+  native KiCad 10.0.4 export and produced repeatable reports. The baseline
+  comparison exposed no detector gap; a separate native probe of synthetic
+  repeated root `board` settings sections exposed the settings-integrity gap
+  addressed here.
+  No candidate code, image, schematic, or project data was copied into this
+  repository. Reproduction and workflow limitations are recorded under
+  [LINT-031](DESIGN_LINT_COHORT_TRIALS.md#lint-031--candidate-analyzer-trial-and-incremental-value-register).
 
 ## Completion and release gate
 

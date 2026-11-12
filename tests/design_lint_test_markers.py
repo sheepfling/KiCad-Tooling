@@ -340,6 +340,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_connector_footprint_peer_metadata_open.py",
                 "tests/test_design_lint_mcp_parity_peer_pins.py",
                 "tests/test_design_lint_mcp_parity_schematic_erc_duplicate_severity_key.py",
+                "tests/test_design_lint_mcp_parity_pcb_drc_duplicate_board_section.py",
                 "tests/test_design_lint_mcp_parity_pcb_drc_duplicate_severity_key.py",
                 "tests/test_design_lint_mcp_parity_two_pin_varistors.py",
                 "tests/test_design_lint_mcp_parity_two_pin_speakers.py",

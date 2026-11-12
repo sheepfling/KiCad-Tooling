@@ -88,6 +88,7 @@ _ALLOWED_DUPLICATE_KICAD_PROJECT_OBJECT_PATHS = frozenset(
         ("board", "design_settings", "rule_severities"),
     }
 )
+_KICAD_PROJECT_BOARD_ROOT_DUPLICATE_MEMBER = ((), "board")
 # Keep exact patch entries; later KiCad 10.0 releases can add ERC item keys.
 _ERC_RULE_KEYS_KICAD_10_0_7 = _ERC_RULE_KEYS_KICAD_10_0 | {"same_local_global_power"}
 _ERC_DEFAULT_WARNING_RULE_KEYS_KICAD_10_0_7 = ERC_DEFAULT_WARNING_RULE_KEYS | {
@@ -163,13 +164,23 @@ def _parse_schematic_erc_project_settings(
     document: str,
     *,
     allow_duplicate_severity_keys: bool,
+    allow_duplicate_board_section: bool = False,
 ) -> _ProjectSettings:
-    if not allow_duplicate_severity_keys:
+    if not allow_duplicate_severity_keys and not allow_duplicate_board_section:
         return parse_model_text(document, _ProjectSettings)
     return parse_model_text_allow_duplicate_json_keys_at(
         document,
         _ProjectSettings,
-        allowed_duplicate_object_paths=_ALLOWED_DUPLICATE_KICAD_PROJECT_OBJECT_PATHS,
+        allowed_duplicate_object_paths=(
+            _ALLOWED_DUPLICATE_KICAD_PROJECT_OBJECT_PATHS
+            if allow_duplicate_severity_keys
+            else frozenset()
+        ),
+        allowed_duplicate_object_members=(
+            frozenset({_KICAD_PROJECT_BOARD_ROOT_DUPLICATE_MEMBER})
+            if allow_duplicate_board_section
+            else frozenset()
+        ),
     )
 
 
@@ -210,11 +221,13 @@ def configured_schematic_erc_rule_severity_settings(
     document: str,
     *,
     allow_duplicate_severity_keys: bool = False,
+    allow_duplicate_board_section: bool = False,
 ) -> tuple[SchematicErcRuleSeveritySetting, ...]:
     """Read saved ERC severity keys and JSON values in stable key order."""
     project = _parse_schematic_erc_project_settings(
         document,
         allow_duplicate_severity_keys=allow_duplicate_severity_keys,
+        allow_duplicate_board_section=allow_duplicate_board_section,
     )
     if project.erc is None:
         return ()
@@ -237,6 +250,8 @@ def configured_schematic_erc_rule_severity_settings(
 
 def configured_schematic_erc_duplicate_rule_severity_settings(
     document: str,
+    *,
+    allow_duplicate_board_section: bool = False,
 ) -> tuple[SchematicErcDuplicateRuleSeveritySetting, ...]:
     """Read repeated severity-map keys without losing their source-order values."""
     # Validate the same project kind, ERC map shape, and settings schema as the
@@ -244,6 +259,7 @@ def configured_schematic_erc_duplicate_rule_severity_settings(
     configured_schematic_erc_rule_severity_settings(
         document,
         allow_duplicate_severity_keys=True,
+        allow_duplicate_board_section=allow_duplicate_board_section,
     )
     project = json.loads(document, object_pairs_hook=retain_json_object_pairs)
     erc = json_object_member(project, "erc")
@@ -273,6 +289,7 @@ def configured_schematic_erc_rule_severities(
     allow_unrecognized_severity_strings: bool = False,
     skip_nonstring_values: bool = False,
     allow_duplicate_severity_keys: bool = False,
+    allow_duplicate_board_section: bool = False,
 ) -> tuple[SchematicErcRuleSeverity, ...]:
     """Read the supported KiCad 10.0 ERC severity map in stable key order.
 
@@ -285,6 +302,7 @@ def configured_schematic_erc_rule_severities(
     for setting in configured_schematic_erc_rule_severity_settings(
         document,
         allow_duplicate_severity_keys=allow_duplicate_severity_keys,
+        allow_duplicate_board_section=allow_duplicate_board_section,
     ):
         severity = json.loads(setting.configured_value_json)
         if not isinstance(severity, str):
@@ -338,11 +356,13 @@ def schematic_erc_exclusions(
     document: str,
     *,
     allow_duplicate_severity_keys: bool = False,
+    allow_duplicate_board_section: bool = False,
 ) -> tuple[SchematicErcExclusion, ...]:
     """Return supported persisted ERC exclusions, rejecting unknown schemas."""
     project = _parse_schematic_erc_project_settings(
         document,
         allow_duplicate_severity_keys=allow_duplicate_severity_keys,
+        allow_duplicate_board_section=allow_duplicate_board_section,
     )
     if project.erc is None:
         return ()

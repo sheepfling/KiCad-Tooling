@@ -172,6 +172,7 @@ def source_bound_pcb_drc_exclusion_candidates(
             document,
             allow_duplicate_erc_severity_keys=True,
             allow_duplicate_drc_severity_keys=True,
+            allow_duplicate_board_section=config.kicad_version == "10.0.8",
         )
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         raise ValueError(f"{relative}: could not read supported PCB DRC exclusions: {exc}") from exc

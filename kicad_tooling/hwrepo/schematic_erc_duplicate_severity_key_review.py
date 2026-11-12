@@ -121,7 +121,10 @@ def source_bound_schematic_erc_duplicate_severity_key_candidates(
     if source is None:
         return ()
     try:
-        settings = configured_schematic_erc_duplicate_rule_severity_settings(source.document)
+        settings = configured_schematic_erc_duplicate_rule_severity_settings(
+            source.document,
+            allow_duplicate_board_section=True,
+        )
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         raise ValueError(
             f"{relative}: could not read supported schematic ERC severity settings: {exc}"

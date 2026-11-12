@@ -8,7 +8,7 @@ for dispositions and timing; leave unmeasured values unstated.
 
 ## LINT-031 — Candidate analyzer trial and incremental-value register
 
-- **Status:** Partial v28; read-only synthetic comparisons across seven cohort
+- **Status:** Partial v29; read-only synthetic comparisons across seven cohort
   repositories, a first-party public-template applicability replay,
   kicad_skills schematic-rule trials, a ThomsonLint board-export trial, and
   public project review samples are recorded below, plus source-only audits of
@@ -50,7 +50,10 @@ for dispositions and timing; leave unmeasured values unstated.
   not confirmed defects. A pinned kicad-happy v3.0.1 source audit also prompted
   bounded component-value parsing regressions for decimal commas, grouped
   spaces, `Meg`, femtofarads, and value metadata; the local changes use
-  tooling-owned fault/control fixtures and existing native I2C lanes.
+  tooling-owned fault/control fixtures and existing native I2C lanes. A
+  follow-up built the pinned `kicad_skills` Docker image and ran its two analog
+  checks through the image's KiCad CLI on synthetic inputs; this closed the
+  documented Docker-workflow gap without finding unique detection.
 
 ### Source review: kicad-druid custom DRC rule lint
 
@@ -2158,10 +2161,28 @@ for dispositions and timing; leave unmeasured values unstated.
   (`6656ec89a49d24b69ce7d319a2709f1c3c59f22410449a9831c3162d3908d4b0`), and DNP control
   (`0406e85fcb7a8c4e82aba8d164864fa94cecdde80e4e4bdc63ef81da3127a702`). Do not adopt a runtime
   dependency for this rule.
-- **Still unmeasured:** The official container build and invocation, native
-  candidate netlist export, reviewer effort, behavior across the advertised
-  KiCad matrix, and results on approved non-proprietary project data. The local
-  native fixture result is not a field false-positive estimate.
+- **Docker follow-up (2026-11-12):** Built the candidate's pinned KiCad 10.0.4
+  image from commit `53d1af8bc550f60415b4b8e51a6d2d5924ada03f` on the ARM
+  Docker host, selecting `linux/amd64`; the image config digest was
+  `sha256:a7279067fc101029c4336bc9b8d4ce03da489cced09edeeab5f5afbb1e6b044`
+  and the base image is pinned to
+  `sha256:770e2fa006695077b5ba218742d5c3137896af91257b2ca971243fa56b01bb86`.
+  The wrapper's doctor command first failed platform resolution without the
+  override, then exposed three `set -u` failures on empty Bash argument arrays;
+  `doctor` succeeded with a TTY, explicit environment passthrough, and
+  `--init`. Direct offline Docker invocations ran the candidate CLI against
+  the tooling-owned source-backed fixtures using native `kicad-cli` export.
+  The fitted fault was reported, the output-driver control stayed quiet, and
+  the DNP control was incorrectly reported. Repeated JSON reports were
+  byte-identical: fault
+  `286b0e5448bb4d2304bf7689e2817dc76c104d1d2b51082671eec3ccb90767df`,
+  output-driver control
+  `c5d7cddba3647bf883166fdb0ff3835686a410d0a02f75f85d759d05885a9c23`, and
+  DNP control
+  `26e57116f44f000de20e6695605e2d0ee967a585a2b8f1748d16ab1135b60bba`.
+- **Still unmeasured:** Reviewer effort, behavior across the advertised KiCad
+  matrix, and results on approved non-proprietary project data. The native
+  fixture result is not a field false-positive estimate.
 
 ### Recorded trial: kicad_skills `analog.missing_decoupling`
 
@@ -2195,10 +2216,24 @@ for dispositions and timing; leave unmeasured values unstated.
   rail-level review because no fitted capacitor connects the supply to return.
   This is synthetic regression evidence, not proof that a real board requires
   decoupling. Do not add a runtime dependency.
-- **Still unmeasured:** The documented Docker workflow, native candidate
-  export, advertised KiCad version matrix, reviewer effort, and behavior on
-  approved non-proprietary project data. The fallback trial does not measure
-  field precision.
+- **Docker follow-up (2026-11-12):** The pinned KiCad 10.0.4 image and wrapper
+  limitations are described in the preceding `analog.no_dc_path` follow-up.
+  Direct offline Docker invocations ran this rule with native `kicad-cli`
+  export against the tooling-owned source-backed no-cap fault, fitted
+  capacitor control, and DNP control. The no-cap fault emitted the target
+  warning (the command exited 2 for an unrelated `power.no_ground` error);
+  both controls exited 0 and stayed quiet. Repeated JSON reports were
+  byte-identical: no-cap fault
+  `2961d0cf1664a8f1581c44acbddfe8b6ff81578714e3ebeed2685eb862c50567`, fitted
+  control
+  `4b6d6a76d28e25eb48c59f24c11dfee818c17c02f12256d1ded86530519dc6b6`, and
+  DNP control
+  `229e635cd4a50fadb609a31f1beb1ac3e48579ea3cbbce6d0cafe29a23e620d`.
+  This duplicates LINT-046's synthetic result and also shows the candidate
+  does not use DNP state as a filter in this rule's fixture.
+- **Still unmeasured:** Reviewer effort, behavior across the advertised KiCad
+  version matrix, and behavior on approved non-proprietary project data. This
+  synthetic Docker run does not estimate field precision.
 
 ### Recorded trial: kicad_skills `analog.clock_no_series_resistor`
 
@@ -2494,10 +2529,10 @@ evaluation of upstream precision or reviewer effort.
 Source: [kicad-happy release notes][happy-fiducial-release-notes].
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 343 active rules. Each entry has a deterministic predicate, evidence
+contains 344 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-Of the 343 active rules, 285 default to `review`, 57 to `off`, and
+Of the 344 active rules, 286 default to `review`, 57 to `off`, and
 `pcb.required_fitted_reference` to `block`. Off-by-default checks include
 schematic geometry, generic peer assignment, selected component topology
 reviews such as the BJT base-bias and base/collector same-net prompts, and

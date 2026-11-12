@@ -13831,6 +13831,55 @@
       ]
     },
     {
+      "rule_id": "pcb.drc_duplicate_board_section",
+      "title": "Duplicate PCB board settings sections need review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_duplicate_board_section_review.py#source_bound_pcb_drc_duplicate_board_section_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0.8 .kicad_pro root object retaining each repeated board section as source-ordered key/value pairs",
+      "predicate": "For PCB and PCB-only projects configured for exact KiCad 10.0.8, emit one source-bound review candidate when the root JSON object repeats the board member; retain each section in source order without selecting an intended section.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.8 only; native source-order application was measured for track_dangling settings embedded in duplicate root board sections on the digest-pinned 10.0.8 image. Other patches, settings, and keys remain outside this claim."
+      ],
+      "limitations": [
+        "The finding reports repeated root board sections and their source-order values; it does not choose an intended section. Native order-sensitive behavior was measured only for the track_dangling DRC severity in the synthetic fault and control.",
+        "Only repeated root-level board members are in scope. Duplicate metadata or other root members remain unsupported by this rule. It reads source-hashed project settings only, does not run DRC on project boards, and does not establish electrical or manufacturing readiness."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_drc_duplicate_board_section.test_duplicate_board_sections_preserve_source_order_and_hash",
+        "tests.test_design_lint_mcp_parity_pcb_drc_duplicate_board_section.test_duplicate_board_section_review_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_duplicate_board_section_native.test_kicad_1008_uses_last_duplicate_board_section_repeatably"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_drc_duplicate_board_section.test_unique_board_is_quiet_and_direct_settings_reader_stays_strict",
+        "tests.test_pcb_drc_duplicate_board_section.test_other_duplicate_sections_remain_outside_the_rule",
+        "tests.test_pcb_drc_duplicate_board_section.test_unmeasured_kicad_versions_are_out_of_scope",
+        "tests.test_pcb_drc_duplicate_board_section.test_non_pcb_projects_are_out_of_scope",
+        "tests.test_pcb_drc_duplicate_board_section_native.test_kicad_1008_uses_last_duplicate_board_section_repeatably"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_drc_duplicate_board_section.test_repeated_scans_are_deterministic"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_duplicate_board_section_review.py#source_bound_pcb_drc_duplicate_board_section_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_duplicate_board_section_review.py#project_pcb_drc_duplicate_board_section_evidence",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings.py#configured_pcb_duplicate_board_sections",
+        "kicad_tooling/hwrepo/json_object_pairs.py#json_object_pairs_source_order_value",
+        "kicad_tooling/hwrepo/contracts.py#parse_model_text_allow_duplicate_json_keys_at",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#read_source_bound_pcb_project_settings",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#verify_source_bound_pcb_project_settings_unchanged",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
+        "kicad_tooling/hwrepo/design_lint_candidate_inputs.py#DesignLintCandidateInputs",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
+      ]
+    },
+    {
       "rule_id": "pcb.drc_unknown_severity_key",
       "title": "Unknown PCB DRC severity keys need version review",
       "theme": "pcb",

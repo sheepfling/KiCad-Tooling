@@ -125,6 +125,7 @@ def source_bound_schematic_erc_unknown_rule_key_candidates(
             allow_unrecognized_severity_strings=True,
             skip_nonstring_values=True,
             allow_duplicate_severity_keys=True,
+            allow_duplicate_board_section=config.kicad_version == "10.0.8",
         )
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         raise ValueError(

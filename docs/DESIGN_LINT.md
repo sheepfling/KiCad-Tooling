@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 343 active rules.
+The catalog currently contains 344 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -5561,6 +5561,26 @@ boards, or establish a board defect or manufacturing readiness. Projects may
 select `review`, `block`, `off`, or an exact-fingerprint ignore. Synthetic
 settings are documented in
 [`tests/fixtures/design_lint/pcb-drc-duplicate-severity-key/`](../tests/fixtures/design_lint/pcb-drc-duplicate-severity-key/README.md).
+
+## Review duplicate top-level PCB board sections
+
+`pcb.drc_duplicate_board_section` prompts when an exact KiCad 10.0.8
+source-hashed `.kicad_pro` repeats the root-level `board` member. It preserves
+each section's nested key/value pairs in source order and asks the project
+owner to retain the intended section. The check is enabled for PCB and
+PCB-only projects configured for exactly KiCad 10.0.8; other patches remain
+out of scope.
+
+A digest-pinned native fixture showed the last duplicate `board` section
+controlling the `track_dangling` severity: a warning section followed by an
+ignore section suppressed its fixture warnings, while the reversed order and
+the unique-warning control emitted warnings. This evidence applies only to
+that DRC key, fixture, and image. The rule does not choose an intended section,
+generalize the result to other settings, run DRC on project boards, or establish
+a board defect or manufacturing readiness. Projects may set `review`, `block`,
+or `off`, or record an exact-fingerprint ignore. Synthetic settings are
+documented in
+[`tests/fixtures/design_lint/pcb-drc-duplicate-board-section/`](../tests/fixtures/design_lint/pcb-drc-duplicate-board-section/README.md).
 
 ## Review invalid PCB DRC severity strings
 
