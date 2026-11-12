@@ -23948,8 +23948,9 @@ acceptance threads while new lint features proceed:
 
 - **Status:** Added a digest-pinned Docker regression to the existing
   `pcb.drc_exclusion_present` review gate. Tagged acceptance `v0.5.3rc685`
-  passed in GitHub Actions run `43125663932`; no rule ID or defect claim was
-  added.
+  passed in GitHub Actions run `43125663932`. The KiCad 10.0.8 extension passed
+  tagged acceptance `v0.5.3rc686` in run `43127521483`; no rule ID or defect
+  claim was added.
 - **Gap:** LINT-141 already checks that source-hashed KiCad project settings
   contain saved exclusion records. Its synthetic parser fixtures did not show
   that saved records match active native DRC markers on a board.
