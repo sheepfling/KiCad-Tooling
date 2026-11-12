@@ -65,15 +65,16 @@ for dispositions and timing; leave unmeasured values unstated.
   a syntactically valid lower-case condition, but no source-lint finding named
   that semantic risk.
 - **Native trial result:** The case-sensitivity claim was checked using
-  tooling-owned synthetic boards and the digest-pinned KiCad 10.0.0 and 10.0.5
-  images. In each version, the lowercase and canonical item-type variants had
-  equal observed behavior: both produced zero authored-rule track-width
-  matches on 10.0.0 and both produced two on 10.0.5. The terminal sentinel
-  passed in all runs. This does not establish that either condition expressed
-  the intended design rule, but it disproves the proposed simple case-mismatch
-  predicate for the versions tested.
-- **Disposition:** No item-type case lint was adopted. LINT-283 adds a source-bound default-REVIEW
-  prompt for named custom rules with no direct `(constraint ...)` clauses. LINT-284 independently
+  tooling-owned synthetic boards and digest-pinned KiCad 10.0.0, 10.0.5, and
+  10.0.8 images. Each lowercase and canonical variant ran twice with identical
+  results: both produced zero authored-rule track-width matches on 10.0.0 and
+  two on 10.0.5 and 10.0.8. The terminal sentinel matched on every run. This
+  supports only the tested condition and constraint; it does not generalize to
+  all expression literals or custom-rule behavior.
+- **Disposition:** No item-type case lint was adopted from this claim. The
+  native probe covers only `track`; lowercase `via` and `pad` remain untested.
+  LINT-283 adds a source-bound default-REVIEW prompt for named custom rules
+  with no direct `(constraint ...)` clauses. LINT-284 independently
   adds a default-REVIEW prompt for exact repeated names, consistent with KiCad's unique-name
   description. Its synthetic fault/control and native sentinel lane test the same source property
   without adopting candidate implementation code. The review prompt does not claim that either

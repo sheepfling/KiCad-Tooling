@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.ci_hosted_kicad10_images import KICAD_10_ERC_SEVERITY_TOOLCHAINS
 from kicad_tooling.hwrepo.contracts import write_model
 from kicad_tooling.hwrepo.models import CommandEvidence
 from kicad_tooling.hwrepo.pcb_dru_compilation import (
@@ -15,7 +16,6 @@ from kicad_tooling.hwrepo.pcb_dru_compilation import (
     run_pcb_dru_compilation_probe,
 )
 from tests.native_kicad_support import execute_kicad_cli
-from tests.synthetic_design_lint_project import PINNED_NATIVE_KICAD_IMAGES
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -29,10 +29,15 @@ pytestmark = [
 ]
 FIXTURES = Path(__file__).parent / "fixtures/design_lint/pcb-dru-item-type-case"
 PROBE_NAME = "pcb-dru-rule-compilation-probe"
-EXPECTED_AUTHORED_TRACK_WIDTH_MATCHES = {"10.0.0": 0, "10.0.5": 2}
+KICAD_10_PCB_TYPE_CASE_TOOLCHAINS = tuple(
+    (version, image)
+    for version, image in KICAD_10_ERC_SEVERITY_TOOLCHAINS
+    if version in {"10.0.0", "10.0.5", "10.0.8"}
+)
+EXPECTED_AUTHORED_TRACK_WIDTH_MATCHES = {"10.0.0": 0, "10.0.5": 2, "10.0.8": 2}
 
 
-@pytest.mark.parametrize(("kicad_version", "image"), tuple(PINNED_NATIVE_KICAD_IMAGES.items()))
+@pytest.mark.parametrize(("kicad_version", "image"), KICAD_10_PCB_TYPE_CASE_TOOLCHAINS)
 def test_native_case_variants_have_equal_behavior_on_pinned_versions(
     tmp_path: Path,
     kicad_version: str,
@@ -43,10 +48,12 @@ def test_native_case_variants_have_equal_behavior_on_pinned_versions(
     project = root / f"{PROBE_NAME}.kicad_pro"
     project.write_bytes((FIXTURES / "control.kicad_pro").read_bytes())
 
-    def run_case(name: str, source_fixture: str) -> tuple[PcbDruCompilationReport, int]:
+    def run_case(
+        name: str, source_fixture: str, repeat: str
+    ) -> tuple[PcbDruCompilationReport, int]:
         rules = root / f"{PROBE_NAME}.kicad_dru"
         rules.write_bytes((FIXTURES / source_fixture).read_bytes())
-        output = root / "build/native" / name
+        output = root / "build/native" / f"{name}-{repeat}"
         output.mkdir(parents=True)
 
         def executor(
@@ -56,7 +63,7 @@ def test_native_case_variants_have_equal_behavior_on_pinned_versions(
                 image,
                 argv,
                 work,
-                home_directory=f"dru-type-case-{name}",
+                home_directory=f"dru-type-case-{kicad_version}-{name}-{repeat}",
             )
             write_model(command_output / f"{command_name}.command.json", command)
             return command
@@ -88,9 +95,22 @@ def test_native_case_variants_have_equal_behavior_on_pinned_versions(
         )
         return report, authored_rule_matches
 
-    fault, fault_matches = run_case("lowercase", "fault-lowercase.kicad_dru")
-    control, control_matches = run_case("canonical", "control-canonical.kicad_dru")
+    results = {
+        name: tuple(run_case(name, rule_file, repeat) for repeat in ("first", "repeat"))
+        for name, rule_file in (
+            ("lowercase", "fault-lowercase.kicad_dru"),
+            ("canonical", "control-canonical.kicad_dru"),
+        )
+    }
+    for (first, first_matches), (repeat, repeat_matches) in results.values():
+        assert first.native_returncode == repeat.native_returncode == 5
+        assert first.status == repeat.status == "PASS"
+        assert first.observed_kicad_version == repeat.observed_kicad_version == kicad_version
+        assert first.sentinel_matches == repeat.sentinel_matches >= 1
+        assert first_matches == repeat_matches
 
-    assert fault.native_returncode == control.native_returncode == 5
-    assert fault_matches == control_matches
-    assert fault_matches == EXPECTED_AUTHORED_TRACK_WIDTH_MATCHES[kicad_version]
+    lowercase, lowercase_matches = results["lowercase"][0]
+    canonical, canonical_matches = results["canonical"][0]
+    assert lowercase.native_returncode == canonical.native_returncode == 5
+    assert lowercase_matches == canonical_matches
+    assert lowercase_matches == EXPECTED_AUTHORED_TRACK_WIDTH_MATCHES[kicad_version]
