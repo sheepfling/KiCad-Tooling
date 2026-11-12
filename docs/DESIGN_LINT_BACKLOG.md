@@ -801,7 +801,14 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc696):** LINT-414 adds
+- **Latest published lint-gate checkpoint (v0.5.3rc704):** LINT-422 adds a
+  source-bound REVIEW for pin-number disagreement between a unique embedded
+  symbol definition and its placed instance, with an exact KiCad 10.0.5
+  Docker fault/control. The local scoped gate passed 403 tests with 8,793
+  deselected, including wheel and external-template rehearsals. Hosted
+  acceptance passed in run `43213623129`; package and preview jobs were
+  skipped under prerelease policy.
+- **Earlier lint-gate checkpoint (v0.5.3rc696):** LINT-414 adds
   source-bound review for non-string saved schematic ERC severity values.
   Hosted acceptance passed in run `43165386784`: 408 tests passed, 8,655 were
   deselected, and the digest-pinned KiCad 10.0.8 fault/control fixtures ran.
