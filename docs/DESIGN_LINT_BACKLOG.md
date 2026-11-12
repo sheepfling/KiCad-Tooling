@@ -802,12 +802,11 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc704):** LINT-422 adds a
-  source-bound REVIEW for pin-number disagreement between a unique embedded
-  symbol definition and its placed instance, with an exact KiCad 10.0.5
-  Docker fault/control. The local scoped gate passed 403 tests with 8,793
-  deselected, including wheel and external-template rehearsals. Hosted
-  acceptance passed in run `43213623129`; package and preview jobs were
+- **Latest published lint-gate checkpoint (v0.5.3rc705):** LINT-423 adds
+  source-bound REVIEW for repeated schematic object UUIDs, with an exact
+  KiCad 10.0.5 Docker fault/control. The local scoped gate passed 405 tests
+  with 8,803 deselected, including wheel and external-template rehearsals.
+  Hosted acceptance passed in run `43218568561`; package and preview jobs were
   skipped under prerelease policy.
 - **Earlier lint-gate checkpoint (v0.5.3rc696):** LINT-414 adds
   source-bound review for non-string saved schematic ERC severity values.
@@ -24722,27 +24721,31 @@ acceptance threads while new lint features proceed:
 - **Status:** Implemented as default-review rule
   `schematic.embedded_symbol_pin_number_mismatch`, with source hashing and
   native evidence bounded to KiCad 10.0.5.
-- **Behavior:** Compare the definition and instance pin-number multisets only
-  when one unique direct definition has exactly one pin-bearing unit/convert
-  group matching the placed symbol. Report the reference, exact library ID,
-  both sorted number lists, and each list's unmatched values.
+- **Behavior:** Compare the definition and instance pin-number multisets when
+  exactly one supported pin-bearing group matches the placed symbol's unit and
+  convert. Sibling units are excluded from the comparison. Report the
+  reference, exact library ID, both sorted number lists, and each list's
+  unmatched values.
 - **Evidence:** In the tooling-owned synthetic control, KiCad 10.0.5 exports
   `USB_GND` on J1.4. Changing only the unique definition's corresponding pin
   number from 4 to 9 makes the same pinned exporter assign `USB_GND` to J1.9
-  without a duplicate library ID. Repeated control and fault exports and lint
-  reports are deterministic. No cohort project or proprietary board source
-  was imported.
+  without a duplicate library ID. The new unit-2 fixture contains a different
+  unit-1 pin inventory; the pinned exporter assigns `USB_GND` to J1.5 in its
+  control and J1.9 when only unit 2's embedded number changes. Repeated
+  single- and multi-unit control/fault exports and lint reports are
+  deterministic. No cohort project or proprietary board source was imported.
 - **Limitations:** This check exposes source disagreement but cannot tell
-  which pin list expresses intent. Multi-unit symbols, shared unit-0 pins,
-  multiple pin-bearing groups, malformed records, ambiguous definitions, and
-  unsupported structures are skipped. A matching list does not prove the
-  symbol's datasheet mapping, electrical connections, footprint, or PCB copper
-  path. The rule defaults to REVIEW; project policy may select block, off, or
-  an exact-fingerprint ignore after review.
-- **Regression coverage:** Tooling-owned source tests cover fault/control,
-  ambiguous multi-unit skip behavior, exact-version and project-kind scope,
-  source freshness, and deterministic findings. CLI/MCP parity and a
-  digest-pinned native export test cover the same single-unit control/fault.
+  which pin list expresses intent. Shared unit-0 pins, unsupported unit/convert
+  suffixes, malformed records, ambiguous definitions, duplicate matching
+  groups, and unsupported structures are skipped. A matching list does not
+  prove the symbol's datasheet mapping, electrical connections, footprint, or
+  PCB copper path. The rule defaults to REVIEW; project policy may select
+  block, off, or an exact-fingerprint ignore after review.
+- **Regression coverage:** Tooling-owned source tests cover single- and
+  multi-unit fault/control, unrelated sibling groups, unit-0 skip behavior,
+  exact-version and project-kind scope, source freshness, and deterministic
+  findings. CLI/MCP parity and digest-pinned native exports cover both the
+  single-unit and selected multi-unit cases.
 - **Selection:** Run
   `tests/test_schematic_embedded_symbol_pin_number_mismatch.py` and
   `tests/test_design_lint_mcp_parity_schematic_embedded_symbol_pin_number_mismatch.py`
@@ -24751,16 +24754,21 @@ acceptance threads while new lint features proceed:
   Run `tests/test_schematic_embedded_symbol_pin_number_mismatch_native.py`
   with `KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1` and the same
   selector plus `native_kicad`.
-- **Local acceptance (2026-11-12):** The tag-equivalent scoped gate passed 403
-  tests with 8,793 unrelated tests deselected, including the digest-pinned
-  KiCad 10.0.5 Docker fixture. Ruff, both Alphus profiles, Rumdl, repository-
-  wide mdrepo, scoped Linux and Windows Pyright, wheel and sdist builds,
-  installed-wheel execution, and the separate template checkout rehearsal
-  passed.
-- **Hosted acceptance (2026-11-12):** Annotated tag `v0.5.3rc704` passed
-  GitHub Actions run `43213623129`. The focused prerelease gate and installed-
-  wheel rehearsal passed; package publication and preview orchestration were
-  skipped under prerelease policy.
+- **Local acceptance (2026-11-12):** The current scoped gate passed 408 tests
+  with 8,803 unrelated tests deselected, including both digest-pinned KiCad
+  10.0.5 single- and multi-unit Docker exports. Ruff, both Alphus profiles,
+  Rumdl, repository-wide mdrepo, scoped Linux and Windows Pyright, wheel and
+  sdist builds, installed-wheel execution, and the separate template checkout
+  rehearsal passed.
+- **Hosted acceptance (original single-unit rule, 2026-11-12):** Annotated tag
+  `v0.5.3rc704` passed GitHub Actions run `43213623129`. The focused prerelease
+  gate and installed-wheel rehearsal passed; package publication and preview
+  orchestration were skipped under prerelease policy.
+- **Multi-unit coverage update (2026-11-12):** Added exact unit/convert
+  selection to the source predicate. The focused source/parity suite passed 11
+  tests; the native lane passed both single-unit and unit-2/convert-1
+  fault/control exports (2 tests). A different convert-2 pin stays outside
+  the selected comparison. Hosted acceptance for this extension is pending.
 
 #### LINT-423 — Review repeated schematic object UUIDs
 

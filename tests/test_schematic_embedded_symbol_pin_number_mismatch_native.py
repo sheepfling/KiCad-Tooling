@@ -98,3 +98,22 @@ def test_native_unique_definition_pin_number_mismatch_changes_exported_net_pin(
     assert fault_netlist.nets["USB_GND"] == ("J1.9",)
     assert control_rules == ()
     assert fault_rules == (RULE_ID,)
+
+
+def test_native_matching_multi_unit_group_controls_exported_net_pin(tmp_path: Path) -> None:
+    control_runs = tuple(
+        _run_export(tmp_path, "multi-unit-control", run) for run in ("first", "repeat")
+    )
+    fault_runs = tuple(
+        _run_export(tmp_path, "multi-unit-fault", run) for run in ("first", "repeat")
+    )
+
+    assert control_runs[0] == control_runs[1]
+    assert fault_runs[0] == fault_runs[1]
+    control_netlist, control_rules = control_runs[0]
+    fault_netlist, fault_rules = fault_runs[0]
+    assert set(control_netlist.components) == {"J1", "U1"}
+    assert control_netlist.nets["USB_GND"] == ("J1.5",)
+    assert fault_netlist.nets["USB_GND"] == ("J1.9",)
+    assert control_rules == ()
+    assert fault_rules == (RULE_ID,)

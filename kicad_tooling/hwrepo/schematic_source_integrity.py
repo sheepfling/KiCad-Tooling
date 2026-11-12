@@ -217,7 +217,9 @@ def embedded_symbol_pin_number_mismatch_candidates(
             else:
                 convert = "1"
 
-            pin_groups: list[tuple[str, tuple[str, ...]]] = []
+            pin_groups: list[tuple[str, str, tuple[str, ...]]] = []
+            unsupported_group = False
+            shared_pin_group = False
             for sub_symbol in schematic_nodes(text, definition, "symbol"):
                 sub_atoms = sexpr_atoms(text, sub_symbol)
                 if len(sub_atoms) != 2:
@@ -225,18 +227,28 @@ def embedded_symbol_pin_number_mismatch_candidates(
                 pin_nodes = schematic_nodes(text, sub_symbol, "pin")
                 if not pin_nodes:
                     continue
+                suffix = _SYMBOL_UNIT_CONVERT_SUFFIX.search(sub_atoms[1])
+                if suffix is None:
+                    unsupported_group = True
+                    break
                 pin_numbers = _pin_numbers(text, pin_nodes)
                 if pin_numbers is None:
-                    pin_groups = []
+                    unsupported_group = True
                     break
-                pin_groups.append((sub_atoms[1], pin_numbers))
-            if len(pin_groups) != 1:
+                unit_group = suffix["unit"]
+                shared_pin_group = shared_pin_group or unit_group == "0"
+                pin_groups.append((unit_group, suffix["convert"], pin_numbers))
+            if unsupported_group or shared_pin_group:
                 continue
 
-            group_name, definition_pin_numbers = pin_groups[0]
-            suffix = _SYMBOL_UNIT_CONVERT_SUFFIX.search(group_name)
-            if suffix is None or (suffix["unit"], suffix["convert"]) != (unit, convert):
+            matching_groups = tuple(
+                pin_numbers
+                for group_unit, group_convert, pin_numbers in pin_groups
+                if (group_unit, group_convert) == (unit, convert)
+            )
+            if len(matching_groups) != 1:
                 continue
+            (definition_pin_numbers,) = matching_groups
             placed_pin_nodes = schematic_nodes(text, symbol, "pin")
             placed_pin_numbers = _placed_pin_numbers(text, placed_pin_nodes)
             if not placed_pin_numbers:

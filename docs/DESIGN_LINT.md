@@ -1021,19 +1021,23 @@ KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
 
 `schematic.embedded_symbol_pin_number_mismatch` compares a placed symbol's pin
 instance records with the pin numbers in its unique embedded definition. It
-reports a default-review finding only when the definition has exactly one
-pin-bearing unit/convert group and the sorted pin-number multisets differ.
-Evidence includes both lists and their unmatched values. The heuristic cannot
-decide which representation matches design intent; a reviewer should check the
-approved symbol source, datasheet, and connector requirement.
+reports a default-review finding when the definition has exactly one
+pin-bearing unit/convert group matching the placed symbol and the sorted
+pin-number multisets differ. Other units do not contribute pins to the
+comparison. Evidence includes both lists and their unmatched values. The
+heuristic cannot decide which representation matches design intent; a reviewer
+should check the approved symbol source, datasheet, and connector requirement.
 
-Symbols with multiple pin-bearing groups, shared unit-0 pins, malformed pin
-records, ambiguous library IDs, and unsupported source structures are skipped.
+Groups with unsupported unit/convert suffixes, shared unit-0 pins, malformed
+pin records, ambiguous library IDs, and duplicate matching groups are skipped.
 Matching lists do not establish electrical connectivity or PCB copper return
-continuity. The digest-pinned KiCad 10.0.5 synthetic experiment exports
-`USB_GND` on J1.4 in the control; changing only the unique embedded definition
-to pin 9 makes the same native exporter assign `USB_GND` to J1.9. This result
-is limited to the tooling-owned fixture and pinned KiCad image.
+continuity. The digest-pinned KiCad 10.0.5 single-unit fixture exports
+`USB_GND` on J1.4 in the control and J1.9 after the embedded number changes.
+The multi-unit fixture selects unit 2 while unit 1 contains separate pins;
+KiCad exports `USB_GND` on J1.5 in the control and J1.9 after only unit 2's
+embedded pin number changes. These results are limited to the tooling-owned
+fixtures and pinned KiCad image. See the
+[fixture record](../tests/fixtures/design_lint/embedded-symbol-pin-number-mismatch/README.md).
 
 Run the source and CLI/MCP regressions with:
 
