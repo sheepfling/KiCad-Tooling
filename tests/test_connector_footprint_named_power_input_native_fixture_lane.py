@@ -10,6 +10,9 @@ from types import MappingProxyType, SimpleNamespace
 
 import pytest
 
+from kicad_tooling.ci_hosted_connector_return_fixture_sources import (
+    CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES,
+)
 from kicad_tooling.ci_hosted_connector_return_named_power_input_divergence import (
     CONTROL_CASE,
     FAULT_CASE,
@@ -19,6 +22,12 @@ from kicad_tooling.ci_hosted_connector_return_named_power_input_divergence impor
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import DesignLintPolicy, DesignLintRuleOverride
+from tests.design_lint_fixtures.connector_reviewed_peer_power_input import (
+    lint_report as reviewed_lint_report,
+)
+from tests.design_lint_fixtures.connector_reviewed_peer_power_input import (
+    power_input_coverage,
+)
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.synthetic_design_lint_project import (
     PINNED_NATIVE_KICAD_IMAGES,
@@ -28,10 +37,24 @@ from tests.synthetic_design_lint_project import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.power_lint]
 
 FIXTURE_CASES = (FAULT_CASE, CONTROL_CASE)
+UNANCHORED_FIXTURE_CASES = (
+    "footprint-alias-named-power-input-unanchored-fault",
+    "footprint-alias-named-power-input-unanchored-control",
+)
 EXPECTED_SOURCE_HASHES = MappingProxyType(
     {
         FAULT_CASE: "d4dfd83d6e8c9859411e613b6f9313ae65efd25c33056541bf35b0e484b70aea",
         CONTROL_CASE: "8b055617a737dde04b6647a7ce8f5e4a167aa9567b712a1b0d88696eae1f8a7c",
+    }
+)
+EXPECTED_UNANCHORED_SOURCE_HASHES = MappingProxyType(
+    {
+        UNANCHORED_FIXTURE_CASES[
+            0
+        ]: "00628b440524b4bbd1deacbeaede223061bb66d479857b4ed795d2f704bd1215",
+        UNANCHORED_FIXTURE_CASES[
+            1
+        ]: "90cde96816d5f80d041d95b29f7aef1cf64c143e74330506110870155e8b34bb",
     }
 )
 
@@ -45,6 +68,9 @@ def test_named_power_input_divergence_fixture_sources_match_reviewed_hashes() ->
         case: hashlib.sha256((fixture_root / f"{name}.kicad_sch").read_bytes()).hexdigest()
         for case, name in ((FAULT_CASE, "fault"), (CONTROL_CASE, "control"))
     } == EXPECTED_SOURCE_HASHES
+    assert {
+        case: CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES[case] for case in UNANCHORED_FIXTURE_CASES
+    } == EXPECTED_UNANCHORED_SOURCE_HASHES
 
 
 def test_named_power_input_divergence_validator_checks_fault_and_control() -> None:
@@ -202,3 +228,90 @@ def test_native_named_power_input_divergence_fault_and_control_are_repeatable(
             context.normalized_netlist_hashes[case, "first"]
             == context.normalized_netlist_hashes[case, "repeat"]
         )
+
+
+@pytest.mark.native_kicad
+@pytest.mark.slow
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.skipif(
+    os.environ.get("KICAD_RUN_NATIVE_CONNECTOR_FIXTURES") != "1",
+    reason="digest-pinned native connector fixtures run in package acceptance",
+)
+@pytest.mark.parametrize(
+    ("project", "version"),
+    (("controller", "10.0.0"), ("raspberry-pi-status-led", "10.0.5")),
+)
+def test_native_unanchored_named_power_input_split_requires_current_peer_map(
+    tmp_path: Path,
+    project: str,
+    version: str,
+) -> None:
+    from kicad_tooling.ci_hosted_connector_return_context import (
+        prepare_connector_return_fixture_context,
+    )
+
+    image = PINNED_NATIVE_KICAD_IMAGES[version]
+    policy = DesignLintPolicy(
+        rules=(
+            DesignLintRuleOverride(
+                rule_id=RULE_ID,
+                mode="review",
+                reason="Synthetic native fixture enables this bounded review heuristic.",
+            ),
+        )
+    )
+    root, _ = synthetic_design_lint_project(
+        tmp_path,
+        policy,
+        project_id=project,
+        kicad_version=version,
+        image=image,
+    )
+    config = selected_config(root, project)
+    assert (config.kicad_version, config.image) == (version, image)
+    context = prepare_connector_return_fixture_context(
+        root,
+        project=project,
+        image=config.image,
+        log=HostedLog(root, f"native-unanchored-named-power-input-{project}"),
+        case_names=UNANCHORED_FIXTURE_CASES,
+        stage_prefix="unanchored-named-power-input-fixture",
+    )
+
+    fault_case, control_case = UNANCHORED_FIXTURE_CASES
+    fault = context.observed_contracts[fault_case, "first"]
+    assert (
+        context.normalized_netlist_hashes[fault_case, "first"]
+        == (context.normalized_netlist_hashes[fault_case, "repeat"])
+    )
+    assert fault.component_pin_numbers["J1"] == ("1",)
+    assert fault.component_pin_numbers["J2"] == ("1",)
+    assert fault.component_symbols["J1"] != fault.component_symbols["J2"]
+    fault_coverage = power_input_coverage(fault, pin_numbers=("1",))
+    assert fault_coverage.status == "COMPLETE"
+
+    unscoped_fault = reviewed_lint_report(fault)
+    assert RULE_ID not in {item.rule_id for item in unscoped_fault.findings}
+    mapped_fault = reviewed_lint_report(fault, fault_coverage)
+    fault_findings = tuple(item for item in mapped_fault.findings if item.rule_id == RULE_ID)
+    assert len(fault_findings) == 1
+    assert fault_findings[0].evidence["assignments"] == (
+        "J1.1=BIAS_INPUT_A",
+        "J2.1=BIAS_INPUT_B",
+    )
+    assert fault_findings[0].evidence["common_anchor_pin_numbers"] == ()
+    assert fault_findings[0].evidence["peer_assignment_group"] == (
+        "reviewed-synthetic-power-peers",
+    )
+
+    control = context.observed_contracts[control_case, "first"]
+    assert (
+        context.normalized_netlist_hashes[control_case, "first"]
+        == (context.normalized_netlist_hashes[control_case, "repeat"])
+    )
+    assert control.component_pin_numbers["J1"] == ("1",)
+    assert control.component_pin_numbers["J2"] == ("1",)
+    control_coverage = power_input_coverage(control, pin_numbers=("1",))
+    assert control_coverage.status == "COMPLETE"
+    mapped_control = reviewed_lint_report(control, control_coverage)
+    assert RULE_ID not in {item.rule_id for item in mapped_control.findings}

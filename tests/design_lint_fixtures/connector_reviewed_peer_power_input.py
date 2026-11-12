@@ -80,6 +80,7 @@ def power_input_coverage(
     unconnected_pin_reasons: tuple[str | None, str | None] = (None, None),
     complete_maps: bool = True,
     inventory_reviewed: bool = True,
+    pin_numbers: tuple[str, ...] = ("1", "2"),
 ) -> ConnectorCoverageReport:
     """Create complete source-bound maps for two distinct interface records."""
     catalog, project_interfaces, reviews = power_input_project_documents(
@@ -90,6 +91,7 @@ def power_input_coverage(
         directions=directions,
         unconnected_pin_reasons=unconnected_pin_reasons,
         complete_maps=complete_maps,
+        pin_numbers=pin_numbers,
     )
     return evaluate_connector_coverage(
         observed,
@@ -115,6 +117,7 @@ def power_input_project_documents(
     directions: tuple[str, str] = ("input", "input"),
     unconnected_pin_reasons: tuple[str | None, str | None] = (None, None),
     complete_maps: bool = True,
+    pin_numbers: tuple[str, ...] = ("1", "2"),
 ) -> tuple[InterfacesCatalog, tuple[str, ...], tuple[ConnectorInterfaceReview, ...]]:
     """Return the synthetic shared catalog and per-connector pinout reviews."""
     interfaces: list[InterfaceRecord] = []
@@ -143,31 +146,35 @@ def power_input_project_documents(
         ),
         start=1,
     ):
+        interface_pins = [
+            InterfacePin(
+                number="1",
+                signal=signal,
+                role=role,
+                direction=direction,
+                voltage_domain=domain,
+                mating="synthetic fixture",
+                orientation="straight",
+                mechanical_clearance="synthetic",
+            )
+        ]
+        if "2" in pin_numbers:
+            interface_pins.append(
+                InterfacePin(
+                    number="2",
+                    signal=f"SIGNAL_{index}",
+                    direction="bidirectional",
+                    voltage_domain="logic-3v3",
+                    mating="synthetic fixture",
+                    orientation="straight",
+                    mechanical_clearance="synthetic",
+                )
+            )
         interfaces.append(
             InterfaceRecord(
                 id=interface_id,
                 revision="synthetic-1",
-                pins=(
-                    InterfacePin(
-                        number="1",
-                        signal=signal,
-                        role=role,
-                        direction=direction,
-                        voltage_domain=domain,
-                        mating="synthetic fixture",
-                        orientation="straight",
-                        mechanical_clearance="synthetic",
-                    ),
-                    InterfacePin(
-                        number="2",
-                        signal=f"SIGNAL_{index}",
-                        direction="bidirectional",
-                        voltage_domain="logic-3v3",
-                        mating="synthetic fixture",
-                        orientation="straight",
-                        mechanical_clearance="synthetic",
-                    ),
-                ),
+                pins=tuple(interface_pins),
             )
         )
         project_interfaces.append(interface_id)
@@ -177,7 +184,9 @@ def power_input_project_documents(
                 disposition="interface",
                 basis=f"Synthetic current pin map for {reference}",
                 interface_id=interface_id,
-                pin_map=({"1": "1", "2": "2"} if complete_maps else {"1": "1"}),
+                pin_map=(
+                    {number: number for number in pin_numbers} if complete_maps else {"1": "1"}
+                ),
                 peer_assignment_group=peer_group,
                 peer_assignment_basis=None if peer_group is None else PEER_BASIS,
                 unconnected_pin_reasons={} if open_reason is None else {"1": open_reason},

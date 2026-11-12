@@ -8,6 +8,12 @@ native `power_in` type. The fault assigns J1.1 and J2.1 to different nets;
 pin 2 is a separate common anchor. The control assigns both power-input pins
 to one net.
 
+The unanchored fault/control pair uses one-pin aliases, so no second contact
+can provide a common-net anchor. A complete synthetic connector map places
+the peers in one current source-matched group for the fault; the same native
+fault netlist without that map stays quiet. The unanchored control assigns
+both named power-input pins to one net.
+
 The rule asks for review only. Separate sources, switched rails, and isolated
 power domains can be intentional; matching symbol properties and one common
 anchor do not establish that the power inputs should be joined.
@@ -16,3 +22,5 @@ SHA-256 source digests:
 
 - `fault.kicad_sch`: `d4dfd83d6e8c9859411e613b6f9313ae65efd25c33056541bf35b0e484b70aea`
 - `control.kicad_sch`: `8b055617a737dde04b6647a7ce8f5e4a167aa9567b712a1b0d88696eae1f8a7c`
+- `unanchored-fault.kicad_sch`: `00628b440524b4bbd1deacbeaede223061bb66d479857b4ed795d2f704bd1215`
+- `unanchored-control.kicad_sch`: `90cde96816d5f80d041d95b29f7aef1cf64c143e74330506110870155e8b34bb`

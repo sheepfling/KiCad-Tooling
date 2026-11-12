@@ -89,6 +89,8 @@ EXPECTED_CONNECTOR_RETURN_STAGES = frozenset(
         "connector-return-fixture/footprint-alias-part-id-peer-missing-metadata-control",
         "connector-return-fixture/footprint-alias-named-power-input-divergence-fault",
         "connector-return-fixture/footprint-alias-named-power-input-divergence-control",
+        "connector-return-fixture/footprint-alias-named-power-input-unanchored-fault",
+        "connector-return-fixture/footprint-alias-named-power-input-unanchored-control",
         "connector-return-fixture/footprint-alias-named-power-input-all-open-fault",
         "connector-return-fixture/footprint-alias-named-power-input-all-open-control",
         "connector-return-fixture/footprint-alias-named-power-output-all-open-fault",

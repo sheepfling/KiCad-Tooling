@@ -45,7 +45,11 @@ def evaluate_footprint_named_power_input_assignment_divergence(
         and all(len(nets) == 1 for nets in item.assignments.values())
         and len({nets for nets in item.assignments.values()}) >= 2
     )
-    anchored = tuple(item for item in eligible if item.common_anchor_pin_numbers)
+    reviewable = tuple(
+        item
+        for item in eligible
+        if item.common_anchor_pin_numbers or item.peer_assignment_group is not None
+    )
     candidates = tuple(
         connector_footprint_named_divergence_candidate(
             item,
@@ -54,10 +58,15 @@ def evaluate_footprint_named_power_input_assignment_divergence(
             message=(
                 "Fitted connectors with distinct native symbols share the same value, footprint, "
                 "complete pin inventory, and matching per-pin metadata. This explicitly named "
-                "power-input contact is assigned to different nets while a separate contact has "
-                "one common assigned net. Review the approved pinout and intended power-domain "
-                "separation; similarity does not prove the assignments are wrong or should be "
-                "joined."
+                "power-input contact is assigned to different nets. "
+                + (
+                    "A separate contact has one common assigned net. "
+                    if item.common_anchor_pin_numbers
+                    else "A current source-matched peer-assignment group scopes the comparison, "
+                    "but no common-net anchor is present. "
+                )
+                + "Review the approved pinout and intended power-domain separation; similarity "
+                "does not prove the assignments are wrong or should be joined."
                 + (
                     " The comparison is scoped to a source-reviewed peer-assignment group."
                     if item.peer_assignment_group is not None
@@ -65,10 +74,10 @@ def evaluate_footprint_named_power_input_assignment_divergence(
                 )
             ),
         )
-        for item in anchored
+        for item in reviewable
     )
     return NamedPowerInputDivergenceEvaluation(
         candidates=candidates,
         candidate_count=len(eligible),
-        unanchored_count=len(eligible) - len(anchored),
+        unanchored_count=len(eligible) - len(reviewable),
     )

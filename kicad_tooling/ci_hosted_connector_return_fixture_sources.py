@@ -137,6 +137,10 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         / "connector-footprint-named-power-input-divergence-native/fault.kicad_sch",
         "footprint-alias-named-power-input-divergence-control": fixture_root
         / "connector-footprint-named-power-input-divergence-native/control.kicad_sch",
+        "footprint-alias-named-power-input-unanchored-fault": fixture_root
+        / "connector-footprint-named-power-input-divergence-native/unanchored-fault.kicad_sch",
+        "footprint-alias-named-power-input-unanchored-control": fixture_root
+        / "connector-footprint-named-power-input-divergence-native/unanchored-control.kicad_sch",
         "footprint-alias-same-voltage-power-input-fault": fixture_root
         / "connector-footprint-same-voltage-power-input-native/fault.kicad_sch",
         "footprint-alias-same-voltage-power-input-control": fixture_root
@@ -376,6 +380,8 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = MappingProxyType(
         "footprint-alias-part-id-peer-missing-metadata-control": "880e000dc1646fe5a8a4183b60ac36150d6e965e9dd7b8055ac286e0a0e1f75c",
         "footprint-alias-named-power-input-divergence-fault": "d4dfd83d6e8c9859411e613b6f9313ae65efd25c33056541bf35b0e484b70aea",
         "footprint-alias-named-power-input-divergence-control": "8b055617a737dde04b6647a7ce8f5e4a167aa9567b712a1b0d88696eae1f8a7c",
+        "footprint-alias-named-power-input-unanchored-fault": "00628b440524b4bbd1deacbeaede223061bb66d479857b4ed795d2f704bd1215",
+        "footprint-alias-named-power-input-unanchored-control": "90cde96816d5f80d041d95b29f7aef1cf64c143e74330506110870155e8b34bb",
         "footprint-alias-same-voltage-power-input-fault": "b1f0fbf69b4bf417ac004147b5eef2649446d8c563bac5716e3aab5a8ea3e78e",
         "footprint-alias-same-voltage-power-input-control": "93b2988e463477a23a5041d1d38f4cf07178245dfc757c086f653ae93bab4f56",
         "footprint-alias-named-power-input-all-open-fault": "fc7bf0d75bcc8775e39328d6e9cf0e19a2c244f3ac1b782fed9d95e23b30271d",

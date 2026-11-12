@@ -45,6 +45,33 @@ def _named_peer(
     )
 
 
+def _single_pin_named_peer(
+    assignments: tuple[str | None, str | None],
+) -> NetlistContract:
+    """Build one-pin power-input peers without an available common anchor."""
+    base = _named_peer(
+        assignments,
+        function="BIAS_IN",
+        electrical_type="power_in",
+        value="Synthetic named power-input peer",
+    )
+    return base.model_copy(
+        update={
+            "nets": {net: pins for net, pins in base.nets.items() if net != "COMMON_ANCHOR"},
+            "component_pin_numbers": {"J1": ("1",), "J2": ("1",)},
+            "pin_functions": {
+                pin: name for pin, name in base.pin_functions.items() if pin.endswith(".1")
+            },
+            "pin_electrical_types": {
+                pin: pin_type
+                for pin, pin_type in base.pin_electrical_types.items()
+                if pin.endswith(".1")
+            },
+            "unconnected_nets": {},
+        }
+    )
+
+
 def _metadata_peer(
     target_assignments: tuple[str | None, str | None],
     *,
@@ -109,6 +136,12 @@ def named_connector_peer_fixture_contracts() -> dict[str, NetlistContract]:
             function="BIAS_IN",
             electrical_type="power_in",
             value="Synthetic named power-input peer",
+        ),
+        "footprint-alias-named-power-input-unanchored-fault": _single_pin_named_peer(
+            ("BIAS_INPUT_A", "BIAS_INPUT_B")
+        ),
+        "footprint-alias-named-power-input-unanchored-control": _single_pin_named_peer(
+            ("BIAS_INPUT", "BIAS_INPUT")
         ),
         "footprint-alias-named-power-input-all-open-fault": _named_peer(
             (None, None),

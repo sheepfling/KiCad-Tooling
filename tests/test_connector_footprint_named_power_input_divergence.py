@@ -11,6 +11,12 @@ from tests.connector_footprint_peer_support import (
 from tests.connector_footprint_peer_support import (
     named_power_input_divergence_netlist as _power_input_divergence_netlist,
 )
+from tests.design_lint_fixtures.connector_reviewed_peer_power_input import (
+    lint_report as _reviewed_lint_report,
+)
+from tests.design_lint_fixtures.connector_reviewed_peer_power_input import (
+    power_input_coverage,
+)
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint]
 
@@ -30,7 +36,7 @@ def test_named_power_input_on_different_nets_is_reviewed_with_a_common_anchor() 
     assert finding.evidence["assignments"] == ("J1.2=BIAS_A", "J2.2=BIAS_B")
     assert finding.evidence["pin_electrical_type"] == ("power_in",)
     assert finding.evidence["common_anchor_pin_numbers"] == ("1",)
-    assert "does not prove the assignments are wrong" in finding.message
+    assert "similarity does not prove the assignments are wrong" in finding.message
 
     coverage = report.connector_peer_pin_coverage
     assert coverage is not None
@@ -67,6 +73,44 @@ def test_common_unanchored_or_ineligible_contacts_are_not_power_divergence_findi
     assert alias.named_power_input_different_assignment_pin_group_count == 1
     assert alias.named_power_input_divergence_finding_count == 0
     assert alias.unanchored_named_power_input_divergence_pin_group_count == 1
+
+
+def test_unanchored_named_power_input_split_requires_a_current_shared_peer_scope() -> None:
+    observed = _power_input_divergence_netlist(anchor_assignments=("RETURN_A", "RETURN_B"))
+    coverage = power_input_coverage(observed)
+    assert coverage.status == "COMPLETE"
+    report = _reviewed_lint_report(observed, coverage)
+    findings = tuple(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert report.status == "REVIEW"
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.evidence["assignments"] == ("J1.2=BIAS_A", "J2.2=BIAS_B")
+    assert finding.evidence["common_anchor_pin_numbers"] == ()
+    assert finding.evidence["peer_assignment_group"] == ("reviewed-synthetic-power-peers",)
+    assert "no common-net anchor is present" in finding.message
+    assert "similarity does not prove the assignments are wrong" in finding.message
+
+    alias = report.connector_peer_pin_coverage.footprint_alias_coverage
+    assert alias.named_power_input_different_assignment_pin_group_count == 1
+    assert alias.named_power_input_divergence_finding_count == 1
+    assert alias.unanchored_named_power_input_divergence_pin_group_count == 0
+
+    controls = (
+        (observed, None),
+        (observed, power_input_coverage(observed, peer_groups=(None, None))),
+        (observed, power_input_coverage(observed, peer_groups=("usb-only", "serial-only"))),
+        (observed, power_input_coverage(observed, complete_maps=False)),
+        (
+            observed,
+            power_input_coverage(
+                _power_input_divergence_netlist(target_assignments=("BIAS_A", "BIAS_A"))
+            ),
+        ),
+    )
+    for source, source_coverage in controls:
+        control = _reviewed_lint_report(source, source_coverage)
+        assert RULE_ID not in {item.rule_id for item in control.findings}
 
 
 def test_named_power_input_divergence_is_stable_under_mapping_order() -> None:

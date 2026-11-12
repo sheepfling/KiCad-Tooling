@@ -242,8 +242,12 @@ def _validate_current_divergence(
             )
         )
     )
-    if current_anchors != divergence.common_anchor_pin_numbers or not current_anchors:
+    if current_anchors != divergence.common_anchor_pin_numbers:
         raise ValueError("Connector named divergence anchors must match the current native nets")
+    if not current_anchors and divergence.peer_assignment_group is None:
+        raise ValueError(
+            "Unanchored connector named divergence requires a current source-matched peer scope"
+        )
 
 
 @dataclass(frozen=True, slots=True)

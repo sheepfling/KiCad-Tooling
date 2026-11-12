@@ -299,8 +299,16 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
                     "test_footprint_alias_review_matches_cli_and_mcp",
                 )
                 + _refs(
+                    "tests.test_connector_footprint_named_power_input_divergence_parity",
+                    "test_unanchored_named_power_input_scope_matches_between_cli_and_mcp",
+                )
+                + _refs(
                     "tests.test_connector_footprint_named_power_input_native_fixture_lane",
                     "test_native_named_power_input_divergence_fault_and_control_are_repeatable",
+                )
+                + _refs(
+                    "tests.test_connector_footprint_named_power_input_native_fixture_lane",
+                    "test_native_unanchored_named_power_input_split_requires_current_peer_map",
                 ),
                 "valid_control_fixtures": _refs(
                     "tests.test_connector_footprint_named_power_input_divergence",
@@ -311,8 +319,16 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
                     "test_footprint_alias_review_matches_cli_and_mcp",
                 )
                 + _refs(
+                    "tests.test_connector_footprint_named_power_input_divergence_parity",
+                    "test_unanchored_named_power_input_scope_matches_between_cli_and_mcp",
+                )
+                + _refs(
                     "tests.test_connector_footprint_named_power_input_native_fixture_lane",
                     "test_native_named_power_input_divergence_fault_and_control_are_repeatable",
+                )
+                + _refs(
+                    "tests.test_connector_footprint_named_power_input_native_fixture_lane",
+                    "test_native_unanchored_named_power_input_split_requires_current_peer_map",
                 ),
                 "metamorphic_fixtures": _refs(
                     "tests.test_connector_footprint_named_power_input_divergence",

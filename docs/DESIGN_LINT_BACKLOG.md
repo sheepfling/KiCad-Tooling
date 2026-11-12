@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 351 rules are implemented with synthetic regression coverage.
+The following 352 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 351 active rules.
+The catalog currently contains 352 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -737,6 +737,7 @@ skipped under prerelease policy.
 - `pcb.drc_exclusion_present`
 - `pcb.drc_duplicate_board_section`
 - `pcb.drc_duplicate_net_settings_section`
+- `pcb.drc_conflicting_netclass_definitions`
 - `pcb.duplicate_object_uuid`
 - `pcb.drc_duplicate_severity_key`
 - `pcb.drc_unknown_severity_key`
@@ -803,7 +804,14 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc714):** LINT-426 extends
+- **Latest published lint-gate checkpoint (v0.5.3rc715):** LINT-427 catches
+  conflicting duplicate `net_settings.classes` JSON members and repeated
+  same-name netclass definitions. KiCad 10.0.8 DRC confirmed the wide-last
+  clearance fault twice while the narrow-last and distinct-name controls
+  remained clean. Local scoped acceptance passed 419 tests with 8,850
+  deselected. Hosted prerelease acceptance passed in run `43277952874`;
+  package and preview jobs were skipped under prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc714):** LINT-426 extends
   `pcb.duplicate_object_uuid` with a footprint/track collision measurement.
   KiCad 10.0.0 and 10.0.5 resolve the shared identifier in dangling-track and
   unconnected DRC records to `Footprint J1`; the distinct-identity control
@@ -12245,20 +12253,25 @@ control are documented in the
   metadata. Honor a current source-matched peer-assignment group when present.
   Review an explicit, non-generic `power_in` function outside recognized
   supply and return roles when every peer has exactly one assignment to at
-  least two distinct nets and another pin in the same scope has one exact
-  common-net assignment.
+  least two distinct nets, and either another pin in the same scope has one
+  exact common-net assignment or a current source-matched peer-assignment
+  group scopes the comparison.
 - **Boundary:** This is a default-review heuristic. Different power-input
   nets can represent separate sources, switched rails, or isolated domains.
-  Matching symbol metadata and one common anchor do not prove that the inputs
-  should be joined. Generic, recognized supply/return, signal, power-output,
+  Matching symbol metadata, a common anchor, and peer grouping do not prove
+  that the inputs should be joined. A peer group narrows which connectors are
+  compared; without it, an unanchored split stays quiet. Generic, recognized
+  supply/return, signal, power-output,
   passive, free, unspecified, open, ambiguous, DNP, PART_ID-bearing, or
   incomplete groups do not trigger. The finding does not establish PCB copper
   continuity or off-board wiring. Project-authored pinout or connectivity
   requirements remain the authority for blocking a specific relationship.
 - **Evidence:** Synthetic tests cover a split-net fault, common-net control,
-  missing-anchor and metadata/type/function exclusions, open assignments,
-  DNP and PART_ID exclusions, mapping-order stability, `REVIEW`/`BLOCK`/`OFF`,
-  exact-ignore behavior, and CLI/MCP parity. A source-hashed synthetic native
+  missing-anchor behavior with and without current source-matched peer scope,
+  stale/incomplete/separate-scope controls, metadata/type/function exclusions,
+  open assignments, DNP and PART_ID exclusions, mapping-order stability,
+  `REVIEW`/`BLOCK`/`OFF`, exact-ignore behavior, and CLI/MCP parity. A
+  source-hashed synthetic native
   fault/control pair is registered in the
   [fixture README](../tests/fixtures/design_lint/connector-footprint-named-power-input-divergence-native/README.md)
   for exact KiCad 10.0.0 and 10.0.5 exports.
@@ -25109,6 +25122,44 @@ acceptance threads while new lint features proceed:
   Actions run `43277952874` on commit
   `bcf1037dce784845979cb4e1701d031c8eeb88c4`. The full package and preview
   jobs were skipped under prerelease policy.
+
+#### LINT-428 — Review unanchored named power-input splits within current connector peers
+
+- **Priority:** P1 coverage closure for a named power-input review heuristic.
+  Same-value, same-footprint connector aliases can carry distinct explicit
+  `power_in` assignments even when the pin inventory provides no common-net
+  anchor.
+- **Status:** Extends the existing default-review rule
+  `connector.footprint_named_power_input_assignment_divergence`; it adds no
+  new rule ID. With no anchor, the rule now requires a complete current
+  source-matched `peer_assignment_group`. That group narrows the comparison;
+  it does not claim corresponding pins should share a net.
+- **Boundary:** Missing, stale, incomplete, or separately grouped maps remain
+  quiet. The rule still requires distinct native symbols, no `PART_ID`, exact
+  value and footprint, complete identical pin inventory, matching native pin
+  metadata, an explicit non-generic function outside supply/return roles, one
+  assigned net per peer, and at least two different nets. Findings are
+  review prompts; separate sources, switched rails, and isolated domains can
+  be intentional.
+- **Evidence:** Synthetic tests cover an unanchored split with a current peer
+  map, and controls for no map, missing group, separate groups, incomplete
+  maps, stale assignments, and a common power-input net. CLI/MCP reports match
+  on the unanchored fault and common-net control. Source-hashed one-pin
+  schematic fault/control fixtures run twice in digest-pinned KiCad 10.0.0
+  and 10.0.5 Docker images; the fault only prompts when a current map is
+  supplied.
+- **Selection:** Run
+  `tests/test_connector_footprint_named_power_input_divergence.py`,
+  `tests/test_connector_footprint_named_power_input_divergence_parity.py`,
+  and `tests/test_connector_footprint_named_power_input_native_fixture_lane.py`
+  with `design_lint` and the rule selector
+  `design_lint_rule(rule_id="connector.footprint_named_power_input_assignment_divergence")`.
+  Native cases require `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` and Docker.
+- **Local acceptance (2026-11-12):** Rule-scoped `scripts/ci.py` passed 409
+  tests with 8,864 deselected, including the fault/control exports in both
+  pinned native versions. Ruff, both Alphus profiles, Rumdl, mdrepo, Linux and
+  Windows Pyright, wheel and sdist builds, and installed-wheel checks passed.
+  Hosted prerelease acceptance is pending.
 
 ## Completion and release gate
 
