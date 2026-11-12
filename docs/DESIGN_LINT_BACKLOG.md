@@ -24154,11 +24154,15 @@ acceptance threads while new lint features proceed:
   394 tests with 8,603 unrelated tests deselected, including the digest-pinned
   KiCad 10.0.8 Docker fault/control regression. Catalog reachability, marker
   ownership, architecture, source freshness, and CLI/MCP parity passed. Ruff,
-  formatting, Linux and Windows
-  Pyright, rumdl, mdrepo, wheel and source builds, installed-wheel checks, and
-  the external/adapted project checks passed. The ignored local receipt is
-  `build/ci/run-bqzmr220`.
-- **Hosted acceptance:** Pending.
+  formatting, Linux and Windows Pyright, rumdl, mdrepo, wheel and source builds,
+  installed-wheel checks, and the external/adapted project checks passed. The
+  ignored local receipt is `build/ci/run-bqzmr220`.
+- **Hosted acceptance (2026-11-11):** Annotated tag `v0.5.3rc693` passed GitHub
+  Actions run `43153605350`: 394 tests passed and 8,603 were deselected. The
+  digest-pinned KiCad 10.0.8 Docker fault/control fixture ran. Ruff, formatting,
+  Pyright, Windows typing, wheel and source builds, installed-wheel checks, and
+  external/adapted project checks passed. Package and preview jobs were skipped
+  under prerelease policy.
 
 ## Completion and release gate
 
