@@ -85,7 +85,7 @@ def _native_uuid_report(tmp_path: Path, version: str, case: str, repeat: str) ->
         config,
         {board_relative: digest(board_path)},
     )
-    expected_finding = case in {"fault", "zone-tstamp-fault"}
+    expected_finding = case in {"fault", "zone-tstamp-fault", "footprint-track-fault"}
     assert tuple(candidate.rule_id for candidate in candidates) == (
         (RULE_ID,) if expected_finding else ()
     )
@@ -182,4 +182,41 @@ def test_pinned_kicad_drc_resolves_legacy_zone_tstamp_identity_collision(
             ),
         )
         assert reports["zone-tstamp-fault"] == (expected_fault, expected_fault)
+        assert reports["control"] == (expected_control, expected_control)
+
+
+def test_pinned_kicad_drc_resolves_footprint_track_identity_collision(
+    tmp_path: Path,
+) -> None:
+    footprint_uuid = "00000000-0000-0000-0000-000000000002"
+    other_track_uuid = "00000000-0000-0000-0000-000000000003"
+    for version in ("10.0.0", "10.0.5"):
+        reports = {
+            case: tuple(
+                _identity_descriptions(_native_uuid_report(tmp_path, version, case, repeat))
+                for repeat in ("a", "b")
+            )
+            for case in ("footprint-track-fault", "control")
+        }
+        expected_fault = (
+            (
+                (footprint_uuid, "Footprint J1"),
+                (other_track_uuid, "Track [DATA] on B.Cu, length 16.0000 mm"),
+            ),
+            (
+                (footprint_uuid, "Footprint J1"),
+                (other_track_uuid, "Track [DATA] on B.Cu, length 16.0000 mm"),
+            ),
+        )
+        expected_control = (
+            (
+                (footprint_uuid, "Track [DATA] on B.Cu, length 16.0000 mm"),
+                (other_track_uuid, "Track [DATA] on B.Cu, length 16.0000 mm"),
+            ),
+            (
+                (footprint_uuid, "Track [DATA] on B.Cu, length 16.0000 mm"),
+                (other_track_uuid, "Track [DATA] on B.Cu, length 16.0000 mm"),
+            ),
+        )
+        assert reports["footprint-track-fault"] == (expected_fault, expected_fault)
         assert reports["control"] == (expected_control, expected_control)

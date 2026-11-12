@@ -1039,10 +1039,12 @@ KiCad 10.0.0 and 10.0.5 accepted two disconnected tracks with the same UUID
 and reported both under that identifier in dangling and unconnected DRC
 diagnostics. A separate zone/track fault changes only a zone `tstamp` to match
 a track `uuid`; the dangling-track diagnostic then resolves to the zone in both
-versions, while the distinct-identity control resolves to the track. This
-supports reviewing repeated board identities; it does not imply an electrical
-or layout fault. The rule defaults to REVIEW and supports project review,
-block, off, and exact-fingerprint ignore decisions. See the
+versions, while the distinct-identity control resolves to the track. Another
+fault gives a footprint the UUID of a track; both versions resolve the
+dangling-track record to `Footprint J1`, while the control resolves to the
+track. These measurements support reviewing repeated board identities; they
+do not imply an electrical or layout fault. The rule defaults to REVIEW and
+supports project review, block, off, and exact-fingerprint ignore decisions. See the
 [PCB UUID fixture README](../tests/fixtures/design_lint/pcb-duplicate-object-uuid/README.md) for
 source hashes and pinned native details.
 

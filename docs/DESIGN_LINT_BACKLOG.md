@@ -25028,6 +25028,40 @@ acceptance threads while new lint features proceed:
   installed-wheel rehearsal passed; package and preview orchestration were
   skipped under prerelease policy.
 
+#### LINT-426 — Verify native footprint/track identity collisions
+
+- **Priority:** P1 source-identity evidence. LINT-425 demonstrated how a zone
+  identity can shadow a track in native diagnostics. The checker also scans
+  direct footprint UUIDs, so this distinct cross-object pair needs its own
+  fault/control regression.
+- **Status:** Implemented as a native-evidence extension to
+  `pcb.duplicate_object_uuid`; the predicate, rule ID, and project policy are
+  unchanged.
+- **Evidence:** The tooling-owned fault adds only a footprint UUID equal to
+  one disconnected track's UUID. Its source-matched control keeps distinct
+  track IDs. KiCad 10.0.0 and 10.0.5 accept both boards. Across two runs per
+  case and version, the `track_dangling` and `unconnected_items` records
+  resolve the shared fault identity to `Footprint J1`; the control resolves
+  both IDs to tracks.
+- **Boundary:** This supports source-identity review for the tested
+  footprint/track pair. It does not establish an electrical or layout defect,
+  determine which ID to change, or generalize native report resolution to all
+  PCB object pairs or KiCad versions.
+- **Selection:** Run
+  `tests/test_pcb_duplicate_object_uuid.py` and the CLI/MCP parity and
+  determinism suites with
+  `design_lint and pcb_lint and design_lint_rule(rule_id="pcb.duplicate_object_uuid")`.
+  The exact native case is in
+  `tests/test_pcb_duplicate_object_uuid_native.py` and requires
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1` plus `native_kicad`.
+- **Local acceptance (2026-11-12):** Scoped package acceptance passed 424 tests
+  with 8,825 unrelated tests deselected, including repeated digest-pinned
+  KiCad 10.0.0 and 10.0.5 Docker runs. Ruff, both Alphus profiles, Rumdl,
+  repository-wide mdrepo, Linux and Windows Pyright, wheel and sdist builds,
+  installed-wheel checks, and the separate KiCad template checkout playtest
+  passed. The focused catalog, architecture, backlog, parity, determinism, and
+  source/native UUID selection passed 36 tests. Hosted acceptance is pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

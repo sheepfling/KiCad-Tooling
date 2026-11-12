@@ -14048,16 +14048,18 @@
       ],
       "limitations": [
         "This is a source identity review prompt. It does not establish an electrical or layout defect, determine which object should retain the UUID, or prove that every KiCad diagnostic uses UUIDs in the same way.",
-        "Native measurements cover two disconnected track segments and a separate track-versus-zone identity collision. KiCad 10.0.0 and 10.0.5 reported the zone under the track UUID in dangling and unconnected diagnostics; distinct-identity controls resolved both tracks correctly.",
+        "Native measurements cover duplicate track identities plus track-versus-zone and track-versus-footprint collisions. KiCad 10.0.0 and 10.0.5 resolve the shared identity to the zone or footprint in dangling and unconnected diagnostics; distinct-identity controls resolve the tracks correctly.",
         "Malformed board roots and noncanonical UUID text are outside the predicate. KiCad versions other than the two measured patches and schematic-only projects are out of scope.",
         "The default is REVIEW. Project policy may select review, block, off, or an exact-fingerprint ignore."
       ],
       "fault_fixtures": [
         "tests.test_pcb_duplicate_object_uuid.test_duplicate_uuid_on_distinct_board_objects_is_localized",
         "tests.test_pcb_duplicate_object_uuid.test_zone_tstamp_and_object_uuid_share_the_identity_check",
+        "tests.test_pcb_duplicate_object_uuid.test_footprint_and_track_uuid_collision_is_localized",
         "tests.test_design_lint_mcp_parity_pcb_duplicate_object_uuid.test_duplicate_board_uuid_review_matches_between_cli_and_mcp",
         "tests.test_pcb_duplicate_object_uuid_native.test_pinned_kicad_drc_reuses_duplicate_segment_uuid",
-        "tests.test_pcb_duplicate_object_uuid_native.test_pinned_kicad_drc_resolves_legacy_zone_tstamp_identity_collision"
+        "tests.test_pcb_duplicate_object_uuid_native.test_pinned_kicad_drc_resolves_legacy_zone_tstamp_identity_collision",
+        "tests.test_pcb_duplicate_object_uuid_native.test_pinned_kicad_drc_resolves_footprint_track_identity_collision"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_duplicate_object_uuid.test_unique_object_uuids_are_quiet",
@@ -14065,7 +14067,8 @@
         "tests.test_pcb_duplicate_object_uuid.test_unmeasured_versions_are_out_of_scope",
         "tests.test_pcb_duplicate_object_uuid.test_non_pcb_project_kinds_are_out_of_scope",
         "tests.test_pcb_duplicate_object_uuid_native.test_pinned_kicad_drc_reuses_duplicate_segment_uuid",
-        "tests.test_pcb_duplicate_object_uuid_native.test_pinned_kicad_drc_resolves_legacy_zone_tstamp_identity_collision"
+        "tests.test_pcb_duplicate_object_uuid_native.test_pinned_kicad_drc_resolves_legacy_zone_tstamp_identity_collision",
+        "tests.test_pcb_duplicate_object_uuid_native.test_pinned_kicad_drc_resolves_footprint_track_identity_collision"
       ],
       "metamorphic_fixtures": [
         "tests.test_pcb_duplicate_object_uuid.test_irrelevant_source_edit_preserves_identity_and_refreshes_hash",
