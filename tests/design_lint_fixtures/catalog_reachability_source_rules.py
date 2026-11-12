@@ -23,6 +23,9 @@ from tests.design_lint_fixtures.catalog_reachability_pcb_drc_severity_keys impor
 from tests.design_lint_fixtures.catalog_reachability_pcb_drc_severity_values import (
     pcb_drc_invalid_severity_value_rule_ids,
 )
+from tests.design_lint_fixtures.catalog_reachability_pcb_drc_unresolved_netclass_assignment import (
+    pcb_drc_unresolved_netclass_assignment_rule_ids,
+)
 from tests.design_lint_fixtures.pcb_source_integrity import pcb_source_integrity_rule_ids
 from tests.design_lint_fixtures.schematic_erc_duplicate_section import (
     schematic_erc_duplicate_section_rule_ids,
@@ -54,6 +57,7 @@ def source_bound_rule_ids() -> frozenset[str]:
         | pcb_drc_duplicate_board_section_rule_ids()
         | pcb_drc_duplicate_net_settings_section_rule_ids()
         | pcb_drc_conflicting_netclass_definitions_rule_ids()
+        | pcb_drc_unresolved_netclass_assignment_rule_ids()
         | pcb_drc_unknown_severity_key_rule_ids()
         | pcb_drc_invalid_severity_value_rule_ids()
         | pcb_drc_nonstring_severity_value_rule_ids()

@@ -14,5 +14,21 @@ PCB_NETCLASS_PARITY_FIXTURES = MappingProxyType(
                 ),
             }
         ),
+        "pcb.drc_unresolved_netclass_assignment": MappingProxyType(
+            {
+                "fault_fixtures": (
+                    (
+                        "tests.test_design_lint_mcp_parity_pcb_drc_unresolved_netclass_assignment"
+                        ".test_unresolved_netclass_assignment_matches_between_cli_and_mcp"
+                    ),
+                ),
+                "valid_control_fixtures": (
+                    (
+                        "tests.test_design_lint_mcp_parity_pcb_drc_unresolved_netclass_assignment"
+                        ".test_unresolved_netclass_assignment_matches_between_cli_and_mcp"
+                    ),
+                ),
+            }
+        ),
     }
 )

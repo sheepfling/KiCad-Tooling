@@ -1,4 +1,4 @@
-# Duplicate top-level PCB net_settings fixtures
+# PCB netclass settings fixtures
 
 These are tooling-owned synthetic inputs. The PCB contains two parallel,
 unconnected tracks on `N1` and `N2`; both nets are assigned to the `Narrow`
@@ -72,24 +72,43 @@ exports every case twice and checks repeatable DRC violation types.
 | `fault-netclass-assignment-default-last.kicad_pro`      | duplicate `N1` assignment      |       `Default` | one                       |
 | `control-netclass-assignment-duplicate-equal.kicad_pro` | identical duplicate assignment |        `Narrow` | none                      |
 
+## Assignments to undeclared netclasses
+
+The unresolved-assignment cases use the same synthetic two-track PCB. The
+faults assign `N1` to either an undeclared `MissingClass` or the case-mismatched
+name `narrow`, while the declared class is `Narrow`. KiCad 10.0.8 applies the
+same 0.20 mm clearance as an explicit `Default` assignment; both fault forms
+produce one clearance violation. The `Default` control produces the same native
+DRC result without a lint finding, while the declared `Narrow` control has no
+clearance violation. The exact source rule uses the class names as written and
+does not recommend a replacement class.
+
+The native regression repeats the undeclared and case-mismatched faults, the
+explicit `Default` control, and the valid `Narrow` control using the digest-
+pinned image below. This measures only these settings, values, board geometry,
+KiCad 10.0.8, and image; it does not establish an electrical board defect.
+
 Native image:
 `ghcr.io/kicad/kicad:10.0.8-amd64@sha256:05f6ac957e351bbbd9e1f9c996be997f61948ed9f94e0c3cab336bfcaf60161c`.
 This observation is limited to these values, geometry, KiCad version, and image; it does not choose
 an intended value or establish an electrical board defect.
 
-| Source                                                 | SHA-256                                                            |
-| ------------------------------------------------------ | ------------------------------------------------------------------ |
-| `control-identical-netclass-list.kicad_pro`            | `fb8250e2f6670448d2ab6d62bc3df7b4cdcdcfc00a3bbf9c2527e78548d851bb` |
-| `fault-netclass-list-narrow-last.kicad_pro`            | `043b28b127bdd202ca96d607f17e0849d2008635ad4d6e27d6700a034ef88943` |
-| `fault-netclass-list-wide-last.kicad_pro`              | `ed24748139422924484928b465f86d33666e42571a213964c9c83ab95c30b170` |
-| `fault-netclass-name-narrow-last.kicad_pro`            | `71a1fc72400f84d7a3395099487264b357955aa7dd0ba0d7fcc46b835216cf88` |
-| `fault-netclass-name-wide-last.kicad_pro`              | `f7f8b1d25d79316c4f8e4c8453246eaed8adbacdefca35b7e7cccf7a1dc92622` |
-| `control-netclass-clearance-duplicate-equal.kicad_pro` | `bd78215a548c9a20664cc5f1ff2a22ee820bae518d40af8af9a32d0a7e1451a2` |
-| `fault-netclass-clearance-narrow-last.kicad_pro`       | `948b539d30b81112904997f7d8eb6fe9dd47730d7aafdcd590144d652c463b33` |
-| `fault-netclass-clearance-wide-last.kicad_pro`         | `cf0517e6b31e2c631942591c3881619626e6fca5a5d12f6b4d798309f2d3ec9f` |
-| `fault-netclass-assignment-narrow-last.kicad_pro`      | `8aeab58637966ab9ad5f2925d59ff1ce8ca04cb63d6b8bea6ee144770a2e79f5` |
-| `fault-netclass-assignment-default-last.kicad_pro`     | `e8531dd55e82dddcce31e00426eee90c891f747ba511c070b3c1ccd54da4fad5` |
-| `control-netclass-assignment-duplicate-equal.kicad_pro`| `ecba7e55a0007d875ead0bfbf675c124680434343300dcaf46dc20c46fec57d8` |
+| Source                                                  | SHA-256                                                            |
+| ------------------------------------------------------- | ------------------------------------------------------------------ |
+| `control-identical-netclass-list.kicad_pro`             | `fb8250e2f6670448d2ab6d62bc3df7b4cdcdcfc00a3bbf9c2527e78548d851bb` |
+| `fault-netclass-list-narrow-last.kicad_pro`             | `043b28b127bdd202ca96d607f17e0849d2008635ad4d6e27d6700a034ef88943` |
+| `fault-netclass-list-wide-last.kicad_pro`               | `ed24748139422924484928b465f86d33666e42571a213964c9c83ab95c30b170` |
+| `fault-netclass-name-narrow-last.kicad_pro`             | `71a1fc72400f84d7a3395099487264b357955aa7dd0ba0d7fcc46b835216cf88` |
+| `fault-netclass-name-wide-last.kicad_pro`               | `f7f8b1d25d79316c4f8e4c8453246eaed8adbacdefca35b7e7cccf7a1dc92622` |
+| `control-netclass-clearance-duplicate-equal.kicad_pro`  | `bd78215a548c9a20664cc5f1ff2a22ee820bae518d40af8af9a32d0a7e1451a2` |
+| `fault-netclass-clearance-narrow-last.kicad_pro`        | `948b539d30b81112904997f7d8eb6fe9dd47730d7aafdcd590144d652c463b33` |
+| `fault-netclass-clearance-wide-last.kicad_pro`          | `cf0517e6b31e2c631942591c3881619626e6fca5a5d12f6b4d798309f2d3ec9f` |
+| `fault-netclass-assignment-narrow-last.kicad_pro`       | `8aeab58637966ab9ad5f2925d59ff1ce8ca04cb63d6b8bea6ee144770a2e79f5` |
+| `fault-netclass-assignment-default-last.kicad_pro`      | `e8531dd55e82dddcce31e00426eee90c891f747ba511c070b3c1ccd54da4fad5` |
+| `control-netclass-assignment-duplicate-equal.kicad_pro` | `ecba7e55a0007d875ead0bfbf675c124680434343300dcaf46dc20c46fec57d8` |
+| `fault-netclass-assignment-undeclared.kicad_pro`        | `19df5a0b5492c549612e921c00e13a36e0ff0b4a56b79e881434c361acd202dd` |
+| `fault-netclass-assignment-case-mismatch.kicad_pro`     | `c9f6b01751f80d867a8c1b45f6ddc236afe44751da31d6464ba50b287ff73551` |
+| `control-netclass-assignment-default.kicad_pro`         | `f6a4b45a1be90581b0449355151325138ab0e9c4e6a3252bf0d602577901e467` |
 
 Run the focused source, CLI/MCP, and pinned native regressions with:
 
@@ -115,3 +134,15 @@ python -I -m pytest -q \
 Run the exact-version native regression with
 `KICAD_RUN_NATIVE_PCB_FIXTURES=1` and the same rule selector on
 `tests/test_pcb_drc_duplicate_net_settings_section_native.py`.
+
+Run the unresolved-netclass source and CLI/MCP regressions with:
+
+```sh
+python -I -m pytest -q \
+  tests/test_pcb_drc_unresolved_netclass_assignment.py \
+  tests/test_design_lint_mcp_parity_pcb_drc_unresolved_netclass_assignment.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.drc_unresolved_netclass_assignment")'
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 python -I -m pytest -q \
+  tests/test_pcb_drc_unresolved_netclass_assignment_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.drc_unresolved_netclass_assignment")'
+```

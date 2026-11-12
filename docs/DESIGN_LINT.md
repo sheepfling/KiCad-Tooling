@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 352 active rules.
+The catalog currently contains 353 active rules.
 
 ### Placed schematic symbol has no embedded definition
 
@@ -5831,6 +5831,26 @@ not choose an intended definition, infer an electrical defect, run DRC on
 adopter boards, or establish manufacturing readiness. Projects may select
 `review`, `block`, or `off`, or record an exact-fingerprint ignore. Synthetic
 settings and measured results are documented in
+[`tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/`](../tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/README.md).
+
+## Review PCB nets assigned to undeclared netclasses
+
+`pcb.drc_unresolved_netclass_assignment` prompts when an exact KiCad 10.0.8
+source-hashed project assigns a net to a class name absent from its one complete
+`net_settings.classes` list. It retains the exact net, requested class, and
+declared class names. Class names are compared as written, including case. The
+check requires a complete list with a `Default` class and skips ambiguous or
+malformed class inventories and conflicting duplicate net assignments.
+
+In the synthetic two-track fixture, assigning `N1` to an undeclared class or
+the case-mismatched `narrow` produces the same clearance violation as an
+explicit `Default` assignment; assigning it to the declared `Narrow` class
+does not. Repeated digest-pinned DRC runs confirmed this only for the fixture's
+values, geometry, and KiCad 10.0.8 image. The review asks the project owner to
+check the assignment or class definition. It does not infer the intended class,
+run DRC on adopter boards, or establish a board defect. Projects may select
+`review`, `block`, or `off`, or record an exact-fingerprint ignore. The
+synthetic sources and native boundary are documented in
 [`tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/`](../tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/README.md).
 
 ## Review invalid PCB DRC severity strings

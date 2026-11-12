@@ -64,6 +64,23 @@ class PcbConflictingNetClassSettings:
     net_name: str | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class PcbUnresolvedNetClassAssignment:
+    """One net assignment that names no declared class in a complete class list."""
+
+    net_name: str
+    assigned_class: str
+    declared_class_names: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if not self.net_name or not self.assigned_class:
+            raise ValueError("PCB netclass assignments require non-empty names")
+        if not self.declared_class_names or "Default" not in self.declared_class_names:
+            raise ValueError("PCB netclass assignment evidence requires a complete class list")
+        if self.assigned_class in self.declared_class_names:
+            raise ValueError("PCB netclass assignment must name an undeclared class")
+
+
 def _validate_pcb_settings_document(
     document: str,
     *,
@@ -220,3 +237,63 @@ def configured_pcb_conflicting_netclass_settings(
         if len(set(values)) > 1
     )
     return (*property_conflicts.values(), *class_name_conflicts, *assignment_conflicts)
+
+
+def configured_pcb_unresolved_netclass_assignments(
+    document: str,
+) -> tuple[PcbUnresolvedNetClassAssignment, ...]:
+    """Find unique assignment targets absent from one complete classes list."""
+    _validate_pcb_settings_document(document, allow_source_bound_duplicates=True)
+    project = json.loads(document, object_pairs_hook=retain_json_object_pairs)
+    if not isinstance(project, JsonObjectPairs):
+        return ()
+    net_settings_members = tuple(value for key, value in project.pairs if key == "net_settings")
+    if len(net_settings_members) != 1 or not isinstance(net_settings_members[0], JsonObjectPairs):
+        return ()
+
+    net_settings = net_settings_members[0]
+    class_lists = tuple(value for key, value in net_settings.pairs if key == "classes")
+    assignment_maps = tuple(
+        value for key, value in net_settings.pairs if key == "netclass_assignments"
+    )
+    if (
+        len(class_lists) != 1
+        or not isinstance(class_lists[0], list)
+        or len(assignment_maps) != 1
+        or not isinstance(assignment_maps[0], JsonObjectPairs)
+    ):
+        return ()
+
+    class_names: list[str] = []
+    for definition in cast(list[object], class_lists[0]):
+        if not isinstance(definition, JsonObjectPairs):
+            return ()
+        names = tuple(value for key, value in definition.pairs if key == "name")
+        if len(names) != 1 or not isinstance(names[0], str) or not names[0]:
+            return ()
+        class_names.append(names[0])
+    if not class_names or "Default" not in class_names:
+        return ()
+
+    assignments_by_net: dict[str, list[object]] = {}
+    for net_name, value in assignment_maps[0].pairs:
+        assignments_by_net.setdefault(net_name, []).append(value)
+
+    unresolved: list[PcbUnresolvedNetClassAssignment] = []
+    for net_name, source_values in sorted(assignments_by_net.items()):
+        values = tuple(json_value_from_object_pairs(value) for value in source_values)
+        normalized = tuple(canonical_json_value(value) for value in values)
+        if not net_name or len(set(normalized)) != 1 or not values:
+            continue
+        assigned_class = values[0]
+        if not isinstance(assigned_class, str) or not assigned_class:
+            continue
+        if assigned_class not in class_names:
+            unresolved.append(
+                PcbUnresolvedNetClassAssignment(
+                    net_name=net_name,
+                    assigned_class=assigned_class,
+                    declared_class_names=tuple(class_names),
+                )
+            )
+    return tuple(unresolved)

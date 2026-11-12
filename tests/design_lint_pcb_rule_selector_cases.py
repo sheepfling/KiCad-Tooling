@@ -215,4 +215,36 @@ PCB_RULE_NODE_CASES = (
         "pcb.drc_conflicting_netclass_definitions",
         "tests/test_pcb_drc_conflicting_netclass_definitions_native.py::test_kicad_1008_conflicting_netclass_definitions_are_order_sensitive_and_repeatable",
     ),
+    (
+        "pcb.drc_unresolved_netclass_assignment",
+        "tests/test_pcb_drc_unresolved_netclass_assignment.py::test_undeclared_netclass_assignment_is_source_bound",
+    ),
+    (
+        "pcb.drc_unresolved_netclass_assignment",
+        "tests/test_pcb_drc_unresolved_netclass_assignment.py::test_netclass_assignment_name_match_is_case_sensitive",
+    ),
+    (
+        "pcb.drc_unresolved_netclass_assignment",
+        "tests/test_pcb_drc_unresolved_netclass_assignment.py::test_equal_duplicate_missing_assignment_is_reported_once",
+    ),
+    (
+        "pcb.drc_unresolved_netclass_assignment",
+        "tests/test_pcb_drc_unresolved_netclass_assignment.py::test_conflicting_duplicate_assignment_is_left_to_conflict_review",
+    ),
+    (
+        "pcb.drc_unresolved_netclass_assignment",
+        "tests/test_pcb_drc_unresolved_netclass_assignment.py::test_declared_default_assignment_is_a_valid_control",
+    ),
+    (
+        "pcb.drc_unresolved_netclass_assignment",
+        "tests/test_pcb_drc_unresolved_netclass_assignment.py::test_incomplete_or_ambiguous_class_inventory_stays_quiet",
+    ),
+    (
+        "pcb.drc_unresolved_netclass_assignment",
+        "tests/test_design_lint_mcp_parity_pcb_drc_unresolved_netclass_assignment.py::test_unresolved_netclass_assignment_matches_between_cli_and_mcp",
+    ),
+    (
+        "pcb.drc_unresolved_netclass_assignment",
+        "tests/test_pcb_drc_unresolved_netclass_assignment_native.py::test_unknown_class_falls_back_like_default_and_repeats_with_valid_control",
+    ),
 )

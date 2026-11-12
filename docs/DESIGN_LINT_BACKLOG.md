@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 352 rules are implemented with synthetic regression coverage.
+The following 353 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 352 active rules.
+The catalog currently contains 353 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -738,6 +738,7 @@ skipped under prerelease policy.
 - `pcb.drc_duplicate_board_section`
 - `pcb.drc_duplicate_net_settings_section`
 - `pcb.drc_conflicting_netclass_definitions`
+- `pcb.drc_unresolved_netclass_assignment`
 - `pcb.duplicate_object_uuid`
 - `pcb.drc_duplicate_severity_key`
 - `pcb.drc_unknown_severity_key`
@@ -4335,7 +4336,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 350 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 353 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -25297,6 +25298,51 @@ acceptance threads while new lint features proceed:
   Hosted prerelease acceptance and the installed-wheel rehearsal against a
   separate project passed in GitHub Actions run `43303351048`; package and
   preview jobs were skipped under prerelease policy.
+
+#### LINT-432 — Review PCB nets assigned to undeclared netclasses
+
+- **Priority:** P1 DRC-configuration integrity. A saved net assignment can
+  name a netclass absent from the project class list, leaving KiCad to apply
+  the default constraint set without a native warning in the measured case.
+- **Status:** Implemented as the default-REVIEW rule
+  `pcb.drc_unresolved_netclass_assignment`, limited to exact KiCad 10.0.8 PCB
+  and PCB-only projects. It adds an independent rule ID beside the duplicate
+  netclass-definition review.
+- **Predicate:** Require one source-bound `net_settings` object, one complete
+  `classes` list containing `Default`, and one `netclass_assignments` object.
+  Review each net whose unique or equal-duplicate string assignment names no
+  declared class. Use exact case-sensitive names. Skip conflicting duplicate
+  assignments and ambiguous or malformed class inventories.
+- **Native evidence:** In the tooling-owned two-track clearance fixture, the
+  undeclared `MissingClass` and case-mismatched `narrow` assignments both
+  produce the same 0.20 mm clearance violation as an explicit `Default`
+  assignment; the declared `Narrow` control produces none. Repeated
+  digest-pinned KiCad 10.0.8 exports verify the result. This is only a
+  configuration behavior measurement for these values, geometry, patch, and
+  image.
+- **Boundary:** A missing class name is a source inconsistency prompt; the lint
+  does not infer which class was intended, select a repair, or determine that
+  the resulting clearance is unsuitable. Other KiCad patches are unmeasured.
+  Conflicting repeated assignments remain covered by LINT-431.
+- **Synthetic evidence:** Tests cover missing and case-mismatched class names,
+  a declared `Default` control, incomplete and ambiguous class inventories,
+  stable net ordering, equal duplicate assignments, source-hash mismatch,
+  out-of-scope versions and project kinds, and CLI/MCP parity. Native cases
+  repeat the two faults, explicit `Default`, and valid `Narrow` control.
+- **Selection:** Run
+  `tests/test_pcb_drc_unresolved_netclass_assignment.py`,
+  `tests/test_design_lint_mcp_parity_pcb_drc_unresolved_netclass_assignment.py`,
+  and `tests/test_pcb_drc_unresolved_netclass_assignment_native.py` with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.drc_unresolved_netclass_assignment")`.
+  Exact native exports use `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, Docker, and
+  `native_kicad`.
+- **Local acceptance (2026-11-12):** The scoped package gate passed 422 tests
+  with 8,890 unrelated tests deselected, including repeated digest-pinned
+  KiCad 10.0.8 fault/control exports. Ruff, Alphus boundary and shared-utility
+  checks, Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist builds,
+  installed-artifact checks, and external/adapted template-project playtests
+  passed. Receipts are under `build/ci/run-ttkv24qi/`.
 
 ## Completion and release gate
 

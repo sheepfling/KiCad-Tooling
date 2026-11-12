@@ -72,7 +72,7 @@ from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
     PcbDifferentialPairRuleMap,
 )
-from .pcb_drc_netclass_conflict_review import source_bound_pcb_netclass_conflict_candidates
+from .pcb_drc_netclass_settings_review import source_bound_pcb_netclass_settings_candidates
 from .pcb_drc_nonstring_severity_value_review import (
     source_bound_pcb_drc_nonstring_severity_value_candidates,
 )
@@ -206,7 +206,7 @@ def inspect_design_lint_request(
                 config,
                 coach.source_hashes,
             ),
-            *source_bound_pcb_netclass_conflict_candidates(root, config, coach.source_hashes),
+            *source_bound_pcb_netclass_settings_candidates(root, config, coach.source_hashes),
             *source_bound_pcb_drc_duplicate_severity_key_candidates(
                 root,
                 config,

@@ -14100,6 +14100,59 @@
       ]
     },
     {
+      "rule_id": "pcb.drc_unresolved_netclass_assignment",
+      "title": "PCB nets assigned to undeclared netclasses need review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_unresolved_netclass_assignment_review.py#source_bound_pcb_unresolved_netclass_assignment_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0.8 .kicad_pro net_settings.classes and netclass_assignments, with exact net and declared-class inventory retained",
+      "predicate": "For PCB and PCB-only projects configured for exact KiCad 10.0.8, require one root net_settings object, one complete classes list containing Default, and one netclass_assignments object. Emit one source-bound REVIEW candidate for a net whose one or more equal string assignments name a class absent from the declared list. Skip conflicting duplicate assignment values, ambiguous or malformed class inventories, and unsupported versions.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.8 only; the digest-pinned native fixture shows that one undeclared assignment falls back to the same clearance behavior as an explicit Default assignment. Other patches remain unmeasured."
+      ],
+      "limitations": [
+        "The review identifies a class name absent from the exact project class list. It does not infer the intended class, choose a replacement, or establish that the assignment causes a board defect.",
+        "Native behavior was measured only for the synthetic N1 assignment, Default and Narrow class values, and the pinned KiCad 10.0.8 image. The rule does not run DRC on adopter projects, inspect copper, or establish manufacturing readiness.",
+        "Ambiguous, malformed, repeated classes lists and conflicting repeated net assignments remain outside this predicate. Class names use exact case-sensitive source strings; unmeasured KiCad patches and other class-resolution behavior are out of scope. Project policy may select review, block, off, or an exact-fingerprint ignore."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_drc_unresolved_netclass_assignment.test_undeclared_netclass_assignment_is_source_bound",
+        "tests.test_pcb_drc_unresolved_netclass_assignment.test_netclass_assignment_name_match_is_case_sensitive",
+        "tests.test_pcb_drc_unresolved_netclass_assignment.test_fault_fixture_source_matches_reviewed_hash",
+        "tests.test_design_lint_mcp_parity_pcb_drc_unresolved_netclass_assignment.test_unresolved_netclass_assignment_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_unresolved_netclass_assignment_native.test_unknown_class_falls_back_like_default_and_repeats_with_valid_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_drc_unresolved_netclass_assignment.test_declared_default_assignment_is_a_valid_control",
+        "tests.test_pcb_drc_unresolved_netclass_assignment.test_default_assignment_control_fixture_source_matches_reviewed_hash",
+        "tests.test_pcb_drc_unresolved_netclass_assignment.test_incomplete_or_ambiguous_class_inventory_stays_quiet",
+        "tests.test_pcb_drc_unresolved_netclass_assignment.test_unmeasured_versions_and_non_pcb_projects_are_out_of_scope",
+        "tests.test_design_lint_mcp_parity_pcb_drc_unresolved_netclass_assignment.test_unresolved_netclass_assignment_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_unresolved_netclass_assignment_native.test_unknown_class_falls_back_like_default_and_repeats_with_valid_control"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_drc_unresolved_netclass_assignment.test_assignments_are_sorted_by_exact_net_name",
+        "tests.test_pcb_drc_unresolved_netclass_assignment.test_equal_duplicate_missing_assignment_is_reported_once"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_unresolved_netclass_assignment_review.py#source_bound_pcb_unresolved_netclass_assignment_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_unresolved_netclass_assignment_review.py#project_pcb_unresolved_netclass_assignment_evidence",
+        "kicad_tooling/hwrepo/pcb_drc_duplicate_net_settings_sections.py#configured_pcb_unresolved_netclass_assignments",
+        "kicad_tooling/hwrepo/pcb_drc_netclass_settings_review.py#source_bound_pcb_netclass_settings_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#read_source_bound_pcb_project_settings",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#verify_source_bound_pcb_project_settings_unchanged",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
+        "kicad_tooling/hwrepo/design_lint_candidate_inputs.py#DesignLintCandidateInputs",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
+      ]
+    },
+    {
       "rule_id": "pcb.duplicate_object_uuid",
       "title": "PCB object UUID repeats within one board source",
       "theme": "pcb",
