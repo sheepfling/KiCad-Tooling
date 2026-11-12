@@ -8,7 +8,7 @@ their internal-unit coordinates and board-item UUIDs identify the two edge
 violations on the fault board. The control settings contain no exclusions and
 run against the control board.
 
-The pinned KiCad 10.0.0 and 10.0.5 Docker lanes run
+The pinned KiCad 10.0.0, 10.0.5, and 10.0.8 Docker lanes run
 `kicad-cli pcb drc --severity-all --severity-exclusions` twice per case. The
 fault report must preserve both exact comments on the two edge violations, and
 the control report must contain no excluded violation. In these report versions

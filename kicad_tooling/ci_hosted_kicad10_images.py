@@ -65,3 +65,12 @@ KICAD_10_ERC_SEVERITY_TOOLCHAINS = (
         ),
     ),
 )
+
+# Focused endpoint sample for native tests of persisted PCB DRC exclusions.
+# Keep it separate from KICAD_10_NATIVE_TOOLCHAINS so ordinary PCB fixtures do
+# not all multiply across the full severity-catalog patch matrix.
+KICAD_10_PCB_DRC_EXCLUSION_TOOLCHAINS = tuple(
+    toolchain
+    for toolchain in KICAD_10_ERC_SEVERITY_TOOLCHAINS
+    if toolchain[0] in {"10.0.0", "10.0.5", "10.0.8"}
+)

@@ -10,8 +10,8 @@ from typing import Any
 
 import pytest
 
+from kicad_tooling.ci_hosted_kicad10_images import KICAD_10_PCB_DRC_EXCLUSION_TOOLCHAINS
 from tests.native_kicad_support import execute_kicad_cli
-from tests.synthetic_design_lint_project import PINNED_NATIVE_KICAD_IMAGES
 
 FIXTURES = Path(__file__).parent / "fixtures/design_lint"
 BOARD_FIXTURE = FIXTURES / "differential-pair-edge-clearance"
@@ -92,7 +92,7 @@ def test_native_pcb_drc_reports_saved_exclusion_markers(tmp_path: Path) -> None:
         "Synthetic reviewed USB_D_P edge-clearance exception.",
         "Synthetic reviewed USB_D_N edge-clearance exception.",
     }
-    for version, image in PINNED_NATIVE_KICAD_IMAGES.items():
+    for version, image in KICAD_10_PCB_DRC_EXCLUSION_TOOLCHAINS:
         reports = {
             case: tuple(
                 _run_case(image=image, version=version, case=case, repeat=repeat, root=tmp_path)

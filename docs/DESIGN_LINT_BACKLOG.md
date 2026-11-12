@@ -23955,8 +23955,8 @@ acceptance threads while new lint features proceed:
   that saved records match active native DRC markers on a board.
 - **Evidence:** Tooling-owned settings match the two `copper_edge_clearance`
   fault markers on the synthetic differential-pair board. The test runs both
-  fault and no-exclusion control boards twice on pinned KiCad 10.0.0 and
-  10.0.5 images, using `--severity-exclusions`. Exact comments identify both
+  fault and no-exclusion control boards twice on pinned KiCad 10.0.0, 10.0.5,
+  and 10.0.8 images, using `--severity-exclusions`. Exact comments identify both
   fault markers in each report; the control has no excluded violations. See
   the tooling-owned
   [fixture record](../tests/fixtures/design_lint/pcb-drc-exclusion-native/README.md).
