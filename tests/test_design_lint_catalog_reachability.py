@@ -496,4 +496,4 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         for item in _tests_test_signal_divider_contract._report(fault="top-resistor-value").findings
     )
     active = {item.rule_id for item in rule_catalog().rules if item.status == "active"}
-    assert emitted | _tests_design_lint_fixtures.schematic_erc_global_severity_rule_ids() == active
+    assert emitted | _tests_design_lint_fixtures.source_setting_rule_ids() == active

@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
-from .contracts import repo_path
 from .design_lint_pcb_drc_global_severity_candidate_evidence import (
     WARNING_DEFAULT_DRC_SUPPORTED_VERSIONS,
     PcbDrcSeverityCandidate,
@@ -15,7 +14,6 @@ from .design_lint_pcb_drc_global_severity_candidate_evidence import (
     SourceBoundPcbDrcSettings,
 )
 from .design_lint_types import Candidate
-from .evidence import digest
 from .pcb_drc_project_settings import (
     PcbDrcCheckSeverity,
     configured_core_drc_check_severities,
@@ -25,6 +23,7 @@ from .pcb_drc_project_settings import (
     configured_signal_integrity_drc_check_severities,
     configured_warning_default_drc_check_severities,
 )
+from .pcb_drc_project_settings_evidence import read_source_bound_pcb_project_settings
 from .project_models import (
     ProjectConfig,
     ProjectKind,
@@ -47,33 +46,19 @@ def _source_bound_drc_settings(
     if not config.kicad_version.startswith(supported_version_prefix):
         return None
 
-    root = root.resolve()
     relative = str(config.project)
-    settings_file = repo_path(root, relative)
-    expected_hash = source_hashes.get(relative)
-    if not settings_file.exists():
-        if expected_hash is not None:
-            raise ValueError("Source-bound KiCad project settings disappeared during inspection")
+    source = read_source_bound_pcb_project_settings(root, relative, source_hashes)
+    if source is None:
         return None
-    if not settings_file.is_file():
-        raise ValueError("KiCad project settings path is not a regular file")
-    if expected_hash is None:
-        raise ValueError("KiCad project settings are outside source-bound project inputs")
-    if digest(settings_file) != expected_hash:
-        raise ValueError("KiCad project settings differ from source-bound project inputs")
-
     try:
-        document = settings_file.read_text(encoding="utf-8")
-        severities = parse_severities(document)
-    except (OSError, UnicodeError, ValueError, TypeError) as exc:
+        severities = parse_severities(source.document)
+    except (ValueError, TypeError) as exc:
         raise ValueError(
             f"{relative}: could not read supported PCB DRC severity settings: {exc}"
         ) from exc
-    if digest(settings_file) != expected_hash:
-        raise ValueError("KiCad project settings changed during design-lint inspection")
     return SourceBoundPcbDrcSettings(
-        project_path=relative,
-        source_sha256=expected_hash,
+        project_path=source.source_path,
+        source_sha256=source.source_sha256,
         project_kind=config.kind,
         kicad_version=config.kicad_version,
         configured_severities=severities,

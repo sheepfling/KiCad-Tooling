@@ -12,6 +12,7 @@ from .buses import (
     spi_active_low_select_netlist,
     unconnected_protocol_pins,
 )
+from .catalog_reachability_source_settings import source_setting_rule_ids
 from .connectors import (
     connector_capacitor_only_netlist,
     cross_symbol_power,
@@ -90,6 +91,7 @@ __all__ = (
     "serial_peer_voltage_map",
     "serial_peer_voltage_netlist",
     "serial_peer_voltage_translator_netlist",
+    "source_setting_rule_ids",
     "spi_active_low_select_netlist",
     "spi_peer_voltage_map",
     "spi_peer_voltage_netlist",

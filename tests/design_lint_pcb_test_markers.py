@@ -115,6 +115,8 @@ PCB_LINT_TEST_MODULES = frozenset(
         "tests/test_pcb_miscellaneous_drc_severity.py",
         "tests/test_pcb_warning_default_drc_ignored.py",
         "tests/test_pcb_warning_default_drc_ignored_native.py",
+        "tests/test_pcb_drc_unknown_severity_key.py",
+        "tests/test_pcb_drc_unknown_severity_key_native.py",
         "tests/test_pcb_drc_exclusion_review.py",
         "tests/test_pcb_drc_exclusion_native_matching.py",
         "tests/test_pcb_drc_exclusion_native_fixture_lane.py",
@@ -132,6 +134,7 @@ PCB_LINT_TEST_MODULES = frozenset(
         "tests/test_design_lint_mcp_parity_pcb_electrical_drc_severity.py",
         "tests/test_design_lint_mcp_parity_pcb_miscellaneous_drc_severity.py",
         "tests/test_design_lint_mcp_parity_pcb_warning_default_drc_ignored.py",
+        "tests/test_design_lint_mcp_parity_pcb_drc_unknown_severity_key.py",
         "tests/test_design_lint_mcp_parity_pcb_drc_exclusions.py",
     }
 )

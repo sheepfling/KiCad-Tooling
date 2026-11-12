@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 336 rules are implemented with synthetic regression coverage.
+The following 337 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 336 active rules.
+The catalog currently contains 337 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -735,6 +735,7 @@ skipped under prerelease policy.
 - `pcb.miscellaneous_drc_check_downgraded`
 - `pcb.warning_default_drc_check_ignored`
 - `pcb.drc_exclusion_present`
+- `pcb.drc_unknown_severity_key`
 - `pcb.mechanical_edge_clearance_rule_coverage`
 - `pcb.rf_module_antenna_keepout_coverage`
 - `pcb.keepout_intent_coverage`
@@ -24072,6 +24073,41 @@ acceptance threads while new lint features proceed:
   10.0.8 Docker regression passed (`1 passed`); the catalog-selected Linux and
   Windows Pyright targets reported zero errors, Ruff and formatting passed,
   the backlog Markdown check passed, and `git diff --check` was clean.
+
+#### LINT-410 — Review unknown PCB DRC severity keys
+
+- **Status:** Implemented as `pcb.drc_unknown_severity_key`, default
+  `review`, for exact KiCad 10.0.8 settings only.
+- **Gap:** A misspelled `board.design_settings.rule_severities` key can be
+  ignored by KiCad while leaving the corresponding DRC check at its default.
+  Native DRC may then look successful even though the authored setting had no
+  effect.
+- **Behavior:** Compare source-hashed project settings with the exact 62
+  current DRC keys and three recognized migration aliases from KiCad 10.0.8.
+  Emit one review candidate per unrecognized key without guessing the intended
+  key. Other KiCad versions remain out of scope.
+- **Regression coverage:** Exercise the misspelled-key fault, all recognized
+  current and migration keys, source ownership and freshness, deterministic
+  output, CLI/MCP parity, and a native fault/control pair. The pinned native
+  control proves the recognized `track_dangling` key suppresses its warning;
+  the typo leaves the warning visible.
+- **Evidence boundary:** This identifies a possible settings typo or version
+  mismatch, not a board defect. It does not inspect connectivity or copper,
+  run DRC on project boards, or establish electrical or manufacturing approval.
+- **Selection:** Run
+  `tests/test_pcb_drc_unknown_severity_key.py` and
+  `tests/test_design_lint_mcp_parity_pcb_drc_unknown_severity_key.py` with
+  `design_lint and pcb_lint and design_lint_rule(rule_id="pcb.drc_unknown_severity_key")`.
+  The tag gate enables `KICAD_RUN_NATIVE_PCB_FIXTURES=1` for the digest-pinned
+  native module.
+- **Local acceptance (candidate `v0.5.3rc692`):** The tag-scoped rule gate
+  passed 397 tests with 8,584 deselected, including the 10.0.8 Docker
+  fault/control regression on the digest-pinned image recorded in the native
+  test. Catalog reachability, marker ownership, architecture, source freshness,
+  CLI/MCP parity, and the existing PCB DRC severity regressions passed. Ruff,
+  formatting, the selected Pyright targets, rumdl, mdrepo, and
+  `git diff --check` passed.
+- **Hosted acceptance:** Pending tag publication and GitHub Actions.
 
 ## Completion and release gate
 

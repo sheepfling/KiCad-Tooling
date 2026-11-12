@@ -1,0 +1,8 @@
+{
+  "board": {
+    "design_settings": {
+      "rule_severities": {"track_dangling": "ignore"}
+    }
+  },
+  "meta": {"filename": "board.kicad_pro", "version": 1}
+}

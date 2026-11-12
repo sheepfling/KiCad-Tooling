@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 336 active rules.
+The catalog currently contains 337 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -5523,6 +5523,24 @@ does not claim a violation exists, determine whether the check applies, run
 DRC, inspect board geometry, or establish electrical or manufacturing
 approval. Tooling-owned settings fixtures are in
 [`tests/fixtures/design_lint/pcb-miscellaneous-drc-severity/`](../tests/fixtures/design_lint/pcb-miscellaneous-drc-severity/README.md).
+
+## Review unknown PCB DRC severity keys
+
+`pcb.drc_unknown_severity_key` prompts when a PCB or PCB-only project's
+source-hashed `.kicad_pro` contains a `board.design_settings.rule_severities`
+key absent from KiCad 10.0.8's exact key catalog. The catalog contains 62
+current DRC item keys and three recognized migration aliases. This rule is
+enabled only for exactly KiCad 10.0.8; other patches remain out of scope until
+their serialized keys and native loading behavior are checked.
+
+KiCad 10.0.8 applies saved severities to recognized DRC keys and skips unknown
+keys. The pinned native fixture shows that an unknown `track_dangling_typo`
+does not suppress the `track_dangling` warning, while the recognized
+`track_dangling=ignore` control does. The review does not guess an intended key,
+claim a board defect, run DRC on project boards, or establish electrical or
+manufacturing approval. Projects can use `review`, `block`, `off`, or an exact
+fingerprint ignore. Synthetic settings are documented in
+[`tests/fixtures/design_lint/pcb-drc-unknown-severity-key/`](../tests/fixtures/design_lint/pcb-drc-unknown-severity-key/README.md).
 
 ## Review persisted schematic ERC exclusions
 

@@ -1,0 +1,11 @@
+{
+  "board": {
+    "design_settings": {
+      "rule_severities": {
+        "track_dangling": "warning",
+        "track_dangling_typo": "ignore"
+      }
+    }
+  },
+  "meta": {"filename": "board.kicad_pro", "version": 1}
+}

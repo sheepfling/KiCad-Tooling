@@ -13538,6 +13538,54 @@
       ]
     },
     {
+      "rule_id": "pcb.drc_unknown_severity_key",
+      "title": "Unknown PCB DRC severity keys need version review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_unknown_severity_key_review.py#source_bound_pcb_drc_unknown_severity_key_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0.8 .kicad_pro board.design_settings.rule_severities map and configured project version compared with the recognized DRC severity-key catalog",
+      "predicate": "For PCB or PCB-only projects configured for exact KiCad 10.0.8, emit one source-bound review candidate for each saved DRC severity key absent from the 62 current DRC item keys and three recognized migration aliases.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.8 only; current severity keys are derived from the tagged DRC_ITEM registry and migration aliases from the tagged board settings loader. Other patches remain out of scope until their exact key catalogs and native behavior are audited."
+      ],
+      "limitations": [
+        "An unknown key may be a typo or a key from another KiCad version. The finding does not infer the intended replacement or claim a PCB defect.",
+        "KiCad 10.0.8 applies saved severities to recognized DRC item keys and ignores unknown keys. The native fixture proves this behavior for one typo and the corresponding recognized control; it does not prove every key's severity behavior.",
+        "The rule inspects saved project settings only. It does not run DRC, determine whether a check applies to a board, verify project-authored electrical requirements, inspect copper, or establish manufacturing readiness. Projects may select review, block, off, or an exact-fingerprint ignore."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_drc_unknown_severity_key.test_unknown_key_creates_source_bound_review_candidate",
+        "tests.test_design_lint_mcp_parity_pcb_drc_unknown_severity_key.test_unknown_pcb_drc_key_review_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_unknown_severity_key_native.test_kicad_1008_ignores_unknown_key_but_honors_known_control_repeatably"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_drc_unknown_severity_key.test_all_current_keys_and_migration_aliases_are_valid_controls",
+        "tests.test_pcb_drc_unknown_severity_key.test_unreviewed_kicad_versions_are_out_of_scope",
+        "tests.test_pcb_drc_unknown_severity_key.test_non_pcb_projects_are_out_of_scope",
+        "tests.test_pcb_drc_unknown_severity_key_native.test_kicad_1008_ignores_unknown_key_but_honors_known_control_repeatably"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_drc_unknown_severity_key.test_unknown_keys_are_sorted_and_json_values_are_canonical"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_unknown_severity_key_review.py#source_bound_pcb_drc_unknown_severity_key_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_unknown_severity_key_review.py#project_pcb_drc_unknown_severity_key_evidence",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings.py#configured_pcb_drc_rule_severity_settings",
+        "kicad_tooling/hwrepo/pcb_drc_severity_key_catalog.py#PCB_DRC_RULE_SEVERITY_KEYS_BY_KICAD_VERSION",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#read_source_bound_pcb_project_settings",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#verify_source_bound_pcb_project_settings_unchanged",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
+        "kicad_tooling/hwrepo/design_lint_candidate_inputs.py#DesignLintCandidateInputs",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
+      ]
+    },
+    {
       "rule_id": "pcb.drc_exclusion_present",
       "title": "Persisted PCB DRC exclusions need intentional review",
       "theme": "pcb",

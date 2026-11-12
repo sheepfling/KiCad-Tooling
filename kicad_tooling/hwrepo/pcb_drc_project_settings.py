@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, JsonValue
 
 from .contracts import parse_model_text
 
@@ -96,6 +97,14 @@ class PcbDrcCheckSeverity:
     configured_severity: str
 
 
+@dataclass(frozen=True, slots=True)
+class PcbDrcRuleSeveritySetting:
+    """One saved DRC severity-map key and its stable JSON value."""
+
+    check_id: str
+    configured_value_json: str
+
+
 class _PcbDesignSettingsMeta(BaseModel):
     model_config = ConfigDict(extra="ignore", strict=True)
 
@@ -106,7 +115,7 @@ class _PcbDesignSettings(BaseModel):
     model_config = ConfigDict(extra="ignore", strict=True)
 
     meta: _PcbDesignSettingsMeta | None = None
-    rule_severities: dict[str, str] | None = None
+    rule_severities: dict[str, JsonValue] | None = None
     drc_exclusions: list[str | tuple[str, ...]] | None = None
 
 
@@ -129,10 +138,36 @@ def _configured_drc_check_severities(
     if project.board is None or project.board.design_settings is None:
         return ()
     severities = project.board.design_settings.rule_severities or {}
+    checks: list[PcbDrcCheckSeverity] = []
+    for check_id in sorted(check_ids):
+        if check_id not in severities:
+            continue
+        severity = severities[check_id]
+        if not isinstance(severity, str):
+            raise TypeError(
+                "PCB DRC severity in board.design_settings.rule_severities "
+                f"for {check_id!r} must be a string"
+            )
+        checks.append(PcbDrcCheckSeverity(check_id, severity))
+    return tuple(checks)
+
+
+def configured_pcb_drc_rule_severity_settings(
+    document: str,
+) -> tuple[PcbDrcRuleSeveritySetting, ...]:
+    """Return saved DRC severity keys and values in deterministic key order."""
+    project = parse_model_text(document, _PcbProjectSettings)
+    if project.board is None or project.board.design_settings is None:
+        return ()
+    severities = project.board.design_settings.rule_severities or {}
     return tuple(
-        PcbDrcCheckSeverity(check_id, severity)
-        for check_id in sorted(check_ids)
-        if (severity := severities.get(check_id)) is not None
+        PcbDrcRuleSeveritySetting(
+            check_id=check_id,
+            configured_value_json=json.dumps(
+                severities[check_id], sort_keys=True, separators=(",", ":"), allow_nan=False
+            ),
+        )
+        for check_id in sorted(severities)
     )
 
 
