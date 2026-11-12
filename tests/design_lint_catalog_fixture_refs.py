@@ -13,6 +13,7 @@ from tests.design_lint_ethernet_connector_parity_fixtures import (
 from tests.design_lint_footprint_peer_fixture_refs import (
     FOOTPRINT_PEER_PARITY_FIXTURES,
 )
+from tests.design_lint_pcb_netclass_fixture_refs import PCB_NETCLASS_PARITY_FIXTURES
 from tests.design_lint_power_fixture_refs import (
     OPEN_DRAIN_CONTROL_PARITY_FIXTURES,
     SUPPLY_RANGE_MAP_COVERAGE_PARITY_FIXTURES,
@@ -38,6 +39,7 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
         **ETHERNET_CONNECTOR_PARITY_FIXTURES,
         **SWD_GENERIC_CONNECTOR_PARITY_FIXTURES,
         **SWD_SIGNAL_SAME_NET_PARITY_FIXTURES,
+        **PCB_NETCLASS_PARITY_FIXTURES,
         "bus.i2c_missing_pullup": MappingProxyType(
             {
                 "fault_fixtures": _refs(

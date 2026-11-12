@@ -31,6 +31,7 @@ _PCB_DRC_SEVERITY_OBJECT_PATH = ("board", "design_settings", "rule_severities")
 _PCB_BOARD_ROOT_DUPLICATE_MEMBER = ((), "board")
 _PCB_ERC_ROOT_DUPLICATE_MEMBER = ((), "erc")
 _PCB_NET_SETTINGS_ROOT_DUPLICATE_MEMBER = ((), "net_settings")
+_PCB_NETCLASS_CLEARANCE_DUPLICATE_MEMBER = (("net_settings", "classes"), "clearance")
 DFM_ERROR_DEFAULT_DRC_CHECK_IDS = frozenset(
     {
         "annular_width",
@@ -172,7 +173,8 @@ def _parse_pcb_project_settings(
     if allow_duplicate_drc_severity_keys:
         allowed_paths.add(_PCB_DRC_SEVERITY_OBJECT_PATH)
     # Exact-version source-bound readers also tolerate the catalogued duplicate
-    # net_settings.classes member so its dedicated review can run.
+    # net_settings.classes and class-clearance members so their dedicated
+    # source-bound reviews can run.
     allowed_members: set[tuple[tuple[str, ...], str]] = set()
     if allow_duplicate_board_section:
         allowed_members.update(
@@ -181,6 +183,7 @@ def _parse_pcb_project_settings(
                 _PCB_ERC_ROOT_DUPLICATE_MEMBER,
                 _PCB_NET_SETTINGS_ROOT_DUPLICATE_MEMBER,
                 (("net_settings",), "classes"),
+                _PCB_NETCLASS_CLEARANCE_DUPLICATE_MEMBER,
             }
         )
     if not allowed_paths and not allowed_members:

@@ -25096,7 +25096,8 @@ acceptance threads while new lint features proceed:
 #### LINT-427 — Review conflicting PCB netclass definitions
 
 - **Priority:** P1 configuration ambiguity. A project can repeat its netclass
-  list or define one named class more than once with different clearances;
+  list, repeat a clearance field inside one class, or define one named class
+  more than once with different clearances;
   KiCad 10.0.8 applies the final definition in the measured cases, which can
   silently change native DRC results.
 - **Status:** Implemented as the source-bound review rule
@@ -25104,17 +25105,18 @@ acceptance threads while new lint features proceed:
   and PCB-only projects pinned to KiCad 10.0.8. It reports the conflicting
   JSON values in source order and does not choose a winner.
 - **Evidence:** Tooling-owned synthetic fixtures cover repeated
-  `net_settings.classes` JSON members and repeated `Narrow` names inside one
-  list. The digest-pinned KiCad 10.0.8 Docker image was run twice on each of
-  four faults and two controls; the last 0.05 mm definition yields no
-  clearance violation and the last 0.20 mm definition yields one. Results
-  were repeatable.
+  `net_settings.classes` JSON members, repeated `clearance` fields inside one
+  class, and repeated `Narrow` names inside one list. The digest-pinned KiCad
+  10.0.8 Docker image was run twice on the class-list and class-name faults
+  and controls; the last 0.05 mm definition yields no clearance violation and
+  the last 0.20 mm definition yields one. Results were repeatable. LINT-429
+  records the separate duplicate-property measurement.
 - **Boundary:** Native order sensitivity is measured only for these settings,
   values, and geometry on the exact image. The review does not establish an
   electrical defect, inspect copper, decide which definition is intended, or
-  generalize to other settings or KiCad versions. Identical repeated lists and
-  unique class lists are controls; multiple root `net_settings` members are
-  handled by their existing rule.
+  generalize to other settings or KiCad versions. Identical repeated lists,
+  duplicate clearance values, and unique class lists are controls; multiple
+  root `net_settings` members are handled by their existing rule.
 - **Selection:** Run `tests/test_pcb_drc_conflicting_netclass_definitions.py` and its CLI/MCP parity
   test with
   `design_lint and pcb_lint and design_lint_rule(rule_id="pcb.drc_conflicting_netclass_definitions")`.
@@ -25170,6 +25172,35 @@ acceptance threads while new lint features proceed:
   Hosted prerelease acceptance and the installed-wheel check against a
   separate project passed in GitHub Actions run `43285650010`. Package and
   preview jobs were skipped under prerelease policy.
+
+#### LINT-429 — Review conflicting duplicate clearance fields inside PCB netclasses
+
+- **Priority:** P1 source ambiguity. A single named KiCad netclass object can
+  contain the same `clearance` JSON key more than once, leaving native DRC
+  behavior dependent on the source order.
+- **Status:** Extends the existing source-bound review rule
+  `pcb.drc_conflicting_netclass_definitions`; it adds no rule ID. Conflicting
+  duplicate `clearance` values are reported with class/property scope and
+  retained source order. Identical duplicate values are quiet. Other repeated
+  class properties remain strict parse errors.
+- **Evidence:** Tooling-owned synthetic fault/control settings were exercised
+  with the digest-pinned KiCad 10.0.8 Docker image. Repeated native exports
+  showed that the last 0.05 mm value yields no clearance violation and the
+  last 0.20 mm value yields one in the existing two-track geometry. CLI/MCP
+  parity verifies the scoped finding reaches both surfaces.
+- **Boundary:** This measures only the `clearance` member in one named class,
+  these two values, this geometry, KiCad 10.0.8, and the pinned image. The
+  review does not choose the intended value, prove a board-level defect, or
+  generalize duplicate-key behavior to other netclass properties or versions.
+- **Selection:** Use the existing rule selector on
+  `tests/test_pcb_drc_conflicting_netclass_definitions.py`, its CLI/MCP parity
+  test, and `tests/test_pcb_drc_conflicting_netclass_definitions_native.py`.
+  Native fixtures require `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, Docker, and
+  `native_kicad`.
+- **Local acceptance (2026-11-12):** Scoped package CI passed 425 tests with
+  8,854 deselected, including the pinned KiCad 10.0.8 native cases. Ruff,
+  Alphus module and shared-utility checks, Rumdl, mdrepo, Linux and Windows
+  Pyright, wheel and sdist builds, and installed-artifact checks passed.
 
 ## Completion and release gate
 

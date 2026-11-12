@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from typing import cast
 
 from pydantic import BaseModel, ConfigDict, JsonValue
 
@@ -30,6 +31,8 @@ _KNOWN_DUPLICATE_SEVERITY_PATHS = frozenset(
     }
 )
 _DUPLICATE_NET_SETTINGS_CLASSES_MEMBER = (("net_settings",), "classes")
+_DUPLICATE_NETCLASS_CLEARANCE_MEMBER = (("net_settings", "classes"), "clearance")
+_DUPLICATE_ROOT_CLEARANCE_MEMBER = ((), "clearance")
 
 
 class _PcbProjectSettingsRoot(BaseModel):
@@ -56,6 +59,7 @@ class PcbConflictingNetClassSettings:
     conflict_scope: str
     class_name: str | None
     source_order_values_json: tuple[str, ...]
+    property_name: str | None = None
 
 
 def _validate_pcb_settings_document(
@@ -66,7 +70,10 @@ def _validate_pcb_settings_document(
     duplicate_members = _KNOWN_DUPLICATE_ROOT_SETTINGS_MEMBERS
     duplicate_paths: frozenset[tuple[str, ...]] = frozenset()
     if allow_source_bound_duplicates:
-        duplicate_members = duplicate_members | {_DUPLICATE_NET_SETTINGS_CLASSES_MEMBER}
+        duplicate_members = duplicate_members | {
+            _DUPLICATE_NET_SETTINGS_CLASSES_MEMBER,
+            _DUPLICATE_NETCLASS_CLEARANCE_MEMBER,
+        }
         duplicate_paths = _KNOWN_DUPLICATE_SEVERITY_PATHS
     parse_model_text_allow_duplicate_json_keys_at(
         document,
@@ -117,7 +124,13 @@ def configured_pcb_conflicting_netclass_settings(
     class_lists = tuple(value for key, value in net_settings[0].pairs if key == "classes")
     if not class_lists:
         return ()
-    normalized_lists = tuple(json_value_from_object_pairs(value) for value in class_lists)
+    normalized_lists = tuple(
+        json_value_from_object_pairs(
+            value,
+            allowed_duplicate_object_members=frozenset({_DUPLICATE_ROOT_CLEARANCE_MEMBER}),
+        )
+        for value in class_lists
+    )
     signatures = tuple(canonical_json_value(value) for value in normalized_lists)
     if len(class_lists) > 1 and len(set(signatures)) > 1:
         return (
@@ -131,17 +144,40 @@ def configured_pcb_conflicting_netclass_settings(
         )
 
     definitions_by_name: dict[str, list[str]] = {}
-    for class_list in normalized_lists:
+    property_conflicts: dict[tuple[str, str, tuple[str, ...]], PcbConflictingNetClassSettings] = {}
+    for class_list in class_lists:
         if not isinstance(class_list, list):
             continue
-        for definition in class_list:
-            if not isinstance(definition, dict):
+        for source_definition in cast(list[object], class_list):
+            if not isinstance(source_definition, JsonObjectPairs):
                 continue
-            name = definition.get("name")
+            name = next(
+                (value for key, value in reversed(source_definition.pairs) if key == "name"),
+                None,
+            )
             if not isinstance(name, str) or not name:
                 continue
+            clearance_values = tuple(
+                canonical_json_value(json_value_from_object_pairs(value))
+                for key, value in source_definition.pairs
+                if key == "clearance"
+            )
+            if len(clearance_values) > 1 and len(set(clearance_values)) > 1:
+                setting = PcbConflictingNetClassSettings(
+                    conflict_scope="class_property",
+                    class_name=name,
+                    source_order_values_json=clearance_values,
+                    property_name="clearance",
+                )
+                property_conflicts[(name.casefold(), "clearance", clearance_values)] = setting
+            definition = json_value_from_object_pairs(
+                source_definition,
+                allowed_duplicate_object_members=frozenset({_DUPLICATE_ROOT_CLEARANCE_MEMBER}),
+            )
+            if not isinstance(definition, dict):
+                continue
             definitions_by_name.setdefault(name, []).append(canonical_json_value(definition))
-    return tuple(
+    class_name_conflicts = tuple(
         PcbConflictingNetClassSettings(
             conflict_scope="class_name",
             class_name=name,
@@ -150,3 +186,4 @@ def configured_pcb_conflicting_netclass_settings(
         for name, values in sorted(definitions_by_name.items())
         if len(set(values)) > 1
     )
+    return (*property_conflicts.values(), *class_name_conflicts)

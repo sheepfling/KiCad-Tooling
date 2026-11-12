@@ -185,7 +185,23 @@ PCB_RULE_NODE_CASES = (
     ),
     (
         "pcb.drc_conflicting_netclass_definitions",
+        "tests/test_pcb_drc_conflicting_netclass_definitions.py::test_conflicting_clearance_properties_are_source_bound",
+    ),
+    (
+        "pcb.drc_conflicting_netclass_definitions",
+        "tests/test_pcb_drc_conflicting_netclass_definitions.py::test_clearance_fault_fixture_sources_match_reviewed_hashes",
+    ),
+    (
+        "pcb.drc_conflicting_netclass_definitions",
         "tests/test_pcb_drc_conflicting_netclass_definitions.py::test_equal_duplicate_classes_member_is_quiet",
+    ),
+    (
+        "pcb.drc_conflicting_netclass_definitions",
+        "tests/test_pcb_drc_conflicting_netclass_definitions.py::test_identical_duplicate_clearance_property_is_quiet",
+    ),
+    (
+        "pcb.drc_conflicting_netclass_definitions",
+        "tests/test_pcb_drc_conflicting_netclass_definitions.py::test_clearance_control_fixture_source_matches_reviewed_hash",
     ),
     (
         "pcb.drc_conflicting_netclass_definitions",

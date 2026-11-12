@@ -16,10 +16,7 @@ from tests.mcp_parity_support import parity_design_lint_policy, semantic_design_
 from tests.synthetic_design_lint_project import run_design_lint_cli, synthetic_design_lint_project
 
 RULE_ID = "pcb.drc_conflicting_netclass_definitions"
-SETTINGS = (
-    Path(__file__).parent
-    / "fixtures/design_lint/pcb-drc-duplicate-net-settings/fault-netclass-list-wide-last.kicad_pro"
-)
+SETTINGS_DIR = Path(__file__).parent / "fixtures/design_lint/pcb-drc-duplicate-net-settings"
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.pcb_lint,
@@ -28,13 +25,29 @@ pytestmark = [
 ]
 
 
-def test_conflicting_netclass_review_matches_between_cli_and_mcp(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("settings_name", "expected_scope", "subject_suffix"),
+    (
+        ("fault-netclass-list-wide-last.kicad_pro", "classes_member", ""),
+        (
+            "fault-netclass-clearance-wide-last.kicad_pro",
+            "class_property",
+            "/Narrow/clearance",
+        ),
+    ),
+)
+def test_conflicting_netclass_review_matches_between_cli_and_mcp(
+    tmp_path: Path,
+    settings_name: str,
+    expected_scope: str,
+    subject_suffix: str,
+) -> None:
     root, native = synthetic_design_lint_project(
         tmp_path,
         parity_design_lint_policy(DesignLintPolicy()),
         kicad_version="10.0.8",
         image="registry.invalid/kicad:10.0.8@sha256:" + "b" * 64,
-        project_settings_source=SETTINGS.read_text(encoding="utf-8"),
+        project_settings_source=(SETTINGS_DIR / settings_name).read_text(encoding="utf-8"),
     )
     process = run_design_lint_cli(tmp_path, root, native)
     assert process.returncode == 1, process.stderr + process.stdout
@@ -60,6 +73,9 @@ def test_conflicting_netclass_review_matches_between_cli_and_mcp(tmp_path: Path)
     findings = [item for item in mcp_report.findings if item.rule_id == RULE_ID]
     assert len(findings) == 1
     assert findings[0].subject == (
-        "projects/controller/kicad/controller.kicad_pro#net_settings/classes"
+        f"projects/controller/kicad/controller.kicad_pro#net_settings/classes{subject_suffix}"
     )
-    assert findings[0].evidence["conflict_scope"] == ("classes_member",)
+    assert findings[0].evidence["conflict_scope"] == (expected_scope,)
+    if expected_scope == "class_property":
+        assert findings[0].evidence["class_name"] == ("Narrow",)
+        assert findings[0].evidence["property_name"] == ("clearance",)

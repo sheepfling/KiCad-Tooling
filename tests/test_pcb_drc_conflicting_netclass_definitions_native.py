@@ -42,7 +42,10 @@ CASES = {
     "fault-netclass-list-wide-last": (True, True),
     "fault-netclass-name-narrow-last": (True, False),
     "fault-netclass-name-wide-last": (True, True),
+    "fault-netclass-clearance-narrow-last": (True, False),
+    "fault-netclass-clearance-wide-last": (True, True),
     "control-identical-netclass-list": (False, False),
+    "control-netclass-clearance-duplicate-equal": (False, False),
     "control-unique-narrow": (False, False),
 }
 

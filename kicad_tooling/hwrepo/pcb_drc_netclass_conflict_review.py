@@ -40,10 +40,15 @@ class PcbNetClassConflictEvidence:
             raise ValueError("PCB netclass conflict evidence requires KiCad 10.0.8")
         if len(self.setting.source_order_values_json) < 2:
             raise ValueError("PCB netclass conflict evidence requires conflicting values")
-        if self.setting.conflict_scope not in {"classes_member", "class_name"}:
+        if self.setting.conflict_scope not in {"classes_member", "class_name", "class_property"}:
             raise ValueError("Unsupported PCB netclass conflict scope")
-        if (self.setting.conflict_scope == "class_name") != bool(self.setting.class_name):
-            raise ValueError("PCB netclass name evidence does not match its conflict scope")
+        if self.setting.conflict_scope == "classes_member":
+            if self.setting.class_name is not None or self.setting.property_name is not None:
+                raise ValueError("PCB netclass list evidence cannot identify one class property")
+        elif not self.setting.class_name:
+            raise ValueError("PCB netclass conflict evidence requires its class name")
+        elif (self.setting.conflict_scope == "class_property") != bool(self.setting.property_name):
+            raise ValueError("PCB netclass property evidence does not match its conflict scope")
 
 
 def project_pcb_netclass_conflict_evidence(
@@ -61,11 +66,15 @@ def project_pcb_netclass_conflict_evidence(
     }
     if source.setting.class_name is not None:
         evidence["class_name"] = (source.setting.class_name,)
+    if source.setting.property_name is not None:
+        evidence["property_name"] = (source.setting.property_name,)
     return CandidateEvidenceProjection(rule_id=_RULE_ID, evidence=evidence)
 
 
 def _subject(source: PcbNetClassConflictEvidence) -> str:
     subject = f"{source.source_path}#net_settings/classes"
+    if source.setting.property_name is not None:
+        return f"{subject}/{source.setting.class_name}/{source.setting.property_name}"
     if source.setting.class_name is not None:
         return f"{subject}/{source.setting.class_name}"
     return subject
@@ -76,6 +85,12 @@ def _message(source: PcbNetClassConflictEvidence) -> str:
         return (
             f"KiCad {source.kicad_version} project settings repeat the net_settings.classes "
             "member with conflicting values; review source order and retain one intended list."
+        )
+    if source.setting.property_name is not None:
+        return (
+            f"KiCad {source.kicad_version} project settings define netclass "
+            f"{source.setting.class_name!r} with conflicting duplicate "
+            f"{source.setting.property_name!r} values; review source order and retain one value."
         )
     return (
         f"KiCad {source.kicad_version} project settings define netclass "

@@ -46,18 +46,34 @@ with identical violation types; the fixture also reports two
 | `control-identical-netclass-list.kicad_pro` | identical repeated member |        0.05 mm | none                      |
 | `control-unique-narrow.kicad_pro`           | unique class list         |        0.05 mm | none                      |
 
+The duplicate-clearance fixtures exercise a third form: two `clearance` keys
+inside one `Narrow` class object. The lint reviews differing source values and
+keeps identical repeated values quiet. On the same digest-pinned KiCad 10.0.8
+image, the last 0.05 mm value yields no clearance violation and the last
+0.20 mm value yields one. Each case was exported twice with repeatable
+violation types.
+
+| Fixture                                                | Conflict form                | Last clearance | Expected clearance result |
+| ------------------------------------------------------ | ---------------------------- | -------------: | ------------------------- |
+| `fault-netclass-clearance-narrow-last.kicad_pro`       | duplicate class property     |        0.05 mm | none                      |
+| `fault-netclass-clearance-wide-last.kicad_pro`         | duplicate class property     |        0.20 mm | one                       |
+| `control-netclass-clearance-duplicate-equal.kicad_pro` | identical duplicate property |        0.05 mm | none                      |
+
 Native image:
 `ghcr.io/kicad/kicad:10.0.8-amd64@sha256:05f6ac957e351bbbd9e1f9c996be997f61948ed9f94e0c3cab336bfcaf60161c`.
 This observation is limited to these values, geometry, KiCad version, and image; it does not choose
 an intended value or establish an electrical board defect.
 
-| Source                                      | SHA-256                                                            |
-| ------------------------------------------- | ------------------------------------------------------------------ |
-| `control-identical-netclass-list.kicad_pro` | `fb8250e2f6670448d2ab6d62bc3df7b4cdcdcfc00a3bbf9c2527e78548d851bb` |
-| `fault-netclass-list-narrow-last.kicad_pro` | `043b28b127bdd202ca96d607f17e0849d2008635ad4d6e27d6700a034ef88943` |
-| `fault-netclass-list-wide-last.kicad_pro`   | `ed24748139422924484928b465f86d33666e42571a213964c9c83ab95c30b170` |
-| `fault-netclass-name-narrow-last.kicad_pro` | `71a1fc72400f84d7a3395099487264b357955aa7dd0ba0d7fcc46b835216cf88` |
-| `fault-netclass-name-wide-last.kicad_pro`   | `f7f8b1d25d79316c4f8e4c8453246eaed8adbacdefca35b7e7cccf7a1dc92622` |
+| Source                                                 | SHA-256                                                            |
+| ------------------------------------------------------ | ------------------------------------------------------------------ |
+| `control-identical-netclass-list.kicad_pro`            | `fb8250e2f6670448d2ab6d62bc3df7b4cdcdcfc00a3bbf9c2527e78548d851bb` |
+| `fault-netclass-list-narrow-last.kicad_pro`            | `043b28b127bdd202ca96d607f17e0849d2008635ad4d6e27d6700a034ef88943` |
+| `fault-netclass-list-wide-last.kicad_pro`              | `ed24748139422924484928b465f86d33666e42571a213964c9c83ab95c30b170` |
+| `fault-netclass-name-narrow-last.kicad_pro`            | `71a1fc72400f84d7a3395099487264b357955aa7dd0ba0d7fcc46b835216cf88` |
+| `fault-netclass-name-wide-last.kicad_pro`              | `f7f8b1d25d79316c4f8e4c8453246eaed8adbacdefca35b7e7cccf7a1dc92622` |
+| `control-netclass-clearance-duplicate-equal.kicad_pro` | `bd78215a548c9a20664cc5f1ff2a22ee820bae518d40af8af9a32d0a7e1451a2` |
+| `fault-netclass-clearance-narrow-last.kicad_pro`       | `948b539d30b81112904997f7d8eb6fe9dd47730d7aafdcd590144d652c463b33` |
+| `fault-netclass-clearance-wide-last.kicad_pro`         | `cf0517e6b31e2c631942591c3881619626e6fca5a5d12f6b4d798309f2d3ec9f` |
 
 Run the focused source, CLI/MCP, and pinned native regressions with:
 
