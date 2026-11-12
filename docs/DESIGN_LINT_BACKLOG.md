@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 345 rules are implemented with synthetic regression coverage.
+The following 346 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 345 active rules.
+The catalog currently contains 346 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -736,6 +736,7 @@ skipped under prerelease policy.
 - `pcb.warning_default_drc_check_ignored`
 - `pcb.drc_exclusion_present`
 - `pcb.drc_duplicate_board_section`
+- `pcb.drc_duplicate_net_settings_section`
 - `pcb.drc_duplicate_severity_key`
 - `pcb.drc_unknown_severity_key`
 - `pcb.drc_invalid_severity_value`
@@ -4247,7 +4248,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 345 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 346 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -24542,6 +24543,54 @@ acceptance threads while new lint features proceed:
   Rumdl, mdrepo, Linux and Windows Pyright, installed-wheel validation, and
   external/adapted template rehearsals passed. The package and preview jobs
   were skipped under prerelease policy.
+
+#### LINT-419 — Review duplicate top-level PCB net_settings sections
+
+- **Priority:** P1 saved-settings integrity. A repeated root `net_settings`
+  member can make netclass constraints ambiguous while ordinary JSON readers
+  retain only one value.
+- **Status:** Implemented as default-review rule
+  `pcb.drc_duplicate_net_settings_section` for exact KiCad 10.0.8. It emits a
+  finding only for duplicate root `net_settings`; its parser also tolerates
+  `board` and `erc` duplicates handled by their dedicated review gates, while
+  unrelated and nested duplicate-key errors stay strict.
+- **Behavior:** For source-hashed PCB and PCB-only projects, report one
+  candidate when the root JSON object repeats `net_settings`. Preserve every
+  complete section in source order and do not select a value.
+- **Native evidence:** The digest-pinned KiCad 10.0.8 synthetic PCB has two
+  0.20 mm tracks with 0.10 mm edge spacing, and both nets belong to the same
+  `Narrow` class. A 0.05 mm clearance in the last section produced no clearance
+  violation; reversing the duplicates so 0.20 mm is last produced one. The
+  unique 0.05 mm control produced none. This claim is limited to that class
+  clearance setting, fixture, and image.
+- **Regression coverage:** Tooling-owned settings cover both duplicate orders
+  and a unique-section control. Tests bind the exact settings hash, preserve
+  source order, reject unrelated and nested duplicate keys, cover KiCad and
+  project-kind boundaries, assert deterministic results, compare CLI/MCP, and
+  repeat the native fault and control cases.
+- **Evidence boundary:** This reports ambiguous saved project settings. It
+  does not decide the intended netclass constraint, inspect copper from an
+  adopter project, generalize behavior to other settings or KiCad patches, or
+  establish an electrical defect or manufacturing readiness.
+- **Selection:** Run
+  `tests/test_pcb_drc_duplicate_net_settings_section.py` and
+  `tests/test_design_lint_mcp_parity_pcb_drc_duplicate_net_settings_section.py`
+  with `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.drc_duplicate_net_settings_section")`. The
+  native module is
+  `tests/test_pcb_drc_duplicate_net_settings_section_native.py` with
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`.
+- **Local focused acceptance (2026-11-12):** 159 tests passed across the
+  source-bound fault/controls, CLI/MCP parity, exact-version Docker lane,
+  adjacent duplicate-section regressions, catalog reachability, architecture,
+  and pytest-marker checks. Ruff and formatting, Rumdl on the four changed
+  Markdown files, and repository-wide mdrepo checks passed. The broader package
+  acceptance suite was not run.
+- **Scoped-tag acceptance (2026-11-12):** The exact `Lint-Rule` selector passed
+  403 tests with 8,756 deselected, including the pinned Docker fixture. Scoped
+  Linux Pyright passed with 0 errors; Ruff, formatting, Rumdl, and mdrepo also
+  passed.
+- **Hosted acceptance:** Pending the scoped tag push.
 
 ## Completion and release gate
 

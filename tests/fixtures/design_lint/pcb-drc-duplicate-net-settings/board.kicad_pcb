@@ -1,0 +1,12 @@
+(kicad_pcb
+  (version 20250114) (generator "pcbnew") (general (thickness 1.6)) (paper "A4")
+  (layers (0 "F.Cu" signal) (31 "B.Cu" signal) (5 "F.SilkS" user) (7 "B.SilkS" user) (25 "Edge.Cuts" user))
+  (setup (pad_to_mask_clearance 0))
+  (net 0 "") (net 1 "N1") (net 2 "N2")
+  (segment (start 2 5) (end 10 5) (width 0.2) (layer "F.Cu") (net 1) (uuid "00000000-0000-0000-0000-000000000001"))
+  (segment (start 2 5.3) (end 10 5.3) (width 0.2) (layer "F.Cu") (net 2) (uuid "00000000-0000-0000-0000-000000000002"))
+  (gr_line (start 0 0) (end 20 0) (stroke (width 0.05) (type solid)) (layer "Edge.Cuts"))
+  (gr_line (start 20 0) (end 20 20) (stroke (width 0.05) (type solid)) (layer "Edge.Cuts"))
+  (gr_line (start 20 20) (end 0 20) (stroke (width 0.05) (type solid)) (layer "Edge.Cuts"))
+  (gr_line (start 0 20) (end 0 0) (stroke (width 0.05) (type solid)) (layer "Edge.Cuts"))
+)

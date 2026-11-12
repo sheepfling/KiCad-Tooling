@@ -13931,6 +13931,55 @@
       ]
     },
     {
+      "rule_id": "pcb.drc_duplicate_net_settings_section",
+      "title": "Duplicate PCB net_settings sections need review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_duplicate_net_settings_section_review.py#source_bound_pcb_drc_duplicate_net_settings_section_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0.8 .kicad_pro root object retaining every repeated net_settings object in source order",
+      "predicate": "For PCB and PCB-only projects configured for exact KiCad 10.0.8, emit one source-bound review candidate when the root JSON object repeats net_settings; retain each complete object in source order and do not select an intended value.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.8 only; native last-section behavior was measured for two nets assigned to one netclass with 0.10 mm track spacing clearance, on the digest-pinned 10.0.8 image. Other settings and patches remain unmeasured."
+      ],
+      "limitations": [
+        "The finding reports repeated root net_settings objects and their source-order values; it does not choose an intended section. Native order-sensitive behavior was measured only for the synthetic netclass clearance case and exact image.",
+        "Only repeated root-level net_settings members produce this finding. Existing board and erc duplicate sections are tolerated by this parser for their dedicated review gates; duplicate metadata, nested members, and other root keys remain strict errors. It reads source-hashed project settings only, does not run DRC on project boards, and does not establish electrical or manufacturing readiness."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_drc_duplicate_net_settings_section.test_duplicate_net_settings_preserve_source_order_and_hash",
+        "tests.test_design_lint_mcp_parity_pcb_drc_duplicate_net_settings_section.test_duplicate_net_settings_review_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_duplicate_net_settings_section_native.test_kicad_1008_uses_last_duplicate_net_settings_repeatably"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_drc_duplicate_net_settings_section.test_unique_section_is_quiet_and_duplicate_scope_is_narrow",
+        "tests.test_pcb_drc_duplicate_net_settings_section.test_unrelated_duplicate_keys_remain_strict",
+        "tests.test_pcb_drc_duplicate_net_settings_section.test_unmeasured_kicad_versions_are_out_of_scope",
+        "tests.test_pcb_drc_duplicate_net_settings_section.test_non_pcb_projects_are_out_of_scope",
+        "tests.test_pcb_drc_duplicate_net_settings_section_native.test_kicad_1008_uses_last_duplicate_net_settings_repeatably"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_drc_duplicate_net_settings_section.test_repeated_scans_are_deterministic"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_duplicate_net_settings_section_review.py#source_bound_pcb_drc_duplicate_net_settings_section_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_duplicate_net_settings_section_review.py#project_pcb_drc_duplicate_net_settings_section_evidence",
+        "kicad_tooling/hwrepo/pcb_drc_duplicate_net_settings_sections.py#configured_pcb_duplicate_net_settings_sections",
+        "kicad_tooling/hwrepo/json_object_pairs.py#json_object_pairs_source_order_value",
+        "kicad_tooling/hwrepo/contracts.py#parse_model_text_allow_duplicate_json_keys_at",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#read_source_bound_pcb_project_settings",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#verify_source_bound_pcb_project_settings_unchanged",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
+        "kicad_tooling/hwrepo/design_lint_candidate_inputs.py#DesignLintCandidateInputs",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
+      ]
+    },
+    {
       "rule_id": "pcb.drc_unknown_severity_key",
       "title": "Unknown PCB DRC severity keys need version review",
       "theme": "pcb",

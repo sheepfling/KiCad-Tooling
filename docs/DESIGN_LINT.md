@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 345 active rules.
+The catalog currently contains 346 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -5581,6 +5581,25 @@ a board defect or manufacturing readiness. Projects may set `review`, `block`,
 or `off`, or record an exact-fingerprint ignore. Synthetic settings are
 documented in
 [`tests/fixtures/design_lint/pcb-drc-duplicate-board-section/`](../tests/fixtures/design_lint/pcb-drc-duplicate-board-section/README.md).
+
+## Review duplicate top-level PCB net settings sections
+
+`pcb.drc_duplicate_net_settings_section` prompts when an exact KiCad 10.0.8
+source-hashed `.kicad_pro` repeats the root-level `net_settings` member. It
+retains each complete section in source order and asks the project owner to
+keep the intended settings. It is enabled for PCB and PCB-only projects
+configured for exactly KiCad 10.0.8; other patches remain out of scope.
+
+A digest-pinned native fixture assigns two nets to one netclass and routes
+tracks with 0.10 mm edge spacing. With a 0.05 mm class clearance last, DRC
+reports no clearance violation; reversing the duplicate sections so the
+0.20 mm clearance is last emits one. The unique 0.05 mm control also emits no
+clearance violation. This establishes last-section behavior only for this
+synthetic netclass clearance case and image. The rule does not choose an
+intended section, run DRC on project boards, or establish a board defect or
+manufacturing readiness. Projects may set `review`, `block`, or `off`, or
+record an exact-fingerprint ignore. The synthetic files are documented in
+[`tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/`](../tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/README.md).
 
 ## Review invalid PCB DRC severity strings
 

@@ -91,6 +91,7 @@ _ALLOWED_DUPLICATE_KICAD_PROJECT_OBJECT_PATHS = frozenset(
 )
 _KICAD_PROJECT_BOARD_ROOT_DUPLICATE_MEMBER = ((), "board")
 _KICAD_PROJECT_ERC_ROOT_DUPLICATE_MEMBER = ((), "erc")
+_KICAD_PROJECT_NET_SETTINGS_ROOT_DUPLICATE_MEMBER = ((), "net_settings")
 # Keep exact patch entries; later KiCad 10.0 releases can add ERC item keys.
 _ERC_RULE_KEYS_KICAD_10_0_7 = _ERC_RULE_KEYS_KICAD_10_0 | {"same_local_global_power"}
 _ERC_DEFAULT_WARNING_RULE_KEYS_KICAD_10_0_7 = ERC_DEFAULT_WARNING_RULE_KEYS | {
@@ -178,6 +179,7 @@ def _parse_schematic_erc_project_settings(
     duplicate_members: set[tuple[tuple[str, ...], str]] = set()
     if allow_duplicate_board_section:
         duplicate_members.add(_KICAD_PROJECT_BOARD_ROOT_DUPLICATE_MEMBER)
+        duplicate_members.add(_KICAD_PROJECT_NET_SETTINGS_ROOT_DUPLICATE_MEMBER)
     if allow_duplicate_erc_section:
         duplicate_members.add(_KICAD_PROJECT_ERC_ROOT_DUPLICATE_MEMBER)
     return parse_model_text_allow_duplicate_json_keys_at(

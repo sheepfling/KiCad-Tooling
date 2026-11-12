@@ -22,5 +22,8 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         ),
         "test_pcb_drc_duplicate_severity_key_native.py": frozenset({"pcb_lint", "evidence_lint"}),
         "test_pcb_drc_duplicate_board_section_native.py": frozenset({"pcb_lint", "evidence_lint"}),
+        "test_pcb_drc_duplicate_net_settings_section_native.py": frozenset(
+            {"pcb_lint", "evidence_lint"}
+        ),
     }
 )

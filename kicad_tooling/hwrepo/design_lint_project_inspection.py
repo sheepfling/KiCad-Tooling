@@ -47,6 +47,9 @@ from .native_summary_binding import validate_native_toolchain
 from .pcb_drc_duplicate_board_section_review import (
     source_bound_pcb_drc_duplicate_board_section_candidates,
 )
+from .pcb_drc_duplicate_net_settings_section_review import (
+    source_bound_pcb_drc_duplicate_net_settings_section_candidates,
+)
 from .pcb_drc_duplicate_severity_key_review import (
     source_bound_pcb_drc_duplicate_severity_key_candidates,
 )
@@ -186,6 +189,11 @@ def inspect_design_lint_request(
         )
         pcb_native_drc_candidates = (
             *source_bound_pcb_drc_duplicate_board_section_candidates(
+                root,
+                config,
+                coach.source_hashes,
+            ),
+            *source_bound_pcb_drc_duplicate_net_settings_section_candidates(
                 root,
                 config,
                 coach.source_hashes,

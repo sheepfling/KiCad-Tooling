@@ -322,6 +322,7 @@ DesignLintRuleId = Literal[
     "pcb.warning_default_drc_check_ignored",
     "pcb.drc_unknown_severity_key",
     "pcb.drc_duplicate_board_section",
+    "pcb.drc_duplicate_net_settings_section",
     "pcb.drc_duplicate_severity_key",
     "pcb.drc_invalid_severity_value",
     "pcb.drc_nonstring_severity_value",
