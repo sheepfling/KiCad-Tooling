@@ -24496,6 +24496,12 @@ acceptance threads while new lint features proceed:
   No candidate code, image, schematic, or project data was copied into this
   repository. Reproduction and workflow limitations are recorded under
   [LINT-031](DESIGN_LINT_COHORT_TRIALS.md#lint-031--candidate-analyzer-trial-and-incremental-value-register).
+- **Hosted acceptance (2026-11-12):** Tag `v0.5.3rc699` passed GitHub Actions
+  run `43182990416`: 401 tests passed and 8,720 were deselected, including the
+  digest-pinned native fixture. `mdrepo`, Ruff, both Alphus profiles, Linux and
+  Windows Pyright, wheel and source builds, installed-wheel checks, and the
+  external and adapted template rehearsals passed. Package and preview jobs
+  were skipped under prerelease policy.
 
 ## Completion and release gate
 
