@@ -25479,6 +25479,54 @@ acceptance threads while new lint features proceed:
   verified in GitHub Actions run `43327954298`; the package and preview jobs
   were skipped under prerelease policy.
 
+#### LINT-435 — Review malformed PCB netclass names
+
+- **Priority:** P1 PCB-settings integrity. Extends the malformed inventory
+  review after pinned KiCad testing showed that present but unusable `name`
+  values also leave the assigned class unapplied.
+- **Rule:** Extends
+  [`pcb.drc_malformed_netclass_inventory`](DESIGN_LINT.md#review-malformed-pcb-netclass-inventories).
+- **Status:** Implemented as a default-REVIEW extension for exact KiCad 10.0.8
+  PCB and PCB-only projects; focused local and native acceptance passed.
+- **Predicate:** For a unique source-hashed `net_settings.classes` array,
+  review class objects with a non-string or empty string `name`. Preserve the
+  value's JSON type and array index. Existing checks handle absent names and
+  malformed collections or entries. Repeated `name` keys remain strict JSON
+  validation errors and are not downgraded by this review.
+- **Native evidence:** On the tooling-owned two-track clearance fixture, null,
+  number, boolean, array, object, and empty-string class names all yield the
+  same DRC violation types as explicit `Default`, while the valid `Narrow`
+  control has no clearance violation. An exploratory Docker run and the
+  regression fixture each repeat these cases against the pinned KiCad 10.0.8
+  image. This measures only the listed settings, values, geometry, version,
+  and image.
+- **Boundary:** The source-bound review reports unusable class-name values; it
+  does not infer the intended name or assignment, inspect copper, or establish
+  an electrical defect. Other KiCad versions, whitespace-only strings, and
+  unrelated class properties are not covered. Repeated `name` keys are handled
+  as strict JSON validation failures.
+- **Synthetic evidence:** Six source-hashed settings files cover each tested
+  malformed value. Tests retain type/index evidence and cover valid named
+  classes, default assignments, empty class lists, source freshness, version
+  and project-kind bounds, and CLI/MCP parity. The native test repeats every
+  fault and valid control.
+- **Selection:** Run
+  `tests/test_pcb_drc_malformed_netclass_inventory.py` and
+  `tests/test_design_lint_mcp_parity_pcb_drc_malformed_netclass_inventory.py`
+  with `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.drc_malformed_netclass_inventory")`.
+  Run `tests/test_pcb_drc_malformed_netclass_inventory_native.py` with
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, Docker, `native_kicad`, and the same rule
+  selector.
+- **Focused local acceptance (2026-11-12):** Source and CLI/MCP selection
+  passed 47 tests. The pinned Docker regression passed with six malformed-name
+  faults, the prior malformed inventory faults, both clearance controls, and
+  repeated exports. The scoped package gate passed 451 tests with 8,956
+  deselected, including catalog/selector/architecture checks. Linux and
+  Windows Pyright, Ruff, Alphus, Rumdl, mdrepo, wheel/sdist builds,
+  installed-wheel checks, and external/adapted project rehearsals passed.
+  Receipt: `build/ci/run-0v2mb16c`. Hosted acceptance is pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

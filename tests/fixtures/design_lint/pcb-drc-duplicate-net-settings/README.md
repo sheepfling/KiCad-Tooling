@@ -128,18 +128,25 @@ bounded to the exact settings, board, version, and image below. The source
 review reports the malformed location and JSON type; it does not infer a
 replacement class.
 
-| Fixture                                              | Malformed shape                 | Clearance |
-| ---------------------------------------------------- | ------------------------------- | --------- |
-| `fault-netclass-classes-object.kicad_pro`            | `classes` is an object          | one       |
-| `fault-netclass-class-entry-null.kicad_pro`          | array item is `null`            | one       |
-| `fault-netclass-class-entry-missing-name.kicad_pro`  | object item has no `name`       | one       |
-| `control-netclass-assignment-default.kicad_pro`      | explicit `Default`              | one       |
-| `control-netclass-assignment-array-narrow.kicad_pro` | valid `Narrow` array assignment | none      |
+| Fixture                                               | Malformed shape                         | Clearance |
+| ----------------------------------------------------- | --------------------------------------- | --------- |
+| `fault-netclass-classes-object.kicad_pro`             | `classes` is an object                  | one       |
+| `fault-netclass-class-entry-null.kicad_pro`           | array item is `null`                    | one       |
+| `fault-netclass-class-entry-missing-name.kicad_pro`   | object item has no `name`               | one       |
+| `fault-netclass-class-name-null.kicad_pro`            | `name` is `null`                        | one       |
+| `fault-netclass-class-name-number.kicad_pro`          | `name` is a number                      | one       |
+| `fault-netclass-class-name-boolean.kicad_pro`         | `name` is a boolean                     | one       |
+| `fault-netclass-class-name-array.kicad_pro`           | `name` is an array                      | one       |
+| `fault-netclass-class-name-object.kicad_pro`          | `name` is an object                     | one       |
+| `fault-netclass-class-name-empty.kicad_pro`           | `name` is an empty string               | one       |
+| `control-netclass-assignment-default.kicad_pro`       | explicit `Default`                      | one       |
+| `control-netclass-assignment-array-narrow.kicad_pro`  | valid `Narrow` array assignment         | none      |
 
 KiCad's 10.0.8 [`NET_SETTINGS` parser][netclass-inventory-source] returns when
 `classes` is not an array, then skips entries that are not objects or have no
-`name` member. The linter treats those as review prompts. It does not validate
-other class properties or establish the intended constraints.
+`name` member. Non-string and empty names also fail to select the fixture's
+`Narrow` class. The linter treats these source shapes as review prompts. It
+does not validate other class properties or establish the intended constraints.
 
 Native image:
 `ghcr.io/kicad/kicad:10.0.8-amd64@sha256:05f6ac957e351bbbd9e1f9c996be997f61948ed9f94e0c3cab336bfcaf60161c`.
@@ -148,7 +155,24 @@ an intended value or establish an electrical board defect.
 
 [net-settings-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L230-263
 [netclass-inventory-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L170-201
+[netclass-inventory-name-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L115-120
 [net-settings-migration]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L418-434
+
+## Malformed netclass names
+
+The class-name fixtures set the `name` field to each JSON type other than a
+nonempty string, plus an empty string. KiCad 10.0.8 accepts all six settings
+files, but the assigned `Narrow` class is no longer applied: each case has the
+same clearance result as the explicit `Default` control. The valid
+`control-netclass-assignment-array-narrow.kicad_pro` remains the distinct
+control. This confirms a missed inventory shape in the existing malformed
+inventory review. It does not show which class a project intended to assign.
+
+The digest-pinned native regression repeats every name fault and both controls
+and requires repeatable DRC violation types. This is limited to the synthetic
+board, class values, KiCad 10.0.8, and pinned image. KiCad's
+[`NET_SETTINGS` class parser][netclass-inventory-name-source] reads the member
+as a class name; the observed fallback is specific to the tested CLI behavior.
 
 | Source                                                  | SHA-256                                                            |
 | ------------------------------------------------------- | ------------------------------------------------------------------ |
@@ -176,6 +200,12 @@ an intended value or establish an electrical board defect.
 | `fault-netclass-classes-object.kicad_pro`               | `c53ce061e4b5718bd5145851d59210036381dbb87e62b1e9993d6da9a3544136` |
 | `fault-netclass-class-entry-null.kicad_pro`             | `edcd031ad5bb8db7d79d003a09fd572bb0a2088da3c2963d6c5af4b79d575edf` |
 | `fault-netclass-class-entry-missing-name.kicad_pro`     | `f7cdfb2ed83f4c9d756e8ce324501149a3bae098952517e8c3038afdaef7281d` |
+| `fault-netclass-class-name-array.kicad_pro`             | `6a377b2a7d08457dc147d35e66a689dc350c9237a6dda172414ce255aac4a963` |
+| `fault-netclass-class-name-boolean.kicad_pro`           | `298a8e6e1b167778cb9e9623f19e3587330bb7243ba072c72510fe4750fdc4a4` |
+| `fault-netclass-class-name-empty.kicad_pro`             | `6140e6db6a085f6846f64f0250f415f5c66b09f9eff54f307bf6c3410606a488` |
+| `fault-netclass-class-name-null.kicad_pro`              | `a0f276f4499161566a236045eb32f7f53fac47dfc77c023750a513ca00e4d427` |
+| `fault-netclass-class-name-number.kicad_pro`            | `200ec98cd810edab141329b4bf7625f9ad2933b9397b7a78c32a16fb5185d51b` |
+| `fault-netclass-class-name-object.kicad_pro`            | `19a622f31045059f8b3c37a0683b1fe52a2b292732ec07acd76eb5503a25a4cd` |
 
 Run the focused source, CLI/MCP, and pinned native regressions with:
 

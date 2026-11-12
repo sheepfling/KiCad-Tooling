@@ -70,12 +70,20 @@ def _message(source: PcbMalformedNetClassInventoryEvidence) -> str:
         detail = (
             f"net_settings.classes[{inventory.entry_index}] is JSON {inventory.observed_json_type}"
         )
-    else:
+    elif inventory.problem == "entry_missing_name":
         detail = f"net_settings.classes[{inventory.entry_index}] has no name member"
-    return (
-        f"KiCad {source.kicad_version} does not load this netclass inventory shape: "
-        f"{detail}; review the class definitions and assignments."
-    )
+    elif inventory.problem == "entry_name_not_string":
+        detail = (
+            f"net_settings.classes[{inventory.entry_index}].name is JSON "
+            f"{inventory.observed_json_type}, expected a nonempty string"
+        )
+    else:
+        detail = f"net_settings.classes[{inventory.entry_index}].name is empty"
+    if inventory.problem in {"entry_name_not_string", "entry_name_empty"}:
+        summary = "cannot resolve this entry as a usable named netclass"
+    else:
+        summary = "does not load this netclass inventory shape"
+    return f"KiCad {source.kicad_version} {summary}: {detail}; review the class definitions and assignments."
 
 
 @dataclass(frozen=True, slots=True)

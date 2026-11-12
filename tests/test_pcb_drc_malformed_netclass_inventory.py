@@ -46,6 +46,48 @@ FAULT_FIXTURES = {
         "object",
         1,
     ),
+    "fault-netclass-class-name-null.kicad_pro": (
+        "a0f276f4499161566a236045eb32f7f53fac47dfc77c023750a513ca00e4d427",
+        "net_settings.classes[1]",
+        "entry_name_not_string",
+        "null",
+        1,
+    ),
+    "fault-netclass-class-name-number.kicad_pro": (
+        "200ec98cd810edab141329b4bf7625f9ad2933b9397b7a78c32a16fb5185d51b",
+        "net_settings.classes[1]",
+        "entry_name_not_string",
+        "number",
+        1,
+    ),
+    "fault-netclass-class-name-boolean.kicad_pro": (
+        "298a8e6e1b167778cb9e9623f19e3587330bb7243ba072c72510fe4750fdc4a4",
+        "net_settings.classes[1]",
+        "entry_name_not_string",
+        "boolean",
+        1,
+    ),
+    "fault-netclass-class-name-array.kicad_pro": (
+        "6a377b2a7d08457dc147d35e66a689dc350c9237a6dda172414ce255aac4a963",
+        "net_settings.classes[1]",
+        "entry_name_not_string",
+        "array",
+        1,
+    ),
+    "fault-netclass-class-name-object.kicad_pro": (
+        "19a622f31045059f8b3c37a0683b1fe52a2b292732ec07acd76eb5503a25a4cd",
+        "net_settings.classes[1]",
+        "entry_name_not_string",
+        "object",
+        1,
+    ),
+    "fault-netclass-class-name-empty.kicad_pro": (
+        "6140e6db6a085f6846f64f0250f415f5c66b09f9eff54f307bf6c3410606a488",
+        "net_settings.classes[1]",
+        "entry_name_empty",
+        "string",
+        1,
+    ),
 }
 pytestmark = [
     pytest.mark.design_lint,
@@ -101,6 +143,10 @@ def test_malformed_inventory_fixtures_are_source_hashed_and_reviewed(
     assert candidate.rule_id == RULE_ID
     assert candidate.subject == f"{PROJECT_RELATIVE}#{location}"
     assert candidate.source_evidence.source_sha256 == digest(project)
+    if problem == "entry_name_not_string":
+        assert f".name is JSON {observed_type}" in candidate.message
+    if problem == "entry_name_empty":
+        assert ".name is empty" in candidate.message
     expected_evidence = {
         "source_path": (PROJECT_RELATIVE,),
         "source_sha256": (digest(project),),
@@ -129,6 +175,12 @@ def test_malformed_inventory_fixtures_are_source_hashed_and_reviewed(
         ([None, False, 17, "entry", []], "entry_not_object", "string", 3),
         ([None, False, 17, "entry", []], "entry_not_object", "array", 4),
         ([{}], "entry_missing_name", "object", 0),
+        ([{"name": None}], "entry_name_not_string", "null", 0),
+        ([{"name": False}], "entry_name_not_string", "boolean", 0),
+        ([{"name": 17}], "entry_name_not_string", "number", 0),
+        ([{"name": []}], "entry_name_not_string", "array", 0),
+        ([{"name": {}}], "entry_name_not_string", "object", 0),
+        ([{"name": ""}], "entry_name_empty", "string", 0),
     ),
 )
 def test_json_shapes_retain_problem_type_and_index(
@@ -158,6 +210,7 @@ def test_json_shapes_retain_problem_type_and_index(
         "control-netclass-assignment-array-narrow.kicad_pro",
         "control-netclass-assignment-default.kicad_pro",
         "control-netclass-assignment-array-empty.kicad_pro",
+        "control-unique-narrow.kicad_pro",
     ),
 )
 def test_valid_class_array_controls_stay_quiet(tmp_path: Path, fixture: str) -> None:
@@ -178,6 +231,10 @@ def test_incomplete_or_ambiguous_class_inventory_stays_quiet() -> None:
         '"netclass_assignments":', '"classes":[],"netclass_assignments":', 1
     )
     assert configured_pcb_malformed_netclass_inventory(duplicate_classes) == ()
+
+    duplicate_name = document.replace('"name":"Narrow"', '"name":"Other","name":"Narrow"', 1)
+    with pytest.raises(ValueError, match="Duplicate JSON key at net_settings.classes: name"):
+        configured_pcb_malformed_netclass_inventory(duplicate_name)
 
 
 def test_unmeasured_versions_and_non_pcb_projects_are_out_of_scope(tmp_path: Path) -> None:

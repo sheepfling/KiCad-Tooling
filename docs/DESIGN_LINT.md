@@ -5822,20 +5822,25 @@ record an exact-fingerprint ignore. The synthetic files are documented in
 
 `pcb.drc_malformed_netclass_inventory` prompts for exact KiCad 10.0.8
 PCB/PCB-only projects when the unique `net_settings.classes` member is not an
-array, an array item is not an object, or an object item has no `name` member.
-Evidence retains the source hash, malformed location, problem kind, JSON type,
-and array index where applicable. Valid arrays, including an empty classes
-array, remain quiet. Repeated or ambiguous root settings and `classes` members
-are left to existing duplicate-setting reviews.
+array, an array item is not an object, or an object item has no usable `name`
+member. A usable name is a nonempty JSON string. Evidence retains the source
+hash, malformed location, problem kind, JSON type, and array index where
+applicable. Valid named classes and an empty classes array remain quiet.
+Repeated or ambiguous root settings and `classes` members are handled by
+existing duplicate-setting reviews. Other repeated JSON keys remain strict
+validation errors.
 
-In the digest-pinned two-track fixture, an object in place of the classes array, a `null` array
-item, and a class object without `name` each produce the same clearance result as explicit
-`Default`; the valid `Narrow` control does not. KiCad 10.0.8's
-[net-settings parser](https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L170-201)
-skips those inventory shapes. This source-bound review does not infer an intended class, validate
-other class properties, inspect copper, or establish an electrical defect. Projects may choose
-`review`, `block`, or `off`, or add an exact-fingerprint ignore. Fixture hashes, native image, and
-focused pytest selectors are recorded in
+In the digest-pinned two-track fixture, an object in place of the classes array,
+a `null` array item, a class object without `name`, each non-string JSON name,
+and an empty name produce the same clearance result as explicit `Default`; the
+valid `Narrow` control remains distinct. KiCad 10.0.8 initializes names from
+the class `name` value and silently leaves these settings without the assigned
+`Narrow` definition. See the [net-settings parser][kicad-netclass-name-parser]
+and [class loading path][kicad-netclass-name-loader].
+This source-bound review does not infer an intended class, validate other class
+properties, inspect copper, or establish an electrical defect. Projects may
+choose `review`, `block`, or `off`, or add an exact-fingerprint ignore. Fixture
+hashes, native image, and focused pytest selectors are recorded in
 [`tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/`](../tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/README.md).
 
 ## Review conflicting PCB netclass definitions
@@ -9853,3 +9858,5 @@ Review the actual board and assembly requirements before approving a build.
 
 [kicad-pcb-parser-100]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/pcb_io/kicad_sexpr/pcb_io_kicad_sexpr_parser.cpp
 [kicad-pcb-parser-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/pcb_io/kicad_sexpr/pcb_io_kicad_sexpr_parser.cpp
+[kicad-netclass-name-parser]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L115-120
+[kicad-netclass-name-loader]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L187-199

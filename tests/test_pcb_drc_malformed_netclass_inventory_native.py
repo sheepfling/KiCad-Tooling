@@ -42,6 +42,12 @@ FAULT_CASES = (
     "fault-netclass-classes-object",
     "fault-netclass-class-entry-null",
     "fault-netclass-class-entry-missing-name",
+    "fault-netclass-class-name-null",
+    "fault-netclass-class-name-number",
+    "fault-netclass-class-name-boolean",
+    "fault-netclass-class-name-array",
+    "fault-netclass-class-name-object",
+    "fault-netclass-class-name-empty",
 )
 CONTROL_CASES = (
     "control-netclass-assignment-default",

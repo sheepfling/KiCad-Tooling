@@ -37,6 +37,12 @@ class PcbMalformedNetClassInventory:
         elif self.problem == "entry_missing_name":
             if self.entry_index is None or self.observed_json_type != "object":
                 raise ValueError("Unnamed class evidence must identify an object item")
+        elif self.problem == "entry_name_not_string":
+            if self.entry_index is None or self.observed_json_type == "string":
+                raise ValueError("Non-string class name evidence must retain its JSON type")
+        elif self.problem == "entry_name_empty":
+            if self.entry_index is None or self.observed_json_type != "string":
+                raise ValueError("Empty class name evidence must identify a string value")
         else:
             raise ValueError("Unsupported PCB netclass inventory problem")
         if self.entry_index is not None and self.entry_index < 0:
@@ -83,13 +89,33 @@ def configured_pcb_malformed_netclass_inventory(
                     entry_index=entry_index,
                 )
             )
-        elif not any(key == "name" for key, _ in entry.pairs):
-            malformed.append(
-                PcbMalformedNetClassInventory(
-                    location=location,
-                    problem="entry_missing_name",
-                    observed_json_type="object",
-                    entry_index=entry_index,
+        else:
+            names = tuple(value for key, value in entry.pairs if key == "name")
+            if not names:
+                malformed.append(
+                    PcbMalformedNetClassInventory(
+                        location=location,
+                        problem="entry_missing_name",
+                        observed_json_type="object",
+                        entry_index=entry_index,
+                    )
                 )
-            )
+            elif len(names) == 1 and not isinstance(names[0], str):
+                malformed.append(
+                    PcbMalformedNetClassInventory(
+                        location=location,
+                        problem="entry_name_not_string",
+                        observed_json_type=pcb_json_type(names[0]),
+                        entry_index=entry_index,
+                    )
+                )
+            elif len(names) == 1 and names[0] == "":
+                malformed.append(
+                    PcbMalformedNetClassInventory(
+                        location=location,
+                        problem="entry_name_empty",
+                        observed_json_type="string",
+                        entry_index=entry_index,
+                    )
+                )
     return tuple(malformed)

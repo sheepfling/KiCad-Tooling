@@ -14221,15 +14221,15 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
-      "evidence_adapter": "Exact source-hashed KiCad 10.0.8 .kicad_pro net_settings.classes JSON shape with collection type, invalid entry indexes/types, project kind, and source digest retained",
-      "predicate": "For PCB and PCB-only projects configured for exact KiCad 10.0.8, inspect one source-hashed project file containing one root net_settings object and one classes member. Review when classes is not an array, when an array item is not an object, or when an object item has no name member. Skip repeated or ambiguous root settings and repeated classes members. Do not validate the meaning or electrical suitability of class names or values.",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0.8 .kicad_pro net_settings.classes JSON shape with collection type, invalid entry indexes/types and class-name type/value state, project kind, and source digest retained",
+      "predicate": "For PCB and PCB-only projects configured for exact KiCad 10.0.8, inspect one source-hashed project file containing one root net_settings object and one classes member. Review when classes is not an array, when an array item is not an object, or when an object item has no name member, a non-string name, or an empty string name. Skip repeated or ambiguous root settings and classes members. Repeated name keys remain strict JSON validation errors. Do not validate the meaning or electrical suitability of class names or values.",
       "supported_kicad_versions": [
-        "KiCad 10.0.8 only; the digest-pinned native fixture shows a non-array classes value, a null array item, and an object without name each produce the same clearance result as explicit Default, while valid Narrow remains distinct. Other patches are unmeasured."
+        "KiCad 10.0.8 only; digest-pinned native fixtures show malformed inventory shapes and non-string or empty class names match explicit Default clearance behavior, while valid Narrow remains distinct. Other patches are unmeasured."
       ],
       "limitations": [
-        "The rule identifies inventory shapes that KiCad 10.0.8 skips while loading netclass definitions. It does not infer the intended class, repair assignments, validate class fields, or establish that the resulting board is electrically defective.",
-        "The native comparison covers only the synthetic two-track board, Default and Narrow clearances, three malformed class-list shapes, and the pinned KiCad 10.0.8 image. It does not run DRC on adopter projects or inspect copper continuity.",
-        "Invalid project syntax, repeated or ambiguous root settings, repeated classes members, duplicate class names, unsupported versions, and malformed fields other than the missing name member are outside this predicate. The default is REVIEW; project policy may promote, disable, or exactly ignore the finding."
+        "The rule identifies inventory shapes and class names that KiCad 10.0.8 does not load as a usable named class. It does not infer the intended class, repair assignments, validate class fields, or establish that the resulting board is electrically defective.",
+        "The native comparison covers only the synthetic two-track board, Default and Narrow clearances, the tested malformed inventory and name values, and the pinned KiCad 10.0.8 image. It does not run DRC on adopter projects or inspect copper continuity.",
+        "Invalid project syntax, repeated or ambiguous root settings, repeated classes members, repeated name keys, duplicate class names, unsupported versions, and malformed fields other than classes shape or name are outside this predicate. Repeated name keys remain strict JSON validation errors. The default is REVIEW; project policy may promote, disable, or exactly ignore the finding."
       ],
       "fault_fixtures": [
         "tests.test_pcb_drc_malformed_netclass_inventory.test_malformed_inventory_fixtures_are_source_hashed_and_reviewed",
