@@ -24536,7 +24536,12 @@ acceptance threads while new lint features proceed:
   design_lint_rule(rule_id="schematic.erc_duplicate_section")`. The exact
   native module is `tests/test_schematic_erc_duplicate_section_native.py`
   with `KICAD_RUN_NATIVE_SCHEMATIC_ERC_DUPLICATE_SECTION_FIXTURES=1`.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance (2026-11-12):** Annotated tag `v0.5.3rc700` passed
+  GitHub Actions run `43188075300`: 406 tests passed and 8,736 were deselected,
+  including both pinned native cases. Ruff and formatting, both Alphus profiles,
+  Rumdl, mdrepo, Linux and Windows Pyright, installed-wheel validation, and
+  external/adapted template rehearsals passed. The package and preview jobs
+  were skipped under prerelease policy.
 
 ## Completion and release gate
 
