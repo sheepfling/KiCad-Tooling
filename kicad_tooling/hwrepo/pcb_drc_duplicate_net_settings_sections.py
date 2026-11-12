@@ -71,6 +71,7 @@ class PcbUnresolvedNetClassAssignment:
     net_name: str
     assigned_class: str
     declared_class_names: tuple[str, ...]
+    assigned_classes: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.net_name or not self.assigned_class:
@@ -79,6 +80,11 @@ class PcbUnresolvedNetClassAssignment:
             raise ValueError("PCB netclass assignment evidence requires a complete class list")
         if self.assigned_class in self.declared_class_names:
             raise ValueError("PCB netclass assignment must name an undeclared class")
+        if self.assigned_classes and (
+            any(not name for name in self.assigned_classes)
+            or self.assigned_class not in self.assigned_classes
+        ):
+            raise ValueError("PCB netclass assignment list must retain its unresolved class")
 
 
 def _validate_pcb_settings_document(
@@ -285,15 +291,27 @@ def configured_pcb_unresolved_netclass_assignments(
         normalized = tuple(canonical_json_value(value) for value in values)
         if not net_name or len(set(normalized)) != 1 or not values:
             continue
-        assigned_class = values[0]
-        if not isinstance(assigned_class, str) or not assigned_class:
+        assignment = values[0]
+        if isinstance(assignment, str) and assignment:
+            assigned_classes = (assignment,)
+            evidence_classes: tuple[str, ...] = ()
+        elif isinstance(assignment, list) and all(
+            isinstance(name, str) and name for name in assignment
+        ):
+            assigned_classes = tuple(cast(list[str], assignment))
+            evidence_classes = assigned_classes
+        else:
             continue
-        if assigned_class not in class_names:
+        unresolved_classes = tuple(
+            name for name in dict.fromkeys(assigned_classes) if name not in class_names
+        )
+        for assigned_class in unresolved_classes:
             unresolved.append(
                 PcbUnresolvedNetClassAssignment(
                     net_name=net_name,
                     assigned_class=assigned_class,
                     declared_class_names=tuple(class_names),
+                    assigned_classes=evidence_classes,
                 )
             )
     return tuple(unresolved)

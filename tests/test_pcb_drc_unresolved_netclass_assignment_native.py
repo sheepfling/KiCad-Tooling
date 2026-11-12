@@ -41,7 +41,11 @@ BOARD = FIXTURES / "board.kicad_pcb"
 CASES = {
     "fault-netclass-assignment-undeclared": (True, True),
     "fault-netclass-assignment-case-mismatch": (True, True),
+    "fault-netclass-assignment-array-undeclared": (True, True),
+    "fault-netclass-assignment-array-mixed": (True, False),
     "control-netclass-assignment-default": (False, True),
+    "control-netclass-assignment-array-narrow": (False, False),
+    "control-netclass-assignment-array-empty": (False, True),
     "control-unique-narrow": (False, False),
 }
 
@@ -107,6 +111,19 @@ def test_unknown_class_falls_back_like_default_and_repeats_with_valid_control(
         assert repeated[0] == repeated[1]
     assert (
         results["fault-netclass-assignment-undeclared"][0]
+        == results["control-netclass-assignment-default"][0]
+    )
+    assert (
+        results["fault-netclass-assignment-array-undeclared"][0]
+        == results["control-netclass-assignment-default"][0]
+    )
+    assert "clearance" not in results["fault-netclass-assignment-array-mixed"][0]
+    assert (
+        results["control-netclass-assignment-array-narrow"][0]
+        == results["control-unique-narrow"][0]
+    )
+    assert (
+        results["control-netclass-assignment-array-empty"][0]
         == results["control-netclass-assignment-default"][0]
     )
     assert "clearance" not in results["control-unique-narrow"][0]

@@ -805,15 +805,12 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc719):** LINT-431 reviews
-  conflicting duplicate PCB net-to-netclass assignments using exact source
-  order and keeps identical duplicates quiet. Local scoped acceptance passed
-  431 tests with 8,859 deselected, including repeatable digest-pinned KiCad
-  10.0.8 Docker fault/control exports. Hosted prerelease acceptance and the
-  installed-wheel rehearsal against a separate project passed in GitHub
-  Actions run `43303351048` on commit
-  `86f4e3dbb7b48dbdd4f8ece33b0e21094b7040c2`; package and preview jobs were
-  skipped under prerelease policy.
+- **Latest published lint-gate checkpoint (v0.5.3rc720):** The first LINT-432
+  implementation reviews PCB assignments to undeclared netclasses. Its
+  original gate passed 422 tests with 8,890 deselected and repeatable
+  digest-pinned KiCad 10.0.8 Docker exports. Hosted acceptance and the
+  installed-wheel rehearsal passed in GitHub Actions run `43310078583`; package
+  and preview jobs were skipped under prerelease policy.
 - **Previous lint-gate checkpoint (v0.5.3rc718):** LINT-430 extends
   `net.numbered_returns` to review a recognized base return label beside a
   matching indexed sibling. Local scoped acceptance passed 456 tests with
@@ -25307,28 +25304,35 @@ acceptance threads while new lint features proceed:
 - **Status:** Implemented as the default-REVIEW rule
   `pcb.drc_unresolved_netclass_assignment`, limited to exact KiCad 10.0.8 PCB
   and PCB-only projects. It adds an independent rule ID beside the duplicate
-  netclass-definition review.
+  netclass-definition review. This rule now accepts legacy scalar class names
+  and current arrays of nonempty class names.
 - **Predicate:** Require one source-bound `net_settings` object, one complete
   `classes` list containing `Default`, and one `netclass_assignments` object.
-  Review each net whose unique or equal-duplicate string assignment names no
-  declared class. Use exact case-sensitive names. Skip conflicting duplicate
-  assignments and ambiguous or malformed class inventories.
+  Review each net whose unique or equal-duplicate legacy scalar or current
+  array assignment includes a class absent from the declared list. Preserve
+  array values in evidence and use exact case-sensitive names. Skip conflicting
+  duplicate assignments, malformed assignment shapes, and ambiguous or
+  malformed class inventories.
 - **Native evidence:** In the tooling-owned two-track clearance fixture, the
   undeclared `MissingClass` and case-mismatched `narrow` assignments both
   produce the same 0.20 mm clearance violation as an explicit `Default`
-  assignment; the declared `Narrow` control produces none. Repeated
-  digest-pinned KiCad 10.0.8 exports verify the result. This is only a
-  configuration behavior measurement for these values, geometry, patch, and
-  image.
+  assignment; the declared `Narrow` control produces none. The current-schema
+  array containing only `MissingClass` has the same result; a mixed
+  `Narrow`/`MissingClass` array keeps the Narrow clearance while still
+  prompting for the unresolved member. Repeated digest-pinned KiCad 10.0.8
+  exports verify the results. This is only a configuration behavior
+  measurement for these values, geometry, patch, and image.
 - **Boundary:** A missing class name is a source inconsistency prompt; the lint
   does not infer which class was intended, select a repair, or determine that
   the resulting clearance is unsuitable. Other KiCad patches are unmeasured.
   Conflicting repeated assignments remain covered by LINT-431.
 - **Synthetic evidence:** Tests cover missing and case-mismatched class names,
-  a declared `Default` control, incomplete and ambiguous class inventories,
-  stable net ordering, equal duplicate assignments, source-hash mismatch,
-  out-of-scope versions and project kinds, and CLI/MCP parity. Native cases
-  repeat the two faults, explicit `Default`, and valid `Narrow` control.
+  legacy and array-valued assignments, mixed known/unknown arrays, multiple
+  unresolved array members, declared and empty array controls, incomplete and
+  ambiguous class inventories, stable net ordering, equal duplicate
+  assignments, source-hash mismatch, out-of-scope versions and project kinds,
+  and CLI/MCP parity. Native cases repeat scalar and array faults, the mixed
+  array, explicit `Default`, empty-array, and valid `Narrow` controls.
 - **Selection:** Run
   `tests/test_pcb_drc_unresolved_netclass_assignment.py`,
   `tests/test_design_lint_mcp_parity_pcb_drc_unresolved_netclass_assignment.py`,
@@ -25347,6 +25351,14 @@ acceptance threads while new lint features proceed:
   Actions run `43310078583` with the same 422-test scoped selection, including
   the installed-wheel rehearsal against a separate project checkout. Package
   publishing and preview jobs were skipped under prerelease policy.
+- **Current-array extension local acceptance (2026-11-12):** The scoped package
+  gate passed 433 tests with 8,890 deselected, including repeated digest-pinned
+  KiCad 10.0.8 exports for unresolved scalar and array members, mixed
+  known/unknown arrays, and declared/empty-array controls. Ruff, both Alphus
+  profiles, Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist builds,
+  installed-artifact checks, and external/adapted template-project playtests
+  passed. Receipts are under `build/ci/run-ge2h5dfy/`. Hosted acceptance for
+  the current-array extension is pending.
 
 ## Completion and release gate
 

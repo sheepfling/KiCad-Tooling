@@ -46,17 +46,20 @@ def project_pcb_unresolved_netclass_assignment_evidence(
     source: PcbUnresolvedNetClassAssignmentEvidence,
 ) -> CandidateEvidenceProjection:
     """Project the source digest, net, requested class, and complete class inventory."""
+    evidence = {
+        "source_path": (source.source_path,),
+        "source_sha256": (source.source_sha256,),
+        "kicad_version": (source.kicad_version,),
+        "project_kind": (source.project_kind.value,),
+        "net_name": (source.assignment.net_name,),
+        "assigned_class": (source.assignment.assigned_class,),
+        "declared_class_names": source.assignment.declared_class_names,
+    }
+    if source.assignment.assigned_classes:
+        evidence["assigned_classes"] = source.assignment.assigned_classes
     return CandidateEvidenceProjection(
         rule_id=_RULE_ID,
-        evidence={
-            "source_path": (source.source_path,),
-            "source_sha256": (source.source_sha256,),
-            "kicad_version": (source.kicad_version,),
-            "project_kind": (source.project_kind.value,),
-            "net_name": (source.assignment.net_name,),
-            "assigned_class": (source.assignment.assigned_class,),
-            "declared_class_names": source.assignment.declared_class_names,
-        },
+        evidence=evidence,
     )
 
 

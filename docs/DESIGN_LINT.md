@@ -906,6 +906,14 @@ are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
 The catalog currently contains 353 active rules.
 
+For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
+legacy scalar assignments and the current array of class names. It reports
+each assigned class absent from the complete project class list, preserving
+the full array in evidence. A mixed array can still have a valid declared
+class applied, so an unresolved entry prompts review without claiming that
+the whole assignment falls back to `Default`. Malformed value shapes remain
+outside this rule.
+
 ### Placed schematic symbol has no embedded definition
 
 `schematic.missing_embedded_symbol_definition` compares each placed symbol's

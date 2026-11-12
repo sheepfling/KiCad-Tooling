@@ -88,10 +88,25 @@ explicit `Default` control, and the valid `Narrow` control using the digest-
 pinned image below. This measures only these settings, values, board geometry,
 KiCad 10.0.8, and image; it does not establish an electrical board defect.
 
+Current KiCad settings store each net's assignments as an array of class
+names. The tooling-owned array cases set `net_settings.meta.version` to 5.
+An array containing only `MissingClass` produces the same clearance finding as
+the explicit `Default` control. An array containing `Narrow` and
+`MissingClass` keeps the Narrow clearance behavior but still receives a
+source-bound review for the unresolved member. A declared `Narrow` array and an
+empty array are controls. This confirms that the lint reports unknown members
+without claiming that the entire mixed assignment falls back to Default.
+The KiCad 10.0.8 [`NET_SETTINGS` parser][net-settings-source] iterates the
+class-name array and stores each name; its [legacy schema migration][net-settings-migration]
+wraps an old scalar assignment in an array.
+
 Native image:
 `ghcr.io/kicad/kicad:10.0.8-amd64@sha256:05f6ac957e351bbbd9e1f9c996be997f61948ed9f94e0c3cab336bfcaf60161c`.
 This observation is limited to these values, geometry, KiCad version, and image; it does not choose
 an intended value or establish an electrical board defect.
+
+[net-settings-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L230-263
+[net-settings-migration]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L418-434
 
 | Source                                                  | SHA-256                                                            |
 | ------------------------------------------------------- | ------------------------------------------------------------------ |
@@ -109,6 +124,10 @@ an intended value or establish an electrical board defect.
 | `fault-netclass-assignment-undeclared.kicad_pro`        | `19df5a0b5492c549612e921c00e13a36e0ff0b4a56b79e881434c361acd202dd` |
 | `fault-netclass-assignment-case-mismatch.kicad_pro`     | `c9f6b01751f80d867a8c1b45f6ddc236afe44751da31d6464ba50b287ff73551` |
 | `control-netclass-assignment-default.kicad_pro`         | `f6a4b45a1be90581b0449355151325138ab0e9c4e6a3252bf0d602577901e467` |
+| `fault-netclass-assignment-array-undeclared.kicad_pro`  | `0b82fbd7a2cae5413427c493964ac8a03c948d598cb6dea4876180bf37a4edf0` |
+| `fault-netclass-assignment-array-mixed.kicad_pro`       | `567b9e54335359274b2fe1a42dacdf5542fcf87ec44fdee78c2219ed4e48c76d` |
+| `control-netclass-assignment-array-narrow.kicad_pro`    | `8945d702eb8f5b7e1b1fb7b78d24798445b48858daf36a3a8e2ba10491d5fa88` |
+| `control-netclass-assignment-array-empty.kicad_pro`     | `6f94553a84c3b85ad642bf7cc12e4a198d824f9c35bb87c0044ecbe61735d0ca` |
 
 Run the focused source, CLI/MCP, and pinned native regressions with:
 

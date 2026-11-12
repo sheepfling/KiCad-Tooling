@@ -14108,25 +14108,29 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
-      "evidence_adapter": "Exact source-hashed KiCad 10.0.8 .kicad_pro net_settings.classes and netclass_assignments, with exact net and declared-class inventory retained",
-      "predicate": "For PCB and PCB-only projects configured for exact KiCad 10.0.8, require one root net_settings object, one complete classes list containing Default, and one netclass_assignments object. Emit one source-bound REVIEW candidate for a net whose one or more equal string assignments name a class absent from the declared list. Skip conflicting duplicate assignment values, ambiguous or malformed class inventories, and unsupported versions.",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0.8 .kicad_pro net_settings.classes and netclass_assignments, with exact net, declared-class inventory, and assigned class names retained",
+      "predicate": "For PCB and PCB-only projects configured for exact KiCad 10.0.8, require one root net_settings object, one complete classes list containing Default, and one netclass_assignments object. Accept a legacy scalar class name or a current array of nonempty class-name strings. Emit one source-bound REVIEW candidate per undeclared class name in an assignment; retain the full class-name array when present. Skip conflicting duplicate assignment values, ambiguous or malformed class inventories, malformed assignment value shapes, and unsupported versions.",
       "supported_kicad_versions": [
-        "KiCad 10.0.8 only; the digest-pinned native fixture shows that one undeclared assignment falls back to the same clearance behavior as an explicit Default assignment. Other patches remain unmeasured."
+        "KiCad 10.0.8 only; digest-pinned native fixtures measure scalar and array assignments, including an unresolved-only array that falls back like explicit Default and a mixed array that retains its declared Narrow class. Other patches remain unmeasured."
       ],
       "limitations": [
         "The review identifies a class name absent from the exact project class list. It does not infer the intended class, choose a replacement, or establish that the assignment causes a board defect.",
-        "Native behavior was measured only for the synthetic N1 assignment, Default and Narrow class values, and the pinned KiCad 10.0.8 image. The rule does not run DRC on adopter projects, inspect copper, or establish manufacturing readiness.",
-        "Ambiguous, malformed, repeated classes lists and conflicting repeated net assignments remain outside this predicate. Class names use exact case-sensitive source strings; unmeasured KiCad patches and other class-resolution behavior are out of scope. Project policy may select review, block, off, or an exact-fingerprint ignore."
+        "Native behavior was measured only for the synthetic N1 assignments, Default and Narrow class values, and the pinned KiCad 10.0.8 image. The rule does not run DRC on adopter projects, inspect copper, or establish manufacturing readiness.",
+        "Ambiguous or repeated classes lists, conflicting repeated net assignments, and assignment values that are neither a legacy scalar nor an array of nonempty strings remain outside this predicate. Class names use exact case-sensitive source strings; unmeasured KiCad patches and other class-resolution behavior are out of scope. Project policy may select review, block, off, or an exact-fingerprint ignore."
       ],
       "fault_fixtures": [
         "tests.test_pcb_drc_unresolved_netclass_assignment.test_undeclared_netclass_assignment_is_source_bound",
         "tests.test_pcb_drc_unresolved_netclass_assignment.test_netclass_assignment_name_match_is_case_sensitive",
+        "tests.test_pcb_drc_unresolved_netclass_assignment.test_current_array_assignment_is_source_bound_and_keeps_all_class_names",
+        "tests.test_pcb_drc_unresolved_netclass_assignment.test_unknown_current_array_member_is_reviewed",
         "tests.test_pcb_drc_unresolved_netclass_assignment.test_fault_fixture_source_matches_reviewed_hash",
+        "tests.test_pcb_drc_unresolved_netclass_assignment.test_current_array_fault_fixture_source_matches_reviewed_hash",
         "tests.test_design_lint_mcp_parity_pcb_drc_unresolved_netclass_assignment.test_unresolved_netclass_assignment_matches_between_cli_and_mcp",
         "tests.test_pcb_drc_unresolved_netclass_assignment_native.test_unknown_class_falls_back_like_default_and_repeats_with_valid_control"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_drc_unresolved_netclass_assignment.test_declared_default_assignment_is_a_valid_control",
+        "tests.test_pcb_drc_unresolved_netclass_assignment.test_declared_and_empty_current_array_assignments_are_controls",
         "tests.test_pcb_drc_unresolved_netclass_assignment.test_default_assignment_control_fixture_source_matches_reviewed_hash",
         "tests.test_pcb_drc_unresolved_netclass_assignment.test_incomplete_or_ambiguous_class_inventory_stays_quiet",
         "tests.test_pcb_drc_unresolved_netclass_assignment.test_unmeasured_versions_and_non_pcb_projects_are_out_of_scope",
@@ -14138,6 +14142,7 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_pcb_drc_unresolved_netclass_assignment.test_assignments_are_sorted_by_exact_net_name",
+        "tests.test_pcb_drc_unresolved_netclass_assignment.test_current_array_unknown_members_are_ordered_and_deduplicated",
         "tests.test_pcb_drc_unresolved_netclass_assignment.test_equal_duplicate_missing_assignment_is_reported_once"
       ],
       "implementation_refs": [

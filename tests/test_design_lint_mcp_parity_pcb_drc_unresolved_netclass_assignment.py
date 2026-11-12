@@ -26,11 +26,24 @@ pytestmark = [
 
 
 @pytest.mark.parametrize(
-    ("settings_name", "expected_class", "should_review"),
+    ("settings_name", "expected_class", "should_review", "expected_classes"),
     (
-        ("fault-netclass-assignment-undeclared.kicad_pro", "MissingClass", True),
-        ("fault-netclass-assignment-case-mismatch.kicad_pro", "narrow", True),
-        ("control-netclass-assignment-default.kicad_pro", "Default", False),
+        ("fault-netclass-assignment-undeclared.kicad_pro", "MissingClass", True, None),
+        ("fault-netclass-assignment-case-mismatch.kicad_pro", "narrow", True, None),
+        (
+            "fault-netclass-assignment-array-undeclared.kicad_pro",
+            "MissingClass",
+            True,
+            ("MissingClass",),
+        ),
+        (
+            "fault-netclass-assignment-array-mixed.kicad_pro",
+            "MissingClass",
+            True,
+            ("Narrow", "MissingClass"),
+        ),
+        ("control-netclass-assignment-default.kicad_pro", "Default", False, None),
+        ("control-netclass-assignment-array-narrow.kicad_pro", "Narrow", False, None),
     ),
 )
 def test_unresolved_netclass_assignment_matches_between_cli_and_mcp(
@@ -38,6 +51,7 @@ def test_unresolved_netclass_assignment_matches_between_cli_and_mcp(
     settings_name: str,
     expected_class: str,
     should_review: bool,
+    expected_classes: tuple[str, ...] | None,
 ) -> None:
     root, native = synthetic_design_lint_project(
         tmp_path,
@@ -72,3 +86,5 @@ def test_unresolved_netclass_assignment_matches_between_cli_and_mcp(
         assert findings[0].subject.endswith("#net_settings/netclass_assignments/N1")
         assert findings[0].evidence["assigned_class"] == (expected_class,)
         assert findings[0].evidence["declared_class_names"] == ("Default", "Narrow")
+        if expected_classes is not None:
+            assert findings[0].evidence["assigned_classes"] == expected_classes

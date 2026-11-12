@@ -74,6 +74,28 @@ def test_case_mismatch_fixture_source_matches_reviewed_hash() -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("fixture", "expected_hash"),
+    (
+        (
+            "fault-netclass-assignment-array-undeclared.kicad_pro",
+            "0b82fbd7a2cae5413427c493964ac8a03c948d598cb6dea4876180bf37a4edf0",
+        ),
+        (
+            "fault-netclass-assignment-array-mixed.kicad_pro",
+            "567b9e54335359274b2fe1a42dacdf5542fcf87ec44fdee78c2219ed4e48c76d",
+        ),
+    ),
+)
+def test_current_array_fault_fixture_source_matches_reviewed_hash(
+    fixture: str,
+    expected_hash: str,
+) -> None:
+    source = FIXTURES / fixture
+
+    assert hashlib.sha256(source.read_bytes()).hexdigest() == expected_hash
+
+
 def test_default_assignment_control_fixture_source_matches_reviewed_hash() -> None:
     source = FIXTURES / "control-netclass-assignment-default.kicad_pro"
 
@@ -117,6 +139,71 @@ def test_netclass_assignment_name_match_is_case_sensitive(tmp_path: Path) -> Non
     assert candidate.evidence["declared_class_names"] == ("Default", "Narrow")
 
 
+def test_current_array_assignment_is_source_bound_and_keeps_all_class_names(
+    tmp_path: Path,
+) -> None:
+    root, project, config, hashes = _project(
+        tmp_path,
+        "fault-netclass-assignment-array-mixed.kicad_pro",
+    )
+
+    (candidate,) = _scan(root, config, hashes)
+
+    assert isinstance(candidate, PcbUnresolvedNetClassAssignmentCandidate)
+    assert candidate.source_evidence.source_sha256 == digest(project)
+    assert candidate.subject == (f"{PROJECT_RELATIVE}#net_settings/netclass_assignments/N1")
+    assert candidate.evidence == {
+        "source_path": (PROJECT_RELATIVE,),
+        "source_sha256": (digest(project),),
+        "kicad_version": ("10.0.8",),
+        "project_kind": ("pcb",),
+        "net_name": ("N1",),
+        "assigned_class": ("MissingClass",),
+        "assigned_classes": ("Narrow", "MissingClass"),
+        "declared_class_names": ("Default", "Narrow"),
+    }
+
+
+@pytest.mark.parametrize(
+    ("fixture", "expected_classes"),
+    (
+        ("fault-netclass-assignment-array-undeclared.kicad_pro", ("MissingClass",)),
+        (
+            "fault-netclass-assignment-array-mixed.kicad_pro",
+            ("Narrow", "MissingClass"),
+        ),
+    ),
+)
+def test_unknown_current_array_member_is_reviewed(
+    tmp_path: Path,
+    fixture: str,
+    expected_classes: tuple[str, ...],
+) -> None:
+    root, _, config, hashes = _project(tmp_path, fixture)
+
+    (candidate,) = _scan(root, config, hashes)
+
+    assert candidate.rule_id == RULE_ID
+    assert candidate.evidence["assigned_class"] == ("MissingClass",)
+    assert candidate.evidence["assigned_classes"] == expected_classes
+
+
+@pytest.mark.parametrize(
+    "fixture",
+    (
+        "control-netclass-assignment-array-narrow.kicad_pro",
+        "control-netclass-assignment-array-empty.kicad_pro",
+    ),
+)
+def test_declared_and_empty_current_array_assignments_are_controls(
+    tmp_path: Path,
+    fixture: str,
+) -> None:
+    root, _, config, hashes = _project(tmp_path, fixture)
+
+    assert _scan(root, config, hashes) == ()
+
+
 def test_declared_default_assignment_is_a_valid_control(tmp_path: Path) -> None:
     root, _, config, hashes = _project(
         tmp_path,
@@ -143,6 +230,28 @@ def test_assignments_are_sorted_by_exact_net_name() -> None:
         ("N3", "OtherMissing"),
         ("N4", "MissingClass"),
     ]
+    assert results == reversed_results
+
+
+def test_current_array_unknown_members_are_ordered_and_deduplicated() -> None:
+    source = json.loads(
+        (FIXTURES / "fault-netclass-assignment-array-undeclared.kicad_pro").read_text()
+    )
+    assignment = ["OtherMissing", "MissingClass", "OtherMissing"]
+    source["net_settings"]["netclass_assignments"]["N1"] = assignment
+
+    results = configured_pcb_unresolved_netclass_assignments(json.dumps(source))
+    reversed_source = json.loads(json.dumps(source))
+    reversed_source["net_settings"]["netclass_assignments"] = dict(
+        reversed(tuple(reversed_source["net_settings"]["netclass_assignments"].items()))
+    )
+    reversed_results = configured_pcb_unresolved_netclass_assignments(json.dumps(reversed_source))
+
+    assert [(item.net_name, item.assigned_class) for item in results] == [
+        ("N1", "OtherMissing"),
+        ("N1", "MissingClass"),
+    ]
+    assert all(item.assigned_classes == tuple(assignment) for item in results)
     assert results == reversed_results
 
 
