@@ -791,14 +791,20 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc689):** LINT-399 extends
-  the source-audited ERC unknown-key catalog to KiCad 10.0.1, 10.0.2, and
-  10.0.4. Hosted acceptance passed in run `43137384109`: 421 tests passed,
-  8,530 were deselected, and the native fault/control matrix passed on all
-  eight digest-pinned KiCad 10.0 images. Wheel, sdist, and separate-project
-  inventory, surface, verification, and playtest stages passed. Package and
-  preview jobs were skipped under prerelease policy.
-- **Previous lint-gate checkpoint (v0.5.3rc688):** LINT-408 extends
+- **Latest published lint-gate checkpoint (v0.5.3rc694):** LINT-412 adds
+  source-bound review for non-string values on recognized PCB DRC severity
+  keys. Hosted acceptance passed in run `43156630980`: 400 tests passed,
+  8,618 were deselected, and the digest-pinned KiCad 10.0.8 native
+  fault/control ran. Ruff, both Alphus profiles, Markdown and repository-link
+  checks, Linux and Windows typing, wheel and source builds, installed-wheel
+  checks, and external/adapted project checks passed. Package and preview jobs
+  were skipped under prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc693):** LINT-411 reviews invalid
+  strings in recognized PCB DRC severity keys. Hosted acceptance passed in run
+  `43153605350`: 394 tests passed, 8,603 were deselected, and its digest-pinned
+  KiCad 10.0.8 native fault/control and external/adapted project checks passed.
+  Package and preview jobs were skipped under prerelease policy.
+- **Earlier lint-gate checkpoint (v0.5.3rc688):** LINT-408 extends
   `pcb.drc_exclusion_present` with digest-bound native match status for each
   saved exclusion. Hosted acceptance passed in run `43135584970`: 387 tests
   passed with 8,564 deselected; the wheel, sdist, and external-project stages
@@ -24207,7 +24213,13 @@ acceptance threads while new lint features proceed:
   Windows Pyright, wheel and sdist builds, installed-wheel checks, and the CLI
   version smoke check passed. The focused behavior/parity/native slice passed
   27 tests with 36 deselected. Receipt: `build/ci/run-umyx1467`.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance (2026-11-11):** Annotated tag `v0.5.3rc694` passed
+  GitHub Actions run `43156630980`: 400 tests passed and 8,618 were
+  deselected. The digest-pinned KiCad 10.0.8 native fault/control fixture ran.
+  Ruff, both Alphus architecture profiles, Markdown and repository-link
+  checks, Linux and Windows typing, wheel and source builds, installed-wheel
+  checks, and external/adapted project checks passed. Package and preview jobs
+  were skipped under prerelease policy.
 
 ## Completion and release gate
 
