@@ -16485,6 +16485,50 @@
       ]
     },
     {
+      "rule_id": "schematic.duplicate_object_uuid",
+      "title": "Schematic object UUID is repeated within a source file",
+      "theme": "schematic",
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_source_integrity.py#duplicate_schematic_object_uuid_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "SHA-256 verified hierarchical schematic sources, repeated direct UUID records and source lines, and digest-pinned KiCad 10.0.5 netlist behavior",
+      "predicate": "For each source-hashed, parseable KiCad 10.0.5 schematic file, review a UUID value that appears in two or more direct object UUID fields in that same file. Report the source hash, UUID, source lines, and containing object kinds; never compare UUIDs across separate source files.",
+      "supported_kicad_versions": [
+        "10.0.5"
+      ],
+      "limitations": [
+        "This is a source identity review prompt. It does not prove that the duplicated identity caused an electrical or layout defect, nor does it determine which occurrence should retain the UUID.",
+        "UUIDs are grouped within each verified schematic file only. Identical values across distinct files are outside scope so a source reused by multiple hierarchical sheet paths is not compared with itself.",
+        "Malformed schematic roots and malformed UUID forms are outside this predicate. Unsupported KiCad versions and PCB-only projects are skipped.",
+        "The native measurement is limited to one tooling-owned fixture where a placed connector pin UUID is duplicated. KiCad 10.0.5 exported the same netlist for control and fault; this does not cover every UUID-bearing object type.",
+        "The default is REVIEW. Project policy may select review, block, off, or an exact-fingerprint ignore."
+      ],
+      "fault_fixtures": [
+        "tests.test_schematic_duplicate_object_uuid.test_duplicate_object_uuid_is_localized_and_control_is_quiet",
+        "tests.test_design_lint_mcp_parity_schematic_duplicate_object_uuid.test_duplicate_schematic_uuid_review_matches_between_cli_and_mcp",
+        "tests.test_schematic_duplicate_object_uuid_native.test_native_duplicate_uuid_is_accepted_without_netlist_change"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_schematic_duplicate_object_uuid.test_duplicate_object_uuid_is_localized_and_control_is_quiet",
+        "tests.test_schematic_duplicate_object_uuid.test_pcb_only_projects_are_out_of_scope",
+        "tests.test_schematic_duplicate_object_uuid_native.test_native_duplicate_uuid_is_accepted_without_netlist_change"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_schematic_duplicate_object_uuid.test_irrelevant_source_edit_preserves_finding_and_refreshes_hash"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/schematic_source_integrity.py#duplicate_schematic_object_uuid_candidates",
+        "kicad_tooling/hwrepo/schematic_source_tree.py#verified_schematic_sources",
+        "kicad_tooling/hwrepo/kicad_sexpr.py#sexpr_children",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ]
+    },
+    {
       "rule_id": "schematic.embedded_symbol_pin_number_mismatch",
       "title": "Placed and embedded symbol pin numbers differ",
       "theme": "schematic",

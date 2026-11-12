@@ -1,4 +1,4 @@
-"""Source-bound integrity checks for embedded schematic library symbols."""
+"""Source-bound structural integrity checks for KiCad schematics."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .kicad_sexpr import SExprSpan, sexpr_atoms
+from .kicad_sexpr import SExprSpan, sexpr_atoms, sexpr_children
 from .project_models import ProjectConfig, ProjectKind
 from .schematic_geometry_models import VerifiedSchematicSourceTree
 from .schematic_geometry_source import (
@@ -24,6 +24,7 @@ from .source_state_models import SourceHashInventory
 _RULE_ID: DesignLintRuleId = "schematic.missing_embedded_symbol_definition"
 _DUPLICATE_RULE_ID: DesignLintRuleId = "schematic.duplicate_embedded_symbol_definition"
 _PIN_NUMBER_MISMATCH_RULE_ID: DesignLintRuleId = "schematic.embedded_symbol_pin_number_mismatch"
+_DUPLICATE_OBJECT_UUID_RULE_ID: DesignLintRuleId = "schematic.duplicate_object_uuid"
 _SUPPORTED_KICAD_VERSION = "10.0.5"
 _SYMBOL_UNIT_CONVERT_SUFFIX = re.compile(r"_(?P<unit>[1-9][0-9]*)_(?P<convert>[1-9][0-9]*)$")
 _UNPARSEABLE_SOURCE_ERRORS = frozenset(
@@ -276,6 +277,67 @@ def embedded_symbol_pin_number_mismatch_candidates(
                         "placed_pin_numbers": placed_pin_numbers,
                         "definition_only_pin_numbers": definition_only,
                         "placed_only_pin_numbers": placed_only,
+                    },
+                )
+            )
+    return tuple(candidates)
+
+
+def duplicate_schematic_object_uuid_candidates(
+    root: Path,
+    config: ProjectConfig,
+    source_hashes: SourceHashInventory,
+) -> tuple[Candidate, ...]:
+    """Review repeated object UUIDs within each verified schematic source file."""
+    source_tree = _integrity_source_tree(root, config, source_hashes)
+    if source_tree is None:
+        return ()
+
+    candidates: list[Candidate] = []
+    for source_file in source_tree.source_files:
+        try:
+            document = schematic_root(source_file.contents)
+        except ValueError as exc:
+            if str(exc) in _UNPARSEABLE_SOURCE_ERRORS:
+                continue
+            raise
+
+        occurrences: dict[str, list[tuple[int, str]]] = {}
+        pending: list[tuple[SExprSpan, str]] = [(document.root, "kicad_sch")]
+        while pending:
+            parent, parent_kind = pending.pop()
+            for child in sexpr_children(document.text, parent.start + 1, parent.end - 1):
+                atoms = sexpr_atoms(document.text, child)
+                if atoms[:1] == ("uuid",):
+                    if len(atoms) == 2:
+                        line = document.text.count("\n", 0, child.start) + 1
+                        occurrences.setdefault(atoms[1], []).append((line, parent_kind))
+                    continue
+                child_kind = atoms[0] if atoms else "<unknown>"
+                pending.append((child, child_kind))
+
+        for object_uuid, entries in sorted(occurrences.items()):
+            if len(entries) < 2:
+                continue
+            source_lines = tuple(str(line) for line, _kind in sorted(entries))
+            object_kinds = tuple(sorted({kind for _line, kind in entries}))
+            first_line = source_lines[0]
+            candidates.append(
+                Candidate(
+                    rule_id=_DUPLICATE_OBJECT_UUID_RULE_ID,
+                    subject=f"{source_file.source_path}:{first_line}:{object_uuid}",
+                    message=(
+                        f"Schematic UUID {object_uuid!r} is assigned to {len(entries)} "
+                        f"objects in this source file on lines {', '.join(source_lines)}; "
+                        "review the object identities before release."
+                    ),
+                    evidence={
+                        "source_path": (source_file.source_path,),
+                        "source_sha256": (source_file.source_sha256,),
+                        "object_uuid": (object_uuid,),
+                        "occurrence_count": (str(len(entries)),),
+                        "source_lines": source_lines,
+                        "object_kinds": object_kinds,
                     },
                 )
             )

@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 349 active rules.
+The catalog currently contains 350 active rules.
 
 ### Placed schematic symbol has no embedded definition
 
@@ -975,6 +975,47 @@ KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
   tests/test_schematic_duplicate_embedded_symbol_definition_native.py \
   -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.duplicate_embedded_symbol_definition")'
 ```
+
+### Schematic object UUID repeats within a source file
+
+`schematic.duplicate_object_uuid` reviews a UUID value that appears in
+multiple direct object UUID fields within one verified schematic file. The
+finding includes the source hash, UUID, source lines, and containing object
+kinds. KiCad uses UUIDs as unique identifiers when maintaining schematic to
+PCB symbol links (see the [KiCad Eeschema documentation] for details).
+This check reports a source identity collision for human review; it does not
+claim that every duplicate changes exported connectivity or PCB behavior.
+
+The scan resets for each source file, so a hierarchical sheet reused at
+multiple paths is not compared with itself. The tooling-owned fault duplicates
+only the UUID for a placed USB connector pin. KiCad 10.0.5 accepts that source
+and exports the same netlist as the control; that observation covers this pin
+record only. The rule is default-review and can be set to `block`, `off`, or an
+exact-fingerprint ignore by project policy.
+The fault/control sources and native command are recorded in the
+[duplicate-UUID fixture README][duplicate-object-uuid-fixture].
+
+Run the source and CLI/MCP regressions with:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_schematic_duplicate_object_uuid.py \
+  tests/test_design_lint_mcp_parity_schematic_duplicate_object_uuid.py \
+  -m 'design_lint and schematic_lint and design_lint_rule(rule_id="schematic.duplicate_object_uuid")'
+```
+
+Run the exact native fault/control regression with:
+
+```sh
+KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
+  .venv/bin/python -I -m pytest \
+  tests/test_schematic_duplicate_object_uuid_native.py \
+  -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.duplicate_object_uuid")'
+```
+
+[KiCad Eeschema documentation]: https://docs.kicad.org/10.0/en/eeschema/eeschema.html
+[duplicate-object-uuid-fixture]:
+  ../tests/fixtures/design_lint/schematic-duplicate-object-uuid/README.md
 
 ### Placed and embedded symbol pin numbers differ
 

@@ -339,6 +339,7 @@ DesignLintRuleId = Literal[
     "schematic.missing_embedded_symbol_definition",
     "schematic.duplicate_embedded_symbol_definition",
     "schematic.embedded_symbol_pin_number_mismatch",
+    "schematic.duplicate_object_uuid",
     "connector.return_distribution",
     "net.numbered_returns",
     "net.numbered_power_rails",

@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 349 rules are implemented with synthetic regression coverage.
+The following 350 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 349 active rules.
+The catalog currently contains 350 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -766,6 +766,7 @@ skipped under prerelease policy.
 - `net.return_labels_without_pin_roles`
 - `mcu.stm32_cubemx_pin_map`
 - `schematic.duplicate_embedded_symbol_definition`
+- `schematic.duplicate_object_uuid`
 - `schematic.embedded_symbol_pin_number_mismatch`
 - `schematic.missing_embedded_symbol_definition`
 - `bus.usb_c_generic_connector_cc_pair_review`
@@ -4258,7 +4259,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 349 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 350 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -24760,6 +24761,48 @@ acceptance threads while new lint features proceed:
   GitHub Actions run `43213623129`. The focused prerelease gate and installed-
   wheel rehearsal passed; package publication and preview orchestration were
   skipped under prerelease policy.
+
+#### LINT-423 — Review repeated schematic object UUIDs
+
+- **Priority:** P1 schematic source integrity. KiCad uses unique identifiers
+  to maintain identity between schematic symbols and PCB footprints, while
+  native export can accept duplicated UUIDs without changing the netlist in a
+  tested pin-instance case.
+- **Status:** Implemented as default-review rule
+  `schematic.duplicate_object_uuid`, bounded to KiCad 10.0.5 and source-hashed
+  schematic files.
+- **Behavior:** Within each verified source file independently, group direct
+  object `(uuid ...)` records by UUID value. Report each repeated value with
+  the source hash, line numbers, and object kinds. Separate files are not
+  compared, so a reused hierarchical sheet file does not collide with itself.
+- **Evidence:** The tooling-owned fault changes only connector pin 2's UUID to
+  the UUID of pin 1. KiCad 10.0.5 accepts both control and fault and exports
+  identical net assignments; source lint produces one review finding only for
+  the fault. This is a single pin-record observation, not a claim about the
+  behavior of every UUID-bearing item or an electrical fault. No cohort or
+  proprietary source is used.
+- **Limitations:** A repeated ID prompts an identity review, but the rule
+  cannot determine which item owns the intended UUID or infer an electrical
+  consequence. It skips unsupported KiCad versions and PCB-only projects.
+  UUIDs in separate files are outside the predicate.
+- **Regression coverage:** Source tests cover fault/control, source hash
+  freshness, repeatability, exact-version boundary, and PCB-only scope. CLI/MCP
+  parity uses the same source-bound typed service. A digest-pinned Docker
+  fixture compares repeated native exports for identical netlist results.
+- **Selection:** Run
+  `tests/test_schematic_duplicate_object_uuid.py` and
+  `tests/test_design_lint_mcp_parity_schematic_duplicate_object_uuid.py` with
+  `design_lint and schematic_lint and
+  design_lint_rule(rule_id="schematic.duplicate_object_uuid")`. Run
+  `tests/test_schematic_duplicate_object_uuid_native.py` with
+  `KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1` and the same selector
+  plus `native_kicad`.
+- **Local acceptance (2026-11-12):** The tag-equivalent scoped gate passed 405
+  tests with 8,803 unrelated tests deselected, including the digest-pinned
+  KiCad 10.0.5 Docker fixture. Ruff, both Alphus profiles, Rumdl, repository-
+  wide mdrepo, scoped Linux and Windows Pyright, wheel and sdist builds,
+  installed-wheel execution, and the separate template checkout rehearsal
+  passed.
 
 ## Completion and release gate
 
