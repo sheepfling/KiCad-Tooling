@@ -130,6 +130,7 @@ def source_bound_schematic_erc_warning_downgrade_candidates(
             source.document,
             allow_unrecognized_severity_strings=True,
             skip_nonstring_values=True,
+            allow_duplicate_severity_keys=True,
         )
     except (ValueError, TypeError) as exc:
         raise ValueError(

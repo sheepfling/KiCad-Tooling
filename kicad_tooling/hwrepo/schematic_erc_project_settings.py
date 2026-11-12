@@ -10,7 +10,13 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, ConfigDict, JsonValue
 
-from .contracts import parse_model_text
+from .contracts import parse_model_text, parse_model_text_allow_duplicate_json_keys_at
+from .json_object_pairs import (
+    JsonObjectPairs,
+    json_object_member,
+    json_value_from_object_pairs,
+    retain_json_object_pairs,
+)
 from .json_value_support import canonical_json_value
 from .project_models import ProjectKind
 
@@ -76,6 +82,7 @@ ERC_DEFAULT_WARNING_RULE_KEYS = frozenset(
 _ERC_RULE_KEYS_KICAD_10_0: frozenset[str] = (
     ERC_DEFAULT_ERROR_RULE_KEYS | ERC_DEFAULT_WARNING_RULE_KEYS | ERC_DEFAULT_IGNORED_RULE_KEYS
 )
+_ALLOWED_DUPLICATE_KICAD_PROJECT_OBJECT_PATHS = frozenset({("erc", "rule_severities")})
 # Keep exact patch entries; later KiCad 10.0 releases can add ERC item keys.
 _ERC_RULE_KEYS_KICAD_10_0_7 = _ERC_RULE_KEYS_KICAD_10_0 | {"same_local_global_power"}
 _ERC_DEFAULT_WARNING_RULE_KEYS_KICAD_10_0_7 = ERC_DEFAULT_WARNING_RULE_KEYS | {
@@ -147,6 +154,20 @@ class _ProjectSettings(BaseModel):
     erc: _ErcSettings | None = None
 
 
+def _parse_schematic_erc_project_settings(
+    document: str,
+    *,
+    allow_duplicate_severity_keys: bool,
+) -> _ProjectSettings:
+    if not allow_duplicate_severity_keys:
+        return parse_model_text(document, _ProjectSettings)
+    return parse_model_text_allow_duplicate_json_keys_at(
+        document,
+        _ProjectSettings,
+        allowed_duplicate_object_paths=_ALLOWED_DUPLICATE_KICAD_PROJECT_OBJECT_PATHS,
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class SchematicErcExclusion:
     """One persisted exclusion, retaining a canonical marker and comment."""
@@ -172,11 +193,24 @@ class SchematicErcRuleSeveritySetting:
     configured_value_json: str
 
 
+@dataclass(frozen=True, slots=True)
+class SchematicErcDuplicateRuleSeveritySetting:
+    """One repeated key in the saved ERC severity map, in source order."""
+
+    rule_key: str
+    configured_values_json: tuple[str, ...]
+
+
 def configured_schematic_erc_rule_severity_settings(
     document: str,
+    *,
+    allow_duplicate_severity_keys: bool = False,
 ) -> tuple[SchematicErcRuleSeveritySetting, ...]:
     """Read saved ERC severity keys and JSON values in stable key order."""
-    project = parse_model_text(document, _ProjectSettings)
+    project = _parse_schematic_erc_project_settings(
+        document,
+        allow_duplicate_severity_keys=allow_duplicate_severity_keys,
+    )
     if project.erc is None:
         return ()
     settings = project.erc
@@ -196,11 +230,44 @@ def configured_schematic_erc_rule_severity_settings(
     return tuple(records)
 
 
+def configured_schematic_erc_duplicate_rule_severity_settings(
+    document: str,
+) -> tuple[SchematicErcDuplicateRuleSeveritySetting, ...]:
+    """Read repeated severity-map keys without losing their source-order values."""
+    # Validate the same project kind, ERC map shape, and settings schema as the
+    # ordinary typed reader before preserving raw object pairs for duplicates.
+    configured_schematic_erc_rule_severity_settings(
+        document,
+        allow_duplicate_severity_keys=True,
+    )
+    project = json.loads(document, object_pairs_hook=retain_json_object_pairs)
+    erc = json_object_member(project, "erc")
+    severities = json_object_member(erc, "rule_severities")
+    if not isinstance(severities, JsonObjectPairs):
+        return ()
+
+    values_by_key: dict[str, list[object]] = {}
+    for rule_key, value in severities.pairs:
+        values_by_key.setdefault(rule_key, []).append(value)
+
+    return tuple(
+        SchematicErcDuplicateRuleSeveritySetting(
+            rule_key=rule_key,
+            configured_values_json=tuple(
+                canonical_json_value(json_value_from_object_pairs(value)) for value in values
+            ),
+        )
+        for rule_key, values in sorted(values_by_key.items())
+        if len(values) > 1
+    )
+
+
 def configured_schematic_erc_rule_severities(
     document: str,
     *,
     allow_unrecognized_severity_strings: bool = False,
     skip_nonstring_values: bool = False,
+    allow_duplicate_severity_keys: bool = False,
 ) -> tuple[SchematicErcRuleSeverity, ...]:
     """Read the supported KiCad 10.0 ERC severity map in stable key order.
 
@@ -210,7 +277,10 @@ def configured_schematic_erc_rule_severities(
     """
     supported_severities = {"error", "warning", "ignore"}
     records: list[SchematicErcRuleSeverity] = []
-    for setting in configured_schematic_erc_rule_severity_settings(document):
+    for setting in configured_schematic_erc_rule_severity_settings(
+        document,
+        allow_duplicate_severity_keys=allow_duplicate_severity_keys,
+    ):
         severity = json.loads(setting.configured_value_json)
         if not isinstance(severity, str):
             if skip_nonstring_values:
@@ -259,9 +329,16 @@ def _read_exclusion(record: JsonValue) -> SchematicErcExclusion:
     return SchematicErcExclusion(marker=marker, error_type=error_type, comment=comment)
 
 
-def schematic_erc_exclusions(document: str) -> tuple[SchematicErcExclusion, ...]:
+def schematic_erc_exclusions(
+    document: str,
+    *,
+    allow_duplicate_severity_keys: bool = False,
+) -> tuple[SchematicErcExclusion, ...]:
     """Return supported persisted ERC exclusions, rejecting unknown schemas."""
-    project = parse_model_text(document, _ProjectSettings)
+    project = _parse_schematic_erc_project_settings(
+        document,
+        allow_duplicate_severity_keys=allow_duplicate_severity_keys,
+    )
     if project.erc is None:
         return ()
     settings = project.erc

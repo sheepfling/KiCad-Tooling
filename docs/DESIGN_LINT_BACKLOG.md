@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 341 rules are implemented with synthetic regression coverage.
+The following 342 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 341 active rules.
+The catalog currently contains 342 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -772,6 +772,7 @@ skipped under prerelease policy.
 - `schematic.erc_catalog_unverified`
 - `schematic.erc_unknown_rule_key`
 - `schematic.erc_invalid_severity_value`
+- `schematic.erc_duplicate_severity_key`
 - `schematic.erc_nonstring_severity_value`
 
 This baseline catches suspicious connector symmetry and missing named pins,
@@ -4243,7 +4244,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 341 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 342 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -24333,6 +24334,57 @@ acceptance threads while new lint features proceed:
   and repository-link checks, Linux and Windows typing, wheel and source builds,
   installed-wheel checks, and external/adapted project checks passed. Package
   and preview jobs were skipped under prerelease policy.
+
+#### LINT-415 — Review duplicate schematic ERC severity keys
+
+- **Priority:** P1 settings-integrity coverage. Conflicting repeated JSON
+  member names can make the active ERC severity depend on source order while
+  ordinary JSON parsing hides the earlier value.
+- **Status:** Implemented as the default-review rule
+  `schematic.erc_duplicate_severity_key` for exact KiCad 10.0.8. The typed
+  settings reader retains every duplicate value in source order while keeping
+  the existing unique-key API behavior unchanged.
+- **Problem:** A normal JSON object conversion collapses repeated member
+  names. The project file can therefore contain conflicting severities that
+  are not visible in the regular parsed map.
+- **Behavior:** For a source-hashed schematic-capable project using ERC schema
+  0 and exact KiCad 10.0.8, report each repeated key in
+  `erc.rule_severities`. Preserve key, all canonical JSON values in source
+  order, project kind, configured version, and source hash. Unknown keys and
+  repeated identical values are still reviewable. The finding never selects a
+  value or infers the intended severity.
+- **Native evidence:** A digest-pinned KiCad 10.0.8 probe measured the known
+  `pin_not_connected` key on the synthetic near-miss schematic. With duplicate
+  `warning` then `ignore`, KiCad emitted no `pin_not_connected` violations;
+  reversing the values emitted two warnings. The unique `warning` control also
+  emitted two warnings. This is a measured source-order effect for that key
+  and patch only; other ERC keys and KiCad patches are outside the claim.
+- **Regression coverage:** Faults cover conflicting known-key duplicates in
+  both orders, unknown-key duplicates, and repeated equal values. Controls
+  cover a unique key and repeated JSON members outside `erc.rule_severities`.
+  Source identity, exact version and project-kind bounds, deterministic
+  reporting, parser compatibility, CLI/MCP parity, and repeatable pinned native
+  fault/control behavior are covered.
+- **Evidence boundary:** The rule flags ambiguous saved settings, not an
+  electrical defect. It does not infer which value is intended, generalize the
+  native result to other keys or patches, run ERC on the inspected project, or
+  establish electrical or manufacturing approval.
+- **Selection:** Run `tests/test_schematic_erc_duplicate_severity_key.py` and
+  `tests/test_design_lint_mcp_parity_schematic_erc_duplicate_severity_key.py`
+  with `design_lint and schematic_lint and
+  `design_lint_rule(rule_id="schematic.erc_duplicate_severity_key")`. The
+  native test runs with
+  `KICAD_RUN_NATIVE_SCHEMATIC_ERC_DUPLICATE_SEVERITY_FIXTURES=1`.
+- **Source:** KiCad's 10.0.8 ERC settings loader applies a saved value when the
+  registered rule key is present. Its source is linked from the
+  [user-facing rule entry](DESIGN_LINT.md#review-duplicate-schematic-erc-severity-keys).
+  The duplicate key order effect is independently measured by the pinned
+  native fixture.
+- **Local acceptance:** 609 focused ERC/DRC severity, exclusion, synthetic, and
+  CLI/MCP parity tests passed; 22 catalog/reachability/architecture tests
+  passed. All three exact KiCad 10.0.8 Docker fixture tests passed. Ruff,
+  Pyright, Rumdl, formatting, and whitespace checks passed. Tag-scoped package
+  and external-project acceptance remains to be run from the annotated tag.
 
 ## Completion and release gate
 

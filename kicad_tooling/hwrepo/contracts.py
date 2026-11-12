@@ -19,6 +19,7 @@ from typing import TypeVar, cast
 from pydantic import BaseModel, JsonValue, TypeAdapter
 
 from .cad_source_models import CadProviderIdentity
+from .json_object_pairs import json_value_from_object_pairs, retain_json_object_pairs
 from .native_drc_findings import NativeDrcReport, parse_native_drc
 from .native_erc_report import KiCadErcItem as KiCadErcItem  # noqa: PLC0414 - compatibility
 from .native_erc_report import KiCadErcReport, parse_native_erc
@@ -59,6 +60,26 @@ def parse_model_text(document: str, model: type[Model]) -> Model:
     # strict scalar validation while retaining JSON array/enum semantics.
     json.loads(document, object_pairs_hook=_unique_object, parse_constant=_invalid_number)
     return model.model_validate_json(document, strict=True)
+
+
+def parse_model_text_allow_duplicate_json_keys_at(
+    document: str,
+    model: type[Model],
+    *,
+    allowed_duplicate_object_paths: frozenset[tuple[str, ...]],
+) -> Model:
+    """Validate JSON while allowing duplicate names only in named object paths."""
+    decoded = json.loads(
+        document,
+        object_pairs_hook=retain_json_object_pairs,
+        parse_constant=_invalid_number,
+    )
+    normalized = json_value_from_object_pairs(
+        decoded,
+        allowed_duplicate_object_paths=allowed_duplicate_object_paths,
+    )
+    normalized_document = json.dumps(normalized, separators=(",", ":"), allow_nan=False)
+    return model.model_validate_json(normalized_document, strict=True)
 
 
 def validate_json_object(document: str) -> None:

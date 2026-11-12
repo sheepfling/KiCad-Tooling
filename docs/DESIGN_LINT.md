@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 341 active rules.
+The catalog currently contains 342 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -5786,6 +5786,35 @@ tooling-owned
 and KiCad 10.0.8
 [ERC settings loader](https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.8/eeschema/erc/erc_settings.cpp).
 [kicad-docker-versions]: https://github.com/KiCad/kicad-docker/pkgs/container/kicad/versions?filters%5Bversion_type%5D=tagged
+
+## Review duplicate schematic ERC severity keys
+
+`schematic.erc_duplicate_severity_key` prompts when the source-hashed
+`erc.rule_severities` JSON object repeats a key in an exact KiCad 10.0.8
+project. It retains every value in source order, including duplicates on
+unknown keys. This makes the ambiguity visible before a normal JSON mapping
+collapses repeated names to one value.
+
+The digest-pinned native fixture measures the known `pin_not_connected` key:
+`ignore` as the last repeated value suppresses its two fixture violations;
+`warning` as the last value emits both as warnings. A unique `warning` control
+also emits both warnings. That observation is limited to KiCad 10.0.8 and this
+known key. It does not determine which duplicate was intended, claim behavior
+for other keys or patches, infer an electrical defect, or replace project
+review.
+
+Select the synthetic and CLI/MCP parity regressions with
+`tests/test_schematic_erc_duplicate_severity_key.py` and
+`tests/test_design_lint_mcp_parity_schematic_erc_duplicate_severity_key.py`
+using the `design_lint` and `schematic_lint` markers plus
+`design_lint_rule(rule_id="schematic.erc_duplicate_severity_key")`.
+The exact native regression is in
+`tests/test_schematic_erc_duplicate_severity_key_native.py` and runs with
+`KICAD_RUN_NATIVE_SCHEMATIC_ERC_DUPLICATE_SEVERITY_FIXTURES=1`. See the
+tooling-owned
+[synthetic settings](../tests/fixtures/design_lint/schematic-erc-duplicate-severity/README.md)
+and KiCad 10.0.8
+[ERC settings loader](https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.8/eeschema/erc/erc_settings.cpp).
 
 ## Review ERC overrides on an unaudited KiCad patch
 

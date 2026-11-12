@@ -9,6 +9,9 @@ from .project_models import ProjectConfig
 from .schematic_erc_catalog_coverage import (
     source_bound_schematic_erc_catalog_coverage_candidates,
 )
+from .schematic_erc_duplicate_severity_key_review import (
+    source_bound_schematic_erc_duplicate_severity_key_candidates,
+)
 from .schematic_erc_exclusion_review import source_bound_schematic_erc_exclusion_candidates
 from .schematic_erc_global_severity_review import (
     source_bound_schematic_erc_ignored_rule_candidates,
@@ -40,6 +43,7 @@ def source_bound_schematic_erc_candidates(
         *source_bound_schematic_erc_ignored_rule_candidates(root, config, source_hashes),
         *source_bound_schematic_erc_unknown_rule_key_candidates(root, config, source_hashes),
         *source_bound_schematic_erc_invalid_severity_value_candidates(root, config, source_hashes),
+        *source_bound_schematic_erc_duplicate_severity_key_candidates(root, config, source_hashes),
         *source_bound_schematic_erc_nonstring_severity_value_candidates(
             root, config, source_hashes
         ),

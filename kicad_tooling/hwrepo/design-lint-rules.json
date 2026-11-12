@@ -10222,6 +10222,59 @@
       ]
     },
     {
+      "rule_id": "schematic.erc_duplicate_severity_key",
+      "title": "Duplicate schematic ERC severity keys need review",
+      "theme": "schematic",
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_erc_duplicate_severity_key_review.py#source_bound_schematic_erc_duplicate_severity_key_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0.8 .kicad_pro erc.rule_severities duplicate key and each canonical value in source order",
+      "predicate": "For a source-hashed schematic-capable project using ERC settings schema 0 and exact KiCad 10.0.8, emit one review candidate for each key repeated in the erc.rule_severities JSON object, preserving every configured value in source order.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.8 only; the digest-pinned native fixture measures the known pin_not_connected key, where the last repeated value determines whether its two fixture violations are ignored or warnings. Other ERC keys and patches remain outside the native claim."
+      ],
+      "limitations": [
+        "Repeated JSON object names are ambiguous across parsers. The native test measures only pin_not_connected on KiCad 10.0.8; the rule does not generalize that runtime result to every key or patch.",
+        "The finding does not infer which repeated value was intended, assert an electrical defect, run ERC against the inspected project, or establish electrical or manufacturing approval. Project policy can select review, block, off, or an exact-fingerprint ignore."
+      ],
+      "fault_fixtures": [
+        "tests.test_schematic_erc_duplicate_severity_key.test_duplicate_known_key_preserves_source_order_and_hash",
+        "tests.test_schematic_erc_duplicate_severity_key.test_unknown_duplicate_and_equal_duplicate_values_are_still_visible",
+        "tests.test_schematic_erc_duplicate_severity_key.test_duplicate_json_keys_outside_severity_map_remain_strict",
+        "tests.test_design_lint_mcp_parity_schematic_erc_duplicate_severity_key.test_duplicate_erc_severity_review_matches_between_cli_and_mcp",
+        "tests.test_schematic_erc_duplicate_severity_key_native.test_kicad_1008_applies_last_duplicate_value_repeatably"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_ERC_DUPLICATE_SEVERITY_FIXTURES"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_schematic_erc_duplicate_severity_key.test_unique_severity_map_is_quiet",
+        "tests.test_schematic_erc_duplicate_severity_key_native.test_kicad_1008_honors_unique_warning_control_repeatably"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_schematic_erc_duplicate_severity_key.test_repeated_scan_is_deterministic"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/schematic_erc_duplicate_severity_key_review.py#source_bound_schematic_erc_duplicate_severity_key_candidates",
+        "kicad_tooling/hwrepo/schematic_erc_duplicate_severity_key_review.py#project_schematic_erc_duplicate_severity_key_evidence",
+        "kicad_tooling/hwrepo/schematic_erc_project_settings.py#configured_schematic_erc_duplicate_rule_severity_settings",
+        "kicad_tooling/hwrepo/contracts.py#parse_model_text_allow_duplicate_json_keys_at",
+        "kicad_tooling/hwrepo/json_object_pairs.py#retain_json_object_pairs",
+        "kicad_tooling/hwrepo/json_object_pairs.py#json_object_member",
+        "kicad_tooling/hwrepo/json_object_pairs.py#json_value_from_object_pairs",
+        "kicad_tooling/hwrepo/json_value_support.py#canonical_json_value",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings.py#configured_pcb_drc_rule_severity_settings",
+        "kicad_tooling/hwrepo/schematic_erc_project_settings_evidence.py#read_source_bound_schematic_erc_settings",
+        "kicad_tooling/hwrepo/schematic_erc_project_settings_evidence.py#verify_source_bound_schematic_erc_settings_unchanged",
+        "kicad_tooling/hwrepo/schematic_erc_source_candidates.py#source_bound_schematic_erc_candidates",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
+        "kicad_tooling/hwrepo/design_lint_candidate_inputs.py#DesignLintCandidateInputs",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
+      ]
+    },
+    {
       "rule_id": "schematic.wire_end_on_pin_line",
       "title": "Native-unconnected pin has wire endpoint on its segment",
       "status": "active",

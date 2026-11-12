@@ -120,7 +120,10 @@ def source_bound_schematic_erc_exclusion_candidates(
         return ()
 
     try:
-        exclusions = schematic_erc_exclusions(source.document)
+        exclusions = schematic_erc_exclusions(
+            source.document,
+            allow_duplicate_severity_keys=True,
+        )
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         raise ValueError(
             f"{relative}: could not read supported schematic ERC exclusions: {exc}"

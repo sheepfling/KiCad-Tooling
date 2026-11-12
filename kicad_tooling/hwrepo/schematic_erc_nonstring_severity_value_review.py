@@ -125,7 +125,10 @@ def source_bound_schematic_erc_nonstring_severity_value_candidates(
     if source is None:
         return ()
     try:
-        configured_settings = configured_schematic_erc_rule_severity_settings(source.document)
+        configured_settings = configured_schematic_erc_rule_severity_settings(
+            source.document,
+            allow_duplicate_severity_keys=True,
+        )
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         raise ValueError(
             f"{relative}: could not read supported schematic ERC severity settings: {exc}"

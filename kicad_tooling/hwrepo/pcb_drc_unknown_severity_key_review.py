@@ -124,7 +124,10 @@ def source_bound_pcb_drc_unknown_severity_key_candidates(
     if source is None:
         return ()
     try:
-        configured_settings = configured_pcb_drc_rule_severity_settings(source.document)
+        configured_settings = configured_pcb_drc_rule_severity_settings(
+            source.document,
+            allow_duplicate_erc_severity_keys=True,
+        )
     except (ValueError, TypeError) as exc:
         raise ValueError(
             f"{relative}: could not read supported PCB DRC severity settings: {exc}"
