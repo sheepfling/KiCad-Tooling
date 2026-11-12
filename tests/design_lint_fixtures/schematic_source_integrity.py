@@ -9,6 +9,7 @@ from typing import cast
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import ProjectConfig, ProjectKind
 from kicad_tooling.hwrepo.schematic_source_integrity import (
+    duplicate_embedded_library_symbol_candidates,
     missing_embedded_library_symbol_candidates,
 )
 
@@ -32,4 +33,22 @@ def schematic_source_integrity_rule_ids() -> frozenset[str]:
         config,
         {relative: digest(source)},
     )
-    return frozenset(item.rule_id for item in candidates)
+    duplicate_relative = (
+        "tests/fixtures/design_lint/duplicate-embedded-symbol-definition/fault.kicad_sch"
+    )
+    duplicate_source = repository / duplicate_relative
+    duplicate_project = duplicate_relative.removesuffix(".kicad_sch") + ".kicad_pro"
+    duplicate_config = cast(
+        ProjectConfig,
+        SimpleNamespace(
+            kind=ProjectKind.PCB,
+            project=duplicate_project,
+            kicad_version="10.0.5",
+        ),
+    )
+    duplicate_candidates = duplicate_embedded_library_symbol_candidates(
+        repository,
+        duplicate_config,
+        {duplicate_relative: digest(duplicate_source)},
+    )
+    return frozenset(item.rule_id for item in (*candidates, *duplicate_candidates))

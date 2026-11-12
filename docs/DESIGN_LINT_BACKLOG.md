@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 347 rules are implemented with synthetic regression coverage.
+The following 348 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 347 active rules.
+The catalog currently contains 348 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -765,6 +765,7 @@ skipped under prerelease policy.
 - `connector.spi_triad_without_return_review`
 - `net.return_labels_without_pin_roles`
 - `mcu.stm32_cubemx_pin_map`
+- `schematic.duplicate_embedded_symbol_definition`
 - `schematic.missing_embedded_symbol_definition`
 - `bus.usb_c_generic_connector_cc_pair_review`
 - `pcb.explicit_thermal_pad_scope_unreviewed`
@@ -4249,7 +4250,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 346 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 348 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -24651,6 +24652,54 @@ acceptance threads while new lint features proceed:
   GitHub Actions run `43204125945`. The scoped gate and installed-wheel check
   against a separate project checkout passed. Package and preview jobs were
   skipped under prerelease policy.
+
+#### LINT-421 — Review placed symbols with duplicate embedded definitions
+
+- **Priority:** P1 schematic source integrity. The LINT-420 follow-up native
+  experiment found that KiCad 10.0.5 accepts conflicting direct definitions
+  with the same embedded `lib_id`. A placed connector's pin assignment changed
+  from J1.4 to J1.9 when the later duplicate changed its ground pin number,
+  while netlist export still returned success.
+- **Status:** Implemented as default-review rule
+  `schematic.duplicate_embedded_symbol_definition`, with source hashing and
+  exact native evidence bounded to KiCad 10.0.5.
+- **Behavior:** For each verified schematic source with exactly one direct
+  `lib_symbols` section, collect direct embedded symbol IDs and direct placed
+  symbol references. Report a source-localized candidate when a placed exact
+  `lib_id` has multiple definitions. Evidence names each definition line,
+  source path and SHA-256, library ID, and affected references. Duplicate IDs
+  without a placed reference are ignored.
+- **Evidence:** The tooling-owned synthetic control has one
+  `Connector:USB_A` definition and KiCad exports `USB_GND` as J1.4. The fault
+  adds a conflicting duplicate with ground pin number 9; digest-pinned KiCad
+  10.0.5 accepts the source and exports J1.9 on that net. Both outputs and lint
+  findings repeat deterministically. No cohort board, external project data,
+  or proprietary source was imported.
+- **Limitations:** The heuristic does not decide which definition is intended.
+  Identical duplicates still receive REVIEW because later edits can make the
+  identity ambiguous. Multiple `lib_symbols` sections, malformed roots, and
+  non-direct identities are outside its supported parse. It does not establish
+  datasheet, footprint, circuit, or PCB correctness. Projects may select
+  review, block, off, or exact-fingerprint ignore.
+- **Regression coverage:** The focused source module covers fault/control,
+  unused duplicate IDs, exact-version and project-kind scope, stale source
+  hashes, and repeatability after an unrelated edit. CLI/MCP parity and the
+  digest-pinned Docker native export run under
+  `KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES`.
+- **Selection:** Run
+  `tests/test_schematic_duplicate_embedded_symbol_definition.py` and
+  `tests/test_design_lint_mcp_parity_schematic_duplicate_embedded_symbol_definition.py`
+  with `design_lint and schematic_lint and
+  design_lint_rule(rule_id="schematic.duplicate_embedded_symbol_definition")`.
+  Run the exact native module with the environment variable above and the same
+  rule selector plus `native_kicad`.
+- **Local acceptance (2026-11-12):** The exact tag-selected gate passed 402
+  tests with 8,782 unrelated tests deselected, including the digest-pinned
+  KiCad 10.0.5 Docker regression. Ruff and formatting, both Alphus profiles,
+  Rumdl, repository-wide mdrepo, scoped Linux and Windows Pyright, wheel and
+  sdist builds, installed-wheel execution, and the external template checkout
+  rehearsal passed.
+- **Hosted acceptance:** Pending tag `v0.5.3rc703` and hosted workflow.
 
 ## Completion and release gate
 

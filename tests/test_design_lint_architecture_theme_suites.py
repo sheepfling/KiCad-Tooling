@@ -52,6 +52,9 @@ SCHEMATIC_SOURCE_INTEGRITY_SUITES = (
     "test_schematic_missing_embedded_symbol_definition.py",
     "test_design_lint_mcp_parity_schematic_missing_embedded_symbol_definition.py",
     "test_schematic_missing_embedded_symbol_definition_native.py",
+    "test_schematic_duplicate_embedded_symbol_definition.py",
+    "test_design_lint_mcp_parity_schematic_duplicate_embedded_symbol_definition.py",
+    "test_schematic_duplicate_embedded_symbol_definition_native.py",
     "test_design_lint_architecture_schematic_source_integrity.py",
 )
 PCB_REFERENCE_PLANE_THEME_SUITES = (

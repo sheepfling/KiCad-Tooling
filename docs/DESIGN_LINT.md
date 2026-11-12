@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 347 active rules.
+The catalog currently contains 348 active rules.
 
 ### Placed schematic symbol has no embedded definition
 
@@ -937,6 +937,43 @@ KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
   .venv/bin/python -I -m pytest \
   tests/test_schematic_missing_embedded_symbol_definition_native.py \
   -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.missing_embedded_symbol_definition")'
+```
+
+### Placed schematic library ID has duplicate embedded definitions
+
+`schematic.duplicate_embedded_symbol_definition` reviews a direct placed
+symbol whose exact `lib_id` appears more than once in that schematic's direct
+embedded `lib_symbols` section. The finding includes the source path and hash,
+each duplicate definition line, and placed references. It does not choose the
+intended definition; even identical duplicates need review because a later
+edit can make them diverge. Unused duplicate IDs are ignored.
+
+The digest-pinned KiCad 10.0.5 fixture accepts a conflicting duplicate
+definition and exports J1's `USB_GND` pin as 9 instead of the intended pin 4.
+That result is specific to the synthetic fixture and pinned image. A unique
+definition still needs independent review against the intended connector and
+datasheet. This rule defaults to REVIEW and supports project review, block, off,
+and exact-fingerprint ignore decisions.
+
+The tooling-owned fault and control sources are described in the
+[duplicate-symbol fixture README](../tests/fixtures/design_lint/duplicate-embedded-symbol-definition/README.md).
+
+Run the source and CLI/MCP regressions with:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_schematic_duplicate_embedded_symbol_definition.py \
+  tests/test_design_lint_mcp_parity_schematic_duplicate_embedded_symbol_definition.py \
+  -m 'design_lint and schematic_lint and design_lint_rule(rule_id="schematic.duplicate_embedded_symbol_definition")'
+```
+
+Run the exact native fault/control regression with:
+
+```sh
+KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
+  .venv/bin/python -I -m pytest \
+  tests/test_schematic_duplicate_embedded_symbol_definition_native.py \
+  -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.duplicate_embedded_symbol_definition")'
 ```
 
 ### Numeric-only generic contacts open across connector peers

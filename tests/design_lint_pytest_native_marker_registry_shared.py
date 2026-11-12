@@ -10,6 +10,9 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_schematic_missing_embedded_symbol_definition_native.py": frozenset(
             {"schematic_lint", "evidence_lint"}
         ),
+        "test_schematic_duplicate_embedded_symbol_definition_native.py": frozenset(
+            {"schematic_lint", "evidence_lint"}
+        ),
         "test_schematic_geometry_symbol_arc_body.py": frozenset({"schematic_lint"}),
         "test_schematic_erc_global_severity_native_fixture_lane.py": frozenset(
             {"schematic_lint", "evidence_lint"}

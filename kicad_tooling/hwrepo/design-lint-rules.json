@@ -16439,6 +16439,50 @@
         "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ]
+    },
+    {
+      "rule_id": "schematic.duplicate_embedded_symbol_definition",
+      "title": "Placed schematic library ID has duplicate embedded definitions",
+      "theme": "schematic",
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_source_integrity.py#duplicate_embedded_library_symbol_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "SHA-256 verified hierarchical schematic sources, direct embedded symbol-definition IDs and source lines, exact placed lib_id references, and digest-pinned KiCad 10.0.5 netlist behavior",
+      "predicate": "For a source-hashed KiCad 10.0.5 schematic with one direct lib_symbols section, review duplicate direct symbol IDs only when a direct placed symbol references that exact ID. The finding names each definition line and affected references.",
+      "supported_kicad_versions": [
+        "10.0.5"
+      ],
+      "limitations": [
+        "The rule does not decide which definition is intended. Even identical duplicate definitions receive REVIEW because KiCad's identity lookup is ambiguous and future edits may make them diverge.",
+        "Multiple lib_symbols sections, malformed roots, and non-direct or nested symbol identities are outside this rule's supported parse. Unused duplicate IDs are intentionally ignored.",
+        "The native fault/control measurement showed that the pinned KiCad 10.0.5 exporter accepted conflicting definitions and used the later pin number for a placed connector. This observation is limited to the exact tooling-owned fixture and image.",
+        "The rule does not validate a unique definition against a datasheet, footprint, intended circuit, or PCB copper. The default is REVIEW and projects can select review, block, off, or exact-fingerprint ignore."
+      ],
+      "fault_fixtures": [
+        "tests.test_schematic_duplicate_embedded_symbol_definition.test_duplicate_definition_fault_is_localized_and_control_is_quiet",
+        "tests.test_design_lint_mcp_parity_schematic_duplicate_embedded_symbol_definition.test_duplicate_embedded_symbol_review_matches_between_cli_and_mcp",
+        "tests.test_schematic_duplicate_embedded_symbol_definition_native.test_native_duplicate_definition_changes_the_exported_pin_identity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_schematic_duplicate_embedded_symbol_definition.test_duplicate_definition_fault_is_localized_and_control_is_quiet",
+        "tests.test_schematic_duplicate_embedded_symbol_definition.test_duplicate_ids_without_a_placed_reference_are_quiet",
+        "tests.test_schematic_duplicate_embedded_symbol_definition.test_pcb_only_projects_are_out_of_scope",
+        "tests.test_schematic_duplicate_embedded_symbol_definition_native.test_native_duplicate_definition_changes_the_exported_pin_identity"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_schematic_duplicate_embedded_symbol_definition.test_irrelevant_source_edit_preserves_finding_and_refreshes_hash"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/schematic_source_integrity.py#duplicate_embedded_library_symbol_candidates",
+        "kicad_tooling/hwrepo/schematic_source_tree.py#verified_schematic_sources",
+        "kicad_tooling/hwrepo/kicad_sexpr.py#sexpr_atoms",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ]
     }
   ]
 }
