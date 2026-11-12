@@ -96,6 +96,7 @@ from .pcb_mechanical_edge_clearance import mechanical_edge_rule_coverage_candida
 from .project_models import ProjectManifest
 from .project_source_hashes import hash_project_sources as hashes
 from .schematic_erc_source_candidates import source_bound_schematic_erc_candidates
+from .schematic_source_integrity import missing_embedded_library_symbol_candidates
 from .selection import resolve_project
 
 
@@ -233,8 +234,9 @@ def inspect_design_lint_request(
                 native_summary=native_summary,
             ),
         )
-        schematic_source_candidates = source_bound_schematic_erc_candidates(
-            root, config, coach.source_hashes
+        schematic_source_candidates = (
+            *source_bound_schematic_erc_candidates(root, config, coach.source_hashes),
+            *missing_embedded_library_symbol_candidates(root, config, coach.source_hashes),
         )
         spi_roster = spi_roster_context(root, config)
         serial_peer_roster = serial_peer_roster_context(root, config)

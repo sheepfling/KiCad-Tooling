@@ -32,15 +32,19 @@ from tests.design_lint_fixtures.schematic_erc_global_severity import (
 from tests.design_lint_fixtures.schematic_erc_nonstring_severity import (
     schematic_erc_nonstring_severity_rule_ids,
 )
+from tests.design_lint_fixtures.schematic_source_integrity import (
+    schematic_source_integrity_rule_ids,
+)
 
 
-def source_setting_rule_ids() -> frozenset[str]:
-    """Reach source-bound schematic and PCB settings review rules."""
+def source_bound_rule_ids() -> frozenset[str]:
+    """Reach source-bound schematic and PCB review rules."""
     return (
         schematic_erc_global_severity_rule_ids()
         | schematic_erc_duplicate_severity_rule_ids()
         | schematic_erc_duplicate_section_rule_ids()
         | schematic_erc_nonstring_severity_rule_ids()
+        | schematic_source_integrity_rule_ids()
         | pcb_drc_duplicate_severity_key_rule_ids()
         | pcb_drc_duplicate_board_section_rule_ids()
         | pcb_drc_duplicate_net_settings_section_rule_ids()

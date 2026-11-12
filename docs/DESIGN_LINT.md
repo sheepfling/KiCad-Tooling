@@ -904,7 +904,40 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 346 active rules.
+The catalog currently contains 347 active rules.
+
+### Placed schematic symbol has no embedded definition
+
+`schematic.missing_embedded_symbol_definition` compares each placed symbol's
+exact `lib_id` with the direct symbol identities in that source file's embedded
+`lib_symbols` section. A missing match produces a source-hashed review with the
+schematic path, line, reference, UUID, and library ID. It does not check the
+definition's pins against a datasheet or establish that the symbol is wired
+correctly. The rule is default-review and can be configured to `block`, `off`,
+or an exact-fingerprint ignore.
+
+The digest-pinned KiCad 10.0.5 fixture confirms the practical failure mode:
+netlist export succeeds but omits the placed connector when its definition is
+missing. That native behavior is measured only on this synthetic fixture and
+KiCad image.
+
+Run the source and CLI/MCP regressions with:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_schematic_missing_embedded_symbol_definition.py \
+  tests/test_design_lint_mcp_parity_schematic_missing_embedded_symbol_definition.py \
+  -m 'design_lint and schematic_lint and design_lint_rule(rule_id="schematic.missing_embedded_symbol_definition")'
+```
+
+Run the exact native fault/control regression with:
+
+```sh
+KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
+  .venv/bin/python -I -m pytest \
+  tests/test_schematic_missing_embedded_symbol_definition_native.py \
+  -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.missing_embedded_symbol_definition")'
+```
 
 ### Numeric-only generic contacts open across connector peers
 

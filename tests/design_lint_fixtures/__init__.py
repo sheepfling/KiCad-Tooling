@@ -12,7 +12,7 @@ from .buses import (
     spi_active_low_select_netlist,
     unconnected_protocol_pins,
 )
-from .catalog_reachability_source_settings import source_setting_rule_ids
+from .catalog_reachability_source_rules import source_bound_rule_ids
 from .connectors import (
     connector_capacitor_only_netlist,
     cross_symbol_power,
@@ -54,6 +54,7 @@ from .power import (
     with_control_resistor,
 )
 from .schematic_erc_global_severity import schematic_erc_global_severity_rule_ids
+from .schematic_source_integrity import schematic_source_integrity_rule_ids
 
 __all__ = (
     "can_netlist",
@@ -88,10 +89,11 @@ __all__ = (
     "policy_without_i2c_map_prompt",
     "repeated_component_supply_pins",
     "schematic_erc_global_severity_rule_ids",
+    "schematic_source_integrity_rule_ids",
     "serial_peer_voltage_map",
     "serial_peer_voltage_netlist",
     "serial_peer_voltage_translator_netlist",
-    "source_setting_rule_ids",
+    "source_bound_rule_ids",
     "spi_active_low_select_netlist",
     "spi_peer_voltage_map",
     "spi_peer_voltage_netlist",

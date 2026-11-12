@@ -48,6 +48,12 @@ SCHEMATIC_ERC_THEME_SUITES = (
     "test_design_lint_mcp_parity_schematic_erc_duplicate_section.py",
     "test_schematic_erc_duplicate_section_native.py",
 )
+SCHEMATIC_SOURCE_INTEGRITY_SUITES = (
+    "test_schematic_missing_embedded_symbol_definition.py",
+    "test_design_lint_mcp_parity_schematic_missing_embedded_symbol_definition.py",
+    "test_schematic_missing_embedded_symbol_definition_native.py",
+    "test_design_lint_architecture_schematic_source_integrity.py",
+)
 PCB_REFERENCE_PLANE_THEME_SUITES = (
     "test_pcb_alternate_reference_plane_run.py",
     "test_design_lint_mcp_parity_pcb_alternate_reference_plane.py",
@@ -321,6 +327,7 @@ def test_design_lint_theme_suites_stay_below_review_limit() -> None:
                     *PCB_THEME_SUITES,
                     *SCHEMATIC_GEOMETRY_THEME_SUITES,
                     *SCHEMATIC_ERC_THEME_SUITES,
+                    *SCHEMATIC_SOURCE_INTEGRITY_SUITES,
                     *PCB_REFERENCE_PLANE_THEME_SUITES,
                     *CONNECTOR_COVERAGE_THEME_SUITES,
                     *HOSTED_ORCHESTRATION_THEME_SUITES,

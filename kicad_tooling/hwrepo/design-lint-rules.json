@@ -16395,6 +16395,50 @@
         "kicad_tooling/hwrepo/design_lint_pcb_dru_deprecated_function_evidence.py#PcbDruDeprecatedFunctionFindingEvidence",
         "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
       ]
+    },
+    {
+      "rule_id": "schematic.missing_embedded_symbol_definition",
+      "title": "Placed schematic symbol has no embedded definition",
+      "theme": "schematic",
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_source_integrity.py#missing_embedded_library_symbol_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "SHA-256 verified hierarchical schematic sources, placed-symbol UUID and reference, exact lib_id, and direct embedded lib_symbols identities; native behavior measured with digest-pinned KiCad 10.0.5",
+      "predicate": "For a source-hashed, parseable KiCad 10.0.5 schematic tree, compare each direct placed symbol's exact lib_id string with the direct symbol identities in that source's unique embedded lib_symbols section. Emit a source-localized REVIEW candidate when the exact identifier has no embedded definition.",
+      "supported_kicad_versions": [
+        "10.0.5"
+      ],
+      "limitations": [
+        "A malformed schematic root, duplicate embedded lib_symbols sections, or malformed library definition is outside this rule's supported parse. The rule does not claim complete coverage for those structural failures.",
+        "The native fault/control measurement showed KiCad 10.0.5 omitted the placed connector from the exported netlist while returning success. This observation is limited to the digest-pinned image and tooling-owned fixture.",
+        "A matching embedded definition does not establish that its pin map is correct, that its pins are connected as intended, or that the symbol matches a datasheet or footprint.",
+        "The default is REVIEW. Projects may select review, block, off, or an exact-fingerprint ignore; the checker never edits schematic source or replaces ERC."
+      ],
+      "fault_fixtures": [
+        "tests.test_schematic_missing_embedded_symbol_definition.test_missing_definition_fault_is_localized_and_control_is_quiet",
+        "tests.test_design_lint_mcp_parity_schematic_missing_embedded_symbol_definition.test_missing_embedded_symbol_review_matches_between_cli_and_mcp",
+        "tests.test_schematic_missing_embedded_symbol_definition_native.test_native_netlist_omits_the_placed_symbol_and_source_lint_finds_it"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_schematic_missing_embedded_symbol_definition.test_missing_definition_fault_is_localized_and_control_is_quiet",
+        "tests.test_schematic_missing_embedded_symbol_definition.test_pcb_only_projects_are_out_of_scope",
+        "tests.test_schematic_missing_embedded_symbol_definition_native.test_native_netlist_omits_the_placed_symbol_and_source_lint_finds_it"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_schematic_missing_embedded_symbol_definition.test_irrelevant_source_edit_preserves_the_finding_and_refreshes_its_hash"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/schematic_source_integrity.py#missing_embedded_library_symbol_candidates",
+        "kicad_tooling/hwrepo/schematic_source_tree.py#verified_schematic_sources",
+        "kicad_tooling/hwrepo/schematic_geometry_source.py#schematic_library_symbols",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ]
     }
   ]
 }

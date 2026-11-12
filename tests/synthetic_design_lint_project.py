@@ -60,6 +60,7 @@ def synthetic_design_lint_project(
     image: str = _IMAGE,
     custom_rules_source: str | None = None,
     project_settings_source: str | None = None,
+    schematic_source: bytes | None = None,
     board_source: str | None = None,
 ) -> tuple[Path, Path]:
     """Create source-bound synthetic evidence, optionally including custom DRC rules."""
@@ -83,7 +84,9 @@ def synthetic_design_lint_project(
             if project_settings_source is None
             else project_settings_source.encode("utf-8")
         ),
-        source_paths[1]: b"synthetic schematic source\n",
+        source_paths[1]: (
+            b"synthetic schematic source\n" if schematic_source is None else schematic_source
+        ),
         source_paths[2]: (
             b"synthetic PCB source\n" if board_source is None else board_source.encode("utf-8")
         ),

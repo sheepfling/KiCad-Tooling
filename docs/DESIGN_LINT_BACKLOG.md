@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 346 rules are implemented with synthetic regression coverage.
+The following 347 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 346 active rules.
+The catalog currently contains 347 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -765,6 +765,7 @@ skipped under prerelease policy.
 - `connector.spi_triad_without_return_review`
 - `net.return_labels_without_pin_roles`
 - `mcu.stm32_cubemx_pin_map`
+- `schematic.missing_embedded_symbol_definition`
 - `bus.usb_c_generic_connector_cc_pair_review`
 - `pcb.explicit_thermal_pad_scope_unreviewed`
 - `pcb.thermal_via_coverage`
@@ -24597,6 +24598,56 @@ acceptance threads while new lint features proceed:
   surface, verification, and playtest checks passed. Package and preview jobs
   were skipped under prerelease policy.
 
+#### LINT-420 — Review placed symbols without embedded definitions
+
+- **Priority:** P1 source integrity. KiCad 10.0.5 accepted the synthetic
+  schematic for netlist export and returned success while omitting a placed
+  connector whose exact `lib_id` had no matching embedded library definition.
+  A source-local check can report this even when the project has no component
+  inventory contract naming the omitted reference.
+- **Cohort source:** The candidate was inspired by the pinned
+  [kicad-file-doctor check][kicad-file-doctor-missing-symbol] at commit
+  `45133533e05aeabb7ef150d3a95084c318f16c9d`, which declares the
+  [MIT license][kicad-file-doctor-license]. This repository implements the
+  predicate against its canonical S-expression and hash-bound source services;
+  no candidate code or project data was copied.
+- **Status:** Implemented as default-review rule
+  `schematic.missing_embedded_symbol_definition` with exact supported native
+  evidence version KiCad 10.0.5. Project contracts can promote it to `block`,
+  turn it `off`, or ignore one exact source-bound finding.
+- **Behavior:** For each direct placed symbol in a verified schematic source
+  tree, compare its exact `lib_id` with the direct embedded symbol identities
+  in the same source. Report a candidate when no exact definition exists,
+  including the source path and SHA-256, line, reference, symbol UUID, and
+  library ID. The predicate does not infer circuit connectivity or symbol
+  correctness.
+- **Native evidence:** The digest-pinned `ghcr.io/kicad/kicad:10.0.5` image
+  exported the control netlist with `J1` and `U1`. The fault still returned
+  success but contained only `U1`; the source rule identified the missing
+  `Connector:USB_A` definition. The test repeats both exports. This proves the
+  tested failure mode only for the exact synthetic sources and image.
+- **Regression coverage:** Synthetic fault/control cases cover exact
+  definition matching, source-hash binding, deterministic evidence, an
+  unrelated source edit, project-kind/version scope, CLI/MCP parity, and the
+  pinned Docker netlist export.
+- **Evidence boundary:** A matching definition does not verify pin numbers,
+  datasheet agreement, symbol-to-footprint correctness, connectivity, or PCB
+  continuity. Malformed schematic roots, duplicate `lib_symbols` sections,
+  and malformed library definitions are outside this rule's supported parse.
+  The native omission result is not generalized to other KiCad versions.
+- **Selection:** Run
+  `tests/test_schematic_missing_embedded_symbol_definition.py` and
+  `tests/test_design_lint_mcp_parity_schematic_missing_embedded_symbol_definition.py`
+  with `design_lint and schematic_lint and
+  design_lint_rule(rule_id="schematic.missing_embedded_symbol_definition")`.
+  The exact native module is
+  `tests/test_schematic_missing_embedded_symbol_definition_native.py` with
+  `KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1`.
+- **Local acceptance (2026-11-12):** The exact scoped gate passed 398 tests
+  with 8,773 unrelated tests deselected, including the digest-pinned Docker
+  fixture. Ruff and formatting, Rumdl, repository-wide mdrepo checks, scoped
+  Linux Pyright (0 errors), and `git diff --check` passed.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -24662,6 +24713,8 @@ quality, or first-article continuity.
 [kicad-10-cli-drc]: https://docs.kicad.org/10.0/en/cli/cli.html
 [kicad-10-5-marker-serializer]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/pcb_marker.cpp
 [kicad-10-project-drc-exclusions]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.7/pcbnew/board_design_settings.cpp
+[kicad-file-doctor-missing-symbol]: https://github.com/94xhn/kicad-file-doctor/blob/45133533e05aeabb7ef150d3a95084c318f16c9d/kicad_file_doctor/checks.py
+[kicad-file-doctor-license]: https://github.com/94xhn/kicad-file-doctor/blob/45133533e05aeabb7ef150d3a95084c318f16c9d/LICENSE
 [lint086-cp2102]: https://github.com/MAATHES-THILAK-K/USB_TO_UART-CP2102
 [lint086-fusb302]: https://github.com/bentwire/USB-C-FUSB302-PI/tree/7d95292262b42767bbeefebadb6bafe055923d50
 [lint086-16nx]: https://github.com/16n-faderbank/16nx/tree/ca7de2233011407fdd791839d711547bf41d33d3
