@@ -46,23 +46,33 @@ def _indexed_return(name: str) -> tuple[str, int] | None:
 
 
 def return_net_groups(observed: NetlistContract) -> tuple[ReturnNetGroup, ...]:
-    """Find numbered sibling returns for review, without inferring electrical intent."""
+    """Find base-plus-indexed or numbered sibling returns for review only."""
     grouped: dict[str, list[tuple[str, int, str]]] = {}
+    base_names: dict[str, list[str]] = {}
     for name in sorted(observed.nets):
         indexed = _indexed_return(name)
-        if indexed is None:
+        if indexed is not None:
+            stem, index = indexed
+            key = re.sub(r"[\s_./-]+", "", stem).casefold()
+            grouped.setdefault(key, []).append((name, index, stem))
             continue
-        stem, index = indexed
-        key = re.sub(r"[\s_./-]+", "", stem).casefold()
-        grouped.setdefault(key, []).append((name, index, stem))
-    return tuple(
-        ReturnNetGroup(
-            stem=entries[0][2],
-            nets={name: observed.nets[name] for name, _, _ in entries},
+        if _RETURN_TOKEN.search(name) is not None:
+            key = re.sub(r"[\s_./-]+", "", name).casefold()
+            base_names.setdefault(key, []).append(name)
+
+    results: list[ReturnNetGroup] = []
+    for key, entries in sorted(grouped.items()):
+        bases = base_names.get(key, [])
+        if len({index for _, index, _ in entries}) < 2 and not bases:
+            continue
+        names = sorted({name for name, _, _ in entries} | set(bases))
+        results.append(
+            ReturnNetGroup(
+                stem=bases[0] if bases else entries[0][2],
+                nets={name: observed.nets[name] for name in names},
+            )
         )
-        for _, entries in sorted(grouped.items())
-        if len({index for _, index, _ in entries}) > 1
-    )
+    return tuple(results)
 
 
 def return_label_groups_without_pin_roles(observed: NetlistContract) -> tuple[ReturnNetGroup, ...]:

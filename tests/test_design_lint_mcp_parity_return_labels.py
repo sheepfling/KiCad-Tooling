@@ -37,6 +37,7 @@ pytestmark = [
 ]
 
 
+@pytest.mark.design_lint_rule(rule_id="net.numbered_returns")
 def test_ret_return_names_match_cli_and_mcp(tmp_path: Path) -> None:
     root, native = synthetic_design_lint_project(
         tmp_path,
@@ -105,6 +106,34 @@ def test_ret_return_names_match_cli_and_mcp(tmp_path: Path) -> None:
             )
             return_rule_ids = {"net.numbered_returns", "net.return_labels_without_pin_roles"}
             assert not return_rule_ids & {item.rule_id for item in compact_prefix_control.findings}
+
+            mixed_base_fault = await compare(
+                {
+                    "CPU_GND": pins_by_port["J1"],
+                    "CPU1_GND": pins_by_port["J2"],
+                    "ISOLATED_C": pins_by_port["J3"],
+                    "ISOLATED_D": pins_by_port["J4"],
+                }
+            )
+            mixed_findings = [
+                item for item in mixed_base_fault.findings if item.rule_id == "net.numbered_returns"
+            ]
+            assert len(mixed_findings) == 1
+            assert mixed_findings[0].subject == "CPU_GND"
+            assert mixed_findings[0].evidence == {
+                "CPU1_GND": pins_by_port["J2"],
+                "CPU_GND": pins_by_port["J1"],
+            }
+
+            unlike_stem_control = await compare(
+                {
+                    "CPU_GND": pins_by_port["J1"],
+                    "AGND1": pins_by_port["J2"],
+                    "ISOLATED_C": pins_by_port["J3"],
+                    "ISOLATED_D": pins_by_port["J4"],
+                }
+            )
+            assert not return_rule_ids & {item.rule_id for item in unlike_stem_control.findings}
 
             unindexed = await compare(
                 {

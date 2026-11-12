@@ -25213,6 +25213,39 @@ acceptance threads while new lint features proceed:
   `2a97e0cdd3864ef86447a35c8c3fe3cb701d6618`. Package and preview jobs were
   skipped under prerelease policy.
 
+#### LINT-430 — Review a base return label beside an indexed sibling
+
+- **Priority:** P1 heuristic coverage. The existing numbered-return rule can
+  recognize `CPU1_GND` and `CPU2_GND`, but it stays quiet when only one
+  connector uses `CPU1_GND` and a peer remains on `CPU_GND`. The same gap
+  applies to pairs such as `GND`/`GND1` and `0V PWM`/`0V PWM 1`.
+- **Status:** Extends `net.numbered_returns`; it adds no rule ID. When a
+  populated return-like base label and an indexed sibling normalize to the
+  same recognized stem, the rule emits one default-review candidate with the
+  exact source net-to-pin evidence. Existing groups with two or more distinct
+  numeric indexes keep their prior behavior.
+- **Boundary:** This is a lexical review heuristic. It does not say the nets
+  should be joined, infer connector pin roles, inspect copper, or establish
+  off-board continuity. Unlike stems such as `GND` and `AGND1` stay separate.
+  Intentional isolation remains reviewable through the project's normal rule
+  mode and exact-fingerprint ignore controls.
+- **Evidence:** Synthetic source-netlist cases cover `CPU_GND`/`CPU1_GND`,
+  `GND`/`GND1`, `0V PWM`/`0V PWM 1`, unrelated-stem controls, and mapping-order
+  stability. CLI and MCP return the same mixed-case evidence. The source-hash
+  pinned KiCad 10.0.0 and 10.0.5 fixtures export the mixed fault and
+  unlike-stem control twice and check normalized-netlist repeatability.
+- **Selection:** Run `tests/test_protocol_return_name_groups.py`,
+  `tests/test_design_lint_mcp_parity_return_labels.py`, and
+  `tests/test_numbered_return_native_fixture_lane.py` with
+  `design_lint_rule(rule_id="net.numbered_returns")`. The native lane also
+  requires `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` and Docker; the full scoped
+  rule gate enables its other catalogued native fixture switches.
+- **Local acceptance (2026-11-12):** Scoped package CI passed 456 tests with
+  8,828 deselected, including both required pinned native fixture lanes.
+  Ruff, Alphus role and shared-utility checks, Rumdl, mdrepo, Linux and Windows
+  Pyright, wheel and sdist builds, installed-wheel checks, and the separate
+  project-origin verification passed. Hosted acceptance is pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

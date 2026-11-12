@@ -180,7 +180,8 @@ def return_domain_candidates(
                 NumberedReturnEvidence(group),
                 subject=group.stem,
                 message=(
-                    "Separately numbered return nets may be intended as one return domain. "
+                    "A base return net and indexed sibling, or separately numbered return nets, "
+                    "may be intended as one return domain. "
                     "Review whether they are common, bonded, or intentionally isolated."
                 ),
             )

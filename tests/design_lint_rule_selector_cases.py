@@ -92,22 +92,6 @@ RULE_NODE_CASES = (
         "tests/test_design_lint_dc_reference.py::test_connector_capacitor_only_net_requests_dc_reference_review",
     ),
     (
-        "net.numbered_returns",
-        "tests/test_numbered_interface_returns.py::test_usb_and_serial_port_returns_are_grouped_by_protocol_stem",
-    ),
-    (
-        "net.numbered_returns",
-        "tests/test_protocol_return_name_groups.py::test_compact_can_i2c_and_spi_return_families_are_reviewed_separately",
-    ),
-    (
-        "net.numbered_returns",
-        "tests/test_protocol_return_name_groups.py::test_generic_numbered_identifier_prefixes_are_reviewed",
-    ),
-    (
-        "net.numbered_returns",
-        "tests/test_protocol_return_name_groups.py::test_delimited_ascii_identifier_prefixes_are_reviewed",
-    ),
-    (
         "connector.jtag_pair_without_return_review",
         "tests/test_design_lint_determinism_jtag_connector_return.py::test_jtag_connector_return_reports_are_stable_across_hash_seeds",
     ),

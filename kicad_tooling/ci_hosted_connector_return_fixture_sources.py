@@ -36,6 +36,9 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         "cpu-numbered-fault": fixture_root / "four-port-db9-returns/cpu-numbered-fault.kicad_sch",
         "cpu-numbered-control": fixture_root
         / "four-port-db9-returns/cpu-numbered-control.kicad_sch",
+        "cpu-mixed-fault": fixture_root / "four-port-db9-returns/cpu-mixed-fault.kicad_sch",
+        "cpu-mixed-unlike-stem-control": fixture_root
+        / "four-port-db9-returns/cpu-mixed-unlike-stem-control.kicad_sch",
         "four-db9-neutral-fault": fixture_root
         / "four-port-db9-returns/numeric-function-neutral-fault.kicad_sch",
         "four-db9-neutral-control": fixture_root
@@ -326,6 +329,8 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = MappingProxyType(
         "four-db9-pwm-control": "3c00cfdee7a7bbba3439baf49f82eb6911ead068cf04ac0782f8f8fe7297cecc",
         "cpu-numbered-fault": "8c7ac073ca1fd6a42ed9c822a252da1c1bc49f5af41e50afe152b60b9d3bd28f",
         "cpu-numbered-control": "f91e9b5f693142b9153b3dafed4248900706c3860f32368586f0865b93d5e6f1",
+        "cpu-mixed-fault": "1b4d5ff85ba71027f562b731a7a2832d70996e2b64b7237b972be6a882bbd1cb",
+        "cpu-mixed-unlike-stem-control": "579659dd062e7645002467a85a672b573c910906baace15faacc2fbbcbf92d65",
         "four-db9-neutral-fault": "8b54babacd735da898cbd477b641a57085ff03b74bf0d9aa665fc8625a36f65f",
         "four-db9-neutral-control": "49e3bca48e79e4b46ce4eba8298026b5c730fca56b119a3ec407dfaafbcf54cd",
         "ret-numbered-fault": "6633ad46ad3084141df7e82232cb0bb38f8f374bd2262ee980b4a7866b77de92",

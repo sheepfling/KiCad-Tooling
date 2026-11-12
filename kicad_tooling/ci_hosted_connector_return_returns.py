@@ -73,6 +73,23 @@ def verify_ret_return_label_cases(ctx: ConnectorReturnFixtureContext) -> None:
     ):
         raise ValueError("Native common compact-prefix control lost its quiet result")
 
+    mixed = ctx.reports["cpu-mixed-fault", "first"]
+    mixed_findings = [
+        finding for finding in mixed.findings if finding.rule_id == "net.numbered_returns"
+    ]
+    if (
+        mixed.status != "REVIEW"
+        or len(mixed_findings) != 1
+        or mixed_findings[0].subject != "CPU_GND"
+        or dict(mixed_findings[0].evidence)
+        != {"CPU1_GND": ("J2.7", "J2.9"), "CPU_GND": ("J1.7", "J1.9")}
+    ):
+        raise ValueError("Native mixed base/index return fault lost exact source evidence")
+
+    unlike_stem = ctx.reports["cpu-mixed-unlike-stem-control", "first"]
+    if any(finding.rule_id == "net.numbered_returns" for finding in unlike_stem.findings):
+        raise ValueError("Native unlike-stem base/index control raised numbered-return review")
+
     numbered = ctx.reports["ret-numbered-fault", "first"]
     numbered_findings = [
         finding for finding in numbered.findings if finding.rule_id == "net.numbered_returns"

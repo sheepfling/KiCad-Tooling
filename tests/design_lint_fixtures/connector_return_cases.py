@@ -305,6 +305,9 @@ def ret_return_label_case_contracts() -> dict[str, NetlistContract]:
         for name, pins in signal_nets.items()
         if any(pin not in numbered_signal_pin_exclusions for pin in pins)
     }
+    return_pin_pairs = {
+        f"J{reference}": (f"J{reference}.7", f"J{reference}.9") for reference in range(1, 5)
+    }
     return {
         "cpu-numbered-fault": identified.model_copy(
             update={
@@ -324,6 +327,28 @@ def ret_return_label_case_contracts() -> dict[str, NetlistContract]:
                     "CPU_GND": tuple(
                         f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9)
                     ),
+                }
+            }
+        ),
+        "cpu-mixed-fault": identified.model_copy(
+            update={
+                "nets": {
+                    **identified_signal_nets,
+                    "CPU_GND": return_pin_pairs["J1"],
+                    "CPU1_GND": return_pin_pairs["J2"],
+                    "ISOLATED_C": return_pin_pairs["J3"],
+                    "ISOLATED_D": return_pin_pairs["J4"],
+                }
+            }
+        ),
+        "cpu-mixed-unlike-stem-control": identified.model_copy(
+            update={
+                "nets": {
+                    **identified_signal_nets,
+                    "CPU_GND": return_pin_pairs["J1"],
+                    "AGND1": return_pin_pairs["J2"],
+                    "ISOLATED_C": return_pin_pairs["J3"],
+                    "ISOLATED_D": return_pin_pairs["J4"],
                 }
             }
         ),

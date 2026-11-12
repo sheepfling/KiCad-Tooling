@@ -10,18 +10,20 @@ The other seven contacts are wired to matching `SIGNAL<n>` nets across all four
 connectors. This keeps the regression focused on the return contacts and avoids
 warnings caused by unrelated unassigned synthetic pins.
 
-| Fixture                          | Assignment                                                                                                      | Expected lint result                                            |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| `fault.kicad_sch`                | J1–J4 pins 7/9 use `RETURN_PORT_n`                                                                              | `REVIEW` for repeated return functions and numbered return nets |
-| `control.kicad_sch`              | All J1–J4 pins 7/9 use `COMMON_RETURN`                                                                          | `PASS`                                                          |
-| `pwm-fault.kicad_sch`            | J1–J4 pins 7/9 use `0V PWM 1` through `0V PWM 4`                                                                | `REVIEW` for numbered return nets                               |
-| `pwm-control.kicad_sch`          | All J1–J4 pins 7/9 use `0V PWM`                                                                                 | `PASS`                                                          |
-| `cpu-numbered-fault.kicad_sch`   | J1–J4 pins 7/9 use `CPU1_GND` through `CPU4_GND`                                                                | `REVIEW` for a generic compact-prefix return family             |
-| `cpu-numbered-control.kicad_sch` | All J1–J4 pins 7/9 use `CPU_GND`                                                                                | `PASS`                                                          |
-| `ret-numbered-fault.kicad_sch`   | J1/J2 use `VSSA1`/`VSSA2`; J3/J4 use `PORT3_RET`/`PORT4_RET`; CAN, I2C, and SPI return labels are split by port | `REVIEW` with exact numbered-return evidence                    |
-| `ret-unindexed-fault.kicad_sch`  | J1/J2 use `RET_USB`/`RET_SERIAL`; J3/J4 use neutral labels                                                      | `REVIEW` for unindexed return-like labels                       |
-| `ret-control.kicad_sch`          | All J1–J4 pins 7/9 use one `RET` net with numeric pin functions                                                 | No numbered or unindexed RET-label finding                      |
-| `vss-control.kicad_sch`          | All J1–J4 pins 7/9 use one `VSSA` net with explicit `GND` pin roles                                             | `PASS`                                                          |
+| Fixture                                   | Assignment                                                                                                      | Expected lint result                                            |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `fault.kicad_sch`                         | J1–J4 pins 7/9 use `RETURN_PORT_n`                                                                              | `REVIEW` for repeated return functions and numbered return nets |
+| `control.kicad_sch`                       | All J1–J4 pins 7/9 use `COMMON_RETURN`                                                                          | `PASS`                                                          |
+| `pwm-fault.kicad_sch`                     | J1–J4 pins 7/9 use `0V PWM 1` through `0V PWM 4`                                                                | `REVIEW` for numbered return nets                               |
+| `pwm-control.kicad_sch`                   | All J1–J4 pins 7/9 use `0V PWM`                                                                                 | `PASS`                                                          |
+| `cpu-numbered-fault.kicad_sch`            | J1–J4 pins 7/9 use `CPU1_GND` through `CPU4_GND`                                                                | `REVIEW` for a generic compact-prefix return family             |
+| `cpu-numbered-control.kicad_sch`          | All J1–J4 pins 7/9 use `CPU_GND`                                                                                | `PASS`                                                          |
+| `cpu-mixed-fault.kicad_sch`               | J1 pins 7/9 use `CPU_GND`; J2 pins 7/9 use `CPU1_GND`; J3/J4 use unrelated labels                               | `REVIEW` with exact base/index evidence                         |
+| `cpu-mixed-unlike-stem-control.kicad_sch` | J1/J3/J4 use `CPU_GND`; J2 uses `AGND1`                                                                         | No numbered-return finding                                      |
+| `ret-numbered-fault.kicad_sch`            | J1/J2 use `VSSA1`/`VSSA2`; J3/J4 use `PORT3_RET`/`PORT4_RET`; CAN, I2C, and SPI return labels are split by port | `REVIEW` with exact numbered-return evidence                    |
+| `ret-unindexed-fault.kicad_sch`           | J1/J2 use `RET_USB`/`RET_SERIAL`; J3/J4 use neutral labels                                                      | `REVIEW` for unindexed return-like labels                       |
+| `ret-control.kicad_sch`                   | All J1–J4 pins 7/9 use one `RET` net with numeric pin functions                                                 | No numbered or unindexed RET-label finding                      |
+| `vss-control.kicad_sch`                   | All J1–J4 pins 7/9 use one `VSSA` net with explicit `GND` pin roles                                             | `PASS`                                                          |
 
 The PWM-named pair is a tooling-owned synthetic reproduction of the supplied
 name pattern. It checks that native KiCad export preserves the spaces and
@@ -33,6 +35,11 @@ The CPU-named pair checks compact numeric prefixes outside a fixed protocol
 allowlist. It confirms that `CPU1_GND` through `CPU4_GND` receives a review
 prompt while one common `CPU_GND` net remains quiet. These labels are synthetic
 and do not assert that processor returns must be common.
+
+The mixed CPU pair covers a base label beside exactly one numbered sibling.
+The unlike-stem control keeps `CPU_GND` separate from `AGND1`, so normalization
+does not merge distinct recognized return stems. Both sources are synthetic
+and their native netlists are exported twice on the pinned KiCad versions.
 
 The fixture deliberately tests detection of a suspicious pattern. It does not
 assert that every DB9 return must be bonded. A real project's connector pinout

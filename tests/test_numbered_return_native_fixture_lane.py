@@ -30,6 +30,7 @@ _RET_CASES = tuple(ret_return_label_case_contracts())
 
 
 @pytest.mark.parametrize("lane_name", ("pwm", "ret"))
+@pytest.mark.design_lint_rule(rule_id="net.numbered_returns")
 def test_focused_return_lanes_export_only_their_synthetic_cases(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, lane_name: str
 ) -> None:
@@ -118,6 +119,7 @@ def test_focused_return_lanes_export_only_their_synthetic_cases(
     ("project", "version"),
     (("controller", "10.0.0"), ("raspberry-pi-status-led", "10.0.5")),
 )
+@pytest.mark.design_lint_rule(rule_id="net.numbered_returns")
 def test_native_numbered_pwm_return_fault_and_control_are_focused_and_repeatable(
     tmp_path: Path, project: str, version: str
 ) -> None:
@@ -190,6 +192,7 @@ def test_native_numbered_pwm_return_fault_and_control_are_focused_and_repeatable
     ("project", "version"),
     (("controller", "10.0.0"), ("raspberry-pi-status-led", "10.0.5")),
 )
+@pytest.mark.design_lint_rule(rule_id="net.numbered_returns")
 def test_native_ret_return_label_fault_and_control_are_focused_and_repeatable(
     tmp_path: Path, project: str, version: str
 ) -> None:
@@ -241,6 +244,14 @@ def test_native_ret_return_label_fault_and_control_are_focused_and_repeatable(
     assert compact_control["lint_status"] == "PASS"
     assert compact_control["findings"] == "none"
 
+    mixed_fault = results["connector-return-fixture/cpu-mixed-fault"]
+    mixed_control = results["connector-return-fixture/cpu-mixed-unlike-stem-control"]
+    assert mixed_fault["status"] == "PASS"
+    assert mixed_fault["lint_status"] == "REVIEW"
+    assert "net.numbered_returns" in mixed_fault["findings"].split(",")
+    assert mixed_control["status"] == "PASS"
+    assert "net.numbered_returns" not in mixed_control["findings"].split(",")
+
     numbered = results["connector-return-fixture/ret-numbered-fault"]
     assert numbered["status"] == "PASS"
     assert numbered["lint_status"] == "REVIEW"
@@ -261,7 +272,16 @@ def test_native_ret_return_label_fault_and_control_are_focused_and_repeatable(
     assert vss_control["status"] == "PASS"
     assert vss_control["lint_status"] == "PASS"
     assert vss_control["findings"] == "none"
-    for result in (compact_fault, compact_control, numbered, unindexed, control, vss_control):
+    for result in (
+        compact_fault,
+        compact_control,
+        mixed_fault,
+        mixed_control,
+        numbered,
+        unindexed,
+        control,
+        vss_control,
+    ):
         assert result["kicad_version"] == version
         assert result["repeatable"] == "true"
         assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]

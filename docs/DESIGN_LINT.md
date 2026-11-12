@@ -2289,7 +2289,8 @@ or manufacturing readiness.
 
 The `net.numbered_returns` review groups indexed return labels such as
 `GND1`/`GND2`, `0V_PWM_1`/`0V_PWM_2`, and identifier-prefix forms including
-`USB1_GND`/`USB2_GND`, `CPU_1_GND`/`CPU_2_GND`, `CAN1_GND`/`CAN2_GND`,
+`USB1_GND`/`USB2_GND`, `CPU_1_GND`/`CPU_2_GND`, and the mixed base/index form
+`CPU_GND`/`CPU1_GND`, alongside `CAN1_GND`/`CAN2_GND`,
 `I2C1_0V`/`I2C2_0V`, and `SPI1_RET`/`SPI2_RET`. A prefix must be an ASCII
 letter/digit identifier and cannot itself be a recognized return token. It
 does not treat the exact protocol identifiers `RS232`, `RS422`, and `RS485`

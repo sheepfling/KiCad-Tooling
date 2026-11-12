@@ -9763,7 +9763,7 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "At least two distinct net names have the same recognized return-like stem and different numeric suffixes. A recognized GND or VSS stem may use a one-letter suffix such as GNDA or VSSA before an optional numeric suffix. The bounded RET token is also recognized. Before a return token, group an ASCII identifier (one letter followed by ASCII letters or digits) and numeric index, with or without a supported separator, such as CPU1_GND/CPU2_GND, CPU_1_GND/CPU_2_GND, USB1_GND/USB2_GND, CAN1_GND/CAN2_GND, I2C1_0V/I2C2_0V, and SPI1_RET/SPI2_RET. A prefix that is itself a complete return token is not treated as an identifier.",
+      "predicate": "Two or more distinct populated return-like net labels share either an indexed stem or an exact normalized relationship between an unnumbered base label and one indexed sibling. A recognized GND or VSS stem may use a one-letter suffix such as GNDA or VSSA before an optional numeric suffix. The bounded RET token is also recognized. Before a return token, group an ASCII identifier (one letter followed by ASCII letters or digits) and numeric index, with or without a supported separator, such as CPU1_GND/CPU2_GND, CPU_GND/CPU1_GND, CPU_1_GND/CPU_2_GND, USB1_GND/USB2_GND, CAN1_GND/CAN2_GND, I2C1_0V/I2C2_0V, and SPI1_RET/SPI2_RET. A prefix that is itself a complete return token is not treated as an identifier.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
@@ -9778,6 +9778,7 @@
         "tests.test_design_lint_numbered_returns.test_four_db9_numbered_pwm_return_names_are_reviewed",
         "tests.test_protocol_return_name_groups.test_generic_numbered_identifier_prefixes_are_reviewed",
         "tests.test_protocol_return_name_groups.test_delimited_ascii_identifier_prefixes_are_reviewed",
+        "tests.test_protocol_return_name_groups.test_base_and_numbered_return_sibling_are_reviewed",
         "tests.test_numbered_interface_returns.test_usb_and_serial_port_returns_are_grouped_by_protocol_stem",
         "tests.test_protocol_return_name_groups.test_compact_can_i2c_and_spi_return_families_are_reviewed_separately",
         "tests.test_design_lint_numbered_returns.test_project_can_block_numbered_return_review",
@@ -9794,6 +9795,7 @@
         "tests.test_design_lint_numbered_returns.test_four_db9_common_pwm_return_name_is_a_valid_control",
         "tests.test_numbered_interface_returns.test_common_return_net_across_usb_and_serial_ports_is_a_valid_control",
         "tests.test_protocol_return_name_groups.test_common_protocol_return_nets_are_a_valid_control",
+        "tests.test_protocol_return_name_groups.test_mixed_base_and_numbered_return_unlike_stem_is_a_valid_control",
         "tests.test_protocol_return_name_groups.test_return_token_prefix_is_not_misread_as_a_device_identifier",
         "tests.test_protocol_return_name_groups.test_return_tokens_and_non_identifier_prefixes_stay_quiet",
         "tests.test_protocol_return_name_groups.test_serial_protocol_numbers_are_not_return_domain_indices",
@@ -9806,6 +9808,7 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_numbered_returns.test_numbered_return_fingerprint_is_stable_under_mapping_reordering",
+        "tests.test_protocol_return_name_groups.test_mixed_base_return_evidence_is_stable_under_mapping_reordering",
         "tests.test_design_lint_numbered_returns.test_unrelated_component_does_not_change_numbered_return_fingerprint",
         "tests.test_design_lint_numbered_returns.test_numbered_return_ignore_keeps_exact_scope",
         "tests.test_design_lint_numbered_returns.test_repeated_pin_ignore_does_not_hide_numbered_return_review",

@@ -145,6 +145,8 @@ def ret_return_label_fixture_lane(
         case_names=(
             "cpu-numbered-fault",
             "cpu-numbered-control",
+            "cpu-mixed-fault",
+            "cpu-mixed-unlike-stem-control",
             "ret-numbered-fault",
             "ret-unindexed-fault",
             "ret-control",

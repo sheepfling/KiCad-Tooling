@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from tests.design_lint_connector_rule_selector_cases import CONNECTOR_RULE_NODE_CASES
+from tests.design_lint_numbered_return_selector_cases import NUMBERED_RETURN_RULE_NODE_CASES
 from tests.design_lint_pcb_rule_selector_cases import PCB_RULE_NODE_CASES
 from tests.design_lint_power_supply_range_selector_cases import POWER_SUPPLY_RANGE_RULE_NODE_CASES
 from tests.design_lint_rule_selector_cases import RULE_NODE_CASES as NON_PCB_RULE_NODE_CASES
@@ -13,6 +14,7 @@ from tests.design_lint_rule_selector_support import collect_rule_nodes
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 RULE_NODE_CASES = (
     *NON_PCB_RULE_NODE_CASES,
+    *NUMBERED_RETURN_RULE_NODE_CASES,
     *PCB_RULE_NODE_CASES,
     *CONNECTOR_RULE_NODE_CASES,
     *POWER_SUPPLY_RANGE_RULE_NODE_CASES,

@@ -89,6 +89,49 @@ def test_generic_numbered_identifier_prefixes_are_reviewed() -> None:
     assert finding.evidence == {"CPU1_GND": ("J1.1",), "CPU2_GND": ("J2.1",)}
 
 
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.parametrize(
+    ("base", "indexed", "subject"),
+    (
+        ("CPU_GND", "CPU1_GND", "CPU_GND"),
+        ("GND", "GND1", "GND"),
+        ("0V PWM", "0V PWM 1", "0V PWM"),
+    ),
+)
+def test_base_and_numbered_return_sibling_are_reviewed(
+    base: str, indexed: str, subject: str
+) -> None:
+    report = _report({base: ("J1.7", "J1.9"), indexed: ("J2.7", "J2.9")})
+    findings = [item for item in report.findings if item.rule_id == RULE_ID]
+
+    assert report.status == "REVIEW"
+    assert len(findings) == 1
+    assert findings[0].subject == subject
+    assert findings[0].evidence == {
+        base: ("J1.7", "J1.9"),
+        indexed: ("J2.7", "J2.9"),
+    }
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_mixed_base_and_numbered_return_unlike_stem_is_a_valid_control() -> None:
+    report = _report({"GND": ("J1.7",), "AGND1": ("J2.7",)})
+
+    assert report.status == "PASS"
+    assert not report.findings
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_mixed_base_return_evidence_is_stable_under_mapping_reordering() -> None:
+    ordered = _report({"CPU_GND": ("J1.7",), "CPU1_GND": ("J2.7",)})
+    reversed_order = _report({"CPU1_GND": ("J2.7",), "CPU_GND": ("J1.7",)})
+
+    ordered_findings = [item for item in ordered.findings if item.rule_id == RULE_ID]
+    reversed_findings = [item for item in reversed_order.findings if item.rule_id == RULE_ID]
+    assert ordered.status == reversed_order.status == "REVIEW"
+    assert ordered_findings == reversed_findings
+
+
 def test_delimited_ascii_identifier_prefixes_are_reviewed() -> None:
     report = _report({"CPU_1_GND": ("J1.1",), "CPU_2_GND": ("J2.1",)})
 
