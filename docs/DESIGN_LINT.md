@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 339 active rules.
+The catalog currently contains 340 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -5726,6 +5726,35 @@ The exact native regression is in
 [kicad-10.0.7-erc-settings-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.7/eeschema/erc/erc_settings.cpp
 [kicad-10.0.8-erc-item-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/eeschema/erc/erc_item.cpp
 [kicad-10.0.8-erc-settings-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/eeschema/erc/erc_settings.cpp
+
+## Review invalid schematic ERC severity strings
+
+`schematic.erc_invalid_severity_value` prompts when an audited KiCad 10.0
+project assigns a string outside `error`, `warning`, or `ignore` to a
+recognized `erc.rule_severities` key. For example, `warnnig` is not the
+canonical `warning` value. The finding is bound to the settings source hash,
+exact configured version, key, and saved string. Unknown keys stay with
+`schematic.erc_unknown_rule_key`; non-string values are outside this rule.
+
+Exact digest-pinned native fault/control runs cover KiCad 10.0.0, 10.0.1,
+10.0.2, 10.0.4, 10.0.5, 10.0.6, 10.0.7, and 10.0.8. On each image the
+invalid string leaves the fixture's `pin_not_connected` finding at Error, and
+the valid `warning` control lowers it to Warning. This asks for severity
+review; it does not infer intended policy, assert an electrical defect, or run
+ERC against the inspected project. KiCad 10.0.3 and unaudited versions remain
+outside the exact catalog.
+
+Select the synthetic and CLI/MCP parity regressions with
+`tests/test_schematic_erc_invalid_severity_value.py` and
+`tests/test_design_lint_mcp_parity_schematic_erc_invalid_severity_value.py` using
+`design_lint and schematic_lint and design_lint_rule(rule_id="schematic.erc_invalid_severity_value")`.
+The exact native regression is in `tests/test_schematic_erc_global_severity_native_fixture_lane.py`
+and runs with `KICAD_RUN_NATIVE_SCHEMATIC_ERC_GLOBAL_SEVERITY_FIXTURES=1`. See the tooling- owned
+[synthetic settings](../tests/fixtures/design_lint/schematic-erc-invalid-severity/README.md) and
+KiCad 10.0.8
+[ERC settings loader](https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.8/eeschema/erc/erc_settings.cpp)
+and
+[severity conversion](https://github.com/KiCad/kicad-source-mirror/blob/10.0.8/common/widgets/ui_common.cpp).
 [kicad-docker-versions]: https://github.com/KiCad/kicad-docker/pkgs/container/kicad/versions?filters%5Bversion_type%5D=tagged
 
 ## Review ERC overrides on an unaudited KiCad patch

@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 339 rules are implemented with synthetic regression coverage.
+The following 340 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 339 active rules.
+The catalog currently contains 340 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -771,6 +771,7 @@ skipped under prerelease policy.
 - `schematic.erc_error_downgraded`
 - `schematic.erc_catalog_unverified`
 - `schematic.erc_unknown_rule_key`
+- `schematic.erc_invalid_severity_value`
 
 This baseline catches suspicious connector symmetry and missing named pins,
 plus narrow netlist patterns for I2C, I3C, SPI, USB-C, and CAN. It does not
@@ -4225,7 +4226,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 336 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 340 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -24220,6 +24221,44 @@ acceptance threads while new lint features proceed:
   checks, Linux and Windows typing, wheel and source builds, installed-wheel
   checks, and external/adapted project checks passed. Package and preview jobs
   were skipped under prerelease policy.
+
+#### LINT-413 — Review invalid schematic ERC severity strings
+
+- **Status:** Implemented as `schematic.erc_invalid_severity_value`, default
+  `review`, for the eight audited KiCad 10.0 patches.
+- **Gap:** ERC checks currently report unknown saved keys but do not identify a
+  recognized key whose severity value is a typo such as `warnnig`.
+- **Behavior:** For a source-hashed schematic-capable project on an audited
+  exact patch, report one candidate for each recognized `erc.rule_severities`
+  key whose string is outside `error`, `warning`, and `ignore`. Preserve the
+  exact value and source identity. Unknown keys remain with the unknown-key
+  rule; non-string values and unsupported schemas are outside this predicate.
+- **Regression coverage:** Test recognized invalid values, all three valid
+  values, unknown keys, exact version and project-kind bounds, source identity,
+  deterministic ordering, CLI/MCP parity, and repeatable digest-pinned native
+  fault/control behavior on every audited KiCad 10.0 image.
+- **Evidence boundary:** A typo does not reveal intended severity. The finding
+  does not assert an electrical defect or run ERC against the inspected
+  project. Project policy can select `review`, `block`, `off`, or an exact
+  ignore.
+- **Selection:** Run `tests/test_schematic_erc_invalid_severity_value.py` and
+  `tests/test_design_lint_mcp_parity_schematic_erc_invalid_severity_value.py` with
+  `design_lint and schematic_lint and design_lint_rule(rule_id="schematic.erc_invalid_severity_value")`.
+  The tag gate enables `KICAD_RUN_NATIVE_SCHEMATIC_ERC_GLOBAL_SEVERITY_FIXTURES=1` for the shared
+  native ERC lane.
+- **Source:** KiCad's
+  [10.0.8 settings loader](https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.8/eeschema/erc/erc_settings.cpp)
+  applies configured values to registered ERC items. Its
+  [severity conversion](https://github.com/KiCad/kicad-source-mirror/blob/10.0.8/common/widgets/ui_common.cpp)
+  maps only canonical warning and ignore strings specially; the exact native matrix verifies invalid
+  and valid settings across the supported patch images.
+- **Local acceptance (`v0.5.3rc695` candidate):** The tag-scoped package gate
+  passed 406 tests with 8,630 deselected, including repeatable invalid-string
+  fault and valid-warning controls on all eight digest-pinned KiCad 10.0
+  images. Ruff, both Alphus checks, Rumdl, mdrepo, Linux and Windows Pyright,
+  wheel and sdist builds, installed-package checks, and the CLI version smoke
+  check passed. Receipt: `build/ci/run-1duid5oc`.
+- **Hosted acceptance:** Pending push and GitHub Actions.
 
 ## Completion and release gate
 

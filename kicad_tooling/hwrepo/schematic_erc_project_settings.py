@@ -164,8 +164,15 @@ class SchematicErcRuleSeverity:
 
 def configured_schematic_erc_rule_severities(
     document: str,
+    *,
+    allow_unrecognized_severity_strings: bool = False,
 ) -> tuple[SchematicErcRuleSeverity, ...]:
-    """Read the supported KiCad 10.0 ERC severity map in stable key order."""
+    """Read the supported KiCad 10.0 ERC severity map in stable key order.
+
+    Source-bound reviews may retain unrecognized strings so a focused rule can
+    report them while neighboring settings checks continue. Direct callers
+    remain strict unless they explicitly opt into that behavior.
+    """
     project = parse_model_text(document, _ProjectSettings)
     if project.erc is None:
         return ()
@@ -183,7 +190,7 @@ def configured_schematic_erc_rule_severities(
     for rule_key, severity in sorted(severities.items()):
         if not rule_key.strip():
             raise ValueError("ERC rule severity key must not be empty")
-        if severity not in supported_severities:
+        if severity not in supported_severities and not allow_unrecognized_severity_strings:
             raise ValueError(f"ERC rule severity for {rule_key!r} is not supported: {severity!r}")
         records.append(SchematicErcRuleSeverity(rule_key, severity))
     return tuple(records)

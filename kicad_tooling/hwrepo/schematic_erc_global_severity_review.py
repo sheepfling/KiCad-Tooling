@@ -124,7 +124,9 @@ def source_bound_schematic_erc_ignored_rule_candidates(
         return ()
 
     try:
-        configured_rules = configured_schematic_erc_rule_severities(source.document)
+        configured_rules = configured_schematic_erc_rule_severities(
+            source.document, allow_unrecognized_severity_strings=True
+        )
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         raise ValueError(
             f"{relative}: could not read supported schematic ERC rule severities: {exc}"

@@ -36,6 +36,8 @@ SCHEMATIC_ERC_THEME_SUITES = (
     "test_design_lint_mcp_parity_schematic_erc_catalog_coverage.py",
     "test_schematic_erc_unknown_rule_key.py",
     "test_design_lint_mcp_parity_schematic_erc_unknown_rule_key.py",
+    "test_schematic_erc_invalid_severity_value.py",
+    "test_design_lint_mcp_parity_schematic_erc_invalid_severity_value.py",
 )
 PCB_REFERENCE_PLANE_THEME_SUITES = (
     "test_pcb_alternate_reference_plane_run.py",

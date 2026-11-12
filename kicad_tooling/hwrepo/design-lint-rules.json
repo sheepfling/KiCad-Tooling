@@ -10129,6 +10129,52 @@
       ]
     },
     {
+      "rule_id": "schematic.erc_invalid_severity_value",
+      "title": "Recognized schematic ERC keys with invalid severity strings need review",
+      "theme": "schematic",
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_erc_invalid_severity_value_review.py#source_bound_schematic_erc_invalid_severity_value_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0.0, 10.0.1, 10.0.2, 10.0.4, 10.0.5, 10.0.6, 10.0.7, or 10.0.8 .kicad_pro erc.rule_severities map and configured patch version",
+      "predicate": "For a recognized ERC key in a source-hashed schematic-capable project on an audited exact KiCad 10.0 patch with ERC schema 0, emit one review candidate when its configured severity string is outside error, warning, and ignore.",
+      "supported_kicad_versions": [
+        "Exact KiCad 10.0.0, 10.0.1, 10.0.2, 10.0.4, 10.0.5, 10.0.6, 10.0.7, and 10.0.8; exact patch key catalogs are used and the digest-pinned native matrix verifies invalid and valid severity behavior on each image"
+      ],
+      "limitations": [
+        "The finding identifies an invalid saved string but does not infer the intended severity or assert that the underlying ERC finding is electrically important.",
+        "The rule covers recognized keys with string values only. Unknown keys remain owned by schematic.erc_unknown_rule_key; non-string JSON values and unsupported settings schemas are outside this predicate.",
+        "KiCad 10.0.3 and unaudited releases remain out of scope. Project policy can select block, off, or an exact-fingerprint ignore."
+      ],
+      "fault_fixtures": [
+        "tests.test_schematic_erc_invalid_severity_value.test_recognized_key_with_invalid_string_creates_source_bound_review",
+        "tests.test_design_lint_mcp_parity_schematic_erc_invalid_severity_value.test_invalid_erc_severity_review_matches_between_cli_and_mcp",
+        "tests.test_schematic_erc_global_severity_native_fixture_lane.test_native_erc_honors_persisted_global_severities"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_ERC_GLOBAL_SEVERITY_FIXTURES"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_schematic_erc_invalid_severity_value.test_canonical_severity_strings_are_valid_controls",
+        "tests.test_schematic_erc_invalid_severity_value.test_unknown_key_with_invalid_string_belongs_to_unknown_key_rule",
+        "tests.test_schematic_erc_global_severity_native_fixture_lane.test_native_erc_honors_persisted_global_severities"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_schematic_erc_invalid_severity_value.test_key_source_order_does_not_change_candidate_order"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/schematic_erc_invalid_severity_value_review.py#source_bound_schematic_erc_invalid_severity_value_candidates",
+        "kicad_tooling/hwrepo/schematic_erc_invalid_severity_value_review.py#project_schematic_erc_invalid_severity_value_evidence",
+        "kicad_tooling/hwrepo/schematic_erc_project_settings.py#configured_schematic_erc_rule_severities",
+        "kicad_tooling/hwrepo/schematic_erc_project_settings.py#ERC_RULE_KEYS_BY_KICAD_VERSION",
+        "kicad_tooling/hwrepo/schematic_erc_project_settings_evidence.py#read_source_bound_schematic_erc_settings",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
+        "kicad_tooling/hwrepo/design_lint_candidate_inputs.py#DesignLintCandidateInputs",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
+      ]
+    },
+    {
       "rule_id": "schematic.wire_end_on_pin_line",
       "title": "Native-unconnected pin has wire endpoint on its segment",
       "status": "active",

@@ -21,6 +21,7 @@ pytestmark = [
     pytest.mark.design_lint_rule(rule_id="schematic.erc_rule_ignored"),
     pytest.mark.design_lint_rule(rule_id="schematic.erc_error_downgraded"),
     pytest.mark.design_lint_rule(rule_id="schematic.erc_unknown_rule_key"),
+    pytest.mark.design_lint_rule(rule_id="schematic.erc_invalid_severity_value"),
     pytest.mark.skipif(
         os.environ.get("KICAD_RUN_NATIVE_SCHEMATIC_ERC_GLOBAL_SEVERITY_FIXTURES") != "1",
         reason="native global ERC severity fixtures run in the digest-pinned acceptance lane",
@@ -56,12 +57,16 @@ def test_native_erc_honors_persisted_global_severities(version: str, image: str)
     assert native_result["active_pin_not_connected"] == "error"
     assert native_result["downgraded_pin_not_connected"] == "warning"
     assert native_result["unknown_key_pin_not_connected"] == "error"
+    assert native_result["invalid_severity_pin_not_connected"] == "error"
+    assert native_result["valid_severity_pin_not_connected"] == "warning"
     assert native_result["repeatable"] == "true"
     for key in (
         "ignored_settings_sha256",
         "active_settings_sha256",
         "downgraded_settings_sha256",
         "unknown_settings_sha256",
+        "invalid_settings_sha256",
+        "valid_settings_sha256",
         "schematic_sha256",
     ):
         assert len(native_result[key]) == 64
@@ -70,3 +75,13 @@ def test_native_erc_honors_persisted_global_severities(version: str, image: str)
         / "fixtures/design_lint/schematic-erc-global-severity/unknown.kicad_pro"
     )
     assert native_result["unknown_settings_sha256"] == digest(unknown_settings)
+    invalid_settings = (
+        Path(__file__).parent
+        / "fixtures/design_lint/schematic-erc-invalid-severity/fault.kicad_pro"
+    )
+    valid_settings = (
+        Path(__file__).parent
+        / "fixtures/design_lint/schematic-erc-invalid-severity/control.kicad_pro"
+    )
+    assert native_result["invalid_settings_sha256"] == digest(invalid_settings)
+    assert native_result["valid_settings_sha256"] == digest(valid_settings)

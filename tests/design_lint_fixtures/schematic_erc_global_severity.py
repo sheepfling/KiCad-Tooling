@@ -14,6 +14,9 @@ from kicad_tooling.hwrepo.schematic_erc_catalog_coverage import (
 from kicad_tooling.hwrepo.schematic_erc_global_severity_review import (
     source_bound_schematic_erc_ignored_rule_candidates,
 )
+from kicad_tooling.hwrepo.schematic_erc_invalid_severity_value_review import (
+    source_bound_schematic_erc_invalid_severity_value_candidates,
+)
 from kicad_tooling.hwrepo.schematic_erc_unknown_rule_key_review import (
     source_bound_schematic_erc_unknown_rule_key_candidates,
 )
@@ -62,6 +65,17 @@ def schematic_erc_global_severity_rule_ids() -> frozenset[str]:
         unknown_config,
         {unknown_relative: digest(unknown_settings)},
     )
+    invalid_relative = "tests/fixtures/design_lint/schematic-erc-invalid-severity/fault.kicad_pro"
+    invalid_settings = repository / invalid_relative
+    invalid_config = cast(
+        ProjectConfig,
+        SimpleNamespace(kind=ProjectKind.PCB, project=invalid_relative, kicad_version="10.0.5"),
+    )
+    invalid = source_bound_schematic_erc_invalid_severity_value_candidates(
+        repository,
+        invalid_config,
+        {invalid_relative: digest(invalid_settings)},
+    )
     coverage_config = cast(
         ProjectConfig,
         SimpleNamespace(kind=ProjectKind.PCB, project=unknown_relative, kicad_version="10.0.3"),
@@ -72,5 +86,5 @@ def schematic_erc_global_severity_rule_ids() -> frozenset[str]:
         {unknown_relative: digest(unknown_settings)},
     )
     return frozenset(
-        candidate.rule_id for candidate in (*ignored, *downgraded, *unknown, *coverage)
+        candidate.rule_id for candidate in (*ignored, *downgraded, *unknown, *invalid, *coverage)
     )
