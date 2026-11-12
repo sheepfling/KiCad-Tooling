@@ -124,6 +124,7 @@ def source_bound_schematic_erc_duplicate_severity_key_candidates(
         settings = configured_schematic_erc_duplicate_rule_severity_settings(
             source.document,
             allow_duplicate_board_section=True,
+            allow_duplicate_erc_section=config.kicad_version == "10.0.8",
         )
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         raise ValueError(

@@ -333,6 +333,7 @@ DesignLintRuleId = Literal[
     "schematic.erc_unknown_rule_key",
     "schematic.erc_invalid_severity_value",
     "schematic.erc_duplicate_severity_key",
+    "schematic.erc_duplicate_section",
     "schematic.erc_nonstring_severity_value",
     "connector.return_distribution",
     "net.numbered_returns",

@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 344 active rules.
+The catalog currently contains 345 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -5825,6 +5825,33 @@ tooling-owned
 [synthetic settings](../tests/fixtures/design_lint/schematic-erc-nonstring-severity/README.md)
 and KiCad 10.0.8
 [ERC settings loader](https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.8/eeschema/erc/erc_settings.cpp).
+
+## Review duplicate top-level schematic ERC sections
+
+`schematic.erc_duplicate_section` prompts when a source-hashed KiCad 10.0.8
+`.kicad_pro` repeats its root `erc` member. It preserves each complete section
+in source order and asks the project owner to retain one intended section.
+Only schematic-capable project kinds configured for exactly KiCad 10.0.8 are
+in scope.
+
+A digest-pinned native fixture measured last-section behavior for the
+`pin_not_connected` setting: a warning section followed by an ignore section
+suppressed its two fixture violations, while the reversed order emitted both
+as warnings. Unique warning and ignore controls matched their settings. This
+observation is limited to that key, schematic, and image. The rule does not
+select an intended section, generalize native behavior to other settings or
+patches, assert an electrical defect, or establish manufacturing readiness.
+Projects may select `review`, `block`, `off`, or an exact-fingerprint ignore.
+
+Run the source-bound and CLI/MCP parity regressions in
+`tests/test_schematic_erc_duplicate_section.py` and
+`tests/test_design_lint_mcp_parity_schematic_erc_duplicate_section.py` with
+`design_lint`, `schematic_lint`, and
+`design_lint_rule(rule_id="schematic.erc_duplicate_section")`. The exact
+native fixture is `tests/test_schematic_erc_duplicate_section_native.py` with
+`KICAD_RUN_NATIVE_SCHEMATIC_ERC_DUPLICATE_SECTION_FIXTURES=1`. Tooling-owned
+settings and their evidence boundary are documented in
+[`tests/fixtures/design_lint/schematic-erc-duplicate-section/`](../tests/fixtures/design_lint/schematic-erc-duplicate-section/README.md).
 [kicad-docker-versions]: https://github.com/KiCad/kicad-docker/pkgs/container/kicad/versions?filters%5Bversion_type%5D=tagged
 
 ## Review duplicate schematic ERC severity keys

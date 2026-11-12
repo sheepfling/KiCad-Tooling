@@ -14,6 +14,7 @@ from .contracts import parse_model_text, parse_model_text_allow_duplicate_json_k
 from .json_object_pairs import (
     JsonObjectPairs,
     json_object_member,
+    json_object_pairs_source_order_value,
     json_value_from_object_pairs,
     retain_json_object_pairs,
 )
@@ -89,6 +90,7 @@ _ALLOWED_DUPLICATE_KICAD_PROJECT_OBJECT_PATHS = frozenset(
     }
 )
 _KICAD_PROJECT_BOARD_ROOT_DUPLICATE_MEMBER = ((), "board")
+_KICAD_PROJECT_ERC_ROOT_DUPLICATE_MEMBER = ((), "erc")
 # Keep exact patch entries; later KiCad 10.0 releases can add ERC item keys.
 _ERC_RULE_KEYS_KICAD_10_0_7 = _ERC_RULE_KEYS_KICAD_10_0 | {"same_local_global_power"}
 _ERC_DEFAULT_WARNING_RULE_KEYS_KICAD_10_0_7 = ERC_DEFAULT_WARNING_RULE_KEYS | {
@@ -165,9 +167,19 @@ def _parse_schematic_erc_project_settings(
     *,
     allow_duplicate_severity_keys: bool,
     allow_duplicate_board_section: bool = False,
+    allow_duplicate_erc_section: bool = False,
 ) -> _ProjectSettings:
-    if not allow_duplicate_severity_keys and not allow_duplicate_board_section:
+    if (
+        not allow_duplicate_severity_keys
+        and not allow_duplicate_board_section
+        and not allow_duplicate_erc_section
+    ):
         return parse_model_text(document, _ProjectSettings)
+    duplicate_members: set[tuple[tuple[str, ...], str]] = set()
+    if allow_duplicate_board_section:
+        duplicate_members.add(_KICAD_PROJECT_BOARD_ROOT_DUPLICATE_MEMBER)
+    if allow_duplicate_erc_section:
+        duplicate_members.add(_KICAD_PROJECT_ERC_ROOT_DUPLICATE_MEMBER)
     return parse_model_text_allow_duplicate_json_keys_at(
         document,
         _ProjectSettings,
@@ -176,11 +188,7 @@ def _parse_schematic_erc_project_settings(
             if allow_duplicate_severity_keys
             else frozenset()
         ),
-        allowed_duplicate_object_members=(
-            frozenset({_KICAD_PROJECT_BOARD_ROOT_DUPLICATE_MEMBER})
-            if allow_duplicate_board_section
-            else frozenset()
-        ),
+        allowed_duplicate_object_members=frozenset(duplicate_members),
     )
 
 
@@ -217,17 +225,26 @@ class SchematicErcDuplicateRuleSeveritySetting:
     configured_values_json: tuple[str, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class SchematicErcDuplicateSectionSetting:
+    """Repeated root-level ERC sections retained in saved source order."""
+
+    source_order_sections_json: tuple[str, ...]
+
+
 def configured_schematic_erc_rule_severity_settings(
     document: str,
     *,
     allow_duplicate_severity_keys: bool = False,
     allow_duplicate_board_section: bool = False,
+    allow_duplicate_erc_section: bool = False,
 ) -> tuple[SchematicErcRuleSeveritySetting, ...]:
     """Read saved ERC severity keys and JSON values in stable key order."""
     project = _parse_schematic_erc_project_settings(
         document,
         allow_duplicate_severity_keys=allow_duplicate_severity_keys,
         allow_duplicate_board_section=allow_duplicate_board_section,
+        allow_duplicate_erc_section=allow_duplicate_erc_section,
     )
     if project.erc is None:
         return ()
@@ -252,6 +269,7 @@ def configured_schematic_erc_duplicate_rule_severity_settings(
     document: str,
     *,
     allow_duplicate_board_section: bool = False,
+    allow_duplicate_erc_section: bool = False,
 ) -> tuple[SchematicErcDuplicateRuleSeveritySetting, ...]:
     """Read repeated severity-map keys without losing their source-order values."""
     # Validate the same project kind, ERC map shape, and settings schema as the
@@ -260,6 +278,7 @@ def configured_schematic_erc_duplicate_rule_severity_settings(
         document,
         allow_duplicate_severity_keys=True,
         allow_duplicate_board_section=allow_duplicate_board_section,
+        allow_duplicate_erc_section=allow_duplicate_erc_section,
     )
     project = json.loads(document, object_pairs_hook=retain_json_object_pairs)
     erc = json_object_member(project, "erc")
@@ -283,6 +302,32 @@ def configured_schematic_erc_duplicate_rule_severity_settings(
     )
 
 
+def configured_schematic_erc_duplicate_sections(
+    document: str,
+) -> tuple[SchematicErcDuplicateSectionSetting, ...]:
+    """Read repeated root ERC sections without collapsing their source order."""
+    _parse_schematic_erc_project_settings(
+        document,
+        allow_duplicate_severity_keys=True,
+        allow_duplicate_board_section=True,
+        allow_duplicate_erc_section=True,
+    )
+    project = json.loads(document, object_pairs_hook=retain_json_object_pairs)
+    if not isinstance(project, JsonObjectPairs):
+        return ()
+    values = tuple(value for key, value in project.pairs if key == "erc")
+    if len(values) < 2:
+        return ()
+    return (
+        SchematicErcDuplicateSectionSetting(
+            source_order_sections_json=tuple(
+                canonical_json_value(json_object_pairs_source_order_value(value))
+                for value in values
+            ),
+        ),
+    )
+
+
 def configured_schematic_erc_rule_severities(
     document: str,
     *,
@@ -290,6 +335,7 @@ def configured_schematic_erc_rule_severities(
     skip_nonstring_values: bool = False,
     allow_duplicate_severity_keys: bool = False,
     allow_duplicate_board_section: bool = False,
+    allow_duplicate_erc_section: bool = False,
 ) -> tuple[SchematicErcRuleSeverity, ...]:
     """Read the supported KiCad 10.0 ERC severity map in stable key order.
 
@@ -303,6 +349,7 @@ def configured_schematic_erc_rule_severities(
         document,
         allow_duplicate_severity_keys=allow_duplicate_severity_keys,
         allow_duplicate_board_section=allow_duplicate_board_section,
+        allow_duplicate_erc_section=allow_duplicate_erc_section,
     ):
         severity = json.loads(setting.configured_value_json)
         if not isinstance(severity, str):
@@ -357,12 +404,14 @@ def schematic_erc_exclusions(
     *,
     allow_duplicate_severity_keys: bool = False,
     allow_duplicate_board_section: bool = False,
+    allow_duplicate_erc_section: bool = False,
 ) -> tuple[SchematicErcExclusion, ...]:
     """Return supported persisted ERC exclusions, rejecting unknown schemas."""
     project = _parse_schematic_erc_project_settings(
         document,
         allow_duplicate_severity_keys=allow_duplicate_severity_keys,
         allow_duplicate_board_section=allow_duplicate_board_section,
+        allow_duplicate_erc_section=allow_duplicate_erc_section,
     )
     if project.erc is None:
         return ()

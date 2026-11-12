@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 344 rules are implemented with synthetic regression coverage.
+The following 345 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 344 active rules.
+The catalog currently contains 345 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -775,6 +775,7 @@ skipped under prerelease policy.
 - `schematic.erc_unknown_rule_key`
 - `schematic.erc_invalid_severity_value`
 - `schematic.erc_duplicate_severity_key`
+- `schematic.erc_duplicate_section`
 - `schematic.erc_nonstring_severity_value`
 
 This baseline catches suspicious connector symmetry and missing named pins,
@@ -4246,7 +4247,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 344 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 345 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -24502,6 +24503,40 @@ acceptance threads while new lint features proceed:
   Windows Pyright, wheel and source builds, installed-wheel checks, and the
   external and adapted template rehearsals passed. Package and preview jobs
   were skipped under prerelease policy.
+
+#### LINT-418 — Review duplicate top-level schematic ERC sections
+
+- **Priority:** P1 saved-settings integrity. A repeated root `erc` JSON member
+  makes the project-level ERC configuration ambiguous and prevented strict
+  settings readers from producing a localized finding.
+- **Status:** Implemented as default-review rule
+  `schematic.erc_duplicate_section` for exact KiCad 10.0.8. Source-bound ERC
+  and PCB settings readers preserve other checks when this section repeats;
+  direct settings APIs remain strict by default.
+- **Behavior:** For source-hashed schematic-capable projects, emit one finding
+  when the root JSON object repeats `erc`. Preserve every complete section in
+  saved order with the exact settings hash. The finding asks the owner to
+  retain one intended section and does not choose a value.
+- **Native evidence:** Digest-pinned KiCad 10.0.8 tests measured last-section
+  behavior for `pin_not_connected`: warning then ignore suppressed the two
+  synthetic violations; ignore then warning emitted two warnings. Unique
+  warning and ignore controls matched. This claim is limited to that key,
+  schematic, and image.
+- **Regression coverage:** Tooling-owned fault fixtures cover both section
+  orders; unique warning and ignore controls keep this rule quiet. Tests cover source
+  binding, strict unrelated duplicate keys, version and project-kind limits,
+  deterministic scans, CLI/MCP parity, and repeated native runs.
+- **Evidence boundary:** The rule detects ambiguous saved settings. It does
+  not generalize native behavior to other ERC settings or patches, run ERC on
+  inspected project schematics, infer electrical intent, or establish
+  electrical or manufacturing approval.
+- **Selection:** Run `tests/test_schematic_erc_duplicate_section.py` and
+  `tests/test_design_lint_mcp_parity_schematic_erc_duplicate_section.py` with
+  `design_lint and schematic_lint and
+  design_lint_rule(rule_id="schematic.erc_duplicate_section")`. The exact
+  native module is `tests/test_schematic_erc_duplicate_section_native.py`
+  with `KICAD_RUN_NATIVE_SCHEMATIC_ERC_DUPLICATE_SECTION_FIXTURES=1`.
+- **Hosted acceptance:** Pending.
 
 ## Completion and release gate
 

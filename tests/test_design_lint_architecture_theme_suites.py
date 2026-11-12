@@ -44,6 +44,9 @@ SCHEMATIC_ERC_THEME_SUITES = (
     "test_schematic_erc_duplicate_severity_key.py",
     "test_design_lint_mcp_parity_schematic_erc_duplicate_severity_key.py",
     "test_schematic_erc_duplicate_severity_key_native.py",
+    "test_schematic_erc_duplicate_section.py",
+    "test_design_lint_mcp_parity_schematic_erc_duplicate_section.py",
+    "test_schematic_erc_duplicate_section_native.py",
 )
 PCB_REFERENCE_PLANE_THEME_SUITES = (
     "test_pcb_alternate_reference_plane_run.py",

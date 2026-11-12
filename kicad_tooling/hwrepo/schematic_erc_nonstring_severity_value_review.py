@@ -129,6 +129,7 @@ def source_bound_schematic_erc_nonstring_severity_value_candidates(
             source.document,
             allow_duplicate_severity_keys=True,
             allow_duplicate_board_section=config.kicad_version == "10.0.8",
+            allow_duplicate_erc_section=config.kicad_version == "10.0.8",
         )
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         raise ValueError(

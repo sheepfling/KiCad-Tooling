@@ -17,6 +17,9 @@ from tests.design_lint_fixtures.catalog_reachability_pcb_drc_severity_keys impor
 from tests.design_lint_fixtures.catalog_reachability_pcb_drc_severity_values import (
     pcb_drc_invalid_severity_value_rule_ids,
 )
+from tests.design_lint_fixtures.schematic_erc_duplicate_section import (
+    schematic_erc_duplicate_section_rule_ids,
+)
 from tests.design_lint_fixtures.schematic_erc_duplicate_severity import (
     schematic_erc_duplicate_severity_rule_ids,
 )
@@ -33,6 +36,7 @@ def source_setting_rule_ids() -> frozenset[str]:
     return (
         schematic_erc_global_severity_rule_ids()
         | schematic_erc_duplicate_severity_rule_ids()
+        | schematic_erc_duplicate_section_rule_ids()
         | schematic_erc_nonstring_severity_rule_ids()
         | pcb_drc_duplicate_severity_key_rule_ids()
         | pcb_drc_duplicate_board_section_rule_ids()

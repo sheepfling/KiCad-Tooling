@@ -29,6 +29,7 @@ CORE_DRC_CHECK_IDS = frozenset(
 _ERC_SEVERITY_OBJECT_PATH = ("erc", "rule_severities")
 _PCB_DRC_SEVERITY_OBJECT_PATH = ("board", "design_settings", "rule_severities")
 _PCB_BOARD_ROOT_DUPLICATE_MEMBER = ((), "board")
+_PCB_ERC_ROOT_DUPLICATE_MEMBER = ((), "erc")
 DFM_ERROR_DEFAULT_DRC_CHECK_IDS = frozenset(
     {
         "annular_width",
@@ -169,8 +170,11 @@ def _parse_pcb_project_settings(
         allowed_paths.add(_ERC_SEVERITY_OBJECT_PATH)
     if allow_duplicate_drc_severity_keys:
         allowed_paths.add(_PCB_DRC_SEVERITY_OBJECT_PATH)
+    # The KiCad 10.0.8 source-bound project readers opt into retained section
+    # duplicates together; schematic ERC has its own rule and preserves the
+    # repeated `erc` sections for a localized finding.
     allowed_members: frozenset[tuple[tuple[str, ...], str]] = (
-        frozenset({_PCB_BOARD_ROOT_DUPLICATE_MEMBER})
+        frozenset({_PCB_BOARD_ROOT_DUPLICATE_MEMBER, _PCB_ERC_ROOT_DUPLICATE_MEMBER})
         if allow_duplicate_board_section
         else frozenset()
     )
