@@ -802,10 +802,17 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc710):** LINT-080 v92 adds
-  complete mixed USB/serial numbered-return fault and common-return control
-  reports to the three-process hash-seed matrix. The report inventory contains
-  335 entries. Hosted acceptance passed in run `43233725138`, including both
+- **Latest published lint-gate checkpoint (v0.5.3rc711):** LINT-423 now
+  detects repeated schematic object UUIDs across unique hierarchical source
+  files and reports each occurrence with source-bound evidence. Local scoped
+  acceptance passed 412 tests with 8,809 deselected, including the digest-pinned
+  KiCad 10.0.5 Docker fixtures and external-template playtest. Hosted acceptance
+  passed in run `43241643244`; package and preview jobs were skipped under
+  prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc710):** LINT-080 v92 adds complete
+  mixed USB/serial numbered-return fault and common-return control reports to
+  the three-process hash-seed matrix. The report inventory contains 335
+  entries. Hosted acceptance passed in run `43233725138`, including both
   digest-pinned KiCad 10.0.0 and 10.0.5 Docker fixtures and the external-project
   playtest; package and preview jobs were skipped under prerelease policy.
 - **Previous lint-gate checkpoint (v0.5.3rc708):** LINT-422 now
@@ -24903,7 +24910,10 @@ acceptance threads while new lint features proceed:
   hash-seed regressions; formatting, both Alphus profiles, Markdown and
   repository-link checks, Linux and Windows Pyright, wheel/sdist builds,
   installed-wheel checks, and the separate external-template playtest passed.
-  Hosted acceptance for this extension is pending its annotated tag.
+- **Hosted acceptance (cross-file UUID extension, 2026-11-12):** Annotated tag
+  `v0.5.3rc711` passed GitHub Actions run `43241643244`. The focused lint gate
+  and installed-wheel rehearsal passed; package publication and preview
+  orchestration were skipped under prerelease policy.
 
 ## Completion and release gate
 
