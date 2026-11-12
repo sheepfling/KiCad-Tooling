@@ -25105,7 +25105,10 @@ acceptance threads while new lint features proceed:
   profiles, Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist builds,
   installed-wheel checks, and the new-rule catalog, fixture, marker, and
   selector integrity checks passed. Hosted acceptance and the installed-wheel
-  rehearsal against the separate workflow-template checkout remain pending.
+  rehearsal against the separate workflow-template checkout passed in GitHub
+  Actions run `43277952874` on commit
+  `bcf1037dce784845979cb4e1701d031c8eeb88c4`. The full package and preview
+  jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
