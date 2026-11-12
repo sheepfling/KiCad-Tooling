@@ -24380,11 +24380,20 @@ acceptance threads while new lint features proceed:
   [user-facing rule entry](DESIGN_LINT.md#review-duplicate-schematic-erc-severity-keys).
   The duplicate key order effect is independently measured by the pinned
   native fixture.
-- **Local acceptance:** 609 focused ERC/DRC severity, exclusion, synthetic, and
-  CLI/MCP parity tests passed; 22 catalog/reachability/architecture tests
-  passed. All three exact KiCad 10.0.8 Docker fixture tests passed. Ruff,
-  Pyright, Rumdl, formatting, and whitespace checks passed. Tag-scoped package
-  and external-project acceptance remains to be run from the annotated tag.
+- **Local acceptance (`v0.5.3rc697` candidate):** The tag-scoped package gate
+  passed 400 tests with 8,681 deselected, including all three exact KiCad
+  10.0.8 Docker fixture cases. Ruff, both Alphus profiles, Rumdl, mdrepo,
+  Linux and Windows Pyright, wheel and source builds, installed-package
+  origin/version checks, and external/adapted project checks passed. Focused
+  ERC/DRC regressions also passed 609 tests; catalog/reachability/architecture
+  checks passed 22 tests. Receipt: `build/ci/run-c424b9y5`.
+- **Hosted acceptance (2026-11-12):** Annotated tag `v0.5.3rc697` passed
+  [GitHub Actions run 43171008699](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43171008699):
+  400 tests passed and 8,681 were deselected, including all three exact KiCad
+  10.0.8 Docker fixture cases. Ruff, both Alphus profiles, Markdown and
+  repository-link checks, Linux and Windows typing, wheel and source builds,
+  installed-wheel checks, and external/adapted project checks passed. Package
+  and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
