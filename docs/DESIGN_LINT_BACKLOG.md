@@ -796,19 +796,18 @@ standalone parity work when it closes a demonstrated feature regression.
   marker's board-item UUID leaves the underlying DRC violation visible but
   removes the marker's comment. Local synthetic, CLI/MCP parity, Linux and
   Windows type checks, and the exact 10.0.0/10.0.5/10.0.8 Docker lane pass.
-  Tagged hosted acceptance is pending. This refines the existing
+  Tagged hosted acceptance passed in `v0.5.3rc688` (run `43135584970`); the
+  initial `v0.5.3rc687` attempt stopped at tag-scope resolution before tests
+  because its annotation omitted the rule selector. This refines the existing
   `pcb.drc_exclusion_present` review evidence; it does not add a new rule ID or
   treat an unmatched marker as proof of an electrical defect.
-- **Latest published lint-gate checkpoint (v0.5.3rc683):** LINT-405 adds a
-  source-bound REVIEW for risky custom DRC layer names. The first hosted run of
-  `v0.5.3rc682` exposed two rule-gate omissions: this rule was absent from
-  synthetic catalog reachability, and its selector entries pushed a support
-  module over the 500-line limit. The PCB selector entries now live in the PCB
-  case table, and reachability exercises the actual source-bound predicate. The
-  exact tag selector passed 381 tests with 8,549 deselected, including repeated
-  fault and control cases in the digest-pinned KiCad 10.0.8 Docker image. Hosted
-  prerelease acceptance passed in GitHub Actions run 43118619465.
-  Package and preview jobs were skipped under prerelease policy.
+- **Latest published lint-gate checkpoint (v0.5.3rc688):** LINT-408 extends
+  `pcb.drc_exclusion_present` with digest-bound native match status for each
+  saved exclusion. Hosted acceptance passed in run `43135584970`: 387 tests
+  passed with 8,564 deselected, and the wheel, sdist-wheel, external inventory,
+  surface, verification, and playtest stages passed. The separate local Docker
+  lane passed on KiCad 10.0.0, 10.0.5, and 10.0.8. Package and preview jobs
+  were skipped under prerelease policy.
 - **Current feature work (LINT-406):** A source-bound default-REVIEW rule now
   flags the five exact custom DRC condition functions that KiCad 10 documents
   as deprecated, with replacement names, rule identity, and condition offsets.
@@ -23986,9 +23985,11 @@ acceptance threads while new lint features proceed:
 
 #### LINT-408 — Compare saved PCB DRC exclusions with current native results
 
-- **Status:** Locally implemented and focused acceptance passed as an evidence
-  refinement to `pcb.drc_exclusion_present`; tagged hosted acceptance is
-  pending. No additional rule ID is planned.
+- **Status:** Accepted as an evidence refinement to
+  `pcb.drc_exclusion_present`. Tag `v0.5.3rc688` passed hosted acceptance in
+  run `43135584970`; the earlier `v0.5.3rc687` attempt failed before tests
+  because its annotation omitted the required lint selector. No additional
+  rule ID is planned.
 - **Gap:** LINT-141 prompts for every saved marker, but could not distinguish a
   marker that matched the current native result from one whose board-item UUID
   no longer identified the excluded violation.
@@ -24019,6 +24020,12 @@ acceptance threads while new lint features proceed:
   4 skipped`); the pinned Docker lane passed (`1 passed`) across KiCad
   10.0.0, 10.0.5, and 10.0.8. Linux and Windows Pyright targets reported zero
   errors, Ruff and formatting passed, and the Markdown repository check passed.
+- **Hosted acceptance (2026-11-11):** Tag `v0.5.3rc688` passed run
+  `43135584970`: 387 tests passed and 8,564 were deselected. Wheel and sdist
+  builds and the external-project inventory, surface, verification, and
+  playtest stages passed. The initial tag `v0.5.3rc687` did not reach tests
+  because its annotated message lacked the required `Lint-Rule` selector;
+  `v0.5.3rc688` supplied the selector and native-fixture declaration.
 
 ## Completion and release gate
 
