@@ -804,13 +804,14 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc717):** LINT-429 extends
-  `pcb.drc_conflicting_netclass_definitions` to review conflicting repeated
-  clearance fields within a named netclass. Local scoped acceptance passed
-  425 tests with 8,854 deselected, including pinned KiCad 10.0.8 Docker
-  fault/control runs. Hosted prerelease acceptance and the installed-wheel
-  check against a separate project passed in run `43292742782`; package and
-  preview jobs were skipped under prerelease policy.
+- **Latest published lint-gate checkpoint (v0.5.3rc718):** LINT-430 extends
+  `net.numbered_returns` to review a recognized base return label beside a
+  matching indexed sibling. Local scoped acceptance passed 456 tests with
+  8,828 deselected, including repeatable pinned KiCad 10.0.0 and 10.0.5
+  Docker fixtures. Hosted prerelease acceptance and the installed-wheel
+  rehearsal against a separate project passed in run `43297728511` on commit
+  `284d886bd74594da9f2053d70bde10c3ec7719b1`; package and preview jobs were
+  skipped under prerelease policy.
 - **Previous lint-gate checkpoint (v0.5.3rc716):** LINT-428 extends
   the named power-input peer review to unanchored connector aliases only when
   a complete current source-matched peer group scopes the comparison. Local
@@ -25244,7 +25245,10 @@ acceptance threads while new lint features proceed:
   8,828 deselected, including both required pinned native fixture lanes.
   Ruff, Alphus role and shared-utility checks, Rumdl, mdrepo, Linux and Windows
   Pyright, wheel and sdist builds, installed-wheel checks, and the separate
-  project-origin verification passed. Hosted acceptance is pending.
+  project-origin verification passed. Hosted prerelease acceptance and the
+  installed-wheel rehearsal against a separate project passed in GitHub
+  Actions run `43297728511` on commit `284d886bd74594da9f2053d70bde10c3ec7719b1`;
+  package and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
