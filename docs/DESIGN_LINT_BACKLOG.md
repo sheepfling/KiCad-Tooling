@@ -24402,8 +24402,8 @@ acceptance threads while new lint features proceed:
   can hide conflicting DRC severity values from ordinary project parsing.
 - **Status:** Implemented as the default-review rule
   `pcb.drc_duplicate_severity_key` for exact KiCad 10.0.8, with source-order
-  values retained by the typed settings parser. Native confirmation and the
-  scoped acceptance gate are in progress.
+  values retained by the typed settings parser. The native behavior and
+  scoped local and hosted acceptance gates passed.
 - **Behavior:** For source-hashed PCB and PCB-only projects configured for
   exactly KiCad 10.0.8, report each key repeated in
   `board.design_settings.rule_severities`, preserving every canonical value in
@@ -24434,6 +24434,19 @@ acceptance threads while new lint features proceed:
   [board settings loader][kicad-10-project-drc-exclusions] applies saved
   settings; the order-sensitive duplicate behavior is directly measured by
   this pinned native fixture.
+- **Local acceptance (`v0.5.3rc698`):** The tag-scoped package gate passed
+  405 tests with 8,699 deselected, including the digest-pinned KiCad 10.0.8
+  Docker fixture. Ruff, both Alphus profiles, Rumdl, mdrepo, Linux and Windows
+  Pyright, wheel and source builds, installed-wheel origin/version checks, and
+  external/adapted template project checks passed. Receipt:
+  `build/ci/run-wh00civi`.
+- **Hosted acceptance (2026-11-12):** Annotated tag `v0.5.3rc698` passed
+  [GitHub Actions run 43174812560](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43174812560):
+  405 tests passed and 8,699 were deselected, including the pinned native
+  fixture. Ruff, both Alphus profiles, Markdown and repository-link checks,
+  Linux and Windows typing, wheel and source builds, installed-wheel checks,
+  and external/adapted project checks passed. Package and preview jobs were
+  skipped under prerelease policy.
 
 ## Completion and release gate
 
