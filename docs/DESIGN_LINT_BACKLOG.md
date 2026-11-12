@@ -24107,7 +24107,12 @@ acceptance threads while new lint features proceed:
   CLI/MCP parity, and the existing PCB DRC severity regressions passed. Ruff,
   formatting, the selected Pyright targets, rumdl, mdrepo, and
   `git diff --check` passed.
-- **Hosted acceptance:** Pending tag publication and GitHub Actions.
+- **Hosted acceptance (2026-11-11):** Annotated tag `v0.5.3rc692` passed
+  GitHub Actions run `43150664502`: 397 tests passed and 8,584 were deselected.
+  The digest-pinned KiCad 10.0.8 Docker fault/control fixture ran. Ruff,
+  formatting, Pyright, Windows typing, wheel and source builds, installed-wheel
+  checks, and the external/adapted project checks passed. Package and preview
+  jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
