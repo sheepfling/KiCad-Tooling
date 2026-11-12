@@ -802,12 +802,14 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc705):** LINT-423 adds
-  source-bound REVIEW for repeated schematic object UUIDs, with an exact
-  KiCad 10.0.5 Docker fault/control. The local scoped gate passed 405 tests
-  with 8,803 deselected, including wheel and external-template rehearsals.
-  Hosted acceptance passed in run `43218568561`; package and preview jobs were
-  skipped under prerelease policy.
+- **Latest published lint-gate checkpoint (v0.5.3rc707):** LINT-422 now
+  compares the selected unit/convert pin group for supported multi-unit
+  symbols. The local scoped gate passed 408 tests with 8,803 deselected,
+  including exact KiCad 10.0.5 Docker fixtures and external-template
+  rehearsals. Hosted acceptance passed in run `43223042588`; package and
+  preview jobs were skipped under prerelease policy. Tag `v0.5.3rc706` stopped
+  at scope resolution because its annotation omitted `Lint-Rule`; the
+  correctly scoped retry passed without code changes.
 - **Earlier lint-gate checkpoint (v0.5.3rc696):** LINT-414 adds
   source-bound review for non-string saved schematic ERC severity values.
   Hosted acceptance passed in run `43165386784`: 408 tests passed, 8,655 were
@@ -24768,7 +24770,12 @@ acceptance threads while new lint features proceed:
   selection to the source predicate. The focused source/parity suite passed 11
   tests; the native lane passed both single-unit and unit-2/convert-1
   fault/control exports (2 tests). A different convert-2 pin stays outside
-  the selected comparison. Hosted acceptance for this extension is pending.
+  the selected comparison. Tag `v0.5.3rc706` stopped at scope resolution
+  because its annotation omitted `Lint-Rule`; no tests ran under that tag.
+  Corrected annotated tag `v0.5.3rc707` passed GitHub Actions run
+  `43223042588`. The focused gate and installed-wheel rehearsal passed;
+  package publication and preview orchestration were skipped under prerelease
+  policy.
 
 #### LINT-423 — Review repeated schematic object UUIDs
 
