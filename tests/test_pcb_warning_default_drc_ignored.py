@@ -28,6 +28,8 @@ EXPECTED_CHECK_IDS = (
     "copper_sliver",
     "duplicate_footprints",
     "extra_footprint",
+    "footprint_symbol_field_mismatch",
+    "footprint_symbol_mismatch",
     "hole_to_hole",
     "holes_co_located",
     "isolated_copper",
@@ -39,8 +41,6 @@ EXPECTED_CHECK_IDS = (
     "net_conflict",
     "nonmirrored_text_on_back_layer",
     "padstack",
-    "schematic_fields_parity",
-    "schematic_parity",
     "silk_edge_clearance",
     "silk_over_copper",
     "silk_overlap",
@@ -78,7 +78,8 @@ def _scan(root: Path, config: ProjectConfig, source_hashes: Mapping[str, str]):
 
 
 @pytest.mark.parametrize(
-    "kicad_version", ("10.0.0", "10.0.3", "10.0.4", "10.0.5", "10.0.6", "10.0.7")
+    "kicad_version",
+    ("10.0.0", "10.0.3", "10.0.4", "10.0.5", "10.0.6", "10.0.7", "10.0.8"),
 )
 @pytest.mark.parametrize("kind", (ProjectKind.PCB, ProjectKind.PCB_ONLY))
 def test_ignored_warning_default_checks_create_source_bound_review_candidates(
@@ -114,7 +115,7 @@ def test_warning_defaults_and_unrelated_ignored_checks_are_valid_controls(
     assert _scan(root, config, source_hashes) == ()
 
 
-@pytest.mark.parametrize("version", ("10.0.1", "10.0.2", "10.1.0", "11.0.0"))
+@pytest.mark.parametrize("version", ("10.0.1", "10.0.2", "10.0.9", "10.1.0", "11.0.0"))
 def test_unreviewed_patch_profiles_are_out_of_scope(tmp_path: Path, version: str) -> None:
     root, _, config, source_hashes = _project(tmp_path, kicad_version=version)
 

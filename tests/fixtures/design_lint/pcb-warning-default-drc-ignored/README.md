@@ -2,14 +2,18 @@
 
 These source-hashed `.kicad_pro` files are synthetic tooling fixtures. They
 exercise explicit `Ignore` settings for checks whose built-in default is
-`Warning` in KiCad 10.0.0, 10.0.3, 10.0.4, 10.0.5, 10.0.6, and 10.0.7, plus a
-control that keeps those checks at `Warning` while ignoring unrelated checks.
+`Warning` in KiCad 10.0.0, 10.0.3, 10.0.4, 10.0.5, 10.0.6, 10.0.7, and
+10.0.8, plus a control that keeps those checks at `Warning` while ignoring
+unrelated checks.
 
 The supported profile is deliberately exact. Warning defaults are mapped from
 `board_design_settings.cpp` and setting keys from `drc_item.cpp` at each listed
 KiCad tag. KiCad 10 patch releases can change defaults; this rule must not
-extend its profile without checking that version's sources. Versions 10.0.1
-and 10.0.2 remain out of scope until their source profiles are verified.
+extend its profile without checking that version's sources. The serializer
+keys for schematic-parity checks are `footprint_symbol_mismatch` and
+`footprint_symbol_field_mismatch`; the DRC item category names are different.
+Versions 10.0.1, 10.0.2, and 10.0.9 remain out of scope until their source
+profiles are verified.
 
 Versioned upstream references:
 
@@ -25,6 +29,13 @@ Versioned upstream references:
 - [KiCad 10.0.6 DRC setting keys](https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.6/pcbnew/drc/drc_item.cpp)
 - [KiCad 10.0.7 board design settings](https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.7/pcbnew/board_design_settings.cpp)
 - [KiCad 10.0.7 DRC setting keys](https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.7/pcbnew/drc/drc_item.cpp)
+- [KiCad 10.0.8 board design settings](https://gitlab.com/kicad/code/kicad/-/raw/10.0.8/pcbnew/board_design_settings.cpp)
+- [KiCad 10.0.8 DRC setting keys](https://gitlab.com/kicad/code/kicad/-/raw/10.0.8/pcbnew/drc/drc_item.cpp)
+
+The exact KiCad 10.0.8 native regression uses the tooling-owned reference-zone
+fault board. Its `track_dangling` warning appears when the project explicitly
+sets that key to `warning` and disappears when the same key is set to
+`ignore`; native outputs remain outside this repository.
 
 The check asks for review of an explicit suppression. It does not establish
 that a given check applies to a board, that a violation exists, or that every

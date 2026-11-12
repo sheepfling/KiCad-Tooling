@@ -38,7 +38,7 @@ PcbDrcSeverityRuleId: TypeAlias = Literal[
 ]
 
 WARNING_DEFAULT_DRC_SUPPORTED_VERSIONS = frozenset(
-    {"10.0.0", "10.0.3", "10.0.4", "10.0.5", "10.0.6", "10.0.7"}
+    {"10.0.0", "10.0.3", "10.0.4", "10.0.5", "10.0.6", "10.0.7", "10.0.8"}
 )
 
 

@@ -274,6 +274,7 @@ PCB_THEME_SUITES = (
     "test_pcb_dru_rule_review.py",
     "test_pcb_drc_global_severity_review.py",
     "test_pcb_warning_default_drc_ignored.py",
+    "test_pcb_warning_default_drc_ignored_native.py",
     "test_design_lint_mcp_parity_pcb_warning_default_drc_ignored.py",
     "test_pcb_signal_integrity_drc_severity.py",
     "test_design_lint_mcp_parity_pcb_signal_integrity_drc_severity.py",

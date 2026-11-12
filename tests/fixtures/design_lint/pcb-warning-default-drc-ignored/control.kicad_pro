@@ -17,8 +17,8 @@
         "net_conflict": "warning",
         "nonmirrored_text_on_back_layer": "warning",
         "padstack": "warning",
-        "schematic_fields_parity": "warning",
-        "schematic_parity": "warning",
+        "footprint_symbol_field_mismatch": "warning",
+        "footprint_symbol_mismatch": "warning",
         "silk_edge_clearance": "warning",
         "silk_overlap": "warning",
         "silk_over_copper": "warning",
@@ -28,6 +28,8 @@
         "via_dangling": "warning",
         "footprint_type_mismatch": "ignore",
         "hole_clearance": "ignore",
+        "schematic_fields_parity": "ignore",
+        "schematic_parity": "ignore",
         "unconnected_items": "ignore"
       }
     }

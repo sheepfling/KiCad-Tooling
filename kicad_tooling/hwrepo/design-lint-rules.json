@@ -13502,25 +13502,30 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
-      "evidence_adapter": "Exact source-hashed KiCad 10.0 .kicad_pro path, Warning-default check ID, configured Ignore severity, and one of six exact configured KiCad versions",
-      "predicate": "For PCB or PCB-only projects configured for exact KiCad 10.0.0, 10.0.3, 10.0.4, 10.0.5, 10.0.6, or 10.0.7, emit one source-bound review candidate for each explicit Ignore setting among the 24 built-in DRC checks whose default severity is Warning in those exact releases.",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0 .kicad_pro path, Warning-default serialized check ID, configured Ignore severity, and one of seven exact configured KiCad versions",
+      "predicate": "For PCB or PCB-only projects configured for exact KiCad 10.0.0, 10.0.3, 10.0.4, 10.0.5, 10.0.6, 10.0.7, or 10.0.8, emit one source-bound review candidate for each explicit Ignore setting among the 24 built-in DRC checks whose default severity is Warning in those exact releases.",
       "supported_kicad_versions": [
-        "KiCad 10.0.0, 10.0.3, 10.0.4, 10.0.5, 10.0.6, and 10.0.7 only; setting keys and default severities are mapped from their versioned board_design_settings.cpp and pcbnew/drc/drc_item.cpp sources. KiCad 10.0.1 and 10.0.2 remain out of scope until separately verified; no native tool is executed"
+        "KiCad 10.0.0, 10.0.3, 10.0.4, 10.0.5, 10.0.6, 10.0.7, and 10.0.8 only; serialized setting keys and default severities are mapped from their versioned board_design_settings.cpp and pcbnew/drc/drc_item.cpp sources. KiCad 10.0.1, 10.0.2, and 10.0.9 remain out of scope until separately verified"
       ],
       "limitations": [
         "Ignore disables the selected check. This finding asks whether suppressing a Warning-default check was intentional; it is not evidence of a board defect or a requirement that every project enable the check.",
-        "Only the 24 explicitly listed keys for the six reviewed patch versions are covered. Other KiCad versions, per-violation exclusions, custom-rule severity, board geometry, and DRC output are outside this predicate.",
+        "Only the 24 explicitly listed serialized keys for the seven reviewed patch versions are covered. Other KiCad versions, per-violation exclusions, custom-rule severity, board geometry, and DRC output are outside this predicate.",
         "The source parser does not determine whether a check applies to the board, run DRC, verify a project-authored requirement, or establish electrical or manufacturing approval. Projects may choose review, block, off, or an exact-fingerprint ignore."
       ],
       "fault_fixtures": [
         "tests.test_pcb_warning_default_drc_ignored.test_ignored_warning_default_checks_create_source_bound_review_candidates",
         "tests.test_pcb_warning_default_drc_ignored.test_changed_settings_after_source_hash_capture_fail_closed",
-        "tests.test_design_lint_mcp_parity_pcb_warning_default_drc_ignored.test_warning_default_drc_findings_match_between_cli_and_mcp"
+        "tests.test_design_lint_mcp_parity_pcb_warning_default_drc_ignored.test_warning_default_drc_findings_match_between_cli_and_mcp",
+        "tests.test_pcb_warning_default_drc_ignored_native.test_kicad_1008_suppresses_ignored_warning_default_check_repeatably"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_warning_default_drc_ignored.test_warning_defaults_and_unrelated_ignored_checks_are_valid_controls",
         "tests.test_pcb_warning_default_drc_ignored.test_unreviewed_patch_profiles_are_out_of_scope",
-        "tests.test_pcb_warning_default_drc_ignored.test_non_pcb_project_is_out_of_scope"
+        "tests.test_pcb_warning_default_drc_ignored.test_non_pcb_project_is_out_of_scope",
+        "tests.test_pcb_warning_default_drc_ignored_native.test_kicad_1008_suppresses_ignored_warning_default_check_repeatably"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
       ],
       "metamorphic_fixtures": [
         "tests.test_pcb_warning_default_drc_ignored.test_json_key_order_does_not_change_review_candidate_order"

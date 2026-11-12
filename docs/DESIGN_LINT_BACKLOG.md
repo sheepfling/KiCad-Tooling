@@ -11838,15 +11838,16 @@ control are documented in the
   default is Error. KiCad also runs useful checks at Warning by default, and
   changing one to Ignore disables it entirely.
 - **Predicate:** For PCB or PCB-only projects configured for exact KiCad
-  `10.0.0`, `10.0.3`, `10.0.4`, `10.0.5`, `10.0.6`, or `10.0.7`, read the
-  source-hashed `.kicad_pro` and report each
+  `10.0.0`, `10.0.3`, `10.0.4`, `10.0.5`, `10.0.6`, `10.0.7`, or
+  `10.0.8`, read the source-hashed `.kicad_pro` and report each
   explicit `Ignore` value among `connection_width`, `copper_sliver`,
   `duplicate_footprints`, `extra_footprint`, `hole_to_hole`,
   `holes_co_located`, `isolated_copper`, `lib_footprint_issues`,
   `lib_footprint_mismatch`, `mirrored_text_on_front_layer`,
   `missing_footprint`, `missing_tuning_profile`, `net_conflict`,
-  `nonmirrored_text_on_back_layer`, `padstack`, `schematic_fields_parity`,
-  `schematic_parity`, `silk_edge_clearance`, `silk_over_copper`,
+  `nonmirrored_text_on_back_layer`, `padstack`,
+  `footprint_symbol_field_mismatch`, `footprint_symbol_mismatch`,
+  `silk_edge_clearance`, `silk_over_copper`,
   `silk_overlap`, `text_height`, `text_thickness`, `track_dangling`, and
   `via_dangling`. Record the settings hash, key, severity, and exact project
   version.
@@ -11856,22 +11857,33 @@ control are documented in the
   run DRC or inspect geometry. The default is `REVIEW` and policy can override
   it per project.
 - **Source basis:** Versioned KiCad 10.0.0, 10.0.3, 10.0.4, 10.0.5, 10.0.6,
-  and 10.0.7 `board_design_settings.cpp` files establish the defaults; their
-  `pcbnew/drc/drc_item.cpp` files map the checks to serialized project keys.
+  10.0.7, and 10.0.8 `board_design_settings.cpp` files establish the
+  defaults; their `pcbnew/drc/drc_item.cpp` files map the checks to
+  serialized project keys.
   This exact profile is deliberate: patch releases can change defaults, so
-  10.0.1 and 10.0.2 remain out of scope until their source profiles are
-  reviewed. No KiCad source or project design is imported.
+  10.0.1, 10.0.2, and 10.0.9 remain out of scope until their source profiles
+  are reviewed. `drc_item.cpp` calls the parity checks
+  `footprint_symbol_mismatch` and `footprint_symbol_field_mismatch`; the
+  category names `schematic_parity` and `schematic_fields_parity` are not
+  serialized setting keys. The native 10.0.8 regression confirms that the
+  source-authored `track_dangling` warning can be suppressed by the matching
+  `Ignore` setting. No KiCad source or project design is imported.
 - **Synthetic evidence:** Tooling-owned `.kicad_pro` fixtures cover every supported key set to
   Ignore, all supported keys left at Warning, unrelated ignored keys, PCB-only and non-PCB scope,
   unsupported patch versions, source-hash mutation, deterministic ordering, standard REVIEW
-  disposition, and CLI/MCP parity. The exact synthetic cases and source references are recorded in
-  the [fixture README](../tests/fixtures/design_lint/pcb-warning-default-drc-ignored/README.md). No
-  native DRC process or product board is used.
+  disposition, and CLI/MCP parity. The exact synthetic cases and source
+  references are recorded in the
+  [fixture README](../tests/fixtures/design_lint/pcb-warning-default-drc-ignored/README.md).
+  A separate native fixture checks the Warning control and Ignore suppression
+  on the digest-pinned KiCad 10.0.8 image using a tooling-owned board.
 - **Focused selection:**
 
   ```sh
   python -I -m pytest \
     -m 'design_lint and design_lint_rule(rule_id="pcb.warning_default_drc_check_ignored")'
+  KICAD_RUN_NATIVE_PCB_FIXTURES=1 python -I -m pytest \
+    tests/test_pcb_warning_default_drc_ignored_native.py \
+    -m 'design_lint and native_kicad and design_lint_rule(rule_id="pcb.warning_default_drc_check_ignored")'
   ```
 
 #### LINT-150 — Review authored oscillator output paths
@@ -24028,6 +24040,38 @@ acceptance threads while new lint features proceed:
   playtest stages passed. The initial tag `v0.5.3rc687` did not reach tests
   because its annotated message lacked the required `Lint-Rule` selector;
   `v0.5.3rc688` supplied the selector and native-fixture declaration.
+
+#### LINT-409 — Correct KiCad warning-default DRC serialized keys
+
+- **Status:** Corrected the existing `pcb.warning_default_drc_check_ignored`
+  rule and extended its exact supported profile through KiCad 10.0.8. This
+  fixes coverage; it does not add a new rule ID.
+- **Gap:** The rule's 24-key set used the DRC category names
+  `schematic_parity` and `schematic_fields_parity` as project setting keys.
+  KiCad serializes those settings as
+  `footprint_symbol_mismatch` and
+  `footprint_symbol_field_mismatch`. Explicitly ignored parity checks could
+  therefore escape the review. The rule also had no 10.0.8 source profile.
+- **Source:** KiCad's versioned `drc_item.cpp` maps the serialized keys;
+  `board_design_settings.cpp` marks the corresponding two checks and the
+  full 24-check set as Warning defaults. The same key mapping is present in
+  10.0.0, 10.0.3–10.0.8. Releases 10.0.1, 10.0.2, and 10.0.9 remain outside
+  the exact profile.
+- **Regression:** Synthetic fault and control settings now use the serialized
+  keys. The obsolete category labels are deliberately ignored controls. The
+  supported-version matrix includes 10.0.8. A digest-pinned 10.0.8 native test
+  checks that the synthetic board's `track_dangling` Warning appears when
+  configured as Warning and is suppressed when configured as Ignore; both
+  outcomes repeat.
+- **Boundary:** The review remains default `REVIEW`: suppressing a warning
+  does not establish that its check applies to a board or that a violation
+  exists. The native fixture proves one setting's behavior on one exact image,
+  not electrical or manufacturing correctness.
+- **Local acceptance (2026-11-11):** The focused rule gate passed (`401 passed,
+  1 skipped`, with 8,559 unrelated tests deselected). The digest-pinned KiCad
+  10.0.8 Docker regression passed (`1 passed`); the catalog-selected Linux and
+  Windows Pyright targets reported zero errors, Ruff and formatting passed,
+  the backlog Markdown check passed, and `git diff --check` was clean.
 
 ## Completion and release gate
 
