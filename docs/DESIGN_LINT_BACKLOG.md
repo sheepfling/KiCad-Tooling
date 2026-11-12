@@ -802,14 +802,18 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc707):** LINT-422 now
-  compares the selected unit/convert pin group for supported multi-unit
-  symbols. The local scoped gate passed 408 tests with 8,803 deselected,
-  including exact KiCad 10.0.5 Docker fixtures and external-template
-  rehearsals. Hosted acceptance passed in run `43223042588`; package and
-  preview jobs were skipped under prerelease policy. Tag `v0.5.3rc706` stopped
-  at scope resolution because its annotation omitted `Lint-Rule`; the
-  correctly scoped retry passed without code changes.
+- **Latest published lint-gate checkpoint (v0.5.3rc708):** LINT-422 now
+  includes a unique matching unit-0 group when comparing a nonzero unit. The
+  local scoped gate passed 410 tests with 8,803 deselected, including the
+  digest-pinned KiCad 10.0.5 Docker fixtures and external-template rehearsals.
+  Hosted acceptance passed in run `43226425772`; package and preview jobs were
+  skipped under prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc707):** LINT-422 compares the
+  selected unit/convert pin group for supported multi-unit symbols. The local
+  scoped gate passed 408 tests with 8,803 deselected. Hosted acceptance passed
+  in run `43223042588`; package and preview jobs were skipped under prerelease
+  policy. Tag `v0.5.3rc706` stopped at scope resolution because its annotation
+  omitted `Lint-Rule`; the correctly scoped retry passed without code changes.
 - **Earlier lint-gate checkpoint (v0.5.3rc696):** LINT-414 adds
   source-bound review for non-string saved schematic ERC severity values.
   Hosted acceptance passed in run `43165386784`: 408 tests passed, 8,655 were
@@ -24789,6 +24793,10 @@ acceptance threads while new lint features proceed:
   CLI/MCP parity, catalog reachability, typing, package builds, installed-wheel
   checks, and external-template rehearsals passed. Duplicate shared groups
   remain intentionally skipped. No project board source was imported.
+- **Hosted acceptance (shared-unit extension, 2026-11-12):** Annotated tag
+  `v0.5.3rc708` passed GitHub Actions run `43226425772`. Scope resolution,
+  focused lint checks, and the installed-wheel rehearsal passed; package
+  publication and preview orchestration were skipped under prerelease policy.
 
 #### LINT-423 — Review repeated schematic object UUIDs
 
