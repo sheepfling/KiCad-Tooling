@@ -56,6 +56,9 @@ from .pcb_drc_global_severity_review import (
     warning_core_native_drc_check_candidates,
     warning_dfm_native_drc_check_candidates,
 )
+from .pcb_drc_invalid_severity_value_review import (
+    source_bound_pcb_drc_invalid_severity_value_candidates,
+)
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
     PcbDifferentialPairRuleMap,
@@ -185,6 +188,11 @@ def inspect_design_lint_request(
             *custom_drc_deprecated_condition_function_candidates(root, config, coach.source_hashes),
         )
         pcb_native_drc_candidates = (
+            *source_bound_pcb_drc_invalid_severity_value_candidates(
+                root,
+                config,
+                coach.source_hashes,
+            ),
             *source_bound_pcb_drc_unknown_severity_key_candidates(
                 root,
                 config,

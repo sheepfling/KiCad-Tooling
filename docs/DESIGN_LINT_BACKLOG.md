@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 337 rules are implemented with synthetic regression coverage.
+The following 338 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 337 active rules.
+The catalog currently contains 338 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -736,6 +736,7 @@ skipped under prerelease policy.
 - `pcb.warning_default_drc_check_ignored`
 - `pcb.drc_exclusion_present`
 - `pcb.drc_unknown_severity_key`
+- `pcb.drc_invalid_severity_value`
 - `pcb.mechanical_edge_clearance_rule_coverage`
 - `pcb.rf_module_antenna_keepout_coverage`
 - `pcb.keepout_intent_coverage`
@@ -24113,6 +24114,51 @@ acceptance threads while new lint features proceed:
   formatting, Pyright, Windows typing, wheel and source builds, installed-wheel
   checks, and the external/adapted project checks passed. Package and preview
   jobs were skipped under prerelease policy.
+
+#### LINT-411 — Review invalid PCB DRC severity strings
+
+- **Status:** Implemented as `pcb.drc_invalid_severity_value`, default
+  `review`, for exact KiCad 10.0.8 settings only.
+- **Gap:** The unknown-key check catches a misspelled check ID. A recognized
+  key can still contain a misspelled severity string. KiCad 10.0.8 maps every
+  value except `warning` and `ignore` to `error`, so `warnnig` silently changes
+  the effective setting.
+- **Behavior:** Compare source-hashed project settings with the exact
+  string-valued key catalog and `error`, `warning`, `ignore` values. Report one
+  candidate per known key with an unrecognized string; do not infer intended
+  correction. The two boolean legacy aliases and unknown keys stay outside this
+  rule. Other KiCad versions remain out of scope.
+- **Regression coverage:** Check every current string key and the
+  `hole_near_hole` string migration alias, all three canonical values, boolean
+  migration aliases, unknown-key ownership, unsupported versions, non-PCB
+  project kinds, source identity, deterministic ordering, CLI/MCP parity, and a
+  digest-pinned native fault/control pair. KiCad 10.0.8 must report the
+  misspelled `track_dangling` value as Error and the recognized `warning`
+  control as Warning on repeated runs.
+- **Evidence boundary:** This verifies serialized severity interpretation. It
+  does not identify author intent, prove a DRC violation exists, run checks on
+  project boards, inspect copper, or establish electrical or manufacturing
+  approval. Projects can choose `review`, `block`, `off`, or an exact ignore.
+- **Selection:** Run
+  `tests/test_pcb_drc_invalid_severity_value.py` and
+  `tests/test_design_lint_mcp_parity_pcb_drc_invalid_severity_value.py` with
+  `design_lint and pcb_lint and design_lint_rule(rule_id="pcb.drc_invalid_severity_value")`.
+  The tag gate enables `KICAD_RUN_NATIVE_PCB_FIXTURES=1` for the digest-pinned
+  native module.
+- **Source:** KiCad 10.0.8's
+  [`SeverityFromString`](https://docs.kicad.org/doxygen/ui__common_8cpp_source.html)
+  converts unknown strings to Error; its versioned
+  [`BOARD_DESIGN_SETTINGS` loader](https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/pcbnew/board_design_settings.cpp)
+  applies that conversion to recognized string-valued keys.
+- **Local acceptance (candidate `v0.5.3rc693`):** The tag-scoped gate passed
+  394 tests with 8,603 unrelated tests deselected, including the digest-pinned
+  KiCad 10.0.8 Docker fault/control regression. Catalog reachability, marker
+  ownership, architecture, source freshness, and CLI/MCP parity passed. Ruff,
+  formatting, Linux and Windows
+  Pyright, rumdl, mdrepo, wheel and source builds, installed-wheel checks, and
+  the external/adapted project checks passed. The ignored local receipt is
+  `build/ci/run-bqzmr220`.
+- **Hosted acceptance:** Pending.
 
 ## Completion and release gate
 

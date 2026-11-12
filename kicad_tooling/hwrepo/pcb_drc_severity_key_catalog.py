@@ -76,7 +76,14 @@ KICAD_10_0_8_DRC_SEVERITY_KEYS = frozenset(
 KICAD_10_0_8_DRC_SEVERITY_MIGRATION_KEYS = frozenset(
     {"hole_near_hole", "legacy_no_courtyard_defined", "legacy_courtyards_overlap"}
 )
+KICAD_10_0_8_DRC_SEVERITY_STRING_KEYS = KICAD_10_0_8_DRC_SEVERITY_KEYS | frozenset(
+    {"hole_near_hole"}
+)
+KICAD_10_0_8_VALID_DRC_SEVERITY_VALUES = frozenset({"error", "warning", "ignore"})
 
 PCB_DRC_RULE_SEVERITY_KEYS_BY_KICAD_VERSION: Mapping[str, frozenset[str]] = MappingProxyType(
     {"10.0.8": KICAD_10_0_8_DRC_SEVERITY_KEYS | KICAD_10_0_8_DRC_SEVERITY_MIGRATION_KEYS}
+)
+PCB_DRC_STRING_RULE_SEVERITY_KEYS_BY_KICAD_VERSION: Mapping[str, frozenset[str]] = MappingProxyType(
+    {"10.0.8": KICAD_10_0_8_DRC_SEVERITY_STRING_KEYS}
 )

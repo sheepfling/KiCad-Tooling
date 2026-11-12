@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 337 active rules.
+The catalog currently contains 338 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -5541,6 +5541,24 @@ claim a board defect, run DRC on project boards, or establish electrical or
 manufacturing approval. Projects can use `review`, `block`, `off`, or an exact
 fingerprint ignore. Synthetic settings are documented in
 [`tests/fixtures/design_lint/pcb-drc-unknown-severity-key/`](../tests/fixtures/design_lint/pcb-drc-unknown-severity-key/README.md).
+
+## Review invalid PCB DRC severity strings
+
+`pcb.drc_invalid_severity_value` prompts when a source-hashed KiCad 10.0.8
+project assigns a string other than `error`, `warning`, or `ignore` to a known
+string-valued `board.design_settings.rule_severities` key. The exact catalog
+covers the 62 current DRC keys and the string-valued `hole_near_hole`
+migration alias. The two legacy boolean aliases remain outside this check.
+
+KiCad 10.0.8 converts `warning` and `ignore` explicitly; every other string
+becomes `error`. The digest-pinned native fault/control shows a misspelled
+`track_dangling` value changes its emitted severity to Error while the exact
+`warning` control remains Warning. This is a settings review, not a board
+defect finding. It does not run DRC on project boards, establish check
+applicability, inspect copper, or prove electrical or manufacturing readiness.
+Only exact KiCad 10.0.8 is supported until each patch is audited. Synthetic
+settings are in
+[`tests/fixtures/design_lint/pcb-drc-invalid-severity-value/`](../tests/fixtures/design_lint/pcb-drc-invalid-severity-value/README.md).
 
 ## Review persisted schematic ERC exclusions
 

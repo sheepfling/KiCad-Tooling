@@ -27,6 +27,7 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_pcb_dru_conflicting_severities_native.py": frozenset({"pcb_lint", "evidence_lint"}),
         "test_pcb_warning_default_drc_ignored_native.py": frozenset({"pcb_lint", "evidence_lint"}),
         "test_pcb_drc_unknown_severity_key_native.py": frozenset({"pcb_lint", "evidence_lint"}),
+        "test_pcb_drc_invalid_severity_value_native.py": frozenset({"pcb_lint", "evidence_lint"}),
         "test_ci_hosted_pcb_fixture_schedule.py": frozenset({"pcb_lint", "return_path_lint"}),
     }
 )
