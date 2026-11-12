@@ -63,6 +63,9 @@ from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
     PcbDifferentialPairRuleMap,
 )
+from .pcb_drc_nonstring_severity_value_review import (
+    source_bound_pcb_drc_nonstring_severity_value_candidates,
+)
 from .pcb_drc_source_scan import scan_source_bound_rule_map
 from .pcb_drc_unknown_severity_key_review import (
     source_bound_pcb_drc_unknown_severity_key_candidates,
@@ -189,6 +192,11 @@ def inspect_design_lint_request(
         )
         pcb_native_drc_candidates = (
             *source_bound_pcb_drc_invalid_severity_value_candidates(
+                root,
+                config,
+                coach.source_hashes,
+            ),
+            *source_bound_pcb_drc_nonstring_severity_value_candidates(
                 root,
                 config,
                 coach.source_hashes,

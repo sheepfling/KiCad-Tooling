@@ -132,7 +132,10 @@ class _PcbProjectSettings(BaseModel):
 
 
 def _configured_drc_check_severities(
-    document: str, check_ids: frozenset[str]
+    document: str,
+    check_ids: frozenset[str],
+    *,
+    skip_non_string_values: bool = False,
 ) -> tuple[PcbDrcCheckSeverity, ...]:
     project = parse_model_text(document, _PcbProjectSettings)
     if project.board is None or project.board.design_settings is None:
@@ -144,6 +147,8 @@ def _configured_drc_check_severities(
             continue
         severity = severities[check_id]
         if not isinstance(severity, str):
+            if skip_non_string_values:
+                continue
             raise TypeError(
                 "PCB DRC severity in board.design_settings.rule_severities "
                 f"for {check_id!r} must be a string"
@@ -171,42 +176,64 @@ def configured_pcb_drc_rule_severity_settings(
     )
 
 
-def configured_core_drc_check_severities(document: str) -> tuple[PcbDrcCheckSeverity, ...]:
+def configured_core_drc_check_severities(
+    document: str, *, skip_non_string_values: bool = False
+) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return explicit severities for the bounded core electrical DRC checks."""
-    return _configured_drc_check_severities(document, CORE_DRC_CHECK_IDS)
+    return _configured_drc_check_severities(
+        document, CORE_DRC_CHECK_IDS, skip_non_string_values=skip_non_string_values
+    )
 
 
-def configured_dfm_drc_check_severities(document: str) -> tuple[PcbDrcCheckSeverity, ...]:
+def configured_dfm_drc_check_severities(
+    document: str, *, skip_non_string_values: bool = False
+) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return explicit severities for documented Error-default DFM checks."""
-    return _configured_drc_check_severities(document, DFM_ERROR_DEFAULT_DRC_CHECK_IDS)
+    return _configured_drc_check_severities(
+        document, DFM_ERROR_DEFAULT_DRC_CHECK_IDS, skip_non_string_values=skip_non_string_values
+    )
 
 
 def configured_signal_integrity_drc_check_severities(
-    document: str,
+    document: str, *, skip_non_string_values: bool = False
 ) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return explicit severities for documented Error-default signal-integrity checks."""
-    return _configured_drc_check_severities(document, SIGNAL_INTEGRITY_ERROR_DEFAULT_DRC_CHECK_IDS)
+    return _configured_drc_check_severities(
+        document,
+        SIGNAL_INTEGRITY_ERROR_DEFAULT_DRC_CHECK_IDS,
+        skip_non_string_values=skip_non_string_values,
+    )
 
 
 def configured_electrical_drc_check_severities(
-    document: str,
+    document: str, *, skip_non_string_values: bool = False
 ) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return explicit severities for bounded Error-default electrical DRC checks."""
-    return _configured_drc_check_severities(document, ELECTRICAL_ERROR_DEFAULT_DRC_CHECK_IDS)
+    return _configured_drc_check_severities(
+        document,
+        ELECTRICAL_ERROR_DEFAULT_DRC_CHECK_IDS,
+        skip_non_string_values=skip_non_string_values,
+    )
 
 
 def configured_miscellaneous_drc_check_severities(
-    document: str,
+    document: str, *, skip_non_string_values: bool = False
 ) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return severities for bounded Error-default miscellaneous DRC checks."""
-    return _configured_drc_check_severities(document, MISCELLANEOUS_ERROR_DEFAULT_DRC_CHECK_IDS)
+    return _configured_drc_check_severities(
+        document,
+        MISCELLANEOUS_ERROR_DEFAULT_DRC_CHECK_IDS,
+        skip_non_string_values=skip_non_string_values,
+    )
 
 
 def configured_warning_default_drc_check_severities(
-    document: str,
+    document: str, *, skip_non_string_values: bool = False
 ) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return explicit severities for reviewed KiCad 10.0 Warning-default checks."""
-    return _configured_drc_check_severities(document, WARNING_DEFAULT_DRC_CHECK_IDS)
+    return _configured_drc_check_severities(
+        document, WARNING_DEFAULT_DRC_CHECK_IDS, skip_non_string_values=skip_non_string_values
+    )
 
 
 def ignored_core_drc_check_ids(document: str) -> tuple[str, ...]:

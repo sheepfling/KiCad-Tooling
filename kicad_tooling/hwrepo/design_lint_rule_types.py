@@ -322,6 +322,7 @@ DesignLintRuleId = Literal[
     "pcb.warning_default_drc_check_ignored",
     "pcb.drc_unknown_severity_key",
     "pcb.drc_invalid_severity_value",
+    "pcb.drc_nonstring_severity_value",
     "pcb.drc_exclusion_present",
     "schematic.erc_error_downgraded",
     "schematic.erc_catalog_unverified",

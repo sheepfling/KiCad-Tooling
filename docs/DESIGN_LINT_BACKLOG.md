@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 338 rules are implemented with synthetic regression coverage.
+The following 339 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 338 active rules.
+The catalog currently contains 339 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -737,6 +737,7 @@ skipped under prerelease policy.
 - `pcb.drc_exclusion_present`
 - `pcb.drc_unknown_severity_key`
 - `pcb.drc_invalid_severity_value`
+- `pcb.drc_nonstring_severity_value`
 - `pcb.mechanical_edge_clearance_rule_coverage`
 - `pcb.rf_module_antenna_keepout_coverage`
 - `pcb.keepout_intent_coverage`
@@ -24163,6 +24164,50 @@ acceptance threads while new lint features proceed:
   Pyright, Windows typing, wheel and source builds, installed-wheel checks, and
   external/adapted project checks passed. Package and preview jobs were skipped
   under prerelease policy.
+
+#### LINT-412 — Review non-string PCB DRC severity values
+
+- **Status:** Implemented as `pcb.drc_nonstring_severity_value`, default
+  `review`, for exact KiCad 10.0.8 settings only.
+- **Gap:** LINT-411 reviews unrecognized strings but leaves non-string JSON
+  values outside that predicate. A native KiCad 10.0.8 probe found that
+  boolean, number, null, array, and object values for `track_dangling` leave
+  the fixture's native Warning severity unchanged, so the saved value does not
+  express the requested severity.
+- **Behavior:** Compare source-hashed settings against the exact string-valued
+  DRC key catalog. Report one candidate for each recognized key whose value is
+  not a JSON string. Preserve the exact JSON value and type; do not infer the
+  intended severity or whether the built-in default is appropriate. The two
+  legacy boolean migration aliases and unknown keys remain outside this rule.
+  Other KiCad versions remain out of scope.
+- **Regression coverage:** Exercise boolean, number, null, array, and object
+  values; every canonical string-valued key; migration aliases; unknown keys;
+  unsupported versions; non-PCB project kinds; source identity; deterministic
+  ordering; CLI/MCP parity; and a digest-pinned native boolean fault/control.
+  KiCad 10.0.8 must keep the native `track_dangling` Warning for the boolean
+  fault and exact `warning` control on repeated runs.
+- **Evidence boundary:** This is a saved-settings review. It does not prove a
+  DRC violation exists, run checks on project boards, identify author intent,
+  inspect copper, or establish electrical or manufacturing approval. Projects
+  can choose `review`, `block`, `off`, or an exact ignore.
+- **Selection:** Run
+  `tests/test_pcb_drc_nonstring_severity_value.py` and
+  `tests/test_design_lint_mcp_parity_pcb_drc_nonstring_severity_value.py` with
+  `design_lint and pcb_lint and design_lint_rule(rule_id="pcb.drc_nonstring_severity_value")`.
+  The tag gate enables `KICAD_RUN_NATIVE_PCB_FIXTURES=1` for the digest-pinned
+  native module.
+- **Source:** KiCad 10.0.8's
+  [`BOARD_DESIGN_SETTINGS` loader](https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/pcbnew/board_design_settings.cpp)
+  passes recognized saved values to its severity conversion. The exact native
+  test measures the non-string behavior for `track_dangling`; it does not claim
+  that observation for every DRC key.
+- **Local acceptance (v0.5.3rc694):** The tag-scoped package gate passed 400
+  tests with 8,618 deselected, including the digest-pinned KiCad 10.0.8 native
+  fixture. Ruff, both Alphus architecture profiles, Rumdl, mdrepo, Linux and
+  Windows Pyright, wheel and sdist builds, installed-wheel checks, and the CLI
+  version smoke check passed. The focused behavior/parity/native slice passed
+  27 tests with 36 deselected. Receipt: `build/ci/run-umyx1467`.
+- **Hosted acceptance:** Pending.
 
 ## Completion and release gate
 

@@ -279,9 +279,12 @@ PCB_THEME_SUITES = (
     "test_pcb_drc_unknown_severity_key_native.py",
     "test_pcb_drc_invalid_severity_value.py",
     "test_pcb_drc_invalid_severity_value_native.py",
+    "test_pcb_drc_nonstring_severity_value.py",
+    "test_pcb_drc_nonstring_severity_value_native.py",
     "test_design_lint_mcp_parity_pcb_warning_default_drc_ignored.py",
     "test_design_lint_mcp_parity_pcb_drc_unknown_severity_key.py",
     "test_design_lint_mcp_parity_pcb_drc_invalid_severity_value.py",
+    "test_design_lint_mcp_parity_pcb_drc_nonstring_severity_value.py",
     "test_pcb_signal_integrity_drc_severity.py",
     "test_design_lint_mcp_parity_pcb_signal_integrity_drc_severity.py",
 )

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from pathlib import Path
+from typing import Protocol
 
 from .design_lint_pcb_drc_global_severity_candidate_evidence import (
     WARNING_DEFAULT_DRC_SUPPORTED_VERSIONS,
@@ -31,15 +31,19 @@ from .project_models import (
 from .source_state_models import SourceHashInventory
 
 
+class _DrcSeverityParser(Protocol):
+    def __call__(
+        self, document: str, *, skip_non_string_values: bool = False
+    ) -> tuple[PcbDrcCheckSeverity, ...]: ...
+
+
 def _source_bound_drc_settings(
     root: Path,
     config: ProjectConfig,
     source_hashes: SourceHashInventory,
     *,
     supported_version_prefix: str = "10.",
-    parse_severities: Callable[[str], tuple[PcbDrcCheckSeverity, ...]] = (
-        configured_core_drc_check_severities
-    ),
+    parse_severities: _DrcSeverityParser = (configured_core_drc_check_severities),
 ) -> SourceBoundPcbDrcSettings | None:
     if config.kind not in {ProjectKind.PCB, ProjectKind.PCB_ONLY}:
         return None
@@ -51,7 +55,10 @@ def _source_bound_drc_settings(
     if source is None:
         return None
     try:
-        severities = parse_severities(source.document)
+        severities = parse_severities(
+            source.document,
+            skip_non_string_values=config.kicad_version == "10.0.8",
+        )
     except (ValueError, TypeError) as exc:
         raise ValueError(
             f"{relative}: could not read supported PCB DRC severity settings: {exc}"
@@ -305,7 +312,7 @@ def _downgraded_native_drc_check_candidates(
     *,
     rule_id: PcbDrcSeverityRuleId,
     category: PcbDrcSeverityCategory,
-    parse_severities: Callable[[str], tuple[PcbDrcCheckSeverity, ...]],
+    parse_severities: _DrcSeverityParser,
 ) -> tuple[Candidate, ...]:
     settings = _source_bound_drc_settings(
         root,

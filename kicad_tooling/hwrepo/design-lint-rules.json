@@ -13554,7 +13554,7 @@
       "limitations": [
         "KiCad 10.0.8 maps warning to Warning, ignore to Ignore, and every other string to Error. The finding reports that interpretation but does not infer the author's intended token or claim a PCB defect.",
         "The rule inspects saved project settings only. It does not run DRC, establish whether a check applies to a board, verify project-authored requirements, inspect copper, or establish manufacturing readiness. Projects may select review, block, off, or an exact-fingerprint ignore.",
-        "Non-string values are outside this review. Existing typed severity readers fail closed for values they consume; the two boolean migration aliases are not severity strings."
+        "Non-string values are handled by pcb.drc_nonstring_severity_value. The two boolean migration aliases are not severity-string keys."
       ],
       "fault_fixtures": [
         "tests.test_pcb_drc_invalid_severity_value.test_invalid_known_value_creates_source_bound_review_candidate",
@@ -13577,6 +13577,54 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_drc_invalid_severity_value_review.py#source_bound_pcb_drc_invalid_severity_value_candidates",
         "kicad_tooling/hwrepo/pcb_drc_invalid_severity_value_review.py#project_pcb_drc_invalid_severity_value_evidence",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings.py#configured_pcb_drc_rule_severity_settings",
+        "kicad_tooling/hwrepo/pcb_drc_severity_key_catalog.py#PCB_DRC_STRING_RULE_SEVERITY_KEYS_BY_KICAD_VERSION",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#read_source_bound_pcb_project_settings",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#verify_source_bound_pcb_project_settings_unchanged",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
+        "kicad_tooling/hwrepo/design_lint_candidate_inputs.py#DesignLintCandidateInputs",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
+      ]
+    },
+    {
+      "rule_id": "pcb.drc_nonstring_severity_value",
+      "title": "Non-string PCB DRC severity values need review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_nonstring_severity_value_review.py#source_bound_pcb_drc_nonstring_severity_value_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0.8 .kicad_pro board.design_settings.rule_severities key, JSON value type, saved value, and project KiCad version",
+      "predicate": "For PCB or PCB-only projects configured for exact KiCad 10.0.8, emit one source-bound review candidate for each recognized string-valued DRC severity key whose saved JSON value is not a string.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.8 only; string-valued keys are the 62 current DRC item keys and the hole_near_hole migration alias. The two legacy boolean aliases are excluded. Other patches remain out of scope until their exact source and native behavior are audited."
+      ],
+      "limitations": [
+        "A non-string value does not state one of KiCad's severity tokens. In a digest-pinned KiCad 10.0.8 probe, boolean, number, null, array, and object values for track_dangling left the fixture's native Warning severity unchanged. This does not prove behavior for every key or infer whether its built-in default is appropriate.",
+        "The rule inspects saved settings only. It does not run DRC on project boards, determine whether a check applies, infer the author's intended severity, inspect copper, or establish electrical or manufacturing readiness. Projects may select review, block, off, or an exact-fingerprint ignore."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_drc_nonstring_severity_value.test_nonstring_known_values_create_source_bound_candidates",
+        "tests.test_design_lint_mcp_parity_pcb_drc_nonstring_severity_value.test_nonstring_pcb_drc_severity_review_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_nonstring_severity_value_native.test_kicad_1008_ignores_boolean_severity_value_and_honors_string_control_repeatably"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_drc_nonstring_severity_value.test_canonical_strings_on_every_key_are_quiet_controls",
+        "tests.test_pcb_drc_nonstring_severity_value.test_unrecognized_key_is_left_to_unknown_key_review",
+        "tests.test_pcb_drc_nonstring_severity_value.test_unaudited_versions_are_out_of_scope",
+        "tests.test_pcb_drc_nonstring_severity_value.test_non_pcb_project_kinds_are_out_of_scope",
+        "tests.test_pcb_drc_nonstring_severity_value_native.test_kicad_1008_ignores_boolean_severity_value_and_honors_string_control_repeatably"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_drc_nonstring_severity_value.test_input_order_changes_do_not_change_candidate_order"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_nonstring_severity_value_review.py#source_bound_pcb_drc_nonstring_severity_value_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_nonstring_severity_value_review.py#project_pcb_drc_nonstring_severity_value_evidence",
         "kicad_tooling/hwrepo/pcb_drc_project_settings.py#configured_pcb_drc_rule_severity_settings",
         "kicad_tooling/hwrepo/pcb_drc_severity_key_catalog.py#PCB_DRC_STRING_RULE_SEVERITY_KEYS_BY_KICAD_VERSION",
         "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#read_source_bound_pcb_project_settings",

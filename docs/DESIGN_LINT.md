@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 338 active rules.
+The catalog currently contains 339 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -5559,6 +5559,23 @@ applicability, inspect copper, or prove electrical or manufacturing readiness.
 Only exact KiCad 10.0.8 is supported until each patch is audited. Synthetic
 settings are in
 [`tests/fixtures/design_lint/pcb-drc-invalid-severity-value/`](../tests/fixtures/design_lint/pcb-drc-invalid-severity-value/README.md).
+
+## Review non-string PCB DRC severity values
+
+`pcb.drc_nonstring_severity_value` prompts when a source-hashed KiCad 10.0.8
+project assigns a non-string JSON value to a recognized string-valued
+`board.design_settings.rule_severities` key. It covers the same 62 current DRC
+keys and `hole_near_hole` migration alias. The two legacy boolean aliases are
+excluded because KiCad migrates them as boolean settings.
+
+A digest-pinned KiCad 10.0.8 probe tested boolean, number, null, array, and
+object values for `track_dangling`; all left the fixture's native Warning
+severity unchanged. The retained regression repeats a boolean fault and exact
+`warning` control. This is a saved-settings review, not a board-defect finding;
+it does not infer whether the built-in default is appropriate, run DRC on
+project boards, or establish electrical or manufacturing readiness. Only exact
+KiCad 10.0.8 is supported. Synthetic settings are in
+[`tests/fixtures/design_lint/pcb-drc-nonstring-severity-value/`](../tests/fixtures/design_lint/pcb-drc-nonstring-severity-value/README.md).
 
 ## Review persisted schematic ERC exclusions
 
