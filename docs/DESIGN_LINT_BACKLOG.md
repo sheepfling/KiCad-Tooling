@@ -24803,6 +24803,10 @@ acceptance threads while new lint features proceed:
   wide mdrepo, scoped Linux and Windows Pyright, wheel and sdist builds,
   installed-wheel execution, and the separate template checkout rehearsal
   passed.
+- **Hosted acceptance (2026-11-12):** Annotated tag `v0.5.3rc705` passed
+  GitHub Actions run `43218568561`. The focused prerelease gate and installed-
+  wheel rehearsal passed; package publication and preview orchestration were
+  skipped under prerelease policy.
 
 ## Completion and release gate
 
