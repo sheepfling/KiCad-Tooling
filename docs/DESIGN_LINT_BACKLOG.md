@@ -17251,6 +17251,15 @@ control are documented in the
   name controls, policy behavior, and CLI/MCP parity are implemented. This is
   a review signal, not electrical approval or a project wiring requirement.
 
+#### Numbered-return mixed-interface native coverage
+
+- **Status:** Extends the existing `net.numbered_returns` gate with a mixed
+  USB/serial synthetic fault/control. KiCad 10.0.0 and 10.0.5 exports must
+  retain the exact `USB1_GND`/`USB2_GND` pins, including USB and serial pins on
+  `USB1_GND`, emit one numbered USB REVIEW, and keep the common-net control
+  quiet. This adds native evidence for an existing source-level scenario; it
+  does not assert that the return domains should be common.
+
 #### LINT-041 — Named complementary-net pair review
 
 - **Status:** Implemented as

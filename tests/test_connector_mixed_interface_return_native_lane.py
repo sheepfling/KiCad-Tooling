@@ -23,6 +23,7 @@ pytestmark = [
 
 
 @pytest.mark.design_lint_rule(rule_id="connector.repeated_pin_function")
+@pytest.mark.design_lint_rule(rule_id="net.numbered_returns")
 @pytest.mark.native_kicad
 @pytest.mark.slow
 @pytest.mark.skipif(
@@ -63,18 +64,21 @@ def test_native_mixed_interface_returns_are_source_bound_and_repeatable(
     assert fault["kicad_version"] == version
     assert fault["connector_coverage"] == "COMPLETE"
     assert fault["findings"] != "none"
+    assert fault["numbered_return_findings"] == "USB_GND"
     assert fault["erc_errors"] == "none"
     assert fault["repeatable"] == "true"
     control = results[f"{prefix}control"]
     assert control["kicad_version"] == version
     assert control["connector_coverage"] == "COMPLETE"
     assert control["findings"] == "none"
+    assert control["numbered_return_findings"] == "none"
     assert control["erc_errors"] == "none"
     assert control["repeatable"] == "true"
     all_open = results[f"{prefix}all-open"]
     assert all_open["kicad_version"] == version
     assert all_open["connector_coverage"] == "COMPLETE"
     assert all_open["findings"] != "none"
+    assert all_open["numbered_return_findings"] == "none"
     assert all_open["erc_errors"] == "none"
     assert all_open["repeatable"] == "true"
     separate_scope = results[f"{prefix}separate-scope-control"]

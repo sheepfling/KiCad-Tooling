@@ -2251,7 +2251,10 @@ ground. The recognizer also accepts one letter after `GND` or `VSS` (for
 example, `GNDA1`/`GNDA2` or `VSSA1`/`VSSA2`). Longer suffixes such as `VSSIO`
 stay outside that pattern. Synthetic tests cover valid compact and delimited
 identifiers, malformed-prefix controls, common-net controls, rule policy, and
-exact-version native export.
+exact-version native export. The mixed USB/serial native fault also verifies
+that the `USB1_GND` evidence includes the USB and serial connector pins, while
+the separate `USB2_GND` pin produces one REVIEW candidate; the common-return
+control is quiet.
 
 The `mapped_check_runs` records distinguish an absent optional map
 (`NOT_CONFIGURED`) from a map comparison that ran and found no mismatch

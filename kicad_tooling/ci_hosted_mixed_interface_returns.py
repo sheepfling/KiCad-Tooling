@@ -34,11 +34,12 @@ from .hwrepo.netlist_contract_models import NetlistContract
 
 MIXED_INTERFACE_RETURN_TOOLCHAINS = KICAD_10_NATIVE_TOOLCHAINS
 _RULE_ID = "connector.repeated_pin_function"
+_NUMBERED_RETURN_RULE_ID = "net.numbered_returns"
 _SCOPE_RULE_ID = "connector.return_supply_scope_singleton"
 _FIXTURE_RELATIVE_ROOT = Path("tests/fixtures/design_lint/mixed-interface-return-peers")
 _SOURCE_HASHES = MappingProxyType(
     {
-        "fault": "53af59844b37ac7181a99e22a5bc14cd868ef33083361590cd627e8907e3fb83",
+        "fault": "c940a2c5bb21c1f3ab70060d36ca512dc3ec08cd556bd74a99ceb4ad2d084c08",
         "control": "b0731cac3cba8b946e905a41f2f9251c459573f699d2c2990b2574c4ba7f5c45",
         "all-open": "3fb246894f60b035be41eae58820d37e607919f3c33a5fd1189ed489fd1cf8ca",
     }
@@ -182,10 +183,10 @@ def mixed_interface_return_fixture_lane(
             "USB1_D-": ("J1.2",),
             "SERIAL_TX": ("J2.1",),
             "SERIAL_RX": ("J2.2",),
-            "COMMON_RETURN": ("J1.3", "J2.3"),
+            "USB1_GND": ("J1.3", "J2.3"),
             "USB2_D+": ("J3.1",),
             "USB2_D-": ("J3.2",),
-            "USB2_RETURN": ("J3.3",),
+            "USB2_GND": ("J3.3",),
         },
         "control": {
             "USB1_D+": ("J1.1",),
@@ -284,13 +285,18 @@ def mixed_interface_return_fixture_lane(
         scope_findings = tuple(
             item for item in reports[case, "first"].findings if item.rule_id == _SCOPE_RULE_ID
         )
+        numbered_return_findings = tuple(
+            item
+            for item in reports[case, "first"].findings
+            if item.rule_id == _NUMBERED_RETURN_RULE_ID
+        )
         if case == "fault":
             if len(target_findings) != 1 or target_findings[0].mode != "review":
                 raise ValueError("Split mixed-interface returns lost their review finding")
             expected_return_assignments = {
-                "J1.3": ("COMMON_RETURN",),
-                "J2.3": ("COMMON_RETURN",),
-                "J3.3": ("USB2_RETURN",),
+                "J1.3": ("USB1_GND",),
+                "J2.3": ("USB1_GND",),
+                "J3.3": ("USB2_GND",),
             }
             if any(
                 target_findings[0].evidence.get(pin) != nets
@@ -306,6 +312,13 @@ def mixed_interface_return_fixture_lane(
                 raise ValueError(
                     "One shared return-comparison scope should retain all connector peers"
                 )
+            if (
+                len(numbered_return_findings) != 1
+                or numbered_return_findings[0].subject != "USB_GND"
+                or numbered_return_findings[0].evidence
+                != {"USB1_GND": ("J1.3", "J2.3"), "USB2_GND": ("J3.3",)}
+            ):
+                raise ValueError("Numbered USB returns lost their exact native pin evidence")
         elif case == "all-open":
             if len(target_findings) != 1 or target_findings[0].mode != "review":
                 raise ValueError("All-open mixed-interface returns lost their review finding")
@@ -322,6 +335,8 @@ def mixed_interface_return_fixture_lane(
             raise ValueError("Common mixed-interface return control retained a review finding")
         elif scope_findings:
             raise ValueError("Common return control retained a singleton-scope finding")
+        if case != "fault" and numbered_return_findings:
+            raise ValueError(f"Numbered-return heuristic unexpectedly flagged {case}")
         log.event(
             f"mixed-interface-return-fixture/{case}",
             "PASS",
@@ -337,6 +352,8 @@ def mixed_interface_return_fixture_lane(
             repeat_normalized_erc_sha256=erc_hashes[case, "repeat"],
             connector_coverage=coverage_statuses[case],
             findings=";".join(item.subject for item in target_findings) or "none",
+            numbered_return_findings=";".join(item.subject for item in numbered_return_findings)
+            or "none",
             erc_errors="none",
             repeatable="true",
         )

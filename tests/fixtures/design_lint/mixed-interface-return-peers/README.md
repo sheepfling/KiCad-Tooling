@@ -7,10 +7,11 @@ The fault schematic has two USB connectors and one serial connector. The
 source-matched interface catalog identifies each connector's return pin, and
 the connector review assigns each data interface to its own peer group. All
 three returns share one return-comparison group for the fault and common-net
-control. The first USB return and serial return share `COMMON_RETURN`; the second
-USB return is assigned to `USB2_RETURN`. The lint should raise one review finding
-for the split return pins while keeping unrelated data pins scoped to their peer
-groups. The fault is also evaluated with
+control. The fault assigns J1 and J2 returns to `USB1_GND`, and J3 to
+`USB2_GND`. The mapped peer lint should review the split return pins, and the
+numbered-return heuristic should report the USB1/USB2 family with evidence for
+both USB1 pins. Unrelated data pins stay scoped to their peer groups. The fault
+is also evaluated with
 `connector-reviews-separate-return-groups.json`: J1/J2 share one comparison
 scope while J3 has another, so the cross-group return prompt is suppressed. This
 review-scope control does not claim electrical isolation or continuity.
@@ -47,7 +48,7 @@ Reviewed input SHA-256 values:
 
 | Input                                           | SHA-256                                                            |
 | ----------------------------------------------- | ------------------------------------------------------------------ |
-| `fault.kicad_sch`                               | `53af59844b37ac7181a99e22a5bc14cd868ef33083361590cd627e8907e3fb83` |
+| `fault.kicad_sch`                               | `c940a2c5bb21c1f3ab70060d36ca512dc3ec08cd556bd74a99ceb4ad2d084c08` |
 | `control.kicad_sch`                             | `b0731cac3cba8b946e905a41f2f9251c459573f699d2c2990b2574c4ba7f5c45` |
 | `all-open.kicad_sch`                            | `3fb246894f60b035be41eae58820d37e607919f3c33a5fd1189ed489fd1cf8ca` |
 | `interfaces.json`                               | `e1216ee351d3fcdddd720f2bc6f0e2068bbc9d85e777aa4914c4af8102cb8b99` |
