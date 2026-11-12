@@ -804,7 +804,16 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc718):** LINT-430 extends
+- **Latest published lint-gate checkpoint (v0.5.3rc719):** LINT-431 reviews
+  conflicting duplicate PCB net-to-netclass assignments using exact source
+  order and keeps identical duplicates quiet. Local scoped acceptance passed
+  431 tests with 8,859 deselected, including repeatable digest-pinned KiCad
+  10.0.8 Docker fault/control exports. Hosted prerelease acceptance and the
+  installed-wheel rehearsal against a separate project passed in GitHub
+  Actions run `43303351048` on commit
+  `86f4e3dbb7b48dbdd4f8ece33b0e21094b7040c2`; package and preview jobs were
+  skipped under prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc718):** LINT-430 extends
   `net.numbered_returns` to review a recognized base return label beside a
   matching indexed sibling. Local scoped acceptance passed 456 tests with
   8,828 deselected, including repeatable pinned KiCad 10.0.0 and 10.0.5
@@ -25285,6 +25294,9 @@ acceptance threads while new lint features proceed:
   Docker fault/control exports. Ruff, Alphus role and shared-utility checks,
   Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist builds, installed
   artifact checks, and external/adapted template-project playtests passed.
+  Hosted prerelease acceptance and the installed-wheel rehearsal against a
+  separate project passed in GitHub Actions run `43303351048`; package and
+  preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
