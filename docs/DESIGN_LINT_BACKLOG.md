@@ -24441,8 +24441,8 @@ acceptance threads while new lint features proceed:
   external/adapted template project checks passed. Receipt:
   `build/ci/run-wh00civi`.
 - **Hosted acceptance (2026-11-12):** Annotated tag `v0.5.3rc698` passed
-  [GitHub Actions run 43174812560](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43174812560):
-  405 tests passed and 8,699 were deselected, including the pinned native
+  GitHub Actions run `43174812560`: 405 tests passed and 8,699 were
+  deselected, including the pinned native
   fixture. Ruff, both Alphus profiles, Markdown and repository-link checks,
   Linux and Windows typing, wheel and source builds, installed-wheel checks,
   and external/adapted project checks passed. Package and preview jobs were
