@@ -802,7 +802,15 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc708):** LINT-422 now
+- **Latest published lint-gate checkpoint (v0.5.3rc709):** LINT-040 now
+  exercises `net.numbered_returns` on a mixed USB/serial synthetic fault and
+  common-return control. Digest-pinned KiCad 10.0.0 and 10.0.5 exports retain
+  the exact J1.3/J2.3 `USB1_GND` and J3.3 `USB2_GND` evidence. Local scoped
+  acceptance passed 444 tests with 8,770 deselected, including both native
+  versions, type checks, package builds, and the external-project wheel check.
+  Hosted acceptance passed in run `43230092868`; package and preview jobs were
+  skipped under prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc708):** LINT-422 now
   includes a unique matching unit-0 group when comparing a nonzero unit. The
   local scoped gate passed 410 tests with 8,803 deselected, including the
   digest-pinned KiCad 10.0.5 Docker fixtures and external-template rehearsals.
