@@ -61,6 +61,7 @@ SCHEMATIC_SOURCE_INTEGRITY_SUITES = (
     "test_schematic_duplicate_object_uuid.py",
     "test_design_lint_mcp_parity_schematic_duplicate_object_uuid.py",
     "test_schematic_duplicate_object_uuid_native.py",
+    "test_design_lint_determinism_schematic_uuid.py",
     "test_design_lint_architecture_schematic_source_integrity.py",
 )
 PCB_REFERENCE_PLANE_THEME_SUITES = (

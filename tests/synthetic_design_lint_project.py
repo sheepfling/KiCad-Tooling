@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 from types import MappingProxyType
 
@@ -61,9 +62,10 @@ def synthetic_design_lint_project(
     custom_rules_source: str | None = None,
     project_settings_source: str | None = None,
     schematic_source: bytes | None = None,
+    hierarchical_schematics: Mapping[str, bytes] | None = None,
     board_source: str | None = None,
 ) -> tuple[Path, Path]:
-    """Create source-bound synthetic evidence, optionally including custom DRC rules."""
+    """Create source-bound synthetic evidence, optionally including hierarchy or custom DRC."""
     root = base / "repository"
     catalog = root / "catalog"
     project_dir = root / "projects" / project_id
@@ -76,6 +78,12 @@ def synthetic_design_lint_project(
     source_paths = tuple(
         f"kicad/{project_id}{suffix}" for suffix in (".kicad_pro", ".kicad_sch", ".kicad_pcb")
     )
+    extra_schematic_paths: dict[str, str] = {}
+    for filename in hierarchical_schematics or {}:
+        if Path(filename).name != filename or not filename.endswith(".kicad_sch"):
+            raise ValueError("hierarchical schematic keys must be schematic filenames")
+        extra_schematic_paths[filename] = f"kicad/{filename}"
+    source_paths = (*source_paths, *extra_schematic_paths.values())
     if custom_rules_source is not None and board_source is None:
         board_source = _PCB_RULE_REVIEW_BOARD.read_text(encoding="utf-8")
     source_bytes = {
@@ -91,6 +99,12 @@ def synthetic_design_lint_project(
             b"synthetic PCB source\n" if board_source is None else board_source.encode("utf-8")
         ),
     }
+    source_bytes.update(
+        {
+            extra_schematic_paths[filename]: content
+            for filename, content in (hierarchical_schematics or {}).items()
+        }
+    )
     if custom_rules_source is not None:
         rules_relative = f"kicad/{project_id}.kicad_dru"
         source_paths = (*source_paths, rules_relative)

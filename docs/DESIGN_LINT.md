@@ -976,24 +976,27 @@ KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
   -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.duplicate_embedded_symbol_definition")'
 ```
 
-### Schematic object UUID repeats within a source file
+### Schematic object UUID repeats across source files
 
 `schematic.duplicate_object_uuid` reviews a UUID value that appears in
-multiple direct object UUID fields within one verified schematic file. The
-finding includes the source hash, UUID, source lines, and containing object
-kinds. KiCad uses UUIDs as unique identifiers when maintaining schematic to
-PCB symbol links (see the [KiCad Eeschema documentation] for details).
-This check reports a source identity collision for human review; it does not
-claim that every duplicate changes exported connectivity or PCB behavior.
+multiple direct object UUID fields across the unique source files in one
+verified schematic tree. The finding includes source paths and hashes, the
+UUID, source lines, and object kinds for each occurrence. KiCad uses UUIDs as
+unique identifiers when maintaining schematic to PCB symbol links (see the
+[KiCad Eeschema documentation] for details). This check reports a source
+identity collision for human review; it does not claim that every duplicate
+changes exported connectivity or PCB behavior.
 
-The scan resets for each source file, so a hierarchical sheet reused at
-multiple paths is not compared with itself. The tooling-owned fault duplicates
-only the UUID for a placed USB connector pin. KiCad 10.0.5 accepts that source
-and exports the same netlist as the control; that observation covers this pin
-record only. The rule is default-review and can be set to `block`, `off`, or an
-exact-fingerprint ignore by project policy.
-The fault/control sources and native command are recorded in the
-[duplicate-UUID fixture README][duplicate-object-uuid-fixture].
+The scan reads each unique file once, so a hierarchical sheet reused at
+multiple paths is not compared with itself. Tooling-owned fault/control pairs
+cover a placed connector pin repeated within one file and a wire UUID repeated
+across two different sheet files. KiCad 10.0.5 accepts each source and exports
+the same netlist as its control; these observations cover those object types
+and fixture structures only. The rule is default-review and can be set to
+`block`, `off`, or an exact-fingerprint ignore by project policy. The
+fault/control sources and native commands are recorded in the
+[within-file UUID fixture README][duplicate-object-uuid-fixture] and the
+[cross-file UUID fixture README][duplicate-object-uuid-cross-file-fixture].
 
 Run the source and CLI/MCP regressions with:
 
@@ -1016,6 +1019,8 @@ KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
 [KiCad Eeschema documentation]: https://docs.kicad.org/10.0/en/eeschema/eeschema.html
 [duplicate-object-uuid-fixture]:
   ../tests/fixtures/design_lint/schematic-duplicate-object-uuid/README.md
+[duplicate-object-uuid-cross-file-fixture]:
+  ../tests/fixtures/design_lint/schematic-duplicate-object-uuid-across-files/README.md
 
 ### Placed and embedded symbol pin numbers differ
 

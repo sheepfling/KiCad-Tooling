@@ -312,12 +312,12 @@ def duplicate_schematic_object_uuid_candidates(
     config: ProjectConfig,
     source_hashes: SourceHashInventory,
 ) -> tuple[Candidate, ...]:
-    """Review repeated object UUIDs within each verified schematic source file."""
+    """Review object UUID collisions across unique verified schematic sources."""
     source_tree = _integrity_source_tree(root, config, source_hashes)
     if source_tree is None:
         return ()
 
-    candidates: list[Candidate] = []
+    occurrences: dict[str, list[tuple[str, str, int, str]]] = {}
     for source_file in source_tree.source_files:
         try:
             document = schematic_root(source_file.contents)
@@ -326,7 +326,6 @@ def duplicate_schematic_object_uuid_candidates(
                 continue
             raise
 
-        occurrences: dict[str, list[tuple[int, str]]] = {}
         pending: list[tuple[SExprSpan, str]] = [(document.root, "kicad_sch")]
         while pending:
             parent, parent_kind = pending.pop()
@@ -335,36 +334,69 @@ def duplicate_schematic_object_uuid_candidates(
                 if atoms[:1] == ("uuid",):
                     if len(atoms) == 2:
                         line = document.text.count("\n", 0, child.start) + 1
-                        occurrences.setdefault(atoms[1], []).append((line, parent_kind))
+                        occurrences.setdefault(atoms[1], []).append(
+                            (source_file.source_path, source_file.source_sha256, line, parent_kind)
+                        )
                     continue
                 child_kind = atoms[0] if atoms else "<unknown>"
                 pending.append((child, child_kind))
 
-        for object_uuid, entries in sorted(occurrences.items()):
-            if len(entries) < 2:
-                continue
-            source_lines = tuple(str(line) for line, _kind in sorted(entries))
-            object_kinds = tuple(sorted({kind for _line, kind in entries}))
-            first_line = source_lines[0]
-            candidates.append(
-                Candidate(
-                    rule_id=_DUPLICATE_OBJECT_UUID_RULE_ID,
-                    subject=f"{source_file.source_path}:{first_line}:{object_uuid}",
-                    message=(
-                        f"Schematic UUID {object_uuid!r} is assigned to {len(entries)} "
-                        f"objects in this source file on lines {', '.join(source_lines)}; "
-                        "review the object identities before release."
-                    ),
-                    evidence={
-                        "source_path": (source_file.source_path,),
-                        "source_sha256": (source_file.source_sha256,),
-                        "object_uuid": (object_uuid,),
-                        "occurrence_count": (str(len(entries)),),
-                        "source_lines": source_lines,
-                        "object_kinds": object_kinds,
-                    },
-                )
+    candidates: list[Candidate] = []
+    for object_uuid, entries in sorted(occurrences.items()):
+        if len(entries) < 2:
+            continue
+        ordered_entries = tuple(sorted(entries, key=lambda item: (item[0], item[2], item[3])))
+        source_paths = tuple(sorted({source_path for source_path, _sha, _line, _kind in entries}))
+        source_hash_by_path = {
+            source_path: source_sha256 for source_path, source_sha256, _line, _kind in entries
+        }
+        source_lines = tuple(str(line) for _path, _sha, line, _kind in ordered_entries)
+        object_kinds = tuple(sorted({kind for _path, _sha, _line, kind in entries}))
+        first_path, _first_hash, first_line, _first_kind = ordered_entries[0]
+        if len(source_paths) == 1:
+            message = (
+                f"Schematic UUID {object_uuid!r} is assigned to {len(entries)} objects "
+                f"in this source file on lines {', '.join(source_lines)}; "
+                "review the object identities before release."
             )
+        else:
+            locations = tuple(f"{path}:{line}" for path, _sha, line, _kind in ordered_entries)
+            message = (
+                f"Schematic UUID {object_uuid!r} is assigned to {len(entries)} objects "
+                f"across {len(source_paths)} distinct source files "
+                f"({', '.join(locations)}); review the object identities before release."
+            )
+
+        evidence = {
+            "source_path": source_paths,
+            "source_sha256": tuple(source_hash_by_path[path] for path in source_paths),
+            "object_uuid": (object_uuid,),
+            "occurrence_count": (str(len(entries)),),
+            "source_lines": source_lines,
+            "object_kinds": object_kinds,
+        }
+        if len(source_paths) > 1:
+            evidence.update(
+                {
+                    "occurrence_source_paths": tuple(
+                        path for path, _sha, _line, _kind in ordered_entries
+                    ),
+                    "occurrence_source_sha256": tuple(
+                        sha for _path, sha, _line, _kind in ordered_entries
+                    ),
+                    "occurrence_object_kinds": tuple(
+                        kind for _path, _sha, _line, kind in ordered_entries
+                    ),
+                }
+            )
+        candidates.append(
+            Candidate(
+                rule_id=_DUPLICATE_OBJECT_UUID_RULE_ID,
+                subject=f"{first_path}:{first_line}:{object_uuid}",
+                message=message,
+                evidence=evidence,
+            )
+        )
     return tuple(candidates)
 
 

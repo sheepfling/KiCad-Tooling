@@ -349,6 +349,8 @@ REPORT_ORDER = (
     "connector_peer_missing_metadata_part_id_control",
     "connector_generic_peer_pin_all_open_fault",
     "connector_generic_peer_pin_all_open_control",
+    "schematic_uuid_cross_file_fault",
+    "schematic_uuid_cross_file_control",
 )
 
 
@@ -404,6 +406,7 @@ REPORT_BUILDERS = MappingProxyType(
         "rs485_line_label_mismatch": "tests.hashseed_probe_cases.rs485_line_label_mismatch",
         "analog": "tests.hashseed_probe_cases.analog",
         "schematic_geometry": "tests.hashseed_probe_cases.schematic_geometry",
+        "schematic_uuid_integrity": "tests.hashseed_probe_cases.schematic_uuid_integrity",
         "pcb_component_inventory": "tests.hashseed_probe_cases.pcb_component_inventory",
         "pcb_touch_pad_clearance": "tests.hashseed_probe_cases.pcb_touch_pad_clearance",
         "pcb_mechanical_edge_clearance": (

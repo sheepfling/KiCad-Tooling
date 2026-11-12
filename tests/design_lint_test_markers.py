@@ -71,6 +71,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_schematic_duplicate_object_uuid.py",
                 "tests/test_schematic_duplicate_object_uuid_native.py",
                 "tests/test_design_lint_mcp_parity_schematic_duplicate_object_uuid.py",
+                "tests/test_design_lint_determinism_schematic_uuid.py",
                 "tests/test_design_lint_architecture_schematic_source_integrity.py",
                 "tests/test_schematic_erc_duplicate_severity_key_native.py",
                 "tests/test_schematic_erc_duplicate_section_native.py",

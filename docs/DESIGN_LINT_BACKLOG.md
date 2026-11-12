@@ -802,14 +802,12 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc709):** LINT-040 now
-  exercises `net.numbered_returns` on a mixed USB/serial synthetic fault and
-  common-return control. Digest-pinned KiCad 10.0.0 and 10.0.5 exports retain
-  the exact J1.3/J2.3 `USB1_GND` and J3.3 `USB2_GND` evidence. Local scoped
-  acceptance passed 444 tests with 8,770 deselected, including both native
-  versions, type checks, package builds, and the external-project wheel check.
-  Hosted acceptance passed in run `43230092868`; package and preview jobs were
-  skipped under prerelease policy.
+- **Latest published lint-gate checkpoint (v0.5.3rc710):** LINT-080 v92 adds
+  complete mixed USB/serial numbered-return fault and common-return control
+  reports to the three-process hash-seed matrix. The report inventory contains
+  335 entries. Hosted acceptance passed in run `43233725138`, including both
+  digest-pinned KiCad 10.0.0 and 10.0.5 Docker fixtures and the external-project
+  playtest; package and preview jobs were skipped under prerelease policy.
 - **Previous lint-gate checkpoint (v0.5.3rc708):** LINT-422 now
   includes a unique matching unit-0 group when comparing a nonzero unit. The
   local scoped gate passed 410 tests with 8,803 deselected, including the
@@ -4451,8 +4449,8 @@ Current catalog audit: 350 covered, 0 not applicable, 0 unreviewed.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v92. The cross-process probe supports themed report
-  selectors and retains the complete 335-report inventory gate. Fault/control
+- **Status:** Implemented v93. The cross-process probe supports themed report
+  selectors and retains the complete 337-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -4626,6 +4624,14 @@ Current catalog audit: 350 covered, 0 not applicable, 0 unreviewed.
   fixtures, then passed wheel installation and the separate external-project
   playtest. Package publication and preview jobs were skipped under prerelease
   policy.
+  The v93 extension adds the full source-bound cross-file UUID fault and
+  distinct-ID control reports to the three-process hash-seed matrix. The fault
+  repeats one wire UUID across two different child sheets; the report retains
+  each occurrence's source path, source hash, line, and object kind. The
+  control stays quiet, and a separate reused-sheet case confirms one file
+  referenced twice is read once. The complete report inventory now contains
+  337 entries. The focused cross-process regression and full inventory check
+  are included in this rule's selector.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
@@ -24842,32 +24848,37 @@ acceptance threads while new lint features proceed:
 
 - **Priority:** P1 schematic source integrity. KiCad uses unique identifiers
   to maintain identity between schematic symbols and PCB footprints, while
-  native export can accept duplicated UUIDs without changing the netlist in a
-  tested pin-instance case.
+  native export can accept duplicate identifiers without changing the netlist
+  in tested pin and cross-file wire cases.
 - **Status:** Implemented as default-review rule
-  `schematic.duplicate_object_uuid`, bounded to KiCad 10.0.5 and source-hashed
-  schematic files.
-- **Behavior:** Within each verified source file independently, group direct
-  object `(uuid ...)` records by UUID value. Report each repeated value with
-  the source hash, line numbers, and object kinds. Separate files are not
-  compared, so a reused hierarchical sheet file does not collide with itself.
+  `schematic.duplicate_object_uuid`, bounded to KiCad 10.0.5 and the
+  source-hashed unique schematic files in a project tree.
+- **Behavior:** Group direct object `(uuid ...)` records by UUID value across
+  unique verified source files. Report each repeated value with every
+  occurrence's source path, hash, line, and object kind. A physical sheet file
+  referenced at multiple hierarchical paths is read once and does not collide
+  with itself.
 - **Evidence:** The tooling-owned fault changes only connector pin 2's UUID to
   the UUID of pin 1. KiCad 10.0.5 accepts both control and fault and exports
   identical net assignments; source lint produces one review finding only for
-  the fault. This is a single pin-record observation, not a claim about the
-  behavior of every UUID-bearing item or an electrical fault. No cohort or
+  the fault. A second hierarchical control/fault pair uses two distinct child
+  files and repeats only one wire UUID across them; KiCad 10.0.5 accepts both
+  and exports identical typed netlists. A repeated-sheet control confirms that
+  one child file reused at two paths remains quiet. These observations do not
+  claim an electrical fault or cover every UUID-bearing item. No cohort or
   proprietary source is used.
 - **Limitations:** A repeated ID prompts an identity review, but the rule
   cannot determine which item owns the intended UUID or infer an electrical
   consequence. It skips unsupported KiCad versions and PCB-only projects.
-  UUIDs in separate files are outside the predicate.
-- **Regression coverage:** Source tests cover fault/control, source hash
-  freshness, repeatability, exact-version boundary, and PCB-only scope. CLI/MCP
-  parity uses the same source-bound typed service. A digest-pinned Docker
-  fixture compares repeated native exports for identical netlist results.
+- **Regression coverage:** Source tests cover within-file and cross-file
+  fault/control pairs, per-occurrence hashes, source-hash freshness, repeated
+  sheet reuse, exact-version boundary, and PCB-only scope. CLI/MCP parity uses
+  the same source-bound typed service. Digest-pinned Docker fixtures compare
+  repeated native exports for identical typed netlist results.
 - **Selection:** Run
   `tests/test_schematic_duplicate_object_uuid.py` and
-  `tests/test_design_lint_mcp_parity_schematic_duplicate_object_uuid.py` with
+  `tests/test_design_lint_mcp_parity_schematic_duplicate_object_uuid.py` and
+  `tests/test_design_lint_determinism_schematic_uuid.py` with
   `design_lint and schematic_lint and
   design_lint_rule(rule_id="schematic.duplicate_object_uuid")`. Run
   `tests/test_schematic_duplicate_object_uuid_native.py` with
@@ -24883,6 +24894,16 @@ acceptance threads while new lint features proceed:
   GitHub Actions run `43218568561`. The focused prerelease gate and installed-
   wheel rehearsal passed; package publication and preview orchestration were
   skipped under prerelease policy.
+- **Local acceptance (cross-file UUID extension, 2026-11-12):** The focused
+  source, CLI/MCP parity, and hash-seed checks passed 14 tests; the complete
+  inventory/backlog selection passed 1 test. Catalog,
+  reachability, marker, collection, and architecture selections passed 46
+  tests. Both digest-pinned KiCad 10.0.5 Docker fixtures passed. Scoped package
+  acceptance passed 412 tests with 8,809 deselected, including the native and
+  hash-seed regressions; formatting, both Alphus profiles, Markdown and
+  repository-link checks, Linux and Windows Pyright, wheel/sdist builds,
+  installed-wheel checks, and the separate external-template playtest passed.
+  Hosted acceptance for this extension is pending its annotated tag.
 
 ## Completion and release gate
 

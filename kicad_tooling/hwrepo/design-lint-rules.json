@@ -16490,7 +16490,7 @@
     },
     {
       "rule_id": "schematic.duplicate_object_uuid",
-      "title": "Schematic object UUID is repeated within a source file",
+      "title": "Schematic object UUID repeats across distinct source files",
       "theme": "schematic",
       "implementation_owner": "kicad_tooling/hwrepo/schematic_source_integrity.py#duplicate_schematic_object_uuid_candidates",
       "status": "active",
@@ -16498,29 +16498,36 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "SHA-256 verified hierarchical schematic sources, repeated direct UUID records and source lines, and digest-pinned KiCad 10.0.5 netlist behavior",
-      "predicate": "For each source-hashed, parseable KiCad 10.0.5 schematic file, review a UUID value that appears in two or more direct object UUID fields in that same file. Report the source hash, UUID, source lines, and containing object kinds; never compare UUIDs across separate source files.",
+      "predicate": "Across the unique files in a source-hashed, parseable KiCad 10.0.5 schematic tree, review a UUID value that appears in two or more direct object UUID fields. Report every source path, hash, line, and object kind. Read each source file once, so a file reused at multiple hierarchical sheet paths is not compared with itself.",
       "supported_kicad_versions": [
         "10.0.5"
       ],
       "limitations": [
         "This is a source identity review prompt. It does not prove that the duplicated identity caused an electrical or layout defect, nor does it determine which occurrence should retain the UUID.",
-        "UUIDs are grouped within each verified schematic file only. Identical values across distinct files are outside scope so a source reused by multiple hierarchical sheet paths is not compared with itself.",
+        "Each distinct verified schematic source file is compared once. A file reused by multiple hierarchical sheet paths is not treated as multiple UUID occurrences.",
         "Malformed schematic roots and malformed UUID forms are outside this predicate. Unsupported KiCad versions and PCB-only projects are skipped.",
-        "The native measurement is limited to one tooling-owned fixture where a placed connector pin UUID is duplicated. KiCad 10.0.5 exported the same netlist for control and fault; this does not cover every UUID-bearing object type.",
+        "The native measurements are limited to tooling-owned fixtures with a placed pin UUID repeated within one file and a wire UUID repeated across two files. KiCad 10.0.5 exported equal control and fault netlists in both cases; this does not cover every UUID-bearing object type or KiCad patch.",
         "The default is REVIEW. Project policy may select review, block, off, or an exact-fingerprint ignore."
       ],
       "fault_fixtures": [
         "tests.test_schematic_duplicate_object_uuid.test_duplicate_object_uuid_is_localized_and_control_is_quiet",
+        "tests.test_schematic_duplicate_object_uuid.test_duplicate_uuid_across_distinct_hierarchical_files_is_localized",
         "tests.test_design_lint_mcp_parity_schematic_duplicate_object_uuid.test_duplicate_schematic_uuid_review_matches_between_cli_and_mcp",
-        "tests.test_schematic_duplicate_object_uuid_native.test_native_duplicate_uuid_is_accepted_without_netlist_change"
+        "tests.test_design_lint_mcp_parity_schematic_duplicate_object_uuid.test_cross_file_uuid_review_matches_between_cli_and_mcp",
+        "tests.test_schematic_duplicate_object_uuid_native.test_native_duplicate_uuid_is_accepted_without_netlist_change",
+        "tests.test_schematic_duplicate_object_uuid_native.test_native_cross_file_uuid_collision_is_review_only_and_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_schematic_duplicate_object_uuid.test_duplicate_object_uuid_is_localized_and_control_is_quiet",
+        "tests.test_schematic_duplicate_object_uuid.test_distinct_file_control_and_reused_sheet_source_are_quiet",
         "tests.test_schematic_duplicate_object_uuid.test_pcb_only_projects_are_out_of_scope",
-        "tests.test_schematic_duplicate_object_uuid_native.test_native_duplicate_uuid_is_accepted_without_netlist_change"
+        "tests.test_schematic_duplicate_object_uuid_native.test_native_duplicate_uuid_is_accepted_without_netlist_change",
+        "tests.test_schematic_duplicate_object_uuid_native.test_native_cross_file_uuid_collision_is_review_only_and_repeatable"
       ],
       "metamorphic_fixtures": [
-        "tests.test_schematic_duplicate_object_uuid.test_irrelevant_source_edit_preserves_finding_and_refreshes_hash"
+        "tests.test_schematic_duplicate_object_uuid.test_irrelevant_source_edit_preserves_finding_and_refreshes_hash",
+        "tests.test_schematic_duplicate_object_uuid.test_cross_file_uuid_finding_refreshes_only_the_edited_source_hash",
+        "tests.test_design_lint_determinism_schematic_uuid.test_uuid_reports_are_deterministic_across_hash_seeds"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES"

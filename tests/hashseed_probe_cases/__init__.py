@@ -64,4 +64,5 @@ HASHSEED_REPORT_FAMILIES = (
     "rs485_line_label_mismatch",
     "analog",
     "schematic_geometry",
+    "schematic_uuid_integrity",
 )
