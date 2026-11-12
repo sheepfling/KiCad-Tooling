@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 348 rules are implemented with synthetic regression coverage.
+The following 349 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 348 active rules.
+The catalog currently contains 349 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -766,6 +766,7 @@ skipped under prerelease policy.
 - `net.return_labels_without_pin_roles`
 - `mcu.stm32_cubemx_pin_map`
 - `schematic.duplicate_embedded_symbol_definition`
+- `schematic.embedded_symbol_pin_number_mismatch`
 - `schematic.missing_embedded_symbol_definition`
 - `bus.usb_c_generic_connector_cc_pair_review`
 - `pcb.explicit_thermal_pad_scope_unreviewed`
@@ -4250,7 +4251,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 348 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 349 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -24703,6 +24704,45 @@ acceptance threads while new lint features proceed:
   GitHub Actions run `43209978913`. The focused prerelease gate and installed-
   wheel rehearsal passed; package publication and preview orchestration were
   skipped under prerelease policy.
+
+#### LINT-422 — Review embedded and placed symbol pin-number mismatch
+
+- **Priority:** P1 schematic source integrity. A unique embedded symbol can
+  have pin numbers that disagree with the placed symbol's pin-instance
+  records, allowing the native exporter to associate a net with a different
+  connector contact while returning success.
+- **Status:** Implemented as default-review rule
+  `schematic.embedded_symbol_pin_number_mismatch`, with source hashing and
+  native evidence bounded to KiCad 10.0.5.
+- **Behavior:** Compare the definition and instance pin-number multisets only
+  when one unique direct definition has exactly one pin-bearing unit/convert
+  group matching the placed symbol. Report the reference, exact library ID,
+  both sorted number lists, and each list's unmatched values.
+- **Evidence:** In the tooling-owned synthetic control, KiCad 10.0.5 exports
+  `USB_GND` on J1.4. Changing only the unique definition's corresponding pin
+  number from 4 to 9 makes the same pinned exporter assign `USB_GND` to J1.9
+  without a duplicate library ID. Repeated control and fault exports and lint
+  reports are deterministic. No cohort project or proprietary board source
+  was imported.
+- **Limitations:** This check exposes source disagreement but cannot tell
+  which pin list expresses intent. Multi-unit symbols, shared unit-0 pins,
+  multiple pin-bearing groups, malformed records, ambiguous definitions, and
+  unsupported structures are skipped. A matching list does not prove the
+  symbol's datasheet mapping, electrical connections, footprint, or PCB copper
+  path. The rule defaults to REVIEW; project policy may select block, off, or
+  an exact-fingerprint ignore after review.
+- **Regression coverage:** Tooling-owned source tests cover fault/control,
+  ambiguous multi-unit skip behavior, exact-version and project-kind scope,
+  source freshness, and deterministic findings. CLI/MCP parity and a
+  digest-pinned native export test cover the same single-unit control/fault.
+- **Selection:** Run
+  `tests/test_schematic_embedded_symbol_pin_number_mismatch.py` and
+  `tests/test_design_lint_mcp_parity_schematic_embedded_symbol_pin_number_mismatch.py`
+  with `design_lint and schematic_lint and
+  design_lint_rule(rule_id="schematic.embedded_symbol_pin_number_mismatch")`.
+  Run `tests/test_schematic_embedded_symbol_pin_number_mismatch_native.py`
+  with `KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1` and the same
+  selector plus `native_kicad`.
 
 ## Completion and release gate
 

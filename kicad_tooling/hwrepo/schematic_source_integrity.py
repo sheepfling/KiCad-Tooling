@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import re
+from collections import Counter
 from pathlib import Path
 
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .kicad_sexpr import sexpr_atoms
+from .kicad_sexpr import SExprSpan, sexpr_atoms
 from .project_models import ProjectConfig, ProjectKind
 from .schematic_geometry_models import VerifiedSchematicSourceTree
 from .schematic_geometry_source import (
@@ -21,7 +23,9 @@ from .source_state_models import SourceHashInventory
 
 _RULE_ID: DesignLintRuleId = "schematic.missing_embedded_symbol_definition"
 _DUPLICATE_RULE_ID: DesignLintRuleId = "schematic.duplicate_embedded_symbol_definition"
+_PIN_NUMBER_MISMATCH_RULE_ID: DesignLintRuleId = "schematic.embedded_symbol_pin_number_mismatch"
 _SUPPORTED_KICAD_VERSION = "10.0.5"
+_SYMBOL_UNIT_CONVERT_SUFFIX = re.compile(r"_(?P<unit>[1-9][0-9]*)_(?P<convert>[1-9][0-9]*)$")
 _UNPARSEABLE_SOURCE_ERRORS = frozenset(
     {"Malformed KiCad schematic source", "Expected one kicad_sch root"}
 )
@@ -163,6 +167,162 @@ def duplicate_embedded_library_symbol_candidates(
                 )
             )
     return tuple(candidates)
+
+
+def embedded_symbol_pin_number_mismatch_candidates(
+    root: Path,
+    config: ProjectConfig,
+    source_hashes: SourceHashInventory,
+) -> tuple[Candidate, ...]:
+    """Review mismatched pin numbers for unambiguous single-group symbols."""
+    source_tree = _integrity_source_tree(root, config, source_hashes)
+    if source_tree is None:
+        return ()
+
+    candidates: list[Candidate] = []
+    for source_file in source_tree.source_files:
+        try:
+            document = schematic_root(source_file.contents)
+        except ValueError as exc:
+            if str(exc) in _UNPARSEABLE_SOURCE_ERRORS:
+                continue
+            raise
+        text = document.text
+        sections = schematic_nodes(text, document.root, "lib_symbols")
+        if len(sections) != 1:
+            continue
+        try:
+            embedded = schematic_library_symbols(text, document.root)
+        except ValueError:
+            continue
+
+        for symbol in schematic_nodes(text, document.root, "symbol"):
+            try:
+                library_id = schematic_scalar(text, symbol, "lib_id")
+                unit = schematic_scalar(text, symbol, "unit")
+            except ValueError:
+                continue
+            definition = embedded.get(library_id)
+            if definition is None:
+                continue
+            convert_nodes = schematic_nodes(text, symbol, "convert")
+            if len(convert_nodes) > 1:
+                continue
+            if convert_nodes:
+                try:
+                    convert = schematic_scalar(text, symbol, "convert")
+                except ValueError:
+                    continue
+            else:
+                convert = "1"
+
+            pin_groups: list[tuple[str, tuple[str, ...]]] = []
+            for sub_symbol in schematic_nodes(text, definition, "symbol"):
+                sub_atoms = sexpr_atoms(text, sub_symbol)
+                if len(sub_atoms) != 2:
+                    continue
+                pin_nodes = schematic_nodes(text, sub_symbol, "pin")
+                if not pin_nodes:
+                    continue
+                pin_numbers = _pin_numbers(text, pin_nodes)
+                if pin_numbers is None:
+                    pin_groups = []
+                    break
+                pin_groups.append((sub_atoms[1], pin_numbers))
+            if len(pin_groups) != 1:
+                continue
+
+            group_name, definition_pin_numbers = pin_groups[0]
+            suffix = _SYMBOL_UNIT_CONVERT_SUFFIX.search(group_name)
+            if suffix is None or (suffix["unit"], suffix["convert"]) != (unit, convert):
+                continue
+            placed_pin_nodes = schematic_nodes(text, symbol, "pin")
+            placed_pin_numbers = _placed_pin_numbers(text, placed_pin_nodes)
+            if not placed_pin_numbers:
+                continue
+            if Counter(definition_pin_numbers) == Counter(placed_pin_numbers):
+                continue
+
+            definition_only, placed_only = _number_multiset_difference(
+                definition_pin_numbers,
+                placed_pin_numbers,
+            )
+            reference = schematic_property(text, symbol, "Reference") or "<unknown>"
+            uuid_nodes = schematic_nodes(text, symbol, "uuid")
+            symbol_uuid = (
+                schematic_scalar(text, symbol, "uuid") if len(uuid_nodes) == 1 else "<unknown>"
+            )
+            source_line = text.count("\n", 0, symbol.start) + 1
+            candidates.append(
+                Candidate(
+                    rule_id=_PIN_NUMBER_MISMATCH_RULE_ID,
+                    subject=f"{source_file.source_path}:{source_line}:{reference}",
+                    message=(
+                        f"Placed symbol {reference} has pin numbers "
+                        f"{', '.join(placed_pin_numbers)} while its embedded definition "
+                        f"for {library_id!r} has {', '.join(definition_pin_numbers)}; "
+                        "review which source representation matches the intended symbol."
+                    ),
+                    evidence={
+                        "source_path": (source_file.source_path,),
+                        "source_sha256": (source_file.source_sha256,),
+                        "source_line": (str(source_line),),
+                        "reference": (reference,),
+                        "symbol_uuid": (symbol_uuid,),
+                        "library_id": (library_id,),
+                        "unit": (unit,),
+                        "convert": (convert,),
+                        "definition_pin_numbers": definition_pin_numbers,
+                        "placed_pin_numbers": placed_pin_numbers,
+                        "definition_only_pin_numbers": definition_only,
+                        "placed_only_pin_numbers": placed_only,
+                    },
+                )
+            )
+    return tuple(candidates)
+
+
+def _pin_numbers(source: str, pin_nodes: tuple[SExprSpan, ...]) -> tuple[str, ...] | None:
+    values: list[str] = []
+    for pin in pin_nodes:
+        try:
+            values.append(schematic_scalar(source, pin, "number"))
+        except ValueError:
+            return None
+    return tuple(sorted(values, key=_pin_number_sort_key))
+
+
+def _placed_pin_numbers(source: str, pin_nodes: tuple[SExprSpan, ...]) -> tuple[str, ...] | None:
+    values: list[str] = []
+    for pin in pin_nodes:
+        atoms = sexpr_atoms(source, pin)
+        if len(atoms) != 2 or atoms[0] != "pin":
+            return None
+        values.append(atoms[1])
+    return tuple(sorted(values, key=_pin_number_sort_key))
+
+
+def _pin_number_sort_key(value: str) -> tuple[int, int | str]:
+    return (0, int(value)) if value.isdigit() else (1, value)
+
+
+def _number_multiset_difference(
+    definition_numbers: tuple[str, ...],
+    placed_numbers: tuple[str, ...],
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    definition_only = tuple(
+        sorted(
+            (Counter(definition_numbers) - Counter(placed_numbers)).elements(),
+            key=_pin_number_sort_key,
+        )
+    )
+    placed_only = tuple(
+        sorted(
+            (Counter(placed_numbers) - Counter(definition_numbers)).elements(),
+            key=_pin_number_sort_key,
+        )
+    )
+    return definition_only, placed_only
 
 
 def _integrity_source_tree(

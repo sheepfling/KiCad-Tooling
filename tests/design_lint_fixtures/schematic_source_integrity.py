@@ -10,6 +10,7 @@ from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import ProjectConfig, ProjectKind
 from kicad_tooling.hwrepo.schematic_source_integrity import (
     duplicate_embedded_library_symbol_candidates,
+    embedded_symbol_pin_number_mismatch_candidates,
     missing_embedded_library_symbol_candidates,
 )
 
@@ -51,4 +52,24 @@ def schematic_source_integrity_rule_ids() -> frozenset[str]:
         duplicate_config,
         {duplicate_relative: digest(duplicate_source)},
     )
-    return frozenset(item.rule_id for item in (*candidates, *duplicate_candidates))
+    pin_mismatch_relative = (
+        "tests/fixtures/design_lint/embedded-symbol-pin-number-mismatch/fault.kicad_sch"
+    )
+    pin_mismatch_source = repository / pin_mismatch_relative
+    pin_mismatch_project = pin_mismatch_relative.removesuffix(".kicad_sch") + ".kicad_pro"
+    pin_mismatch_config = cast(
+        ProjectConfig,
+        SimpleNamespace(
+            kind=ProjectKind.PCB,
+            project=pin_mismatch_project,
+            kicad_version="10.0.5",
+        ),
+    )
+    pin_mismatch_candidates = embedded_symbol_pin_number_mismatch_candidates(
+        repository,
+        pin_mismatch_config,
+        {pin_mismatch_relative: digest(pin_mismatch_source)},
+    )
+    return frozenset(
+        item.rule_id for item in (*candidates, *duplicate_candidates, *pin_mismatch_candidates)
+    )

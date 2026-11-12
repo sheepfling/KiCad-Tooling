@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 348 active rules.
+The catalog currently contains 349 active rules.
 
 ### Placed schematic symbol has no embedded definition
 
@@ -974,6 +974,42 @@ KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
   .venv/bin/python -I -m pytest \
   tests/test_schematic_duplicate_embedded_symbol_definition_native.py \
   -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.duplicate_embedded_symbol_definition")'
+```
+
+### Placed and embedded symbol pin numbers differ
+
+`schematic.embedded_symbol_pin_number_mismatch` compares a placed symbol's pin
+instance records with the pin numbers in its unique embedded definition. It
+reports a default-review finding only when the definition has exactly one
+pin-bearing unit/convert group and the sorted pin-number multisets differ.
+Evidence includes both lists and their unmatched values. The heuristic cannot
+decide which representation matches design intent; a reviewer should check the
+approved symbol source, datasheet, and connector requirement.
+
+Symbols with multiple pin-bearing groups, shared unit-0 pins, malformed pin
+records, ambiguous library IDs, and unsupported source structures are skipped.
+Matching lists do not establish electrical connectivity or PCB copper return
+continuity. The digest-pinned KiCad 10.0.5 synthetic experiment exports
+`USB_GND` on J1.4 in the control; changing only the unique embedded definition
+to pin 9 makes the same native exporter assign `USB_GND` to J1.9. This result
+is limited to the tooling-owned fixture and pinned KiCad image.
+
+Run the source and CLI/MCP regressions with:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_schematic_embedded_symbol_pin_number_mismatch.py \
+  tests/test_design_lint_mcp_parity_schematic_embedded_symbol_pin_number_mismatch.py \
+  -m 'design_lint and schematic_lint and design_lint_rule(rule_id="schematic.embedded_symbol_pin_number_mismatch")'
+```
+
+Run the exact native fault/control regression with:
+
+```sh
+KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
+  .venv/bin/python -I -m pytest \
+  tests/test_schematic_embedded_symbol_pin_number_mismatch_native.py \
+  -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.embedded_symbol_pin_number_mismatch")'
 ```
 
 ### Numeric-only generic contacts open across connector peers

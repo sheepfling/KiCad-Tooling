@@ -16,6 +16,9 @@ RULE_OWNERS = {
     "schematic.duplicate_embedded_symbol_definition": (
         "kicad_tooling/hwrepo/schematic_source_integrity.py#duplicate_embedded_library_symbol_candidates"
     ),
+    "schematic.embedded_symbol_pin_number_mismatch": (
+        "kicad_tooling/hwrepo/schematic_source_integrity.py#embedded_symbol_pin_number_mismatch_candidates"
+    ),
 }
 pytestmark = [
     pytest.mark.design_lint,
