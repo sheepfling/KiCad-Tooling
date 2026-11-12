@@ -4620,6 +4620,12 @@ Current catalog audit: 350 covered, 0 not applicable, 0 unreviewed.
   and 10.0.5 Docker lanes. Formatting, both Alphus profiles, Markdown and
   repository-link checks, Linux and Windows typing, wheel/sdist builds, and
   installed-wheel checks passed.
+  Hosted tag `v0.5.3rc710` also passed the scoped gate in GitHub Actions
+  [run 43233725138](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43233725138).
+  Its 445-test selection ran the digest-pinned KiCad 10.0.0 and 10.0.5 Docker
+  fixtures, then passed wheel installation and the separate external-project
+  playtest. Package publication and preview jobs were skipped under prerelease
+  policy.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
