@@ -26,13 +26,22 @@ pytestmark = [
 
 
 @pytest.mark.parametrize(
-    ("settings_name", "expected_scope", "subject_suffix"),
+    ("settings_name", "expected_scope", "subject_path"),
     (
-        ("fault-netclass-list-wide-last.kicad_pro", "classes_member", ""),
+        (
+            "fault-netclass-list-wide-last.kicad_pro",
+            "classes_member",
+            "#net_settings/classes",
+        ),
         (
             "fault-netclass-clearance-wide-last.kicad_pro",
             "class_property",
-            "/Narrow/clearance",
+            "#net_settings/classes/Narrow/clearance",
+        ),
+        (
+            "fault-netclass-assignment-default-last.kicad_pro",
+            "netclass_assignment",
+            "#net_settings/netclass_assignments/N1",
         ),
     ),
 )
@@ -40,7 +49,7 @@ def test_conflicting_netclass_review_matches_between_cli_and_mcp(
     tmp_path: Path,
     settings_name: str,
     expected_scope: str,
-    subject_suffix: str,
+    subject_path: str,
 ) -> None:
     root, native = synthetic_design_lint_project(
         tmp_path,
@@ -72,10 +81,10 @@ def test_conflicting_netclass_review_matches_between_cli_and_mcp(
     assert mcp_report.status == "REVIEW", mcp_report.issues
     findings = [item for item in mcp_report.findings if item.rule_id == RULE_ID]
     assert len(findings) == 1
-    assert findings[0].subject == (
-        f"projects/controller/kicad/controller.kicad_pro#net_settings/classes{subject_suffix}"
-    )
+    assert findings[0].subject == f"projects/controller/kicad/controller.kicad_pro{subject_path}"
     assert findings[0].evidence["conflict_scope"] == (expected_scope,)
     if expected_scope == "class_property":
         assert findings[0].evidence["class_name"] == ("Narrow",)
         assert findings[0].evidence["property_name"] == ("clearance",)
+    if expected_scope == "netclass_assignment":
+        assert findings[0].evidence["net_name"] == ("N1",)

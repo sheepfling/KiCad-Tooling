@@ -13993,25 +13993,27 @@
     },
     {
       "rule_id": "pcb.drc_conflicting_netclass_definitions",
-      "title": "Conflicting PCB netclass definitions need review",
+      "title": "Conflicting PCB netclass settings need review",
       "theme": "pcb",
       "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_netclass_conflict_review.py#source_bound_pcb_netclass_conflict_candidates",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
-      "evidence_adapter": "Exact source-hashed KiCad 10.0.8 .kicad_pro net_settings.classes values retained in source order",
-      "predicate": "For PCB and PCB-only projects configured for exact KiCad 10.0.8, emit a source-bound review candidate when one net_settings object has repeated classes members with different lists, repeated class names with different definitions, or conflicting duplicate clearance fields inside one named class. Preserve conflicting JSON values in source order and do not select an intended definition.",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0.8 .kicad_pro net_settings class definitions and netclass assignments retained in source order",
+      "predicate": "For PCB and PCB-only projects configured for exact KiCad 10.0.8, emit a source-bound review candidate when one net_settings object has repeated classes members with different lists, repeated class names with different definitions, conflicting duplicate clearance fields inside one named class, or a repeated netclass_assignments net key with different class values. Preserve conflicting JSON values in source order and do not select an intended definition.",
       "supported_kicad_versions": [
-        "KiCad 10.0.8 only; native last-definition behavior was measured for synthetic Narrow-class clearances on one digest-pinned image. Other settings and patches remain unmeasured."
+        "KiCad 10.0.8 only; native last-definition behavior was measured for synthetic Narrow-class clearances and a duplicated N1 netclass assignment on one digest-pinned image. Other settings and patches remain unmeasured."
       ],
       "limitations": [
         "The finding identifies conflicting source values and retains their order; it does not decide which class list or definition is intended. Native order-sensitive DRC behavior was measured only for the fixture's 0.05 mm and 0.20 mm clearance values on the exact image.",
-        "Identical repeated classes lists, identical repeated clearance fields, and unique class names are quiet. Only duplicate clearance fields within net_settings.classes are source-reviewed; malformed or unrelated duplicate keys remain strict errors. Multiple root net_settings objects are handled by the separate repeated-section rule. The rule reads source-hashed project settings only and does not establish an electrical defect, run DRC on adopter boards, inspect copper, or establish manufacturing readiness."
+        "Identical repeated classes lists, identical repeated clearance fields, identical repeated netclass assignment values, and unique class names are quiet. Only duplicate clearance fields within net_settings.classes and duplicate net keys within one net_settings.netclass_assignments object are source-reviewed; malformed or unrelated duplicate keys remain strict errors. Multiple root net_settings objects are handled by the separate repeated-section rule. The rule reads source-hashed project settings only and does not establish an electrical defect, run DRC on adopter boards, inspect copper, or establish manufacturing readiness."
       ],
       "fault_fixtures": [
         "tests.test_pcb_drc_conflicting_netclass_definitions.test_conflicting_netclass_values_are_source_bound",
         "tests.test_pcb_drc_conflicting_netclass_definitions.test_conflicting_clearance_properties_are_source_bound",
+        "tests.test_pcb_drc_conflicting_netclass_definitions.test_conflicting_netclass_assignments_are_source_bound",
+        "tests.test_pcb_drc_conflicting_netclass_definitions.test_netclass_assignment_fixture_sources_match_reviewed_hashes",
         "tests.test_pcb_drc_conflicting_netclass_definitions.test_clearance_fault_fixture_sources_match_reviewed_hashes",
         "tests.test_design_lint_mcp_parity_pcb_drc_conflicting_netclass_definitions.test_conflicting_netclass_review_matches_between_cli_and_mcp",
         "tests.test_pcb_drc_conflicting_netclass_definitions_native.test_kicad_1008_conflicting_netclass_definitions_are_order_sensitive_and_repeatable"
@@ -14019,6 +14021,7 @@
       "valid_control_fixtures": [
         "tests.test_pcb_drc_conflicting_netclass_definitions.test_equal_duplicate_classes_member_is_quiet",
         "tests.test_pcb_drc_conflicting_netclass_definitions.test_identical_duplicate_clearance_property_is_quiet",
+        "tests.test_pcb_drc_conflicting_netclass_definitions.test_identical_duplicate_netclass_assignment_is_quiet",
         "tests.test_pcb_drc_conflicting_netclass_definitions.test_clearance_control_fixture_source_matches_reviewed_hash",
         "tests.test_pcb_drc_conflicting_netclass_definitions.test_unique_netclass_list_is_quiet_and_unrelated_duplicates_stay_strict",
         "tests.test_pcb_drc_conflicting_netclass_definitions.test_unmeasured_kicad_versions_are_out_of_scope",
@@ -14030,7 +14033,8 @@
         "KICAD_RUN_NATIVE_PCB_FIXTURES"
       ],
       "metamorphic_fixtures": [
-        "tests.test_pcb_drc_conflicting_netclass_definitions.test_repeated_scans_preserve_class_and_list_order"
+        "tests.test_pcb_drc_conflicting_netclass_definitions.test_repeated_scans_preserve_class_and_list_order",
+        "tests.test_pcb_drc_conflicting_netclass_definitions.test_repeated_scans_preserve_netclass_assignment_order"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_drc_netclass_conflict_review.py#source_bound_pcb_netclass_conflict_candidates",

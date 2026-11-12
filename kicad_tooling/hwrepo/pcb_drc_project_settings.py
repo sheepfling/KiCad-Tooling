@@ -32,6 +32,7 @@ _PCB_BOARD_ROOT_DUPLICATE_MEMBER = ((), "board")
 _PCB_ERC_ROOT_DUPLICATE_MEMBER = ((), "erc")
 _PCB_NET_SETTINGS_ROOT_DUPLICATE_MEMBER = ((), "net_settings")
 _PCB_NETCLASS_CLEARANCE_DUPLICATE_MEMBER = (("net_settings", "classes"), "clearance")
+_PCB_NETCLASS_ASSIGNMENTS_OBJECT_PATH = ("net_settings", "netclass_assignments")
 DFM_ERROR_DEFAULT_DRC_CHECK_IDS = frozenset(
     {
         "annular_width",
@@ -172,11 +173,11 @@ def _parse_pcb_project_settings(
         allowed_paths.add(_ERC_SEVERITY_OBJECT_PATH)
     if allow_duplicate_drc_severity_keys:
         allowed_paths.add(_PCB_DRC_SEVERITY_OBJECT_PATH)
-    # Exact-version source-bound readers also tolerate the catalogued duplicate
-    # net_settings.classes and class-clearance members so their dedicated
-    # source-bound reviews can run.
+    # Exact-version source-bound readers also tolerate catalogued duplicate
+    # netclass fields so their dedicated source-bound reviews can run.
     allowed_members: set[tuple[tuple[str, ...], str]] = set()
     if allow_duplicate_board_section:
+        allowed_paths.add(_PCB_NETCLASS_ASSIGNMENTS_OBJECT_PATH)
         allowed_members.update(
             {
                 _PCB_BOARD_ROOT_DUPLICATE_MEMBER,

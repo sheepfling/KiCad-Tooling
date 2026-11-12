@@ -25250,6 +25250,42 @@ acceptance threads while new lint features proceed:
   Actions run `43297728511` on commit `284d886bd74594da9f2053d70bde10c3ec7719b1`;
   package and preview jobs were skipped under prerelease policy.
 
+#### LINT-431 — Review conflicting duplicate PCB netclass assignments
+
+- **Priority:** P1 source ambiguity. One `.kicad_pro` can assign the same PCB
+  net to different netclasses more than once in `netclass_assignments`. The
+  final entry can silently select a different DRC constraint set.
+- **Status:** Extends the source-bound default-review rule
+  `pcb.drc_conflicting_netclass_definitions`; it adds no rule ID. For the
+  audited KiCad 10.0.8 patch, the rule retains each conflicting class value in
+  source order and identifies the exact net. Equal duplicate values stay
+  quiet, and other duplicate JSON keys remain strict errors.
+- **Evidence:** On the tooling-owned two-track clearance fixture, the
+  digest-pinned KiCad 10.0.8 image produces no clearance violation when the
+  repeated `N1 → Narrow` assignment is last and one when `N1 → Default` is
+  last. The native acceptance test repeats both orders, an equal-value
+  duplicate, and the unique-assignment control. Synthetic source-bound tests
+  check the source digest and assignment order; CLI/MCP reports match on the
+  conflicting assignment.
+- **Boundary:** This measures only the exact `netclass_assignments` behavior,
+  values, board geometry, KiCad 10.0.8 patch, and pinned image in the fixture.
+  The lint does not select the intended class, establish a board defect, infer
+  signal suitability, inspect copper, or prove manufacturing readiness. Other
+  KiCad patches remain outside the rule's measured support.
+- **Selection:** Run
+  `tests/test_pcb_drc_conflicting_netclass_definitions.py` and
+  `tests/test_design_lint_mcp_parity_pcb_drc_conflicting_netclass_definitions.py`
+  with `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.drc_conflicting_netclass_definitions")`.
+  The native regression is
+  `tests/test_pcb_drc_conflicting_netclass_definitions_native.py` with
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, Docker, and `native_kicad`.
+- **Local acceptance (2026-11-12):** The scoped package gate passed 431 tests
+  with 8,859 unrelated tests deselected, including repeated KiCad 10.0.8
+  Docker fault/control exports. Ruff, Alphus role and shared-utility checks,
+  Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist builds, installed
+  artifact checks, and external/adapted template-project playtests passed.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

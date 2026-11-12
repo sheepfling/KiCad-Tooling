@@ -5814,21 +5814,23 @@ record an exact-fingerprint ignore. The synthetic files are documented in
 
 `pcb.drc_conflicting_netclass_definitions` prompts when an exact KiCad 10.0.8
 source-hashed `.kicad_pro` has conflicting values in repeated
-`net_settings.classes` members or gives one class name different definitions
-in the same list. The review retains every conflicting JSON value in source
-order and asks the project owner to resolve the settings. It is enabled for
-PCB and PCB-only projects configured for exactly KiCad 10.0.8; other patches
-remain out of scope.
+`net_settings.classes` members, gives one class name different definitions
+in the same list, repeats a class `clearance` value, or assigns one net to
+different classes more than once in `netclass_assignments`. The review retains
+the conflicting JSON values in source order and asks the project owner to
+resolve the settings. It is enabled for PCB and PCB-only projects configured
+for exactly KiCad 10.0.8; other patches remain out of scope.
 
 Digest-pinned native DRC was run twice for each synthetic fault and control.
 With the `Narrow` class's 0.05 mm clearance last, the fixture has no clearance
-violation; with its 0.20 mm clearance last, DRC reports one. This covers both
-repeated `classes` members and repeated `Narrow` entries in one class list, on
-the tested image and geometry only. The check does not choose an intended
-definition, infer an electrical defect, run DRC on adopter boards, or establish
-manufacturing readiness. Projects may select `review`, `block`, or `off`, or
-record an exact-fingerprint ignore. Synthetic settings and measured results
-are documented in
+violation; with its 0.20 mm clearance last, DRC reports one. The same board has
+no clearance violation when `N1` is assigned to `Narrow` last, and one when
+the duplicate `N1` assignment to `Default` is last. These results cover the
+listed duplicate forms, values, KiCad image, and geometry only. The check does
+not choose an intended definition, infer an electrical defect, run DRC on
+adopter boards, or establish manufacturing readiness. Projects may select
+`review`, `block`, or `off`, or record an exact-fingerprint ignore. Synthetic
+settings and measured results are documented in
 [`tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/`](../tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/README.md).
 
 ## Review invalid PCB DRC severity strings

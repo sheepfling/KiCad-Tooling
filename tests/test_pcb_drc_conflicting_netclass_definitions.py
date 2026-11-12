@@ -71,6 +71,17 @@ def test_clearance_control_fixture_source_matches_reviewed_hash() -> None:
     )
 
 
+def test_netclass_assignment_fixture_sources_match_reviewed_hashes() -> None:
+    expected = {
+        "fault-netclass-assignment-narrow-last.kicad_pro": "8aeab58637966ab9ad5f2925d59ff1ce8ca04cb63d6b8bea6ee144770a2e79f5",
+        "fault-netclass-assignment-default-last.kicad_pro": "e8531dd55e82dddcce31e00426eee90c891f747ba511c070b3c1ccd54da4fad5",
+        "control-netclass-assignment-duplicate-equal.kicad_pro": "ecba7e55a0007d875ead0bfbf675c124680434343300dcaf46dc20c46fec57d8",
+    }
+    assert {
+        name: hashlib.sha256((FIXTURES / name).read_bytes()).hexdigest() for name in expected
+    } == expected
+
+
 @pytest.mark.parametrize(
     "fixture,scope,expected_clearances",
     (
@@ -144,6 +155,43 @@ def test_identical_duplicate_clearance_property_is_quiet(tmp_path: Path) -> None
     assert _scan(root, config, hashes) == ()
 
 
+@pytest.mark.parametrize(
+    "fixture,expected_assignments",
+    (
+        ("fault-netclass-assignment-narrow-last.kicad_pro", ("Default", "Narrow")),
+        ("fault-netclass-assignment-default-last.kicad_pro", ("Narrow", "Default")),
+    ),
+)
+def test_conflicting_netclass_assignments_are_source_bound(
+    tmp_path: Path,
+    fixture: str,
+    expected_assignments: tuple[str, str],
+) -> None:
+    root, project, config, hashes = _project(tmp_path, fixture)
+
+    (candidate,) = _scan(root, config, hashes)
+
+    assert isinstance(candidate, PcbNetClassConflictCandidate)
+    assert candidate.rule_id == RULE_ID
+    assert candidate.source_evidence.source_sha256 == digest(project)
+    assert candidate.evidence["conflict_scope"] == ("netclass_assignment",)
+    assert candidate.evidence["net_name"] == ("N1",)
+    assert (
+        tuple(json.loads(value) for value in candidate.evidence["source_order_values_json"])
+        == expected_assignments
+    )
+    assert candidate.subject == f"{PROJECT_RELATIVE}#net_settings/netclass_assignments/N1"
+
+
+def test_identical_duplicate_netclass_assignment_is_quiet(tmp_path: Path) -> None:
+    root, _, config, hashes = _project(
+        tmp_path,
+        "control-netclass-assignment-duplicate-equal.kicad_pro",
+    )
+
+    assert _scan(root, config, hashes) == ()
+
+
 def test_equal_duplicate_classes_member_is_quiet(tmp_path: Path) -> None:
     root, _, config, hashes = _project(tmp_path, "control-identical-netclass-list.kicad_pro")
 
@@ -171,6 +219,20 @@ def test_unique_netclass_list_is_quiet_and_unrelated_duplicates_stay_strict(
     )
     with pytest.raises(ValueError, match="Duplicate JSON key at net_settings.classes: track_width"):
         configured_pcb_conflicting_netclass_settings(duplicate_track_width)
+    duplicate_assignment_section = (
+        (FIXTURES / "control-unique-narrow.kicad_pro")
+        .read_text(encoding="utf-8")
+        .replace(
+            '"netclass_assignments":{"N1":"Narrow","N2":"Narrow"}',
+            '"netclass_assignments":{"N1":"Narrow"},"netclass_assignments":{"N2":"Narrow"}',
+            1,
+        )
+    )
+    with pytest.raises(
+        ValueError,
+        match="Duplicate JSON key at net_settings: netclass_assignments",
+    ):
+        configured_pcb_conflicting_netclass_settings(duplicate_assignment_section)
 
 
 @pytest.mark.parametrize("version", ("10.0.0", "10.0.5", "10.0.7", "10.0.9", "11.0.0"))
@@ -217,6 +279,22 @@ def test_repeated_scans_preserve_class_and_list_order(tmp_path: Path) -> None:
     assert first == second
     values = tuple(json.loads(value) for value in first[0].evidence["source_order_values_json"])
     assert tuple(item[1]["clearance"] for item in values) == (0.05, 0.2)
+
+
+def test_repeated_scans_preserve_netclass_assignment_order(tmp_path: Path) -> None:
+    root, _, config, hashes = _project(
+        tmp_path,
+        "fault-netclass-assignment-default-last.kicad_pro",
+    )
+
+    first = _scan(root, config, hashes)
+    second = _scan(root, config, hashes)
+
+    assert first == second
+    assert tuple(json.loads(value) for value in first[0].evidence["source_order_values_json"]) == (
+        "Narrow",
+        "Default",
+    )
 
 
 def test_stale_source_inventory_blocks_the_finding(tmp_path: Path) -> None:

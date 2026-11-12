@@ -59,6 +59,19 @@ violation types.
 | `fault-netclass-clearance-wide-last.kicad_pro`         | duplicate class property     |        0.20 mm | one                       |
 | `control-netclass-clearance-duplicate-equal.kicad_pro` | identical duplicate property |        0.05 mm | none                      |
 
+The netclass-assignment fixtures exercise repeated `N1` keys in one
+`netclass_assignments` object. KiCad 10.0.8 applies the final class assignment
+in this synthetic case: assigning `N1` to `Narrow` last produces no clearance
+violation, while assigning it to `Default` last produces one. An identical
+duplicate assignment and the unique assignment are controls. The native test
+exports every case twice and checks repeatable DRC violation types.
+
+| Fixture                                                 | Conflict form                  | Last assignment | Expected clearance result |
+| ------------------------------------------------------- | ------------------------------ | --------------: | ------------------------- |
+| `fault-netclass-assignment-narrow-last.kicad_pro`       | duplicate `N1` assignment      |        `Narrow` | none                      |
+| `fault-netclass-assignment-default-last.kicad_pro`      | duplicate `N1` assignment      |       `Default` | one                       |
+| `control-netclass-assignment-duplicate-equal.kicad_pro` | identical duplicate assignment |        `Narrow` | none                      |
+
 Native image:
 `ghcr.io/kicad/kicad:10.0.8-amd64@sha256:05f6ac957e351bbbd9e1f9c996be997f61948ed9f94e0c3cab336bfcaf60161c`.
 This observation is limited to these values, geometry, KiCad version, and image; it does not choose
@@ -74,6 +87,9 @@ an intended value or establish an electrical board defect.
 | `control-netclass-clearance-duplicate-equal.kicad_pro` | `bd78215a548c9a20664cc5f1ff2a22ee820bae518d40af8af9a32d0a7e1451a2` |
 | `fault-netclass-clearance-narrow-last.kicad_pro`       | `948b539d30b81112904997f7d8eb6fe9dd47730d7aafdcd590144d652c463b33` |
 | `fault-netclass-clearance-wide-last.kicad_pro`         | `cf0517e6b31e2c631942591c3881619626e6fca5a5d12f6b4d798309f2d3ec9f` |
+| `fault-netclass-assignment-narrow-last.kicad_pro`      | `8aeab58637966ab9ad5f2925d59ff1ce8ca04cb63d6b8bea6ee144770a2e79f5` |
+| `fault-netclass-assignment-default-last.kicad_pro`     | `e8531dd55e82dddcce31e00426eee90c891f747ba511c070b3c1ccd54da4fad5` |
+| `control-netclass-assignment-duplicate-equal.kicad_pro`| `ecba7e55a0007d875ead0bfbf675c124680434343300dcaf46dc20c46fec57d8` |
 
 Run the focused source, CLI/MCP, and pinned native regressions with:
 

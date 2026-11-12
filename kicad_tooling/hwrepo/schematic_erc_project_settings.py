@@ -94,6 +94,7 @@ _KICAD_PROJECT_ERC_ROOT_DUPLICATE_MEMBER = ((), "erc")
 _KICAD_PROJECT_NET_SETTINGS_ROOT_DUPLICATE_MEMBER = ((), "net_settings")
 _KICAD_PROJECT_NET_SETTINGS_CLASSES_DUPLICATE_MEMBER = (("net_settings",), "classes")
 _KICAD_PROJECT_NETCLASS_CLEARANCE_DUPLICATE_MEMBER = (("net_settings", "classes"), "clearance")
+_KICAD_PROJECT_NETCLASS_ASSIGNMENTS_OBJECT_PATH = ("net_settings", "netclass_assignments")
 # Keep exact patch entries; later KiCad 10.0 releases can add ERC item keys.
 _ERC_RULE_KEYS_KICAD_10_0_7 = _ERC_RULE_KEYS_KICAD_10_0 | {"same_local_global_power"}
 _ERC_DEFAULT_WARNING_RULE_KEYS_KICAD_10_0_7 = ERC_DEFAULT_WARNING_RULE_KEYS | {
@@ -179,7 +180,9 @@ def _parse_schematic_erc_project_settings(
     ):
         return parse_model_text(document, _ProjectSettings)
     duplicate_members: set[tuple[tuple[str, ...], str]] = set()
+    duplicate_paths: frozenset[tuple[str, ...]] = frozenset()
     if allow_duplicate_board_section:
+        duplicate_paths = frozenset({_KICAD_PROJECT_NETCLASS_ASSIGNMENTS_OBJECT_PATH})
         duplicate_members.add(_KICAD_PROJECT_BOARD_ROOT_DUPLICATE_MEMBER)
         duplicate_members.add(_KICAD_PROJECT_NET_SETTINGS_ROOT_DUPLICATE_MEMBER)
         duplicate_members.add(_KICAD_PROJECT_NET_SETTINGS_CLASSES_DUPLICATE_MEMBER)
@@ -190,9 +193,9 @@ def _parse_schematic_erc_project_settings(
         document,
         _ProjectSettings,
         allowed_duplicate_object_paths=(
-            _ALLOWED_DUPLICATE_KICAD_PROJECT_OBJECT_PATHS
+            _ALLOWED_DUPLICATE_KICAD_PROJECT_OBJECT_PATHS | duplicate_paths
             if allow_duplicate_severity_keys
-            else frozenset()
+            else duplicate_paths
         ),
         allowed_duplicate_object_members=frozenset(duplicate_members),
     )

@@ -38,16 +38,34 @@ class PcbNetClassConflictEvidence:
             raise ValueError("PCB netclass conflict evidence requires a PCB project")
         if self.kicad_version != _SUPPORTED_KICAD_VERSION:
             raise ValueError("PCB netclass conflict evidence requires KiCad 10.0.8")
-        if len(self.setting.source_order_values_json) < 2:
+        if len(set(self.setting.source_order_values_json)) < 2:
             raise ValueError("PCB netclass conflict evidence requires conflicting values")
-        if self.setting.conflict_scope not in {"classes_member", "class_name", "class_property"}:
+        if self.setting.conflict_scope not in {
+            "classes_member",
+            "class_name",
+            "class_property",
+            "netclass_assignment",
+        }:
             raise ValueError("Unsupported PCB netclass conflict scope")
         if self.setting.conflict_scope == "classes_member":
-            if self.setting.class_name is not None or self.setting.property_name is not None:
+            if (
+                self.setting.class_name is not None
+                or self.setting.property_name is not None
+                or self.setting.net_name is not None
+            ):
                 raise ValueError("PCB netclass list evidence cannot identify one class property")
+        elif self.setting.conflict_scope == "netclass_assignment":
+            if (
+                not self.setting.net_name
+                or self.setting.class_name is not None
+                or self.setting.property_name is not None
+            ):
+                raise ValueError("PCB netclass assignment evidence requires only its net name")
         elif not self.setting.class_name:
             raise ValueError("PCB netclass conflict evidence requires its class name")
-        elif (self.setting.conflict_scope == "class_property") != bool(self.setting.property_name):
+        elif (self.setting.conflict_scope == "class_property") != bool(
+            self.setting.property_name
+        ) or self.setting.net_name is not None:
             raise ValueError("PCB netclass property evidence does not match its conflict scope")
 
 
@@ -68,11 +86,15 @@ def project_pcb_netclass_conflict_evidence(
         evidence["class_name"] = (source.setting.class_name,)
     if source.setting.property_name is not None:
         evidence["property_name"] = (source.setting.property_name,)
+    if source.setting.net_name is not None:
+        evidence["net_name"] = (source.setting.net_name,)
     return CandidateEvidenceProjection(rule_id=_RULE_ID, evidence=evidence)
 
 
 def _subject(source: PcbNetClassConflictEvidence) -> str:
     subject = f"{source.source_path}#net_settings/classes"
+    if source.setting.net_name is not None:
+        return f"{source.source_path}#net_settings/netclass_assignments/{source.setting.net_name}"
     if source.setting.property_name is not None:
         return f"{subject}/{source.setting.class_name}/{source.setting.property_name}"
     if source.setting.class_name is not None:
@@ -81,6 +103,12 @@ def _subject(source: PcbNetClassConflictEvidence) -> str:
 
 
 def _message(source: PcbNetClassConflictEvidence) -> str:
+    if source.setting.net_name is not None:
+        return (
+            f"KiCad {source.kicad_version} project settings assign net "
+            f"{source.setting.net_name!r} to conflicting netclasses; review source order and retain "
+            "one intended assignment."
+        )
     if source.setting.class_name is None:
         return (
             f"KiCad {source.kicad_version} project settings repeat the net_settings.classes "

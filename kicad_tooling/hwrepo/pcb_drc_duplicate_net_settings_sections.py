@@ -32,6 +32,7 @@ _KNOWN_DUPLICATE_SEVERITY_PATHS = frozenset(
 )
 _DUPLICATE_NET_SETTINGS_CLASSES_MEMBER = (("net_settings",), "classes")
 _DUPLICATE_NETCLASS_CLEARANCE_MEMBER = (("net_settings", "classes"), "clearance")
+_DUPLICATE_NETCLASS_ASSIGNMENT_PATH = ("net_settings", "netclass_assignments")
 _DUPLICATE_ROOT_CLEARANCE_MEMBER = ((), "clearance")
 
 
@@ -60,6 +61,7 @@ class PcbConflictingNetClassSettings:
     class_name: str | None
     source_order_values_json: tuple[str, ...]
     property_name: str | None = None
+    net_name: str | None = None
 
 
 def _validate_pcb_settings_document(
@@ -74,7 +76,9 @@ def _validate_pcb_settings_document(
             _DUPLICATE_NET_SETTINGS_CLASSES_MEMBER,
             _DUPLICATE_NETCLASS_CLEARANCE_MEMBER,
         }
-        duplicate_paths = _KNOWN_DUPLICATE_SEVERITY_PATHS
+        duplicate_paths = _KNOWN_DUPLICATE_SEVERITY_PATHS | {
+            _DUPLICATE_NETCLASS_ASSIGNMENT_PATH,
+        }
     parse_model_text_allow_duplicate_json_keys_at(
         document,
         _PcbProjectSettingsRoot,
@@ -109,10 +113,37 @@ def configured_pcb_duplicate_net_settings_sections(
     )
 
 
+def _conflicting_netclass_assignment_settings(
+    net_settings: JsonObjectPairs,
+) -> tuple[PcbConflictingNetClassSettings, ...]:
+    """Retain repeated net keys with different netclass values in source order."""
+    assignment_maps = tuple(
+        value for key, value in net_settings.pairs if key == "netclass_assignments"
+    )
+    if len(assignment_maps) != 1 or not isinstance(assignment_maps[0], JsonObjectPairs):
+        return ()
+
+    assignments_by_net: dict[str, list[str]] = {}
+    for net_name, value in assignment_maps[0].pairs:
+        assignments_by_net.setdefault(net_name, []).append(
+            canonical_json_value(json_value_from_object_pairs(value))
+        )
+    return tuple(
+        PcbConflictingNetClassSettings(
+            conflict_scope="netclass_assignment",
+            class_name=None,
+            source_order_values_json=tuple(values),
+            net_name=net_name,
+        )
+        for net_name, values in sorted(assignments_by_net.items())
+        if len(values) > 1 and len(set(values)) > 1
+    )
+
+
 def configured_pcb_conflicting_netclass_settings(
     document: str,
 ) -> tuple[PcbConflictingNetClassSettings, ...]:
-    """Retain conflicting duplicate netclass-list and named-class values."""
+    """Retain conflicting duplicate netclass-list, class, and assignment values."""
     _validate_pcb_settings_document(document, allow_source_bound_duplicates=True)
     project = json.loads(document, object_pairs_hook=retain_json_object_pairs)
     if not isinstance(project, JsonObjectPairs):
@@ -122,8 +153,9 @@ def configured_pcb_conflicting_netclass_settings(
         return ()
 
     class_lists = tuple(value for key, value in net_settings[0].pairs if key == "classes")
+    assignment_conflicts = _conflicting_netclass_assignment_settings(net_settings[0])
     if not class_lists:
-        return ()
+        return assignment_conflicts
     normalized_lists = tuple(
         json_value_from_object_pairs(
             value,
@@ -141,6 +173,7 @@ def configured_pcb_conflicting_netclass_settings(
                     canonical_json_value(value) for value in normalized_lists
                 ),
             ),
+            *assignment_conflicts,
         )
 
     definitions_by_name: dict[str, list[str]] = {}
@@ -186,4 +219,4 @@ def configured_pcb_conflicting_netclass_settings(
         for name, values in sorted(definitions_by_name.items())
         if len(set(values)) > 1
     )
-    return (*property_conflicts.values(), *class_name_conflicts)
+    return (*property_conflicts.values(), *class_name_conflicts, *assignment_conflicts)
