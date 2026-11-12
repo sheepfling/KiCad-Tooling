@@ -23947,8 +23947,9 @@ acceptance threads while new lint features proceed:
 #### LINT-407 — Verify persisted PCB DRC exclusions with native KiCad
 
 - **Status:** Added a digest-pinned Docker regression to the existing
-  `pcb.drc_exclusion_present` review gate; this adds native evidence without a
-  new rule ID or a claim that the exclusions are defects.
+  `pcb.drc_exclusion_present` review gate. Tagged acceptance `v0.5.3rc685`
+  passed in GitHub Actions run `43125663932`; no rule ID or defect claim was
+  added.
 - **Gap:** LINT-141 already checks that source-hashed KiCad project settings
   contain saved exclusion records. Its synthetic parser fixtures did not show
   that saved records match active native DRC markers on a board.
@@ -23969,7 +23970,9 @@ acceptance threads while new lint features proceed:
   project or cohort data was imported.
 - **Selection:** The native test is registered to
   `KICAD_RUN_NATIVE_PCB_FIXTURES` and the exact rule selector. Full acceptance
-  enables it; ordinary focused unit/parity selections can omit Docker.
+  enables it; ordinary focused unit/parity selections can omit Docker. The
+  hosted focused gate also passed its installed-wheel check against a separate
+  project checkout.
 
 ## Completion and release gate
 
