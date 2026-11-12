@@ -4451,8 +4451,8 @@ Current catalog audit: 350 covered, 0 not applicable, 0 unreviewed.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v91. The cross-process probe supports themed report
-  selectors and retains the complete 333-report inventory gate. Fault/control
+- **Status:** Implemented v92. The cross-process probe supports themed report
+  selectors and retains the complete 335-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -4610,6 +4610,16 @@ Current catalog audit: 350 covered, 0 not applicable, 0 unreviewed.
   Scoped `scripts/ci.py` acceptance passed formatting, code and architecture
   lint, Markdown, focused pytest, Linux and Windows typing, wheel and sdist
   builds, installed-wheel checks, and the separate public-template playtest.
+  The v92 extension adds complete mapped mixed USB/serial numbered-return
+  fault and common-return control reports to the three-process hash-seed
+  matrix. The fault preserves `USB1_GND` evidence for J1.3/J2.3 and
+  `USB2_GND` evidence for J3.3; its control stays quiet for
+  `net.numbered_returns`. The report inventory now contains 335 entries.
+  The complete inventory/backlog check passed 2 tests. The focused scoped CI
+  gate passed 445 tests with 8,770 deselected, including exact KiCad 10.0.0
+  and 10.0.5 Docker lanes. Formatting, both Alphus profiles, Markdown and
+  repository-link checks, Linux and Windows typing, wheel/sdist builds, and
+  installed-wheel checks passed.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized

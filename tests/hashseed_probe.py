@@ -204,6 +204,8 @@ REPORT_ORDER = (
     "peer_pin_control",
     "mapped_return_fault",
     "mapped_return_control",
+    "mixed_interface_numbered_return_fault",
+    "mixed_interface_numbered_return_control",
     "two_usb_one_serial_return_fault",
     "two_usb_one_serial_return_control",
     "two_usb_one_serial_return_ignored",
@@ -353,6 +355,7 @@ REPORT_ORDER = (
 REPORT_BUILDERS = MappingProxyType(
     {
         "returns": "tests.hashseed_probe_cases.returns",
+        "numbered_interface_returns": "tests.hashseed_probe_cases.numbered_interface_returns",
         "connectors": "tests.hashseed_probe_cases.connectors",
         "jtag_connector_return": "tests.hashseed_probe_cases.jtag_connector_return",
         "connector_return_protocols": "tests.hashseed_probe_cases.connector_return_protocols",

@@ -704,6 +704,9 @@ theme slice without collecting unrelated tests:
 .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint and design_lint_rule(rule_id="connector.usb_superspeed_pair_without_return_review")' \
   tests/test_design_lint_determinism_connector_returns.py --durations=10
+.venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint and design_lint_rule(rule_id="net.numbered_returns")' \
+  tests/test_design_lint_determinism_returns.py --durations=10
 ```
 
 The same shared report module covers the serial, I2C, I3C, SWD, CAN, RS-485,

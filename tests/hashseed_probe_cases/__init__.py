@@ -2,6 +2,7 @@
 
 HASHSEED_REPORT_FAMILIES = (
     "returns",
+    "numbered_interface_returns",
     "connectors",
     "jtag_connector_return",
     "connector_return_protocols",

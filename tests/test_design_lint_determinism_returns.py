@@ -142,3 +142,22 @@ def test_return_and_ground_reports_remain_deterministic() -> None:
         in inventory_results["missing_inventory"]["checks"][0]["detail"]
     )
     assert inventory_results["complete_inventory_control"]["checks"][0]["status"] == "PASS"
+
+
+@pytest.mark.design_lint_rule(rule_id="net.numbered_returns")
+def test_mixed_usb_serial_numbered_returns_remain_hashseed_deterministic() -> None:
+    reports = hashseed_probe_reports(families=("numbered_interface_returns",))
+    fault = reports["mixed_interface_numbered_return_fault"]
+    control = reports["mixed_interface_numbered_return_control"]
+
+    findings = [item for item in fault["findings"] if item["rule_id"] == "net.numbered_returns"]
+    assert fault["status"] == "REVIEW"
+    assert len(findings) == 1
+    assert findings[0]["subject"] == "USB_GND"
+    assert findings[0]["mode"] == "review"
+    assert findings[0]["evidence"] == {
+        "USB1_GND": ["J1.3", "J2.3"],
+        "USB2_GND": ["J3.3"],
+    }
+    assert control["netlist_sha256"] != fault["netlist_sha256"]
+    assert not [item for item in control["findings"] if item["rule_id"] == "net.numbered_returns"]

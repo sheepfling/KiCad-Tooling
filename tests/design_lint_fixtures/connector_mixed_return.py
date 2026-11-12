@@ -21,6 +21,7 @@ def two_usb_one_serial_return_case(
     common_return: bool,
     all_returns_open: bool = False,
     return_comparison_groups: Mapping[str, str] | None = None,
+    split_return_net_names: tuple[str, str] | None = None,
 ) -> tuple[NetlistContract, ConnectorCoverageReport]:
     """Build mapped USB and serial peers with split, common, or open returns."""
     nets: dict[str, tuple[str, ...]] = {
@@ -35,6 +36,12 @@ def two_usb_one_serial_return_case(
     if not all_returns_open:
         if common_return:
             nets["COMMON_RETURN"] = ("J1.3", "J2.3", "J3.3")
+        elif split_return_net_names is not None:
+            if len(set(split_return_net_names)) != 2:
+                raise ValueError("split return net names must be distinct")
+            first_name, second_name = split_return_net_names
+            nets[first_name] = ("J1.3", "J2.3")
+            nets[second_name] = ("J3.3",)
         else:
             nets["COMMON_RETURN"] = ("J1.3", "J2.3")
             nets["USB2_RETURN"] = ("J3.3",)
