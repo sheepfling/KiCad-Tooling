@@ -807,7 +807,14 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc722):** LINT-433 adds a
+- **Latest published lint-gate checkpoint (v0.5.3rc723):** LINT-434 reviews
+  malformed PCB netclass inventories. Local and hosted scoped gates each
+  passed 432 tests with 8,956 deselected and ran the repeatable,
+  digest-pinned KiCad 10.0.8 Docker fault/control fixture. Hosted acceptance
+  and the installed-wheel rehearsal against a separate project passed in
+  GitHub Actions run `43327954298`; package and preview jobs were skipped
+  under prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc722):** LINT-433 adds a
   default-REVIEW source-shape check for malformed PCB netclass assignments.
   Local and hosted scoped gates each passed 436 tests with 8,922 deselected;
   both ran the repeatable, digest-pinned KiCad 10.0.8 Docker fault/control
@@ -25469,7 +25476,8 @@ acceptance threads while new lint features proceed:
   passed in the gate. Linux and Windows Pyright, Ruff, Alphus, Rumdl, mdrepo,
   wheel/sdist builds, installed-wheel checks, and external/adapted template
   rehearsals passed. Receipt: `build/ci/run-n5bp1cy3`. Hosted acceptance is
-  pending.
+  verified in GitHub Actions run `43327954298`; the package and preview jobs
+  were skipped under prerelease policy.
 
 ## Completion and release gate
 
