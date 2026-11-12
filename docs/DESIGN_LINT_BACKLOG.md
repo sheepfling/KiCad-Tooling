@@ -805,12 +805,13 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc720):** The first LINT-432
-  implementation reviews PCB assignments to undeclared netclasses. Its
-  original gate passed 422 tests with 8,890 deselected and repeatable
-  digest-pinned KiCad 10.0.8 Docker exports. Hosted acceptance and the
-  installed-wheel rehearsal passed in GitHub Actions run `43310078583`; package
-  and preview jobs were skipped under prerelease policy.
+- **Latest published lint-gate checkpoint (v0.5.3rc721):** LINT-432 now also
+  reviews current array-valued PCB netclass assignments alongside legacy
+  scalars. Local and hosted scoped gates each passed 433 tests with 8,890
+  deselected; the local run included repeatable digest-pinned KiCad 10.0.8
+  Docker exports. Hosted acceptance and the installed-wheel rehearsal against
+  a separate project passed in GitHub Actions run `43315379001`; package and
+  preview jobs were skipped under prerelease policy.
 - **Previous lint-gate checkpoint (v0.5.3rc718):** LINT-430 extends
   `net.numbered_returns` to review a recognized base return label beside a
   matching indexed sibling. Local scoped acceptance passed 456 tests with
@@ -25357,8 +25358,11 @@ acceptance threads while new lint features proceed:
   known/unknown arrays, and declared/empty-array controls. Ruff, both Alphus
   profiles, Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist builds,
   installed-artifact checks, and external/adapted template-project playtests
-  passed. Receipts are under `build/ci/run-ge2h5dfy/`. Hosted acceptance for
-  the current-array extension is pending.
+  passed. Receipts are under `build/ci/run-ge2h5dfy/`.
+- **Hosted acceptance (2026-11-12):** Tag `v0.5.3rc721` passed in GitHub
+  Actions run `43315379001` with 433 tests and 8,890 deselected. The installed
+  wheel passed its separate-project rehearsal. Package publishing and preview
+  jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
