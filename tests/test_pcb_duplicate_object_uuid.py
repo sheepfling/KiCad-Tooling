@@ -66,9 +66,27 @@ def test_duplicate_uuid_on_distinct_board_objects_is_localized(tmp_path: Path) -
     assert len(candidate.evidence["source_lines"]) == 2
     assert candidate.evidence["object_kinds"] == ("segment",)
     assert candidate.evidence["occurrence_object_kinds"] == ("segment", "segment")
+    assert candidate.evidence["occurrence_identity_fields"] == ("uuid", "uuid")
+
+
+def test_zone_tstamp_and_object_uuid_share_the_identity_check(tmp_path: Path) -> None:
+    root, _board, config, hashes = _project(tmp_path, "zone-tstamp-fault")
+
+    (candidate,) = _scan(root, config, hashes)
+
+    assert candidate.evidence["object_uuid"] == ("00000000-0000-0000-0000-000000000002",)
+    assert candidate.evidence["object_kinds"] == ("segment", "zone")
+    assert candidate.evidence["occurrence_object_kinds"] == ("segment", "zone")
+    assert candidate.evidence["occurrence_identity_fields"] == ("uuid", "tstamp")
 
 
 def test_unique_object_uuids_are_quiet(tmp_path: Path) -> None:
+    root, _board, config, hashes = _project(tmp_path, "control")
+
+    assert _scan(root, config, hashes) == ()
+
+
+def test_zone_tstamp_control_remains_quiet(tmp_path: Path) -> None:
     root, _board, config, hashes = _project(tmp_path, "control")
 
     assert _scan(root, config, hashes) == ()

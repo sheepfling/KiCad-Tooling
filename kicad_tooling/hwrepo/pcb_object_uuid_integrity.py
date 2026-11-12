@@ -48,7 +48,7 @@ def duplicate_pcb_object_uuid_candidates(
     except (UnicodeError, ValueError):
         return ()
 
-    occurrences: dict[str, list[tuple[int, str]]] = defaultdict(list)
+    occurrences: dict[str, list[tuple[int, str, str]]] = defaultdict(list)
     line_breaks = tuple(index for index, character in enumerate(document) if character == "\n")
     pending: list[tuple[SExprSpan, str]] = [(board_root, "kicad_pcb")]
     while pending:
@@ -57,12 +57,12 @@ def duplicate_pcb_object_uuid_candidates(
             atoms = sexpr_atoms(document, child)
             if not atoms:
                 continue
-            if atoms[0] == "uuid":
+            if atoms[0] in {"uuid", "tstamp"}:
                 if len(atoms) == 2:
                     canonical_uuid = _canonical_uuid(atoms[1])
                     if canonical_uuid is not None:
                         line = bisect_right(line_breaks, child.start) + 1
-                        occurrences[canonical_uuid].append((line, parent_kind))
+                        occurrences[canonical_uuid].append((line, parent_kind, atoms[0]))
                 continue
             pending.append((child, atoms[0]))
 
@@ -74,15 +74,16 @@ def duplicate_pcb_object_uuid_candidates(
         if len(entries) < 2:
             continue
         ordered = tuple(sorted(entries))
-        lines = tuple(str(line) for line, _kind in ordered)
-        kinds = tuple(kind for _line, kind in ordered)
+        lines = tuple(str(line) for line, _kind, _field in ordered)
+        kinds = tuple(kind for _line, kind, _field in ordered)
+        identity_fields = tuple(field for _line, _kind, field in ordered)
         first_line = ordered[0][0]
         candidates.append(
             Candidate(
                 rule_id=_RULE_ID,
                 subject=f"{board_relative}:{first_line}:{object_uuid}",
                 message=(
-                    f"PCB UUID {object_uuid!r} is assigned to {len(entries)} objects "
+                    f"PCB object identity {object_uuid!r} is assigned to {len(entries)} objects "
                     f"on lines {', '.join(lines)}; review the source identities because "
                     "native diagnostics can refer to distinct objects by the same UUID."
                 ),
@@ -94,6 +95,7 @@ def duplicate_pcb_object_uuid_candidates(
                     "source_lines": lines,
                     "object_kinds": tuple(sorted(set(kinds))),
                     "occurrence_object_kinds": kinds,
+                    "occurrence_identity_fields": identity_fields,
                 },
             )
         )

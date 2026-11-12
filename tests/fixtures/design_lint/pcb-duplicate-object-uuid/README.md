@@ -6,10 +6,14 @@ contain no customer or cohort design data. The only fault mutation is the UUID
 of the second disconnected copper track: the control assigns it a distinct ID,
 while the fault repeats the first track's ID.
 
-| Source              | SHA-256                                                            | Expected source lint                               |
-| ------------------- | ------------------------------------------------------------------ | -------------------------------------------------- |
-| `control.kicad_pcb` | `58eb8a374ede66a0c4c53b766b5f30507933c8fbebcdac98d1f4986ca8a0bed4` | No repeated UUID                                   |
-| `fault.kicad_pcb`   | `c579a9593bd10784544898323ae1600dd26e8b65fc4d1a8e54b0acbd22c1cc90` | One review candidate for the two `segment` objects |
+| Source                        | SHA-256                                                            | Expected source lint                               |
+| ----------------------------- | ------------------------------------------------------------------ | -------------------------------------------------- |
+| `control.kicad_pcb`           | `58eb8a374ede66a0c4c53b766b5f30507933c8fbebcdac98d1f4986ca8a0bed4` | No repeated UUID                                   |
+| `fault.kicad_pcb`             | `c579a9593bd10784544898323ae1600dd26e8b65fc4d1a8e54b0acbd22c1cc90` | One review for the two `segment` objects           |
+| `zone-tstamp-fault.kicad_pcb` | `2766d404d6da0d1dec8e9f8a0e31fdcd12c9bba4094ef1fa1813ab3f37117e88` | One review for the `zone` and `segment` identities |
+
+`control.kicad_pcb` is also the distinct-identity control for the zone/track
+case, avoiding a second copy of identical source bytes.
 
 ## Native observation
 
@@ -26,6 +30,21 @@ refer to the same UUID. On the control board those records refer to the two
 distinct track UUIDs. This source identity ambiguity is the demonstrated value
 of the review prompt; the fixture does not establish a general electrical
 failure or cover non-track UUID fields.
+
+The legacy-field fault and the same tooling-owned control were also accepted by
+both images and exported twice per version. The fault changes only the zone's
+`(tstamp ...)` to match one segment's `(uuid ...)`. In both versions, the `track_dangling` record
+for that segment and the corresponding `unconnected_items` record resolve the
+shared UUID to `Zone [RETURN]` rather than the track. The control resolves both
+segments as tracks. KiCad's pinned 10.0.0 and 10.0.5 schematic-expression
+PCB S-expression parsers map zone `tstamp` and `uuid` tokens to the same internal
+UUID field ([10.0.0 source][kicad-pcb-parser-zone-id-100],
+[10.0.5 source][kicad-pcb-parser-zone-id-105]).
+These results demonstrate identifier ambiguity for this zone/track case only;
+they do not establish an electrical or layout defect.
+
+[kicad-pcb-parser-zone-id-100]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/pcb_io/kicad_sexpr/pcb_io_kicad_sexpr_parser.cpp
+[kicad-pcb-parser-zone-id-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/pcb_io/kicad_sexpr/pcb_io_kicad_sexpr_parser.cpp
 
 Run the native check from the repository root with:
 

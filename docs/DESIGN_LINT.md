@@ -1025,18 +1025,24 @@ KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
 ### PCB object UUID repeats within one board source
 
 `pcb.duplicate_object_uuid` reviews a canonical UUID assigned to multiple
-direct object UUID fields in the exact source-hashed board. It applies to PCB
-and PCB-only projects configured for KiCad 10.0.0 or 10.0.5. The evidence names
-the UUID, each occurrence line and object type, and the board's repository path
-and SHA-256. Unsupported patch versions, malformed board roots, and
-noncanonical UUID text are outside the predicate.
+direct `(uuid ...)` or legacy `(tstamp ...)` identity fields in the exact
+source-hashed board. KiCad 10.0.0 and 10.0.5 map these spellings to the same
+zone identity field ([10.0.0 parser][kicad-pcb-parser-100],
+[10.0.5 parser][kicad-pcb-parser-105]).
+The rule applies to PCB and PCB-only projects configured for either version.
+Evidence names the UUID, each occurrence line, object type, field spelling,
+and the board's repository path and SHA-256. Unsupported patch versions,
+malformed board roots, and noncanonical UUID text are outside the predicate.
 
-This is a source identity review prompt. In the tooling-owned synthetic fixture, KiCad 10.0.0 and
-10.0.5 accepted two disconnected tracks with the same UUID and reported both tracks under that same
-UUID in dangling and unconnected DRC diagnostics. The distinct-UUID control identifies each track
-separately. This measurement supports reviewing repeated board identities; it does not imply an
-electrical or layout fault, and it covers track segments only. The rule defaults to REVIEW and
-supports project review, block, off, and exact-fingerprint ignore decisions. See the
+This is a source identity review prompt. In tooling-owned synthetic fixtures,
+KiCad 10.0.0 and 10.0.5 accepted two disconnected tracks with the same UUID
+and reported both under that identifier in dangling and unconnected DRC
+diagnostics. A separate zone/track fault changes only a zone `tstamp` to match
+a track `uuid`; the dangling-track diagnostic then resolves to the zone in both
+versions, while the distinct-identity control resolves to the track. This
+supports reviewing repeated board identities; it does not imply an electrical
+or layout fault. The rule defaults to REVIEW and supports project review,
+block, off, and exact-fingerprint ignore decisions. See the
 [PCB UUID fixture README](../tests/fixtures/design_lint/pcb-duplicate-object-uuid/README.md) for
 source hashes and pinned native details.
 
@@ -9749,3 +9755,6 @@ netlist, KiCad version, image, and probe digest. This is a count screen only.
 It does not inspect panel fiducials, pad or solder-mask geometry, vision
 performance, placement tolerance, assembly setup, or manufacturing suitability.
 Review the actual board and assembly requirements before approving a build.
+
+[kicad-pcb-parser-100]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/pcb_io/kicad_sexpr/pcb_io_kicad_sexpr_parser.cpp
+[kicad-pcb-parser-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/pcb_io/kicad_sexpr/pcb_io_kicad_sexpr_parser.cpp

@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 350 rules are implemented with synthetic regression coverage.
+The following 351 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 350 active rules.
+The catalog currently contains 351 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -737,6 +737,7 @@ skipped under prerelease policy.
 - `pcb.drc_exclusion_present`
 - `pcb.drc_duplicate_board_section`
 - `pcb.drc_duplicate_net_settings_section`
+- `pcb.duplicate_object_uuid`
 - `pcb.drc_duplicate_severity_key`
 - `pcb.drc_unknown_severity_key`
 - `pcb.drc_invalid_severity_value`
@@ -24972,6 +24973,50 @@ acceptance threads while new lint features proceed:
   The focused lint gate and installed-wheel rehearsal passed; package and
   preview orchestration were skipped under prerelease policy.
 
+#### LINT-425 — Include legacy PCB `tstamp` identity fields in UUID review
+
+- **Priority:** P1 source-identity evidence. KiCad can read a shared object
+  identity through either the current `uuid` spelling or the legacy `tstamp`
+  spelling, so scanning only `uuid` fields can miss a cross-object collision.
+- **Status:** Implemented as an evidence-completeness extension to
+  `pcb.duplicate_object_uuid`; no new rule ID or project configuration is
+  introduced.
+- **Source basis:** The pinned KiCad 10.0.0 and 10.0.5 PCB S-expression
+  parsers map zone `tstamp` and `uuid` tokens to one internal UUID field
+  ([10.0.0 source][kicad-pcb-parser-zone-id-100],
+  [10.0.5 source][kicad-pcb-parser-zone-id-105]).
+- **Behavior:** Group canonical identifiers from direct `(uuid ...)` and
+  `(tstamp ...)` fields in the exact source-hashed board. Report each field
+  spelling alongside its source line and owning object type.
+- **Evidence:** Tooling-owned synthetic boards differ only in the zone's
+  `tstamp`: the fault repeats a disconnected track's `uuid`, while the control
+  keeps a distinct value. Both exact-version native images accept both boards.
+  Across two runs per case and version, DRC resolves the shared fault identity
+  to the zone in the dangling-track and unconnected records; the control
+  resolves both objects as tracks. This demonstrates ambiguous source
+  localization for this tested object pair, not an electrical or layout fault.
+- **Boundary:** Only canonical UUID text in the two recognized identity field
+  spellings is grouped. The rule remains limited to configured KiCad 10.0.0
+  and 10.0.5 projects with a matching source hash; it does not infer which
+  object identity should change or generalize native behavior to unmeasured
+  object pairs or versions.
+- **Selection:** Run
+  `tests/test_pcb_duplicate_object_uuid.py` and
+  `tests/test_design_lint_mcp_parity_pcb_duplicate_object_uuid.py` and
+  `tests/test_design_lint_determinism_pcb_duplicate_object_uuid.py` with
+  `design_lint and pcb_lint and design_lint_rule(rule_id="pcb.duplicate_object_uuid")`.
+  The exact native cases are in
+  `tests/test_pcb_duplicate_object_uuid_native.py`; they also require
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1` and `native_kicad`.
+- **Local acceptance (2026-11-12):** Scoped package acceptance passed 422 tests
+  with 8,825 unrelated tests deselected, including repeated digest-pinned
+  KiCad 10.0.0 and 10.0.5 Docker fault/control runs. Ruff, both Alphus profiles,
+  Rumdl, repository-wide mdrepo, Linux and Windows Pyright, wheel and sdist
+  builds, installed-wheel checks, and the separate KiCad template checkout
+  playtest passed. The focused catalog and backlog selection also passed 34
+  tests, including the active-rule inventory and fixture references. Hosted
+  acceptance for this extension is pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -25036,6 +25081,8 @@ quality, or first-article continuity.
 [kicad-10-drc-exclusions]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#design-rule-checking
 [kicad-10-cli-drc]: https://docs.kicad.org/10.0/en/cli/cli.html
 [kicad-10-5-marker-serializer]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/pcb_marker.cpp
+[kicad-pcb-parser-zone-id-100]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/pcb_io/kicad_sexpr/pcb_io_kicad_sexpr_parser.cpp
+[kicad-pcb-parser-zone-id-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/pcb_io/kicad_sexpr/pcb_io_kicad_sexpr_parser.cpp
 [kicad-10-project-drc-exclusions]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.7/pcbnew/board_design_settings.cpp
 [kicad-file-doctor-missing-symbol]: https://github.com/94xhn/kicad-file-doctor/blob/45133533e05aeabb7ef150d3a95084c318f16c9d/kicad_file_doctor/checks.py
 [kicad-file-doctor-license]: https://github.com/94xhn/kicad-file-doctor/blob/45133533e05aeabb7ef150d3a95084c318f16c9d/LICENSE

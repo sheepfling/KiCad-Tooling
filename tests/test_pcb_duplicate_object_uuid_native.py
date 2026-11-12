@@ -85,8 +85,9 @@ def _native_uuid_report(tmp_path: Path, version: str, case: str, repeat: str) ->
         config,
         {board_relative: digest(board_path)},
     )
+    expected_finding = case in {"fault", "zone-tstamp-fault"}
     assert tuple(candidate.rule_id for candidate in candidates) == (
-        (RULE_ID,) if case == "fault" else ()
+        (RULE_ID,) if expected_finding else ()
     )
     return report
 
@@ -103,6 +104,25 @@ def _track_and_unconnected_uuids(report: dict) -> tuple[tuple[str, ...], tuple[s
     unconnected = tuple(
         sorted(
             item["uuid"] for issue in report["unconnected_items"] for item in issue.get("items", ())
+        )
+    )
+    return dangling, unconnected
+
+
+def _identity_descriptions(report: dict) -> tuple[tuple[tuple[str, str], ...], ...]:
+    dangling = tuple(
+        sorted(
+            (item["uuid"], item["description"])
+            for violation in report["violations"]
+            if violation.get("type") == "track_dangling"
+            for item in violation.get("items", ())
+        )
+    )
+    unconnected = tuple(
+        sorted(
+            (item["uuid"], item["description"])
+            for issue in report["unconnected_items"]
+            for item in issue.get("items", ())
         )
     )
     return dangling, unconnected
@@ -125,4 +145,41 @@ def test_pinned_kicad_drc_reuses_duplicate_segment_uuid(tmp_path: Path) -> None:
             tuple(sorted((repeated_uuid, other_uuid))),
         )
         assert reports["fault"] == (expected_fault, expected_fault)
+        assert reports["control"] == (expected_control, expected_control)
+
+
+def test_pinned_kicad_drc_resolves_legacy_zone_tstamp_identity_collision(
+    tmp_path: Path,
+) -> None:
+    segment_uuid = "00000000-0000-0000-0000-000000000002"
+    other_track_uuid = "00000000-0000-0000-0000-000000000003"
+    for version in ("10.0.0", "10.0.5"):
+        reports = {
+            case: tuple(
+                _identity_descriptions(_native_uuid_report(tmp_path, version, case, repeat))
+                for repeat in ("a", "b")
+            )
+            for case in ("zone-tstamp-fault", "control")
+        }
+        expected_fault = (
+            (
+                (segment_uuid, "Zone [RETURN] on F.Cu, priority 0"),
+                (other_track_uuid, "Track [DATA] on B.Cu, length 16.0000 mm"),
+            ),
+            (
+                (segment_uuid, "Zone [RETURN] on F.Cu, priority 0"),
+                (other_track_uuid, "Track [DATA] on B.Cu, length 16.0000 mm"),
+            ),
+        )
+        expected_control = (
+            (
+                (segment_uuid, "Track [DATA] on B.Cu, length 16.0000 mm"),
+                (other_track_uuid, "Track [DATA] on B.Cu, length 16.0000 mm"),
+            ),
+            (
+                (segment_uuid, "Track [DATA] on B.Cu, length 16.0000 mm"),
+                (other_track_uuid, "Track [DATA] on B.Cu, length 16.0000 mm"),
+            ),
+        )
+        assert reports["zone-tstamp-fault"] == (expected_fault, expected_fault)
         assert reports["control"] == (expected_control, expected_control)
