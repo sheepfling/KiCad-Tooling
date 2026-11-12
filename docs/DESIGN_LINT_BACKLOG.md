@@ -24647,6 +24647,10 @@ acceptance threads while new lint features proceed:
   with 8,773 unrelated tests deselected, including the digest-pinned Docker
   fixture. Ruff and formatting, Rumdl, repository-wide mdrepo checks, scoped
   Linux Pyright (0 errors), and `git diff --check` passed.
+- **Hosted acceptance (2026-11-12):** Annotated tag `v0.5.3rc702` passed
+  GitHub Actions run `43204125945`. The scoped gate and installed-wheel check
+  against a separate project checkout passed. Package and preview jobs were
+  skipped under prerelease policy.
 
 ## Completion and release gate
 
