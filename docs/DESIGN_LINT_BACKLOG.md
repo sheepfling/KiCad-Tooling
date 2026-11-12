@@ -25072,6 +25072,41 @@ acceptance threads while new lint features proceed:
   run `43270500786`; package and preview jobs were skipped under prerelease
   policy.
 
+#### LINT-427 — Review conflicting PCB netclass definitions
+
+- **Priority:** P1 configuration ambiguity. A project can repeat its netclass
+  list or define one named class more than once with different clearances;
+  KiCad 10.0.8 applies the final definition in the measured cases, which can
+  silently change native DRC results.
+- **Status:** Implemented as the source-bound review rule
+  `pcb.drc_conflicting_netclass_definitions`, defaulting to `review` for PCB
+  and PCB-only projects pinned to KiCad 10.0.8. It reports the conflicting
+  JSON values in source order and does not choose a winner.
+- **Evidence:** Tooling-owned synthetic fixtures cover repeated
+  `net_settings.classes` JSON members and repeated `Narrow` names inside one
+  list. The digest-pinned KiCad 10.0.8 Docker image was run twice on each of
+  four faults and two controls; the last 0.05 mm definition yields no
+  clearance violation and the last 0.20 mm definition yields one. Results
+  were repeatable.
+- **Boundary:** Native order sensitivity is measured only for these settings,
+  values, and geometry on the exact image. The review does not establish an
+  electrical defect, inspect copper, decide which definition is intended, or
+  generalize to other settings or KiCad versions. Identical repeated lists and
+  unique class lists are controls; multiple root `net_settings` members are
+  handled by their existing rule.
+- **Selection:** Run `tests/test_pcb_drc_conflicting_netclass_definitions.py` and its CLI/MCP parity
+  test with
+  `design_lint and pcb_lint and design_lint_rule(rule_id="pcb.drc_conflicting_netclass_definitions")`.
+  The native fixture is in `tests/test_pcb_drc_conflicting_netclass_definitions_native.py` and
+  requires `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, Docker, and `native_kicad`.
+- **Local acceptance (2026-11-12):** The scoped `scripts/ci.py` gate passed
+  419 tests with 8,850 unrelated tests deselected, including repeatable
+  digest-pinned KiCad 10.0.8 Docker fault/control runs. Ruff, both Alphus
+  profiles, Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist builds,
+  installed-wheel checks, and the new-rule catalog, fixture, marker, and
+  selector integrity checks passed. Hosted acceptance and the installed-wheel
+  rehearsal against the separate workflow-template checkout remain pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

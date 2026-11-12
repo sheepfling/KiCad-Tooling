@@ -179,4 +179,24 @@ PCB_RULE_NODE_CASES = (
         "pcb.mechanical_edge_clearance_rule_coverage",
         "tests/test_design_lint_determinism_pcb_mechanical_edge.py::test_mechanical_edge_fault_and_control_reports_are_source_bound_and_deterministic",
     ),
+    (
+        "pcb.drc_conflicting_netclass_definitions",
+        "tests/test_pcb_drc_conflicting_netclass_definitions.py::test_conflicting_netclass_values_are_source_bound",
+    ),
+    (
+        "pcb.drc_conflicting_netclass_definitions",
+        "tests/test_pcb_drc_conflicting_netclass_definitions.py::test_equal_duplicate_classes_member_is_quiet",
+    ),
+    (
+        "pcb.drc_conflicting_netclass_definitions",
+        "tests/test_pcb_drc_conflicting_netclass_definitions.py::test_repeated_scans_preserve_class_and_list_order",
+    ),
+    (
+        "pcb.drc_conflicting_netclass_definitions",
+        "tests/test_design_lint_mcp_parity_pcb_drc_conflicting_netclass_definitions.py::test_conflicting_netclass_review_matches_between_cli_and_mcp",
+    ),
+    (
+        "pcb.drc_conflicting_netclass_definitions",
+        "tests/test_pcb_drc_conflicting_netclass_definitions_native.py::test_kicad_1008_conflicting_netclass_definitions_are_order_sensitive_and_repeatable",
+    ),
 )

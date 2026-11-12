@@ -120,7 +120,10 @@ def source_bound_pcb_drc_duplicate_net_settings_section_candidates(
     if source is None:
         return ()
     try:
-        settings = configured_pcb_duplicate_net_settings_sections(source.document)
+        settings = configured_pcb_duplicate_net_settings_sections(
+            source.document,
+            allow_source_bound_duplicates=True,
+        )
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         raise ValueError(
             f"{relative}: could not read supported PCB project settings: {exc}"

@@ -37,5 +37,8 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_pcb_drc_duplicate_net_settings_section_native.py": frozenset(
             {"pcb_lint", "evidence_lint"}
         ),
+        "test_pcb_drc_conflicting_netclass_definitions_native.py": frozenset(
+            {"pcb_lint", "evidence_lint"}
+        ),
     }
 )

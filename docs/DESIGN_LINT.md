@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 351 active rules.
+The catalog currently contains 352 active rules.
 
 ### Placed schematic symbol has no embedded definition
 
@@ -5807,6 +5807,27 @@ synthetic netclass clearance case and image. The rule does not choose an
 intended section, run DRC on project boards, or establish a board defect or
 manufacturing readiness. Projects may set `review`, `block`, or `off`, or
 record an exact-fingerprint ignore. The synthetic files are documented in
+[`tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/`](../tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/README.md).
+
+## Review conflicting PCB netclass definitions
+
+`pcb.drc_conflicting_netclass_definitions` prompts when an exact KiCad 10.0.8
+source-hashed `.kicad_pro` has conflicting values in repeated
+`net_settings.classes` members or gives one class name different definitions
+in the same list. The review retains every conflicting JSON value in source
+order and asks the project owner to resolve the settings. It is enabled for
+PCB and PCB-only projects configured for exactly KiCad 10.0.8; other patches
+remain out of scope.
+
+Digest-pinned native DRC was run twice for each synthetic fault and control.
+With the `Narrow` class's 0.05 mm clearance last, the fixture has no clearance
+violation; with its 0.20 mm clearance last, DRC reports one. This covers both
+repeated `classes` members and repeated `Narrow` entries in one class list, on
+the tested image and geometry only. The check does not choose an intended
+definition, infer an electrical defect, run DRC on adopter boards, or establish
+manufacturing readiness. Projects may select `review`, `block`, or `off`, or
+record an exact-fingerprint ignore. Synthetic settings and measured results
+are documented in
 [`tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/`](../tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/README.md).
 
 ## Review invalid PCB DRC severity strings

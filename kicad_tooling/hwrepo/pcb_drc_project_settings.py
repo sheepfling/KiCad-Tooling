@@ -171,26 +171,25 @@ def _parse_pcb_project_settings(
         allowed_paths.add(_ERC_SEVERITY_OBJECT_PATH)
     if allow_duplicate_drc_severity_keys:
         allowed_paths.add(_PCB_DRC_SEVERITY_OBJECT_PATH)
-    # KiCad 10.0.8 source-bound readers tolerate only known root sections with
-    # dedicated review rules. Nested and unrelated duplicate keys stay strict.
-    allowed_members: frozenset[tuple[tuple[str, ...], str]] = (
-        frozenset(
+    # Exact-version source-bound readers also tolerate the catalogued duplicate
+    # net_settings.classes member so its dedicated review can run.
+    allowed_members: set[tuple[tuple[str, ...], str]] = set()
+    if allow_duplicate_board_section:
+        allowed_members.update(
             {
                 _PCB_BOARD_ROOT_DUPLICATE_MEMBER,
                 _PCB_ERC_ROOT_DUPLICATE_MEMBER,
                 _PCB_NET_SETTINGS_ROOT_DUPLICATE_MEMBER,
+                (("net_settings",), "classes"),
             }
         )
-        if allow_duplicate_board_section
-        else frozenset()
-    )
     if not allowed_paths and not allowed_members:
         return parse_model_text(document, _PcbProjectSettings)
     return parse_model_text_allow_duplicate_json_keys_at(
         document,
         _PcbProjectSettings,
         allowed_duplicate_object_paths=frozenset(allowed_paths),
-        allowed_duplicate_object_members=allowed_members,
+        allowed_duplicate_object_members=frozenset(allowed_members),
     )
 
 

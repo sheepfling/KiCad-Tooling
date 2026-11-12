@@ -25,6 +25,52 @@ boards. The result is limited to this netclass setting and exact image.
 | `fault-narrow-last.kicad_pro`     | `eda25107d816187358c3fe9c4123964177319cf365d6f1280a2c58015a8139d5` |
 | `fault-wide-last.kicad_pro`       | `df11aa162318b4ab52ded878295d822614af55102faf187907ae3eb4fe58adfd` |
 
+## Conflicting netclass definitions
+
+The following additional tooling-owned settings fixtures exercise two
+conflict forms: repeated `net_settings.classes` JSON members, and repeated
+`Narrow` class names in one `classes` array. Each conflicting pair contains
+0.05 mm and 0.20 mm clearances. KiCad 10.0.8 on the digest-pinned image below
+uses the last definition in these cases: the narrow-last faults have no
+clearance violation and the wide-last faults have one. The identical-list and
+unique-list controls have no clearance violation. Each case was exported twice
+with identical violation types; the fixture also reports two
+`track_dangling` records in each run.
+
+| Fixture                                     | Conflict form             | Last clearance | Expected clearance result |
+| ------------------------------------------- | ------------------------- | -------------: | ------------------------- |
+| `fault-netclass-list-narrow-last.kicad_pro` | repeated `classes` member |        0.05 mm | none                      |
+| `fault-netclass-list-wide-last.kicad_pro`   | repeated `classes` member |        0.20 mm | one                       |
+| `fault-netclass-name-narrow-last.kicad_pro` | repeated class name       |        0.05 mm | none                      |
+| `fault-netclass-name-wide-last.kicad_pro`   | repeated class name       |        0.20 mm | one                       |
+| `control-identical-netclass-list.kicad_pro` | identical repeated member |        0.05 mm | none                      |
+| `control-unique-narrow.kicad_pro`           | unique class list         |        0.05 mm | none                      |
+
+Native image:
+`ghcr.io/kicad/kicad:10.0.8-amd64@sha256:05f6ac957e351bbbd9e1f9c996be997f61948ed9f94e0c3cab336bfcaf60161c`.
+This observation is limited to these values, geometry, KiCad version, and image; it does not choose
+an intended value or establish an electrical board defect.
+
+| Source                                      | SHA-256                                                            |
+| ------------------------------------------- | ------------------------------------------------------------------ |
+| `control-identical-netclass-list.kicad_pro` | `fb8250e2f6670448d2ab6d62bc3df7b4cdcdcfc00a3bbf9c2527e78548d851bb` |
+| `fault-netclass-list-narrow-last.kicad_pro` | `043b28b127bdd202ca96d607f17e0849d2008635ad4d6e27d6700a034ef88943` |
+| `fault-netclass-list-wide-last.kicad_pro`   | `ed24748139422924484928b465f86d33666e42571a213964c9c83ab95c30b170` |
+| `fault-netclass-name-narrow-last.kicad_pro` | `71a1fc72400f84d7a3395099487264b357955aa7dd0ba0d7fcc46b835216cf88` |
+| `fault-netclass-name-wide-last.kicad_pro`   | `f7f8b1d25d79316c4f8e4c8453246eaed8adbacdefca35b7e7cccf7a1dc92622` |
+
+Run the focused source, CLI/MCP, and pinned native regressions with:
+
+```sh
+python -I -m pytest -q \
+  tests/test_pcb_drc_conflicting_netclass_definitions.py \
+  tests/test_design_lint_mcp_parity_pcb_drc_conflicting_netclass_definitions.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.drc_conflicting_netclass_definitions")'
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 python -I -m pytest -q \
+  tests/test_pcb_drc_conflicting_netclass_definitions_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.drc_conflicting_netclass_definitions")'
+```
+
 Run the source-bound and CLI/MCP regressions with:
 
 ```sh
