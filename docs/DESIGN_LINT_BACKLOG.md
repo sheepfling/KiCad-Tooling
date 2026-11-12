@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 354 rules are implemented with synthetic regression coverage.
+The following 355 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 354 active rules.
+The catalog currently contains 355 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -740,6 +740,7 @@ skipped under prerelease policy.
 - `pcb.drc_conflicting_netclass_definitions`
 - `pcb.drc_unresolved_netclass_assignment`
 - `pcb.drc_malformed_netclass_assignment`
+- `pcb.drc_malformed_netclass_inventory`
 - `pcb.duplicate_object_uuid`
 - `pcb.drc_duplicate_severity_key`
 - `pcb.drc_unknown_severity_key`
@@ -950,14 +951,14 @@ standalone parity work when it closes a demonstrated feature regression.
   required native lanes, targeted Linux and Windows typing, wheel/source
   builds, and installed-wheel rehearsal against the public template and its
   adapted layout. Hosted prerelease acceptance passed in GitHub Actions run
-  [43106385974](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43106385974).
+  GitHub Actions run `43106385974`.
   Package and preview jobs were skipped under prerelease policy.
 - **Latest published lint-gate checkpoint (v0.5.3rc680):** Focused serial
   reference fault, control, and ordering regressions now collect separately.
   The exact serial unit and native selector passed 10 tests with 2 deselected,
   including KiCad 10.0.0 and 10.0.5. The selector and catalog gates passed,
   and hosted prerelease lint acceptance passed in GitHub Actions run
-  [43101940203](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43101940203).
+  GitHub Actions run `43101940203`.
 - **Earlier published lint-gate checkpoint (v0.5.3rc677):** LINT-403
   makes the default-ignore ERC keys exact-patch scoped instead of assuming
   one global set for every KiCad 10.0 release. The scoped package gate passed
@@ -966,7 +967,7 @@ standalone parity work when it closes a demonstrated feature regression.
   native and Windows-target Pyright, wheel and source-archive builds, and
   installed-wheel verification against the public and adapted template
   checkouts passed. Hosted acceptance passed in GitHub Actions run
-  [43088190619](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43088190619).
+  GitHub Actions run `43088190619`.
 - **Earlier published lint-gate checkpoint (v0.5.3rc676):** LINT-402
   aligns `schematic.erc_error_downgraded` metadata with the eight exact
   source-audited patches already accepted by its settings parser. The scoped
@@ -4342,7 +4343,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 354 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 355 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -4691,7 +4692,7 @@ Current catalog audit: 354 covered, 0 not applicable, 0 unreviewed.
   repository-link checks, Linux and Windows typing, wheel/sdist builds, and
   installed-wheel checks passed.
   Hosted tag `v0.5.3rc710` also passed the scoped gate in GitHub Actions
-  [run 43233725138](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43233725138).
+  `43233725138`.
   Its 445-test selection ran the digest-pinned KiCad 10.0.0 and 10.0.5 Docker
   fixtures, then passed wheel installation and the separate external-project
   playtest. Package publication and preview jobs were skipped under prerelease
@@ -24024,7 +24025,7 @@ acceptance threads while new lint features proceed:
   against the separate public template and adapted checkout passed. No customer
   or proprietary board source was used.
 - **Hosted acceptance:** Tag `v0.5.3rc677` passed GitHub Actions run
-  [43088190619](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43088190619).
+  GitHub Actions run `43088190619`.
 
 #### LINT-404 — Recheck the DB9 return heuristic on KiCad 10.0.8
 
@@ -24058,7 +24059,7 @@ acceptance threads while new lint features proceed:
   external public template was checked out at
   `ed89536f0dbbcb013145af2994fef41b2250143e`.
 - **Hosted acceptance:** Tag `v0.5.3rc681` passed in GitHub Actions run
-  [43106385974](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43106385974).
+  GitHub Actions run `43106385974`.
   The package and preview jobs were skipped by prerelease policy.
 
 #### LINT-405 — Review custom DRC layer references
@@ -24535,7 +24536,7 @@ acceptance threads while new lint features proceed:
   ERC/DRC regressions also passed 609 tests; catalog/reachability/architecture
   checks passed 22 tests. Receipt: `build/ci/run-c424b9y5`.
 - **Hosted acceptance (2026-11-12):** Annotated tag `v0.5.3rc697` passed
-  [GitHub Actions run 43171008699](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43171008699):
+  GitHub Actions run `43171008699`:
   400 tests passed and 8,681 were deselected, including all three exact KiCad
   10.0.8 Docker fixture cases. Ruff, both Alphus profiles, Markdown and
   repository-link checks, Linux and Windows typing, wheel and source builds,
@@ -25421,6 +25422,54 @@ acceptance threads while new lint features proceed:
   Hosted acceptance passed in GitHub Actions run `43322304085` with 436 tests
   and 8,922 deselected, including the pinned Docker regression and external
   installed-wheel rehearsal.
+
+#### LINT-434 — Review malformed PCB netclass inventories
+
+- **Priority:** P1 PCB-settings integrity. KiCad 10.0.8 skips a non-array
+  `net_settings.classes` value and skips class-array entries that are not
+  objects or do not contain `name`. A project can therefore apply the default
+  class constraints when its saved class inventory is malformed.
+- **Rule:**
+  [`pcb.drc_malformed_netclass_inventory`](DESIGN_LINT.md#review-malformed-pcb-netclass-inventories)
+- **Status:** Implemented as a default-REVIEW rule for exact KiCad 10.0.8 PCB
+  and PCB-only projects; focused local and native acceptance passed.
+- **Predicate:** Require a source-hashed settings file with one root
+  `net_settings` object and one `classes` member. Review a non-array class
+  collection, a non-object array entry, or an object entry without `name`.
+  Retain the JSON type and array index. Skip repeated or ambiguous root
+  settings and repeated `classes` members. Other class property validation is
+  outside this check.
+- **Native evidence:** On the tooling-owned two-track board, a `classes`
+  object, a `null` entry, and an object entry without `name` each produce the
+  same DRC violation types as explicit `Default`. The valid `Narrow` control
+  has no clearance violation. Repeated exports ran in the digest-pinned
+  KiCad 10.0.8 container. This measures only the fixture's settings, values,
+  geometry, version, and image.
+- **Boundary:** The review identifies shapes KiCad skips during class loading.
+  It does not infer an intended class, validate other class values, inspect
+  copper, or establish an electrical defect. Other KiCad patches remain
+  unmeasured.
+- **Synthetic evidence:** Separate hashed fixtures cover the non-array
+  collection, null entry, and missing-name entry. Tests cover all JSON types,
+  valid and empty-array controls, ambiguous duplicate `classes` entries,
+  source-hash mismatch, project-kind and exact-version bounds, and CLI/MCP
+  parity. Native tests repeat each fault and the Default/Narrow controls.
+- **Selection:** Run
+  `tests/test_pcb_drc_malformed_netclass_inventory.py` and
+  `tests/test_design_lint_mcp_parity_pcb_drc_malformed_netclass_inventory.py`
+  with `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.drc_malformed_netclass_inventory")`.
+  Run `tests/test_pcb_drc_malformed_netclass_inventory_native.py` with
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, Docker, `native_kicad`, and the same rule
+  selector.
+- **Focused local acceptance (2026-11-12):** Source and CLI/MCP tests passed
+  28 cases. The digest-pinned Docker regression passed with all three malformed
+  shapes, both controls, and repeated exports. The scoped package gate passed
+  432 tests with 8,956 deselected; catalog, selector, and architecture checks
+  passed in the gate. Linux and Windows Pyright, Ruff, Alphus, Rumdl, mdrepo,
+  wheel/sdist builds, installed-wheel checks, and external/adapted template
+  rehearsals passed. Receipt: `build/ci/run-n5bp1cy3`. Hosted acceptance is
+  pending.
 
 ## Completion and release gate
 

@@ -315,4 +315,40 @@ PCB_RULE_NODE_CASES = (
         "pcb.drc_malformed_netclass_assignment",
         "tests/test_pcb_drc_malformed_netclass_assignment_native.py::test_malformed_shapes_fall_back_like_default_and_repeat_with_narrow_control",
     ),
+    (
+        "pcb.drc_malformed_netclass_inventory",
+        "tests/test_pcb_drc_malformed_netclass_inventory.py::test_malformed_inventory_fixtures_are_source_hashed_and_reviewed",
+    ),
+    (
+        "pcb.drc_malformed_netclass_inventory",
+        "tests/test_pcb_drc_malformed_netclass_inventory.py::test_json_shapes_retain_problem_type_and_index",
+    ),
+    (
+        "pcb.drc_malformed_netclass_inventory",
+        "tests/test_pcb_drc_malformed_netclass_inventory.py::test_valid_class_array_controls_stay_quiet",
+    ),
+    (
+        "pcb.drc_malformed_netclass_inventory",
+        "tests/test_pcb_drc_malformed_netclass_inventory.py::test_incomplete_or_ambiguous_class_inventory_stays_quiet",
+    ),
+    (
+        "pcb.drc_malformed_netclass_inventory",
+        "tests/test_pcb_drc_malformed_netclass_inventory.py::test_unmeasured_versions_and_non_pcb_projects_are_out_of_scope",
+    ),
+    (
+        "pcb.drc_malformed_netclass_inventory",
+        "tests/test_pcb_drc_malformed_netclass_inventory.py::test_pcb_only_projects_are_supported",
+    ),
+    (
+        "pcb.drc_malformed_netclass_inventory",
+        "tests/test_pcb_drc_malformed_netclass_inventory.py::test_stale_source_hash_does_not_produce_candidate",
+    ),
+    (
+        "pcb.drc_malformed_netclass_inventory",
+        "tests/test_design_lint_mcp_parity_pcb_drc_malformed_netclass_inventory.py::test_malformed_netclass_inventory_matches_between_cli_and_mcp",
+    ),
+    (
+        "pcb.drc_malformed_netclass_inventory",
+        "tests/test_pcb_drc_malformed_netclass_inventory_native.py::test_malformed_shapes_fall_back_like_default_and_repeat_with_narrow_control",
+    ),
 )

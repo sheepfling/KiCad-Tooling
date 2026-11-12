@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 354 active rules.
+The catalog currently contains 355 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -5816,6 +5816,26 @@ synthetic netclass clearance case and image. The rule does not choose an
 intended section, run DRC on project boards, or establish a board defect or
 manufacturing readiness. Projects may set `review`, `block`, or `off`, or
 record an exact-fingerprint ignore. The synthetic files are documented in
+[`tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/`](../tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/README.md).
+
+## Review malformed PCB netclass inventories
+
+`pcb.drc_malformed_netclass_inventory` prompts for exact KiCad 10.0.8
+PCB/PCB-only projects when the unique `net_settings.classes` member is not an
+array, an array item is not an object, or an object item has no `name` member.
+Evidence retains the source hash, malformed location, problem kind, JSON type,
+and array index where applicable. Valid arrays, including an empty classes
+array, remain quiet. Repeated or ambiguous root settings and `classes` members
+are left to existing duplicate-setting reviews.
+
+In the digest-pinned two-track fixture, an object in place of the classes array, a `null` array
+item, and a class object without `name` each produce the same clearance result as explicit
+`Default`; the valid `Narrow` control does not. KiCad 10.0.8's
+[net-settings parser](https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L170-201)
+skips those inventory shapes. This source-bound review does not infer an intended class, validate
+other class properties, inspect copper, or establish an electrical defect. Projects may choose
+`review`, `block`, or `off`, or add an exact-fingerprint ignore. Fixture hashes, native image, and
+focused pytest selectors are recorded in
 [`tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/`](../tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/README.md).
 
 ## Review conflicting PCB netclass definitions

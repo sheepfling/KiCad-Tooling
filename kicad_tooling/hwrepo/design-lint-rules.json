@@ -14213,6 +14213,56 @@
       ]
     },
     {
+      "rule_id": "pcb.drc_malformed_netclass_inventory",
+      "title": "Malformed PCB netclass inventories need review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_malformed_netclass_inventory_review.py#source_bound_pcb_malformed_netclass_inventory_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0.8 .kicad_pro net_settings.classes JSON shape with collection type, invalid entry indexes/types, project kind, and source digest retained",
+      "predicate": "For PCB and PCB-only projects configured for exact KiCad 10.0.8, inspect one source-hashed project file containing one root net_settings object and one classes member. Review when classes is not an array, when an array item is not an object, or when an object item has no name member. Skip repeated or ambiguous root settings and repeated classes members. Do not validate the meaning or electrical suitability of class names or values.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.8 only; the digest-pinned native fixture shows a non-array classes value, a null array item, and an object without name each produce the same clearance result as explicit Default, while valid Narrow remains distinct. Other patches are unmeasured."
+      ],
+      "limitations": [
+        "The rule identifies inventory shapes that KiCad 10.0.8 skips while loading netclass definitions. It does not infer the intended class, repair assignments, validate class fields, or establish that the resulting board is electrically defective.",
+        "The native comparison covers only the synthetic two-track board, Default and Narrow clearances, three malformed class-list shapes, and the pinned KiCad 10.0.8 image. It does not run DRC on adopter projects or inspect copper continuity.",
+        "Invalid project syntax, repeated or ambiguous root settings, repeated classes members, duplicate class names, unsupported versions, and malformed fields other than the missing name member are outside this predicate. The default is REVIEW; project policy may promote, disable, or exactly ignore the finding."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_drc_malformed_netclass_inventory.test_malformed_inventory_fixtures_are_source_hashed_and_reviewed",
+        "tests.test_pcb_drc_malformed_netclass_inventory.test_json_shapes_retain_problem_type_and_index",
+        "tests.test_design_lint_mcp_parity_pcb_drc_malformed_netclass_inventory.test_malformed_netclass_inventory_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_malformed_netclass_inventory_native.test_malformed_shapes_fall_back_like_default_and_repeat_with_narrow_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_drc_malformed_netclass_inventory.test_valid_class_array_controls_stay_quiet",
+        "tests.test_pcb_drc_malformed_netclass_inventory.test_incomplete_or_ambiguous_class_inventory_stays_quiet",
+        "tests.test_design_lint_mcp_parity_pcb_drc_malformed_netclass_inventory.test_malformed_netclass_inventory_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_malformed_netclass_inventory_native.test_malformed_shapes_fall_back_like_default_and_repeat_with_narrow_control"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_drc_malformed_netclass_inventory.test_json_shapes_retain_problem_type_and_index",
+        "tests.test_pcb_drc_malformed_netclass_inventory.test_incomplete_or_ambiguous_class_inventory_stays_quiet"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_malformed_netclass_inventory_review.py#source_bound_pcb_malformed_netclass_inventory_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_malformed_netclass_inventory_review.py#project_pcb_malformed_netclass_inventory_evidence",
+        "kicad_tooling/hwrepo/pcb_drc_malformed_netclass_inventory.py#configured_pcb_malformed_netclass_inventory",
+        "kicad_tooling/hwrepo/pcb_drc_netclass_settings_review.py#source_bound_pcb_netclass_settings_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#read_source_bound_pcb_project_settings",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#verify_source_bound_pcb_project_settings_unchanged",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
+        "kicad_tooling/hwrepo/design_lint_candidate_inputs.py#DesignLintCandidateInputs",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
+      ]
+    },
+    {
       "rule_id": "pcb.duplicate_object_uuid",
       "title": "PCB object UUID repeats within one board source",
       "theme": "pcb",

@@ -117,12 +117,37 @@ schema migration wraps scalar strings in arrays. The lint reports malformed
 source shape for review; it does not select a class or claim every malformed
 value has the same behavior.
 
+## Malformed netclass inventory shapes
+
+The classes fixtures probe three shapes that KiCad 10.0.8 skips while loading
+its netclass inventory: `classes` as an object, a `null` array entry, and an
+object entry without `name`. Each produces the same clearance violation as the
+explicit `Default` control; the valid `Narrow` control has no clearance
+violation. The native regression repeats each case and both controls. This is
+bounded to the exact settings, board, version, and image below. The source
+review reports the malformed location and JSON type; it does not infer a
+replacement class.
+
+| Fixture                                              | Malformed shape                 | Clearance |
+| ---------------------------------------------------- | ------------------------------- | --------- |
+| `fault-netclass-classes-object.kicad_pro`            | `classes` is an object          | one       |
+| `fault-netclass-class-entry-null.kicad_pro`          | array item is `null`            | one       |
+| `fault-netclass-class-entry-missing-name.kicad_pro`  | object item has no `name`       | one       |
+| `control-netclass-assignment-default.kicad_pro`      | explicit `Default`              | one       |
+| `control-netclass-assignment-array-narrow.kicad_pro` | valid `Narrow` array assignment | none      |
+
+KiCad's 10.0.8 [`NET_SETTINGS` parser][netclass-inventory-source] returns when
+`classes` is not an array, then skips entries that are not objects or have no
+`name` member. The linter treats those as review prompts. It does not validate
+other class properties or establish the intended constraints.
+
 Native image:
 `ghcr.io/kicad/kicad:10.0.8-amd64@sha256:05f6ac957e351bbbd9e1f9c996be997f61948ed9f94e0c3cab336bfcaf60161c`.
 This observation is limited to these values, geometry, KiCad version, and image; it does not choose
 an intended value or establish an electrical board defect.
 
 [net-settings-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L230-263
+[netclass-inventory-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L170-201
 [net-settings-migration]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L418-434
 
 | Source                                                  | SHA-256                                                            |
@@ -148,6 +173,9 @@ an intended value or establish an electrical board defect.
 | `fault-netclass-assignment-array-nonstring.kicad_pro`   | `30dc2a9893349267ee687712d42f46bf3e34f228f863560fd280699356820c78` |
 | `fault-netclass-assignment-value-number.kicad_pro`      | `d25e8ef51e4057815a4b8c0c560e1f28a0309969df891000a8b84df7b7117c87` |
 | `fault-netclass-assignment-map-array.kicad_pro`         | `f7b10a8cad4c0e305b61e50b43009ea25e9d52a077e96421d9a8fcec62dc026c` |
+| `fault-netclass-classes-object.kicad_pro`               | `c53ce061e4b5718bd5145851d59210036381dbb87e62b1e9993d6da9a3544136` |
+| `fault-netclass-class-entry-null.kicad_pro`             | `edcd031ad5bb8db7d79d003a09fd572bb0a2088da3c2963d6c5af4b79d575edf` |
+| `fault-netclass-class-entry-missing-name.kicad_pro`     | `f7cdfb2ed83f4c9d756e8ce324501149a3bae098952517e8c3038afdaef7281d` |
 
 Run the focused source, CLI/MCP, and pinned native regressions with:
 
@@ -196,4 +224,11 @@ python -I -m pytest -q \
 KICAD_RUN_NATIVE_PCB_FIXTURES=1 python -I -m pytest -q \
   tests/test_pcb_drc_malformed_netclass_assignment_native.py \
   -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.drc_malformed_netclass_assignment")'
+python -I -m pytest -q \
+  tests/test_pcb_drc_malformed_netclass_inventory.py \
+  tests/test_design_lint_mcp_parity_pcb_drc_malformed_netclass_inventory.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.drc_malformed_netclass_inventory")'
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 python -I -m pytest -q \
+  tests/test_pcb_drc_malformed_netclass_inventory_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.drc_malformed_netclass_inventory")'
 ```

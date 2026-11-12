@@ -112,11 +112,12 @@ class PcbMalformedNetClassAssignment:
             raise ValueError("Only array assignments can have malformed member indexes")
 
 
-def _validate_pcb_settings_document(
+def validate_pcb_settings_document(
     document: str,
     *,
     allow_source_bound_duplicates: bool,
 ) -> None:
+    """Validate PCB project settings while allowing only reviewed repeated values."""
     duplicate_members = _KNOWN_DUPLICATE_ROOT_SETTINGS_MEMBERS
     duplicate_paths: frozenset[tuple[str, ...]] = frozenset()
     if allow_source_bound_duplicates:
@@ -141,7 +142,7 @@ def configured_pcb_duplicate_net_settings_sections(
     allow_source_bound_duplicates: bool = False,
 ) -> tuple[PcbDuplicateNetSettingsSectionSetting, ...]:
     """Return duplicate root net_settings sections without collapsing their order."""
-    _validate_pcb_settings_document(
+    validate_pcb_settings_document(
         document,
         allow_source_bound_duplicates=allow_source_bound_duplicates,
     )
@@ -192,7 +193,7 @@ def configured_pcb_conflicting_netclass_settings(
     document: str,
 ) -> tuple[PcbConflictingNetClassSettings, ...]:
     """Retain conflicting duplicate netclass-list, class, and assignment values."""
-    _validate_pcb_settings_document(document, allow_source_bound_duplicates=True)
+    validate_pcb_settings_document(document, allow_source_bound_duplicates=True)
     project = json.loads(document, object_pairs_hook=retain_json_object_pairs)
     if not isinstance(project, JsonObjectPairs):
         return ()
@@ -274,7 +275,7 @@ def configured_pcb_unresolved_netclass_assignments(
     document: str,
 ) -> tuple[PcbUnresolvedNetClassAssignment, ...]:
     """Find unique assignment targets absent from one complete classes list."""
-    _validate_pcb_settings_document(document, allow_source_bound_duplicates=True)
+    validate_pcb_settings_document(document, allow_source_bound_duplicates=True)
     project = json.loads(document, object_pairs_hook=retain_json_object_pairs)
     if not isinstance(project, JsonObjectPairs):
         return ()
@@ -342,7 +343,7 @@ def configured_pcb_unresolved_netclass_assignments(
     return tuple(unresolved)
 
 
-def _pcb_json_type(value: object) -> str:
+def pcb_json_type(value: object) -> str:
     if value is None:
         return "null"
     if isinstance(value, bool):
@@ -361,7 +362,7 @@ def _pcb_json_type(value: object) -> str:
 def _pcb_json_member_kind(value: object) -> str:
     if value == "":
         return "empty-string"
-    return _pcb_json_type(value)
+    return pcb_json_type(value)
 
 
 def _malformed_pcb_netclass_assignment(
@@ -373,7 +374,7 @@ def _malformed_pcb_netclass_assignment(
     if not isinstance(assignment, list):
         return PcbMalformedNetClassAssignment(
             net_name=net_name,
-            observed_json_type=_pcb_json_type(assignment),
+            observed_json_type=pcb_json_type(assignment),
         )
 
     assignment_members = cast(list[JsonValue], assignment)
@@ -396,7 +397,7 @@ def configured_pcb_malformed_netclass_assignments(
     document: str,
 ) -> tuple[PcbMalformedNetClassAssignment, ...]:
     """Find unsupported JSON shapes in unique PCB netclass assignment settings."""
-    _validate_pcb_settings_document(document, allow_source_bound_duplicates=True)
+    validate_pcb_settings_document(document, allow_source_bound_duplicates=True)
     project = json.loads(document, object_pairs_hook=retain_json_object_pairs)
     if not isinstance(project, JsonObjectPairs):
         return ()
@@ -415,7 +416,7 @@ def configured_pcb_malformed_netclass_assignments(
         return (
             PcbMalformedNetClassAssignment(
                 net_name=None,
-                observed_json_type=_pcb_json_type(assignment_map),
+                observed_json_type=pcb_json_type(assignment_map),
             ),
         )
 
