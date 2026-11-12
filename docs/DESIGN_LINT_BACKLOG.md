@@ -17253,12 +17253,19 @@ control are documented in the
 
 #### Numbered-return mixed-interface native coverage
 
-- **Status:** Extends the existing `net.numbered_returns` gate with a mixed
-  USB/serial synthetic fault/control. KiCad 10.0.0 and 10.0.5 exports must
-  retain the exact `USB1_GND`/`USB2_GND` pins, including USB and serial pins on
-  `USB1_GND`, emit one numbered USB REVIEW, and keep the common-net control
-  quiet. This adds native evidence for an existing source-level scenario; it
-  does not assert that the return domains should be common.
+- **Done (2026-11-12):** Extended the existing `net.numbered_returns` gate
+  with a mixed USB/serial synthetic fault/control. Exact KiCad 10.0.0 and
+  10.0.5 Docker exports retain `USB1_GND` on J1.3/J2.3 and `USB2_GND` on
+  J3.3; the fault emits one numbered USB REVIEW and the common-net control is
+  quiet. The heuristic does not assert that the return domains should be
+  common.
+- **Local acceptance:** The scoped `scripts/ci.py` gate passed 444 tests with
+  8,770 deselected, including both native versions, formatting, type checks,
+  wheel/sdist builds, and an installed-wheel check against a separate project
+  checkout.
+- **Hosted acceptance:** `v0.5.3rc709`, run `43230092868`, passed its scoped
+  prerelease lint gate. Package and preview jobs were skipped by prerelease
+  policy.
 
 #### LINT-041 — Named complementary-net pair review
 
